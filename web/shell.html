@@ -1,0 +1,479 @@
+<!doctype html>
+<html lang="en-us">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Struktur</title>
+    
+    <!-- Favicon (prevents 404 errors) -->
+    <link rel="icon" type="image/x-icon" href="favicon.ico">
+    <link rel="icon" type="image/png" sizes="32x32" href="favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="favicon-16x16.png">
+    <link rel="icon" href="data:," style="display:none">
+    
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@400;700;900&family=Orbitron:wght@400;600;700&display=swap');
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Orbitron', sans-serif;
+            font-weight: 700;
+            background: linear-gradient(135deg, #0f0f0f 0%, #1a1a1a 25%, #252525 50%, #1f1f1f 75%, #141414 100%);
+            color: #e8e8e8;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        /* Minimal header */
+        .header {
+            background: linear-gradient(135deg, rgba(100, 149, 237, 0.15), rgba(176, 196, 222, 0.08));
+            border-bottom: 2px solid;
+            border-image: linear-gradient(90deg, #6495ed, #b0c4de, #87ceeb) 1;
+            padding: 8px 20px;
+            text-align: center;
+            backdrop-filter: blur(10px);
+        }
+
+        .header h1 {
+            font-family: 'Roboto Mono', monospace;
+            font-size: 1.8rem;
+            font-weight: 900;
+            letter-spacing: 0.1em;
+            color: #f0f0f0;
+            text-shadow: 
+                1px 1px 0 #6495ed,
+                2px 2px 0 rgba(0, 0, 0, 0.4),
+                0 0 15px rgba(100, 149, 237, 0.3);
+            margin: 0;
+        }
+
+        /* Game area - takes up most space */
+        .game-area {
+            flex: 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+            padding: 10px;
+        }
+
+        canvas.emscripten {
+            border: 2px solid;
+            border-image: linear-gradient(135deg, #6495ed, #b0c4de, #87ceeb) 1;
+            border-radius: 4px;
+            background: #000000;
+            box-shadow: 
+                0 8px 25px rgba(0, 0, 0, 0.7),
+                inset 0 1px 0 rgba(255, 255, 255, 0.1),
+                0 0 30px rgba(100, 149, 237, 0.15);
+            height: 100%;
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: contain;
+            display: block;
+        }
+
+        /* Loading overlay */
+        .loading-container {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+            z-index: 10;
+            background: rgba(0, 0, 0, 0.8);
+            padding: 30px;
+            border-radius: 8px;
+            border: 1px solid rgba(100, 149, 237, 0.3);
+        }
+
+        .loading-text {
+            font-family: 'Roboto Mono', monospace;
+            font-size: 16px;
+            font-weight: 700;
+            color: #6495ed;
+            margin-bottom: 20px;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            animation: blueprintText 2s ease-in-out infinite;
+        }
+
+        @keyframes blueprintText {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
+        }
+
+        .progress-container {
+            width: 300px;
+            height: 8px;
+            background: rgba(0, 0, 0, 0.5);
+            border: 1px solid #778899;
+            border-radius: 2px;
+            margin: 0 auto;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #6495ed 0%, #87ceeb 50%, #b0c4de 100%);
+            width: 0%;
+            transition: width 0.3s ease;
+            box-shadow: 0 0 15px rgba(100, 149, 237, 0.6);
+        }
+
+        /* Minimal footer */
+        .footer {
+            background: linear-gradient(135deg, rgba(100, 149, 237, 0.1), rgba(176, 196, 222, 0.05));
+            border-top: 1px solid rgba(100, 149, 237, 0.2);
+            padding: 8px 20px;
+            text-align: center;
+            backdrop-filter: blur(10px);
+        }
+
+        .fullscreen-button {
+            background: linear-gradient(135deg, #4a4a4a 0%, #2a2a2a 50%, #3a3a3a 100%);
+            border: 1px solid #778899;
+            color: #e8e8e8;
+            padding: 8px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-family: 'Roboto Mono', monospace;
+            font-size: 12px;
+            font-weight: 700;
+            letter-spacing: 0.05em;
+            text-transform: uppercase;
+            transition: all 0.3s ease;
+            box-shadow: 
+                0 2px 6px rgba(0, 0, 0, 0.3),
+                inset 0 1px 0 rgba(255, 255, 255, 0.1);
+        }
+
+        .fullscreen-button:hover {
+            border-color: #6495ed;
+            color: #87ceeb;
+            box-shadow: 
+                0 4px 12px rgba(0, 0, 0, 0.4),
+                0 0 15px rgba(100, 149, 237, 0.3);
+        }
+
+        /* Fullscreen mode styles */
+        body.fullscreen-mode {
+            overflow: hidden;
+        }
+
+        body.fullscreen-mode .header,
+        body.fullscreen-mode .footer {
+            display: none;
+        }
+
+        body.fullscreen-mode .game-area {
+            padding: 0;
+        }
+
+        body.fullscreen-mode canvas.emscripten {
+            border: none;
+            border-radius: 0;
+            width: 100vw !important;
+            height: 100vh !important;
+            max-width: none !important;
+            max-height: none !important;
+        }
+
+        /* Fullscreen exit button */
+        .fullscreen-exit-button {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 999999;
+            background: rgba(0, 0, 0, 0.8);
+            border: 1px solid rgba(100, 149, 237, 0.5);
+            color: #e8e8e8;
+            padding: 10px 15px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-family: 'Roboto Mono', monospace;
+            font-size: 12px;
+            font-weight: 700;
+            text-transform: uppercase;
+            display: none;
+            backdrop-filter: blur(10px);
+            transition: all 0.3s ease;
+        }
+
+        .fullscreen-exit-button:hover {
+            background: rgba(100, 149, 237, 0.2);
+            border-color: #6495ed;
+        }
+
+        body.fullscreen-mode .fullscreen-exit-button {
+            display: block;
+        }
+
+        .error-message {
+            color: #fbbf24;
+            text-align: center;
+            padding: 20px;
+            background: rgba(251, 191, 36, 0.1);
+            border: 1px solid rgba(251, 191, 36, 0.3);
+            border-radius: 8px;
+            margin: 20px 0;
+            font-family: 'Roboto Mono', monospace;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        /* Mobile responsiveness */
+        @media (max-width: 768px) {
+            .header h1 {
+                font-size: 1.4rem;
+            }
+            
+            .header, .footer {
+                padding: 6px 15px;
+            }
+            
+            .game-area {
+                padding: 5px;
+            }
+            
+            .progress-container {
+                width: 250px;
+            }
+            
+            .fullscreen-button {
+                padding: 6px 12px;
+                font-size: 11px;
+            }
+        }
+
+        /* Hide elements during loading */
+        .footer {
+            opacity: 0;
+            transition: opacity 0.5s ease;
+        }
+
+        .footer.loaded {
+            opacity: 1;
+        }
+    </style>
+</head>
+<body>
+    <!-- Minimal header -->
+    <div class="header">
+        <h1>STRUKTUR</h1>
+    </div>
+    
+    <!-- Main game area -->
+    <div class="game-area">
+        <div class="loading-container" id="loading">
+            <div class="loading-text" id="status">ARCHITECTING...</div>
+            <div class="progress-container">
+                <div class="progress-fill" id="progress"></div>
+            </div>
+        </div>
+        <canvas class="emscripten" id="canvas" oncontextmenu="event.preventDefault()" tabindex=-1></canvas>
+    </div>
+    
+    <!-- Minimal footer with fullscreen button -->
+    <div class="footer" id="footer">
+        <button class="fullscreen-button" onclick="toggleFullscreen()" type="button" id="fullscreen-btn">
+            ⛶ FULLSCREEN
+        </button>
+    </div>
+    
+    <!-- Fullscreen exit button (hidden by default) -->
+    <button class="fullscreen-exit-button" onclick="exitFullscreen()" type="button" id="exit-fullscreen-btn">
+        ✕ EXIT FULLSCREEN
+    </button>
+
+    <script type='text/javascript'>
+        var statusElement = document.getElementById('status');
+        var progressElement = document.getElementById('progress');
+        var loadingElement = document.getElementById('loading');
+        var canvasElement = document.getElementById('canvas');
+        var footerElement = document.getElementById('footer');
+        var fullscreenBtn = document.getElementById('fullscreen-btn');
+        var exitFullscreenBtn = document.getElementById('exit-fullscreen-btn');
+        
+        var isInFullscreen = false;
+
+        var Module = {
+            preRun: [],
+            postRun: [],
+            print: function(text) {
+                console.log(text);
+            },
+            printErr: function(text) {
+                console.error(text);
+            },
+            canvas: canvasElement,
+            setStatus: function(text) {
+                if (!Module.setStatus.last) Module.setStatus.last = { time: Date.now(), text: '' };
+                if (text === Module.setStatus.last.text) return;
+                
+                var m = text.match(/([^(]+)\((\d+(\.\d+)?)\/(\d+)\)/);
+                var now = Date.now();
+                
+                if (m && now - Module.setStatus.last.time < 30) return;
+                Module.setStatus.last.time = now;
+                Module.setStatus.last.text = text;
+                
+                // Architectural construction-style status messages
+                var architecturalText = text.toUpperCase();
+                if (text.includes('Downloading')) architecturalText = 'DRAFTING BLUEPRINTS...';
+                if (text.includes('Preparing')) architecturalText = 'LAYING FOUNDATION...';
+                if (text.includes('Loading')) architecturalText = 'RAISING FRAMEWORK...';
+                
+                statusElement.innerHTML = architecturalText;
+                
+                if (m) {
+                    var progress = parseInt(m[2]) / parseInt(m[4]) * 100;
+                    progressElement.style.width = progress + '%';
+                }
+                
+                if (text === '') {
+                    loadingElement.style.display = 'none';
+                    footerElement.classList.add('loaded');
+                    
+                    // Focus canvas for input
+                    setTimeout(() => {
+                        canvasElement.focus();
+                    }, 500);
+                }
+            },
+            totalDependencies: 0,
+            monitorRunDependencies: function(left) {
+                this.totalDependencies = Math.max(this.totalDependencies, left);
+                Module.setStatus(left ? 'Preparing... (' + (this.totalDependencies-left) + '/' + this.totalDependencies + ')' : '');
+            }
+        };
+        
+        Module.setStatus('Loading...');
+        
+        window.onerror = function() {
+            Module.setStatus('');
+            loadingElement.innerHTML = '<div class="error-message">STRUCTURAL INTEGRITY COMPROMISED - RECONSTRUCTION REQUIRED</div>';
+        };
+
+        function toggleFullscreen() {
+            console.log('Toggle fullscreen called');
+            
+            if (isInFullscreen) {
+                exitFullscreen();
+            } else {
+                requestFullscreen();
+            }
+        }
+
+        function requestFullscreen() {
+            console.log('HTML requestFullscreen called');
+            
+            // Check if the C++ function is available
+            if (typeof Module !== 'undefined' && Module._RequestFullscreenFromC) {
+                console.log('Calling C++ RequestFullscreenFromC');
+                Module._RequestFullscreenFromC();
+            } else if (typeof RequestFullscreenFromC !== 'undefined') {
+                console.log('Calling direct RequestFullscreenFromC');
+                RequestFullscreenFromC();
+            } else {
+                console.log('C++ fullscreen function not available, trying fallback');
+                createPseudoFullscreen();
+            }
+        }
+
+        function exitFullscreen() {
+            console.log('HTML exitFullscreen called');
+            
+            if (typeof Module !== 'undefined' && Module._ExitFullscreenFromC) {
+                console.log('Calling C++ ExitFullscreenFromC');
+                Module._ExitFullscreenFromC();
+            } else if (typeof ExitFullscreenFromC !== 'undefined') {
+                console.log('Calling direct ExitFullscreenFromC');
+                ExitFullscreenFromC();
+            } else {
+                console.log('Exiting pseudo-fullscreen');
+                exitPseudoFullscreen();
+            }
+        }
+
+        function createPseudoFullscreen() {
+            console.log('Creating pseudo-fullscreen');
+            document.body.classList.add('fullscreen-mode');
+            isInFullscreen = true;
+            updateFullscreenButton();
+            canvasElement.focus();
+        }
+
+        function exitPseudoFullscreen() {
+            console.log('Exiting pseudo-fullscreen');
+            document.body.classList.remove('fullscreen-mode');
+            isInFullscreen = false;
+            updateFullscreenButton();
+        }
+
+        function updateFullscreenButton() {
+            if (isInFullscreen) {
+                fullscreenBtn.innerHTML = '⛶ EXIT FULLSCREEN';
+            } else {
+                fullscreenBtn.innerHTML = '⛶ FULLSCREEN';
+            }
+        }
+
+        // Handle fullscreen change events (from C++ or browser)
+        function handleFullscreenChange() {
+            const isFullscreen = document.fullscreenElement || 
+                                document.webkitFullscreenElement || 
+                                document.mozFullScreenElement || 
+                                document.msFullscreenElement;
+            
+            console.log('Fullscreen change detected. Is fullscreen:', !!isFullscreen);
+            
+            if (isFullscreen) {
+                document.body.classList.add('fullscreen-mode');
+                isInFullscreen = true;
+            } else {
+                document.body.classList.remove('fullscreen-mode');
+                isInFullscreen = false;
+            }
+            
+            updateFullscreenButton();
+        }
+
+        // Listen for fullscreen change events
+        document.addEventListener('fullscreenchange', handleFullscreenChange);
+        document.addEventListener('webkitfullscreenchange', handleFullscreenChange);
+        document.addEventListener('mozfullscreenchange', handleFullscreenChange);
+        document.addEventListener('MSFullscreenChange', handleFullscreenChange);
+
+        // ESC key handling
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape' && isInFullscreen) {
+                exitFullscreen();
+            }
+        });
+
+        // Auto-focus canvas for keyboard input
+        canvasElement.addEventListener('click', function() {
+            canvasElement.focus();
+        });
+
+        // Initialize after game loads
+        Module.postRun.push(function() {
+            console.log('Game loaded, checking for C++ fullscreen functions...');
+            console.log('RequestFullscreenFromC available:', typeof RequestFullscreenFromC);
+            console.log('Module._RequestFullscreenFromC available:', typeof Module._RequestFullscreenFromC);
+        });
+    </script>
+    {{{ SCRIPT }}}
+</body>
+</html>
