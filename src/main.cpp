@@ -184,9 +184,6 @@ void UpdateDrawFrame() {
     // Update physics
     gameState.physicsWorld->Step(GetFrameTime(), 6, 2);
 
-    // Start ImGui frame using rlImGui
-    rlImGuiBegin();
-
     // Draw everything
     BeginDrawing();
     ClearBackground(DARKBLUE);
@@ -221,7 +218,8 @@ void UpdateDrawFrame() {
         gameState.showLibraryInfo = !gameState.showLibraryInfo;
     }
     
-    EndDrawing();
+    // Start ImGui frame using rlImGui (INSIDE BeginDrawing/EndDrawing)
+    rlImGuiBegin();
 
     // ImGui rendering with rlImGui
     if (gameState.showLibraryInfo) {
@@ -263,8 +261,10 @@ void UpdateDrawFrame() {
         ImGui::ShowDemoWindow(&gameState.showDemoWindow);
     }
 
-    // End ImGui frame and render using rlImGui
+    // End ImGui frame and render using rlImGui (BEFORE EndDrawing)
     rlImGuiEnd();
+    
+    EndDrawing();
 }
 
 int main() {
