@@ -207,6 +207,16 @@ if (NOT raylib_FOUND)
             target_compile_definitions(lua PRIVATE LUA_USE_POSIX)
             target_link_libraries(lua PRIVATE m dl)
         endif()
+    endif()    
+    
+    # Handle Sol2 (header-only, needs Lua)
+    FetchContent_GetProperties(sol2)
+    if(NOT sol2_POPULATED)
+        FetchContent_Populate(sol2)
+        add_library(sol2 INTERFACE)
+        target_include_directories(sol2 INTERFACE ${sol2_SOURCE_DIR}/include)
+        target_link_libraries(sol2 INTERFACE lua)
+        target_compile_features(sol2 INTERFACE cxx_std_17)
     endif()
     
     # Handle RayGUI (header-only)
@@ -253,6 +263,7 @@ target_link_libraries(${PROJECT_NAME}
     EnTT::EnTT
     glm::glm
     lua
+    sol2
     nlohmann_json::nlohmann_json
     pugixml
     raygui

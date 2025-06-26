@@ -13,6 +13,8 @@ extern "C" {
 #include "lualib.h"
 }
 
+#include "sol/sol.hpp"             // Sol2 Lua C++ bindings
+
 // RayGUI is included differently
 #define RAYGUI_IMPLEMENTATION
 #include "raygui.h"                // Immediate mode GUI for RayLib
@@ -94,27 +96,17 @@ void InitializeLibraries() {
     };
     std::cout << "JSON Config: " << config.dump(2) << std::endl;
     
-    // Test Lua with C API (simple and reliable)
-    lua_State* L = luaL_newstate();
-    luaL_openlibs(L);
+    // Test Lua with Sol2 (C++ style - much easier!)
+    sol::state lua;
+    lua.open_libraries(sol::lib::base, sol::lib::math);
     
-    // Execute a simple Lua script
-    const char* luaScript = "function greet(name) return 'Hello from Lua, ' .. name .. '!' end";
-    if (luaL_dostring(L, luaScript) == LUA_OK) {
-        // Call the Lua function
-        lua_getglobal(L, "greet");
-        lua_pushstring(L, "RayLib");
-        if (lua_pcall(L, 1, 1, 0) == LUA_OK) {
-            const char* result = lua_tostring(L, -1);
-            std::cout << "Lua says: " << result << std::endl;
-            lua_pop(L, 1);
-        }
-    } else {
-        std::cout << "Lua error: " << lua_tostring(L, -1) << std::endl;
-        lua_pop(L, 1);
-    }
+    // Define a Lua script
+    lua.script("function greet(name) return 'Hello from Sol2, ' .. name .. '!' end");
     
-    lua_close(L);
+    // Call the Lua function (C++ style)
+    sol::function greet = lua["greet"];
+    std::string greeting = greet("RayLib");
+    std::cout << "Sol2 says: " << greeting << std::endl;
     
     // Test GLM
     glm::vec3 position(1.0f, 2.0f, 3.0f);
@@ -240,7 +232,8 @@ void UpdateDrawFrame() {
         ImGui::Text("• RayLib 5.5 - Graphics & Audio");
         ImGui::Text("• EnTT 3.12.2 - Entity Component System");
         ImGui::Text("• GLM 0.9.9.8 - OpenGL Mathematics");
-        ImGui::Text("• Lua 5.4.6 - Scripting Language (C API)");
+        ImGui::Text("• Lua 5.4.6 - Scripting Language");
+        ImGui::Text("• Sol2 3.3.0 - Lua C++ Bindings");
         ImGui::Text("• nlohmann/json 3.11.3 - JSON Parser");
         ImGui::Text("• PugiXML 1.14 - XML Parser");
         ImGui::Text("• RayGUI 4.0 - Immediate Mode GUI");
