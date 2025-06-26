@@ -153,12 +153,12 @@ if (NOT raylib_FOUND)
         target_link_libraries(rlimgui PUBLIC raylib imgui)
     endif()
     
-    # Handle Lua separately (needs custom build)
+    # Handle Lua separately (clean build using GLOB with exclusions)
     FetchContent_GetProperties(lua)
     if(NOT lua_POPULATED)
         FetchContent_Populate(lua)
         
-        # Build Lua as a static library (compatible with Sol2)
+        # Explicitly list only the library source files (no main() functions)
         set(LUA_LIB_SOURCES
             ${lua_SOURCE_DIR}/lapi.c
             ${lua_SOURCE_DIR}/lcode.c
@@ -197,9 +197,6 @@ if (NOT raylib_FOUND)
         add_library(lua STATIC ${LUA_LIB_SOURCES})
         target_include_directories(lua PUBLIC ${lua_SOURCE_DIR})
         
-        # Lua compile definitions
-        target_compile_definitions(lua PRIVATE LUA_BUILD_AS_DLL=0)
-        
         # Platform-specific settings
         if(WIN32)
             target_compile_definitions(lua PRIVATE 
@@ -210,22 +207,6 @@ if (NOT raylib_FOUND)
             target_compile_definitions(lua PRIVATE LUA_USE_POSIX)
             target_link_libraries(lua PRIVATE m dl)
         endif()
-        
-        # Ensure C linkage for C++ (needed for Sol2)
-        set_target_properties(lua PROPERTIES
-            C_STANDARD 99
-            C_STANDARD_REQUIRED ON
-        )
-    endif()
-
-    # Handle Sol2 (header-only, needs Lua)
-    FetchContent_GetProperties(sol2)
-    if(NOT sol2_POPULATED)
-        FetchContent_Populate(sol2)
-        add_library(sol2 INTERFACE)
-        target_include_directories(sol2 INTERFACE ${sol2_SOURCE_DIR}/include)
-        target_link_libraries(sol2 INTERFACE lua)
-        target_compile_features(sol2 INTERFACE cxx_std_17)
     endif()
     
     # Handle RayGUI (header-only)
@@ -276,7 +257,6 @@ target_link_libraries(${PROJECT_NAME}
     pugixml
     raygui
     box2d
-    sol2
     imgui
     rlimgui
 )
