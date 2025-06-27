@@ -8,12 +8,8 @@
 #include "pugixml.hpp"             // XML handling
 
 extern "C" {
-#include "lua.h"                   // Lua C API
-#include "lauxlib.h"
-#include "lualib.h"
+#include "wren.h"
 }
-
-#include "sol/sol.hpp"             // Sol2 Lua C++ bindings
 
 // RayGUI is included differently
 #define RAYGUI_IMPLEMENTATION
@@ -96,17 +92,37 @@ void InitializeLibraries() {
     };
     std::cout << "JSON Config: " << config.dump(2) << std::endl;
     
-    // Test Lua with Sol2 (C++ style - much easier!)
-    sol::state lua;
-    lua.open_libraries(sol::lib::base, sol::lib::math);
+    // Test Wren scripting (cross-platform compatible!)
+    WrenConfiguration wrenConfig;
+    wrenInitConfiguration(&wrenConfig);
     
-    // Define a Lua script
-    lua.script("function greet(name) return 'Hello from Sol2, ' .. name .. '!' end");
+    // Set up Wren write function for output
+    wrenConfig.writeFn = [](WrenVM* vm, const char* text) {
+        std::cout << "Wren: " << text;
+    };
     
-    // Call the Lua function (C++ style)
-    sol::function greet = lua["greet"];
-    std::string greeting = greet("RayLib");
-    std::cout << "Sol2 says: " << greeting << std::endl;
+    WrenVM* wrenVM = wrenNewVM(&wrenConfig);
+    
+    // Execute Wren script
+    const char* wrenScript = R"(
+        class Game {
+            static greet(name) {
+                System.print("Hello from Wren, %(name)!")
+                return "Wren says hello to %(name)\"
+            }
+        }
+        
+        Game.greet(\"RayLib\")
+    )";
+    
+    WrenInterpretResult result = wrenInterpret(wrenVM, "main", wrenScript);
+    if (result == WREN_RESULT_SUCCESS) {
+        std::cout << "Wren script executed successfully!" << std::endl;
+    } else {
+        std::cout << "Wren script error!" << std::endl;
+    }
+    
+    wrenFreeVM(wrenVM);
     
     // Test GLM
     glm::vec3 position(1.0f, 2.0f, 3.0f);
@@ -275,7 +291,7 @@ int main() {
     InitWindow(screenWidth, screenHeight, "RayLib Multi-Library Template");
     
     // Load player texture
-    gameState.playerTexture = LoadTexture("assets/player.png");
+    gameState.playerTexture = LoadTexture("assets/Circle.png");
     
     // Check if texture loaded successfully
     if (gameState.playerTexture.id == 0) {

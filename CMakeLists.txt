@@ -16,6 +16,30 @@ option(USE_ASYNCIFY "Enable ASYNCIFY for traditional game loops" OFF)
 # Platform detection
 if(EMSCRIPTEN)
     set(PLATFORM_WEB TRUE)
+    set(CMAKE_EXECUTABLE_SUFFIX ".html")
+
+    # Fix missing Emscripten CMake variables
+    if(NOT CMAKE_C_COMPILE_OBJECT)
+        set(CMAKE_C_COMPILE_OBJECT "<CMAKE_C_COMPILER> <DEFINES> <INCLUDES> <FLAGS> -o <OBJECT> -c <SOURCE>")
+    endif()
+    if(NOT CMAKE_C_ARCHIVE_CREATE)
+        set(CMAKE_C_ARCHIVE_CREATE "<CMAKE_AR> qc <TARGET> <LINK_FLAGS> <OBJECTS>")
+    endif()
+    if(NOT CMAKE_C_ARCHIVE_FINISH)
+        set(CMAKE_C_ARCHIVE_FINISH "<CMAKE_RANLIB> <TARGET>")
+    endif()
+    
+    # Also set CXX variants for completeness
+    if(NOT CMAKE_CXX_COMPILE_OBJECT)
+        set(CMAKE_CXX_COMPILE_OBJECT "<CMAKE_CXX_COMPILER> <DEFINES> <INCLUDES> <FLAGS> -o <OBJECT> -c <SOURCE>")
+    endif()
+    if(NOT CMAKE_CXX_ARCHIVE_CREATE)
+        set(CMAKE_CXX_ARCHIVE_CREATE "<CMAKE_AR> qc <TARGET> <LINK_FLAGS> <OBJECTS>")
+    endif()
+    if(NOT CMAKE_CXX_ARCHIVE_FINISH)
+        set(CMAKE_CXX_ARCHIVE_FINISH "<CMAKE_RANLIB> <TARGET>")
+    endif()
+
     message(STATUS "Building for Web (Emscripten)")
 else()
     set(PLATFORM_DESKTOP TRUE)
@@ -63,13 +87,6 @@ if (NOT raylib_FOUND)
         GIT_TAG 0.9.9.8
     )
     
-    # Lua - Scripting language
-    FetchContent_Declare(
-        lua
-        GIT_REPOSITORY https://github.com/lua/lua.git
-        GIT_TAG v5.4.6
-    )
-    
     # nlohmann/json - JSON library
     FetchContent_Declare(
         nlohmann_json
@@ -98,11 +115,11 @@ if (NOT raylib_FOUND)
         GIT_TAG v2.4.1
     )
     
-    # Sol2 - Lua C++ binding (depends on Lua)
+    # Wren - Lightweight scripting language (cross-platform compatible)
     FetchContent_Declare(
-        sol2
-        GIT_REPOSITORY https://github.com/ThePhD/sol2.git
-        GIT_TAG v3.3.0
+        wren
+        GIT_REPOSITORY https://github.com/wren-lang/wren.git
+        GIT_TAG 0.4.0
     )
     
     # Dear ImGui - Immediate mode GUI (RayLib compatible version)
@@ -153,72 +170,30 @@ if (NOT raylib_FOUND)
         target_link_libraries(rlimgui PUBLIC raylib imgui)
     endif()
     
-    # Handle Lua separately (clean build using GLOB with exclusions)
-    FetchContent_GetProperties(lua)
-    if(NOT lua_POPULATED)
-        FetchContent_Populate(lua)
+    # Handle Wren (cross-platform scripting)
+    FetchContent_GetProperties(wren)
+    if(NOT wren_POPULATED)
+        FetchContent_Populate(wren)
         
-        # Explicitly list only the library source files (no main() functions)
-        set(LUA_LIB_SOURCES
-            ${lua_SOURCE_DIR}/lapi.c
-            ${lua_SOURCE_DIR}/lcode.c
-            ${lua_SOURCE_DIR}/lctype.c
-            ${lua_SOURCE_DIR}/ldebug.c
-            ${lua_SOURCE_DIR}/ldo.c
-            ${lua_SOURCE_DIR}/ldump.c
-            ${lua_SOURCE_DIR}/lfunc.c
-            ${lua_SOURCE_DIR}/lgc.c
-            ${lua_SOURCE_DIR}/llex.c
-            ${lua_SOURCE_DIR}/lmem.c
-            ${lua_SOURCE_DIR}/lobject.c
-            ${lua_SOURCE_DIR}/lopcodes.c
-            ${lua_SOURCE_DIR}/lparser.c
-            ${lua_SOURCE_DIR}/lstate.c
-            ${lua_SOURCE_DIR}/lstring.c
-            ${lua_SOURCE_DIR}/ltable.c
-            ${lua_SOURCE_DIR}/ltm.c
-            ${lua_SOURCE_DIR}/lundump.c
-            ${lua_SOURCE_DIR}/lvm.c
-            ${lua_SOURCE_DIR}/lzio.c
-            ${lua_SOURCE_DIR}/lauxlib.c
-            ${lua_SOURCE_DIR}/lbaselib.c
-            ${lua_SOURCE_DIR}/lcorolib.c
-            ${lua_SOURCE_DIR}/ldblib.c
-            ${lua_SOURCE_DIR}/liolib.c
-            ${lua_SOURCE_DIR}/lmathlib.c
-            ${lua_SOURCE_DIR}/loadlib.c
-            ${lua_SOURCE_DIR}/loslib.c
-            ${lua_SOURCE_DIR}/lstrlib.c
-            ${lua_SOURCE_DIR}/ltablib.c
-            ${lua_SOURCE_DIR}/lutf8lib.c
-            ${lua_SOURCE_DIR}/linit.c
+        # Build Wren VM from source
+        file(GLOB WREN_SOURCES 
+            ${wren_SOURCE_DIR}/src/vm/*.c
+            ${wren_SOURCE_DIR}/src/optional/*.c
         )
         
-        add_library(lua STATIC ${LUA_LIB_SOURCES})
-        target_include_directories(lua PUBLIC ${lua_SOURCE_DIR})
+        add_library(wren STATIC ${WREN_SOURCES})
+        target_include_directories(wren PUBLIC 
+            ${wren_SOURCE_DIR}/src/include
+            ${wren_SOURCE_DIR}/src/vm
+            ${wren_SOURCE_DIR}/src/optional
+        )
         
-        # Platform-specific settings
+        # Platform-specific settings for Wren
         if(WIN32)
-            target_compile_definitions(lua PRIVATE 
-                LUA_USE_WINDOWS
-                _CRT_SECURE_NO_WARNINGS
-            )
-        elseif(UNIX AND NOT EMSCRIPTEN)
-            target_compile_definitions(lua PRIVATE LUA_USE_POSIX)
-            target_link_libraries(lua PRIVATE m dl)
+            target_compile_definitions(wren PRIVATE _CRT_SECURE_NO_WARNINGS)
         endif()
-    endif()    
-    
-    # Handle Sol2 (header-only, needs Lua)
-    FetchContent_GetProperties(sol2)
-    if(NOT sol2_POPULATED)
-        FetchContent_Populate(sol2)
-        add_library(sol2 INTERFACE)
-        target_include_directories(sol2 INTERFACE ${sol2_SOURCE_DIR}/include)
-        target_link_libraries(sol2 INTERFACE lua)
-        target_compile_features(sol2 INTERFACE cxx_std_17)
     endif()
-    
+
     # Handle RayGUI (header-only)
     FetchContent_GetProperties(raygui)
     if(NOT raygui_POPULATED)
@@ -262,8 +237,7 @@ target_link_libraries(${PROJECT_NAME}
     raylib
     EnTT::EnTT
     glm::glm
-    lua
-    sol2
+    wren
     nlohmann_json::nlohmann_json
     pugixml
     raygui
