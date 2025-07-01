@@ -2,8 +2,9 @@ cmake_minimum_required(VERSION 3.15)
 set(PROJECT_NAME "Struktur")
 project(${PROJECT_NAME} CXX)
 
-set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_EXTENSIONS OFF)  # Disable compiler-specific extensions
 
 ##########################################################################################
 # Configurable options
@@ -224,13 +225,20 @@ if (NOT raylib_FOUND)
     
 endif()
 
+
 # Source files
 set(SOURCES
-    src/main.cpp
+src/Main.cpp
+src/Engine/Core/Game.h src/Engine/Core/Game.cpp
+src/Engine/Core/GameContext.h src/Engine/Core/GameContext.cpp
+src/Engine/Core/Gamedata.h src/Engine/Core/GameData.cpp
+src/Engine/Core/Input.h src/Engine/Core/Input.cpp
 )
 
 # Create executable
 add_executable(${PROJECT_NAME} ${SOURCES})
+
+target_include_directories(${PROJECT_NAME} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src)
 
 # Link Libraries
 target_link_libraries(${PROJECT_NAME} 

@@ -1,5 +1,6 @@
-build-windows
 build-web
+build-windows
+build-windows-debug
 imgui
 .vscode
 imgui.ini
