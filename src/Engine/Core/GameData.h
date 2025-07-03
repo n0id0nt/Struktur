@@ -4,12 +4,24 @@ namespace Struktur
 {
 	namespace Core
 	{
+        enum class GameState{
+            SPLASH_SCREEN,
+            LOADING,
+            GAME,
+            QUIT,
+        
+            COUNT
+        };
+
 		struct GameData
         {
-            bool shouldQuit;
-            float pausedTime = 0.0f;
-            //GameState gameState = GameState::MAIN_MENU;
-            //GameState previousGameState = GameState::PAUSE;
+            double pausedTime = 0.0f;
+            double dt = 0.0f;
+            double gameTime = 0.0f;
+            double startTime = 0.0f;
+            int screenWidth = 0;
+            int screenHeight = 0;
+            GameState gameState = GameState::SPLASH_SCREEN;
         };
 	};
 };

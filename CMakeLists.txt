@@ -46,6 +46,10 @@ else()
     set(PLATFORM_DESKTOP TRUE)
     message(STATUS "Building for Desktop")
 endif()
+
+if(CMAKE_BUILD_TYPE STREQUAL "Debug")
+    set(DEBUG TRUE)
+endif()
 ##########################################################################################
 # MSVC runtime linking
 ##########################################################################################
@@ -85,7 +89,7 @@ if (NOT raylib_FOUND)
     FetchContent_Declare(
         glm
         GIT_REPOSITORY https://github.com/g-truc/glm.git
-        GIT_TAG 0.9.9.8
+        GIT_TAG 1.0.1
     )
     
     # nlohmann/json - JSON library
@@ -228,11 +232,16 @@ endif()
 
 # Source files
 set(SOURCES
-src/Main.cpp
-src/Engine/Core/Game.h src/Engine/Core/Game.cpp
-src/Engine/Core/GameContext.h src/Engine/Core/GameContext.cpp
-src/Engine/Core/Gamedata.h src/Engine/Core/GameData.cpp
-src/Engine/Core/Input.h src/Engine/Core/Input.cpp
+    src/Main.cpp
+
+    src/Engine/Core/Game.h src/Engine/Core/Game.cpp
+    src/Engine/Core/GameContext.h src/Engine/Core/GameContext.cpp
+    src/Engine/Core/Gamedata.h src/Engine/Core/GameData.cpp
+    src/Engine/Core/Input.h src/Engine/Core/Input.cpp
+    src/Engine/Core/ResourcePool.h src/Engine/Core/ResourcePool.cpp
+    src/Engine/Core/SystemManager.h src/Engine/Core/SystemManager.cpp
+
+    src/Debug/Assertions.h
 )
 
 # Create executable

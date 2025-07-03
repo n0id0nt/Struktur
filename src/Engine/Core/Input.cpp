@@ -1,6 +1,7 @@
 #include "Input.h"
 #include "pugixml.hpp"
 #include <format>
+#include "Debug/Assertions.h"
 
 std::unordered_map<std::string, KeyboardKey> Struktur::Core::Input::s_keycodeMap = {
 	{"null",				KEY_NULL},
@@ -155,10 +156,11 @@ Struktur::Core::Input::Input(int gamer) : m_buttonBindings(), m_variableBindings
 	if (IsGamepadAvailable(m_gamepadIndex))
 	{
 		m_gamepadId = GetGamepadName(m_gamepadIndex);
+		DEBUG_INFO(std::format("gamepad {} was successfuly connected.", m_gamepadIndex).c_str());
 	}
 	else
 	{
-		TraceLog(LOG_WARNING, std::format("gamepad {} is not connected.", m_gamepadIndex).c_str());
+		DEBUG_WARNING(std::format("gamepad {} is not connected.", m_gamepadIndex).c_str());
 	}
 }
 
@@ -180,7 +182,7 @@ void Struktur::Core::Input::LoadInputBindings(const std::string& file)
 {
 	pugi::xml_document doc;
 	pugi::xml_parse_result result = doc.load_file(file.c_str());
-	assert(result, file.c_str());
+	ASSERT_MSG(result, file.c_str());
 
 	auto controllerAxis = doc.child("controllerAxis");
 
@@ -206,8 +208,7 @@ void Struktur::Core::Input::LoadInputBindings(const std::string& file)
 				}
 				else
 				{
-					TraceLog(LOG_ERROR, std::format("{} is not a valid binding type.", bindingType).c_str());
-					assert(false);
+					DEBUG_ERROR(std::format("{} is not a valid binding type.", bindingType).c_str());
 				}
 			}
 		}
@@ -227,8 +228,7 @@ void Struktur::Core::Input::LoadInputBindings(const std::string& file)
 				}
 				else
 				{
-					TraceLog(LOG_ERROR, std::format("{} is not a valid binding type.", bindingType).c_str());
-					assert(false);
+					DEBUG_ERROR(std::format("{} is not a valid binding type.", bindingType).c_str());
 				}
 			}
 		}
@@ -249,7 +249,7 @@ void Struktur::Core::Input::LoadInputBindings(const std::string& file)
 					else if (component == "negetive")
 						axis = AxisComponent::Negetive;
 					else
-						assert(false);
+						ASSERT(false);
 					CreateAxisBinding(name, GetKeycodeFromString(value), axis);
 				}
 				else if (bindingType == "controllerButton")
@@ -260,7 +260,7 @@ void Struktur::Core::Input::LoadInputBindings(const std::string& file)
 					else if (component == "negetive")
 						axis = AxisComponent::Negetive;
 					else
-						assert(false);
+						ASSERT(false);
 					CreateAxisBinding(name, GetControllerButtonFromString(value), axis);
 				}
 				else if (bindingType == "controllerAxis")
@@ -269,8 +269,7 @@ void Struktur::Core::Input::LoadInputBindings(const std::string& file)
 				}
 				else
 				{
-					TraceLog(LOG_ERROR, std::format("{} is not a valid binding type.", bindingType).c_str());
-					assert(false);
+					DEBUG_ERROR(std::format("{} is not a valid binding type.", bindingType).c_str());
 				}
 			}
 		}
@@ -292,7 +291,7 @@ void Struktur::Core::Input::LoadInputBindings(const std::string& file)
 				else if (component == "right")
 					axis = Axis2Component::Right;
 				else
-					assert(false);
+					ASSERT(false);
 
 				if (bindingType == "keycode")
 				{
@@ -304,15 +303,13 @@ void Struktur::Core::Input::LoadInputBindings(const std::string& file)
 				}
 				else
 				{
-					TraceLog(LOG_ERROR, std::format("{} is not a valid binding type.", bindingType).c_str());
-					assert(false);
+					DEBUG_ERROR(std::format("{} is not a valid binding type.", bindingType).c_str());
 				}
 			}
 		}
 		else
 		{
-			TraceLog(LOG_ERROR, std::format("{} is not a valid input type.", inputType).c_str());
-			assert(false);
+			DEBUG_ERROR(std::format("{} is not a valid input type.", inputType).c_str());
 		}
 	}
 }
@@ -449,7 +446,7 @@ void Struktur::Core::Input::CreateAxisBinding(const std::string& input, Keyboard
 			m_axisBindings[input].negetive.keycodes.insert(code);
 		break;
 	default:
-		assert(false);
+		ASSERT(false);
 	}
 }
 
@@ -472,7 +469,7 @@ void Struktur::Core::Input::CreateAxisBinding(const std::string& input, GamepadB
 			m_axisBindings[input].negetive.controllerButtons.insert(code);
 		break;
 	default:
-		assert(false);
+		ASSERT(false);
 	}
 }
 
@@ -516,7 +513,7 @@ void Struktur::Core::Input::CreateAxis2Binding(const std::string& input, Keyboar
 			m_axis2Bindings[input].xAxis.positive.keycodes.insert(code);
 		break;
 	default:
-		assert(false);
+		ASSERT(false);
 	}
 }
 
@@ -551,7 +548,7 @@ void Struktur::Core::Input::CreateAxis2Binding(const std::string& input, Gamepad
 			m_axis2Bindings[input].xAxis.positive.controllerButtons.insert(code);
 		break;
 	default:
-		assert(false);
+		ASSERT(false);
 	}
 }
 
@@ -574,14 +571,14 @@ void Struktur::Core::Input::CreateAxis2Binding(const std::string& input, Gamepad
 			m_axis2Bindings[input].yAxis.controllerAxis.insert(code);
 		break;
 	default:
-		assert(false);
+		ASSERT(false);
 	}
 }
 
 bool Struktur::Core::Input::IsInputDown(const std::string& input)
 {
 	auto keys = m_buttonBindings.find(input);
-	assert(keys != m_buttonBindings.end());
+	ASSERT(keys != m_buttonBindings.end());
 	for (auto it = keys->second.keycodes.begin(); it != keys->second.keycodes.end(); ++it)
 	{
 		if (IsKeyDown(*it))
@@ -598,7 +595,7 @@ bool Struktur::Core::Input::IsInputDown(const std::string& input)
 bool Struktur::Core::Input::IsInputJustPressed(const std::string& input)
 {
 	auto keys = m_buttonBindings.find(input);
-	assert(keys != m_buttonBindings.end());
+	ASSERT(keys != m_buttonBindings.end());
 	for (auto it = keys->second.keycodes.begin(); it != keys->second.keycodes.end(); ++it)
 	{
 		if (IsKeyJustPressed(*it))
@@ -615,7 +612,7 @@ bool Struktur::Core::Input::IsInputJustPressed(const std::string& input)
 bool Struktur::Core::Input::IsInputJustReleased(const std::string& input)
 {
 	auto keys = m_buttonBindings.find(input);
-	assert(keys != m_buttonBindings.end());
+	ASSERT(keys != m_buttonBindings.end());
 	for (auto it = keys->second.keycodes.begin(); it != keys->second.keycodes.end(); ++it)
 	{
 		if (IsKeyJustReleased(*it))
@@ -632,7 +629,7 @@ bool Struktur::Core::Input::IsInputJustReleased(const std::string& input)
 float Struktur::Core::Input::GetInputVariable(const std::string& input)
 {
 	auto keys = m_variableBindings.find(input);
-	assert(keys != m_variableBindings.end());
+	ASSERT(keys != m_variableBindings.end());
 	for (auto it = keys->second.keycodes.begin(); it != keys->second.keycodes.end(); ++it)
 	{
 		if (IsKeyDown(*it))
@@ -649,7 +646,7 @@ float Struktur::Core::Input::GetInputVariable(const std::string& input)
 float Struktur::Core::Input::GetInputAxis(const std::string& input)
 {
 	auto keys = m_axisBindings.find(input);
-	assert(keys != m_axisBindings.end());
+	ASSERT(keys != m_axisBindings.end());
 
 	float positive = 0.f;
 	for (auto it = keys->second.positive.keycodes.begin(); it != keys->second.positive.keycodes.end(); ++it)
@@ -691,7 +688,7 @@ float Struktur::Core::Input::GetInputAxis(const std::string& input)
 glm::vec2 Struktur::Core::Input::GetInputAxis2(const std::string& input)
 {
 	auto keys = m_axis2Bindings.find(input);
-	assert(keys != m_axis2Bindings.end());
+	ASSERT(keys != m_axis2Bindings.end());
 
 	float up = 0.f;
 	for (auto it = keys->second.yAxis.positive.keycodes.begin(); it != keys->second.yAxis.positive.keycodes.end(); ++it)
@@ -747,20 +744,20 @@ glm::vec2 Struktur::Core::Input::GetInputAxis2(const std::string& input)
 KeyboardKey Struktur::Core::Input::GetKeycodeFromString(const std::string& input)
 {
 	auto it = s_keycodeMap.find(input);
-	assert(it != s_keycodeMap.end());
+	ASSERT(it != s_keycodeMap.end());
 	return it->second;
 }
 
 GamepadButton Struktur::Core::Input::GetControllerButtonFromString(const std::string& input)
 {
 	auto it = s_controllerButtonMap.find(input);
-	assert(it != s_controllerButtonMap.end());
+	ASSERT(it != s_controllerButtonMap.end());
 	return it->second;
 }
 
 GamepadAxis Struktur::Core::Input::GetControllerAxisFromString(const std::string& input)
 {
 	auto it = s_controllerAxisMap.find(input);
-	assert(it != s_controllerAxisMap.end());
+	ASSERT(it != s_controllerAxisMap.end());
 	return it->second;
 }

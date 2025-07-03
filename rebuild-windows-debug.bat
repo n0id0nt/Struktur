@@ -1,8 +1,8 @@
 @echo off
 echo Rebuilding for Windows Desktop...
 
-if not exist "build-windows" mkdir build-windows
-cd build-windows
+if not exist "build-windows-debug" mkdir build-windows-debug
+cd build-windows-debug
 
 cmake --build . --config Debug
 if %errorlevel% neq 0 (
