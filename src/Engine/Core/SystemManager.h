@@ -26,7 +26,6 @@ namespace Struktur
             ~SystemManager() {}
 
             void Update(GameContext& context);
-            void Render(GameContext& context);
 
             template<typename T, typename... Args>
             T& AddUpdateSystem(Args&&... args)
