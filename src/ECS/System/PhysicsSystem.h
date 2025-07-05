@@ -20,7 +20,8 @@ namespace Struktur
         public:
             PhysicsSystem()
             {
-                m_physicsWorld = std::make_unique<b2World>(b2Vec2_zero);
+                b2Vec2 gravity(0.0f, -10.0f);
+                m_physicsWorld = std::make_unique<b2World>(gravity);
             }
             
             void Update(Struktur::Core::GameContext& context) override
@@ -112,6 +113,18 @@ namespace Struktur
                 entt::registry& registry = context.GetRegistry();
                 b2Body* body = m_physicsWorld->CreateBody(&bodyDef);
                 body->GetUserData().pointer = static_cast<uintptr_t>(entity);
+
+                //Create Ball shape
+                b2CircleShape circleBox;
+                circleBox.m_radius = 16.f;
+
+                b2FixtureDef fixtureDef;
+                fixtureDef.shape = &circleBox;
+                fixtureDef.density = 1.f;
+                fixtureDef.friction = 0.4;
+                fixtureDef.restitution = 0.f; 
+
+                body->CreateFixture(&fixtureDef);
                 
                 registry.emplace<Component::PhysicsBody>(entity, body, bodyDef.type == b2_kinematicBody);
                 

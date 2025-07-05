@@ -241,6 +241,19 @@ set(SOURCES
     src/Engine/Core/ResourcePool.h src/Engine/Core/ResourcePool.cpp
     src/Engine/Core/SystemManager.h src/Engine/Core/SystemManager.cpp
 
+    src/ECS/Component/PhysicsBody.h
+    src/ECS/Component/Player.h
+    src/ECS/Component/Sprite.h
+    src/ECS/Component/Transform.h
+
+    src/ECS/System/DebugSystem.h
+    src/ECS/System/GameObjectManager.h
+    src/ECS/System/HierrarchySystem.h
+    src/ECS/System/PhysicsSystem.h
+    src/ECS/System/PlayerSystem.h
+    src/ECS/System/SpriteRenderSystem.h
+    src/ECS/System/TransformSystem.h
+
     src/Debug/Assertions.h
 )
 
