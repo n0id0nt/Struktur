@@ -10,9 +10,14 @@ namespace Struktur
 {
 	namespace System
 	{
-        class HierarchySystem {
+        class HierarchySystem : public Core::ISystem
+        {
         public:
             HierarchySystem() {}
+
+            void Update(Core::GameContext& context) override
+            {
+            }
 
             void SetParent(Core::GameContext& context, entt::entity child, entt::entity parent) {
                 entt::registry& registry = context.GetRegistry();

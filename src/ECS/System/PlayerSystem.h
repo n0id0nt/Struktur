@@ -5,6 +5,7 @@
 
 #include "ECS/Component/Transform.h"
 #include "ECS/Component/Player.h"
+#include "ECS/Component/PhysicsBody.h"
 #include "Engine/Core/GameContext.h"
 
 namespace Struktur
@@ -20,11 +21,11 @@ namespace Struktur
                 Core::GameData& gameData = context.GetGameData();
                 entt::registry& registry = context.GetRegistry();
                 glm::vec2 inputDir = context.GetInput().GetInputAxis2("Move");
-                auto view = registry.view<Component::Transform, Component::Player>();
-                for (auto [entity, transform, player] : view.each())
+                auto view = registry.view<Component::Transform, Component::Player, Component::PhysicsBody>();
+                for (auto [entity, transform, player, physicsBody] : view.each())
                 {
-                    transform.position.x += inputDir.x * gameData.dt * player.speed;
-                    transform.position.y += inputDir.y * gameData.dt * player.speed;
+                    b2Vec2 velecity = b2Vec2(inputDir.x *  player.speed, inputDir.y * -player.speed);
+                    physicsBody.body->SetLinearVelocity(velecity);
                 }
             }
         };

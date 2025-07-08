@@ -11,6 +11,7 @@ namespace Struktur
             bool isKinematic = false;
             bool syncFromPhysics = true;
             bool syncToPhysics = false;
+            bool isDirty = true;
         };
     }
 }

@@ -9,17 +9,20 @@
     #include <emscripten.h>
     #include <emscripten/html5.h>
 #endif
-#define GLM_ENABLE_EXPERIMENTAL
-#include <glm/gtx/matrix_decompose.hpp>
 
 #include "Debug/Assertions.h"
+
 #include "Engine/Core/GameContext.h"
 #include "Engine/Core/Input.h"
 #include "Engine/Core/SystemManager.h"
+
 #include "ECS/Component/Transform.h"
 #include "ECS/Component/Player.h"
 #include "ECS/Component/PhysicsBody.h"
 #include "ECS/Component/Sprite.h"
+
+#include "ECS/System/HierrarchySystem.h"
+#include "ECS/System/TransformSystem.h"
 #include "ECS/System/GameObjectManager.h"
 #include "ECS/System/PhysicsSystem.h"
 #include "ECS/System/PlayerSystem.h"
@@ -39,9 +42,12 @@ void Struktur::Core::LoadData(GameContext& context)
     ResourcePool& resourcePool = context.GetResourcePool();
     SystemManager& systemManager = context.GetSystemManager();
 
+    auto gameObjectManager = System::GameObjectManager(context);
+
     systemManager.AddUpdateSystem<System::PlayerSystem>();
-    System::GameObjectManager& gameObjectManager = systemManager.AddUpdateSystem<System::GameObjectManager>(context);
-    System::PhysicsSystem& physicsSystem = systemManager.AddUpdateSystem<System::PhysicsSystem>();
+    systemManager.AddUpdateSystem<System::HierarchySystem>();
+    systemManager.AddUpdateSystem<System::TransformSystem>();
+    auto& physicsSystem = systemManager.AddUpdateSystem<System::PhysicsSystem>();
     systemManager.AddRenderSystem<System::SpriteRenderSystem>();
     systemManager.AddRenderSystem<System::DebugSystem>();
 
@@ -49,44 +55,45 @@ void Struktur::Core::LoadData(GameContext& context)
     DEBUG_INFO("Game Data Loaded");
 
     auto parent = gameObjectManager.CreateGameObject(context);
-    registry.emplace<Component::Player>(parent, 300.f);
-    registry.emplace<Component::Sprite>(parent, PLAYER_TEXTURE, WHITE);
+    registry.emplace<Component::Player>(parent, 10.f);
+    registry.emplace<Component::Sprite>(parent, PLAYER_TEXTURE, WHITE, glm::vec2(16, 16), 1, 1, false, 0);
     auto& parentTransform = registry.get<Component::Transform>(parent);
     parentTransform.position = {500.0f, 300.0f, 0.0f};
+    b2BodyDef kinematicBodyDef;
+    kinematicBodyDef.type = b2_dynamicBody;
+    physicsSystem.createPhysicsBody(context, parent, kinematicBodyDef);
+    auto& physicsBody = registry.get<Component::PhysicsBody>(parent);
+    physicsBody.syncFromPhysics = true;  // Don't let physics drive transform
+    physicsBody.syncToPhysics = true;     // Let transform drive physics
 
     // Create children
     auto child1 = gameObjectManager.CreateGameObject(context, parent);
-    registry.emplace<Component::Sprite>(child1, PLAYER_TEXTURE, GREEN);
+    registry.emplace<Component::Sprite>(child1, PLAYER_TEXTURE, GREEN, glm::vec2(8, 8), 2, 2, false, 1);
     auto& child1Transform = registry.get<Component::Transform>(child1);
     child1Transform.position = {50.0f, 10.0f, 0.0f}; // Relative to parent
     
     auto child2 = gameObjectManager.CreateGameObject(context, parent);
-    registry.emplace<Component::Sprite>(child2, PLAYER_TEXTURE, BLUE);
+    registry.emplace<Component::Sprite>(child2, PLAYER_TEXTURE, BLUE, glm::vec2(16, 16), 1, 1, false, 0);
     auto& child2Transform = registry.get<Component::Transform>(child2);
     child2Transform.position = {-100.0f, -90.0f, 0.0f};
-    b2BodyDef kinematicBodyDef;
-    kinematicBodyDef.type = b2_kinematicBody;
-    physicsSystem.createPhysicsBody(context, child2, kinematicBodyDef);
-    auto& physicsBody = registry.get<Component::PhysicsBody>(child2);
-    physicsBody.syncFromPhysics = true;  // Don't let physics drive transform
-    physicsBody.syncToPhysics = true;     // Let transform drive physics
     
     auto wall = gameObjectManager.CreateGameObject(context);
-    registry.emplace<Component::Sprite>(wall, PLAYER_TEXTURE, RED);
+    registry.emplace<Component::Sprite>(wall, PLAYER_TEXTURE, RED, glm::vec2(16, 16), 1, 1, false, 0);
     auto& wallTransform = registry.get<Component::Transform>(wall);
     wallTransform.position = {300.0f, 200.0f, 0.0f};
     b2BodyDef kinematicBody2Def;
+    kinematicBody2Def.type = b2_staticBody;
     physicsSystem.createPhysicsBody(context, wall, kinematicBody2Def);
     auto& physicsBody2 = registry.get<Component::PhysicsBody>(wall);
     physicsBody2.syncFromPhysics = true;  // Don't let physics drive transform
     physicsBody2.syncToPhysics = true;     // Let transform drive physics
     
     auto movingBox = gameObjectManager.CreateGameObject(context);
-    registry.emplace<Component::Sprite>(movingBox, PLAYER_TEXTURE, YELLOW);
+    registry.emplace<Component::Sprite>(movingBox, PLAYER_TEXTURE, YELLOW, glm::vec2(16, 16), 1, 1, false, 0);
     auto& movingBoxTransform = registry.get<Component::Transform>(movingBox);
     movingBoxTransform.position = {700.0f, 700.0f, 0.0f};
     b2BodyDef kinematicBody3Def;
-    kinematicBody3Def.type = b2_kinematicBody;
+    kinematicBody3Def.type = b2_dynamicBody;
     physicsSystem.createPhysicsBody(context, movingBox, kinematicBody3Def);
     auto& physicsBody3 = registry.get<Component::PhysicsBody>(movingBox);
     physicsBody3.syncFromPhysics = true;  // Don't let physics drive transform

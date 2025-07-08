@@ -6,7 +6,7 @@ void Struktur::Core::SystemManager::Update(GameContext &context)
 {
     for (auto& system : m_updateSystems)
     {
-        system->Update(context);
+        m_systemMap[system]->Update(context);
     }
 
     ::BeginDrawing();
@@ -14,7 +14,7 @@ void Struktur::Core::SystemManager::Update(GameContext &context)
 
     for (auto& system : m_renderSystems)
     {
-        system->Update(context);
+        m_systemMap[system]->Update(context);
     }
 
     ::EndDrawing();

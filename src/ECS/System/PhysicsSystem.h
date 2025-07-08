@@ -16,6 +16,7 @@ namespace Struktur
         {
         private:
             std::unique_ptr<b2World> m_physicsWorld;
+            const float m_pixelsPerPhysicsMeter = 32.f; // pixels per game unit
 
         public:
             PhysicsSystem()
@@ -24,32 +25,33 @@ namespace Struktur
                 m_physicsWorld = std::make_unique<b2World>(gravity);
             }
             
-            void Update(Struktur::Core::GameContext& context) override
+            void Update(Core::GameContext& context) override
             {
                 float deltaTime = context.GetGameData().dt;
                 stepPhysics(context, deltaTime);
             }
 
-            void stepPhysics(Struktur::Core::GameContext& context, float deltaTime) 
+            void stepPhysics(Core::GameContext& context, float deltaTime) 
             {
                 syncTransformsToPhysics(context);
-
-                m_physicsWorld->Step(deltaTime, 6, 2);
+                int32 velocityIterations = 8;
+                int32 positionIterations = 3;
+                m_physicsWorld->Step(1/60.f, velocityIterations, positionIterations);
                 
                 // Update transforms from physics for dynamic bodies
                 syncPhysicsToTransforms(context);
             }
 
-            void syncPhysicsToTransforms(Struktur::Core::GameContext& context) 
+            void syncPhysicsToTransforms(Core::GameContext& context) 
             {
                 entt::registry& registry = context.GetRegistry();
 
-                auto view = registry.view<Component::PhysicsBody, Struktur::Component::Transform>();
+                auto view = registry.view<Component::PhysicsBody, Component::Transform>();
                 
-                for (auto entity : view) 
+                for (auto entity : view)
                 {
                     auto& physicsBody = view.get<Component::PhysicsBody>(entity);
-                    auto& transform = view.get<Struktur::Component::Transform>(entity);
+                    auto& transform = view.get<Component::Transform>(entity);
                     
                     if (physicsBody.body && physicsBody.syncFromPhysics) 
                     {
@@ -58,10 +60,11 @@ namespace Struktur
                         float angle = physicsBody.body->GetAngle();
                         
                         // Convert to local space if entity has a parent
-                        if (auto* parent = registry.try_get<Struktur::Component::Parent>(entity)) 
+                        if (auto* parent = registry.try_get<Component::Parent>(entity)) 
                         {
-                            if (parent->entity != entt::null) {
-                                glm::vec3 worldPos(position.x, position.y, 0.0f);
+                            if (parent->entity != entt::null) 
+                            {
+                                glm::vec3 worldPos(position.x * m_pixelsPerPhysicsMeter, position.y * m_pixelsPerPhysicsMeter, 0.0f);
                                 glm::vec3 localPos = worldToLocal(context, worldPos, parent->entity);
                                 transform.position = localPos;
                                 
@@ -69,57 +72,60 @@ namespace Struktur
                                 float parentAngle = getWorldRotation(context, parent->entity);
                                 float localAngle = angle - parentAngle;
                                 transform.rotation = glm::angleAxis(localAngle, glm::vec3(0, 0, 1));
-                            } else {
+                            }
+                            else
+                            {
                                 // No parent, use world coordinates directly
-                                transform.position = glm::vec3(position.x, position.y, 0.0f);
+                                transform.position = glm::vec3(position.x * m_pixelsPerPhysicsMeter, position.y * m_pixelsPerPhysicsMeter, 0.0f);
                                 transform.rotation = glm::angleAxis(angle, glm::vec3(0, 0, 1));
                             }
-                        } 
-                        else 
+                        }
+                        else
                         {
                             // No parent, use world coordinates directly
-                            transform.position = glm::vec3(position.x, position.y, 0.0f);
+                            transform.position = glm::vec3(position.x * m_pixelsPerPhysicsMeter, position.y * m_pixelsPerPhysicsMeter, 0.0f);
                             transform.rotation = glm::angleAxis(angle, glm::vec3(0, 0, 1));
                         }
                     }
                 }
             }
 
-            void syncTransformsToPhysics(Struktur::Core::GameContext& context) 
+            void syncTransformsToPhysics(Core::GameContext& context) 
             {
                 entt::registry& registry = context.GetRegistry();
-                auto view = registry.view<Component::PhysicsBody, Struktur::Component::Transform, Struktur::Component::WorldTransform>();
+                auto view = registry.view<Component::PhysicsBody, Component::Transform, Component::WorldTransform>();
                 
                 for (auto entity : view) 
                 {
                     auto& physicsBody = view.get<Component::PhysicsBody>(entity);
-                    auto& worldTransform = view.get<Struktur::Component::WorldTransform>(entity);
+                    auto& worldTransform = view.get<Component::WorldTransform>(entity);
                     
-                    if (physicsBody.body && physicsBody.syncToPhysics) 
+                    if (physicsBody.body && physicsBody.syncToPhysics && physicsBody.isDirty)
                     {
                         // Extract position and rotation from world transform matrix
-                        glm::vec3 worldPos = glm::vec3(worldTransform.matrix[3]);
+                        glm::vec3 worldPos = glm::vec3(worldTransform.matrix[3]) / m_pixelsPerPhysicsMeter;
                         
                         // For 2D, extract rotation from matrix
                         float angle = atan2(worldTransform.matrix[1][0], worldTransform.matrix[0][0]);
                         
                         physicsBody.body->SetTransform(b2Vec2(worldPos.x, worldPos.y), angle);
+                        physicsBody.isDirty = false;
                     }
                 }
             }
 
-            b2Body* createPhysicsBody(Struktur::Core::GameContext& context, entt::entity entity, const b2BodyDef& bodyDef) 
+            b2Body* createPhysicsBody(Core::GameContext& context, entt::entity entity, const b2BodyDef& bodyDef) 
             {
                 entt::registry& registry = context.GetRegistry();
                 b2Body* body = m_physicsWorld->CreateBody(&bodyDef);
                 body->GetUserData().pointer = static_cast<uintptr_t>(entity);
 
                 //Create Ball shape
-                b2CircleShape circleBox;
-                circleBox.m_radius = 16.f;
+                b2PolygonShape groundBox;
+                groundBox.SetAsBox(1 / 2.0f, 1 / 2.0f);
 
                 b2FixtureDef fixtureDef;
-                fixtureDef.shape = &circleBox;
+                fixtureDef.shape = &groundBox;
                 fixtureDef.density = 1.f;
                 fixtureDef.friction = 0.4;
                 fixtureDef.restitution = 0.f; 
@@ -132,10 +138,10 @@ namespace Struktur
             }
             
         private:
-            glm::vec3 worldToLocal(Struktur::Core::GameContext& context, const glm::vec3& worldPos, entt::entity parentEntity) 
+            glm::vec3 worldToLocal(Core::GameContext& context, const glm::vec3& worldPos, entt::entity parentEntity) 
             {
                 entt::registry& registry = context.GetRegistry();
-                if (auto* parentWorld = registry.try_get<Struktur::Component::WorldTransform>(parentEntity)) 
+                if (auto* parentWorld = registry.try_get<Component::WorldTransform>(parentEntity)) 
                 {
                     glm::mat4 parentInverse = glm::inverse(parentWorld->matrix);
                     glm::vec4 localPos = parentInverse * glm::vec4(worldPos, 1.0f);
@@ -144,10 +150,10 @@ namespace Struktur
                 return worldPos;
             }
 
-            float getWorldRotation(Struktur::Core::GameContext& context, entt::entity entity) 
+            float getWorldRotation(Core::GameContext& context, entt::entity entity) 
             {
                 entt::registry& registry = context.GetRegistry();
-                if (auto* worldTransform = registry.try_get<Struktur::Component::WorldTransform>(entity)) 
+                if (auto* worldTransform = registry.try_get<Component::WorldTransform>(entity)) 
                 {
                     return atan2(worldTransform->matrix[1][0], worldTransform->matrix[0][0]);
                 }

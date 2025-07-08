@@ -10,11 +10,12 @@ namespace Struktur
 {
 	namespace System
 	{
-        class TransformSystem {
+        class TransformSystem : public Core::ISystem
+        {
         public:
             TransformSystem() {}
 
-            void UpdateTransforms(Core::GameContext& context)
+            void Update(Core::GameContext& context) override
             {
                 entt::registry& registry = context.GetRegistry();
                 

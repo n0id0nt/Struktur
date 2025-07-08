@@ -13,14 +13,10 @@ namespace Struktur
 {
 	namespace System
 	{
-        class GameObjectManager : public Core::ISystem
+        class GameObjectManager
         {
-        private:
-            HierarchySystem hierarchySystem;
-            TransformSystem transformSystem;
-
         public:
-            GameObjectManager(Core::GameContext& context) : hierarchySystem(), transformSystem() 
+            GameObjectManager(Core::GameContext& context)
             {
                 entt::registry& registry = context.GetRegistry();
                 
@@ -31,6 +27,8 @@ namespace Struktur
             entt::entity CreateGameObject(Core::GameContext& context, entt::entity parent = entt::null) 
             {
                 entt::registry& registry = context.GetRegistry();
+                Core::SystemManager& systemManager = context.GetSystemManager();
+                HierarchySystem& hierarchySystem = systemManager.GetSystem<HierarchySystem>();
 
                 auto entity = registry.create();
                 registry.emplace<Component::Transform>(entity);
@@ -45,12 +43,9 @@ namespace Struktur
 
             void DestroyGameObject(Core::GameContext& context, entt::entity entity) 
             {
+                Core::SystemManager& systemManager = context.GetSystemManager();
+                HierarchySystem& hierarchySystem = systemManager.GetSystem<HierarchySystem>();
                 hierarchySystem.DestroyEntity(context, entity);
-            }
-
-            void Update(Core::GameContext& context) override 
-            {
-                transformSystem.UpdateTransforms(context);
             }
 
         private:
