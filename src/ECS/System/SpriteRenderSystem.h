@@ -61,7 +61,7 @@ namespace Struktur
 
                     ::Vector2 offset{sprite.offset.x, sprite.offset.y};
             
-                    ::DrawTexturePro(resourcePool.RetrieveTexture(sprite.fileName), sourceRec, destRec, offset, euler.x, sprite.color);
+                    ::DrawTexturePro(resourcePool.RetrieveTexture(sprite.fileName), sourceRec, destRec, offset, euler.z, sprite.color);
                 }
             }
         };

@@ -33,7 +33,8 @@ constexpr static const unsigned int FPS = 60;
 constexpr static const float TIME_STEP = 1.0f / FPS;
 constexpr static const int VELOCITY_ITERATIONS = 6;
 constexpr static const int POSITION_ITERATIONS = 4;
-constexpr static const char* PLAYER_TEXTURE = "assets/Circle.png";
+constexpr static const char* CIRCLE_TEXTURE = "assets/Circle.png";
+constexpr static const char* PLAYERIDLE_TEXTURE = "assets/32x32idle.png";
 
 void Struktur::Core::LoadData(GameContext& context)
 {
@@ -56,7 +57,7 @@ void Struktur::Core::LoadData(GameContext& context)
 
     auto parent = gameObjectManager.CreateGameObject(context);
     registry.emplace<Component::Player>(parent, 10.f);
-    registry.emplace<Component::Sprite>(parent, PLAYER_TEXTURE, WHITE, glm::vec2(16, 16), 1, 1, false, 0);
+    registry.emplace<Component::Sprite>(parent, PLAYERIDLE_TEXTURE, WHITE, glm::vec2(16, 16), 4, 1, false, 0);
     auto& parentTransform = registry.get<Component::Transform>(parent);
     parentTransform.position = {500.0f, 300.0f, 0.0f};
     b2BodyDef kinematicBodyDef;
@@ -68,17 +69,17 @@ void Struktur::Core::LoadData(GameContext& context)
 
     // Create children
     auto child1 = gameObjectManager.CreateGameObject(context, parent);
-    registry.emplace<Component::Sprite>(child1, PLAYER_TEXTURE, GREEN, glm::vec2(8, 8), 2, 2, false, 1);
+    registry.emplace<Component::Sprite>(child1, CIRCLE_TEXTURE, GREEN, glm::vec2(8, 8), 2, 2, false, 1);
     auto& child1Transform = registry.get<Component::Transform>(child1);
     child1Transform.position = {50.0f, 10.0f, 0.0f}; // Relative to parent
     
     auto child2 = gameObjectManager.CreateGameObject(context, parent);
-    registry.emplace<Component::Sprite>(child2, PLAYER_TEXTURE, BLUE, glm::vec2(16, 16), 1, 1, false, 0);
+    registry.emplace<Component::Sprite>(child2, CIRCLE_TEXTURE, BLUE, glm::vec2(16, 16), 1, 1, false, 0);
     auto& child2Transform = registry.get<Component::Transform>(child2);
     child2Transform.position = {-100.0f, -90.0f, 0.0f};
     
     auto wall = gameObjectManager.CreateGameObject(context);
-    registry.emplace<Component::Sprite>(wall, PLAYER_TEXTURE, RED, glm::vec2(16, 16), 1, 1, false, 0);
+    registry.emplace<Component::Sprite>(wall, CIRCLE_TEXTURE, RED, glm::vec2(16, 16), 1, 1, false, 0);
     auto& wallTransform = registry.get<Component::Transform>(wall);
     wallTransform.position = {300.0f, 200.0f, 0.0f};
     b2BodyDef kinematicBody2Def;
@@ -89,7 +90,7 @@ void Struktur::Core::LoadData(GameContext& context)
     physicsBody2.syncToPhysics = true;     // Let transform drive physics
     
     auto movingBox = gameObjectManager.CreateGameObject(context);
-    registry.emplace<Component::Sprite>(movingBox, PLAYER_TEXTURE, YELLOW, glm::vec2(16, 16), 1, 1, false, 0);
+    registry.emplace<Component::Sprite>(movingBox, CIRCLE_TEXTURE, YELLOW, glm::vec2(16, 16), 1, 1, false, 0);
     auto& movingBoxTransform = registry.get<Component::Transform>(movingBox);
     movingBoxTransform.position = {700.0f, 700.0f, 0.0f};
     b2BodyDef kinematicBody3Def;
@@ -101,8 +102,11 @@ void Struktur::Core::LoadData(GameContext& context)
 
 	DEBUG_INFO("Created Player Entity");
 
-    resourcePool.CreateTexture(PLAYER_TEXTURE);
-    resourcePool.LoadTextureInGPU(PLAYER_TEXTURE);
+    resourcePool.CreateTexture(CIRCLE_TEXTURE);
+    resourcePool.LoadTextureInGPU(CIRCLE_TEXTURE);
+
+    resourcePool.CreateTexture(PLAYERIDLE_TEXTURE);
+    resourcePool.LoadTextureInGPU(PLAYERIDLE_TEXTURE);
 }
 
 void Struktur::Core::SplashScreenLoop(GameContext& context)
