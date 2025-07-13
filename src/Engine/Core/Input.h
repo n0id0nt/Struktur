@@ -14,15 +14,15 @@ namespace Struktur
 		private:
 			struct Binding
 			{
-				std::set<KeyboardKey> keycodes;
-				std::set<GamepadButton> controllerButtons;
+				std::set<::KeyboardKey> keycodes;
+				std::set<::GamepadButton> controllerButtons;
 			};
 
 			struct AxisBinding
 			{
 				Binding positive;
 				Binding negetive;
-				std::set<GamepadAxis> controllerAxis;
+				std::set<::GamepadAxis> controllerAxis;
 			};
 
 			enum class AxisComponent
@@ -116,6 +116,7 @@ namespace Struktur
 			std::unordered_map<std::string, Binding> m_variableBindings;
 			std::unordered_map<std::string, AxisBinding> m_axisBindings;
 			std::unordered_map<std::string, Axis2Binding> m_axis2Bindings;
+			
 			static std::unordered_map<std::string, KeyboardKey> s_keycodeMap;
 			static std::unordered_map<std::string, GamepadButton> s_controllerButtonMap;
 			static std::unordered_map<std::string, GamepadAxis> s_controllerAxisMap;

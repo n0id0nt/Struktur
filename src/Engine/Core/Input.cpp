@@ -5,7 +5,7 @@
 
 #include "Debug/Assertions.h"
 
-std::unordered_map<std::string, KeyboardKey> Struktur::Core::Input::s_keycodeMap = {
+std::unordered_map<std::string, ::KeyboardKey> Struktur::Core::Input::s_keycodeMap = {
 	{"null",				KEY_NULL},
 	// Alphanumeric keys
 	{"apostrophe",          KEY_APOSTROPHE},
@@ -122,7 +122,7 @@ std::unordered_map<std::string, KeyboardKey> Struktur::Core::Input::s_keycodeMap
 	{"anvolumedown",        KEY_VOLUME_DOWN},
 };
 
-std::unordered_map<std::string, GamepadButton> Struktur::Core::Input::s_controllerButtonMap = {
+std::unordered_map<std::string, ::GamepadButton> Struktur::Core::Input::s_controllerButtonMap = {
 	{"unknown",     GAMEPAD_BUTTON_UNKNOWN},
 	{"a",           GAMEPAD_BUTTON_RIGHT_FACE_DOWN},
 	{"b",           GAMEPAD_BUTTON_RIGHT_FACE_LEFT},
@@ -143,7 +143,7 @@ std::unordered_map<std::string, GamepadButton> Struktur::Core::Input::s_controll
 	{"right",       GAMEPAD_BUTTON_LEFT_FACE_RIGHT},
 };
 
-std::unordered_map<std::string, GamepadAxis> Struktur::Core::Input::s_controllerAxisMap = {
+std::unordered_map<std::string, ::GamepadAxis> Struktur::Core::Input::s_controllerAxisMap = {
 	{"leftx",       GAMEPAD_AXIS_LEFT_X},
 	{"lefty",       GAMEPAD_AXIS_LEFT_Y},
 	{"rightx",      GAMEPAD_AXIS_RIGHT_X},
