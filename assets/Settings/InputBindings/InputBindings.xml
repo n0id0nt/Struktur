@@ -18,9 +18,21 @@
             <binding type="controllerButton"    value="b"/>
         </bindings>
     </input>
-    <input name="Pause" type="button">
+    <input name="AddObject" type="button">
         <bindings>
-            <binding type="keycode" value="p"/>
+            <binding type="keycode" value="q"/>
+            <binding type="controllerButton" value="start"/>
+        </bindings>
+    </input>
+    <input name="AddChild" type="button">
+        <bindings>
+            <binding type="keycode" value="1"/>
+            <binding type="controllerButton" value="start"/>
+        </bindings>
+    </input>
+    <input name="DeleteObject" type="button">
+        <bindings>
+            <binding type="keycode" value="e"/>
             <binding type="controllerButton" value="start"/>
         </bindings>
     </input>

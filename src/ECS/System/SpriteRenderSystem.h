@@ -5,7 +5,8 @@
 #define GLM_ENABLE_EXPERIMENTAL
 #include "glm/gtx/matrix_decompose.hpp"
 
-
+#include "raylib.h"
+#include "raymath.h"
 #include "ECS/Component/Transform.h"
 #include "ECS/Component/Player.h"
 #include "ECS/Component/Sprite.h"
@@ -59,9 +60,9 @@ namespace Struktur
 
                     ::Rectangle destRec{ ::round(translationVec.x * 2) / 2, ::round(translationVec.y * 2) / 2, size.x * scaleVec.x, size.y * scaleVec.x };
 
-                    ::Vector2 offset{sprite.offset.x, sprite.offset.y};
+                    ::Vector2 offset{ sprite.offset.x, sprite.offset.y };
             
-                    ::DrawTexturePro(resourcePool.RetrieveTexture(sprite.fileName), sourceRec, destRec, offset, euler.z, sprite.color);
+                    ::DrawTexturePro(resourcePool.RetrieveTexture(sprite.fileName), sourceRec, destRec, offset, glm::degrees(euler.z), sprite.color);
                 }
             }
         };

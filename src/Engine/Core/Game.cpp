@@ -42,8 +42,9 @@ void Struktur::Core::LoadData(GameContext& context)
     entt::registry& registry = context.GetRegistry();
     ResourcePool& resourcePool = context.GetResourcePool();
     SystemManager& systemManager = context.GetSystemManager();
+    System::GameObjectManager& gameObjectManager = context.GetGameObjectManager();
 
-    auto gameObjectManager = System::GameObjectManager(context);
+    gameObjectManager.CreateDeleteObjectCallBack(context);
 
     systemManager.AddUpdateSystem<System::PlayerSystem>();
     systemManager.AddUpdateSystem<System::HierarchySystem>();

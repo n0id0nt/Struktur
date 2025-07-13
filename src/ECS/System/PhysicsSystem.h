@@ -21,7 +21,7 @@ namespace Struktur
         public:
             PhysicsSystem()
             {
-                b2Vec2 gravity(0.0f, -10.0f);
+                b2Vec2 gravity(0.0f, 0.0f);
                 m_physicsWorld = std::make_unique<b2World>(gravity);
             }
             

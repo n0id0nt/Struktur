@@ -9,6 +9,8 @@
 #include "Engine/Core/ResourcePool.h"
 #include "Engine/Core/SystemManager.h"
 
+#include "ECS/GameObjectManager.h"
+
 namespace Struktur
 {
 	namespace Core
@@ -22,6 +24,7 @@ namespace Struktur
                 m_registry = std::make_unique<entt::registry>();
                 m_resourcePool = std::make_unique<ResourcePool>();
                 m_systemManager = std::make_unique<SystemManager>();
+                m_gameObjectManager = std::make_unique<System::GameObjectManager>();
             }
 
             Input& GetInput() const { 
@@ -49,12 +52,18 @@ namespace Struktur
 				return *m_systemManager;
 			}
 
+            System::GameObjectManager& GetGameObjectManager() const {
+                ASSERT_MSG(m_gameObjectManager.get(), "Game Object Manager not initialized");
+				return *m_gameObjectManager;
+			}
+
         private:
             std::unique_ptr<GameData> m_gameData;
             std::unique_ptr<Input> m_input;
             std::unique_ptr<entt::registry> m_registry;
             std::unique_ptr<ResourcePool> m_resourcePool;
             std::unique_ptr<SystemManager> m_systemManager;
+            std::unique_ptr<System::GameObjectManager> m_gameObjectManager;
         };
     };
 };
