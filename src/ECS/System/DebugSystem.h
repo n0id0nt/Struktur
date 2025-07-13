@@ -1,18 +1,19 @@
 #pragma once
-#include "raylib.h"
-#include "Engine/Core/GameContext.h"
+
+#include "Engine/Core/SystemManager.h"
 
 namespace Struktur
 {
+    namespace Core
+    {
+        class GameContext;
+    }
 	namespace System
 	{
         class DebugSystem : public Core::ISystem
         {
         public:
-            void Update(Core::GameContext& context) override
-            {
-                ::DrawFPS(10,10);
-            }
+            void Update(Core::GameContext& context) override;
         };
     }
 }

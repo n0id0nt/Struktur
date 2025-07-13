@@ -1,5 +1,8 @@
 #include "GameObjectManager.h"
 
+#include "glm/glm.hpp"
+#include "glm/gtc/quaternion.hpp."
+
 #include "ECS/Component/Transform.h"
 #include "ECS/System/HierrarchySystem.h"
 #include "ECS/System/TransformSystem.h"

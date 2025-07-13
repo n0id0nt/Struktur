@@ -21,9 +21,9 @@
 #include "ECS/Component/PhysicsBody.h"
 #include "ECS/Component/Sprite.h"
 
+#include "ECS/GameObjectManager.h"
 #include "ECS/System/HierrarchySystem.h"
 #include "ECS/System/TransformSystem.h"
-#include "ECS/System/GameObjectManager.h"
 #include "ECS/System/PhysicsSystem.h"
 #include "ECS/System/PlayerSystem.h"
 #include "ECS/System/SpriteRenderSystem.h"
@@ -63,7 +63,7 @@ void Struktur::Core::LoadData(GameContext& context)
     parentTransform.position = {500.0f, 300.0f, 0.0f};
     b2BodyDef kinematicBodyDef;
     kinematicBodyDef.type = b2_dynamicBody;
-    physicsSystem.createPhysicsBody(context, parent, kinematicBodyDef);
+    physicsSystem.CreatePhysicsBody(context, parent, kinematicBodyDef);
     auto& physicsBody = registry.get<Component::PhysicsBody>(parent);
     physicsBody.syncFromPhysics = true;  // Don't let physics drive transform
     physicsBody.syncToPhysics = true;     // Let transform drive physics
@@ -85,7 +85,7 @@ void Struktur::Core::LoadData(GameContext& context)
     wallTransform.position = {300.0f, 200.0f, 0.0f};
     b2BodyDef kinematicBody2Def;
     kinematicBody2Def.type = b2_staticBody;
-    physicsSystem.createPhysicsBody(context, wall, kinematicBody2Def);
+    physicsSystem.CreatePhysicsBody(context, wall, kinematicBody2Def);
     auto& physicsBody2 = registry.get<Component::PhysicsBody>(wall);
     physicsBody2.syncFromPhysics = true;  // Don't let physics drive transform
     physicsBody2.syncToPhysics = true;     // Let transform drive physics
@@ -96,7 +96,7 @@ void Struktur::Core::LoadData(GameContext& context)
     movingBoxTransform.position = {700.0f, 700.0f, 0.0f};
     b2BodyDef kinematicBody3Def;
     kinematicBody3Def.type = b2_dynamicBody;
-    physicsSystem.createPhysicsBody(context, movingBox, kinematicBody3Def);
+    physicsSystem.CreatePhysicsBody(context, movingBox, kinematicBody3Def);
     auto& physicsBody3 = registry.get<Component::PhysicsBody>(movingBox);
     physicsBody3.syncFromPhysics = true;  // Don't let physics drive transform
     physicsBody3.syncToPhysics = true;     // Let transform drive physics

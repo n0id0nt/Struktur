@@ -5,6 +5,8 @@
 #include <typeindex>
 #include <unordered_map>
 
+#include "Debug/Assertions.h"
+
 namespace Struktur
 {
 	namespace Core
@@ -14,10 +16,6 @@ namespace Struktur
         class ISystem
         {
         public:
-            //ISystem() = default;
-            //ISystem(const ISystem&) = delete;
-            //ISystem& operator=(const ISystem&) = delete;
-
             virtual void Update(GameContext& context) = 0;
         };
 
