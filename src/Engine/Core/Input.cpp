@@ -1,6 +1,8 @@
 #include "Input.h"
-#include "pugixml.hpp"
+
 #include <format>
+#include "pugixml.hpp"
+
 #include "Debug/Assertions.h"
 
 std::unordered_map<std::string, KeyboardKey> Struktur::Core::Input::s_keycodeMap = {

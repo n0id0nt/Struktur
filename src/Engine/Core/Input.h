@@ -125,5 +125,5 @@ namespace Struktur
 			std::string m_gamepadId;
 			int m_gamepadIndex;
 		};
-	};
-};
+	}
+}

@@ -65,5 +65,5 @@ namespace Struktur
             std::unique_ptr<SystemManager> m_systemManager;
             std::unique_ptr<System::GameObjectManager> m_gameObjectManager;
         };
-    };
-};
+    }
+}

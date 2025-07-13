@@ -23,5 +23,5 @@ namespace Struktur
             int screenHeight = 0;
             GameState gameState = GameState::SPLASH_SCREEN;
         };
-	};
-};
+	}
+}
