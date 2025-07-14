@@ -1,9 +1,9 @@
 #pragma once
 
 #include "box2d\box2d.h"
-#include "raylib.h"
+#include "glm/glm.hpp"
 
-#include "Physics/ContactListener.h"
+#include "Engine/Physics/ContactListener.h"
 
 namespace Struktur
 {
@@ -12,9 +12,9 @@ namespace Struktur
 		class PhysicsWorld
 		{
 		public:
-			PhysicsWorld(Vector2 gravity, float timeStep, int velocityIterations, int positionIterations, float pixelsPerMeter);
+			PhysicsWorld(glm::vec2 gravity, int velocityIterations, int positionIterations, float pixelsPerMeter);
 
-			void Step();
+			void Step(float deltaTime);
 
 			void ClearForces();
 
@@ -32,7 +32,6 @@ namespace Struktur
 
 			b2World m_world;
 
-			float m_timeStep;
 			int m_velocityIteration;
 			int m_positionIterations;
 		};

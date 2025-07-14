@@ -1,6 +1,6 @@
 #include "raylib.h"
 #include "SystemManager.h"
-#include "Engine/Core/GameContext.h"
+#include "Engine/GameContext.h"
 
 void Struktur::Core::SystemManager::Update(GameContext &context)
 {

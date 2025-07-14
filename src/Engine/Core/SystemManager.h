@@ -9,10 +9,10 @@
 
 namespace Struktur
 {
+    class GameContext;
+
 	namespace Core
 	{
-        class GameContext;
-
         class ISystem
         {
         public:

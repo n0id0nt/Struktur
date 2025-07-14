@@ -234,26 +234,30 @@ endif()
 set(SOURCES
     src/Main.cpp
 
-    src/Engine/Core/Game.h src/Engine/Core/Game.cpp
-    src/Engine/Core/GameContext.h src/Engine/Core/GameContext.cpp
-    src/Engine/Core/Gamedata.h src/Engine/Core/GameData.cpp
-    src/Engine/Core/Input.h src/Engine/Core/Input.cpp
-    src/Engine/Core/ResourcePool.h src/Engine/Core/ResourcePool.cpp
-    src/Engine/Core/SystemManager.h src/Engine/Core/SystemManager.cpp
+    src/Engine/Game.h                           src/Engine/Game.cpp
+    src/Engine/GameContext.h                    src/Engine/GameContext.cpp
     
-    src/ECS/GameObjectManager.h src/ECS/GameObjectManager.cpp
-    
-    src/ECS/Component/PhysicsBody.h
-    src/ECS/Component/Player.h
-    src/ECS/Component/Sprite.h
-    src/ECS/Component/Transform.h
+    src/Engine/Core/Gamedata.h                  src/Engine/Core/GameData.cpp
+    src/Engine/Core/Input.h                     src/Engine/Core/Input.cpp
+    src/Engine/Core/ResourcePool.h              src/Engine/Core/ResourcePool.cpp
+    src/Engine/Core/SystemManager.h             src/Engine/Core/SystemManager.cpp
 
-    src/ECS/System/DebugSystem.h src/ECS/System/DebugSystem.cpp
-    src/ECS/System/HierrarchySystem.h src/ECS/System/HierrarchySystem.cpp
-    src/ECS/System/PhysicsSystem.h src/ECS/System/PhysicsSystem.cpp
-    src/ECS/System/PlayerSystem.h src/ECS/System/PlayerSystem.cpp
-    src/ECS/System/SpriteRenderSystem.h src/ECS/System/SpriteRenderSystem.cpp
-    src/ECS/System/TransformSystem.h src/ECS/System/TransformSystem.cpp
+    src/Engine/ECS/GameObjectManager.h          src/Engine/ECS/GameObjectManager.cpp
+    
+    src/Engine/ECS/Component/PhysicsBody.h
+    src/Engine/ECS/Component/Player.h
+    src/Engine/ECS/Component/Sprite.h
+    src/Engine/ECS/Component/Transform.h
+
+    src/Engine/ECS/System/DebugSystem.h         src/Engine/ECS/System/DebugSystem.cpp
+    src/Engine/ECS/System/HierrarchySystem.h    src/Engine/ECS/System/HierrarchySystem.cpp
+    src/Engine/ECS/System/PhysicsSystem.h       src/Engine/ECS/System/PhysicsSystem.cpp
+    src/Engine/ECS/System/PlayerSystem.h        src/Engine/ECS/System/PlayerSystem.cpp
+    src/Engine/ECS/System/SpriteRenderSystem.h  src/Engine/ECS/System/SpriteRenderSystem.cpp
+    src/Engine/ECS/System/TransformSystem.h     src/Engine/ECS/System/TransformSystem.cpp
+
+    src/Engine/Physics/PhysicsWorld.h           src/Engine/Physics/PhysicsWorld.cpp
+    src/Engine/Physics/ContactListener.h        src/Engine/Physics/ContactListener.cpp
 
     src/Debug/Assertions.h
 )

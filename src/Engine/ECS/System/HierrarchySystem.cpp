@@ -1,9 +1,9 @@
 #include "HierrarchySystem.h"
 
-#include "Engine/Core/GameContext.h"
-#include "ECS/Component/Transform.h"
+#include "Engine/GameContext.h"
+#include "Engine/ECS/Component/Transform.h"
 
-void Struktur::System::HierarchySystem::SetParent(Core::GameContext &context, entt::entity child, entt::entity parent)
+void Struktur::System::HierarchySystem::SetParent(GameContext& context, entt::entity child, entt::entity parent)
 {
     entt::registry& registry = context.GetRegistry();
     
@@ -30,7 +30,7 @@ void Struktur::System::HierarchySystem::SetParent(Core::GameContext &context, en
     }
 }
 
-void Struktur::System::HierarchySystem::RemoveFromParent(Core::GameContext &context, entt::entity child, entt::entity parent)
+void Struktur::System::HierarchySystem::RemoveFromParent(GameContext& context, entt::entity child, entt::entity parent)
 {
     entt::registry& registry = context.GetRegistry();
 
@@ -44,7 +44,7 @@ void Struktur::System::HierarchySystem::RemoveFromParent(Core::GameContext &cont
     }
 }
 
-void Struktur::System::HierarchySystem::DestroyEntity(Core::GameContext &context, entt::entity entity)
+void Struktur::System::HierarchySystem::DestroyEntity(GameContext& context, entt::entity entity)
 {
     entt::registry& registry = context.GetRegistry();
     

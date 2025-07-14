@@ -4,16 +4,14 @@
 
 namespace Struktur
 {
-    namespace Core
-    {
-        class GameContext;
-    }
+    class GameContext;
+
 	namespace System
 	{
         class PlayerSystem : public Core::ISystem
         {        
         public:
-            void Update(Core::GameContext& context) override;
+            void Update(GameContext& context) override;
         };
     }
 }

@@ -1,7 +1,7 @@
-#include "Engine/Core/Game.h"
+#include "Engine/Game.h"
 
 int main(int argc, char* argv[])
 {
-    Struktur::Core::Game();
+    Struktur::Game();
     return 0;
 }

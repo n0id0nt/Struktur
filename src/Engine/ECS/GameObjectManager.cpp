@@ -3,13 +3,13 @@
 #include "glm/glm.hpp"
 #include "glm/gtc/quaternion.hpp."
 
-#include "ECS/Component/Transform.h"
-#include "ECS/System/HierrarchySystem.h"
-#include "ECS/System/TransformSystem.h"
-#include "Engine/Core/GameContext.h"
+#include "Engine/GameContext.h"
 #include "Engine/Core/SystemManager.h"
+#include "Engine/ECS/Component/Transform.h"
+#include "Engine/ECS/System/HierrarchySystem.h"
+#include "Engine/ECS/System/TransformSystem.h"
 
-void Struktur::System::GameObjectManager::CreateDeleteObjectCallBack(Core::GameContext& context)
+void Struktur::System::GameObjectManager::CreateDeleteObjectCallBack(GameContext& context)
 {
     entt::registry& registry = context.GetRegistry();
     
@@ -17,7 +17,7 @@ void Struktur::System::GameObjectManager::CreateDeleteObjectCallBack(Core::GameC
     registry.on_destroy<Component::Children>().connect<&GameObjectManager::OnChildrenDestroy>(*this);
 }
 
-entt::entity Struktur::System::GameObjectManager::CreateGameObject(Core::GameContext& context, entt::entity parent)
+entt::entity Struktur::System::GameObjectManager::CreateGameObject(GameContext& context, entt::entity parent)
 {
     entt::registry& registry = context.GetRegistry();
     Core::SystemManager& systemManager = context.GetSystemManager();
@@ -34,7 +34,7 @@ entt::entity Struktur::System::GameObjectManager::CreateGameObject(Core::GameCon
     return entity;
 }
 
-void Struktur::System::GameObjectManager::DestroyGameObject(Core::GameContext& context, entt::entity entity) 
+void Struktur::System::GameObjectManager::DestroyGameObject(GameContext& context, entt::entity entity) 
 {
     Core::SystemManager& systemManager = context.GetSystemManager();
     HierarchySystem& hierarchySystem = systemManager.GetSystem<HierarchySystem>();

@@ -12,22 +12,22 @@
 
 #include "Debug/Assertions.h"
 
-#include "Engine/Core/GameContext.h"
+#include "Engine/GameContext.h"
 #include "Engine/Core/Input.h"
 #include "Engine/Core/SystemManager.h"
 
-#include "ECS/Component/Transform.h"
-#include "ECS/Component/Player.h"
-#include "ECS/Component/PhysicsBody.h"
-#include "ECS/Component/Sprite.h"
+#include "Engine/ECS/Component/Transform.h"
+#include "Engine/ECS/Component/Player.h"
+#include "Engine/ECS/Component/PhysicsBody.h"
+#include "Engine/ECS/Component/Sprite.h"
 
-#include "ECS/GameObjectManager.h"
-#include "ECS/System/HierrarchySystem.h"
-#include "ECS/System/TransformSystem.h"
-#include "ECS/System/PhysicsSystem.h"
-#include "ECS/System/PlayerSystem.h"
-#include "ECS/System/SpriteRenderSystem.h"
-#include "ECS/System/DebugSystem.h"
+#include "Engine/ECS/GameObjectManager.h"
+#include "Engine/ECS/System/HierrarchySystem.h"
+#include "Engine/ECS/System/TransformSystem.h"
+#include "Engine/ECS/System/PhysicsSystem.h"
+#include "Engine/ECS/System/PlayerSystem.h"
+#include "Engine/ECS/System/SpriteRenderSystem.h"
+#include "Engine/ECS/System/DebugSystem.h"
 
 constexpr static const unsigned int FPS = 60;
 constexpr static const float TIME_STEP = 1.0f / FPS;
@@ -36,12 +36,12 @@ constexpr static const int POSITION_ITERATIONS = 4;
 constexpr static const char* CIRCLE_TEXTURE = "assets/Circle.png";
 constexpr static const char* PLAYERIDLE_TEXTURE = "assets/32x32idle.png";
 
-void Struktur::Core::LoadData(GameContext& context)
+void Struktur::LoadData(GameContext& context)
 {
-    Input& input = context.GetInput();
+    Core::Input& input = context.GetInput();
     entt::registry& registry = context.GetRegistry();
-    ResourcePool& resourcePool = context.GetResourcePool();
-    SystemManager& systemManager = context.GetSystemManager();
+    Core::ResourcePool& resourcePool = context.GetResourcePool();
+    Core::SystemManager& systemManager = context.GetSystemManager();
     System::GameObjectManager& gameObjectManager = context.GetGameObjectManager();
 
     gameObjectManager.CreateDeleteObjectCallBack(context);
@@ -110,9 +110,9 @@ void Struktur::Core::LoadData(GameContext& context)
     resourcePool.LoadTextureInGPU(PLAYERIDLE_TEXTURE);
 }
 
-void Struktur::Core::SplashScreenLoop(GameContext& context)
+void Struktur::SplashScreenLoop(GameContext& context)
 {
-    GameData& gameData = context.GetGameData();
+    Core::GameData& gameData = context.GetGameData();
     //fade in time
     const double fadeInTime = 1.5;
     const double holdTime = 1;
@@ -121,7 +121,7 @@ void Struktur::Core::SplashScreenLoop(GameContext& context)
     const double startTime = gameData.startTime;
     if (currentTime > startTime + fadeInTime + holdTime + fadeOutTime)
     {
-        gameData.gameState = GameState::GAME;
+        gameData.gameState = Core::GameState::GAME;
         DEBUG_INFO("Start Game Loop");
     }
 
@@ -151,53 +151,53 @@ void Struktur::Core::SplashScreenLoop(GameContext& context)
     ::EndDrawing();
 }
 
-void Struktur::Core::LoadingLoop(GameContext& context)
+void Struktur::LoadingLoop(GameContext& context)
 {
 
 }
 
-void Struktur::Core::GameLoop(GameContext& context)
+void Struktur::GameLoop(GameContext& context)
 {
-    GameData& gameData = context.GetGameData();
+    Core::GameData& gameData = context.GetGameData();
     entt::registry& registry = context.GetRegistry();
-    ResourcePool& resourcePool = context.GetResourcePool();
-    SystemManager& systemManager = context.GetSystemManager();
+    Core::ResourcePool& resourcePool = context.GetResourcePool();
+    Core::SystemManager& systemManager = context.GetSystemManager();
 
 #ifndef PLATFORM_WEB
     if (WindowShouldClose()) 
     {
-        gameData.gameState = GameState::QUIT;
+        gameData.gameState = Core::GameState::QUIT;
     }
 #endif
 
     systemManager.Update(context);    
 }
 
-void Struktur::Core::UpdateLoop(void* userData) 
+void Struktur::UpdateLoop(void* userData) 
 {
     GameContext* context = static_cast<GameContext*>(userData);
     // Set the game data
-    GameData& gameData = context->GetGameData();
-    gameData.dt = ::GetFrameTime();
+    Core::GameData& gameData = context->GetGameData();
+    gameData.deltaTime = ::GetFrameTime();
     gameData.gameTime = ::GetTime();
     gameData.screenWidth = ::GetScreenWidth();
     gameData.screenHeight = ::GetScreenHeight();
     
     switch(gameData.gameState)
     {
-    case GameState::SPLASH_SCREEN:
+    case Core::GameState::SPLASH_SCREEN:
         SplashScreenLoop(*context);
         return;
-    case GameState::LOADING:
+    case Core::GameState::LOADING:
         LoadingLoop(*context);
         return;
-    case GameState::GAME:
+    case Core::GameState::GAME:
         GameLoop(*context);
         return;
     }
 }
 
-void Struktur::Core::Game() 
+void Struktur::Game() 
 {
     // Initialize window
     const int screenWidth = 1024;
@@ -211,7 +211,7 @@ void Struktur::Core::Game()
     // Load resources
     LoadData(context);
     
-    GameData& gameData = context.GetGameData();
+    Core::GameData& gameData = context.GetGameData();
     gameData.startTime = ::GetTime();
 #ifdef PLATFORM_WEB
     // Web platform - use emscripten main loop
@@ -220,7 +220,7 @@ void Struktur::Core::Game()
     // Desktop platform - standard game loop
     ::SetTargetFPS(FPS);
     
-    while (gameData.gameState != GameState::QUIT) {
+    while (gameData.gameState != Core::GameState::QUIT) {
         UpdateLoop(&context);
     }
 #endif

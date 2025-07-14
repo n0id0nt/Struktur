@@ -3,18 +3,18 @@
 #include <cstdlib>
 //#include <ctime>
 
-#include "Engine/Core/GameContext.h"
-
 #include "glm/glm.hpp"
 #include "glm/gtc/quaternion.hpp."
 #include "entt/entt.hpp"
 
-#include "ECS/Component/Transform.h"
-#include "ECS/Component/Player.h"
-#include "ECS/Component/PhysicsBody.h"
-#include "ECS/Component/Sprite.h"
+#include "Engine/GameContext.h"
 
-void Struktur::System::PlayerSystem::Update(Core::GameContext &context)
+#include "Engine/ECS/Component/Transform.h"
+#include "Engine/ECS/Component/Player.h"
+#include "Engine/ECS/Component/PhysicsBody.h"
+#include "Engine/ECS/Component/Sprite.h"
+
+void Struktur::System::PlayerSystem::Update(GameContext &context)
 {
     auto& input = context.GetInput();
     auto& gameObjectManager = context.GetGameObjectManager();

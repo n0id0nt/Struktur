@@ -4,7 +4,7 @@
 #include "raylib.h"
 #include <format>
 
-#include "Engine/Core/GameContext.h"
+#include "Engine/GameContext.h"
 #include "Debug/Assertions.h"
 
 Vector2 Struktur::FileLoading::LevelParser::LoadJsonVector2(const nlohmann::json& json)
@@ -13,7 +13,7 @@ Vector2 Struktur::FileLoading::LevelParser::LoadJsonVector2(const nlohmann::json
 	return vector;
 }
 
-Struktur::FileLoading::LevelParser::World Struktur::FileLoading::LevelParser::LoadWorldMap(Core::GameContext& context, const std::string& fileDir, const std::string& worldFile)
+Struktur::FileLoading::LevelParser::World Struktur::FileLoading::LevelParser::LoadWorldMap(GameContext& context, const std::string& fileDir, const std::string& worldFile)
 {
 	std::string filePath(fileDir + worldFile);
 	std::ifstream file(filePath);

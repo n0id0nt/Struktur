@@ -11,10 +11,8 @@
 
 namespace Struktur
 {
-	namespace Core
-    {
-        class GameContext;
-    }
+	class GameContext;
+
 	namespace FileLoading
 	{
 		namespace LevelParser
@@ -124,7 +122,7 @@ namespace Struktur
 
 			Vector2 LoadJsonVector2(const nlohmann::json& json);
 
-			World LoadWorldMap(Core::GameContext&* context, const std::string& fileDir, const std::string& worldFile);
+			World LoadWorldMap(GameContext&* context, const std::string& fileDir, const std::string& worldFile);
 			void LoadLevels(World& world, const nlohmann::json& json);
 			void LoadLayers(Level& level, const nlohmann::json& json);
 			void LoadEntities(Layer& entityLayer, const nlohmann::json& json);

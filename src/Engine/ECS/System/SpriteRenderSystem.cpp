@@ -8,12 +8,12 @@
 #include "raylib.h"
 #include "raymath.h"
 
-#include "ECS/Component/Transform.h"
-#include "ECS/Component/Player.h"
-#include "ECS/Component/Sprite.h"
-#include "Engine/Core/GameContext.h"
+#include "Engine/GameContext.h"
+#include "Engine/ECS/Component/Transform.h"
+#include "Engine/ECS/Component/Player.h"
+#include "Engine/ECS/Component/Sprite.h"
 
-void Struktur::System::SpriteRenderSystem::Update(Core::GameContext &context)
+void Struktur::System::SpriteRenderSystem::Update(GameContext &context)
 {
     Struktur::Core::ResourcePool& resourcePool = context.GetResourcePool();
     entt::registry& registry = context.GetRegistry();
