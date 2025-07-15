@@ -2,7 +2,7 @@
 #include "SystemManager.h"
 #include "Engine/GameContext.h"
 
-void Struktur::Core::SystemManager::Update(GameContext &context)
+void Struktur::System::SystemManager::Update(GameContext &context)
 {
     for (auto& system : m_updateSystems)
     {

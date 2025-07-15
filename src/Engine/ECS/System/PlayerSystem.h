@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Engine/Core/SystemManager.h"
+#include "Engine/ECS/SystemManager.h"
 
 namespace Struktur
 {
@@ -8,7 +8,7 @@ namespace Struktur
 
 	namespace System
 	{
-        class PlayerSystem : public Core::ISystem
+        class PlayerSystem : public ISystem
         {        
         public:
             void Update(GameContext& context) override;

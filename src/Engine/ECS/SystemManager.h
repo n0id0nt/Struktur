@@ -11,7 +11,7 @@ namespace Struktur
 {
     class GameContext;
 
-	namespace Core
+	namespace System
 	{
         class ISystem
         {

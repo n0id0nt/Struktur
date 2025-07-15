@@ -3,7 +3,7 @@
 #include "entt/entt.hpp"
 #include "box2d/box2d.h"
 
-#include "Engine/Core/SystemManager.h"
+#include "Engine/ECS/SystemManager.h"
 
 namespace Struktur
 {
@@ -11,7 +11,7 @@ namespace Struktur
 
 	namespace System
 	{
-        class PhysicsSystem : public Core::ISystem
+        class PhysicsSystem : public ISystem
         {
         public:         
             void Update(GameContext& context) override;

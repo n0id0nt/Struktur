@@ -236,12 +236,12 @@ set(SOURCES
 
     src/Engine/Game.h                           src/Engine/Game.cpp
     src/Engine/GameContext.h                    src/Engine/GameContext.cpp
-    
+
     src/Engine/Core/Gamedata.h                  src/Engine/Core/GameData.cpp
     src/Engine/Core/Input.h                     src/Engine/Core/Input.cpp
     src/Engine/Core/ResourcePool.h              src/Engine/Core/ResourcePool.cpp
-    src/Engine/Core/SystemManager.h             src/Engine/Core/SystemManager.cpp
-
+    
+    src/Engine/ECS/SystemManager.h              src/Engine/ECS/SystemManager.cpp
     src/Engine/ECS/GameObjectManager.h          src/Engine/ECS/GameObjectManager.cpp
     
     src/Engine/ECS/Component/PhysicsBody.h

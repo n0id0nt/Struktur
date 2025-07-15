@@ -9,6 +9,7 @@
 
 #include "Engine/GameContext.h"
 
+#include "engine/ECS/System/PhysicsSystem.h"
 #include "Engine/ECS/Component/Transform.h"
 #include "Engine/ECS/Component/Player.h"
 #include "Engine/ECS/Component/PhysicsBody.h"
@@ -53,6 +54,16 @@ void Struktur::System::PlayerSystem::Update(GameContext &context)
                     auto& childTransform = registry.get<Component::Transform>(child);
                     childTransform.position = { (float)(std::rand() % 200) - 100.0f, (float)(std::rand() % 200) - 100.0f, 0.0f }; // Relative to parent
                     DEBUG_INFO("Add child game object");
+
+                    System::SystemManager& systemManager = context.GetSystemManager();
+                    System::PhysicsSystem& physicsSystem = systemManager.GetSystem<System::PhysicsSystem>();
+
+                    b2BodyDef kinematicBodyDef;
+                    kinematicBodyDef.type = b2_dynamicBody;
+                    physicsSystem.CreatePhysicsBody(context, child, kinematicBodyDef);
+                    auto& physicsBody = registry.get<Component::PhysicsBody>(child);
+                    physicsBody.syncFromPhysics = true;  // Don't let physics drive transform
+                    physicsBody.syncToPhysics = true;     // Let transform drive physics
                 }
             }
         }

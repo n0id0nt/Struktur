@@ -14,7 +14,7 @@
 
 #include "Engine/GameContext.h"
 #include "Engine/Core/Input.h"
-#include "Engine/Core/SystemManager.h"
+#include "Engine/ECS/SystemManager.h"
 
 #include "Engine/ECS/Component/Transform.h"
 #include "Engine/ECS/Component/Player.h"
@@ -41,11 +41,12 @@ void Struktur::LoadData(GameContext& context)
     Core::Input& input = context.GetInput();
     entt::registry& registry = context.GetRegistry();
     Core::ResourcePool& resourcePool = context.GetResourcePool();
-    Core::SystemManager& systemManager = context.GetSystemManager();
+    System::SystemManager& systemManager = context.GetSystemManager();
     System::GameObjectManager& gameObjectManager = context.GetGameObjectManager();
 
     gameObjectManager.CreateDeleteObjectCallBack(context);
 
+    // The order here also defines the order they are updated
     systemManager.AddUpdateSystem<System::PlayerSystem>();
     systemManager.AddUpdateSystem<System::HierarchySystem>();
     systemManager.AddUpdateSystem<System::TransformSystem>();
@@ -161,7 +162,7 @@ void Struktur::GameLoop(GameContext& context)
     Core::GameData& gameData = context.GetGameData();
     entt::registry& registry = context.GetRegistry();
     Core::ResourcePool& resourcePool = context.GetResourcePool();
-    Core::SystemManager& systemManager = context.GetSystemManager();
+    System::SystemManager& systemManager = context.GetSystemManager();
 
 #ifndef PLATFORM_WEB
     if (WindowShouldClose()) 

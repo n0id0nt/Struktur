@@ -79,7 +79,7 @@ void Struktur::System::PhysicsSystem::SyncTransformsToPhysics(GameContext &conte
     
     for (auto [entity, physicsBody, transform, worldTransform] : view.each())
     {
-        if (physicsBody.body && physicsBody.syncToPhysics && physicsBody.isDirty)
+        if (physicsBody.body && physicsBody.syncToPhysics)
         {
             // Extract position and rotation from world transform matrix
             glm::vec3 worldPos = glm::vec3(worldTransform.matrix[3]) / physicsWorld.GetPixelsPerMeter();
@@ -88,7 +88,6 @@ void Struktur::System::PhysicsSystem::SyncTransformsToPhysics(GameContext &conte
             float angle = atan2(worldTransform.matrix[1][0], worldTransform.matrix[0][0]);
             
             physicsBody.body->SetTransform(b2Vec2(worldPos.x, worldPos.y), angle);
-            physicsBody.isDirty = false;
         }
     }
 }

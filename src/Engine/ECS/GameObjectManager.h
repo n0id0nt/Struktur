@@ -12,6 +12,7 @@ namespace Struktur
         {
         public:
             GameObjectManager() {}
+            ~GameObjectManager();
 
             void CreateDeleteObjectCallBack(GameContext& context);
 
@@ -21,6 +22,9 @@ namespace Struktur
 
         private:
             void OnChildrenDestroy(entt::registry& reg, entt::entity entity);
+            void OnPhysicsBodyDestory(entt::registry& reg, entt::entity entity);
+
+            GameContext* m_context = nullptr;
         };
     }
 }

@@ -3,7 +3,7 @@
 #include "glm/gtc/quaternion.hpp."
 #include "entt/entt.hpp"
 
-#include "Engine/Core/SystemManager.h"
+#include "Engine/ECS/SystemManager.h"
 
 namespace Struktur
 {
@@ -11,7 +11,7 @@ namespace Struktur
 
 	namespace System
 	{
-        class HierarchySystem : public Core::ISystem
+        class HierarchySystem : public ISystem
         {
         public:
             HierarchySystem() {}
