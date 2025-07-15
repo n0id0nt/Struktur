@@ -12,6 +12,15 @@ namespace Struktur
         {
         public:
             void Update(GameContext& context) override;
+
+        private:
+            struct spriteDraw {
+                Texture2D texture;
+                Rectangle sourceRect;
+                Rectangle destRect;
+                Vector2 offset;
+                float angle;
+            };
         };
     }
 }

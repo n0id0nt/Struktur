@@ -4,7 +4,7 @@
 
 namespace Struktur
 {
-	namespace Game
+	namespace GameResource
 	{
 		namespace TileMap
 		{

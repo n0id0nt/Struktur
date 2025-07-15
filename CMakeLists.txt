@@ -248,6 +248,8 @@ set(SOURCES
     src/Engine/ECS/Component/Player.h
     src/Engine/ECS/Component/Sprite.h
     src/Engine/ECS/Component/Transform.h
+    src/Engine/ECS/Component/TileMap.h
+    src/Engine/ECS/Component/Identifier.h
 
     src/Engine/ECS/System/DebugSystem.h         src/Engine/ECS/System/DebugSystem.cpp
     src/Engine/ECS/System/HierrarchySystem.h    src/Engine/ECS/System/HierrarchySystem.cpp
@@ -258,6 +260,11 @@ set(SOURCES
 
     src/Engine/Physics/PhysicsWorld.h           src/Engine/Physics/PhysicsWorld.cpp
     src/Engine/Physics/ContactListener.h        src/Engine/Physics/ContactListener.cpp
+
+    src/Engine/FileLoading/LevelParser.h        src/Engine/FileLoading/LevelParser.cpp
+
+    src/Engine/Game/Level.h                     src/Engine/Game/Level.cpp
+    src/Engine/Game/TileMap.h                   src/Engine/Game/TileMap.cpp
 
     src/Debug/Assertions.h
 )

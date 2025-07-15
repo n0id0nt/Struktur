@@ -7,9 +7,9 @@
 #include "Engine/GameContext.h"
 #include "Debug/Assertions.h"
 
-Vector2 Struktur::FileLoading::LevelParser::LoadJsonVector2(const nlohmann::json& json)
+glm::vec2 Struktur::FileLoading::LevelParser::LoadJsonVector2(const nlohmann::json& json)
 {
-	Vector2 vector{ json[0], json[1] };
+	glm::vec2 vector{ json[0], json[1] };
 	return vector;
 }
 

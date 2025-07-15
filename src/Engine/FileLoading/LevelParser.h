@@ -1,13 +1,12 @@
 #pragma once
+
 #include <string>
-#include <entt/entt.hpp>
-#include "pugixml.hpp"
 #include <unordered_map>
 #include <vector>
-#include "raylib.h"
-#include <nlohmann/json.hpp>
 #include <optional>
 #include <any>
+#include "nlohmann/json.hpp"
+#include "glm/glm.hpp"
 
 namespace Struktur
 {
@@ -45,11 +44,11 @@ namespace Struktur
 			{
 				std::string identifier;
 				std::string Iid;
-				Vector2 grid;
-				Vector2 pivot;
+				glm::vec2 grid;
+				glm::vec2 pivot;
 				int width;
 				int height;
-				Vector2 px;
+				glm::vec2 px;
 				int worldX;
 				int worldY;
 				std::vector<FieldInstance> fieldInstances;
@@ -77,9 +76,9 @@ namespace Struktur
 
 			struct GridTile
 			{
-				Vector2 px;
-				Vector2 src;
-				Vector2 d;
+				glm::vec2 px;
+				glm::vec2 src;
+				glm::vec2 d;
 				FlipBit f;
 				int t;
 				int a;
@@ -120,9 +119,9 @@ namespace Struktur
 				std::vector<Level> levels;
 			};
 
-			Vector2 LoadJsonVector2(const nlohmann::json& json);
+			glm::vec2 LoadJsonVector2(const nlohmann::json& json);
 
-			World LoadWorldMap(GameContext&* context, const std::string& fileDir, const std::string& worldFile);
+			World LoadWorldMap(GameContext& context, const std::string& fileDir, const std::string& worldFile);
 			void LoadLevels(World& world, const nlohmann::json& json);
 			void LoadLayers(Level& level, const nlohmann::json& json);
 			void LoadEntities(Layer& entityLayer, const nlohmann::json& json);

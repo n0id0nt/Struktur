@@ -29,12 +29,16 @@
 #include "Engine/ECS/System/SpriteRenderSystem.h"
 #include "Engine/ECS/System/DebugSystem.h"
 
+#include "Engine/Game/Level.h"
+
+#include "Engine/FileLoading/LevelParser.h"
+
 constexpr static const unsigned int FPS = 60;
 constexpr static const float TIME_STEP = 1.0f / FPS;
 constexpr static const int VELOCITY_ITERATIONS = 6;
 constexpr static const int POSITION_ITERATIONS = 4;
-constexpr static const char* CIRCLE_TEXTURE = "assets/Circle.png";
-constexpr static const char* PLAYERIDLE_TEXTURE = "assets/32x32idle.png";
+constexpr static const char* TILE_TEXTURE = "assets/Tiles/cavesofgallet_tiles.png";
+constexpr static const char* PLAYER_TEXTURE = "assets/Tiles/PlayerGrowthSprites.png";
 
 void Struktur::LoadData(GameContext& context)
 {
@@ -44,8 +48,6 @@ void Struktur::LoadData(GameContext& context)
     System::SystemManager& systemManager = context.GetSystemManager();
     System::GameObjectManager& gameObjectManager = context.GetGameObjectManager();
 
-    gameObjectManager.CreateDeleteObjectCallBack(context);
-
     // The order here also defines the order they are updated
     systemManager.AddUpdateSystem<System::PlayerSystem>();
     systemManager.AddUpdateSystem<System::HierarchySystem>();
@@ -54,12 +56,20 @@ void Struktur::LoadData(GameContext& context)
     systemManager.AddRenderSystem<System::SpriteRenderSystem>();
     systemManager.AddRenderSystem<System::DebugSystem>();
 
+    FileLoading::LevelParser::World world = FileLoading::LevelParser::LoadWorldMap(context, "assets/", "Levels/ExampleLDKTLevel.ldtk"); // need to sore the world somewhere to be refered to later.
+    
+    FileLoading::LevelParser::Level& firstLevel = world.levels[0]; // should probably actually store the first level somewhere
+    GameResource::Level::LoadLevelEntities(context, firstLevel);
+
+    gameObjectManager.CreateDeleteObjectCallBack(context);
+
+
     input.LoadInputBindings("assets/Settings/InputBindings/InputBindings.xml");
     DEBUG_INFO("Game Data Loaded");
 
     auto parent = gameObjectManager.CreateGameObject(context);
     registry.emplace<Component::Player>(parent, 10.f);
-    registry.emplace<Component::Sprite>(parent, PLAYERIDLE_TEXTURE, WHITE, glm::vec2(16, 16), 4, 1, false, 0);
+    registry.emplace<Component::Sprite>(parent, PLAYER_TEXTURE, WHITE, glm::vec2(16, 16), 4, 1, false, 0);
     auto& parentTransform = registry.get<Component::Transform>(parent);
     parentTransform.position = {500.0f, 300.0f, 0.0f};
     b2BodyDef kinematicBodyDef;
@@ -71,17 +81,17 @@ void Struktur::LoadData(GameContext& context)
 
     // Create children
     auto child1 = gameObjectManager.CreateGameObject(context, parent);
-    registry.emplace<Component::Sprite>(child1, CIRCLE_TEXTURE, GREEN, glm::vec2(8, 8), 2, 2, false, 1);
+    registry.emplace<Component::Sprite>(child1, TILE_TEXTURE, GREEN, glm::vec2(8, 8), 2, 2, false, 1);
     auto& child1Transform = registry.get<Component::Transform>(child1);
     child1Transform.position = {50.0f, 10.0f, 0.0f}; // Relative to parent
     
     auto child2 = gameObjectManager.CreateGameObject(context, parent);
-    registry.emplace<Component::Sprite>(child2, CIRCLE_TEXTURE, BLUE, glm::vec2(16, 16), 1, 1, false, 0);
+    registry.emplace<Component::Sprite>(child2, TILE_TEXTURE, BLUE, glm::vec2(16, 16), 1, 1, false, 0);
     auto& child2Transform = registry.get<Component::Transform>(child2);
     child2Transform.position = {-100.0f, -90.0f, 0.0f};
     
     auto wall = gameObjectManager.CreateGameObject(context);
-    registry.emplace<Component::Sprite>(wall, CIRCLE_TEXTURE, RED, glm::vec2(16, 16), 1, 1, false, 0);
+    registry.emplace<Component::Sprite>(wall, TILE_TEXTURE, RED, glm::vec2(16, 16), 1, 1, false, 0);
     auto& wallTransform = registry.get<Component::Transform>(wall);
     wallTransform.position = {300.0f, 200.0f, 0.0f};
     b2BodyDef kinematicBody2Def;
@@ -92,7 +102,7 @@ void Struktur::LoadData(GameContext& context)
     physicsBody2.syncToPhysics = true;     // Let transform drive physics
     
     auto movingBox = gameObjectManager.CreateGameObject(context);
-    registry.emplace<Component::Sprite>(movingBox, CIRCLE_TEXTURE, YELLOW, glm::vec2(16, 16), 1, 1, false, 0);
+    registry.emplace<Component::Sprite>(movingBox, TILE_TEXTURE, YELLOW, glm::vec2(16, 16), 1, 1, false, 0);
     auto& movingBoxTransform = registry.get<Component::Transform>(movingBox);
     movingBoxTransform.position = {700.0f, 700.0f, 0.0f};
     b2BodyDef kinematicBody3Def;
@@ -104,11 +114,11 @@ void Struktur::LoadData(GameContext& context)
 
 	DEBUG_INFO("Created Player Entity");
 
-    resourcePool.CreateTexture(CIRCLE_TEXTURE);
-    resourcePool.LoadTextureInGPU(CIRCLE_TEXTURE);
+    resourcePool.CreateTexture(TILE_TEXTURE);
+    resourcePool.LoadTextureInGPU(TILE_TEXTURE);
 
-    resourcePool.CreateTexture(PLAYERIDLE_TEXTURE);
-    resourcePool.LoadTextureInGPU(PLAYERIDLE_TEXTURE);
+    resourcePool.CreateTexture(PLAYER_TEXTURE);
+    resourcePool.LoadTextureInGPU(PLAYER_TEXTURE);
 }
 
 void Struktur::SplashScreenLoop(GameContext& context)

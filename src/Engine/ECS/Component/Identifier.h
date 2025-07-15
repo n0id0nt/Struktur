@@ -6,7 +6,7 @@ namespace Struktur
 {
 	namespace Component
 	{
-		struct IdentifierComponent
+		struct Identifier
 		{
 			std::string type;
 		};

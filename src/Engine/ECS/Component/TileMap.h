@@ -3,7 +3,7 @@
 #include <string>
 #include <vector>
 
-#include "Game/TileMap.h"
+#include "Engine/Game/TileMap.h"
 
 namespace Struktur
 {
@@ -15,7 +15,7 @@ namespace Struktur
 			int width;
 			int height;
 			int tileSize;
-			std::vector<Game::TileMap::GridTile> gridTiles;
+			std::vector<GameResource::TileMap::GridTile> gridTiles;
 			std::vector<int> grid;
 		};
     }
