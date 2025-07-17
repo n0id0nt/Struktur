@@ -3,8 +3,6 @@
 #include "entt/entt.hpp"
 #include "glm/glm.hpp"
 #include "glm/gtc/quaternion.hpp."
-#define GLM_ENABLE_EXPERIMENTAL
-#include "glm/gtx/matrix_decompose.hpp"
 #include "raylib.h"
 #include "raymath.h"
 
@@ -16,25 +14,20 @@
 
 void Struktur::System::SpriteRenderSystem::Update(GameContext &context)
 {
-    Struktur::Core::ResourcePool& resourcePool = context.GetResourcePool();
+    Core::ResourcePool& resourcePool = context.GetResourcePool();
     entt::registry& registry = context.GetRegistry();
+    GameResource::Camera& camera = context.GetCamera();
 
+    ::BeginMode2D(camera.GetRaylibCamera());
     //std::vector<spriteDraw> lateSprites;
     {
         auto view = registry.view<Component::Sprite, Component::WorldTransform>();
         for (auto [entity, sprite, worldTransform] : view.each())
         {
-            glm::vec3 scaleVec;
-            glm::quat rotationQuat{};
-            glm::vec3 translationVec;
-            glm::vec3 skewVec;
-            glm::vec4 perspectiveVec;
-            glm::decompose(worldTransform.matrix, scaleVec, rotationQuat, translationVec, skewVec, perspectiveVec);
-            glm::vec3 euler = glm::eulerAngles(rotationQuat);
-
             const Image& image = resourcePool.RetrieveImage(sprite.fileName);
             int imageWidth = image.width;
             int imageHeight = image.height;
+            glm::vec3 euler = glm::eulerAngles(worldTransform.rotation);
 
             int index = sprite.index;
             ASSERT_MSG(sprite.columns > 0, "Sprite needs to have at least one column");
@@ -56,22 +49,23 @@ void Struktur::System::SpriteRenderSystem::Update(GameContext &context)
             sourceRec.width -= 0.0002f;
             sourceRec.height -= 0.0002f;
 
-            ::Rectangle destRec{ ::round(translationVec.x * 2) / 2, ::round(translationVec.y * 2) / 2, size.x * scaleVec.x, size.y * scaleVec.x };
+            ::Rectangle destRec{ ::round(worldTransform.position.x * 2) / 2, ::round(worldTransform.position.y * 2) / 2, size.x * worldTransform.scale.x, size.y * worldTransform.scale.x };
 
             ::Vector2 offset{ sprite.offset.x, sprite.offset.y };
-
-            ::DrawTexturePro(resourcePool.RetrieveTexture(sprite.fileName), sourceRec, destRec, offset, glm::degrees(euler.z), sprite.color);
+            
+            ::Texture2D texture = resourcePool.RetrieveTexture(sprite.fileName);
+            ::DrawTexturePro(texture, sourceRec, destRec, offset, glm::degrees(euler.z), sprite.color);
         }
     }
     {
         auto view = registry.view<Component::TileMap, Component::WorldTransform>();
         for (auto [entity, tileMap, worldTransform] : view.each())
         {
-            Texture2D texture = resourcePool.RetrieveTexture(tileMap.imagePath);
+            ::Texture2D texture = resourcePool.RetrieveTexture(tileMap.imagePath);
 
             for (auto& gridTile : tileMap.gridTiles)
             {
-                Rectangle sourceRec{ gridTile.sourcePosition.x, gridTile.sourcePosition.y, tileMap.tileSize, tileMap.tileSize };
+                ::Rectangle sourceRec{ gridTile.sourcePosition.x, gridTile.sourcePosition.y, tileMap.tileSize, tileMap.tileSize };
                 switch (gridTile.flipBit)
                 {
                 case GameResource::TileMap::FlipBit::BOTH:
@@ -85,14 +79,15 @@ void Struktur::System::SpriteRenderSystem::Update(GameContext &context)
                     sourceRec.height *= -1;
                     break;
                 }
-                // this stops you from seeing a little bit of the neighboring sprite
+                // this stops you from seeing a little bit of the neighbouring sprite
                 sourceRec.x += 0.0001f;
                 sourceRec.y += 0.0001f;
                 sourceRec.width -= 0.0002f;
                 sourceRec.height -= 0.0002f;
-                Rectangle DestRec{ gridTile.position.x, gridTile.position.y, tileMap.tileSize, tileMap.tileSize };
-                DrawTexturePro(texture, sourceRec, DestRec, Vector2{ 0,0 }, 0, WHITE);
+                ::Rectangle DestRec{ gridTile.position.x, gridTile.position.y, tileMap.tileSize, tileMap.tileSize };
+                ::DrawTexturePro(texture, sourceRec, DestRec, ::Vector2{ 0,0 }, 0, WHITE);
             }
         }
     }
+    ::EndMode2D();
 }

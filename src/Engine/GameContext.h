@@ -11,6 +11,7 @@
 #include "Engine/ECS/SystemManager.h"
 #include "Engine/ECS/GameObjectManager.h"
 #include "Engine/Physics/PhysicsWorld.h"
+#include "Engine/Game/Camera.h"
 #include "Debug/Assertions.h"
 
 namespace Struktur
@@ -26,6 +27,7 @@ namespace Struktur
             m_resourcePool = std::make_unique<Core::ResourcePool>();
             m_systemManager = std::make_unique<System::SystemManager>();
             m_gameObjectManager = std::make_unique<System::GameObjectManager>();
+            m_camera = std::make_unique<GameResource::Camera>();
             
             //TODO These variables don't belong here - Possibly initialise these from a file or just pass them in??
             glm::vec2 gravity(0.0f, 0.0f);
@@ -71,6 +73,11 @@ namespace Struktur
             return *m_physicsWorld;
         }
 
+        GameResource::Camera& GetCamera() const {
+            ASSERT_MSG(m_camera.get(), "Camera not initialized");
+            return *m_camera;
+        }
+
     private:
         std::unique_ptr<Core::GameData> m_gameData;
         std::unique_ptr<Core::Input> m_input;
@@ -79,5 +86,6 @@ namespace Struktur
         std::unique_ptr<System::SystemManager> m_systemManager;
         std::unique_ptr<System::GameObjectManager> m_gameObjectManager;
         std::unique_ptr<Physics::PhysicsWorld> m_physicsWorld;
+        std::unique_ptr<GameResource::Camera> m_camera;
     };
 }

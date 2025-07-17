@@ -20,6 +20,7 @@
 #include "Engine/ECS/Component/Player.h"
 #include "Engine/ECS/Component/PhysicsBody.h"
 #include "Engine/ECS/Component/Sprite.h"
+#include "Engine/ECS/Component/Camera.h"
 
 #include "Engine/ECS/GameObjectManager.h"
 #include "Engine/ECS/System/HierrarchySystem.h"
@@ -28,6 +29,7 @@
 #include "Engine/ECS/System/PlayerSystem.h"
 #include "Engine/ECS/System/SpriteRenderSystem.h"
 #include "Engine/ECS/System/DebugSystem.h"
+#include "Engine/ECS/System/CameraSystem.h"
 
 #include "Engine/Game/Level.h"
 
@@ -51,7 +53,8 @@ void Struktur::LoadData(GameContext& context)
     // The order here also defines the order they are updated
     systemManager.AddUpdateSystem<System::PlayerSystem>();
     systemManager.AddUpdateSystem<System::HierarchySystem>();
-    systemManager.AddUpdateSystem<System::TransformSystem>();
+    auto& transformSystem = systemManager.AddUpdateSystem<System::TransformSystem>();
+    systemManager.AddUpdateSystem<System::CameraSystem>();
     auto& physicsSystem = systemManager.AddUpdateSystem<System::PhysicsSystem>();
     systemManager.AddRenderSystem<System::SpriteRenderSystem>();
     systemManager.AddRenderSystem<System::DebugSystem>();
@@ -70,8 +73,11 @@ void Struktur::LoadData(GameContext& context)
     auto parent = gameObjectManager.CreateGameObject(context);
     registry.emplace<Component::Player>(parent, 10.f);
     registry.emplace<Component::Sprite>(parent, PLAYER_TEXTURE, WHITE, glm::vec2(16, 16), 4, 1, false, 0);
-    auto& parentTransform = registry.get<Component::Transform>(parent);
-    parentTransform.position = {500.0f, 300.0f, 0.0f};
+    auto& parentCamera = registry.emplace<Component::Camera>(parent);
+    parentCamera.zoom = 2.f;
+    parentCamera.forcePosition = true;
+    parentCamera.damping = glm::vec2(0.1f,0.1f);
+    transformSystem.SetLocalTransform(context, parent, glm::vec3(500.0f, 300.0f, 0.0f), glm::vec3(0.0f), glm::quat(1.0f, 0.0f, 0.0f, 0.0f));
     b2BodyDef kinematicBodyDef;
     kinematicBodyDef.type = b2_dynamicBody;
     physicsSystem.CreatePhysicsBody(context, parent, kinematicBodyDef);
@@ -82,18 +88,15 @@ void Struktur::LoadData(GameContext& context)
     // Create children
     auto child1 = gameObjectManager.CreateGameObject(context, parent);
     registry.emplace<Component::Sprite>(child1, TILE_TEXTURE, GREEN, glm::vec2(8, 8), 2, 2, false, 1);
-    auto& child1Transform = registry.get<Component::Transform>(child1);
-    child1Transform.position = {50.0f, 10.0f, 0.0f}; // Relative to parent
+    transformSystem.SetLocalTransform(context, child1, glm::vec3(50.0f, 10.0f, 0.0f), glm::vec3(0.0f), glm::quat(1.0f, 0.0f, 0.0f, 0.0f));
     
     auto child2 = gameObjectManager.CreateGameObject(context, parent);
     registry.emplace<Component::Sprite>(child2, TILE_TEXTURE, BLUE, glm::vec2(16, 16), 1, 1, false, 0);
-    auto& child2Transform = registry.get<Component::Transform>(child2);
-    child2Transform.position = {-100.0f, -90.0f, 0.0f};
+    transformSystem.SetLocalTransform(context, child2, glm::vec3(-100.0f, -90.0f, 0.0f), glm::vec3(0.0f), glm::quat(1.0f, 0.0f, 0.0f, 0.0f));
     
     auto wall = gameObjectManager.CreateGameObject(context);
     registry.emplace<Component::Sprite>(wall, TILE_TEXTURE, RED, glm::vec2(16, 16), 1, 1, false, 0);
-    auto& wallTransform = registry.get<Component::Transform>(wall);
-    wallTransform.position = {300.0f, 200.0f, 0.0f};
+    transformSystem.SetLocalTransform(context, wall, glm::vec3(300.0f, 200.0f, 0.0f), glm::vec3(0.0f), glm::quat(1.0f, 0.0f, 0.0f, 0.0f));
     b2BodyDef kinematicBody2Def;
     kinematicBody2Def.type = b2_staticBody;
     physicsSystem.CreatePhysicsBody(context, wall, kinematicBody2Def);
@@ -103,8 +106,7 @@ void Struktur::LoadData(GameContext& context)
     
     auto movingBox = gameObjectManager.CreateGameObject(context);
     registry.emplace<Component::Sprite>(movingBox, TILE_TEXTURE, YELLOW, glm::vec2(16, 16), 1, 1, false, 0);
-    auto& movingBoxTransform = registry.get<Component::Transform>(movingBox);
-    movingBoxTransform.position = {700.0f, 700.0f, 0.0f};
+    transformSystem.SetLocalTransform(context, wall, glm::vec3(700.0f, 700.0f, 0.0f), glm::vec3(0.0f), glm::quat(1.0f, 0.0f, 0.0f, 0.0f));
     b2BodyDef kinematicBody3Def;
     kinematicBody3Def.type = b2_dynamicBody;
     physicsSystem.CreatePhysicsBody(context, movingBox, kinematicBody3Def);

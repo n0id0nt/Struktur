@@ -7,6 +7,7 @@
 #include "Engine/ECS/Component/TileMap.h"
 #include "Engine/ECS/Component/Identifier.h"
 #include "Engine/ECS/Component/Sprite.h"
+#include "Engine/ECS/System/TransformSystem.h"
 //#include "Engine/ECS/Component/Level.h"
 
 void Struktur::GameResource::Level::LoadLevelEntities(GameContext& context, const Struktur::FileLoading::LevelParser::Level& level)
@@ -14,6 +15,8 @@ void Struktur::GameResource::Level::LoadLevelEntities(GameContext& context, cons
     //const auto levelEntity = registry.create();
     entt::registry& registry = context.GetRegistry();
     System::GameObjectManager& gameObjectManager = context.GetGameObjectManager();
+    System::SystemManager& systemManager = context.GetSystemManager();
+    System::TransformSystem& transformSystem = systemManager.GetSystem<System::TransformSystem>();
 
     for (auto& layer : level.layers) {
         switch (layer.type)
@@ -22,8 +25,7 @@ void Struktur::GameResource::Level::LoadLevelEntities(GameContext& context, cons
         case Struktur::FileLoading::LevelParser::LayerType::AUTO_LAYER:
         {
             const auto layerEntity = gameObjectManager.CreateGameObject(context);
-            auto& layerTransform = registry.get<Component::Transform>(layerEntity);
-            layerTransform.position = {layer.pxTotalOffsetX, layer.pxTotalOffsetY, 0.0f};
+            transformSystem.SetWorldTransform(context, layerEntity, glm::vec3(layer.pxTotalOffsetX, layer.pxTotalOffsetY, 0.0f), glm::vec3(0.0f), glm::quat(1.0f, 0.0f, 0.0f, 0.0f));
             //registry.emplace<Struktur::Component::Level>(layerEntity, level.Iid);
             std::vector<Struktur::GameResource::TileMap::GridTile> grid;
             grid.reserve(layer.autoLayerTiles.size());
@@ -40,8 +42,7 @@ void Struktur::GameResource::Level::LoadLevelEntities(GameContext& context, cons
             for (auto& entityInstance : layer.entityInstaces)
             {
                 const auto layerEntity = gameObjectManager.CreateGameObject(context);
-                auto& layerTransform = registry.get<Component::Transform>(layerEntity);
-                layerTransform.position = {layer.pxTotalOffsetX, layer.pxTotalOffsetY, 0.0f};
+                transformSystem.SetWorldTransform(context, layerEntity, glm::vec3(layer.pxTotalOffsetX, layer.pxTotalOffsetY, 0.0f), glm::vec3(0.0f), glm::quat(1.0f, 0.0f, 0.0f, 0.0f));
                 registry.emplace<Struktur::Component::Identifier>(layerEntity, entityInstance.identifier);
                 registry.emplace<Component::Sprite>(layerEntity, "assets/Tiles/PlayerGrowthSprite.png", WHITE, glm::vec2(16, 16), 12, 5, false, 0);
                 //auto& luaComponent = registry.emplace<Struktur::Component::LuaComponent>(layerEntity, false, luaState.CreateTable());

@@ -250,6 +250,7 @@ set(SOURCES
     src/Engine/ECS/Component/Transform.h
     src/Engine/ECS/Component/TileMap.h
     src/Engine/ECS/Component/Identifier.h
+    src/Engine/ECS/Component/Camera.h
 
     src/Engine/ECS/System/DebugSystem.h         src/Engine/ECS/System/DebugSystem.cpp
     src/Engine/ECS/System/HierrarchySystem.h    src/Engine/ECS/System/HierrarchySystem.cpp
@@ -257,6 +258,7 @@ set(SOURCES
     src/Engine/ECS/System/PlayerSystem.h        src/Engine/ECS/System/PlayerSystem.cpp
     src/Engine/ECS/System/SpriteRenderSystem.h  src/Engine/ECS/System/SpriteRenderSystem.cpp
     src/Engine/ECS/System/TransformSystem.h     src/Engine/ECS/System/TransformSystem.cpp
+    src/Engine/ECS/System/CameraSystem.h     src/Engine/ECS/System/CameraSystem.cpp
 
     src/Engine/Physics/PhysicsWorld.h           src/Engine/Physics/PhysicsWorld.cpp
     src/Engine/Physics/ContactListener.h        src/Engine/Physics/ContactListener.cpp
@@ -265,6 +267,7 @@ set(SOURCES
 
     src/Engine/Game/Level.h                     src/Engine/Game/Level.cpp
     src/Engine/Game/TileMap.h                   src/Engine/Game/TileMap.cpp
+    src/Engine/Game/Camera.h                   src/Engine/Game/Camera.cpp
 
     src/Debug/Assertions.h
 )

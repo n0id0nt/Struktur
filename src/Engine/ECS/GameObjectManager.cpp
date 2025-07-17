@@ -37,7 +37,7 @@ entt::entity Struktur::System::GameObjectManager::CreateGameObject(GameContext& 
     auto entity = registry.create();
     registry.emplace<Component::Transform>(entity);
     
-    if (parent != entt::null) 
+    if (parent != entt::null)
     {
         hierarchySystem.SetParent(context, entity, parent);
     }
@@ -55,9 +55,10 @@ void Struktur::System::GameObjectManager::DestroyGameObject(GameContext& context
 void Struktur::System::GameObjectManager::OnChildrenDestroy(entt::registry& reg, entt::entity entity) 
 {
     // Clean up any dangling references in children's Parent components
-    if (auto* children = reg.try_get<Component::Children>(entity)) 
+    if (auto* children = reg.try_get<Component::Children>(entity))
     {
-        for (auto child : children->entities) {
+        for (auto child : children->entities)
+        {
             if (reg.valid(child)) 
             {
                 reg.remove<Component::Parent>(child);

@@ -1,6 +1,7 @@
 #include "PhysicsSystem.h"
 
 #include "glm/gtc/quaternion.hpp."
+
 #include "Engine/GameContext.h"
 
 #include "Engine/ECS/Component/Transform.h"
@@ -38,34 +39,16 @@ void Struktur::System::PhysicsSystem::SyncPhysicsToTransforms(GameContext &conte
             // Get world position from physics
             b2Vec2 position = physicsBody.body->GetPosition();
             float angle = physicsBody.body->GetAngle();
+
+            glm::vec3 scale = glm::vec3(1.0f);
+            if (auto* worldTransform = registry.try_get<Component::WorldTransform>(entity))
+            {
+                scale = worldTransform->scale;
+            }
             
-            // Convert to local space if entity has a parent
-            if (auto* parent = registry.try_get<Component::Parent>(entity)) 
-            {
-                if (parent->entity != entt::null) 
-                {
-                    glm::vec3 worldPos(position.x * physicsWorld.GetPixelsPerMeter(), position.y * physicsWorld.GetPixelsPerMeter(), 0.0f);
-                    glm::vec3 localPos = transformSystem.WorldToLocal(context, worldPos, parent->entity);
-                    transform.position = localPos;
-                    
-                    // Handle rotation relative to parent
-                    float parentAngle = transformSystem.GetWorldRotation(context, parent->entity);
-                    float localAngle = angle - parentAngle;
-                    transform.rotation = glm::angleAxis(localAngle, glm::vec3(0, 0, 1));
-                }
-                else
-                {
-                    // No parent, use world coordinates directly
-                    transform.position = glm::vec3(position.x * physicsWorld.GetPixelsPerMeter(), position.y * physicsWorld.GetPixelsPerMeter(), 0.0f);
-                    transform.rotation = glm::angleAxis(angle, glm::vec3(0, 0, 1));
-                }
-            }
-            else
-            {
-                // No parent, use world coordinates directly
-                transform.position = glm::vec3(position.x * physicsWorld.GetPixelsPerMeter(), position.y * physicsWorld.GetPixelsPerMeter(), 0.0f);
-                transform.rotation = glm::angleAxis(angle, glm::vec3(0, 0, 1));
-            }
+            glm::vec3 worldPos(position.x * physicsWorld.GetPixelsPerMeter(), position.y * physicsWorld.GetPixelsPerMeter(), 0.0f);
+            glm::quat worldAngle = glm::angleAxis(angle, glm::vec3(0, 0, 1));
+            transformSystem.SetWorldTransform(context, entity, worldPos, scale, worldAngle);
         }
     }
 }
@@ -81,13 +64,8 @@ void Struktur::System::PhysicsSystem::SyncTransformsToPhysics(GameContext &conte
     {
         if (physicsBody.body && physicsBody.syncToPhysics)
         {
-            // Extract position and rotation from world transform matrix
-            glm::vec3 worldPos = glm::vec3(worldTransform.matrix[3]) / physicsWorld.GetPixelsPerMeter();
-            
-            // For 2D, extract rotation from matrix
-            float angle = atan2(worldTransform.matrix[1][0], worldTransform.matrix[0][0]);
-            
-            physicsBody.body->SetTransform(b2Vec2(worldPos.x, worldPos.y), angle);
+			glm::vec3 euler = glm::eulerAngles(worldTransform.rotation);
+            physicsBody.body->SetTransform(b2Vec2(worldTransform.position.x / physicsWorld.GetPixelsPerMeter(), worldTransform.position.y / physicsWorld.GetPixelsPerMeter()), euler.z);
         }
     }
 }
