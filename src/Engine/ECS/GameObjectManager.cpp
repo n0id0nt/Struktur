@@ -31,11 +31,11 @@ void Struktur::System::GameObjectManager::CreateDeleteObjectCallBack(GameContext
 entt::entity Struktur::System::GameObjectManager::CreateGameObject(GameContext& context, entt::entity parent)
 {
     entt::registry& registry = context.GetRegistry();
-    System::SystemManager& systemManager = context.GetSystemManager();
+    SystemManager& systemManager = context.GetSystemManager();
     HierarchySystem& hierarchySystem = systemManager.GetSystem<HierarchySystem>();
 
     auto entity = registry.create();
-    registry.emplace<Component::Transform>(entity);
+    registry.emplace<Component::LocalTransform>(entity);
     
     if (parent != entt::null)
     {
@@ -47,7 +47,7 @@ entt::entity Struktur::System::GameObjectManager::CreateGameObject(GameContext& 
 
 void Struktur::System::GameObjectManager::DestroyGameObject(GameContext& context, entt::entity entity) 
 {
-    System::SystemManager& systemManager = context.GetSystemManager();
+    SystemManager& systemManager = context.GetSystemManager();
     HierarchySystem& hierarchySystem = systemManager.GetSystem<HierarchySystem>();
     hierarchySystem.DestroyEntity(context, entity);
 }

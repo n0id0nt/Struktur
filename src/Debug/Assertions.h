@@ -1,7 +1,8 @@
 #pragma once
-#include <raylib.h>
+
 #include <string>
 #include <sstream>
+#include "raylib.h"
 
 // Platform detection
 #ifdef PLATFORM_WEB
@@ -10,21 +11,21 @@
     #define PLATFORM_WINDOWS
 #endif
 
-namespace Struktur 
+namespace Struktur
 {
-    namespace Debug 
+    namespace Debug
     {
         
-        // Debug levels
-        enum class Level {
+        enum class Level
+        {
             LEVEL_INFO,
             LEVEL_WARNING,
             LEVEL_ERROR,
             LEVEL_FATAL
         };
         
-        // Convert debug level to Raylib log level
-        inline int ToRaylibLogLevel(Level level) {
+        inline int ToRaylibLogLevel(Level level)
+        {
             switch (level) {
                 case Level::LEVEL_INFO:    return LOG_INFO;
                 case Level::LEVEL_WARNING: return LOG_WARNING;
@@ -34,11 +35,10 @@ namespace Struktur
             }
         }
         
-        // Format message with file, line, and function info
-        inline std::string FormatMessage(const char* file, int line, const char* func, const std::string& message) {
+        inline std::string FormatMessage(const char* file, int line, const char* func, const std::string& message)
+        {
             std::stringstream ss;
             
-            // Extract just the filename from full path
             const char* filename = file;
             const char* lastSlash = strrchr(file, '/');
             const char* lastBackslash = strrchr(file, '\\');
@@ -50,14 +50,15 @@ namespace Struktur
             return ss.str();
         }
         
-        // Log function that integrates with Raylib
-        inline void Log(Level level, const char* file, int line, const char* func, const std::string& message) {
+        inline void Log(Level level, const char* file, int line, const char* func, const std::string& message)
+        {
             std::string formatted = FormatMessage(file, line, func, message);
             TraceLog(ToRaylibLogLevel(level), formatted.c_str());
         }
         
         // Break/halt execution based on platform
-        inline void DebugBreak() {
+        inline void DebugBreak()
+        {
             #ifdef PLATFORM_WINDOWS
                 __debugbreak();
             #elif defined(PLATFORM_WEB)
@@ -76,37 +77,51 @@ namespace Struktur
             #endif
         }
         
-        // Assert implementation
-        inline bool AssertImpl(bool condition, const char* conditionStr, const char* file, int line, const char* func, const std::string& message = "") {
-            if (!condition) {
+        inline bool AssertImpl(bool condition, const char* conditionStr, const char* file, int line, const char* func, const std::string& message = "")
+        {
+            if (!condition)
+            {
                 std::stringstream ss;
                 ss << "ASSERTION FAILED: " << conditionStr;
-                if (!message.empty()) {
+                if (!message.empty())
+                {
                     ss << " - " << message;
                 }
                 
                 Log(Level::LEVEL_FATAL, file, line, func, ss.str());
                 
-                #ifdef DEBUG
-                    DebugBreak();
-                #endif
+#ifdef DEBUG
+				DebugBreak();
+#endif
                 
                 return false;
             }
             return true;
         }
+        
+        inline bool BreakImpl(const char* file, int line, const char* func, const std::string& message = "")
+        {
+			std::stringstream ss;
+            ss << "BREAK: ";
+			if (!message.empty())
+            {
+				ss << " - " << message;
+			}
+
+			Log(Level::LEVEL_FATAL, file, line, func, ss.str());
+
+#ifdef DEBUG
+			DebugBreak();
+#endif
+
+			return false;
+        }
     }
 }
 
-// Macro definitions for easy use
+// Macro definitions
 #define DEBUG_LOG(level, message) \
     Struktur::Debug::Log(level, __FILE__, __LINE__, __FUNCTION__, message)
-
-#define DEBUG_ASSERT(condition) \
-    Struktur::Debug::AssertImpl(condition, #condition, __FILE__, __LINE__, __FUNCTION__)
-
-#define DEBUG_ASSERT_MSG(condition, message) \
-    Struktur::Debug::AssertImpl(condition, #condition, __FILE__, __LINE__, __FUNCTION__, message)
 
 // Specific log level macros
 #define DEBUG_INFO(message) DEBUG_LOG(Struktur::Debug::Level::LEVEL_INFO, message)
@@ -121,10 +136,17 @@ namespace Struktur
 #define ASSERT_MSG(condition, message) \
     Struktur::Debug::AssertImpl(condition, #condition, __FILE__, __LINE__, __FUNCTION__, message)
 
+#define BREAK \
+    Struktur::Debug::BreakImpl(__FILE__, __LINE__, __FUNCTION__)
+
+#define BREAK_MSG(message) \
+    Struktur::Debug::BreakImpl(__FILE__, __LINE__, __FUNCTION__, message)
+
 // Usage examples:
 /*
 
-int main() {
+int main()
+{
     // Initialize Raylib
     InitWindow(800, 600, "Debug Assert Example");
     SetTraceLogLevel(LOG_ALL); // Enable all log levels
@@ -148,7 +170,8 @@ int main() {
     // Always-on assert (works in release too)
     ASSERT_MSG(value != 0, "Value cannot be zero");
     
-    while (!WindowShouldClose()) {
+    while (!WindowShouldClose())
+    {
         BeginDrawing();
         ClearBackground(RAYWHITE);
         DrawText("Check console for debug output", 10, 10, 20, DARKGRAY);

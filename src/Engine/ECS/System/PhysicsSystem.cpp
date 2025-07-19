@@ -8,6 +8,7 @@
 #include "Engine/ECS/Component/PhysicsBody.h"
 #include "Engine/ECS/System/TransformSystem.h"
 #include "Engine/Physics/PhysicsWorld.h"
+#include "Engine/Game/TileMap.h"
 
 void Struktur::System::PhysicsSystem::Update(GameContext &context)
 {
@@ -30,7 +31,7 @@ void Struktur::System::PhysicsSystem::SyncPhysicsToTransforms(GameContext &conte
     Physics::PhysicsWorld& physicsWorld = context.GetPhysicsWorld();
     TransformSystem& transformSystem = context.GetSystemManager().GetSystem<TransformSystem>();
 
-    auto view = registry.view<Component::PhysicsBody, Component::Transform>();
+    auto view = registry.view<Component::PhysicsBody, Component::LocalTransform>();
     
     for (auto [entity, physicsBody, transform] : view.each())
     {
@@ -58,19 +59,20 @@ void Struktur::System::PhysicsSystem::SyncTransformsToPhysics(GameContext &conte
     entt::registry& registry = context.GetRegistry();
     Physics::PhysicsWorld& physicsWorld = context.GetPhysicsWorld();
 
-    auto view = registry.view<Component::PhysicsBody, Component::Transform, Component::WorldTransform>();
+    auto view = registry.view<Component::PhysicsBody, Component::LocalTransform, Component::WorldTransform>();
     
     for (auto [entity, physicsBody, transform, worldTransform] : view.each())
     {
         if (physicsBody.body && physicsBody.syncToPhysics)
         {
 			glm::vec3 euler = glm::eulerAngles(worldTransform.rotation);
+            // create helper functions to convert to and from b2vec to glm::vec2 using hte physics scale
             physicsBody.body->SetTransform(b2Vec2(worldTransform.position.x / physicsWorld.GetPixelsPerMeter(), worldTransform.position.y / physicsWorld.GetPixelsPerMeter()), euler.z);
         }
     }
 }
 
-b2Body *Struktur::System::PhysicsSystem::CreatePhysicsBody(GameContext &context, entt::entity entity, const b2BodyDef &bodyDef)
+Struktur::Component::PhysicsBody& Struktur::System::PhysicsSystem::CreatePhysicsBody(GameContext &context, entt::entity entity, const b2BodyDef &bodyDef, const b2Shape& shape)
 {
     entt::registry& registry = context.GetRegistry();
     Physics::PhysicsWorld& physicsWorld = context.GetPhysicsWorld();
@@ -78,19 +80,28 @@ b2Body *Struktur::System::PhysicsSystem::CreatePhysicsBody(GameContext &context,
     b2Body* body = physicsWorld.CreateBody(&bodyDef);
     body->GetUserData().pointer = static_cast<uintptr_t>(entity);
 
-    //Create Ball shape
-    b2PolygonShape groundBox;
-    groundBox.SetAsBox(1 / 2.0f, 1 / 2.0f);
-
     b2FixtureDef fixtureDef;
-    fixtureDef.shape = &groundBox;
+    fixtureDef.shape = &shape;
     fixtureDef.density = 1.f;
     fixtureDef.friction = 0.4;
     fixtureDef.restitution = 0.f; 
 
     body->CreateFixture(&fixtureDef);
     
-    registry.emplace<Component::PhysicsBody>(entity, body, bodyDef.type == b2_kinematicBody);
+    Component::PhysicsBody& physicsBody = registry.emplace<Component::PhysicsBody>(entity, body, bodyDef.type == b2_kinematicBody);
     
-    return body;
+    return physicsBody;
+}
+
+Struktur::Component::PhysicsBody &Struktur::System::PhysicsSystem::CreatePhysicsBody(GameContext &context, entt::entity entity, const b2BodyDef &bodyDef)
+{
+    entt::registry& registry = context.GetRegistry();
+    Physics::PhysicsWorld& physicsWorld = context.GetPhysicsWorld();
+
+    b2Body* body = physicsWorld.CreateBody(&bodyDef);
+    body->GetUserData().pointer = static_cast<uintptr_t>(entity);
+    
+    Component::PhysicsBody& physicsBody = registry.emplace<Component::PhysicsBody>(entity, body, bodyDef.type == b2_kinematicBody);
+    
+    return physicsBody;
 }

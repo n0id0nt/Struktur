@@ -258,18 +258,20 @@ set(SOURCES
     src/Engine/ECS/System/PlayerSystem.h        src/Engine/ECS/System/PlayerSystem.cpp
     src/Engine/ECS/System/SpriteRenderSystem.h  src/Engine/ECS/System/SpriteRenderSystem.cpp
     src/Engine/ECS/System/TransformSystem.h     src/Engine/ECS/System/TransformSystem.cpp
-    src/Engine/ECS/System/CameraSystem.h     src/Engine/ECS/System/CameraSystem.cpp
+    src/Engine/ECS/System/CameraSystem.h        src/Engine/ECS/System/CameraSystem.cpp
 
     src/Engine/Physics/PhysicsWorld.h           src/Engine/Physics/PhysicsWorld.cpp
     src/Engine/Physics/ContactListener.h        src/Engine/Physics/ContactListener.cpp
+    src/Engine/Physics/CollisionShapeGenerators/TileMapCollisionBodyGenerator.h     src/Engine/Physics/CollisionShapeGenerators/TileMapCollisionBodyGenerator.cpp
 
     src/Engine/FileLoading/LevelParser.h        src/Engine/FileLoading/LevelParser.cpp
 
     src/Engine/Game/Level.h                     src/Engine/Game/Level.cpp
     src/Engine/Game/TileMap.h                   src/Engine/Game/TileMap.cpp
-    src/Engine/Game/Camera.h                   src/Engine/Game/Camera.cpp
+    src/Engine/Game/Camera.h                    src/Engine/Game/Camera.cpp
 
     src/Debug/Assertions.h
+    src/Debug/Box2DDebugRenderer.h
 )
 
 # Create executable

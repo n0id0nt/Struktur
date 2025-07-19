@@ -9,6 +9,10 @@ namespace Struktur
 {
     class GameContext;
 
+	namespace Component
+	{
+		struct PhysicsBody;
+	}
 	namespace System
 	{
         class PhysicsSystem : public ISystem
@@ -20,7 +24,8 @@ namespace Struktur
             void SyncPhysicsToTransforms(GameContext& context);
             void SyncTransformsToPhysics(GameContext& context) ;
 
-            b2Body* CreatePhysicsBody(GameContext& context, entt::entity entity, const b2BodyDef& bodyDef);
+            Component::PhysicsBody& CreatePhysicsBody(GameContext& context, entt::entity entity, const b2BodyDef& bodyDef, const b2Shape& shape);
+            Component::PhysicsBody& CreatePhysicsBody(GameContext& context, entt::entity entity, const b2BodyDef& bodyDef);
         };
     }
 }

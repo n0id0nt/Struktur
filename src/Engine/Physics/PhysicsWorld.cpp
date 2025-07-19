@@ -36,6 +36,6 @@ float Struktur::Physics::PhysicsWorld::GetPixelsPerMeter() const
 void Struktur::Physics::PhysicsWorld::SetPixelsPerMeter(float pixelsPerMeter)
 {
 	m_pixelsPerMeter = pixelsPerMeter;
-	// TODO resize everything in the scene to match the new pixel size, or just assert to ensure the scene is empty before resizeing - currently only set before any physics objects are created os it is not yet a problem 
-	ASSERT_MSG(false, "Set Pixels Per Meter should not be called because it would require everything in the physics scene to be resized which is not implemented.");
+	// TODO resize everything in the scene to match the new pixel size, or just assert to ensure the scene is empty before resizing - currently only set before any physics objects are created as it is not yet a problem 
+	BREAK_MSG("Set Pixels Per Meter should not be called because it would require everything in the physics scene to be resized which is not implemented.");
 }

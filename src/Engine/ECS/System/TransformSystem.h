@@ -15,7 +15,7 @@ namespace Struktur
         {
         public:
 
-            void Update(GameContext& context) override;
+            void Update(GameContext& context) override {}
 
             glm::vec3 WorldToLocal(GameContext& context, const glm::vec3& worldPos, entt::entity parentEntity);
             float GetWorldRotation(GameContext& context, entt::entity entity);

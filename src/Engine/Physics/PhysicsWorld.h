@@ -24,6 +24,8 @@ namespace Struktur
 			float GetPixelsPerMeter() const;
 			void SetPixelsPerMeter(float pixelsPerMeter);
 
+			b2World* GetRawWorld() { return &m_world; }
+
 		private:
 
 			ContactListener m_contactListener;
