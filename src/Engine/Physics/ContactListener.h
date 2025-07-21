@@ -1,7 +1,7 @@
 #pragma once
 
 #include <vector>
-#include "Box2D/Box2D.h"
+#include "box2d/box2d.h"
 #include "entt/entt.hpp"
 #include "glm/glm.hpp"
 

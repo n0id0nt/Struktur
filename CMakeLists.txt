@@ -137,7 +137,7 @@ if (NOT raylib_FOUND)
     FetchContent_Declare(
         rlimgui
         GIT_REPOSITORY https://github.com/raylib-extras/rlImGui.git
-        GIT_TAG HEAD
+        GIT_TAG 0105acf1bfba22e883688e5b9ffb1af0536739e2
     )
 
     # Configure library options before making available

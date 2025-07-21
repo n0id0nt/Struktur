@@ -65,7 +65,7 @@ void Struktur::System::SpriteRenderSystem::Update(GameContext &context)
 
             for (auto& gridTile : tileMap.gridTiles)
             {
-                ::Rectangle sourceRec{ gridTile.sourcePosition.x, gridTile.sourcePosition.y, tileMap.tileSize, tileMap.tileSize };
+                ::Rectangle sourceRec{ gridTile.sourcePosition.x, gridTile.sourcePosition.y, (float)tileMap.tileSize, (float)tileMap.tileSize };
                 switch (gridTile.flipBit)
                 {
                 case GameResource::TileMap::FlipBit::BOTH:
@@ -84,7 +84,7 @@ void Struktur::System::SpriteRenderSystem::Update(GameContext &context)
                 sourceRec.y += 0.0001f;
                 sourceRec.width -= 0.0002f;
                 sourceRec.height -= 0.0002f;
-                ::Rectangle DestRec{ gridTile.position.x, gridTile.position.y, tileMap.tileSize, tileMap.tileSize };
+                ::Rectangle DestRec{ gridTile.position.x, gridTile.position.y, (float)tileMap.tileSize, (float)tileMap.tileSize };
                 ::DrawTexturePro(texture, sourceRec, DestRec, ::Vector2{ 0,0 }, 0, WHITE);
             }
         }

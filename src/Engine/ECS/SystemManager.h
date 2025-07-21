@@ -16,6 +16,7 @@ namespace Struktur
         class ISystem
         {
         public:
+            virtual ~ISystem() = default;  
             virtual void Update(GameContext& context) = 0;
         };
 
