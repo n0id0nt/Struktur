@@ -255,7 +255,7 @@ set(SOURCES
     src/Engine/ECS/System/DebugSystem.h         src/Engine/ECS/System/DebugSystem.cpp
     src/Engine/ECS/System/HierrarchySystem.h    src/Engine/ECS/System/HierrarchySystem.cpp
     src/Engine/ECS/System/PhysicsSystem.h       src/Engine/ECS/System/PhysicsSystem.cpp
-    src/Engine/ECS/System/PlayerSystem.h        src/Engine/ECS/System/PlayerSystem.cpp
+    src/Engine/ECS/System/GameplaySystem.h      src/Engine/ECS/System/GameplaySystem.cpp
     src/Engine/ECS/System/SpriteRenderSystem.h  src/Engine/ECS/System/SpriteRenderSystem.cpp
     src/Engine/ECS/System/TransformSystem.h     src/Engine/ECS/System/TransformSystem.cpp
     src/Engine/ECS/System/CameraSystem.h        src/Engine/ECS/System/CameraSystem.cpp

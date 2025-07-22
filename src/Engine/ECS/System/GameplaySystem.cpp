@@ -1,4 +1,4 @@
-#include "PlayerSystem.h"
+#include "GameplaySystem.h"
 
 #include <cstdlib>
 //#include <ctime>
@@ -16,7 +16,7 @@
 #include "Engine/ECS/Component/PhysicsBody.h"
 #include "Engine/ECS/Component/Sprite.h"
 
-void Struktur::System::PlayerSystem::Update(GameContext &context)
+void Struktur::System::GameplaySystem::Update(GameContext &context)
 {
     auto& input = context.GetInput();
     auto& gameObjectManager = context.GetGameObjectManager();
@@ -38,7 +38,7 @@ void Struktur::System::PlayerSystem::Update(GameContext &context)
         if (inputAddObject)
         {
             //std::srand(std::time({}));
-            auto child = gameObjectManager.CreateGameObject(context, entity);
+            auto child = gameObjectManager.CreateGameObject(context, "Child", entity);
             registry.emplace<Component::Sprite>(child, "assets/Tiles/cavesofgallet_tiles.png", PINK, glm::vec2(8, 8), 20, 20, false, 10);
 			transformSystem.SetLocalTransform(context, child, glm::vec3((float)(std::rand() % 200) - 100.0f, (float)(std::rand() % 200) - 100.0f, 0.0f), glm::vec3(1.0f), glm::quat(1.0f, 0.0f, 0.0f, 0.0f));
             DEBUG_INFO("Add game object");
@@ -52,7 +52,7 @@ void Struktur::System::PlayerSystem::Update(GameContext &context)
                 {
                     entt::entity parent = children->entities[std::rand() % children->entities.size()];
                     //std::srand(std::time({}));
-                    auto child = gameObjectManager.CreateGameObject(context, parent);
+                    auto child = gameObjectManager.CreateGameObject(context, "Child of child", parent);
                     registry.emplace<Component::Sprite>(child, "assets/Tiles/cavesofgallet_tiles.png", PURPLE, glm::vec2(8, 8), 20, 20, false, 11);
                     transformSystem.SetLocalTransform(context, child, glm::vec3((float)(std::rand() % 200) - 100.0f, (float)(std::rand() % 200) - 100.0f, 0.0f), glm::vec3(1.0f), glm::quat(1.0f, 0.0f, 0.0f, 0.0f));
                     DEBUG_INFO("Add child game object");

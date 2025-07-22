@@ -9,6 +9,7 @@
 #include "Engine/ECS/System/TransformSystem.h"
 #include "Engine/ECS/Component/Transform.h"
 #include "Engine/ECS/Component/PhysicsBody.h"
+#include "Engine/ECS/Component/Identifier.h"
 
 Struktur::System::GameObjectManager::~GameObjectManager()
 {
@@ -28,7 +29,7 @@ void Struktur::System::GameObjectManager::CreateDeleteObjectCallBack(GameContext
     registry.on_destroy<Component::PhysicsBody>().connect<&GameObjectManager::OnPhysicsBodyDestory>(*this);
 }
 
-entt::entity Struktur::System::GameObjectManager::CreateGameObject(GameContext& context, entt::entity parent)
+entt::entity Struktur::System::GameObjectManager::CreateGameObject(GameContext& context, const std::string& identifier, entt::entity parent)
 {
     entt::registry& registry = context.GetRegistry();
     SystemManager& systemManager = context.GetSystemManager();
@@ -36,6 +37,7 @@ entt::entity Struktur::System::GameObjectManager::CreateGameObject(GameContext& 
 
     auto entity = registry.create();
     registry.emplace<Component::LocalTransform>(entity);
+    registry.emplace<Component::Identifier>(entity, identifier);
     
     if (parent != entt::null)
     {

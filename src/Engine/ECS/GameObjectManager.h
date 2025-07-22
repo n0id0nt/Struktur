@@ -1,5 +1,6 @@
 #pragma once
 
+#include <string>
 #include "entt/entt.hpp"
 
 namespace Struktur
@@ -16,7 +17,7 @@ namespace Struktur
 
             void CreateDeleteObjectCallBack(GameContext& context);
 
-            entt::entity CreateGameObject(GameContext& context, entt::entity parent = entt::null);
+            entt::entity CreateGameObject(GameContext& context, const std::string& identifier, entt::entity parent = entt::null);
 
             void DestroyGameObject(GameContext& context, entt::entity entity);
 

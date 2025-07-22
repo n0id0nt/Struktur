@@ -8,7 +8,7 @@ namespace Struktur
 
 	namespace System
 	{
-        class PlayerSystem : public ISystem
+        class GameplaySystem : public ISystem
         {        
         public:
             void Update(GameContext& context) override;

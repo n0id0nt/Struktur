@@ -26,7 +26,7 @@
 #include "Engine/ECS/System/HierrarchySystem.h"
 #include "Engine/ECS/System/TransformSystem.h"
 #include "Engine/ECS/System/PhysicsSystem.h"
-#include "Engine/ECS/System/PlayerSystem.h"
+#include "Engine/ECS/System/GameplaySystem.h"
 #include "Engine/ECS/System/SpriteRenderSystem.h"
 #include "Engine/ECS/System/DebugSystem.h"
 #include "Engine/ECS/System/CameraSystem.h"
@@ -51,11 +51,11 @@ void Struktur::LoadData(GameContext& context)
     System::GameObjectManager& gameObjectManager = context.GetGameObjectManager();
 
     // The order here also defines the order they are updated
-    systemManager.AddUpdateSystem<System::PlayerSystem>();
+    systemManager.AddUpdateSystem<System::GameplaySystem>();
     systemManager.AddUpdateSystem<System::HierarchySystem>();
-    auto& transformSystem = systemManager.AddUpdateSystem<System::TransformSystem>();
+    systemManager.AddUpdateSystem<System::TransformSystem>();
     systemManager.AddUpdateSystem<System::CameraSystem>();
-    auto& physicsSystem = systemManager.AddUpdateSystem<System::PhysicsSystem>();
+    systemManager.AddUpdateSystem<System::PhysicsSystem>();
     systemManager.AddRenderSystem<System::SpriteRenderSystem>();
     systemManager.AddRenderSystem<System::DebugSystem>();
 
@@ -66,69 +66,14 @@ void Struktur::LoadData(GameContext& context)
 
     gameObjectManager.CreateDeleteObjectCallBack(context);
 
-
     input.LoadInputBindings("assets/Settings/InputBindings/InputBindings.xml");
-    DEBUG_INFO("Game Data Loaded");
-
-    auto parent = gameObjectManager.CreateGameObject(context);
-    registry.emplace<Component::Player>(parent, 10.f);
-    registry.emplace<Component::Sprite>(parent, PLAYER_TEXTURE, WHITE, glm::vec2(16, 16), 12, 5, false, 12);
-    auto& parentCamera = registry.emplace<Component::Camera>(parent);
-    parentCamera.zoom = 2.f;
-    parentCamera.forcePosition = true;
-    parentCamera.damping = glm::vec2(0.8f,0.8f);
-    transformSystem.SetLocalTransform(context, parent, glm::vec3(500.0f, 300.0f, 0.0f), glm::vec3(1.0f), glm::quat(1.0f, 0.0f, 0.0f, 0.0f));
-    b2BodyDef kinematicBodyDef;
-    kinematicBodyDef.type = b2_dynamicBody;
-	b2PolygonShape playerShape;
-    playerShape.SetAsBox(1 / 2.0f, 1 / 2.0f);
-    physicsSystem.CreatePhysicsBody(context, parent, kinematicBodyDef, playerShape);
-    auto& physicsBody = registry.get<Component::PhysicsBody>(parent);
-    physicsBody.syncFromPhysics = true;  // Don't let physics drive transform
-    physicsBody.syncToPhysics = true;     // Let transform drive physics
-
-    // Create children
-    auto child1 = gameObjectManager.CreateGameObject(context, parent);
-    registry.emplace<Component::Sprite>(child1, TILE_TEXTURE, GREEN, glm::vec2(8, 8), 9, 12, false, 14);
-    transformSystem.SetLocalTransform(context, child1, glm::vec3(50.0f, 10.0f, 0.0f), glm::vec3(1.0f), glm::quat(1.0f, 0.0f, 0.0f, 0.0f));
-    
-    auto child2 = gameObjectManager.CreateGameObject(context, parent);
-    registry.emplace<Component::Sprite>(child2, TILE_TEXTURE, BLUE, glm::vec2(16, 16), 9, 12, false, 3);
-    transformSystem.SetLocalTransform(context, child2, glm::vec3(-100.0f, -90.0f, 0.0f), glm::vec3(1.0f), glm::quat(1.0f, 0.0f, 0.0f, 0.0f));
-    
-    auto wall = gameObjectManager.CreateGameObject(context);
-    registry.emplace<Component::Sprite>(wall, TILE_TEXTURE, RED, glm::vec2(16, 16), 9, 12, false, 5);
-    transformSystem.SetLocalTransform(context, wall, glm::vec3(350.0f, 250.0f, 0.0f), glm::vec3(1.0f), glm::quat(1.0f, 0.0f, 0.0f, 0.0f));
-    b2BodyDef kinematicBody2Def;
-    kinematicBody2Def.type = b2_staticBody;
-	b2PolygonShape wallShape;
-    wallShape.SetAsBox(1 / 2.0f, 1 / 2.0f);
-    physicsSystem.CreatePhysicsBody(context, wall, kinematicBody2Def, wallShape);
-    auto& physicsBody2 = registry.get<Component::PhysicsBody>(wall);
-    physicsBody2.syncFromPhysics = true;  // Don't let physics drive transform
-    physicsBody2.syncToPhysics = true;     // Let transform drive physics
-    
-    auto movingBox = gameObjectManager.CreateGameObject(context);
-    registry.emplace<Component::Sprite>(movingBox, TILE_TEXTURE, YELLOW, glm::vec2(16, 16), 9, 12, false, 6);
-    transformSystem.SetLocalTransform(context, movingBox, glm::vec3(600.0f, 400.0f, 0.0f), glm::vec3(1.0f), glm::quat(1.0f, 0.0f, 0.0f, 0.0f));
-    b2BodyDef kinematicBody3Def;
-    kinematicBody3Def.type = b2_dynamicBody;
-	b2PolygonShape groundBox;
-	groundBox.SetAsBox(1 / 2.0f, 1 / 2.0f);
-	b2PolygonShape groundShape;
-    groundShape.SetAsBox(1 / 2.0f, 1 / 2.0f);
-    physicsSystem.CreatePhysicsBody(context, movingBox, kinematicBody3Def, groundShape);
-    auto& physicsBody3 = registry.get<Component::PhysicsBody>(movingBox);
-    physicsBody3.syncFromPhysics = true;  // Don't let physics drive transform
-    physicsBody3.syncToPhysics = true;     // Let transform drive physics
-
-	DEBUG_INFO("Created Player Entity");
 
     resourcePool.CreateTexture(TILE_TEXTURE);
     resourcePool.LoadTextureInGPU(TILE_TEXTURE);
 
     resourcePool.CreateTexture(PLAYER_TEXTURE);
     resourcePool.LoadTextureInGPU(PLAYER_TEXTURE);
+    DEBUG_INFO("Game Data Loaded");
 }
 
 void Struktur::SplashScreenLoop(GameContext& context)

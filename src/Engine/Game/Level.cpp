@@ -6,6 +6,9 @@
 #include "Engine/ECS/Component/Sprite.h"
 #include "Engine/ECS/Component/TileMap.h"
 #include "Engine/ECS/Component/Identifier.h"
+#include "Engine/ECS/Component/Player.h"
+#include "Engine/ECS/Component/Camera.h"
+#include "Engine/ECS/Component/PhysicsBody.h"
 #include "Engine/ECS/System/TransformSystem.h"
 #include "Engine/ECS/System/PhysicsSystem.h"
 //#include "Engine/ECS/Component/Level.h"
@@ -20,13 +23,15 @@ void Struktur::GameResource::Level::LoadLevelEntities(GameContext& context, cons
     System::TransformSystem& transformSystem = systemManager.GetSystem<System::TransformSystem>();
     System::PhysicsSystem& physicsSystem = systemManager.GetSystem<System::PhysicsSystem>();
 
+    const auto levelEntity = gameObjectManager.CreateGameObject(context, level.identifier);
+
     for (auto& layer : level.layers) {
+        const auto layerEntity = gameObjectManager.CreateGameObject(context, layer.identifier, levelEntity);
         switch (layer.type)
         {
         case FileLoading::LevelParser::LayerType::INT_GRID:
         case FileLoading::LevelParser::LayerType::AUTO_LAYER:
         {
-            const auto layerEntity = gameObjectManager.CreateGameObject(context);
             transformSystem.SetWorldTransform(context, layerEntity, glm::vec3(layer.pxTotalOffsetX, layer.pxTotalOffsetY, 0.0f), glm::vec3(1.0f), glm::quat(1.0f, 0.0f, 0.0f, 0.0f));
             //registry.emplace<Struktur::Component::Level>(layerEntity, level.Iid);
             std::vector<TileMap::GridTile> grid;
@@ -52,11 +57,27 @@ void Struktur::GameResource::Level::LoadLevelEntities(GameContext& context, cons
         {
             for (auto& entityInstance : layer.entityInstaces)
             {
-                const auto layerEntity = gameObjectManager.CreateGameObject(context);
-                transformSystem.SetWorldTransform(context, layerEntity, glm::vec3(layer.pxTotalOffsetX, layer.pxTotalOffsetY, 0.0f), glm::vec3(1.0f), glm::quat(1.0f, 0.0f, 0.0f, 0.0f));
-                registry.emplace<Component::Identifier>(layerEntity, entityInstance.identifier);
-                registry.emplace<Component::Sprite>(layerEntity, "assets/Tiles/PlayerGrowthSprite.png", WHITE, glm::vec2(16, 16), 12, 5, false, 0);
-                //auto& luaComponent = registry.emplace<Struktur::Component::LuaComponent>(layerEntity, false, luaState.CreateTable());
+                const auto layerInstaceEntity = gameObjectManager.CreateGameObject(context, entityInstance.identifier, levelEntity);
+                transformSystem.SetWorldTransform(context, layerInstaceEntity, glm::vec3(entityInstance.px.x, entityInstance.px.y, 0.0f), glm::vec3(1.0f), glm::quat(1.0f, 0.0f, 0.0f, 0.0f));
+
+                // All this is specific to the player and should be brought to a separate function
+                registry.emplace<Component::Sprite>(layerInstaceEntity, "assets/Tiles/PlayerGrowthSprites.png", WHITE, glm::vec2(16, 16), 12, 5, false, 12);
+				registry.emplace<Component::Player>(layerInstaceEntity, 10.f);
+                Component::Camera& parentCamera = registry.emplace<Component::Camera>(layerInstaceEntity);
+				parentCamera.zoom = 2.f;
+				parentCamera.forcePosition = true;
+				parentCamera.damping = glm::vec2(0.8f, 0.8f);
+				transformSystem.SetLocalTransform(context, layerInstaceEntity, glm::vec3(500.0f, 300.0f, 0.0f), glm::vec3(1.0f), glm::quat(1.0f, 0.0f, 0.0f, 0.0f));
+				b2BodyDef kinematicBodyDef;
+				kinematicBodyDef.type = b2_dynamicBody;
+				b2PolygonShape playerShape;
+				playerShape.SetAsBox(1 / 2.0f, 1 / 2.0f);
+				physicsSystem.CreatePhysicsBody(context, layerInstaceEntity, kinematicBodyDef, playerShape);
+                Component::PhysicsBody& physicsBody = registry.get<Component::PhysicsBody>(layerInstaceEntity);
+                physicsBody.syncFromPhysics = true;  // Don't let physics drive transform
+                physicsBody.syncToPhysics = true;     // Let transform drive physics
+
+                //auto& luaComponent = registry.emplace<Struktur::Component::LuaComponent>(layerInstaceEntity, false, luaState.CreateTable());
                 //for (auto fieldInstance : entityInstance.fieldInstances)
                 //{
                 //    switch (fieldInstance.type)
