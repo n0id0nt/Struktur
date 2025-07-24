@@ -4,6 +4,7 @@
 
 #include "Engine/ECS/Component/Transform.h"
 #include "Engine/ECS/Component/Sprite.h"
+#include "Engine/ECS/Component/SpriteAnimation.h"
 #include "Engine/ECS/Component/TileMap.h"
 #include "Engine/ECS/Component/Identifier.h"
 #include "Engine/ECS/Component/Player.h"
@@ -11,6 +12,7 @@
 #include "Engine/ECS/Component/PhysicsBody.h"
 #include "Engine/ECS/System/TransformSystem.h"
 #include "Engine/ECS/System/PhysicsSystem.h"
+#include "Engine/ECS/System/AnimationSystem.h"
 //#include "Engine/ECS/Component/Level.h"
 #include "Engine/Physics/CollisionShapeGenerators/TileMapCollisionBodyGenerator.h"
 
@@ -22,6 +24,7 @@ void Struktur::GameResource::Level::LoadLevelEntities(GameContext& context, cons
     System::SystemManager& systemManager = context.GetSystemManager();
     System::TransformSystem& transformSystem = systemManager.GetSystem<System::TransformSystem>();
     System::PhysicsSystem& physicsSystem = systemManager.GetSystem<System::PhysicsSystem>();
+    System::AnimationSystem& animationSystem = systemManager.GetSystem<System::AnimationSystem>();
 
     const auto levelEntity = gameObjectManager.CreateGameObject(context, level.identifier);
 
@@ -41,6 +44,8 @@ void Struktur::GameResource::Level::LoadLevelEntities(GameContext& context, cons
                 TileMap::GridTile newGridTile{ gridTile.px, gridTile.src, (TileMap::FlipBit)gridTile.f };
                 grid.push_back(newGridTile);
             }
+
+            // TODO - grab the tileset path from the level somehow - possibly have a store the tilesets in the resource pool and grab is here
             Component::TileMap& tileMap = registry.emplace<Component::TileMap>(layerEntity, "assets/Tiles/cavesofgallet_tiles.png", layer.cWid, layer.cHei, layer.gridSize, grid, layer.intGrid);
 
             if (layer.identifier == "Collision")
@@ -61,7 +66,7 @@ void Struktur::GameResource::Level::LoadLevelEntities(GameContext& context, cons
                 transformSystem.SetWorldTransform(context, layerInstaceEntity, glm::vec3(entityInstance.px.x, entityInstance.px.y, 0.0f), glm::vec3(1.0f), glm::quat(1.0f, 0.0f, 0.0f, 0.0f));
 
                 // All this is specific to the player and should be brought to a separate function
-                registry.emplace<Component::Sprite>(layerInstaceEntity, "assets/Tiles/PlayerGrowthSprites.png", WHITE, glm::vec2(16, 16), 12, 5, false, 12);
+                registry.emplace<Component::Sprite>(layerInstaceEntity, "assets/Tiles/PlayerGrowthSprites.png", WHITE, glm::vec2(16, 16), 12, 5, false, 0);
 				registry.emplace<Component::Player>(layerInstaceEntity, 10.f);
                 Component::Camera& parentCamera = registry.emplace<Component::Camera>(layerInstaceEntity);
 				parentCamera.zoom = 2.f;
@@ -76,6 +81,18 @@ void Struktur::GameResource::Level::LoadLevelEntities(GameContext& context, cons
                 Component::PhysicsBody& physicsBody = registry.get<Component::PhysicsBody>(layerInstaceEntity);
                 physicsBody.syncFromPhysics = true;  // Don't let physics drive transform
                 physicsBody.syncToPhysics = true;     // Let transform drive physics
+				Component::SpriteAnimation& spriteAnimation = registry.emplace<Component::SpriteAnimation>(layerInstaceEntity);
+                // animation could possibly be a resource stored in the resource pool and loaded in from a file.
+                Animation::SpriteAnimation idle32Animation{ 24u, 28u, 1.f, true };
+                Animation::SpriteAnimation run32Animation{ 28u, 33u, 0.7f, true };
+                Animation::SpriteAnimation jump32Animation{ 33u, 35u, 0.2f, false };
+                Animation::SpriteAnimation fall32Animation{ 35u, 36u, 1.f, false };
+
+                animationSystem.AddAnimation(context, layerInstaceEntity, "idle32", idle32Animation);
+                animationSystem.AddAnimation(context, layerInstaceEntity, "run32", run32Animation);
+                animationSystem.AddAnimation(context, layerInstaceEntity, "jump32", jump32Animation);
+                animationSystem.AddAnimation(context, layerInstaceEntity, "fall32", fall32Animation);
+                animationSystem.PlayAnimation(context, layerInstaceEntity, "idle32");
 
                 //auto& luaComponent = registry.emplace<Struktur::Component::LuaComponent>(layerInstaceEntity, false, luaState.CreateTable());
                 //for (auto fieldInstance : entityInstance.fieldInstances)

@@ -121,7 +121,7 @@ namespace Struktur
 
 			glm::vec2 LoadJsonVector2(const nlohmann::json& json);
 
-			World LoadWorldMap(GameContext& context, const std::string& fileDir, const std::string& worldFile);
+			World LoadWorldMap(GameContext& context, const std::string& filePath);
 			void LoadLevels(World& world, const nlohmann::json& json);
 			void LoadLayers(Level& level, const nlohmann::json& json);
 			void LoadEntities(Layer& entityLayer, const nlohmann::json& json);

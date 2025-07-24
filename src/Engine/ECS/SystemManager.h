@@ -58,6 +58,21 @@ namespace Struktur
                 return *ptr;
             }
 
+            template<typename T, typename... Args>
+            T& AddHelperSystem(Args&&... args)
+            {
+                static_assert(std::is_base_of_v<ISystem, T>, "T must inherit from Struktur::Core::ISystem");
+                std::type_index typeIndex = std::type_index(typeid(T));
+
+                m_helperSystems.push_back(typeIndex);
+
+                auto system = std::make_unique<T>(std::forward<Args>(args)...);
+                T* ptr = system.get();
+                m_systemMap[typeIndex] = std::move(system);
+
+                return *ptr;
+            }
+
             template<typename T>
             T* TryGetSystem()
             {
@@ -82,6 +97,7 @@ namespace Struktur
         private:
             std::vector<std::type_index> m_updateSystems;
             std::vector<std::type_index> m_renderSystems;
+            std::vector<std::type_index> m_helperSystems;
 
             std::unordered_map<std::type_index, std::unique_ptr<ISystem>> m_systemMap;
         };

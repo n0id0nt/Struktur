@@ -13,9 +13,8 @@ glm::vec2 Struktur::FileLoading::LevelParser::LoadJsonVector2(const nlohmann::js
 	return vector;
 }
 
-Struktur::FileLoading::LevelParser::World Struktur::FileLoading::LevelParser::LoadWorldMap(GameContext& context, const std::string& fileDir, const std::string& worldFile)
+Struktur::FileLoading::LevelParser::World Struktur::FileLoading::LevelParser::LoadWorldMap(GameContext& context, const std::string& filePath)
 {
-	std::string filePath(fileDir + worldFile);
 	std::ifstream file(filePath);
 	assert(file);
 	nlohmann::json data = nlohmann::json::parse(file);

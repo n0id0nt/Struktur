@@ -21,6 +21,7 @@ namespace Struktur
 	{
 		class CameraSystem : public ISystem
 		{
+		public:
 			void Update(GameContext& context) override;
 
 			glm::vec2 CalculateSmoothedPosition(float gameTime, float deltaTime, int screenWidth, int screenHeight, Component::Camera* cameraComponent, const glm::vec2& cameraComponentPos, GameResource::Camera& camera);

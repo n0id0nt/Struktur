@@ -30,8 +30,11 @@
 #include "Engine/ECS/System/SpriteRenderSystem.h"
 #include "Engine/ECS/System/DebugSystem.h"
 #include "Engine/ECS/System/CameraSystem.h"
+#include "Engine/ECS/System/AnimationSystem.h"
 
 #include "Engine/Game/Level.h"
+
+#include "Gameplay/GameplayStates/GameWorldState.h"
 
 #include "Engine/FileLoading/LevelParser.h"
 
@@ -39,41 +42,49 @@ constexpr static const unsigned int FPS = 60;
 constexpr static const float TIME_STEP = 1.0f / FPS;
 constexpr static const int VELOCITY_ITERATIONS = 6;
 constexpr static const int POSITION_ITERATIONS = 4;
-constexpr static const char* TILE_TEXTURE = "assets/Tiles/cavesofgallet_tiles.png";
-constexpr static const char* PLAYER_TEXTURE = "assets/Tiles/PlayerGrowthSprites.png";
+constexpr static const char* INPUT_BINDINGS_PATH = "assets/Settings/InputBindings/InputBindings.xml";
 
-void Struktur::LoadData(GameContext& context)
+void Struktur::InitialiseGame(GameContext& context)
 {
     Core::Input& input = context.GetInput();
-    entt::registry& registry = context.GetRegistry();
-    Core::ResourcePool& resourcePool = context.GetResourcePool();
     System::SystemManager& systemManager = context.GetSystemManager();
     System::GameObjectManager& gameObjectManager = context.GetGameObjectManager();
-
-    // The order here also defines the order they are updated
-    systemManager.AddUpdateSystem<System::GameplaySystem>();
-    systemManager.AddUpdateSystem<System::HierarchySystem>();
-    systemManager.AddUpdateSystem<System::TransformSystem>();
-    systemManager.AddUpdateSystem<System::CameraSystem>();
-    systemManager.AddUpdateSystem<System::PhysicsSystem>();
-    systemManager.AddRenderSystem<System::SpriteRenderSystem>();
-    systemManager.AddRenderSystem<System::DebugSystem>();
-
-    FileLoading::LevelParser::World world = FileLoading::LevelParser::LoadWorldMap(context, "assets/", "Levels/ExampleLDKTLevel.ldtk"); // need to sore the world somewhere to be refered to later.
+    GameResource::StateManager& stateManager = context.GetStateManager();
     
-    FileLoading::LevelParser::Level& firstLevel = world.levels[0]; // should probably actually store the first level somewhere
-    GameResource::Level::LoadLevelEntities(context, firstLevel);
-
     gameObjectManager.CreateDeleteObjectCallBack(context);
 
-    input.LoadInputBindings("assets/Settings/InputBindings/InputBindings.xml");
+    input.LoadInputBindings(INPUT_BINDINGS_PATH);
 
-    resourcePool.CreateTexture(TILE_TEXTURE);
-    resourcePool.LoadTextureInGPU(TILE_TEXTURE);
+    // The order here also defines the order they are updated - TODO need a better way to determine render priority and also need a way to have helper systems with out an empty update
+    systemManager.AddHelperSystem<System::HierarchySystem>();
+    systemManager.AddHelperSystem<System::TransformSystem>();
+    systemManager.AddUpdateSystem<System::GameplaySystem>();
+    systemManager.AddUpdateSystem<System::CameraSystem>();
+    systemManager.AddUpdateSystem<System::PhysicsSystem>();
+    systemManager.AddUpdateSystem<System::AnimationSystem>();
+    systemManager.AddRenderSystem<System::SpriteRenderSystem>();
+    systemManager.AddRenderSystem<System::GameplayRenderSystem>();
+    //TODO add #if define _DEBUG here
+    systemManager.AddRenderSystem<System::DebugSystem>();
 
-    resourcePool.CreateTexture(PLAYER_TEXTURE);
-    resourcePool.LoadTextureInGPU(PLAYER_TEXTURE);
     DEBUG_INFO("Game Data Loaded");
+
+    std::unique_ptr<GamePlay::GameWorldState> gameWorldState = std::make_unique<GamePlay::GameWorldState>();
+    stateManager.ChangeState(context, std::move(gameWorldState));
+}
+
+void Struktur::ExitGame(GameContext &context)
+{
+    Core::ResourcePool& resourcePool = context.GetResourcePool();
+
+    GameResource::StateManager& stateManager = context.GetStateManager();
+    stateManager.ReleaseState(context);
+
+    // delete all entities
+
+    // destroy physics world
+
+    resourcePool.Clear();
 }
 
 void Struktur::SplashScreenLoop(GameContext& context)
@@ -122,7 +133,7 @@ void Struktur::LoadingLoop(GameContext& context)
 
 }
 
-void Struktur::GameLoop(GameContext& context)
+void Struktur::GameLoop(GameContext &context)
 {
     Core::GameData& gameData = context.GetGameData();
     entt::registry& registry = context.GetRegistry();
@@ -175,7 +186,7 @@ void Struktur::Game()
     ::SetExitKey(KEY_NULL);
 
     // Load resources
-    LoadData(context);
+    InitialiseGame(context);
     
     Core::GameData& gameData = context.GetGameData();
     gameData.startTime = ::GetTime();
@@ -192,5 +203,6 @@ void Struktur::Game()
 #endif
     
     // Cleanup
+    ExitGame(context);
     ::CloseWindow();
 }

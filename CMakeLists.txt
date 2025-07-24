@@ -239,7 +239,7 @@ set(SOURCES
 
     src/Engine/Core/Gamedata.h                  src/Engine/Core/GameData.cpp
     src/Engine/Core/Input.h                     src/Engine/Core/Input.cpp
-    src/Engine/Core/ResourcePool.h              src/Engine/Core/ResourcePool.cpp
+    src/Engine/Core/Resource/ResourcePool.h     src/Engine/Core/Resource/ResourcePool.cpp
     
     src/Engine/ECS/SystemManager.h              src/Engine/ECS/SystemManager.cpp
     src/Engine/ECS/GameObjectManager.h          src/Engine/ECS/GameObjectManager.cpp
@@ -247,6 +247,7 @@ set(SOURCES
     src/Engine/ECS/Component/PhysicsBody.h
     src/Engine/ECS/Component/Player.h
     src/Engine/ECS/Component/Sprite.h
+    src/Engine/ECS/Component/SpriteAnimation.h
     src/Engine/ECS/Component/Transform.h
     src/Engine/ECS/Component/TileMap.h
     src/Engine/ECS/Component/Identifier.h
@@ -257,6 +258,7 @@ set(SOURCES
     src/Engine/ECS/System/PhysicsSystem.h       src/Engine/ECS/System/PhysicsSystem.cpp
     src/Engine/ECS/System/GameplaySystem.h      src/Engine/ECS/System/GameplaySystem.cpp
     src/Engine/ECS/System/SpriteRenderSystem.h  src/Engine/ECS/System/SpriteRenderSystem.cpp
+    src/Engine/ECS/System/AnimationSystem.h     src/Engine/ECS/System/AnimationSystem.cpp
     src/Engine/ECS/System/TransformSystem.h     src/Engine/ECS/System/TransformSystem.cpp
     src/Engine/ECS/System/CameraSystem.h        src/Engine/ECS/System/CameraSystem.cpp
 
@@ -269,6 +271,10 @@ set(SOURCES
     src/Engine/Game/Level.h                     src/Engine/Game/Level.cpp
     src/Engine/Game/TileMap.h                   src/Engine/Game/TileMap.cpp
     src/Engine/Game/Camera.h                    src/Engine/Game/Camera.cpp
+    src/Engine/Game/StateManager.h              src/Engine/Game/StateManager.cpp
+    src/Engine/Game/State.h
+
+    src/Gameplay/GameplayStates/GameWorldState.h
 
     src/Debug/Assertions.h
     src/Debug/Box2DDebugRenderer.h

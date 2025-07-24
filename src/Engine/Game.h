@@ -6,7 +6,8 @@ namespace Struktur
 
 	void Game();
 	void UpdateLoop(void* userData);
-	void LoadData(GameContext& context);
+	void InitialiseGame(GameContext& context);
+	void ExitGame(GameContext& context);
 	void GameLoop(GameContext& context);
 	void SplashScreenLoop(GameContext& context);
 	void LoadingLoop(GameContext& context);
