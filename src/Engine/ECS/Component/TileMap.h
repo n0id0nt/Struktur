@@ -4,6 +4,7 @@
 #include <vector>
 
 #include "Engine/Game/TileMap.h"
+#include "Engine/Core/Resource/TextureResource.h"
 
 namespace Struktur
 {
@@ -11,7 +12,7 @@ namespace Struktur
 	{
         struct TileMap
 		{
-			std::string imagePath;
+			Core::Resource::ResourcePtr<Core::Resource::TextureResource> texture;
 			int width;
 			int height;
 			int tileSize;

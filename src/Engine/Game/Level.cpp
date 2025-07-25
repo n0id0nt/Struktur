@@ -21,10 +21,11 @@ void Struktur::GameResource::Level::LoadLevelEntities(GameContext& context, cons
     //const auto levelEntity = registry.create();
     entt::registry& registry = context.GetRegistry();
     System::GameObjectManager& gameObjectManager = context.GetGameObjectManager();
+    Core::Resource::ResourceManager& resoruceManager = context.GetResourceManager();
     System::SystemManager& systemManager = context.GetSystemManager();
-    System::TransformSystem& transformSystem = systemManager.GetSystem<System::TransformSystem>();
-    System::PhysicsSystem& physicsSystem = systemManager.GetSystem<System::PhysicsSystem>();
-    System::AnimationSystem& animationSystem = systemManager.GetSystem<System::AnimationSystem>();
+    auto& transformSystem = systemManager.GetSystem<System::TransformSystem>();
+    auto& physicsSystem = systemManager.GetSystem<System::PhysicsSystem>();
+    auto& animationSystem = systemManager.GetSystem<System::AnimationSystem>();
 
     const auto levelEntity = gameObjectManager.CreateGameObject(context, level.identifier);
 
@@ -35,6 +36,7 @@ void Struktur::GameResource::Level::LoadLevelEntities(GameContext& context, cons
         case FileLoading::LevelParser::LayerType::INT_GRID:
         case FileLoading::LevelParser::LayerType::AUTO_LAYER:
         {
+            Core::Resource::ResourcePtr<Core::Resource::TextureResource> texture = resoruceManager.GetTexture("assets/Tiles/cavesofgallet_tiles.png");
             transformSystem.SetWorldTransform(context, layerEntity, glm::vec3(layer.pxTotalOffsetX, layer.pxTotalOffsetY, 0.0f), glm::vec3(1.0f), glm::quat(1.0f, 0.0f, 0.0f, 0.0f));
             //registry.emplace<Struktur::Component::Level>(layerEntity, level.Iid);
             std::vector<TileMap::GridTile> grid;
@@ -46,7 +48,7 @@ void Struktur::GameResource::Level::LoadLevelEntities(GameContext& context, cons
             }
 
             // TODO - grab the tileset path from the level somehow - possibly have a store the tilesets in the resource pool and grab is here
-            Component::TileMap& tileMap = registry.emplace<Component::TileMap>(layerEntity, "assets/Tiles/cavesofgallet_tiles.png", layer.cWid, layer.cHei, layer.gridSize, grid, layer.intGrid);
+            Component::TileMap& tileMap = registry.emplace<Component::TileMap>(layerEntity, std::move(texture), layer.cWid, layer.cHei, layer.gridSize, grid, layer.intGrid);
 
             if (layer.identifier == "Collision")
             {
@@ -62,11 +64,12 @@ void Struktur::GameResource::Level::LoadLevelEntities(GameContext& context, cons
         {
             for (auto& entityInstance : layer.entityInstaces)
             {
+                Core::Resource::ResourcePtr<Core::Resource::TextureResource> texture = resoruceManager.GetTexture("assets/Tiles/PlayerGrowthSprites.png");
                 const auto layerInstaceEntity = gameObjectManager.CreateGameObject(context, entityInstance.identifier, levelEntity);
                 transformSystem.SetWorldTransform(context, layerInstaceEntity, glm::vec3(entityInstance.px.x, entityInstance.px.y, 0.0f), glm::vec3(1.0f), glm::quat(1.0f, 0.0f, 0.0f, 0.0f));
 
                 // All this is specific to the player and should be brought to a separate function
-                registry.emplace<Component::Sprite>(layerInstaceEntity, "assets/Tiles/PlayerGrowthSprites.png", WHITE, glm::vec2(16, 16), 12, 5, false, 0);
+                registry.emplace<Component::Sprite>(layerInstaceEntity, texture, WHITE, glm::vec2(16, 16), 12, 5, false, 0);
 				registry.emplace<Component::Player>(layerInstaceEntity, 10.f);
                 Component::Camera& parentCamera = registry.emplace<Component::Camera>(layerInstaceEntity);
 				parentCamera.zoom = 2.f;

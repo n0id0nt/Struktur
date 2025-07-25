@@ -5,6 +5,7 @@
 #include <format>
 
 #include "Engine/Core/Resource/Resource.h"
+#include "Engine/Core/Resource/ResourcePtr.h"
 
 #include "Debug/Assertions.h"
 
@@ -19,18 +20,19 @@ namespace Struktur
 			class ResourcePool 
 			{
 			protected:
+				// TODO might be a good idea to make these not pointers so the memory is stores in series and pass around the pointers to these items
 				struct ResourceEntry
 				{
-					T* resource;
-					size_t* refCount;
+					T* resource = nullptr;
+					size_t* refCount = nullptr;
 					
 					ResourceEntry(T* res) : resource(res), refCount(new size_t(1)) {}
 				};
 				
 				std::unordered_map<std::string, ResourceEntry> m_loadedResources;
 				
-				virtual T* LoadResource(const std::string& name) = 0;
-				virtual void UnloadResource(const std::string& name, T* resource) = 0;
+				virtual T* LoadResource(const std::string& filePath) = 0;
+				virtual void UnloadResource(const std::string& filePath, T* resource) { delete resource; }
 
 			public:
 				virtual ~ResourcePool() 
@@ -60,7 +62,7 @@ namespace Struktur
 						if (newResource)
 						{
 							ResourceEntry entry(newResource);
-							m_loadedResources[name] = entry;
+							m_loadedResources.emplace(name, entry);
 							return ResourcePtr<T>(entry.resource, entry.refCount, this, name);
 						}
 						else
@@ -119,6 +121,13 @@ namespace Struktur
 				size_t m_maxGpuMemory;
 				size_t m_currentGpuMemory;
 
+			protected:
+				virtual void UnloadResource(const std::string& filePath, T* resource)
+				{
+					RemoveGpuResource(resource);
+					delete resource;
+				}
+
 			public:
 				GpuResourcePool(size_t maxGpuMemory = 512 * 1024 * 1024) // Default 512MB
 					: m_maxGpuMemory(maxGpuMemory), m_currentGpuMemory(0) {}
@@ -130,8 +139,8 @@ namespace Struktur
 				
 				bool EnsureResourceReady(const std::string& name) override
 				{
-					auto it = this->loadedResources.find(name);
-					if (it == this->loadedResources.end()) return false;
+					auto it = this->m_loadedResources.find(name);
+					if (it == this->m_loadedResources.end()) return false;
 					
 					T* resource = it->second.resource;
 					
@@ -191,11 +200,11 @@ namespace Struktur
 					
 					if (resource->gpuState == GpuResource::GpuState::LoadedToGpu)
 					{
-						m_currentGpuMemory -= resource->getGpuMemoryUsage();
+						m_currentGpuMemory -= resource->GetGpuMemoryUsage();
 					}
 				}
 				
-				void freeUnusedGpuResources(size_t neededMemory)
+				void FreeUnusedGpuResources(size_t neededMemory)
 				{
 					DEBUG_INFO(std::format("Freeing GPU memory (need {} bytes)...", neededMemory).c_str());
 					
@@ -205,10 +214,10 @@ namespace Struktur
 					{
 						if (freedMemory >= neededMemory) break;
 						
-						auto resourceIt = std::find_if(m_loadedResources.begin(), m_loadedResources.end(),
+						auto resourceIt = std::find_if(this->m_loadedResources.begin(), this->m_loadedResources.end(),
 							[resource](const auto& pair) { return pair.second.resource == resource; });
 						
-						if (resourceIt != m_loadedResources.end() && *(resourceIt->second.refCount) == 1)
+						if (resourceIt != this->m_loadedResources.end() && *(resourceIt->second.refCount) == 1)
 						{
 							if (resource->gpuState == GpuResource::GpuState::LoadedToGpu)
 							{
@@ -217,7 +226,7 @@ namespace Struktur
 								resource->gpuState = GpuResource::GpuState::Unloaded;
 								m_currentGpuMemory -= memoryFreed;
 								freedMemory += memoryFreed;
-								DEBUG_INFO(std::format("Freed '{}' from GPU ({} bytes)", resource->name, memoryFreed).c_str());
+								DEBUG_INFO(std::format("Freed '{}' from GPU ({} bytes)", resource->filePath, memoryFreed).c_str());
 							}
 						}
 					}
@@ -251,7 +260,7 @@ namespace Struktur
 							{
 								resource->gpuState = GpuResource::GpuState::LoadedToGpu;
 								m_currentGpuMemory += resource->GetGpuMemoryUsage();
-								DEBUG_INFO(std::format("Reloaded '{}' to GPU", resource->name).c_str());
+								DEBUG_INFO(std::format("Reloaded '{}' to GPU", resource->filePath).c_str());
 							}
 						}
 					}

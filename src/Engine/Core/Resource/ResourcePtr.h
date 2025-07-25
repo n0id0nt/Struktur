@@ -1,4 +1,5 @@
 #pragma once
+
 #include <string>
 
 #include "Engine/Core/Resource/Resource.h"
@@ -29,7 +30,7 @@ namespace Struktur
                         {
                             if (m_pool) 
                             {
-                                m_pool->onResourceUnreferenced(m_filePath);
+                                m_pool->OnResourceUnreferenced(m_filePath);
                             }
                             delete m_refCount;
                         }
@@ -95,7 +96,7 @@ namespace Struktur
                 
                 T& operator*() const { return *m_ptr; }
                 T* operator->() const { return m_ptr; }
-                T* get() const { return m_ptr; }
+                T* Get() const { return m_ptr; }
                 
                 size_t GetUseCount() const { return m_refCount ? *m_refCount : 0; }
                 const std::string& GetFilePath() const { return m_filePath; }
@@ -113,7 +114,7 @@ namespace Struktur
                     {
                         return m_ptr->IsGpuReady();
                     }
-                    else if constexpr (std::is_base_of_v<NonGpuResource, T>)
+                    else if constexpr (std::is_base_of_v<CpuResource, T>)
                     {
                         return m_ptr->IsHardwareReady();
                     }

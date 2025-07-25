@@ -5,6 +5,7 @@
 
 #include "Engine/Core/Resource/Resource.h"
 #include "Engine/Core/Resource/ResourcePool.h"
+#include "Engine/Core/Resource/ResourcePtr.h"
 
 namespace Struktur
 {
@@ -12,7 +13,7 @@ namespace Struktur
 	{
 		namespace Resource
 		{
-			// Raylib sound - Non-GPU resource (uses audio hardware)
+			// Raylib sound - CPU resource (uses audio hardware)
 			class SoundResource : public CpuResource
             {
 			private:
@@ -86,7 +87,7 @@ namespace Struktur
 				}
 			};
 
-			// Raylib music - Non-GPU resource (streaming audio)
+			// Raylib music - CPU resource (streaming audio)
 			class MusicResource : public CpuResource
             {
 			public:
@@ -112,7 +113,7 @@ namespace Struktur
 					if (music.frameCount == 0) return false;
 					
 					isLoaded = true;
-                    DEBUG_INFO(std::format("Loaded music stream: {}", m_filePath).c_str());
+                    DEBUG_INFO(std::format("Loaded music stream: {}", filePath).c_str());
 					return true;
 				}
 				
@@ -158,11 +159,6 @@ namespace Struktur
 					return sound;
 				}
 				
-				void UnloadResource(const std::string& filePath, SoundResource* sound) override
-                {
-					delete sound;
-				}
-				
 			public:
 				bool EnsureResourceReady(const std::string& filePath) override
                 {
@@ -185,7 +181,8 @@ namespace Struktur
 			class MusicPool : public ResourcePool<MusicResource>
             {
 			protected:
-				MusicResource* LoadResource(const std::string& filePath) override {
+				MusicResource* LoadResource(const std::string& filePath) override
+				{
 					auto* music = new MusicResource(filePath);
 					
 					if (!music->LoadFromDisk()) {
@@ -194,10 +191,6 @@ namespace Struktur
 					}
 					
 					return music;
-				}
-				
-				void UnloadResource(const std::string& filePath, MusicResource* music) override {
-					delete music;
 				}
 			};
         }

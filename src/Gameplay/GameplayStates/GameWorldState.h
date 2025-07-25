@@ -33,25 +33,18 @@ namespace Struktur
 
             void Enter(GameContext& context) override 
             {
-                Core::ResourcePool& resourcePool = context.GetResourcePool();
-
                 FileLoading::LevelParser::World world = FileLoading::LevelParser::LoadWorldMap(context, WORLD_FILE_PATH); // need to sore the world somewhere to be refered to later. - probably Have a world entity as entities store states
                 FileLoading::LevelParser::Level& firstLevel = world.levels[0]; // should probably actually store the first level somewhere so it can more dynamically be fetched
                 GameResource::Level::LoadLevelEntities(context, firstLevel);
-
-                resourcePool.CreateTexture(TILE_TEXTURE);
-                resourcePool.LoadTextureInGPU(TILE_TEXTURE);
-            
-                resourcePool.CreateTexture(PLAYER_TEXTURE);
-                resourcePool.LoadTextureInGPU(PLAYER_TEXTURE);
             }
 
             void Update(GameContext& context) override 
             {
-                auto& input = context.GetInput();
-                auto& gameObjectManager = context.GetGameObjectManager();
+                Core::Input& input = context.GetInput();
+                Core::Resource::ResourceManager& resoruceManager = context.GetResourceManager();
+                System::GameObjectManager& gameObjectManager = context.GetGameObjectManager();
                 System::SystemManager& systemManager = context.GetSystemManager();
-                System::TransformSystem& transformSystem = systemManager.GetSystem<System::TransformSystem>();
+                auto& transformSystem = systemManager.GetSystem<System::TransformSystem>();
 
                 // player movement system
                 Core::GameData& gameData = context.GetGameData();
@@ -69,7 +62,8 @@ namespace Struktur
                     {
                         //std::srand(std::time({}));
                         auto child = gameObjectManager.CreateGameObject(context, "Child", entity);
-                        registry.emplace<Component::Sprite>(child, "assets/Tiles/cavesofgallet_tiles.png", PINK, glm::vec2(8, 8), 20, 20, false, 10);
+                        Core::Resource::ResourcePtr<Core::Resource::TextureResource> texture = resoruceManager.GetTexture("assets/Tiles/cavesofgallet_tiles.png");
+                        registry.emplace<Component::Sprite>(child, std::move(texture), PINK, glm::vec2(8, 8), 20, 20, false, 10);
                         transformSystem.SetLocalTransform(context, child, glm::vec3((float)(std::rand() % 200) - 100.0f, (float)(std::rand() % 200) - 100.0f, 0.0f), glm::vec3(1.0f), glm::quat(1.0f, 0.0f, 0.0f, 0.0f));
                         DEBUG_INFO("Add game object");
                     }
@@ -83,7 +77,8 @@ namespace Struktur
                                 entt::entity parent = children->entities[std::rand() % children->entities.size()];
                                 //std::srand(std::time({}));
                                 auto child = gameObjectManager.CreateGameObject(context, "Child of child", parent);
-                                registry.emplace<Component::Sprite>(child, "assets/Tiles/cavesofgallet_tiles.png", PURPLE, glm::vec2(8, 8), 20, 20, false, 11);
+								Core::Resource::ResourcePtr<Core::Resource::TextureResource> texture = resoruceManager.GetTexture("assets/Tiles/cavesofgallet_tiles.png");
+                                registry.emplace<Component::Sprite>(child, std::move(texture), PURPLE, glm::vec2(8, 8), 20, 20, false, 11);
                                 transformSystem.SetLocalTransform(context, child, glm::vec3((float)(std::rand() % 200) - 100.0f, (float)(std::rand() % 200) - 100.0f, 0.0f), glm::vec3(1.0f), glm::quat(1.0f, 0.0f, 0.0f, 0.0f));
                                 DEBUG_INFO("Add child game object");
 
@@ -115,10 +110,7 @@ namespace Struktur
             void Render(GameContext& context) override {}
             void Exit(GameContext& context) override 
             {
-				Core::ResourcePool& resourcePool = context.GetResourcePool();
-
-				resourcePool.ReleaseTexture(TILE_TEXTURE);
-				resourcePool.ReleaseTexture(PLAYER_TEXTURE);
+                // delete all players
             }
 
             std::string GetStateName() const override { return std::string(typeid(GameWorldState).name()); }

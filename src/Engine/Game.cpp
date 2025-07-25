@@ -75,7 +75,7 @@ void Struktur::InitialiseGame(GameContext& context)
 
 void Struktur::ExitGame(GameContext &context)
 {
-    Core::ResourcePool& resourcePool = context.GetResourcePool();
+    //Core::Resource::ResourceManager& resourceManager = context.GetResourceManager();
 
     GameResource::StateManager& stateManager = context.GetStateManager();
     stateManager.ReleaseState(context);
@@ -84,7 +84,7 @@ void Struktur::ExitGame(GameContext &context)
 
     // destroy physics world
 
-    resourcePool.Clear();
+    //resourceManager.Clear();
 }
 
 void Struktur::SplashScreenLoop(GameContext& context)
@@ -137,7 +137,6 @@ void Struktur::GameLoop(GameContext &context)
 {
     Core::GameData& gameData = context.GetGameData();
     entt::registry& registry = context.GetRegistry();
-    Core::ResourcePool& resourcePool = context.GetResourcePool();
     System::SystemManager& systemManager = context.GetSystemManager();
 
 #ifndef PLATFORM_WEB

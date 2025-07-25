@@ -14,7 +14,6 @@
 
 void Struktur::System::SpriteRenderSystem::Update(GameContext &context)
 {
-    Core::ResourcePool& resourcePool = context.GetResourcePool();
     entt::registry& registry = context.GetRegistry();
     GameResource::Camera& camera = context.GetCamera();
 
@@ -24,9 +23,13 @@ void Struktur::System::SpriteRenderSystem::Update(GameContext &context)
         auto view = registry.view<Component::Sprite, Component::WorldTransform>();
         for (auto [entity, sprite, worldTransform] : view.each())
         {
-            const Image& image = resourcePool.RetrieveImage(sprite.fileName);
-            int imageWidth = image.width;
-            int imageHeight = image.height;
+            Core::Resource::TextureResource* texture = sprite.texture.Get();
+			if (!texture->IsGpuReady())
+			{
+				texture->LoadToGpu();
+			}
+            int imageWidth = texture->GetWidth();
+            int imageHeight = texture->GetHeight();
             glm::vec3 euler = glm::eulerAngles(worldTransform.rotation);
 
             int index = sprite.index;
@@ -52,16 +55,19 @@ void Struktur::System::SpriteRenderSystem::Update(GameContext &context)
             ::Rectangle destRec{ ::round(worldTransform.position.x * 2) / 2, ::round(worldTransform.position.y * 2) / 2, size.x * worldTransform.scale.x, size.y * worldTransform.scale.x };
 
             ::Vector2 offset{ sprite.offset.x, sprite.offset.y };
-            
-            ::Texture2D texture = resourcePool.RetrieveTexture(sprite.fileName);
-            ::DrawTexturePro(texture, sourceRec, destRec, offset, glm::degrees(euler.z), sprite.color);
+            ::DrawTexturePro(texture->texture, sourceRec, destRec, offset, glm::degrees(euler.z), sprite.color);
+
         }
     }
     {
         auto view = registry.view<Component::TileMap, Component::WorldTransform>();
         for (auto [entity, tileMap, worldTransform] : view.each())
         {
-            ::Texture2D texture = resourcePool.RetrieveTexture(tileMap.imagePath);
+            Core::Resource::TextureResource* texture = tileMap.texture.Get();
+            if (!texture->IsGpuReady())
+            {
+                texture->LoadToGpu();
+            }
 
             for (auto& gridTile : tileMap.gridTiles)
             {
@@ -85,7 +91,7 @@ void Struktur::System::SpriteRenderSystem::Update(GameContext &context)
                 sourceRec.width -= 0.0002f;
                 sourceRec.height -= 0.0002f;
                 ::Rectangle DestRec{ gridTile.position.x, gridTile.position.y, (float)tileMap.tileSize, (float)tileMap.tileSize };
-                ::DrawTexturePro(texture, sourceRec, DestRec, ::Vector2{ 0,0 }, 0, WHITE);
+                ::DrawTexturePro(texture->texture, sourceRec, DestRec, ::Vector2{ 0,0 }, 0, WHITE);
             }
         }
     }

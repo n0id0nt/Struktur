@@ -7,7 +7,6 @@
 #include "Engine/Core/Input.h"
 #include "Engine/Core/GameData.h"
 #include "Engine/Core/Resource/ResourceManager.h"
-
 #include "Engine/ECS/SystemManager.h"
 #include "Engine/ECS/GameObjectManager.h"
 #include "Engine/Physics/PhysicsWorld.h"
@@ -59,7 +58,7 @@ namespace Struktur
             return *m_registry;
         }
 
-        Core::Resource::ResourceManager& GetResourcePool() const
+        Core::Resource::ResourceManager& GetResourceManager() const
         {
             ASSERT_MSG(m_resourceManager.get(), "Resource Manager not initialized");
             return *m_resourceManager;
