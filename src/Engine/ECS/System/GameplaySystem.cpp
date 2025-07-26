@@ -1,6 +1,7 @@
 #include "GameplaySystem.h"
 
 #include "Engine/GameContext.h"
+#include "Engine/Game/StateManager.h"
 
 void Struktur::System::GameplaySystem::Update(GameContext &context)
 {

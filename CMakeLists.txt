@@ -266,12 +266,19 @@ set(SOURCES
     src/Engine/ECS/System/AnimationSystem.h     src/Engine/ECS/System/AnimationSystem.cpp
     src/Engine/ECS/System/TransformSystem.h     src/Engine/ECS/System/TransformSystem.cpp
     src/Engine/ECS/System/CameraSystem.h        src/Engine/ECS/System/CameraSystem.cpp
+    src/Engine/ECS/System/UISystem.h            src/Engine/ECS/System/UISystem.cpp
 
     src/Engine/Physics/PhysicsWorld.h           src/Engine/Physics/PhysicsWorld.cpp
     src/Engine/Physics/ContactListener.h        src/Engine/Physics/ContactListener.cpp
     src/Engine/Physics/CollisionShapeGenerators/TileMapCollisionBodyGenerator.h     src/Engine/Physics/CollisionShapeGenerators/TileMapCollisionBodyGenerator.cpp
 
     src/Engine/FileLoading/LevelParser.h        src/Engine/FileLoading/LevelParser.cpp
+
+    src/Engine/UI/UIManager.h                   src/Engine/UI/UIManager.cpp
+    src/Engine/UI/FocusNavigator.h              src/Engine/UI/FocusNavigator.cpp
+    src/Engine/UI/UIElement.h                   src/Engine/UI/UIElement.cpp
+    src/Engine/UI/UILabel.h                     src/Engine/UI/UILabel.cpp
+    src/Engine/UI/UIPanel.h                     src/Engine/UI/UIPanel.cpp
 
     src/Engine/Game/Level.h                     src/Engine/Game/Level.cpp
     src/Engine/Game/TileMap.h                   src/Engine/Game/TileMap.cpp

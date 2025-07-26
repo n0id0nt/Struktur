@@ -31,6 +31,7 @@
 #include "Engine/ECS/System/DebugSystem.h"
 #include "Engine/ECS/System/CameraSystem.h"
 #include "Engine/ECS/System/AnimationSystem.h"
+#include "Engine/ECS/System/UIsystem.h"
 
 #include "Engine/Game/Level.h"
 
@@ -62,10 +63,12 @@ void Struktur::InitialiseGame(GameContext& context)
     systemManager.AddUpdateSystem<System::CameraSystem>();
     systemManager.AddUpdateSystem<System::PhysicsSystem>();
     systemManager.AddUpdateSystem<System::AnimationSystem>();
+    systemManager.AddUpdateSystem<System::UISystem>();
     systemManager.AddRenderSystem<System::SpriteRenderSystem>();
     systemManager.AddRenderSystem<System::GameplayRenderSystem>();
     //TODO add #if define _DEBUG here
     systemManager.AddRenderSystem<System::DebugSystem>();
+    systemManager.AddRenderSystem<System::UIRenderSystem>();
 
     DEBUG_INFO("Game Data Loaded");
 
@@ -79,6 +82,9 @@ void Struktur::ExitGame(GameContext &context)
 
     GameResource::StateManager& stateManager = context.GetStateManager();
     stateManager.ReleaseState(context);
+
+    UI::UIManager& uiManager = context.GetUIManager();
+    uiManager.Clear();
 
     // delete all entities
 

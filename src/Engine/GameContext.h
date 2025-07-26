@@ -12,6 +12,7 @@
 #include "Engine/Physics/PhysicsWorld.h"
 #include "Engine/Game/Camera.h"
 #include "Engine/Game/StateManager.h"
+#include "Engine/UI/UIManager.h"
 
 #include "Debug/Assertions.h"
 
@@ -30,6 +31,7 @@ namespace Struktur
             m_gameObjectManager = std::make_unique<System::GameObjectManager>();
             m_camera = std::make_unique<GameResource::Camera>();
             m_stateManager = std::make_unique<GameResource::StateManager>();
+            m_uiManger = std::make_unique<UI::UIManager>();
             
             //TODO These variables don't belong here - Possibly initialise these from a file or just pass them in??
             glm::vec2 gravity(0.0f, 0.0f);
@@ -94,6 +96,12 @@ namespace Struktur
             return *m_stateManager;
         }
 
+        UI::UIManager& GetUIManager() const
+        {
+            ASSERT_MSG(m_uiManger.get(), "UI Manager not initialized");
+            return *m_uiManger;
+        }
+
     private:
         std::unique_ptr<Core::GameData> m_gameData;
         std::unique_ptr<Core::Input> m_input;
@@ -104,5 +112,6 @@ namespace Struktur
         std::unique_ptr<Physics::PhysicsWorld> m_physicsWorld;
         std::unique_ptr<GameResource::Camera> m_camera;
         std::unique_ptr<GameResource::StateManager> m_stateManager;
+        std::unique_ptr<UI::UIManager> m_uiManger;
     };
 }

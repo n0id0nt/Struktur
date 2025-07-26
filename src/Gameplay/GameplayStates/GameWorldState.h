@@ -18,6 +18,9 @@
 #include "Engine/ECS/Component/PhysicsBody.h"
 #include "Engine/ECS/Component/Sprite.h"
 
+#include "Engine/UI/UILabel.h"
+#include "Engine/UI/UIPanel.h"
+
 constexpr static const char* TILE_TEXTURE = "assets/Tiles/cavesofgallet_tiles.png";
 constexpr static const char* PLAYER_TEXTURE = "assets/Tiles/PlayerGrowthSprites.png";
 constexpr static const char* WORLD_FILE_PATH = "assets/Levels/ExampleLDKTLevel.ldtk";
@@ -36,6 +39,38 @@ namespace Struktur
                 FileLoading::LevelParser::World world = FileLoading::LevelParser::LoadWorldMap(context, WORLD_FILE_PATH); // need to sore the world somewhere to be refered to later. - probably Have a world entity as entities store states
                 FileLoading::LevelParser::Level& firstLevel = world.levels[0]; // should probably actually store the first level somewhere so it can more dynamically be fetched
                 GameResource::Level::LoadLevelEntities(context, firstLevel);
+                
+                UI::UIManager& uiManager = context.GetUIManager();
+                UI::FocusNavigator* focusNavigator = uiManager.GetFocusNavigator();
+
+                // Create a main panel
+                UI::UIPanel* mainPanel = uiManager.CreateElement<UI::UIPanel>(glm::vec2{50, 50}, glm::vec2{700, 500});
+                mainPanel->SetBackgroundColor(DARKGRAY);
+                mainPanel->SetBorderColor(WHITE);
+                mainPanel->SetBorderWidth(2.0f);
+                
+                // Create labels
+                UI::UILabel* titleLabel = uiManager.CreateElement<UI::UILabel>(glm::vec2{100, 80}, "UI System Demo", 30.0f);
+                titleLabel->SetTextColor(WHITE);
+                titleLabel->SetAlignment(UI::TextAlignment::CENTER);
+                titleLabel->SetFocusable(true);
+                uiManager.SetFocus(titleLabel);
+                focusNavigator->RegisterElement(titleLabel);
+
+                UI::UILabel* infoLabel = uiManager.CreateElement<UI::UILabel>(glm::vec2{100, 120}, "Use Tab/Arrow keys or Controller to navigate", 16.0f);
+                infoLabel->SetTextColor(LIGHTGRAY);
+                
+                // Create sub-panel
+                UI::UIPanel* subPanel = uiManager.CreateElement<UI::UIPanel>(glm::vec2{100, 160}, glm::vec2{600, 300});
+                subPanel->SetBackgroundColor(GRAY);
+                subPanel->SetBorderColor(LIGHTGRAY);
+                subPanel->SetBorderWidth(1.0f);
+                subPanel->SetFocusable(true);
+                focusNavigator->RegisterElement(subPanel);
+
+                // Add some content labels to the sub-panel
+                subPanel->AddChild(std::make_unique<UI::UILabel>(glm::vec2{120, 200}, "Content Area", 20.0f));
+                subPanel->AddChild(std::make_unique<UI::UILabel>(glm::vec2{120, 230}, "This is where your UI content would go.", 14.0f));
             }
 
             void Update(GameContext& context) override 

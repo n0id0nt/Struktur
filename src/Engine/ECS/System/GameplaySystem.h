@@ -1,7 +1,6 @@
 #pragma once
 
 #include "Engine/ECS/SystemManager.h"
-#include "Engine/Game/StateManager.h"
 
 namespace Struktur
 {
