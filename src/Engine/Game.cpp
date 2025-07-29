@@ -96,6 +96,8 @@ void Struktur::ExitGame(GameContext &context)
 void Struktur::SplashScreenLoop(GameContext& context)
 {
     Core::GameData& gameData = context.GetGameData();
+    Core::Resource::ResourceManager& resoruceManager = context.GetResourceManager();
+    Core::Resource::ResourcePtr<Core::Resource::FontResource> font = resoruceManager.GetFontResource("assets/Fonts/machine-std/machine-std-regular.ttf_120");
     //fade in time
     const double fadeInTime = 1.5;
     const double holdTime = 1;
@@ -123,14 +125,14 @@ void Struktur::SplashScreenLoop(GameContext& context)
     }
 
     std::string splashScreenName = "Struktur";
-    int fontSize = 60;
-    int fontWidth = ::MeasureText(splashScreenName.c_str(), fontSize);
+    int fontSize = 120;
+    int fontWidth = ::MeasureTextEx(font->font, splashScreenName.c_str(), fontSize, 1.0f).x;
     int width = gameData.screenWidth;
     int height = gameData.screenHeight;
 
     ::BeginDrawing();
     ::ClearBackground(Color{ 0,0,0,255 });
-    ::DrawText(splashScreenName.c_str(), (width - fontWidth) / 2.f, (height - fontSize) / 2.f, fontSize, Color{ 255,255,255,(unsigned char)textAlpha });
+    ::DrawTextEx(font->font, splashScreenName.c_str(), { (width - fontWidth) / 2.f, (height - fontSize) / 2.f }, fontSize, 5.0f, Color{ 255,255,255,(unsigned char)textAlpha });
     ::EndDrawing();
 }
 
@@ -192,6 +194,9 @@ void Struktur::Game()
 
     // Load resources
     InitialiseGame(context);
+
+    Core::Resource::ResourceManager& resoruceManager = context.GetResourceManager();
+    Core::Resource::ResourcePtr<Core::Resource::FontResource> font = resoruceManager.GetFontResource("assets/Fonts/machine-std/machine-std-regular.ttf_120");
     
     Core::GameData& gameData = context.GetGameData();
     gameData.startTime = ::GetTime();

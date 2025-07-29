@@ -7,7 +7,9 @@
 #include "Engine/Core/Resource/ResourcePtr.h"
 #include "Engine/Core/Resource/ResourcePool.h"
 #include "Engine/Core/Resource/SoundResource.h"
+#include "Engine/Core/Resource/MusicResource.h"
 #include "Engine/Core/Resource/TextureResource.h"
+#include "Engine/Core/Resource/FontResource.h"
 
 namespace Struktur
 {
@@ -22,6 +24,7 @@ namespace Struktur
 				TexturePool m_texturePool;
 				SoundPool m_soundPool;
 				MusicPool m_musicPool;
+				FontPool m_fontResource;
 				
 			public:
 				ResourcePtr<TextureResource> GetTexture(const std::string& name)
@@ -37,6 +40,11 @@ namespace Struktur
 				ResourcePtr<MusicResource> GetMusic(const std::string& name)
                 {
 					return m_musicPool.GetResource(name);
+				}
+				
+				ResourcePtr<FontResource> GetFontResource(const std::string& name)
+                {
+					return m_fontResource.GetResource(name);
 				}
 				
 				// GPU-specific operations (only affect GPU resources)
