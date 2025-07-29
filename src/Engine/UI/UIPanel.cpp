@@ -1,7 +1,7 @@
 #include "UIPanel.h"
 
-Struktur::UI::UIPanel::UIPanel(const glm::vec2 &pos, const glm::vec2 &size)
-    : UIElement(pos, size), m_panelColor(LIGHTGRAY), m_hasBackgroundTexture(false)
+Struktur::UI::UIPanel::UIPanel(const glm::vec2& absolutePosition, const glm::vec2& relativePosition, const glm::vec2& absoluteSize, const glm::vec2& relativeSize)
+    : UIElement(absolutePosition, relativePosition, absoluteSize, relativeSize), m_panelColor(LIGHTGRAY), m_hasBackgroundTexture(false)
 {                
     m_backgroundColor = m_panelColor;
     m_focusable = false; // Panels typically don't receive focus
@@ -13,9 +13,9 @@ void Struktur::UI::UIPanel::SetBackgroundColor(::Color color)
     m_backgroundColor = color;
 }
 
-void Struktur::UI::UIPanel::SetBackgroundTexture(::Texture2D texture)
+void Struktur::UI::UIPanel::SetBackgroundTexture(Core::Resource::ResourcePtr<Core::Resource::TextureResource> texture)
 {
-    m_backgroundTexture = texture;
+    m_backgroundTexture = std::move(texture);
     m_hasBackgroundTexture = true;
 }
 
@@ -35,8 +35,8 @@ void Struktur::UI::UIPanel::Render(GameContext &context)
     if (m_hasBackgroundTexture)
     {
         // Scale texture to fit panel
-        ::Rectangle srcRect = {0, 0, (float)m_backgroundTexture.width, (float)m_backgroundTexture.height};
-        ::DrawTexturePro(m_backgroundTexture, srcRect, m_bounds, {0, 0}, 0.0f, WHITE);
+        ::Rectangle srcRect = {0, 0, (float)m_backgroundTexture->GetWidth(), (float)m_backgroundTexture->GetHeight()};
+        ::DrawTexturePro(m_backgroundTexture->texture, srcRect, m_bounds, {0, 0}, 0.0f, WHITE);
     }
     else
     {

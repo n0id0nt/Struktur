@@ -8,7 +8,7 @@ void Struktur::UI::FocusNavigator::Update(GameContext& context)
     m_currentCooldownTimer -= deltaTime;
 }
 
-void Struktur::UI::FocusNavigator::RegisterElement(UIElement *element)
+void Struktur::UI::FocusNavigator::RegisterElement(UIElement* element)
 {
     if (element && element->IsFocusable())
     {
@@ -21,7 +21,7 @@ void Struktur::UI::FocusNavigator::RegisterElement(UIElement *element)
     }
 }
 
-void Struktur::UI::FocusNavigator::UnregisterElement(UIElement *element)
+void Struktur::UI::FocusNavigator::UnregisterElement(UIElement* element)
 {
     auto it = std::find(m_focusableElements.begin(), m_focusableElements.end(), element);
     if (it != m_focusableElements.end())

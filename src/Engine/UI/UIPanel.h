@@ -2,6 +2,9 @@
 
 #include "Engine/UI/UIElement.h"
 
+#include "Engine/Core/Resource/ResourcePtr.h"
+#include "Engine/Core/Resource/TextureResource.h"
+
 namespace Struktur
 {
 	namespace UI
@@ -13,14 +16,14 @@ namespace Struktur
         {
         private:
             ::Color m_panelColor;
-            ::Texture2D m_backgroundTexture; // TODO replace this with resoruce loader texture
+            Core::Resource::ResourcePtr<Core::Resource::TextureResource> m_backgroundTexture; // TODO replace this with resoruce loader texture
             bool m_hasBackgroundTexture;
 
         public:
-            UIPanel(const glm::vec2& pos, const glm::vec2& size);
+            UIPanel(const glm::vec2& absolutePosition, const glm::vec2& relativePosition, const glm::vec2& absoluteSize, const glm::vec2& relativeSize);
 
             void SetBackgroundColor(::Color color);
-            void SetBackgroundTexture(::Texture2D texture);
+            void SetBackgroundTexture(Core::Resource::ResourcePtr<Core::Resource::TextureResource> texture);
             void ClearBackgroundTexture();
 
             void Update(GameContext& context) override;

@@ -6,7 +6,7 @@
 #include "Engine/ECS/Component/TileMap.h"
 #include "Engine/ECS/Component/PhysicsBody.h"
 
-void Struktur::Physics::TileMapCollisionBodyGenerator::CreateTileMapShape(GameContext &context, const Component::TileMap &tilemap, bool isSensor, Component::PhysicsBody &out_body)
+void Struktur::Physics::TileMapCollisionBodyGenerator::CreateTileMapShape(GameContext& context, const Component::TileMap& tilemap, bool isSensor, Component::PhysicsBody& out_body)
 {
     Physics::PhysicsWorld& world = context.GetPhysicsWorld();
 

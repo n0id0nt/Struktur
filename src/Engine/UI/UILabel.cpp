@@ -1,15 +1,14 @@
 #include "UILabel.h"
 
-Struktur::UI::UILabel::UILabel(const glm::vec2 &pos, const std::string &labelText, float fontSz)
-    : UIElement(pos, {0, 0}), m_text(labelText), m_textColor(BLACK),
+Struktur::UI::UILabel::UILabel(const glm::vec2& absolutePosition, const glm::vec2& relativePosition, const std::string &labelText, float fontSz)
+    : UIElement(absolutePosition, relativePosition, {0, 0}, {0, 0}), m_text(labelText), m_textColor(BLACK),
     m_alignment(TextAlignment::LEFT), m_wordWrap(false), m_fontSize(fontSz)
 {
-    
     m_font = ::GetFontDefault();
     
     // Auto-size based on text
     ::Vector2 textSize = ::MeasureTextEx(m_font, m_text.c_str(), m_fontSize, 1.0f);
-    SetSize({textSize.x + 10, textSize.y + 5}); // Add some padding
+    SetSize({textSize.x + 10, textSize.y + 5}, {0, 0}); // Add some padding
     
     // Labels are typically not focusable
     m_focusable = false;
@@ -22,7 +21,7 @@ void Struktur::UI::UILabel::SetText(const std::string &newText)
     m_text = newText;
     // Recalculate size
     ::Vector2 textSize = ::MeasureTextEx(m_font, m_text.c_str(), m_fontSize, 1.0f);
-    SetSize({textSize.x + 10, textSize.y + 5});
+    SetSize({textSize.x + 10, textSize.y + 5}, {0, 0});
 }
 
 void Struktur::UI::UILabel::Update(GameContext &context)

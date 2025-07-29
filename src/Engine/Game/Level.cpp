@@ -10,15 +10,30 @@
 #include "Engine/ECS/Component/Player.h"
 #include "Engine/ECS/Component/Camera.h"
 #include "Engine/ECS/Component/PhysicsBody.h"
+#include "Engine/ECS/Component/Level.h"
+
 #include "Engine/ECS/System/TransformSystem.h"
 #include "Engine/ECS/System/PhysicsSystem.h"
 #include "Engine/ECS/System/AnimationSystem.h"
-//#include "Engine/ECS/Component/Level.h"
+
+#include "Engine/FileLoading/LevelParser.h"
 #include "Engine/Physics/CollisionShapeGenerators/TileMapCollisionBodyGenerator.h"
 
-void Struktur::GameResource::Level::LoadLevelEntities(GameContext& context, const FileLoading::LevelParser::Level& level)
+entt::entity Struktur::GameResource::Level::CreateWorldEntity(GameContext& context, const std::string& filePath)
 {
-    //const auto levelEntity = registry.create();
+    entt::registry& registry = context.GetRegistry();
+    System::GameObjectManager& gameObjectManager = context.GetGameObjectManager();
+
+    FileLoading::LevelParser::World worldMap = FileLoading::LevelParser::LoadWorldMap(context, filePath);
+
+    std::string worldIdentifier = "World: " + filePath;
+    entt::entity worldEntity = gameObjectManager.CreateGameObject(context, worldIdentifier);
+    registry.emplace<Component::World>(worldEntity, worldMap);
+    return worldEntity;
+}
+
+entt::entity Struktur::GameResource::Level::LoadLevelEntities(GameContext& context, const entt::entity worldEntity, int levelIndex)
+{
     entt::registry& registry = context.GetRegistry();
     System::GameObjectManager& gameObjectManager = context.GetGameObjectManager();
     Core::Resource::ResourceManager& resoruceManager = context.GetResourceManager();
@@ -27,9 +42,20 @@ void Struktur::GameResource::Level::LoadLevelEntities(GameContext& context, cons
     auto& physicsSystem = systemManager.GetSystem<System::PhysicsSystem>();
     auto& animationSystem = systemManager.GetSystem<System::AnimationSystem>();
 
-    const auto levelEntity = gameObjectManager.CreateGameObject(context, level.identifier);
+    auto* worldComponent = registry.try_get<Component::World>(worldEntity);
+    if (!worldComponent)
+    {
+        BREAK_MSG("Entity provided does not contain a World Component");
+        return entt::entity();
+    }
 
-    for (auto& layer : level.layers) {
+    FileLoading::LevelParser::Level levelToLoad = worldComponent->worldMap.levels[levelIndex];
+
+    entt::entity levelEntity = gameObjectManager.CreateGameObject(context, levelToLoad.identifier);
+    registry.emplace<Component::Level>(levelEntity, levelIndex, levelToLoad.Iid, levelToLoad.pxWid, levelToLoad.pxHei);
+    transformSystem.SetWorldTransform(context, levelEntity, glm::vec3(levelToLoad.worldX, levelToLoad.worldY, 0.0f), glm::vec3(1.0f), glm::quat(1.0f, 0.0f, 0.0f, 0.0f));
+
+    for (auto& layer : levelToLoad.layers) {
         const auto layerEntity = gameObjectManager.CreateGameObject(context, layer.identifier, levelEntity);
         switch (layer.type)
         {
@@ -37,8 +63,7 @@ void Struktur::GameResource::Level::LoadLevelEntities(GameContext& context, cons
         case FileLoading::LevelParser::LayerType::AUTO_LAYER:
         {
             Core::Resource::ResourcePtr<Core::Resource::TextureResource> texture = resoruceManager.GetTexture("assets/Tiles/cavesofgallet_tiles.png");
-            transformSystem.SetWorldTransform(context, layerEntity, glm::vec3(layer.pxTotalOffsetX, layer.pxTotalOffsetY, 0.0f), glm::vec3(1.0f), glm::quat(1.0f, 0.0f, 0.0f, 0.0f));
-            //registry.emplace<Struktur::Component::Level>(layerEntity, level.Iid);
+            transformSystem.SetLocalTransform(context, layerEntity, glm::vec3(layer.pxTotalOffsetX, layer.pxTotalOffsetY, 0.0f), glm::vec3(1.0f), glm::quat(1.0f, 0.0f, 0.0f, 0.0f));
             std::vector<TileMap::GridTile> grid;
             grid.reserve(layer.autoLayerTiles.size());
             for (auto& gridTile : layer.autoLayerTiles)
@@ -56,6 +81,8 @@ void Struktur::GameResource::Level::LoadLevelEntities(GameContext& context, cons
                 b2BodyDef kinematicBodyDef;
                 kinematicBodyDef.type = b2_dynamicBody;
                 Component::PhysicsBody& physicsBody = physicsSystem.CreatePhysicsBody(context, layerEntity, kinematicBodyDef);
+				physicsBody.syncFromPhysics = true;  // Don't let physics drive transform
+				physicsBody.syncToPhysics = true;     // Let transform drive physics
                 Physics::TileMapCollisionBodyGenerator::CreateTileMapShape(context, tileMap, isSensor, physicsBody);
             }
             break;
@@ -75,7 +102,6 @@ void Struktur::GameResource::Level::LoadLevelEntities(GameContext& context, cons
 				parentCamera.zoom = 2.f;
 				parentCamera.forcePosition = true;
 				parentCamera.damping = glm::vec2(0.8f, 0.8f);
-				transformSystem.SetLocalTransform(context, layerInstaceEntity, glm::vec3(500.0f, 300.0f, 0.0f), glm::vec3(1.0f), glm::quat(1.0f, 0.0f, 0.0f, 0.0f));
 				b2BodyDef kinematicBodyDef;
 				kinematicBodyDef.type = b2_dynamicBody;
 				b2PolygonShape playerShape;
@@ -126,4 +152,6 @@ void Struktur::GameResource::Level::LoadLevelEntities(GameContext& context, cons
             break;
         }
     }
+
+    return levelEntity;
 }

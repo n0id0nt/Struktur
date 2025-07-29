@@ -90,7 +90,8 @@ void Struktur::System::SpriteRenderSystem::Update(GameContext &context)
                 sourceRec.y += 0.0001f;
                 sourceRec.width -= 0.0002f;
                 sourceRec.height -= 0.0002f;
-                ::Rectangle DestRec{ gridTile.position.x, gridTile.position.y, (float)tileMap.tileSize, (float)tileMap.tileSize };
+                // TODO - Move this to a helper function so this line is much more consise
+                ::Rectangle DestRec{ gridTile.position.x + ::round(worldTransform.position.x * 2) / 2, gridTile.position.y + ::round(worldTransform.position.y * 2) / 2, (float)tileMap.tileSize, (float)tileMap.tileSize };
                 ::DrawTexturePro(texture->texture, sourceRec, DestRec, ::Vector2{ 0,0 }, 0, WHITE);
             }
         }

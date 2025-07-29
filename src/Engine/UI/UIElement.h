@@ -25,8 +25,11 @@ namespace Struktur
         {
         protected:
             ::Rectangle m_bounds;
-            glm::vec2 m_position;
-            glm::vec2 m_size;
+            glm::vec2 m_absolutePosition;
+            glm::vec2 m_relativePosition;
+            glm::vec2 m_absoluteSize;
+            glm::vec2 m_relativeSize;
+            glm::vec2 m_anchorPoint;
             ::Color m_backgroundColor;
             ::Color m_borderColor;
             float m_borderWidth;
@@ -41,7 +44,7 @@ namespace Struktur
             std::vector<UIElement*> m_navigationNeighbors[4]; // UP, DOWN, LEFT, RIGHT
 
         public:
-            UIElement(const glm::vec2& pos, const glm::vec2& sz);
+            UIElement(const glm::vec2& absolutePosition, const glm::vec2& relativePosition, const glm::vec2& absoluteSize, const glm::vec2& relativeSize);
             virtual ~UIElement() = default;
 
             // Delete copy constructor and copy assignment operator
@@ -62,21 +65,22 @@ namespace Struktur
             virtual void OnFocus() {}
             virtual void OnLoseFocus() {}
             virtual void OnButtonPressed(int key) {}
-            virtual void OnActivate() { OnClick(m_position); } // Default activation
+            virtual void OnActivate() { OnClick(GetPosition()); } // Default activation
+            virtual void RenderFocusIndicator();
 
             // Child management
-            void AddChild(std::unique_ptr<UIElement> child);
+            UIElement* AddChild(std::unique_ptr<UIElement> child);
             UIElement* AddChild(UIElement* child);
-            void RemoveChild(UIElement* child);
+            bool RemoveChild(UIElement* child);
 
             // Position and size
-            void SetPosition(const glm::vec2& pos);
+            void SetPosition(const glm::vec2& absolutePosition, const glm::vec2& relativePosition);
+            void SetSize(const glm::vec2& absoluteSize, const glm::vec2& relativeSize);
+            void SetAnchorPoint(const glm::vec2& anchorPoint);
 
-            void SetSize(const glm::vec2& sz);
-
-            glm::vec2 GetPosition() const { return m_position; }
-            glm::vec2 GetSize() const { return m_size; }
-            ::Rectangle GetBounds() const { return m_bounds; }
+            glm::vec2 GetPosition() const;
+            glm::vec2 GetSize() const;
+            ::Rectangle GetBounds() const;
 
             // Utility methods
             bool IsPointInside(const glm::vec2& point) const;
@@ -114,9 +118,10 @@ namespace Struktur
             int GetZIndex() const { return m_zIndex; }
 
         protected:
-            void RenderFocusIndicator();
             void UpdateChildren(GameContext& context);
             void RenderChildren(GameContext& context);
+
+            void UpdateBounds();
         };
     }
 }

@@ -88,6 +88,15 @@ void Struktur::System::TransformSystem::SetLocalTransform(GameContext& context, 
         {
             parentMatrix = parentWorldTransform->matrix;
         }
+        else
+        {
+            auto* parentLocalTransform = registry.try_get<Component::LocalTransform>(parent->entity);
+            ASSERT_MSG(parentLocalTransform, "Parent Entt does not contain a local transform this suggests that this object was not created with the game object manager");
+            SetLocalTransform(context, parent->entity, parentLocalTransform->matrix);
+            auto* justCreatedParentWorldTransform = registry.try_get<Component::WorldTransform>(parent->entity);
+            ASSERT_MSG(justCreatedParentWorldTransform, "Parent Entt does not contain a world transform. Something here is fucked");
+			parentMatrix = justCreatedParentWorldTransform->matrix;
+        }
     }
 
     UpdateWorldTransform(context, entity, parentMatrix);

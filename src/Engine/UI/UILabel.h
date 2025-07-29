@@ -24,7 +24,7 @@ namespace Struktur
             float m_fontSize;
 
         public:
-            UILabel(const glm::vec2& pos, const std::string& labelText, float fontSz = 20.0f);
+            UILabel(const glm::vec2& absolutePosition, const glm::vec2& relativePosition, const std::string& labelText, float fontSz = 20.0f);
 
             void SetText(const std::string& newText);
 

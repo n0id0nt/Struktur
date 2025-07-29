@@ -1,23 +1,29 @@
 #include "UIElement.h"
 
-Struktur::UI::UIElement::UIElement(const glm::vec2 &pos, const glm::vec2 &sz)
-    : m_position(pos), m_size(sz), m_backgroundColor(LIGHTGRAY), m_borderColor(DARKGRAY),
+Struktur::UI::UIElement::UIElement(const glm::vec2& absolutePosition, const glm::vec2& relativePosition, const glm::vec2& absoluteSize, const glm::vec2& relativeSize)
+    : m_absolutePosition(absolutePosition), m_relativePosition(relativePosition), 
+    m_absoluteSize(absoluteSize), m_relativeSize(relativeSize), m_anchorPoint(glm::vec2()),
+    m_backgroundColor(LIGHTGRAY), m_borderColor(DARKGRAY),
     m_borderWidth(1.0f), m_visible(true), m_enabled(true), m_focusable(false),
     m_parent(nullptr), m_zIndex(0), m_tabIndex(-1)
 {
-    m_bounds = { pos.x, pos.y, sz.x, sz.y };
+    UpdateBounds();
 }
 
-void Struktur::UI::UIElement::AddChild(std::unique_ptr<UIElement> child)
+Struktur::UI::UIElement* Struktur::UI::UIElement::AddChild(std::unique_ptr<UIElement> child)
 {
     if (child)
     {
         child->m_parent = this;
+        child->UpdateBounds();
+        UIElement* childPtr = child.get();
         m_children.push_back(std::move(child));
+        return childPtr;
     }
+    return nullptr;
 }
 
-Struktur::UI::UIElement *Struktur::UI::UIElement::AddChild(UIElement *child)
+Struktur::UI::UIElement* Struktur::UI::UIElement::AddChild(UIElement* child)
 {
     if (child)
     {
@@ -28,29 +34,78 @@ Struktur::UI::UIElement *Struktur::UI::UIElement::AddChild(UIElement *child)
     return nullptr;
 }
 
-void Struktur::UI::UIElement::RemoveChild(UIElement *child)
+bool Struktur::UI::UIElement::RemoveChild(UIElement* child)
 {
-    m_children.erase(
-        std::remove_if(m_children.begin(), m_children.end(),
-            [child](const std::unique_ptr<UIElement>& ptr) {
-                return ptr.get() == child;
-            }),
-        m_children.end()
-    );
+	auto it = std::find_if(m_children.begin(), m_children.end(),
+		[child](const std::unique_ptr<UIElement>& ptr) {
+			return ptr.get() == child;
+		});
+
+	if (it != m_children.end())
+    {
+        child->UpdateBounds();
+		m_children.erase(it);
+        return true;
+	}
+    return false;
 }
 
-void Struktur::UI::UIElement::SetPosition(const glm::vec2 &pos)
+void Struktur::UI::UIElement::SetPosition(const glm::vec2& absolutePosition, const glm::vec2& relativePosition)
 {
-    m_position = pos;
-    m_bounds.x = pos.x;
-    m_bounds.y = pos.y;
+    m_absolutePosition = absolutePosition;
+    m_relativePosition = relativePosition;
+    UpdateBounds();
 }
 
-void Struktur::UI::UIElement::SetSize(const glm::vec2 &sz)
+void Struktur::UI::UIElement::SetSize(const glm::vec2& absoluteSize, const glm::vec2& relativeSize)
 {
-    m_size = sz;
-    m_bounds.width = sz.x;
-    m_bounds.height = sz.y;
+    m_absoluteSize = absoluteSize;
+    m_relativeSize = relativeSize;
+    UpdateBounds();
+}
+
+void Struktur::UI::UIElement::SetAnchorPoint(const glm::vec2& anchorPoint)
+{
+    m_anchorPoint = anchorPoint;
+    UpdateBounds();
+}
+
+glm::vec2 Struktur::UI::UIElement::GetPosition() const
+{
+    glm::vec2 basePosition = glm::vec2();
+    glm::vec2 baseSize = glm::vec2();
+    if (m_parent)
+    {
+        basePosition = m_parent->GetPosition();
+        baseSize = m_parent->GetSize();
+    }
+
+    glm::vec2 absolutePosition = m_absolutePosition;
+    glm::vec2 relativePosition = baseSize * m_relativePosition;
+    glm::vec2 anchorOffset = m_anchorPoint * GetSize();
+
+    return basePosition + absolutePosition + relativePosition - anchorOffset;
+}
+
+glm::vec2 Struktur::UI::UIElement::GetSize() const
+{
+    glm::vec2 basePosition = glm::vec2();
+    glm::vec2 baseSize = glm::vec2();
+    if (m_parent)
+    {
+        basePosition = m_parent->GetPosition();
+        baseSize = m_parent->GetSize();
+    }
+
+    glm::vec2 absoluteSize = m_absoluteSize;
+    glm::vec2 relativeSize = baseSize * m_relativeSize;
+
+    return absoluteSize + relativeSize;
+}
+
+::Rectangle Struktur::UI::UIElement::GetBounds() const
+{
+    return m_bounds;
 }
 
 bool Struktur::UI::UIElement::IsPointInside(const glm::vec2 &point) const
@@ -115,4 +170,11 @@ void Struktur::UI::UIElement::RenderChildren(GameContext& context)
     {
         child->Render(context);
     }
+}
+
+void Struktur::UI::UIElement::UpdateBounds()
+{
+    glm::vec2 position = GetPosition();
+    glm::vec2 size = GetSize();
+    m_bounds = ::Rectangle{ position.x, position.y, size.x, size.y };
 }

@@ -36,41 +36,44 @@ namespace Struktur
 
             void Enter(GameContext& context) override 
             {
-                FileLoading::LevelParser::World world = FileLoading::LevelParser::LoadWorldMap(context, WORLD_FILE_PATH); // need to sore the world somewhere to be refered to later. - probably Have a world entity as entities store states
-                FileLoading::LevelParser::Level& firstLevel = world.levels[0]; // should probably actually store the first level somewhere so it can more dynamically be fetched
-                GameResource::Level::LoadLevelEntities(context, firstLevel);
+                entt::entity worldEntity = GameResource::Level::CreateWorldEntity(context, WORLD_FILE_PATH);
+                GameResource::Level::LoadLevelEntities(context, worldEntity, 0);
+                GameResource::Level::LoadLevelEntities(context, worldEntity, 1);
                 
                 UI::UIManager& uiManager = context.GetUIManager();
                 UI::FocusNavigator* focusNavigator = uiManager.GetFocusNavigator();
 
                 // Create a main panel
-                UI::UIPanel* mainPanel = uiManager.CreateElement<UI::UIPanel>(glm::vec2{50, 50}, glm::vec2{700, 500});
+                auto* mainPanel = uiManager.CreateElement<UI::UIPanel>(glm::vec2{50, 50}, glm::vec2{0, 0}, glm::vec2{700, 500}, glm::vec2{0, 0});
                 mainPanel->SetBackgroundColor(DARKGRAY);
                 mainPanel->SetBorderColor(WHITE);
                 mainPanel->SetBorderWidth(2.0f);
                 
                 // Create labels
-                UI::UILabel* titleLabel = uiManager.CreateElement<UI::UILabel>(glm::vec2{100, 80}, "UI System Demo", 30.0f);
+                auto* titleLabel = uiManager.CreateElement<UI::UILabel>(glm::vec2{100, 80}, glm::vec2{0, 0}, "UI System Demo", 30.0f);
                 titleLabel->SetTextColor(WHITE);
                 titleLabel->SetAlignment(UI::TextAlignment::CENTER);
                 titleLabel->SetFocusable(true);
                 uiManager.SetFocus(titleLabel);
                 focusNavigator->RegisterElement(titleLabel);
 
-                UI::UILabel* infoLabel = uiManager.CreateElement<UI::UILabel>(glm::vec2{100, 120}, "Use Tab/Arrow keys or Controller to navigate", 16.0f);
+                auto* infoLabel = uiManager.CreateElement<UI::UILabel>(glm::vec2{100, 120}, glm::vec2{0, 0}, "Use Tab/Arrow keys or Controller to navigate", 16.0f);
                 infoLabel->SetTextColor(LIGHTGRAY);
                 
                 // Create sub-panel
-                UI::UIPanel* subPanel = uiManager.CreateElement<UI::UIPanel>(glm::vec2{100, 160}, glm::vec2{600, 300});
+                auto* subPanel = uiManager.CreateElement<UI::UIPanel>(glm::vec2{100, 160}, glm::vec2{0, 0},  glm::vec2{600, 300}, glm::vec2{0, 0});
                 subPanel->SetBackgroundColor(GRAY);
                 subPanel->SetBorderColor(LIGHTGRAY);
                 subPanel->SetBorderWidth(1.0f);
-                subPanel->SetFocusable(true);
-                focusNavigator->RegisterElement(subPanel);
 
                 // Add some content labels to the sub-panel
-                subPanel->AddChild(std::make_unique<UI::UILabel>(glm::vec2{120, 200}, "Content Area", 20.0f));
-                subPanel->AddChild(std::make_unique<UI::UILabel>(glm::vec2{120, 230}, "This is where your UI content would go.", 14.0f));
+                auto* childLabel1 = subPanel->AddChild(std::make_unique<UI::UILabel>(glm::vec2{ 20, 40 }, glm::vec2{ 0, 0 }, "Content Area", 20.0f));
+				childLabel1->SetFocusable(true);
+				focusNavigator->RegisterElement(childLabel1);
+                auto* childLabel2 = subPanel->AddChild(std::make_unique<UI::UILabel>(glm::vec2{ 0, 0 }, glm::vec2{ 0.5f,0.5f }, "This is where your UI content would go.", 14.0f));
+				childLabel2->SetFocusable(true);
+				childLabel2->SetAnchorPoint({ 0.5f,0.5f });
+				focusNavigator->RegisterElement(childLabel2);
             }
 
             void Update(GameContext& context) override 

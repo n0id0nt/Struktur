@@ -100,7 +100,7 @@ void Struktur::UI::UIManager::Render(GameContext& context)
     // Draw focus indicator on top
     if (m_focusedElement)
     {
-        DrawRectangleLinesEx(m_focusedElement->GetBounds(), 2.0f, BLUE);
+        m_focusedElement->RenderFocusIndicator();
     }
     
     ::EndMode2D();
