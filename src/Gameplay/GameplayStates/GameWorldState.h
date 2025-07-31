@@ -106,7 +106,7 @@ namespace Struktur
                 Core::GameData& gameData = context.GetGameData();
                 entt::registry& registry = context.GetRegistry();
                 glm::vec2 inputDir = input.GetInputAxis2("Move");
-                bool interact = input.IsKeyJustPressed("Interact");
+                bool interact = input.IsInputJustPressed("Interact");
 
                 auto view = registry.view<Component::Player>();
                 for (auto& entity : view)

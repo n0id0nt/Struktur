@@ -3,7 +3,7 @@
 <inputs>
     <input name="Interact" type="button">
         <bindings>
-            <binding type="keycode" value="E"/>
+            <binding type="keycode" value="e"/>
             <binding type="controllerButton" value="a"/>
             <binding type="controllerButton" value="b"/>
         </bindings>
