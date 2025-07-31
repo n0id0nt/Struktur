@@ -46,6 +46,14 @@ namespace Struktur
                 {
 					return m_fontResource.GetResource(name);
 				}
+
+				void Clear()
+				{
+					m_texturePool.Clear();
+					m_soundPool.Clear();
+					m_musicPool.Clear();
+					m_fontResource.Clear();
+				}
 				
 				// GPU-specific operations (only affect GPU resources)
 				void HandleGpuContextLost() {

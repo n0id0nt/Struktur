@@ -39,3 +39,14 @@ void Struktur::Physics::PhysicsWorld::SetPixelsPerMeter(float pixelsPerMeter)
 	// TODO resize everything in the scene to match the new pixel size, or just assert to ensure the scene is empty before resizing - currently only set before any physics objects are created as it is not yet a problem 
 	BREAK_MSG("Set Pixels Per Meter should not be called because it would require everything in the physics scene to be resized which is not implemented.");
 }
+
+void Struktur::Physics::PhysicsWorld::Clear()
+{
+	b2Body* body = m_world.GetBodyList();
+	while (body)
+	{
+		b2Body* next = body->GetNext();
+		m_world.DestroyBody(body);
+		body = next;
+	}
+}

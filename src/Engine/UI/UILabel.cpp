@@ -1,13 +1,15 @@
 #include "UILabel.h"
 
-Struktur::UI::UILabel::UILabel(const glm::vec2& absolutePosition, const glm::vec2& relativePosition, const std::string &labelText, float fontSz)
+#include "Engine/GameContext.h"
+
+Struktur::UI::UILabel::UILabel(GameContext& context, const glm::vec2& absolutePosition, const glm::vec2& relativePosition, const std::string& labelText, float fontSz)
     : UIElement(absolutePosition, relativePosition, {0, 0}, {0, 0}), m_text(labelText), m_textColor(BLACK),
     m_alignment(TextAlignment::LEFT), m_wordWrap(false), m_fontSize(fontSz)
 {
-    m_font = ::GetFontDefault();
+    m_font = context.GetResourceManager().GetFontResource("default");
     
     // Auto-size based on text
-    ::Vector2 textSize = ::MeasureTextEx(m_font, m_text.c_str(), m_fontSize, 1.0f);
+    ::Vector2 textSize = ::MeasureTextEx(m_font->font, m_text.c_str(), m_fontSize, 1.0f);
     SetSize({textSize.x + 10, textSize.y + 5}, {0, 0}); // Add some padding
     
     // Labels are typically not focusable
@@ -16,20 +18,20 @@ Struktur::UI::UILabel::UILabel(const glm::vec2& absolutePosition, const glm::vec
     m_borderWidth = 0.0f;
 }
 
-void Struktur::UI::UILabel::SetText(const std::string &newText)
+void Struktur::UI::UILabel::SetText(const std::string& newText)
 {
     m_text = newText;
     // Recalculate size
-    ::Vector2 textSize = ::MeasureTextEx(m_font, m_text.c_str(), m_fontSize, 1.0f);
+    ::Vector2 textSize = ::MeasureTextEx(m_font->font, m_text.c_str(), m_fontSize, 1.0f);
     SetSize({textSize.x + 10, textSize.y + 5}, {0, 0});
 }
 
-void Struktur::UI::UILabel::Update(GameContext &context)
+void Struktur::UI::UILabel::Update(GameContext& context)
 {
     UpdateChildren(context);
 }
 
-void Struktur::UI::UILabel::Render(GameContext &context)
+void Struktur::UI::UILabel::Render(GameContext& context)
 {
     // Draw background if not transparent
     if (m_backgroundColor.a > 0)
@@ -45,7 +47,7 @@ void Struktur::UI::UILabel::Render(GameContext &context)
 
     // Calculate text position based on alignment
     ::Vector2 textPos = {m_bounds.x + 5, m_bounds.y + 2.5f};
-    ::Vector2 textSize = ::MeasureTextEx(m_font, m_text.c_str(), m_fontSize, 1.0f);
+    ::Vector2 textSize = ::MeasureTextEx(m_font->font, m_text.c_str(), m_fontSize, 1.0f);
 
     switch (m_alignment)
     {
@@ -62,7 +64,7 @@ void Struktur::UI::UILabel::Render(GameContext &context)
     }
 
     // Draw text
-    ::DrawTextEx(m_font, m_text.c_str(), textPos, m_fontSize, 1.0f, m_textColor);
+    ::DrawTextEx(m_font->font, m_text.c_str(), textPos, m_fontSize, 1.0f, m_textColor);
 
     RenderChildren(context);
 }

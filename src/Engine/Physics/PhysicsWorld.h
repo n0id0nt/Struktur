@@ -26,6 +26,8 @@ namespace Struktur
 
 			b2World* GetRawWorld() { return &m_world; }
 
+			void Clear();
+
 		private:
 
 			ContactListener m_contactListener;

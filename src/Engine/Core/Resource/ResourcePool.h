@@ -37,6 +37,11 @@ namespace Struktur
 			public:
 				virtual ~ResourcePool() 
 				{
+					Clear();
+				}
+
+				void Clear()
+				{
 					for (auto& pair : m_loadedResources) 
 					{
 						UnloadResource(pair.first, pair.second.resource);

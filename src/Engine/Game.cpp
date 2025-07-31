@@ -78,19 +78,25 @@ void Struktur::InitialiseGame(GameContext& context)
 
 void Struktur::ExitGame(GameContext &context)
 {
-    //Core::Resource::ResourceManager& resourceManager = context.GetResourceManager();
-
+    DEBUG_INFO("[Clean Up] State Manager");
     GameResource::StateManager& stateManager = context.GetStateManager();
     stateManager.ReleaseState(context);
-
+    
+    DEBUG_INFO("[Clean Up] UI Manager");
     UI::UIManager& uiManager = context.GetUIManager();
     uiManager.Clear();
-
-    // delete all entities
-
-    // destroy physics world
-
-    //resourceManager.Clear();
+    
+    DEBUG_INFO("[Clean Up] Registry");
+    entt::registry& registry = context.GetRegistry();
+    registry.clear();
+    
+    DEBUG_INFO("[Clean Up] Physics World");
+    Physics::PhysicsWorld& world = context.GetPhysicsWorld();
+    world.Clear();
+    
+    DEBUG_INFO("[Clean Up] Resource Manager");
+    Core::Resource::ResourceManager& resourceManager = context.GetResourceManager();
+    resourceManager.Clear();
 }
 
 void Struktur::SplashScreenLoop(GameContext& context)

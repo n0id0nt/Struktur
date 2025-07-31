@@ -3,6 +3,7 @@
 #include <string>
 
 #include "Engine/Core/Resource/Resource.h"
+#include "Debug/Assertions.h"
 
 namespace Struktur
 {
@@ -28,11 +29,14 @@ namespace Struktur
                         (*m_refCount)--;
                         if (*m_refCount == 0) 
                         {
-                            if (m_pool) 
+                            if (!m_pool) 
                             {
-                                m_pool->OnResourceUnreferenced(m_filePath);
+                                BREAK_MSG("There is no resource pool reference here, so we don't know how to safley delete this resource");
+                                delete m_ptr;
+                                delete m_refCount;
+                                return;
                             }
-                            delete m_refCount;
+                            m_pool->OnResourceUnreferenced(m_filePath);
                         }
                     }
                 }

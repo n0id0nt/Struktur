@@ -36,28 +36,34 @@ namespace Struktur
 
             void Enter(GameContext& context) override 
             {
+                Core::Resource::ResourceManager& resourceManager = context.GetResourceManager();
+                Core::Resource::ResourcePtr<Core::Resource::FontResource> font = resourceManager.GetFontResource("assets/Fonts/machine-std/machine-std-regular.ttf_120");
+
                 entt::entity worldEntity = GameResource::Level::CreateWorldEntity(context, WORLD_FILE_PATH);
                 GameResource::Level::LoadLevelEntities(context, worldEntity, 0);
                 GameResource::Level::LoadLevelEntities(context, worldEntity, 1);
                 
                 UI::UIManager& uiManager = context.GetUIManager();
                 UI::FocusNavigator* focusNavigator = uiManager.GetFocusNavigator();
-
+                
                 // Create a main panel
                 auto* mainPanel = uiManager.CreateElement<UI::UIPanel>(glm::vec2{50, 50}, glm::vec2{0, 0}, glm::vec2{700, 500}, glm::vec2{0, 0});
                 mainPanel->SetBackgroundColor(DARKGRAY);
                 mainPanel->SetBorderColor(WHITE);
                 mainPanel->SetBorderWidth(2.0f);
                 
+                
                 // Create labels
-                auto* titleLabel = uiManager.CreateElement<UI::UILabel>(glm::vec2{100, 80}, glm::vec2{0, 0}, "UI System Demo", 30.0f);
+                auto* titleLabel = uiManager.CreateElement<UI::UILabel>(context, glm::vec2{100, 80}, glm::vec2{0, 0}, "UI System Demo", 30.0f);
                 titleLabel->SetTextColor(WHITE);
                 titleLabel->SetAlignment(UI::TextAlignment::CENTER);
+                titleLabel->SetFont(font);
                 titleLabel->SetFocusable(true);
                 uiManager.SetFocus(titleLabel);
                 focusNavigator->RegisterElement(titleLabel);
 
-                auto* infoLabel = uiManager.CreateElement<UI::UILabel>(glm::vec2{100, 120}, glm::vec2{0, 0}, "Use Tab/Arrow keys or Controller to navigate", 16.0f);
+                auto* infoLabel = uiManager.CreateElement<UI::UILabel>(context, glm::vec2{100, 120}, glm::vec2{0, 0}, "Use Tab/Arrow keys or Controller to navigate", 16.0f);
+                infoLabel->SetFont(font);
                 infoLabel->SetTextColor(LIGHTGRAY);
                 
                 // Create sub-panel
@@ -67,13 +73,15 @@ namespace Struktur
                 subPanel->SetBorderWidth(1.0f);
 
                 // Add some content labels to the sub-panel
-                auto* childLabel1 = subPanel->AddChild(std::make_unique<UI::UILabel>(glm::vec2{ 20, 40 }, glm::vec2{ 0, 0 }, "Content Area", 20.0f));
-				childLabel1->SetFocusable(true);
-				focusNavigator->RegisterElement(childLabel1);
-                auto* childLabel2 = subPanel->AddChild(std::make_unique<UI::UILabel>(glm::vec2{ 0, 0 }, glm::vec2{ 0.5f,0.5f }, "This is where your UI content would go.", 14.0f));
-				childLabel2->SetFocusable(true);
-				childLabel2->SetAnchorPoint({ 0.5f,0.5f });
-				focusNavigator->RegisterElement(childLabel2);
+                auto* childLabel1 = static_cast<UI::UILabel*>(subPanel->AddChild(std::make_unique<UI::UILabel>(context, glm::vec2{ 20, 40 }, glm::vec2{ 0, 0 }, "Content Area", 20.0f)));
+                childLabel1->SetFont(font);
+                childLabel1->SetFocusable(true);
+                focusNavigator->RegisterElement(childLabel1);
+                auto* childLabel2 = static_cast<UI::UILabel*>(subPanel->AddChild(std::make_unique<UI::UILabel>(context, glm::vec2{ 0, 0 }, glm::vec2{ 0.5f,0.5f }, "This is where your UI content would go.", 14.0f)));
+                childLabel2->SetFont(font);
+                childLabel2->SetFocusable(true);
+                childLabel2->SetAnchorPoint({ 0.5f,0.5f });
+                focusNavigator->RegisterElement(childLabel2);
             }
 
             void Update(GameContext& context) override 
