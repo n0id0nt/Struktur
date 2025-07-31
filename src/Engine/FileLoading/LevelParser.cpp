@@ -73,9 +73,9 @@ void Struktur::FileLoading::LevelParser::LoadLayers(Level& level, const nlohmann
 			else if (layerType == "AutoLayer")
 			{
 				layer.type = LayerType::AUTO_LAYER;
+				layer.tilesetRelPath = layerJson["__tilesetRelPath"];
+				LoadAutoLayerTiles(layer, layerJson["autoLayerTiles"]);
 			}
-			layer.tilesetRelPath = layerJson["__tilesetRelPath"];
-			LoadAutoLayerTiles(layer, layerJson["autoLayerTiles"]);
 		}
 		
 		layer.identifier = layerName;
@@ -210,6 +210,10 @@ Struktur::FileLoading::LevelParser::FieldInstanceType Struktur::FileLoading::Lev
 	{
 		return FieldInstanceType::INTEGER;
 	}
-	assert(false); // need to implement this type
+	if (fieldInstanceType == "String")
+	{
+		return FieldInstanceType::STRING;
+	}
+	BREAK_MSG(std::format("Need to implement type: {}", fieldInstanceType).c_str());
 	return FieldInstanceType::COUNT;
 }

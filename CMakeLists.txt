@@ -287,6 +287,9 @@ set(SOURCES
     src/Engine/Game/State.h
 
     src/Gameplay/GameplayStates/GameWorldState.h
+    src/Gameplay/GameObjects/Player.h           src/Gameplay/GameObjects/Player.cpp
+    src/Gameplay/GameObjects/NPC.h
+    src/Gameplay/GameObjects/Item.h
 
     src/Debug/Assertions.h
     src/Debug/Box2DDebugRenderer.h

@@ -35,9 +35,9 @@ namespace Struktur
             
             //TODO These variables don't belong here - Possibly initialise these from a file or just pass them in??
             glm::vec2 gravity(0.0f, 0.0f);
-            int velocityIterations = 8;
-            int positionIterations = 3;
-            float pixelsPerMeter = 32.f;
+            int velocityIterations = 16;
+            int positionIterations = 10;
+            float pixelsPerMeter = 64.f;
 
             m_physicsWorld = std::make_unique<Physics::PhysicsWorld>(gravity, velocityIterations, positionIterations, pixelsPerMeter);
         }

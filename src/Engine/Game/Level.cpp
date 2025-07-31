@@ -7,7 +7,6 @@
 #include "Engine/ECS/Component/SpriteAnimation.h"
 #include "Engine/ECS/Component/TileMap.h"
 #include "Engine/ECS/Component/Identifier.h"
-#include "Engine/ECS/Component/Player.h"
 #include "Engine/ECS/Component/Camera.h"
 #include "Engine/ECS/Component/PhysicsBody.h"
 #include "Engine/ECS/Component/Level.h"
@@ -18,6 +17,10 @@
 
 #include "Engine/FileLoading/LevelParser.h"
 #include "Engine/Physics/CollisionShapeGenerators/TileMapCollisionBodyGenerator.h"
+
+#include "GamePlay/GameObjects/Player.h"
+#include "GamePlay/GameObjects/NPC.h"
+#include "GamePlay/GameObjects/Item.h"
 
 entt::entity Struktur::GameResource::Level::CreateWorldEntity(GameContext& context, const std::string& filePath)
 {
@@ -91,37 +94,21 @@ entt::entity Struktur::GameResource::Level::LoadLevelEntities(GameContext& conte
         {
             for (auto& entityInstance : layer.entityInstaces)
             {
-                Core::Resource::ResourcePtr<Core::Resource::TextureResource> texture = resoruceManager.GetTexture("assets/Tiles/PlayerGrowthSprites.png");
                 const auto layerInstaceEntity = gameObjectManager.CreateGameObject(context, entityInstance.identifier, levelEntity);
-                transformSystem.SetWorldTransform(context, layerInstaceEntity, glm::vec3(entityInstance.px.x, entityInstance.px.y, 0.0f), glm::vec3(1.0f), glm::quat(1.0f, 0.0f, 0.0f, 0.0f));
+                transformSystem.SetLocalTransform(context, layerInstaceEntity, glm::vec3(entityInstance.px.x + layer.gridSize/2.f, entityInstance.px.y + layer.gridSize / 2.f, 0.0f), glm::vec3(1.0f), glm::quat(1.0f, 0.0f, 0.0f, 0.0f));
 
-                // All this is specific to the player and should be brought to a separate function
-                registry.emplace<Component::Sprite>(layerInstaceEntity, texture, WHITE, glm::vec2(16, 16), 12, 5, false, 0);
-				registry.emplace<Component::Player>(layerInstaceEntity, 10.f);
-                Component::Camera& parentCamera = registry.emplace<Component::Camera>(layerInstaceEntity);
-				parentCamera.zoom = 2.f;
-				parentCamera.forcePosition = true;
-				parentCamera.damping = glm::vec2(0.8f, 0.8f);
-				b2BodyDef kinematicBodyDef;
-				kinematicBodyDef.type = b2_dynamicBody;
-				b2PolygonShape playerShape;
-				playerShape.SetAsBox(1 / 2.0f, 1 / 2.0f);
-				physicsSystem.CreatePhysicsBody(context, layerInstaceEntity, kinematicBodyDef, playerShape);
-                Component::PhysicsBody& physicsBody = registry.get<Component::PhysicsBody>(layerInstaceEntity);
-                physicsBody.syncFromPhysics = true;  // Don't let physics drive transform
-                physicsBody.syncToPhysics = true;     // Let transform drive physics
-				Component::SpriteAnimation& spriteAnimation = registry.emplace<Component::SpriteAnimation>(layerInstaceEntity);
-                // animation could possibly be a resource stored in the resource pool and loaded in from a file.
-                Animation::SpriteAnimation idle32Animation{ 24u, 28u, 1.f, true };
-                Animation::SpriteAnimation run32Animation{ 28u, 33u, 0.7f, true };
-                Animation::SpriteAnimation jump32Animation{ 33u, 35u, 0.2f, false };
-                Animation::SpriteAnimation fall32Animation{ 35u, 36u, 1.f, false };
-
-                animationSystem.AddAnimation(context, layerInstaceEntity, "idle32", idle32Animation);
-                animationSystem.AddAnimation(context, layerInstaceEntity, "run32", run32Animation);
-                animationSystem.AddAnimation(context, layerInstaceEntity, "jump32", jump32Animation);
-                animationSystem.AddAnimation(context, layerInstaceEntity, "fall32", fall32Animation);
-                animationSystem.PlayAnimation(context, layerInstaceEntity, "idle32");
+                if (entityInstance.identifier == "Player")
+                {
+                    Player::Create(context, layerInstaceEntity);
+                }
+                else if (entityInstance.identifier == "NPC")
+                {
+                    NPC::Create(context, layerInstaceEntity);
+                }
+                else if (entityInstance.identifier == "Item")
+                {
+                    Item::Create(context, layerInstaceEntity);
+                }
 
                 //auto& luaComponent = registry.emplace<Struktur::Component::LuaComponent>(layerInstaceEntity, false, luaState.CreateTable());
                 //for (auto fieldInstance : entityInstance.fieldInstances)

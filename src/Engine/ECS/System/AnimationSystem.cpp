@@ -64,6 +64,11 @@ bool Struktur::System::AnimationSystem::IsAnimationPlaying(GameContext& context,
     entt::registry& registry = context.GetRegistry();
     auto& animationComponent = registry.get<Component::SpriteAnimation>(entity);
     
+	if (animationComponent.curAnimation != animationName)
+	{
+		return false;
+	}
+
 	Struktur::Animation::SpriteAnimation curAnimation = animationComponent.animations[animationComponent.curAnimation];
     if (curAnimation.loop) 
     {

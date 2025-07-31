@@ -13,17 +13,22 @@
 
 #include "engine/ECS/System/PhysicsSystem.h"
 #include "Engine/ECS/System/TransformSystem.h"
+#include "Engine/ECS/System/AnimationSystem.h"
+
 #include "Engine/ECS/Component/Transform.h"
 #include "Engine/ECS/Component/Player.h"
 #include "Engine/ECS/Component/PhysicsBody.h"
 #include "Engine/ECS/Component/Sprite.h"
+#include "Engine/ECS/Component/SpriteAnimation.h"
 
 #include "Engine/UI/UILabel.h"
 #include "Engine/UI/UIPanel.h"
 
+#include "Gameplay/GameObjects/Player.h"
+
 constexpr static const char* TILE_TEXTURE = "assets/Tiles/cavesofgallet_tiles.png";
 constexpr static const char* PLAYER_TEXTURE = "assets/Tiles/PlayerGrowthSprites.png";
-constexpr static const char* WORLD_FILE_PATH = "assets/Levels/ExampleLDKTLevel.ldtk";
+constexpr static const char* WORLD_FILE_PATH = "assets/Levels/MemoryPalace.ldtk";
 
 namespace Struktur
 {    
@@ -40,9 +45,13 @@ namespace Struktur
                 Core::Resource::ResourcePtr<Core::Resource::FontResource> font = resourceManager.GetFontResource("assets/Fonts/machine-std/machine-std-regular.ttf_120");
 
                 entt::entity worldEntity = GameResource::Level::CreateWorldEntity(context, WORLD_FILE_PATH);
-                GameResource::Level::LoadLevelEntities(context, worldEntity, 0);
-                GameResource::Level::LoadLevelEntities(context, worldEntity, 1);
-                
+                entt::entity northRoom = GameResource::Level::LoadLevelEntities(context, worldEntity, 0);
+                entt::entity courtyard = GameResource::Level::LoadLevelEntities(context, worldEntity, 1);
+                entt::entity EastRoom = GameResource::Level::LoadLevelEntities(context, worldEntity, 2);
+                entt::entity WestRoom = GameResource::Level::LoadLevelEntities(context, worldEntity, 3);
+                entt::entity SouthRoom = GameResource::Level::LoadLevelEntities(context, worldEntity, 4);
+
+                /*
                 UI::UIManager& uiManager = context.GetUIManager();
                 UI::FocusNavigator* focusNavigator = uiManager.GetFocusNavigator();
                 
@@ -81,7 +90,7 @@ namespace Struktur
                 childLabel2->SetFont(font);
                 childLabel2->SetFocusable(true);
                 childLabel2->SetAnchorPoint({ 0.5f,0.5f });
-                focusNavigator->RegisterElement(childLabel2);
+                focusNavigator->RegisterElement(childLabel2);*/
             }
 
             void Update(GameContext& context) override 
@@ -91,65 +100,25 @@ namespace Struktur
                 System::GameObjectManager& gameObjectManager = context.GetGameObjectManager();
                 System::SystemManager& systemManager = context.GetSystemManager();
                 auto& transformSystem = systemManager.GetSystem<System::TransformSystem>();
+                auto& animationSystem = systemManager.GetSystem<System::AnimationSystem>();
 
                 // player movement system
                 Core::GameData& gameData = context.GetGameData();
                 entt::registry& registry = context.GetRegistry();
                 glm::vec2 inputDir = input.GetInputAxis2("Move");
-                bool inputAddObject = input.IsInputJustPressed("AddObject");
-                bool inputAddChild = input.IsInputJustPressed("AddChild");
-                bool inputDeleteObject = input.IsInputJustPressed("DeleteObject");
-                auto view = registry.view<Component::LocalTransform, Component::Player, Component::PhysicsBody>();
-                for (auto [entity, transform, player, physicsBody] : view.each())
+                bool interact = input.IsKeyJustPressed("Interact");
+
+                auto view = registry.view<Component::Player>();
+                for (auto& entity : view)
                 {
-                    b2Vec2 velecity = b2Vec2(inputDir.x *  player.speed, inputDir.y * -player.speed);
-                    physicsBody.body->SetLinearVelocity(velecity);
-                    if (inputAddObject)
-                    {
-                        //std::srand(std::time({}));
-                        auto child = gameObjectManager.CreateGameObject(context, "Child", entity);
-                        Core::Resource::ResourcePtr<Core::Resource::TextureResource> texture = resoruceManager.GetTexture("assets/Tiles/cavesofgallet_tiles.png");
-                        registry.emplace<Component::Sprite>(child, std::move(texture), PINK, glm::vec2(8, 8), 20, 20, false, 10);
-                        transformSystem.SetLocalTransform(context, child, glm::vec3((float)(std::rand() % 200) - 100.0f, (float)(std::rand() % 200) - 100.0f, 0.0f), glm::vec3(1.0f), glm::quat(1.0f, 0.0f, 0.0f, 0.0f));
-                        DEBUG_INFO("Add game object");
-                    }
-                    if (inputAddChild)
-                    {
-                        Component::Children* children = registry.try_get<Component::Children>(entity);
-                        if (children)
-                        {
-                            if (!children->entities.empty())
-                            {
-                                entt::entity parent = children->entities[std::rand() % children->entities.size()];
-                                //std::srand(std::time({}));
-                                auto child = gameObjectManager.CreateGameObject(context, "Child of child", parent);
-								Core::Resource::ResourcePtr<Core::Resource::TextureResource> texture = resoruceManager.GetTexture("assets/Tiles/cavesofgallet_tiles.png");
-                                registry.emplace<Component::Sprite>(child, std::move(texture), PURPLE, glm::vec2(8, 8), 20, 20, false, 11);
-                                transformSystem.SetLocalTransform(context, child, glm::vec3((float)(std::rand() % 200) - 100.0f, (float)(std::rand() % 200) - 100.0f, 0.0f), glm::vec3(1.0f), glm::quat(1.0f, 0.0f, 0.0f, 0.0f));
-                                DEBUG_INFO("Add child game object");
+                    Struktur::Player::PlayerControl(context, entity, inputDir);
 
-                                System::SystemManager& systemManager = context.GetSystemManager();
-                                System::PhysicsSystem& physicsSystem = systemManager.GetSystem<System::PhysicsSystem>();
+                    entt::entity canInteract = Struktur::Player::CanInteract(context, entity);
+                    // render interact UI toolTip
 
-                                b2BodyDef kinematicBodyDef;
-                                kinematicBodyDef.type = b2_dynamicBody;
-                                b2PolygonShape childShape;
-                                childShape.SetAsBox(1 / 2.0f, 1 / 2.0f);
-                                physicsSystem.CreatePhysicsBody(context, child, kinematicBodyDef, childShape);
-                            }
-                        }
-                    }
-                    if (inputDeleteObject)
+                    if (interact && canInteract != entt::null)
                     {
-                        Component::Children* children = registry.try_get<Component::Children>(entity);
-                        if (children)
-                        {
-                            if (!children->entities.empty())
-                            {
-                                gameObjectManager.DestroyGameObject(context, children->entities[0]);
-                                DEBUG_INFO("Delete game object");
-                            }
-                        }
+                        Struktur::Player::Interact(context, entity, canInteract);
                     }
                 }
             }
