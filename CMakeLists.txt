@@ -286,7 +286,12 @@ set(SOURCES
     src/Engine/Game/StateManager.h              src/Engine/Game/StateManager.cpp
     src/Engine/Game/State.h
 
+    src/Engine/Util/Noise.h                     src/Engine/Util/Noise.cpp
+
     src/Gameplay/GameplayStates/GameWorldState.h
+    src/Gameplay/GameplayStates/InteractState.h
+    src/Gameplay/GameplayStates/InventoryState.h
+
     src/Gameplay/GameObjects/Player.h           src/Gameplay/GameObjects/Player.cpp
     src/Gameplay/GameObjects/NPC.h
     src/Gameplay/GameObjects/Item.h

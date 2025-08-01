@@ -18,6 +18,7 @@
 
 namespace Struktur
 {
+    using Inventory = std::vector<std::string>;
     class GameContext 
     {
     public:
@@ -32,6 +33,7 @@ namespace Struktur
             m_camera = std::make_unique<GameResource::Camera>();
             m_stateManager = std::make_unique<GameResource::StateManager>();
             m_uiManger = std::make_unique<UI::UIManager>();
+            m_inventory = std::make_unique<Inventory>();
             
             //TODO These variables don't belong here - Possibly initialise these from a file or just pass them in??
             glm::vec2 gravity(0.0f, 0.0f);
@@ -102,6 +104,12 @@ namespace Struktur
             return *m_uiManger;
         }
 
+        Inventory& GetInventory() const
+        {
+            ASSERT_MSG(m_inventory.get(), "Inventory not initialized");
+            return *m_inventory;
+        }
+
     private:
         std::unique_ptr<Core::GameData> m_gameData;
         std::unique_ptr<Core::Input> m_input;
@@ -113,5 +121,6 @@ namespace Struktur
         std::unique_ptr<GameResource::Camera> m_camera;
         std::unique_ptr<GameResource::StateManager> m_stateManager;
         std::unique_ptr<UI::UIManager> m_uiManger;
+        std::unique_ptr<Inventory> m_inventory;
     };
 }

@@ -33,6 +33,7 @@ namespace Struktur
             Core::Resource::ResourcePtr<Core::Resource::TextureResource> texture = resourceManager.GetTexture("assets/Tiles/PlayerGrowthSprites.png");
 
             registry.emplace<Component::Sprite>(entity, texture, WHITE, glm::vec2(32, 48), 12, 5, false, 0);
+            registry.emplace<Component::Interactable>(entity, "Book");
         }
     }
 }

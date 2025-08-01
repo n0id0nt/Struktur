@@ -4,8 +4,15 @@
     <input name="Interact" type="button">
         <bindings>
             <binding type="keycode" value="e"/>
+            <binding type="keycode" value="enter"/>
             <binding type="controllerButton" value="a"/>
             <binding type="controllerButton" value="b"/>
+        </bindings>
+    </input>
+    <input name="Inventory" type="button">
+        <bindings>
+            <binding type="keycode" value="i"/>
+            <binding type="controllerButton" value="start"/>
         </bindings>
     </input>
     <input name="Horizontal" type="axis">

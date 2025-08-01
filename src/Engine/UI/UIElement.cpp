@@ -132,6 +132,113 @@ Struktur::UI::UIElement *Struktur::UI::UIElement::GetNavigationNeighbor(Navigati
     return nullptr;
 }
 
+Struktur::UI::UIElement* Struktur::UI::UIElement::SetOnClick(UIClickCallback callback)
+{
+    m_onClickCallback = callback;
+    return this;
+}
+
+Struktur::UI::UIElement* Struktur::UI::UIElement::SetOnFocus(UIFocusCallback callback)
+{
+    m_onFocusCallback = callback;
+    return this;
+}
+
+Struktur::UI::UIElement* Struktur::UI::UIElement::SetOnLoseFocus(UIFocusCallback callback)
+{
+    m_onLoseFocusCallback = callback;
+    return this;
+}
+
+Struktur::UI::UIElement* Struktur::UI::UIElement::SetOnHover(UIHoverCallback callback)
+{
+    m_onHoverCallback = callback;
+    return this;
+}
+
+Struktur::UI::UIElement* Struktur::UI::UIElement::SetOnKeyPressed(UIKeyCallback callback)
+{
+    m_onKeyPressedCallback = callback;
+    return this;
+}
+
+Struktur::UI::UIElement* Struktur::UI::UIElement::SetOnActivate(UIActivateCallback callback)
+{
+    m_onActivateCallback = callback;
+    return this;
+}
+
+Struktur::UI::UIElement* Struktur::UI::UIElement::SetOnEvent(UIEventCallback callback)
+{
+    m_onActivateCallback = callback;
+    return this;
+}
+
+void Struktur::UI::UIElement::TriggerEvent(const std::string& eventType, float numericValue, bool boolValue)
+{
+    if (m_onEventCallback)
+    {
+        UIEventData eventData(this);
+        eventData.stringData = eventType;
+        eventData.numericValue = numericValue;
+        eventData.boolValue = boolValue;
+        m_onEventCallback(eventData);
+    }
+}
+
+void Struktur::UI::UIElement::OnClick(const glm::vec2& mousePos)
+{
+    if (m_onClickCallback)
+    {
+        m_onClickCallback(this, mousePos);
+    }
+}
+
+void Struktur::UI::UIElement::OnHover(const glm::vec2& mousePos)
+{
+    if (m_onHoverCallback)
+    {
+        m_onHoverCallback(this, mousePos);
+    }
+}
+
+void Struktur::UI::UIElement::OnFocus()
+{
+    if (m_onFocusCallback)
+    {
+        m_onFocusCallback(this);
+    }
+}
+
+void Struktur::UI::UIElement::OnLoseFocus()
+{
+    if (m_onLoseFocusCallback)
+    {
+        m_onLoseFocusCallback(this);
+    }
+}
+
+void Struktur::UI::UIElement::OnButtonPressed(int key)
+{
+    if (m_onKeyPressedCallback)
+    {
+        m_onKeyPressedCallback(this, key);
+    }
+}
+
+void Struktur::UI::UIElement::OnActivate()
+{
+    if (m_onActivateCallback)
+    {
+        m_onActivateCallback(this);
+    }
+    else
+    {
+        // Default behavior - trigger click
+        OnClick(GetPosition());
+    }
+}
+
 void Struktur::UI::UIElement::RenderFocusIndicator()
 {
     // Simple focus indicator - can be customized

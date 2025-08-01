@@ -4,8 +4,14 @@ namespace Struktur
 {
 	namespace Component
 	{
-        struct Player {
+        struct Player
+        {
             float speed;
+        };
+
+        struct Interactable
+        {
+            std::string interactionId;
         };
     }
 }

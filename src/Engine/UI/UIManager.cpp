@@ -150,18 +150,18 @@ void Struktur::UI::UIManager::HandleInput(GameContext &context)
     //}
     
     // Handle keyboard navigation
-    float tabAxis = input.GetInputAxis("UITab");
-    if (tabAxis == 0.0f)
-    {
-        if (tabAxis > 0)
-        {
-            m_focusNavigator->NavigateToPrevious();
-        }
-        else
-        {
-            m_focusNavigator->NavigateToNext();
-        }
-    }
+    //float tabAxis = input.GetInputAxis("UITab");
+    //if (tabAxis == 0.0f)
+    //{
+    //    if (tabAxis > 0)
+    //    {
+    //        m_focusNavigator->NavigateToPrevious();
+    //    }
+    //    else
+    //    {
+    //        m_focusNavigator->NavigateToNext();
+    //    }
+    //}
     
     // Handle arrow key navigation
     glm::vec2 inputDir = input.GetInputAxis2("UIDir");
@@ -176,7 +176,7 @@ void Struktur::UI::UIManager::HandleInput(GameContext &context)
         {
             navigationDirection = NavigationDirection::DOWN;
         }
-        else if (inputDir.x > 0.0f)
+        else if (inputDir.x < 0.0f)
         {
             navigationDirection = NavigationDirection::LEFT;
         }

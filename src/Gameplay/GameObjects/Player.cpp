@@ -1,5 +1,7 @@
 #include "Player.h"
 
+#include <limits>
+
 #include "Engine/GameContext.h"
 #include "Engine/ECS/Component/Transform.h"
 #include "Engine/ECS/Component/Sprite.h"
@@ -16,6 +18,8 @@
 #include "Engine/ECS/System/AnimationSystem.h"
 
 #include "Engine/Core/Resource/TextureResource.h"
+
+constexpr static const float INTERACTABLE_DISTANCE = 64.0f;
 
 void Struktur::Player::Create(GameContext &context, entt::entity entity)
 {
@@ -53,10 +57,25 @@ void Struktur::Player::Create(GameContext &context, entt::entity entity)
     animationSystem.PlayAnimation(context, entity, "idle");
 }
 
+void Struktur::Player::PlayerForceStop(GameContext &context, entt::entity entity)
+{
+    entt::registry& registry = context.GetRegistry();
+    System::SystemManager& systemManager = context.GetSystemManager();
+    auto& animationSystem = systemManager.GetSystem<System::AnimationSystem>();
+
+    auto& physicsBody = registry.get<Component::PhysicsBody>(entity);
+    auto& spriteAnimation = registry.get<Component::SpriteAnimation>(entity);
+
+    b2Vec2 velecity = b2Vec2_zero;
+    physicsBody.body->SetLinearVelocity(velecity);
+    if (!animationSystem.IsAnimationPlaying(context, entity, "idle"))
+    {
+        animationSystem.PlayAnimation(context, entity, "idle");
+    }
+}
+
 void Struktur::Player::PlayerControl(GameContext &context, entt::entity entity, glm::vec2 dir)
 {
-    Core::Resource::ResourceManager& resoruceManager = context.GetResourceManager();
-    System::GameObjectManager& gameObjectManager = context.GetGameObjectManager();
     entt::registry& registry = context.GetRegistry();
     System::SystemManager& systemManager = context.GetSystemManager();
     auto& animationSystem = systemManager.GetSystem<System::AnimationSystem>();
@@ -98,11 +117,28 @@ void Struktur::Player::PlayerControl(GameContext &context, entt::entity entity, 
     }
 }
 
-void Struktur::Player::Interact(GameContext &context, entt::entity entity, entt::entity targetEntity)
-{
-}
-
 entt::entity Struktur::Player::CanInteract(GameContext &context, entt::entity entity)
 {
+    entt::registry& registry = context.GetRegistry();
+    glm::vec3& playerWorldPosition = registry.get<Component::WorldTransform>(entity).position;
+    entt::entity closestEntity = entt::null;
+    float closestDistance = std::numeric_limits<float>::infinity();
+
+    auto view = registry.view<Component::Interactable, Component::WorldTransform>();
+    for (auto& interactableEntity : view)
+    {
+        glm::vec3& interactableWorldPosition = registry.get<Component::WorldTransform>(interactableEntity).position;
+        float distance = glm::distance(interactableWorldPosition, playerWorldPosition);
+        if (distance < closestDistance)
+        {
+            closestDistance = distance;
+            closestEntity = interactableEntity;
+        }
+    }
+    if (closestDistance < INTERACTABLE_DISTANCE)
+    {
+        return closestEntity;
+    }
+
     return entt::null;
 }

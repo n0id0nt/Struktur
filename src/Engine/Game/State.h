@@ -8,15 +8,17 @@ namespace Struktur
     
 	namespace GameResource
 	{
+        class StateManager;
+
 		class IState
 		{
         public:
             IState() = default;
 
-            virtual void Enter(GameContext& context) = 0;
-            virtual void Update(GameContext& context) = 0;
-            virtual void Render(GameContext& context) = 0;
-            virtual void Exit(GameContext& context) = 0;
+            virtual void Enter(GameContext& context, StateManager& stateManager) = 0;
+            virtual void Update(GameContext& context, StateManager& stateManager) = 0;
+            virtual void Render(GameContext& context, StateManager& stateManager) = 0;
+            virtual void Exit(GameContext& context, StateManager& stateManager) = 0;
 
             virtual std::string GetStateName() const = 0;
         };

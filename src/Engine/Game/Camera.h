@@ -16,8 +16,8 @@ namespace Struktur
 			glm::vec2 previousCameraPosition;
 			float previousCameraAngle;
 
-			glm::vec2 WorldPosToScreenPos(glm::vec2 worldPos);
-			glm::vec2 ScreenPosToWorldPos(glm::vec2 screenPos);
+			glm::vec2 WorldPosToScreenPos(const glm::vec2& worldPos);
+			glm::vec2 ScreenPosToWorldPos(const glm::vec2& screenPos);
             ::Camera2D GetRaylibCamera();
 		};
 	}

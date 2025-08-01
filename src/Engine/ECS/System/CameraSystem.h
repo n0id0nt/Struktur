@@ -27,6 +27,9 @@ namespace Struktur
 			glm::vec2 CalculateSmoothedPosition(float gameTime, float deltaTime, int screenWidth, int screenHeight, Component::Camera* cameraComponent, const glm::vec2& cameraComponentPos, GameResource::Camera& camera);
 			glm::vec2 TargetPosition(float gameTime, float deltaTime, int screenWidth, int screenHeight, Component::Camera* cameraComponent, const glm::vec2& cameraComponentPos, GameResource::Camera& camera);
 			void CalculateCameraShake(float gameTime, float deltaTime, int screenWidth, int screenHeight, Component::Camera* cameraComponent, GameResource::Camera& camera);
+
+			void AddCameraTrauma(GameContext& context, entt::entity entity, float trauma);
+			void ResetCameraTrauma(GameContext& context, entt::entity entity);
 		};
 	}
 }

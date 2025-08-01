@@ -6,6 +6,7 @@
 #include "raylib.h"
 #include "glm/glm.hpp"
 #include <algorithm>
+#include <functional>
 
 namespace Struktur
 {
@@ -17,6 +18,30 @@ namespace Struktur
         enum class NavigationDirection {
             UP, DOWN, LEFT, RIGHT
         };
+
+        class UIElement;
+
+        // Callback function types
+        using UIClickCallback = std::function<void(UIElement* sender, const glm::vec2& mousePos)>;
+        using UIFocusCallback = std::function<void(UIElement* sender)>;
+        using UIHoverCallback = std::function<void(UIElement* sender, const glm::vec2& mousePos)>;
+        using UIActivateCallback = std::function<void(UIElement* sender)>;
+        using UIKeyCallback = std::function<void(UIElement* sender, int key)>;
+
+        // Event data structure for more complex events
+        struct UIEventData {
+            UIElement* sender;
+            Vector2 mousePosition;
+            std::string stringData;
+            float numericValue;
+            bool boolValue;
+
+            UIEventData(UIElement* s) : sender(s), mousePosition({ 0,0 }),
+                numericValue(0.0f), boolValue(false) {
+            }
+        };
+
+        using UIEventCallback = std::function<void(const UIEventData& eventData)>;
 
         //=============================================================================
         // UIElement - Base class for all UI elements
@@ -43,6 +68,15 @@ namespace Struktur
             int m_tabIndex;
             std::vector<UIElement*> m_navigationNeighbors[4]; // UP, DOWN, LEFT, RIGHT
 
+            // Callback functions
+            UIClickCallback m_onClickCallback;
+            UIFocusCallback m_onFocusCallback;
+            UIFocusCallback m_onLoseFocusCallback;
+            UIHoverCallback m_onHoverCallback;
+            UIActivateCallback m_onActivateCallback;
+            UIKeyCallback m_onKeyPressedCallback;
+            UIEventCallback m_onEventCallback; // Generic event callback
+
         public:
             UIElement(const glm::vec2& absolutePosition, const glm::vec2& relativePosition, const glm::vec2& absoluteSize, const glm::vec2& relativeSize);
             virtual ~UIElement() = default;
@@ -60,12 +94,12 @@ namespace Struktur
             virtual void Render(GameContext& context) = 0;
 
             // Virtual methods with default implementations
-            virtual void OnClick(const glm::vec2& mousePos) {}
-            virtual void OnHover(const glm::vec2& mousePos) {}
-            virtual void OnFocus() {}
-            virtual void OnLoseFocus() {}
-            virtual void OnButtonPressed(int key) {}
-            virtual void OnActivate() { OnClick(GetPosition()); } // Default activation
+            virtual void OnClick(const glm::vec2& mousePos);
+            virtual void OnHover(const glm::vec2& mousePos);
+            virtual void OnFocus();
+            virtual void OnLoseFocus();
+            virtual void OnButtonPressed(int key);
+            virtual void OnActivate();
             virtual void RenderFocusIndicator();
 
             // Child management
@@ -116,6 +150,17 @@ namespace Struktur
             // Z-order
             void SetZIndex(int z) { m_zIndex = z; }
             int GetZIndex() const { return m_zIndex; }
+
+            // Callback setters - Fluent interface style
+            UIElement* SetOnClick(UIClickCallback callback);
+            UIElement* SetOnFocus(UIFocusCallback callback);
+            UIElement* SetOnLoseFocus(UIFocusCallback callback);
+            UIElement* SetOnHover(UIHoverCallback callback);
+            UIElement* SetOnKeyPressed(UIKeyCallback callback);
+            UIElement* SetOnActivate(UIActivateCallback callback);
+            UIElement* SetOnEvent(UIEventCallback callback);
+            // Convenience method to trigger generic events
+            void TriggerEvent(const std::string& eventType, float numericValue = 0.0f, bool boolValue = false);
 
         protected:
             void UpdateChildren(GameContext& context);

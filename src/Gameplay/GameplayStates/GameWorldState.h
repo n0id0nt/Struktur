@@ -10,6 +10,7 @@
 #include "Engine/GameContext.h"
 
 #include "Engine/Game/State.h"
+#include "Engine/Game/StateManager.h"
 
 #include "engine/ECS/System/PhysicsSystem.h"
 #include "Engine/ECS/System/TransformSystem.h"
@@ -25,6 +26,8 @@
 #include "Engine/UI/UIPanel.h"
 
 #include "Gameplay/GameObjects/Player.h"
+#include "Gameplay/GameplayStates/InteractState.h"
+#include "Gameplay/GameplayStates/InventoryState.h"
 
 constexpr static const char* TILE_TEXTURE = "assets/Tiles/cavesofgallet_tiles.png";
 constexpr static const char* PLAYER_TEXTURE = "assets/Tiles/PlayerGrowthSprites.png";
@@ -36,24 +39,39 @@ namespace Struktur
 	{
 		class GameWorldState : public GameResource::IState
 		{
+        private:
+            UI::UILabel* m_interactLabel;
+
+            GameResource::StateManager m_stateManager;
+            entt::entity m_worldEntity;
+
         public:
             GameWorldState() {}
 
-            void Enter(GameContext& context) override 
+            void Enter(GameContext& context, GameResource::StateManager& stateManager) override
             {
                 Core::Resource::ResourceManager& resourceManager = context.GetResourceManager();
                 Core::Resource::ResourcePtr<Core::Resource::FontResource> font = resourceManager.GetFontResource("assets/Fonts/machine-std/machine-std-regular.ttf_120");
 
                 entt::entity worldEntity = GameResource::Level::CreateWorldEntity(context, WORLD_FILE_PATH);
+                m_worldEntity = worldEntity;
                 entt::entity northRoom = GameResource::Level::LoadLevelEntities(context, worldEntity, 0);
                 entt::entity courtyard = GameResource::Level::LoadLevelEntities(context, worldEntity, 1);
                 entt::entity EastRoom = GameResource::Level::LoadLevelEntities(context, worldEntity, 2);
                 entt::entity WestRoom = GameResource::Level::LoadLevelEntities(context, worldEntity, 3);
                 entt::entity SouthRoom = GameResource::Level::LoadLevelEntities(context, worldEntity, 4);
 
-                /*
                 UI::UIManager& uiManager = context.GetUIManager();
                 UI::FocusNavigator* focusNavigator = uiManager.GetFocusNavigator();
+
+                // Create the UI for the level.
+                m_interactLabel = uiManager.CreateElement<UI::UILabel>(context, glm::vec2{0, 0}, glm::vec2{0, 0}, "Interact", 16.0f);
+                m_interactLabel->SetVisible(false);
+                //m_interactLabel->SetFont(font);
+                m_interactLabel->SetTextColor(WHITE); // Change this when the background is created.
+                m_interactLabel->SetAnchorPoint({ 0.5f,0.5f });
+                // could have same text behind slighly shifted for border effect
+                /*
                 
                 // Create a main panel
                 auto* mainPanel = uiManager.CreateElement<UI::UIPanel>(glm::vec2{50, 50}, glm::vec2{0, 0}, glm::vec2{700, 500}, glm::vec2{0, 0});
@@ -71,9 +89,6 @@ namespace Struktur
                 uiManager.SetFocus(titleLabel);
                 focusNavigator->RegisterElement(titleLabel);
 
-                auto* infoLabel = uiManager.CreateElement<UI::UILabel>(context, glm::vec2{100, 120}, glm::vec2{0, 0}, "Use Tab/Arrow keys or Controller to navigate", 16.0f);
-                infoLabel->SetFont(font);
-                infoLabel->SetTextColor(LIGHTGRAY);
                 
                 // Create sub-panel
                 auto* subPanel = uiManager.CreateElement<UI::UIPanel>(glm::vec2{100, 160}, glm::vec2{0, 0},  glm::vec2{600, 300}, glm::vec2{0, 0});
@@ -93,11 +108,19 @@ namespace Struktur
                 focusNavigator->RegisterElement(childLabel2);*/
             }
 
-            void Update(GameContext& context) override 
+            void Update(GameContext& context, GameResource::StateManager& stateManager) override
             {
+                // if substate return out here
+                if (auto* currentState = m_stateManager.GetCurrentState())
+                {
+                    m_stateManager.Update(context);
+                    return;
+                }
+
                 Core::Input& input = context.GetInput();
                 Core::Resource::ResourceManager& resoruceManager = context.GetResourceManager();
                 System::GameObjectManager& gameObjectManager = context.GetGameObjectManager();
+                GameResource::Camera& camera = context.GetCamera();
                 System::SystemManager& systemManager = context.GetSystemManager();
                 auto& transformSystem = systemManager.GetSystem<System::TransformSystem>();
                 auto& animationSystem = systemManager.GetSystem<System::AnimationSystem>();
@@ -106,26 +129,62 @@ namespace Struktur
                 Core::GameData& gameData = context.GetGameData();
                 entt::registry& registry = context.GetRegistry();
                 glm::vec2 inputDir = input.GetInputAxis2("Move");
-                bool interact = input.IsInputJustPressed("Interact");
+                bool inputInteract = input.IsInputJustReleased("Interact");
+                bool inventoryInteract = input.IsInputJustReleased("Inventory");
 
                 auto view = registry.view<Component::Player>();
+                if (inventoryInteract)
+                {
+                    m_interactLabel->SetVisible(false);
+                    //TODO also pause the game time to pause the players animation
+                    // just forcing player to idle for now
+                    for (auto& entity : view)
+                    {
+                        Struktur::Player::PlayerForceStop(context, entity);
+                    }
+                    std::unique_ptr<InventoryState> inventoryState = std::make_unique<InventoryState>();
+                    m_stateManager.ChangeState(context, std::move(inventoryState));
+                    return;
+                }
+
                 for (auto& entity : view)
                 {
                     Struktur::Player::PlayerControl(context, entity, inputDir);
 
                     entt::entity canInteract = Struktur::Player::CanInteract(context, entity);
-                    // render interact UI toolTip
 
-                    if (interact && canInteract != entt::null)
+                    if (canInteract != entt::null)
                     {
-                        Struktur::Player::Interact(context, entity, canInteract);
+                        auto& interactWorldTransform = registry.get<Component::WorldTransform>(canInteract);
+                        m_interactLabel->SetVisible(true);
+                        
+                        glm::vec2 screenInteractPosition = camera.WorldPosToScreenPos(interactWorldTransform.position) + glm::vec2{ 0,-32 };
+                        m_interactLabel->SetPosition(screenInteractPosition, glm::vec2{0,0});
+                        if (inputInteract)
+                        {
+                            m_interactLabel->SetVisible(false);
+                            Struktur::Player::PlayerForceStop(context, entity);
+                            // Change state to interact state
+                            std::unique_ptr<InteractState> interactState = std::make_unique<InteractState>(canInteract);
+                            m_stateManager.ChangeState(context, std::move(interactState));
+                            return;
+                        }
+                    }
+                    else
+                    {
+                        m_interactLabel->SetVisible(false);
                     }
                 }
             }
-            void Render(GameContext& context) override {}
-            void Exit(GameContext& context) override 
+            void Render(GameContext& context, GameResource::StateManager& stateManager) override {}
+            void Exit(GameContext& context, GameResource::StateManager& stateManager) override
             {
                 // delete all players
+                System::GameObjectManager& gameObjectManager = context.GetGameObjectManager();
+                gameObjectManager.DestroyGameObject(context, m_worldEntity);
+                // delete all UI
+                UI::UIManager& uiManager = context.GetUIManager();
+                uiManager.RemoveElement(m_interactLabel);
             }
 
             std::string GetStateName() const override { return std::string(typeid(GameWorldState).name()); }

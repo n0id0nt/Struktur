@@ -8,7 +8,7 @@
 #include "Engine/ECS/Component/Camera.h"
 #include "Engine/ECS/Component/Transform.h"
 #include "Engine/Game/Camera.h"
-//#include "Util/skNoise.h"
+#include "Engine/Util/Noise.h"
 
 void Struktur::System::CameraSystem::Update(GameContext& context)
 {
@@ -99,9 +99,9 @@ void Struktur::System::CameraSystem::CalculateCameraShake(float gameTime, float 
     {
         const int seed = 0;
         float shake = std::pow(trauma, 2.f);
-        float angle = cameraComponent->maxAngle * shake * 0;//Util::Noise::PerlinNoise1(seed, gameTime / cameraComponent->shakeAmplitude);
-        float xOffset = cameraComponent->maxOffset * shake * 0;//Util::Noise::PerlinNoise1(seed + 1, gameTime / cameraComponent->shakeAmplitude);
-        float yOffset = cameraComponent->maxOffset * shake * 0;//Util::Noise::PerlinNoise1(seed + 2, gameTime / cameraComponent->shakeAmplitude);
+        float angle = cameraComponent->maxAngle * shake * Util::Noise::PerlinNoise1(seed, gameTime / cameraComponent->shakeAmplitude);
+        float xOffset = cameraComponent->maxOffset * shake * Util::Noise::PerlinNoise1(seed + 1, gameTime / cameraComponent->shakeAmplitude);
+        float yOffset = cameraComponent->maxOffset * shake * Util::Noise::PerlinNoise1(seed + 2, gameTime / cameraComponent->shakeAmplitude);
 
         cameraComponent->trauma = trauma - deltaTime / cameraComponent->traumaTime;
         camera.target = glm::vec2{ camera.target.x + xOffset, camera.target.y + yOffset };
@@ -112,4 +112,29 @@ void Struktur::System::CameraSystem::CalculateCameraShake(float gameTime, float 
     {
         cameraComponent->trauma = 0;
     }
+}
+
+void Struktur::System::CameraSystem::AddCameraTrauma(GameContext &context, entt::entity entity, float trauma)
+{
+    entt::registry& registry = context.GetRegistry();
+    Struktur::Component::Camera* cameraComponent = registry.try_get<Struktur::Component::Camera>(entity);
+    if (!cameraComponent)
+    {
+        BREAK_MSG("Entity provided does not contain a camera component");
+        return;
+    }
+    cameraComponent->trauma += trauma;
+	if (cameraComponent->trauma > 1.0f) cameraComponent->trauma = 1.0f;
+}
+
+void Struktur::System::CameraSystem::ResetCameraTrauma(GameContext &context, entt::entity entity)
+{
+    entt::registry& registry = context.GetRegistry();
+    Struktur::Component::Camera* cameraComponent = registry.try_get<Struktur::Component::Camera>(entity);
+    if (!cameraComponent)
+    {
+        BREAK_MSG("Entity provided does not contain a camera component");
+        return;
+    }
+    cameraComponent->trauma = 0.0f;
 }
