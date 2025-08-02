@@ -98,11 +98,39 @@ entt::entity Struktur::GameResource::Level::LoadLevelEntities(GameContext& conte
 
                 if (entityInstance.identifier == "NPC")
                 {
-                    NPC::Create(context, layerInstaceEntity);
+                    std::string name;
+                    for (auto fieldInstance : entityInstance.fieldInstances)
+                    {
+                        switch (fieldInstance.type)
+                        {
+                        case Struktur::FileLoading::LevelParser::FieldInstanceType::STRING:
+                        {
+                            name = std::any_cast<std::string>(fieldInstance.value);
+                            break;
+                        }
+                        default:
+                            break;
+                        }
+                    }
+                    NPC::Create(context, layerInstaceEntity, name);
                 }
                 else if (entityInstance.identifier == "Item")
                 {
-                    Item::Create(context, layerInstaceEntity);
+                    std::string name;
+                    for (auto fieldInstance : entityInstance.fieldInstances)
+                    {
+                        switch (fieldInstance.type)
+                        {
+                        case Struktur::FileLoading::LevelParser::FieldInstanceType::STRING:
+                        {
+                            name = std::any_cast<std::string>(fieldInstance.value);
+                            break;
+                        }
+                        default:
+                            break;
+                        }
+                    }
+                    Item::Create(context, layerInstaceEntity, name, true);
                 }
 
                 //auto& luaComponent = registry.emplace<Struktur::Component::LuaComponent>(layerInstaceEntity, false, luaState.CreateTable());

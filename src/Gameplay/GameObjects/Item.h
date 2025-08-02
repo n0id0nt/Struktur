@@ -21,7 +21,7 @@ namespace Struktur
 {
     namespace Item
     {
-        void Create(GameContext& context, entt::entity entity)
+        void Create(GameContext& context, entt::entity entity, const std::string& name, bool canBeReturned)
         {
             entt::registry& registry = context.GetRegistry();
             System::GameObjectManager& gameObjectManager = context.GetGameObjectManager();
@@ -33,7 +33,7 @@ namespace Struktur
             Core::Resource::ResourcePtr<Core::Resource::TextureResource> texture = resourceManager.GetTexture("assets/Tiles/PlayerGrowthSprites.png");
 
             registry.emplace<Component::Sprite>(entity, texture, WHITE, glm::vec2(32, 48), 12, 5, false, 0);
-            registry.emplace<Component::Interactable>(entity, "Book");
+            registry.emplace<Component::Interactable>(entity, name, canBeReturned);
         }
     }
 }

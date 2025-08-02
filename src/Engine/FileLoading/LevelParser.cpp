@@ -149,7 +149,7 @@ void Struktur::FileLoading::LevelParser::LoadFieldInstances(Entity& entity, cons
 			std::string fieldValue = fieldInstanceJson["__value"];
 			field.value = fieldValue;
 			break;
-		}		
+		}
 		//case Struktur::FileLoading::LevelParser::FieldInstanceType::MULTILINE:
 		//	break;
 		//case Struktur::FileLoading::LevelParser::FieldInstanceType::COLOUR:
@@ -213,6 +213,10 @@ Struktur::FileLoading::LevelParser::FieldInstanceType Struktur::FileLoading::Lev
 	if (fieldInstanceType == "String")
 	{
 		return FieldInstanceType::STRING;
+	}
+	if (fieldInstanceType == "Bool")
+	{
+		return FieldInstanceType::BOOLEAN;
 	}
 	BREAK_MSG(std::format("Need to implement type: {}", fieldInstanceType).c_str());
 	return FieldInstanceType::COUNT;

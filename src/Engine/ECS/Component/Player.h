@@ -12,6 +12,7 @@ namespace Struktur
         struct Interactable
         {
             std::string interactionId;
+            bool canBeReturned;
         };
     }
 }

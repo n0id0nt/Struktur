@@ -55,555 +55,511 @@ namespace Struktur
         };
 
         static std::unordered_map<std::string, Interaction> s_interactionMap = {
-            // === NPCs ===
+            
+            // ===== NPC DIALOGUES =====
             
             {"Scholar", {{ // Source: Library
                 // After Quest Complete (Has Red Master Key)
                 {"The knowledge is shared, as it should be.\nTheodore's greatest discovery is now yours to use wisely.", {"Red Master Key"}, {}, {}, {}, false, false, true, true},
-                
                 // Has All Three Herbs (Moonbell Herb + Fireroot + Stargrass)
-                {"Perfect! The herbs of wisdom! Moonbell for illumination, Fireroot for transformation, Stargrass for transcendence. Now I can decode Theodore's cipher!", {"Scholar's Memory Note", "Moonbell Herb", "Fireroot", "Stargrass"}, {}, {"Safe Combination Note", "Red Master Key"}, {"Moonbell Herb", "Fireroot", "Stargrass"}, false, false, true, true},
-                
+                {"Perfect! The herbs of wisdom! Moonbell for illumination, Fireroot for transformation, Stargrass for transcendence.\nNow I can decode Theodore's cipher!", {"Scholar's Memory Note", "Moonbell Herb", "Fireroot", "Stargrass"}, {}, {"Safe Combination Note", "Red Master Key"}, {"Moonbell Herb", "Fireroot", "Stargrass"}, false, false, true, true},
                 // Subsequent Meetings (Has Scholar's Memory Note, Missing Herbs)
-                {"Have you found the three herbs?\nMoonbell from gardens of memory, Fireroot from laboratories of change, Stargrass from observatories of dream.", {"Scholar's Memory Note"}, {"Safe Combination Note"}, {}, {}, false, false, true, true},
-                
+                {"Have you found the three herbs?\nMoonbell from gardens of memory, Fireroot from laboratories of change, Stargrass from observatories of dream.", {"Scholar's Memory Note"}, {"Moonbell Herb", "Fireroot", "Stargrass"}, {}, {}, false, false, true, true},
                 // First Meeting (Default)
-                {"Welcome, seeker of knowledge. I solved the greatest theorem of my age, but I never got to share it.\nI have Theodore's encrypted research, but it requires three sacred herbs to decode.", {}, {"Scholar's Memory Note"}, {"Encrypted Note", "Scholar's Memory Note"}, {}, false, false, true, true},
+                {"Welcome, seeker of knowledge.\nI solved the greatest theorem of my age, but I never got to share it.", {}, {"Scholar's Memory Note"}, {}, {}, false, false, true, false},
+                {"I have Theodore's encrypted research, but it requires three sacred herbs to decode.", {}, {"Scholar's Memory Note"}, {"Encrypted Note", "Scholar's Memory Note"}, {}, false, false, true, true},
             }}},
 
             {"Cook", {{ // Source: Kitchen
                 // After Quest Complete (Has Cook's Blessing Token)
-                {"Family traditions live on through those who remember them. You carry our love with you now.", {"Cook's Blessing Token"}, {}, {}, {}, false, false, true, true},
-                
+                {"Family traditions live on through those who remember them.\nYou carry our love with you now.", {"Cook's Blessing Token"}, {}, {}, {}, false, false, true, true},
                 // Has Complete Recipe (Recipe Fragment A + Recipe Fragment B)
-                {"My stars! Grandmother's recipe, whole again! Just like her cookies brought the family together, this will help you find your way home.", {"Cook's Memory Note", "Recipe Fragment A", "Recipe Fragment B"}, {}, {"Green Master Key", "Cook's Blessing Token"}, {"Recipe Fragment A", "Recipe Fragment B"}, false, false, true, true},
-                
+                {"My stars! Grandmother's recipe, whole again!\nJust like her cookies brought the family together, this will help you find your way home.", {"Cook's Memory Note", "Recipe Fragment A", "Recipe Fragment B"}, {}, {"Green Master Key", "Cook's Blessing Token"}, {"Recipe Fragment A", "Recipe Fragment B"}, false, false, true, true},
                 // Subsequent Meetings (Has Cook's Memory Note, Incomplete Recipe)
-                {"The recipe was torn in half and hidden when the family scattered. Find both pieces, and I'll prepare something that opens more than just appetites.", {"Cook's Memory Note"}, {"Cook's Blessing Token"}, {}, {}, false, false, true, true},
-                
+                {"The recipe was torn in half and hidden when the family scattered.\nFind both pieces, and I'll prepare something that opens more than just appetites.", {"Cook's Memory Note"}, {"Recipe Fragment A", "Recipe Fragment B"}, {}, {}, false, false, true, true},
                 // First Meeting (Default)
-                {"Hello dear! Christmas morning, 1967 - the last time we were all together.\nI'll cook you something special if you bring me grandmother's complete recipe.", {}, {"Cook's Memory Note"}, {"Cook's Memory Note"}, {}, false, false, true, true},
+                {"Hello dear! Christmas morning, 1967 - the last time we were all together.", {}, {"Cook's Memory Note"}, {}, {}, false, false, true, false},
+                {"I'll cook you something special if you bring me grandmother's complete recipe.", {}, {"Cook's Memory Note"}, {"Cook's Memory Note"}, {}, false, false, true, true},
             }}},
 
             {"Knight", {{ // Source: Armory
                 // After Trade (Has Guardian's Trial Note)
-                {"Honor is kept through deeds, not words. The Guardian awaits your proof of understanding.", {"Guardian's Trial Note"}, {}, {}, {}, false, false, true, true},
-                
+                {"Honor is kept through deeds, not words.\nThe Guardian awaits your proof of understanding.", {"Guardian's Trial Note"}, {}, {}, {}, false, false, true, true},
                 // Holding Any Weapon (Ceremonial Sword)
-                {"A fine blade! In return, know this: The Guardian in the Vault tests with three symbols - Sun, Moon, and Spiral.\nFind them, face them in order, and prove your worth.", {"Knight's Honor Note", "Ceremonial Sword"}, {}, {"Guardian's Trial Note"}, {"Ceremonial Sword"}, false, false, true, true},
-                
+                {"A fine blade! In return, know this:\nThe Guardian in the Vault tests with three symbols - Sun, Moon, and Spiral.", {"Knight's Honor Note", "Ceremonial Sword"}, {}, {"Guardian's Trial Note"}, {"Ceremonial Sword"}, false, false, true, false},
+                {"Find them, face them in order, and prove your worth.", {"Knight's Honor Note", "Ceremonial Sword"}, {}, {}, {}, false, false, true, true},
                 // Subsequent Meetings (Has Knight's Honor Note)
-                {"Bring me a weapon, and I'll share what I've observed about this battlefield of memories.", {"Knight's Honor Note"}, {"Guardian's Trial Note"}, {}, {}, false, false, true, true},
-                
+                {"Bring me a weapon, and I'll share what I've observed about this battlefield of memories.", {"Knight's Honor Note"}, {"Ceremonial Sword"}, {}, {}, false, false, true, true},
                 // First Meeting (Default)
-                {"Stand ready! Sir Edmund Cross, forever prepared for the charge that saved my unit.\nI share knowledge with those who understand honor.", {}, {"Knight's Honor Note"}, {"Knight's Honor Note"}, {}, false, false, true, true},
-            }}},
-
-            {"Gardener", {{ // Source: Garden
-                // Subsequent Meetings (Has Gardener's Wisdom Note)
-                {"Theodore wanted to preserve our perfect moments, but he never understood - love isn't about holding onto the past, it's about planting seeds for the future.", {"Gardener's Wisdom Note"}, {}, {}, {}, false, false, true, true},
-                
-                // First Meeting (Default)
-                {"Welcome to my sanctuary, where love took root and promises were made.\nI tend to memories as if they were flowers.", {}, {"Gardener's Wisdom Note"}, {"Gardener's Wisdom Note"}, {}, false, false, true, true},
+                {"Stand ready! Sir Edmund Cross, forever prepared for the charge that saved my unit.", {}, {"Knight's Honor Note"}, {}, {}, false, false, true, false},
+                {"I share knowledge with those who understand honor.", {}, {"Knight's Honor Note"}, {"Knight's Honor Note"}, {}, false, false, true, true},
             }}},
 
             {"Inventor", {{ // Source: Workshop
                 // After Trade (Has Inventor's Trade Note)
                 {"Sometimes the most important inventions are the ones that bring families together.", {"Inventor's Trade Note"}, {}, {}, {}, false, false, true, true},
-                
                 // Holding Broken Clockwork
                 {"Perfect! These gears have the right temporal resonance.\nHere's something I found - part of an old family recipe.", {"Inventor's Project Note", "Broken Clockwork"}, {}, {"Recipe Fragment B", "Inventor's Trade Note"}, {"Broken Clockwork"}, false, false, true, true},
-                
                 // Subsequent Meetings (Has Inventor's Project Note, No Clockwork)
-                {"Bring me broken clockwork - gears, springs, escapements - and I'll trade you something valuable.", {"Inventor's Project Note"}, {"Inventor's Trade Note"}, {}, {}, false, false, true, true},
-                
+                {"Bring me broken clockwork - gears, springs, escapements - and I'll trade you something valuable.", {"Inventor's Project Note"}, {"Broken Clockwork"}, {}, {}, false, false, true, true},
                 // First Meeting (Default)
-                {"Ah! A visitor to my workshop! I've been building a Temporal Stabilizer, but I need proper clockwork components.", {}, {"Inventor's Project Note"}, {"Inventor's Project Note"}, {}, false, false, true, true},
+                {"Ah! A visitor to my workshop!\nI've been building a Temporal Stabilizer, but I need proper clockwork components.", {}, {"Inventor's Project Note"}, {"Inventor's Project Note"}, {}, false, false, true, true},
             }}},
 
             {"Guardian", {{ // Source: Vault
                 // After Approval (Has Guardian's Approval Note)
                 {"The vault's treasures await those who have proven their understanding of memory's true nature.", {"Guardian's Approval Note"}, {}, {}, {}, false, false, true, true},
-                
                 // Has All Symbol Knowledge (Seen all three symbols)
-                {"You've found them all! Sun, Moon, Spiral - the cycle of memory!\nNow face the final test: In my safe lies a key, but only those who understand the Scholar's wisdom may claim it.", {"Guardian's Challenge Note", "Sun Symbol Seen", "Moon Symbol Seen", "Spiral Symbol Seen"}, {}, {"Guardian's Approval Note", "Yellow Master Key"}, {}, false, false, true, true},
-                
+                {"You've found them all! Sun, Moon, Spiral - the cycle of memory!\nNow face the final test: In my safe lies a key, but only those who understand the Scholar's wisdom may claim it.", {"Guardian's Challenge Note", "Sun Symbol Seen", "Moon Symbol Seen", "Spiral Symbol Seen"}, {}, {"Guardian's Approval Note"}, {}, false, false, true, true},
                 // Subsequent Meetings (Has Guardian's Challenge Note, No Symbols)
-                {"Prove you understand memory's nature by finding three symbols: the Sun of creation, the Moon of preservation, and the Spiral of transcendence.", {"Guardian's Challenge Note"}, {"Guardian's Approval Note"}, {}, {}, false, false, true, true},
-                
+                {"Prove you understand memory's nature by finding three symbols:\nthe Sun of creation, the Moon of preservation, and the Spiral of transcendence.", {"Guardian's Challenge Note"}, {"Sun Symbol Seen", "Moon Symbol Seen", "Spiral Symbol Seen"}, {}, {}, false, false, true, true},
                 // First Meeting (Default)
-                {"Welcome, descendant! I am Theodore Aldrich, creator of this memory palace!\nI've preserved perfect moments within these walls.", {}, {"Guardian's Challenge Note"}, {"Guardian's Challenge Note"}, {}, false, false, true, true},
+                {"Welcome, descendant! I am Theodore Aldrich, creator of this memory palace!", {}, {"Guardian's Challenge Note"}, {}, {}, false, false, true, false},
+                {"I've preserved perfect moments within these walls.", {}, {"Guardian's Challenge Note"}, {"Guardian's Challenge Note"}, {}, false, false, true, true},
             }}},
 
             {"Mage", {{ // Source: Portal Chamber
                 // After Redemption (Has Mage's Redemption Note)
                 {"You've achieved what I could not - understanding that the future matters more than the past.", {"Mage's Redemption Note"}, {}, {}, {}, false, false, true, true},
-                
                 // Holding Charged Memory Crystal
                 {"Perfect! This crystal contains what could be, not just what was.\nYou understand what Theodore never did. Take this - my redemption.", {"Mage's Lament Note", "Charged Memory Crystal"}, {}, {"Purple Master Key", "Mage's Redemption Note"}, {"Charged Memory Crystal"}, false, false, true, true},
-                
                 // Holding Memory Crystal (Uncharged)
-                {"The crystal contains potential, but it needs the Dreamer's touch while starlight watches.\nBring it to one who sleeps while the Observatory is active.", {"Mage's Lament Note", "Memory Crystal"}, {}, {"Crystal Charging Note"}, {}, false, false, true, true},
-                
+                {"The crystal contains potential, but it needs the Dreamer's touch while starlight watches.\nBring it to one who sleeps while the Observatory is active.", {"Mage's Lament Note", "Memory Crystal"}, {"Charged Memory Crystal"}, {"Crystal Charging Note"}, {}, false, false, true, true},
                 // Subsequent Meetings (Has Mage's Lament Note, No Crystal)
-                {"To prove mastery over this house's memory, you must create the Pattern of Echoes.\nOnly when memories overlap perfectly will the Memory Crystal manifest.", {"Mage's Lament Note"}, {"Crystal Charging Note"}, {}, {}, false, false, true, true},
-                
+                {"To prove mastery over this house's memory, you must create the Pattern of Echoes.\nOnly when memories overlap perfectly will the Memory Crystal manifest.", {"Mage's Lament Note"}, {"Memory Crystal"}, {}, {}, false, false, true, true},
                 // First Meeting (Default)
-                {"Child, you stand where Theodore's ritual failed. I am Vera Cross, trapped in my moment of greatest failure - arriving too late to stop this catastrophe.", {}, {"Mage's Lament Note"}, {"Mage's Lament Note"}, {}, false, false, true, true},
+                {"Child, you stand where Theodore's ritual failed.\nI am Vera Cross, trapped in my moment of greatest failure - arriving too late to stop this catastrophe.", {}, {"Mage's Lament Note"}, {"Mage's Lament Note"}, {}, false, false, true, true},
             }}},
 
             {"Dreamer", {{ // Source: Bedroom
                 // After Charging (Has Dream Blessing Note)
                 {"Dreams and starlight together can break even the strongest chains of memory.", {"Dream Blessing Note"}, {}, {}, {}, false, false, true, true},
-                
-                // Holding Memory Crystal + Observatory Active (need to check West room state in code)
-                {"The crystal... yes, I dreamed of this. Let me fill it with dreams of freedom and possibility.", {"Dreamer's Vision Note", "Memory Crystal"}, {}, {"Charged Memory Crystal", "Dream Blessing Note"}, {"Memory Crystal"}, false, false, true, true},
-                
-                // Interacting While Sleeping / Default
-                {"Mmm? I was dreaming of the house's true nature... but it fades like morning mist.\nI can only help when the stars are watching.", {}, {"Dreamer's Vision Note"}, {"Dreamer's Vision Note"}, {}, false, false, true, true},
+                // Holding Memory Crystal + Observatory Active (Research Notes in inventory)
+                {"The crystal... yes, I dreamed of this.\nLet me fill it with dreams of freedom and possibility.", {"Dreamer's Vision Note", "Memory Crystal", "Research Notes"}, {}, {"Charged Memory Crystal", "Dream Blessing Note"}, {"Memory Crystal"}, false, false, true, true},
+                // Interacting While Sleeping
+                {"Mmm? I was dreaming of the house's true nature... but it fades like morning mist.", {}, {"Dreamer's Vision Note"}, {}, {}, false, false, true, false},
+                {"I can only help when the stars are watching.", {}, {"Dreamer's Vision Note"}, {"Dreamer's Vision Note"}, {}, false, false, true, true},
             }}},
 
-            // === ROOM TRANSFORMATION ITEMS ===
-
-            {"Family Portrait", {{ // Controls North Room, Source: Vault
-                // Putback in wrong room
-                {"This doesn't belong here. The portrait should return to where you found it.", {}, {"Family Portrait"}, {}, {}, false, false, true, true},
-                // Putback in correct room (Vault)
-                {"You place the portrait back on the safe.\nThe North Room will no longer be Garden next loop.", {"Family Portrait"}, {}, {}, {"Family Portrait"}, false, false, true, true},
-                // Pickup
-                {"A photo of happier times before the curse. Carrying it draws you toward natural beauty and growth.\nThe North Room will be Garden next loop.", {}, {"Family Portrait"}, {"Family Portrait"}, {}, false, false, true, true},
+            {"Gardener", {{ // Source: Garden
+                // Subsequent Meetings (Has Gardener's Wisdom Note)
+                {"Theodore wanted to preserve our perfect moments, but he never understood -\nlove isn't about holding onto the past, it's about planting seeds for the future.", {"Gardener's Wisdom Note"}, {}, {}, {}, false, false, true, true},
+                // First Meeting (Default)
+                {"Welcome to my sanctuary, where love took root and promises were made.", {}, {"Gardener's Wisdom Note"}, {}, {}, false, false, true, false},
+                {"I tend to memories as if they were flowers.", {}, {"Gardener's Wisdom Note"}, {"Gardener's Wisdom Note"}, {}, false, false, true, true},
             }}},
 
-            {"Broken Clockwork", {{ // Controls North Room, Source: Treasury
-                // Putback in wrong room
-                {"The clockwork belongs with the other valuables in the Treasury.", {}, {"Broken Clockwork"}, {}, {}, false, false, true, true},
-                // Putback in correct room (Treasury)
-                {"You return the clockwork to its place.\nThe North Room will no longer be Armory next loop.", {"Broken Clockwork"}, {}, {}, {"Broken Clockwork"}, false, false, true, true},
-                // Pickup
-                {"Gears and springs from an old timepiece. Carrying it awakens thoughts of honor and duty.\nThe North Room will be Armory next loop.", {}, {"Broken Clockwork"}, {"Broken Clockwork"}, {}, false, false, true, true},
+            {"Alchemist", {{ // Source: Lab
+                // Subsequent Meetings (Has Alchemist's Knowledge Note)
+                {"We thought we were creating paradise - a place where perfect moments never ended.\nInstead, we built a prison where perfect moments never begin.", {"Alchemist's Knowledge Note"}, {}, {}, {}, false, false, true, true},
+                // First Meeting (Default)
+                {"Fascinating! Another visitor to Theodore's grand experiment!", {}, {"Alchemist's Knowledge Note"}, {}, {}, false, false, true, false},
+                {"I'm trapped in the moment I discovered the perfect formula for crystallizing human memories.\nThe implications were... overwhelming.", {}, {"Alchemist's Knowledge Note"}, {"Alchemist's Knowledge Note"}, {}, false, false, true, true},
             }}},
 
-            {"Love Letter", {{ // Controls East Room, Source: Library
-                // Putback in wrong room
-                {"The love letter belongs in the Library where it was kept.", {}, {"Love Letter"}, {}, {}, false, false, true, true},
-                // Putback in correct room (Library)
-                {"You place the letter back carefully.\nThe East Room will no longer be Kitchen next loop.", {"Love Letter"}, {}, {}, {"Love Letter"}, false, false, true, true},
-                // Pickup
-                {"Theodore's proposal letter filled with domestic dreams. Carrying it awakens hunger for family comfort.\nThe East Room will be Kitchen next loop.", {}, {"Love Letter"}, {"Love Letter"}, {}, false, false, true, true},
+            {"Merchant", {{ // Source: Treasury
+                // After Transaction (Has Merchant's Deal Note)
+                {"Family traditions, passed down through generations - that's true wealth.\nSome things are more valuable than gold.", {"Merchant's Deal Note"}, {}, {}, {}, false, false, true, true},
+                // Holding Complete Recipe (Recipe Fragment A + Recipe Fragment B)
+                {"Grandmother's recipe! This proves some things are more valuable than gold.", {"Merchant's Wisdom Note", "Recipe Fragment A", "Recipe Fragment B"}, {}, {"Silver Key", "Merchant's Deal Note"}, {}, false, false, true, true},
+                // Subsequent Meetings (Has Merchant's Wisdom Note)
+                {"I deal in valuable exchanges.\nProve to me that family traditions have worth - show me a complete family recipe.", {"Merchant's Wisdom Note"}, {"Recipe Fragment A", "Recipe Fragment B"}, {}, {}, false, false, true, true},
+                // First Meeting (Default)
+                {"Ah, another Aldrich! I'm afraid the family's financial situation is... complicated.", {}, {"Merchant's Wisdom Note"}, {}, {}, false, false, true, false},
+                {"Theodore spent everything on his occult research.\nI'm trapped in the moment I realized we were ruined.", {}, {"Merchant's Wisdom Note"}, {"Merchant's Wisdom Note"}, {}, false, false, true, true},
             }}},
 
-            {"Star Chart", {{ // Controls East Room, Source: Portal Chamber
-                // Putback in wrong room
-                {"The star chart belongs with the mystical apparatus in the Portal Chamber.", {}, {"Star Chart"}, {}, {}, false, false, true, true},
-                // Putback in correct room (Portal Chamber)
-                {"You return the chart to its place.\nThe East Room will no longer be Lab next loop.", {"Star Chart"}, {}, {}, {"Star Chart"}, false, false, true, true},
-                // Pickup
-                {"Astronomical maps covered in alchemical symbols. Carrying it stirs scientific curiosity.\nThe East Room will be Lab next loop.", {}, {"Star Chart"}, {"Star Chart"}, {}, false, false, true, true},
+            {"Cartographer", {{ // Source: Study
+                // Subsequent Meetings (Has Cartographer's Maps Note)
+                {"Each room has three states representing different aspects of human experience.\nTheodore thought he could catalog and control memory itself, but memory is a living thing.", {"Cartographer's Maps Note"}, {}, {}, {}, false, false, true, true},
+                // First Meeting (Default)
+                {"Greetings, fellow explorer!\nI've been mapping this house's supernatural properties for... well, time has no meaning here.", {}, {"Cartographer's Maps Note"}, {}, {}, false, false, true, false},
+                {"Every room state, every transformation, every hidden connection.\nThe house follows patterns, even in its madness.", {}, {"Cartographer's Maps Note"}, {"Cartographer's Maps Note"}, {}, false, false, true, true},
             }}},
 
-            {"Recipe Box", {{ // Controls South Room, Source: Library
-                // Putback in wrong room
-                {"The recipe box belongs in the Library where family documents are kept.", {}, {"Recipe Box"}, {}, {}, false, false, true, true},
-                // Putback in correct room (Library)
-                {"You return the recipe box to its shelf.\nThe South Room will no longer be Bedroom next loop.", {"Recipe Box"}, {}, {}, {"Recipe Box"}, false, false, true, true},
-                // Pickup
-                {"A wooden box that once held family recipes. Carrying it awakens longing for personal comfort.\nThe South Room will be Bedroom next loop.", {}, {"Recipe Box"}, {"Recipe Box"}, {}, false, false, true, true},
+            {"Astronomer", {{ // Source: Observatory
+                // Subsequent Meetings (Has Astronomer's Vision Note)
+                {"Theodore asked me to calculate the perfect moment for his ritual.\nI gave him exact times, precise alignments... but I should have calculated the cost, not just the opportunity.", {"Astronomer's Vision Note"}, {}, {}, {}, false, false, true, true},
+                // First Meeting (Default)
+                {"The stars align in mysterious ways, traveler.", {}, {"Astronomer's Vision Note"}, {}, {}, false, false, true, false},
+                {"I calculated the perfect astrological timing for Theodore's ritual... but I failed to foresee its consequences.", {}, {"Astronomer's Vision Note"}, {"Astronomer's Vision Note"}, {}, false, false, true, true},
             }}},
 
-            {"Ritual Candle", {{ // Controls South Room, Source: Portal Chamber
-                // Putback in wrong room
-                {"The ritual candle must remain with the mystical apparatus.", {}, {"Ritual Candle"}, {}, {}, false, false, true, true},
-                // Putback in correct room (Portal Chamber)
-                {"You return the candle to the ritual altar.\nThe South Room will no longer be Study next loop.", {"Ritual Candle"}, {}, {}, {"Ritual Candle"}, false, false, true, true},
-                // Pickup
-                {"Burns with silver flame from Theodore's ritual. Carrying it awakens scholarly investigation.\nThe South Room will be Study next loop.", {}, {"Ritual Candle"}, {"Ritual Candle"}, {}, false, false, true, true},
+            // ===== TRANSFORMATION ITEMS =====
+
+            {"Family Portrait", {{ // Controls North Room → Garden (from Vault)
+                {"A photo of happier times before the curse.\nCarrying it draws you toward natural beauty and growth.", {}, {}, {}, {}, false, false, false, false},
+                {"The North Room stirs with longing for simpler days.", {}, {}, {}, {}, true, false, false, false},
+                {"Obtained Family Portrait", {}, {}, {"Family Portrait"}, {}, false, true, false, true},
             }}},
 
-            {"Old Journal", {{ // Controls West Room, Source: Vault
-                // Putback in wrong room
-                {"The personal journal belongs in the Vault where private things are kept.", {}, {"Old Journal"}, {}, {}, false, false, true, true},
-                // Putback in correct room (Vault)
-                {"You return the journal to its place.\nThe West Room will no longer be Workshop next loop.", {"Old Journal"}, {}, {}, {"Old Journal"}, false, false, true, true},
-                // Pickup
-                {"Personal diary filled with daily life and practical concerns. Carrying it awakens the urge to create and build.\nThe West Room will be Workshop next loop.", {}, {"Old Journal"}, {"Old Journal"}, {}, false, false, true, true},
+            {"Family Portrait Return", {{ // Can only return to Vault
+                {"You place the portrait back on the safe with reverence.", {"Family Portrait"}, {}, {}, {}, false, false, false, false},
+                {"The North Room settles, its yearning quieted.", {"Family Portrait"}, {}, {}, {}, true, false, false, false},
+                {"Put Back Family Portrait", {"Family Portrait"}, {}, {}, {"Family Portrait"}, false, true, false, true},
             }}},
 
-            {"Research Notes", {{ // Controls West Room, Source: Treasury
-                // Putback in wrong room
-                {"The research notes belong with the other valuable documents in the Treasury.", {}, {"Research Notes"}, {}, {}, false, false, true, true},
-                // Putback in correct room (Treasury)
-                {"You organize the notes back in their place.\nThe West Room will no longer be Observatory next loop.", {"Research Notes"}, {}, {}, {"Research Notes"}, false, false, true, true},
-                // Pickup
-                {"Cordelia's research into the family curse and astronomical phenomena. Contains the Moon Symbol.\nCarrying it stirs transcendent ambitions. The West Room will be Observatory next loop.", {}, {"Research Notes"}, {"Research Notes", "Moon Symbol Seen"}, {}, false, false, true, true},
+            {"Broken Clockwork", {{ // Controls North Room → Armory (from Treasury)
+                {"Gears and springs from an old timepiece.\nCarrying it awakens thoughts of honor and duty.", {}, {}, {}, {}, false, false, false, false},
+                {"The North Room resonates with martial precision.", {}, {}, {}, {}, true, false, false, false},
+                {"Obtained Broken Clockwork", {}, {}, {"Broken Clockwork"}, {}, false, true, false, true},
             }}},
 
-            // === QUEST ITEMS ===
-
-            {"Moonbell Herb", {{ // Quest item for Scholar
-                // Cannot be put back
-                {"A silvery herb that chimes with memory. The Scholar seeks this for his cipher.", {}, {"Moonbell Herb"}, {"Moonbell Herb"}, {}, false, false, true, true},
+            {"Broken Clockwork Return", {{ // Can only return to Treasury
+                {"You return the clockwork to its resting place.", {"Broken Clockwork"}, {}, {}, {}, false, false, false, false},
+                {"The North Room's military bearing fades.", {"Broken Clockwork"}, {}, {}, {}, true, false, false, false},
+                {"Put Back Broken Clockwork", {"Broken Clockwork"}, {}, {}, {"Broken Clockwork"}, false, true, false, true},
             }}},
 
-            {"Fireroot", {{ // Quest item for Scholar
-                // Cannot be put back
-                {"A red herb that burns cold. Essential for the Scholar's cipher.", {}, {"Fireroot"}, {"Fireroot"}, {}, false, false, true, true},
+            {"Love Letter", {{ // Controls East Room → Kitchen (from Library)
+                {"Theodore's proposal letter filled with domestic dreams.\nCarrying it awakens hunger for family comfort.", {}, {}, {}, {}, false, false, false, false},
+                {"The East Room warms with thoughts of gathering.", {}, {}, {}, {}, true, false, false, false},
+                {"Obtained Love Letter", {}, {}, {"Love Letter"}, {}, false, true, false, true},
             }}},
 
-            {"Stargrass", {{ // Quest item for Scholar
-                // Cannot be put back
-                {"An ethereal herb that glows with starlight. The final component for the Scholar's ritual.", {}, {"Stargrass"}, {"Stargrass"}, {}, false, false, true, true},
+            {"Love Letter Return", {{ // Can only return to Library
+                {"You place the letter back among the scholarly works.", {"Love Letter"}, {}, {}, {}, false, false, false, false},
+                {"The East Room's domestic warmth dissipates.", {"Love Letter"}, {}, {}, {}, true, false, false, false},
+                {"Put Back Love Letter", {"Love Letter"}, {}, {}, {"Love Letter"}, false, true, false, true},
             }}},
 
-            {"Recipe Fragment A", {{ // Quest item for Cook
-                // Cannot be put back
-                {"Half of grandmother's cookie recipe. The torn edge suggests its partner waits elsewhere.", {}, {"Recipe Fragment A"}, {"Recipe Fragment A"}, {}, false, false, true, true},
+            {"Star Chart", {{ // Controls East Room → Lab (from Portal Chamber)
+                {"Astronomical maps covered in alchemical symbols.\nCarrying it stirs scientific curiosity.", {}, {}, {}, {}, false, false, false, false},
+                {"The East Room hums with experimental energy.", {}, {}, {}, {}, true, false, false, false},
+                {"Obtained Star Chart", {}, {}, {"Star Chart"}, {}, false, true, false, true},
             }}},
 
-            {"Recipe Fragment B", {{ // Given by Inventor
-                // Cannot be put back - this should never be found as an item, only given by Inventor
+            {"Star Chart Return", {{ // Can only return to Portal Chamber
+                {"You return the chart to the mystical apparatus.", {"Star Chart"}, {}, {}, {}, false, false, false, false},
+                {"The East Room's scientific fervor cools.", {"Star Chart"}, {}, {}, {}, true, false, false, false},
+                {"Put Back Star Chart", {"Star Chart"}, {}, {}, {"Star Chart"}, false, true, false, true},
             }}},
 
-            {"Memory Crystal", {{ // Quest item for Mage
-                // Cannot be put back
-                {"A clear crystal that seems to contain swirling potential. It pulses gently, waiting to be filled with dreams and starlight.", {}, {"Memory Crystal"}, {"Memory Crystal"}, {}, false, false, true, true},
+            {"Recipe Box", {{ // Controls South Room → Bedroom (from Library)
+                {"A wooden box that once held family recipes.\nCarrying it awakens longing for personal comfort.", {}, {}, {}, {}, false, false, false, false},
+                {"The South Room softens with intimate memories.", {}, {}, {}, {}, true, false, false, false},
+                {"Obtained Recipe Box", {}, {}, {"Recipe Box"}, {}, false, true, false, true},
             }}},
 
-            // === NON-PICKUPABLE INTERACTABLES ===
+            {"Recipe Box Return", {{ // Can only return to Library
+                {"You return the recipe box to its scholarly home.", {"Recipe Box"}, {}, {}, {}, false, false, false, false},
+                {"The South Room's personal warmth recedes.", {"Recipe Box"}, {}, {}, {}, true, false, false, false},
+                {"Put Back Recipe Box", {"Recipe Box"}, {}, {}, {"Recipe Box"}, false, true, false, true},
+            }}},
+
+            {"Ritual Candle", {{ // Controls South Room → Study (from Portal Chamber)
+                {"Burns with silver flame from Theodore's ritual.\nCarrying it awakens scholarly investigation.", {}, {}, {}, {}, false, false, false, false},
+                {"The South Room flickers with research ambition.", {}, {}, {}, {}, true, false, false, false},
+                {"Obtained Ritual Candle", {}, {}, {"Ritual Candle"}, {}, false, true, false, true},
+            }}},
+
+            {"Ritual Candle Return", {{ // Can only return to Portal Chamber
+                {"You return the candle to the ritual altar.", {"Ritual Candle"}, {}, {}, {}, false, false, false, false},
+                {"The South Room's scholarly fire dims.", {"Ritual Candle"}, {}, {}, {}, true, false, false, false},
+                {"Put Back Ritual Candle", {"Ritual Candle"}, {}, {}, {"Ritual Candle"}, false, true, false, true},
+            }}},
+
+            {"Old Journal", {{ // Controls West Room → Workshop (from Vault)
+                {"Personal diary filled with daily life and practical concerns.\nCarrying it awakens the urge to create and build.", {}, {}, {}, {}, false, false, false, false},
+                {"The West Room stirs with creative potential.", {}, {}, {}, {}, true, false, false, false},
+                {"Obtained Old Journal", {}, {}, {"Old Journal"}, {}, false, true, false, true},
+            }}},
+
+            {"Old Journal Return", {{ // Can only return to Vault
+                {"You return the journal to its secure resting place.", {"Old Journal"}, {}, {}, {}, false, false, false, false},
+                {"The West Room's creative energy subsides.", {"Old Journal"}, {}, {}, {}, true, false, false, false},
+                {"Put Back Old Journal", {"Old Journal"}, {}, {}, {"Old Journal"}, false, true, false, true},
+            }}},
+
+            {"Research Notes", {{ // Controls West Room → Observatory (from Treasury)
+                {"Cordelia's research into the family curse and astronomical phenomena.\nCarrying it stirs transcendent ambitions.", {}, {}, {}, {}, false, false, false, false},
+                {"The West Room reaches toward celestial mysteries.", {}, {}, {}, {}, true, false, false, false},
+                {"Obtained Research Notes", {}, {}, {"Research Notes", "Moon Symbol Seen"}, {}, false, true, false, true},
+            }}},
+
+            {"Research Notes Return", {{ // Can only return to Treasury
+                {"You organize the notes back among the valuables.", {"Research Notes"}, {}, {}, {}, false, false, false, false},
+                {"The West Room's starward gaze lowers.", {"Research Notes"}, {}, {}, {}, true, false, false, false},
+                {"Put Back Research Notes", {"Research Notes"}, {}, {}, {"Research Notes"}, false, true, false, true},
+            }}},
+
+            // ===== QUEST ITEMS =====
+
+            {"Encrypted Note", {{ // Scholar (Library) - Given during first dialogue
+                {"The Scholar's encrypted research, covered in mystical symbols.\n'Only the three sacred herbs can decode this cipher.'", {}, {}, {}, {}, false, false, false, true},
+            }}},
+
+            {"Moonbell Herb", {{ // Source: Garden (when North Room is Garden)
+                {"A silvery herb that chimes with memory.\nThe Scholar seeks this for his cipher.", {}, {}, {}, {}, false, false, false, false},
+                {"Obtained Moonbell Herb", {}, {}, {"Moonbell Herb"}, {}, false, true, false, true},
+            }}},
+
+            {"Fireroot", {{ // Source: Lab (when East Room is Lab)
+                {"A red herb that burns cold.\nEssential for the Scholar's cipher.", {}, {}, {}, {}, false, false, false, false},
+                {"Obtained Fireroot", {}, {}, {"Fireroot"}, {}, false, true, false, true},
+            }}},
+
+            {"Stargrass", {{ // Source: Observatory (when West Room is Observatory)
+                {"An ethereal herb that glows with starlight.\nThe final component for the Scholar's ritual.", {}, {}, {}, {}, false, false, false, false},
+                {"Obtained Stargrass", {}, {}, {"Stargrass"}, {}, false, true, false, true},
+            }}},
+
+            {"Recipe Fragment A", {{ // Source: Bedroom (when South Room is Bedroom)
+                {"Half of grandmother's cookie recipe.\nThe torn edge suggests its partner waits elsewhere.", {}, {}, {}, {}, false, false, false, false},
+                {"Obtained Recipe Fragment A", {}, {}, {"Recipe Fragment A"}, {}, false, true, false, true},
+            }}},
+
+            {"Memory Crystal", {{ // Appears in Study during Pattern of Echoes
+                {"A crystal formed from overlapping memories.\nIt pulses with potential, waiting to be charged.", {}, {}, {}, {}, false, false, false, false},
+                {"Obtained Memory Crystal", {}, {}, {"Memory Crystal"}, {}, false, true, false, true},
+            }}},
+
+            // ===== NON-PICKUPABLE INTERACTABLES =====
 
             {"Theodore's Safe", {{ // Vault only
-                // With combination
-                {"You enter 7-3-9. The safe opens with a satisfying click, revealing treasure!", {"Safe Combination Note"}, {"Safe Opened"}, {"Safe Opened"}, {}, true, false, true, true},
+                // With Safe Combination Note
+                {"You enter the combination 7-3-9.\nThe safe opens with a satisfying click, revealing treasures within!", {"Safe Combination Note"}, {}, {"Yellow Master Key"}, {}, false, false, false, true},
                 // Without combination
-                {"A locked safe requiring a three-number combination. The Scholar might know how to open it.", {}, {"Safe Combination Note"}, {}, {}, false, false, true, true},
+                {"A locked safe requiring a three-number combination.\nThe Scholar might know how to open it.", {}, {"Safe Combination Note"}, {}, {}, false, false, false, true},
             }}},
 
             {"Sun Symbol Stone", {{ // Armory only
-                // First interaction
-                {"Carved into the wall: a radiant sun. 'In the beginning, there was light.'", {}, {"Sun Symbol Seen"}, {"Sun Symbol Seen"}, {}, false, false, true, true},
+                {"Carved into the wall: a radiant sun.\n'In the beginning, there was light.'", {}, {}, {"Sun Symbol Seen"}, {}, false, false, false, true},
             }}},
 
-            {"Moon Symbol Text", {{ // In Research Notes - this triggers when picking up Research Notes
-                // Handled in Research Notes pickup
+            {"Moon Symbol Text", {{ // Study only (in Research Notes area)
+                {"Written in the research notes: a crescent moon.\n'Preservation follows creation.'", {}, {}, {"Moon Symbol Seen"}, {}, false, false, false, true},
             }}},
 
             {"Spiral Symbol Chart", {{ // Observatory only
-                // First interaction
-                {"Drawn on star charts: an eternal spiral. 'All things return, but changed.'", {}, {"Spiral Symbol Seen"}, {"Spiral Symbol Seen"}, {}, false, false, true, true},
+                {"Drawn on star charts: an eternal spiral.\n'All things return, but changed.'", {}, {}, {"Spiral Symbol Seen"}, {}, false, false, false, true},
             }}},
 
-            // === SPECIAL QUEST ITEMS ===
+            // ===== OTHER ROOM ITEMS =====
 
-            {"Ceremonial Sword", {{ // Can be given to Knight
-                // This is a special case - can be taken and given away
-                {"A blade of honor. The Knight would appreciate this weapon.", {}, {"Ceremonial Sword"}, {"Ceremonial Sword"}, {}, false, false, true, true},
-            }}},
-
-            // Pattern of Echoes trigger - Memory Crystal appears in Study when pattern is active
-            {"Pattern of Echoes Active", {{ // Special trigger in Study
-                // This would be checked by room logic when all conditions are met
-                {"The overlapping memories crystallize into pure potential!", {}, {}, {"Memory Crystal"}, {}, true, false, true, true},
+            {"Ceremonial Sword", {{ // Source: Armory
+                {"A blade of honor that has never seen battle.\nThe Knight's reflection appears faintly in its polished surface.", {}, {}, {}, {}, false, false, false, false},
+                {"Obtained Ceremonial Sword", {}, {}, {"Ceremonial Sword"}, {}, false, true, false, true},
             }}},
 
-            // === FINAL VICTORY ===
-
-            {"Final Pedestals", {{ // Courtyard
-                // All keys held
-                {"With all four Master Keys in hand, the fountain begins to glow. Four pedestals rise from the water, each awaiting its destined key.", {"Red Master Key", "Green Master Key", "Yellow Master Key", "Purple Master Key"}, {}, {"Victory Achieved"}, {}, true, false, true, true},
-                // Missing keys
-                {"The fountain remains dormant. You need all four Master Keys to unlock the way home.", {}, {"Red Master Key", "Green Master Key", "Yellow Master Key", "Purple Master Key"}, {}, {}, false, false, true, true},
+            {"Ancient Tome", {{ // Source: Library
+                {"Theodore's memory research journal, filled with symbols that shift when you're not looking directly at them.\nReading it feels like remembering a dream.", {}, {}, {}, {}, false, false, false, false},
+                {"Obtained Ancient Tome", {}, {}, {"Ancient Tome"}, {}, false, true, false, true},
             }}},
 
-            {"Victory Portal", {{ // Final exit
-                {"The exit door unseals with a sound like exhaling. The house's memory loops are broken, and you are free to leave.\nThe trapped souls fade peacefully, finally able to rest.", {"Victory Achieved"}, {}, {}, {}, true, false, true, true},
-            }}},
-/*
-            // Quest Items
-            {"Encrypted Note", {{ // Scholar (Library) - Given during first dialogue
-                {"The Scholar hands you an encrypted note.\n'Only the three sacred herbs can decode this cipher.", {}, {}, {}, {}, false, false, false, false},
-                {"Obtained Encrypted Note", {}, {}, {"Encrypted Note"}, {}, false, true, false, false},
-            }}},
-            {"Recipe Fragment A", {{ // Source: Found in Bedroom under bed
-                {"Half of grandmother's cookie recipe.\nThe torn edge suggests its partner waits elsewhere.", {}, {}, {}, {}, false, false, false, false},
-                {"Obtained Recipe Fragment A", {}, {}, {"Recipe Fragment A"}, {}, false, true, false, false},
-            }}},
-            {"Recipe Fragment B", {{ // Source: Inventor (Workshop) - Given in exchange for Broken Clockwork
-                {"The Inventor trades you the recipe fragment.\n'Family traditions are worth more than gears,' he says.", {}, {}, {}, {}, false, false, false, false},
-                {"Obtained Recipe Fragment B", {}, {}, {"Recipe Fragment B"}, {}, false, true, false, false},
-            }}},
-            {"Moonbell Herb", {{ // Source: Found in Garden on plant
-                {"The silvery herb chimes softly as you pluck it.\nOne of three for the Scholar's cipher.", {}, {}, {}, {}, false, false, false, false},
-                {"Obtained Moonbell Herb", {}, {}, {"Moonbell Herb"}, {}, false, true, false, false},
-            }}},
-            {"Fireroot", {{ // Source: Found in Lab on shelf
-                {"The red herb burns cold to the touch.\nThe Scholar seeks this for his ancient knowledge.", {}, {}, {}, {}, false, false, false, false},
-                {"Obtained Fireroot", {}, {}, {"Fireroot"}, {}, false, true, false, false},
-            }}},
-            {"Stargrass", {{ // Source: Found in Observatory on windowsill
-                {"The ethereal herb glows with starlight.\nThe final component for the Scholar's ritual.", {}, {}, {}, {}, false, false, false, false},
-                {"Obtained Stargrass", {}, {}, {"Stargrass"}, {}, false, true, false, false},
-            }}},
-            {"Memory Crystal", {{ // Source: Appears in Study when Pattern of Echoes is active
-                {"A crystal forms from the overlapping memories.\nIt pulses with potential, waiting to be charged.", {}, {}, {}, {}, false, false, false, false},
-                {"Obtained Memory Crystal", {}, {}, {"Memory Crystal"}, {}, false, true, false, false},
-            }}},
-            {"Broken Clockwork", {{ // Source: Found in Armory in weapon case
-                {"Gears and springs from an old timepiece.\nThe Inventor might find this useful.", {}, {}, {}, {}, false, false, false, false},
-                {"Obtained Broken Clockwork", {}, {}, {"Broken Clockwork"}, {}, false, true, false, false},
-            }}},
-            {"Safe Combination Note", {{ // Source: Scholar (Library) - Given after bringing all three herbs
-                {"The Scholar decodes the cipher.\n'The combination is 7-3-9. Theodore hid his greatest secret in the Vault.'", {}, {}, {}, {}, false, false, false, false},
-                {"Obtained Safe Combination Note", {}, {}, {"Safe Combination Note"}, {}, false, true, false, false},
+            {"Fresh Bread", {{ // Source: Kitchen
+                {"Still-warm bread from Christmas past.\nTaking a bite fills you with the comfort of family gatherings and the melancholy of knowing they can't last forever.", {}, {}, {}, {}, false, false, false, false},
+                {"Obtained Fresh Bread", {}, {}, {"Fresh Bread"}, {}, false, true, false, true},
             }}},
 
-            // Room Transformation Items
-            {"Ancient Tome", {{ // Source: Found in Library on desk
-                {"Theodore's memory research journal.\nTaking this book stirs knowledge-seeking energies.", {}, {}, {}, {}, false, false, false, false},
-                {"The North Room has shifted, but not now - next loop.", {}, {}, {}, {}, true, false, false, false},
-                {"Obtained Ancient Tome", {}, {}, {"Ancient Tome"}, {}, false, true, false, false},
-            }}},
-            {"Ancient Tome Return", {{ // Source: Found in Library on desk
-                {"You replace the tome on its pedestal.", {}, {}, {}, {}, false, false, false, false},
-                {"The North Room has settled, no longer in a state to shift.", {}, {}, {}, {}, true, false, false, false},
-                {"Put Back Ancient Tome", {}, {}, {}, {"Ancient Tome"}, false, true, false, false},
-            }}},
-            {"Ceremonial Sword", {{ // Source: Found in Armory on weapon rack
-                {"A blade of honor.\nGrasping it awakens warrior's courage.", {}, {}, {}, {}, false, false, false, false},
-                {"The North Room has shifted, but not now - next loop.", {}, {}, {}, {}, true, false, false, false},
-                {"Obtained Ceremonial Sword", {}, {}, {"Ceremonial Sword"}, {}, false, true, false, false},
-            }}},
-            {"Ceremonial Sword Return", {{ // Source: Found in Armory on weapon rack
-                {"You return the sword to its place.", {}, {}, {}, {}, false, false, false, false},
-                {"The North Room has settled, no longer in a state to shift.", {}, {}, {}, {}, true, false, false, false},
-                {"Put Back Ceremonial Sword", {}, {}, {}, {"Ceremonial Sword"}, false, true, false, false},
-            }}},
-            {"Love Letter", {{ // Source: Found in Garden on bench
-                {"Theodore's proposal letter.\nReading it stirs memories of lost romance.", {}, {}, {}, {}, false, false, false, false},
-                {"The North Room has shifted, but not now - next loop.", {}, {}, {}, {}, true, false, false, false},
-                {"Obtained Love Letter", {}, {}, {"Love Letter"}, {}, false, true, false, false},
-            }}},
-            {"Love Letter Return", {{ // Source: Found in Garden on bench
-                {"You carefully place the letter back.", {}, {}, {}, {}, false, false, false, false},
-                {"The North Room has settled, no longer in a state to shift.", {}, {}, {}, {}, true, false, false, false},
-                {"Put Back Love Letter", {}, {}, {}, {"Love Letter"}, false, true, false, false},
-            }}},
-            {"Fresh Bread", {{ // Source: Found in Kitchen on counter
-                {"Still-warm bread from Christmas past.\nTaking it awakens hunger for transformation.", {}, {}, {}, {}, false, false, false, false},
-                {"The East Room has shifted, but not now - next loop.", {}, {}, {}, {}, true, false, false, false},
-                {"Obtained Fresh Bread", {}, {}, {"Fresh Bread"}, {}, false, true, false, false},
-            }}},
-            {"Fresh Bread Return", {{ // Source: Found in Kitchen on counter
-                {"You return the bread to its place.", {}, {}, {}, {}, false, false, false, false},
-                {"The East Room has settled, no longer in a state to shift.", {}, {}, {}, {}, true, false, false, false},
-                {"Put Back Fresh Bread", {}, {}, {}, {"Fresh Bread"}, false, true, false, false},
-            }}},
-            {"Memory Vial", {{ // Source: Found in Lab on shelf
-                {"Crystallized memories swirl within.\nGrasping it stirs alchemical ambitions.", {}, {}, {}, {}, false, false, false, false},
-                {"The East Room has shifted, but not now - next loop.", {}, {}, {}, {}, true, false, false, false},
-                {"Obtained Memory Vial", {}, {}, {"Memory Vial"}, {}, false, true, false, false},
-            }}},
-            {"Memory Vial Return", {{ // Source: Found in Lab on shelf
-                {"You place the vial back carefully.", {}, {}, {}, {}, false, false, false, false},
-                {"The East Room has settled, no longer in a state to shift.", {}, {}, {}, {}, true, false, false, false},
-                {"Put Back Memory Vial", {}, {}, {}, {"Memory Vial"}, false, true, false, false},
-            }}},
-            {"Gold Coins", {{ // Source: Found in Treasury in chest
-                {"Tarnished wealth that couldn't buy happiness.\nTaking them stirs domestic longings.", {}, {}, {}, {}, false, false, false, false},
-                {"The East Room has shifted, but not now - next loop.", {}, {}, {}, {}, true, false, false, false},
-                {"Obtained Gold Coins", {}, {}, {"Gold Coins"}, {}, false, true, false, false},
-            }}},
-            {"Gold Coins Return", {{ // Source: Found in Treasury in chest
-                {"You return the coins to their chest.", {}, {}, {}, {}, false, false, false, false},
-                {"The East Room has settled, no longer in a state to shift.", {}, {}, {}, {}, true, false, false, false},
-                {"Put Back Gold Coins", {}, {}, {}, {"Gold Coins"}, false, true, false, false},
-            }}},
-            {"Personal Diary", {{ // Source: Found in Bedroom on nightstand
-                {"Young Cordelia's journal of supernatural encounters.\nReading it awakens scholarly pursuits.", {}, {}, {}, {}, false, false, false, false},
-                {"The South Room has shifted, but not now - next loop.", {}, {}, {}, {}, true, false, false, false},
-                {"Obtained Personal Diary", {}, {}, {"Personal Diary"}, {}, false, true, false, false},
-            }}},
-            {"Personal Diary Return", {{ // Source: Found in Bedroom on nightstand
-                {"You close the diary and place it back.", {}, {}, {}, {}, false, false, false, false},
-                {"The South Room has settled, no longer in a state to shift.", {}, {}, {}, {}, true, false, false, false},
-                {"Put Back Personal Diary", {}, {}, {}, {"Personal Diary"}, false, true, false, false},
-            }}},
-            {"Research Notes", {{ // Source: Found in Bedroom on nightstand
-                {"Cordelia's research into the family curse.\nContains the Moon Symbol.\nTaking them stirs protective instincts.", {}, {}, {}, {}, false, false, false, false},
-                {"The South Room has shifted, but not now - next loop.", {}, {}, {}, {}, true, false, false, false},
-                {"Obtained Research Notes", {}, {}, {"Research Notes"}, {}, false, true, false, false},
-            }}},
-            {"Research Notes Return", {{ // Source: Found in Bedroom on nightstand
-                {"You organize the notes back on the desk.", {}, {}, {}, {}, false, false, false, false},
-                {"The South Room has settled, no longer in a state to shift.", {}, {}, {}, {}, true, false, false, false},
-                {"Put Back Research Notes", {}, {}, {}, {"Research Notes"}, false, true, false, false},
-            }}},
-            {"Family Portrait", {{ // Source: Found in Vault on safe
-                {"A photo of happier times before the curse.\nTaking it stirs longing for simpler days.", {}, {}, {}, {}, false, false, false, false},
-                {"The South Room has shifted, but not now - next loop.", {}, {}, {}, {}, true, false, false, false},
-                {"Obtained Family Portrait", {}, {}, {"Family Portrait"}, {}, false, true, false, false},
-            }}},
-            {"Family Portrait Return", {{ // Source: Found in Vault on safe
-                {"You place the portrait back with care.", {}, {}, {}, {}, false, false, false, false},
-                {"The South Room has settled, no longer in a state to shift.", {}, {}, {}, {}, true, false, false, false},
-                {"Put Back Family Portrait", {}, {}, {}, {"Family Portrait"}, false, true, false, false},
-            }}},
-            {"Hammer", {{ // Source: Found in Workshop on workbench
-                {"A well-used tool of creation.\nGrasping it awakens the urge to build and reach higher.", {}, {}, {}, {}, false, false, false, false},
-                {"The West Room has shifted, but not now - next loop.", {}, {}, {}, {}, true, false, false, false},
-                {"Obtained Hammer", {}, {}, {"Hammer"}, {}, false, true, false, false},
-            }}},
-            {"Hammer Return", {{ // Source: Found in Workshop on workbench
-                {"You place the portrait back with care.", {}, {}, {}, {}, false, false, false, false},
-                {"The West Room has settled, no longer in a state to shift.", {}, {}, {}, {}, true, false, false, false},
-                {"Put Back Hammer", {}, {}, {}, {"Hammer"}, false, true, false, false},
-            }}},
-            {"Telescope", {{ // Source: Found in Observatory on tripod
-                {"Reveals distant possibilities and times.\nTaking it stirs transcendent ambitions.", {}, {}, {}, {}, false, false, false, false},
-                {"The West Room has shifted, but not now - next loop.", {}, {}, {}, {}, true, false, false, false},
-                {"Obtained Telescope", {}, {}, {"Telescope"}, {}, false, true, false, false},
-            }}},
-            {"Telescope Return", {{ // Source: Found in Observatory on tripod
-                {"You carefully return the telescope to its mount.", {}, {}, {}, {}, false, false, false, false},
-                {"The West Room has settled, no longer in a state to shift.", {}, {}, {}, {}, true, false, false, false},
-                {"Put Back Telescope", {}, {}, {}, {"Telescope"}, false, true, false, false},
-            }}},
-            {"Ritual Candle", {{ // Source: Found in Portal Chamber on altar
-                {"Burns with silver flame from Theodore's ritual.\nTaking it stirs practical needs.", {}, {}, {}, {}, false, false, false, false},
-                {"The West Room has shifted, but not now - next loop.", {}, {}, {}, {}, true, false, false, false},
-                {"Obtained Ritual Candle", {}, {}, {"Ritual Candle"}, {}, false, true, false, false},
-            }}},
-            {"Ritual Candle return", {{ // Source: Found in Portal Chamber on altar
-                {"You replace the candle on the altar.", {}, {}, {}, {}, false, false, false, false},
-                {"The West Room has settled, no longer in a state to shift.", {}, {}, {}, {}, true, false, false, false},
-                {"Put Back Ritual Candle", {}, {}, {}, {"Ritual Candle"}, false, true, false, false},
+            {"Memory Vial", {{ // Source: Lab
+                {"Contains swirling silver mist that moves like liquid starlight.\nThe label reads: 'Essence of Christmas Morning, 1967 - Handle with Care.'", {}, {}, {}, {}, false, false, false, false},
+                {"Obtained Memory Vial", {}, {}, {"Memory Vial"}, {}, false, true, false, true},
             }}},
 
-            // Non-pickupable Interactables
-            {"Theodore's Safe", {{ // Source: Vault 
-                {"You enter 7-3-9. The safe opens with a satisfying click, revealing the Red Master Key!", {"Safe Combination Note"}, {"Red Master Key"}, {}, {}, false, false, false, false},
-                {"You Obtained the Red Master Key.", {"Safe Combination Note"}, {"Red Master Key"}, {"Red Master Key"}, {}, false, false, false, true},
-                {"You have already opened Theodore's Safe, and taken its contents", {"Safe Combination Note"}, {"Safe Combination Note", "Red Master Key"}, {}, {}, false, false, false, true},
-                {"A locked safe requiring a three-number combination. The Scholar might know how to open it.", {}, {}, {}, {}, false, false, false, false},
-            }}},
-            {"Sun Symbol", {{ // Source: Armory
-                {"Carved into the wall: a radiant sun.\n\n\t\t'In the beginning, there was light.", {}, {}, {"Sun Symbol Sketch"}, {}, false, false, false, false},
-            }}},
-            {"Moon Symbol", {{ // Source: Study
-                {"Written in the research notes: a crescent moon.\n\n\t\t'Preservation follows creation.", {}, {}, {"Moon Symbol Sketch"}, {}, false, false, false, false},
-            }}},
-            {"Spiral Symbol", {{ // Source: Observatory
-                {"Drawn on star charts: an eternal spiral.\n\n\t\t'All things return, but changed.", {}, {}, {"Spiral Symbol Sketch"}, {}, false, false, false, false},
+            {"Gold Coins", {{ // Source: Treasury
+                {"Tarnished currency from another era.\nThey can't buy back lost time or repair broken relationships.", {}, {}, {}, {}, false, false, false, false},
+                {"Obtained Gold Coins", {}, {}, {"Gold Coins"}, {}, false, true, false, true},
             }}},
 
-            // NPC Dialogue
-            {"Scholar", {{ // Source: Library
-                // After Quest Complete (Has Red Master Key Token)
-                {"The knowledge is shared, as it should be.\nTheodore's greatest discovery is now yours to use wisely.", {"Red Master Key"}, {}, {}, {}, false, false, true, true},
-                // Has All Three Herbs (Moonbell Herb + Fireroot + Stargrass)
-                {"Perfect! The herbs of wisdom! Moonbell for illumination, Fireroot for transformation, Stargrass for transcendence. Now I can decode Theodore's cipher!", {"Scholar's Memory Note", "Moonbell Herb", "Fireroot", "Stargrass"}, {}, {}, {}, false, false, true, false},
-                {"Perfect! The herbs of wisdom!", {"Scholar's Memory Note", "Moonbell Herb", "Fireroot", "Stargrass"}, {}, {}, {}, false, false, true, false},
-                {"Now I can decode Theodore's cipher!", {"Scholar's Memory Note", "Moonbell Herb", "Fireroot", "Stargrass"}, {}, {"Safe Combination Note"}, {"Moonbell Herb", "Fireroot", "Stargrass"}, false, false, true, true},
-                // Subsequent Meetings (Has Scholar's Memory Note, Missing Herbs)
-                {"Have you found the three herbs?", {"Scholar's Memory Note"}, {}, {}, {}, false, false, true, false},
-                {"Moonbell from gardens of memory,", {"Scholar's Memory Note"}, {}, {}, {}, false, false, true, false},
-                {"Fireroot from laboratories of change,", {"Scholar's Memory Note"}, {}, {}, {}, false, false, true, false},
-                {"Stargrass from observatories of dream.", {"Scholar's Memory Note"}, {}, {}, {}, false, false, true, true},
-                // First Meeting (Default)
-                {"Welcome, seeker of knowledge.", {}, {}, {}, {}, false, false, true, false},
-                {"I solved the greatest theorem of my age, but I never got to share it.", {}, {}, {}, {}, false, false, true, false},
-                {"I have Theodore's encrypted research, but it requires three sacred herbs to decode.", {}, {}, {"Encrypted Note", "Scholar's Memory Note"}, {}, false, false, true, true},
+            {"Personal Diary", {{ // Source: Bedroom
+                {"Young Cordelia's journal, documenting her first encounters with the supernatural.\nThe final entry reads: 'The house remembers what we try to forget, but forgetting might be more merciful than remembering forever.'", {}, {}, {}, {}, false, false, false, false},
+                {"Obtained Personal Diary", {}, {}, {"Personal Diary"}, {}, false, true, false, true},
             }}},
-            {"Cook", {{ // Source: Kitchen
-                // After Quest Complete (Has Red Master Key Token)
-                {"Family traditions live on through those who remember them.\nYou carry our love with you now.", {"Green Master Key"}, {}, {}, {}, false, false, true, true},
-                // Has Complete Recipe (Recipe Fragment A + Recipe Fragment B)
-                {"My stars!\nGrandmother's recipe, whole again!", {"Cook's Memory Note", "Recipe Fragment A", "Recipe Fragment B"}, {}, {}, {}, false, false, true, false},
-                {"Just like her cookies brought the family together, this will help you find your way home.", {"Cook's Memory Note", "Recipe Fragment A", "Recipe Fragment B"}, {}, {"Recipe Fragment A", "Recipe Fragment B"}, {"Green Master Key", "Cook's Blessing Token"}, false, false, true, true},
-                // Subsequent Meetings (Has Cook's Memory Note, Incomplete Recipe)
-                {"The recipe was torn in half and hidden when the family scattered.", {"Cook's Memory Note"}, {}, {}, {}, false, false, true, false},
-                {"Find both pieces, and I'll prepare something that opens more than just appetites.", {"Cook's Memory Note"}, {}, {}, {}, false, false, true, true},
-                // First Meeting (Default)
-                {"Hello dear!", {}, {}, {}, {}, false, false, true, false},
-                {"Christmas morning, 1967 - the last time we were all together.", {}, {}, {}, {}, false, false, true, false},
-                {"I'll cook you something special if you bring me grandmother's complete recipe.", {}, {}, {"Cook's Memory Note"}, {}, false, false, true, false},
+
+            {"House Maps", {{ // Source: Study
+                {"Detailed blueprints showing every room configuration, hidden passage, and secret compartment.\nRed X marks indicate where temporal energy concentrates.", {}, {}, {}, {}, false, false, false, false},
+                {"Obtained House Maps", {}, {}, {"House Maps"}, {}, false, true, false, true},
             }}},
-            {"Knight", {{ // Source: Armory
-                // After Trade (Has Guardian's Trial Note)
-                {"Honor is kept through deeds, not words. The Guardian awaits your proof of understanding.", {"Guardian's Trial Note"}, {}, {}, {}, false, false, true, true},
-                // Holding Any Weapon (Ceremonial Sword)
-                {"A fine blade!", {"Knight's Honor Note", "Ceremonial Sword"}, {}, {}, {}, false, false, true, false},
-                {"In return, know this: The Guardian in the Vault tests with three symbols - Sun, Moon, and Spiral.", {"Knight's Honor Note", "Ceremonial Sword"}, {}, {}, {}, false, false, true, false},
-                {"Find them, face them in order, and prove your worth.", {"Knight's Honor Note", "Ceremonial Sword"}, {}, {"Guardian's Trial Note"}, {"Ceremonial Sword"}, false, false, true, true},
-                // Subsequent Meetings (Has Knight's Honor Note)
-                {"Bring me a weapon, and I'll share what I've observed about this battlefield of memories.", {"Knight's Honor Note"}, {}, {}, {}, false, false, true, true},
-                // First Meeting (Default)
-                {"Stand ready!", {}, {}, {}, {}, false, false, true, false},
-                {"Sir Edmund Cross, forever prepared for the charge that saved my unit.", {}, {}, {}, {}, false, false, true, false},
-                {"I share knowledge with those who understand honor.", {}, {}, {"Knight's Honor Note"}, {}, false, false, true, false},
+
+            {"Family Tree", {{ // Source: Vault
+                {"A genealogical chart showing how the curse has affected each generation of Aldrichs.\nYour name appears at the bottom, with a question mark for your fate.", {}, {}, {}, {}, false, false, false, false},
+                {"Obtained Family Tree", {}, {}, {"Family Tree"}, {}, false, true, false, true},
             }}},
-            {"Gardener", {{ // Source: Garden
-                // Subsequent Meetings (Has Gardener's Wisdom Note)
-                {"Theodore wanted to preserve our perfect moments,", {"Gardener's Wisdom Note"}, {}, {}, {}, false, false, true, false},
-                {"but he never understood - love isn't about holding onto the past,", {"Gardener's Wisdom Note"}, {}, {}, {}, false, false, true, false},
-                {"it's about planting seeds for the future.", {"Gardener's Wisdom Note"}, {}, {}, {}, false, false, true, true},
-                // First Meeting (Default)
-                {"Welcome to my sanctuary, where love took root and promises were made.", {}, {}, {}, {}, false, false, true, false},
-                {"I tend to memories as if they were flowers.", {}, {}, {"Gardener's Wisdom Note"}, {}, false, false, true, false},
+
+            {"Hammer", {{ // Source: Workshop
+                {"A well-used carpenter's hammer, worn smooth by years of honest work.\nIt represents the satisfaction of building something lasting through effort rather than magic.", {}, {}, {}, {}, false, false, false, false},
+                {"Obtained Hammer", {}, {}, {"Hammer"}, {}, false, true, false, true},
             }}},
-            {"Inventor", {{ // Source: Workshop
-                // After Trade (Has Inventor's Trade Note)
-                {"Sometimes the most important inventions are the ones that bring families together.", {"Inventor's Trade Note"}, {}, {}, {}, false, false, true, true},
-                // Holding Broken Clockwork
-                {"Perfect!", {"Inventor's Project Note", "Broken Clockwork"}, {}, {}, {}, false, false, true, false},
-                {"These gears have the right temporal resonance.", {"Inventor's Project Note", "Broken Clockwork"}, {}, {}, {}, false, false, true, false},
-                {"Here's something I found - part of an old family recipe.", {"Inventor's Project Note", "Broken Clockwork"}, {}, {"Recipe Fragment B", "Inventor's Trade Note"}, {"Broken Clockwork"}, false, false, true, true},
-                // Subsequent Meetings (Has Inventor's Project Note, No Clockwork)
-                {"Bring me broken clockwork - gears, springs, escapements - and I'll trade you something valuable.", {"Inventor's Project Note"}, {}, {}, {}, false, false, true, true},
-                // First Meeting (Default)
-                {"Ah! A visitor to my workshop!", {}, {}, {}, {}, false, false, true, false},
-                {"I've been building a Temporal Stabilizer,", {}, {}, {}, {}, false, false, true, false},
-                {"but I need proper clockwork components.", {}, {}, {"Inventor's Project Note"}, {}, false, false, true, false},
+
+            {"Telescope", {{ // Source: Observatory
+                {"Points not at the night sky, but at temporal possibilities.\nThrough it, you can observe potential room transformations and glimpse the consequences of different choices.", {}, {}, {}, {}, false, false, false, false},
+                {"Obtained Telescope", {}, {}, {"Telescope"}, {}, false, true, false, true},
             }}},
-            {"Guardian", {{ // Source: Vault
-                // After Approval (Has Guardian's Approval Note)
-                {"The vault's treasures await those who have proven their understanding of memory's true nature.", {"Guardian's Approval Note"}, {}, {}, {}, false, false, true, true},
-                // Has All Symbol Knowledge (Seen all three symbols)
-                {"You've found them all!", {"Guardian's Challenge Note", "Sun Symbol Sketch", "Moon Symbol Sketch", "Spiral Symbol Sketch"}, {}, {}, {}, false, false, true, false},
-                {"Sun, Moon, Spiral - the cycle of memory!", {"Guardian's Challenge Note", "Sun Symbol Sketch", "Moon Symbol Sketch", "Spiral Symbol Sketch"}, {}, {}, {}, false, false, true, false},
-                {"Now face the final test:\nIn my safe lies a key, but only those who understand the Scholar's wisdom may claim it.", {"Guardian's Challenge Note", "Sun Symbol Sketch", "Moon Symbol Sketch", "Spiral Symbol Sketch"}, {}, {"Guardian's Approval Note"}, {}, false, false, true, true},
-                // Subsequent Meetings (Has Guardian's Challenge Note, No Symbols)
-                {"Prove you understand memory's nature by finding three symbols:\n\nthe Sun of creation, the Moon of preservation, and the Spiral of transcendence.", {"Guardian's Challenge Note"}, {}, {}, {}, false, false, true, true},
-                // First Meeting (Default)
-                {"Welcome, descendant!", {}, {}, {}, {}, false, false, true, false},
-                {"I am Theodore Aldrich, creator of this memory palace!", {}, {}, {}, {}, false, false, true, false},
-                {"I've preserved perfect moments within these walls.", {}, {}, {"Guardian's Challenge Note"}, {}, false, false, true, false},
+
+            {"Crystal Formations", {{ // Source: Portal Chamber (non-pickupable)
+                {"Crystallized memories jutting from the walls like frozen lightning.\nEach formation contains someone's trapped moment - you can hear faint echoes of laughter, weeping, and whispered words of love.", {}, {}, {}, {}, false, false, false, true},
             }}},
-            {"Mage", {{ // Source: Portal Chamber 
-                // After Redemption (Has Mage's Redemption Note)
-                {"You've achieved what I could not - understanding that the future matters more than the past.", {"Mage's Lament Note", "Charged Memory Crystal"}, {}, {}, {}, false, false, true, true},
-                // Holding Charged Memory Crystal
-                {"Perfect!", {"Mage's Lament Note", "Charged Memory Crystal"}, {}, {}, {}, false, false, true, false},
-                {"This crystal contains what could be, not just what was.", {"Mage's Lament Note", "Charged Memory Crystal"}, {}, {}, {}, false, false, true, false},
-                {"You understand what Theodore never did. Take this - my redemption.", {"Mage's Lament Note", "Charged Memory Crystal"}, {}, {"Purple Master Key", "Mage's Redemption Note"}, {"Charged Memory Crystal"}, false, false, true, true},
-                // Holding Memory Crystal (Uncharged)
-                {"The crystal contains potential,\nbut it needs the Dreamer's touch while starlight watches.", {"Mage's Lament Note", "Memory Crystal"}, {}, {}, {}, false, false, true, false},
-                {"Bring it to one who sleeps while the Observatory is active.", {"Mage's Lament Note", "Memory Crystal"}, {}, {"Crystal Charging Note"}, {}, false, false, true, true},
-                // Subsequent Meetings (Has Mage's Lament Note, No Crystal)
-                {"To prove mastery over this house's memory, you must create the Pattern of Echoes.", {"Mage's Lament Note"}, {}, {}, {}, false, false, true, false},
-                {"Only when memories overlap perfectly will the Memory Crystal manifest.", {"Mage's Lament Note"}, {}, {}, {}, false, false, true, true},
-                // First Meeting (Default)
-                {"Child, you stand where Theodore's ritual failed.", {}, {}, {}, {}, false, false, true, false},
-                {"I am Vera Cross,\ntrapped in my moment of greatest failure - arriving too late to stop this catastrophe.", {}, {}, {"Mage's Lament Note"}, {}, false, false, true, false},
+
+            {"Watering Can", {{ // Source: Garden
+                {"Contains water that never seems to empty or evaporate.\nThe Gardener uses it to tend memories as if they were flowers.", {}, {}, {}, {}, false, false, false, false},
+                {"Obtained Watering Can", {}, {}, {"Watering Can"}, {}, false, true, false, true},
             }}},
-            {"Dreamer", {{ // Source: Bedroom 
-                // After Charging (Has Dream Blessing Note)
-                {"Dreams and starlight together can break even the strongest chains of memory.", {"Dream Blessing Note"}, {}, {}, {}, false, false, true, false},
-                // Holding Memory Crystal + Observatory Active - TODO test that observatory is an active room - COULD give player the rooms in inventory and not show?
-                {"The crystal... yes, I dreamed of this.", {"Memory Crystal"}, {}, {}, {}, false, false, true, false},
-                {"Let me fill it with dreams of freedom and possibility.", {"Memory Crystal"}, {}, {"Charged Memory Crystal", "Dream Blessing Note"}, {"Memory Crystal"}, false, false, true, true},
-                // Interacting While Sleeping
-                {"Mmm? I was dreaming of the house's true nature...\n\n\tbut it fades like morning mist.", {}, {}, {}, {}, false, false, true, false},
-                {"I can only help when the stars are watching.", {}, {}, {"Dreamer's Vision Note "}, {}, false, false, true, false},
-            }}},*/
+
+            {"Laboratory Notes", {{ // Source: Lab
+                {"Theodore's experimental records, documenting his attempts to crystallize human consciousness.\nThe later entries show increasing desperation and decreasing sanity.", {}, {}, {}, {}, false, false, false, false},
+                {"Obtained Laboratory Notes", {}, {}, {"Laboratory Notes"}, {}, false, true, false, true},
+            }}},
+
+            {"Jewelry Box", {{ // Source: Treasury
+                {"Contains engagement rings, wedding bands, and heirloom pieces -\nsymbols of love that outlasted the relationships they celebrated.", {}, {}, {}, {}, false, false, false, false},
+                {"Obtained Jewelry Box", {}, {}, {"Jewelry Box"}, {}, false, true, false, true},
+            }}},
+
+            {"Hand Mirror", {{ // Source: Bedroom
+                {"Reflects not your current appearance, but glimpses of who you might become.\nSometimes you see yourself older, sometimes younger, sometimes not yourself at all.", {}, {}, {}, {}, false, false, false, false},
+                {"Obtained Hand Mirror", {}, {}, {"Hand Mirror"}, {}, false, true, false, true},
+            }}},
+
+            {"Magnifying Glass", {{ // Source: Study
+                {"Reveals hidden text and symbols throughout the house.\nThrough it, you can see the ghostly outlines of items and people from other time periods overlapping the present.", {}, {}, {}, {}, false, false, false, false},
+                {"Obtained Magnifying Glass", {}, {}, {"Magnifying Glass"}, {}, false, true, false, true},
+            }}},
+
+            {"Theodore's Final Journal", {{ // Source: Vault
+                {"His last entries, written as the ritual began.\nThey reveal a man who realized too late that he was trapping rather than preserving, but was too proud to stop.", {}, {}, {}, {}, false, false, false, false},
+                {"Obtained Theodore's Final Journal", {}, {}, {"Theodore's Final Journal"}, {}, false, true, false, true},
+            }}},
+
+            {"Tool Box", {{ // Source: Workshop
+                {"Contains various implements for building, fixing, and creating.\nEach tool represents a different approach to solving problems through practical action.", {}, {}, {}, {}, false, false, false, false},
+                {"Obtained Tool Box", {}, {}, {"Tool Box"}, {}, false, true, false, true},
+            }}},
+
+            {"Summoning Candles", {{ // Source: Portal Chamber (non-pickupable)
+                {"Black candles that burn with silver flames.\nThey were lit the night of Theodore's ritual and have never gone out, sustained by the temporal energy they helped unleash.", {}, {}, {}, {}, false, false, false, true},
+            }}},
+
+            {"Recipe Fragment B", {{ // Given by Inventor in trade
+                {"The other half of the recipe: '...1 tsp vanilla, bake at 350°F until golden. Makes enough to feed the whole family.'\nA note adds: 'Love is the secret ingredient.'", {}, {}, {}, {}, false, false, false, true},
+            }}},
+
+            {"Safe Combination Note", {{ // Given by Scholar after herb quest
+                {"The Scholar's decoded cipher reveals: 'The combination is 7-3-9.\nTheodore hid his greatest secret in the Vault.'", {}, {}, {}, {}, false, false, false, true},
+            }}},
+
+            {"Silver Key", {{ // Given by Merchant
+                {"A tarnished key that unlocks additional vault treasures.\nEngraved with: 'Some treasures are worth more than gold.'", {}, {}, {}, {}, false, false, false, true},
+            }}},
+
+            {"Charged Memory Crystal", {{ // Given by Dreamer
+                {"The crystal now blazes with inner light, containing the essence of pure possibility.\nIt whispers of futures yet unwritten.", {}, {}, {}, {}, false, false, false, true},
+            }}},
+
+            // ===== RETURN INTERACTIONS FOR ROOM ITEMS =====
+
+            {"Ancient Tome Return", {{ // Can only return to Library
+                {"You place the tome back among the scholarly works.", {"Ancient Tome"}, {}, {}, {}, false, false, false, false},
+                {"The ancient knowledge settles back into its rightful place.", {"Ancient Tome"}, {}, {}, {}, false, false, false, false},
+                {"Put Back Ancient Tome", {"Ancient Tome"}, {}, {}, {"Ancient Tome"}, false, true, false, true},
+            }}},
+
+            {"Fresh Bread Return", {{ // Can only return to Kitchen
+                {"You return the bread to the counter where Christmas never ends.", {"Fresh Bread"}, {}, {}, {}, false, false, false, false},
+                {"The warmth of family gatherings settles back into place.", {"Fresh Bread"}, {}, {}, {}, false, false, false, false},
+                {"Put Back Fresh Bread", {"Fresh Bread"}, {}, {}, {"Fresh Bread"}, false, true, false, true},
+            }}},
+
+            {"Memory Vial Return", {{ // Can only return to Lab
+                {"You carefully place the vial back on the laboratory shelf.", {"Memory Vial"}, {}, {}, {}, false, false, false, false},
+                {"The crystallized memories swirl back into their experimental rest.", {"Memory Vial"}, {}, {}, {}, false, false, false, false},
+                {"Put Back Memory Vial", {"Memory Vial"}, {}, {}, {"Memory Vial"}, false, true, false, true},
+            }}},
+
+            {"Gold Coins Return", {{ // Can only return to Treasury
+                {"You return the coins to their chest among the other valuables.", {"Gold Coins"}, {}, {}, {}, false, false, false, false},
+                {"The tarnished wealth settles back into meaningless accumulation.", {"Gold Coins"}, {}, {}, {}, false, false, false, false},
+                {"Put Back Gold Coins", {"Gold Coins"}, {}, {}, {"Gold Coins"}, false, true, false, true},
+            }}},
+
+            {"Personal Diary Return", {{ // Can only return to Bedroom
+                {"You close the diary and place it back on the nightstand.", {"Personal Diary"}, {}, {}, {}, false, false, false, false},
+                {"Young Cordelia's secrets return to their intimate sanctuary.", {"Personal Diary"}, {}, {}, {}, false, false, false, false},
+                {"Put Back Personal Diary", {"Personal Diary"}, {}, {}, {"Personal Diary"}, false, true, false, true},
+            }}},
+
+            {"House Maps Return", {{ // Can only return to Study
+                {"You organize the maps back on the research desk.", {"House Maps"}, {}, {}, {}, false, false, false, false},
+                {"The cartographic knowledge returns to its academic home.", {"House Maps"}, {}, {}, {}, false, false, false, false},
+                {"Put Back House Maps", {"House Maps"}, {}, {}, {"House Maps"}, false, true, false, true},
+            }}},
+
+            {"Family Tree Return", {{ // Can only return to Vault
+                {"You place the genealogical chart back among the family secrets.", {"Family Tree"}, {}, {}, {}, false, false, false, false},
+                {"The record of the Aldrich curse returns to its guarded rest.", {"Family Tree"}, {}, {}, {}, false, false, false, false},
+                {"Put Back Family Tree", {"Family Tree"}, {}, {}, {"Family Tree"}, false, true, false, true},
+            }}},
+
+            {"Hammer Return", {{ // Can only return to Workshop
+                {"You set the hammer back on the workbench where it belongs.", {"Hammer"}, {}, {}, {}, false, false, false, false},
+                {"The tool of honest creation returns to its practical purpose.", {"Hammer"}, {}, {}, {}, false, false, false, false},
+                {"Put Back Hammer", {"Hammer"}, {}, {}, {"Hammer"}, false, true, false, true},
+            }}},
+
+            {"Telescope Return", {{ // Can only return to Observatory
+                {"You carefully return the telescope to its celestial mount.", {"Telescope"}, {}, {}, {}, false, false, false, false},
+                {"The instrument of transcendent vision returns to its starward gaze.", {"Telescope"}, {}, {}, {}, false, false, false, false},
+                {"Put Back Telescope", {"Telescope"}, {}, {}, {"Telescope"}, false, true, false, true},
+            }}},
+
+            {"Watering Can Return", {{ // Can only return to Garden
+                {"You place the watering can back among the memory flowers.", {"Watering Can"}, {}, {}, {}, false, false, false, false},
+                {"The tender of memories returns to its eternal gardening.", {"Watering Can"}, {}, {}, {}, false, false, false, false},
+                {"Put Back Watering Can", {"Watering Can"}, {}, {}, {"Watering Can"}, false, true, false, true},
+            }}},
+
+            {"Laboratory Notes Return", {{ // Can only return to Lab
+                {"You organize the experimental notes back on the laboratory table.", {"Laboratory Notes"}, {}, {}, {}, false, false, false, false},
+                {"Theodore's dangerous research returns to its scientific rest.", {"Laboratory Notes"}, {}, {}, {}, false, false, false, false},
+                {"Put Back Laboratory Notes", {"Laboratory Notes"}, {}, {}, {"Laboratory Notes"}, false, true, false, true},
+            }}},
+
+            {"Jewelry Box Return", {{ // Can only return to Treasury
+                {"You place the jewelry box back among the other precious things.", {"Jewelry Box"}, {}, {}, {}, false, false, false, false},
+                {"The symbols of love return to their valuable but empty collection.", {"Jewelry Box"}, {}, {}, {}, false, false, false, false},
+                {"Put Back Jewelry Box", {"Jewelry Box"}, {}, {}, {"Jewelry Box"}, false, true, false, true},
+            }}},
+
+            {"Hand Mirror Return", {{ // Can only return to Bedroom
+                {"You place the mirror back on the dresser with care.", {"Hand Mirror"}, {}, {}, {}, false, false, false, false},
+                {"The glimpses of possible futures return to their intimate reflection.", {"Hand Mirror"}, {}, {}, {}, false, false, false, false},
+                {"Put Back Hand Mirror", {"Hand Mirror"}, {}, {}, {"Hand Mirror"}, false, true, false, true},
+            }}},
+
+            {"Magnifying Glass Return", {{ // Can only return to Study
+                {"You set the magnifying glass back among the research tools.", {"Magnifying Glass"}, {}, {}, {}, false, false, false, false},
+                {"The revealer of hidden truths returns to its scholarly purpose.", {"Magnifying Glass"}, {}, {}, {}, false, false, false, false},
+                {"Put Back Magnifying Glass", {"Magnifying Glass"}, {}, {}, {"Magnifying Glass"}, false, true, false, true},
+            }}},
+
+            {"Theodore's Final Journal Return", {{ // Can only return to Vault
+                {"You place the journal back among Theodore's most guarded secrets.", {"Theodore's Final Journal"}, {}, {}, {}, false, false, false, false},
+                {"The record of ultimate failure returns to its shameful hiding.", {"Theodore's Final Journal"}, {}, {}, {}, false, false, false, false},
+                {"Put Back Theodore's Final Journal", {"Theodore's Final Journal"}, {}, {}, {"Theodore's Final Journal"}, false, true, false, true},
+            }}},
+
+            {"Tool Box Return", {{ // Can only return to Workshop
+                {"You return the tool box to its place among the other implements.", {"Tool Box"}, {}, {}, {}, false, false, false, false},
+                {"The collection of practical solutions returns to its creative home.", {"Tool Box"}, {}, {}, {}, false, false, false, false},
+                {"Put Back Tool Box", {"Tool Box"}, {}, {}, {"Tool Box"}, false, true, false, true},
+            }}},
+
+            {"Ceremonial Sword Return", {{ // Can only return to Armory
+                {"You return the sword to its place of honor on the weapon rack.", {"Ceremonial Sword"}, {}, {}, {}, false, false, false, false},
+                {"The blade of untested valor returns to its ceremonial rest.", {"Ceremonial Sword"}, {}, {}, {}, false, false, false, false},
+                {"Put Back Ceremonial Sword", {"Ceremonial Sword"}, {}, {}, {"Ceremonial Sword"}, false, true, false, true},
+            }}},
+
+            // ===== FINAL VICTORY =====
+
+            {"Final Pedestals", {{ // Courtyard - when all 4 Master Keys held
+                {"With all four Master Keys in hand, the fountain begins to glow.\nFour pedestals rise from the water, each awaiting its destined key.", {"Red Master Key", "Green Master Key", "Yellow Master Key", "Purple Master Key"}, {}, {}, {}, false, false, false, false},
+                {"Knowledge flows through the house's foundation.", {"Red Master Key", "Green Master Key", "Yellow Master Key", "Purple Master Key"}, {}, {}, {"Red Master Key"}, false, false, false, false},
+                {"Warmth spreads from remembered family gatherings.", {"Green Master Key", "Yellow Master Key", "Purple Master Key"}, {}, {}, {"Green Master Key"}, false, false, false, false},
+                {"Truth illuminates the house's dark corners.", {"Yellow Master Key", "Purple Master Key"}, {}, {}, {"Yellow Master Key"}, false, false, false, false},
+                {"The final key! The house's temporal bonds shatter like glass.", {"Purple Master Key"}, {}, {}, {"Purple Master Key"}, true, false, false, false},
+                {"The exit door unseals with a sound like exhaling.\nThe house's memory loops are broken, and you are free to leave.", {}, {}, {}, {}, false, false, false, true},
+            }}},
         };
 
 		class InteractState : public GameResource::IState
@@ -618,6 +574,7 @@ namespace Struktur
             Interaction m_interaction;
 
             bool m_dialogueSrolling = false;
+            bool m_breakAfterStep = false;
             int m_interactionStep = 0;
             std::string m_currentString;
 
@@ -660,7 +617,19 @@ namespace Struktur
                 Component::Interactable interactable = registry.get<Component::Interactable>(m_interactingEntity);
 
                 m_interaction = s_interactionMap[interactable.interactionId];
-                SetInteractionStep(context, 0);
+
+
+                int interactionStep = 0;
+                while (!TrySetInteractionStep(context, interactionStep))
+                {
+                    interactionStep++;
+                    if (interactionStep == m_interaction.dialougeVector.size())
+                    {
+                        BREAK_MSG("No valid interaction steps for this interaction");
+                        stateManager.ChangeState(context, std::unique_ptr<GameResource::IState>(nullptr));
+                        return;
+                    }
+                }
             }
 
             void Update(GameContext& context, GameResource::StateManager& stateManager) override
@@ -679,15 +648,24 @@ namespace Struktur
                         m_dialogueSrolling = false;
                         m_continueDialogueLabel->SetVisible(true);
                     }
-                    else if (m_interaction.dialougeVector.size() > m_interactionStep + 1)
-                    {
-                        SetInteractionStep(context, m_interactionStep + 1);
-                        m_continueDialogueLabel->SetVisible(false);
-                    }
                     else
                     {
-                        stateManager.ChangeState(context, std::unique_ptr<GameResource::IState>(nullptr));
-                        return; // we are finished with the interaction.
+                        if (m_breakAfterStep)
+                        {
+                            stateManager.ChangeState(context, std::unique_ptr<GameResource::IState>(nullptr));
+                            return; // we are finished with the interaction.
+                        }
+                        int interactionStep = m_interactionStep + 1;
+                        while (!TrySetInteractionStep(context, interactionStep))
+                        {
+                            interactionStep++;
+                            if (interactionStep == m_interaction.dialougeVector.size())
+                            {
+                                stateManager.ChangeState(context, std::unique_ptr<GameResource::IState>(nullptr));
+                                return;
+                            }
+                        }
+                        m_continueDialogueLabel->SetVisible(false);
                     }
                 }
 
@@ -713,14 +691,31 @@ namespace Struktur
 
             std::string GetStateName() const override { return std::string(typeid(InteractState).name()); }
 
-            void SetInteractionStep(GameContext& context, int stepIndex)
+            bool TrySetInteractionStep(GameContext& context, int stepIndex)
             {
                 Core::GameData& gameDate = context.GetGameData();
                 Inventory& inventory = context.GetInventory();
                 System::GameObjectManager& gameObjectManager = context.GetGameObjectManager();
                 DialogueStep step = m_interaction.dialougeVector[stepIndex];
+                // check step conditions
+                for (auto& item : step.conditionContainsItemVector)
+                {
+                    if(std::find(inventory.begin(), inventory.end(), item) == inventory.end())
+                    {
+                        return false;
+                    }
+                }
+                for (auto& item : step.conditionExcludeItemVector)
+                {
+                    if(std::find(inventory.begin(), inventory.end(), item) != inventory.end())
+                    {
+                        return false;
+                    }
+                }
+
                 m_currentString = step.dialogue;
                 m_dialogueSrolling = step.animateText;
+                m_breakAfterStep = step.exitInteraction;
                 m_interactionStep = stepIndex;
                 m_currentDialogueStartTime = gameDate.gameTime;
 
@@ -739,7 +734,31 @@ namespace Struktur
 
                 if (step.deleteInteractingEntity)
                 {
-                    gameObjectManager.DestroyGameObject(context, m_interactingEntity);
+                    entt::registry& registry = context.GetRegistry();
+                    auto& interactableComponent = registry.get<Component::Interactable>(m_interactingEntity);
+                    if (interactableComponent.canBeReturned)
+                    {
+                        // TODO Change the items sprite (Toggle the sprite index)
+                        std::string& interactionId = interactableComponent.interactionId;
+                        const std::string suffix = " Return";
+                        
+                        // Check if string ends with " returns"
+                        if (interactionId.length() >= suffix.length() && 
+                            interactionId.substr(interactionId.length() - suffix.length()) == suffix)
+                        {
+                            // Remove the suffix
+                            interactionId = interactionId.substr(0, interactionId.length() - suffix.length());
+                        }
+                        else
+                        {
+                            // Add the suffix
+                            interactionId = interactionId + suffix;
+                        }
+                    }
+                    else
+                    {
+                        gameObjectManager.DestroyGameObject(context, m_interactingEntity);
+                    }                    
                 }
 
                 if (step.applyCameraShake)
@@ -754,6 +773,8 @@ namespace Struktur
                         cameraSystem.AddCameraTrauma(context, entity, 0.4f);
                     }
                 }
+
+                return true;
             }
         };
     }

@@ -11,7 +11,7 @@
 	"iid": "8e3c2b30-5e50-11f0-93ac-69bb141d2be3",
 	"jsonVersion": "1.5.3",
 	"appBuildId": 473703,
-	"nextUid": 25,
+	"nextUid": 26,
 	"identifierStyle": "Capitalize",
 	"toc": [],
 	"worldLayout": "Free",
@@ -290,6 +290,46 @@
 					"allowedRefsEntityUid": null,
 					"allowedRefTags": [],
 					"tilesetUid": null
+				},
+				{
+					"identifier": "Returnable",
+					"doc": null,
+					"__type": "Bool",
+					"uid": 25,
+					"type": "F_Bool",
+					"isArray": false,
+					"canBeNull": false,
+					"arrayMinLength": null,
+					"arrayMaxLength": null,
+					"editorDisplayMode": "Hidden",
+					"editorDisplayScale": 1,
+					"editorDisplayPos": "Above",
+					"editorLinkStyle": "StraightArrow",
+					"editorDisplayColor": null,
+					"editorAlwaysShow": false,
+					"editorShowInWorld": true,
+					"editorCutLongValues": true,
+					"editorTextSuffix": null,
+					"editorTextPrefix": null,
+					"useForSmartColor": false,
+					"exportToToc": false,
+					"searchable": false,
+					"min": null,
+					"max": null,
+					"regex": null,
+					"acceptFileTypes": null,
+					"defaultOverride": {
+						"id": "V_Bool",
+						"params": [ false ]
+					},
+					"textLanguageMode": null,
+					"symmetricalRef": false,
+					"autoChainRef": true,
+					"allowOutOfLevelRef": true,
+					"allowedRefs": "OnlySame",
+					"allowedRefsEntityUid": null,
+					"allowedRefTags": [],
+					"tilesetUid": null
 				}
 			]
 		}
@@ -391,10 +431,16 @@
 							"height": 64,
 							"defUid": 5,
 							"px": [256,256],
-							"fieldInstances": [{ "__identifier": "Name", "__type": "String", "__value": "Ancient Tome", "__tile": null, "defUid": 7, "realEditorValues": [{
-								"id": "V_String",
-								"params": ["Ancient Tome"]
-							}] }],
+							"fieldInstances": [
+								{ "__identifier": "Name", "__type": "String", "__value": "Ancient Tome", "__tile": null, "defUid": 7, "realEditorValues": [{
+									"id": "V_String",
+									"params": ["Ancient Tome"]
+								}] },
+								{ "__identifier": "Returnable", "__type": "Bool", "__value": true, "__tile": null, "defUid": 25, "realEditorValues": [{
+									"id": "V_Bool",
+									"params": [ true ]
+								}] }
+							],
 							"__worldX": 256,
 							"__worldY": 256
 						},
@@ -410,11 +456,86 @@
 							"height": 64,
 							"defUid": 5,
 							"px": [64,384],
-							"fieldInstances": [{ "__identifier": "Name", "__type": "String", "__value": "Moonbell Herb", "__tile": null, "defUid": 7, "realEditorValues": [{
-								"id": "V_String",
-								"params": ["Moonbell Herb"]
-							}] }],
+							"fieldInstances": [
+								{ "__identifier": "Name", "__type": "String", "__value": "Love Letter", "__tile": null, "defUid": 7, "realEditorValues": [{
+									"id": "V_String",
+									"params": ["Love Letter"]
+								}] },
+								{ "__identifier": "Returnable", "__type": "Bool", "__value": true, "__tile": null, "defUid": 25, "realEditorValues": [{
+									"id": "V_Bool",
+									"params": [ true ]
+								}] }
+							],
 							"__worldX": 64,
+							"__worldY": 384
+						},
+						{
+							"__identifier": "Item",
+							"__grid": [1,2],
+							"__pivot": [0,0],
+							"__tags": [],
+							"__tile": null,
+							"__smartColor": "#FEE761",
+							"iid": "5fecb770-5e50-11f0-93ac-8ba9ab82ffb8",
+							"width": 64,
+							"height": 64,
+							"defUid": 5,
+							"px": [64,128],
+							"fieldInstances": [
+								{ "__identifier": "Name", "__type": "String", "__value": "Recipe Box", "__tile": null, "defUid": 7, "realEditorValues": [{
+									"id": "V_String",
+									"params": ["Recipe Box"]
+								}] },
+								{ "__identifier": "Returnable", "__type": "Bool", "__value": true, "__tile": null, "defUid": 25, "realEditorValues": [{
+									"id": "V_Bool",
+									"params": [ true ]
+								}] }
+							],
+							"__worldX": 64,
+							"__worldY": 128
+						},
+						{
+							"__identifier": "Item",
+							"__grid": [8,4],
+							"__pivot": [0,0],
+							"__tags": [],
+							"__tile": null,
+							"__smartColor": "#FEE761",
+							"iid": "6c4cbf10-5e50-11f0-93ac-69dc47575c19",
+							"width": 64,
+							"height": 64,
+							"defUid": 5,
+							"px": [512,256],
+							"fieldInstances": [
+								{ "__identifier": "Name", "__type": "String", "__value": "Occult Symbols", "__tile": null, "defUid": 7, "realEditorValues": [{
+									"id": "V_String",
+									"params": ["Occult Symbols"]
+								}] },
+								{ "__identifier": "Returnable", "__type": "Bool", "__value": false, "__tile": null, "defUid": 25, "realEditorValues": [] }
+							],
+							"__worldX": 512,
+							"__worldY": 256
+						},
+						{
+							"__identifier": "Item",
+							"__grid": [7,6],
+							"__pivot": [0,0],
+							"__tags": [],
+							"__tile": null,
+							"__smartColor": "#FEE761",
+							"iid": "7d56c6c0-5e50-11f0-93ac-bf4355e7e92a",
+							"width": 64,
+							"height": 64,
+							"defUid": 5,
+							"px": [448,384],
+							"fieldInstances": [
+								{ "__identifier": "Name", "__type": "String", "__value": "Bookshelves", "__tile": null, "defUid": 7, "realEditorValues": [{
+									"id": "V_String",
+									"params": ["Bookshelves"]
+								}] },
+								{ "__identifier": "Returnable", "__type": "Bool", "__value": false, "__tile": null, "defUid": 25, "realEditorValues": [] }
+							],
+							"__worldX": 448,
 							"__worldY": 384
 						}
 					]
@@ -712,10 +833,16 @@
 							"height": 64,
 							"defUid": 5,
 							"px": [128,384],
-							"fieldInstances": [{ "__identifier": "Name", "__type": "String", "__value": "Ceremonial Sword", "__tile": null, "defUid": 7, "realEditorValues": [{
-								"id": "V_String",
-								"params": ["Ceremonial Sword"]
-							}] }],
+							"fieldInstances": [
+								{ "__identifier": "Name", "__type": "String", "__value": "Ceremonial Sword", "__tile": null, "defUid": 7, "realEditorValues": [{
+									"id": "V_String",
+									"params": ["Ceremonial Sword"]
+								}] },
+								{ "__identifier": "Returnable", "__type": "Bool", "__value": true, "__tile": null, "defUid": 25, "realEditorValues": [{
+									"id": "V_Bool",
+									"params": [ true ]
+								}] }
+							],
 							"__worldX": 704,
 							"__worldY": 384
 						},
@@ -731,10 +858,13 @@
 							"height": 64,
 							"defUid": 5,
 							"px": [384,384],
-							"fieldInstances": [{ "__identifier": "Name", "__type": "String", "__value": "Military Medal", "__tile": null, "defUid": 7, "realEditorValues": [{
-								"id": "V_String",
-								"params": ["Military Medal"]
-							}] }],
+							"fieldInstances": [
+								{ "__identifier": "Name", "__type": "String", "__value": "Military Display", "__tile": null, "defUid": 7, "realEditorValues": [{
+									"id": "V_String",
+									"params": ["Military Display"]
+								}] },
+								{ "__identifier": "Returnable", "__type": "Bool", "__value": false, "__tile": null, "defUid": 25, "realEditorValues": [] }
+							],
 							"__worldX": 960,
 							"__worldY": 384
 						},
@@ -750,12 +880,59 @@
 							"height": 64,
 							"defUid": 5,
 							"px": [384,128],
-							"fieldInstances": [{ "__identifier": "Name", "__type": "String", "__value": "Broken Clockwork", "__tile": null, "defUid": 7, "realEditorValues": [{
-								"id": "V_String",
-								"params": ["Broken Clockwork"]
-							}] }],
+							"fieldInstances": [
+								{ "__identifier": "Name", "__type": "String", "__value": "Weapon Rack", "__tile": null, "defUid": 7, "realEditorValues": [{
+									"id": "V_String",
+									"params": ["Weapon Rack"]
+								}] },
+								{ "__identifier": "Returnable", "__type": "Bool", "__value": false, "__tile": null, "defUid": 25, "realEditorValues": [] }
+							],
 							"__worldX": 960,
 							"__worldY": 128
+						},
+						{
+							"__identifier": "Item",
+							"__grid": [0,4],
+							"__pivot": [0,0],
+							"__tags": [],
+							"__tile": null,
+							"__smartColor": "#FEE761",
+							"iid": "9bd7eb60-5e50-11f0-93ac-3926e5181e6a",
+							"width": 64,
+							"height": 64,
+							"defUid": 5,
+							"px": [0,256],
+							"fieldInstances": [
+								{ "__identifier": "Name", "__type": "String", "__value": "Honor Medals", "__tile": null, "defUid": 7, "realEditorValues": [{
+									"id": "V_String",
+									"params": ["Honor Medals"]
+								}] },
+								{ "__identifier": "Returnable", "__type": "Bool", "__value": false, "__tile": null, "defUid": 25, "realEditorValues": [] }
+							],
+							"__worldX": 576,
+							"__worldY": 256
+						},
+						{
+							"__identifier": "Item",
+							"__grid": [4,4],
+							"__pivot": [0,0],
+							"__tags": [],
+							"__tile": null,
+							"__smartColor": "#FEE761",
+							"iid": "9f3aec80-5e50-11f0-93ac-93e569c0d93f",
+							"width": 64,
+							"height": 64,
+							"defUid": 5,
+							"px": [256,256],
+							"fieldInstances": [
+								{ "__identifier": "Name", "__type": "String", "__value": "Sun Symbol", "__tile": null, "defUid": 7, "realEditorValues": [{
+									"id": "V_String",
+									"params": ["Sun Symbol"]
+								}] },
+								{ "__identifier": "Returnable", "__type": "Bool", "__value": false, "__tile": null, "defUid": 25, "realEditorValues": [] }
+							],
+							"__worldX": 832,
+							"__worldY": 256
 						}
 					]
 				},
@@ -1058,10 +1235,13 @@
 							"height": 64,
 							"defUid": 5,
 							"px": [128,384],
-							"fieldInstances": [{ "__identifier": "Name", "__type": "String", "__value": "Fire Root", "__tile": null, "defUid": 7, "realEditorValues": [{
-								"id": "V_String",
-								"params": ["Fire Root"]
-							}] }],
+							"fieldInstances": [
+								{ "__identifier": "Name", "__type": "String", "__value": "Fireroot", "__tile": null, "defUid": 7, "realEditorValues": [{
+									"id": "V_String",
+									"params": ["Fireroot"]
+								}] },
+								{ "__identifier": "Returnable", "__type": "Bool", "__value": false, "__tile": null, "defUid": 25, "realEditorValues": [] }
+							],
 							"__worldX": 128,
 							"__worldY": 960
 						},
@@ -1077,10 +1257,16 @@
 							"height": 64,
 							"defUid": 5,
 							"px": [128,128],
-							"fieldInstances": [{ "__identifier": "Name", "__type": "String", "__value": "Memory Vial", "__tile": null, "defUid": 7, "realEditorValues": [{
-								"id": "V_String",
-								"params": ["Memory Vial"]
-							}] }],
+							"fieldInstances": [
+								{ "__identifier": "Name", "__type": "String", "__value": "Memory Vial", "__tile": null, "defUid": 7, "realEditorValues": [{
+									"id": "V_String",
+									"params": ["Memory Vial"]
+								}] },
+								{ "__identifier": "Returnable", "__type": "Bool", "__value": true, "__tile": null, "defUid": 25, "realEditorValues": [{
+									"id": "V_Bool",
+									"params": [ true ]
+								}] }
+							],
 							"__worldX": 128,
 							"__worldY": 704
 						},
@@ -1096,12 +1282,62 @@
 							"height": 64,
 							"defUid": 5,
 							"px": [320,384],
-							"fieldInstances": [{ "__identifier": "Name", "__type": "String", "__value": "Laboratory Notes", "__tile": null, "defUid": 7, "realEditorValues": [{
-								"id": "V_String",
-								"params": ["Laboratory Notes"]
-							}] }],
+							"fieldInstances": [
+								{ "__identifier": "Name", "__type": "String", "__value": "Laboratory Notes", "__tile": null, "defUid": 7, "realEditorValues": [{
+									"id": "V_String",
+									"params": ["Laboratory Notes"]
+								}] },
+								{ "__identifier": "Returnable", "__type": "Bool", "__value": true, "__tile": null, "defUid": 25, "realEditorValues": [{
+									"id": "V_Bool",
+									"params": [ true ]
+								}] }
+							],
 							"__worldX": 320,
 							"__worldY": 960
+						},
+						{
+							"__identifier": "Item",
+							"__grid": [6,3],
+							"__pivot": [0,0],
+							"__tags": [],
+							"__tile": null,
+							"__smartColor": "#FEE761",
+							"iid": "6bfcadd0-5e50-11f0-93ac-29a1461f77f6",
+							"width": 64,
+							"height": 64,
+							"defUid": 5,
+							"px": [384,192],
+							"fieldInstances": [
+								{ "__identifier": "Name", "__type": "String", "__value": "Alchemy Equipment", "__tile": null, "defUid": 7, "realEditorValues": [{
+									"id": "V_String",
+									"params": ["Alchemy Equipment"]
+								}] },
+								{ "__identifier": "Returnable", "__type": "Bool", "__value": false, "__tile": null, "defUid": 25, "realEditorValues": [] }
+							],
+							"__worldX": 384,
+							"__worldY": 768
+						},
+						{
+							"__identifier": "Item",
+							"__grid": [4,1],
+							"__pivot": [0,0],
+							"__tags": [],
+							"__tile": null,
+							"__smartColor": "#FEE761",
+							"iid": "7cdd0d70-5e50-11f0-93ac-b907fe410d48",
+							"width": 64,
+							"height": 64,
+							"defUid": 5,
+							"px": [256,64],
+							"fieldInstances": [
+								{ "__identifier": "Name", "__type": "String", "__value": "Memory Crystallization Devices", "__tile": null, "defUid": 7, "realEditorValues": [{
+									"id": "V_String",
+									"params": ["Memory Crystallization Devices"]
+								}] },
+								{ "__identifier": "Returnable", "__type": "Bool", "__value": false, "__tile": null, "defUid": 25, "realEditorValues": [] }
+							],
+							"__worldX": 256,
+							"__worldY": 640
 						}
 					]
 				},
@@ -1404,10 +1640,13 @@
 							"height": 64,
 							"defUid": 5,
 							"px": [64,256],
-							"fieldInstances": [{ "__identifier": "Name", "__type": "String", "__value": "Moonbell Herb", "__tile": null, "defUid": 7, "realEditorValues": [{
-								"id": "V_String",
-								"params": ["Moonbell Herb"]
-							}] }],
+							"fieldInstances": [
+								{ "__identifier": "Name", "__type": "String", "__value": "Moonbell Herb", "__tile": null, "defUid": 7, "realEditorValues": [{
+									"id": "V_String",
+									"params": ["Moonbell Herb"]
+								}] },
+								{ "__identifier": "Returnable", "__type": "Bool", "__value": false, "__tile": null, "defUid": 25, "realEditorValues": [] }
+							],
 							"__worldX": 1216,
 							"__worldY": 256
 						},
@@ -1423,10 +1662,16 @@
 							"height": 64,
 							"defUid": 5,
 							"px": [320,64],
-							"fieldInstances": [{ "__identifier": "Name", "__type": "String", "__value": "Watering Can", "__tile": null, "defUid": 7, "realEditorValues": [{
-								"id": "V_String",
-								"params": ["Watering Can"]
-							}] }],
+							"fieldInstances": [
+								{ "__identifier": "Name", "__type": "String", "__value": "Watering Can", "__tile": null, "defUid": 7, "realEditorValues": [{
+									"id": "V_String",
+									"params": ["Watering Can"]
+								}] },
+								{ "__identifier": "Returnable", "__type": "Bool", "__value": true, "__tile": null, "defUid": 25, "realEditorValues": [{
+									"id": "V_Bool",
+									"params": [ true ]
+								}] }
+							],
 							"__worldX": 1472,
 							"__worldY": 64
 						},
@@ -1442,11 +1687,36 @@
 							"height": 64,
 							"defUid": 5,
 							"px": [320,384],
-							"fieldInstances": [{ "__identifier": "Name", "__type": "String", "__value": "Love Letter", "__tile": null, "defUid": 7, "realEditorValues": [{
-								"id": "V_String",
-								"params": ["Love Letter"]
-							}] }],
+							"fieldInstances": [
+								{ "__identifier": "Name", "__type": "String", "__value": "Proposal Bench", "__tile": null, "defUid": 7, "realEditorValues": [{
+									"id": "V_String",
+									"params": ["Proposal Bench"]
+								}] },
+								{ "__identifier": "Returnable", "__type": "Bool", "__value": false, "__tile": null, "defUid": 25, "realEditorValues": [] }
+							],
 							"__worldX": 1472,
+							"__worldY": 384
+						},
+						{
+							"__identifier": "Item",
+							"__grid": [2,6],
+							"__pivot": [0,0],
+							"__tags": [],
+							"__tile": null,
+							"__smartColor": "#FEE761",
+							"iid": "dde8c2e0-5e50-11f0-93ac-63509a21b73a",
+							"width": 64,
+							"height": 64,
+							"defUid": 5,
+							"px": [128,384],
+							"fieldInstances": [
+								{ "__identifier": "Name", "__type": "String", "__value": "Memory Flowers", "__tile": null, "defUid": 7, "realEditorValues": [{
+									"id": "V_String",
+									"params": ["Memory Flowers"]
+								}] },
+								{ "__identifier": "Returnable", "__type": "Bool", "__value": false, "__tile": null, "defUid": 25, "realEditorValues": [] }
+							],
+							"__worldX": 1280,
 							"__worldY": 384
 						}
 					]
@@ -1744,10 +2014,16 @@
 							"height": 64,
 							"defUid": 5,
 							"px": [256,448],
-							"fieldInstances": [{ "__identifier": "Name", "__type": "String", "__value": "Fresh Bread", "__tile": null, "defUid": 7, "realEditorValues": [{
-								"id": "V_String",
-								"params": ["Fresh Bread"]
-							}] }],
+							"fieldInstances": [
+								{ "__identifier": "Name", "__type": "String", "__value": "Fresh Bread", "__tile": null, "defUid": 7, "realEditorValues": [{
+									"id": "V_String",
+									"params": ["Fresh Bread"]
+								}] },
+								{ "__identifier": "Returnable", "__type": "Bool", "__value": true, "__tile": null, "defUid": 25, "realEditorValues": [{
+									"id": "V_Bool",
+									"params": [ true ]
+								}] }
+							],
 							"__worldX": 832,
 							"__worldY": 1024
 						},
@@ -1763,10 +2039,13 @@
 							"height": 64,
 							"defUid": 5,
 							"px": [320,64],
-							"fieldInstances": [{ "__identifier": "Name", "__type": "String", "__value": "Empty Recipe Box", "__tile": null, "defUid": 7, "realEditorValues": [{
-								"id": "V_String",
-								"params": ["Empty Recipe Box"]
-							}] }],
+							"fieldInstances": [
+								{ "__identifier": "Name", "__type": "String", "__value": "Cooking Implements", "__tile": null, "defUid": 7, "realEditorValues": [{
+									"id": "V_String",
+									"params": ["Cooking Implements"]
+								}] },
+								{ "__identifier": "Returnable", "__type": "Bool", "__value": false, "__tile": null, "defUid": 25, "realEditorValues": [] }
+							],
 							"__worldX": 896,
 							"__worldY": 640
 						},
@@ -1782,12 +2061,59 @@
 							"height": 64,
 							"defUid": 5,
 							"px": [64,320],
-							"fieldInstances": [{ "__identifier": "Name", "__type": "String", "__value": "Family Photo", "__tile": null, "defUid": 7, "realEditorValues": [{
-								"id": "V_String",
-								"params": ["Family Photo"]
-							}] }],
+							"fieldInstances": [
+								{ "__identifier": "Name", "__type": "String", "__value": "Family Photo", "__tile": null, "defUid": 7, "realEditorValues": [{
+									"id": "V_String",
+									"params": ["Family Photo"]
+								}] },
+								{ "__identifier": "Returnable", "__type": "Bool", "__value": false, "__tile": null, "defUid": 25, "realEditorValues": [] }
+							],
 							"__worldX": 640,
 							"__worldY": 896
+						},
+						{
+							"__identifier": "Item",
+							"__grid": [4,4],
+							"__pivot": [0,0],
+							"__tags": [],
+							"__tile": null,
+							"__smartColor": "#FEE761",
+							"iid": "3a10fc40-5e50-11f0-93ac-01061eafb992",
+							"width": 64,
+							"height": 64,
+							"defUid": 5,
+							"px": [256,256],
+							"fieldInstances": [
+								{ "__identifier": "Name", "__type": "String", "__value": "Christmas Table Setting", "__tile": null, "defUid": 7, "realEditorValues": [{
+									"id": "V_String",
+									"params": ["Christmas Table Setting"]
+								}] },
+								{ "__identifier": "Returnable", "__type": "Bool", "__value": false, "__tile": null, "defUid": 25, "realEditorValues": [] }
+							],
+							"__worldX": 832,
+							"__worldY": 832
+						},
+						{
+							"__identifier": "Item",
+							"__grid": [8,4],
+							"__pivot": [0,0],
+							"__tags": [],
+							"__tile": null,
+							"__smartColor": "#FEE761",
+							"iid": "54e804a0-5e50-11f0-93ac-a72366009544",
+							"width": 64,
+							"height": 64,
+							"defUid": 5,
+							"px": [512,256],
+							"fieldInstances": [
+								{ "__identifier": "Name", "__type": "String", "__value": "Warm Fire Place", "__tile": null, "defUid": 7, "realEditorValues": [{
+									"id": "V_String",
+									"params": ["Warm Fire Place"]
+								}] },
+								{ "__identifier": "Returnable", "__type": "Bool", "__value": false, "__tile": null, "defUid": 25, "realEditorValues": [] }
+							],
+							"__worldX": 1088,
+							"__worldY": 832
 						}
 					]
 				},
@@ -2083,7 +2409,7 @@
 						},
 						{
 							"__identifier": "Item",
-							"__grid": [6,3],
+							"__grid": [6,2],
 							"__pivot": [0,0],
 							"__tags": [],
 							"__tile": null,
@@ -2092,32 +2418,19 @@
 							"width": 64,
 							"height": 64,
 							"defUid": 5,
-							"px": [384,192],
-							"fieldInstances": [{ "__identifier": "Name", "__type": "String", "__value": "Hammer", "__tile": null, "defUid": 7, "realEditorValues": [{
-								"id": "V_String",
-								"params": ["Hammer"]
-							}] }],
+							"px": [384,128],
+							"fieldInstances": [
+								{ "__identifier": "Name", "__type": "String", "__value": "Hammer", "__tile": null, "defUid": 7, "realEditorValues": [{
+									"id": "V_String",
+									"params": ["Hammer"]
+								}] },
+								{ "__identifier": "Returnable", "__type": "Bool", "__value": true, "__tile": null, "defUid": 25, "realEditorValues": [{
+									"id": "V_Bool",
+									"params": [ true ]
+								}] }
+							],
 							"__worldX": 384,
-							"__worldY": 1920
-						},
-						{
-							"__identifier": "Item",
-							"__grid": [6,6],
-							"__pivot": [0,0],
-							"__tags": [],
-							"__tile": null,
-							"__smartColor": "#FEE761",
-							"iid": "538729d0-5e50-11f0-93ac-5132c4f179d4",
-							"width": 64,
-							"height": 64,
-							"defUid": 5,
-							"px": [384,384],
-							"fieldInstances": [{ "__identifier": "Name", "__type": "String", "__value": "Blueprint Fragments", "__tile": null, "defUid": 7, "realEditorValues": [{
-								"id": "V_String",
-								"params": ["Blueprint Fragments"]
-							}] }],
-							"__worldX": 384,
-							"__worldY": 2112
+							"__worldY": 1856
 						},
 						{
 							"__identifier": "Item",
@@ -2131,10 +2444,16 @@
 							"height": 64,
 							"defUid": 5,
 							"px": [192,384],
-							"fieldInstances": [{ "__identifier": "Name", "__type": "String", "__value": "Recipe Fragment B", "__tile": null, "defUid": 7, "realEditorValues": [{
-								"id": "V_String",
-								"params": ["Recipe Fragment B"]
-							}] }],
+							"fieldInstances": [
+								{ "__identifier": "Name", "__type": "String", "__value": "Tool Box", "__tile": null, "defUid": 7, "realEditorValues": [{
+									"id": "V_String",
+									"params": ["Tool Box"]
+								}] },
+								{ "__identifier": "Returnable", "__type": "Bool", "__value": true, "__tile": null, "defUid": 25, "realEditorValues": [{
+									"id": "V_Bool",
+									"params": [ true ]
+								}] }
+							],
 							"__worldX": 192,
 							"__worldY": 2112
 						}
@@ -2439,16 +2758,22 @@
 							"height": 64,
 							"defUid": 5,
 							"px": [256,256],
-							"fieldInstances": [{ "__identifier": "Name", "__type": "String", "__value": "Telescope", "__tile": null, "defUid": 7, "realEditorValues": [{
-								"id": "V_String",
-								"params": ["Telescope"]
-							}] }],
+							"fieldInstances": [
+								{ "__identifier": "Name", "__type": "String", "__value": "Telescope", "__tile": null, "defUid": 7, "realEditorValues": [{
+									"id": "V_String",
+									"params": ["Telescope"]
+								}] },
+								{ "__identifier": "Returnable", "__type": "Bool", "__value": true, "__tile": null, "defUid": 25, "realEditorValues": [{
+									"id": "V_Bool",
+									"params": [ true ]
+								}] }
+							],
 							"__worldX": 832,
 							"__worldY": 1984
 						},
 						{
 							"__identifier": "Item",
-							"__grid": [7,2],
+							"__grid": [4,8],
 							"__pivot": [0,0],
 							"__tags": [],
 							"__tile": null,
@@ -2457,13 +2782,16 @@
 							"width": 64,
 							"height": 64,
 							"defUid": 5,
-							"px": [448,128],
-							"fieldInstances": [{ "__identifier": "Name", "__type": "String", "__value": "Star Charts", "__tile": null, "defUid": 7, "realEditorValues": [{
-								"id": "V_String",
-								"params": ["Star Charts"]
-							}] }],
-							"__worldX": 1024,
-							"__worldY": 1856
+							"px": [256,512],
+							"fieldInstances": [
+								{ "__identifier": "Name", "__type": "String", "__value": "Spiral Symbol Chart", "__tile": null, "defUid": 7, "realEditorValues": [{
+									"id": "V_String",
+									"params": ["Spiral Symbol Chart"]
+								}] },
+								{ "__identifier": "Returnable", "__type": "Bool", "__value": false, "__tile": null, "defUid": 25, "realEditorValues": [] }
+							],
+							"__worldX": 832,
+							"__worldY": 2240
 						},
 						{
 							"__identifier": "Item",
@@ -2477,12 +2805,37 @@
 							"height": 64,
 							"defUid": 5,
 							"px": [128,64],
-							"fieldInstances": [{ "__identifier": "Name", "__type": "String", "__value": "Sun Grass", "__tile": null, "defUid": 7, "realEditorValues": [{
-								"id": "V_String",
-								"params": ["Sun Grass"]
-							}] }],
+							"fieldInstances": [
+								{ "__identifier": "Name", "__type": "String", "__value": "Sun Grass", "__tile": null, "defUid": 7, "realEditorValues": [{
+									"id": "V_String",
+									"params": ["Sun Grass"]
+								}] },
+								{ "__identifier": "Returnable", "__type": "Bool", "__value": false, "__tile": null, "defUid": 25, "realEditorValues": [] }
+							],
 							"__worldX": 704,
 							"__worldY": 1792
+						},
+						{
+							"__identifier": "Item",
+							"__grid": [8,2],
+							"__pivot": [0,0],
+							"__tags": [],
+							"__tile": null,
+							"__smartColor": "#FEE761",
+							"iid": "843af800-5e50-11f0-93ac-b153e113c46c",
+							"width": 64,
+							"height": 64,
+							"defUid": 5,
+							"px": [512,128],
+							"fieldInstances": [
+								{ "__identifier": "Name", "__type": "String", "__value": "Celestial Maps", "__tile": null, "defUid": 7, "realEditorValues": [{
+									"id": "V_String",
+									"params": ["Celestial Maps"]
+								}] },
+								{ "__identifier": "Returnable", "__type": "Bool", "__value": false, "__tile": null, "defUid": 25, "realEditorValues": [] }
+							],
+							"__worldX": 1088,
+							"__worldY": 1856
 						}
 					]
 				},
@@ -2768,10 +3121,16 @@
 							"height": 64,
 							"defUid": 5,
 							"px": [256,256],
-							"fieldInstances": [{ "__identifier": "Name", "__type": "String", "__value": "Ritual Circle", "__tile": null, "defUid": 7, "realEditorValues": [{
-								"id": "V_String",
-								"params": ["Ritual Circle"]
-							}] }],
+							"fieldInstances": [
+								{ "__identifier": "Name", "__type": "String", "__value": "Ritual Candle", "__tile": null, "defUid": 7, "realEditorValues": [{
+									"id": "V_String",
+									"params": ["Ritual Candle"]
+								}] },
+								{ "__identifier": "Returnable", "__type": "Bool", "__value": true, "__tile": null, "defUid": 25, "realEditorValues": [{
+									"id": "V_Bool",
+									"params": [ true ]
+								}] }
+							],
 							"__worldX": 1408,
 							"__worldY": 1984
 						},
@@ -2806,30 +3165,39 @@
 							"height": 64,
 							"defUid": 5,
 							"px": [256,448],
-							"fieldInstances": [{ "__identifier": "Name", "__type": "String", "__value": "Crystal Formations", "__tile": null, "defUid": 7, "realEditorValues": [{
-								"id": "V_String",
-								"params": ["Crystal Formations"]
-							}] }],
+							"fieldInstances": [
+								{ "__identifier": "Name", "__type": "String", "__value": "Crystal Formations", "__tile": null, "defUid": 7, "realEditorValues": [{
+									"id": "V_String",
+									"params": ["Crystal Formations"]
+								}] },
+								{ "__identifier": "Returnable", "__type": "Bool", "__value": false, "__tile": null, "defUid": 25, "realEditorValues": [] }
+							],
 							"__worldX": 1408,
 							"__worldY": 2176
 						},
 						{
 							"__identifier": "Item",
-							"__grid": [5,1],
+							"__grid": [4,1],
 							"__pivot": [0,0],
 							"__tags": [],
 							"__tile": null,
 							"__smartColor": "#FEE761",
-							"iid": "fff9e450-5e50-11f0-93ac-f9ff7a7d446a",
+							"iid": "3471dbe0-5e50-11f0-93ac-a5c650ae9328",
 							"width": 64,
 							"height": 64,
 							"defUid": 5,
-							"px": [320,64],
-							"fieldInstances": [{ "__identifier": "Name", "__type": "String", "__value": "Purple Master Key", "__tile": null, "defUid": 7, "realEditorValues": [{
-								"id": "V_String",
-								"params": ["Purple Master Key"]
-							}] }],
-							"__worldX": 1472,
+							"px": [256,64],
+							"fieldInstances": [
+								{ "__identifier": "Name", "__type": "String", "__value": "Star Chart", "__tile": null, "defUid": 7, "realEditorValues": [{
+									"id": "V_String",
+									"params": ["Star Chart"]
+								}] },
+								{ "__identifier": "Returnable", "__type": "Bool", "__value": true, "__tile": null, "defUid": 25, "realEditorValues": [{
+									"id": "V_Bool",
+									"params": [ true ]
+								}] }
+							],
+							"__worldX": 1408,
 							"__worldY": 1792
 						}
 					]
@@ -3108,10 +3476,13 @@
 							"height": 64,
 							"defUid": 5,
 							"px": [256,192],
-							"fieldInstances": [{ "__identifier": "Name", "__type": "String", "__value": "Inactive Pedestals", "__tile": null, "defUid": 7, "realEditorValues": [{
-								"id": "V_String",
-								"params": ["Inactive Pedestals"]
-							}] }],
+							"fieldInstances": [
+								{ "__identifier": "Name", "__type": "String", "__value": "Inactive Pedestals", "__tile": null, "defUid": 7, "realEditorValues": [{
+									"id": "V_String",
+									"params": ["Inactive Pedestals"]
+								}] },
+								{ "__identifier": "Returnable", "__type": "Bool", "__value": false, "__tile": null, "defUid": 25, "realEditorValues": [] }
+							],
 							"__worldX": 256,
 							"__worldY": 2496
 						},
@@ -3127,10 +3498,13 @@
 							"height": 64,
 							"defUid": 5,
 							"px": [320,256],
-							"fieldInstances": [{ "__identifier": "Name", "__type": "String", "__value": "Inactive Pedestals", "__tile": null, "defUid": 7, "realEditorValues": [{
-								"id": "V_String",
-								"params": ["Inactive Pedestals"]
-							}] }],
+							"fieldInstances": [
+								{ "__identifier": "Name", "__type": "String", "__value": "Inactive Pedestals", "__tile": null, "defUid": 7, "realEditorValues": [{
+									"id": "V_String",
+									"params": ["Inactive Pedestals"]
+								}] },
+								{ "__identifier": "Returnable", "__type": "Bool", "__value": false, "__tile": null, "defUid": 25, "realEditorValues": [] }
+							],
 							"__worldX": 320,
 							"__worldY": 2560
 						},
@@ -3146,10 +3520,13 @@
 							"height": 64,
 							"defUid": 5,
 							"px": [256,320],
-							"fieldInstances": [{ "__identifier": "Name", "__type": "String", "__value": "Inactive Pedestals", "__tile": null, "defUid": 7, "realEditorValues": [{
-								"id": "V_String",
-								"params": ["Inactive Pedestals"]
-							}] }],
+							"fieldInstances": [
+								{ "__identifier": "Name", "__type": "String", "__value": "Inactive Pedestals", "__tile": null, "defUid": 7, "realEditorValues": [{
+									"id": "V_String",
+									"params": ["Inactive Pedestals"]
+								}] },
+								{ "__identifier": "Returnable", "__type": "Bool", "__value": false, "__tile": null, "defUid": 25, "realEditorValues": [] }
+							],
 							"__worldX": 256,
 							"__worldY": 2624
 						},
@@ -3165,10 +3542,13 @@
 							"height": 64,
 							"defUid": 5,
 							"px": [192,256],
-							"fieldInstances": [{ "__identifier": "Name", "__type": "String", "__value": "Inactive Pedestals", "__tile": null, "defUid": 7, "realEditorValues": [{
-								"id": "V_String",
-								"params": ["Inactive Pedestals"]
-							}] }],
+							"fieldInstances": [
+								{ "__identifier": "Name", "__type": "String", "__value": "Inactive Pedestals", "__tile": null, "defUid": 7, "realEditorValues": [{
+									"id": "V_String",
+									"params": ["Inactive Pedestals"]
+								}] },
+								{ "__identifier": "Returnable", "__type": "Bool", "__value": false, "__tile": null, "defUid": 25, "realEditorValues": [] }
+							],
 							"__worldX": 192,
 							"__worldY": 2560
 						}
@@ -3448,10 +3828,13 @@
 							"height": 64,
 							"defUid": 5,
 							"px": [256,192],
-							"fieldInstances": [{ "__identifier": "Name", "__type": "String", "__value": "Pedestals Red", "__tile": null, "defUid": 7, "realEditorValues": [{
-								"id": "V_String",
-								"params": ["Pedestals Red"]
-							}] }],
+							"fieldInstances": [
+								{ "__identifier": "Name", "__type": "String", "__value": "Pedestals Red", "__tile": null, "defUid": 7, "realEditorValues": [{
+									"id": "V_String",
+									"params": ["Pedestals Red"]
+								}] },
+								{ "__identifier": "Returnable", "__type": "Bool", "__value": false, "__tile": null, "defUid": 25, "realEditorValues": [] }
+							],
 							"__worldX": 832,
 							"__worldY": 2496
 						},
@@ -3467,10 +3850,13 @@
 							"height": 64,
 							"defUid": 5,
 							"px": [320,256],
-							"fieldInstances": [{ "__identifier": "Name", "__type": "String", "__value": "Pedestals Green", "__tile": null, "defUid": 7, "realEditorValues": [{
-								"id": "V_String",
-								"params": ["Pedestals Green"]
-							}] }],
+							"fieldInstances": [
+								{ "__identifier": "Name", "__type": "String", "__value": "Pedestals Green", "__tile": null, "defUid": 7, "realEditorValues": [{
+									"id": "V_String",
+									"params": ["Pedestals Green"]
+								}] },
+								{ "__identifier": "Returnable", "__type": "Bool", "__value": false, "__tile": null, "defUid": 25, "realEditorValues": [] }
+							],
 							"__worldX": 896,
 							"__worldY": 2560
 						},
@@ -3486,10 +3872,13 @@
 							"height": 64,
 							"defUid": 5,
 							"px": [256,320],
-							"fieldInstances": [{ "__identifier": "Name", "__type": "String", "__value": "Pedestals Yellow", "__tile": null, "defUid": 7, "realEditorValues": [{
-								"id": "V_String",
-								"params": ["Pedestals Yellow"]
-							}] }],
+							"fieldInstances": [
+								{ "__identifier": "Name", "__type": "String", "__value": "Pedestals Yellow", "__tile": null, "defUid": 7, "realEditorValues": [{
+									"id": "V_String",
+									"params": ["Pedestals Yellow"]
+								}] },
+								{ "__identifier": "Returnable", "__type": "Bool", "__value": false, "__tile": null, "defUid": 25, "realEditorValues": [] }
+							],
 							"__worldX": 832,
 							"__worldY": 2624
 						},
@@ -3505,12 +3894,34 @@
 							"height": 64,
 							"defUid": 5,
 							"px": [192,256],
-							"fieldInstances": [{ "__identifier": "Name", "__type": "String", "__value": "Pedestals Purple", "__tile": null, "defUid": 7, "realEditorValues": [{
-								"id": "V_String",
-								"params": ["Pedestals Purple"]
-							}] }],
+							"fieldInstances": [
+								{ "__identifier": "Name", "__type": "String", "__value": "Pedestals Purple", "__tile": null, "defUid": 7, "realEditorValues": [{
+									"id": "V_String",
+									"params": ["Pedestals Purple"]
+								}] },
+								{ "__identifier": "Returnable", "__type": "Bool", "__value": false, "__tile": null, "defUid": 25, "realEditorValues": [] }
+							],
 							"__worldX": 768,
 							"__worldY": 2560
+						},
+						{
+							"__identifier": "NPC",
+							"__grid": [6,2],
+							"__pivot": [0,0],
+							"__tags": [],
+							"__tile": null,
+							"__smartColor": "#63C74D",
+							"iid": "8ed310e0-5e50-11f0-93ac-979115999fd6",
+							"width": 64,
+							"height": 64,
+							"defUid": 4,
+							"px": [384,128],
+							"fieldInstances": [{ "__identifier": "Name", "__type": "String", "__value": "Cordelia", "__tile": null, "defUid": 6, "realEditorValues": [{
+								"id": "V_String",
+								"params": ["Cordelia"]
+							}] }],
+							"__worldX": 960,
+							"__worldY": 2432
 						}
 					]
 				},
@@ -3807,10 +4218,16 @@
 							"height": 64,
 							"defUid": 5,
 							"px": [128,384],
-							"fieldInstances": [{ "__identifier": "Name", "__type": "String", "__value": "Gold Coins", "__tile": null, "defUid": 7, "realEditorValues": [{
-								"id": "V_String",
-								"params": ["Gold Coins"]
-							}] }],
+							"fieldInstances": [
+								{ "__identifier": "Name", "__type": "String", "__value": "Gold Coins", "__tile": null, "defUid": 7, "realEditorValues": [{
+									"id": "V_String",
+									"params": ["Gold Coins"]
+								}] },
+								{ "__identifier": "Returnable", "__type": "Bool", "__value": true, "__tile": null, "defUid": 25, "realEditorValues": [{
+									"id": "V_Bool",
+									"params": [ true ]
+								}] }
+							],
 							"__worldX": 1280,
 							"__worldY": 960
 						},
@@ -3826,10 +4243,16 @@
 							"height": 64,
 							"defUid": 5,
 							"px": [320,256],
-							"fieldInstances": [{ "__identifier": "Name", "__type": "String", "__value": "Investment Documents", "__tile": null, "defUid": 7, "realEditorValues": [{
-								"id": "V_String",
-								"params": ["Investment Documents"]
-							}] }],
+							"fieldInstances": [
+								{ "__identifier": "Name", "__type": "String", "__value": "Research Notes", "__tile": null, "defUid": 7, "realEditorValues": [{
+									"id": "V_String",
+									"params": ["Research Notes"]
+								}] },
+								{ "__identifier": "Returnable", "__type": "Bool", "__value": true, "__tile": null, "defUid": 25, "realEditorValues": [{
+									"id": "V_Bool",
+									"params": [ true ]
+								}] }
+							],
 							"__worldX": 1472,
 							"__worldY": 832
 						},
@@ -3845,12 +4268,43 @@
 							"height": 64,
 							"defUid": 5,
 							"px": [128,128],
-							"fieldInstances": [{ "__identifier": "Name", "__type": "String", "__value": "Silver Key", "__tile": null, "defUid": 7, "realEditorValues": [{
-								"id": "V_String",
-								"params": ["Silver Key"]
-							}] }],
+							"fieldInstances": [
+								{ "__identifier": "Name", "__type": "String", "__value": "Broken Clockwork", "__tile": null, "defUid": 7, "realEditorValues": [{
+									"id": "V_String",
+									"params": ["Broken Clockwork"]
+								}] },
+								{ "__identifier": "Returnable", "__type": "Bool", "__value": true, "__tile": null, "defUid": 25, "realEditorValues": [{
+									"id": "V_Bool",
+									"params": [ true ]
+								}] }
+							],
 							"__worldX": 1280,
 							"__worldY": 704
+						},
+						{
+							"__identifier": "Item",
+							"__grid": [7,7],
+							"__pivot": [0,0],
+							"__tags": [],
+							"__tile": null,
+							"__smartColor": "#FEE761",
+							"iid": "0d1b9600-5e50-11f0-93ac-c54b5230c41f",
+							"width": 64,
+							"height": 64,
+							"defUid": 5,
+							"px": [448,448],
+							"fieldInstances": [
+								{ "__identifier": "Name", "__type": "String", "__value": "Jewerly Box", "__tile": null, "defUid": 7, "realEditorValues": [{
+									"id": "V_String",
+									"params": ["Jewerly Box"]
+								}] },
+								{ "__identifier": "Returnable", "__type": "Bool", "__value": true, "__tile": null, "defUid": 25, "realEditorValues": [{
+									"id": "V_Bool",
+									"params": [ true ]
+								}] }
+							],
+							"__worldX": 1600,
+							"__worldY": 1024
 						}
 					]
 				},
@@ -4153,10 +4607,16 @@
 							"height": 64,
 							"defUid": 5,
 							"px": [64,256],
-							"fieldInstances": [{ "__identifier": "Name", "__type": "String", "__value": "Personal Diary", "__tile": null, "defUid": 7, "realEditorValues": [{
-								"id": "V_String",
-								"params": ["Personal Diary"]
-							}] }],
+							"fieldInstances": [
+								{ "__identifier": "Name", "__type": "String", "__value": "Personal Diary", "__tile": null, "defUid": 7, "realEditorValues": [{
+									"id": "V_String",
+									"params": ["Personal Diary"]
+								}] },
+								{ "__identifier": "Returnable", "__type": "Bool", "__value": true, "__tile": null, "defUid": 25, "realEditorValues": [{
+									"id": "V_Bool",
+									"params": [ true ]
+								}] }
+							],
 							"__worldX": 64,
 							"__worldY": 1408
 						},
@@ -4172,10 +4632,16 @@
 							"height": 64,
 							"defUid": 5,
 							"px": [64,192],
-							"fieldInstances": [{ "__identifier": "Name", "__type": "String", "__value": "Hand Mirror", "__tile": null, "defUid": 7, "realEditorValues": [{
-								"id": "V_String",
-								"params": ["Hand Mirror"]
-							}] }],
+							"fieldInstances": [
+								{ "__identifier": "Name", "__type": "String", "__value": "Hand Mirror", "__tile": null, "defUid": 7, "realEditorValues": [{
+									"id": "V_String",
+									"params": ["Hand Mirror"]
+								}] },
+								{ "__identifier": "Returnable", "__type": "Bool", "__value": true, "__tile": null, "defUid": 25, "realEditorValues": [{
+									"id": "V_Bool",
+									"params": [ true ]
+								}] }
+							],
 							"__worldX": 64,
 							"__worldY": 1344
 						},
@@ -4191,10 +4657,13 @@
 							"height": 64,
 							"defUid": 5,
 							"px": [448,128],
-							"fieldInstances": [{ "__identifier": "Name", "__type": "String", "__value": "Recipe Fragment A", "__tile": null, "defUid": 7, "realEditorValues": [{
-								"id": "V_String",
-								"params": ["Recipe Fragment A"]
-							}] }],
+							"fieldInstances": [
+								{ "__identifier": "Name", "__type": "String", "__value": "Recipe Fragment A", "__tile": null, "defUid": 7, "realEditorValues": [{
+									"id": "V_String",
+									"params": ["Recipe Fragment A"]
+								}] },
+								{ "__identifier": "Returnable", "__type": "Bool", "__value": false, "__tile": null, "defUid": 25, "realEditorValues": [] }
+							],
 							"__worldX": 448,
 							"__worldY": 1280
 						}
@@ -4499,10 +4968,13 @@
 							"height": 64,
 							"defUid": 5,
 							"px": [384,192],
-							"fieldInstances": [{ "__identifier": "Name", "__type": "String", "__value": "House Map", "__tile": null, "defUid": 7, "realEditorValues": [{
-								"id": "V_String",
-								"params": ["House Map"]
-							}] }],
+							"fieldInstances": [
+								{ "__identifier": "Name", "__type": "String", "__value": "House Map", "__tile": null, "defUid": 7, "realEditorValues": [{
+									"id": "V_String",
+									"params": ["House Map"]
+								}] },
+								{ "__identifier": "Returnable", "__type": "Bool", "__value": false, "__tile": null, "defUid": 25, "realEditorValues": [] }
+							],
 							"__worldX": 960,
 							"__worldY": 1344
 						},
@@ -4518,10 +4990,13 @@
 							"height": 64,
 							"defUid": 5,
 							"px": [448,384],
-							"fieldInstances": [{ "__identifier": "Name", "__type": "String", "__value": "Magnifying Glass", "__tile": null, "defUid": 7, "realEditorValues": [{
-								"id": "V_String",
-								"params": ["Magnifying Glass"]
-							}] }],
+							"fieldInstances": [
+								{ "__identifier": "Name", "__type": "String", "__value": "Magnifying Glass", "__tile": null, "defUid": 7, "realEditorValues": [{
+									"id": "V_String",
+									"params": ["Magnifying Glass"]
+								}] },
+								{ "__identifier": "Returnable", "__type": "Bool", "__value": false, "__tile": null, "defUid": 25, "realEditorValues": [] }
+							],
 							"__worldX": 1024,
 							"__worldY": 1536
 						},
@@ -4537,10 +5012,13 @@
 							"height": 64,
 							"defUid": 5,
 							"px": [64,256],
-							"fieldInstances": [{ "__identifier": "Name", "__type": "String", "__value": "Research Notes", "__tile": null, "defUid": 7, "realEditorValues": [{
-								"id": "V_String",
-								"params": ["Research Notes"]
-							}] }],
+							"fieldInstances": [
+								{ "__identifier": "Name", "__type": "String", "__value": "Research Notes", "__tile": null, "defUid": 7, "realEditorValues": [{
+									"id": "V_String",
+									"params": ["Research Notes"]
+								}] },
+								{ "__identifier": "Returnable", "__type": "Bool", "__value": false, "__tile": null, "defUid": 25, "realEditorValues": [] }
+							],
 							"__worldX": 640,
 							"__worldY": 1408
 						}
@@ -4838,25 +5316,6 @@
 						},
 						{
 							"__identifier": "Item",
-							"__grid": [4,4],
-							"__pivot": [0,0],
-							"__tags": [],
-							"__tile": null,
-							"__smartColor": "#FEE761",
-							"iid": "60c4b5a0-5e50-11f0-93ac-7556f07c1709",
-							"width": 64,
-							"height": 64,
-							"defUid": 5,
-							"px": [256,256],
-							"fieldInstances": [{ "__identifier": "Name", "__type": "String", "__value": "Red Master Key", "__tile": null, "defUid": 7, "realEditorValues": [{
-								"id": "V_String",
-								"params": ["Red Master Key"]
-							}] }],
-							"__worldX": 1408,
-							"__worldY": 1408
-						},
-						{
-							"__identifier": "Item",
 							"__grid": [1,5],
 							"__pivot": [0,0],
 							"__tags": [],
@@ -4867,10 +5326,13 @@
 							"height": 64,
 							"defUid": 5,
 							"px": [64,320],
-							"fieldInstances": [{ "__identifier": "Name", "__type": "String", "__value": "Theodore's Journal", "__tile": null, "defUid": 7, "realEditorValues": [{
-								"id": "V_String",
-								"params": ["Theodore's Journal"]
-							}] }],
+							"fieldInstances": [
+								{ "__identifier": "Name", "__type": "String", "__value": "Old Journal", "__tile": null, "defUid": 7, "realEditorValues": [{
+									"id": "V_String",
+									"params": ["Old Journal"]
+								}] },
+								{ "__identifier": "Returnable", "__type": "Bool", "__value": false, "__tile": null, "defUid": 25, "realEditorValues": [] }
+							],
 							"__worldX": 1216,
 							"__worldY": 1472
 						},
@@ -4892,6 +5354,81 @@
 							}] }],
 							"__worldX": 1472,
 							"__worldY": 1280
+						},
+						{
+							"__identifier": "Item",
+							"__grid": [4,5],
+							"__pivot": [0,0],
+							"__tags": [],
+							"__tile": null,
+							"__smartColor": "#FEE761",
+							"iid": "bb624d30-5e50-11f0-93ac-a16bc59583e4",
+							"width": 64,
+							"height": 64,
+							"defUid": 5,
+							"px": [256,320],
+							"fieldInstances": [
+								{ "__identifier": "Name", "__type": "String", "__value": "Family Portrait", "__tile": null, "defUid": 7, "realEditorValues": [{
+									"id": "V_String",
+									"params": ["Family Portrait"]
+								}] },
+								{ "__identifier": "Returnable", "__type": "Bool", "__value": true, "__tile": null, "defUid": 25, "realEditorValues": [{
+									"id": "V_Bool",
+									"params": [ true ]
+								}] }
+							],
+							"__worldX": 1408,
+							"__worldY": 1472
+						},
+						{
+							"__identifier": "Item",
+							"__grid": [8,3],
+							"__pivot": [0,0],
+							"__tags": [],
+							"__tile": null,
+							"__smartColor": "#FEE761",
+							"iid": "f9b72e20-5e50-11f0-93ac-8346def179e8",
+							"width": 64,
+							"height": 64,
+							"defUid": 5,
+							"px": [512,192],
+							"fieldInstances": [
+								{ "__identifier": "Name", "__type": "String", "__value": "Family Tree", "__tile": null, "defUid": 7, "realEditorValues": [{
+									"id": "V_String",
+									"params": ["Family Tree"]
+								}] },
+								{ "__identifier": "Returnable", "__type": "Bool", "__value": false, "__tile": null, "defUid": 25, "realEditorValues": [{
+									"id": "V_Bool",
+									"params": [ false ]
+								}] }
+							],
+							"__worldX": 1664,
+							"__worldY": 1344
+						},
+						{
+							"__identifier": "Item",
+							"__grid": [4,4],
+							"__pivot": [0,0],
+							"__tags": [],
+							"__tile": null,
+							"__smartColor": "#FEE761",
+							"iid": "1b8a15d0-5e50-11f0-93ac-51b1ea84f481",
+							"width": 64,
+							"height": 64,
+							"defUid": 5,
+							"px": [256,256],
+							"fieldInstances": [
+								{ "__identifier": "Name", "__type": "String", "__value": "Theodore's Final Journal", "__tile": null, "defUid": 7, "realEditorValues": [{
+									"id": "V_String",
+									"params": ["Theodore's Final Journal"]
+								}] },
+								{ "__identifier": "Returnable", "__type": "Bool", "__value": true, "__tile": null, "defUid": 25, "realEditorValues": [{
+									"id": "V_Bool",
+									"params": [ true ]
+								}] }
+							],
+							"__worldX": 1408,
+							"__worldY": 1408
 						}
 					]
 				},

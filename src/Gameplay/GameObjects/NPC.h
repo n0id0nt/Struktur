@@ -21,7 +21,7 @@ namespace Struktur
 {
     namespace NPC
     {
-        void Create(GameContext& context, entt::entity entity)
+        void Create(GameContext& context, entt::entity entity, const std::string& name)
         {
             entt::registry& registry = context.GetRegistry();
             System::GameObjectManager& gameObjectManager = context.GetGameObjectManager();
@@ -33,7 +33,7 @@ namespace Struktur
             Core::Resource::ResourcePtr<Core::Resource::TextureResource> texture = resourceManager.GetTexture("assets/Tiles/PlayerGrowthSprites.png");
 
             registry.emplace<Component::Sprite>(entity, texture, WHITE, glm::vec2(32, 48), 12, 5, false, 0);
-            registry.emplace<Component::Interactable>(entity, "Scholar");
+            registry.emplace<Component::Interactable>(entity, name);
             b2BodyDef kinematicBodyDef;
             kinematicBodyDef.type = b2_staticBody;
             b2CircleShape playerShape;
