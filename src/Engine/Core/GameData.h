@@ -21,6 +21,7 @@ namespace Struktur
             double startTime = 0.0f;
             int screenWidth = 0;
             int screenHeight = 0;
+            int Loops = 0;
             GameState gameState = GameState::SPLASH_SCREEN;
         };
 	}

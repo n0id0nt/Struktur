@@ -18,7 +18,6 @@
 #include "Engine/FileLoading/LevelParser.h"
 #include "Engine/Physics/CollisionShapeGenerators/TileMapCollisionBodyGenerator.h"
 
-#include "GamePlay/GameObjects/Player.h"
 #include "GamePlay/GameObjects/NPC.h"
 #include "GamePlay/GameObjects/Item.h"
 
@@ -97,11 +96,7 @@ entt::entity Struktur::GameResource::Level::LoadLevelEntities(GameContext& conte
                 const auto layerInstaceEntity = gameObjectManager.CreateGameObject(context, entityInstance.identifier, levelEntity);
                 transformSystem.SetLocalTransform(context, layerInstaceEntity, glm::vec3(entityInstance.px.x + layer.gridSize/2.f, entityInstance.px.y + layer.gridSize / 2.f, 0.0f), glm::vec3(1.0f), glm::quat(1.0f, 0.0f, 0.0f, 0.0f));
 
-                if (entityInstance.identifier == "Player")
-                {
-                    Player::Create(context, layerInstaceEntity);
-                }
-                else if (entityInstance.identifier == "NPC")
+                if (entityInstance.identifier == "NPC")
                 {
                     NPC::Create(context, layerInstaceEntity);
                 }

@@ -2,6 +2,7 @@
 
 #include <cstdlib>
 //#include <ctime>
+#include <format>
 
 #include "glm/glm.hpp"
 #include "glm/gtc/quaternion.hpp."
@@ -29,6 +30,9 @@
 #include "Gameplay/GameplayStates/InteractState.h"
 #include "Gameplay/GameplayStates/InventoryState.h"
 
+#include "GamePlay/GameObjects/Player.h"
+#include "GamePlay/GameObjects/Door.h"
+
 constexpr static const char* TILE_TEXTURE = "assets/Tiles/cavesofgallet_tiles.png";
 constexpr static const char* PLAYER_TEXTURE = "assets/Tiles/PlayerGrowthSprites.png";
 constexpr static const char* WORLD_FILE_PATH = "assets/Levels/MemoryPalace.ldtk";
@@ -41,6 +45,7 @@ namespace Struktur
 		{
         private:
             UI::UILabel* m_interactLabel;
+            UI::UILabel* m_loopCountLabel;
 
             GameResource::StateManager m_stateManager;
             entt::entity m_worldEntity;
@@ -48,19 +53,156 @@ namespace Struktur
         public:
             GameWorldState() {}
 
+            int GetLevelIndex(const FileLoading::LevelParser::World& worldMap, const std::string& levelName)
+            {
+                for (int i = 0; i < worldMap.levels.size(); i++)
+                {
+                    if (worldMap.levels[i].identifier == levelName)
+                    {
+                        return i;
+                    }
+                }
+                return -1;
+            }
+
+            std::string GetNorthRoom(GameContext& context)
+            {
+                Inventory& inventory = context.GetInventory();
+                if(std::find(inventory.begin(), inventory.end(), "Family Portrait") != inventory.end())
+                {
+                    return "Garden";
+                }
+                if(std::find(inventory.begin(), inventory.end(), "Broken Clockwork") != inventory.end())
+                {
+                    return "Armory";
+                }
+                return "Library";
+            }
+
+            std::string GetEastRoom(GameContext& context)
+            {
+                Inventory& inventory = context.GetInventory();
+                if(std::find(inventory.begin(), inventory.end(), "Love Letter") != inventory.end())
+                {
+                    return "Kitchen";
+                }
+                if(std::find(inventory.begin(), inventory.end(), "Star Chart") != inventory.end())
+                {
+                    return "Lab";
+                }
+                return "Treasury";
+            }
+
+            std::string GetSouthRoom(GameContext& context)
+            {
+                Inventory& inventory = context.GetInventory();
+                if(std::find(inventory.begin(), inventory.end(), "Recipe Box") != inventory.end())
+                {
+                    return "Bedroom";
+                }
+                if(std::find(inventory.begin(), inventory.end(), "Ritual Candle") != inventory.end())
+                {
+                    return "Study";
+                }
+                return "Vault";
+            }
+
+            std::string GetWestRoom(GameContext& context)
+            {
+                Inventory& inventory = context.GetInventory();
+                if(std::find(inventory.begin(), inventory.end(), "Old Journal") != inventory.end())
+                {
+                    return "Workshop";
+                }
+                if(std::find(inventory.begin(), inventory.end(), "Research Notes") != inventory.end())
+                {
+                    return "Observatory";
+                }
+                return "Portal_Chamber";
+            }
+
+            std::string GetCourtyard(GameContext& context)
+            {
+                Inventory& inventory = context.GetInventory();
+                if(std::find(inventory.begin(), inventory.end(), "Red Master Key") != inventory.end())
+                {
+                    if(std::find(inventory.begin(), inventory.end(), "Red Master Key") != inventory.end())
+                    {
+                        if(std::find(inventory.begin(), inventory.end(), "Red Master Key") != inventory.end())
+                        {
+                            if(std::find(inventory.begin(), inventory.end(), "Red Master Key") != inventory.end())
+                            {
+                                return "Courtyard_Complete";
+                            }
+                        }
+                    }
+                }
+                return "Courtyard";
+            }
+
+            std::vector<int> CalculateRoomListToLoad(GameContext& context, entt::entity worldEntity)
+            {
+                entt::registry& registry = context.GetRegistry();
+                auto* worldComponent = registry.try_get<Component::World>(worldEntity);
+                if (!worldComponent)
+                {
+                    BREAK_MSG("Entity provided does not contain a World Component");
+                    return std::vector<int>(5);
+                }
+
+                std::vector<int> roomList(5);
+                // NorthRoom (0-2)
+                int northRoom = GetLevelIndex(worldComponent->worldMap, GetNorthRoom(context));
+                // EastRoom (3-5)
+                int eastRoom = GetLevelIndex(worldComponent->worldMap, GetEastRoom(context));
+                // SouthRoom (6-8)
+                int southRoom = GetLevelIndex(worldComponent->worldMap, GetSouthRoom(context));
+                // WestRoom (9-11)
+                int westRoom = GetLevelIndex(worldComponent->worldMap, GetWestRoom(context));
+                // Courtyard (12)
+                int courtyard = GetLevelIndex(worldComponent->worldMap, GetCourtyard(context));
+                return std::vector<int>{northRoom, eastRoom, westRoom, southRoom, courtyard};
+            }
+
             void Enter(GameContext& context, GameResource::StateManager& stateManager) override
             {
+                Core::GameData& gameData = context.GetGameData();
+                gameData.Loops++; // increment the game loop count
+
                 Core::Resource::ResourceManager& resourceManager = context.GetResourceManager();
+                System::SystemManager& systemManager = context.GetSystemManager();
+                System::GameObjectManager& gameObjectManger = context.GetGameObjectManager();
+
                 Core::Resource::ResourcePtr<Core::Resource::FontResource> font = resourceManager.GetFontResource("assets/Fonts/machine-std/machine-std-regular.ttf_120");
+                System::TransformSystem& transformSystem = systemManager.GetSystem<System::TransformSystem>();
 
                 entt::entity worldEntity = GameResource::Level::CreateWorldEntity(context, WORLD_FILE_PATH);
                 m_worldEntity = worldEntity;
-                entt::entity northRoom = GameResource::Level::LoadLevelEntities(context, worldEntity, 0);
-                entt::entity courtyard = GameResource::Level::LoadLevelEntities(context, worldEntity, 1);
-                entt::entity EastRoom = GameResource::Level::LoadLevelEntities(context, worldEntity, 2);
-                entt::entity WestRoom = GameResource::Level::LoadLevelEntities(context, worldEntity, 3);
-                entt::entity SouthRoom = GameResource::Level::LoadLevelEntities(context, worldEntity, 4);
 
+                std::vector<int> roomList = CalculateRoomListToLoad(context, worldEntity);
+                entt::entity northRoom = GameResource::Level::LoadLevelEntities(context, worldEntity, roomList[0]);
+                transformSystem.SetWorldTransform(context, northRoom, glm::vec3(576.0f, 0.0f, 0.0f), glm::vec3(1.0f), glm::quat(1.0f, 0.0f, 0.0f, 0.0f));
+                entt::entity eastRoom = GameResource::Level::LoadLevelEntities(context, worldEntity, roomList[1]);
+                transformSystem.SetWorldTransform(context, eastRoom, glm::vec3(1152.0f, 576.0f, 0.0f), glm::vec3(1.0f), glm::quat(1.0f, 0.0f, 0.0f, 0.0f));                
+                entt::entity westRoom = GameResource::Level::LoadLevelEntities(context, worldEntity, roomList[2]);
+                transformSystem.SetWorldTransform(context, westRoom, glm::vec3(0.0f, 576.0f, 0.0f), glm::vec3(1.0f), glm::quat(1.0f, 0.0f, 0.0f, 0.0f));
+                entt::entity southRoom = GameResource::Level::LoadLevelEntities(context, worldEntity, roomList[3]);
+                transformSystem.SetWorldTransform(context, southRoom, glm::vec3(576.0f, 1152.0f, 0.0f), glm::vec3(1.0f), glm::quat(1.0f, 0.0f, 0.0f, 0.0f));
+                entt::entity courtyard = GameResource::Level::LoadLevelEntities(context, worldEntity, roomList[4]);
+                transformSystem.SetWorldTransform(context, courtyard, glm::vec3(576.0f, 576.0f, 0.0f), glm::vec3(1.0f), glm::quat(1.0f, 0.0f, 0.0f, 0.0f));
+
+                entt::entity northRoomDupe = GameResource::Level::LoadLevelEntities(context, worldEntity, roomList[0]);
+                transformSystem.SetWorldTransform(context, northRoomDupe, glm::vec3(576.0f, 1728.0f, 0.0f), glm::vec3(1.0f), glm::quat(1.0f, 0.0f, 0.0f, 0.0f));
+
+                entt::entity playerEntity = gameObjectManger.CreateGameObject(context, "Player", worldEntity);
+                transformSystem.SetWorldTransform(context, playerEntity, glm::vec3(864.0f, 32.0f, 0.0f), glm::vec3(1.0f), glm::quat(1.0f, 0.0f, 0.0f, 0.0f));
+                Player::Create(context, playerEntity);
+
+                entt::entity lockedDoorEntity = gameObjectManger.CreateGameObject(context, "Door", worldEntity);
+                transformSystem.SetWorldTransform(context, lockedDoorEntity, glm::vec3(864.0f, 0.0f, 0.0f), glm::vec3(1.0f), glm::quat(1.0f, 0.0f, 0.0f, 0.0f));
+                Door::Create(context, lockedDoorEntity);
+
+                
                 UI::UIManager& uiManager = context.GetUIManager();
                 UI::FocusNavigator* focusNavigator = uiManager.GetFocusNavigator();
 
@@ -70,42 +212,10 @@ namespace Struktur
                 //m_interactLabel->SetFont(font);
                 m_interactLabel->SetTextColor(WHITE); // Change this when the background is created.
                 m_interactLabel->SetAnchorPoint({ 0.5f,0.5f });
-                // could have same text behind slighly shifted for border effect
-                /*
-                
-                // Create a main panel
-                auto* mainPanel = uiManager.CreateElement<UI::UIPanel>(glm::vec2{50, 50}, glm::vec2{0, 0}, glm::vec2{700, 500}, glm::vec2{0, 0});
-                mainPanel->SetBackgroundColor(DARKGRAY);
-                mainPanel->SetBorderColor(WHITE);
-                mainPanel->SetBorderWidth(2.0f);
-                
-                
-                // Create labels
-                auto* titleLabel = uiManager.CreateElement<UI::UILabel>(context, glm::vec2{100, 80}, glm::vec2{0, 0}, "UI System Demo", 30.0f);
-                titleLabel->SetTextColor(WHITE);
-                titleLabel->SetAlignment(UI::TextAlignment::CENTER);
-                titleLabel->SetFont(font);
-                titleLabel->SetFocusable(true);
-                uiManager.SetFocus(titleLabel);
-                focusNavigator->RegisterElement(titleLabel);
 
-                
-                // Create sub-panel
-                auto* subPanel = uiManager.CreateElement<UI::UIPanel>(glm::vec2{100, 160}, glm::vec2{0, 0},  glm::vec2{600, 300}, glm::vec2{0, 0});
-                subPanel->SetBackgroundColor(GRAY);
-                subPanel->SetBorderColor(LIGHTGRAY);
-                subPanel->SetBorderWidth(1.0f);
-
-                // Add some content labels to the sub-panel
-                auto* childLabel1 = static_cast<UI::UILabel*>(subPanel->AddChild(std::make_unique<UI::UILabel>(context, glm::vec2{ 20, 40 }, glm::vec2{ 0, 0 }, "Content Area", 20.0f)));
-                childLabel1->SetFont(font);
-                childLabel1->SetFocusable(true);
-                focusNavigator->RegisterElement(childLabel1);
-                auto* childLabel2 = static_cast<UI::UILabel*>(subPanel->AddChild(std::make_unique<UI::UILabel>(context, glm::vec2{ 0, 0 }, glm::vec2{ 0.5f,0.5f }, "This is where your UI content would go.", 14.0f)));
-                childLabel2->SetFont(font);
-                childLabel2->SetFocusable(true);
-                childLabel2->SetAnchorPoint({ 0.5f,0.5f });
-                focusNavigator->RegisterElement(childLabel2);*/
+                m_loopCountLabel = uiManager.CreateElement<UI::UILabel>(context, glm::vec2{20, 20}, glm::vec2{0, 0}, std::format("Loops: {}", gameData.Loops).c_str(), 30.0f);
+                //m_interactLabel->SetFont(font);
+                m_loopCountLabel->SetTextColor(WHITE); // Change this when the background is created.
             }
 
             void Update(GameContext& context, GameResource::StateManager& stateManager) override
@@ -124,8 +234,6 @@ namespace Struktur
                 System::SystemManager& systemManager = context.GetSystemManager();
                 auto& transformSystem = systemManager.GetSystem<System::TransformSystem>();
                 auto& animationSystem = systemManager.GetSystem<System::AnimationSystem>();
-
-                // player movement system
                 Core::GameData& gameData = context.GetGameData();
                 entt::registry& registry = context.GetRegistry();
                 glm::vec2 inputDir = input.GetInputAxis2("Move");
@@ -174,6 +282,16 @@ namespace Struktur
                     {
                         m_interactLabel->SetVisible(false);
                     }
+
+                    // check player at bottom of screen
+                    auto& playerPosition = registry.get<Component::WorldTransform>(entity).position;
+                    if (playerPosition.y > 1760.0f)
+                    {
+                        // reset the current state
+                        std::unique_ptr<GamePlay::GameWorldState> gameWorldState = std::make_unique<GamePlay::GameWorldState>();
+                        stateManager.ChangeState(context, std::move(gameWorldState));
+                        return;
+                    }
                 }
             }
             void Render(GameContext& context, GameResource::StateManager& stateManager) override {}
@@ -185,6 +303,7 @@ namespace Struktur
                 // delete all UI
                 UI::UIManager& uiManager = context.GetUIManager();
                 uiManager.RemoveElement(m_interactLabel);
+                uiManager.RemoveElement(m_loopCountLabel);
             }
 
             std::string GetStateName() const override { return std::string(typeid(GameWorldState).name()); }

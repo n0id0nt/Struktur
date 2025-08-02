@@ -122,6 +122,7 @@ namespace Struktur
 				UI::UIManager& uiManager = context.GetUIManager();
                 UI::FocusNavigator* focusNavigator = uiManager.GetFocusNavigator();
                 uiManager.SetFocus(nullptr);
+                focusNavigator->Clear();
                 uiManager.RemoveElement(m_screenPanel);
             }
 
