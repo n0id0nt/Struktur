@@ -68,13 +68,9 @@ namespace Struktur
             std::string GetNorthRoom(GameContext& context)
             {
                 Inventory& inventory = context.GetInventory();
-                if(std::find(inventory.begin(), inventory.end(), "Family Portrait") != inventory.end())
+                if(std::find(inventory.begin(), inventory.end(), "Love Letter") != inventory.end())
                 {
                     return "Garden";
-                }
-                if(std::find(inventory.begin(), inventory.end(), "Broken Clockwork") != inventory.end())
-                {
-                    return "Armory";
                 }
                 return "Library";
             }
@@ -82,43 +78,31 @@ namespace Struktur
             std::string GetEastRoom(GameContext& context)
             {
                 Inventory& inventory = context.GetInventory();
-                if(std::find(inventory.begin(), inventory.end(), "Love Letter") != inventory.end())
+                if(std::find(inventory.begin(), inventory.end(), "Hammer") != inventory.end())
                 {
-                    return "Kitchen";
+                    return "Workshop";
                 }
-                if(std::find(inventory.begin(), inventory.end(), "Star Chart") != inventory.end())
-                {
-                    return "Lab";
-                }
-                return "Treasury";
+                return "Kitchen";
             }
 
             std::string GetSouthRoom(GameContext& context)
             {
                 Inventory& inventory = context.GetInventory();
-                if(std::find(inventory.begin(), inventory.end(), "Recipe Box") != inventory.end())
+                if(std::find(inventory.begin(), inventory.end(), "Star Chart") != inventory.end())
                 {
-                    return "Bedroom";
+                    return "Observatory";
                 }
-                if(std::find(inventory.begin(), inventory.end(), "Ritual Candle") != inventory.end())
-                {
-                    return "Study";
-                }
-                return "Vault";
+                return "Bedroom";
             }
 
             std::string GetWestRoom(GameContext& context)
             {
                 Inventory& inventory = context.GetInventory();
-                if(std::find(inventory.begin(), inventory.end(), "Old Journal") != inventory.end())
+                if(std::find(inventory.begin(), inventory.end(), "Observatory") != inventory.end())
                 {
-                    return "Workshop";
+                    return "Vault";
                 }
-                if(std::find(inventory.begin(), inventory.end(), "Research Notes") != inventory.end())
-                {
-                    return "Observatory";
-                }
-                return "Portal_Chamber";
+                return "Treasury";
             }
 
             std::string GetCourtyard(GameContext& context)
@@ -198,7 +182,7 @@ namespace Struktur
                 transformSystem.SetWorldTransform(context, playerEntity, glm::vec3(864.0f, 32.0f, 0.0f), glm::vec3(1.0f), glm::quat(1.0f, 0.0f, 0.0f, 0.0f));
                 Player::Create(context, playerEntity);
 
-                entt::entity lockedDoorEntity = gameObjectManger.CreateGameObject(context, "Door", worldEntity);
+                entt::entity lockedDoorEntity = gameObjectManger.CreateGameObject(context, "Entrance Door", worldEntity);
                 transformSystem.SetWorldTransform(context, lockedDoorEntity, glm::vec3(864.0f, 0.0f, 0.0f), glm::vec3(1.0f), glm::quat(1.0f, 0.0f, 0.0f, 0.0f));
                 Door::Create(context, lockedDoorEntity);
 

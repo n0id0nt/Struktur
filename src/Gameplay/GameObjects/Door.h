@@ -30,7 +30,7 @@ namespace Struktur
             auto& transformSystem = systemManager.GetSystem<System::TransformSystem>();
             auto& physicsSystem = systemManager.GetSystem<System::PhysicsSystem>();
 
-            registry.emplace<Component::Interactable>(entity, "Door");
+            registry.emplace<Component::Interactable>(entity, "Entrance Door");
             b2BodyDef kinematicBodyDef;
             kinematicBodyDef.type = b2_staticBody;
             b2PolygonShape playerShape;
