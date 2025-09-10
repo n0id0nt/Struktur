@@ -1,5 +1,8 @@
 #pragma once
 
+#include <format>
+#include <Vector>
+
 #include "Engine/GameContext.h"
 #include "Engine/ECS/Component/Transform.h"
 #include "Engine/ECS/Component/Sprite.h"
@@ -17,6 +20,19 @@
 
 #include "Engine/Core/Resource/TextureResource.h"
 
+static const std::vector<std::string> s_itemsWithNoImage = {
+    "Yellow Pedestal Inactive",
+    "Blue Pedestal Inactive",
+    "Red Pedestal Inactive",
+    "Green Pedestal Inactive",
+    "Yellow Pedestal Active",
+    "Blue Pedestal Active",
+    "Red Pedestal Active",
+    "Green Pedestal Active",
+    "Safe",
+    "Memory Palace",
+};
+
 namespace Struktur
 {
     namespace Item
@@ -28,11 +44,24 @@ namespace Struktur
             Core::Resource::ResourceManager& resourceManager = context.GetResourceManager();
             System::SystemManager& systemManager = context.GetSystemManager();
             auto& transformSystem = systemManager.GetSystem<System::TransformSystem>();
-            auto& physicsSystem = systemManager.GetSystem<System::PhysicsSystem>();
-            auto& animationSystem = systemManager.GetSystem<System::AnimationSystem>();
-            Core::Resource::ResourcePtr<Core::Resource::TextureResource> texture = resourceManager.GetTexture("assets/Tiles/PlayerGrowthSprites.png");
+            
+            if (std::find(s_itemsWithNoImage.begin(), s_itemsWithNoImage.end(), name) == s_itemsWithNoImage.end())
+            {
+                std::string interactionId = name;
+                ::Color color = WHITE;
+                const std::string suffix = " Return";
+                if (interactionId.length() >= suffix.length() && 
+                    interactionId.substr(interactionId.length() - suffix.length()) == suffix)
+                {
+                    color = ::Color{0,0,0,100};
+                    // Remove the suffix
+                    interactionId = interactionId.substr(0, interactionId.length() - suffix.length());
+                }
 
-            registry.emplace<Component::Sprite>(entity, texture, WHITE, glm::vec2(32, 48), 12, 5, false, 0);
+                Core::Resource::ResourcePtr<Core::Resource::TextureResource> texture = resourceManager.GetTexture(std::format("assets/Tiles/Items/{}.png", interactionId).c_str());
+                registry.emplace<Component::Sprite>(entity, texture, color, glm::vec2(32, 48), 1, 1, false, 0);
+            }
+
             registry.emplace<Component::Interactable>(entity, name, canBeReturned);
         }
     }

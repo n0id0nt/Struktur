@@ -130,7 +130,7 @@ void Struktur::SplashScreenLoop(GameContext& context)
         textAlpha *= Lerp(1.f, 0.f, t);
     }
 
-    std::string splashScreenName = "Struktur";
+    std::string splashScreenName = "Memory Palace";
     int fontSize = 120;
     int fontWidth = ::MeasureTextEx(font->font, splashScreenName.c_str(), fontSize, 1.0f).x;
     int width = gameData.screenWidth;

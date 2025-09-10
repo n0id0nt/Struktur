@@ -291,6 +291,7 @@ set(SOURCES
     src/Gameplay/GameplayStates/GameWorldState.h
     src/Gameplay/GameplayStates/InteractState.h
     src/Gameplay/GameplayStates/InventoryState.h
+    src/Gameplay/GameplayStates/GameOverState.h
 
     src/Gameplay/GameObjects/Player.h           src/Gameplay/GameObjects/Player.cpp
     src/Gameplay/GameObjects/NPC.h

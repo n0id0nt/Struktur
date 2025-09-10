@@ -35,8 +35,13 @@ void Struktur::UI::UIPanel::Render(GameContext &context)
     if (m_hasBackgroundTexture)
     {
         // Scale texture to fit panel
-        ::Rectangle srcRect = {0, 0, (float)m_backgroundTexture->GetWidth(), (float)m_backgroundTexture->GetHeight()};
-        ::DrawTexturePro(m_backgroundTexture->texture, srcRect, m_bounds, {0, 0}, 0.0f, WHITE);
+        Core::Resource::TextureResource* texture = m_backgroundTexture.Get();
+        if (!texture->IsGpuReady())
+        {
+            texture->LoadToGpu();
+        }
+        ::Rectangle srcRect = {0, 0, (float)texture->GetWidth(), (float)texture->GetHeight()};
+        ::DrawTexturePro(texture->texture, srcRect, m_bounds, {0, 0}, 0.0f, WHITE);
     }
     else
     {

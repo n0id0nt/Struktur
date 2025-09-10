@@ -29,6 +29,7 @@
 #include "Gameplay/GameObjects/Player.h"
 #include "Gameplay/GameplayStates/InteractState.h"
 #include "Gameplay/GameplayStates/InventoryState.h"
+#include "Gameplay/GameplayStates/GameOverState.h"
 
 #include "GamePlay/GameObjects/Player.h"
 #include "GamePlay/GameObjects/Door.h"
@@ -98,7 +99,7 @@ namespace Struktur
             std::string GetWestRoom(GameContext& context)
             {
                 Inventory& inventory = context.GetInventory();
-                if(std::find(inventory.begin(), inventory.end(), "Observatory") != inventory.end())
+                if(std::find(inventory.begin(), inventory.end(), "Ornate Key") != inventory.end())
                 {
                     return "Vault";
                 }
@@ -108,13 +109,13 @@ namespace Struktur
             std::string GetCourtyard(GameContext& context)
             {
                 Inventory& inventory = context.GetInventory();
-                if(std::find(inventory.begin(), inventory.end(), "Red Master Key") != inventory.end())
+                if(std::find(inventory.begin(), inventory.end(), "Red Crystal Key") != inventory.end())
                 {
-                    if(std::find(inventory.begin(), inventory.end(), "Red Master Key") != inventory.end())
+                    if(std::find(inventory.begin(), inventory.end(), "Green Crystal Key") != inventory.end())
                     {
-                        if(std::find(inventory.begin(), inventory.end(), "Red Master Key") != inventory.end())
+                        if(std::find(inventory.begin(), inventory.end(), "Yellow Crystal Key") != inventory.end())
                         {
-                            if(std::find(inventory.begin(), inventory.end(), "Red Master Key") != inventory.end())
+                            if(std::find(inventory.begin(), inventory.end(), "Blue Crystal Key") != inventory.end())
                             {
                                 return "Courtyard_Complete";
                             }
@@ -156,6 +157,7 @@ namespace Struktur
                 Core::Resource::ResourceManager& resourceManager = context.GetResourceManager();
                 System::SystemManager& systemManager = context.GetSystemManager();
                 System::GameObjectManager& gameObjectManger = context.GetGameObjectManager();
+                entt::registry& registry = context.GetRegistry();
 
                 Core::Resource::ResourcePtr<Core::Resource::FontResource> font = resourceManager.GetFontResource("assets/Fonts/machine-std/machine-std-regular.ttf_120");
                 System::TransformSystem& transformSystem = systemManager.GetSystem<System::TransformSystem>();
@@ -166,17 +168,44 @@ namespace Struktur
                 std::vector<int> roomList = CalculateRoomListToLoad(context, worldEntity);
                 entt::entity northRoom = GameResource::Level::LoadLevelEntities(context, worldEntity, roomList[0]);
                 transformSystem.SetWorldTransform(context, northRoom, glm::vec3(576.0f, 0.0f, 0.0f), glm::vec3(1.0f), glm::quat(1.0f, 0.0f, 0.0f, 0.0f));
+                entt::entity northRoomSpriteEntity = gameObjectManger.CreateGameObject(context, "northRoomSprite", northRoom);
+                transformSystem.SetLocalTransform(context, northRoomSpriteEntity, glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(1.0f), glm::quat(1.0f, 0.0f, 0.0f, 0.0f));
+                Core::Resource::ResourcePtr<Core::Resource::TextureResource> northRoomSpriteTexture = resourceManager.GetTexture(std::format("assets/Tiles/{}.png", GetNorthRoom(context)).c_str());
+                registry.emplace<Component::Sprite>(northRoomSpriteEntity, northRoomSpriteTexture, WHITE, glm::vec2(0, 0), 1, 1, false, 0);
+                
                 entt::entity eastRoom = GameResource::Level::LoadLevelEntities(context, worldEntity, roomList[1]);
-                transformSystem.SetWorldTransform(context, eastRoom, glm::vec3(1152.0f, 576.0f, 0.0f), glm::vec3(1.0f), glm::quat(1.0f, 0.0f, 0.0f, 0.0f));                
+                transformSystem.SetWorldTransform(context, eastRoom, glm::vec3(1152.0f, 576.0f, 0.0f), glm::vec3(1.0f), glm::quat(1.0f, 0.0f, 0.0f, 0.0f));
+                entt::entity eastRoomSpriteEntity = gameObjectManger.CreateGameObject(context, "eastRoomSprite", eastRoom);
+                transformSystem.SetLocalTransform(context, eastRoomSpriteEntity, glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(1.0f), glm::quat(1.0f, 0.0f, 0.0f, 0.0f));
+                Core::Resource::ResourcePtr<Core::Resource::TextureResource> eastRoomSpriteTexture = resourceManager.GetTexture(std::format("assets/Tiles/{}.png", GetEastRoom(context)).c_str());
+                registry.emplace<Component::Sprite>(eastRoomSpriteEntity, eastRoomSpriteTexture, WHITE, glm::vec2(0, 0), 1, 1, false, 0);
+                
                 entt::entity westRoom = GameResource::Level::LoadLevelEntities(context, worldEntity, roomList[2]);
                 transformSystem.SetWorldTransform(context, westRoom, glm::vec3(0.0f, 576.0f, 0.0f), glm::vec3(1.0f), glm::quat(1.0f, 0.0f, 0.0f, 0.0f));
+                entt::entity westRoomSpriteEntity = gameObjectManger.CreateGameObject(context, "westRoomSprite", westRoom);
+                transformSystem.SetLocalTransform(context, westRoomSpriteEntity, glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(1.0f), glm::quat(1.0f, 0.0f, 0.0f, 0.0f));
+                Core::Resource::ResourcePtr<Core::Resource::TextureResource> westRoomSpriteTexture = resourceManager.GetTexture(std::format("assets/Tiles/{}.png", GetWestRoom(context)).c_str());
+                registry.emplace<Component::Sprite>(westRoomSpriteEntity, westRoomSpriteTexture, WHITE, glm::vec2(0, 0), 1, 1, false, 0);
+                
                 entt::entity southRoom = GameResource::Level::LoadLevelEntities(context, worldEntity, roomList[3]);
                 transformSystem.SetWorldTransform(context, southRoom, glm::vec3(576.0f, 1152.0f, 0.0f), glm::vec3(1.0f), glm::quat(1.0f, 0.0f, 0.0f, 0.0f));
+                entt::entity southRoomSpriteEntity = gameObjectManger.CreateGameObject(context, "southRoomSprite", southRoom);
+                transformSystem.SetLocalTransform(context, southRoomSpriteEntity, glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(1.0f), glm::quat(1.0f, 0.0f, 0.0f, 0.0f));
+                Core::Resource::ResourcePtr<Core::Resource::TextureResource> southRoomSpriteTexture = resourceManager.GetTexture(std::format("assets/Tiles/{}.png", GetSouthRoom(context)).c_str());
+                registry.emplace<Component::Sprite>(southRoomSpriteEntity, southRoomSpriteTexture, WHITE, glm::vec2(0, 0), 1, 1, false, 0);
+                
                 entt::entity courtyard = GameResource::Level::LoadLevelEntities(context, worldEntity, roomList[4]);
                 transformSystem.SetWorldTransform(context, courtyard, glm::vec3(576.0f, 576.0f, 0.0f), glm::vec3(1.0f), glm::quat(1.0f, 0.0f, 0.0f, 0.0f));
-
+                entt::entity courtyardSpriteEntity = gameObjectManger.CreateGameObject(context, "courtyardSprite", courtyard);
+                transformSystem.SetLocalTransform(context, courtyardSpriteEntity, glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(1.0f), glm::quat(1.0f, 0.0f, 0.0f, 0.0f));
+                Core::Resource::ResourcePtr<Core::Resource::TextureResource> courtyardSpriteTexture = resourceManager.GetTexture("assets/Tiles/Courtyard.png");
+                registry.emplace<Component::Sprite>(courtyardSpriteEntity, courtyardSpriteTexture, WHITE, glm::vec2(0, 0), 1, 1, false, 0);
+                
                 entt::entity northRoomDupe = GameResource::Level::LoadLevelEntities(context, worldEntity, roomList[0]);
                 transformSystem.SetWorldTransform(context, northRoomDupe, glm::vec3(576.0f, 1728.0f, 0.0f), glm::vec3(1.0f), glm::quat(1.0f, 0.0f, 0.0f, 0.0f));
+                entt::entity northRoomDupeSpriteEntity = gameObjectManger.CreateGameObject(context, "northRoomDupeSprite", northRoomDupe);
+                transformSystem.SetLocalTransform(context, northRoomDupeSpriteEntity, glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(1.0f), glm::quat(1.0f, 0.0f, 0.0f, 0.0f));
+                registry.emplace<Component::Sprite>(northRoomDupeSpriteEntity, northRoomSpriteTexture, WHITE, glm::vec2(0, 0), 1, 1, false, 0);
 
                 entt::entity playerEntity = gameObjectManger.CreateGameObject(context, "Player", worldEntity);
                 transformSystem.SetWorldTransform(context, playerEntity, glm::vec3(864.0f, 32.0f, 0.0f), glm::vec3(1.0f), glm::quat(1.0f, 0.0f, 0.0f, 0.0f));
@@ -200,6 +229,7 @@ namespace Struktur
                 m_loopCountLabel = uiManager.CreateElement<UI::UILabel>(context, glm::vec2{20, 20}, glm::vec2{0, 0}, std::format("Loops: {}", gameData.Loops).c_str(), 30.0f);
                 //m_interactLabel->SetFont(font);
                 m_loopCountLabel->SetTextColor(WHITE); // Change this when the background is created.
+                m_loopCountLabel->SetVisible(false);
             }
 
             void Update(GameContext& context, GameResource::StateManager& stateManager) override
@@ -269,8 +299,26 @@ namespace Struktur
 
                     // check player at bottom of screen
                     auto& playerPosition = registry.get<Component::WorldTransform>(entity).position;
-                    if (playerPosition.y > 1760.0f)
+                    if (playerPosition.y > 1755.0f)
                     {
+                        Inventory& inventory = context.GetInventory();
+                        if(std::find(inventory.begin(), inventory.end(), "Red Pedestal Active") != inventory.end())
+                        {
+                            if(std::find(inventory.begin(), inventory.end(), "Green Pedestal Active") != inventory.end())
+                            {
+                                if(std::find(inventory.begin(), inventory.end(), "Yellow Pedestal Active") != inventory.end())
+                                {
+                                    if(std::find(inventory.begin(), inventory.end(), "Blue Pedestal Active") != inventory.end())
+                                    {
+                                        Struktur::Player::PlayerForceStop(context, entity);
+                                        std::unique_ptr<GameOverState> gameOverState = std::make_unique<GameOverState>();
+                                        m_stateManager.ChangeState(context, std::move(gameOverState));
+                                        return;
+                                    }
+                                }
+                            }
+                        } 
+
                         // reset the current state
                         std::unique_ptr<GamePlay::GameWorldState> gameWorldState = std::make_unique<GamePlay::GameWorldState>();
                         stateManager.ChangeState(context, std::move(gameWorldState));

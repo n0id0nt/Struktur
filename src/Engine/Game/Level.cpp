@@ -53,7 +53,7 @@ entt::entity Struktur::GameResource::Level::LoadLevelEntities(GameContext& conte
 
     FileLoading::LevelParser::Level levelToLoad = worldComponent->worldMap.levels[levelIndex];
 
-    entt::entity levelEntity = gameObjectManager.CreateGameObject(context, levelToLoad.identifier);
+    entt::entity levelEntity = gameObjectManager.CreateGameObject(context, levelToLoad.identifier, worldEntity);
     registry.emplace<Component::Level>(levelEntity, levelIndex, levelToLoad.Iid, levelToLoad.pxWid, levelToLoad.pxHei);
     transformSystem.SetWorldTransform(context, levelEntity, glm::vec3(levelToLoad.worldX, levelToLoad.worldY, 0.0f), glm::vec3(1.0f), glm::quat(1.0f, 0.0f, 0.0f, 0.0f));
 
@@ -64,7 +64,7 @@ entt::entity Struktur::GameResource::Level::LoadLevelEntities(GameContext& conte
         case FileLoading::LevelParser::LayerType::INT_GRID:
         case FileLoading::LevelParser::LayerType::AUTO_LAYER:
         {
-            Core::Resource::ResourcePtr<Core::Resource::TextureResource> texture = resoruceManager.GetTexture("assets/Tiles/cavesofgallet_tiles.png");
+            Core::Resource::ResourcePtr<Core::Resource::TextureResource> texture = resoruceManager.GetTexture("assets/Tiles/MemoryPalaceCollisionTiles.png");
             transformSystem.SetLocalTransform(context, layerEntity, glm::vec3(layer.pxTotalOffsetX, layer.pxTotalOffsetY, 0.0f), glm::vec3(1.0f), glm::quat(1.0f, 0.0f, 0.0f, 0.0f));
             std::vector<TileMap::GridTile> grid;
             grid.reserve(layer.autoLayerTiles.size());
@@ -117,6 +117,7 @@ entt::entity Struktur::GameResource::Level::LoadLevelEntities(GameContext& conte
                 else if (entityInstance.identifier == "Item")
                 {
                     std::string name;
+                    bool returnable = false;
                     for (auto fieldInstance : entityInstance.fieldInstances)
                     {
                         switch (fieldInstance.type)
@@ -126,11 +127,37 @@ entt::entity Struktur::GameResource::Level::LoadLevelEntities(GameContext& conte
                             name = std::any_cast<std::string>(fieldInstance.value);
                             break;
                         }
+                        case Struktur::FileLoading::LevelParser::FieldInstanceType::BOOLEAN:
+                        {
+                            returnable = std::any_cast<bool>(fieldInstance.value);
+                            break;
+                        }
                         default:
                             break;
                         }
                     }
-                    Item::Create(context, layerInstaceEntity, name, true);
+                    
+                    Inventory& inventory = context.GetInventory();
+                    if (returnable)
+                    {
+                        bool itemInInventory = std::find(inventory.begin(), inventory.end(), name) != inventory.end();
+                        if (itemInInventory)
+                        {
+                            Item::Create(context, layerInstaceEntity, name + " Return", returnable);
+                        }
+                        else
+                        {
+                            Item::Create(context, layerInstaceEntity, name, returnable);
+                        }
+                    }
+                    else
+                    {
+                        bool hasItemRecipt = std::find(inventory.begin(), inventory.end(), name  + " Recipt") != inventory.end();
+                        if (!hasItemRecipt)
+                        {
+                            Item::Create(context, layerInstaceEntity, name, returnable);
+                        }
+                    }
                 }
 
                 //auto& luaComponent = registry.emplace<Struktur::Component::LuaComponent>(layerInstaceEntity, false, luaState.CreateTable());

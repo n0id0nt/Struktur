@@ -56,50 +56,81 @@ namespace Struktur
                 m_screenPanel->SetBackgroundColor(BLANK); // don't render this
                 m_screenPanel->SetBorderColor(BLANK);
 
-                auto* inventoryBackgroundPanel = static_cast<UI::UIPanel*>(m_screenPanel->AddChild(std::make_unique<UI::UIPanel>(glm::vec2{0, 0}, glm::vec2{0.3f, 0.5f}, glm::vec2{500, 500}, glm::vec2{0, 0})));
+                auto* inventoryBackgroundPanel = static_cast<UI::UIPanel*>(m_screenPanel->AddChild(std::make_unique<UI::UIPanel>(glm::vec2{0, 0}, glm::vec2{0.3f, 0.5f}, glm::vec2{394, 500}, glm::vec2{0, 0})));
                 inventoryBackgroundPanel->SetAnchorPoint(glm::vec2{0.5f, 0.5f});
-                inventoryBackgroundPanel->SetBackgroundColor(LIGHTGRAY);
-                inventoryBackgroundPanel->SetBorderColor(BLACK);
+                inventoryBackgroundPanel->SetBorderColor(BLANK);
                 inventoryBackgroundPanel->SetBorderWidth(2.0f);
+                Core::Resource::ResourcePtr<Core::Resource::TextureResource> inventoryBackgroundPanelTexture = resourceManager.GetTexture("assets/Tiles/InventoryBackgroundPanel.png");
+                inventoryBackgroundPanel->SetBackgroundTexture(inventoryBackgroundPanelTexture);
 
-                auto* focusedBackgroundPanel = static_cast<UI::UIPanel*>(m_screenPanel->AddChild(std::make_unique<UI::UIPanel>(glm::vec2{0, 0}, glm::vec2{0.8f, 0.5f}, glm::vec2{300, 500}, glm::vec2{0, 0})));
+                auto* focusedBackgroundPanel = static_cast<UI::UIPanel*>(m_screenPanel->AddChild(std::make_unique<UI::UIPanel>(glm::vec2{0, 0}, glm::vec2{0.7f, 0.5f}, glm::vec2{400, 500}, glm::vec2{0, 0})));
                 focusedBackgroundPanel->SetAnchorPoint(glm::vec2{0.5f, 0.5f});
-                focusedBackgroundPanel->SetBackgroundColor(DARKGRAY);
-                focusedBackgroundPanel->SetBorderColor(WHITE);
+                focusedBackgroundPanel->SetBorderColor(BLANK);
                 focusedBackgroundPanel->SetBorderWidth(2.0f);
-
-                auto* inventoryFocusedItemNameLabel = static_cast<UI::UILabel*>(focusedBackgroundPanel->AddChild(std::make_unique<UI::UILabel>(context, glm::vec2{ 0.0f, 5.0f }, glm::vec2{ 0.5f, 0.5f }, "No Items", 45.0f)));
+                Core::Resource::ResourcePtr<Core::Resource::TextureResource> focusedItemBackgroundPanelTexture = resourceManager.GetTexture("assets/Tiles/FocusedItemBackgroundPanel.png");
+                focusedBackgroundPanel->SetBackgroundTexture(focusedItemBackgroundPanelTexture);
+                
+                auto* inventoryFocusedItemNameLabel = static_cast<UI::UILabel*>(focusedBackgroundPanel->AddChild(std::make_unique<UI::UILabel>(context, glm::vec2{ 0.0f, -20.0f }, glm::vec2{ 0.5f, 0.75f }, "No Items", 30.0f)));
                 inventoryFocusedItemNameLabel->SetTextColor(WHITE);
                 inventoryFocusedItemNameLabel->SetAnchorPoint(glm::vec2{ 0.5f, 0.0f });
-                auto* inventoryFocusedItemDescriptionLabel = static_cast<UI::UILabel*>(focusedBackgroundPanel->AddChild(std::make_unique<UI::UILabel>(context, glm::vec2{ 5.0f, 55.0f }, glm::vec2{ 0.0f, 0.5f }, "No Items in your inventory.\n\nGo collect items and\nprogress the game", 20.0f)));
-                inventoryFocusedItemDescriptionLabel->SetTextColor(WHITE);
-                inventoryFocusedItemDescriptionLabel->SetAnchorPoint(glm::vec2{ 0.0f, 0.0f });
+                //auto* inventoryFocusedItemDescriptionLabel = static_cast<UI::UILabel*>(focusedBackgroundPanel->AddChild(std::make_unique<UI::UILabel>(context, glm::vec2{ 35.0f, 70.0f }, glm::vec2{ 0.0f, 0.5f }, "No Items in your inventory.\n\nGo collect items and\nprogress the game", 16.0f)));
+                //inventoryFocusedItemDescriptionLabel->SetTextColor(WHITE);
+                //inventoryFocusedItemDescriptionLabel->SetAnchorPoint(glm::vec2{ 0.0f, 0.0f });
 
+                auto* focusedItemPanel = static_cast<UI::UIPanel*>(focusedBackgroundPanel->AddChild(std::make_unique<UI::UIPanel>(glm::vec2{0, 0}, glm::vec2{0.5f, 0.25f}, glm::vec2{250, 250}, glm::vec2{0, 0})));
+                focusedItemPanel->SetAnchorPoint(glm::vec2{0.5f, 0.5f});
+                focusedItemPanel->SetBorderColor(BLANK);
+                focusedItemPanel->SetBorderWidth(2.0f);
+                
                 int index = 0;
-                float curX = 10.f;
+                int row = 0;
+                int column = 0;
+                float curX = 25.f;
+                float curY = 35.f;
                 for (auto& item : inventory)
                 {
-                    auto* inventoryItemPanel = static_cast<UI::UIPanel*>(inventoryBackgroundPanel->AddChild(std::make_unique<UI::UIPanel>(glm::vec2{curX, 10.0f}, glm::vec2{0.f, 0.f}, glm::vec2{50, 50}, glm::vec2{0, 0})));
-                    inventoryItemPanel->SetBackgroundColor(DARKGRAY);
-                    inventoryItemPanel->SetBorderColor(WHITE);
+                    auto* inventoryItemPanel = static_cast<UI::UIPanel*>(inventoryBackgroundPanel->AddChild(std::make_unique<UI::UIPanel>(glm::vec2{curX, curY}, glm::vec2{0.f, 0.f}, glm::vec2{64, 64}, glm::vec2{0, 0})));
+                    inventoryItemPanel->SetBackgroundColor(BLANK);
+                    inventoryItemPanel->SetBorderColor(BLANK);
                     inventoryItemPanel->SetBorderWidth(2.0f);
                     inventoryItemPanel->SetFocusable(true);
-                    inventoryItemPanel->SetOnFocus([item, inventoryFocusedItemNameLabel, inventoryFocusedItemDescriptionLabel](UI::UIElement* sender) {
+                    Core::Resource::ResourcePtr<Core::Resource::TextureResource> texture;
+                    const std::string suffix1 = " Note";
+                    const std::string suffix2 = " Recipt";
+                    // Check if string ends with " returns"
+                    if ((item.length() >= suffix1.length() && 
+                        item.substr(item.length() - suffix1.length()) == suffix1) ||
+                        (item.length() >= suffix2.length() && 
+                        item.substr(item.length() - suffix2.length()) == suffix2)
+                    )
+                    {
+                        texture = resourceManager.GetTexture("assets/Tiles/Items/Recipt.png");
+                    }
+                    else
+                    {
+                        texture = resourceManager.GetTexture(std::format("assets/Tiles/Items/{}.png", item).c_str());
+                    }
+                    
+                    inventoryItemPanel->SetBackgroundTexture(texture);
+
+                    inventoryItemPanel->SetOnFocus([item, inventoryFocusedItemNameLabel, /*inventoryFocusedItemDescriptionLabel,*/ texture, focusedItemPanel](UI::UIElement* sender) {
                         inventoryFocusedItemNameLabel->SetText(item);
-                        inventoryFocusedItemDescriptionLabel->SetText(item);
+                        //inventoryFocusedItemDescriptionLabel->SetText(item);
+                        focusedItemPanel->SetBackgroundTexture(texture);
                     });
                     focusNavigator->RegisterElement(inventoryItemPanel);
-                    curX += 70.f;
-                    
-                    auto* inventoryItemLabel = static_cast<UI::UILabel*>(inventoryItemPanel->AddChild(std::make_unique<UI::UILabel>(context, glm::vec2{ 0.0f, 0.0f }, glm::vec2{ 0.5f, 1.0f }, item, 15.0f)));
-                    inventoryItemLabel->SetTextColor(WHITE);
-                    inventoryItemLabel->SetAnchorPoint(glm::vec2{0.5f, 1.0f});
+                    curX += 90.f;
                     
                     if (index == 0)
                     {
                         uiManager.SetFocus(inventoryItemPanel);
                     }
                     index++;
+                    if (index % 4 == 0)
+                    {
+                        curX = 25.f;
+                        curY += 90.f;
+                    }
                 }
                 
             }

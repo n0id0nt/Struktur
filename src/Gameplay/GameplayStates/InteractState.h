@@ -67,7 +67,7 @@ namespace Struktur
                 {"In exchange for returning my life's work, I offer you this Crystal Key of Knowledge.\nMay it unlock the secrets you seek.", {"Scholar's Memory Note", "Ancient Tome"}, {"Red Crystal Key"}, {"Red Crystal Key"}, {"Ancient Tome"}, false, false, true, false},
                 {"Obtained Red Crystal Key", {"Scholar's Memory Note", "Red Crystal Key"}, {}, {}, {}, false, false, false, true},
                 // Subsequent meetings without Ancient Tome
-                {"My Ancient Tome is still missing - it contains all my research into this house's curse.\nPerhaps the Gardener has seen it? She tends to collect beautiful things in her garden.", {"Scholar's Memory Note"}, {"Ancient Tome"}, {}, {}, false, false, true, true},
+                {"My Ancient Tome is still missing - it contains all my research into this house's curse.", {"Scholar's Memory Note"}, {"Ancient Tome"}, {}, {}, false, false, true, true},
                 // First Meeting (Default)
                 {"Welcome to my library, fellow seeker of knowledge.\nI've been trapped here since 1943, studying the curse that binds us all.", {}, {"Scholar's Memory Note"}, {}, {}, false, false, true, false},
                 {"I had nearly solved the mystery when my research was scattered.\nIf you could find my Ancient Tome, I would gladly share a Crystal Key with you.", {}, {"Scholar's Memory Note"}, {"Scholar's Memory Note"}, {}, false, false, true, true},
@@ -82,7 +82,7 @@ namespace Struktur
                 {"Obtained Ancient Tome", {"Gardener's Memory Note", "Ancient Tome"}, {}, {}, {}, false, false, false, true},
                 // Subsequent meetings without Rose
                 {"Welcome to my garden where love once bloomed.\nI found the Scholar's tome among my flowers, but I won't trade it for just anything.", {"Gardener's Memory Note"}, {"Rose"}, {}, {}, false, false, true, false},
-                {"Bring me a perfect rose - I've heard the Inventor has one in his workshop.\nA garden needs its most precious flower.", {"Gardener's Memory Note"}, {"Rose"}, {}, {}, false, false, true, true},
+                {"Bring me a perfect rose", {"Gardener's Memory Note"}, {"Rose"}, {}, {}, false, false, true, true},
                 // First Meeting (Default)
                 {"Welcome, dear visitor, to my sanctuary of eternal spring.\nI tend to memories as if they were flowers, nurturing what should grow and bloom.", {}, {"Gardener's Memory Note"}, {}, {}, false, false, true, false},
                 {"Love requires patience and care, just like any garden.\nSome things belong together - a rose belongs among flowers, not gathering dust in workshops.", {}, {"Gardener's Memory Note"}, {"Gardener's Memory Note"}, {}, false, false, true, true},
@@ -96,7 +96,7 @@ namespace Struktur
                 {"For bringing warmth back to my kitchen, I'll give you this Crystal Key I've been safeguarding.", {"Cook's Memory Note", "Fresh Bread"}, {"Green Crystal Key"}, {"Green Crystal Key"}, {"Fresh Bread"}, false, false, true, false},
                 {"Obtained Green Crystal Key", {"Cook's Memory Note", "Green Crystal Key"}, {}, {}, {}, false, false, false, true},
                 // Subsequent meetings without Fresh Bread
-                {"My kitchen feels so empty without the warmth of fresh bread.\nI believe the Inventor has been keeping some - perhaps as sustenance for his work?", {"Cook's Memory Note"}, {"Fresh Bread"}, {}, {}, false, false, true, true},
+                {"My kitchen feels so empty without the warmth of fresh bread.", {"Cook's Memory Note"}, {"Fresh Bread"}, {}, {}, false, false, true, true},
                 // First Meeting (Default)
                 {"Welcome to my kitchen, dear!\nI've been preparing the same Christmas feast for decades,\nwaiting for family to gather.", {}, {"Cook's Memory Note"}, {}, {}, false, false, true, false},
                 {"A kitchen without fresh bread is like a hearth without fire.\nBring me the bread that belongs here, and I'll share something precious in return.", {}, {"Cook's Memory Note"}, {"Cook's Memory Note"}, {}, false, false, true, true},
@@ -106,11 +106,11 @@ namespace Struktur
                 // After receiving Tool Box and giving Fresh Bread
                 {"My tool box! Every craftsman needs his complete set of implements.\nThis bread was keeping me fed during long work sessions, but you've earned it.", {"Fresh Bread"}, {}, {}, {}, false, false, true, true},
                 // Has Tool Box to trade
-                {"Ah, my missing tool box! I've been making do with individual tools, but a craftsman needs his complete kit.", {"Inventor's Memory Note", "Tool Box"}, {"Fresh Bread"}, {}, {}, false, false, true, false},
+                {"Ah, my missing tool box!\nI've been making do with individual tools, but a craftsman needs his complete kit.", {"Inventor's Memory Note", "Tool Box"}, {"Fresh Bread"}, {}, {}, false, false, true, false},
                 {"I've been saving this fresh bread for sustenance during long projects.\nA fair trade - tools for nourishment!", {"Inventor's Memory Note", "Tool Box"}, {"Fresh Bread"}, {"Fresh Bread"}, {"Tool Box"}, false, false, true, false},
                 {"Obtained Fresh Bread", {"Inventor's Memory Note", "Fresh Bread"}, {}, {}, {}, false, false, false, true},
                 // Subsequent meetings without Tool Box
-                {"My workshop isn't complete without my full set of tools.\nI think the Researcher borrowed my tool box - scholars always need instruments for their work.", {"Inventor's Memory Note"}, {"Tool Box"}, {}, {}, false, false, true, true},
+                {"My workshop isn't complete without my full set of tools.", {"Inventor's Memory Note"}, {"Tool Box"}, {}, {}, false, false, true, true},
                 // First Meeting (Default)
                 {"Welcome to my workshop! I've been trying to build our way out of this cursed house for decades.", {}, {"Inventor's Memory Note"}, {}, {}, false, false, true, false},
                 {"Every problem has a practical solution if you have the right tools.\nBring me my complete tool box, and I'll trade you something nourishing in return.", {}, {"Inventor's Memory Note"}, {"Inventor's Memory Note"}, {}, false, false, true, true},
@@ -124,7 +124,7 @@ namespace Struktur
                 {"For reuniting me with my dreams and memories, I offer you this Crystal Key of Visions.", {"Dreamer's Memory Note", "Personal Diary"}, {"Yellow Crystal Key"}, {"Yellow Crystal Key"}, {"Personal Diary"}, false, false, true, false},
                 {"Obtained Yellow Crystal Key", {"Dreamer's Memory Note", "Yellow Crystal Key"}, {}, {}, {}, false, false, false, true},
                 // Subsequent meetings without Personal Diary
-                {"I dream of my lost diary... it contains visions that could help us all escape.\nThe Researcher has it - she studies everything, even personal dreams.", {"Dreamer's Memory Note"}, {"Personal Diary"}, {}, {}, false, false, true, true},
+                {"I dream of my lost diary... it contains visions that could help us all escape.", {"Dreamer's Memory Note"}, {"Personal Diary"}, {}, {}, false, false, true, true},
                 // First Meeting (Default)
                 {"Mmm... I dream of escape, but the dreams never end...\nI exist in the space between sleeping and waking, seeing glimpses of what could be.", {}, {"Dreamer's Memory Note"}, {}, {}, false, false, true, false},
                 {"In my dreams, I see rooms flowing like water, changing with the items we carry...\nFind my diary, and I'll share a key that unlocks more than just doors.", {}, {"Dreamer's Memory Note"}, {"Dreamer's Memory Note"}, {}, false, false, true, true},
@@ -138,9 +138,9 @@ namespace Struktur
                 {"I've been analyzing the Dreamer's diary for cosmic patterns, but I need my telescope more.\nA fair exchange - earthly dreams for celestial observations.", {"Astronomer's Memory Note", "Telescope"}, {"Personal Diary"}, {"Personal Diary"}, {"Telescope"}, false, false, true, false},
                 {"Obtained Personal Diary", {"Astronomer's Memory Note", "Personal Diary"}, {}, {}, {}, false, false, false, true},
                 // Subsequent meetings without Telescope
-                {"I've been calculating the house's temporal distortions, but I need my telescope for proper astronomical observations.\nI believe it's in the Scholar's library - instruments of learning belong together.", {"Astronomer's Memory Note"}, {"Telescope"}, {}, {}, false, false, true, true},
+                {"I've been calculating the house's temporal distortions, but I need my telescope for proper astronomical observations.", {"Astronomer's Memory Note"}, {"Telescope"}, {}, {}, false, false, true, true},
                 // First Meeting (Default)
-                {"Greetings, earthbound traveler! I am Professor Orion Starweaver, astronomer and calculator of celestial influences.", {}, {"Astronomer's Memory Note"}, {}, {}, false, false, true, false},
+                {"Greetings, earthbound traveler!\nI am Professor Orion Starweaver, astronomer and calculator of celestial influences.", {}, {"Astronomer's Memory Note"}, {}, {}, false, false, true, false},
                 {"I've been studying how the stars affect this house's temporal anomalies.\nBring me my telescope, and I'll trade you this diary I've been analyzing for cosmic patterns.", {}, {"Astronomer's Memory Note"}, {"Astronomer's Memory Note"}, {}, false, false, true, true},
             }}},
 
@@ -152,7 +152,7 @@ namespace Struktur
                 {"For returning my fortune, I'll give you this Crystal Key - the most valuable treasure in my collection.", {"Merchant's Memory Note", "Gold Coins"}, {"Blue Crystal Key"}, {"Blue Crystal Key"}, {"Gold Coins"}, false, false, true, false},
                 {"Obtained Blue Crystal Key", {"Merchant's Memory Note", "Blue Crystal Key"}, {}, {}, {}, false, false, false, true},
                 // Subsequent meetings without Gold Coins
-                {"My treasury feels empty without my gold coins - the foundation of all true wealth.\nThe Guardian in the vault has them secured away from common access.", {"Merchant's Memory Note"}, {"Gold Coins"}, {}, {}, false, false, true, true},
+                {"My treasury feels empty without my gold coins - the foundation of all true wealth.", {"Merchant's Memory Note"}, {"Gold Coins"}, {}, {}, false, false, true, true},
                 // First Meeting (Default)
                 {"Welcome to my treasury!\nI am Augustus Goldstein, and I've spent decades learning what truly has value in this cursed place.", {}, {"Merchant's Memory Note"}, {}, {}, false, false, true, false},
                 {"I've learned that some treasures can't be bought or sold, but gold still has its place in the world.\nBring me my coins, and I'll trade you something more valuable than money.", {}, {"Merchant's Memory Note"}, {"Merchant's Memory Note"}, {}, false, false, true, true},
@@ -166,7 +166,7 @@ namespace Struktur
                 {"I'll gladly trade mere gold for this relic that could unleash untold dangers if misused.\nIt belongs here, warded and watched.", {"Guardian's Memory Note", "Ancient Seal"}, {"Gold Coins"}, {"Gold Coins"}, {"Ancient Seal"}, false, false, true, false},
                 {"Obtained Gold Coins", {"Guardian's Memory Note", "Gold Coins"}, {}, {}, {}, false, false, false, true},
                 // Subsequent meetings without Ancient Seal
-                {"I am the keeper of this house's most dangerous artifacts and forbidden knowledge.\nThere is an Ancient Seal of Binding that must be secured - I sense it lies unprotected in the bedroom.", {"Guardian's Memory Note"}, {"Ancient Seal"}, {}, {}, false, false, true, true},
+                {"I am the keeper of this house's most dangerous artifacts and forbidden knowledge.\nThere is an Ancient Seal of Binding that must be secured - I sense it lies unprotected.", {"Guardian's Memory Note"}, {"Ancient Seal"}, {}, {}, false, false, true, true},
                 // First Meeting (Default)
                 {"I am Master Cedric Voss, Guardian of this vault and protector of the house's most perilous secrets.", {}, {"Guardian's Memory Note"}, {}, {}, false, false, true, false},
                 {"Some artifacts are too dangerous to leave unguarded. Bring me the Ancient Seal, and I'll give you gold that holds no mystical corruption.", {}, {"Guardian's Memory Note"}, {"Guardian's Memory Note"}, {}, false, false, true, true},
@@ -174,10 +174,10 @@ namespace Struktur
 
             {"Cordelia", {{ // Courtyard - appears when all 4 Crystal Keys held
                 // After all pedestals activated and portal opens
-                {"The curse is finally broken, dear Elena. All the trapped souls can rest now.\nThank you for succeeding where I failed. The exit portal awaits - step through and be free.", {"Red Pedestal Active", "Green Pedestal Active", "Yellow Pedestal Active", "Blue Pedestal Active"}, {}, {}, {}, false, false, true, true},
+                {"The curse is finally broken, dear Elena. All the trapped souls can rest now.\nThank you for succeeding where I failed.\nThe exit portal awaits - step through and be free.", {"Red Pedestal Active", "Green Pedestal Active", "Yellow Pedestal Active", "Blue Pedestal Active"}, {}, {}, {}, false, false, true, true},
                 // When player has all keys but hasn't activated pedestals yet
-                {"Elena, my dear great-niece. You've done what I spent my whole life trying to achieve.\nYou have all four Crystal Keys! Now you must activate each pedestal in turn to break Theodore's curse forever.", {"Red Crystal Key", "Green Crystal Key", "Yellow Crystal Key", "Blue Crystal Key"}, {"Red Pedestal Active"}, {}, {}, false, false, true, false},
-                {"Place each key in its corresponding pedestal. The red pedestal calls to knowledge, green to creation, yellow to dreams, and blue to protection.\nOnly when all four are activated will the portal to freedom open.", {"Red Crystal Key", "Green Crystal Key", "Yellow Crystal Key", "Blue Crystal Key"}, {"Red Pedestal Active"}, {}, {}, false, false, true, true},
+                {"Elena, my dear great-niece. You've done what I spent my whole life trying to achieve.\nYou have all four Crystal Keys! Now you must activate each pedestal in turn to break Theodore's curse forever.", {}, {}, {}, {}, false, false, true, false},
+                {"Place each key in its corresponding pedestal.\nThe red pedestal calls to knowledge, green to creation, yellow to dreams, and blue to protection.\nOnly when all four are activated will the portal to freedom open.", {}, {}, {}, {}, false, false, true, true},
             }}},
 
             // ===== TRANSFORMATION ITEMS =====
@@ -221,13 +221,13 @@ namespace Struktur
             {"Ornate Key", {{ // Controls West Room → Vault (from Observatory)
                 {"An ornate key that promises to unlock hidden secrets.\nCarrying it awakens thoughts of security and protected treasures.", {}, {}, {}, {}, false, false, false, false},
                 {"The West Room shifts toward impenetrable security.", {}, {}, {}, {}, true, false, false, false},
-                {"Obtained Key", {}, {}, {"Key"}, {}, false, true, false, true},
+                {"Obtained Key", {}, {}, {"Ornate Key"}, {}, false, true, false, true},
             }}},
 
             {"Ornate Key Return", {{ // Can only return to Observatory
-                {"You return the key to its place among the tools and inventions.", {"Key"}, {}, {}, {}, false, false, false, false},
-                {"The West Room's protective aura settles back to simple commerce.", {"Key"}, {}, {}, {}, true, false, false, false},
-                {"Put Back Key", {"Key"}, {}, {}, {"Key"}, false, true, false, true},
+                {"You return the key to its place among the tools and inventions.", {"Ornate Key"}, {}, {}, {}, false, false, false, false},
+                {"The West Room's protective aura settles back to simple commerce.", {"Ornate Key"}, {}, {}, {}, true, false, false, false},
+                {"Put Back Key", {"Ornate Key"}, {}, {}, {"Ornate Key"}, false, true, false, true},
             }}},
 
             // ===== QUEST ITEMS (Not Returnable) =====
@@ -323,7 +323,7 @@ namespace Struktur
             {"Entrance Door", {{ // North Room - the door player entered through
                 // After entering the house (door becomes one-way)
                 {"The heavy oak door you entered through stands firmly shut.\nThe handle turns, but the door refuses to budge - as if the house itself holds it closed.", {}, {}, {}, {}, false, false, false, false},
-                {"Strange symbols have appeared along the door frame, glowing faintly with an otherworldly light.\nA whispered voice seems to echo from within the wood: 'None may leave until the four keys sing as one.'", {}, {}, {}, {}, false, false, false, false},
+                {"Strange symbols have appeared along the door frame, glowing faintly with an otherworldly light.\nA whispered voice seems to echo from within the wood:\n\t'None may leave until the four keys sing as one.'", {}, {}, {}, {}, false, false, false, false},
                 {"The door remembers your entry, but it has forgotten how to let you leave.\nYou sense this threshold will not open again until the house's curse is broken.", {}, {}, {}, {}, false, false, false, true},
             }}},
         };
@@ -356,7 +356,7 @@ namespace Struktur
                 Core::GameData& gameDate = context.GetGameData();
                 entt::registry& registry = context.GetRegistry();
                 Core::Resource::ResourceManager& resourceManager = context.GetResourceManager();
-                Core::Resource::ResourcePtr<Core::Resource::FontResource> font = resourceManager.GetFontResource("assets/Fonts/machine-std/machine-std-regular.ttf_120");
+                //Core::Resource::ResourcePtr<Core::Resource::FontResource> font = resourceManager.GetFontResource("assets/Fonts/machine-std/machine-std-regular.ttf_120");
 
                 // UI layout
                 UI::UIManager& uiManager = context.GetUIManager();
@@ -366,15 +366,19 @@ namespace Struktur
                 m_screenPanel->SetBackgroundColor(BLANK); // don't render this
                 m_screenPanel->SetBorderColor(BLANK);
 
-                auto* textBackgroundPanel = static_cast<UI::UIPanel*>(m_screenPanel->AddChild(std::make_unique<UI::UIPanel>(glm::vec2{0, -50}, glm::vec2{0.5f, 1.0f}, glm::vec2{900, 150}, glm::vec2{0, 0})));
+                auto* textBackgroundPanel = static_cast<UI::UIPanel*>(m_screenPanel->AddChild(std::make_unique<UI::UIPanel>(glm::vec2{0, 0}, glm::vec2{0.5f, 0.95f}, glm::vec2{800, 200}, glm::vec2{0, 0})));
                 textBackgroundPanel->SetAnchorPoint(glm::vec2{0.5f, 1.0f});
                 textBackgroundPanel->SetBackgroundColor(DARKGRAY);
-                textBackgroundPanel->SetBorderColor(WHITE);
+                textBackgroundPanel->SetBorderColor(BLANK);
                 textBackgroundPanel->SetBorderWidth(2.0f);
+                Core::Resource::ResourcePtr<Core::Resource::TextureResource> dialogueBackgroundPanelTexture = resourceManager.GetTexture("assets/Tiles/DialoguePanel.png");
+                textBackgroundPanel->SetBackgroundTexture(dialogueBackgroundPanelTexture);
 
-                m_dialogueLabel = static_cast<UI::UILabel*>(textBackgroundPanel->AddChild(std::make_unique<UI::UILabel>(context, glm::vec2{ 20, 40 }, glm::vec2{ 0, 0 }, "", 18.0f)));
+                m_dialogueLabel = static_cast<UI::UILabel*>(textBackgroundPanel->AddChild(std::make_unique<UI::UILabel>(context, glm::vec2{ 40, 30 }, glm::vec2{ 0.0f, 0.0f }, "", 16.0f)));
                 m_dialogueLabel->SetTextColor(BLACK);
-                m_continueDialogueLabel = static_cast<UI::UILabel*>(textBackgroundPanel->AddChild(std::make_unique<UI::UILabel>(context, glm::vec2{ -20, -20 }, glm::vec2{ 1, 1 }, "Continue", 20.0f)));
+                m_dialogueLabel->SetAnchorPoint(glm::vec2{0.0f, 0.0f});
+                //m_dialogueLabel->SetFont(font);
+                m_continueDialogueLabel = static_cast<UI::UILabel*>(textBackgroundPanel->AddChild(std::make_unique<UI::UILabel>(context, glm::vec2{ -40, -30 }, glm::vec2{ 1, 1 }, "Continue", 20.0f)));
                 m_continueDialogueLabel->SetAnchorPoint(glm::vec2{1.0f, 1.0f});
                 m_continueDialogueLabel->SetTextColor(BLACK);
                 m_continueDialogueLabel->SetVisible(false);
@@ -413,7 +417,7 @@ namespace Struktur
                     if (m_dialogueSrolling)
                     {
                         m_dialogueSrolling = false;
-                        m_continueDialogueLabel->SetVisible(true);
+                        m_continueDialogueLabel->SetVisible(false);
                     }
                     else
                     {
@@ -441,7 +445,7 @@ namespace Struktur
                 {
                     numberOfCharactersToDraw = m_currentString.length();
                     m_dialogueSrolling = false;
-                    m_continueDialogueLabel->SetVisible(true);
+                    m_continueDialogueLabel->SetVisible(false);
                 }
                 std::string subString = m_currentString.substr(0, numberOfCharactersToDraw);
                 m_dialogueLabel->SetText(subString);
@@ -508,18 +512,26 @@ namespace Struktur
                         // TODO Change the items sprite (Toggle the sprite index)
                         std::string& interactionId = interactableComponent.interactionId;
                         const std::string suffix = " Return";
-                        
+                        auto* spriteComponent = registry.try_get<Component::Sprite>(m_interactingEntity);
                         // Check if string ends with " returns"
                         if (interactionId.length() >= suffix.length() && 
                             interactionId.substr(interactionId.length() - suffix.length()) == suffix)
                         {
                             // Remove the suffix
                             interactionId = interactionId.substr(0, interactionId.length() - suffix.length());
+                            if (spriteComponent)
+                            {
+                                spriteComponent->color = WHITE;
+                            }
                         }
                         else
                         {
                             // Add the suffix
                             interactionId = interactionId + suffix;
+                            if (spriteComponent)
+                            {
+                                spriteComponent->color = ::Color{0,0,0,100};;
+                            }
                         }
                     }
                     else

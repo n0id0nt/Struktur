@@ -12,6 +12,8 @@
 #include "Engine/ECS/Component/Sprite.h"
 #include "Engine/ECS/Component/TileMap.h"
 
+#include "Debug/Assertions.h"
+
 void Struktur::System::SpriteRenderSystem::Update(GameContext &context)
 {
     entt::registry& registry = context.GetRegistry();
@@ -20,10 +22,12 @@ void Struktur::System::SpriteRenderSystem::Update(GameContext &context)
     ::BeginMode2D(camera.GetRaylibCamera());
     //std::vector<spriteDraw> lateSprites;
     {
+        DEBUG_INFO("Render Sprites");
         auto view = registry.view<Component::Sprite, Component::WorldTransform>();
         for (auto [entity, sprite, worldTransform] : view.each())
         {
             Core::Resource::TextureResource* texture = sprite.texture.Get();
+            if (!texture) continue;
 			if (!texture->IsGpuReady())
 			{
 				texture->LoadToGpu();
@@ -59,6 +63,7 @@ void Struktur::System::SpriteRenderSystem::Update(GameContext &context)
 
         }
     }
+    DEBUG_INFO("Render TileMaps");
     {
         auto view = registry.view<Component::TileMap, Component::WorldTransform>();
         for (auto [entity, tileMap, worldTransform] : view.each())
