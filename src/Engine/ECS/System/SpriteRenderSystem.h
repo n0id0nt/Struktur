@@ -18,9 +18,6 @@ namespace Struktur
 	{
         class SpriteRenderSystem : public ISystem
         {
-        public:
-            void Update(GameContext& context) override;
-
         private:
             struct SpriteRenderData
             {
@@ -29,6 +26,12 @@ namespace Struktur
                 Component::WorldTransform* worldTransform;
                 int renderPriority;
             };
+
+        public:
+            void Update(GameContext& context) override;
+
+        private:
+            std::vector<SpriteRenderData> m_spritesToRender;
         };
     }
 }

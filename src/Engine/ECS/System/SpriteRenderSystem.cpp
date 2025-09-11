@@ -22,8 +22,9 @@ void Struktur::System::SpriteRenderSystem::Update(GameContext &context)
     //std::vector<spriteDraw> lateSprites;
     {
         DEBUG_INFO("Render Sprites");
-        std::vector<SpriteRenderData> spritesToRender;
         auto view = registry.view<Component::Sprite, Component::WorldTransform>();
+        m_spritesToRender.clear();
+        m_spritesToRender.reserve(view.size_hint());
         for (auto [entity, sprite, worldTransform] : view.each())
         {
             Core::Resource::TextureResource* texture = sprite.texture.Get();
@@ -35,7 +36,7 @@ void Struktur::System::SpriteRenderSystem::Update(GameContext &context)
             }
 
             // Add to render list
-            spritesToRender.push_back({
+            m_spritesToRender.push_back({
                 entity,
                 &sprite,
                 &worldTransform,
@@ -44,13 +45,13 @@ void Struktur::System::SpriteRenderSystem::Update(GameContext &context)
         }
 
         // Sort by render priority (lower values render first, higher values render on top)
-        std::sort(spritesToRender.begin(), spritesToRender.end(),
+        std::sort(m_spritesToRender.begin(), m_spritesToRender.end(),
             [](const SpriteRenderData& a, const SpriteRenderData& b) {
                 return a.renderPriority < b.renderPriority;
             });
 
         // Render sprites in priority order
-        for (const auto& renderData : spritesToRender)
+        for (const auto& renderData : m_spritesToRender)
         {
             const Component::Sprite& sprite = *renderData.sprite;
             const Component::WorldTransform& worldTransform = *renderData.worldTransform;
