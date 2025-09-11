@@ -3012,31 +3012,6 @@
 							"__worldY": 1344
 						},
 						{
-							"__identifier": "Item",
-							"__grid": [4,5],
-							"__pivot": [0,0],
-							"__tags": [],
-							"__tile": null,
-							"__smartColor": "#FEE761",
-							"iid": "400f1df0-5e50-11f0-8915-5f30fd73b592",
-							"width": 64,
-							"height": 64,
-							"defUid": 5,
-							"px": [256,320],
-							"fieldInstances": [
-								{ "__identifier": "Name", "__type": "String", "__value": "Memory Palace", "__tile": null, "defUid": 7, "realEditorValues": [{
-									"id": "V_String",
-									"params": ["Memory Palace"]
-								}] },
-								{ "__identifier": "Returnable", "__type": "Bool", "__value": false, "__tile": null, "defUid": 25, "realEditorValues": [{
-									"id": "V_Bool",
-									"params": [ false ]
-								}] }
-							],
-							"__worldX": 832,
-							"__worldY": 1472
-						},
-						{
 							"__identifier": "NPC",
 							"__grid": [2,4],
 							"__pivot": [0,0],
