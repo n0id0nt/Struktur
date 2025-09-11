@@ -13,7 +13,7 @@
     <link rel="icon" href="data:," style="display:none">
     
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Uncial+Antiqua&family=MedievalSharp&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap');
         
         * {
             margin: 0;
@@ -22,97 +22,43 @@
         }
         
         body {
-            font-family: 'Cinzel', serif;
-            font-weight: 600;
-            background: 
-                radial-gradient(circle at 20% 30%, rgba(139, 69, 19, 0.3) 0%, transparent 50%),
-                radial-gradient(circle at 80% 70%, rgba(160, 82, 45, 0.2) 0%, transparent 50%),
-                linear-gradient(135deg, #2c1810 0%, #3d2817 25%, #4a321d 50%, #3a2515 75%, #2a1609 100%);
-            color: #d4af37;
+            font-family: 'Inter', sans-serif;
+            background: #0a0a0a;
+            color: #e5e5e5;
             min-height: 100vh;
             display: flex;
             flex-direction: column;
             overflow: hidden;
-            position: relative;
         }
 
-        /* Parchment texture overlay */
-        body::before {
-            content: '';
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-image: 
-                radial-gradient(circle at 25% 25%, rgba(222, 184, 135, 0.02) 1px, transparent 1px),
-                radial-gradient(circle at 75% 75%, rgba(210, 180, 140, 0.02) 1px, transparent 1px);
-            background-size: 50px 50px, 80px 80px;
-            pointer-events: none;
-            z-index: -1;
-        }
-
-        /* Medieval header */
+        /* Clean header */
         .header {
-            background: linear-gradient(135deg, rgba(139, 69, 19, 0.8), rgba(160, 82, 45, 0.6));
-            border-bottom: 3px solid;
-            border-image: linear-gradient(90deg, #d4af37, #b8860b, #daa520) 1;
-            padding: 12px 20px;
+            background: #111111;
+            border-bottom: 1px solid #333333;
+            padding: 16px 24px;
             text-align: center;
-            backdrop-filter: blur(8px);
-            position: relative;
-        }
-
-        .header::before {
-            content: '⚔️ ';
-            position: absolute;
-            left: 20px;
-            top: 50%;
-            transform: translateY(-50%);
-            font-size: 1.5rem;
-        }
-
-        .header::after {
-            content: ' ⚔️';
-            position: absolute;
-            right: 20px;
-            top: 50%;
-            transform: translateY(-50%);
-            font-size: 1.5rem;
         }
 
         .header h1 {
-            font-family: 'MedievalSharp', serif;
-            font-size: 2.2rem;
-            font-weight: 400;
-            letter-spacing: 0.15em;
-            color: #d4af37;
-            text-shadow: 
-                2px 2px 0 #8b4513,
-                3px 3px 0 rgba(0, 0, 0, 0.7),
-                0 0 20px rgba(212, 175, 55, 0.4);
-            margin: 0;
+            font-size: 1.5rem;
+            font-weight: 500;
+            color: #ffffff;
+            letter-spacing: 0.05em;
         }
 
-        /* Game area - takes up most space */
+        /* Game area */
         .game-area {
             flex: 1;
             display: flex;
             justify-content: center;
             align-items: center;
             position: relative;
-            padding: 15px;
+            padding: 24px;
         }
 
         canvas.emscripten {
-            border: 4px solid;
-            border-image: linear-gradient(135deg, #d4af37, #b8860b, #daa520) 1;
-            border-radius: 8px;
-            background: #1a0f0a;
-            box-shadow: 
-                0 12px 35px rgba(0, 0, 0, 0.8),
-                inset 0 2px 0 rgba(212, 175, 55, 0.2),
-                0 0 40px rgba(139, 69, 19, 0.3);
+            border: 1px solid #333333;
+            background: #000000;
             height: 100%;
             max-width: 100%;
             max-height: 100%;
@@ -128,100 +74,60 @@
             transform: translate(-50%, -50%);
             text-align: center;
             z-index: 10;
-            background: rgba(42, 22, 9, 0.95);
-            padding: 40px;
-            border-radius: 12px;
-            border: 2px solid rgba(212, 175, 55, 0.4);
-            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.8);
+            background: rgba(0, 0, 0, 0.9);
+            padding: 32px;
+            border: 1px solid #333333;
         }
 
         .loading-text {
-            font-family: 'Cinzel', serif;
-            font-size: 18px;
-            font-weight: 600;
-            color: #d4af37;
-            margin-bottom: 25px;
-            letter-spacing: 0.1em;
-            text-transform: uppercase;
-            animation: flicker 2.5s ease-in-out infinite;
-        }
-
-        @keyframes flicker {
-            0%, 100% { 
-                opacity: 1;
-                text-shadow: 0 0 15px rgba(212, 175, 55, 0.8);
-            }
-            50% { 
-                opacity: 0.8;
-                text-shadow: 0 0 8px rgba(212, 175, 55, 0.4);
-            }
+            font-size: 14px;
+            font-weight: 500;
+            color: #cccccc;
+            margin-bottom: 16px;
+            letter-spacing: 0.05em;
         }
 
         .progress-container {
-            width: 320px;
-            height: 12px;
-            background: rgba(26, 15, 10, 0.8);
-            border: 2px solid #8b4513;
-            border-radius: 6px;
+            width: 240px;
+            height: 2px;
+            background: #333333;
             margin: 0 auto;
             overflow: hidden;
-            position: relative;
         }
 
         .progress-fill {
             height: 100%;
-            background: linear-gradient(90deg, #d4af37 0%, #daa520 50%, #b8860b 100%);
+            background: #ffffff;
             width: 0%;
-            transition: width 0.4s ease;
-            box-shadow: 
-                0 0 20px rgba(212, 175, 55, 0.6),
-                inset 0 1px 0 rgba(255, 255, 255, 0.3);
+            transition: width 0.3s ease;
         }
 
-        /* Medieval footer */
+        /* Clean footer */
         .footer {
-            background: linear-gradient(135deg, rgba(139, 69, 19, 0.7), rgba(160, 82, 45, 0.5));
-            border-top: 2px solid rgba(212, 175, 55, 0.3);
-            padding: 12px 20px;
+            background: #111111;
+            border-top: 1px solid #333333;
+            padding: 16px 24px;
             text-align: center;
-            backdrop-filter: blur(8px);
         }
 
         .frame-button {
-            background: linear-gradient(135deg, #8b4513 0%, #a0522d 50%, #654321 100%);
-            border: 2px solid #d4af37;
-            color: #d4af37;
-            padding: 10px 20px;
-            border-radius: 8px;
+            background: #1a1a1a;
+            border: 1px solid #444444;
+            color: #e5e5e5;
+            padding: 8px 16px;
             cursor: pointer;
-            font-family: 'Cinzel', serif;
-            font-size: 14px;
-            font-weight: 600;
-            letter-spacing: 0.05em;
-            text-transform: uppercase;
-            transition: all 0.3s ease;
-            box-shadow: 
-                0 4px 12px rgba(0, 0, 0, 0.5),
-                inset 0 1px 0 rgba(212, 175, 55, 0.2);
-            position: relative;
-        }
-
-        .frame-button::before {
-            content: '🏰';
-            margin-right: 8px;
+            font-family: 'Inter', sans-serif;
+            font-size: 13px;
+            font-weight: 500;
+            transition: all 0.2s ease;
         }
 
         .frame-button:hover {
-            border-color: #daa520;
-            color: #daa520;
-            background: linear-gradient(135deg, #a0522d 0%, #8b4513 50%, #654321 100%);
-            box-shadow: 
-                0 6px 18px rgba(0, 0, 0, 0.6),
-                0 0 20px rgba(212, 175, 55, 0.3);
-            transform: translateY(-2px);
+            background: #2a2a2a;
+            border-color: #666666;
         }
 
-        /* Fullscreen mode styles */
+        /* Frameless mode */
         body.fullscreen-mode {
             overflow: hidden;
         }
@@ -237,44 +143,33 @@
 
         body.fullscreen-mode canvas.emscripten {
             border: none;
-            border-radius: 0;
             width: 100vw !important;
             height: 100vh !important;
             max-width: none !important;
             max-height: none !important;
         }
 
-        /* Fullscreen exit button */
+        /* Exit button */
         .fullscreen-exit-button {
             position: fixed;
-            top: 20px;
-            right: 20px;
+            top: 16px;
+            right: 16px;
             z-index: 999999;
-            background: rgba(42, 22, 9, 0.95);
-            border: 2px solid rgba(212, 175, 55, 0.6);
-            color: #d4af37;
-            padding: 12px 18px;
-            border-radius: 8px;
+            background: rgba(0, 0, 0, 0.8);
+            border: 1px solid #444444;
+            color: #e5e5e5;
+            padding: 8px 16px;
             cursor: pointer;
-            font-family: 'Cinzel', serif;
+            font-family: 'Inter', sans-serif;
             font-size: 13px;
-            font-weight: 600;
-            text-transform: uppercase;
+            font-weight: 500;
             display: none;
-            backdrop-filter: blur(10px);
-            transition: all 0.3s ease;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.8);
-        }
-
-        .fullscreen-exit-button::before {
-            content: '🏰 ';
+            transition: all 0.2s ease;
         }
 
         .fullscreen-exit-button:hover {
-            background: rgba(139, 69, 19, 0.8);
-            border-color: #d4af37;
-            transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.9);
+            background: rgba(0, 0, 0, 0.9);
+            border-color: #666666;
         }
 
         body.fullscreen-mode .fullscreen-exit-button {
@@ -284,84 +179,59 @@
         .error-message {
             color: #ff6b6b;
             text-align: center;
-            padding: 25px;
-            background: rgba(139, 0, 0, 0.2);
-            border: 2px solid rgba(255, 107, 107, 0.4);
-            border-radius: 12px;
-            margin: 25px 0;
-            font-family: 'Cinzel', serif;
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 0.05em;
-            text-shadow: 0 0 10px rgba(255, 107, 107, 0.5);
+            padding: 16px;
+            background: rgba(255, 107, 107, 0.1);
+            border: 1px solid rgba(255, 107, 107, 0.3);
+            margin: 16px 0;
+            font-size: 14px;
+            font-weight: 500;
         }
 
         /* Mobile responsiveness */
         @media (max-width: 768px) {
             .header h1 {
-                font-size: 1.6rem;
+                font-size: 1.3rem;
             }
             
             .header, .footer {
-                padding: 8px 15px;
+                padding: 12px 16px;
             }
             
             .game-area {
-                padding: 8px;
+                padding: 16px;
             }
             
             .progress-container {
-                width: 280px;
+                width: 200px;
             }
             
             .frame-button {
-                padding: 8px 16px;
+                padding: 6px 12px;
                 font-size: 12px;
-            }
-
-            .header::before,
-            .header::after {
-                font-size: 1.2rem;
             }
         }
 
         /* Hide elements during loading */
         .footer {
             opacity: 0;
-            transition: opacity 0.5s ease;
+            transition: opacity 0.3s ease;
         }
 
         .footer.loaded {
             opacity: 1;
         }
-
-        /* Decorative elements */
-        .footer::after {
-            content: '';
-            position: absolute;
-            bottom: 0;
-            left: 0;
-            right: 0;
-            height: 2px;
-            background: linear-gradient(90deg, 
-                transparent 0%, 
-                #d4af37 20%, 
-                #daa520 50%, 
-                #d4af37 80%, 
-                transparent 100%);
-        }
     </style>
 </head>
 <body>
-    <!-- Medieval header -->
+    <!-- Clean header -->
     <div class="header">
-        <h1>Memory Palace</h1>
+        <h1>STRUKTUR</h1>
     </div>
     
     <!-- Main game area -->
     <div class="game-area">
         <div class="loading-container" id="loading">
-            <div class="loading-text" id="status">Conjuring Ancient Powers...</div>
+            <div class="loading-text" id="status">Loading...</div>
             <div class="progress-container">
                 <div class="progress-fill" id="progress"></div>
             </div>
@@ -369,14 +239,14 @@
         <canvas class="emscripten" id="canvas" oncontextmenu="event.preventDefault()" tabindex=-1></canvas>
     </div>
     
-    <!-- Medieval footer with frame toggle button -->
+    <!-- Clean footer -->
     <div class="footer" id="footer">
         <button class="frame-button" onclick="toggleFrame()" type="button" id="frame-btn">
             Remove Frame
         </button>
     </div>
     
-    <!-- Frame exit button (hidden by default) -->
+    <!-- Exit button -->
     <button class="fullscreen-exit-button" onclick="addFrame()" type="button" id="exit-frame-btn">
         Add Frame
     </button>
@@ -413,13 +283,7 @@
                 Module.setStatus.last.time = now;
                 Module.setStatus.last.text = text;
                 
-                // Medieval fantasy status messages
-                var medievalText = text.toUpperCase();
-                if (text.includes('Downloading')) medievalText = 'Scribing Ancient Scrolls...';
-                if (text.includes('Preparing')) medievalText = 'Forging Mystical Foundations...';
-                if (text.includes('Loading')) medievalText = 'Awakening Arcane Powers...';
-                
-                statusElement.innerHTML = medievalText;
+                statusElement.innerHTML = text;
                 
                 if (m) {
                     var progress = parseInt(m[2]) / parseInt(m[4]) * 100;
@@ -447,7 +311,7 @@
         
         window.onerror = function() {
             Module.setStatus('');
-            loadingElement.innerHTML = '<div class="error-message">The Ancient Magic Has Failed - Seek The Wise Ones</div>';
+            loadingElement.innerHTML = '<div class="error-message">Loading failed - please refresh</div>';
         };
 
         function toggleFrame() {
@@ -508,9 +372,9 @@
 
         function updateFrameButton() {
             if (isFrameless) {
-                frameBtn.innerHTML = '🏰 Add Frame';
+                frameBtn.innerHTML = 'Add Frame';
             } else {
-                frameBtn.innerHTML = '🏰 Remove Frame';
+                frameBtn.innerHTML = 'Remove Frame';
             }
         }
 

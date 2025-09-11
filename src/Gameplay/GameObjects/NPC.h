@@ -21,17 +21,21 @@ namespace Struktur
 {
     namespace NPC
     {
-        struct NPCData { int spriteIndex; };
+        struct NPCData
+        {
+            int spriteIndex;
+            int xOffset, yOffset;
+        };
         static std::unordered_map<std::string, NPCData> s_spriteDataMap = {
-            {"Scholar", { 0 }, },
-            {"Gardener", { 6 }, },
-            {"Cook", { 4 }, },
-            {"Inventor", { 2 }, },
-            {"Dreamer", { 5 }, },
-            {"Astronomer", { 8 }, },
-            {"Merchant", { 1 }, },
-            {"Guardian", { 7 }, },
-            {"Cordelia", { 3 }, },
+            {"Scholar", { 0, 64, 64 }, },
+            {"Gardener", { 6, 64, 64 }, },
+            {"Cook", { 4, 64, 64 }, },
+            {"Inventor", { 2, 64, 64 }, },
+            {"Dreamer", { 5, 90, 64 }, },
+            {"Astronomer", { 8, 64, 64 }, },
+            {"Merchant", { 1, 64, 64 }, },
+            {"Guardian", { 7, 64, 64 }, },
+            {"Cordelia", { 3, 64, 64 }, },
         };
 
         void Create(GameContext& context, entt::entity entity, const std::string& name)
@@ -46,7 +50,7 @@ namespace Struktur
             Core::Resource::ResourcePtr<Core::Resource::TextureResource> texture = resourceManager.GetTexture("assets/Tiles/NPCs.png");
 
             const NPCData& npcData = s_spriteDataMap[name];
-            registry.emplace<Component::Sprite>(entity, texture, WHITE, glm::vec2(64, 100), 9, 1, false, npcData.spriteIndex, 2);
+            registry.emplace<Component::Sprite>(entity, texture, WHITE, glm::vec2(npcData.xOffset, npcData.yOffset), 9, 1, false, npcData.spriteIndex, 2);
             registry.emplace<Component::Interactable>(entity, name);
             b2BodyDef kinematicBodyDef;
             kinematicBodyDef.type = b2_staticBody;
@@ -58,7 +62,7 @@ namespace Struktur
             physicsBody.syncToPhysics = true;     // Let transform drive physics
             Component::SpriteAnimation& spriteAnimation = registry.emplace<Component::SpriteAnimation>(entity);
             // animation could possibly be a resource stored in the resource pool and loaded in from a file.
-            Animation::SpriteAnimation idleAnimation{ npcData.spriteIndex, npcData.spriteIndex + 1, 1.f, true };
+            Animation::SpriteAnimation idleAnimation{ (unsigned int)npcData.spriteIndex, (unsigned int)npcData.spriteIndex + 1u, 1.f, true };
 
             animationSystem.AddAnimation(context, entity, "idle", idleAnimation);
             animationSystem.PlayAnimation(context, entity, "idle");

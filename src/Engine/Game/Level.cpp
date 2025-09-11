@@ -18,8 +18,8 @@
 #include "Engine/FileLoading/LevelParser.h"
 #include "Engine/Physics/CollisionShapeGenerators/TileMapCollisionBodyGenerator.h"
 
-#include "GamePlay/GameObjects/NPC.h"
-#include "GamePlay/GameObjects/Item.h"
+#include "Gameplay/GameObjects/NPC.h"
+#include "Gameplay/GameObjects/Item.h"
 
 entt::entity Struktur::GameResource::Level::CreateWorldEntity(GameContext& context, const std::string& filePath)
 {

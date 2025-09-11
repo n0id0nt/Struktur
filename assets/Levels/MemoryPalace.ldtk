@@ -1015,7 +1015,7 @@
 					"entityInstances": [
 						{
 							"__identifier": "NPC",
-							"__grid": [6,5],
+							"__grid": [6,4],
 							"__pivot": [0,0],
 							"__tags": [],
 							"__tile": null,
@@ -1024,13 +1024,13 @@
 							"width": 64,
 							"height": 64,
 							"defUid": 4,
-							"px": [384,320],
+							"px": [384,256],
 							"fieldInstances": [{ "__identifier": "Name", "__type": "String", "__value": "Cook", "__tile": null, "defUid": 6, "realEditorValues": [{
 								"id": "V_String",
 								"params": ["Cook"]
 							}] }],
 							"__worldX": 384,
-							"__worldY": 896
+							"__worldY": 832
 						}
 					]
 				},

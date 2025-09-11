@@ -127,7 +127,7 @@ namespace Struktur
 				size_t m_currentGpuMemory;
 
 			protected:
-				virtual void UnloadResource(const std::string& filePath, T* resource)
+				virtual void UnloadResource(const std::string& filePath, T* resource) override
 				{
 					RemoveGpuResource(resource);
 					delete resource;
