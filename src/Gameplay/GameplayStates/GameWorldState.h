@@ -171,41 +171,41 @@ namespace Struktur
                 entt::entity northRoomSpriteEntity = gameObjectManger.CreateGameObject(context, "northRoomSprite", northRoom);
                 transformSystem.SetLocalTransform(context, northRoomSpriteEntity, glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(1.0f), glm::quat(1.0f, 0.0f, 0.0f, 0.0f));
                 Core::Resource::ResourcePtr<Core::Resource::TextureResource> northRoomSpriteTexture = resourceManager.GetTexture(std::format("assets/Tiles/{}.png", GetNorthRoom(context)).c_str());
-                registry.emplace<Component::Sprite>(northRoomSpriteEntity, northRoomSpriteTexture, WHITE, glm::vec2(0, 0), 1, 1, false, 0);
+                registry.emplace<Component::Sprite>(northRoomSpriteEntity, northRoomSpriteTexture, WHITE, glm::vec2(0, 0), 1, 1, false, 0, 0);
                 
                 entt::entity eastRoom = GameResource::Level::LoadLevelEntities(context, worldEntity, roomList[1]);
                 transformSystem.SetWorldTransform(context, eastRoom, glm::vec3(1152.0f, 576.0f, 0.0f), glm::vec3(1.0f), glm::quat(1.0f, 0.0f, 0.0f, 0.0f));
                 entt::entity eastRoomSpriteEntity = gameObjectManger.CreateGameObject(context, "eastRoomSprite", eastRoom);
                 transformSystem.SetLocalTransform(context, eastRoomSpriteEntity, glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(1.0f), glm::quat(1.0f, 0.0f, 0.0f, 0.0f));
                 Core::Resource::ResourcePtr<Core::Resource::TextureResource> eastRoomSpriteTexture = resourceManager.GetTexture(std::format("assets/Tiles/{}.png", GetEastRoom(context)).c_str());
-                registry.emplace<Component::Sprite>(eastRoomSpriteEntity, eastRoomSpriteTexture, WHITE, glm::vec2(0, 0), 1, 1, false, 0);
+                registry.emplace<Component::Sprite>(eastRoomSpriteEntity, eastRoomSpriteTexture, WHITE, glm::vec2(0, 0), 1, 1, false, 0, 0);
                 
                 entt::entity westRoom = GameResource::Level::LoadLevelEntities(context, worldEntity, roomList[2]);
                 transformSystem.SetWorldTransform(context, westRoom, glm::vec3(0.0f, 576.0f, 0.0f), glm::vec3(1.0f), glm::quat(1.0f, 0.0f, 0.0f, 0.0f));
                 entt::entity westRoomSpriteEntity = gameObjectManger.CreateGameObject(context, "westRoomSprite", westRoom);
                 transformSystem.SetLocalTransform(context, westRoomSpriteEntity, glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(1.0f), glm::quat(1.0f, 0.0f, 0.0f, 0.0f));
                 Core::Resource::ResourcePtr<Core::Resource::TextureResource> westRoomSpriteTexture = resourceManager.GetTexture(std::format("assets/Tiles/{}.png", GetWestRoom(context)).c_str());
-                registry.emplace<Component::Sprite>(westRoomSpriteEntity, westRoomSpriteTexture, WHITE, glm::vec2(0, 0), 1, 1, false, 0);
+                registry.emplace<Component::Sprite>(westRoomSpriteEntity, westRoomSpriteTexture, WHITE, glm::vec2(0, 0), 1, 1, false, 0, 0);
                 
                 entt::entity southRoom = GameResource::Level::LoadLevelEntities(context, worldEntity, roomList[3]);
                 transformSystem.SetWorldTransform(context, southRoom, glm::vec3(576.0f, 1152.0f, 0.0f), glm::vec3(1.0f), glm::quat(1.0f, 0.0f, 0.0f, 0.0f));
                 entt::entity southRoomSpriteEntity = gameObjectManger.CreateGameObject(context, "southRoomSprite", southRoom);
                 transformSystem.SetLocalTransform(context, southRoomSpriteEntity, glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(1.0f), glm::quat(1.0f, 0.0f, 0.0f, 0.0f));
                 Core::Resource::ResourcePtr<Core::Resource::TextureResource> southRoomSpriteTexture = resourceManager.GetTexture(std::format("assets/Tiles/{}.png", GetSouthRoom(context)).c_str());
-                registry.emplace<Component::Sprite>(southRoomSpriteEntity, southRoomSpriteTexture, WHITE, glm::vec2(0, 0), 1, 1, false, 0);
+                registry.emplace<Component::Sprite>(southRoomSpriteEntity, southRoomSpriteTexture, WHITE, glm::vec2(0, 0), 1, 1, false, 0, 0);
                 
                 entt::entity courtyard = GameResource::Level::LoadLevelEntities(context, worldEntity, roomList[4]);
                 transformSystem.SetWorldTransform(context, courtyard, glm::vec3(576.0f, 576.0f, 0.0f), glm::vec3(1.0f), glm::quat(1.0f, 0.0f, 0.0f, 0.0f));
                 entt::entity courtyardSpriteEntity = gameObjectManger.CreateGameObject(context, "courtyardSprite", courtyard);
                 transformSystem.SetLocalTransform(context, courtyardSpriteEntity, glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(1.0f), glm::quat(1.0f, 0.0f, 0.0f, 0.0f));
                 Core::Resource::ResourcePtr<Core::Resource::TextureResource> courtyardSpriteTexture = resourceManager.GetTexture("assets/Tiles/Courtyard.png");
-                registry.emplace<Component::Sprite>(courtyardSpriteEntity, courtyardSpriteTexture, WHITE, glm::vec2(0, 0), 1, 1, false, 0);
+                registry.emplace<Component::Sprite>(courtyardSpriteEntity, courtyardSpriteTexture, WHITE, glm::vec2(0, 0), 1, 1, false, 0, 0);
                 
                 entt::entity northRoomDupe = GameResource::Level::LoadLevelEntities(context, worldEntity, roomList[0]);
                 transformSystem.SetWorldTransform(context, northRoomDupe, glm::vec3(576.0f, 1728.0f, 0.0f), glm::vec3(1.0f), glm::quat(1.0f, 0.0f, 0.0f, 0.0f));
                 entt::entity northRoomDupeSpriteEntity = gameObjectManger.CreateGameObject(context, "northRoomDupeSprite", northRoomDupe);
                 transformSystem.SetLocalTransform(context, northRoomDupeSpriteEntity, glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(1.0f), glm::quat(1.0f, 0.0f, 0.0f, 0.0f));
-                registry.emplace<Component::Sprite>(northRoomDupeSpriteEntity, northRoomSpriteTexture, WHITE, glm::vec2(0, 0), 1, 1, false, 0);
+                registry.emplace<Component::Sprite>(northRoomDupeSpriteEntity, northRoomSpriteTexture, WHITE, glm::vec2(0, 0), 1, 1, false, 0, 0);
 
                 entt::entity playerEntity = gameObjectManger.CreateGameObject(context, "Player", worldEntity);
                 transformSystem.SetWorldTransform(context, playerEntity, glm::vec3(864.0f, 32.0f, 0.0f), glm::vec3(1.0f), glm::quat(1.0f, 0.0f, 0.0f, 0.0f));

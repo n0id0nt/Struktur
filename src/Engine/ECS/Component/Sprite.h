@@ -19,6 +19,7 @@ namespace Struktur
             int columns, rows;
 			bool flipped; // TODO change this to an enum
 			int index;
+            int renderPriority;
         };
     }
 }

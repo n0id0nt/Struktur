@@ -1,6 +1,5 @@
 #include "SpriteRenderSystem.h"
 
-#include "entt/entt.hpp"
 #include "glm/glm.hpp"
 #include "glm/gtc/quaternion.hpp."
 #include "raylib.h"
@@ -23,44 +22,70 @@ void Struktur::System::SpriteRenderSystem::Update(GameContext &context)
     //std::vector<spriteDraw> lateSprites;
     {
         DEBUG_INFO("Render Sprites");
+        std::vector<SpriteRenderData> spritesToRender;
         auto view = registry.view<Component::Sprite, Component::WorldTransform>();
         for (auto [entity, sprite, worldTransform] : view.each())
         {
             Core::Resource::TextureResource* texture = sprite.texture.Get();
             if (!texture) continue;
-			if (!texture->IsGpuReady())
-			{
-				texture->LoadToGpu();
-			}
+
+            if (!texture->IsGpuReady())
+            {
+                texture->LoadToGpu();
+            }
+
+            // Add to render list
+            spritesToRender.push_back({
+                entity,
+                &sprite,
+                &worldTransform,
+                sprite.renderPriority  // Assuming this is the new attribute you added
+            });
+        }
+
+        // Sort by render priority (lower values render first, higher values render on top)
+        std::sort(spritesToRender.begin(), spritesToRender.end(),
+            [](const SpriteRenderData& a, const SpriteRenderData& b) {
+                return a.renderPriority < b.renderPriority;
+            });
+
+        // Render sprites in priority order
+        for (const auto& renderData : spritesToRender)
+        {
+            const Component::Sprite& sprite = *renderData.sprite;
+            const Component::WorldTransform& worldTransform = *renderData.worldTransform;
+
+            Core::Resource::TextureResource* texture = sprite.texture.Get();
+            // texture is guaranteed to exist and be GPU ready from previous check
+
             int imageWidth = texture->GetWidth();
             int imageHeight = texture->GetHeight();
             glm::vec3 euler = glm::eulerAngles(worldTransform.rotation);
-
             int index = sprite.index;
+
             ASSERT_MSG(sprite.columns > 0, "Sprite needs to have at least one column");
             ASSERT_MSG(sprite.rows > 0, "Sprite needs to have at least one row");
+
             glm::vec2 size = glm::vec2(imageWidth / sprite.columns, imageHeight / sprite.rows);
             int x = (index % sprite.columns) * size.x;
             int y = std::floor(index / sprite.columns) * size.y;
 
             ::Rectangle sourceRec{ (float)x, (float)y, size.x, size.y };
-
             if (sprite.flipped)
             {
                 sourceRec.width *= -1;
             }
 
-            // this stops a little of the next sprite in the sprite sheet from showing due to rounding error in the GPU
+            // This stops a little of the next sprite in the sprite sheet from showing due to rounding error in the GPU
             sourceRec.x += 0.0001f;
             sourceRec.y += 0.0001f;
             sourceRec.width -= 0.0002f;
             sourceRec.height -= 0.0002f;
 
             ::Rectangle destRec{ ::round(worldTransform.position.x * 2) / 2, ::round(worldTransform.position.y * 2) / 2, size.x * worldTransform.scale.x, size.y * worldTransform.scale.x };
-
             ::Vector2 offset{ sprite.offset.x, sprite.offset.y };
-            ::DrawTexturePro(texture->texture, sourceRec, destRec, offset, glm::degrees(euler.z), sprite.color);
 
+            ::DrawTexturePro(texture->texture, sourceRec, destRec, offset, glm::degrees(euler.z), sprite.color);
         }
     }
     DEBUG_INFO("Render TileMaps");

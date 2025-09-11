@@ -1,10 +1,18 @@
 #pragma once
 
+#include "entt/entt.hpp"
+
 #include "Engine/ECS/SystemManager.h"
 
 namespace Struktur
 {
     class GameContext;
+
+    namespace Component
+    {
+        struct Sprite;
+        struct WorldTransform;
+    }
 
 	namespace System
 	{
@@ -14,12 +22,12 @@ namespace Struktur
             void Update(GameContext& context) override;
 
         private:
-            struct spriteDraw {
-                Texture2D texture;
-                Rectangle sourceRect;
-                Rectangle destRect;
-                Vector2 offset;
-                float angle;
+            struct SpriteRenderData
+            {
+                entt::entity entity;
+                Component::Sprite* sprite;
+                Component::WorldTransform* worldTransform;
+                int renderPriority;
             };
         };
     }

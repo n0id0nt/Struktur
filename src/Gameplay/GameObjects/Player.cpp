@@ -32,7 +32,7 @@ void Struktur::Player::Create(GameContext &context, entt::entity entity)
     auto& animationSystem = systemManager.GetSystem<System::AnimationSystem>();
     Core::Resource::ResourcePtr<Core::Resource::TextureResource> texture = resourceManager.GetTexture("assets/Tiles/PlayerGrowthSprites.png");
 
-    registry.emplace<Component::Sprite>(entity, texture, WHITE, glm::vec2(32, 48), 12, 5, false, 0);
+    registry.emplace<Component::Sprite>(entity, texture, WHITE, glm::vec2(32, 48), 12, 5, false, 0, 3);
     registry.emplace<Component::Player>(entity, 5.f);
     Component::Camera& parentCamera = registry.emplace<Component::Camera>(entity);
     parentCamera.zoom = 1.5f;

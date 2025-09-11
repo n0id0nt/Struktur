@@ -32,7 +32,7 @@ namespace Struktur
             auto& animationSystem = systemManager.GetSystem<System::AnimationSystem>();
             Core::Resource::ResourcePtr<Core::Resource::TextureResource> texture = resourceManager.GetTexture("assets/Tiles/PlayerGrowthSprites.png");
 
-            registry.emplace<Component::Sprite>(entity, texture, WHITE, glm::vec2(32, 48), 12, 5, false, 0);
+            registry.emplace<Component::Sprite>(entity, texture, WHITE, glm::vec2(32, 48), 12, 5, false, 0, 2);
             registry.emplace<Component::Interactable>(entity, name);
             b2BodyDef kinematicBodyDef;
             kinematicBodyDef.type = b2_staticBody;

@@ -59,7 +59,7 @@ namespace Struktur
                 }
 
                 Core::Resource::ResourcePtr<Core::Resource::TextureResource> texture = resourceManager.GetTexture(std::format("assets/Tiles/Items/{}.png", interactionId).c_str());
-                registry.emplace<Component::Sprite>(entity, texture, color, glm::vec2(32, 48), 1, 1, false, 0);
+                registry.emplace<Component::Sprite>(entity, texture, color, glm::vec2(32, 48), 1, 1, false, 0, 1);
             }
 
             registry.emplace<Component::Interactable>(entity, name, canBeReturned);
