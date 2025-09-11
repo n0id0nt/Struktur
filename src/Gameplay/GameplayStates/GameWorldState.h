@@ -229,7 +229,7 @@ namespace Struktur
                 m_loopCountLabel = uiManager.CreateElement<UI::UILabel>(context, glm::vec2{20, 20}, glm::vec2{0, 0}, std::format("Loops: {}", gameData.Loops).c_str(), 30.0f);
                 //m_interactLabel->SetFont(font);
                 m_loopCountLabel->SetTextColor(WHITE); // Change this when the background is created.
-                m_loopCountLabel->SetVisible(false);
+                m_loopCountLabel->SetVisible(true);
             }
 
             void Update(GameContext& context, GameResource::StateManager& stateManager) override
