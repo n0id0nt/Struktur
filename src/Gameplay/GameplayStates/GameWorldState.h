@@ -159,7 +159,7 @@ namespace Struktur
                 System::GameObjectManager& gameObjectManger = context.GetGameObjectManager();
                 entt::registry& registry = context.GetRegistry();
 
-                Core::Resource::ResourcePtr<Core::Resource::FontResource> font = resourceManager.GetFontResource("assets/Fonts/machine-std/machine-std-regular.ttf_120");
+                Core::Resource::ResourcePtr<Core::Resource::FontResource> font = resourceManager.GetFontResource("assets/Fonts/medieval_sharp/MedievalSharp-Bold.ttf_60");
                 System::TransformSystem& transformSystem = systemManager.GetSystem<System::TransformSystem>();
 
                 entt::entity worldEntity = GameResource::Level::CreateWorldEntity(context, WORLD_FILE_PATH);
@@ -222,12 +222,12 @@ namespace Struktur
                 // Create the UI for the level.
                 m_interactLabel = uiManager.CreateElement<UI::UILabel>(context, glm::vec2{0, 0}, glm::vec2{0, 0}, "Interact", 16.0f);
                 m_interactLabel->SetVisible(false);
-                //m_interactLabel->SetFont(font);
+                m_interactLabel->SetFont(font);
                 m_interactLabel->SetTextColor(WHITE); // Change this when the background is created.
                 m_interactLabel->SetAnchorPoint({ 0.5f,0.5f });
 
                 m_loopCountLabel = uiManager.CreateElement<UI::UILabel>(context, glm::vec2{20, 20}, glm::vec2{0, 0}, std::format("Loops: {}", gameData.Loops).c_str(), 30.0f);
-                //m_interactLabel->SetFont(font);
+                m_loopCountLabel->SetFont(font);
                 m_loopCountLabel->SetTextColor(WHITE); // Change this when the background is created.
                 m_loopCountLabel->SetVisible(true);
             }
@@ -302,21 +302,15 @@ namespace Struktur
                     if (playerPosition.y > 1755.0f)
                     {
                         Inventory& inventory = context.GetInventory();
-                        if(std::find(inventory.begin(), inventory.end(), "Red Pedestal Active") != inventory.end())
+                        if ((std::find(inventory.begin(), inventory.end(), "Red Pedestal Active") != inventory.end())
+                            && (std::find(inventory.begin(), inventory.end(), "Green Pedestal Active") != inventory.end())
+                            && (std::find(inventory.begin(), inventory.end(), "Yellow Pedestal Active") != inventory.end())
+                            && (std::find(inventory.begin(), inventory.end(), "Blue Pedestal Active") != inventory.end()))
                         {
-                            if(std::find(inventory.begin(), inventory.end(), "Green Pedestal Active") != inventory.end())
-                            {
-                                if(std::find(inventory.begin(), inventory.end(), "Yellow Pedestal Active") != inventory.end())
-                                {
-                                    if(std::find(inventory.begin(), inventory.end(), "Blue Pedestal Active") != inventory.end())
-                                    {
-                                        Struktur::Player::PlayerForceStop(context, entity);
-                                        std::unique_ptr<GameOverState> gameOverState = std::make_unique<GameOverState>();
-                                        m_stateManager.ChangeState(context, std::move(gameOverState));
-                                        return;
-                                    }
-                                }
-                            }
+                            Struktur::Player::PlayerForceStop(context, entity);
+                            std::unique_ptr<GameOverState> gameOverState = std::make_unique<GameOverState>();
+                            m_stateManager.ChangeState(context, std::move(gameOverState));
+                            return;
                         } 
 
                         // reset the current state
@@ -324,6 +318,9 @@ namespace Struktur
                         stateManager.ChangeState(context, std::move(gameWorldState));
                         return;
                     }
+
+                    auto& playerSprite = registry.get<Component::Sprite>(entity);
+                    playerSprite.renderPriority = (int)playerPosition.y;
                 }
             }
             void Render(GameContext& context, GameResource::StateManager& stateManager) override {}

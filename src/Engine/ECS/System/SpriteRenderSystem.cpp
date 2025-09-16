@@ -21,7 +21,6 @@ void Struktur::System::SpriteRenderSystem::Update(GameContext &context)
     ::BeginMode2D(camera.GetRaylibCamera());
     //std::vector<spriteDraw> lateSprites;
     {
-        DEBUG_INFO("Render Sprites");
         auto view = registry.view<Component::Sprite, Component::WorldTransform>();
         m_spritesToRender.clear();
         m_spritesToRender.reserve(view.size_hint());
@@ -89,7 +88,6 @@ void Struktur::System::SpriteRenderSystem::Update(GameContext &context)
             ::DrawTexturePro(texture->texture, sourceRec, destRec, offset, glm::degrees(euler.z), sprite.color);
         }
     }
-    DEBUG_INFO("Render TileMaps");
     {
         auto view = registry.view<Component::TileMap, Component::WorldTransform>();
         for (auto [entity, tileMap, worldTransform] : view.each())

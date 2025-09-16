@@ -356,7 +356,7 @@ namespace Struktur
                 Core::GameData& gameDate = context.GetGameData();
                 entt::registry& registry = context.GetRegistry();
                 Core::Resource::ResourceManager& resourceManager = context.GetResourceManager();
-                //Core::Resource::ResourcePtr<Core::Resource::FontResource> font = resourceManager.GetFontResource("assets/Fonts/machine-std/machine-std-regular.ttf_120");
+                Core::Resource::ResourcePtr<Core::Resource::FontResource> font = resourceManager.GetFontResource("assets/Fonts/medieval_sharp/MedievalSharp-Bold.ttf_30");
 
                 // UI layout
                 UI::UIManager& uiManager = context.GetUIManager();
@@ -374,10 +374,10 @@ namespace Struktur
                 Core::Resource::ResourcePtr<Core::Resource::TextureResource> dialogueBackgroundPanelTexture = resourceManager.GetTexture("assets/Tiles/DialoguePanel.png");
                 textBackgroundPanel->SetBackgroundTexture(dialogueBackgroundPanelTexture);
 
-                m_dialogueLabel = static_cast<UI::UILabel*>(textBackgroundPanel->AddChild(std::make_unique<UI::UILabel>(context, glm::vec2{ 40, 30 }, glm::vec2{ 0.0f, 0.0f }, "", 16.0f)));
+                m_dialogueLabel = static_cast<UI::UILabel*>(textBackgroundPanel->AddChild(std::make_unique<UI::UILabel>(context, glm::vec2{ 40, 30 }, glm::vec2{ 0.0f, 0.0f }, "", 20.0f)));
                 m_dialogueLabel->SetTextColor(BLACK);
                 m_dialogueLabel->SetAnchorPoint(glm::vec2{0.0f, 0.0f});
-                //m_dialogueLabel->SetFont(font);
+                m_dialogueLabel->SetFont(font);
                 m_continueDialogueLabel = static_cast<UI::UILabel*>(textBackgroundPanel->AddChild(std::make_unique<UI::UILabel>(context, glm::vec2{ -40, -30 }, glm::vec2{ 1, 1 }, "Continue", 20.0f)));
                 m_continueDialogueLabel->SetAnchorPoint(glm::vec2{1.0f, 1.0f});
                 m_continueDialogueLabel->SetTextColor(BLACK);

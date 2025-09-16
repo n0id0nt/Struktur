@@ -102,8 +102,8 @@ void Struktur::ExitGame(GameContext &context)
 void Struktur::SplashScreenLoop(GameContext& context)
 {
     Core::GameData& gameData = context.GetGameData();
-    Core::Resource::ResourceManager& resoruceManager = context.GetResourceManager();
-    Core::Resource::ResourcePtr<Core::Resource::FontResource> font = resoruceManager.GetFontResource("assets/Fonts/machine-std/machine-std-regular.ttf_120");
+    Core::Resource::ResourceManager& resourceManager = context.GetResourceManager();
+    Core::Resource::ResourcePtr<Core::Resource::FontResource> font = resourceManager.GetFontResource("assets/Fonts/medieval_sharp/MedievalSharp-Bold.ttf_120");
     //fade in time
     const double fadeInTime = 1.5;
     const double holdTime = 1;
@@ -201,8 +201,8 @@ void Struktur::Game()
     // Load resources
     InitialiseGame(context);
 
-    Core::Resource::ResourceManager& resoruceManager = context.GetResourceManager();
-    Core::Resource::ResourcePtr<Core::Resource::FontResource> font = resoruceManager.GetFontResource("assets/Fonts/machine-std/machine-std-regular.ttf_120");
+    Core::Resource::ResourceManager& resourceManager = context.GetResourceManager();
+    Core::Resource::ResourcePtr<Core::Resource::FontResource> font = resourceManager.GetFontResource("assets/Fonts/medieval_sharp/MedievalSharp-Bold.ttf_120");
     
     Core::GameData& gameData = context.GetGameData();
     gameData.startTime = ::GetTime();

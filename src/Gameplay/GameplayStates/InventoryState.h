@@ -47,7 +47,7 @@ namespace Struktur
                 Inventory& inventory = context.GetInventory();
                 Core::GameData& gameDate = context.GetGameData();
                 Core::Resource::ResourceManager& resourceManager = context.GetResourceManager();
-                Core::Resource::ResourcePtr<Core::Resource::FontResource> font = resourceManager.GetFontResource("assets/Fonts/machine-std/machine-std-regular.ttf_120");
+                Core::Resource::ResourcePtr<Core::Resource::FontResource> font = resourceManager.GetFontResource("assets/Fonts/medieval_sharp/MedievalSharp-Bold.ttf_120");
 
                 UI::UIManager& uiManager = context.GetUIManager();
                 UI::FocusNavigator* focusNavigator = uiManager.GetFocusNavigator();
@@ -73,6 +73,7 @@ namespace Struktur
                 auto* inventoryFocusedItemNameLabel = static_cast<UI::UILabel*>(focusedBackgroundPanel->AddChild(std::make_unique<UI::UILabel>(context, glm::vec2{ 0.0f, -20.0f }, glm::vec2{ 0.5f, 0.75f }, "No Items", 30.0f)));
                 inventoryFocusedItemNameLabel->SetTextColor(WHITE);
                 inventoryFocusedItemNameLabel->SetAnchorPoint(glm::vec2{ 0.5f, 0.0f });
+                inventoryFocusedItemNameLabel->SetFont(font);
                 //auto* inventoryFocusedItemDescriptionLabel = static_cast<UI::UILabel*>(focusedBackgroundPanel->AddChild(std::make_unique<UI::UILabel>(context, glm::vec2{ 35.0f, 70.0f }, glm::vec2{ 0.0f, 0.5f }, "No Items in your inventory.\n\nGo collect items and\nprogress the game", 16.0f)));
                 //inventoryFocusedItemDescriptionLabel->SetTextColor(WHITE);
                 //inventoryFocusedItemDescriptionLabel->SetAnchorPoint(glm::vec2{ 0.0f, 0.0f });

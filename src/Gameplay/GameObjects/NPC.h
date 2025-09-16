@@ -27,15 +27,15 @@ namespace Struktur
             int xOffset, yOffset;
         };
         static std::unordered_map<std::string, NPCData> s_spriteDataMap = {
-            {"Scholar", { 0, 64, 64 }, },
-            {"Gardener", { 6, 64, 64 }, },
-            {"Cook", { 4, 64, 64 }, },
-            {"Inventor", { 2, 64, 64 }, },
-            {"Dreamer", { 5, 90, 64 }, },
-            {"Astronomer", { 8, 64, 64 }, },
-            {"Merchant", { 1, 64, 64 }, },
-            {"Guardian", { 7, 64, 64 }, },
-            {"Cordelia", { 3, 64, 64 }, },
+            {"Scholar", { 0, 48, 64 }, },
+            {"Gardener", { 6, 48, 64 }, },
+            {"Cook", { 4, 48, 64 }, },
+            {"Inventor", { 2, 48, 64 }, },
+            {"Dreamer", { 5, 60, 48 }, },
+            {"Astronomer", { 8, 48, 64 }, },
+            {"Merchant", { 1, 48, 64 }, },
+            {"Guardian", { 7, 48, 64 }, },
+            {"Cordelia", { 3, 48, 64 }, },
         };
 
         void Create(GameContext& context, entt::entity entity, const std::string& name)
@@ -50,7 +50,8 @@ namespace Struktur
             Core::Resource::ResourcePtr<Core::Resource::TextureResource> texture = resourceManager.GetTexture("assets/Tiles/NPCs.png");
 
             const NPCData& npcData = s_spriteDataMap[name];
-            registry.emplace<Component::Sprite>(entity, texture, WHITE, glm::vec2(npcData.xOffset, npcData.yOffset), 9, 1, false, npcData.spriteIndex, 2);
+            auto& worldTransform = registry.get<Component::WorldTransform>(entity);
+            registry.emplace<Component::Sprite>(entity, texture, WHITE, glm::vec2(npcData.xOffset, npcData.yOffset), 9, 1, false, npcData.spriteIndex, (int)worldTransform.position.y);
             registry.emplace<Component::Interactable>(entity, name);
             b2BodyDef kinematicBodyDef;
             kinematicBodyDef.type = b2_staticBody;

@@ -50,7 +50,7 @@ namespace Struktur
                 Core::GameData& gameDate = context.GetGameData();
                 entt::registry& registry = context.GetRegistry();
                 Core::Resource::ResourceManager& resourceManager = context.GetResourceManager();
-                Core::Resource::ResourcePtr<Core::Resource::FontResource> font = resourceManager.GetFontResource("assets/Fonts/machine-std/machine-std-regular.ttf_120");
+                Core::Resource::ResourcePtr<Core::Resource::FontResource> font = resourceManager.GetFontResource("assets/Fonts/medieval_sharp/MedievalSharp-Bold.ttf_120");
 
                 // UI layout
                 UI::UIManager& uiManager = context.GetUIManager();
@@ -63,6 +63,7 @@ namespace Struktur
                 auto* textBackgroundPanel = static_cast<UI::UILabel*>(m_screenPanel->AddChild(std::make_unique<UI::UILabel>(context, glm::vec2{ -20, -20 }, glm::vec2{ 0.5f, 0.5f }, "Game Complete", 60.0f)));
                 textBackgroundPanel->SetAnchorPoint(glm::vec2{0.5f, 0.5f});
                 textBackgroundPanel->SetTextColor(WHITE);
+                textBackgroundPanel->SetFont(font);
             }
 
             void Update(GameContext& context, GameResource::StateManager& stateManager) override

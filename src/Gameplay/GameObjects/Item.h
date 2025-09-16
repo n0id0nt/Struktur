@@ -1,6 +1,5 @@
 #pragma once
 
-#include <format>
 #include <Vector>
 
 #include "Engine/GameContext.h"
@@ -20,23 +19,48 @@
 
 #include "Engine/Core/Resource/TextureResource.h"
 
-static const std::vector<std::string> s_itemsWithNoImage = {
-    "Yellow Pedestal Inactive",
-    "Blue Pedestal Inactive",
-    "Red Pedestal Inactive",
-    "Green Pedestal Inactive",
-    "Yellow Pedestal Active",
-    "Blue Pedestal Active",
-    "Red Pedestal Active",
-    "Green Pedestal Active",
-    "Safe",
-    "Memory Palace",
-};
 
 namespace Struktur
 {
     namespace Item
     {
+        static const std::vector<std::string> s_itemsWithNoImage = {
+            "Yellow Pedestal Inactive",
+            "Blue Pedestal Inactive",
+            "Red Pedestal Inactive",
+            "Green Pedestal Inactive",
+            "Yellow Pedestal Active",
+            "Blue Pedestal Active",
+            "Red Pedestal Active",
+            "Green Pedestal Active",
+            "Safe",
+            "Memory Palace",
+        };
+
+        struct ItemData
+        {
+            int spriteIndex;
+            //int xOffset, yOffset;
+        };
+        static std::unordered_map<std::string, ItemData> s_spriteDataMap = {
+            {"Love Letter", { 10, }, },
+            {"Hammer", { 9, }, },
+            {"Star Chart", { 15, }, },
+            {"Ornate Key", { 11, }, },
+            {"Ancient Tome", { 1, }, },
+            {"Rose", { 14, }, },
+            {"Fresh Bread", { 2, }, },
+            {"Tool Box", { 16, }, },
+            {"Personal Diary", { 12, }, },
+            {"Telescope", { 4, }, },
+            {"Gold Coins", { 3, }, },
+            {"Ancient Seal", { 0, }, },
+            {"Red Pedestal", { 6, }, },
+            {"Green Pedestal", { 7, }, },
+            {"Blue Pedestal", { 8, }, },
+            {"Yellow Pedestal", { 9, }, },
+        };
+
         void Create(GameContext& context, entt::entity entity, const std::string& name, bool canBeReturned)
         {
             entt::registry& registry = context.GetRegistry();
@@ -58,8 +82,9 @@ namespace Struktur
                     interactionId = interactionId.substr(0, interactionId.length() - suffix.length());
                 }
 
-                Core::Resource::ResourcePtr<Core::Resource::TextureResource> texture = resourceManager.GetTexture(std::format("assets/Tiles/Items/{}.png", interactionId).c_str());
-                registry.emplace<Component::Sprite>(entity, texture, color, glm::vec2(32, 48), 1, 1, false, 0, 1);
+                auto& itemData = s_spriteDataMap[interactionId];
+                Core::Resource::ResourcePtr<Core::Resource::TextureResource> texture = resourceManager.GetTexture("assets/Tiles/Items.png");
+                registry.emplace<Component::Sprite>(entity, texture, color, glm::vec2(32, 48), 9, 2, false, itemData.spriteIndex, 1);
             }
 
             registry.emplace<Component::Interactable>(entity, name, canBeReturned);
