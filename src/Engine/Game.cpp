@@ -67,7 +67,7 @@ void Struktur::InitialiseGame(GameContext& context)
     systemManager.AddRenderSystem<System::SpriteRenderSystem>();
     systemManager.AddRenderSystem<System::GameplayRenderSystem>();
     //TODO add #if define _DEBUG here
-    //systemManager.AddRenderSystem<System::DebugSystem>();
+    systemManager.AddRenderSystem<System::DebugSystem>();
     systemManager.AddRenderSystem<System::UIRenderSystem>();
 
     DEBUG_INFO("Game Data Loaded");

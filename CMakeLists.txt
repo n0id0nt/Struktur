@@ -257,6 +257,7 @@ set(SOURCES
     src/Engine/ECS/Component/TileMap.h
     src/Engine/ECS/Component/Identifier.h
     src/Engine/ECS/Component/Camera.h
+    src/Engine/ECS/Component/Shader.h
 
     src/Engine/ECS/System/DebugSystem.h         src/Engine/ECS/System/DebugSystem.cpp
     src/Engine/ECS/System/HierrarchySystem.h    src/Engine/ECS/System/HierrarchySystem.cpp

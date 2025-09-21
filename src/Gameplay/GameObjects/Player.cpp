@@ -30,9 +30,9 @@ void Struktur::Player::Create(GameContext &context, entt::entity entity)
     auto& transformSystem = systemManager.GetSystem<System::TransformSystem>();
     auto& physicsSystem = systemManager.GetSystem<System::PhysicsSystem>();
     auto& animationSystem = systemManager.GetSystem<System::AnimationSystem>();
-    Core::Resource::ResourcePtr<Core::Resource::TextureResource> texture = resourceManager.GetTexture("assets/Tiles/PlayerGrowthSprites.png");
+    Core::Resource::ResourcePtr<Core::Resource::TextureResource> texture = resourceManager.GetTexture("assets/Tiles/PlayerSpriteSheet.png");
 
-    registry.emplace<Component::Sprite>(entity, texture, WHITE, glm::vec2(32, 48), 12, 5, false, 0, 3);
+    registry.emplace<Component::Sprite>(entity, texture, WHITE, glm::vec2(48, 64), 6, 3, false, 0, 3);
     registry.emplace<Component::Player>(entity, 5.f);
     Component::Camera& parentCamera = registry.emplace<Component::Camera>(entity);
     parentCamera.zoom = 1.5f;
@@ -49,12 +49,19 @@ void Struktur::Player::Create(GameContext &context, entt::entity entity)
     physicsBody.syncToPhysics = true;     // Let transform drive physics
     Component::SpriteAnimation& spriteAnimation = registry.emplace<Component::SpriteAnimation>(entity);
     // animation could possibly be a resource stored in the resource pool and loaded in from a file.
-    Animation::SpriteAnimation idleAnimation{ 24u, 28u, 1.f, true };
-    Animation::SpriteAnimation runAnimation{ 28u, 33u, 0.7f, true };
+    Animation::SpriteAnimation upIdleAnimation{ 0u, 2u, 1.f, true };
+    Animation::SpriteAnimation downIdleAnimation{ 6u, 8u, 1.f, true };
+    Animation::SpriteAnimation sideIdleAnimation{ 12u, 14u, 1.f, true };
+    Animation::SpriteAnimation upRunAnimation{ 2u, 6u, 0.7f, true };
+    Animation::SpriteAnimation downRunAnimation{ 8u, 12u, 0.7f, true };
+    Animation::SpriteAnimation sideRunAnimation{ 14u, 18u, 0.7f, true };
 
-    animationSystem.AddAnimation(context, entity, "idle", idleAnimation);
-    animationSystem.AddAnimation(context, entity, "run", runAnimation);
-    animationSystem.PlayAnimation(context, entity, "idle");
+    animationSystem.AddAnimation(context, entity, "upIdleAnimation", upIdleAnimation);
+    animationSystem.AddAnimation(context, entity, "downIdleAnimation", downIdleAnimation);
+    animationSystem.AddAnimation(context, entity, "sideIdleAnimation", sideIdleAnimation);
+    animationSystem.AddAnimation(context, entity, "upRunAnimation", upRunAnimation);
+    animationSystem.AddAnimation(context, entity, "downRunAnimation", downRunAnimation);
+    animationSystem.AddAnimation(context, entity, "sideRunAnimation", sideRunAnimation);
 }
 
 void Struktur::Player::PlayerForceStop(GameContext &context, entt::entity entity)
@@ -68,9 +75,9 @@ void Struktur::Player::PlayerForceStop(GameContext &context, entt::entity entity
 
     b2Vec2 velecity = b2Vec2_zero;
     physicsBody.body->SetLinearVelocity(velecity);
-    if (!animationSystem.IsAnimationPlaying(context, entity, "idle"))
+    if (!animationSystem.IsAnimationPlaying(context, entity, "sideIdleAnimation"))
     {
-        animationSystem.PlayAnimation(context, entity, "idle");
+        animationSystem.PlayAnimation(context, entity, "sideIdleAnimation");
     }
 }
 
@@ -94,9 +101,9 @@ void Struktur::Player::PlayerControl(GameContext &context, entt::entity entity, 
     physicsBody.body->SetLinearVelocity(velecity);
     if (glm::length(dir) > 0.001f)
     {
-        if (!animationSystem.IsAnimationPlaying(context, entity, "run"))
+        if (!animationSystem.IsAnimationPlaying(context, entity, "sideRunAnimation"))
         {
-            animationSystem.PlayAnimation(context, entity, "run");
+            animationSystem.PlayAnimation(context, entity, "sideRunAnimation");
         }
 
         if (dir.x > 0)
@@ -110,9 +117,9 @@ void Struktur::Player::PlayerControl(GameContext &context, entt::entity entity, 
     }
     else
     {
-        if (!animationSystem.IsAnimationPlaying(context, entity, "idle"))
+        if (!animationSystem.IsAnimationPlaying(context, entity, "sideIdleAnimation"))
         {
-            animationSystem.PlayAnimation(context, entity, "idle");
+            animationSystem.PlayAnimation(context, entity, "sideIdleAnimation");
         }
     }
 }
