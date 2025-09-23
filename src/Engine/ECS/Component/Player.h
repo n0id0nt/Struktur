@@ -1,5 +1,7 @@
 #pragma once
 
+#include "glm/glm.hpp"
+
 namespace Struktur
 {
 	namespace Component
@@ -7,6 +9,7 @@ namespace Struktur
         struct Player
         {
             float speed;
+            glm::vec2 facing;
         };
 
         struct Interactable

@@ -108,6 +108,12 @@ void Struktur::System::SpriteRenderSystem::Update(GameContext &context)
                 ::SetShaderValue(shader->shader, ::GetShaderLocation(shader->shader, "waveSpeed"), &shader->speed, SHADER_UNIFORM_FLOAT);
                 ::SetShaderValue(shader->shader, ::GetShaderLocation(shader->shader, "waveDirection"), &shader->direction, SHADER_UNIFORM_VEC2);
 
+                // Set VHS/glitch shader uniforms
+                SetShaderValue(shader->shader, GetShaderLocation(shader->shader, "scanlineIntensity"), &shader->scanlineIntensity, SHADER_UNIFORM_FLOAT);
+                SetShaderValue(shader->shader, GetShaderLocation(shader->shader, "chromaticAberration"), &shader->chromaticAberration, SHADER_UNIFORM_FLOAT);
+                SetShaderValue(shader->shader, GetShaderLocation(shader->shader, "glitchFrequency"), &shader->glitchFrequency, SHADER_UNIFORM_FLOAT);
+                SetShaderValue(shader->shader, GetShaderLocation(shader->shader, "holographicShift"), &shader->holographicShift, SHADER_UNIFORM_FLOAT);
+                
                 ::BeginShaderMode(shader->shader);
             }
             ::DrawTexturePro(texture->texture, sourceRec, destRec, offset, glm::degrees(euler.z), sprite.color);
