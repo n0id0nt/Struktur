@@ -64,7 +64,13 @@ namespace Struktur
             physicsBody.syncFromPhysics = true;  // Don't let physics drive transform
             physicsBody.syncToPhysics = true;     // Let transform drive physics
             
-            ::Shader soulShader = ::LoadShader(0, "assets/Shaders/SoulEffect.fs");
+            ::Shader soulShader = ::LoadShader(0, "assets/Shaders/SoulEffect_100.fs");
+
+            bool useShader = (soulShader.id > 0);
+            if (!useShader)
+            {
+                DEBUG_WARNING("Failed to load soul shader");
+            }
             registry.emplace<Component::Shader>(entity, soulShader, ::Vector3{0.3f, 0.7f, 1.0f}, 0.05f, 1.0f, 15.0f, 0.05f, 8.0f, 3.0f, ::Vector2{1.0f, 0.3f}, 0.1f, 0.005f, 0.05f, 10.0f);
 
             //Component::SpriteAnimation& spriteAnimation = registry.emplace<Component::SpriteAnimation>(entity);

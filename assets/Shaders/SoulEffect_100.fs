@@ -1,8 +1,10 @@
-#version 330
+#version 100
+
+precision mediump float;
 
 // Input vertex attributes (from vertex shader)
-in vec2 fragTexCoord;
-in vec4 fragColor;
+varying vec2 fragTexCoord;
+varying vec4 fragColor;
 
 // Input uniform values
 uniform sampler2D texture0;
@@ -20,9 +22,6 @@ uniform float chromaticAberration;
 uniform float glitchFrequency;
 uniform float holographicShift;
 
-// Output fragment color
-out vec4 finalColor;
-
 void main()
 {
     vec2 uv = fragTexCoord;
@@ -36,10 +35,10 @@ void main()
     vec2 redOffset = vec2(aberration, 0.0);
     vec2 blueOffset = vec2(-aberration, 0.0);
     
-    float r = texture(texture0, uv + redOffset).r;
-    float g = texture(texture0, uv).g;
-    float b = texture(texture0, uv + blueOffset).b;
-    float alpha = texture(texture0, uv).a;
+    float r = texture2D(texture0, uv + redOffset).r;
+    float g = texture2D(texture0, uv).g;
+    float b = texture2D(texture0, uv + blueOffset).b;
+    float alpha = texture2D(texture0, uv).a;
     
     vec3 baseColor = vec3(r, g, b);
     
@@ -61,5 +60,5 @@ void main()
     float glow = (1.0 - smoothstep(0.0, 0.8, dist)) * glowIntensity;
     baseColor += soulColor * glow * 0.2;
     
-    finalColor = vec4(baseColor, alpha) * colDiffuse * fragColor;
+    gl_FragColor = vec4(baseColor, alpha) * colDiffuse * fragColor;
 }

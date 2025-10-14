@@ -99,7 +99,7 @@ void Struktur::System::SpriteRenderSystem::Update(GameContext &context)
                 ::SetShaderValue(shader->shader, ::GetShaderLocation(shader->shader, "rippleSpeed"), &shader->rippleSpeed, SHADER_UNIFORM_FLOAT);
                 ::SetShaderValue(shader->shader, ::GetShaderLocation(shader->shader, "rippleFrequency"), &shader->rippleFreq, SHADER_UNIFORM_FLOAT);
                 
-                ::Vector2 resolution = {gameDate.screenWidth, gameDate.screenHeight};
+                ::Vector2 resolution = {(float)gameDate.screenWidth, (float) gameDate.screenHeight};
                 ::SetShaderValue(shader->shader, ::GetShaderLocation(shader->shader, "resolution"), &resolution, SHADER_UNIFORM_VEC2);
 
                 // Set vertex shader uniforms for wave effect
@@ -109,10 +109,10 @@ void Struktur::System::SpriteRenderSystem::Update(GameContext &context)
                 ::SetShaderValue(shader->shader, ::GetShaderLocation(shader->shader, "waveDirection"), &shader->direction, SHADER_UNIFORM_VEC2);
 
                 // Set VHS/glitch shader uniforms
-                SetShaderValue(shader->shader, GetShaderLocation(shader->shader, "scanlineIntensity"), &shader->scanlineIntensity, SHADER_UNIFORM_FLOAT);
-                SetShaderValue(shader->shader, GetShaderLocation(shader->shader, "chromaticAberration"), &shader->chromaticAberration, SHADER_UNIFORM_FLOAT);
-                SetShaderValue(shader->shader, GetShaderLocation(shader->shader, "glitchFrequency"), &shader->glitchFrequency, SHADER_UNIFORM_FLOAT);
-                SetShaderValue(shader->shader, GetShaderLocation(shader->shader, "holographicShift"), &shader->holographicShift, SHADER_UNIFORM_FLOAT);
+                ::SetShaderValue(shader->shader, GetShaderLocation(shader->shader, "scanlineIntensity"), &shader->scanlineIntensity, SHADER_UNIFORM_FLOAT);
+                ::SetShaderValue(shader->shader, GetShaderLocation(shader->shader, "chromaticAberration"), &shader->chromaticAberration, SHADER_UNIFORM_FLOAT);
+                ::SetShaderValue(shader->shader, GetShaderLocation(shader->shader, "glitchFrequency"), &shader->glitchFrequency, SHADER_UNIFORM_FLOAT);
+                ::SetShaderValue(shader->shader, GetShaderLocation(shader->shader, "holographicShift"), &shader->holographicShift, SHADER_UNIFORM_FLOAT);
                 
                 ::BeginShaderMode(shader->shader);
             }
