@@ -3,7 +3,7 @@
 #include <string>
 #include "raylib.h"
 #include "glm/glm.hpp"
-#include "Engine/Core/Resource/TextureResource.h"
+#include "Engine/Resource/TextureResource.h"
 
 namespace Struktur
 {
@@ -11,7 +11,7 @@ namespace Struktur
 	{
         struct Sprite
         {
-            Core::Resource::ResourcePtr<Core::Resource::TextureResource> texture;
+            Resource::ResourcePtr<Resource::TextureResource> texture;
             ::Color color;
             glm::vec2 offset;
 

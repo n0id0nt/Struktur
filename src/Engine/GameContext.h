@@ -6,7 +6,7 @@
 
 #include "Engine/Core/Input.h"
 #include "Engine/Core/GameData.h"
-#include "Engine/Core/Resource/ResourceManager.h"
+#include "Engine/Resource/ResourceManager.h"
 #include "Engine/ECS/SystemManager.h"
 #include "Engine/ECS/GameObjectManager.h"
 #include "Engine/Physics/PhysicsWorld.h"
@@ -27,21 +27,14 @@ namespace Struktur
             m_input = std::make_unique<Core::Input>(0);
             m_gameData = std::make_unique<Core::GameData>();
             m_registry = std::make_unique<entt::registry>();
-            m_resourceManager = std::make_unique<Core::Resource::ResourceManager>();
+            m_resourceManager = std::make_unique<Resource::ResourceManager>();
             m_systemManager = std::make_unique<System::SystemManager>();
             m_gameObjectManager = std::make_unique<System::GameObjectManager>();
             m_camera = std::make_unique<GameResource::Camera>();
             m_stateManager = std::make_unique<GameResource::StateManager>();
             m_uiManger = std::make_unique<UI::UIManager>();
             m_inventory = std::make_unique<Inventory>();
-            
-            //TODO These variables don't belong here - Possibly initialise these from a file or just pass them in??
-            glm::vec2 gravity(0.0f, 0.0f);
-            int velocityIterations = 16;
-            int positionIterations = 10;
-            float pixelsPerMeter = 64.f;
-
-            m_physicsWorld = std::make_unique<Physics::PhysicsWorld>(gravity, velocityIterations, positionIterations, pixelsPerMeter);
+            m_physicsWorld = std::make_unique<Physics::PhysicsWorld>();
         }
 
         Core::Input& GetInput() const
@@ -62,7 +55,7 @@ namespace Struktur
             return *m_registry;
         }
 
-        Core::Resource::ResourceManager& GetResourceManager() const
+        Resource::ResourceManager& GetResourceManager() const
         {
             ASSERT_MSG(m_resourceManager.get(), "Resource Manager not initialized");
             return *m_resourceManager;
@@ -114,7 +107,7 @@ namespace Struktur
         std::unique_ptr<Core::GameData> m_gameData;
         std::unique_ptr<Core::Input> m_input;
         std::unique_ptr<entt::registry> m_registry;
-        std::unique_ptr<Core::Resource::ResourceManager> m_resourceManager;
+        std::unique_ptr<Resource::ResourceManager> m_resourceManager;
         std::unique_ptr<System::SystemManager> m_systemManager;
         std::unique_ptr<System::GameObjectManager> m_gameObjectManager;
         std::unique_ptr<Physics::PhysicsWorld> m_physicsWorld;

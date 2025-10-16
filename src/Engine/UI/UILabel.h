@@ -1,8 +1,8 @@
 #pragma once
 
 #include "Engine/UI/UIElement.h"
-#include "Engine/Core/Resource/ResourcePtr.h"
-#include "Engine/Core/Resource/FontResource.h"
+#include "Engine/Resource/ResourcePtr.h"
+#include "Engine/Resource/FontResource.h"
 
 namespace Struktur
 {
@@ -21,7 +21,7 @@ namespace UI
         {
         private:
             std::string m_text;
-            Core::Resource::ResourcePtr<Core::Resource::FontResource> m_font; // TODO Change this to UI a font from my resource manager
+            Resource::ResourcePtr<Resource::FontResource> m_font; // TODO Change this to UI a font from my resource manager
             ::Color m_textColor;
             TextAlignment m_alignment;
             bool m_wordWrap;
@@ -32,7 +32,7 @@ namespace UI
 
             void SetText(const std::string& newText);
 
-            void SetFont(Core::Resource::ResourcePtr<Core::Resource::FontResource> newFont) { m_font = std::move(newFont); }
+            void SetFont(Resource::ResourcePtr<Resource::FontResource> newFont) { m_font = std::move(newFont); }
             void SetTextColor(::Color color) { m_textColor = color; }
             void SetAlignment(TextAlignment align) { m_alignment = align; }
             void SetFontSize(float size) { m_fontSize = size; }

@@ -17,7 +17,7 @@
 #include "Engine/ECS/System/PhysicsSystem.h"
 #include "Engine/ECS/System/AnimationSystem.h"
 
-#include "Engine/Core/Resource/TextureResource.h"
+#include "Engine/Resource/TextureResource.h"
 
 
 namespace Struktur
@@ -65,7 +65,7 @@ namespace Struktur
         {
             entt::registry& registry = context.GetRegistry();
             System::GameObjectManager& gameObjectManager = context.GetGameObjectManager();
-            Core::Resource::ResourceManager& resourceManager = context.GetResourceManager();
+            Resource::ResourceManager& resourceManager = context.GetResourceManager();
             System::SystemManager& systemManager = context.GetSystemManager();
             auto& transformSystem = systemManager.GetSystem<System::TransformSystem>();
             
@@ -83,7 +83,7 @@ namespace Struktur
                 }
 
                 auto& itemData = s_spriteDataMap[interactionId];
-                Core::Resource::ResourcePtr<Core::Resource::TextureResource> texture = resourceManager.GetTexture("assets/Tiles/Items.png");
+                Resource::ResourcePtr<Resource::TextureResource> texture = resourceManager.GetTexture("assets/Tiles/Items.png");
                 registry.emplace<Component::Sprite>(entity, texture, color, glm::vec2(32, 48), 9, 2, false, itemData.spriteIndex, 1);
             }
 

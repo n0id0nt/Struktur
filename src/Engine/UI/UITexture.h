@@ -1,7 +1,7 @@
 #pragma once
 
-#include "Engine/Core/Resource/ResourcePtr.h"
-#include "Engine/Core/Resource/TextureResource.h"
+#include "Engine/Resource/ResourcePtr.h"
+#include "Engine/Resource/TextureResource.h"
 
 namespace Struktur
 {
@@ -13,7 +13,7 @@ namespace Struktur
         class UITexture
         {
         private:
-            Core::Resource::ResourcePtr<Core::Resource::TextureResource> m_backgroundTexture; // TODO replace this with resoruce loader texture
+            Resource::ResourcePtr<Resource::TextureResource> m_backgroundTexture; // TODO replace this with resoruce loader texture
             int columns, rows;
             int index;
 
@@ -21,7 +21,7 @@ namespace Struktur
             UITexture(const glm::vec2& absolutePosition, const glm::vec2& relativePosition, const glm::vec2& absoluteSize, const glm::vec2& relativeSize);
 
             void SetBackgroundColor(::Color color);
-            void SetBackgroundTexture(Core::Resource::ResourcePtr<Core::Resource::TextureResource> texture);
+            void SetBackgroundTexture(Resource::ResourcePtr<Resource::TextureResource> texture);
             void ClearBackgroundTexture();
 
             void Update(GameContext& context) override;

@@ -2,20 +2,20 @@
 
 #include <format>
 
-Struktur::Core::Resource::TextureResource::TextureResource(const std::string &filePath)
+Struktur::Resource::TextureResource::TextureResource(const std::string &filePath)
 : GpuResource(filePath)
 {
     texture.id = 0;
     m_sourceImage.data = nullptr;
 }
 
-Struktur::Core::Resource::TextureResource::~TextureResource()
+Struktur::Resource::TextureResource::~TextureResource()
 {
     UnloadFromGpu();
     UnloadFromDisk();
 }
 
-bool Struktur::Core::Resource::TextureResource::LoadFromDisk()
+bool Struktur::Resource::TextureResource::LoadFromDisk()
 {
     if (isLoaded) return true;
     
@@ -31,7 +31,7 @@ bool Struktur::Core::Resource::TextureResource::LoadFromDisk()
     return true;
 }
 
-void Struktur::Core::Resource::TextureResource::UnloadFromDisk()
+void Struktur::Resource::TextureResource::UnloadFromDisk()
 {
     if (isLoaded)
     {
@@ -41,7 +41,7 @@ void Struktur::Core::Resource::TextureResource::UnloadFromDisk()
     isLoaded = false;
 }
 
-bool Struktur::Core::Resource::TextureResource::LoadToGpu()
+bool Struktur::Resource::TextureResource::LoadToGpu()
 {
     if (!LoadFromDisk()) return false;
     if (IsGpuResourceValid()) return true;
@@ -50,7 +50,7 @@ bool Struktur::Core::Resource::TextureResource::LoadToGpu()
     return texture.id != 0;
 }
 
-void Struktur::Core::Resource::TextureResource::UnloadFromGpu()
+void Struktur::Resource::TextureResource::UnloadFromGpu()
 {
     if (texture.id != 0)
     {
@@ -59,22 +59,22 @@ void Struktur::Core::Resource::TextureResource::UnloadFromGpu()
     }
 }
 
-bool Struktur::Core::Resource::TextureResource::IsGpuResourceValid() const
+bool Struktur::Resource::TextureResource::IsGpuResourceValid() const
 {
     return texture.id != 0/* && IsTextureReady(texture)*/;
 }
 
-size_t Struktur::Core::Resource::TextureResource::GetMemoryUsage() const
+size_t Struktur::Resource::TextureResource::GetMemoryUsage() const
 {
     return isLoaded ? (m_sourceImage.width * m_sourceImage.height * 4) : 0;
 }
 
-size_t Struktur::Core::Resource::TextureResource::GetGpuMemoryUsage() const
+size_t Struktur::Resource::TextureResource::GetGpuMemoryUsage() const
 {
     return GetMemoryUsage(); // Same as disk for simple case
 }
 
-Struktur::Core::Resource::TextureResource *Struktur::Core::Resource::TexturePool::LoadResource(const std::string& filePath)
+Struktur::Resource::TextureResource *Struktur::Resource::TexturePool::LoadResource(const std::string& filePath)
 {
     auto* texture = new TextureResource(filePath);
     

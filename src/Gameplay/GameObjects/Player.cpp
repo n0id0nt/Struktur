@@ -18,7 +18,7 @@
 #include "Engine/ECS/System/PhysicsSystem.h"
 #include "Engine/ECS/System/AnimationSystem.h"
 
-#include "Engine/Core/Resource/TextureResource.h"
+#include "Engine/Resource/TextureResource.h"
 
 constexpr static const float INTERACTABLE_DISTANCE = 64.0f;
 
@@ -42,12 +42,12 @@ void Struktur::Player::Create(GameContext &context, entt::entity entity)
 {
     entt::registry& registry = context.GetRegistry();
     System::GameObjectManager& gameObjectManager = context.GetGameObjectManager();
-    Core::Resource::ResourceManager& resourceManager = context.GetResourceManager();
+    Resource::ResourceManager& resourceManager = context.GetResourceManager();
     System::SystemManager& systemManager = context.GetSystemManager();
     auto& transformSystem = systemManager.GetSystem<System::TransformSystem>();
     auto& physicsSystem = systemManager.GetSystem<System::PhysicsSystem>();
     auto& animationSystem = systemManager.GetSystem<System::AnimationSystem>();
-    Core::Resource::ResourcePtr<Core::Resource::TextureResource> texture = resourceManager.GetTexture("assets/Tiles/PlayerSpriteSheet.png");
+    Resource::ResourcePtr<Resource::TextureResource> texture = resourceManager.GetTexture("assets/Tiles/PlayerSpriteSheet.png");
 
     registry.emplace<Component::Sprite>(entity, texture, WHITE, glm::vec2(48, 64), 6, 3, false, 0, 3);
     registry.emplace<Component::Player>(entity, 5.f);

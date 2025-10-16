@@ -49,8 +49,8 @@ namespace Struktur
 
                 Core::GameData& gameDate = context.GetGameData();
                 entt::registry& registry = context.GetRegistry();
-                Core::Resource::ResourceManager& resourceManager = context.GetResourceManager();
-                Core::Resource::ResourcePtr<Core::Resource::FontResource> font = resourceManager.GetFontResource("assets/Fonts/medieval_sharp/MedievalSharp-Bold.ttf_120");
+                Resource::ResourceManager& resourceManager = context.GetResourceManager();
+                Resource::ResourcePtr<Resource::FontResource> font = resourceManager.GetFontResource("assets/Fonts/medieval_sharp/MedievalSharp-Bold.ttf_120");
 
                 // UI layout
                 UI::UIManager& uiManager = context.GetUIManager();

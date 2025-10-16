@@ -13,7 +13,7 @@ void Struktur::UI::UIPanel::SetBackgroundColor(::Color color)
     m_backgroundColor = color;
 }
 
-void Struktur::UI::UIPanel::SetBackgroundTexture(Core::Resource::ResourcePtr<Core::Resource::TextureResource> texture)
+void Struktur::UI::UIPanel::SetBackgroundTexture(Resource::ResourcePtr<Resource::TextureResource> texture)
 {
     m_backgroundTexture = std::move(texture);
     m_hasBackgroundTexture = true;
@@ -35,7 +35,7 @@ void Struktur::UI::UIPanel::Render(GameContext &context)
     if (m_hasBackgroundTexture)
     {
         // Scale texture to fit panel
-        Core::Resource::TextureResource* texture = m_backgroundTexture.Get();
+        Resource::TextureResource* texture = m_backgroundTexture.Get();
         if (!texture->IsGpuReady())
         {
             texture->LoadToGpu();

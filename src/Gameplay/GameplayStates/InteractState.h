@@ -355,8 +355,8 @@ namespace Struktur
 
                 Core::GameData& gameDate = context.GetGameData();
                 entt::registry& registry = context.GetRegistry();
-                Core::Resource::ResourceManager& resourceManager = context.GetResourceManager();
-                Core::Resource::ResourcePtr<Core::Resource::FontResource> font = resourceManager.GetFontResource("assets/Fonts/medieval_sharp/MedievalSharp-Bold.ttf_30");
+                Resource::ResourceManager& resourceManager = context.GetResourceManager();
+                Resource::ResourcePtr<Resource::FontResource> font = resourceManager.GetFontResource("assets/Fonts/medieval_sharp/MedievalSharp-Bold.ttf_30");
 
                 // UI layout
                 UI::UIManager& uiManager = context.GetUIManager();
@@ -371,7 +371,7 @@ namespace Struktur
                 textBackgroundPanel->SetBackgroundColor(DARKGRAY);
                 textBackgroundPanel->SetBorderColor(BLANK);
                 textBackgroundPanel->SetBorderWidth(2.0f);
-                Core::Resource::ResourcePtr<Core::Resource::TextureResource> dialogueBackgroundPanelTexture = resourceManager.GetTexture("assets/Tiles/DialoguePanel.png");
+                Resource::ResourcePtr<Resource::TextureResource> dialogueBackgroundPanelTexture = resourceManager.GetTexture("assets/Tiles/DialoguePanel.png");
                 textBackgroundPanel->SetBackgroundTexture(dialogueBackgroundPanelTexture);
 
                 m_dialogueLabel = static_cast<UI::UILabel*>(textBackgroundPanel->AddChild(std::make_unique<UI::UILabel>(context, glm::vec2{ 40, 30 }, glm::vec2{ 0.0f, 0.0f }, "", 20.0f)));

@@ -12,7 +12,8 @@ namespace Struktur
 		class PhysicsWorld
 		{
 		public:
-			PhysicsWorld(glm::vec2 gravity, int velocityIterations, int positionIterations, float pixelsPerMeter);
+			PhysicsWorld();
+			void Initialise(glm::vec2 gravity, int velocityIterations, int positionIterations, float pixelsPerMeter);
 
 			void Step(float deltaTime);
 

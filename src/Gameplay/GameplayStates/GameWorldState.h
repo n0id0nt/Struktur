@@ -154,12 +154,12 @@ namespace Struktur
                 Core::GameData& gameData = context.GetGameData();
                 gameData.Loops++; // increment the game loop count
 
-                Core::Resource::ResourceManager& resourceManager = context.GetResourceManager();
+                Resource::ResourceManager& resourceManager = context.GetResourceManager();
                 System::SystemManager& systemManager = context.GetSystemManager();
                 System::GameObjectManager& gameObjectManger = context.GetGameObjectManager();
                 entt::registry& registry = context.GetRegistry();
 
-                Core::Resource::ResourcePtr<Core::Resource::FontResource> font = resourceManager.GetFontResource("assets/Fonts/medieval_sharp/MedievalSharp-Bold.ttf_60");
+                Resource::ResourcePtr<Resource::FontResource> font = resourceManager.GetFontResource("assets/Fonts/medieval_sharp/MedievalSharp-Bold.ttf_60");
                 System::TransformSystem& transformSystem = systemManager.GetSystem<System::TransformSystem>();
 
                 entt::entity worldEntity = GameResource::Level::CreateWorldEntity(context, WORLD_FILE_PATH);
@@ -170,35 +170,35 @@ namespace Struktur
                 transformSystem.SetWorldTransform(context, northRoom, glm::vec3(576.0f, 0.0f, 0.0f), glm::vec3(1.0f), glm::quat(1.0f, 0.0f, 0.0f, 0.0f));
                 entt::entity northRoomSpriteEntity = gameObjectManger.CreateGameObject(context, "northRoomSprite", northRoom);
                 transformSystem.SetLocalTransform(context, northRoomSpriteEntity, glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(1.0f), glm::quat(1.0f, 0.0f, 0.0f, 0.0f));
-                Core::Resource::ResourcePtr<Core::Resource::TextureResource> northRoomSpriteTexture = resourceManager.GetTexture(std::format("assets/Tiles/{}.png", GetNorthRoom(context)).c_str());
+                Resource::ResourcePtr<Resource::TextureResource> northRoomSpriteTexture = resourceManager.GetTexture(std::format("assets/Tiles/{}.png", GetNorthRoom(context)).c_str());
                 registry.emplace<Component::Sprite>(northRoomSpriteEntity, northRoomSpriteTexture, WHITE, glm::vec2(0, 0), 1, 1, false, 0, 0);
                 
                 entt::entity eastRoom = GameResource::Level::LoadLevelEntities(context, worldEntity, roomList[1]);
                 transformSystem.SetWorldTransform(context, eastRoom, glm::vec3(1152.0f, 576.0f, 0.0f), glm::vec3(1.0f), glm::quat(1.0f, 0.0f, 0.0f, 0.0f));
                 entt::entity eastRoomSpriteEntity = gameObjectManger.CreateGameObject(context, "eastRoomSprite", eastRoom);
                 transformSystem.SetLocalTransform(context, eastRoomSpriteEntity, glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(1.0f), glm::quat(1.0f, 0.0f, 0.0f, 0.0f));
-                Core::Resource::ResourcePtr<Core::Resource::TextureResource> eastRoomSpriteTexture = resourceManager.GetTexture(std::format("assets/Tiles/{}.png", GetEastRoom(context)).c_str());
+                Resource::ResourcePtr<Resource::TextureResource> eastRoomSpriteTexture = resourceManager.GetTexture(std::format("assets/Tiles/{}.png", GetEastRoom(context)).c_str());
                 registry.emplace<Component::Sprite>(eastRoomSpriteEntity, eastRoomSpriteTexture, WHITE, glm::vec2(0, 0), 1, 1, false, 0, 0);
                 
                 entt::entity westRoom = GameResource::Level::LoadLevelEntities(context, worldEntity, roomList[2]);
                 transformSystem.SetWorldTransform(context, westRoom, glm::vec3(0.0f, 576.0f, 0.0f), glm::vec3(1.0f), glm::quat(1.0f, 0.0f, 0.0f, 0.0f));
                 entt::entity westRoomSpriteEntity = gameObjectManger.CreateGameObject(context, "westRoomSprite", westRoom);
                 transformSystem.SetLocalTransform(context, westRoomSpriteEntity, glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(1.0f), glm::quat(1.0f, 0.0f, 0.0f, 0.0f));
-                Core::Resource::ResourcePtr<Core::Resource::TextureResource> westRoomSpriteTexture = resourceManager.GetTexture(std::format("assets/Tiles/{}.png", GetWestRoom(context)).c_str());
+                Resource::ResourcePtr<Resource::TextureResource> westRoomSpriteTexture = resourceManager.GetTexture(std::format("assets/Tiles/{}.png", GetWestRoom(context)).c_str());
                 registry.emplace<Component::Sprite>(westRoomSpriteEntity, westRoomSpriteTexture, WHITE, glm::vec2(0, 0), 1, 1, false, 0, 0);
                 
                 entt::entity southRoom = GameResource::Level::LoadLevelEntities(context, worldEntity, roomList[3]);
                 transformSystem.SetWorldTransform(context, southRoom, glm::vec3(576.0f, 1152.0f, 0.0f), glm::vec3(1.0f), glm::quat(1.0f, 0.0f, 0.0f, 0.0f));
                 entt::entity southRoomSpriteEntity = gameObjectManger.CreateGameObject(context, "southRoomSprite", southRoom);
                 transformSystem.SetLocalTransform(context, southRoomSpriteEntity, glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(1.0f), glm::quat(1.0f, 0.0f, 0.0f, 0.0f));
-                Core::Resource::ResourcePtr<Core::Resource::TextureResource> southRoomSpriteTexture = resourceManager.GetTexture(std::format("assets/Tiles/{}.png", GetSouthRoom(context)).c_str());
+                Resource::ResourcePtr<Resource::TextureResource> southRoomSpriteTexture = resourceManager.GetTexture(std::format("assets/Tiles/{}.png", GetSouthRoom(context)).c_str());
                 registry.emplace<Component::Sprite>(southRoomSpriteEntity, southRoomSpriteTexture, WHITE, glm::vec2(0, 0), 1, 1, false, 0, 0);
                 
                 entt::entity courtyard = GameResource::Level::LoadLevelEntities(context, worldEntity, roomList[4]);
                 transformSystem.SetWorldTransform(context, courtyard, glm::vec3(576.0f, 576.0f, 0.0f), glm::vec3(1.0f), glm::quat(1.0f, 0.0f, 0.0f, 0.0f));
                 entt::entity courtyardSpriteEntity = gameObjectManger.CreateGameObject(context, "courtyardSprite", courtyard);
                 transformSystem.SetLocalTransform(context, courtyardSpriteEntity, glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(1.0f), glm::quat(1.0f, 0.0f, 0.0f, 0.0f));
-                Core::Resource::ResourcePtr<Core::Resource::TextureResource> courtyardSpriteTexture = resourceManager.GetTexture("assets/Tiles/Courtyard.png");
+                Resource::ResourcePtr<Resource::TextureResource> courtyardSpriteTexture = resourceManager.GetTexture("assets/Tiles/Courtyard.png");
                 registry.emplace<Component::Sprite>(courtyardSpriteEntity, courtyardSpriteTexture, WHITE, glm::vec2(0, 0), 1, 1, false, 0, 0);
                 
                 entt::entity northRoomDupe = GameResource::Level::LoadLevelEntities(context, worldEntity, roomList[0]);
@@ -242,7 +242,7 @@ namespace Struktur
                 }
 
                 Core::Input& input = context.GetInput();
-                Core::Resource::ResourceManager& resoruceManager = context.GetResourceManager();
+                Resource::ResourceManager& resoruceManager = context.GetResourceManager();
                 System::GameObjectManager& gameObjectManager = context.GetGameObjectManager();
                 GameResource::Camera& camera = context.GetCamera();
                 System::SystemManager& systemManager = context.GetSystemManager();

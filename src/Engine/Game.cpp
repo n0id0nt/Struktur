@@ -41,8 +41,9 @@
 
 constexpr static const unsigned int FPS = 60;
 constexpr static const float TIME_STEP = 1.0f / FPS;
-constexpr static const int VELOCITY_ITERATIONS = 6;
-constexpr static const int POSITION_ITERATIONS = 4;
+constexpr static const int VELOCITY_ITERATIONS = 16;
+constexpr static const int POSITION_ITERATIONS = 10;
+constexpr static const float PIXELS_PER_METER = 64.f;
 constexpr static const char* INPUT_BINDINGS_PATH = "assets/Settings/InputBindings/InputBindings.xml";
 
 void Struktur::InitialiseGame(GameContext& context)
@@ -51,10 +52,13 @@ void Struktur::InitialiseGame(GameContext& context)
     System::SystemManager& systemManager = context.GetSystemManager();
     System::GameObjectManager& gameObjectManager = context.GetGameObjectManager();
     GameResource::StateManager& stateManager = context.GetStateManager();
+    Physics::PhysicsWorld& physicsWorld = context.GetPhysicsWorld();
     
     gameObjectManager.CreateDeleteObjectCallBack(context);
 
     input.LoadInputBindings(INPUT_BINDINGS_PATH);
+    glm::vec2 gravity(0.0f, 0.0f);
+    physicsWorld.Initialise(gravity, VELOCITY_ITERATIONS, POSITION_ITERATIONS, PIXELS_PER_METER);
 
     // The order here also defines the order they are updated - TODO need a better way to determine render priority and also need a way to have helper systems with out an empty update
     systemManager.AddHelperSystem<System::HierarchySystem>();
@@ -95,15 +99,15 @@ void Struktur::ExitGame(GameContext &context)
     world.Clear();
     
     DEBUG_INFO("[Clean Up] Resource Manager");
-    Core::Resource::ResourceManager& resourceManager = context.GetResourceManager();
+    Resource::ResourceManager& resourceManager = context.GetResourceManager();
     resourceManager.Clear();
 }
 
 void Struktur::SplashScreenLoop(GameContext& context)
 {
     Core::GameData& gameData = context.GetGameData();
-    Core::Resource::ResourceManager& resourceManager = context.GetResourceManager();
-    Core::Resource::ResourcePtr<Core::Resource::FontResource> font = resourceManager.GetFontResource("assets/Fonts/medieval_sharp/MedievalSharp-Bold.ttf_120");
+    Resource::ResourceManager& resourceManager = context.GetResourceManager();
+    Resource::ResourcePtr<Resource::FontResource> font = resourceManager.GetFontResource("assets/Fonts/medieval_sharp/MedievalSharp-Bold.ttf_120");
     //fade in time
     const double fadeInTime = 1.5;
     const double holdTime = 1;
@@ -201,8 +205,8 @@ void Struktur::Game()
     // Load resources
     InitialiseGame(context);
 
-    Core::Resource::ResourceManager& resourceManager = context.GetResourceManager();
-    Core::Resource::ResourcePtr<Core::Resource::FontResource> font = resourceManager.GetFontResource("assets/Fonts/medieval_sharp/MedievalSharp-Bold.ttf_120");
+    Resource::ResourceManager& resourceManager = context.GetResourceManager();
+    Resource::ResourcePtr<Resource::FontResource> font = resourceManager.GetFontResource("assets/Fonts/medieval_sharp/MedievalSharp-Bold.ttf_120");
     
     Core::GameData& gameData = context.GetGameData();
     gameData.startTime = ::GetTime();

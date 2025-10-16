@@ -239,12 +239,12 @@ set(SOURCES
 
     src/Engine/Core/Gamedata.h                  src/Engine/Core/GameData.cpp
     src/Engine/Core/Input.h                     src/Engine/Core/Input.cpp
-    src/Engine/Core/Resource/ResourcePool.h     src/Engine/Core/Resource/ResourcePool.cpp
-    src/Engine/Core/Resource/Resource.h
-    src/Engine/Core/Resource/ResourcePtr.h
-    src/Engine/Core/Resource/ResourceManager.h
-    src/Engine/Core/Resource/SoundResource.h
-    src/Engine/Core/Resource/TextureResource.h  src/Engine/Core/Resource/TextureResource.cpp
+    src/Engine/Resource/ResourcePool.h
+    src/Engine/Resource/Resource.h
+    src/Engine/Resource/ResourcePtr.h
+    src/Engine/Resource/ResourceManager.h
+    src/Engine/Resource/SoundResource.h
+    src/Engine/Resource/TextureResource.h       src/Engine/Resource/TextureResource.cpp
     
     src/Engine/ECS/SystemManager.h              src/Engine/ECS/SystemManager.cpp
     src/Engine/ECS/GameObjectManager.h          src/Engine/ECS/GameObjectManager.cpp

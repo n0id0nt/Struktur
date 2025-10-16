@@ -2,10 +2,17 @@
 
 #include "Debug/Assertions.h"
 
-Struktur::Physics::PhysicsWorld::PhysicsWorld(glm::vec2 gravity, int velocityIterations, int positionIterations, float pixelsPerMeter)
-	: m_world({ gravity.x, gravity.y }), m_velocityIteration(velocityIterations), m_positionIterations(positionIterations), m_pixelsPerMeter(pixelsPerMeter), m_contactListener()
+Struktur::Physics::PhysicsWorld::PhysicsWorld() : m_world(b2Vec2()), m_contactListener()
 {
 	m_world.SetContactListener(&m_contactListener);
+}
+
+void Struktur::Physics::PhysicsWorld::Initialise(glm::vec2 gravity, int velocityIterations, int positionIterations, float pixelsPerMeter)
+{
+	m_world.SetGravity(b2Vec2(gravity.x, gravity.y));
+	m_velocityIteration = velocityIterations;
+	m_positionIterations = positionIterations;
+	m_pixelsPerMeter = pixelsPerMeter;
 }
 
 void Struktur::Physics::PhysicsWorld::Step(float deltaTime)

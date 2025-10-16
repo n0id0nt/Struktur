@@ -38,7 +38,7 @@ entt::entity Struktur::GameResource::Level::LoadLevelEntities(GameContext& conte
 {
     entt::registry& registry = context.GetRegistry();
     System::GameObjectManager& gameObjectManager = context.GetGameObjectManager();
-    Core::Resource::ResourceManager& resoruceManager = context.GetResourceManager();
+    Resource::ResourceManager& resoruceManager = context.GetResourceManager();
     System::SystemManager& systemManager = context.GetSystemManager();
     auto& transformSystem = systemManager.GetSystem<System::TransformSystem>();
     auto& physicsSystem = systemManager.GetSystem<System::PhysicsSystem>();
@@ -64,7 +64,7 @@ entt::entity Struktur::GameResource::Level::LoadLevelEntities(GameContext& conte
         case FileLoading::LevelParser::LayerType::INT_GRID:
         case FileLoading::LevelParser::LayerType::AUTO_LAYER:
         {
-            Core::Resource::ResourcePtr<Core::Resource::TextureResource> texture = resoruceManager.GetTexture("assets/Tiles/MemoryPalaceCollisionTiles.png");
+            Resource::ResourcePtr<Resource::TextureResource> texture = resoruceManager.GetTexture("assets/Tiles/MemoryPalaceCollisionTiles.png");
             transformSystem.SetLocalTransform(context, layerEntity, glm::vec3(layer.pxTotalOffsetX, layer.pxTotalOffsetY, 0.0f), glm::vec3(1.0f), glm::quat(1.0f, 0.0f, 0.0f, 0.0f));
             std::vector<TileMap::GridTile> grid;
             grid.reserve(layer.autoLayerTiles.size());

@@ -46,8 +46,8 @@ namespace Struktur
                 // Create Call the interact function and get the player to interact with
                 Inventory& inventory = context.GetInventory();
                 Core::GameData& gameDate = context.GetGameData();
-                Core::Resource::ResourceManager& resourceManager = context.GetResourceManager();
-                Core::Resource::ResourcePtr<Core::Resource::FontResource> font = resourceManager.GetFontResource("assets/Fonts/medieval_sharp/MedievalSharp-Bold.ttf_120");
+                Resource::ResourceManager& resourceManager = context.GetResourceManager();
+                Resource::ResourcePtr<Resource::FontResource> font = resourceManager.GetFontResource("assets/Fonts/medieval_sharp/MedievalSharp-Bold.ttf_120");
 
                 UI::UIManager& uiManager = context.GetUIManager();
                 UI::FocusNavigator* focusNavigator = uiManager.GetFocusNavigator();
@@ -60,14 +60,14 @@ namespace Struktur
                 inventoryBackgroundPanel->SetAnchorPoint(glm::vec2{0.5f, 0.5f});
                 inventoryBackgroundPanel->SetBorderColor(BLANK);
                 inventoryBackgroundPanel->SetBorderWidth(2.0f);
-                Core::Resource::ResourcePtr<Core::Resource::TextureResource> inventoryBackgroundPanelTexture = resourceManager.GetTexture("assets/Tiles/InventoryBackgroundPanel.png");
+                Resource::ResourcePtr<Resource::TextureResource> inventoryBackgroundPanelTexture = resourceManager.GetTexture("assets/Tiles/InventoryBackgroundPanel.png");
                 inventoryBackgroundPanel->SetBackgroundTexture(inventoryBackgroundPanelTexture);
 
                 auto* focusedBackgroundPanel = static_cast<UI::UIPanel*>(m_screenPanel->AddChild(std::make_unique<UI::UIPanel>(glm::vec2{0, 0}, glm::vec2{0.7f, 0.5f}, glm::vec2{400, 500}, glm::vec2{0, 0})));
                 focusedBackgroundPanel->SetAnchorPoint(glm::vec2{0.5f, 0.5f});
                 focusedBackgroundPanel->SetBorderColor(BLANK);
                 focusedBackgroundPanel->SetBorderWidth(2.0f);
-                Core::Resource::ResourcePtr<Core::Resource::TextureResource> focusedItemBackgroundPanelTexture = resourceManager.GetTexture("assets/Tiles/FocusedItemBackgroundPanel.png");
+                Resource::ResourcePtr<Resource::TextureResource> focusedItemBackgroundPanelTexture = resourceManager.GetTexture("assets/Tiles/FocusedItemBackgroundPanel.png");
                 focusedBackgroundPanel->SetBackgroundTexture(focusedItemBackgroundPanelTexture);
                 
                 auto* inventoryFocusedItemNameLabel = static_cast<UI::UILabel*>(focusedBackgroundPanel->AddChild(std::make_unique<UI::UILabel>(context, glm::vec2{ 0.0f, -20.0f }, glm::vec2{ 0.5f, 0.75f }, "No Items", 30.0f)));
@@ -95,7 +95,7 @@ namespace Struktur
                     inventoryItemPanel->SetBorderColor(BLANK);
                     inventoryItemPanel->SetBorderWidth(2.0f);
                     inventoryItemPanel->SetFocusable(true);
-                    Core::Resource::ResourcePtr<Core::Resource::TextureResource> texture;
+                    Resource::ResourcePtr<Resource::TextureResource> texture;
                     const std::string suffix1 = " Note";
                     const std::string suffix2 = " Recipt";
                     // Check if string ends with " returns"

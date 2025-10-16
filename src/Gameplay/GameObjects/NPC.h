@@ -16,7 +16,7 @@
 #include "Engine/ECS/System/PhysicsSystem.h"
 #include "Engine/ECS/System/AnimationSystem.h"
 
-#include "Engine/Core/Resource/TextureResource.h"
+#include "Engine/Resource/TextureResource.h"
 
 namespace Struktur
 {
@@ -44,12 +44,12 @@ namespace Struktur
         {
             entt::registry& registry = context.GetRegistry();
             System::GameObjectManager& gameObjectManager = context.GetGameObjectManager();
-            Core::Resource::ResourceManager& resourceManager = context.GetResourceManager();
+            Resource::ResourceManager& resourceManager = context.GetResourceManager();
             System::SystemManager& systemManager = context.GetSystemManager();
             auto& transformSystem = systemManager.GetSystem<System::TransformSystem>();
             auto& physicsSystem = systemManager.GetSystem<System::PhysicsSystem>();
             auto& animationSystem = systemManager.GetSystem<System::AnimationSystem>();
-            Core::Resource::ResourcePtr<Core::Resource::TextureResource> texture = resourceManager.GetTexture("assets/Tiles/NPCs.png");
+            Resource::ResourcePtr<Resource::TextureResource> texture = resourceManager.GetTexture("assets/Tiles/NPCs.png");
 
             const NPCData& npcData = s_spriteDataMap[name];
             auto& worldTransform = registry.get<Component::WorldTransform>(entity);

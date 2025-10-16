@@ -27,7 +27,7 @@ void Struktur::System::SpriteRenderSystem::Update(GameContext &context)
         m_spritesToRender.reserve(view.size_hint());
         for (auto [entity, sprite, worldTransform] : view.each())
         {
-            Core::Resource::TextureResource* texture = sprite.texture.Get();
+            Resource::TextureResource* texture = sprite.texture.Get();
             if (!texture) continue;
 
             if (!texture->IsGpuReady())
@@ -57,7 +57,7 @@ void Struktur::System::SpriteRenderSystem::Update(GameContext &context)
             const Component::WorldTransform& worldTransform = *renderData.worldTransform;
 
             
-            Core::Resource::TextureResource* texture = sprite.texture.Get();
+            Resource::TextureResource* texture = sprite.texture.Get();
             // texture is guaranteed to exist and be GPU ready from previous check
             
             int imageWidth = texture->GetWidth();
@@ -127,7 +127,7 @@ void Struktur::System::SpriteRenderSystem::Update(GameContext &context)
         auto view = registry.view<Component::TileMap, Component::WorldTransform>();
         for (auto [entity, tileMap, worldTransform] : view.each())
         {
-            Core::Resource::TextureResource* texture = tileMap.texture.Get();
+            Resource::TextureResource* texture = tileMap.texture.Get();
             if (!texture->IsGpuReady())
             {
                 texture->LoadToGpu();
