@@ -378,6 +378,8 @@ namespace Struktur
                 m_dialogueLabel->SetTextColor(BLACK);
                 m_dialogueLabel->SetAnchorPoint(glm::vec2{0.0f, 0.0f});
                 m_dialogueLabel->SetFont(font);
+                m_dialogueLabel->SetWordWrap(UI::TextWrapping::WORD_WRAP);
+                m_dialogueLabel->SetSize(glm::vec2{ -40, -30 }, glm::vec2{ 1.0f, 1.0f });
                 m_continueDialogueLabel = static_cast<UI::UILabel*>(textBackgroundPanel->AddChild(std::make_unique<UI::UILabel>(context, glm::vec2{ -40, -30 }, glm::vec2{ 1, 1 }, "Continue", 20.0f)));
                 m_continueDialogueLabel->SetAnchorPoint(glm::vec2{1.0f, 1.0f});
                 m_continueDialogueLabel->SetTextColor(BLACK);
