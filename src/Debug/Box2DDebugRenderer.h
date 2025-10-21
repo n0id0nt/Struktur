@@ -3,6 +3,8 @@
 #include <vector>
 #include "raylib.h"
 #include "box2d/box2d.h"
+#include "glm/glm.hpp"
+#include "Engine/Physics/ContactListener.h"
 
 namespace Struktur
 {
@@ -15,10 +17,30 @@ namespace Struktur
             Color m_fillColor;
             float m_lineThickness;
 
+            // Contact point visualization settings
+            struct ContactPointSettings {
+                Color pointColor = RED;
+                Color normalColor = BLUE;
+                Color impulseColor = YELLOW;
+                float pointRadius = 4.0f;
+                float normalLength = 20.0f;
+                float impulseScale = 0.5f;
+                bool drawNormals = true;
+                bool drawImpulses = true;
+            };
+
+            ContactPointSettings m_contactSettings;
+
             // Helper function to convert Box2D coordinates to screen coordinates
             Vector2 B2ToScreen(const b2Vec2& b2Pos, float scale)
             {
                 return { b2Pos.x * scale, b2Pos.y * scale };
+            }
+
+            // Helper function to convert glm::vec2 to screen coordinates
+            Vector2 GlmToScreen(const glm::vec2& pos, float scale)
+            {
+                return { pos.x * scale, pos.y * scale };
             }
 
             // Draw a polygon shape
@@ -219,6 +241,45 @@ namespace Struktur
                 ::DrawLineEx(arcEnd, arrowTip, m_lineThickness, angularColor);
             }
 
+            // Draw a single contact point with optional normal and impulse
+            void DrawContactPoint(const glm::vec2& point, const glm::vec2& normal, float impulse, float scale, bool drawNormal, bool drawImpulse)
+            {
+                Vector2 screenPoint = GlmToScreen(point, scale);
+
+                // Draw contact point as a filled circle
+                ::DrawCircleV(screenPoint, m_contactSettings.pointRadius, m_contactSettings.pointColor);
+                ::DrawCircleLines(screenPoint.x, screenPoint.y, m_contactSettings.pointRadius, ColorBrightness(m_contactSettings.pointColor, -0.3f));
+
+                // Draw contact normal
+                if (drawNormal && m_contactSettings.drawNormals)
+                {
+                    Vector2 normalEnd = {
+                        screenPoint.x + normal.x * m_contactSettings.normalLength,
+                        screenPoint.y + normal.y * m_contactSettings.normalLength
+                    };
+                    ::DrawLineEx(screenPoint, normalEnd, m_lineThickness * 1.2f, m_contactSettings.normalColor);
+
+                    // Draw small circle at the end of normal
+                    ::DrawCircleV(normalEnd, 2.0f, m_contactSettings.normalColor);
+                }
+
+                // Draw impulse magnitude (as a perpendicular line or color intensity)
+                if (drawImpulse && m_contactSettings.drawImpulses && impulse > 0.01f)
+                {
+                    float impulseLength = impulse * m_contactSettings.impulseScale * scale;
+                    impulseLength = fminf(impulseLength, 50.0f); // Cap maximum length
+
+                    // Draw impulse as a line perpendicular to the normal
+                    glm::vec2 perpendicular = glm::vec2(-normal.y, normal.x);
+                    Vector2 impulseEnd = {
+                        screenPoint.x + perpendicular.x * impulseLength,
+                        screenPoint.y + perpendicular.y * impulseLength
+                    };
+
+                    ::DrawLineEx(screenPoint, impulseEnd, m_lineThickness, m_contactSettings.impulseColor);
+                }
+            }
+
         public:
             Box2DDebugRenderer(::Color line = GREEN, ::Color fill = { 0, 255, 0, 50 }, float thickness = 1.0f)
                 : m_lineColor(line), m_fillColor(fill), m_lineThickness(thickness)
@@ -308,6 +369,35 @@ namespace Struktur
                 }
             }
 
+            // Render contact points from your ContactListener
+            template<typename ContactContainer>
+            void RenderContactPoints(const ContactContainer& contacts, float scale = 32.0f, bool drawNormals = true, bool drawImpulses = true)
+            {
+                for (const auto& contact : contacts)
+                {
+                    if (!contact.enabled) continue;
+
+                    // Draw each contact point
+                    for (size_t i = 0; i < contact.contactPoints.size(); ++i)
+                    {
+                        float impulse = (i < contact.impulses.size()) ? contact.impulses[i] : 0.0f;
+                        DrawContactPoint(contact.contactPoints[i], contact.normal, impulse, scale, drawNormals, drawImpulses);
+                    }
+                }
+            }
+
+            // Render a single contact from your ContactListener::Contact
+            void RenderContact(const Physics::ContactListener::Contact& contact, float scale = 32.0f, bool drawNormals = true, bool drawImpulses = true)
+            {
+                if (!contact.enabled) return;
+
+                for (size_t i = 0; i < contact.contactPoints.size(); ++i)
+                {
+                    float impulse = (i < contact.impulses.size()) ? contact.impulses[i] : 0.0f;
+                    DrawContactPoint(contact.contactPoints[i], contact.normal, impulse, scale, drawNormals, drawImpulses);
+                }
+            }
+
             // Render only specific bodies that match a condition
             template<typename Predicate>
             void RenderBodiesIf(b2World& world, Predicate pred, float scale, bool drawFilled, bool drawCenterOfMass, bool drawVelocity, bool drawAngularVelocity)
@@ -350,10 +440,19 @@ namespace Struktur
             void SetFillColor(Color color) { m_fillColor = color; }
             void SetLineThickness(float thickness) { m_lineThickness = thickness; }
 
+            // Contact point visualization settings
+            void SetContactPointColor(Color color) { m_contactSettings.pointColor = color; }
+            void SetContactNormalColor(Color color) { m_contactSettings.normalColor = color; }
+            void SetContactImpulseColor(Color color) { m_contactSettings.impulseColor = color; }
+            void SetContactPointRadius(float radius) { m_contactSettings.pointRadius = radius; }
+            void SetContactNormalLength(float length) { m_contactSettings.normalLength = length; }
+            void SetContactImpulseScale(float scale) { m_contactSettings.impulseScale = scale; }
+
             // Get current settings
             Color GetLineColor() const { return m_lineColor; }
             Color GetFillColor() const { return m_fillColor; }
             float GetLineThickness() const { return m_lineThickness; }
+            const ContactPointSettings& GetContactSettings() const { return m_contactSettings; }
         };
     }
 }

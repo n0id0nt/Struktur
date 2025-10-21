@@ -49,6 +49,7 @@ endif()
 
 if(CMAKE_BUILD_TYPE STREQUAL "Debug")
     set(DEBUG TRUE)
+    add_compile_definitions(DEBUG)
 endif()
 ##########################################################################################
 # MSVC runtime linking
