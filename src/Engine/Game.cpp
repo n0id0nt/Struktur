@@ -32,6 +32,7 @@
 #include "Engine/ECS/System/CameraSystem.h"
 #include "Engine/ECS/System/AnimationSystem.h"
 #include "Engine/ECS/System/UIsystem.h"
+#include "Engine/ECS/System/ShaderSystem.h"
 
 #include "Engine/Game/Level.h"
 
@@ -63,6 +64,7 @@ void Struktur::InitialiseGame(GameContext& context)
     // The order here also defines the order they are updated - TODO need a better way to determine render priority and also need a way to have helper systems with out an empty update
     systemManager.AddHelperSystem<System::HierarchySystem>();
     systemManager.AddHelperSystem<System::TransformSystem>();
+    systemManager.AddHelperSystem<System::ShaderSystem>();
     systemManager.AddUpdateSystem<System::GameplaySystem>();
     systemManager.AddUpdateSystem<System::CameraSystem>();
     systemManager.AddUpdateSystem<System::PhysicsSystem>();

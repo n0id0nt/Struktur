@@ -268,6 +268,7 @@ set(SOURCES
     src/Engine/ECS/System/TransformSystem.h     src/Engine/ECS/System/TransformSystem.cpp
     src/Engine/ECS/System/CameraSystem.h        src/Engine/ECS/System/CameraSystem.cpp
     src/Engine/ECS/System/UISystem.h            src/Engine/ECS/System/UISystem.cpp
+    src/Engine/ECS/System/ShaderSystem.h        src/Engine/ECS/System/ShaderSystem.cpp
 
     src/Engine/Physics/PhysicsWorld.h           src/Engine/Physics/PhysicsWorld.cpp
     src/Engine/Physics/ContactListener.h        src/Engine/Physics/ContactListener.cpp

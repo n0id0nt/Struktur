@@ -15,6 +15,7 @@
 #include "Engine/ECS/System/TransformSystem.h"
 #include "Engine/ECS/System/PhysicsSystem.h"
 #include "Engine/ECS/System/AnimationSystem.h"
+#include "Engine/ECS/System/ShaderSystem.h"
 
 #include "Engine/Resource/TextureResource.h"
 
@@ -65,20 +66,26 @@ namespace Struktur
             physicsBody.syncToPhysics = true;     // Let transform drive physics
             
             ::Shader soulShader = ::LoadShader(0, "assets/Shaders/SoulEffect_100.fs");
-
             bool useShader = (soulShader.id > 0);
             if (!useShader)
             {
                 DEBUG_WARNING("Failed to load soul shader");
             }
-            registry.emplace<Component::Shader>(entity, soulShader, ::Vector3{0.3f, 0.7f, 1.0f}, 0.05f, 1.0f, 15.0f, 0.05f, 8.0f, 3.0f, ::Vector2{1.0f, 0.3f}, 0.1f, 0.005f, 0.05f, 10.0f);
+            registry.emplace<Component::Shader>(entity, soulShader);
 
-            //Component::SpriteAnimation& spriteAnimation = registry.emplace<Component::SpriteAnimation>(entity);
-            //// animation could possibly be a resource stored in the resource pool and loaded in from a file.
-            //Animation::SpriteAnimation idleAnimation{ (unsigned int)npcData.spriteIndex, (unsigned int)npcData.spriteIndex + 1u, 1.f, true };
-//
-            //animationSystem.AddAnimation(context, entity, "idle", idleAnimation);
-            //animationSystem.PlayAnimation(context, entity, "idle");
+            System::ShaderSystem& shaderSystem = context.GetSystemManager().GetSystem<System::ShaderSystem>();
+            shaderSystem.SetUniform(context, entity, "soulColor", glm::vec3{0.3f, 0.7f, 1.0f});
+            shaderSystem.SetUniform(context, entity, "glowIntensity", 0.05f);
+            shaderSystem.SetUniform(context, entity, "rippleSpeed", 1.0f);
+            shaderSystem.SetUniform(context, entity, "rippleFrequency", 15.0f);
+            shaderSystem.SetUniform(context, entity, "waveAmplitude", 0.05f);
+            shaderSystem.SetUniform(context, entity, "waveFrequency", 8.0f);
+            shaderSystem.SetUniform(context, entity, "waveSpeed", 3.0f);
+            shaderSystem.SetUniform(context, entity, "waveDirection", glm::vec2{1.0f, 0.3f});
+            shaderSystem.SetUniform(context, entity, "scanlineIntensity", 0.1f);
+            shaderSystem.SetUniform(context, entity, "chromaticAberration", 0.005f);
+            shaderSystem.SetUniform(context, entity, "glitchFrequency", 0.05f);
+            shaderSystem.SetUniform(context, entity, "holographicShift", 10.0f);
         }
     }
 }

@@ -12,6 +12,8 @@
 #include "Engine/ECS/Component/TileMap.h"
 #include "Engine/ECS/Component/Shader.h"
 
+#include "Engine/ECS/System/ShaderSystem.h"
+
 #include "Debug/Assertions.h"
 
 void Struktur::System::SpriteRenderSystem::Update(GameContext &context)
@@ -20,7 +22,6 @@ void Struktur::System::SpriteRenderSystem::Update(GameContext &context)
     GameResource::Camera& camera = context.GetCamera();
 
     ::BeginMode2D(camera.GetRaylibCamera());
-    //std::vector<spriteDraw> lateSprites;
     {
         auto view = registry.view<Component::Sprite, Component::WorldTransform>();
         m_spritesToRender.clear();
@@ -87,40 +88,10 @@ void Struktur::System::SpriteRenderSystem::Update(GameContext &context)
             ::Rectangle destRec{ ::round(worldTransform.position.x * 2) / 2, ::round(worldTransform.position.y * 2) / 2, size.x * worldTransform.scale.x, size.y * worldTransform.scale.x };
             ::Vector2 offset{ sprite.offset.x, sprite.offset.y };
             
-            Component::Shader* shader = registry.try_get<Component::Shader>(renderData.entity);
-
-            if (shader)
-            {
-                Core::GameData& gameDate = context.GetGameData();
-                // Set shader uniforms
-                ::SetShaderValue(shader->shader, ::GetShaderLocation(shader->shader, "time"), &gameDate.gameTime, SHADER_UNIFORM_FLOAT);
-                ::SetShaderValue(shader->shader, ::GetShaderLocation(shader->shader, "soulColor"), &shader->color, SHADER_UNIFORM_VEC3);
-                ::SetShaderValue(shader->shader, ::GetShaderLocation(shader->shader, "glowIntensity"), &shader->glowIntensity, SHADER_UNIFORM_FLOAT);
-                ::SetShaderValue(shader->shader, ::GetShaderLocation(shader->shader, "rippleSpeed"), &shader->rippleSpeed, SHADER_UNIFORM_FLOAT);
-                ::SetShaderValue(shader->shader, ::GetShaderLocation(shader->shader, "rippleFrequency"), &shader->rippleFreq, SHADER_UNIFORM_FLOAT);
-                
-                ::Vector2 resolution = {(float)gameDate.screenWidth, (float) gameDate.screenHeight};
-                ::SetShaderValue(shader->shader, ::GetShaderLocation(shader->shader, "resolution"), &resolution, SHADER_UNIFORM_VEC2);
-
-                // Set vertex shader uniforms for wave effect
-                ::SetShaderValue(shader->shader, ::GetShaderLocation(shader->shader, "waveAmplitude"), &shader->amplitude, SHADER_UNIFORM_FLOAT);
-                ::SetShaderValue(shader->shader, ::GetShaderLocation(shader->shader, "waveFrequency"), &shader->frequency, SHADER_UNIFORM_FLOAT);
-                ::SetShaderValue(shader->shader, ::GetShaderLocation(shader->shader, "waveSpeed"), &shader->speed, SHADER_UNIFORM_FLOAT);
-                ::SetShaderValue(shader->shader, ::GetShaderLocation(shader->shader, "waveDirection"), &shader->direction, SHADER_UNIFORM_VEC2);
-
-                // Set VHS/glitch shader uniforms
-                ::SetShaderValue(shader->shader, GetShaderLocation(shader->shader, "scanlineIntensity"), &shader->scanlineIntensity, SHADER_UNIFORM_FLOAT);
-                ::SetShaderValue(shader->shader, GetShaderLocation(shader->shader, "chromaticAberration"), &shader->chromaticAberration, SHADER_UNIFORM_FLOAT);
-                ::SetShaderValue(shader->shader, GetShaderLocation(shader->shader, "glitchFrequency"), &shader->glitchFrequency, SHADER_UNIFORM_FLOAT);
-                ::SetShaderValue(shader->shader, GetShaderLocation(shader->shader, "holographicShift"), &shader->holographicShift, SHADER_UNIFORM_FLOAT);
-                
-                ::BeginShaderMode(shader->shader);
-            }
+            ShaderSystem& shaderSystem = context.GetSystemManager().GetSystem<ShaderSystem>();
+            shaderSystem.BeginShader(context, renderData.entity);
             ::DrawTexturePro(texture->texture, sourceRec, destRec, offset, glm::degrees(euler.z), sprite.color);
-            if (shader)
-            {
-                ::EndShaderMode();
-            }
+            shaderSystem.EndShader(context, renderData.entity);
         }
     }
     {
@@ -132,7 +103,8 @@ void Struktur::System::SpriteRenderSystem::Update(GameContext &context)
             {
                 texture->LoadToGpu();
             }
-
+            ShaderSystem& shaderSystem = context.GetSystemManager().GetSystem<ShaderSystem>();
+            shaderSystem.BeginShader(context, entity);
             for (auto& gridTile : tileMap.gridTiles)
             {
                 ::Rectangle sourceRec{ gridTile.sourcePosition.x, gridTile.sourcePosition.y, (float)tileMap.tileSize, (float)tileMap.tileSize };
@@ -158,6 +130,7 @@ void Struktur::System::SpriteRenderSystem::Update(GameContext &context)
                 ::Rectangle DestRec{ gridTile.position.x + ::round(worldTransform.position.x * 2) / 2, gridTile.position.y + ::round(worldTransform.position.y * 2) / 2, (float)tileMap.tileSize, (float)tileMap.tileSize };
                 ::DrawTexturePro(texture->texture, sourceRec, DestRec, ::Vector2{ 0,0 }, 0, WHITE);
             }
+            shaderSystem.EndShader(context, entity);
         }
     }
     ::EndMode2D();
