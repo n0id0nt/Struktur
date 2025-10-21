@@ -34,11 +34,15 @@
 #include "Engine/ECS/System/UIsystem.h"
 #include "Engine/ECS/System/ShaderSystem.h"
 
+#include "Engine/FileLoading/LevelParser.h"
+
 #include "Engine/Game/Level.h"
 
-#include "Gameplay/GameplayStates/GameWorldState.h"
+#ifdef DEBUG
+    #include "rlImGui.h"
+#endif
 
-#include "Engine/FileLoading/LevelParser.h"
+#include "Gameplay/GameplayStates/GameWorldState.h"
 
 constexpr static const unsigned int FPS = 60;
 constexpr static const float TIME_STEP = 1.0f / FPS;
@@ -60,6 +64,11 @@ void Struktur::InitialiseGame(GameContext& context)
     input.LoadInputBindings(INPUT_BINDINGS_PATH);
     glm::vec2 gravity(0.0f, 0.0f);
     physicsWorld.Initialise(gravity, VELOCITY_ITERATIONS, POSITION_ITERATIONS, PIXELS_PER_METER);
+
+#ifdef DEBUG
+    Debug::Editor& editor = context.GetEditor();
+    editor.Initialise(context);
+#endif
 
     // The order here also defines the order they are updated - TODO need a better way to determine render priority and also need a way to have helper systems with out an empty update
     systemManager.AddHelperSystem<System::HierarchySystem>();
@@ -179,30 +188,44 @@ void Struktur::UpdateLoop(void* userData)
     gameData.gameTime = ::GetTime();
     gameData.screenWidth = ::GetScreenWidth();
     gameData.screenHeight = ::GetScreenHeight();
-    
+
     switch(gameData.gameState)
     {
     case Core::GameState::SPLASH_SCREEN:
         SplashScreenLoop(*context);
-        return;
+        break;
     case Core::GameState::LOADING:
         LoadingLoop(*context);
-        return;
+        break;
     case Core::GameState::GAME:
         GameLoop(*context);
-        return;
+        break;
     }
 }
 
 void Struktur::Game() 
 {
-    // Initialize window
-    const int screenWidth = 1024;
-    const int screenHeight = 768;
+    // Game settings
+    const int gameWidth = 1280;
+    const int gameHeight = 720;
+
+#ifdef DEBUG
+    // In debug mode, create a larger window to fit ImGui panels
+    const int windowWidth = 1280;
+    const int windowHeight = 720;
+    ::InitWindow(windowWidth, windowHeight, "Game - Debug Mode");
+
+    ::rlImGuiSetup(true);
+
+    ImGuiIO& io = ImGui::GetIO();
+    io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
+#else
+    // In release mode, window matches game size
+    ::InitWindow(gameWidth, gameHeight, "Struktur");
+#endif
 
     GameContext context;
     
-    ::InitWindow(screenWidth, screenHeight, "Struktur");
     ::SetExitKey(KEY_NULL);
 
     // Load resources
@@ -227,5 +250,8 @@ void Struktur::Game()
     
     // Cleanup
     ExitGame(context);
+#ifdef DEBUG
+    ::rlImGuiEnd();
+#endif
     ::CloseWindow();
 }

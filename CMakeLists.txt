@@ -302,6 +302,8 @@ set(SOURCES
 
     src/Debug/Assertions.h
     src/Debug/Box2DDebugRenderer.h
+
+    src/Debug/Editor/Editor.h                   src/Debug/Editor/Editor.cpp
 )
 
 # Create executable
