@@ -2,18 +2,21 @@
 
 #include <raylib.h>
 #include <imgui.h>
+#include <memory>
+#include <vector>
+#include <unordered_map>
+
+#include "Debug/Editor/Windows/EditorWindow.h"
+#include "Debug/Editor/EditorLayoutManager.h"
 
 namespace Struktur
 {
     class GameContext;
     
-    namespace Core
-    {
-        class GameData;
-    }
-    
     namespace Debug
     {
+        class GameViewportWindow;
+        
         class Editor
         {
         public:
@@ -23,43 +26,50 @@ namespace Struktur
             // Initialize the editor
             void Initialise(GameContext& context);
             
+            // Shutdown the editor
+            void Shutdown(GameContext& context);
+            
             // Call before game update/render
             void BeginUpdateLoop(GameContext& context);
             
             // Call after game update/render
             void EndUpdateLoop(GameContext& context);
-
+            
+            // Update editor UI (call after EndUpdateLoop)
             void Update(GameContext& context);
             
-            // Check if game viewport has focus
-            bool IsViewportFocused() const { return m_viewportFocused; }
-            bool IsViewportHovered() const { return m_viewportHovered; }
+            // Register a new editor window
+            void RegisterWindow(std::shared_ptr<EditorWindow> window);
             
-            // Get mouse position in game coordinates
-            Vector2 GetGameMousePosition(Core::GameData& gameData) const;
+            // Get a window by name
+            EditorWindow* GetWindow(const std::string& name);
+            
+            // Get the game viewport window
+            GameViewportWindow* GetGameViewport() { return m_gameViewport; }
             
         private:
             // Render the complete editor layout
             void RenderEditorLayout(GameContext& context);
             
-            // Setup the default docking layout
-            void SetupDefaultLayout(ImGuiID dockspace_id, ImVec2 viewportSize);
-            
-            // Render individual windows
+            // Render individual components
             void RenderMenuBar(GameContext& context);
-            void RenderToolbar(GameContext& context);
-            void RenderGameViewport(GameContext& context);
-            void RenderDebugInfo(GameContext& context);
+            void RenderViewMenu();
+            void RenderLayoutMenu();
             
         private:
-            // Render texture for game
-            RenderTexture2D m_renderTexture;
+            // Window management
+            std::vector<std::shared_ptr<EditorWindow>> m_windows;
+            std::unordered_map<std::string, EditorWindow*> m_windowMap;
             
-            // Viewport state
-            bool m_viewportFocused;
-            bool m_viewportHovered;
-            ImVec2 m_viewportPos;
-            ImVec2 m_viewportSize;
+            // Special windows (kept as raw pointers for quick access)
+            GameViewportWindow* m_gameViewport;
+            
+            // Layout management
+            EditorLayoutManager m_layoutManager;
+            std::string m_currentLayout;
+            
+            // Editor state
+            bool m_showDemoWindow;
         };
     }
 }
