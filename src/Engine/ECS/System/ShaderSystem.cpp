@@ -56,7 +56,7 @@ void Struktur::System::ShaderSystem::ApplyUniforms(GameContext& context, entt::e
 {
     Core::GameData& gameDate = context.GetGameData();
     SetUniform(context, entity, "time", (float)gameDate.gameTime);
-    SetUniform(context, entity, "resolution", glm::vec2{(float)gameDate.screenWidth, (float) gameDate.screenHeight});
+    SetUniform(context, entity, "resolution", glm::vec2{(float)gameDate.gameWidth, (float) gameDate.gameHeight});
 
     entt::registry& registry = context.GetRegistry();
 	auto& shader = registry.get<Component::Shader>(entity);

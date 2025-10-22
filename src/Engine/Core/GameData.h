@@ -19,8 +19,10 @@ namespace Struktur
             double deltaTime = 0.0f;
             double gameTime = 0.0f;
             double startTime = 0.0f;
-            int screenWidth = 0;
-            int screenHeight = 0;
+            int gameWidth = 0;
+            int gameHeight = 0;
+            int applicationWidth = 0;
+            int applicationHeight = 0;
             int Loops = 0;
             GameState gameState = GameState::SPLASH_SCREEN;
         };

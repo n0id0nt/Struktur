@@ -38,8 +38,8 @@ void Struktur::System::CameraSystem::Update(GameContext& context)
 
         float gameTime = gameData.gameTime;
         float deltaTime = gameData.deltaTime;
-        int screenWidth = gameData.screenWidth;
-        int screenHeight = gameData.screenHeight;
+        int screenWidth = gameData.gameWidth;
+        int screenHeight = gameData.gameHeight;
         GameResource::Camera& out_camera = context.GetCamera();
         //out_camera.target = out_camera.previousCameraPosition;
         glm::vec2 newPos = focusedCameraComponent->forcePosition ? TargetPosition(gameTime, deltaTime, screenWidth, screenHeight, focusedCameraComponent, focusedTransformComponent->position, out_camera)

@@ -15,7 +15,7 @@
 #include "Engine/UI/UIManager.h"
 
 #include "Debug/Assertions.h"
-#ifdef DEBUG
+#ifdef EDITOR
     #include "Debug/Editor/Editor.h"
 #endif
 
@@ -38,7 +38,7 @@ namespace Struktur
             m_uiManger = std::make_unique<UI::UIManager>();
             m_inventory = std::make_unique<Inventory>();
             m_physicsWorld = std::make_unique<Physics::PhysicsWorld>();
-#ifdef DEBUG
+#ifdef EDITOR
             m_editor = std::make_unique<Debug::Editor>();
 #endif
         }
@@ -109,7 +109,7 @@ namespace Struktur
             return *m_inventory;
         }
 
-#ifdef DEBUG
+#ifdef EDITOR
         Debug::Editor& GetEditor() const
         {
             ASSERT_MSG(m_editor.get(), "Editor not initialized");
@@ -129,7 +129,7 @@ namespace Struktur
         std::unique_ptr<GameResource::StateManager> m_stateManager;
         std::unique_ptr<UI::UIManager> m_uiManger;
         std::unique_ptr<Inventory> m_inventory;
-#ifdef DEBUG
+#ifdef EDITOR
         std::unique_ptr<Debug::Editor> m_editor;
 #endif
     };

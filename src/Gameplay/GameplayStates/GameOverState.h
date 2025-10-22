@@ -56,7 +56,7 @@ namespace Struktur
                 UI::UIManager& uiManager = context.GetUIManager();
                 UI::FocusNavigator* focusNavigator = uiManager.GetFocusNavigator();
 
-                m_screenPanel = uiManager.CreateElement<UI::UIPanel>(glm::vec2{0, 0}, glm::vec2{0, 0}, glm::vec2{gameDate.screenWidth, gameDate.screenHeight}, glm::vec2{0, 0});
+                m_screenPanel = uiManager.CreateElement<UI::UIPanel>(glm::vec2{0, 0}, glm::vec2{0, 0}, glm::vec2{gameDate.gameWidth, gameDate.gameHeight}, glm::vec2{0, 0});
                 m_screenPanel->SetBackgroundColor(Color{ 0, 0, 0, 200 }); // don't render this
                 m_screenPanel->SetBorderColor(BLANK);
 

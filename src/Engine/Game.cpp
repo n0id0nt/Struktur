@@ -65,7 +65,7 @@ void Struktur::InitialiseGame(GameContext& context)
     glm::vec2 gravity(0.0f, 0.0f);
     physicsWorld.Initialise(gravity, VELOCITY_ITERATIONS, POSITION_ITERATIONS, PIXELS_PER_METER);
 
-#ifdef DEBUG
+#ifdef EDITOR
     Debug::Editor& editor = context.GetEditor();
     editor.Initialise(context);
 #endif
@@ -149,8 +149,8 @@ void Struktur::SplashScreenLoop(GameContext& context)
     std::string splashScreenName = "Memory Palace";
     int fontSize = 120;
     int fontWidth = ::MeasureTextEx(font->font, splashScreenName.c_str(), fontSize, 1.0f).x;
-    int width = gameData.screenWidth;
-    int height = gameData.screenHeight;
+    int width = gameData.applicationWidth;
+    int height = gameData.applicationHeight;
 
     ::BeginDrawing();
     ::ClearBackground(Color{ 0,0,0,255 });
@@ -176,7 +176,21 @@ void Struktur::GameLoop(GameContext &context)
     }
 #endif
 
-    systemManager.Update(context);    
+    systemManager.Update(context);
+    
+    ::BeginDrawing();
+#ifdef EDITOR
+    ::ClearBackground(DARKGRAY);
+    Debug::Editor& editor = context.GetEditor();
+    editor.BeginUpdateLoop(context);
+#endif
+    ::ClearBackground(BLACK);
+    systemManager.Render(context);
+#ifdef EDITOR
+    editor.EndUpdateLoop(context);
+    editor.Update(context);
+#endif
+    ::EndDrawing();
 }
 
 void Struktur::UpdateLoop(void* userData) 
@@ -186,8 +200,8 @@ void Struktur::UpdateLoop(void* userData)
     Core::GameData& gameData = context->GetGameData();
     gameData.deltaTime = ::GetFrameTime();
     gameData.gameTime = ::GetTime();
-    gameData.screenWidth = ::GetScreenWidth();
-    gameData.screenHeight = ::GetScreenHeight();
+    gameData.applicationWidth = ::GetScreenWidth();
+    gameData.applicationHeight = ::GetScreenHeight();
 
     switch(gameData.gameState)
     {
@@ -208,25 +222,29 @@ void Struktur::Game()
     // Game settings
     const int gameWidth = 1280;
     const int gameHeight = 720;
-
-#ifdef DEBUG
+    
+    #ifdef EDITOR
     // In debug mode, create a larger window to fit ImGui panels
     const int windowWidth = 1280;
     const int windowHeight = 720;
-    ::InitWindow(windowWidth, windowHeight, "Game - Debug Mode");
-
+    ::InitWindow(windowWidth, windowHeight, "Struktur");
+    ::SetWindowState(FLAG_WINDOW_RESIZABLE);
     ::rlImGuiSetup(true);
-
+    
     ImGuiIO& io = ImGui::GetIO();
     io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
-#else
+    #else
     // In release mode, window matches game size
-    ::InitWindow(gameWidth, gameHeight, "Struktur");
-#endif
-
-    GameContext context;
+    ::InitWindow(gameWidth, gameHeight, "Memory Palace");
+    #endif
     
     ::SetExitKey(KEY_NULL);
+    
+    GameContext context;
+
+    Core::GameData& gameData = context.GetGameData();
+    gameData.gameWidth = gameWidth;
+    gameData.gameHeight = gameHeight;
 
     // Load resources
     InitialiseGame(context);
@@ -234,7 +252,6 @@ void Struktur::Game()
     Resource::ResourceManager& resourceManager = context.GetResourceManager();
     Resource::ResourcePtr<Resource::FontResource> font = resourceManager.GetFontResource("assets/Fonts/medieval_sharp/MedievalSharp-Bold.ttf_120");
     
-    Core::GameData& gameData = context.GetGameData();
     gameData.startTime = ::GetTime();
 #ifdef PLATFORM_WEB
     // Web platform - use emscripten main loop
@@ -250,7 +267,7 @@ void Struktur::Game()
     
     // Cleanup
     ExitGame(context);
-#ifdef DEBUG
+#ifdef EDITOR
     ::rlImGuiEnd();
 #endif
     ::CloseWindow();
