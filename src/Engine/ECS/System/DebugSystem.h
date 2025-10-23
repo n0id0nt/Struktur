@@ -19,7 +19,10 @@ namespace Struktur
 
             void Update(GameContext& context) override;
 
-		private:
+            void RenderEntityGizmos(GameContext &context);
+            void RenderGrid(GameContext &context);
+
+        private:
 			Debug::Box2DDebugRenderer m_box2dRenderer;
         };
     }

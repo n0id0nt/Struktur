@@ -8,6 +8,7 @@
 
 #include "Debug/Editor/Windows/EditorWindow.h"
 #include "Debug/Editor/EditorLayoutManager.h"
+#include "Debug/Editor/EditorSettings.h"
 
 namespace Struktur
 {
@@ -47,6 +48,10 @@ namespace Struktur
             // Get the game viewport window
             GameViewportWindow* GetGameViewport() { return m_gameViewport; }
             
+            // Get editor settings
+            EditorSettings& GetSettings() { return m_settings; }
+            const EditorSettings& GetSettings() const { return m_settings; }
+            
         private:
             // Render the complete editor layout
             void RenderEditorLayout(GameContext& context);
@@ -67,6 +72,9 @@ namespace Struktur
             // Layout management
             EditorLayoutManager m_layoutManager;
             std::string m_currentLayout;
+            
+            // Editor settings
+            EditorSettings m_settings;
             
             // Editor state
             bool m_showDemoWindow;

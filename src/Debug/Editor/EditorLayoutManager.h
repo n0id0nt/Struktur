@@ -68,7 +68,7 @@ namespace Struktur::Debug
             LayoutConfig defaultLayout;
             defaultLayout.name = "Default";
             
-            // Split left panel (25%)
+            // Split left panel (20% - Hierarchy)
             defaultLayout.splits.push_back({
                 "Hierarchy",
                 ImGuiDir_Left,
@@ -76,11 +76,19 @@ namespace Struktur::Debug
                 "main"
             });
             
-            // Split right panel (25%)
+            // Split right panel (30% - Inspector)
+            defaultLayout.splits.push_back({
+                "Inspector",
+                ImGuiDir_Right,
+                0.3f,
+                "main"
+            });
+            
+            // Split far right for debug info (half of remaining right space)
             defaultLayout.splits.push_back({
                 "Debug Info",
                 ImGuiDir_Right,
-                0.25f,
+                0.5f,
                 "main"
             });
             
@@ -172,10 +180,12 @@ namespace Struktur::Debug
             ImGuiID dock_left_id = ImGui::DockBuilderSplitNode(dock_main_id, ImGuiDir_Left, 0.2f, nullptr, &dock_main_id);
             ImGuiID dock_right_id = ImGui::DockBuilderSplitNode(dock_main_id, ImGuiDir_Right, 0.25f, nullptr, &dock_main_id);
             ImGuiID dock_top_id = ImGui::DockBuilderSplitNode(dock_main_id, ImGuiDir_Up, 0.05f, nullptr, &dock_main_id);
-            
+            ImGuiID dock_right_bottom = ImGui::DockBuilderSplitNode(dock_right_id, ImGuiDir_Down, 0.5f, nullptr, &dock_right_id);
+
             ImGui::DockBuilderDockWindow("Game Viewport", dock_main_id);
             ImGui::DockBuilderDockWindow("Hierarchy", dock_left_id);
-            ImGui::DockBuilderDockWindow("Debug Info", dock_right_id);
+            ImGui::DockBuilderDockWindow("Inspector", dock_right_id);
+            ImGui::DockBuilderDockWindow("Debug Info", dock_right_bottom);
             ImGui::DockBuilderDockWindow("Toolbar", dock_top_id);
         }
         

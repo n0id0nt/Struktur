@@ -10,6 +10,8 @@
 #include "Debug/Editor/Windows/DebugInfoWindow.h"
 #include "Debug/Editor/Windows/ToolbarWindow.h"
 #include "Debug/Editor/Windows/HierarchyWindow.h"
+#include "Debug/Editor/Windows/InspectorWindow.h"
+#include "Debug/Editor/Windows/SettingsWindow.h"
 #include "Debug/Editor/EditorTheme.h"
 
 namespace Struktur::Debug
@@ -30,6 +32,15 @@ namespace Struktur::Debug
         m_gameViewport = gameViewport.get();
         RegisterWindow(gameViewport);
         
+        // Hierarchy window (must be created before inspector)
+        auto hierarchy = std::make_shared<HierarchyWindow>();
+        auto hierarchyPtr = hierarchy.get();
+        RegisterWindow(hierarchy);
+        
+        // Inspector window (depends on hierarchy)
+        auto inspector = std::make_shared<InspectorWindow>(hierarchyPtr);
+        RegisterWindow(inspector);
+        
         // Debug info panel
         auto debugInfo = std::make_shared<DebugInfoWindow>(m_gameViewport);
         RegisterWindow(debugInfo);
@@ -38,9 +49,9 @@ namespace Struktur::Debug
         auto toolbar = std::make_shared<ToolbarWindow>();
         RegisterWindow(toolbar);
         
-        // Hierarchy window
-        auto hierarchy = std::make_shared<HierarchyWindow>();
-        RegisterWindow(hierarchy);
+        // Settings window
+        auto settings = std::make_shared<SettingsWindow>();
+        RegisterWindow(settings);
         
         // Initialize all windows
         for (auto& window : m_windows)
@@ -207,6 +218,16 @@ namespace Struktur::Debug
                 if (ImGui::MenuItem("Redo", "Ctrl+Y"))
                 {
                     // Handle redo
+                }
+                ImGui::Separator();
+                if (ImGui::MenuItem("Settings", "Ctrl+,"))
+                {
+                    // Open settings window
+                    auto* settingsWindow = GetWindow("Editor Settings");
+                    if (settingsWindow)
+                    {
+                        settingsWindow->SetVisible(true);
+                    }
                 }
                 ImGui::EndMenu();
             }

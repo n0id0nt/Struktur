@@ -308,12 +308,15 @@ set(SOURCES
     src/Debug/Editor/Editor.h                   src/Debug/Editor/Editor.cpp
     src/Debug/Editor/EditorLayoutManager.h
     src/Debug/Editor/EditorTheme.h
+    src/Debug/Editor/EditorSettings.h           src/Debug/Editor/EditorSettings.cpp
 
     src/Debug/Editor/Windows/EditorWindow.h     src/Debug/Editor/Windows/EditorWindow.cpp
     src/Debug/Editor/Windows/DebugInfoWindow.h  src/Debug/Editor/Windows/DebugInfoWindow.cpp
     src/Debug/Editor/Windows/GameViewPortWindow.h src/Debug/Editor/Windows/GameViewPortWindow.cpp
     src/Debug/Editor/Windows/HierarchyWindow.h  src/Debug/Editor/Windows/HierarchyWindow.cpp
     src/Debug/Editor/Windows/ToolbarWindow.h    src/Debug/Editor/Windows/ToolbarWindow.cpp
+    src/Debug/Editor/Windows/InspectorWindow.h  src/Debug/Editor/Windows/InspectorWindow.cpp
+    src/Debug/Editor/Windows/SettingsWindow.h   src/Debug/Editor/Windows/SettingsWindow.cpp
 )
 
 # Create executable

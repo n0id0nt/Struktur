@@ -55,6 +55,65 @@ namespace Struktur::Debug
         {
             // Handle scale tool
         }
+
+        // Debug visualization toggles
+        auto& debugSettings = context.GetEditor().GetSettings().debugRender;
+        
+        ImGui::PushStyleColor(ImGuiCol_Button, 
+            debugSettings.showPhysicsShapes ? ImVec4(0.4f, 0.7f, 0.4f, 1.0f) : ImVec4(0.2f, 0.2f, 0.2f, 1.0f));
+        if (ImGui::Button("Physics"))
+        {
+            debugSettings.showPhysicsShapes = !debugSettings.showPhysicsShapes;
+            debugSettings.showPhysicsBodies = debugSettings.showPhysicsShapes;
+            debugSettings.showPhysicsJoints = debugSettings.showPhysicsShapes;
+        }
+        ImGui::PopStyleColor();
+        if (ImGui::IsItemHovered())
+        {
+            ImGui::SetTooltip("Toggle physics debug rendering");
+        }
+        
+        ImGui::SameLine();
+        
+        ImGui::PushStyleColor(ImGuiCol_Button, 
+            debugSettings.showLevelBounds ? ImVec4(0.4f, 0.7f, 0.4f, 1.0f) : ImVec4(0.2f, 0.2f, 0.2f, 1.0f));
+        if (ImGui::Button("Bounds"))
+        {
+            debugSettings.showLevelBounds = !debugSettings.showLevelBounds;
+        }
+        ImGui::PopStyleColor();
+        if (ImGui::IsItemHovered())
+        {
+            ImGui::SetTooltip("Toggle level boundary rendering");
+        }
+        
+        ImGui::SameLine();
+        
+        ImGui::PushStyleColor(ImGuiCol_Button, 
+            debugSettings.showGrid ? ImVec4(0.4f, 0.7f, 0.4f, 1.0f) : ImVec4(0.2f, 0.2f, 0.2f, 1.0f));
+        if (ImGui::Button("Grid"))
+        {
+            debugSettings.showGrid = !debugSettings.showGrid;
+        }
+        ImGui::PopStyleColor();
+        if (ImGui::IsItemHovered())
+        {
+            ImGui::SetTooltip("Toggle grid rendering");
+        }
+        
+        ImGui::SameLine();
+        
+        ImGui::PushStyleColor(ImGuiCol_Button, 
+            debugSettings.showFPS ? ImVec4(0.4f, 0.7f, 0.4f, 1.0f) : ImVec4(0.2f, 0.2f, 0.2f, 1.0f));
+        if (ImGui::Button("FPS"))
+        {
+            debugSettings.showFPS = !debugSettings.showFPS;
+        }
+        ImGui::PopStyleColor();
+        if (ImGui::IsItemHovered())
+        {
+            ImGui::SetTooltip("Toggle FPS counter");
+        }
         
         ImGui::End();
         ImGui::PopStyleVar();
