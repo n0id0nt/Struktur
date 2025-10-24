@@ -5,15 +5,26 @@
 #define GLM_ENABLE_EXPERIMENTAL
 #include <glm/gtx/quaternion.hpp> 
 
-#include "HierarchyWindow.h"
+#include "Debug/Editor/Windows/HierarchyWindow.h"
+#include "Debug/Editor/Windows/PreviewWindow.h"
+#include "Debug/Editor/PreviewRenderers/PreviewHelpers.h"
 #include "Engine/GameContext.h"
 #include "Engine/ECS/Component/Transform.h"
 #include "Engine/ECS/Component/Identifier.h"
 #include "Engine/ECS/Component/Sprite.h"
-
+#include "Engine/ECS/Component/Shader.h"
 
 namespace Struktur::Debug
 {
+    InspectorWindow::InspectorWindow(HierarchyWindow* hierarchyWindow, PreviewWindow* previewWindow)
+        : EditorWindow("Inspector")
+        , m_hierarchyWindow(hierarchyWindow)
+        , m_previewWindow(previewWindow)
+    {
+        // Register default component renderers
+        RegisterDefaultRenderers();
+    }
+
     void InspectorWindow::Render(GameContext& context)
     {
         if (!m_isVisible)
@@ -63,18 +74,18 @@ namespace Struktur::Debug
         // Register LocalTransform renderer
         RegisterComponentRenderer<Component::LocalTransform>(
             "LocalTransform",
-            [this](Component::LocalTransform& transform, entt::registry& registry, entt::entity entity)
+            [this](GameContext& context, Component::LocalTransform& transform, entt::registry& registry, entt::entity entity)
             {
-                RenderLocalTransformComponent(transform, registry, entity);
+                RenderLocalTransformComponent(context, transform, registry, entity);
             }
         );
         
         // Register Sprite renderer
         RegisterComponentRenderer<Component::Sprite>(
             "Sprite",
-            [this](Component::Sprite& sprite, entt::registry& registry, entt::entity entity)
+            [this](GameContext& context, Component::Sprite& sprite, entt::registry& registry, entt::entity entity)
             {
-                RenderSpriteComponent(sprite, registry, entity);
+                RenderSpriteComponent(context, sprite, registry, entity);
             }
         );
     }
@@ -104,7 +115,7 @@ namespace Struktur::Debug
             if (ImGui::CollapsingHeader("Local Transform", ImGuiTreeNodeFlags_DefaultOpen))
             {
                 ImGui::PushID("LocalTransform");
-                RenderLocalTransformComponent(*transform, registry, entity);
+                RenderLocalTransformComponent(context, *transform, registry, entity);
                 ImGui::PopID();
             }
         }
@@ -115,7 +126,18 @@ namespace Struktur::Debug
             if (ImGui::CollapsingHeader("Sprite", ImGuiTreeNodeFlags_DefaultOpen))
             {
                 ImGui::PushID("Sprite");
-                RenderSpriteComponent(*sprite, registry, entity);
+                RenderSpriteComponent(context, *sprite, registry, entity);
+                ImGui::PopID();
+            }
+        }
+        
+        // Render Shader if exists
+        if (auto* shader = registry.try_get<Component::Shader>(entity))
+        {
+            if (ImGui::CollapsingHeader("Shader", ImGuiTreeNodeFlags_DefaultOpen))
+            {
+                ImGui::PushID("Shader");
+                RenderShaderComponent(context, *shader, registry, entity);
                 ImGui::PopID();
             }
         }
@@ -158,7 +180,8 @@ namespace Struktur::Debug
         }
     }
     
-    void InspectorWindow::RenderLocalTransformComponent(Component::LocalTransform& transform, 
+    void InspectorWindow::RenderLocalTransformComponent(GameContext& context,
+                                                       Component::LocalTransform& transform, 
                                                        entt::registry& registry, 
                                                        entt::entity entity)
     {
@@ -246,15 +269,21 @@ namespace Struktur::Debug
         }
     }
     
-    void InspectorWindow::RenderSpriteComponent(Component::Sprite& sprite, 
+    void InspectorWindow::RenderSpriteComponent(GameContext& context,
+                                               Component::Sprite& sprite, 
                                                entt::registry& registry, 
                                                entt::entity entity)
     {
+        // Preview button
+        if (ImGui::Button("Preview Sprite"))
+        {
+            if (m_previewWindow) PreviewSprite(m_previewWindow, &sprite, "Sprite Component");
+        }
+
         // Texture info
         if (sprite.texture)
         {
             ImGui::Text("Texture: Loaded");
-            // TODO: Show texture preview
         }
         else
         {
@@ -303,7 +332,143 @@ namespace Struktur::Debug
             ImGui::TreePop();
         }
     }
-    
+
+    void InspectorWindow::RenderShaderComponent(GameContext& context, Component::Shader &shader, entt::registry &registry, entt::entity entity)
+ {
+        // Preview button
+        if (ImGui::Button("Preview Shader"))
+        {
+           if (m_previewWindow) PreviewShader(m_previewWindow, &shader, "Shader Component");
+        }
+        
+        ImGui::Separator();
+        
+        ImGui::Text("Shader ID: %d", shader.shader.id);
+        ImGui::Separator();
+        
+        // Float uniforms
+        if (ImGui::TreeNode("Float Uniforms"))
+        {
+            if (shader.floatUniforms.empty())
+            {
+                ImGui::TextDisabled("No float uniforms");
+            }
+            else
+            {
+                for (auto& [name, value] : shader.floatUniforms)
+                {
+                    ImGui::PushID(name.c_str());
+                    ImGui::DragFloat(name.c_str(), &value, 0.01f);
+                    ImGui::PopID();
+                }
+            }
+            ImGui::TreePop();
+        }
+        
+        // Int uniforms
+        if (ImGui::TreeNode("Int Uniforms"))
+        {
+            if (shader.intUniforms.empty())
+            {
+                ImGui::TextDisabled("No int uniforms");
+            }
+            else
+            {
+                for (auto& [name, value] : shader.intUniforms)
+                {
+                    ImGui::PushID(name.c_str());
+                    ImGui::DragInt(name.c_str(), &value);
+                    ImGui::PopID();
+                }
+            }
+            ImGui::TreePop();
+        }
+        
+        // Vec2 uniforms
+        if (ImGui::TreeNode("Vector2 Uniforms"))
+        {
+            if (shader.vec2Uniforms.empty())
+            {
+                ImGui::TextDisabled("No vec2 uniforms");
+            }
+            else
+            {
+                for (auto& [name, value] : shader.vec2Uniforms)
+                {
+                    ImGui::PushID(name.c_str());
+                    float v[2] = {value.x, value.y};
+                    if (ImGui::DragFloat2(name.c_str(), v, 0.01f))
+                    {
+                        value.x = v[0];
+                        value.y = v[1];
+                    }
+                    ImGui::PopID();
+                }
+            }
+            ImGui::TreePop();
+        }
+        
+        // Vec3 uniforms
+        if (ImGui::TreeNode("Vector3 Uniforms"))
+        {
+            if (shader.vec3Uniforms.empty())
+            {
+                ImGui::TextDisabled("No vec3 uniforms");
+            }
+            else
+            {
+                for (auto& [name, value] : shader.vec3Uniforms)
+                {
+                    ImGui::PushID(name.c_str());
+                    float v[3] = {value.x, value.y, value.z};
+                    if (ImGui::DragFloat3(name.c_str(), v, 0.01f))
+                    {
+                        value.x = v[0];
+                        value.y = v[1];
+                        value.z = v[2];
+                    }
+                    ImGui::PopID();
+                }
+            }
+            ImGui::TreePop();
+        }
+        
+        // Vec4 uniforms
+        if (ImGui::TreeNode("Vector4 Uniforms"))
+        {
+            if (shader.vec4Uniforms.empty())
+            {
+                ImGui::TextDisabled("No vec4 uniforms");
+            }
+            else
+            {
+                for (auto& [name, value] : shader.vec4Uniforms)
+                {
+                    ImGui::PushID(name.c_str());
+                    float v[4] = {value.x, value.y, value.z, value.w};
+                    if (ImGui::DragFloat4(name.c_str(), v, 0.01f))
+                    {
+                        value.x = v[0];
+                        value.y = v[1];
+                        value.z = v[2];
+                        value.w = v[3];
+                    }
+                    ImGui::PopID();
+                }
+            }
+            ImGui::TreePop();
+        }
+        
+        // Matrix uniforms (read-only for now)
+        if (ImGui::TreeNode("Matrix Uniforms"))
+        {
+            if (shader.matrixUniforms.empty())
+            {
+                ImGui::TextDisabled("No matrix uniforms");
+            }
+        }
+    }
+
     // ====================================================================
     // Helper functions for rendering common data types
     // ====================================================================

@@ -12,6 +12,8 @@
 #include "Debug/Editor/Windows/HierarchyWindow.h"
 #include "Debug/Editor/Windows/InspectorWindow.h"
 #include "Debug/Editor/Windows/SettingsWindow.h"
+#include "Debug/Editor/Windows/PreviewWindow.h"
+#include "Debug/Editor/Windows/FileExplorerWindow.h"
 #include "Debug/Editor/EditorTheme.h"
 
 namespace Struktur::Debug
@@ -37,10 +39,6 @@ namespace Struktur::Debug
         auto hierarchyPtr = hierarchy.get();
         RegisterWindow(hierarchy);
         
-        // Inspector window (depends on hierarchy)
-        auto inspector = std::make_shared<InspectorWindow>(hierarchyPtr);
-        RegisterWindow(inspector);
-        
         // Debug info panel
         auto debugInfo = std::make_shared<DebugInfoWindow>(m_gameViewport);
         RegisterWindow(debugInfo);
@@ -52,6 +50,19 @@ namespace Struktur::Debug
         // Settings window
         auto settings = std::make_shared<SettingsWindow>();
         RegisterWindow(settings);
+
+        // Preview window (must be created before inspector and file explorer)
+        auto previewWindow = std::make_shared<PreviewWindow>();
+        auto previewPtr = previewWindow.get();
+        RegisterWindow(previewWindow);
+
+        // File Explorer (depends on preview window)
+        auto fileExplorer = std::make_shared<FileExplorerWindow>(previewPtr, "assets");
+        RegisterWindow(fileExplorer);
+                
+        // Inspector window (depends on hierarchy)
+        auto inspector = std::make_shared<InspectorWindow>(hierarchyPtr, previewPtr);
+        RegisterWindow(inspector);
         
         // Initialize all windows
         for (auto& window : m_windows)

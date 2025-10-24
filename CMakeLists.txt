@@ -290,6 +290,7 @@ set(SOURCES
     src/Engine/Game/Camera.h                    src/Engine/Game/Camera.cpp
     src/Engine/Game/StateManager.h              src/Engine/Game/StateManager.cpp
     src/Engine/Game/State.h
+    src/Engine/Game/Curve.h
 
     src/Engine/Util/Noise.h                     src/Engine/Util/Noise.cpp
 
@@ -317,6 +318,16 @@ set(SOURCES
     src/Debug/Editor/Windows/ToolbarWindow.h    src/Debug/Editor/Windows/ToolbarWindow.cpp
     src/Debug/Editor/Windows/InspectorWindow.h  src/Debug/Editor/Windows/InspectorWindow.cpp
     src/Debug/Editor/Windows/SettingsWindow.h   src/Debug/Editor/Windows/SettingsWindow.cpp
+    src/Debug/Editor/Windows/PreviewWindow.h    src/Debug/Editor/Windows/PreviewWindow.cpp
+    src/Debug/Editor/Windows/FileExplorerWindow.h src/Debug/Editor/Windows/FileExplorerWindow.cpp
+
+    src/Debug/Editor/PreviewRenderers/PreviewRenderer.h
+    src/Debug/Editor/PreviewRenderers/TexturePreviewRenderer.h src/Debug/Editor/PreviewRenderers/TexturePreviewRenderer.cpp
+    src/Debug/Editor/PreviewRenderers/ShaderPreviewRenderer.h  src/Debug/Editor/PreviewRenderers/ShaderPreviewRenderer.cpp
+    src/Debug/Editor/PreviewRenderers/SpritePreviewRenderer.h  src/Debug/Editor/PreviewRenderers/SpritePreviewRenderer.cpp
+    src/Debug/Editor/PreviewRenderers/TextFilePreviewRenderer.h
+    src/Debug/Editor/PreviewRenderers/UnknownFilePreviewRenderer.h
+    src/Debug/Editor/PreviewRenderers/PreviewHelpers.h
 )
 
 # Create executable

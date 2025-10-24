@@ -76,7 +76,7 @@ namespace Struktur::Debug
                 "main"
             });
             
-            // Split right panel (30% - Inspector)
+            // Split right panel (30% - Inspector + Preview stacked)
             defaultLayout.splits.push_back({
                 "Inspector",
                 ImGuiDir_Right,
@@ -84,11 +84,11 @@ namespace Struktur::Debug
                 "main"
             });
             
-            // Split far right for debug info (half of remaining right space)
+            // Split bottom left for file explorer
             defaultLayout.splits.push_back({
-                "Debug Info",
-                ImGuiDir_Right,
-                0.5f,
+                "File Explorer",
+                ImGuiDir_Down,
+                0.3f,
                 "main"
             });
             
@@ -177,15 +177,29 @@ namespace Struktur::Debug
         void ApplyDefaultLayout(ImGuiID dockspace_id)
         {
             ImGuiID dock_main_id = dockspace_id;
+            
+            // Split left for hierarchy (20%)
             ImGuiID dock_left_id = ImGui::DockBuilderSplitNode(dock_main_id, ImGuiDir_Left, 0.2f, nullptr, &dock_main_id);
-            ImGuiID dock_right_id = ImGui::DockBuilderSplitNode(dock_main_id, ImGuiDir_Right, 0.25f, nullptr, &dock_main_id);
-            ImGuiID dock_top_id = ImGui::DockBuilderSplitNode(dock_main_id, ImGuiDir_Up, 0.05f, nullptr, &dock_main_id);
+            
+            // Split right for inspector/preview (30%)
+            ImGuiID dock_right_id = ImGui::DockBuilderSplitNode(dock_main_id, ImGuiDir_Right, 0.3f, nullptr, &dock_main_id);
+            
+            // Split right panel vertically for Inspector (top) and Preview (bottom)
             ImGuiID dock_right_bottom = ImGui::DockBuilderSplitNode(dock_right_id, ImGuiDir_Down, 0.5f, nullptr, &dock_right_id);
-
+            
+            // Split bottom of main area for File Explorer
+            ImGuiID dock_bottom_id = ImGui::DockBuilderSplitNode(dock_main_id, ImGuiDir_Down, 0.3f, nullptr, &dock_main_id);
+            
+            // Split top for toolbar (5%)
+            ImGuiID dock_top_id = ImGui::DockBuilderSplitNode(dock_main_id, ImGuiDir_Up, 0.05f, nullptr, &dock_main_id);
+            
+            // Dock windows
             ImGui::DockBuilderDockWindow("Game Viewport", dock_main_id);
             ImGui::DockBuilderDockWindow("Hierarchy", dock_left_id);
             ImGui::DockBuilderDockWindow("Inspector", dock_right_id);
-            ImGui::DockBuilderDockWindow("Debug Info", dock_right_bottom);
+            ImGui::DockBuilderDockWindow("Preview", dock_right_bottom);
+            ImGui::DockBuilderDockWindow("File Explorer", dock_bottom_id);
+            ImGui::DockBuilderDockWindow("Debug Info", dock_bottom_id);
             ImGui::DockBuilderDockWindow("Toolbar", dock_top_id);
         }
         
