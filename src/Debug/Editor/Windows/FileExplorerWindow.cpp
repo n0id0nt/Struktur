@@ -4,6 +4,7 @@
 #include "PreviewWindow.h"
 #include "Engine/GameContext.h"
 #include "Debug/Editor/PreviewRenderers/PreviewHelpers.h"
+#include "Debug/Assertions.h"
 #include <algorithm>
 
 namespace Struktur::Debug
@@ -100,6 +101,10 @@ namespace Struktur::Debug
             ImGui::TableSetupColumn("Type", ImGuiTableColumnFlags_WidthFixed, 60.0f);
             ImGui::TableSetupColumn("Size", ImGuiTableColumnFlags_WidthFixed, 80.0f);
             ImGui::TableHeadersRow();
+
+            bool newFolderSelected = false;
+            bool newFileSelected = false;
+            const FileEntry* selectedFile = nullptr;
             
             for (const auto& file : m_files)
             {
@@ -118,13 +123,14 @@ namespace Struktur::Debug
                     {
                         // Navigate into directory
                         m_currentPath = file.path;
-                        RefreshFileList();
+                        newFolderSelected = true;
                     }
                     else
                     {
                         // Select file and preview
                         m_selectedFile = file.path;
-                        OnFileSelected(file, context);
+                        selectedFile = &file;
+                        newFileSelected = true;
                     }
                 }
                 ImGui::PopID();
@@ -152,6 +158,15 @@ namespace Struktur::Debug
             }
             
             ImGui::EndTable();
+
+            if (newFolderSelected)
+            {
+                RefreshFileList();
+            }
+            else if (newFileSelected)
+            {
+                OnFileSelected(*selectedFile, context);
+            }
         }
     }
     
