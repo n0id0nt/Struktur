@@ -9,6 +9,7 @@ namespace Struktur::System {
 bool WrenScriptSystem::InitializeScript(GameContext& context, entt::entity entity, 
                                        Component::WrenScript& script)
 {
+    Wren::WrenScriptEngine& scriptEngine = context.GetWrenScriptEngine();
     WrenVM* vm = scriptEngine.GetVM();
     if (!vm)
     {
@@ -91,7 +92,7 @@ bool WrenScriptSystem::InitializeScript(GameContext& context, entt::entity entit
     script.isInitialized = true;
     fileModificationTimes[script.scriptPath] = GetFileModificationTime(script.scriptPath);
     
-    DEBUG_LOG("Initialized Wren script: %s (%s)", script.scriptPath.c_str(), script.className.c_str());
+    DEBUG_INFO("Initialized Wren script: %s (%s)", script.scriptPath.c_str(), script.className.c_str());
     
     return true;
 }
@@ -109,7 +110,8 @@ bool WrenScriptSystem::CallCreate(GameContext& context, entt::entity entity,
         DEBUG_WARNING("Script %s does not have a Create method", script.className.c_str());
         return true; // Not an error, just doesn't have the method
     }
-    
+
+    Wren::WrenScriptEngine& scriptEngine = context.GetWrenScriptEngine();
     WrenVM* vm = scriptEngine.GetVM();
     
     wrenEnsureSlots(vm, 2);
@@ -131,6 +133,7 @@ bool WrenScriptSystem::CallCreate(GameContext& context, entt::entity entity,
 
 void WrenScriptSystem::Update(GameContext& context)
 {
+    Wren::WrenScriptEngine& scriptEngine = context.GetWrenScriptEngine();
     WrenVM* vm = scriptEngine.GetVM();
     if (!vm) return;
     
@@ -187,6 +190,7 @@ void WrenScriptSystem::DestroyScript(GameContext& context, entt::entity entity,
         return;
     }
     
+    Wren::WrenScriptEngine& scriptEngine = context.GetWrenScriptEngine();
     WrenVM* vm = scriptEngine.GetVM();
     if (!vm) return;
     
@@ -229,6 +233,7 @@ void WrenScriptSystem::SendEvent(GameContext& context, entt::entity entity,
         return;
     }
     
+    Wren::WrenScriptEngine& scriptEngine = context.GetWrenScriptEngine();
     WrenVM* vm = scriptEngine.GetVM();
     
     // Create event map in Wren
@@ -274,7 +279,7 @@ void WrenScriptSystem::CheckForScriptChanges(GameContext& context)
         auto it = fileModificationTimes.find(script.scriptPath);
         if (it != fileModificationTimes.end() && currentModTime > it->second)
         {
-            DEBUG_LOG("Script file changed, reloading: %s", script.scriptPath.c_str());
+            DEBUG_INFO("Script file changed, reloading: %s", script.scriptPath.c_str());
             ReloadScript(context, entity, script);
             fileModificationTimes[script.scriptPath] = currentModTime;
         }
@@ -295,7 +300,7 @@ void WrenScriptSystem::ReloadScript(GameContext& context, entt::entity entity,
     if (InitializeScript(context, entity, script))
     {
         CallCreate(context, entity, script);
-        DEBUG_LOG("Successfully reloaded script: %s", script.scriptPath.c_str());
+        DEBUG_INFO("Successfully reloaded script: %s", script.scriptPath.c_str());
     }
     else
     {

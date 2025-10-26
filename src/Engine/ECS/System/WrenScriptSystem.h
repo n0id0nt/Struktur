@@ -17,14 +17,13 @@ namespace Struktur
         class WrenScriptSystem : public ISystem
         {
         private:
-            Wren::WrenScriptEngine& scriptEngine;
             
             // Track which scripts have been loaded
             //TODO make this a debug only feature
             std::unordered_map<std::string, time_t> fileModificationTimes;
             
         public:
-            WrenScriptSystem(Wren::WrenScriptEngine& engine) : scriptEngine(engine) {}
+            WrenScriptSystem() {}
             
             // Initialize a script component (load and instantiate)
             bool InitializeScript(GameContext& context, entt::entity entity, 
@@ -35,7 +34,7 @@ namespace Struktur
                         Component::WrenScript& script);
             
             // Update all scripted entities
-            void Update(GameContext& context);
+            void Update(GameContext& context) override;
             
             // Destroy a script (call OnDestroy and release handles)
             void DestroyScript(GameContext& context, entt::entity entity, 

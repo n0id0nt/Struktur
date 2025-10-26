@@ -58,7 +58,7 @@ namespace Struktur
         public:
             WrenScriptEngine() : m_vm(nullptr) {}
             
-            void Initialize(GameContext* ctx);
+            void Initialize(GameContext& ctx);
             void Shutdown();
             
             WrenVM* GetVM() { return m_vm; }

@@ -54,7 +54,7 @@ namespace Struktur::Wren {
                 );
             }
             
-            DEBUG_LOG("Generated %zu Wren binding file(s) in: %s", 
+            DEBUG_INFO("Generated %zu Wren binding file(s) in: %s", 
                     methodsByModule.size(), outputDir.c_str());
         }
         
@@ -186,7 +186,7 @@ namespace Struktur::Wren {
             }
             
             file.close();
-            DEBUG_LOG("Generated: %s", filePath.c_str());
+            DEBUG_INFO("Generated: %s", filePath.c_str());
         }
         
         static std::string ConvertSignature(const std::string& signature) {

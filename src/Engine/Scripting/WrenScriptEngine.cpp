@@ -4,7 +4,7 @@
 
 namespace Struktur::Wren {
 
-void WrenScriptEngine::Initialize(GameContext* context)
+void WrenScriptEngine::Initialize(GameContext& context)
 {   
     WrenConfiguration config;
     wrenInitConfiguration(&config);
@@ -16,13 +16,13 @@ void WrenScriptEngine::Initialize(GameContext* context)
     config.bindForeignClassFn = OnBindForeignClass;
     
     m_vm = wrenNewVM(&config);
-    wrenSetUserData(m_vm, context);
+    wrenSetUserData(m_vm, &context);
     
-    DEBUG_LOG("Wren VM initialized");
-    DEBUG_LOG("Registered %zu method bindings", Wren::g_methodBindings.size());
-    DEBUG_LOG("Registered %zu class bindings", Wren::g_classBindings.size());
-    DEBUG_LOG("Registered %zu enum bindings", Wren::g_enumBindings.size());
-    DEBUG_LOG("Registered %zu constant bindings", Wren::g_constantBindings.size());
+    DEBUG_INFO("Wren VM initialized");
+    DEBUG_INFO("Registered %zu method bindings", Wren::g_methodBindings.size());
+    DEBUG_INFO("Registered %zu class bindings", Wren::g_classBindings.size());
+    DEBUG_INFO("Registered %zu enum bindings", Wren::g_enumBindings.size());
+    DEBUG_INFO("Registered %zu constant bindings", Wren::g_constantBindings.size());
 }
 
 void WrenScriptEngine::Shutdown() {
@@ -96,7 +96,7 @@ void WrenScriptEngine::OnWrenError(WrenVM* vm, WrenErrorType type,
 }
 
 void WrenScriptEngine::OnWrenWrite(WrenVM* vm, const char* text) {
-    DEBUG_LOG("[Wren Print] %s", text);
+    DEBUG_INFO("[Wren Print] %s", text);
 }
 
 WrenLoadModuleResult WrenScriptEngine::OnLoadModule(WrenVM* vm, const char* name) {
@@ -120,7 +120,7 @@ WrenLoadModuleResult WrenScriptEngine::OnLoadModule(WrenVM* vm, const char* name
             buffer << file.rdbuf();
             source = buffer.str();
             found = true;
-            DEBUG_LOG("Loaded Wren module: %s from %s", name, path.c_str());
+            DEBUG_INFO("Loaded Wren module: %s from %s", name, path.c_str());
             break;
         }
     }

@@ -2,6 +2,7 @@
 
 #include <string>
 #include <sstream>
+#include <cstdio>
 #include "raylib.h"
 
 // Platform detection
@@ -35,6 +36,27 @@ namespace Struktur
             }
         }
         
+        // Variadic template function for printf-style formatting
+        template<typename... Args>
+        inline std::string FormatString(const char* format, Args&&... args)
+        {
+            // Calculate required buffer size
+            int size = snprintf(nullptr, 0, format, std::forward<Args>(args)...) + 1;
+            if (size <= 0) return std::string(format);
+            
+            // Allocate buffer and format string
+            std::string result(size, '\0');
+            snprintf(&result[0], size, format, std::forward<Args>(args)...);
+            result.resize(size - 1); // Remove null terminator
+            return result;
+        }
+        
+        // Overload for no arguments (just return the format string)
+        inline std::string FormatString(const char* format)
+        {
+            return std::string(format);
+        }
+        
         inline std::string FormatMessage(const char* file, int line, const char* func, const std::string& message)
         {
             std::stringstream ss;
@@ -50,8 +72,25 @@ namespace Struktur
             return ss.str();
         }
         
+        // Overload for string message (backward compatibility)
         inline void Log(Level level, const char* file, int line, const char* func, const std::string& message)
         {
+            std::string formatted = FormatMessage(file, line, func, message);
+            TraceLog(ToRaylibLogLevel(level), formatted.c_str());
+        }
+        
+        // Overload for const char* message (backward compatibility)
+        inline void Log(Level level, const char* file, int line, const char* func, const char* message)
+        {
+            std::string formatted = FormatMessage(file, line, func, std::string(message));
+            TraceLog(ToRaylibLogLevel(level), formatted.c_str());
+        }
+        
+        // Template version of Log that accepts format arguments
+        template<typename... Args>
+        inline void Log(Level level, const char* file, int line, const char* func, const char* format, Args&&... args)
+        {
+            std::string message = FormatString(format, std::forward<Args>(args)...);
             std::string formatted = FormatMessage(file, line, func, message);
             TraceLog(ToRaylibLogLevel(level), formatted.c_str());
         }
@@ -99,8 +138,54 @@ namespace Struktur
             return true;
         }
         
+        // Template version for formatted assert messages
+        template<typename... Args>
+        inline bool AssertImpl(bool condition, const char* conditionStr, const char* file, int line, const char* func, const char* format, Args&&... args)
+        {
+            if (!condition)
+            {
+                std::string message = FormatString(format, std::forward<Args>(args)...);
+                std::stringstream ss;
+                ss << "ASSERTION FAILED: " << conditionStr;
+                if (!message.empty())
+                {
+                    ss << " - " << message;
+                }
+                
+                Log(Level::LEVEL_FATAL, file, line, func, ss.str());
+                
+#ifdef DEBUG
+				DebugBreak();
+#endif
+                
+                return false;
+            }
+            return true;
+        }
+        
         inline bool BreakImpl(const char* file, int line, const char* func, const std::string& message = "")
         {
+			std::stringstream ss;
+            ss << "BREAK: ";
+			if (!message.empty())
+            {
+				ss << " - " << message;
+			}
+
+			Log(Level::LEVEL_FATAL, file, line, func, ss.str());
+
+#ifdef DEBUG
+			DebugBreak();
+#endif
+
+			return false;
+        }
+        
+        // Template version for formatted break messages
+        template<typename... Args>
+        inline bool BreakImpl(const char* file, int line, const char* func, const char* format, Args&&... args)
+        {
+            std::string message = FormatString(format, std::forward<Args>(args)...);
 			std::stringstream ss;
             ss << "BREAK: ";
 			if (!message.empty())
@@ -120,27 +205,27 @@ namespace Struktur
 }
 
 // Macro definitions
-#define DEBUG_LOG(level, message) \
-    Struktur::Debug::Log(level, __FILE__, __LINE__, __FUNCTION__, message)
+#define DEBUG_LOG(level, ...) \
+    Struktur::Debug::Log(level, __FILE__, __LINE__, __FUNCTION__, __VA_ARGS__)
 
 // Specific log level macros
-#define DEBUG_INFO(message) DEBUG_LOG(Struktur::Debug::Level::LEVEL_INFO, message)
-#define DEBUG_WARNING(message) DEBUG_LOG(Struktur::Debug::Level::LEVEL_WARNING, message)
-#define DEBUG_ERROR(message) DEBUG_LOG(Struktur::Debug::Level::LEVEL_ERROR, message)
-#define DEBUG_FATAL(message) DEBUG_LOG(Struktur::Debug::Level::LEVEL_FATAL, message)
+#define DEBUG_INFO(...) DEBUG_LOG(Struktur::Debug::Level::LEVEL_INFO, __VA_ARGS__)
+#define DEBUG_WARNING(...) DEBUG_LOG(Struktur::Debug::Level::LEVEL_WARNING, __VA_ARGS__)
+#define DEBUG_ERROR(...) DEBUG_LOG(Struktur::Debug::Level::LEVEL_ERROR, __VA_ARGS__)
+#define DEBUG_FATAL(...) DEBUG_LOG(Struktur::Debug::Level::LEVEL_FATAL, __VA_ARGS__)
 
 // Always-on assert (works in both debug and release)
 #define ASSERT(condition) \
     Struktur::Debug::AssertImpl(condition, #condition, __FILE__, __LINE__, __FUNCTION__)
 
-#define ASSERT_MSG(condition, message) \
-    Struktur::Debug::AssertImpl(condition, #condition, __FILE__, __LINE__, __FUNCTION__, message)
+#define ASSERT_MSG(condition, ...) \
+    Struktur::Debug::AssertImpl(condition, #condition, __FILE__, __LINE__, __FUNCTION__, __VA_ARGS__)
 
 #define BREAK \
     Struktur::Debug::BreakImpl(__FILE__, __LINE__, __FUNCTION__)
 
-#define BREAK_MSG(message) \
-    Struktur::Debug::BreakImpl(__FILE__, __LINE__, __FUNCTION__, message)
+#define BREAK_MSG(...) \
+    Struktur::Debug::BreakImpl(__FILE__, __LINE__, __FUNCTION__, __VA_ARGS__)
 
 // Usage examples:
 /*
@@ -152,23 +237,28 @@ int main()
     SetTraceLogLevel(LOG_ALL); // Enable all log levels
     
     int value = 42;
+    const char* name = "TestObject";
     
     // Basic assert
-    DEBUG_ASSERT(value > 0);
+    ASSERT(value > 0);
     
-    // Assert with custom message
-    DEBUG_ASSERT_MSG(value < 100, "Value should be less than 100");
+    // Assert with formatted message
+    ASSERT_MSG(value < 100, "Value %d should be less than 100", value);
     
-    // Different log levels
+    // Different log levels with formatting
     DEBUG_INFO("This is an info message");
-    DEBUG_WARNING("This is a warning message");
-    DEBUG_ERROR("This is an error message");
+    DEBUG_WARNING("Warning: Value is %d", value);
+    DEBUG_ERROR("Error in object: %s", name);
     
-    // This will trigger an assertion failure and break in debug mode
-    // DEBUG_ASSERT(value > 100);
+    // Printf-style formatting
+    DEBUG_WARNING("Wren binding not found: %s.%s%s (static=%d)",
+                  "module", "ClassName", "signature", 1);
+    
+    // Break with formatted message
+    // BREAK_MSG("Critical error at position (%d, %d)", 10, 20);
     
     // Always-on assert (works in release too)
-    ASSERT_MSG(value != 0, "Value cannot be zero");
+    ASSERT_MSG(value != 0, "Value cannot be zero (got %d)", value);
     
     while (!WindowShouldClose())
     {

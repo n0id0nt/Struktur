@@ -60,9 +60,8 @@ void Struktur::InitialiseGame(GameContext& context)
     System::GameObjectManager& gameObjectManager = context.GetGameObjectManager();
     GameResource::StateManager& stateManager = context.GetStateManager();
     Physics::PhysicsWorld& physicsWorld = context.GetPhysicsWorld();
-    Physics::PhysicsWorld& physicsWorld = context.GetPhysicsWorld();
     Wren::WrenScriptEngine& wrenScriptEngine = context.GetWrenScriptEngine();
-
+    wrenScriptEngine.Initialize(context);
     gameObjectManager.CreateDeleteObjectCallBack(context);
 
     input.LoadInputBindings(INPUT_BINDINGS_PATH);

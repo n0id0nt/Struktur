@@ -45,19 +45,4 @@ namespace Struktur::Wren
         return methods;
     }
 
-    WrenForeignClassMethods FindClass(const char* module, const char* className)
-    {
-        WrenForeignClassMethods methods = {};
-        for (const auto& binding : g_classBindings)
-        {
-            if (binding.moduleName == module && binding.className == className)
-            {
-                methods.allocate = binding.allocate;
-                methods.finalize = binding.finalize;
-                return methods;
-            }
-        }
-        return methods;
-    }
-
 } // namespace Struktur::Wren
