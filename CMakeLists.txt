@@ -326,6 +326,7 @@ set(SOURCES
     src/Debug/Editor/Windows/SettingsWindow.h   src/Debug/Editor/Windows/SettingsWindow.cpp
     src/Debug/Editor/Windows/PreviewWindow.h    src/Debug/Editor/Windows/PreviewWindow.cpp
     src/Debug/Editor/Windows/FileExplorerWindow.h src/Debug/Editor/Windows/FileExplorerWindow.cpp
+    src/Debug/Editor/Windows/LogWindow.h        src/Debug/Editor/Windows/LogWindow.cpp
 
     src/Debug/Editor/PreviewRenderers/PreviewRenderer.h
     src/Debug/Editor/PreviewRenderers/TexturePreviewRenderer.h src/Debug/Editor/PreviewRenderers/TexturePreviewRenderer.cpp

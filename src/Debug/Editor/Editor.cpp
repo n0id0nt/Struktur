@@ -14,6 +14,7 @@
 #include "Debug/Editor/Windows/SettingsWindow.h"
 #include "Debug/Editor/Windows/PreviewWindow.h"
 #include "Debug/Editor/Windows/FileExplorerWindow.h"
+#include "Debug/Editor/Windows/LogWindow.h"
 #include "Debug/Editor/EditorTheme.h"
 
 namespace Struktur::Debug
@@ -50,6 +51,10 @@ namespace Struktur::Debug
         // Settings window
         auto settings = std::make_shared<SettingsWindow>();
         RegisterWindow(settings);
+        
+        // Log window
+        auto log = std::make_shared<LogWindow>();
+        RegisterWindow(log);
 
         // Preview window (must be created before inspector and file explorer)
         auto previewWindow = std::make_shared<PreviewWindow>();
