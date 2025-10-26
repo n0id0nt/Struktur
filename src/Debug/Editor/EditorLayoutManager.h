@@ -199,6 +199,7 @@ namespace Struktur::Debug
             ImGui::DockBuilderDockWindow("Inspector", dock_right_id);
             ImGui::DockBuilderDockWindow("Preview", dock_right_bottom);
             ImGui::DockBuilderDockWindow("File Explorer", dock_bottom_id);
+            ImGui::DockBuilderDockWindow("Console", dock_bottom_id);  
             ImGui::DockBuilderDockWindow("Debug Info", dock_bottom_id);
             ImGui::DockBuilderDockWindow("Toolbar", dock_top_id);
         }

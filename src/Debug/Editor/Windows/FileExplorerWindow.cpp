@@ -179,13 +179,15 @@ namespace Struktur::Debug
         std::transform(ext.begin(), ext.end(), ext.begin(), ::tolower);
         
         // Determine file type and preview accordingly
+        // Improve way this is handled. load this from somewhere
         if (ext == ".png" || ext == ".jpg" || ext == ".jpeg" || ext == ".bmp" || ext == ".tga")
         {
             PreviewUnknownFile(m_previewWindow, file.name);
         }
         else if (ext == ".txt" || ext == ".cpp" || ext == ".h" || ext == ".hpp" || 
                  ext == ".c" || ext == ".cs" || ext == ".lua" || ext == ".py" ||
-                 ext == ".json" || ext == ".xml" || ext == ".glsl" || ext == ".frag" || ext == ".vert")
+                 ext == ".wren" || ext == ".fs" || ext == ".vs" || ext == ".json" ||
+                 ext == ".xml" || ext == ".glsl" || ext == ".frag" || ext == ".vert")
         {
             PreviewTextFile(m_previewWindow, file.path, file.name);
         }
