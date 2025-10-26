@@ -14,6 +14,7 @@
 
 #include "Engine/GameContext.h"
 #include "Engine/Core/Input.h"
+#include "Engine/Scripting/WrenScriptEngine.h"
 #include "Engine/ECS/SystemManager.h"
 
 #include "Engine/ECS/Component/Transform.h"
@@ -33,6 +34,7 @@
 #include "Engine/ECS/System/AnimationSystem.h"
 #include "Engine/ECS/System/UIsystem.h"
 #include "Engine/ECS/System/ShaderSystem.h"
+#include "Engine/ECS/System/WrenScriptSystem.h"
 
 #include "Engine/FileLoading/LevelParser.h"
 
@@ -58,7 +60,9 @@ void Struktur::InitialiseGame(GameContext& context)
     System::GameObjectManager& gameObjectManager = context.GetGameObjectManager();
     GameResource::StateManager& stateManager = context.GetStateManager();
     Physics::PhysicsWorld& physicsWorld = context.GetPhysicsWorld();
-    
+    Physics::PhysicsWorld& physicsWorld = context.GetPhysicsWorld();
+    Wren::WrenScriptEngine& wrenScriptEngine = context.GetWrenScriptEngine();
+
     gameObjectManager.CreateDeleteObjectCallBack(context);
 
     input.LoadInputBindings(INPUT_BINDINGS_PATH);
@@ -75,6 +79,7 @@ void Struktur::InitialiseGame(GameContext& context)
     systemManager.AddHelperSystem<System::TransformSystem>();
     systemManager.AddHelperSystem<System::ShaderSystem>();
     systemManager.AddUpdateSystem<System::GameplaySystem>();
+    systemManager.AddUpdateSystem<System::WrenScriptSystem>();
     systemManager.AddUpdateSystem<System::CameraSystem>();
     systemManager.AddUpdateSystem<System::PhysicsSystem>();
     systemManager.AddUpdateSystem<System::AnimationSystem>();

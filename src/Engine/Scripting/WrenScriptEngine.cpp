@@ -1,0 +1,145 @@
+#include "WrenScriptEngine.h"
+#include "Engine/GameContext.h"
+#include <filesystem>
+
+namespace Struktur::Wren {
+
+void WrenScriptEngine::Initialize(GameContext* context)
+{   
+    WrenConfiguration config;
+    wrenInitConfiguration(&config);
+    
+    config.errorFn = OnWrenError;
+    config.writeFn = OnWrenWrite;
+    config.loadModuleFn = OnLoadModule;
+    config.bindForeignMethodFn = OnBindForeignMethod;
+    config.bindForeignClassFn = OnBindForeignClass;
+    
+    m_vm = wrenNewVM(&config);
+    wrenSetUserData(m_vm, context);
+    
+    DEBUG_LOG("Wren VM initialized");
+    DEBUG_LOG("Registered %zu method bindings", Wren::g_methodBindings.size());
+    DEBUG_LOG("Registered %zu class bindings", Wren::g_classBindings.size());
+    DEBUG_LOG("Registered %zu enum bindings", Wren::g_enumBindings.size());
+    DEBUG_LOG("Registered %zu constant bindings", Wren::g_constantBindings.size());
+}
+
+void WrenScriptEngine::Shutdown() {
+    if (m_vm) {
+        wrenFreeVM(m_vm);
+        m_vm = nullptr;
+    }
+}
+
+bool WrenScriptEngine::InterpretString(const char* module, const char* source) {
+    if (!m_vm) {
+        DEBUG_ERROR("Wren VM not initialized");
+        return false;
+    }
+    
+    WrenInterpretResult result = wrenInterpret(m_vm, module, source);
+    
+    if (result == WREN_RESULT_COMPILE_ERROR) {
+        DEBUG_ERROR("Wren compile error in module: %s", module);
+        return false;
+    } else if (result == WREN_RESULT_RUNTIME_ERROR) {
+        DEBUG_ERROR("Wren runtime error in module: %s", module);
+        return false;
+    }
+    
+    return true;
+}
+
+bool WrenScriptEngine::InterpretFile(const char* path) {
+    if (!m_vm) {
+        DEBUG_ERROR("Wren VM not initialized");
+        return false;
+    }
+    
+    // Load file
+    std::ifstream file(path);
+    if (!file.is_open()) {
+        DEBUG_ERROR("Failed to open Wren file: %s", path);
+        return false;
+    }
+    
+    std::stringstream buffer;
+    buffer << file.rdbuf();
+    std::string source = buffer.str();
+    file.close();
+    
+    // Extract module name from path (remove extension)
+    std::filesystem::path filepath(path);
+    std::string module = filepath.stem().string();
+    
+    return InterpretString(module.c_str(), source.c_str());
+}
+
+// ============================================================================
+// CALLBACK IMPLEMENTATIONS
+// ============================================================================
+
+void WrenScriptEngine::OnWrenError(WrenVM* vm, WrenErrorType type, 
+                                   const char* module, int line, const char* message) {
+    switch (type) {
+        case WREN_ERROR_COMPILE:
+            DEBUG_ERROR("[Wren Compile] %s:%d: %s", module, line, message);
+            break;
+        case WREN_ERROR_RUNTIME:
+            DEBUG_ERROR("[Wren Runtime] %s", message);
+            break;
+        case WREN_ERROR_STACK_TRACE:
+            DEBUG_ERROR("[Wren Trace] %s:%d: %s", module, line, message);
+            break;
+    }
+}
+
+void WrenScriptEngine::OnWrenWrite(WrenVM* vm, const char* text) {
+    DEBUG_LOG("[Wren Print] %s", text);
+}
+
+WrenLoadModuleResult WrenScriptEngine::OnLoadModule(WrenVM* vm, const char* name) {
+    WrenLoadModuleResult result = {};
+    
+    // Try multiple paths for module loading
+    std::vector<std::string> searchPaths = {
+        std::string("assets/scripts/") + name + ".wren",
+        std::string("assets/scripts/bindings/") + name + ".wren",
+        std::string("assets/scripts/behaviors/") + name + ".wren",
+        std::string("assets/scripts/states/") + name + ".wren",
+    };
+    
+    std::string source;
+    bool found = false;
+    
+    for (const auto& path : searchPaths) {
+        std::ifstream file(path);
+        if (file.is_open()) {
+            std::stringstream buffer;
+            buffer << file.rdbuf();
+            source = buffer.str();
+            found = true;
+            DEBUG_LOG("Loaded Wren module: %s from %s", name, path.c_str());
+            break;
+        }
+    }
+    
+    if (!found) {
+        DEBUG_ERROR("Failed to load Wren module: %s", name);
+        return result;
+    }
+    
+    // Allocate memory for Wren (Wren will free it)
+    char* source_copy = new char[source.size() + 1];
+    strcpy(source_copy, source.c_str());
+    
+    result.source = source_copy;
+    result.onComplete = [](WrenVM* vm, const char* name, WrenLoadModuleResult result) {
+        delete[] result.source;
+    };
+    
+    return result;
+}
+
+}

@@ -13,6 +13,7 @@
 #include "Engine/Game/Camera.h"
 #include "Engine/Game/StateManager.h"
 #include "Engine/UI/UIManager.h"
+#include "Engine/Scripting/WrenScriptEngine.h"
 
 #include "Debug/Assertions.h"
 #ifdef EDITOR
@@ -38,6 +39,7 @@ namespace Struktur
             m_uiManger = std::make_unique<UI::UIManager>();
             m_inventory = std::make_unique<Inventory>();
             m_physicsWorld = std::make_unique<Physics::PhysicsWorld>();
+            m_wrenScriptEngine = std::make_unique<Wren::WrenScriptEngine>();
 #ifdef EDITOR
             m_editor = std::make_unique<Debug::Editor>();
 #endif
@@ -109,6 +111,12 @@ namespace Struktur
             return *m_inventory;
         }
 
+        Wren::WrenScriptEngine& GetWrenScriptEngine() const
+        {
+            ASSERT_MSG(m_wrenScriptEngine.get(), "Wren Script Engine not initialized");
+            return *m_wrenScriptEngine;
+        }
+
 #ifdef EDITOR
         Debug::Editor& GetEditor() const
         {
@@ -129,6 +137,7 @@ namespace Struktur
         std::unique_ptr<GameResource::StateManager> m_stateManager;
         std::unique_ptr<UI::UIManager> m_uiManger;
         std::unique_ptr<Inventory> m_inventory;
+        std::unique_ptr<Wren::WrenScriptEngine> m_wrenScriptEngine;
 #ifdef EDITOR
         std::unique_ptr<Debug::Editor> m_editor;
 #endif

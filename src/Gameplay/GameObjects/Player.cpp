@@ -13,6 +13,7 @@
 #include "Engine/ECS/Component/Camera.h"
 #include "Engine/ECS/Component/PhysicsBody.h"
 #include "Engine/ECS/Component/Level.h"
+#include "Engine/ECS/Component/WrenScript.h"
 
 #include "Engine/ECS/System/TransformSystem.h"
 #include "Engine/ECS/System/PhysicsSystem.h"
@@ -47,8 +48,10 @@ void Struktur::Player::Create(GameContext &context, entt::entity entity)
     auto& transformSystem = systemManager.GetSystem<System::TransformSystem>();
     auto& physicsSystem = systemManager.GetSystem<System::PhysicsSystem>();
     auto& animationSystem = systemManager.GetSystem<System::AnimationSystem>();
-    Resource::ResourcePtr<Resource::TextureResource> texture = resourceManager.GetTexture("assets/Tiles/PlayerSpriteSheet.png");
 
+    Component::WrenScript& scriptComponent = registry.emplace<Component::WrenScript>(entity, "Assets/Acripts/GameObjects/Player.wren", "Player");
+
+    Resource::ResourcePtr<Resource::TextureResource> texture = resourceManager.GetTexture("assets/Tiles/PlayerSpriteSheet.png");
     registry.emplace<Component::Sprite>(entity, texture, WHITE, glm::vec2(48, 64), 6, 3, false, 0, 3);
     registry.emplace<Component::Player>(entity, 5.f);
     Component::Camera& parentCamera = registry.emplace<Component::Camera>(entity);
