@@ -37,6 +37,7 @@
 #include "Engine/ECS/System/WrenScriptSystem.h"
 
 #include "Engine/FileLoading/LevelParser.h"
+#include "Engine/Scripting/WrenCodeGenerator.h"
 
 #include "Engine/Game/Level.h"
 
@@ -62,6 +63,11 @@ void Struktur::InitialiseGame(GameContext& context)
     Physics::PhysicsWorld& physicsWorld = context.GetPhysicsWorld();
     Wren::WrenScriptEngine& wrenScriptEngine = context.GetWrenScriptEngine();
     wrenScriptEngine.Initialize(context);
+
+#ifdef DEBUG
+    Wren::CodeGenerator::GenerateBindingFiles("Assets/Scripts/Bindings");
+#endif
+
     gameObjectManager.CreateDeleteObjectCallBack(context);
 
     input.LoadInputBindings(INPUT_BINDINGS_PATH);

@@ -49,7 +49,7 @@ void Struktur::Player::Create(GameContext &context, entt::entity entity)
     auto& physicsSystem = systemManager.GetSystem<System::PhysicsSystem>();
     auto& animationSystem = systemManager.GetSystem<System::AnimationSystem>();
 
-    Component::WrenScript& scriptComponent = registry.emplace<Component::WrenScript>(entity, "Assets/Acripts/GameObjects/Player.wren", "Player");
+    Component::WrenScript& scriptComponent = registry.emplace<Component::WrenScript>(entity, "Assets/Scripts/GameObjects/Player.wren", "Player", "Test Player Name");
 
     Resource::ResourcePtr<Resource::TextureResource> texture = resourceManager.GetTexture("assets/Tiles/PlayerSpriteSheet.png");
     registry.emplace<Component::Sprite>(entity, texture, WHITE, glm::vec2(48, 64), 6, 3, false, 0, 3);

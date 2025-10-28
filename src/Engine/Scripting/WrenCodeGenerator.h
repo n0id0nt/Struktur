@@ -11,14 +11,14 @@
 
 namespace Struktur::Wren {
 
-    class CodeGenerator {
+    class CodeGenerator
+    {
     public:
         // Generate all .wren declaration files from registered bindings
-        static void GenerateBindingFiles(const std::string& outputDir) {
+        static void GenerateBindingFiles(const std::string& outputDir)
+        {
             // Create output directory if it doesn't exist
             std::filesystem::create_directories(outputDir);
-            
-            auto& registry = g_methodBindings;
             
             // Group bindings by module
             std::unordered_map<std::string, std::vector<const MethodBinding*>> methodsByModule;
@@ -26,24 +26,29 @@ namespace Struktur::Wren {
             std::unordered_map<std::string, std::vector<const EnumBinding*>> enumsByModule;
             std::unordered_map<std::string, std::vector<const ConstantBinding*>> constantsByModule;
             
-            for (const auto& method : g_methodBindings) {
+            for (const auto& method : GetMethodBindings())
+            {
                 methodsByModule[method.moduleName].push_back(&method);
             }
             
-            for (const auto& cls : g_classBindings) {
+            for (const auto& cls : GetClassBindings())
+            {
                 classesByModule[cls.moduleName].push_back(&cls);
             }
             
-            for (const auto& enumBinding : g_enumBindings) {
+            for (const auto& enumBinding : GetEnumBindings())
+            {
                 enumsByModule[enumBinding.moduleName].push_back(&enumBinding);
             }
             
-            for (const auto& constant : g_constantBindings) {
+            for (const auto& constant : GetConstantBindings())
+            {
                 constantsByModule[constant.moduleName].push_back(&constant);
             }
             
             // Generate a .wren file for each module
-            for (const auto& [moduleName, methods] : methodsByModule) {
+            for (const auto& [moduleName, methods] : methodsByModule)
+            {
                 GenerateModuleFile(
                     outputDir, 
                     moduleName, 
@@ -70,7 +75,8 @@ namespace Struktur::Wren {
             std::string filePath = outputDir + "/" + moduleName + ".wren";
             std::ofstream file(filePath);
             
-            if (!file.is_open()) {
+            if (!file.is_open())
+            {
                 DEBUG_ERROR("Failed to create file: %s", filePath.c_str());
                 return;
             }
@@ -81,13 +87,17 @@ namespace Struktur::Wren {
             
             // Generate module-level constants first
             bool hasModuleConstants = false;
-            for (const auto* constant : constants) {
-                if (constant->className.empty()) {
-                    if (!hasModuleConstants) {
+            for (const auto* constant : constants)
+            {
+                if (constant->className.empty())
+                {
+                    if (!hasModuleConstants)
+                    {
                         file << "// Module Constants\n";
                         hasModuleConstants = true;
                     }
-                    if (!constant->documentation.empty()) {
+                    if (!constant->documentation.empty())
+                    {
                         file << "// " << constant->documentation << "\n";
                     }
                     file << "var " << constant->name << " = " << constant->value << "\n";
@@ -97,13 +107,17 @@ namespace Struktur::Wren {
             
             // Generate module-level functions
             bool hasModuleFunctions = false;
-            for (const auto* method : methods) {
-                if (method->className.empty()) {
-                    if (!hasModuleFunctions) {
+            for (const auto* method : methods)
+            {
+                if (method->className.empty())
+                {
+                    if (!hasModuleFunctions)
+                    {
                         file << "// Module Functions\n";
                         hasModuleFunctions = true;
                     }
-                    if (!method->documentation.empty()) {
+                    if (!method->documentation.empty())
+                    {
                         file << "// " << method->documentation << "\n";
                     }
                     std::string signature = ConvertSignature(method->signature);
@@ -113,12 +127,15 @@ namespace Struktur::Wren {
             if (hasModuleFunctions) file << "\n";
             
             // Generate enums
-            for (const auto* enumBinding : enums) {
-                if (!enumBinding->documentation.empty()) {
+            for (const auto* enumBinding : enums)
+            {
+                if (!enumBinding->documentation.empty())
+                {
                     file << "// " << enumBinding->documentation << "\n";
                 }
                 file << "class " << enumBinding->enumName << " {\n";
-                for (const auto& [name, value] : enumBinding->values) {
+                for (const auto& [name, value] : enumBinding->values)
+                {
                     file << "    static " << name << " { " << value << " }\n";
                 }
                 file << "}\n\n";
@@ -126,36 +143,48 @@ namespace Struktur::Wren {
             
             // Group methods by class
             std::unordered_map<std::string, std::vector<const MethodBinding*>> methodsByClass;
-            for (const auto* method : methods) {
-                if (!method->className.empty()) {
+            for (const auto* method : methods)
+            {
+                if (!method->className.empty())
+                {
                     methodsByClass[method->className].push_back(method);
                 }
             }
             
             // Generate each class
-            for (const auto& [className, classMethods] : methodsByClass) {
+            for (const auto& [className, classMethods] : methodsByClass)
+            {
                 // Check if it's a foreign class
                 bool isForeignClass = false;
-                for (const auto* cls : classes) {
-                    if (cls->className == className) {
+                for (const auto* cls : classes)
+                {
+                    if (cls->className == className)
+                    {
                         isForeignClass = true;
-                        if (!cls->documentation.empty()) {
+                        if (!cls->documentation.empty())
+                        {
                             file << "// " << cls->documentation << "\n";
                         }
                         break;
                     }
                 }
                 
-                if (isForeignClass) {
+                if (isForeignClass)
+                {
                     file << "foreign class " << className << " {\n";
-                } else {
+                }
+                else
+                {
                     file << "class " << className << " {\n";
                 }
                 
                 // Add class constants
-                for (const auto* constant : constants) {
-                    if (constant->className == className) {
-                        if (!constant->documentation.empty()) {
+                for (const auto* constant : constants)
+                {
+                    if (constant->className == className)
+                    {
+                        if (!constant->documentation.empty())
+                        {
                             file << "    // " << constant->documentation << "\n";
                         }
                         file << "    static " << constant->name << " { " 
@@ -164,16 +193,21 @@ namespace Struktur::Wren {
                 }
                 
                 // Add methods
-                for (const auto* method : classMethods) {
+                for (const auto* method : classMethods)
+                {
                     // Add documentation as comment
-                    if (!method->documentation.empty()) {
+                    if (!method->documentation.empty())
+                    {
                         file << "    // " << method->documentation << "\n";
                     }
                     
                     // Generate method declaration
-                    if (method->isStatic) {
+                    if (method->isStatic)
+                    {
                         file << "    foreign static ";
-                    } else {
+                    }
+                    else
+                    {
                         file << "    foreign ";
                     }
                     
@@ -189,13 +223,15 @@ namespace Struktur::Wren {
             DEBUG_INFO("Generated: %s", filePath.c_str());
         }
         
-        static std::string ConvertSignature(const std::string& signature) {
+        static std::string ConvertSignature(const std::string& signature)
+        {
             // Convert "methodName(_,_)" to "methodName(arg0, arg1)"
             std::string result = signature;
             int argCount = 0;
             
             size_t pos = 0;
-            while ((pos = result.find('_', pos)) != std::string::npos) {
+            while ((pos = result.find('_', pos)) != std::string::npos)
+            {
                 std::string argName = "arg" + std::to_string(argCount++);
                 result.replace(pos, 1, argName);
                 pos += argName.length();

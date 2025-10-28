@@ -19,10 +19,10 @@ void WrenScriptEngine::Initialize(GameContext& context)
     wrenSetUserData(m_vm, &context);
     
     DEBUG_INFO("Wren VM initialized");
-    DEBUG_INFO("Registered %zu method bindings", Wren::g_methodBindings.size());
-    DEBUG_INFO("Registered %zu class bindings", Wren::g_classBindings.size());
-    DEBUG_INFO("Registered %zu enum bindings", Wren::g_enumBindings.size());
-    DEBUG_INFO("Registered %zu constant bindings", Wren::g_constantBindings.size());
+    DEBUG_INFO("Registered %zu method bindings", Wren::GetMethodBindings().size());
+    DEBUG_INFO("Registered %zu class bindings", Wren::GetClassBindings().size());
+    DEBUG_INFO("Registered %zu enum bindings", Wren::GetEnumBindings().size());
+    DEBUG_INFO("Registered %zu constant bindings", Wren::GetConstantBindings().size());
 }
 
 void WrenScriptEngine::Shutdown() {

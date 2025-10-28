@@ -50,7 +50,8 @@ bool WrenScriptSystem::InitializeScript(GameContext& context, entt::entity entit
     script.classHandle = wrenGetSlotHandle(vm, 0);
     
     // Instantiate the class
-    wrenEnsureSlots(vm, 2);
+    int numberOfSlots = script.constructorArgs.empty() ? 2 : 3;
+    wrenEnsureSlots(vm, numberOfSlots);
     wrenSetSlotHandle(vm, 0, script.classHandle);
     
     // Pass entity ID and constructor args to constructor
@@ -145,13 +146,13 @@ void WrenScriptSystem::Update(GameContext& context)
         auto& script = view.get<Component::WrenScript>(entity);
         
         // Skip if not initialized or has error
-        if (!script.isInitialized || script.hasError)
+        if (script.hasError)
         {
             continue;
         }
         
         // Initialize if needed
-        if (!script.instanceHandle)
+        if (!script.isInitialized && !script.instanceHandle)
         {
             if (!InitializeScript(context, entity, script)) {
                 continue;

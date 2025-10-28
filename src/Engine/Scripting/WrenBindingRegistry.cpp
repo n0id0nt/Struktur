@@ -7,10 +7,26 @@ namespace Struktur::Wren
     // DEFINE GLOBAL REGISTRIES
     // ============================================================================
 
-    std::vector<MethodBinding> g_methodBindings;
-    std::vector<ClassBinding> g_classBindings;
-    std::vector<EnumBinding> g_enumBindings;
-    std::vector<ConstantBinding> g_constantBindings;
+    inline std::vector<MethodBinding>& GetMethodBindings()
+    {
+        static std::vector<MethodBinding> bindings;
+        return bindings;
+    }
+    inline std::vector<ClassBinding>& GetClassBindings()
+    {
+        static std::vector<ClassBinding> bindings;
+        return bindings;
+    }
+    inline std::vector<EnumBinding>& GetEnumBindings()
+    {
+        static std::vector<EnumBinding> bindings;
+        return bindings;
+    }
+    inline std::vector<ConstantBinding>& GetConstantBindings()
+    {
+        static std::vector<ConstantBinding> bindings;
+        return bindings;
+    }
 
     // ============================================================================
     // LOOKUP IMPLEMENTATIONS
@@ -19,11 +35,13 @@ namespace Struktur::Wren
     WrenForeignMethodFn FindMethod(const char* module, const char* className,
                                 bool isStatic, const char* signature)
     {
-        for (const auto& binding : g_methodBindings) {
+        for (const auto& binding : GetMethodBindings())
+        {
             if (binding.moduleName == module &&
                 binding.className == className &&
                 binding.isStatic == isStatic &&
-                binding.signature == signature) {
+                binding.signature == signature)
+            {
                 return binding.function;
             }
         }
@@ -33,7 +51,7 @@ namespace Struktur::Wren
     WrenForeignClassMethods FindClass(const char* module, const char* className)
     {
         WrenForeignClassMethods methods = {};
-        for (const auto& binding : g_classBindings)
+        for (const auto& binding : GetClassBindings())
         {
             if (binding.moduleName == module && binding.className == className)
             {

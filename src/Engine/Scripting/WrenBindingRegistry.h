@@ -11,11 +11,6 @@ namespace Struktur::Wren {
     // BINDING STRUCTURES
     // ============================================================================
 
-    #ifndef WREN_FINALIZER_DEFINED
-    typedef WrenFinalizerFn WrenFinalizer;
-    #define WREN_FINALIZER_DEFINED
-    #endif
-
     struct MethodBinding {
         std::string moduleName;
         std::string className;
@@ -29,7 +24,7 @@ namespace Struktur::Wren {
         std::string moduleName;
         std::string className;
         WrenForeignMethodFn allocate;
-        WrenFinalizer finalize;
+        WrenFinalizerFn finalize;
         std::string documentation;
     };
 
@@ -52,10 +47,10 @@ namespace Struktur::Wren {
     // GLOBAL REGISTRIES
     // ============================================================================
 
-    extern std::vector<MethodBinding> g_methodBindings;
-    extern std::vector<ClassBinding> g_classBindings;
-    extern std::vector<EnumBinding> g_enumBindings;
-    extern std::vector<ConstantBinding> g_constantBindings;
+    extern std::vector<MethodBinding>& GetMethodBindings();
+    extern std::vector<ClassBinding>& GetClassBindings();
+    extern std::vector<EnumBinding>& GetEnumBindings();
+    extern std::vector<ConstantBinding>& GetConstantBindings();
 
     // ============================================================================
     // REGISTRAR HELPERS (Static initialization)
@@ -66,16 +61,16 @@ namespace Struktur::Wren {
         MethodRegistrar(const char* module, const char* className, const char* signature,
                         bool isStatic, WrenForeignMethodFn func, const char* doc)
         {
-            g_methodBindings.push_back({module, className, signature, isStatic, func, doc});
+            GetMethodBindings().push_back({module, className, signature, isStatic, func, doc});
         }
     };
 
     struct ClassRegistrar
     {
         ClassRegistrar(const char* module, const char* className,
-                    WrenForeignMethodFn alloc, WrenFinalizer fin, const char* doc)
+                    WrenForeignMethodFn alloc, WrenFinalizerFn fin, const char* doc)
         {
-            g_classBindings.push_back({module, className, alloc, fin, doc});
+            GetClassBindings().push_back({module, className, alloc, fin, doc});
         }
     };
 
@@ -92,7 +87,7 @@ namespace Struktur::Wren {
             {
                 binding.values.push_back({name, value});
             }
-            g_enumBindings.push_back(binding);
+            GetEnumBindings().push_back(binding);
         }
     };
 
@@ -101,7 +96,7 @@ namespace Struktur::Wren {
         ConstantRegistrar(const char* module, const char* className, 
                         const char* name, double value, const char* doc)
         {
-            g_constantBindings.push_back({module, className, name, value, doc});
+            GetConstantBindings().push_back({module, className, name, value, doc});
         }
     };
 
