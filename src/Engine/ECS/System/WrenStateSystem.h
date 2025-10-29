@@ -8,13 +8,13 @@ namespace Struktur
 
 	namespace System
 	{
-        class GameplaySystem : public ISystem
+        class WrenStateSystem : public ISystem
         {        
         public:
             void Update(GameContext& context) override;
         };
 
-        class GameplayRenderSystem : public ISystem
+        class WrenStateRenderSystem : public ISystem
         {        
         public:
             void Update(GameContext& context) override;

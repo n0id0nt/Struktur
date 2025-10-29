@@ -1,15 +1,15 @@
-#include "GameplaySystem.h"
+#include "WrenStateSystem.h"
 
 #include "Engine/GameContext.h"
 #include "Engine/Game/StateManager.h"
 
-void Struktur::System::GameplaySystem::Update(GameContext &context)
+void Struktur::System::WrenStateSystem::Update(GameContext &context)
 {
     auto& stateManager = context.GetStateManager();
     stateManager.Update(context);
 }
 
-void Struktur::System::GameplayRenderSystem::Update(GameContext &context)
+void Struktur::System::WrenStateRenderSystem::Update(GameContext &context)
 {
     auto& stateManager = context.GetStateManager();
     stateManager.Render(context);

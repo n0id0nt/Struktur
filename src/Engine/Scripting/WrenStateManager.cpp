@@ -1,0 +1,246 @@
+#include "WrenStateManager.h"
+
+#include <sstream>
+
+#include "Engine/GameContext.h"
+#include "Debug/Assertions.h"
+
+namespace Struktur::Wren
+{
+
+bool WrenStateManager::Initialize(GameContext& context, const std::string& initialStateName)
+{
+    WrenScriptEngine& scriptEngine = context.GetWrenScriptEngine();
+    WrenVM* vm = scriptEngine.GetVM();
+    
+    if (!vm) {
+        DEBUG_ERROR("WrenStateManager: Wren VM not initialized");
+        return false;
+    }
+    
+    DEBUG_LOG("WrenStateManager: Initializing with state: %s", initialStateName.c_str());
+    
+    // Load Boot.wren
+    if (!scriptEngine.InterpretFile("assets/scripts/Boot.wren")) {
+        DEBUG_ERROR("WrenStateManager: Failed to load Boot.wren");
+        return false;
+    }
+    
+    // Get Boot class
+    wrenEnsureSlots(vm, 2);
+    wrenGetVariable(vm, "Boot", "Boot", 0);
+    
+    if (wrenGetSlotType(vm, 0) == WREN_TYPE_NULL) {
+        DEBUG_ERROR("WrenStateManager: Boot class not found");
+        return false;
+    }
+    
+    // Call Boot.initialize(initialStateName)
+    wrenSetSlotString(vm, 1, initialStateName.c_str());
+    
+    WrenHandle* initializeMethod = wrenMakeCallHandle(vm, "initialize(_)");
+    WrenInterpretResult result = wrenCall(vm, initializeMethod);
+    wrenReleaseHandle(vm, initializeMethod);
+    
+    if (result != WREN_RESULT_SUCCESS) {
+        DEBUG_ERROR("WrenStateManager: Boot.initialize() failed");
+        return false;
+    }
+    
+    // Store Game instance handle (returned from initialize)
+    m_rootStateInstanceHandle = wrenGetSlotHandle(vm, 0);
+    
+    if (!m_rootStateInstanceHandle) {
+        DEBUG_ERROR("WrenStateManager: Failed to get Game instance handle");
+        return false;
+    }
+    
+    // Cache method handles for performance
+    wrenEnsureSlots(vm, 1);
+    wrenSetSlotHandle(vm, 0, m_rootStateInstanceHandle);
+    
+    m_updateMethodHandle = wrenMakeCallHandle(vm, "update(_)");
+    m_renderMethodHandle = wrenMakeCallHandle(vm, "render()");
+    
+    if (!m_updateMethodHandle) {
+        DEBUG_ERROR("WrenStateManager: Failed to get update method handle");
+        return false;
+    }
+    
+    m_isInitialized = true;
+    DEBUG_LOG("WrenStateManager: Initialized successfully");
+    
+    return true;
+}
+
+void WrenStateManager::Update(GameContext& context)
+{
+    if (!m_isInitialized || !m_rootStateInstanceHandle || !m_updateMethodHandle)
+    {
+        return;
+    }
+
+    WrenScriptEngine& scriptEngine = context.GetWrenScriptEngine();
+    WrenVM* vm = scriptEngine.GetVM();
+    
+    // Call Game.update(dt)
+    wrenEnsureSlots(vm, 2);
+    wrenSetSlotHandle(vm, 0, m_rootStateInstanceHandle);
+    wrenSetSlotDouble(vm, 1, context.GetGameData().deltaTime);
+    
+    WrenInterpretResult result = wrenCall(vm, m_updateMethodHandle);
+    
+    if (result != WREN_RESULT_SUCCESS)
+    {
+        DEBUG_ERROR("WrenStateManager: Update failed");
+    }
+}
+
+void WrenStateManager::Render(GameContext& context)
+{
+    if (!m_isInitialized || !m_rootStateInstanceHandle || !m_renderMethodHandle)
+    {
+        return;
+    }
+    
+    WrenScriptEngine& scriptEngine = context.GetWrenScriptEngine();
+    WrenVM* vm = scriptEngine.GetVM();
+    
+    // Call Game.render()
+    wrenEnsureSlots(vm, 1);
+    wrenSetSlotHandle(vm, 0, m_rootStateInstanceHandle);
+    
+    WrenInterpretResult result = wrenCall(vm, m_renderMethodHandle);
+    
+    if (result != WREN_RESULT_SUCCESS)
+    {
+        DEBUG_WARNING("WrenStateManager: Render failed (this is optional)");
+    }
+}
+
+void WrenStateManager::SendEvent(GameContext& context, const std::string& eventType, const std::unordered_map<std::string, double>& eventData)
+{
+    if (!m_isInitialized || !m_rootStateInstanceHandle)
+    {
+        return;
+    }
+    
+    WrenScriptEngine& scriptEngine = context.GetWrenScriptEngine();
+    WrenVM* vm = scriptEngine.GetVM();
+    
+    // Get StateManager from Game
+    wrenEnsureSlots(vm, 3);
+    wrenSetSlotHandle(vm, 0, m_rootStateInstanceHandle);
+    
+    // Get stateManager property
+    WrenHandle* getStateManager = wrenMakeCallHandle(vm, "stateManager");
+    WrenInterpretResult result = wrenCall(vm, getStateManager);
+    wrenReleaseHandle(vm, getStateManager);
+    
+    if (result != WREN_RESULT_SUCCESS)
+    {
+        DEBUG_ERROR("WrenStateManager: Failed to get stateManager");
+        return;
+    }
+    
+    // stateManager is now in slot 0
+    // Create event map
+    wrenSetSlotNewMap(vm, 1);
+    
+    // Add event type
+    wrenSetSlotString(vm, 2, "type");
+    wrenSetSlotString(vm, 3, eventType.c_str());
+    wrenSetMapValue(vm, 1, 2, 3);
+    
+    // Add event data
+    for (const auto& [key, value] : eventData)
+    {
+        wrenSetSlotString(vm, 2, key.c_str());
+        wrenSetSlotDouble(vm, 3, value);
+        wrenSetMapValue(vm, 1, 2, 3);
+    }
+    
+    // Call stateManager.sendEvent(eventMap)
+    WrenHandle* sendEventMethod = wrenMakeCallHandle(vm, "sendEvent(_)");
+    result = wrenCall(vm, sendEventMethod);
+    wrenReleaseHandle(vm, sendEventMethod);
+    
+    if (result != WREN_RESULT_SUCCESS)
+    {
+        DEBUG_ERROR("WrenStateManager: SendEvent failed");
+    }
+}
+
+void WrenStateManager::Shutdown(GameContext& context)
+{
+    if (!m_isInitialized)
+    {
+        return;
+    }
+    
+    WrenScriptEngine& scriptEngine = context.GetWrenScriptEngine();
+    WrenVM* vm = scriptEngine.GetVM();
+    
+    if (vm)
+    {
+        if (m_rootStateInstanceHandle) wrenReleaseHandle(vm, m_rootStateInstanceHandle);
+        if (m_updateMethodHandle) wrenReleaseHandle(vm, m_updateMethodHandle);
+        if (m_renderMethodHandle) wrenReleaseHandle(vm, m_renderMethodHandle);
+    }
+    
+    m_rootStateInstanceHandle = nullptr;
+    m_updateMethodHandle = nullptr;
+    m_renderMethodHandle = nullptr;
+    m_isInitialized = false;
+    
+    DEBUG_LOG("WrenStateManager: Shutdown complete");
+}
+
+std::string WrenStateManager::GetCurrentStateName(GameContext& context)
+{
+    if (!m_isInitialized || !m_rootStateInstanceHandle)
+    {
+        return "None";
+    }
+    
+    WrenScriptEngine& scriptEngine = context.GetWrenScriptEngine();
+    WrenVM* vm = scriptEngine.GetVM();
+    
+    // Get StateManager from Game
+    wrenEnsureSlots(vm, 2);
+    wrenSetSlotHandle(vm, 0, m_rootStateInstanceHandle);
+    
+    WrenHandle* getStateManager = wrenMakeCallHandle(vm, "stateManager");
+    WrenInterpretResult result = wrenCall(vm, getStateManager);
+    wrenReleaseHandle(vm, getStateManager);
+    
+    if (result != WREN_RESULT_SUCCESS)
+    {
+        return "Error";
+    }
+    
+    // Get currentState from StateManager
+    WrenHandle* getCurrentState = wrenMakeCallHandle(vm, "currentState");
+    result = wrenCall(vm, getCurrentState);
+    wrenReleaseHandle(vm, getCurrentState);
+    
+    if (result != WREN_RESULT_SUCCESS || wrenGetSlotType(vm, 0) == WREN_TYPE_NULL)
+    {
+        return "None";
+    }
+    
+    // Get name property from state
+    WrenHandle* getName = wrenMakeCallHandle(vm, "name");
+    result = wrenCall(vm, getName);
+    wrenReleaseHandle(vm, getName);
+    
+    if (result != WREN_RESULT_SUCCESS)
+    {
+        return "Unknown";
+    }
+    
+    const char* name = wrenGetSlotString(vm, 0);
+    return name ? std::string(name) : "Unknown";
+}
+
+}

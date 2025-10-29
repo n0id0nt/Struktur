@@ -27,7 +27,6 @@
 #include "Engine/ECS/System/HierrarchySystem.h"
 #include "Engine/ECS/System/TransformSystem.h"
 #include "Engine/ECS/System/PhysicsSystem.h"
-#include "Engine/ECS/System/GameplaySystem.h"
 #include "Engine/ECS/System/SpriteRenderSystem.h"
 #include "Engine/ECS/System/DebugSystem.h"
 #include "Engine/ECS/System/CameraSystem.h"
@@ -35,6 +34,7 @@
 #include "Engine/ECS/System/UIsystem.h"
 #include "Engine/ECS/System/ShaderSystem.h"
 #include "Engine/ECS/System/WrenScriptSystem.h"
+#include "Engine/ECS/System/WrenStateSystem.h"
 
 #include "Engine/FileLoading/LevelParser.h"
 #include "Engine/Scripting/WrenCodeGenerator.h"
@@ -83,14 +83,14 @@ void Struktur::InitialiseGame(GameContext& context)
     systemManager.AddHelperSystem<System::HierarchySystem>();
     systemManager.AddHelperSystem<System::TransformSystem>();
     systemManager.AddHelperSystem<System::ShaderSystem>();
-    systemManager.AddUpdateSystem<System::GameplaySystem>();
+    systemManager.AddUpdateSystem<System::WrenStateSystem>();
     systemManager.AddUpdateSystem<System::WrenScriptSystem>();
     systemManager.AddUpdateSystem<System::CameraSystem>();
     systemManager.AddUpdateSystem<System::PhysicsSystem>();
     systemManager.AddUpdateSystem<System::AnimationSystem>();
     systemManager.AddUpdateSystem<System::UISystem>();
     systemManager.AddRenderSystem<System::SpriteRenderSystem>();
-    systemManager.AddRenderSystem<System::GameplayRenderSystem>();
+    systemManager.AddRenderSystem<System::WrenStateRenderSystem>();
 #ifdef DEBUG
     systemManager.AddRenderSystem<System::DebugSystem>();
 #endif
@@ -104,9 +104,18 @@ void Struktur::InitialiseGame(GameContext& context)
 
 void Struktur::ExitGame(GameContext &context)
 {
+#ifdef EDITOR
+    DEBUG_INFO("[Clean Up] Editor");
+    Debug::Editor& editor = context.GetEditor();
+    editor.Shutdown(context);
+#endif
+
     DEBUG_INFO("[Clean Up] State Manager");
     GameResource::StateManager& stateManager = context.GetStateManager();
     stateManager.ReleaseState(context);
+
+    Wren::WrenScriptEngine& wrenScriptEngine = context.GetWrenScriptEngine();
+    wrenScriptEngine.Shutdown();
     
     DEBUG_INFO("[Clean Up] UI Manager");
     UI::UIManager& uiManager = context.GetUIManager();
