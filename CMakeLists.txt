@@ -266,7 +266,6 @@ set(SOURCES
     src/Engine/ECS/System/DebugSystem.h         src/Engine/ECS/System/DebugSystem.cpp
     src/Engine/ECS/System/HierrarchySystem.h    src/Engine/ECS/System/HierrarchySystem.cpp
     src/Engine/ECS/System/PhysicsSystem.h       src/Engine/ECS/System/PhysicsSystem.cpp
-    src/Engine/ECS/System/GameplaySystem.h      src/Engine/ECS/System/GameplaySystem.cpp
     src/Engine/ECS/System/SpriteRenderSystem.h  src/Engine/ECS/System/SpriteRenderSystem.cpp
     src/Engine/ECS/System/AnimationSystem.h     src/Engine/ECS/System/AnimationSystem.cpp
     src/Engine/ECS/System/TransformSystem.h     src/Engine/ECS/System/TransformSystem.cpp
@@ -274,6 +273,7 @@ set(SOURCES
     src/Engine/ECS/System/UISystem.h            src/Engine/ECS/System/UISystem.cpp
     src/Engine/ECS/System/ShaderSystem.h        src/Engine/ECS/System/ShaderSystem.cpp
     src/Engine/ECS/System/WrenScriptSystem.h    src/Engine/ECS/System/WrenScriptSystem.cpp
+    src/Engine/ECS/System/WrenStateSystem.h     src/Engine/ECS/System/WrenStateSystem.cpp
 
     src/Engine/Physics/PhysicsWorld.h           src/Engine/Physics/PhysicsWorld.cpp
     src/Engine/Physics/ContactListener.h        src/Engine/Physics/ContactListener.cpp
@@ -296,6 +296,7 @@ set(SOURCES
 
     src/Engine/Scripting/WrenScriptEngine.h     src/Engine/Scripting/WrenScriptEngine.cpp
     src/Engine/Scripting/WrenBindingRegistry.h  src/Engine/Scripting/WrenBindingRegistry.cpp
+    src/Engine/Scripting/WrenStateManager.h     src/Engine/Scripting/WrenStateManager.cpp
     src/Engine/Scripting/WrenCodeGenerator.h
 
     src/Engine/Util/Noise.h                     src/Engine/Util/Noise.cpp

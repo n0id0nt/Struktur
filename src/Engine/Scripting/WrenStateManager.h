@@ -34,7 +34,7 @@ namespace Struktur
             // Initialize the Wren state system
             // Loads Boot.wren, calls Boot.initialize(initialStateName)
             // Returns Game instance handle
-            bool Initialize(GameContext& context, const std::string& initialStateName);
+            bool Initialize(GameContext& context);
             
             // Update the game state (calls Game.update(dt) in Wren)
             void Update(GameContext& context);

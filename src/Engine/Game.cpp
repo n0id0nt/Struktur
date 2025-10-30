@@ -62,7 +62,10 @@ void Struktur::InitialiseGame(GameContext& context)
     GameResource::StateManager& stateManager = context.GetStateManager();
     Physics::PhysicsWorld& physicsWorld = context.GetPhysicsWorld();
     Wren::WrenScriptEngine& wrenScriptEngine = context.GetWrenScriptEngine();
+    Wren::WrenStateManager& wrenStateManager = context.GetWrenStateManager();
+
     wrenScriptEngine.Initialize(context);
+    wrenStateManager.Initialize(context);
 
 #ifdef DEBUG
     Wren::CodeGenerator::GenerateBindingFiles("Assets/Scripts/Bindings");
@@ -110,10 +113,15 @@ void Struktur::ExitGame(GameContext &context)
     editor.Shutdown(context);
 #endif
 
-    DEBUG_INFO("[Clean Up] State Manager");
+    DEBUG_INFO("[Clean Up] State Manager"); // TODO remove this
     GameResource::StateManager& stateManager = context.GetStateManager();
     stateManager.ReleaseState(context);
 
+    DEBUG_INFO("[Clean Up] Wren State Manager");
+    Wren::WrenStateManager& wrenStateManager = context.GetWrenStateManager();
+    wrenStateManager.Shutdown(context);
+
+    DEBUG_INFO("[Clean Up] Wren Script Engine");
     Wren::WrenScriptEngine& wrenScriptEngine = context.GetWrenScriptEngine();
     wrenScriptEngine.Shutdown();
     
