@@ -232,6 +232,42 @@ if (NOT raylib_FOUND)
     
 endif()
 
+if(DEBUG)
+    set(DEBUG_SOURCES 
+        src/Debug/Box2DDebugRenderer.h
+
+        src/Engine/ECS/System/DebugSystem.h         src/Engine/ECS/System/DebugSystem.cpp
+    )
+endif()
+
+if(EDITOR)
+    # Debug: Use source assets directly
+    set(EDITOR_SOURCES 
+        src/Debug/Editor/Editor.h                   src/Debug/Editor/Editor.cpp
+        src/Debug/Editor/EditorLayoutManager.h
+        src/Debug/Editor/EditorTheme.h
+        src/Debug/Editor/EditorSettings.h           src/Debug/Editor/EditorSettings.cpp
+
+        src/Debug/Editor/Windows/EditorWindow.h     src/Debug/Editor/Windows/EditorWindow.cpp
+        src/Debug/Editor/Windows/DebugInfoWindow.h  src/Debug/Editor/Windows/DebugInfoWindow.cpp
+        src/Debug/Editor/Windows/GameViewPortWindow.h src/Debug/Editor/Windows/GameViewPortWindow.cpp
+        src/Debug/Editor/Windows/HierarchyWindow.h  src/Debug/Editor/Windows/HierarchyWindow.cpp
+        src/Debug/Editor/Windows/ToolbarWindow.h    src/Debug/Editor/Windows/ToolbarWindow.cpp
+        src/Debug/Editor/Windows/InspectorWindow.h  src/Debug/Editor/Windows/InspectorWindow.cpp
+        src/Debug/Editor/Windows/SettingsWindow.h   src/Debug/Editor/Windows/SettingsWindow.cpp
+        src/Debug/Editor/Windows/PreviewWindow.h    src/Debug/Editor/Windows/PreviewWindow.cpp
+        src/Debug/Editor/Windows/FileExplorerWindow.h src/Debug/Editor/Windows/FileExplorerWindow.cpp
+        src/Debug/Editor/Windows/LogWindow.h        src/Debug/Editor/Windows/LogWindow.cpp
+
+        src/Debug/Editor/PreviewRenderers/PreviewRenderer.h
+        src/Debug/Editor/PreviewRenderers/TexturePreviewRenderer.h src/Debug/Editor/PreviewRenderers/TexturePreviewRenderer.cpp
+        src/Debug/Editor/PreviewRenderers/ShaderPreviewRenderer.h  src/Debug/Editor/PreviewRenderers/ShaderPreviewRenderer.cpp
+        src/Debug/Editor/PreviewRenderers/SpritePreviewRenderer.h  src/Debug/Editor/PreviewRenderers/SpritePreviewRenderer.cpp
+        src/Debug/Editor/PreviewRenderers/TextFilePreviewRenderer.h
+        src/Debug/Editor/PreviewRenderers/UnknownFilePreviewRenderer.h
+        src/Debug/Editor/PreviewRenderers/PreviewHelpers.h
+    )
+endif()
 
 # Source files
 set(SOURCES
@@ -263,7 +299,6 @@ set(SOURCES
     src/Engine/ECS/Component/Shader.h
     src/Engine/ECS/Component/WrenScript.h
 
-    src/Engine/ECS/System/DebugSystem.h         src/Engine/ECS/System/DebugSystem.cpp
     src/Engine/ECS/System/HierrarchySystem.h    src/Engine/ECS/System/HierrarchySystem.cpp
     src/Engine/ECS/System/PhysicsSystem.h       src/Engine/ECS/System/PhysicsSystem.cpp
     src/Engine/ECS/System/SpriteRenderSystem.h  src/Engine/ECS/System/SpriteRenderSystem.cpp
@@ -311,31 +346,9 @@ set(SOURCES
     src/Gameplay/GameObjects/Item.h
 
     src/Debug/Assertions.h
-    src/Debug/Box2DDebugRenderer.h
 
-    src/Debug/Editor/Editor.h                   src/Debug/Editor/Editor.cpp
-    src/Debug/Editor/EditorLayoutManager.h
-    src/Debug/Editor/EditorTheme.h
-    src/Debug/Editor/EditorSettings.h           src/Debug/Editor/EditorSettings.cpp
-
-    src/Debug/Editor/Windows/EditorWindow.h     src/Debug/Editor/Windows/EditorWindow.cpp
-    src/Debug/Editor/Windows/DebugInfoWindow.h  src/Debug/Editor/Windows/DebugInfoWindow.cpp
-    src/Debug/Editor/Windows/GameViewPortWindow.h src/Debug/Editor/Windows/GameViewPortWindow.cpp
-    src/Debug/Editor/Windows/HierarchyWindow.h  src/Debug/Editor/Windows/HierarchyWindow.cpp
-    src/Debug/Editor/Windows/ToolbarWindow.h    src/Debug/Editor/Windows/ToolbarWindow.cpp
-    src/Debug/Editor/Windows/InspectorWindow.h  src/Debug/Editor/Windows/InspectorWindow.cpp
-    src/Debug/Editor/Windows/SettingsWindow.h   src/Debug/Editor/Windows/SettingsWindow.cpp
-    src/Debug/Editor/Windows/PreviewWindow.h    src/Debug/Editor/Windows/PreviewWindow.cpp
-    src/Debug/Editor/Windows/FileExplorerWindow.h src/Debug/Editor/Windows/FileExplorerWindow.cpp
-    src/Debug/Editor/Windows/LogWindow.h        src/Debug/Editor/Windows/LogWindow.cpp
-
-    src/Debug/Editor/PreviewRenderers/PreviewRenderer.h
-    src/Debug/Editor/PreviewRenderers/TexturePreviewRenderer.h src/Debug/Editor/PreviewRenderers/TexturePreviewRenderer.cpp
-    src/Debug/Editor/PreviewRenderers/ShaderPreviewRenderer.h  src/Debug/Editor/PreviewRenderers/ShaderPreviewRenderer.cpp
-    src/Debug/Editor/PreviewRenderers/SpritePreviewRenderer.h  src/Debug/Editor/PreviewRenderers/SpritePreviewRenderer.cpp
-    src/Debug/Editor/PreviewRenderers/TextFilePreviewRenderer.h
-    src/Debug/Editor/PreviewRenderers/UnknownFilePreviewRenderer.h
-    src/Debug/Editor/PreviewRenderers/PreviewHelpers.h
+    ${DEBUG_SOURCES}
+    ${EDITOR_SOURCES}
 )
 
 # Create executable
@@ -414,12 +427,22 @@ elseif(PLATFORM_DESKTOP)
     endif()
     
     if(IS_DIRECTORY ${CMAKE_SOURCE_DIR}/assets)
-        # Copy assets to build directory
-        add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
-            COMMAND ${CMAKE_COMMAND} -E copy_directory
-            ${CMAKE_SOURCE_DIR}/assets
-            ${CMAKE_BINARY_DIR}/assets
-            COMMENT "Copying assets to build directory"
-        )
+        if(CMAKE_BUILD_TYPE STREQUAL "Release")
+            # Copy assets for release builds
+            add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
+                COMMAND ${CMAKE_COMMAND} -E copy_directory
+                ${CMAKE_SOURCE_DIR}/assets
+                ${CMAKE_BINARY_DIR}/assets
+                COMMENT "Copying assets to build directory (Release)"
+            )
+        else()
+            # Create symlink for debug builds (faster, uses source directly)
+            add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
+                COMMAND ${CMAKE_COMMAND} -E create_symlink
+                ${CMAKE_SOURCE_DIR}/assets
+                ${CMAKE_BINARY_DIR}/assets
+                COMMENT "Creating symlink to assets (Debug)"
+            )
+        endif()
     endif()
 endif()

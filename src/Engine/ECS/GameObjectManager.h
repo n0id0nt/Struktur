@@ -24,6 +24,7 @@ namespace Struktur
         private:
             void OnChildrenDestroy(entt::registry& reg, entt::entity entity);
             void OnPhysicsBodyDestory(entt::registry& reg, entt::entity entity);
+            void OnScriptDestory(entt::registry &reg, entt::entity entity);
 
             GameContext* m_context = nullptr;
         };

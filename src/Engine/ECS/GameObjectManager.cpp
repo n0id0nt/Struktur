@@ -7,9 +7,11 @@
 #include "Engine/ECS/SystemManager.h"
 #include "Engine/ECS/System/HierrarchySystem.h"
 #include "Engine/ECS/System/TransformSystem.h"
+#include "Engine/ECS/System/WrenScriptSystem.h"
 #include "Engine/ECS/Component/Transform.h"
 #include "Engine/ECS/Component/PhysicsBody.h"
 #include "Engine/ECS/Component/Identifier.h"
+#include "Engine/ECS/Component/WrenScript.h"
 
 Struktur::System::GameObjectManager::~GameObjectManager()
 {
@@ -17,6 +19,7 @@ Struktur::System::GameObjectManager::~GameObjectManager()
 
     registry.on_destroy<Component::Children>().disconnect<&GameObjectManager::OnChildrenDestroy>(*this);
     registry.on_destroy<Component::PhysicsBody>().disconnect<&GameObjectManager::OnPhysicsBodyDestory>(*this);
+    registry.on_destroy<Component::WrenScript>().disconnect<&GameObjectManager::OnScriptDestory>(*this);
 }
 
 void Struktur::System::GameObjectManager::CreateDeleteObjectCallBack(GameContext &context)
@@ -27,6 +30,7 @@ void Struktur::System::GameObjectManager::CreateDeleteObjectCallBack(GameContext
     // Listen for entity destruction to clean up references
     registry.on_destroy<Component::Children>().connect<&GameObjectManager::OnChildrenDestroy>(*this);
     registry.on_destroy<Component::PhysicsBody>().connect<&GameObjectManager::OnPhysicsBodyDestory>(*this);
+    registry.on_destroy<Component::WrenScript>().connect<&GameObjectManager::OnScriptDestory>(*this);
 }
 
 entt::entity Struktur::System::GameObjectManager::CreateGameObject(GameContext& context, const std::string& identifier, entt::entity parent)
@@ -78,6 +82,13 @@ void Struktur::System::GameObjectManager::OnPhysicsBodyDestory(entt::registry &r
         m_context->GetPhysicsWorld().DestroyBody(physicsBody.body);
         physicsBody.body = nullptr;
     }
+}
+
+void Struktur::System::GameObjectManager::OnScriptDestory(entt::registry &reg, entt::entity entity)
+{
+    auto& scriptSystem = m_context->GetSystemManager().GetSystem<System::WrenScriptSystem>();
+    auto& wrenScript = reg.get<Component::WrenScript>(entity);
+    scriptSystem.DestroyScript(*m_context, entity, wrenScript);
 }
 
 // ============================================================================

@@ -11,11 +11,6 @@ class Game {
         // Create state manager
         _stateManager = StateManager.new(this)
         
-        // Game-wide data
-        _isPaused = false
-        _debugMode = false
-        _time = 0
-        
         System.print("Game instance created")
         
         // Load initial state
@@ -23,16 +18,7 @@ class Game {
     }
     
     // Called by C++ every frame
-    update(dt) {
-        // Don't update if paused
-        if (_isPaused) {
-            return
-        }
-        
-        // Update time
-        _time = _time + dt
-        
-        // Update state manager (delegates to active state)
+    update(dt) {      
         _stateManager.update(dt)
     }
     
@@ -56,24 +42,7 @@ class Game {
     
     // Getters
     stateManager { _stateManager }
-    isPaused { _isPaused }
-    debugMode { _debugMode }
     time { _time }
-    
-    // Setters
-    isPaused=(value) { _isPaused = value }
-    setDebugMode(value) { _debugMode = value }
-    
-    // Game-wide utility methods
-    pause() {
-        System.print("Game paused")
-        _isPaused = true
-    }
-    
-    unpause() {
-        System.print("Game unpaused")
-        _isPaused = false
-    }
     
     quit() {
         System.print("Quit requested")
