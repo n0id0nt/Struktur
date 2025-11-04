@@ -286,7 +286,7 @@ set(SOURCES
     src/Engine/Resource/TextureResource.h       src/Engine/Resource/TextureResource.cpp
     
     src/Engine/ECS/SystemManager.h              src/Engine/ECS/SystemManager.cpp
-    src/Engine/ECS/GameObjectManager.h          src/Engine/ECS/GameObjectManager.cpp
+    src/Engine/ECS/GameObjectManager.h          src/Engine/ECS/GameObjectManager.cpp        src/Engine/ECS/GameObjectManager_wren.cpp
     
     src/Engine/ECS/Component/PhysicsBody.h
     src/Engine/ECS/Component/Player.h

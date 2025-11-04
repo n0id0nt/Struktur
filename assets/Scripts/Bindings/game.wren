@@ -2,10 +2,10 @@
 // Generated from C++ bindings
 // Module: game
 
-class Entity {
-    // Create a new entity with the given name and parent. Returns entity ID.
+class GameObject {
+    // Create a new Game Object with the given name and parent. Returns entity ID.
     foreign static create(arg0,arg1)
-    // Destroy an entity and all its children.
+    // Destroy an Game Object and all its children.
     foreign static destroy(arg0)
     // Check if an entity ID is valid.
     foreign static isValid(arg0)

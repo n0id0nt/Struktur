@@ -3,6 +3,8 @@
 // Updated every frame by C++
 
 import "States/StateManager" for StateManager
+import "States/GameWorldState" for GameWorldState
+import "States/MainMenuState" for MainMenuState
 
 class Game {
     construct new() {
@@ -12,9 +14,14 @@ class Game {
         _stateManager = StateManager.new(this)
         
         System.print("Game instance created")
+
+        // TODO Define the window, spash screen Text/Image and window name game icon ect
         
-        // Load initial state
-        this.changeState("GameState")
+        // Initial states
+        _stateManager.insertState("GameWorld", GameWorldState)
+        _stateManager.insertState("MainMenu", MainMenuState)
+
+        _stateManager.changeState("GameWorld")
     }
     
     // Called by C++ every frame
@@ -28,21 +35,9 @@ class Game {
     }
     
     // State management convenience methods
-    changeState(stateName) {
-        _stateManager.changeState(stateName)
-    }
-    
-    pushState(stateName) {
-        _stateManager.pushState(stateName)
-    }
-    
-    popState() {
-        _stateManager.popState()
-    }
     
     // Getters
     stateManager { _stateManager }
-    time { _time }
     
     quit() {
         System.print("Quit requested")

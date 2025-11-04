@@ -13,11 +13,5 @@ namespace Struktur
         public:
             void Update(GameContext& context) override;
         };
-
-        class UIRenderSystem : public ISystem
-        {        
-        public:
-            void Update(GameContext& context) override;
-        };
     }
 }

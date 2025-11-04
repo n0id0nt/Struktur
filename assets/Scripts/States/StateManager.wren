@@ -5,73 +5,10 @@
 
 class StateManager {
     construct new(game) {
-        _game = game
-        _stateStack = []
-        
+        _currentState = null
+        _stateFactory = {}
+
         System.print("StateManager created")
-    }
-    
-    // Change to a new state (replaces current)
-    changeState(stateName) {
-        System.print("Changing state to: %(stateName)")
-        
-        // Exit current state
-        if (_stateStack.count > 0) {
-            var currentState = _stateStack[-1]
-            currentState.exit()
-        }
-        
-        // Clear stack
-        _stateStack.clear()
-        
-        // Create and enter new state
-        var newState = this.createState(stateName)
-        if (newState != null) {
-            _stateStack.add(newState)
-            newState.enter()
-        } else {
-            System.print("ERROR: Failed to create state: %(stateName)")
-        }
-    }
-    
-    // Push a new state on top (pauses current)
-    pushState(stateName) {
-        System.print("Pushing state: %(stateName)")
-        
-        // Create new state
-        var newState = this.createState(stateName)
-        if (newState != null) {
-            _stateStack.add(newState)
-            newState.enter()
-        } else {
-            System.print("ERROR: Failed to create state: %(stateName)")
-        }
-    }
-    
-    // Pop current state (return to previous)
-    popState() {
-        if (_stateStack.count <= 1) {
-            System.print("WARNING: Cannot pop last state")
-            return
-        }
-        
-        System.print("Popping state")
-        
-        // Exit current state
-        var currentState = _stateStack[-1]
-        currentState.exit()
-        
-        // Remove from stack
-        _stateStack.removeAt(-1)
-        
-        // Re-enter previous state if it exists
-        if (_stateStack.count > 0) {
-            var previousState = _stateStack[-1]
-            // Optional: call resume() instead of enter() for returning states
-            if (previousState.respondsTo("resume(_)")) {
-                previousState.resume()
-            }
-        }
     }
     
     // Update active state
@@ -103,31 +40,25 @@ class StateManager {
     }
     
     // Create state instance from name
-    createState(stateName) {
-        // Import the state class dynamically
-        // This is a placeholder - actual implementation depends on your state files
-        
-        // For now, we'll use a simple factory pattern
-        // You'll need to import all your states and add them here
-        
-        if (stateName == "MainMenuState") {
-            // Would need: import "states/MainMenuState" for MainMenuState
-            // return MainMenuState.new(_game)
-            System.print("TODO: Import and create MainMenuState")
-            return null
-        } else if (stateName == "GameWorldState") {
-            // Would need: import "states/GameWorldState" for GameWorldState
-            // return GameWorldState.new(_game)
-            System.print("TODO: Import and create GameWorldState")
-            return null
+    changeState(stateName) {
+        if (_currentState) {
+            _currentState.exit()
         }
-        
-        System.print("ERROR: Unknown state: %(stateName)")
-        return null
+        _currentState = _stateFactory[stateName].new() // TODO Decide where I want to call new() here or where the state factory is created
+        // TODO Assert that there is a new state here
+        if (_currentState) {
+            _currentState.enter()
+        }
+    }
+
+    insertState(stateName, stateConstructor) {
+        _stateFactory[statename] = stateConstructor
     }
     
     // Getters
-    currentState { _stateStack.count > 0 ? _stateStack[-1] : null }
-    stateStack { _stateStack }
-    game { _game }
+    currentState { _currentState }
+    stateFactory { _stateFactory }
+
+    // Setters
+    stateFactory=(value) { _stateFactory = value }
 }
