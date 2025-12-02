@@ -306,6 +306,7 @@ set(SOURCES
     src/Engine/ECS/System/TransformSystem.h     src/Engine/ECS/System/TransformSystem.cpp
     src/Engine/ECS/System/CameraSystem.h        src/Engine/ECS/System/CameraSystem.cpp
     src/Engine/ECS/System/UISystem.h            src/Engine/ECS/System/UISystem.cpp
+    src/Engine/ECS/System/UIRenderSystem.h      src/Engine/ECS/System/UIRenderSystem.cpp
     src/Engine/ECS/System/ShaderSystem.h        src/Engine/ECS/System/ShaderSystem.cpp
     src/Engine/ECS/System/WrenScriptSystem.h    src/Engine/ECS/System/WrenScriptSystem.cpp
     src/Engine/ECS/System/WrenStateSystem.h     src/Engine/ECS/System/WrenStateSystem.cpp

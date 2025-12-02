@@ -11,14 +11,3 @@ class GameObject {
     foreign static isValid(arg0)
 }
 
-class Transform {
-    // Get the world position of an entity. Returns [x, y, z] or null if no transform.
-    foreign static getPosition(arg0)
-    // Set the world position of an entity.
-    foreign static setPosition(arg0,arg1,arg2,arg3)
-    // Set the local position of an entity.
-    foreign static setLocal(arg0,arg1,arg2,arg3)
-    // Get the local position of an entity. Returns [x, y, z] or null if no transform.
-    foreign static getLocal(arg0)
-}
-
