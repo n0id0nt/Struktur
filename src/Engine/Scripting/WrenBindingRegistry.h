@@ -5,7 +5,8 @@
 #include <string>
 #include <unordered_map>
 
-namespace Struktur::Wren {
+namespace Struktur::Wren
+{
 
     // ============================================================================
     // BINDING STRUCTURES
@@ -131,7 +132,7 @@ namespace Struktur::Wren {
 
 // Foreign class with allocator and finalizer
 #define WREN_FOREIGN_CLASS(module, cls, alloc, fin, doc) \
-    static Struktur::Wren::ClassRegistrar _wren_cls_reg_##cls( \
+    static Struktur::Wren::ClassRegistrar _wren_cls_reg_##alloc( \
         module, cls, alloc, fin, doc)
 
 // Enum binding: CollisionType { None = 0, Wall = 1, Enemy = 2 }
@@ -141,7 +142,7 @@ namespace Struktur::Wren {
 
 // Class constant: Math.PI = 3.14159
 #define WREN_CLASS_CONSTANT(module, cls, name, value, doc) \
-    static Struktur::Wren::ConstantRegistrar _wren_const_##cls##_##name( \
+    static Struktur::Wren::ConstantRegistrar _wren_const_##name( \
         module, cls, #name, static_cast<double>(value), doc)
 
 // Module-level constant: PI = 3.14159

@@ -2,6 +2,8 @@
 // Owns the state manager and provides game-wide services
 // Updated every frame by C++
 
+import "game" for Application
+
 import "States/StateManager" for StateManager
 import "States/GameWorldState" for GameWorldState
 import "States/MainMenuState" for MainMenuState
@@ -11,7 +13,7 @@ class Game {
         System.print("Creating Game instance...")
         
         // Create state manager
-        _stateManager = StateManager.new(this)
+        _stateManager = StateManager.new()
         
         System.print("Game instance created")
 
@@ -37,11 +39,6 @@ class Game {
     render() {
         _stateManager.render()
     }
-    
-    // State management convenience methods
-    
-    // Getters
-    stateManager { _stateManager }
     
     quit() {
         System.print("Quit requested")

@@ -2,8 +2,8 @@
 // Main gameplay state - loads level, creates entities, manages gameplay sub-states
 // This state owns the game world and delegates to sub-states for different gameplay modes
 
-import "core/BaseState" for BaseState
-import "core/StateManager" for StateManager
+import "States/BaseState" for BaseState
+import "States/StateManager" for StateManager
 
 var TILE_TEXTURE = "assets/Tiles/cavesofgallet_tiles.png"
 var PLAYER_TEXTURE = "assets/Tiles/PlayerGrowthSprites.png"
@@ -11,23 +11,14 @@ var WORLD_FILE_PATH = "assets/Levels/MemoryPalace.ldtk"
 var WHITE = vec4.new(0,0,0,255)
 
 class GameWorldState is BaseState {
-    construct new(game) {
-        super(game)
+    construct new() {
+        super()
         _name = "GameWorldState"
         
         _interactLabel = null
         _loopCountLabel = null
         _worldEntity = null //TODO Create an entity constant for invalid entity or null entity
-        _stateManager = StateManager.new(game)
-    }
-
-    getLevelIndex(worldMap, levelName) {
-        for (i in 0...worldMap.levels.size()) {
-            if (worldMap.levels[i].identifier == levelName) {
-                return i
-            }
-        }
-        return -1
+        _stateManager = StateManager.new()
     }
 
     getNorthRoom() {
@@ -66,22 +57,16 @@ class GameWorldState is BaseState {
     }
 
     calculateRoomListToLoad(worldEntity) {
-        var worldComponent = Registry.getWorld(worldEntity)
-        if (!worldComponent) {
-            System.print("Entity provided does not contain a World Component")
-            return null
-        }
-
         // NorthRoom (0-2)
-        var northRoom = getLevelIndex(worldComponent.worldMap, getNorthRoom())
+        var northRoom = World.getLevelIndex(worldEntity, getNorthRoom())
         // EastRoom (3-5)
-        var eastRoom = getLevelIndex(worldComponent.worldMap, getEastRoom())
+        var eastRoom = World.getLevelIndex(worldEntity, getEastRoom())
         // SouthRoom (6-8)
-        var southRoom = getLevelIndex(worldComponent.worldMap, getSouthRoom())
+        var southRoom = World.getLevelIndex(worldEntity, getSouthRoom())
         // WestRoom (9-11)
-        var westRoom = getLevelIndex(worldComponent.worldMap, getWestRoom())
+        var westRoom = World.getLevelIndex(worldEntity, getWestRoom())
         // Courtyard (12)
-        var courtyard = getLevelIndex(worldComponent.worldMap, getCourtyard())
+        var courtyard = World.getLevelIndex(worldEntity, getCourtyard())
         return [northRoom, eastRoom, westRoom, southRoom, courtyard]
     }
     
@@ -92,63 +77,63 @@ class GameWorldState is BaseState {
 
         GameData.Loops = GameData.Loops + 1 // increment the game loop count
         
-        var font = ResourceManager.GetFontResource("assets/Fonts/medieval_sharp/MedievalSharp-Bold.ttf_60")
+        var font = RebsourceManager.GetFontResource("assets/Fonts/medieval_sharp/MedievalSharp-Bold.ttf_60")
 
-        var worldEntity = Level.CreateWorldEntity(WORLD_FILE_PATH)
+        var worldEntity = Level.createWorldEntity(WORLD_FILE_PATH)
         _worldEntity = worldEntity
 
         var roomList = calculateRoomListToLoad(worldEntity)
 
-        var northRoom = Level.LoadLevelEntities(worldEntity, roomList[0])
-        Transform.SetWorldTransform(northRoom, vec3.new(576.0, 0.0, 0.0), vec3.new(1.0), quat.new(1.0, 0.0, 0.0, 0.0))
-        var northRoomSpriteEntity = GameObjectManger.CreateGameObject("northRoomSprite", northRoom)
-        Transform.SetLocalTransform(northRoomSpriteEntity, vec3.new(0.0, 0.0, 0.0), vec3.new(1.0), quat.new(1.0, 0.0, 0.0, 0.0))
+        var northRoom = Level.loadLevelEntities(worldEntity, roomList[0])
+        Transform.setPosition(northRoom, vec3.new(576.0, 0.0, 0.0))
+        var northRoomSpriteEntity = GameObjectManger.create("northRoomSprite", northRoom)
+        Transform.setLocalPosition(northRoomSpriteEntity, vec3.new(0.0, 0.0, 0.0))
         var northRoomKey = getNorthRoom()
         var northRoomSpriteTexture = ResourceManager.GetTexture("assets/Tiles/%(northRoomKey).png")
-        Registry.AddSpriteComponent(northRoomSpriteEntity, northRoomSpriteTexture, WHITE, vec2.new(0, 0), 1, 1, false, 0, 0)
+        SpriteComponent.create(northRoomSpriteEntity, northRoomSpriteTexture, WHITE, vec2.new(0, 0), 1, 1, false, 0, 0)
         
-        var eastRoom = Level.LoadLevelEntities(worldEntity, roomList[1])
-        Transform.SetWorldTransform(eastRoom, vec3.new(1152.0, 576.0, 0.0), vec3.new(1.0), quat.new(1.0, 0.0, 0.0, 0.0))
-        var eastRoomSpriteEntity = GameObjectManger.CreateGameObject("eastRoomSprite", eastRoom)
-        Transform.SetLocalTransform(eastRoomSpriteEntity, vec3.new(0.0, 0.0, 0.0), vec3.new(1.0), quat.new(1.0, 0.0, 0.0, 0.0))
+        var eastRoom = Level.loadLevelEntities(worldEntity, roomList[1])
+        Transform.setPosition(eastRoom, vec3.new(1152.0, 576.0, 0.0))
+        var eastRoomSpriteEntity = GameObjectManger.create("eastRoomSprite", eastRoom)
+        Transform.setLocalPosition(eastRoomSpriteEntity, vec3.new(0.0, 0.0, 0.0))
         var eastRoomKey = getEastRoom()
         var eastRoomSpriteTexture = ResourceManager.GetTexture("assets/Tiles/%(eastRoomKey).png")
-        Registry.AddSpriteComponent(eastRoomSpriteEntity, eastRoomSpriteTexture, WHITE, vec2.new(0, 0), 1, 1, false, 0, 0)
+        SpriteComponent.create(eastRoomSpriteEntity, eastRoomSpriteTexture, WHITE, vec2.new(0, 0), 1, 1, false, 0, 0)
         
-        var westRoom = Level.LoadLevelEntities(worldEntity, roomList[2])
-        Transform.SetWorldTransform(westRoom, vec3.new(0.0, 576.0, 0.0), vec3.new(1.0), quad.new(1.0, 0.0, 0.0, 0.0))
-        var westRoomSpriteEntity = GameObjectManger.CreateGameObject("westRoomSprite", westRoom)
-        Transform.SetLocalTransform(westRoomSpriteEntity, vec3.new(0.0, 0.0, 0.0), vec3.new(1.0), quad.new(1.0, 0.0, 0.0, 0.0))
+        var westRoom = Level.loadLevelEntities(worldEntity, roomList[2])
+        Transform.setPosition(westRoom, vec3.new(0.0, 576.0, 0.0))
+        var westRoomSpriteEntity = GameObjectManger.create("westRoomSprite", westRoom)
+        Transform.setLocalPosition(westRoomSpriteEntity, vec3.new(0.0, 0.0, 0.0))
         var westRoomKey = getWestRoom()
         var westRoomSpriteTexture = ResourceManager.GetTexture("assets/Tiles/%(westRoomKey).png")
-        Registry.AddSpriteComponent(westRoomSpriteEntity, westRoomSpriteTexture, WHITE, vec2.new(0, 0), 1, 1, false, 0, 0)
+        SpriteComponent.create(westRoomSpriteEntity, westRoomSpriteTexture, WHITE, vec2.new(0, 0), 1, 1, false, 0, 0)
         
-        var southRoom = Level.LoadLevelEntities(worldEntity, roomList[3])
-        Transform.SetWorldTransform(southRoom, vec3.new(576.0, 1152.0, 0.0), vec3.new(1.0), quad.new(1.0, 0.0, 0.0, 0.0))
-        var southRoomSpriteEntity = GameObjectManger.CreateGameObject("southRoomSprite", southRoom)
-        Transform.SetLocalTransform(southRoomSpriteEntity, vec3.new(0.0, 0.0, 0.0), vec3.new(1.0), quad.new(1.0, 0.0, 0.0, 0.0))
+        var southRoom = Level.loadLevelEntities(worldEntity, roomList[3])
+        Transform.setPosition(southRoom, vec3.new(576.0, 1152.0, 0.0))
+        var southRoomSpriteEntity = GameObjectManger.create("southRoomSprite", southRoom)
+        Transform.setLocalPosition(southRoomSpriteEntity, vec3.new(0.0, 0.0, 0.0))
         var southRoomKey = getSouthRoom()
         var southRoomSpriteTexture = ResourceManager.GetTexture("assets/Tiles/%(southRoomKey).png")
-        Registry.AddSpriteComponent(southRoomSpriteEntity, southRoomSpriteTexture, WHITE, vec2.new(0, 0), 1, 1, false, 0, 0)
+        SpriteComponent.create(southRoomSpriteEntity, southRoomSpriteTexture, WHITE, vec2.new(0, 0), 1, 1, false, 0, 0)
         
-        var courtyard = Level.LoadLevelEntities(worldEntity, roomList[4])
-        Transform.SetWorldTransform(courtyard, vec3.new(576.0, 576.0, 0.0), vec3.new(1.0), quad.new(1.0, 0.0, 0.0, 0.0))
-        var courtyardSpriteEntity = GameObjectManger.CreateGameObject("courtyardSprite", courtyard)
-        Transform.SetLocalTransform(courtyardSpriteEntity, vec3.new(0.0, 0.0, 0.0), vec3.new(1.0), quad.new(1.0, 0.0, 0.0, 0.0))
+        var courtyard = Level.loadLevelEntities(worldEntity, roomList[4])
+        Transform.setPosition(courtyard, vec3.new(576.0, 576.0, 0.0))
+        var courtyardSpriteEntity = GameObjectManger.create("courtyardSprite", courtyard)
+        Transform.setLocalPosition(courtyardSpriteEntity, vec3.new(0.0, 0.0, 0.0))
         var courtyardSpriteTexture = ResourceManager.GetTexture("assets/Tiles/Courtyard.png")
-        Registry.AddSpriteComponent(courtyardSpriteEntity, courtyardSpriteTexture, WHITE, vec2.new(0, 0), 1, 1, false, 0, 0)
+        SpriteComponent.create(courtyardSpriteEntity, courtyardSpriteTexture, WHITE, vec2.new(0, 0), 1, 1, false, 0, 0)
         
-        var northRoomDupe = Level.LoadLevelEntities(worldEntity, roomList[0])
-        Transform.SetWorldTransform(northRoomDupe, vec3.new(576.0, 1728.0, 0.0), vec3.new(1.0), quad.new(1.0, 0.0, 0.0, 0.0))
-        var northRoomDupeSpriteEntity = GameObjectManger.CreateGameObject("northRoomDupeSprite", northRoomDupe)
-        Transform.SetLocalTransform(northRoomDupeSpriteEntity, vec3.new(0.0, 0.0, 0.0), vec3.new(1.0), quad.new(1.0, 0.0, 0.0, 0.0))
-        Registry.AddSpriteComponent(northRoomDupeSpriteEntity, northRoomSpriteTexture, WHITE, vec2.new(0, 0), 1, 1, false, 0, 0)
+        var northRoomDupe = Level.loadLevelEntities(worldEntity, roomList[0])
+        Transform.setPosition(northRoomDupe, vec3.new(576.0, 1728.0, 0.0))
+        var northRoomDupeSpriteEntity = GameObjectManger.create("northRoomDupeSprite", northRoomDupe)
+        Transform.setLocalPosition(northRoomDupeSpriteEntity, vec3.new(0.0, 0.0, 0.0))
+        SpriteComponent.create(northRoomDupeSpriteEntity, northRoomSpriteTexture, WHITE, vec2.new(0, 0), 1, 1, false, 0, 0)
 
-        var playerEntity = GameObjectManger.CreateGameObject("Player", worldEntity, "GameObjects/Player")
-        Transform.SetWorldTransform(playerEntity, vec3.new(864.0, 32.0, 0.0), vec3.new(1.0), quad.new(1.0, 0.0, 0.0, 0.0))
+        var playerEntity = GameObjectManger.createWithScript("Player", worldEntity, "GameObjects/Player")
+        Transform.setPosition(playerEntity, vec3.new(864.0, 32.0, 0.0))
 
-        var lockedDoorEntity = GameObjectManger.CreateGameObject("Entrance Door", worldEntity, "GameObjects/Door")
-        Transform.SetWorldTransform(lockedDoorEntity, vec3.new(864.0, 0.0, 0.0), vec3.new(1.0), quad.new(1.0, 0.0, 0.0, 0.0))
+        var lockedDoorEntity = GameObjectManger.createWithScript("Entrance Door", worldEntity, "GameObjects/Door")
+        Transform.setPosition(lockedDoorEntity, vec3.new(864.0, 0.0, 0.0))
         
         // Create the UI for the level.
         _interactLabel = UIManager.CreateUILabel(context, vec2.new(0, 0), vec2.new(0, 0), "Interact", 16.0)
@@ -170,7 +155,7 @@ class GameWorldState is BaseState {
     
     update(dt) {
         // if substate return out here
-        if (_stateManager.getCurrentState()) {
+        if (_stateManager.currentState) {
             _stateManager.update()
             return
         }
@@ -248,7 +233,7 @@ class GameWorldState is BaseState {
     
     render() {
         // Delegate to gameplay sub-state
-        if (_stateManager != null) {
+        if (_stateManager.currentState) {
             _stateManager.render()
         }
     }

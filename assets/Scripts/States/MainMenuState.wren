@@ -2,11 +2,11 @@
 // Main menu state - first state when game starts
 // Handles menu navigation and transitions to game
 
-import "core/BaseState" for BaseState
+import "States/BaseState" for BaseState
 
 class MainMenuState is BaseState {
-    construct new(game) {
-        super(game)
+    construct new() {
+        super()
         _name = "MainMenuState"
     }
     

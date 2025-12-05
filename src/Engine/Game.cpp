@@ -76,10 +76,6 @@ void Struktur::InitialiseGame(GameContext& context)
 
 	ImGuiIO& io = ImGui::GetIO();
 	io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
-	io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;
-
-	io.ConfigViewportsNoAutoMerge = false;  // Auto-merge back when docked
-	io.ConfigViewportsNoTaskBarIcon = false; // Show in taskbar
 #else
 	// In release mode, window matches game size
 	::InitWindow(gameData.gameWidth, gameData.gameHeight, gameData.projectName);
@@ -234,12 +230,6 @@ void Struktur::GameLoop(GameContext& context)
 	editor.Update(context);
 #endif
 	::EndDrawing();
-	// Handle viewports (AFTER EndDrawing)
-	//if (io.ConfigFlags & ImGuiConfigFlags_ViewportsEnable)
-	{
-		ImGui::UpdatePlatformWindows();
-		ImGui::RenderPlatformWindowsDefault();
-	}
 }
 
 void Struktur::UpdateLoop(void* userData)

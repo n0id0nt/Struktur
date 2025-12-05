@@ -2,11 +2,11 @@
 // Main gameplay state - handles player movement, interaction checks
 // This is the default state when playing the game
 
-import "core/BaseState" for BaseState
+import "States/BaseState" for BaseState
 
 class PlayState is BaseState {
-    construct new(game) {
-        super(game)
+    construct new() {
+        super()
         _name = "PlayState"
     }
     

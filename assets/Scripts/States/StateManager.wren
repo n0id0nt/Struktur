@@ -4,7 +4,7 @@
 // Delegates update to active state
 
 class StateManager {
-    construct new(game) {
+    construct new() {
         _currentState = null
         _stateFactory = {}
 
@@ -13,29 +13,22 @@ class StateManager {
     
     // Update active state
     update(dt) {
-        if (_stateStack.count > 0) {
-            var currentState = _stateStack[-1]
-            currentState.update(dt)
+        if (_currentState) {
+            _currentState.update(dt)
         }
     }
     
     // Render active state
     render() {
-        if (_stateStack.count > 0) {
-            var currentState = _stateStack[-1]
-            if (currentState.respondsTo("render()")) {
-                currentState.render()
-            }
+        if (_currentState) {
+            _currentState.render()
         }
     }
     
     // Send event to active state
     sendEvent(event) {
-        if (_stateStack.count > 0) {
-            var currentState = _stateStack[-1]
-            if (currentState.respondsTo("onEvent(_)")) {
-                currentState.onEvent(event)
-            }
+        if (_currentState) {
+            _currentState.onEvent(event)
         }
     }
     
@@ -44,6 +37,7 @@ class StateManager {
         if (_currentState) {
             _currentState.exit()
         }
+        // TODO add some error handling here for when there is no state of given name
         _currentState = _stateFactory[stateName].new() // TODO Decide where I want to call new() here or where the state factory is created
         // TODO Assert that there is a new state here
         if (_currentState) {
@@ -52,7 +46,7 @@ class StateManager {
     }
 
     insertState(stateName, stateConstructor) {
-        _stateFactory[statename] = stateConstructor
+        _stateFactory[stateName] = stateConstructor
     }
     
     // Getters

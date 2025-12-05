@@ -1,4 +1,4 @@
-import "game" for Entity, Transform
+import "game" for Transform
 
 class Player {
     construct new(entity, name) {
@@ -35,8 +35,8 @@ class Player {
             var pos = Transform.getPosition(_entity)
             if (pos != null) {
                 // Move slightly (example behavior)
-                var newY = pos[1] + 0.1
-                System.print("New position: %(pos[0]), %(pos[1]), %(pos[2])")
+                var newY = pos.y + 0.1
+                System.print("New position: %(pos.x), %(pos.y), %(pos.z)")
                 //Transform.setPosition(_entity, pos[0], newY, pos[2])
             }
             

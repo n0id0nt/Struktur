@@ -141,6 +141,11 @@ namespace Struktur
                 m_fontSize = size;
             }
             
+            int GetFontSize()
+            {
+                return m_fontSize;
+            }
+            
             // Convenience methods for text rendering
             void DrawText(const std::string& text, Vector2 position, float fontSize, Color color) const
             {
