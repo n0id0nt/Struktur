@@ -160,14 +160,11 @@ class GameWorldState is BaseState {
             return
         }
 
-        var transformSystem = SystemManager.GetTransformSystem()
-        var animationSystem = SystemManager.GetAnimationSystem()
+        var inputDir = Input.getInputAxis2("Move")
+        var inputInteract = Input.isInputJustReleased("Interact")
+        var inventoryInteract = Input.isInputJustReleased("Inventory")
 
-        var inputDir = Input.GetInputAxis2("Move")
-        var inputInteract = Input.IsInputJustReleased("Interact")
-        var inventoryInteract = Input.IsInputJustReleased("Inventory")
-
-        var view = registry.view<Component::Player>()
+        var view = GameObject.getAllWithComponent("Player")
         if (inventoryInteract) {
             _interactLabel.SetVisible(false)
             //TODO also pause the game time to pause the players animation

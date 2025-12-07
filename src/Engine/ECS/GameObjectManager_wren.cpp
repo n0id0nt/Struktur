@@ -1849,7 +1849,8 @@ void wren_TransformGetPosition(WrenVM* vm)
 	}
 
 	// Create Vec3 foreign object with position
-    WrenVec3* vec = (WrenVec3*)wrenSetSlotNewForeign(vm, 0, 0, sizeof(WrenVec3));
+    wrenGetVariable(vm, "game", "Vec3", 1);  // Get class into slot 1
+    WrenVec3* vec = (WrenVec3*)wrenSetSlotNewForeign(vm, 0, 1, sizeof(WrenVec3));
     new (vec) WrenVec3(transform->position);
 }
 
@@ -1919,7 +1920,8 @@ void wren_TransformGetLocalPosition(WrenVM* vm)
 	}
 
 	// Create Vec3 foreign object with position
-    WrenVec3* vec = (WrenVec3*)wrenSetSlotNewForeign(vm, 0, 0, sizeof(WrenVec3));
+    wrenGetVariable(vm, "game", "Vec3", 1);  // Get class into slot 1
+    WrenVec3* vec = (WrenVec3*)wrenSetSlotNewForeign(vm, 0, 1, sizeof(WrenVec3));
     new (vec) WrenVec3(transform->position);
 }
 
@@ -1943,7 +1945,8 @@ void wren_TransformGetRotation(WrenVM* vm)
     }
     
     // Create Quat foreign object with rotation
-    WrenQuat* quat = (WrenQuat*)wrenSetSlotNewForeign(vm, 0, 0, sizeof(WrenQuat));
+    wrenGetVariable(vm, "game", "Quat", 1);  // Get class into slot 1
+    WrenQuat* quat = (WrenQuat*)wrenSetSlotNewForeign(vm, 0, 1, sizeof(WrenQuat));
     new (quat) WrenQuat(transform->rotation);
 }
 
@@ -2023,8 +2026,9 @@ void wren_TransformGetLocalRotation(WrenVM* vm)
         wrenSetSlotNull(vm, 0);
         return;
     }
-    
-    WrenQuat* quat = (WrenQuat*)wrenSetSlotNewForeign(vm, 0, 0, sizeof(WrenQuat));
+
+    wrenGetVariable(vm, "game", "Vec3", 1);  // Get class into slot 1
+    WrenQuat* quat = (WrenQuat*)wrenSetSlotNewForeign(vm, 0, 1, sizeof(WrenQuat));
     new (quat) WrenQuat(transform->rotation);
 }
 
@@ -2145,7 +2149,8 @@ void wren_ResourceManagerGetFontResource(WrenVM* vm)
 
 	const char* fontPath = wrenGetSlotString(vm, 1);
 
-	WrenFontHandle* font = (WrenFontHandle*)wrenSetSlotNewForeign(vm, 0, 0, sizeof(WrenFontHandle));
+    wrenGetVariable(vm, "game", "Font", 1);  // Get class into slot 1
+	WrenFontHandle* font = (WrenFontHandle*)wrenSetSlotNewForeign(vm, 0, 1, sizeof(WrenFontHandle));
     new (font) WrenFontHandle(resourceManager.GetFontResource(fontPath));
 }
 
@@ -2159,7 +2164,8 @@ void wren_ResourceManagerGetTextureResource(WrenVM* vm)
 
 	const char* texturePath = wrenGetSlotString(vm, 1);
 
-	WrenTextureHandle* texture = (WrenTextureHandle*)wrenSetSlotNewForeign(vm, 0, 0, sizeof(WrenTextureHandle));
+    wrenGetVariable(vm, "game", "Texture", 1);  // Get class into slot 1
+	WrenTextureHandle* texture = (WrenTextureHandle*)wrenSetSlotNewForeign(vm, 0, 1, sizeof(WrenTextureHandle));
     new (texture) WrenTextureHandle(resourceManager.GetTexture(texturePath));
 }
 
@@ -2196,5 +2202,39 @@ WREN_CLASS_STATIC("game", "SpriteComponent", "create(_,_,_,_,_,_,_,_,_)", wren_S
 // UI MANAGER BINDINGS
 // ============================================================================
 
+// ============================================================================
+// LEVEL BINDINGS
+// ============================================================================
 
+// Input.getInputAxis2(inputKey) -> Vec2
+void wren_InputGetInputAxis2(WrenVM* vm)
+{
+	Struktur::GameContext* context = static_cast<Struktur::GameContext*>(wrenGetUserData(vm));
+    Struktur::Core::Input& input = context->GetInput();
+
+	const char* inputKey = wrenGetSlotString(vm, 1);
+
+    glm::vec2 inputDir = input.GetInputAxis2(inputKey);
+
+    wrenGetVariable(vm, "game", "Vec2", 1);  // Get class into slot 1
+	WrenVec2* vec2 = (WrenVec2*)wrenSetSlotNewForeign(vm, 0, 1, sizeof(WrenVec2));
+    new (vec2) WrenVec2(inputDir);
+}
+
+WREN_CLASS_STATIC("game", "Input", "getInputAxis2(_)", wren_InputGetInputAxis2, "Gets input dir of a key code.");
+
+// Input.isInputJustReleased(inputKey) -> bool
+void wren_InputIsInputJustReleased(WrenVM* vm)
+{
+	Struktur::GameContext* context = static_cast<Struktur::GameContext*>(wrenGetUserData(vm));
+    Struktur::Core::Input& input = context->GetInput();
+
+	const char* inputKey = wrenGetSlotString(vm, 1);
+
+    bool inputJustReleased = input.IsInputJustReleased(inputKey);
+
+	wrenSetSlotBool(vm, 0, inputJustReleased);
+}
+
+WREN_CLASS_STATIC("game", "Input", "isInputJustReleased(_)", wren_InputGetInputAxis2, "Gets input dir of a key code.");
 
