@@ -9,8 +9,8 @@
 
 #include "Debug/Assertions.h"
 
-namespace Struktur::Wren {
-
+namespace Struktur::Wren
+{
     class CodeGenerator
     {
     public:
@@ -176,6 +176,31 @@ namespace Struktur::Wren {
                 else
                 {
                     file << "class " << className << " {\n";
+                }
+
+                // Generate constuctors
+                for (const auto* cls : classes)
+                {
+                    if (cls->className == className)
+                    {
+                        for (const auto& ctor : cls->constructors)
+                        {
+                            if (!ctor.documentation.empty()) {
+                                file << "    // " << ctor.documentation << "\n";
+                            }
+                            
+                            file << "    foreign construct new(";
+                            
+                            // Generate parameter list
+                            for (size_t i = 0; i < ctor.paramNames.size(); i++) {
+                                if (i > 0) file << ", ";
+                                file << ctor.paramNames[i];
+                            }
+                            
+                            file << ")\n";
+                        }
+                        break;
+                    }
                 }
                 
                 // Add class constants

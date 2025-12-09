@@ -4,6 +4,10 @@
 
 // 2D vector class wrapping glm::vec2
 foreign class Vec2 {
+    // Create zero vector
+    foreign construct new()
+    // Create vector with x, y components
+    foreign construct new(x, y)
     // Get X component
     foreign x
     // Get Y component
@@ -30,6 +34,10 @@ foreign class Vec2 {
 
 // 3D vector class wrapping glm::vec3
 foreign class Vec3 {
+    // Create zero vector
+    foreign construct new()
+    // Create vector with x, y, z components
+    foreign construct new(x, y, z)
     // Get X component
     foreign x
     // Get Y component
@@ -62,6 +70,10 @@ foreign class Vec3 {
 
 // 4D vector class wrapping glm::vec4
 foreign class Vec4 {
+    // Create zero vector
+    foreign construct new()
+    // Create vector with x, y, z, w components
+    foreign construct new(x, y, z, w)
     // Get X component
     foreign x
     // Get Y component
@@ -96,6 +108,10 @@ foreign class Vec4 {
 
 // Quaternion class for 3D rotations wrapping glm::quat
 foreign class Quat {
+    // Create identity quaternion
+    foreign construct new()
+    // Create quaternion with w, x, y, z components
+    foreign construct new(w, x, y, z)
     // Get W component
     foreign w
     // Get X component
@@ -212,12 +228,14 @@ foreign class Font {
 
 // UI Label component
 foreign class UILabel {
-    // Sets Font to be visible
-    foreign static setVisible(arg0)
+    // Sets Label to be visible
+    foreign setVisible(arg0)
     // Sets the labels font
     foreign setFont(arg0)
     // Sets the labels text color
     foreign setTextColor(arg0)
+    // Sets the labels position
+    foreign setPosition(arg0)
     // Sets the labels anchor point
     foreign setAnchorPoint(arg0)
 }
@@ -267,9 +285,9 @@ class Transform {
     // Get the world position of an entity. Returns vec3 or null if no transform.
     foreign static getPosition(arg0)
     // Set the world position of an entity.
-    foreign static setPosition(arg0)
+    foreign static setPosition(arg0,arg1)
     // Set the local position of an entity.
-    foreign static setLocalPosition(arg0)
+    foreign static setLocalPosition(arg0,arg1)
     // Get the local position of an entity. Returns [x, y, z] or null if no transform.
     foreign static getLocalPosition(arg0)
     // Get rotation of entity as Quat.
@@ -296,7 +314,7 @@ class Level {
     // Loads in a LDTK world file and creates the world game object and corresponding components.
     foreign static createWorldEntity(arg0)
     // Creates a level in the game and all its corresponding objects and entities.
-    foreign static loadLevelEntities(arg0)
+    foreign static loadLevelEntities(arg0,arg1)
 }
 
 class ResourceManager {
@@ -312,16 +330,25 @@ class SpriteComponent {
 }
 
 class ScriptComponent {
+    // Sets the render priority of a sprite component
+    foreign static setRenderPriority(arg0,arg1)
     // Creates the script Component.
     foreign static create(arg0,arg1,arg2)
     // Creates the script Component with an arg.
-    foreign static createArg(arg0,arg1,arg2)
+    foreign static createArg(arg0,arg1,arg2,arg3)
     // Check if entity's script has a method
     foreign static hasMethod(arg0,arg1)
     // Call a method on another entity's script with arguments
     foreign static callArg(arg0,arg1,arg2)
     // Call a method on another entity's script
     foreign static call(arg0,arg1)
+}
+
+class UIManager {
+    // Creates the UI component for UILabel.
+    foreign static createUILabel(arg0,arg1,arg2,arg3)
+    // Creates the UI component for UILabel.
+    foreign static removeUILabel(arg0)
 }
 
 class Camera {

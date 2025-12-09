@@ -1,6 +1,6 @@
 import "game" for Transform
 
-class Player {
+class Door {
     construct new(entity, name) {
         _entity = entity
         _name = name
@@ -18,7 +18,7 @@ class Player {
         // Get the entity's position
         var pos = Transform.getPosition(_entity)
         if (pos != null) {
-            System.print("Initial position: %(pos.x), %(pos.y), %(pos.y)")
+            System.print("Initial position: %(pos.x), %(pos.y), %(pos.z)")
         }
         
         _initialized = true

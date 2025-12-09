@@ -59,29 +59,21 @@ void Struktur::InitialiseGame(GameContext& context)
 	Wren::WrenScriptEngine& wrenScriptEngine = context.GetWrenScriptEngine();
 	Wren::WrenStateManager& wrenStateManager = context.GetWrenStateManager();
 
+	//TODO probably want to better handle this for this
+	::InitWindow(1, 1, "");
+	::SetExitKey(KEY_NULL);
+
 	wrenScriptEngine.Initialize(context);
-	wrenStateManager.Initialize(context);
+
+	::rlImGuiSetup(true);
+#ifdef EDITOR
+	ImGuiIO& io = ImGui::GetIO();
+	io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
+#endif
 
 #ifdef DEBUG
 	Wren::CodeGenerator::GenerateBindingFiles("Assets/Scripts/Bindings");
 #endif
-
-#ifdef EDITOR
-	// In debug mode, create a larger window to fit ImGui panels
-	const int windowWidth = 1280;
-	const int windowHeight = 720;
-	::InitWindow(windowWidth, windowHeight, "Struktur");
-	::SetWindowState(FLAG_WINDOW_RESIZABLE);
-	::rlImGuiSetup(true);
-
-	ImGuiIO& io = ImGui::GetIO();
-	io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
-#else
-	// In release mode, window matches game size
-	::InitWindow(gameData.gameWidth, gameData.gameHeight, gameData.projectName);
-#endif
-
-	::SetExitKey(KEY_NULL);
 
 	gameObjectManager.CreateDeleteObjectCallBack(context);
 
@@ -113,8 +105,24 @@ void Struktur::InitialiseGame(GameContext& context)
 
 	DEBUG_INFO("Game Data Loaded");
 
-	std::unique_ptr<GamePlay::GameWorldState> gameWorldState = std::make_unique<GamePlay::GameWorldState>();
-	stateManager.ChangeState(context, std::move(gameWorldState));
+	wrenStateManager.Initialize(context);
+
+#ifdef EDITOR
+	// In debug mode, create a larger window to fit ImGui panels
+	const int windowWidth = 1280;
+	const int windowHeight = 720;
+	::SetWindowSize(windowWidth, windowHeight);
+	::SetWindowTitle("Struktur");
+	::SetWindowState(FLAG_WINDOW_RESIZABLE);
+#else
+	// In release mode, window matches game size
+	::SetWindowSize(gameData.gameWidth, gameData.gameHeight);
+	::SetWindowTitle(gameData.projectName);
+	::SetWindowTitle()
+#endif
+
+	//std::unique_ptr<GamePlay::GameWorldState> gameWorldState = std::make_unique<GamePlay::GameWorldState>();
+	//stateManager.ChangeState(context, std::move(gameWorldState));
 }
 
 void Struktur::ExitGame(GameContext& context)

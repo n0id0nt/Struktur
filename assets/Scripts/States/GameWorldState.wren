@@ -2,13 +2,16 @@
 // Main gameplay state - loads level, creates entities, manages gameplay sub-states
 // This state owns the game world and delegates to sub-states for different gameplay modes
 
+import "game" for Transform, Vec2, Vec3, Vec4, Inventory, World, Level, ResourceManager, GameObject, ScriptComponent, SpriteComponent, UIManager, Input, Camera
+
 import "States/BaseState" for BaseState
 import "States/StateManager" for StateManager
 
 var TILE_TEXTURE = "assets/Tiles/cavesofgallet_tiles.png"
 var PLAYER_TEXTURE = "assets/Tiles/PlayerGrowthSprites.png"
 var WORLD_FILE_PATH = "assets/Levels/MemoryPalace.ldtk"
-var WHITE = vec4.new(0,0,0,255)
+var WHITE = Vec4.new(0, 0, 0, 255)
+var Loops = 0
 
 class GameWorldState is BaseState {
     construct new() {
@@ -19,6 +22,11 @@ class GameWorldState is BaseState {
         _loopCountLabel = null
         _worldEntity = null //TODO Create an entity constant for invalid entity or null entity
         _stateManager = StateManager.new()
+
+        _stateManager.insertState("PlayState", BaseState)
+        _stateManager.insertState("inventoryState", BaseState)
+        _stateManager.insertState("interactState", BaseState)
+        _stateManager.insertState("gameOverState", BaseState)
     }
 
     getNorthRoom() {
@@ -75,9 +83,9 @@ class GameWorldState is BaseState {
         
         System.print("Loading game world...")
 
-        GameData.Loops = GameData.Loops + 1 // increment the game loop count
+        Loops = Loops + 1 // increment the game loop count
         
-        var font = RebsourceManager.GetFontResource("assets/Fonts/medieval_sharp/MedievalSharp-Bold.ttf_60")
+        var font = ResourceManager.getFontResource("assets/Fonts/medieval_sharp/MedievalSharp-Bold.ttf_60")
 
         var worldEntity = Level.createWorldEntity(WORLD_FILE_PATH)
         _worldEntity = worldEntity
@@ -85,67 +93,67 @@ class GameWorldState is BaseState {
         var roomList = calculateRoomListToLoad(worldEntity)
 
         var northRoom = Level.loadLevelEntities(worldEntity, roomList[0])
-        Transform.setPosition(northRoom, vec3.new(576.0, 0.0, 0.0))
-        var northRoomSpriteEntity = GameObjectManger.create("northRoomSprite", northRoom)
-        Transform.setLocalPosition(northRoomSpriteEntity, vec3.new(0.0, 0.0, 0.0))
+        Transform.setPosition(northRoom, Vec3.new(576.0, 0.0, 0.0))
+        var northRoomSpriteEntity = GameObject.create("northRoomSprite", northRoom)
+        Transform.setLocalPosition(northRoomSpriteEntity, Vec3.new(10.0, 0.0, 0.0))
         var northRoomKey = getNorthRoom()
-        var northRoomSpriteTexture = ResourceManager.GetTexture("assets/Tiles/%(northRoomKey).png")
-        SpriteComponent.create(northRoomSpriteEntity, northRoomSpriteTexture, WHITE, vec2.new(0, 0), 1, 1, false, 0, 0)
+        var northRoomSpriteTexture = ResourceManager.getTextureResource("assets/Tiles/%(northRoomKey).png")
+        SpriteComponent.create(northRoomSpriteEntity, northRoomSpriteTexture, WHITE, Vec2.new(0, 0), 1, 1, false, 0, 0)
         
         var eastRoom = Level.loadLevelEntities(worldEntity, roomList[1])
-        Transform.setPosition(eastRoom, vec3.new(1152.0, 576.0, 0.0))
-        var eastRoomSpriteEntity = GameObjectManger.create("eastRoomSprite", eastRoom)
-        Transform.setLocalPosition(eastRoomSpriteEntity, vec3.new(0.0, 0.0, 0.0))
+        Transform.setPosition(eastRoom, Vec3.new(1152.0, 576.0, 0.0))
+        var eastRoomSpriteEntity = GameObject.create("eastRoomSprite", eastRoom)
+        Transform.setLocalPosition(eastRoomSpriteEntity, Vec3.new(0.0, 0.0, 0.0))
         var eastRoomKey = getEastRoom()
-        var eastRoomSpriteTexture = ResourceManager.GetTexture("assets/Tiles/%(eastRoomKey).png")
-        SpriteComponent.create(eastRoomSpriteEntity, eastRoomSpriteTexture, WHITE, vec2.new(0, 0), 1, 1, false, 0, 0)
+        var eastRoomSpriteTexture = ResourceManager.getTextureResource("assets/Tiles/%(eastRoomKey).png")
+        SpriteComponent.create(eastRoomSpriteEntity, eastRoomSpriteTexture, WHITE, Vec2.new(0, 0), 1, 1, false, 0, 0)
         
         var westRoom = Level.loadLevelEntities(worldEntity, roomList[2])
-        Transform.setPosition(westRoom, vec3.new(0.0, 576.0, 0.0))
-        var westRoomSpriteEntity = GameObjectManger.create("westRoomSprite", westRoom)
-        Transform.setLocalPosition(westRoomSpriteEntity, vec3.new(0.0, 0.0, 0.0))
+        Transform.setPosition(westRoom, Vec3.new(0.0, 576.0, 0.0))
+        var westRoomSpriteEntity = GameObject.create("westRoomSprite", westRoom)
+        Transform.setLocalPosition(westRoomSpriteEntity, Vec3.new(0.0, 0.0, 0.0))
         var westRoomKey = getWestRoom()
-        var westRoomSpriteTexture = ResourceManager.GetTexture("assets/Tiles/%(westRoomKey).png")
-        SpriteComponent.create(westRoomSpriteEntity, westRoomSpriteTexture, WHITE, vec2.new(0, 0), 1, 1, false, 0, 0)
+        var westRoomSpriteTexture = ResourceManager.getTextureResource("assets/Tiles/%(westRoomKey).png")
+        SpriteComponent.create(westRoomSpriteEntity, westRoomSpriteTexture, WHITE, Vec2.new(0, 0), 1, 1, false, 0, 0)
         
         var southRoom = Level.loadLevelEntities(worldEntity, roomList[3])
-        Transform.setPosition(southRoom, vec3.new(576.0, 1152.0, 0.0))
-        var southRoomSpriteEntity = GameObjectManger.create("southRoomSprite", southRoom)
-        Transform.setLocalPosition(southRoomSpriteEntity, vec3.new(0.0, 0.0, 0.0))
+        Transform.setPosition(southRoom, Vec3.new(576.0, 1152.0, 0.0))
+        var southRoomSpriteEntity = GameObject.create("southRoomSprite", southRoom)
+        Transform.setLocalPosition(southRoomSpriteEntity, Vec3.new(0.0, 0.0, 0.0))
         var southRoomKey = getSouthRoom()
-        var southRoomSpriteTexture = ResourceManager.GetTexture("assets/Tiles/%(southRoomKey).png")
-        SpriteComponent.create(southRoomSpriteEntity, southRoomSpriteTexture, WHITE, vec2.new(0, 0), 1, 1, false, 0, 0)
+        var southRoomSpriteTexture = ResourceManager.getTextureResource("assets/Tiles/%(southRoomKey).png")
+        SpriteComponent.create(southRoomSpriteEntity, southRoomSpriteTexture, WHITE, Vec2.new(0, 0), 1, 1, false, 0, 0)
         
         var courtyard = Level.loadLevelEntities(worldEntity, roomList[4])
-        Transform.setPosition(courtyard, vec3.new(576.0, 576.0, 0.0))
-        var courtyardSpriteEntity = GameObjectManger.create("courtyardSprite", courtyard)
-        Transform.setLocalPosition(courtyardSpriteEntity, vec3.new(0.0, 0.0, 0.0))
-        var courtyardSpriteTexture = ResourceManager.GetTexture("assets/Tiles/Courtyard.png")
-        SpriteComponent.create(courtyardSpriteEntity, courtyardSpriteTexture, WHITE, vec2.new(0, 0), 1, 1, false, 0, 0)
+        Transform.setPosition(courtyard, Vec3.new(576.0, 576.0, 0.0))
+        var courtyardSpriteEntity = GameObject.create("courtyardSprite", courtyard)
+        Transform.setLocalPosition(courtyardSpriteEntity, Vec3.new(0.0, 0.0, 0.0))
+        var courtyardSpriteTexture = ResourceManager.getTextureResource("assets/Tiles/Courtyard.png")
+        SpriteComponent.create(courtyardSpriteEntity, courtyardSpriteTexture, WHITE, Vec2.new(0, 0), 1, 1, false, 0, 0)
         
         var northRoomDupe = Level.loadLevelEntities(worldEntity, roomList[0])
-        Transform.setPosition(northRoomDupe, vec3.new(576.0, 1728.0, 0.0))
-        var northRoomDupeSpriteEntity = GameObjectManger.create("northRoomDupeSprite", northRoomDupe)
-        Transform.setLocalPosition(northRoomDupeSpriteEntity, vec3.new(0.0, 0.0, 0.0))
-        SpriteComponent.create(northRoomDupeSpriteEntity, northRoomSpriteTexture, WHITE, vec2.new(0, 0), 1, 1, false, 0, 0)
+        Transform.setPosition(northRoomDupe, Vec3.new(576.0, 1728.0, 0.0))
+        var northRoomDupeSpriteEntity = GameObject.create("northRoomDupeSprite", northRoomDupe)
+        Transform.setLocalPosition(northRoomDupeSpriteEntity, Vec3.new(0.0, 0.0, 0.0))
+        SpriteComponent.create(northRoomDupeSpriteEntity, northRoomSpriteTexture, WHITE, Vec2.new(0, 0), 1, 1, false, 0, 0)
 
-        var playerEntity = GameObjectManger.create("Player", worldEntity)
-        ScriptComponent.createArg(worldEntity, "Assets/Scripts/GameObjects/Player.wren", "Player", "Test Player Name")
-        Transform.setPosition(playerEntity, vec3.new(864.0, 32.0, 0.0))
+        var playerEntity = GameObject.create("Player", worldEntity)
+        ScriptComponent.createArg(playerEntity, "Assets/Scripts/GameObjects/Player.wren", "Player", "Test Player Name")
+        Transform.setPosition(playerEntity, Vec3.new(864.0, 32.0, 0.0))
 
-        var lockedDoorEntity = GameObjectManger.create("Entrance Door", worldEntity)
-        ScriptComponent.createArg(worldEntity, "Assets/Scripts/GameObjects/Door.wren", "Door", "Test Door Name")
-        Transform.setPosition(lockedDoorEntity, vec3.new(864.0, 0.0, 0.0))
+        var lockedDoorEntity = GameObject.create("Entrance Door", worldEntity)
+        ScriptComponent.createArg(lockedDoorEntity, "Assets/Scripts/GameObjects/Door.wren", "Door", "Test Door Name")
+        Transform.setPosition(lockedDoorEntity, Vec3.new(864.0, 0.0, 0.0))
         
         // Create the UI for the level.
-        _interactLabel = UIManager.CreateUILabel(vec2.new(0, 0), vec2.new(0, 0), "Interact", 16.0)
+        _interactLabel = UIManager.createUILabel(Vec2.new(0, 0), Vec2.new(0, 0), "Interact", 16.0)
         _interactLabel.setVisible(false)
         _interactLabel.setFont(font)
         _interactLabel.setTextColor(WHITE) // Change this when the background is created.
-        _interactLabel.setAnchorPoint(vec2.new(0.5, 0.5))
+        _interactLabel.setAnchorPoint(Vec2.new(0.5, 0.5))
 
-        var loops = GameData.Loops
-        _loopCountLabel = UIManager.CreateUILabel(vec2.new(20, 20), vec2.new(0, 0), "Loops: %(loops)", 30.0)
+        var loops = Loops
+        _loopCountLabel = UIManager.createUILabel(Vec2.new(20, 20), Vec2.new(0, 0), "Loops: %(loops)", 30.0)
         _loopCountLabel.setFont(font)
         _loopCountLabel.setTextColor(WHITE) // Change this when the background is created.
         _loopCountLabel.setVisible(true)
@@ -158,7 +166,7 @@ class GameWorldState is BaseState {
     update(dt) {
         // if substate return out here
         if (_stateManager.currentState) {
-            _stateManager.update()
+            _stateManager.update(dt)
             return
         }
 
@@ -172,60 +180,52 @@ class GameWorldState is BaseState {
             _interactLabel.SetVisible(false)
             //TODO also pause the game time to pause the players animation
             // just forcing player to idle for now
-            for (entity in playerEntities)
-            {
+            for (entity in playerEntities) {
                 ScriptComponent.call(entity, "playerForceStop")
             }
-            var inventoryState = std::make_unique<InventoryState>()
-            _stateManager.ChangeState(inventoryState)
+            _stateManager.changeState("inventoryState")
             return
         }
 
         for (entity in playerEntities) {
             ScriptComponent.callArg(entity, "playerControl", inputDir.x, inputDir.y)
 
-            var canInteract = ScriptComponent.call(entity, "canInteract")
+            var interactEntity = ScriptComponent.call(entity, "getInteractEntity")
 
-            if (canInteract) {
-                _interactLabel->setVisible(true)
+            if (interactEntity) {
+                _interactLabel.setVisible(true)
                 
-                auto& interactWorldTransform = Registry.GetWorldTransform(canInteract)
-                glm::vec2 screenInteractPosition = Camera.worldPosToScreenPos(interactWorldTransform.position) + vec2.new(0, -32)
-                _interactLabel->setPosition(screenInteractPosition, vec2.new(0, 0))
+                var interactWorldPosition = Transform.getPosition(interactEntity)
+                var screenInteractPosition = Camera.worldPosToScreenPos(interactWorldPosition) + Vec2.new(0, -32)
+                _interactLabel.setPosition(screenInteractPosition, Vec2.new(0, 0))
                 if (inputInteract) {
-                    _interactLabel->setVisible(false)
-                    Struktur::Player::PlayerForceStop(context, entity)
+                    _interactLabel.setVisible(false)
+                    ScriptComponent.call(entity, "playerForceStop")
                     // Change state to interact state
-                    std::unique_ptr<InteractState> interactState = std::make_unique<InteractState>(canInteract)
-                    m_stateManager.ChangeState(context, std::move(interactState))
+                    _stateManager.ChangeState("interactState")
                     return
                 }
             } else {
-                _interactLabel->setVisible(false)
+                _interactLabel.setVisible(false)
             }
 
             // check player at bottom of screen
-            auto& playerPosition = registry.get<Component::WorldTransform>(entity).position
-            if (playerPosition.y > 1755.0f) {
-                Inventory& inventory = context.GetInventory()
-                if ((std::find(inventory.begin(), inventory.end(), "Red Pedestal Active") != inventory.end())
-                    && (std::find(inventory.begin(), inventory.end(), "Green Pedestal Active") != inventory.end())
-                    && (std::find(inventory.begin(), inventory.end(), "Yellow Pedestal Active") != inventory.end())
-                    && (std::find(inventory.begin(), inventory.end(), "Blue Pedestal Active") != inventory.end())) {
-                    Struktur::Player::PlayerForceStop(context, entity)
-                    std::unique_ptr<GameOverState> gameOverState = std::make_unique<GameOverState>()
-                    m_stateManager.ChangeState(context, std::move(gameOverState))
+            var playerPosition = Transform.getPosition(entity)
+            if (playerPosition.y > 1755.0) {
+                if (Inventory.contains("Red Pedestal Active") && Inventory.contains("Green Pedestal Active") && Inventory.contains("Yellow Pedestal Active") && Inventory.contains("Blue Pedestal Active")) {
+                    ScriptComponent.call(entity, "playerForceStop")
+                    _stateManager.ChangeState("gameOverState")
                     return
                 } 
 
                 // reset the current state
-                std::unique_ptr<GamePlay::GameWorldState> gameWorldState = std::make_unique<GamePlay::GameWorldState>()
-                stateManager.ChangeState(context, std::move(gameWorldState))
+                //_stateManager.ChangeState("gameWorldState")
+                exit()
+                enter()
                 return
             }
 
-            auto& playerSprite = registry.get<Component::Sprite>(entity)
-            playerSprite.renderPriority = (int)playerPosition.y
+            ScriptComponent.setRenderPriority(entity, playerPosition.y)
         }
     }
     
@@ -246,13 +246,11 @@ class GameWorldState is BaseState {
             _stateManager.currentState.exit()
         }
         
-        // TODO: Destroy all entities
-        // if (_worldEntity != null) {
-        //     Entity.Destroy(_worldEntity)
-        // }
+        GameObject.destroy(_worldEntity)
         
-        // TODO: Unload level
-        
+        UIManager.removeUILabel(_interactLabel)
+        UIManager.removeUILabel(_loopCountLabel)
+
         System.print("Game world unloaded")
     }
     

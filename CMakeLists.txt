@@ -283,6 +283,8 @@ set(SOURCES
     src/Engine/Resource/ResourcePtr.h
     src/Engine/Resource/ResourceManager.h
     src/Engine/Resource/SoundResource.h
+    src/Engine/Resource/FontResource.h
+    src/Engine/Resource/MusicResource.h
     src/Engine/Resource/TextureResource.h       src/Engine/Resource/TextureResource.cpp
     
     src/Engine/ECS/SystemManager.h              src/Engine/ECS/SystemManager.cpp

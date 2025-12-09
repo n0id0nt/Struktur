@@ -36,12 +36,19 @@ namespace Struktur
                 WrenVM* vm, const char* module, const char* className, 
                 bool isStatic, const char* signature)
             {
-                
-                WrenForeignMethodFn method = Wren::FindMethod(module, className, isStatic, signature);
+                WrenForeignMethodFn method;
+                if (!isStatic && strncmp(signature, "init ", 5) == 0)
+                {
+                    method = Wren::FindClass(module, className).allocate;
+                }
+                else
+                {
+                    method = Wren::FindMethod(module, className, isStatic, signature);
+                }
                 
                 if (!method)
                 {
-                    DEBUG_WARNING("Wren binding not found: %s.%s%s (static=%d)", 
+                    DEBUG_WARNING("Wren binding not found: %s.%s.%s (static=%d)", 
                                 module, className, signature, isStatic);
                 }
                 

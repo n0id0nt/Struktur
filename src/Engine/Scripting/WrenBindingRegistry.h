@@ -7,6 +7,15 @@
 
 namespace Struktur::Wren
 {
+    // ============================================================================
+    // Constructor Parameter Info
+    // ============================================================================
+
+    struct ConstructorSignature {
+        int paramCount;                          // Number of parameters
+        std::vector<std::string> paramNames;     // Parameter names for documentation
+        std::string documentation;               // Constructor documentation
+    };
 
     // ============================================================================
     // BINDING STRUCTURES
@@ -26,6 +35,7 @@ namespace Struktur::Wren
         std::string className;
         WrenForeignMethodFn allocate;
         WrenFinalizerFn finalize;
+        std::vector<ConstructorSignature> constructors;
         std::string documentation;
     };
 
@@ -71,7 +81,7 @@ namespace Struktur::Wren
         ClassRegistrar(const char* module, const char* className,
                     WrenForeignMethodFn alloc, WrenFinalizerFn fin, const char* doc)
         {
-            GetClassBindings().push_back({module, className, alloc, fin, doc});
+            GetClassBindings().push_back({module, className, alloc, fin, {}, doc});
         }
     };
 
@@ -98,6 +108,34 @@ namespace Struktur::Wren
                         const char* name, double value, const char* doc)
         {
             GetConstantBindings().push_back({module, className, name, value, doc});
+        }
+    };
+
+    struct ConstructorRegistrar
+    {
+        ConstructorRegistrar(const char* moduleName, const char* className, WrenForeignMethodFn alloc,
+                        int paramCount, const std::vector<std::string>& paramNames,
+                        const char* documentation)
+        {
+            // Find the foreign class binding and add constructor signature
+            auto& bindings = GetClassBindings();
+            
+            for (auto& binding : bindings) {
+                if (binding.moduleName == moduleName && binding.className == className) {
+                    ConstructorSignature sig;
+                    sig.paramCount = paramCount;
+                    sig.paramNames = paramNames;
+                    sig.documentation = documentation;
+                    binding.constructors.push_back(sig);
+                    return;
+                }
+            }
+            
+            // Class not found - this is an error
+            // In production, you might want to queue this and resolve later
+
+            // Also need a method Binding
+            //GetMethodBindings().push_back({moduleName, className, "init new()", false, alloc, documentation});
         }
     };
 
@@ -132,8 +170,24 @@ namespace Struktur::Wren
 
 // Foreign class with allocator and finalizer
 #define WREN_FOREIGN_CLASS(module, cls, alloc, fin, doc) \
-    static Struktur::Wren::ClassRegistrar _wren_cls_reg_##alloc( \
+    static Struktur::Wren::ClassRegistrar _wren_cls_reg_##alloc##_##fin( \
         module, cls, alloc, fin, doc)
+
+// Register a constructor signature for a foreign class
+#define WREN_CONSTRUCTOR(module, className, alloc, ...) \
+    static Struktur::Wren::ConstructorRegistrar WREN_UNIQUE_NAME(constructor_reg_)( \
+        module, className, alloc, \
+        WREN_COUNT_ARGS(__VA_ARGS__), \
+        std::vector<std::string>{WREN_STRINGIFY_ARGS(__VA_ARGS__)}, \
+        "Constructor with " #__VA_ARGS__);
+
+// Register a constructor with custom documentation
+#define WREN_CONSTRUCTOR_DOC(module, className, alloc, docs, ...) \
+    static Struktur::Wren::ConstructorRegistrar WREN_UNIQUE_NAME(constructor_reg_)( \
+        module, className, alloc, \
+        WREN_COUNT_ARGS(__VA_ARGS__), \
+        std::vector<std::string>{WREN_STRINGIFY_ARGS(__VA_ARGS__)}, \
+        docs); \
 
 // Enum binding: CollisionType { None = 0, Wall = 1, Enemy = 2 }
 #define WREN_ENUM(module, enumName, values, doc) \
@@ -161,3 +215,20 @@ namespace Struktur::Wren
         module, cls, #name, true, getterFunc, doc); \
     static Struktur::Wren::MethodRegistrar _wren_var_set_##setterFunc( \
         module, cls, #name "=(_)", true, setterFunc, doc " (setter)")
+
+// ============================================================================
+// Utility Macros
+// ============================================================================
+
+// Generate unique variable names
+#define WREN_CONCAT_IMPL(x, y) x##y
+#define WREN_CONCAT(x, y) WREN_CONCAT_IMPL(x, y)
+#define WREN_UNIQUE_NAME(prefix) WREN_CONCAT(prefix, __LINE__)
+
+// Count variadic arguments (up to 10 args)
+#define WREN_COUNT_ARGS_IMPL(_1,_2,_3,_4,_5,_6,_7,_8,_9,_10,N,...) N
+#define WREN_COUNT_ARGS(...) WREN_COUNT_ARGS_IMPL(__VA_ARGS__,10,9,8,7,6,5,4,3,2,1,0)
+
+// Stringify arguments
+#define WREN_STRINGIFY_IMPL(...) #__VA_ARGS__
+#define WREN_STRINGIFY_ARGS(...) WREN_STRINGIFY_IMPL(__VA_ARGS__)
