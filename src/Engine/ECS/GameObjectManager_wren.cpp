@@ -16,8 +16,6 @@
 #include "Engine/ECS/Component/Transform.h"
 #include "Engine/ECS/Component/WrenScript.h"
 
-
-
 // ============================================================================
 // Vec2 - Foreign class wrapping glm::vec2
 // ============================================================================
@@ -1323,6 +1321,86 @@ WREN_CLASS_METHOD("game", "Sound", "isValid", wren_SoundIsValid, "Check if sound
 WREN_CLASS_METHOD("game", "Sound", "path", wren_SoundGetPath, "Get sound path");
 WREN_CLASS_METHOD("game", "Sound", "toString", wren_SoundToString, "Convert to string");
 
+// ============================================================================
+// UI LABEL - Foreign class wrapping glm::vec2
+// ============================================================================
+
+#include "Engine/UI/UILabel.h"
+
+struct WrenUILabel
+{
+    Struktur::UI::UILabel label;
+    
+    WrenUILabel(Struktur::GameContext& context, const glm::vec2& absolutePosition, const glm::vec2& relativePosition, const std::string& labelText, float fontSz = 20.0f) : 
+        label(context, absolutePosition, relativePosition, labelText, fontSz) {}
+};
+
+// Allocator - called when UILabel.new() is invoked
+void wren_UILabelAllocate(WrenVM* vm)
+{
+    Struktur::GameContext* context = static_cast<Struktur::GameContext*>(wrenGetUserData(vm));
+
+    WrenVec2* absolutePosition = static_cast<WrenVec2*>(wrenGetSlotForeign(vm, 1));
+    WrenVec2* relativePosition = static_cast<WrenVec2*>(wrenGetSlotForeign(vm, 2));
+    const char* labelText = wrenGetSlotString(vm, 3);
+    float fontSz = static_cast<float>(wrenGetSlotDouble(vm, 4));
+
+    // Allocate foreign object
+    WrenUILabel* vec = (WrenUILabel*)wrenSetSlotNewForeign(vm, 0, 0, sizeof(WrenUILabel));
+    new (vec) WrenUILabel(*context, absolutePosition->value, relativePosition->value, labelText, fontSz);
+}
+
+// Finalizer - called when garbage collected
+void wren_UILabelFinalize(void* data)
+{
+    WrenUILabel* vec = (WrenUILabel*)data;
+    vec->~WrenUILabel();
+}
+
+// UILabel.setVisible(isVisible)
+void wren_UILabelSetVisible(WrenVM* vm)
+{
+    WrenUILabel* handle = static_cast<WrenUILabel*>(wrenGetSlotForeign(vm, 0));
+    
+    bool isVisible = wrenGetSlotBool(vm, 1);
+    handle->label.SetVisible(isVisible);
+}
+
+// UILabel.setFont(font)
+void wren_UILabelSetFont(WrenVM* vm)
+{
+    WrenUILabel* handle = static_cast<WrenUILabel*>(wrenGetSlotForeign(vm, 0));
+    
+    WrenFontHandle* font = static_cast<WrenFontHandle*>(wrenGetSlotForeign(vm, 1));
+    handle->label.SetFont(font->resource);
+}
+
+// UILabel.setTextColor(color)
+void wren_UILabelSetTextColor(WrenVM* vm)
+{
+    WrenUILabel* handle = static_cast<WrenUILabel*>(wrenGetSlotForeign(vm, 0));
+    
+    WrenVec4* color = static_cast<WrenVec4*>(wrenGetSlotForeign(vm, 1));
+    ::Color rayColor {color->value.r, color->value.g, color->value.b, color->value.a};
+    handle->label.SetTextColor(rayColor);
+}
+
+// UILabel.setAnchorPoint(anchorPoint)
+void wren_UILabelSetAnchorPoint(WrenVM* vm)
+{
+    WrenUILabel* handle = static_cast<WrenUILabel*>(wrenGetSlotForeign(vm, 0));
+    
+    WrenVec2* anchorPoint = static_cast<WrenVec2*>(wrenGetSlotForeign(vm, 1));
+    handle->label.SetAnchorPoint(anchorPoint->value);
+}
+
+// Register Sound foreign class
+WREN_FOREIGN_CLASS("game", "UILabel", wren_UILabelAllocate, wren_UILabelFinalize, "UI Label component");
+
+WREN_CLASS_STATIC("game", "UILabel", "setVisible(_)", wren_UILabelSetVisible, "Sets Font to be visible");
+WREN_CLASS_METHOD("game", "UILabel", "setFont(_)", wren_UILabelSetFont, "Sets the labels font");
+WREN_CLASS_METHOD("game", "UILabel", "setTextColor(_)", wren_UILabelSetTextColor, "Sets the labels text color");
+WREN_CLASS_METHOD("game", "UILabel", "setAnchorPoint(_)", wren_UILabelSetAnchorPoint, "Sets the labels anchor point");
 
 // ============================================================================
 // GAME OBJECT MANAGER BINDINGS
@@ -2178,9 +2256,9 @@ WREN_CLASS_STATIC("game", "ResourceManager", "getTextureResource(_)", wren_Resou
 // SpriteComponent.create(spriteEntity, texture, color, offset, columns, rows, flipped, index, renderPriority) -> number
 void wren_SpriteComponentCreate(WrenVM* vm)
 {
-	Struktur::GameContext* context = static_cast<Struktur::GameContext*>(wrenGetUserData(vm));
+    Struktur::GameContext* context = static_cast<Struktur::GameContext*>(wrenGetUserData(vm));
 	entt::registry& registry = context->GetRegistry();
-
+    
 	entt::entity levelEntity = static_cast<entt::entity>(wrenGetSlotDouble(vm, 1));
 	WrenTextureHandle* texture = static_cast<WrenTextureHandle*>(wrenGetSlotForeign(vm, 2));
 	WrenVec4* color = static_cast<WrenVec4*>(wrenGetSlotForeign(vm, 3));
@@ -2190,17 +2268,326 @@ void wren_SpriteComponentCreate(WrenVM* vm)
 	bool flipped = wrenGetSlotBool(vm, 7);
 	int index = static_cast<int>(wrenGetSlotDouble(vm, 8));
 	int renderPriority = static_cast<int>(wrenGetSlotDouble(vm, 9));
-
-	Color rayColor {color->value.r, color->value.g, color->value.b, color->value.a};
-
+    
+	::Color rayColor {color->value.r, color->value.g, color->value.b, color->value.a};
+    
 	registry.emplace<Struktur::Component::Sprite>(levelEntity, texture->resource, rayColor, offset->value, columns, rows, flipped, index, renderPriority);
 }
 
 WREN_CLASS_STATIC("game", "SpriteComponent", "create(_,_,_,_,_,_,_,_,_)", wren_SpriteComponentCreate, "Creates the sprite Component.");
 
 // ============================================================================
+// SCRIPT COMPONENT BINDINGS
+// ============================================================================
+
+// ScriptComponent.create(spriteEntity, scriptPath, className) -> number
+void wren_ScriptComponentCreate(WrenVM* vm)
+{
+	Struktur::GameContext* context = static_cast<Struktur::GameContext*>(wrenGetUserData(vm));
+	entt::registry& registry = context->GetRegistry();
+
+	entt::entity levelEntity = static_cast<entt::entity>(wrenGetSlotDouble(vm, 1));
+    const char* scriptPath = wrenGetSlotString(vm, 2);
+    const char* className = wrenGetSlotString(vm, 3);
+
+	registry.emplace<Struktur::Component::WrenScript>(levelEntity, scriptPath, className);
+}
+
+WREN_CLASS_STATIC("game", "ScriptComponent", "create(_,_,_)", wren_ScriptComponentCreate, "Creates the script Component.");
+
+// ScriptComponent.createArg(spriteEntity, scriptPath, className, args) -> number
+void wren_ScriptComponentCreateArg(WrenVM* vm)
+{
+	Struktur::GameContext* context = static_cast<Struktur::GameContext*>(wrenGetUserData(vm));
+	entt::registry& registry = context->GetRegistry();
+
+	entt::entity levelEntity = static_cast<entt::entity>(wrenGetSlotDouble(vm, 1));
+    const char* scriptPath = wrenGetSlotString(vm, 2);
+    const char* className = wrenGetSlotString(vm, 3);
+    const char* args = wrenGetSlotString(vm, 4);
+
+	registry.emplace<Struktur::Component::WrenScript>(levelEntity, scriptPath, className, args);
+
+    //TODO possibly initialise the wren script here??
+
+}
+
+WREN_CLASS_STATIC("game", "ScriptComponent", "createArg(_,_,_)", wren_ScriptComponentCreateArg, "Creates the script Component with an arg.");
+
+
+// ScriptComponent.hasMethod(entity, methodName) -> Bool
+void wren_ScriptComponentHasMethod(WrenVM* vm)
+{
+    Struktur::GameContext* context = static_cast<Struktur::GameContext*>(wrenGetUserData(vm));
+    auto& registry = context->GetRegistry();
+    
+    double entityId = wrenGetSlotDouble(vm, 1);
+    entt::entity entity = static_cast<entt::entity>(entityId);
+    
+    const char* methodName = wrenGetSlotString(vm, 2);
+    
+    auto* script = registry.try_get<Struktur::Component::WrenScript>(entity);
+    
+    if (!script || !script->isInitialized || script->hasError) {
+        wrenSetSlotBool(vm, 0, false);
+        return;
+    }
+    
+    // Check if the script's instance has this method
+    // We need to get the Wren instance and check if it responds to the method
+    
+    // For now, we'll just check if the script is valid
+    // You could implement a method registry in WrenScript component
+    wrenSetSlotBool(vm, 0, true);
+}
+
+WREN_CLASS_STATIC("game", "ScriptComponent", "hasMethod(_,_)", wren_ScriptComponentHasMethod, "Check if entity's script has a method");
+
+// ScriptComponent.callArg(entity, methodName, ...args) -> result
+void wren_ScriptComponentCallArg(WrenVM* vm)
+{
+    Struktur::GameContext* context = static_cast<Struktur::GameContext*>(wrenGetUserData(vm));
+    auto& registry = context->GetRegistry();
+    auto& scriptEngine = context->GetWrenScriptEngine();
+    
+    double entityId = wrenGetSlotDouble(vm, 1);
+    entt::entity entity = static_cast<entt::entity>(entityId);
+    
+    const char* methodName = wrenGetSlotString(vm, 2);
+    
+    auto* script = registry.try_get<Struktur::Component::WrenScript>(entity);
+    
+    if (!script || !script->isInitialized || script->hasError)
+    {
+        DEBUG_ERROR("ScriptComponent.call: Entity has no valid script");
+        wrenSetSlotNull(vm, 0);
+        return;
+    }
+    
+    WrenVM* wrenVM = scriptEngine.GetVM();
+    
+    // Get the script's instance
+    if (!script->instanceHandle)
+    {
+        DEBUG_ERROR("ScriptComponent.call: No instance handle");
+        wrenSetSlotNull(vm, 0);
+        return;
+    }
+    
+    // Build method signature based on argument count
+    int argCount = wrenGetSlotCount(vm) - 3;  // Total - (receiver, entity, methodName)
+    
+    std::string signature = methodName;
+    if (argCount > 0)
+    {
+        signature += "(";
+        for (int i = 0; i < argCount; i++) {
+            if (i > 0) signature += ",";
+            signature += "_";
+        }
+        signature += ")";
+    }
+    else
+    {
+        signature += "()";
+    }
+    
+    // Create call handle
+    WrenHandle* methodHandle = wrenMakeCallHandle(wrenVM, signature.c_str());
+    
+    if (!methodHandle)
+    {
+        DEBUG_ERROR("ScriptComponent.call: Method '%s' not found", signature.c_str());
+        wrenSetSlotNull(vm, 0);
+        return;
+    }
+    
+    // Set up call
+    wrenEnsureSlots(wrenVM, argCount + 1);
+    wrenSetSlotHandle(wrenVM, 0, script->instanceHandle);
+    
+    // Copy arguments from calling VM to target VM
+    for (int i = 0; i < argCount; i++)
+    {
+        int sourceSlot = i + 3;  // Skip receiver, entity, methodName
+        int targetSlot = i + 1;
+        
+        WrenType type = wrenGetSlotType(vm, sourceSlot);
+        
+        switch (type) {
+            case WREN_TYPE_BOOL:
+                wrenSetSlotBool(wrenVM, targetSlot, wrenGetSlotBool(vm, sourceSlot));
+                break;
+            case WREN_TYPE_NUM:
+                wrenSetSlotDouble(wrenVM, targetSlot, wrenGetSlotDouble(vm, sourceSlot));
+                break;
+            case WREN_TYPE_STRING:
+                wrenSetSlotString(wrenVM, targetSlot, wrenGetSlotString(vm, sourceSlot));
+                break;
+            case WREN_TYPE_NULL:
+                wrenSetSlotNull(wrenVM, targetSlot);
+                break;
+            default:
+                DEBUG_ERROR("ScriptComponent.call: Type of '%s' not implemented", signature.c_str());
+                // For complex types, we'd need to handle them specially
+                wrenSetSlotNull(wrenVM, targetSlot);
+                break;
+        }
+    }
+    
+    // Call the method
+    WrenInterpretResult result = wrenCall(wrenVM, methodHandle);
+    wrenReleaseHandle(wrenVM, methodHandle);
+    
+    if (result != WREN_RESULT_SUCCESS)
+    {
+        DEBUG_ERROR("ScriptComponent.call: Method call failed");
+        wrenSetSlotNull(vm, 0);
+        return;
+    }
+    
+    // Copy return value back to calling VM
+    WrenType returnType = wrenGetSlotType(wrenVM, 0);
+    
+    switch (returnType)
+    {
+        case WREN_TYPE_BOOL:
+            wrenSetSlotBool(vm, 0, wrenGetSlotBool(wrenVM, 0));
+            break;
+        case WREN_TYPE_NUM:
+            wrenSetSlotDouble(vm, 0, wrenGetSlotDouble(wrenVM, 0));
+            break;
+        case WREN_TYPE_STRING:
+            wrenSetSlotString(vm, 0, wrenGetSlotString(wrenVM, 0));
+            break;
+        case WREN_TYPE_NULL:
+            wrenSetSlotNull(vm, 0);
+            break;
+        default:
+            // For complex return types, we'd need special handling
+            wrenSetSlotNull(vm, 0);
+            break;
+    }
+}
+
+WREN_CLASS_STATIC("game", "ScriptComponent", "callArg(_,_,_)", wren_ScriptComponentCallArg,"Call a method on another entity's script with arguments");
+
+// ScriptComponent.call(entity, methodName) -> result
+void wren_ScriptComponentCall(WrenVM* vm)
+{
+    Struktur::GameContext* context = static_cast<Struktur::GameContext*>(wrenGetUserData(vm));
+    auto& registry = context->GetRegistry();
+    auto& scriptEngine = context->GetWrenScriptEngine();
+    
+    double entityId = wrenGetSlotDouble(vm, 1);
+    entt::entity entity = static_cast<entt::entity>(entityId);
+    
+    const char* methodName = wrenGetSlotString(vm, 2);
+    
+    auto* script = registry.try_get<Struktur::Component::WrenScript>(entity);
+    
+    if (!script || !script->isInitialized || script->hasError)
+    {
+        DEBUG_ERROR("ScriptComponent.call: Entity has no valid script");
+        wrenSetSlotNull(vm, 0);
+        return;
+    }
+    
+    WrenVM* wrenVM = scriptEngine.GetVM();
+    
+    // Get the script's instance
+    if (!script->instanceHandle)
+    {
+        DEBUG_ERROR("ScriptComponent.call: No instance handle");
+        wrenSetSlotNull(vm, 0);
+        return;
+    }
+    
+    // Create call handle
+    std::string signature = std::string(methodName) + "()";
+    WrenHandle* methodHandle = wrenMakeCallHandle(wrenVM, signature.c_str());
+    
+    if (!methodHandle)
+    {
+        DEBUG_ERROR("ScriptComponent.call: Method '%s' not found", signature.c_str());
+        wrenSetSlotNull(vm, 0);
+        return;
+    }
+    
+    // Set up call
+    wrenEnsureSlots(wrenVM, 1);
+    wrenSetSlotHandle(wrenVM, 0, script->instanceHandle);
+    
+    WrenInterpretResult result = wrenCall(wrenVM, methodHandle);
+    wrenReleaseHandle(wrenVM, methodHandle);
+    
+    if (result != WREN_RESULT_SUCCESS)
+    {
+        wrenSetSlotNull(vm, 0);
+        return;
+    }
+    
+    // Return value
+    WrenType returnType = wrenGetSlotType(wrenVM, 0);
+    
+    switch (returnType)
+    {
+        case WREN_TYPE_BOOL:
+            wrenSetSlotBool(vm, 0, wrenGetSlotBool(wrenVM, 0));
+            break;
+        case WREN_TYPE_NUM:
+            wrenSetSlotDouble(vm, 0, wrenGetSlotDouble(wrenVM, 0));
+            break;
+        case WREN_TYPE_STRING:
+            wrenSetSlotString(vm, 0, wrenGetSlotString(wrenVM, 0));
+            break;
+        default:
+            wrenSetSlotNull(vm, 0);
+            break;
+    }
+}
+
+WREN_CLASS_STATIC("game", "ScriptComponent", "call(_,_)", wren_ScriptComponentCall, "Call a method on another entity's script");
+
+// ============================================================================
 // UI MANAGER BINDINGS
 // ============================================================================
+
+// ============================================================================
+// CAMERA BINDINGS
+// ============================================================================
+
+// Camera.worldPosToScreenPos(worldPos) -> Vec2
+void wren_CameraWorldPosToScreenPos(WrenVM* vm)
+{
+	Struktur::GameContext* context = static_cast<Struktur::GameContext*>(wrenGetUserData(vm));
+    Struktur::GameResource::Camera& camera = context->GetCamera();
+
+    WrenVec2* worldPos = static_cast<WrenVec2*>(wrenGetSlotForeign(vm, 1));
+    glm::vec2 screenPos = camera.WorldPosToScreenPos(worldPos->value);
+
+    wrenGetVariable(vm, "game", "Vec2", 1);  // Get class into slot 1
+	WrenVec2* vec2 = (WrenVec2*)wrenSetSlotNewForeign(vm, 0, 1, sizeof(WrenVec2));
+    new (vec2) WrenVec2(screenPos);
+}
+
+WREN_CLASS_STATIC("game", "Camera", "worldPosToScreenPos(_)", wren_CameraWorldPosToScreenPos, "Converts a world position to the screen position.");
+
+// Camera.screenPosToWorldPos(worldPos) -> Vec2
+void wren_CameraScreenPosToWorldPos(WrenVM* vm)
+{
+	Struktur::GameContext* context = static_cast<Struktur::GameContext*>(wrenGetUserData(vm));
+    Struktur::GameResource::Camera& camera = context->GetCamera();
+
+    WrenVec2* screenPos = static_cast<WrenVec2*>(wrenGetSlotForeign(vm, 1));
+    glm::vec2 worldPos = camera.ScreenPosToWorldPos(screenPos->value);
+
+    wrenGetVariable(vm, "game", "Vec2", 1);  // Get class into slot 1
+	WrenVec2* vec2 = (WrenVec2*)wrenSetSlotNewForeign(vm, 0, 1, sizeof(WrenVec2));
+    new (vec2) WrenVec2(worldPos);
+}
+
+WREN_CLASS_STATIC("game", "Camera", "screenPosToWorldPos(_)", wren_CameraScreenPosToWorldPos, "Converts a screen position to the world position.");
 
 // ============================================================================
 // LEVEL BINDINGS
@@ -2236,5 +2623,4 @@ void wren_InputIsInputJustReleased(WrenVM* vm)
 	wrenSetSlotBool(vm, 0, inputJustReleased);
 }
 
-WREN_CLASS_STATIC("game", "Input", "isInputJustReleased(_)", wren_InputGetInputAxis2, "Gets input dir of a key code.");
-
+WREN_CLASS_STATIC("game", "Input", "isInputJustReleased(_)", wren_InputIsInputJustReleased, "Gets input was just released.");

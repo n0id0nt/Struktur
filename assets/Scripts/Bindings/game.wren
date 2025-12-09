@@ -210,6 +210,18 @@ foreign class Font {
     foreign toString
 }
 
+// UI Label component
+foreign class UILabel {
+    // Sets Font to be visible
+    foreign static setVisible(arg0)
+    // Sets the labels font
+    foreign setFont(arg0)
+    // Sets the labels text color
+    foreign setTextColor(arg0)
+    // Sets the labels anchor point
+    foreign setAnchorPoint(arg0)
+}
+
 class GameObject {
     // Create a new Game Object with the given name and parent. Returns entity ID.
     foreign static create(arg0,arg1)
@@ -242,6 +254,13 @@ class Application {
     foreign static setWindowSize(arg0,arg1)
     // Changes the name of the game window.
     foreign static setApplicationName(arg0)
+}
+
+class Input {
+    // Gets input dir of a key code.
+    foreign static getInputAxis2(arg0)
+    // Gets input was just released.
+    foreign static isInputJustReleased(arg0)
 }
 
 class Transform {
@@ -290,5 +309,25 @@ class ResourceManager {
 class SpriteComponent {
     // Creates the sprite Component.
     foreign static create(arg0,arg1,arg2,arg3,arg4,arg5,arg6,arg7,arg8)
+}
+
+class ScriptComponent {
+    // Creates the script Component.
+    foreign static create(arg0,arg1,arg2)
+    // Creates the script Component with an arg.
+    foreign static createArg(arg0,arg1,arg2)
+    // Check if entity's script has a method
+    foreign static hasMethod(arg0,arg1)
+    // Call a method on another entity's script with arguments
+    foreign static callArg(arg0,arg1,arg2)
+    // Call a method on another entity's script
+    foreign static call(arg0,arg1)
+}
+
+class Camera {
+    // Converts a world position to the screen position.
+    foreign static worldPosToScreenPos(arg0)
+    // Converts a screen position to the world position.
+    foreign static screenPosToWorldPos(arg0)
 }
 

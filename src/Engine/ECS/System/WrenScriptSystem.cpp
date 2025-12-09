@@ -6,8 +6,7 @@
 
 namespace Struktur::System {
 
-bool WrenScriptSystem::InitializeScript(GameContext& context, entt::entity entity, 
-                                       Component::WrenScript& script)
+bool WrenScriptSystem::InitializeScript(GameContext& context, entt::entity entity, Component::WrenScript& script)
 {
     Wren::WrenScriptEngine& scriptEngine = context.GetWrenScriptEngine();
     WrenVM* vm = scriptEngine.GetVM();

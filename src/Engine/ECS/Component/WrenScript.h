@@ -3,9 +3,10 @@
 #include "wren.hpp"
 #include <string>
 
-namespace Struktur::Component {
-
-struct WrenScript {
+namespace Struktur::Component
+{
+struct WrenScript
+{
     std::string scriptPath;           // Path to .wren file
     std::string className;            // Wren class name
     std::string constructorArgs;      // Optional constructor arguments (e.g., NPC name)

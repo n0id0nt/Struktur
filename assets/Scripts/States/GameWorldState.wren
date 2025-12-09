@@ -129,24 +129,26 @@ class GameWorldState is BaseState {
         Transform.setLocalPosition(northRoomDupeSpriteEntity, vec3.new(0.0, 0.0, 0.0))
         SpriteComponent.create(northRoomDupeSpriteEntity, northRoomSpriteTexture, WHITE, vec2.new(0, 0), 1, 1, false, 0, 0)
 
-        var playerEntity = GameObjectManger.createWithScript("Player", worldEntity, "GameObjects/Player")
+        var playerEntity = GameObjectManger.create("Player", worldEntity)
+        ScriptComponent.createArg(worldEntity, "Assets/Scripts/GameObjects/Player.wren", "Player", "Test Player Name")
         Transform.setPosition(playerEntity, vec3.new(864.0, 32.0, 0.0))
 
-        var lockedDoorEntity = GameObjectManger.createWithScript("Entrance Door", worldEntity, "GameObjects/Door")
+        var lockedDoorEntity = GameObjectManger.create("Entrance Door", worldEntity)
+        ScriptComponent.createArg(worldEntity, "Assets/Scripts/GameObjects/Door.wren", "Door", "Test Door Name")
         Transform.setPosition(lockedDoorEntity, vec3.new(864.0, 0.0, 0.0))
         
         // Create the UI for the level.
-        _interactLabel = UIManager.CreateUILabel(context, vec2.new(0, 0), vec2.new(0, 0), "Interact", 16.0)
-        _interactLabel.SetVisible(false)
-        _interactLabel.SetFont(font)
-        _interactLabel.SetTextColor(WHITE) // Change this when the background is created.
-        _interactLabel.SetAnchorPoint(vec2.new(0.5, 0.5))
+        _interactLabel = UIManager.CreateUILabel(vec2.new(0, 0), vec2.new(0, 0), "Interact", 16.0)
+        _interactLabel.setVisible(false)
+        _interactLabel.setFont(font)
+        _interactLabel.setTextColor(WHITE) // Change this when the background is created.
+        _interactLabel.setAnchorPoint(vec2.new(0.5, 0.5))
 
         var loops = GameData.Loops
-        _loopCountLabel = UIManager.CreateUILabel(context, vec2.new(20, 20), vec2.new(0, 0), "Loops: %(loops)", 30.0)
-        _loopCountLabel.SetFont(font)
-        _loopCountLabel.SetTextColor(WHITE) // Change this when the background is created.
-        _loopCountLabel.SetVisible(true)
+        _loopCountLabel = UIManager.CreateUILabel(vec2.new(20, 20), vec2.new(0, 0), "Loops: %(loops)", 30.0)
+        _loopCountLabel.setFont(font)
+        _loopCountLabel.setTextColor(WHITE) // Change this when the background is created.
+        _loopCountLabel.setVisible(true)
 
         _stateManager.changeState("PlayState")
         
@@ -164,35 +166,34 @@ class GameWorldState is BaseState {
         var inputInteract = Input.isInputJustReleased("Interact")
         var inventoryInteract = Input.isInputJustReleased("Inventory")
 
-        var view = GameObject.getAllWithComponent("Player")
+        // TODO this should be an event.
+        var playerEntities = GameObject.getAllWithIdentifier("Player")
         if (inventoryInteract) {
             _interactLabel.SetVisible(false)
             //TODO also pause the game time to pause the players animation
             // just forcing player to idle for now
-            for (auto& entity : view)
+            for (entity in playerEntities)
             {
-                Player.PlayerForceStop(entity)
+                ScriptComponent.call(entity, "playerForceStop")
             }
             var inventoryState = std::make_unique<InventoryState>()
             _stateManager.ChangeState(inventoryState)
             return
         }
 
-        for (auto& entity : view) {
-            Player.PlayerControl(entity, inputDir)
+        for (entity in playerEntities) {
+            ScriptComponent.callArg(entity, "playerControl", inputDir.x, inputDir.y)
 
-            var canInteract = Player.CanInteract(entity)
+            var canInteract = ScriptComponent.call(entity, "canInteract")
 
-            if (canInteract != null)
-            {
-                auto& interactWorldTransform = Registry.GetWorldTransform(canInteract)
-                m_interactLabel->SetVisible(true)
+            if (canInteract) {
+                _interactLabel->setVisible(true)
                 
-                glm::vec2 screenInteractPosition = camera.WorldPosToScreenPos(interactWorldTransform.position) + vec2.new(0, -32)
-                m_interactLabel->SetPosition(screenInteractPosition, vec2.new(0, 0))
-                if (inputInteract)
-                {
-                    m_interactLabel->SetVisible(false)
+                auto& interactWorldTransform = Registry.GetWorldTransform(canInteract)
+                glm::vec2 screenInteractPosition = Camera.worldPosToScreenPos(interactWorldTransform.position) + vec2.new(0, -32)
+                _interactLabel->setPosition(screenInteractPosition, vec2.new(0, 0))
+                if (inputInteract) {
+                    _interactLabel->setVisible(false)
                     Struktur::Player::PlayerForceStop(context, entity)
                     // Change state to interact state
                     std::unique_ptr<InteractState> interactState = std::make_unique<InteractState>(canInteract)
@@ -200,7 +201,7 @@ class GameWorldState is BaseState {
                     return
                 }
             } else {
-                m_interactLabel->SetVisible(false)
+                _interactLabel->setVisible(false)
             }
 
             // check player at bottom of screen
