@@ -87,8 +87,34 @@ foreign class Vec2 {
     foreign length
     // Get normalized vector
     foreign normalize()
-    // Dot product
-    foreign dot(arg0)
+    // Distance between two vectors
+    foreign static distance(arg0,arg1)
+    // Squared distance
+    foreign static distanceSquared(arg0,arg1)
+    // Linear interpolation
+    foreign static lerp(arg0,arg1,arg2)
+    // Dot product (static)
+    foreign static dot(arg0,arg1)
+    // Reflect vector
+    foreign static reflect(arg0,arg1)
+    // Component-wise minimum
+    foreign static min(arg0,arg1)
+    // Component-wise maximum
+    foreign static max(arg0,arg1)
+    // Clamp vector
+    foreign static clamp(arg0,arg1,arg2)
+    // Zero vector (0, 0)
+    foreign static zero()
+    // One vector (1, 1)
+    foreign static one()
+    // Right vector (1, 0)
+    foreign static right()
+    // Up vector (0, 1)
+    foreign static up()
+    // Left vector (-1, 0)
+    foreign static left()
+    // Down vector (0, -1)
+    foreign static down()
 }
 
 // 3D vector class wrapping glm::vec3
@@ -121,10 +147,42 @@ foreign class Vec3 {
     foreign length
     // Get normalized vector
     foreign normalize()
-    // Dot product
-    foreign dot(arg0)
-    // Cross product
-    foreign cross(arg0)
+    // Distance between two vectors
+    foreign static distance(arg0,arg1)
+    // Squared distance
+    foreign static distanceSquared(arg0,arg1)
+    // Linear interpolation
+    foreign static lerp(arg0,arg1,arg2)
+    // Dot product (static)
+    foreign static dot(arg0,arg1)
+    // Cross product (static)
+    foreign static cross(arg0,arg1)
+    // Reflect vector
+    foreign static reflect(arg0,arg1)
+    // Refract vector
+    foreign static refract(arg0,arg1,arg2)
+    // Component-wise minimum
+    foreign static min(arg0,arg1)
+    // Component-wise maximum
+    foreign static max(arg0,arg1)
+    // Clamp vector
+    foreign static clamp(arg0,arg1,arg2)
+    // Zero vector (0, 0, 0)
+    foreign static zero()
+    // One vector (1, 1, 1)
+    foreign static one()
+    // Right vector (1, 0, 0)
+    foreign static right()
+    // Up vector (0, 1, 0)
+    foreign static up()
+    // Forward vector (0, 0, -1)
+    foreign static forward()
+    // Left vector (-1, 0, 0)
+    foreign static left()
+    // Down vector (0, -1, 0)
+    foreign static down()
+    // Back vector (0, 0, 1)
+    foreign static back()
 }
 
 // 4D vector class wrapping glm::vec4
@@ -161,8 +219,24 @@ foreign class Vec4 {
     foreign length
     // Get normalized vector
     foreign normalize()
-    // Dot product
-    foreign dot(arg0)
+    // Distance between two vectors
+    foreign static distance(arg0,arg1)
+    // Squared distance
+    foreign static distanceSquared(arg0,arg1)
+    // Linear interpolation
+    foreign static lerp(arg0,arg1,arg2)
+    // Dot product (static)
+    foreign static dot(arg0,arg1)
+    // Component-wise minimum
+    foreign static min(arg0,arg1)
+    // Component-wise maximum
+    foreign static max(arg0,arg1)
+    // Clamp vector
+    foreign static clamp(arg0,arg1,arg2)
+    // Zero vector (0, 0, 0, 0)
+    foreign static zero()
+    // One vector (1, 1, 1, 1)
+    foreign static one()
 }
 
 // Quaternion class for 3D rotations wrapping glm::quat

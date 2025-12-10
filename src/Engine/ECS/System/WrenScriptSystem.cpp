@@ -154,7 +154,7 @@ void WrenScriptSystem::Update(GameContext& context)
         // This should not be called here and be called as needed.
         if (!script.isInitialised && !script.instanceHandle)
         {
-            DEBUG_ERROR("Script %s is not initialised", script.scriptPath);
+            DEBUG_WARNING("Script %s is not initialised - THIS IS HERE AS A TODO TO FIX PREVIOUS IMPLEMENTAITON OF INHERATENCE ONVE DONE MAKE THIS AN ERROR", script.scriptPath.c_str());
             if (!InitialiseScript(context, entity, script))
             {
                 continue;
