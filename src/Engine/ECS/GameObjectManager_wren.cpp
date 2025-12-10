@@ -17,6 +17,236 @@
 #include "Engine/ECS/Component/WrenScript.h"
 
 // ============================================================================
+// Math utialaty functions
+// ============================================================================
+#include <limits>
+#define _USE_MATH_DEFINES
+#include <math.h>
+
+// Math.infinity -> Num
+void wren_MathInfinity(WrenVM* vm) {
+    wrenSetSlotDouble(vm, 0, std::numeric_limits<double>::infinity());
+}
+
+// Math.negInfinity -> Num
+void wren_MathNegInfinity(WrenVM* vm) {
+    wrenSetSlotDouble(vm, 0, -std::numeric_limits<double>::infinity());
+}
+
+// Math.nan -> Num
+void wren_MathNaN(WrenVM* vm) {
+    wrenSetSlotDouble(vm, 0, std::numeric_limits<double>::quiet_NaN());
+}
+
+// Math.pi -> Num
+void wren_MathPi(WrenVM* vm) {
+    wrenSetSlotDouble(vm, 0, M_PI);
+}
+
+// Math.e -> Num
+void wren_MathE(WrenVM* vm) {
+    wrenSetSlotDouble(vm, 0, M_E);
+}
+
+// Math.max(a, b) -> Num
+void wren_MathMax(WrenVM* vm) {
+    double a = wrenGetSlotDouble(vm, 1);
+    double b = wrenGetSlotDouble(vm, 2);
+    wrenSetSlotDouble(vm, 0, std::max(a, b));
+}
+
+// Math.min(a, b) -> Num
+void wren_MathMin(WrenVM* vm) {
+    double a = wrenGetSlotDouble(vm, 1);
+    double b = wrenGetSlotDouble(vm, 2);
+    wrenSetSlotDouble(vm, 0, std::min(a, b));
+}
+
+// Math.clamp(value, min, max) -> Num
+void wren_MathClamp(WrenVM* vm) {
+    double value = wrenGetSlotDouble(vm, 1);
+    double min = wrenGetSlotDouble(vm, 2);
+    double max = wrenGetSlotDouble(vm, 3);
+    
+    if (value < min) value = min;
+    if (value > max) value = max;
+    
+    wrenSetSlotDouble(vm, 0, value);
+}
+
+// Math.abs(n) -> Num
+void wren_MathAbs(WrenVM* vm) {
+    double n = wrenGetSlotDouble(vm, 1);
+    wrenSetSlotDouble(vm, 0, std::abs(n));
+}
+
+// Math.sqrt(n) -> Num
+void wren_MathSqrt(WrenVM* vm) {
+    double n = wrenGetSlotDouble(vm, 1);
+    wrenSetSlotDouble(vm, 0, std::sqrt(n));
+}
+
+// Math.pow(base, exponent) -> Num
+void wren_MathPow(WrenVM* vm) {
+    double base = wrenGetSlotDouble(vm, 1);
+    double exponent = wrenGetSlotDouble(vm, 2);
+    wrenSetSlotDouble(vm, 0, std::pow(base, exponent));
+}
+
+// Math.sin(angle) -> Num
+void wren_MathSin(WrenVM* vm) {
+    double angle = wrenGetSlotDouble(vm, 1);
+    wrenSetSlotDouble(vm, 0, std::sin(angle));
+}
+
+// Math.cos(angle) -> Num
+void wren_MathCos(WrenVM* vm) {
+    double angle = wrenGetSlotDouble(vm, 1);
+    wrenSetSlotDouble(vm, 0, std::cos(angle));
+}
+
+// Math.tan(angle) -> Num
+void wren_MathTan(WrenVM* vm) {
+    double angle = wrenGetSlotDouble(vm, 1);
+    wrenSetSlotDouble(vm, 0, std::tan(angle));
+}
+
+// Math.asin(n) -> Num
+void wren_MathAsin(WrenVM* vm) {
+    double n = wrenGetSlotDouble(vm, 1);
+    wrenSetSlotDouble(vm, 0, std::asin(n));
+}
+
+// Math.acos(n) -> Num
+void wren_MathAcos(WrenVM* vm) {
+    double n = wrenGetSlotDouble(vm, 1);
+    wrenSetSlotDouble(vm, 0, std::acos(n));
+}
+
+// Math.atan(n) -> Num
+void wren_MathAtan(WrenVM* vm) {
+    double n = wrenGetSlotDouble(vm, 1);
+    wrenSetSlotDouble(vm, 0, std::atan(n));
+}
+
+// Math.atan2(y, x) -> Num
+void wren_MathAtan2(WrenVM* vm) {
+    double y = wrenGetSlotDouble(vm, 1);
+    double x = wrenGetSlotDouble(vm, 2);
+    wrenSetSlotDouble(vm, 0, std::atan2(y, x));
+}
+
+// Math.floor(n) -> Num
+void wren_MathFloor(WrenVM* vm) {
+    double n = wrenGetSlotDouble(vm, 1);
+    wrenSetSlotDouble(vm, 0, std::floor(n));
+}
+
+// Math.ceil(n) -> Num
+void wren_MathCeil(WrenVM* vm) {
+    double n = wrenGetSlotDouble(vm, 1);
+    wrenSetSlotDouble(vm, 0, std::ceil(n));
+}
+
+// Math.round(n) -> Num
+void wren_MathRound(WrenVM* vm) {
+    double n = wrenGetSlotDouble(vm, 1);
+    wrenSetSlotDouble(vm, 0, std::round(n));
+}
+
+// Math.lerp(a, b, t) -> Num
+void wren_MathLerp(WrenVM* vm) {
+    double a = wrenGetSlotDouble(vm, 1);
+    double b = wrenGetSlotDouble(vm, 2);
+    double t = wrenGetSlotDouble(vm, 3);
+    wrenSetSlotDouble(vm, 0, a + (b - a) * t);
+}
+
+// Math.isInfinite(n) -> Bool
+void wren_MathIsInfinite(WrenVM* vm) {
+    double n = wrenGetSlotDouble(vm, 1);
+    wrenSetSlotBool(vm, 0, std::isinf(n));
+}
+
+// Math.isNaN(n) -> Bool
+void wren_MathIsNaN(WrenVM* vm) {
+    double n = wrenGetSlotDouble(vm, 1);
+    wrenSetSlotBool(vm, 0, std::isnan(n));
+}
+
+// Math.isFinite(n) -> Bool
+void wren_MathIsFinite(WrenVM* vm) {
+    double n = wrenGetSlotDouble(vm, 1);
+    wrenSetSlotBool(vm, 0, std::isfinite(n));
+}
+
+// Math.sign(n) -> Num
+void wren_MathSign(WrenVM* vm) {
+    double n = wrenGetSlotDouble(vm, 1);
+    
+    if (n > 0) {
+        wrenSetSlotDouble(vm, 0, 1.0);
+    } else if (n < 0) {
+        wrenSetSlotDouble(vm, 0, -1.0);
+    } else {
+        wrenSetSlotDouble(vm, 0, 0.0);
+    }
+}
+
+// Math.radians(degrees) -> Num
+void wren_MathRadians(WrenVM* vm) {
+    double degrees = wrenGetSlotDouble(vm, 1);
+    wrenSetSlotDouble(vm, 0, degrees * M_PI / 180.0);
+}
+
+// Math.degrees(radians) -> Num
+void wren_MathDegrees(WrenVM* vm) {
+    double radians = wrenGetSlotDouble(vm, 1);
+    wrenSetSlotDouble(vm, 0, radians * 180.0 / M_PI);
+}
+
+// Constants (as static getters)
+WREN_CLASS_STATIC("game", "Math", "infinity", wren_MathInfinity, "Positive infinity");
+WREN_CLASS_STATIC("game", "Math", "negInfinity", wren_MathNegInfinity, "Negative infinity");
+WREN_CLASS_STATIC("game", "Math", "nan", wren_MathNaN, "Not a Number");
+WREN_CLASS_STATIC("game", "Math", "pi", wren_MathPi, "Pi constant");
+WREN_CLASS_STATIC("game", "Math", "e", wren_MathE, "Euler's number");
+
+// Utility functions
+WREN_CLASS_STATIC("game", "Math", "max(_,_)", wren_MathMax, "Maximum of two numbers");
+WREN_CLASS_STATIC("game", "Math", "min(_,_)", wren_MathMin, "Minimum of two numbers");
+WREN_CLASS_STATIC("game", "Math", "clamp(_,_,_)", wren_MathClamp, "Clamp value between min and max");
+WREN_CLASS_STATIC("game", "Math", "abs(_)", wren_MathAbs, "Absolute value");
+WREN_CLASS_STATIC("game", "Math", "sqrt(_)", wren_MathSqrt, "Square root");
+WREN_CLASS_STATIC("game", "Math", "pow(_,_)", wren_MathPow, "Power");
+WREN_CLASS_STATIC("game", "Math", "lerp(_,_,_)", wren_MathLerp, "Linear interpolation");
+WREN_CLASS_STATIC("game", "Math", "sign(_)", wren_MathSign, "Sign of number (-1, 0, 1)");
+
+// Trigonometry
+WREN_CLASS_STATIC("game", "Math", "sin(_)", wren_MathSin, "Sine");
+WREN_CLASS_STATIC("game", "Math", "cos(_)", wren_MathCos, "Cosine");
+WREN_CLASS_STATIC("game", "Math", "tan(_)", wren_MathTan, "Tangent");
+WREN_CLASS_STATIC("game", "Math", "asin(_)", wren_MathAsin, "Arc sine");
+WREN_CLASS_STATIC("game", "Math", "acos(_)", wren_MathAcos, "Arc cosine");
+WREN_CLASS_STATIC("game", "Math", "atan(_)", wren_MathAtan, "Arc tangent");
+WREN_CLASS_STATIC("game", "Math", "atan2(_,_)", wren_MathAtan2, "Arc tangent of y/x");
+
+// Rounding
+WREN_CLASS_STATIC("game", "Math", "floor(_)", wren_MathFloor, "Floor");
+WREN_CLASS_STATIC("game", "Math", "ceil(_)", wren_MathCeil, "Ceiling");
+WREN_CLASS_STATIC("game", "Math", "round(_)", wren_MathRound, "Round to nearest integer");
+
+// Checks
+WREN_CLASS_STATIC("game", "Math", "isInfinite(_)", wren_MathIsInfinite, "Check if infinite");
+WREN_CLASS_STATIC("game", "Math", "isNaN(_)", wren_MathIsNaN, "Check if NaN");
+WREN_CLASS_STATIC("game", "Math", "isFinite(_)", wren_MathIsFinite, "Check if finite");
+
+// Conversions
+WREN_CLASS_STATIC("game", "Math", "radians(_)", wren_MathRadians, "Convert degrees to radians");
+WREN_CLASS_STATIC("game", "Math", "degrees(_)", wren_MathDegrees, "Convert radians to degrees");
+
+
+// ============================================================================
 // Vec2 - Foreign class wrapping glm::vec2
 // ============================================================================
 
@@ -36,7 +266,7 @@ void wren_Vec2Allocate(WrenVM* vm)
     wrenGetVariable(vm, "game", "Vec2", 0);  // Get class into slot 1
     WrenVec2* vec = (WrenVec2*)wrenSetSlotNewForeign(vm, 0, 0, sizeof(WrenVec2));
     
-    // Initialize with constructor parameters if provided
+    // Initialise with constructor parameters if provided
     if (wrenGetSlotCount(vm) >= 3)
 	{
         float x = (float)wrenGetSlotDouble(vm, 1);
@@ -2382,6 +2612,8 @@ WREN_CLASS_STATIC("game", "ScriptComponent", "setRenderPriority(_,_)", wren_Scri
 // SCRIPT COMPONENT BINDINGS
 // ============================================================================
 
+#include "Engine/ECS/System/WrenScriptSystem.h"
+
 // ScriptComponent.create(spriteEntity, scriptPath, className) -> number
 void wren_ScriptComponentCreate(WrenVM* vm)
 {
@@ -2402,16 +2634,24 @@ void wren_ScriptComponentCreateArg(WrenVM* vm)
 {
 	Struktur::GameContext* context = static_cast<Struktur::GameContext*>(wrenGetUserData(vm));
 	entt::registry& registry = context->GetRegistry();
+	Struktur::System::SystemManager& systemManager = context->GetSystemManager();
+    Struktur::System::WrenScriptSystem& scriptSystem = systemManager.GetSystem<Struktur::System::WrenScriptSystem>();
 
 	entt::entity levelEntity = static_cast<entt::entity>(wrenGetSlotDouble(vm, 1));
     const char* scriptPath = wrenGetSlotString(vm, 2);
     const char* className = wrenGetSlotString(vm, 3);
     const char* args = wrenGetSlotString(vm, 4);
 
-	registry.emplace<Struktur::Component::WrenScript>(levelEntity, scriptPath, className, args);
+	auto& script = registry.emplace<Struktur::Component::WrenScript>(levelEntity, scriptPath, className, args);
 
-    //TODO possibly initialise the wren script here??
-
+    // Initialise the script
+    
+    //if (!scriptSystem.InitialiseScript(*context, levelEntity, script))
+    //{
+    //    DEBUG_ERROR("Failed to create script: %s", scriptPath);
+    //    return;
+    //}
+    //scriptSystem.CallCreate(*context, levelEntity, script);
 }
 
 WREN_CLASS_STATIC("game", "ScriptComponent", "createArg(_,_,_,_)", wren_ScriptComponentCreateArg, "Creates the script Component with an arg.");
@@ -2429,7 +2669,7 @@ void wren_ScriptComponentHasMethod(WrenVM* vm)
     
     auto* script = registry.try_get<Struktur::Component::WrenScript>(entity);
     
-    if (!script || !script->isInitialized || script->hasError) {
+    if (!script || !script->isInitialised || script->hasError) {
         wrenSetSlotBool(vm, 0, false);
         return;
     }
@@ -2458,7 +2698,7 @@ void wren_ScriptComponentCallArg(WrenVM* vm)
     
     auto* script = registry.try_get<Struktur::Component::WrenScript>(entity);
     
-    if (!script || !script->isInitialized || script->hasError)
+    if (!script || !script->isInitialised || script->hasError)
     {
         DEBUG_ERROR("ScriptComponent.call: Entity has no valid script");
         wrenSetSlotNull(vm, 0);
@@ -2587,7 +2827,7 @@ void wren_ScriptComponentCall(WrenVM* vm)
     
     auto* script = registry.try_get<Struktur::Component::WrenScript>(entity);
     
-    if (!script || !script->isInitialized || script->hasError)
+    if (!script || !script->isInitialised || script->hasError)
     {
         DEBUG_ERROR("ScriptComponent.call: Entity has no valid script");
         wrenSetSlotNull(vm, 0);

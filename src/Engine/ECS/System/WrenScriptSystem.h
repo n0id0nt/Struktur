@@ -25,8 +25,8 @@ namespace Struktur
         public:
             WrenScriptSystem() {}
             
-            // Initialize a script component (load and instantiate)
-            bool InitializeScript(GameContext& context, entt::entity entity, 
+            // Initialise a script component (load and instantiate)
+            bool InitialiseScript(GameContext& context, entt::entity entity, 
                                 Component::WrenScript& script);
             
             // Call Create() on the script

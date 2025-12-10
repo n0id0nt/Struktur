@@ -54,19 +54,27 @@ void Struktur::InitialiseGame(GameContext& context)
 	Core::Input& input = context.GetInput();
 	System::SystemManager& systemManager = context.GetSystemManager();
 	System::GameObjectManager& gameObjectManager = context.GetGameObjectManager();
-	GameResource::StateManager& stateManager = context.GetStateManager();
 	Physics::PhysicsWorld& physicsWorld = context.GetPhysicsWorld();
 	Wren::WrenScriptEngine& wrenScriptEngine = context.GetWrenScriptEngine();
 	Wren::WrenStateManager& wrenStateManager = context.GetWrenStateManager();
 
-	//TODO probably want to better handle this for this
-	::InitWindow(1, 1, "");
+	wrenScriptEngine.Initialise(context);
+	wrenStateManager.Initialise(context);
+
+#ifdef EDITOR
+	// In debug mode, create a larger window to fit ImGui panels
+	const int windowWidth = 1280;
+	const int windowHeight = 720;
+	::InitWindow(windowWidth, windowHeight, "Struktur");
+	::SetWindowState(FLAG_WINDOW_RESIZABLE);
+#else
+	// In release mode, window matches game size
+	::InitWindow(gameData.gameWidth, gameData.gameHeight, gameData.projectName);
+#endif
 	::SetExitKey(KEY_NULL);
 
-	wrenScriptEngine.Initialize(context);
-
-	::rlImGuiSetup(true);
 #ifdef EDITOR
+	::rlImGuiSetup(true);
 	ImGuiIO& io = ImGui::GetIO();
 	io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
 #endif
@@ -104,25 +112,8 @@ void Struktur::InitialiseGame(GameContext& context)
 	systemManager.AddRenderSystem<System::UIRenderSystem>();
 
 	DEBUG_INFO("Game Data Loaded");
-
-	wrenStateManager.Initialize(context);
-
-#ifdef EDITOR
-	// In debug mode, create a larger window to fit ImGui panels
-	const int windowWidth = 1280;
-	const int windowHeight = 720;
-	::SetWindowSize(windowWidth, windowHeight);
-	::SetWindowTitle("Struktur");
-	::SetWindowState(FLAG_WINDOW_RESIZABLE);
-#else
-	// In release mode, window matches game size
-	::SetWindowSize(gameData.gameWidth, gameData.gameHeight);
-	::SetWindowTitle(gameData.projectName);
-	::SetWindowTitle()
-#endif
-
-	//std::unique_ptr<GamePlay::GameWorldState> gameWorldState = std::make_unique<GamePlay::GameWorldState>();
-	//stateManager.ChangeState(context, std::move(gameWorldState));
+	
+	wrenStateManager.Start(context);
 }
 
 void Struktur::ExitGame(GameContext& context)
@@ -132,10 +123,6 @@ void Struktur::ExitGame(GameContext& context)
 	Debug::Editor& editor = context.GetEditor();
 	editor.Shutdown(context);
 #endif
-
-	DEBUG_INFO("[Clean Up] State Manager"); // TODO remove this
-	GameResource::StateManager& stateManager = context.GetStateManager();
-	stateManager.ReleaseState(context);
 
 	DEBUG_INFO("[Clean Up] Wren State Manager");
 	Wren::WrenStateManager& wrenStateManager = context.GetWrenStateManager();
@@ -205,11 +192,6 @@ void Struktur::SplashScreenLoop(GameContext& context)
 	::EndDrawing();
 }
 
-void Struktur::LoadingLoop(GameContext& context)
-{
-
-}
-
 void Struktur::GameLoop(GameContext& context)
 {
 	Core::GameData& gameData = context.GetGameData();
@@ -255,12 +237,11 @@ void Struktur::UpdateLoop(void* userData)
 	case Core::GameState::SPLASH_SCREEN:
 		SplashScreenLoop(*context);
 		break;
-	case Core::GameState::LOADING:
-		LoadingLoop(*context);
-		break;
 	case Core::GameState::GAME:
 		GameLoop(*context);
 		break;
+	default:
+		gameData.gameState = Core::GameState::QUIT;
 	}
 }
 
@@ -271,6 +252,7 @@ void Struktur::Game()
 	// Load resources
 	InitialiseGame(context);
 
+	{
 	Resource::ResourceManager& resourceManager = context.GetResourceManager();
 	Resource::ResourcePtr<Resource::FontResource> font = resourceManager.GetFontResource("assets/Fonts/medieval_sharp/MedievalSharp-Bold.ttf_120");
 
@@ -287,6 +269,7 @@ void Struktur::Game()
 		UpdateLoop(&context);
 	}
 #endif
+	}
 
 	// Cleanup
 	ExitGame(context);

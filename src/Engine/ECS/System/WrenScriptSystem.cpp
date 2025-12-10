@@ -6,15 +6,15 @@
 
 namespace Struktur::System {
 
-bool WrenScriptSystem::InitializeScript(GameContext& context, entt::entity entity, Component::WrenScript& script)
+bool WrenScriptSystem::InitialiseScript(GameContext& context, entt::entity entity, Component::WrenScript& script)
 {
     Wren::WrenScriptEngine& scriptEngine = context.GetWrenScriptEngine();
     WrenVM* vm = scriptEngine.GetVM();
     if (!vm)
     {
-        DEBUG_ERROR("Wren VM not initialized");
+        DEBUG_ERROR("Wren VM not initialised");
         script.hasError = true;
-        script.errorMessage = "Wren VM not initialized";
+        script.errorMessage = "Wren VM not initialised";
         return false;
     }
     
@@ -84,15 +84,15 @@ bool WrenScriptSystem::InitializeScript(GameContext& context, entt::entity entit
     script.instanceHandle = wrenGetSlotHandle(vm, 0);
     
     // Cache method handles for performance
-    script.createMethodHandle = GetMethodHandle(vm, script.classHandle, "Create(_)");
-    script.updateMethodHandle = GetMethodHandle(vm, script.classHandle, "Update(_)");
-    script.onDestroyMethodHandle = GetMethodHandle(vm, script.classHandle, "OnDestroy()");
-    script.onEventMethodHandle = GetMethodHandle(vm, script.classHandle, "OnEvent(_)");
+    script.createMethodHandle = GetMethodHandle(vm, script.classHandle, "create(_)");
+    script.updateMethodHandle = GetMethodHandle(vm, script.classHandle, "update(_)");
+    script.onDestroyMethodHandle = GetMethodHandle(vm, script.classHandle, "onDestroy()");
+    script.onEventMethodHandle = GetMethodHandle(vm, script.classHandle, "onEvent(_)");
     
-    script.isInitialized = true;
+    script.isInitialised = true;
     fileModificationTimes[script.scriptPath] = GetFileModificationTime(script.scriptPath);
     
-    DEBUG_INFO("Initialized Wren script: %s (%s)", script.scriptPath.c_str(), script.className.c_str());
+    DEBUG_INFO("Initialised Wren script: %s (%s)", script.scriptPath.c_str(), script.className.c_str());
     
     return true;
 }
@@ -100,7 +100,7 @@ bool WrenScriptSystem::InitializeScript(GameContext& context, entt::entity entit
 bool WrenScriptSystem::CallCreate(GameContext& context, entt::entity entity, 
                                  Component::WrenScript& script)
 {
-    if (!script.isInitialized || script.hasError)
+    if (!script.isInitialised || script.hasError)
     {
         return false;
     }
@@ -144,16 +144,19 @@ void WrenScriptSystem::Update(GameContext& context)
     {
         auto& script = view.get<Component::WrenScript>(entity);
         
-        // Skip if not initialized or has error
+        // Skip if not initialised or has error
         if (script.hasError)
         {
             continue;
         }
         
-        // Initialize if needed
-        if (!script.isInitialized && !script.instanceHandle)
+        // Initialise if needed
+        // This should not be called here and be called as needed.
+        if (!script.isInitialised && !script.instanceHandle)
         {
-            if (!InitializeScript(context, entity, script)) {
+            DEBUG_ERROR("Script %s is not initialised", script.scriptPath);
+            if (!InitialiseScript(context, entity, script))
+            {
                 continue;
             }
             CallCreate(context, entity, script);
@@ -185,7 +188,7 @@ void WrenScriptSystem::Update(GameContext& context)
 void WrenScriptSystem::DestroyScript(GameContext& context, entt::entity entity, 
                                     Component::WrenScript& script)
 {
-    if (!script.isInitialized)
+    if (!script.isInitialised)
     {
         return;
     }
@@ -221,14 +224,14 @@ void WrenScriptSystem::DestroyScript(GameContext& context, entt::entity entity,
     script.updateMethodHandle = nullptr;
     script.onDestroyMethodHandle = nullptr;
     script.onEventMethodHandle = nullptr;
-    script.isInitialized = false;
+    script.isInitialised = false;
 }
 
 void WrenScriptSystem::SendEvent(GameContext& context, entt::entity entity, 
                                 Component::WrenScript& script, const std::string& eventType,
                                 const std::unordered_map<std::string, double>& eventData)
 {
-    if (!script.isInitialized || script.hasError || !script.onEventMethodHandle)
+    if (!script.isInitialised || script.hasError || !script.onEventMethodHandle)
     {
         return;
     }
@@ -272,7 +275,7 @@ void WrenScriptSystem::CheckForScriptChanges(GameContext& context)
     {
         auto& script = view.get<Component::WrenScript>(entity);
         
-        if (!script.isInitialized) continue;
+        if (!script.isInitialised) continue;
         
         time_t currentModTime = GetFileModificationTime(script.scriptPath);
         
@@ -296,8 +299,8 @@ void WrenScriptSystem::ReloadScript(GameContext& context, entt::entity entity,
     script.hasError = false;
     script.errorMessage.clear();
     
-    // Reinitialize
-    if (InitializeScript(context, entity, script))
+    // Reinitialise
+    if (InitialiseScript(context, entity, script))
     {
         CallCreate(context, entity, script);
         DEBUG_INFO("Successfully reloaded script: %s", script.scriptPath.c_str());

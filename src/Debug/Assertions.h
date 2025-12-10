@@ -232,7 +232,7 @@ namespace Struktur
 
 int main()
 {
-    // Initialize Raylib
+    // Initialise Raylib
     InitWindow(800, 600, "Debug Assert Example");
     SetTraceLogLevel(LOG_ALL); // Enable all log levels
     

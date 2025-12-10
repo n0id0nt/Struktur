@@ -19,7 +19,7 @@ struct WrenScript
     WrenHandle* onDestroyMethodHandle;// Cached handle to OnDestroy()
     WrenHandle* onEventMethodHandle;  // Cached handle to OnEvent(event)
     
-    bool isInitialized;               // Initialization status
+    bool isInitialised;               // Initialization status
     bool hasError;                    // Error flag for fallback behavior
     std::string errorMessage;         // Last error message
     
@@ -30,7 +30,7 @@ struct WrenScript
         , updateMethodHandle(nullptr)
         , onDestroyMethodHandle(nullptr)
         , onEventMethodHandle(nullptr)
-        , isInitialized(false)
+        , isInitialised(false)
         , hasError(false)
     {}
     
@@ -44,7 +44,7 @@ struct WrenScript
         , updateMethodHandle(nullptr)
         , onDestroyMethodHandle(nullptr)
         , onEventMethodHandle(nullptr)
-        , isInitialized(false)
+        , isInitialised(false)
         , hasError(false)
     {}
 };

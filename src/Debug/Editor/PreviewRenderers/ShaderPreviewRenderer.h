@@ -32,7 +32,7 @@ namespace Struktur::Debug
             , m_useCustomTexture(false)
             , m_rotation(0.0f)
         {
-            InitializePreview();
+            InitialisePreview();
         }
         
         ~ShaderPreviewRenderer()
@@ -46,7 +46,7 @@ namespace Struktur::Debug
         void Clear() override { CleanupPreview(); }
         
     private:
-        void InitializePreview();
+        void InitialisePreview();
         void CleanupPreview();
         void RenderShaderPreview(const ImVec2& size);
         void ApplyShaderUniforms();

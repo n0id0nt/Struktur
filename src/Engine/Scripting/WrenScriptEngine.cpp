@@ -4,7 +4,7 @@
 
 namespace Struktur::Wren {
 
-void WrenScriptEngine::Initialize(GameContext& context)
+void WrenScriptEngine::Initialise(GameContext& context)
 {   
     WrenConfiguration config;
     wrenInitConfiguration(&config);
@@ -18,7 +18,7 @@ void WrenScriptEngine::Initialize(GameContext& context)
     m_vm = wrenNewVM(&config);
     wrenSetUserData(m_vm, &context);
     
-    DEBUG_INFO("Wren VM initialized");
+    DEBUG_INFO("Wren VM initialised");
     DEBUG_INFO("Registered %zu method bindings", Wren::GetMethodBindings().size());
     DEBUG_INFO("Registered %zu class bindings", Wren::GetClassBindings().size());
     DEBUG_INFO("Registered %zu enum bindings", Wren::GetEnumBindings().size());
@@ -34,7 +34,7 @@ void WrenScriptEngine::Shutdown() {
 
 bool WrenScriptEngine::InterpretString(const char* module, const char* source) {
     if (!m_vm) {
-        DEBUG_ERROR("Wren VM not initialized");
+        DEBUG_ERROR("Wren VM not initialised");
         return false;
     }
     
@@ -53,7 +53,7 @@ bool WrenScriptEngine::InterpretString(const char* module, const char* source) {
 
 bool WrenScriptEngine::InterpretFile(const char* path) {
     if (!m_vm) {
-        DEBUG_ERROR("Wren VM not initialized");
+        DEBUG_ERROR("Wren VM not initialised");
         return false;
     }
     

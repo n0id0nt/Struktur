@@ -26,8 +26,8 @@ namespace Struktur
             // Render the window (must be implemented by derived classes)
             virtual void Render(GameContext& context) = 0;
             
-            // Optional: Called once when the editor initializes
-            virtual void Initialize(GameContext& context) {}
+            // Optional: Called once when the editor initialises
+            virtual void Initialise(GameContext& context) {}
             
             // Optional: Called once when the editor shuts down
             virtual void Shutdown(GameContext& context) {}

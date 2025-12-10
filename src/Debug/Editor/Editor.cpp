@@ -69,10 +69,10 @@ namespace Struktur::Debug
 		auto inspector = std::make_shared<InspectorWindow>(hierarchyPtr, previewPtr);
 		RegisterWindow(inspector);
 
-		// Initialize all windows
+		// Initialise all windows
 		for (auto& window : m_windows)
 		{
-			window->Initialize(context);
+			window->Initialise(context);
 		}
 
 		// Setup layouts

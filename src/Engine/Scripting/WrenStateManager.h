@@ -14,27 +14,24 @@ namespace Struktur
         // Holds handle to Wren Game instance and delegates all calls to Wren
         class WrenStateManager
         {
-        private:
-            WrenHandle* m_rootStateInstanceHandle;   // Handle to Wren Game object
-            WrenHandle* m_updateMethodHandle;   // Cached Game.update(_) method
-            WrenHandle* m_renderMethodHandle;   // Cached Game.render() method (optional)
-            
-            bool m_isInitialized;
-            
         public:
             WrenStateManager() 
                 : m_rootStateInstanceHandle(nullptr)
                 , m_updateMethodHandle(nullptr)
                 , m_renderMethodHandle(nullptr)
-                , m_isInitialized(false)
+                , m_isInitialised(false)
             {}
             
             ~WrenStateManager() {}
             
-            // Initialize the Wren state system
-            // Loads Boot.wren, calls Boot.initialize(initialStateName)
+            // Initialise the Wren state system
+            // Loads Main.wren, calls Boot.initialise(initialStateName)
             // Returns Game instance handle
-            bool Initialize(GameContext& context);
+            // Called before the game window is created and will initial the project settings.
+            bool Initialise(GameContext& context);
+
+            // Called after the all the systems are initialised 
+            void Start(GameContext& context);
             
             // Update the game state (calls Game.update(dt) in Wren)
             void Update(GameContext& context);
@@ -52,8 +49,18 @@ namespace Struktur
             std::string GetCurrentStateName(GameContext& context);
             
             // Getters
-            bool IsInitialized() const { return m_isInitialized; }
+            bool IsInitialised() const { return m_isInitialised; }
             WrenHandle* GetGameHandle() const { return m_rootStateInstanceHandle; }
+
+        private:
+            WrenHandle* m_rootStateInstanceHandle;  // Handle to Wren Game object
+            WrenHandle* m_updateMethodHandle;       // Cached Game.update(_) method
+            WrenHandle* m_renderMethodHandle;       // Cached Game.render() method
+            WrenHandle* m_startMethodHandle;        // Cached Game.start() method
+            WrenHandle* m_quitMethodHandle;         // Cached Game.quit() method
+            
+            bool m_isInitialised;
+            
         };
     }
 }

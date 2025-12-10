@@ -7,7 +7,7 @@
 
 namespace Struktur::Debug
 {
-    void ShaderPreviewRenderer::InitializePreview()
+    void ShaderPreviewRenderer::InitialisePreview()
     {
         // Create a default checkerboard texture
         const int texSize = 256;

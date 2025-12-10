@@ -2,6 +2,65 @@
 // Generated from C++ bindings
 // Module: game
 
+class Math {
+    // Positive infinity
+    foreign static infinity
+    // Negative infinity
+    foreign static negInfinity
+    // Not a Number
+    foreign static nan
+    // Pi constant
+    foreign static pi
+    // Euler's number
+    foreign static e
+    // Maximum of two numbers
+    foreign static max(arg0,arg1)
+    // Minimum of two numbers
+    foreign static min(arg0,arg1)
+    // Clamp value between min and max
+    foreign static clamp(arg0,arg1,arg2)
+    // Absolute value
+    foreign static abs(arg0)
+    // Square root
+    foreign static sqrt(arg0)
+    // Power
+    foreign static pow(arg0,arg1)
+    // Linear interpolation
+    foreign static lerp(arg0,arg1,arg2)
+    // Sign of number (-1, 0, 1)
+    foreign static sign(arg0)
+    // Sine
+    foreign static sin(arg0)
+    // Cosine
+    foreign static cos(arg0)
+    // Tangent
+    foreign static tan(arg0)
+    // Arc sine
+    foreign static asin(arg0)
+    // Arc cosine
+    foreign static acos(arg0)
+    // Arc tangent
+    foreign static atan(arg0)
+    // Arc tangent of y/x
+    foreign static atan2(arg0,arg1)
+    // Floor
+    foreign static floor(arg0)
+    // Ceiling
+    foreign static ceil(arg0)
+    // Round to nearest integer
+    foreign static round(arg0)
+    // Check if infinite
+    foreign static isInfinite(arg0)
+    // Check if NaN
+    foreign static isNaN(arg0)
+    // Check if finite
+    foreign static isFinite(arg0)
+    // Convert degrees to radians
+    foreign static radians(arg0)
+    // Convert radians to degrees
+    foreign static degrees(arg0)
+}
+
 // 2D vector class wrapping glm::vec2
 foreign class Vec2 {
     // Create zero vector
@@ -172,18 +231,6 @@ foreign class Quat {
     foreign static lerp(arg0,arg1,arg2)
 }
 
-// Font resource handle
-foreign class Sound {
-    // Load sound from path
-    foreign static load(arg0)
-    // Check if sound is valid
-    foreign isValid
-    // Get sound path
-    foreign path
-    // Convert to string
-    foreign toString
-}
-
 // Texture resource handle
 foreign class Texture {
     // Load texture from path
@@ -222,6 +269,18 @@ foreign class Font {
     foreign path
     // Get font size
     foreign size
+    // Convert to string
+    foreign toString
+}
+
+// Font resource handle
+foreign class Sound {
+    // Load sound from path
+    foreign static load(arg0)
+    // Check if sound is valid
+    foreign isValid
+    // Get sound path
+    foreign path
     // Convert to string
     foreign toString
 }

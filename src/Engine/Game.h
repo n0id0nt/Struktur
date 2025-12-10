@@ -10,5 +10,4 @@ namespace Struktur
 	void ExitGame(GameContext& context);
 	void GameLoop(GameContext& context);
 	void SplashScreenLoop(GameContext& context);
-	void LoadingLoop(GameContext& context);
 };

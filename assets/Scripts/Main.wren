@@ -9,20 +9,21 @@ import "States/GameWorldState" for GameWorldState
 import "States/MainMenuState" for MainMenuState
 
 class Game {
-    construct new() {
-        System.print("Creating Game instance...")
+    // Called before the game window is created and will initial the project settings.
+    construct new() {        
         
-        // Create state manager
-        _stateManager = StateManager.new()
-        
-        System.print("Game instance created")
-
         // TODO Define the window, spash screen Text/Image and window name game icon ect
         var windowWidth = 1280
         var windowHeight = 720
         Application.setWindowSize(windowWidth, windowHeight)
         Application.setApplicationName("Memory Palace")
 
+        // Create state manager
+        _stateManager = StateManager.new()
+    }
+
+    // Called after the all the systems are initialised 
+    start() {
         // Initial states
         _stateManager.insertState("GameWorld", GameWorldState)
         _stateManager.insertState("MainMenu", MainMenuState)

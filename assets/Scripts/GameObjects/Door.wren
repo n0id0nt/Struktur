@@ -12,7 +12,7 @@ class Door {
     
     // Called after C++ has created base components
     // Script configures/initializes component values
-    Create(entity) {
+    create(entity) {
         System.print("NPCBehavior.Create() called for: %(_name)")
         
         // Get the entity's position
@@ -24,7 +24,7 @@ class Door {
         _initialized = true
     }
     
-    Update(dt) {
+    update(dt) {
         if (!_initialized) return
         
         _timeAccumulator = _timeAccumulator + dt
@@ -44,11 +44,11 @@ class Door {
         }
     }
     
-    OnDestroy() {
+    onDestroy() {
         System.print("NPCBehavior.OnDestroy() called for: %(_name)")
     }
     
-    OnEvent(event) {
+    onEvent(event) {
         var eventType = event["type"]
         
         if (eventType == "CollisionBegin") {

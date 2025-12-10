@@ -49,86 +49,86 @@ namespace Struktur
 
         Core::Input& GetInput() const
         { 
-            ASSERT_MSG(m_input.get(), "Input not initialized");
+            ASSERT_MSG(m_input.get(), "Input not initialised");
             return *m_input; 
         }
         
         Core::GameData& GetGameData() const
         { 
-            ASSERT_MSG(m_gameData.get(), "GameData not initialized");
+            ASSERT_MSG(m_gameData.get(), "GameData not initialised");
             return *m_gameData; 
         }
 
         entt::registry& GetRegistry() const
         {
-            ASSERT_MSG(m_registry.get(), "Registry not initialized");
+            ASSERT_MSG(m_registry.get(), "Registry not initialised");
             return *m_registry;
         }
 
         Resource::ResourceManager& GetResourceManager() const
         {
-            ASSERT_MSG(m_resourceManager.get(), "Resource Manager not initialized");
+            ASSERT_MSG(m_resourceManager.get(), "Resource Manager not initialised");
             return *m_resourceManager;
         }
 
         System::SystemManager& GetSystemManager() const
         {
-            ASSERT_MSG(m_systemManager.get(), "System Manager not initialized");
+            ASSERT_MSG(m_systemManager.get(), "System Manager not initialised");
             return *m_systemManager;
         }
 
         System::GameObjectManager& GetGameObjectManager() const
         {
-            ASSERT_MSG(m_gameObjectManager.get(), "Game Object Manager not initialized");
+            ASSERT_MSG(m_gameObjectManager.get(), "Game Object Manager not initialised");
             return *m_gameObjectManager;
         }
 
         Physics::PhysicsWorld& GetPhysicsWorld() const
         {
-            ASSERT_MSG(m_physicsWorld.get(), "Physics World not initialized");
+            ASSERT_MSG(m_physicsWorld.get(), "Physics World not initialised");
             return *m_physicsWorld;
         }
 
         GameResource::Camera& GetCamera() const
         {
-            ASSERT_MSG(m_camera.get(), "Camera not initialized");
+            ASSERT_MSG(m_camera.get(), "Camera not initialised");
             return *m_camera;
         }
 
         GameResource::StateManager& GetStateManager() const
         {
-            ASSERT_MSG(m_stateManager.get(), "State Manager not initialized");
+            ASSERT_MSG(m_stateManager.get(), "State Manager not initialised");
             return *m_stateManager;
         }
 
         UI::UIManager& GetUIManager() const
         {
-            ASSERT_MSG(m_uiManger.get(), "UI Manager not initialized");
+            ASSERT_MSG(m_uiManger.get(), "UI Manager not initialised");
             return *m_uiManger;
         }
 
         Inventory& GetInventory() const
         {
-            ASSERT_MSG(m_inventory.get(), "Inventory not initialized");
+            ASSERT_MSG(m_inventory.get(), "Inventory not initialised");
             return *m_inventory;
         }
 
         Wren::WrenScriptEngine& GetWrenScriptEngine() const
         {
-            ASSERT_MSG(m_wrenScriptEngine.get(), "Wren Script Engine not initialized");
+            ASSERT_MSG(m_wrenScriptEngine.get(), "Wren Script Engine not initialised");
             return *m_wrenScriptEngine;
         }
 
         Wren::WrenStateManager& GetWrenStateManager() const
         {
-            ASSERT_MSG(m_wrenStateManager.get(), "Wren State Manager not initialized");
+            ASSERT_MSG(m_wrenStateManager.get(), "Wren State Manager not initialised");
             return *m_wrenStateManager;
         }
 
 #ifdef EDITOR
         Debug::Editor& GetEditor() const
         {
-            ASSERT_MSG(m_editor.get(), "Editor not initialized");
+            ASSERT_MSG(m_editor.get(), "Editor not initialised");
             return *m_editor;
         }
 #endif

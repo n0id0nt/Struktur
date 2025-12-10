@@ -4,9 +4,10 @@ namespace Struktur
 {
 	namespace Core
 	{
-		enum class GameState {
+		enum class GameState
+		{
 			SPLASH_SCREEN,
-			LOADING,
+			LOADING, // Not currently used cause I don't have multithreading set up
 			GAME,
 			QUIT,
 

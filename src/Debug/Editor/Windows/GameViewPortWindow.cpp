@@ -5,7 +5,7 @@
 
 namespace Struktur::Debug
 {
-    void GameViewportWindow::Initialize(GameContext& context)
+    void GameViewportWindow::Initialise(GameContext& context)
     {
         Core::GameData& gameData = context.GetGameData();
         m_renderTexture = ::LoadRenderTexture(gameData.gameWidth, gameData.gameHeight);

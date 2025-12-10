@@ -15,7 +15,7 @@ namespace Struktur::Debug
         {
         }
         
-        void Initialize(GameContext& context) override;
+        void Initialise(GameContext& context) override;
         void Render(GameContext& context) override;
         void Shutdown(GameContext& context) override;
         

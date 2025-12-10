@@ -24,7 +24,7 @@ namespace Struktur
             Editor();
             ~Editor() = default;
             
-            // Initialize the editor
+            // Initialise the editor
             void Initialise(GameContext& context);
             
             // Shutdown the editor
