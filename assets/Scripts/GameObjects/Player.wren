@@ -1,4 +1,4 @@
-import "game" for Transform
+import "game" for Transform, Vec2, Vec3, PhysicsBody, SpriteAnimation, Math, GameObject, Sprite
 
 var INTERACTABLE_DISTANCE = 64.0
 
@@ -75,9 +75,9 @@ class Player {
 
     playerForceStop() {
         var velocity = Vec2.new()
-        PhysicsSystem.setLinearVelocity(_entity, velocity)
+        PhysicsBody.setLinearVelocity(_entity, velocity)
         var animation = getPlayerAnimation("Idle")
-        AnimationSystem.playAnimation(_entity, animation)
+        SpriteAnimation.setCurrentAnimation(_entity, animation)
     }
 
     playerControl(dir) {
@@ -88,34 +88,34 @@ class Player {
         }
 
         var velocity = dir * _speed
-        PhysicsSystem.setLinearVelocity(_entity, velocity)
+        PhysicsBody.setLinearVelocity(_entity, velocity)
 
         if (dir.length() > 0.001) {
             var animation = getPlayerAnimation("Run")
-            AnimationSystem.playAnimation(_entity, animation)
+            SpriteAnimation.setCurrentAnimation(_entity, animation)
 
             if (dir.x > 0) {
-                SpriteSystem.setFlipped(_entity, false)
+                Sprite.setFlipped(_entity, false)
             } else if (dir.x < 0) {
-                SpriteSystem.setFlipped(_entity, true)
+                Sprite.setFlipped(_entity, true)
             }
         } else {
             var animation = getPlayerAnimation("Idle")
-            AnimationSystem.playAnimation(_entity, animation)
+            SpriteAnimation.setCurrentAnimation(_entity, animation)
         }
     }
 
     canInteract() {
         var closestDistance = Math.infinity
-        var playerWorldPosition = TransformSystem.getPosition(_entity)
+        var playerWorldPosition = Transform.getPosition(_entity)
         var closestEntity = null
 
-        TransformSystem.setTransform()
+        Transform.setTransform()
         GameObject.forEachWithComponent(["WorldTransform", "WrenScript"]) { |entity|
-            if (!ScriptSystem.call(entity, "isInteractable")) {
+            if (!Script.call(entity, "isInteractable")) {
                 return
             }
-            var interactableWorldPosition = TransformSystem.getPosition(entity)
+            var interactableWorldPosition = Transform.getPosition(entity)
             var distance = Vec3.distance(interactableWorldPosition, playerWorldPosition)
             if (distance < closestDistance) {
                 closestDistance = distance

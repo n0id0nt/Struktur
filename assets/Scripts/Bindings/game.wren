@@ -380,6 +380,8 @@ class GameObject {
     foreign static destroy(arg0)
     // Check if an entity ID is valid.
     foreign static isValid(arg0)
+    // Checks if entity has a specific component.
+    foreign static hasComponent(arg0)
     // Get all entities with a specific component. Returns list of entity IDs.
     foreign static getAllWithComponent(arg0)
     // Get all entities with ALL specified components. Pass list of component names.
@@ -450,6 +452,11 @@ class Level {
     foreign static loadLevelEntities(arg0,arg1)
 }
 
+class Sprite {
+    // Creates the sprite Component.
+    foreign static create(arg0,arg1,arg2,arg3,arg4,arg5,arg6,arg7,arg8)
+}
+
 class ResourceManager {
     // Creates a pointer to the font resource in the resource pool.
     foreign static getFontResource(arg0)
@@ -457,14 +464,11 @@ class ResourceManager {
     foreign static getTextureResource(arg0)
 }
 
-class SpriteComponent {
-    // Creates the sprite Component.
-    foreign static create(arg0,arg1,arg2,arg3,arg4,arg5,arg6,arg7,arg8)
-}
-
-class ScriptComponent {
+class Script {
     // Sets the render priority of a sprite component
     foreign static setRenderPriority(arg0,arg1)
+    // Flips a sprite in a horizontal direction
+    foreign static setFlipped(arg0,arg1)
     // Creates the script Component.
     foreign static create(arg0,arg1,arg2)
     // Creates the script Component with an arg.
@@ -489,5 +493,19 @@ class Camera {
     foreign static worldPosToScreenPos(arg0)
     // Converts a screen position to the world position.
     foreign static screenPosToWorldPos(arg0)
+}
+
+class PhysicsBody {
+    // Sets the linear velocity of a physics body.
+    foreign static setLinearVelocity(arg0,arg1)
+}
+
+class SpriteAnimation {
+    // Will set and play a current sprite animation, is already playing the animation continue it.
+    foreign static setCurrentAnimation(arg0,arg1)
+    // Will play a sprite animation, and if playering animation will forcibly restart it.
+    foreign static forcePlayAnimation(arg0,arg1)
+    // Checks if a cirtain animation is playing.
+    foreign static isAnimationPlaying(arg0,arg1)
 }
 

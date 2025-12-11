@@ -2200,6 +2200,36 @@ WREN_CLASS_STATIC("game", "GameObject", "isValid(_)", wren_GameObjectIsValid, "C
 	// COMPONENT_LIST
 
 
+// GameObject.hasComponent(entity, componentName) ->bool
+void wren_GameObjecthasComponent(WrenVM* vm)
+{
+    Struktur::GameContext* context = static_cast<Struktur::GameContext*>(wrenGetUserData(vm));
+    auto& registry = context->GetRegistry();
+    
+	double entityId = wrenGetSlotDouble(vm, 1);
+	entt::entity entity = static_cast<entt::entity>(entityId);
+
+    const char* componentName = wrenGetSlotString(vm, 2);
+    bool hasComponent = false;
+#define COMPONENT(component_name) 											                    \
+	if (strcmp(componentName, #component_name) == 0) 						                    \
+	{																		                    \
+        auto* componentValue = registry.try_get<Struktur::Component::component_name>(entity);   \
+        hasComponent = componentValue != nullptr;										        \
+    } else
+	COMPONENT_LIST
+#undef COMPONENT
+	// need to handle last else statement
+	{
+		DEBUG_ERROR("%s is not a valid component type", componentName);
+	}
+    wrenSetSlotBool(vm, 1, hasComponent);
+}
+
+WREN_CLASS_STATIC("game", "GameObject", "hasComponent(_)", 
+                  wren_GameObjecthasComponent,
+                  "Checks if entity has a specific component.");
+
 // GameObject.getAllWithComponent(componentName) -> List
 void wren_GameObjectGetAllWithComponent(WrenVM* vm)
 {
@@ -2983,11 +3013,11 @@ void wren_ResourceManagerGetTextureResource(WrenVM* vm)
 WREN_CLASS_STATIC("game", "ResourceManager", "getTextureResource(_)", wren_ResourceManagerGetTextureResource, "Creates a pointer to the texture resource in the resource pool.");
 
 // ============================================================================
-// SPRITE COMPONENT BINDINGS
+// SPRITE BINDINGS
 // ============================================================================
 
-// SpriteComponent.create(spriteEntity, texture, color, offset, columns, rows, flipped, index, renderPriority) -> number
-void wren_SpriteComponentCreate(WrenVM* vm)
+// Sprite.create(spriteEntity, texture, color, offset, columns, rows, flipped, index, renderPriority) -> number
+void wren_SpriteCreate(WrenVM* vm)
 {
     Struktur::GameContext* context = static_cast<Struktur::GameContext*>(wrenGetUserData(vm));
 	entt::registry& registry = context->GetRegistry();
@@ -3007,10 +3037,10 @@ void wren_SpriteComponentCreate(WrenVM* vm)
 	registry.emplace<Struktur::Component::Sprite>(levelEntity, texture->resource, rayColor, offset->value, columns, rows, flipped, index, renderPriority);
 }
 
-WREN_CLASS_STATIC("game", "SpriteComponent", "create(_,_,_,_,_,_,_,_,_)", wren_SpriteComponentCreate, "Creates the sprite Component.");
+WREN_CLASS_STATIC("game", "Sprite", "create(_,_,_,_,_,_,_,_,_)", wren_SpriteCreate, "Creates the sprite Component.");
 
-// ScriptComponent.setRenderPriority(entity, renderPriority)
-void wren_ScriptComponentSetRenderPriority(WrenVM* vm)
+// Script.setRenderPriority(entity, renderPriority)
+void wren_ScriptSetRenderPriority(WrenVM* vm)
 {
     Struktur::GameContext* context = static_cast<Struktur::GameContext*>(wrenGetUserData(vm));
     auto& registry = context->GetRegistry();
@@ -3029,16 +3059,38 @@ void wren_ScriptComponentSetRenderPriority(WrenVM* vm)
     sprite->renderPriority = static_cast<int>(renderPriority);
 }
 
-WREN_CLASS_STATIC("game", "ScriptComponent", "setRenderPriority(_,_)", wren_ScriptComponentSetRenderPriority, "Sets the render priority of a sprite component");
+WREN_CLASS_STATIC("game", "Script", "setRenderPriority(_,_)", wren_ScriptSetRenderPriority, "Sets the render priority of a sprite component");
+
+// Script.setFlipped(entity, flipped)
+void wren_ScriptSetFlipped(WrenVM* vm)
+{
+    Struktur::GameContext* context = static_cast<Struktur::GameContext*>(wrenGetUserData(vm));
+    auto& registry = context->GetRegistry();
+    
+    double entityId = wrenGetSlotDouble(vm, 1);
+    bool flipped = wrenGetSlotBool(vm, 2);
+    entt::entity entity = static_cast<entt::entity>(entityId);
+    
+    auto* sprite = registry.try_get<Struktur::Component::Sprite>(entity);
+
+    if (!sprite)
+    {
+        return;
+    }
+
+    sprite->flipped = flipped;
+}
+
+WREN_CLASS_STATIC("game", "Script", "setFlipped(_,_)", wren_ScriptSetFlipped, "Flips a sprite in a horizontal direction");
 
 // ============================================================================
-// SCRIPT COMPONENT BINDINGS
+// SCRIPT BINDINGS
 // ============================================================================
 
 #include "Engine/ECS/System/WrenScriptSystem.h"
 
-// ScriptComponent.create(spriteEntity, scriptPath, className) -> number
-void wren_ScriptComponentCreate(WrenVM* vm)
+// Script.create(spriteEntity, scriptPath, className) -> number
+void wren_ScriptCreate(WrenVM* vm)
 {
 	Struktur::GameContext* context = static_cast<Struktur::GameContext*>(wrenGetUserData(vm));
 	entt::registry& registry = context->GetRegistry();
@@ -3050,10 +3102,10 @@ void wren_ScriptComponentCreate(WrenVM* vm)
 	registry.emplace<Struktur::Component::WrenScript>(levelEntity, scriptPath, className);
 }
 
-WREN_CLASS_STATIC("game", "ScriptComponent", "create(_,_,_)", wren_ScriptComponentCreate, "Creates the script Component.");
+WREN_CLASS_STATIC("game", "Script", "create(_,_,_)", wren_ScriptCreate, "Creates the script Component.");
 
-// ScriptComponent.createArg(spriteEntity, scriptPath, className, args) -> number
-void wren_ScriptComponentCreateArg(WrenVM* vm)
+// Script.createArg(spriteEntity, scriptPath, className, args) -> number
+void wren_ScriptCreateArg(WrenVM* vm)
 {
 	Struktur::GameContext* context = static_cast<Struktur::GameContext*>(wrenGetUserData(vm));
 	entt::registry& registry = context->GetRegistry();
@@ -3077,10 +3129,10 @@ void wren_ScriptComponentCreateArg(WrenVM* vm)
     //scriptSystem.CallCreate(*context, levelEntity, script);
 }
 
-WREN_CLASS_STATIC("game", "ScriptComponent", "createArg(_,_,_,_)", wren_ScriptComponentCreateArg, "Creates the script Component with an arg.");
+WREN_CLASS_STATIC("game", "Script", "createArg(_,_,_,_)", wren_ScriptCreateArg, "Creates the script Component with an arg.");
 
-// ScriptComponent.hasMethod(entity, methodName) -> Bool
-void wren_ScriptComponentHasMethod(WrenVM* vm)
+// Script.hasMethod(entity, methodName) -> Bool
+void wren_ScriptHasMethod(WrenVM* vm)
 {
     Struktur::GameContext* context = static_cast<Struktur::GameContext*>(wrenGetUserData(vm));
     auto& registry = context->GetRegistry();
@@ -3105,10 +3157,10 @@ void wren_ScriptComponentHasMethod(WrenVM* vm)
     wrenSetSlotBool(vm, 0, true);
 }
 
-WREN_CLASS_STATIC("game", "ScriptComponent", "hasMethod(_,_)", wren_ScriptComponentHasMethod, "Check if entity's script has a method");
+WREN_CLASS_STATIC("game", "Script", "hasMethod(_,_)", wren_ScriptHasMethod, "Check if entity's script has a method");
 
-// ScriptComponent.callArg(entity, methodName, ...args) -> result
-void wren_ScriptComponentCallArg(WrenVM* vm)
+// Script.callArg(entity, methodName, ...args) -> result
+void wren_ScriptCallArg(WrenVM* vm)
 {
     Struktur::GameContext* context = static_cast<Struktur::GameContext*>(wrenGetUserData(vm));
     auto& registry = context->GetRegistry();
@@ -3123,7 +3175,7 @@ void wren_ScriptComponentCallArg(WrenVM* vm)
     
     if (!script || !script->isInitialised || script->hasError)
     {
-        DEBUG_ERROR("ScriptComponent.call: Entity has no valid script");
+        DEBUG_ERROR("Script.call: Entity has no valid script");
         wrenSetSlotNull(vm, 0);
         return;
     }
@@ -3133,7 +3185,7 @@ void wren_ScriptComponentCallArg(WrenVM* vm)
     // Get the script's instance
     if (!script->instanceHandle)
     {
-        DEBUG_ERROR("ScriptComponent.call: No instance handle");
+        DEBUG_ERROR("Script.call: No instance handle");
         wrenSetSlotNull(vm, 0);
         return;
     }
@@ -3161,7 +3213,7 @@ void wren_ScriptComponentCallArg(WrenVM* vm)
     
     if (!methodHandle)
     {
-        DEBUG_ERROR("ScriptComponent.call: Method '%s' not found", signature.c_str());
+        DEBUG_ERROR("Script.call: Method '%s' not found", signature.c_str());
         wrenSetSlotNull(vm, 0);
         return;
     }
@@ -3192,7 +3244,7 @@ void wren_ScriptComponentCallArg(WrenVM* vm)
                 wrenSetSlotNull(wrenVM, targetSlot);
                 break;
             default:
-                DEBUG_ERROR("ScriptComponent.call: Type of '%s' not implemented", signature.c_str());
+                DEBUG_ERROR("Script.call: Type of '%s' not implemented", signature.c_str());
                 // For complex types, we'd need to handle them specially
                 wrenSetSlotNull(wrenVM, targetSlot);
                 break;
@@ -3205,7 +3257,7 @@ void wren_ScriptComponentCallArg(WrenVM* vm)
     
     if (result != WREN_RESULT_SUCCESS)
     {
-        DEBUG_ERROR("ScriptComponent.call: Method call failed");
+        DEBUG_ERROR("Script.call: Method call failed");
         wrenSetSlotNull(vm, 0);
         return;
     }
@@ -3234,10 +3286,10 @@ void wren_ScriptComponentCallArg(WrenVM* vm)
     }
 }
 
-WREN_CLASS_STATIC("game", "ScriptComponent", "callArg(_,_,_)", wren_ScriptComponentCallArg,"Call a method on another entity's script with arguments");
+WREN_CLASS_STATIC("game", "Script", "callArg(_,_,_)", wren_ScriptCallArg,"Call a method on another entity's script with arguments");
 
-// ScriptComponent.call(entity, methodName) -> result
-void wren_ScriptComponentCall(WrenVM* vm)
+// Script.call(entity, methodName) -> result
+void wren_ScriptCall(WrenVM* vm)
 {
     Struktur::GameContext* context = static_cast<Struktur::GameContext*>(wrenGetUserData(vm));
     auto& registry = context->GetRegistry();
@@ -3252,7 +3304,7 @@ void wren_ScriptComponentCall(WrenVM* vm)
     
     if (!script || !script->isInitialised || script->hasError)
     {
-        DEBUG_ERROR("ScriptComponent.call: Entity has no valid script");
+        DEBUG_ERROR("Script.call: Entity has no valid script");
         wrenSetSlotNull(vm, 0);
         return;
     }
@@ -3262,7 +3314,7 @@ void wren_ScriptComponentCall(WrenVM* vm)
     // Get the script's instance
     if (!script->instanceHandle)
     {
-        DEBUG_ERROR("ScriptComponent.call: No instance handle");
+        DEBUG_ERROR("Script.call: No instance handle");
         wrenSetSlotNull(vm, 0);
         return;
     }
@@ -3273,7 +3325,7 @@ void wren_ScriptComponentCall(WrenVM* vm)
     
     if (!methodHandle)
     {
-        DEBUG_ERROR("ScriptComponent.call: Method '%s' not found", signature.c_str());
+        DEBUG_ERROR("Script.call: Method '%s' not found", signature.c_str());
         wrenSetSlotNull(vm, 0);
         return;
     }
@@ -3311,7 +3363,7 @@ void wren_ScriptComponentCall(WrenVM* vm)
     }
 }
 
-WREN_CLASS_STATIC("game", "ScriptComponent", "call(_,_)", wren_ScriptComponentCall, "Call a method on another entity's script");
+WREN_CLASS_STATIC("game", "Script", "call(_,_)", wren_ScriptCall, "Call a method on another entity's script");
 
 // ============================================================================
 // UI MANAGER BINDINGS
@@ -3426,3 +3478,84 @@ void wren_InputIsInputJustReleased(WrenVM* vm)
 }
 
 WREN_CLASS_STATIC("game", "Input", "isInputJustReleased(_)", wren_InputIsInputJustReleased, "Gets input was just released.");
+
+// ============================================================================
+// PHYSICS BODY BINDINGS
+// ============================================================================
+
+// PhysicsBody.setLinearVelocity(entity, velocity)
+void wren_PhysicsBodySetLinearVelocity(WrenVM* vm)
+{
+	Struktur::GameContext* context = static_cast<Struktur::GameContext*>(wrenGetUserData(vm));
+    auto& registry = context->GetRegistry();
+    
+	double entityId = wrenGetSlotDouble(vm, 1);
+    WrenVec2* velocity = static_cast<WrenVec2*>(wrenGetSlotForeign(vm, 2));
+	entt::entity entity = static_cast<entt::entity>(entityId);
+
+    auto& physicsBody = registry.get<Struktur::Component::PhysicsBody>(entity);
+    b2Vec2 b2Velecity = b2Vec2(velocity->value.x, velocity->value.y);
+    physicsBody.body->SetLinearVelocity(b2Velecity);
+}
+
+WREN_CLASS_STATIC("game", "PhysicsBody", "setLinearVelocity(_,_)", wren_PhysicsBodySetLinearVelocity, "Sets the linear velocity of a physics body.");
+
+// ============================================================================
+// SPRITE ANIMATION BINDINGS
+// ============================================================================
+#include "Engine/ECS/System/AnimationSystem.h"
+
+// SpriteAnimation.setCurrentAnimation(entity, animationName)
+void wren_SpriteAnimationSetCurrentAnimation(WrenVM* vm)
+{
+	Struktur::GameContext* context = static_cast<Struktur::GameContext*>(wrenGetUserData(vm));
+    Struktur::System::SystemManager& systemManager = context->GetSystemManager();
+    auto& animationSystem = systemManager.GetSystem<Struktur::System::AnimationSystem>();
+    auto& registry = context->GetRegistry();
+
+	double entityId = wrenGetSlotDouble(vm, 1);
+    const char* animationName = wrenGetSlotString(vm, 2);
+	entt::entity entity = static_cast<entt::entity>(entityId);
+
+    if (!animationSystem.IsAnimationPlaying(*context, entity, animationName))
+    {
+        animationSystem.PlayAnimation(*context, entity, animationName);
+    }
+}
+
+WREN_CLASS_STATIC("game", "SpriteAnimation", "setCurrentAnimation(_,_)", wren_SpriteAnimationSetCurrentAnimation, "Will set and play a current sprite animation, is already playing the animation continue it.");
+
+// SpriteAnimation.playAnimation(entity, animationName)
+void wren_SpriteAnimationPlayAnimation(WrenVM* vm)
+{
+	Struktur::GameContext* context = static_cast<Struktur::GameContext*>(wrenGetUserData(vm));
+    Struktur::System::SystemManager& systemManager = context->GetSystemManager();
+    auto& animationSystem = systemManager.GetSystem<Struktur::System::AnimationSystem>();
+    auto& registry = context->GetRegistry();
+
+	double entityId = wrenGetSlotDouble(vm, 1);
+    const char* animationName = wrenGetSlotString(vm, 2);
+	entt::entity entity = static_cast<entt::entity>(entityId);
+
+    animationSystem.PlayAnimation(*context, entity, animationName);
+}
+
+WREN_CLASS_STATIC("game", "SpriteAnimation", "forcePlayAnimation(_,_)", wren_SpriteAnimationPlayAnimation, "Will play a sprite animation, and if playering animation will forcibly restart it.");
+
+// SpriteAnimation.isAnimationPlaying(entity, animationName) -> bool
+void wren_SpriteAnimationIsAnimationPlaying(WrenVM* vm)
+{
+	Struktur::GameContext* context = static_cast<Struktur::GameContext*>(wrenGetUserData(vm));
+    Struktur::System::SystemManager& systemManager = context->GetSystemManager();
+    auto& animationSystem = systemManager.GetSystem<Struktur::System::AnimationSystem>();
+    auto& registry = context->GetRegistry();
+
+	double entityId = wrenGetSlotDouble(vm, 1);
+    const char* animationName = wrenGetSlotString(vm, 2);
+	entt::entity entity = static_cast<entt::entity>(entityId);
+
+    bool isAnimationPlaying = animationSystem.IsAnimationPlaying(*context, entity, animationName);
+    wrenSetSlotBool(vm, 0, isAnimationPlaying);
+}
+
+WREN_CLASS_STATIC("game", "SpriteAnimation", "isAnimationPlaying(_,_)", wren_SpriteAnimationIsAnimationPlaying, "Checks if a cirtain animation is playing.");
