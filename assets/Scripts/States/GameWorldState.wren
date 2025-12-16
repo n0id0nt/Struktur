@@ -10,7 +10,7 @@ import "States/StateManager" for StateManager
 var TILE_TEXTURE = "assets/Tiles/cavesofgallet_tiles.png"
 var PLAYER_TEXTURE = "assets/Tiles/PlayerGrowthSprites.png"
 var WORLD_FILE_PATH = "assets/Levels/MemoryPalace.ldtk"
-var WHITE = Vec4.new(0, 0, 0, 255)
+var WHITE = Vec4.new(255, 255, 255, 255)
 var Loops = 0
 
 class GameWorldState is BaseState {
@@ -95,7 +95,7 @@ class GameWorldState is BaseState {
         var northRoom = Level.loadLevelEntities(worldEntity, roomList[0])
         Transform.setPosition(northRoom, Vec3.new(576.0, 0.0, 0.0))
         var northRoomSpriteEntity = GameObject.create("northRoomSprite", northRoom)
-        Transform.setLocalPosition(northRoomSpriteEntity, Vec3.new(10.0, 0.0, 0.0))
+        Transform.setLocalPosition(northRoomSpriteEntity, Vec3.new(0.0, 0.0, 0.0))
         var northRoomKey = getNorthRoom()
         var northRoomSpriteTexture = ResourceManager.getTextureResource("assets/Tiles/%(northRoomKey).png")
         Sprite.create(northRoomSpriteEntity, northRoomSpriteTexture, WHITE, Vec2.new(0, 0), 1, 1, false, 0, 0)
@@ -174,6 +174,9 @@ class GameWorldState is BaseState {
         var inputInteract = Input.isInputJustReleased("Interact")
         var inventoryInteract = Input.isInputJustReleased("Inventory")
 
+        System.print("Updated")
+        System.print("Input Dir: %(inputDir)")
+
         // TODO this should be an event.
         var playerEntities = GameObject.getAllWithIdentifier("Player")
         if (inventoryInteract) {
@@ -188,7 +191,7 @@ class GameWorldState is BaseState {
         }
 
         for (entity in playerEntities) {
-            Script.callArg(entity, "playerControl", inputDir.x, inputDir.y)
+            Script.callArg(entity, "playerControl", [inputDir.x, inputDir.y])
 
             var interactEntity = Script.call(entity, "getInteractEntity")
 
@@ -225,7 +228,7 @@ class GameWorldState is BaseState {
                 return
             }
 
-            Script.setRenderPriority(entity, playerPosition.y)
+            Sprite.setRenderPriority(entity, playerPosition.y)
         }
     }
     

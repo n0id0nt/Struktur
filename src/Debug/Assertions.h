@@ -3,6 +3,7 @@
 #include <string>
 #include <sstream>
 #include <cstdio>
+#include <intrin.h>
 #include "raylib.h"
 
 // Platform detection
@@ -99,6 +100,7 @@ namespace Struktur
         inline void DebugBreak()
         {
             #ifdef PLATFORM_WINDOWS
+                __nop();
                 __debugbreak();
             #elif defined(PLATFORM_WEB)
                 // For web, we can't really break, so we'll throw an exception or use emscripten_force_exit

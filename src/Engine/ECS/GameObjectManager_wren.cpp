@@ -27,184 +27,186 @@
 
 // Math.infinity -> Num
 void wren_MathInfinity(WrenVM* vm) {
-    wrenSetSlotDouble(vm, 0, std::numeric_limits<double>::infinity());
+	wrenSetSlotDouble(vm, 0, std::numeric_limits<double>::infinity());
 }
 
 // Math.negInfinity -> Num
 void wren_MathNegInfinity(WrenVM* vm) {
-    wrenSetSlotDouble(vm, 0, -std::numeric_limits<double>::infinity());
+	wrenSetSlotDouble(vm, 0, -std::numeric_limits<double>::infinity());
 }
 
 // Math.nan -> Num
 void wren_MathNaN(WrenVM* vm) {
-    wrenSetSlotDouble(vm, 0, std::numeric_limits<double>::quiet_NaN());
+	wrenSetSlotDouble(vm, 0, std::numeric_limits<double>::quiet_NaN());
 }
 
 // Math.pi -> Num
 void wren_MathPi(WrenVM* vm) {
-    wrenSetSlotDouble(vm, 0, M_PI);
+	wrenSetSlotDouble(vm, 0, M_PI);
 }
 
 // Math.e -> Num
 void wren_MathE(WrenVM* vm) {
-    wrenSetSlotDouble(vm, 0, M_E);
+	wrenSetSlotDouble(vm, 0, M_E);
 }
 
 // Math.max(a, b) -> Num
 void wren_MathMax(WrenVM* vm) {
-    double a = wrenGetSlotDouble(vm, 1);
-    double b = wrenGetSlotDouble(vm, 2);
-    wrenSetSlotDouble(vm, 0, std::max(a, b));
+	double a = wrenGetSlotDouble(vm, 1);
+	double b = wrenGetSlotDouble(vm, 2);
+	wrenSetSlotDouble(vm, 0, std::max(a, b));
 }
 
 // Math.min(a, b) -> Num
 void wren_MathMin(WrenVM* vm) {
-    double a = wrenGetSlotDouble(vm, 1);
-    double b = wrenGetSlotDouble(vm, 2);
-    wrenSetSlotDouble(vm, 0, std::min(a, b));
+	double a = wrenGetSlotDouble(vm, 1);
+	double b = wrenGetSlotDouble(vm, 2);
+	wrenSetSlotDouble(vm, 0, std::min(a, b));
 }
 
 // Math.clamp(value, min, max) -> Num
 void wren_MathClamp(WrenVM* vm) {
-    double value = wrenGetSlotDouble(vm, 1);
-    double min = wrenGetSlotDouble(vm, 2);
-    double max = wrenGetSlotDouble(vm, 3);
-    
-    if (value < min) value = min;
-    if (value > max) value = max;
-    
-    wrenSetSlotDouble(vm, 0, value);
+	double value = wrenGetSlotDouble(vm, 1);
+	double min = wrenGetSlotDouble(vm, 2);
+	double max = wrenGetSlotDouble(vm, 3);
+
+	if (value < min) value = min;
+	if (value > max) value = max;
+
+	wrenSetSlotDouble(vm, 0, value);
 }
 
 // Math.abs(n) -> Num
 void wren_MathAbs(WrenVM* vm) {
-    double n = wrenGetSlotDouble(vm, 1);
-    wrenSetSlotDouble(vm, 0, std::abs(n));
+	double n = wrenGetSlotDouble(vm, 1);
+	wrenSetSlotDouble(vm, 0, std::abs(n));
 }
 
 // Math.sqrt(n) -> Num
 void wren_MathSqrt(WrenVM* vm) {
-    double n = wrenGetSlotDouble(vm, 1);
-    wrenSetSlotDouble(vm, 0, std::sqrt(n));
+	double n = wrenGetSlotDouble(vm, 1);
+	wrenSetSlotDouble(vm, 0, std::sqrt(n));
 }
 
 // Math.pow(base, exponent) -> Num
 void wren_MathPow(WrenVM* vm) {
-    double base = wrenGetSlotDouble(vm, 1);
-    double exponent = wrenGetSlotDouble(vm, 2);
-    wrenSetSlotDouble(vm, 0, std::pow(base, exponent));
+	double base = wrenGetSlotDouble(vm, 1);
+	double exponent = wrenGetSlotDouble(vm, 2);
+	wrenSetSlotDouble(vm, 0, std::pow(base, exponent));
 }
 
 // Math.sin(angle) -> Num
 void wren_MathSin(WrenVM* vm) {
-    double angle = wrenGetSlotDouble(vm, 1);
-    wrenSetSlotDouble(vm, 0, std::sin(angle));
+	double angle = wrenGetSlotDouble(vm, 1);
+	wrenSetSlotDouble(vm, 0, std::sin(angle));
 }
 
 // Math.cos(angle) -> Num
 void wren_MathCos(WrenVM* vm) {
-    double angle = wrenGetSlotDouble(vm, 1);
-    wrenSetSlotDouble(vm, 0, std::cos(angle));
+	double angle = wrenGetSlotDouble(vm, 1);
+	wrenSetSlotDouble(vm, 0, std::cos(angle));
 }
 
 // Math.tan(angle) -> Num
 void wren_MathTan(WrenVM* vm) {
-    double angle = wrenGetSlotDouble(vm, 1);
-    wrenSetSlotDouble(vm, 0, std::tan(angle));
+	double angle = wrenGetSlotDouble(vm, 1);
+	wrenSetSlotDouble(vm, 0, std::tan(angle));
 }
 
 // Math.asin(n) -> Num
 void wren_MathAsin(WrenVM* vm) {
-    double n = wrenGetSlotDouble(vm, 1);
-    wrenSetSlotDouble(vm, 0, std::asin(n));
+	double n = wrenGetSlotDouble(vm, 1);
+	wrenSetSlotDouble(vm, 0, std::asin(n));
 }
 
 // Math.acos(n) -> Num
 void wren_MathAcos(WrenVM* vm) {
-    double n = wrenGetSlotDouble(vm, 1);
-    wrenSetSlotDouble(vm, 0, std::acos(n));
+	double n = wrenGetSlotDouble(vm, 1);
+	wrenSetSlotDouble(vm, 0, std::acos(n));
 }
 
 // Math.atan(n) -> Num
 void wren_MathAtan(WrenVM* vm) {
-    double n = wrenGetSlotDouble(vm, 1);
-    wrenSetSlotDouble(vm, 0, std::atan(n));
+	double n = wrenGetSlotDouble(vm, 1);
+	wrenSetSlotDouble(vm, 0, std::atan(n));
 }
 
 // Math.atan2(y, x) -> Num
 void wren_MathAtan2(WrenVM* vm) {
-    double y = wrenGetSlotDouble(vm, 1);
-    double x = wrenGetSlotDouble(vm, 2);
-    wrenSetSlotDouble(vm, 0, std::atan2(y, x));
+	double y = wrenGetSlotDouble(vm, 1);
+	double x = wrenGetSlotDouble(vm, 2);
+	wrenSetSlotDouble(vm, 0, std::atan2(y, x));
 }
 
 // Math.floor(n) -> Num
 void wren_MathFloor(WrenVM* vm) {
-    double n = wrenGetSlotDouble(vm, 1);
-    wrenSetSlotDouble(vm, 0, std::floor(n));
+	double n = wrenGetSlotDouble(vm, 1);
+	wrenSetSlotDouble(vm, 0, std::floor(n));
 }
 
 // Math.ceil(n) -> Num
 void wren_MathCeil(WrenVM* vm) {
-    double n = wrenGetSlotDouble(vm, 1);
-    wrenSetSlotDouble(vm, 0, std::ceil(n));
+	double n = wrenGetSlotDouble(vm, 1);
+	wrenSetSlotDouble(vm, 0, std::ceil(n));
 }
 
 // Math.round(n) -> Num
 void wren_MathRound(WrenVM* vm) {
-    double n = wrenGetSlotDouble(vm, 1);
-    wrenSetSlotDouble(vm, 0, std::round(n));
+	double n = wrenGetSlotDouble(vm, 1);
+	wrenSetSlotDouble(vm, 0, std::round(n));
 }
 
 // Math.lerp(a, b, t) -> Num
 void wren_MathLerp(WrenVM* vm) {
-    double a = wrenGetSlotDouble(vm, 1);
-    double b = wrenGetSlotDouble(vm, 2);
-    double t = wrenGetSlotDouble(vm, 3);
-    wrenSetSlotDouble(vm, 0, a + (b - a) * t);
+	double a = wrenGetSlotDouble(vm, 1);
+	double b = wrenGetSlotDouble(vm, 2);
+	double t = wrenGetSlotDouble(vm, 3);
+	wrenSetSlotDouble(vm, 0, a + (b - a) * t);
 }
 
 // Math.isInfinite(n) -> Bool
 void wren_MathIsInfinite(WrenVM* vm) {
-    double n = wrenGetSlotDouble(vm, 1);
-    wrenSetSlotBool(vm, 0, std::isinf(n));
+	double n = wrenGetSlotDouble(vm, 1);
+	wrenSetSlotBool(vm, 0, std::isinf(n));
 }
 
 // Math.isNaN(n) -> Bool
 void wren_MathIsNaN(WrenVM* vm) {
-    double n = wrenGetSlotDouble(vm, 1);
-    wrenSetSlotBool(vm, 0, std::isnan(n));
+	double n = wrenGetSlotDouble(vm, 1);
+	wrenSetSlotBool(vm, 0, std::isnan(n));
 }
 
 // Math.isFinite(n) -> Bool
 void wren_MathIsFinite(WrenVM* vm) {
-    double n = wrenGetSlotDouble(vm, 1);
-    wrenSetSlotBool(vm, 0, std::isfinite(n));
+	double n = wrenGetSlotDouble(vm, 1);
+	wrenSetSlotBool(vm, 0, std::isfinite(n));
 }
 
 // Math.sign(n) -> Num
 void wren_MathSign(WrenVM* vm) {
-    double n = wrenGetSlotDouble(vm, 1);
-    
-    if (n > 0) {
-        wrenSetSlotDouble(vm, 0, 1.0);
-    } else if (n < 0) {
-        wrenSetSlotDouble(vm, 0, -1.0);
-    } else {
-        wrenSetSlotDouble(vm, 0, 0.0);
-    }
+	double n = wrenGetSlotDouble(vm, 1);
+
+	if (n > 0) {
+		wrenSetSlotDouble(vm, 0, 1.0);
+	}
+	else if (n < 0) {
+		wrenSetSlotDouble(vm, 0, -1.0);
+	}
+	else {
+		wrenSetSlotDouble(vm, 0, 0.0);
+	}
 }
 
 // Math.radians(degrees) -> Num
 void wren_MathRadians(WrenVM* vm) {
-    double degrees = wrenGetSlotDouble(vm, 1);
-    wrenSetSlotDouble(vm, 0, degrees * M_PI / 180.0);
+	double degrees = wrenGetSlotDouble(vm, 1);
+	wrenSetSlotDouble(vm, 0, degrees * M_PI / 180.0);
 }
 
 // Math.degrees(radians) -> Num
 void wren_MathDegrees(WrenVM* vm) {
-    double radians = wrenGetSlotDouble(vm, 1);
-    wrenSetSlotDouble(vm, 0, radians * 180.0 / M_PI);
+	double radians = wrenGetSlotDouble(vm, 1);
+	wrenSetSlotDouble(vm, 0, radians * 180.0 / M_PI);
 }
 
 // Constants (as static getters)
@@ -254,259 +256,259 @@ WREN_CLASS_STATIC("game", "Math", "degrees(_)", wren_MathDegrees, "Convert radia
 
 struct WrenVec2
 {
-    glm::vec2 value;
-    
-    WrenVec2() : value(0.0f, 0.0f) {}
-    WrenVec2(float x, float y) : value(x, y) {}
-    WrenVec2(const glm::vec2& v) : value(v) {}
+	glm::vec2 value;
+
+	WrenVec2() : value(0.0f, 0.0f) {}
+	WrenVec2(float x, float y) : value(x, y) {}
+	WrenVec2(const glm::vec2& v) : value(v) {}
 };
 
 // Allocator - called when Vec2.new() is invoked
 void wren_Vec2Allocate(WrenVM* vm)
 {
-    // Allocate foreign object
-    wrenGetVariable(vm, "game", "Vec2", 0);  // Get class into slot 1
-    WrenVec2* vec = (WrenVec2*)wrenSetSlotNewForeign(vm, 0, 0, sizeof(WrenVec2));
-    
-    // Initialise with constructor parameters if provided
-    if (wrenGetSlotCount(vm) >= 3)
+	// Allocate foreign object
+	wrenGetVariable(vm, "game", "Vec2", 0);  // Get class into slot 1
+	WrenVec2* vec = (WrenVec2*)wrenSetSlotNewForeign(vm, 0, 0, sizeof(WrenVec2));
+
+	// Initialise with constructor parameters if provided
+	if (wrenGetSlotCount(vm) >= 3)
 	{
-        float x = (float)wrenGetSlotDouble(vm, 1);
-        float y = (float)wrenGetSlotDouble(vm, 2);
-        new (vec) WrenVec2(x, y);
-    }
+		float x = (float)wrenGetSlotDouble(vm, 1);
+		float y = (float)wrenGetSlotDouble(vm, 2);
+		new (vec) WrenVec2(x, y);
+	}
 	else
 	{
-        new (vec) WrenVec2();
-    }
+		new (vec) WrenVec2();
+	}
 }
 
 // Finalizer - called when garbage collected
 void wren_Vec2Finalize(void* data)
 {
-    WrenVec2* vec = (WrenVec2*)data;
-    vec->~WrenVec2();
+	WrenVec2* vec = (WrenVec2*)data;
+	vec->~WrenVec2();
 }
 
 // Getters
 void wren_Vec2GetX(WrenVM* vm)
 {
-    WrenVec2* vec = (WrenVec2*)wrenGetSlotForeign(vm, 0);
-    wrenSetSlotDouble(vm, 0, vec->value.x);
+	WrenVec2* vec = (WrenVec2*)wrenGetSlotForeign(vm, 0);
+	wrenSetSlotDouble(vm, 0, vec->value.x);
 }
 
 void wren_Vec2GetY(WrenVM* vm)
 {
-    WrenVec2* vec = (WrenVec2*)wrenGetSlotForeign(vm, 0);
-    wrenSetSlotDouble(vm, 0, vec->value.y);
+	WrenVec2* vec = (WrenVec2*)wrenGetSlotForeign(vm, 0);
+	wrenSetSlotDouble(vm, 0, vec->value.y);
 }
 
 // Setters
 void wren_Vec2SetX(WrenVM* vm)
 {
-    WrenVec2* vec = (WrenVec2*)wrenGetSlotForeign(vm, 0);
-    vec->value.x = (float)wrenGetSlotDouble(vm, 1);
+	WrenVec2* vec = (WrenVec2*)wrenGetSlotForeign(vm, 0);
+	vec->value.x = (float)wrenGetSlotDouble(vm, 1);
 }
 
 void wren_Vec2SetY(WrenVM* vm)
 {
-    WrenVec2* vec = (WrenVec2*)wrenGetSlotForeign(vm, 0);
-    vec->value.y = (float)wrenGetSlotDouble(vm, 1);
+	WrenVec2* vec = (WrenVec2*)wrenGetSlotForeign(vm, 0);
+	vec->value.y = (float)wrenGetSlotDouble(vm, 1);
 }
 
 // toString()
 void wren_Vec2ToString(WrenVM* vm)
 {
-    WrenVec2* vec = (WrenVec2*)wrenGetSlotForeign(vm, 0);
-    
-    char buffer[64];
-    snprintf(buffer, sizeof(buffer), "Vec2(%.2f, %.2f)", vec->value.x, vec->value.y);
-    
-    wrenSetSlotString(vm, 0, buffer);
+	WrenVec2* vec = (WrenVec2*)wrenGetSlotForeign(vm, 0);
+
+	char buffer[64];
+	snprintf(buffer, sizeof(buffer), "Vec2(%.2f, %.2f)", vec->value.x, vec->value.y);
+
+	wrenSetSlotString(vm, 0, buffer);
 }
 
 // Math operations
 void wren_Vec2Add(WrenVM* vm)
 {
-    WrenVec2* a = (WrenVec2*)wrenGetSlotForeign(vm, 0);
-    WrenVec2* b = (WrenVec2*)wrenGetSlotForeign(vm, 1);
-    
-    // Create new Vec2 with result
-    wrenGetVariable(vm, "game", "Vec2", 1);  // Get class into slot 1
-    WrenVec2* result = (WrenVec2*)wrenSetSlotNewForeign(vm, 0, 1, sizeof(WrenVec2));
-    new (result) WrenVec2(a->value + b->value);
+	WrenVec2* a = (WrenVec2*)wrenGetSlotForeign(vm, 0);
+	WrenVec2* b = (WrenVec2*)wrenGetSlotForeign(vm, 1);
+
+	// Create new Vec2 with result
+	wrenGetVariable(vm, "game", "Vec2", 1);  // Get class into slot 1
+	WrenVec2* result = (WrenVec2*)wrenSetSlotNewForeign(vm, 0, 1, sizeof(WrenVec2));
+	new (result) WrenVec2(a->value + b->value);
 }
 
 void wren_Vec2Subtract(WrenVM* vm)
 {
-    WrenVec2* a = (WrenVec2*)wrenGetSlotForeign(vm, 0);
-    WrenVec2* b = (WrenVec2*)wrenGetSlotForeign(vm, 1);
-    
-    wrenGetVariable(vm, "game", "Vec2", 1);  // Get class into slot 1
-    WrenVec2* result = (WrenVec2*)wrenSetSlotNewForeign(vm, 0, 1, sizeof(WrenVec2));
-    new (result) WrenVec2(a->value - b->value);
+	WrenVec2* a = (WrenVec2*)wrenGetSlotForeign(vm, 0);
+	WrenVec2* b = (WrenVec2*)wrenGetSlotForeign(vm, 1);
+
+	wrenGetVariable(vm, "game", "Vec2", 1);  // Get class into slot 1
+	WrenVec2* result = (WrenVec2*)wrenSetSlotNewForeign(vm, 0, 1, sizeof(WrenVec2));
+	new (result) WrenVec2(a->value - b->value);
 }
 
 void wren_Vec2Multiply(WrenVM* vm)
 {
-    WrenVec2* vec = (WrenVec2*)wrenGetSlotForeign(vm, 0);
-    float scalar = (float)wrenGetSlotDouble(vm, 1);
-    
-    wrenGetVariable(vm, "game", "Vec2", 1);  // Get class into slot 1
-    WrenVec2* result = (WrenVec2*)wrenSetSlotNewForeign(vm, 0, 1, sizeof(WrenVec2));
-    new (result) WrenVec2(vec->value * scalar);
+	WrenVec2* vec = (WrenVec2*)wrenGetSlotForeign(vm, 0);
+	float scalar = (float)wrenGetSlotDouble(vm, 1);
+
+	wrenGetVariable(vm, "game", "Vec2", 1);  // Get class into slot 1
+	WrenVec2* result = (WrenVec2*)wrenSetSlotNewForeign(vm, 0, 1, sizeof(WrenVec2));
+	new (result) WrenVec2(vec->value * scalar);
 }
 
 void wren_Vec2Length(WrenVM* vm)
 {
-    WrenVec2* vec = (WrenVec2*)wrenGetSlotForeign(vm, 0);
-    wrenSetSlotDouble(vm, 0, glm::length(vec->value));
+	WrenVec2* vec = (WrenVec2*)wrenGetSlotForeign(vm, 0);
+	wrenSetSlotDouble(vm, 0, glm::length(vec->value));
 }
 
 void wren_Vec2LengthSquared(WrenVM* vm) {
-    WrenVec2* vec = (WrenVec2*)wrenGetSlotForeign(vm, 0);
-    wrenSetSlotDouble(vm, 0, glm::length2(vec->value));
+	WrenVec2* vec = (WrenVec2*)wrenGetSlotForeign(vm, 0);
+	wrenSetSlotDouble(vm, 0, glm::length2(vec->value));
 }
 
 void wren_Vec2Normalize(WrenVM* vm)
 {
-    WrenVec2* vec = (WrenVec2*)wrenGetSlotForeign(vm, 0);
-    
-    wrenGetVariable(vm, "game", "Vec2", 1);  // Get class into slot 1
-    WrenVec2* result = (WrenVec2*)wrenSetSlotNewForeign(vm, 0, 1, sizeof(WrenVec2));
-    new (result) WrenVec2(glm::normalize(vec->value));
+	WrenVec2* vec = (WrenVec2*)wrenGetSlotForeign(vm, 0);
+
+	wrenGetVariable(vm, "game", "Vec2", 1);  // Get class into slot 1
+	WrenVec2* result = (WrenVec2*)wrenSetSlotNewForeign(vm, 0, 1, sizeof(WrenVec2));
+	new (result) WrenVec2(glm::normalize(vec->value));
 }
 
 // Vec2.distance(a, b) -> Num
 void wren_Vec2Distance(WrenVM* vm)
 {
-    WrenVec2* a = (WrenVec2*)wrenGetSlotForeign(vm, 1);
-    WrenVec2* b = (WrenVec2*)wrenGetSlotForeign(vm, 2);
-    
-    wrenSetSlotDouble(vm, 0, glm::distance(a->value, b->value));
+	WrenVec2* a = (WrenVec2*)wrenGetSlotForeign(vm, 1);
+	WrenVec2* b = (WrenVec2*)wrenGetSlotForeign(vm, 2);
+
+	wrenSetSlotDouble(vm, 0, glm::distance(a->value, b->value));
 }
 
 // Vec2.distanceSquared(a, b) -> Num
 void wren_Vec2DistanceSquared(WrenVM* vm)
 {
-    WrenVec2* a = (WrenVec2*)wrenGetSlotForeign(vm, 1);
-    WrenVec2* b = (WrenVec2*)wrenGetSlotForeign(vm, 2);
-    
-    wrenSetSlotDouble(vm, 0, glm::distance2(a->value, b->value));
+	WrenVec2* a = (WrenVec2*)wrenGetSlotForeign(vm, 1);
+	WrenVec2* b = (WrenVec2*)wrenGetSlotForeign(vm, 2);
+
+	wrenSetSlotDouble(vm, 0, glm::distance2(a->value, b->value));
 }
 
 // Vec2.lerp(a, b, t) -> Vec2
 void wren_Vec2Lerp(WrenVM* vm)
 {
-    WrenVec2* a = (WrenVec2*)wrenGetSlotForeign(vm, 1);
-    WrenVec2* b = (WrenVec2*)wrenGetSlotForeign(vm, 2);
-    float t = (float)wrenGetSlotDouble(vm, 3);
-    
-    wrenGetVariable(vm, "game", "Vec2", 1);  // Get class into slot 1
-    WrenVec2* result = (WrenVec2*)wrenSetSlotNewForeign(vm, 0, 1, sizeof(WrenVec2));
-    new (result) WrenVec2(glm::mix(a->value, b->value, t));
+	WrenVec2* a = (WrenVec2*)wrenGetSlotForeign(vm, 1);
+	WrenVec2* b = (WrenVec2*)wrenGetSlotForeign(vm, 2);
+	float t = (float)wrenGetSlotDouble(vm, 3);
+
+	wrenGetVariable(vm, "game", "Vec2", 1);  // Get class into slot 1
+	WrenVec2* result = (WrenVec2*)wrenSetSlotNewForeign(vm, 0, 1, sizeof(WrenVec2));
+	new (result) WrenVec2(glm::mix(a->value, b->value, t));
 }
 
 // Vec2.dot(a, b) -> Num
 void wren_Vec2DotStatic(WrenVM* vm)
 {
-    WrenVec2* a = (WrenVec2*)wrenGetSlotForeign(vm, 1);
-    WrenVec2* b = (WrenVec2*)wrenGetSlotForeign(vm, 2);
-    
-    wrenSetSlotDouble(vm, 0, glm::dot(a->value, b->value));
+	WrenVec2* a = (WrenVec2*)wrenGetSlotForeign(vm, 1);
+	WrenVec2* b = (WrenVec2*)wrenGetSlotForeign(vm, 2);
+
+	wrenSetSlotDouble(vm, 0, glm::dot(a->value, b->value));
 }
 
 // Vec2.reflect(incident, normal) -> Vec2
 void wren_Vec2Reflect(WrenVM* vm)
 {
-    WrenVec2* incident = (WrenVec2*)wrenGetSlotForeign(vm, 1);
-    WrenVec2* normal = (WrenVec2*)wrenGetSlotForeign(vm, 2);
-    
-    wrenGetVariable(vm, "game", "Vec2", 1);  // Get class into slot 1
-    WrenVec2* result = (WrenVec2*)wrenSetSlotNewForeign(vm, 0, 1, sizeof(WrenVec2));
-    new (result) WrenVec2(glm::reflect(incident->value, normal->value));
+	WrenVec2* incident = (WrenVec2*)wrenGetSlotForeign(vm, 1);
+	WrenVec2* normal = (WrenVec2*)wrenGetSlotForeign(vm, 2);
+
+	wrenGetVariable(vm, "game", "Vec2", 1);  // Get class into slot 1
+	WrenVec2* result = (WrenVec2*)wrenSetSlotNewForeign(vm, 0, 1, sizeof(WrenVec2));
+	new (result) WrenVec2(glm::reflect(incident->value, normal->value));
 }
 
 // Vec2.min(a, b) -> Vec2
 void wren_Vec2Min(WrenVM* vm)
 {
-    WrenVec2* a = (WrenVec2*)wrenGetSlotForeign(vm, 1);
-    WrenVec2* b = (WrenVec2*)wrenGetSlotForeign(vm, 2);
-    
-    wrenGetVariable(vm, "game", "Vec2", 1);  // Get class into slot 1
-    WrenVec2* result = (WrenVec2*)wrenSetSlotNewForeign(vm, 0, 1, sizeof(WrenVec2));
-    new (result) WrenVec2(glm::min(a->value, b->value));
+	WrenVec2* a = (WrenVec2*)wrenGetSlotForeign(vm, 1);
+	WrenVec2* b = (WrenVec2*)wrenGetSlotForeign(vm, 2);
+
+	wrenGetVariable(vm, "game", "Vec2", 1);  // Get class into slot 1
+	WrenVec2* result = (WrenVec2*)wrenSetSlotNewForeign(vm, 0, 1, sizeof(WrenVec2));
+	new (result) WrenVec2(glm::min(a->value, b->value));
 }
 
 // Vec2.max(a, b) -> Vec2
 void wren_Vec2Max(WrenVM* vm)
 {
-    WrenVec2* a = (WrenVec2*)wrenGetSlotForeign(vm, 1);
-    WrenVec2* b = (WrenVec2*)wrenGetSlotForeign(vm, 2);
-    
-    wrenGetVariable(vm, "game", "Vec2", 1);  // Get class into slot 1
-    WrenVec2* result = (WrenVec2*)wrenSetSlotNewForeign(vm, 0, 1, sizeof(WrenVec2));
-    new (result) WrenVec2(glm::max(a->value, b->value));
+	WrenVec2* a = (WrenVec2*)wrenGetSlotForeign(vm, 1);
+	WrenVec2* b = (WrenVec2*)wrenGetSlotForeign(vm, 2);
+
+	wrenGetVariable(vm, "game", "Vec2", 1);  // Get class into slot 1
+	WrenVec2* result = (WrenVec2*)wrenSetSlotNewForeign(vm, 0, 1, sizeof(WrenVec2));
+	new (result) WrenVec2(glm::max(a->value, b->value));
 }
 
 // Vec2.clamp(v, min, max) -> Vec2
 void wren_Vec2Clamp(WrenVM* vm)
 {
-    WrenVec2* v = (WrenVec2*)wrenGetSlotForeign(vm, 1);
-    WrenVec2* minVec = (WrenVec2*)wrenGetSlotForeign(vm, 2);
-    WrenVec2* maxVec = (WrenVec2*)wrenGetSlotForeign(vm, 3);
-    
-    wrenGetVariable(vm, "game", "Vec2", 1);  // Get class into slot 1
-    WrenVec2* result = (WrenVec2*)wrenSetSlotNewForeign(vm, 0, 1, sizeof(WrenVec2));
-    new (result) WrenVec2(glm::clamp(v->value, minVec->value, maxVec->value));
+	WrenVec2* v = (WrenVec2*)wrenGetSlotForeign(vm, 1);
+	WrenVec2* minVec = (WrenVec2*)wrenGetSlotForeign(vm, 2);
+	WrenVec2* maxVec = (WrenVec2*)wrenGetSlotForeign(vm, 3);
+
+	wrenGetVariable(vm, "game", "Vec2", 1);  // Get class into slot 1
+	WrenVec2* result = (WrenVec2*)wrenSetSlotNewForeign(vm, 0, 1, sizeof(WrenVec2));
+	new (result) WrenVec2(glm::clamp(v->value, minVec->value, maxVec->value));
 }
 
 // Vec2.zero() -> Vec2
 void wren_Vec2Zero(WrenVM* vm)
 {
-    wrenGetVariable(vm, "game", "Vec2", 1);  // Get class into slot 1
-    WrenVec2* result = (WrenVec2*)wrenSetSlotNewForeign(vm, 0, 1, sizeof(WrenVec2));
-    new (result) WrenVec2(0.0f, 0.0f);
+	wrenGetVariable(vm, "game", "Vec2", 1);  // Get class into slot 1
+	WrenVec2* result = (WrenVec2*)wrenSetSlotNewForeign(vm, 0, 1, sizeof(WrenVec2));
+	new (result) WrenVec2(0.0f, 0.0f);
 }
 
 // Vec2.one() -> Vec2
 void wren_Vec2One(WrenVM* vm)
 {
-    wrenGetVariable(vm, "game", "Vec2", 1);  // Get class into slot 1
-    WrenVec2* result = (WrenVec2*)wrenSetSlotNewForeign(vm, 0, 1, sizeof(WrenVec2));
-    new (result) WrenVec2(1.0f, 1.0f);
+	wrenGetVariable(vm, "game", "Vec2", 1);  // Get class into slot 1
+	WrenVec2* result = (WrenVec2*)wrenSetSlotNewForeign(vm, 0, 1, sizeof(WrenVec2));
+	new (result) WrenVec2(1.0f, 1.0f);
 }
 
 // Vec2.right() -> Vec2
 void wren_Vec2Right(WrenVM* vm)
 {
-    wrenGetVariable(vm, "game", "Vec2", 1);  // Get class into slot 1
-    WrenVec2* result = (WrenVec2*)wrenSetSlotNewForeign(vm, 0, 1, sizeof(WrenVec2));
-    new (result) WrenVec2(1.0f, 0.0f);
+	wrenGetVariable(vm, "game", "Vec2", 1);  // Get class into slot 1
+	WrenVec2* result = (WrenVec2*)wrenSetSlotNewForeign(vm, 0, 1, sizeof(WrenVec2));
+	new (result) WrenVec2(1.0f, 0.0f);
 }
 
 // Vec2.up() -> Vec2
 void wren_Vec2Up(WrenVM* vm)
 {
-    wrenGetVariable(vm, "game", "Vec2", 1);  // Get class into slot 1
-    WrenVec2* result = (WrenVec2*)wrenSetSlotNewForeign(vm, 0, 1, sizeof(WrenVec2));
-    new (result) WrenVec2(0.0f, 1.0f);
+	wrenGetVariable(vm, "game", "Vec2", 1);  // Get class into slot 1
+	WrenVec2* result = (WrenVec2*)wrenSetSlotNewForeign(vm, 0, 1, sizeof(WrenVec2));
+	new (result) WrenVec2(0.0f, 1.0f);
 }
 
 // Vec2.left() -> Vec2
 void wren_Vec2Left(WrenVM* vm)
 {
-    wrenGetVariable(vm, "game", "Vec2", 1);  // Get class into slot 1
-    WrenVec2* result = (WrenVec2*)wrenSetSlotNewForeign(vm, 0, 1, sizeof(WrenVec2));
-    new (result) WrenVec2(-1.0f, 0.0f);
+	wrenGetVariable(vm, "game", "Vec2", 1);  // Get class into slot 1
+	WrenVec2* result = (WrenVec2*)wrenSetSlotNewForeign(vm, 0, 1, sizeof(WrenVec2));
+	new (result) WrenVec2(-1.0f, 0.0f);
 }
 
 // Vec2.down() -> Vec2
 void wren_Vec2Down(WrenVM* vm)
 {
-    wrenGetVariable(vm, "game", "Vec2", 0);  // Get class into slot 1
-    WrenVec2* result = (WrenVec2*)wrenSetSlotNewForeign(vm, 0, 0, sizeof(WrenVec2));
-    new (result) WrenVec2(0.0f, -1.0f);
+	wrenGetVariable(vm, "game", "Vec2", 0);  // Get class into slot 1
+	WrenVec2* result = (WrenVec2*)wrenSetSlotNewForeign(vm, 0, 0, sizeof(WrenVec2));
+	new (result) WrenVec2(0.0f, -1.0f);
 }
 
 // Register Vec2 foreign class
@@ -550,305 +552,305 @@ WREN_CLASS_STATIC("game", "Vec2", "down()", wren_Vec2Down, "Down vector (0, -1)"
 
 struct WrenVec3
 {
-    glm::vec3 value;
-    
-    WrenVec3() : value(0.0f, 0.0f, 0.0f) {}
-    WrenVec3(float x, float y, float z) : value(x, y, z) {}
-    WrenVec3(const glm::vec3& v) : value(v) {}
+	glm::vec3 value;
+
+	WrenVec3() : value(0.0f, 0.0f, 0.0f) {}
+	WrenVec3(float x, float y, float z) : value(x, y, z) {}
+	WrenVec3(const glm::vec3& v) : value(v) {}
 };
 
 void wren_Vec3Allocate(WrenVM* vm)
 {
-    wrenGetVariable(vm, "game", "Vec3", 0);  // Get class into slot 4
-    WrenVec3* vec = (WrenVec3*)wrenSetSlotNewForeign(vm, 0, 0, sizeof(WrenVec3));
-    
-    if (wrenGetSlotCount(vm) >= 4)
+	wrenGetVariable(vm, "game", "Vec3", 0);  // Get class into slot 4
+	WrenVec3* vec = (WrenVec3*)wrenSetSlotNewForeign(vm, 0, 0, sizeof(WrenVec3));
+
+	if (wrenGetSlotCount(vm) >= 4)
 	{
-        float x = (float)wrenGetSlotDouble(vm, 1);
-        float y = (float)wrenGetSlotDouble(vm, 2);
-        float z = (float)wrenGetSlotDouble(vm, 3);
-        new (vec) WrenVec3(x, y, z);
-    }
+		float x = (float)wrenGetSlotDouble(vm, 1);
+		float y = (float)wrenGetSlotDouble(vm, 2);
+		float z = (float)wrenGetSlotDouble(vm, 3);
+		new (vec) WrenVec3(x, y, z);
+	}
 	else
 	{
-        new (vec) WrenVec3();
-    }
+		new (vec) WrenVec3();
+	}
 }
 
 void wren_Vec3Finalize(void* data)
 {
-    WrenVec3* vec = (WrenVec3*)data;
-    vec->~WrenVec3();
+	WrenVec3* vec = (WrenVec3*)data;
+	vec->~WrenVec3();
 }
 
 void wren_Vec3GetX(WrenVM* vm)
 {
-    WrenVec3* vec = (WrenVec3*)wrenGetSlotForeign(vm, 0);
-    wrenSetSlotDouble(vm, 0, vec->value.x);
+	WrenVec3* vec = (WrenVec3*)wrenGetSlotForeign(vm, 0);
+	wrenSetSlotDouble(vm, 0, vec->value.x);
 }
 
 void wren_Vec3GetY(WrenVM* vm)
 {
-    WrenVec3* vec = (WrenVec3*)wrenGetSlotForeign(vm, 0);
-    wrenSetSlotDouble(vm, 0, vec->value.y);
+	WrenVec3* vec = (WrenVec3*)wrenGetSlotForeign(vm, 0);
+	wrenSetSlotDouble(vm, 0, vec->value.y);
 }
 
 void wren_Vec3GetZ(WrenVM* vm)
 {
-    WrenVec3* vec = (WrenVec3*)wrenGetSlotForeign(vm, 0);
-    wrenSetSlotDouble(vm, 0, vec->value.z);
+	WrenVec3* vec = (WrenVec3*)wrenGetSlotForeign(vm, 0);
+	wrenSetSlotDouble(vm, 0, vec->value.z);
 }
 
 void wren_Vec3SetX(WrenVM* vm)
 {
-    WrenVec3* vec = (WrenVec3*)wrenGetSlotForeign(vm, 0);
-    vec->value.x = (float)wrenGetSlotDouble(vm, 1);
+	WrenVec3* vec = (WrenVec3*)wrenGetSlotForeign(vm, 0);
+	vec->value.x = (float)wrenGetSlotDouble(vm, 1);
 }
 
 void wren_Vec3SetY(WrenVM* vm)
 {
-    WrenVec3* vec = (WrenVec3*)wrenGetSlotForeign(vm, 0);
-    vec->value.y = (float)wrenGetSlotDouble(vm, 1);
+	WrenVec3* vec = (WrenVec3*)wrenGetSlotForeign(vm, 0);
+	vec->value.y = (float)wrenGetSlotDouble(vm, 1);
 }
 
 void wren_Vec3SetZ(WrenVM* vm)
 {
-    WrenVec3* vec = (WrenVec3*)wrenGetSlotForeign(vm, 0);
-    vec->value.z = (float)wrenGetSlotDouble(vm, 1);
+	WrenVec3* vec = (WrenVec3*)wrenGetSlotForeign(vm, 0);
+	vec->value.z = (float)wrenGetSlotDouble(vm, 1);
 }
 
 void wren_Vec3ToString(WrenVM* vm)
 {
-    WrenVec3* vec = (WrenVec3*)wrenGetSlotForeign(vm, 0);
-    
-    char buffer[80];
-    snprintf(buffer, sizeof(buffer), "Vec3(%.2f, %.2f, %.2f)", 
-             vec->value.x, vec->value.y, vec->value.z);
-    
-    wrenSetSlotString(vm, 0, buffer);
+	WrenVec3* vec = (WrenVec3*)wrenGetSlotForeign(vm, 0);
+
+	char buffer[80];
+	snprintf(buffer, sizeof(buffer), "Vec3(%.2f, %.2f, %.2f)",
+		vec->value.x, vec->value.y, vec->value.z);
+
+	wrenSetSlotString(vm, 0, buffer);
 }
 
 void wren_Vec3Add(WrenVM* vm)
 {
-    WrenVec3* a = (WrenVec3*)wrenGetSlotForeign(vm, 0);
-    WrenVec3* b = (WrenVec3*)wrenGetSlotForeign(vm, 1);
-    
-    wrenGetVariable(vm, "game", "Vec3", 1);  // Get class into slot 1
-    WrenVec3* result = (WrenVec3*)wrenSetSlotNewForeign(vm, 0, 1, sizeof(WrenVec3));
-    new (result) WrenVec3(a->value + b->value);
+	WrenVec3* a = (WrenVec3*)wrenGetSlotForeign(vm, 0);
+	WrenVec3* b = (WrenVec3*)wrenGetSlotForeign(vm, 1);
+
+	wrenGetVariable(vm, "game", "Vec3", 1);  // Get class into slot 1
+	WrenVec3* result = (WrenVec3*)wrenSetSlotNewForeign(vm, 0, 1, sizeof(WrenVec3));
+	new (result) WrenVec3(a->value + b->value);
 }
 
 void wren_Vec3Subtract(WrenVM* vm)
 {
-    WrenVec3* a = (WrenVec3*)wrenGetSlotForeign(vm, 0);
-    WrenVec3* b = (WrenVec3*)wrenGetSlotForeign(vm, 1);
-    
-    wrenGetVariable(vm, "game", "Vec3", 1);  // Get class into slot 1
-    WrenVec3* result = (WrenVec3*)wrenSetSlotNewForeign(vm, 0, 1, sizeof(WrenVec3));
-    new (result) WrenVec3(a->value - b->value);
+	WrenVec3* a = (WrenVec3*)wrenGetSlotForeign(vm, 0);
+	WrenVec3* b = (WrenVec3*)wrenGetSlotForeign(vm, 1);
+
+	wrenGetVariable(vm, "game", "Vec3", 1);  // Get class into slot 1
+	WrenVec3* result = (WrenVec3*)wrenSetSlotNewForeign(vm, 0, 1, sizeof(WrenVec3));
+	new (result) WrenVec3(a->value - b->value);
 }
 
 void wren_Vec3Multiply(WrenVM* vm)
 {
-    WrenVec3* vec = (WrenVec3*)wrenGetSlotForeign(vm, 0);
-    float scalar = (float)wrenGetSlotDouble(vm, 1);
-    
-    wrenGetVariable(vm, "game", "Vec3", 1);  // Get class into slot 1
-    WrenVec3* result = (WrenVec3*)wrenSetSlotNewForeign(vm, 0, 1, sizeof(WrenVec3));
-    new (result) WrenVec3(vec->value * scalar);
+	WrenVec3* vec = (WrenVec3*)wrenGetSlotForeign(vm, 0);
+	float scalar = (float)wrenGetSlotDouble(vm, 1);
+
+	wrenGetVariable(vm, "game", "Vec3", 1);  // Get class into slot 1
+	WrenVec3* result = (WrenVec3*)wrenSetSlotNewForeign(vm, 0, 1, sizeof(WrenVec3));
+	new (result) WrenVec3(vec->value * scalar);
 }
 
 void wren_Vec3Length(WrenVM* vm)
 {
-    WrenVec3* vec = (WrenVec3*)wrenGetSlotForeign(vm, 0);
-    wrenSetSlotDouble(vm, 0, glm::length(vec->value));
+	WrenVec3* vec = (WrenVec3*)wrenGetSlotForeign(vm, 0);
+	wrenSetSlotDouble(vm, 0, glm::length(vec->value));
 }
 
 void wren_Vec3LengthSquared(WrenVM* vm)
 {
-    WrenVec3* vec = (WrenVec3*)wrenGetSlotForeign(vm, 0);
-    wrenSetSlotDouble(vm, 0, glm::length2(vec->value));
+	WrenVec3* vec = (WrenVec3*)wrenGetSlotForeign(vm, 0);
+	wrenSetSlotDouble(vm, 0, glm::length2(vec->value));
 }
 
 void wren_Vec3Normalize(WrenVM* vm)
 {
-    WrenVec3* vec = (WrenVec3*)wrenGetSlotForeign(vm, 0);
-    
-    wrenGetVariable(vm, "game", "Vec3", 1);  // Get class into slot 1
-    WrenVec3* result = (WrenVec3*)wrenSetSlotNewForeign(vm, 0, 1, sizeof(WrenVec3));
-    new (result) WrenVec3(glm::normalize(vec->value));
+	WrenVec3* vec = (WrenVec3*)wrenGetSlotForeign(vm, 0);
+
+	wrenGetVariable(vm, "game", "Vec3", 1);  // Get class into slot 1
+	WrenVec3* result = (WrenVec3*)wrenSetSlotNewForeign(vm, 0, 1, sizeof(WrenVec3));
+	new (result) WrenVec3(glm::normalize(vec->value));
 }
 
 
 // Vec3.distance(a, b) -> Num
 void wren_Vec3Distance(WrenVM* vm)
 {
-    WrenVec3* a = (WrenVec3*)wrenGetSlotForeign(vm, 1);
-    WrenVec3* b = (WrenVec3*)wrenGetSlotForeign(vm, 2);
-    
-    wrenSetSlotDouble(vm, 0, glm::distance(a->value, b->value));
+	WrenVec3* a = (WrenVec3*)wrenGetSlotForeign(vm, 1);
+	WrenVec3* b = (WrenVec3*)wrenGetSlotForeign(vm, 2);
+
+	wrenSetSlotDouble(vm, 0, glm::distance(a->value, b->value));
 }
 
 // Vec3.distanceSquared(a, b) -> Num
 void wren_Vec3DistanceSquared(WrenVM* vm)
 {
-    WrenVec3* a = (WrenVec3*)wrenGetSlotForeign(vm, 1);
-    WrenVec3* b = (WrenVec3*)wrenGetSlotForeign(vm, 2);
-    
-    wrenSetSlotDouble(vm, 0, glm::distance2(a->value, b->value));
+	WrenVec3* a = (WrenVec3*)wrenGetSlotForeign(vm, 1);
+	WrenVec3* b = (WrenVec3*)wrenGetSlotForeign(vm, 2);
+
+	wrenSetSlotDouble(vm, 0, glm::distance2(a->value, b->value));
 }
 
 // Vec3.lerp(a, b, t) -> Vec3
 void wren_Vec3Lerp(WrenVM* vm)
 {
-    WrenVec3* a = (WrenVec3*)wrenGetSlotForeign(vm, 1);
-    WrenVec3* b = (WrenVec3*)wrenGetSlotForeign(vm, 2);
-    float t = (float)wrenGetSlotDouble(vm, 3);
-    
-    wrenGetVariable(vm, "game", "Vec3", 1);  // Get class into slot 1
-    WrenVec3* result = (WrenVec3*)wrenSetSlotNewForeign(vm, 0, 1, sizeof(WrenVec3));
-    new (result) WrenVec3(glm::mix(a->value, b->value, t));
+	WrenVec3* a = (WrenVec3*)wrenGetSlotForeign(vm, 1);
+	WrenVec3* b = (WrenVec3*)wrenGetSlotForeign(vm, 2);
+	float t = (float)wrenGetSlotDouble(vm, 3);
+
+	wrenGetVariable(vm, "game", "Vec3", 1);  // Get class into slot 1
+	WrenVec3* result = (WrenVec3*)wrenSetSlotNewForeign(vm, 0, 1, sizeof(WrenVec3));
+	new (result) WrenVec3(glm::mix(a->value, b->value, t));
 }
 
 // Vec3.dot(a, b) -> Num
 void wren_Vec3DotStatic(WrenVM* vm)
 {
-    WrenVec3* a = (WrenVec3*)wrenGetSlotForeign(vm, 1);
-    WrenVec3* b = (WrenVec3*)wrenGetSlotForeign(vm, 2);
-    
-    wrenSetSlotDouble(vm, 0, glm::dot(a->value, b->value));
+	WrenVec3* a = (WrenVec3*)wrenGetSlotForeign(vm, 1);
+	WrenVec3* b = (WrenVec3*)wrenGetSlotForeign(vm, 2);
+
+	wrenSetSlotDouble(vm, 0, glm::dot(a->value, b->value));
 }
 
 // Vec3.cross(a, b) -> Vec3
 void wren_Vec3CrossStatic(WrenVM* vm)
 {
-    WrenVec3* a = (WrenVec3*)wrenGetSlotForeign(vm, 1);
-    WrenVec3* b = (WrenVec3*)wrenGetSlotForeign(vm, 2);
-    
-    wrenGetVariable(vm, "game", "Vec3", 1);  // Get class into slot 1
-    WrenVec3* result = (WrenVec3*)wrenSetSlotNewForeign(vm, 0, 1, sizeof(WrenVec3));
-    new (result) WrenVec3(glm::cross(a->value, b->value));
+	WrenVec3* a = (WrenVec3*)wrenGetSlotForeign(vm, 1);
+	WrenVec3* b = (WrenVec3*)wrenGetSlotForeign(vm, 2);
+
+	wrenGetVariable(vm, "game", "Vec3", 1);  // Get class into slot 1
+	WrenVec3* result = (WrenVec3*)wrenSetSlotNewForeign(vm, 0, 1, sizeof(WrenVec3));
+	new (result) WrenVec3(glm::cross(a->value, b->value));
 }
 
 // Vec3.reflect(incident, normal) -> Vec3
 void wren_Vec3Reflect(WrenVM* vm)
 {
-    WrenVec3* incident = (WrenVec3*)wrenGetSlotForeign(vm, 1);
-    WrenVec3* normal = (WrenVec3*)wrenGetSlotForeign(vm, 2);
-    
-    wrenGetVariable(vm, "game", "Vec3", 1);  // Get class into slot 1
-    WrenVec3* result = (WrenVec3*)wrenSetSlotNewForeign(vm, 0, 1, sizeof(WrenVec3));
-    new (result) WrenVec3(glm::reflect(incident->value, normal->value));
+	WrenVec3* incident = (WrenVec3*)wrenGetSlotForeign(vm, 1);
+	WrenVec3* normal = (WrenVec3*)wrenGetSlotForeign(vm, 2);
+
+	wrenGetVariable(vm, "game", "Vec3", 1);  // Get class into slot 1
+	WrenVec3* result = (WrenVec3*)wrenSetSlotNewForeign(vm, 0, 1, sizeof(WrenVec3));
+	new (result) WrenVec3(glm::reflect(incident->value, normal->value));
 }
 
 // Vec3.refract(incident, normal, eta) -> Vec3
 void wren_Vec3Refract(WrenVM* vm)
 {
-    WrenVec3* incident = (WrenVec3*)wrenGetSlotForeign(vm, 1);
-    WrenVec3* normal = (WrenVec3*)wrenGetSlotForeign(vm, 2);
-    float eta = (float)wrenGetSlotDouble(vm, 3);
-    
-    wrenGetVariable(vm, "game", "Vec3", 1);  // Get class into slot 1
-    WrenVec3* result = (WrenVec3*)wrenSetSlotNewForeign(vm, 0, 1, sizeof(WrenVec3));
-    new (result) WrenVec3(glm::refract(incident->value, normal->value, eta));
+	WrenVec3* incident = (WrenVec3*)wrenGetSlotForeign(vm, 1);
+	WrenVec3* normal = (WrenVec3*)wrenGetSlotForeign(vm, 2);
+	float eta = (float)wrenGetSlotDouble(vm, 3);
+
+	wrenGetVariable(vm, "game", "Vec3", 1);  // Get class into slot 1
+	WrenVec3* result = (WrenVec3*)wrenSetSlotNewForeign(vm, 0, 1, sizeof(WrenVec3));
+	new (result) WrenVec3(glm::refract(incident->value, normal->value, eta));
 }
 
 // Vec3.min(a, b) -> Vec3
 void wren_Vec3Min(WrenVM* vm)
 {
-    WrenVec3* a = (WrenVec3*)wrenGetSlotForeign(vm, 1);
-    WrenVec3* b = (WrenVec3*)wrenGetSlotForeign(vm, 2);
-    
-    wrenGetVariable(vm, "game", "Vec3", 1);  // Get class into slot 1
-    WrenVec3* result = (WrenVec3*)wrenSetSlotNewForeign(vm, 0, 1, sizeof(WrenVec3));
-    new (result) WrenVec3(glm::min(a->value, b->value));
+	WrenVec3* a = (WrenVec3*)wrenGetSlotForeign(vm, 1);
+	WrenVec3* b = (WrenVec3*)wrenGetSlotForeign(vm, 2);
+
+	wrenGetVariable(vm, "game", "Vec3", 1);  // Get class into slot 1
+	WrenVec3* result = (WrenVec3*)wrenSetSlotNewForeign(vm, 0, 1, sizeof(WrenVec3));
+	new (result) WrenVec3(glm::min(a->value, b->value));
 }
 
 // Vec3.max(a, b) -> Vec3
 void wren_Vec3Max(WrenVM* vm)
 {
-    WrenVec3* a = (WrenVec3*)wrenGetSlotForeign(vm, 1);
-    WrenVec3* b = (WrenVec3*)wrenGetSlotForeign(vm, 2);
-    
-    wrenGetVariable(vm, "game", "Vec3", 1);  // Get class into slot 1
-    WrenVec3* result = (WrenVec3*)wrenSetSlotNewForeign(vm, 0, 1, sizeof(WrenVec3));
-    new (result) WrenVec3(glm::max(a->value, b->value));
+	WrenVec3* a = (WrenVec3*)wrenGetSlotForeign(vm, 1);
+	WrenVec3* b = (WrenVec3*)wrenGetSlotForeign(vm, 2);
+
+	wrenGetVariable(vm, "game", "Vec3", 1);  // Get class into slot 1
+	WrenVec3* result = (WrenVec3*)wrenSetSlotNewForeign(vm, 0, 1, sizeof(WrenVec3));
+	new (result) WrenVec3(glm::max(a->value, b->value));
 }
 
 // Vec3.clamp(v, min, max) -> Vec3
 void wren_Vec3Clamp(WrenVM* vm)
 {
-    WrenVec3* v = (WrenVec3*)wrenGetSlotForeign(vm, 1);
-    WrenVec3* minVec = (WrenVec3*)wrenGetSlotForeign(vm, 2);
-    WrenVec3* maxVec = (WrenVec3*)wrenGetSlotForeign(vm, 3);
-    
-    wrenGetVariable(vm, "game", "Vec3", 1);  // Get class into slot 1
-    WrenVec3* result = (WrenVec3*)wrenSetSlotNewForeign(vm, 0, 1, sizeof(WrenVec3));
-    new (result) WrenVec3(glm::clamp(v->value, minVec->value, maxVec->value));
+	WrenVec3* v = (WrenVec3*)wrenGetSlotForeign(vm, 1);
+	WrenVec3* minVec = (WrenVec3*)wrenGetSlotForeign(vm, 2);
+	WrenVec3* maxVec = (WrenVec3*)wrenGetSlotForeign(vm, 3);
+
+	wrenGetVariable(vm, "game", "Vec3", 1);  // Get class into slot 1
+	WrenVec3* result = (WrenVec3*)wrenSetSlotNewForeign(vm, 0, 1, sizeof(WrenVec3));
+	new (result) WrenVec3(glm::clamp(v->value, minVec->value, maxVec->value));
 }
 
 // Vec3.zero() -> Vec3
 void wren_Vec3Zero(WrenVM* vm)
 {
-    wrenGetVariable(vm, "game", "Vec3", 1);  // Get class into slot 1
-    WrenVec3* result = (WrenVec3*)wrenSetSlotNewForeign(vm, 0, 1, sizeof(WrenVec3));
-    new (result) WrenVec3(0.0f, 0.0f, 0.0f);
+	wrenGetVariable(vm, "game", "Vec3", 1);  // Get class into slot 1
+	WrenVec3* result = (WrenVec3*)wrenSetSlotNewForeign(vm, 0, 1, sizeof(WrenVec3));
+	new (result) WrenVec3(0.0f, 0.0f, 0.0f);
 }
 
 // Vec3.one() -> Vec3
 void wren_Vec3One(WrenVM* vm)
 {
-    wrenGetVariable(vm, "game", "Vec3", 1);  // Get class into slot 1
-    WrenVec3* result = (WrenVec3*)wrenSetSlotNewForeign(vm, 0, 1, sizeof(WrenVec3));
-    new (result) WrenVec3(1.0f, 1.0f, 1.0f);
+	wrenGetVariable(vm, "game", "Vec3", 1);  // Get class into slot 1
+	WrenVec3* result = (WrenVec3*)wrenSetSlotNewForeign(vm, 0, 1, sizeof(WrenVec3));
+	new (result) WrenVec3(1.0f, 1.0f, 1.0f);
 }
 
 // Vec3.right() -> Vec3
 void wren_Vec3Right(WrenVM* vm)
 {
-    wrenGetVariable(vm, "game", "Vec3", 1);  // Get class into slot 1
-    WrenVec3* result = (WrenVec3*)wrenSetSlotNewForeign(vm, 0, 1, sizeof(WrenVec3));
-    new (result) WrenVec3(1.0f, 0.0f, 0.0f);
+	wrenGetVariable(vm, "game", "Vec3", 1);  // Get class into slot 1
+	WrenVec3* result = (WrenVec3*)wrenSetSlotNewForeign(vm, 0, 1, sizeof(WrenVec3));
+	new (result) WrenVec3(1.0f, 0.0f, 0.0f);
 }
 
 // Vec3.up() -> Vec3
 void wren_Vec3Up(WrenVM* vm)
 {
-    wrenGetVariable(vm, "game", "Vec3", 1);  // Get class into slot 1
-    WrenVec3* result = (WrenVec3*)wrenSetSlotNewForeign(vm, 0, 1, sizeof(WrenVec3));
-    new (result) WrenVec3(0.0f, 1.0f, 0.0f);
+	wrenGetVariable(vm, "game", "Vec3", 1);  // Get class into slot 1
+	WrenVec3* result = (WrenVec3*)wrenSetSlotNewForeign(vm, 0, 1, sizeof(WrenVec3));
+	new (result) WrenVec3(0.0f, 1.0f, 0.0f);
 }
 
 // Vec3.forward() -> Vec3
 void wren_Vec3Forward(WrenVM* vm)
 {
-    wrenGetVariable(vm, "game", "Vec3", 1);  // Get class into slot 1
-    WrenVec3* result = (WrenVec3*)wrenSetSlotNewForeign(vm, 0, 1, sizeof(WrenVec3));
-    new (result) WrenVec3(0.0f, 0.0f, -1.0f);
+	wrenGetVariable(vm, "game", "Vec3", 1);  // Get class into slot 1
+	WrenVec3* result = (WrenVec3*)wrenSetSlotNewForeign(vm, 0, 1, sizeof(WrenVec3));
+	new (result) WrenVec3(0.0f, 0.0f, -1.0f);
 }
 
 // Vec3.left() -> Vec3
 void wren_Vec3Left(WrenVM* vm)
 {
-    wrenGetVariable(vm, "game", "Vec3", 1);  // Get class into slot 1
-    WrenVec3* result = (WrenVec3*)wrenSetSlotNewForeign(vm, 0, 1, sizeof(WrenVec3));
-    new (result) WrenVec3(-1.0f, 0.0f, 0.0f);
+	wrenGetVariable(vm, "game", "Vec3", 1);  // Get class into slot 1
+	WrenVec3* result = (WrenVec3*)wrenSetSlotNewForeign(vm, 0, 1, sizeof(WrenVec3));
+	new (result) WrenVec3(-1.0f, 0.0f, 0.0f);
 }
 
 // Vec3.down() -> Vec3
 void wren_Vec3Down(WrenVM* vm)
 {
-    wrenGetVariable(vm, "game", "Vec3", 1);  // Get class into slot 1
-    WrenVec3* result = (WrenVec3*)wrenSetSlotNewForeign(vm, 0, 1, sizeof(WrenVec3));
-    new (result) WrenVec3(0.0f, -1.0f, 0.0f);
+	wrenGetVariable(vm, "game", "Vec3", 1);  // Get class into slot 1
+	WrenVec3* result = (WrenVec3*)wrenSetSlotNewForeign(vm, 0, 1, sizeof(WrenVec3));
+	new (result) WrenVec3(0.0f, -1.0f, 0.0f);
 }
 
 // Vec3.back() -> Vec3
 void wren_Vec3Back(WrenVM* vm)
 {
-    wrenGetVariable(vm, "game", "Vec3", 1);  // Get class into slot 1
-    WrenVec3* result = (WrenVec3*)wrenSetSlotNewForeign(vm, 0, 1, sizeof(WrenVec3));
-    new (result) WrenVec3(0.0f, 0.0f, 1.0f);
+	wrenGetVariable(vm, "game", "Vec3", 1);  // Get class into slot 1
+	WrenVec3* result = (WrenVec3*)wrenSetSlotNewForeign(vm, 0, 1, sizeof(WrenVec3));
+	new (result) WrenVec3(0.0f, 0.0f, 1.0f);
 }
 
 // Register Vec3 foreign class
@@ -898,236 +900,236 @@ WREN_CLASS_STATIC("game", "Vec3", "back()", wren_Vec3Back, "Back vector (0, 0, 1
 
 struct WrenVec4
 {
-    glm::vec4 value;
-    
-    WrenVec4() : value(0.0f, 0.0f, 0.0f, 0.0f) {}
-    WrenVec4(float x, float y, float z, float w) : value(x, y, z, w) {}
-    WrenVec4(const glm::vec4& v) : value(v) {}
+	glm::vec4 value;
+
+	WrenVec4() : value(0.0f, 0.0f, 0.0f, 0.0f) {}
+	WrenVec4(float x, float y, float z, float w) : value(x, y, z, w) {}
+	WrenVec4(const glm::vec4& v) : value(v) {}
 };
 
 void wren_Vec4Allocate(WrenVM* vm)
 {
-    wrenGetVariable(vm, "game", "Vec4", 0);  // Get class into slot 1
-    WrenVec4* vec = static_cast<WrenVec4*>(wrenSetSlotNewForeign(vm, 0, 0, sizeof(WrenVec4)));
-    
-    if (wrenGetSlotCount(vm) >= 5)
+	wrenGetVariable(vm, "game", "Vec4", 0);  // Get class into slot 1
+	WrenVec4* vec = static_cast<WrenVec4*>(wrenSetSlotNewForeign(vm, 0, 0, sizeof(WrenVec4)));
+
+	if (wrenGetSlotCount(vm) >= 5)
 	{
-        float x = static_cast<int>(wrenGetSlotDouble(vm, 1));
-        float y = static_cast<int>(wrenGetSlotDouble(vm, 2));
-        float z = static_cast<int>(wrenGetSlotDouble(vm, 3));
-        float w = static_cast<int>(wrenGetSlotDouble(vm, 4));
-        new (vec) WrenVec4(x, y, z, w);
-    }
+		float x = static_cast<int>(wrenGetSlotDouble(vm, 1));
+		float y = static_cast<int>(wrenGetSlotDouble(vm, 2));
+		float z = static_cast<int>(wrenGetSlotDouble(vm, 3));
+		float w = static_cast<int>(wrenGetSlotDouble(vm, 4));
+		new (vec) WrenVec4(x, y, z, w);
+	}
 	else
 	{
-        new (vec) WrenVec4();
-    }
+		new (vec) WrenVec4();
+	}
 }
 
 void wren_Vec4Finalize(void* data)
 {
-    WrenVec4* vec = (WrenVec4*)data;
-    vec->~WrenVec4();
+	WrenVec4* vec = (WrenVec4*)data;
+	vec->~WrenVec4();
 }
 
 void wren_Vec4GetX(WrenVM* vm)
 {
-    WrenVec4* vec = (WrenVec4*)wrenGetSlotForeign(vm, 0);
-    wrenSetSlotDouble(vm, 0, vec->value.x);
+	WrenVec4* vec = (WrenVec4*)wrenGetSlotForeign(vm, 0);
+	wrenSetSlotDouble(vm, 0, vec->value.x);
 }
 
 void wren_Vec4GetY(WrenVM* vm)
 {
-    WrenVec4* vec = (WrenVec4*)wrenGetSlotForeign(vm, 0);
-    wrenSetSlotDouble(vm, 0, vec->value.y);
+	WrenVec4* vec = (WrenVec4*)wrenGetSlotForeign(vm, 0);
+	wrenSetSlotDouble(vm, 0, vec->value.y);
 }
 
 void wren_Vec4GetZ(WrenVM* vm)
 {
-    WrenVec4* vec = (WrenVec4*)wrenGetSlotForeign(vm, 0);
-    wrenSetSlotDouble(vm, 0, vec->value.z);
+	WrenVec4* vec = (WrenVec4*)wrenGetSlotForeign(vm, 0);
+	wrenSetSlotDouble(vm, 0, vec->value.z);
 }
 
 void wren_Vec4GetW(WrenVM* vm)
 {
-    WrenVec4* vec = (WrenVec4*)wrenGetSlotForeign(vm, 0);
-    wrenSetSlotDouble(vm, 0, vec->value.w);
+	WrenVec4* vec = (WrenVec4*)wrenGetSlotForeign(vm, 0);
+	wrenSetSlotDouble(vm, 0, vec->value.w);
 }
 
 void wren_Vec4SetX(WrenVM* vm)
 {
-    WrenVec4* vec = (WrenVec4*)wrenGetSlotForeign(vm, 0);
-    vec->value.x = (float)wrenGetSlotDouble(vm, 1);
+	WrenVec4* vec = (WrenVec4*)wrenGetSlotForeign(vm, 0);
+	vec->value.x = (float)wrenGetSlotDouble(vm, 1);
 }
 
 void wren_Vec4SetY(WrenVM* vm)
 {
-    WrenVec4* vec = (WrenVec4*)wrenGetSlotForeign(vm, 0);
-    vec->value.y = (float)wrenGetSlotDouble(vm, 1);
+	WrenVec4* vec = (WrenVec4*)wrenGetSlotForeign(vm, 0);
+	vec->value.y = (float)wrenGetSlotDouble(vm, 1);
 }
 
 void wren_Vec4SetZ(WrenVM* vm)
 {
-    WrenVec4* vec = (WrenVec4*)wrenGetSlotForeign(vm, 0);
-    vec->value.z = (float)wrenGetSlotDouble(vm, 1);
+	WrenVec4* vec = (WrenVec4*)wrenGetSlotForeign(vm, 0);
+	vec->value.z = (float)wrenGetSlotDouble(vm, 1);
 }
 
 void wren_Vec4SetW(WrenVM* vm)
 {
-    WrenVec4* vec = (WrenVec4*)wrenGetSlotForeign(vm, 0);
-    vec->value.w = (float)wrenGetSlotDouble(vm, 1);
+	WrenVec4* vec = (WrenVec4*)wrenGetSlotForeign(vm, 0);
+	vec->value.w = (float)wrenGetSlotDouble(vm, 1);
 }
 
 void wren_Vec4ToString(WrenVM* vm)
 {
-    WrenVec4* vec = (WrenVec4*)wrenGetSlotForeign(vm, 0);
-    
-    char buffer[80];
-    snprintf(buffer, sizeof(buffer), "Vec4(%.2f, %.2f, %.2f)", 
-             vec->value.x, vec->value.y, vec->value.z);
-    
-    wrenSetSlotString(vm, 0, buffer);
+	WrenVec4* vec = (WrenVec4*)wrenGetSlotForeign(vm, 0);
+
+	char buffer[80];
+	snprintf(buffer, sizeof(buffer), "Vec4(%.2f, %.2f, %.2f)",
+		vec->value.x, vec->value.y, vec->value.z);
+
+	wrenSetSlotString(vm, 0, buffer);
 }
 
 void wren_Vec4Add(WrenVM* vm)
 {
-    WrenVec4* a = (WrenVec4*)wrenGetSlotForeign(vm, 0);
-    WrenVec4* b = (WrenVec4*)wrenGetSlotForeign(vm, 1);
-    
-    wrenGetVariable(vm, "game", "Vec4", 1);  // Get class into slot 1
-    WrenVec4* result = (WrenVec4*)wrenSetSlotNewForeign(vm, 0, 1, sizeof(WrenVec4));
-    new (result) WrenVec4(a->value + b->value);
+	WrenVec4* a = (WrenVec4*)wrenGetSlotForeign(vm, 0);
+	WrenVec4* b = (WrenVec4*)wrenGetSlotForeign(vm, 1);
+
+	wrenGetVariable(vm, "game", "Vec4", 1);  // Get class into slot 1
+	WrenVec4* result = (WrenVec4*)wrenSetSlotNewForeign(vm, 0, 1, sizeof(WrenVec4));
+	new (result) WrenVec4(a->value + b->value);
 }
 
 void wren_Vec4Subtract(WrenVM* vm)
 {
-    WrenVec4* a = (WrenVec4*)wrenGetSlotForeign(vm, 0);
-    WrenVec4* b = (WrenVec4*)wrenGetSlotForeign(vm, 1);
-    
-    wrenGetVariable(vm, "game", "Vec4", 1);  // Get class into slot 1
-    WrenVec4* result = (WrenVec4*)wrenSetSlotNewForeign(vm, 0, 1, sizeof(WrenVec4));
-    new (result) WrenVec4(a->value - b->value);
+	WrenVec4* a = (WrenVec4*)wrenGetSlotForeign(vm, 0);
+	WrenVec4* b = (WrenVec4*)wrenGetSlotForeign(vm, 1);
+
+	wrenGetVariable(vm, "game", "Vec4", 1);  // Get class into slot 1
+	WrenVec4* result = (WrenVec4*)wrenSetSlotNewForeign(vm, 0, 1, sizeof(WrenVec4));
+	new (result) WrenVec4(a->value - b->value);
 }
 
 void wren_Vec4Multiply(WrenVM* vm)
 {
-    WrenVec4* vec = (WrenVec4*)wrenGetSlotForeign(vm, 0);
-    float scalar = (float)wrenGetSlotDouble(vm, 1);
-    
-    wrenGetVariable(vm, "game", "Vec4", 1);  // Get class into slot 1
-    WrenVec4* result = (WrenVec4*)wrenSetSlotNewForeign(vm, 0, 1, sizeof(WrenVec4));
-    new (result) WrenVec4(vec->value * scalar);
+	WrenVec4* vec = (WrenVec4*)wrenGetSlotForeign(vm, 0);
+	float scalar = (float)wrenGetSlotDouble(vm, 1);
+
+	wrenGetVariable(vm, "game", "Vec4", 1);  // Get class into slot 1
+	WrenVec4* result = (WrenVec4*)wrenSetSlotNewForeign(vm, 0, 1, sizeof(WrenVec4));
+	new (result) WrenVec4(vec->value * scalar);
 }
 
 void wren_Vec4Length(WrenVM* vm)
 {
-    WrenVec4* vec = (WrenVec4*)wrenGetSlotForeign(vm, 0);
-    wrenSetSlotDouble(vm, 0, glm::length(vec->value));
+	WrenVec4* vec = (WrenVec4*)wrenGetSlotForeign(vm, 0);
+	wrenSetSlotDouble(vm, 0, glm::length(vec->value));
 }
 
 void wren_Vec4LengthSquared(WrenVM* vm)
 {
-    WrenVec4* vec = (WrenVec4*)wrenGetSlotForeign(vm, 0);
-    wrenSetSlotDouble(vm, 0, glm::length2(vec->value));
+	WrenVec4* vec = (WrenVec4*)wrenGetSlotForeign(vm, 0);
+	wrenSetSlotDouble(vm, 0, glm::length2(vec->value));
 }
 
 void wren_Vec4Normalize(WrenVM* vm)
 {
-    WrenVec4* vec = (WrenVec4*)wrenGetSlotForeign(vm, 0);
-    
-    wrenGetVariable(vm, "game", "Vec4", 1);  // Get class into slot 1
-    WrenVec4* result = (WrenVec4*)wrenSetSlotNewForeign(vm, 0, 1, sizeof(WrenVec4));
-    new (result) WrenVec4(glm::normalize(vec->value));
+	WrenVec4* vec = (WrenVec4*)wrenGetSlotForeign(vm, 0);
+
+	wrenGetVariable(vm, "game", "Vec4", 1);  // Get class into slot 1
+	WrenVec4* result = (WrenVec4*)wrenSetSlotNewForeign(vm, 0, 1, sizeof(WrenVec4));
+	new (result) WrenVec4(glm::normalize(vec->value));
 }
 
 
 // Vec4.distance(a, b) -> Num
 void wren_Vec4Distance(WrenVM* vm)
 {
-    WrenVec4* a = (WrenVec4*)wrenGetSlotForeign(vm, 1);
-    WrenVec4* b = (WrenVec4*)wrenGetSlotForeign(vm, 2);
-    
-    wrenSetSlotDouble(vm, 0, glm::distance(a->value, b->value));
+	WrenVec4* a = (WrenVec4*)wrenGetSlotForeign(vm, 1);
+	WrenVec4* b = (WrenVec4*)wrenGetSlotForeign(vm, 2);
+
+	wrenSetSlotDouble(vm, 0, glm::distance(a->value, b->value));
 }
 
 // Vec4.distanceSquared(a, b) -> Num
 void wren_Vec4DistanceSquared(WrenVM* vm)
 {
-    WrenVec4* a = (WrenVec4*)wrenGetSlotForeign(vm, 1);
-    WrenVec4* b = (WrenVec4*)wrenGetSlotForeign(vm, 2);
-    
-    wrenSetSlotDouble(vm, 0, glm::distance2(a->value, b->value));
+	WrenVec4* a = (WrenVec4*)wrenGetSlotForeign(vm, 1);
+	WrenVec4* b = (WrenVec4*)wrenGetSlotForeign(vm, 2);
+
+	wrenSetSlotDouble(vm, 0, glm::distance2(a->value, b->value));
 }
 
 // Vec4.lerp(a, b, t) -> Vec4
 void wren_Vec4Lerp(WrenVM* vm)
 {
-    WrenVec4* a = (WrenVec4*)wrenGetSlotForeign(vm, 1);
-    WrenVec4* b = (WrenVec4*)wrenGetSlotForeign(vm, 2);
-    float t = (float)wrenGetSlotDouble(vm, 3);
-    
-    wrenGetVariable(vm, "game", "Vec4", 1);  // Get class into slot 1
-    WrenVec4* result = (WrenVec4*)wrenSetSlotNewForeign(vm, 0, 1, sizeof(WrenVec4));
-    new (result) WrenVec4(glm::mix(a->value, b->value, t));
+	WrenVec4* a = (WrenVec4*)wrenGetSlotForeign(vm, 1);
+	WrenVec4* b = (WrenVec4*)wrenGetSlotForeign(vm, 2);
+	float t = (float)wrenGetSlotDouble(vm, 3);
+
+	wrenGetVariable(vm, "game", "Vec4", 1);  // Get class into slot 1
+	WrenVec4* result = (WrenVec4*)wrenSetSlotNewForeign(vm, 0, 1, sizeof(WrenVec4));
+	new (result) WrenVec4(glm::mix(a->value, b->value, t));
 }
 
 // Vec4.dot(a, b) -> Num
 void wren_Vec4DotStatic(WrenVM* vm)
 {
-    WrenVec4* a = (WrenVec4*)wrenGetSlotForeign(vm, 1);
-    WrenVec4* b = (WrenVec4*)wrenGetSlotForeign(vm, 2);
-    
-    wrenSetSlotDouble(vm, 0, glm::dot(a->value, b->value));
+	WrenVec4* a = (WrenVec4*)wrenGetSlotForeign(vm, 1);
+	WrenVec4* b = (WrenVec4*)wrenGetSlotForeign(vm, 2);
+
+	wrenSetSlotDouble(vm, 0, glm::dot(a->value, b->value));
 }
 
 // Vec4.min(a, b) -> Vec4
 void wren_Vec4Min(WrenVM* vm)
 {
-    WrenVec4* a = (WrenVec4*)wrenGetSlotForeign(vm, 1);
-    WrenVec4* b = (WrenVec4*)wrenGetSlotForeign(vm, 2);
-    
-    wrenGetVariable(vm, "game", "Vec4", 1);  // Get class into slot 1
-    WrenVec4* result = (WrenVec4*)wrenSetSlotNewForeign(vm, 0, 1, sizeof(WrenVec4));
-    new (result) WrenVec4(glm::min(a->value, b->value));
+	WrenVec4* a = (WrenVec4*)wrenGetSlotForeign(vm, 1);
+	WrenVec4* b = (WrenVec4*)wrenGetSlotForeign(vm, 2);
+
+	wrenGetVariable(vm, "game", "Vec4", 1);  // Get class into slot 1
+	WrenVec4* result = (WrenVec4*)wrenSetSlotNewForeign(vm, 0, 1, sizeof(WrenVec4));
+	new (result) WrenVec4(glm::min(a->value, b->value));
 }
 
 // Vec4.max(a, b) -> Vec4
 void wren_Vec4Max(WrenVM* vm)
 {
-    WrenVec4* a = (WrenVec4*)wrenGetSlotForeign(vm, 1);
-    WrenVec4* b = (WrenVec4*)wrenGetSlotForeign(vm, 2);
-    
-    wrenGetVariable(vm, "game", "Vec4", 1);  // Get class into slot 1
-    WrenVec4* result = (WrenVec4*)wrenSetSlotNewForeign(vm, 0, 1, sizeof(WrenVec4));
-    new (result) WrenVec4(glm::max(a->value, b->value));
+	WrenVec4* a = (WrenVec4*)wrenGetSlotForeign(vm, 1);
+	WrenVec4* b = (WrenVec4*)wrenGetSlotForeign(vm, 2);
+
+	wrenGetVariable(vm, "game", "Vec4", 1);  // Get class into slot 1
+	WrenVec4* result = (WrenVec4*)wrenSetSlotNewForeign(vm, 0, 1, sizeof(WrenVec4));
+	new (result) WrenVec4(glm::max(a->value, b->value));
 }
 
 // Vec4.clamp(v, min, max) -> Vec4
 void wren_Vec4Clamp(WrenVM* vm)
 {
-    WrenVec4* v = (WrenVec4*)wrenGetSlotForeign(vm, 1);
-    WrenVec4* minVec = (WrenVec4*)wrenGetSlotForeign(vm, 2);
-    WrenVec4* maxVec = (WrenVec4*)wrenGetSlotForeign(vm, 3);
-    
-    wrenGetVariable(vm, "game", "Vec4", 1);  // Get class into slot 1
-    WrenVec4* result = (WrenVec4*)wrenSetSlotNewForeign(vm, 0, 1, sizeof(WrenVec4));
-    new (result) WrenVec4(glm::clamp(v->value, minVec->value, maxVec->value));
+	WrenVec4* v = (WrenVec4*)wrenGetSlotForeign(vm, 1);
+	WrenVec4* minVec = (WrenVec4*)wrenGetSlotForeign(vm, 2);
+	WrenVec4* maxVec = (WrenVec4*)wrenGetSlotForeign(vm, 3);
+
+	wrenGetVariable(vm, "game", "Vec4", 1);  // Get class into slot 1
+	WrenVec4* result = (WrenVec4*)wrenSetSlotNewForeign(vm, 0, 1, sizeof(WrenVec4));
+	new (result) WrenVec4(glm::clamp(v->value, minVec->value, maxVec->value));
 }
 
 // Vec4.zero() -> Vec4
 void wren_Vec4Zero(WrenVM* vm)
 {
-    wrenGetVariable(vm, "game", "Vec4", 1);  // Get class into slot 1
-    WrenVec4* result = (WrenVec4*)wrenSetSlotNewForeign(vm, 0, 1, sizeof(WrenVec4));
-    new (result) WrenVec4(0.0f, 0.0f, 0.0f, 0.0f);
+	wrenGetVariable(vm, "game", "Vec4", 1);  // Get class into slot 1
+	WrenVec4* result = (WrenVec4*)wrenSetSlotNewForeign(vm, 0, 1, sizeof(WrenVec4));
+	new (result) WrenVec4(0.0f, 0.0f, 0.0f, 0.0f);
 }
 
 // Vec4.one() -> Vec4
 void wren_Vec4One(WrenVM* vm)
 {
-    wrenGetVariable(vm, "game", "Vec4", 1);  // Get class into slot 1
-    WrenVec4* result = (WrenVec4*)wrenSetSlotNewForeign(vm, 0, 1, sizeof(WrenVec4));
-    new (result) WrenVec4(1.0f, 1.0f, 1.0f, 1.0f);
+	wrenGetVariable(vm, "game", "Vec4", 1);  // Get class into slot 1
+	WrenVec4* result = (WrenVec4*)wrenSetSlotNewForeign(vm, 0, 1, sizeof(WrenVec4));
+	new (result) WrenVec4(1.0f, 1.0f, 1.0f, 1.0f);
 }
 
 // Register Vec3 foreign class
@@ -1169,100 +1171,101 @@ WREN_CLASS_STATIC("game", "Vec4", "one()", wren_Vec4One, "One vector (1, 1, 1, 1
 // ============================================================================
 
 struct WrenQuat {
-    glm::quat value;
-    
-    WrenQuat() : value(1.0f, 0.0f, 0.0f, 0.0f) {}  // Identity quaternion
-    WrenQuat(float w, float x, float y, float z) : value(w, x, y, z) {}
-    WrenQuat(const glm::quat& q) : value(q) {}
+	glm::quat value;
+
+	WrenQuat() : value(1.0f, 0.0f, 0.0f, 0.0f) {}  // Identity quaternion
+	WrenQuat(float w, float x, float y, float z) : value(w, x, y, z) {}
+	WrenQuat(const glm::quat& q) : value(q) {}
 };
 
 // Allocator
 void wren_QuatAllocate(WrenVM* vm)
 {
-    wrenGetVariable(vm, "game", "Quat", 1);  // Get class into slot 1
-    WrenQuat* quat = (WrenQuat*)wrenSetSlotNewForeign(vm, 0, 1, sizeof(WrenQuat));
-    
-    if (wrenGetSlotCount(vm) >= 5)
+	wrenGetVariable(vm, "game", "Quat", 0);  // Get class into slot 1
+	WrenQuat* quat = (WrenQuat*)wrenSetSlotNewForeign(vm, 0, 0, sizeof(WrenQuat));
+
+	if (wrenGetSlotCount(vm) >= 5)
 	{
-        // Quat.new(w, x, y, z)
-        float w = (float)wrenGetSlotDouble(vm, 1);
-        float x = (float)wrenGetSlotDouble(vm, 2);
-        float y = (float)wrenGetSlotDouble(vm, 3);
-        float z = (float)wrenGetSlotDouble(vm, 4);
-        new (quat) WrenQuat(w, x, y, z);
-    } else {
-        // Quat.new() - identity
-        new (quat) WrenQuat();
-    }
+		// Quat.new(w, x, y, z)
+		float w = (float)wrenGetSlotDouble(vm, 1);
+		float x = (float)wrenGetSlotDouble(vm, 2);
+		float y = (float)wrenGetSlotDouble(vm, 3);
+		float z = (float)wrenGetSlotDouble(vm, 4);
+		new (quat) WrenQuat(w, x, y, z);
+	}
+	else {
+		// Quat.new() - identity
+		new (quat) WrenQuat();
+	}
 }
 
 // Finalizer
 void wren_QuatFinalize(void* data)
 {
-    WrenQuat* quat = (WrenQuat*)data;
-    quat->~WrenQuat();
+	WrenQuat* quat = (WrenQuat*)data;
+	quat->~WrenQuat();
 }
 
 // Component getters
 void wren_QuatGetW(WrenVM* vm)
 {
-    WrenQuat* quat = (WrenQuat*)wrenGetSlotForeign(vm, 0);
-    wrenSetSlotDouble(vm, 0, quat->value.w);
+	WrenQuat* quat = (WrenQuat*)wrenGetSlotForeign(vm, 0);
+	wrenSetSlotDouble(vm, 0, quat->value.w);
 }
 
-void wren_QuatGetX(WrenVM* vm) 
+void wren_QuatGetX(WrenVM* vm)
 {
-    WrenQuat* quat = (WrenQuat*)wrenGetSlotForeign(vm, 0);
-    wrenSetSlotDouble(vm, 0, quat->value.x);
+	WrenQuat* quat = (WrenQuat*)wrenGetSlotForeign(vm, 0);
+	wrenSetSlotDouble(vm, 0, quat->value.x);
 }
 
 void wren_QuatGetY(WrenVM* vm)
 {
-    WrenQuat* quat = (WrenQuat*)wrenGetSlotForeign(vm, 0);
-    wrenSetSlotDouble(vm, 0, quat->value.y);
+	WrenQuat* quat = (WrenQuat*)wrenGetSlotForeign(vm, 0);
+	wrenSetSlotDouble(vm, 0, quat->value.y);
 }
 
-void wren_QuatGetZ(WrenVM* vm) 
+void wren_QuatGetZ(WrenVM* vm)
 {
-    WrenQuat* quat = (WrenQuat*)wrenGetSlotForeign(vm, 0);
-    wrenSetSlotDouble(vm, 0, quat->value.z);
+	WrenQuat* quat = (WrenQuat*)wrenGetSlotForeign(vm, 0);
+	wrenSetSlotDouble(vm, 0, quat->value.z);
 }
 
 // Component setters
 void wren_QuatSetW(WrenVM* vm)
 {
-    WrenQuat* quat = (WrenQuat*)wrenGetSlotForeign(vm, 0);
-    quat->value.w = (float)wrenGetSlotDouble(vm, 1);
+	WrenQuat* quat = (WrenQuat*)wrenGetSlotForeign(vm, 0);
+	quat->value.w = (float)wrenGetSlotDouble(vm, 1);
 }
 
 void wren_QuatSetX(WrenVM* vm)
 {
-    WrenQuat* quat = (WrenQuat*)wrenGetSlotForeign(vm, 0);
-    quat->value.x = (float)wrenGetSlotDouble(vm, 1);
+	WrenQuat* quat = (WrenQuat*)wrenGetSlotForeign(vm, 0);
+	quat->value.x = (float)wrenGetSlotDouble(vm, 1);
 }
 
 void wren_QuatSetY(WrenVM* vm)
 {
-    WrenQuat* quat = (WrenQuat*)wrenGetSlotForeign(vm, 0);
-    quat->value.y = (float)wrenGetSlotDouble(vm, 1);
+	WrenQuat* quat = (WrenQuat*)wrenGetSlotForeign(vm, 0);
+	quat->value.y = (float)wrenGetSlotDouble(vm, 1);
 }
 
 void wren_QuatSetZ(WrenVM* vm)
 {
-    WrenQuat* quat = (WrenQuat*)wrenGetSlotForeign(vm, 0);
-    quat->value.z = (float)wrenGetSlotDouble(vm, 1);
+	WrenQuat* quat = (WrenQuat*)wrenGetSlotForeign(vm, 0);
+	quat->value.z = (float)wrenGetSlotDouble(vm, 1);
 }
 
 // toString
 void wren_QuatToString(WrenVM* vm)
 {
-    WrenQuat* quat = (WrenQuat*)wrenGetSlotForeign(vm, 0);
-    
-    char buffer[96];
-    snprintf(buffer, sizeof(buffer), "Quat(%.2f, %.2f, %.2f, %.2f)", 
-             quat->value.w, quat->value.x, quat->value.y, quat->value.z);
-    
-    wrenSetSlotString(vm, 0, buffer);
+	WrenQuat* quat = (WrenQuat*)wrenGetSlotForeign(vm, 0);
+
+	char buffer[96];
+	snprintf(buffer, sizeof(buffer), "Quat(%.2f, %.2f, %.2f, %.2f)",
+		quat->value.w, quat->value.x, quat->value.y, quat->value.z);
+
+	wrenSetSlotString(vm, 0, buffer);
 }
 
 // Static constructors for common rotations
@@ -1270,69 +1273,69 @@ void wren_QuatToString(WrenVM* vm)
 // Quat.identity() -> Quat
 void wren_QuatIdentity(WrenVM* vm)
 {
-    wrenGetVariable(vm, "game", "Quat", 1);  // Get class into slot 1
-    WrenQuat* quat = (WrenQuat*)wrenSetSlotNewForeign(vm, 0, 1, sizeof(WrenQuat));
-    new (quat) WrenQuat(1.0f, 0.0f, 0.0f, 0.0f);
+	wrenGetVariable(vm, "game", "Quat", 1);  // Get class into slot 1
+	WrenQuat* quat = (WrenQuat*)wrenSetSlotNewForeign(vm, 0, 1, sizeof(WrenQuat));
+	new (quat) WrenQuat(1.0f, 0.0f, 0.0f, 0.0f);
 }
 
 // Quat.fromAxisAngle(axis, angle) -> Quat
 void wren_QuatFromAxisAngle(WrenVM* vm)
 {
-    WrenVec3* axis = (WrenVec3*)wrenGetSlotForeign(vm, 1);
-    float angle = (float)wrenGetSlotDouble(vm, 2);
-    
-    if (!axis)
+	WrenVec3* axis = (WrenVec3*)wrenGetSlotForeign(vm, 1);
+	float angle = (float)wrenGetSlotDouble(vm, 2);
+
+	if (!axis)
 	{
-        DEBUG_ERROR("Quat.fromAxisAngle: Invalid axis");
-        wrenSetSlotNull(vm, 0);
-        return;
-    }
-    
-    wrenGetVariable(vm, "game", "Quat", 1);  // Get class into slot 1
-    WrenQuat* quat = (WrenQuat*)wrenSetSlotNewForeign(vm, 0, 1, sizeof(WrenQuat));
-    new (quat) WrenQuat(glm::angleAxis(angle, glm::normalize(axis->value)));
+		DEBUG_ERROR("Quat.fromAxisAngle: Invalid axis");
+		wrenSetSlotNull(vm, 0);
+		return;
+	}
+
+	wrenGetVariable(vm, "game", "Quat", 1);  // Get class into slot 1
+	WrenQuat* quat = (WrenQuat*)wrenSetSlotNewForeign(vm, 0, 1, sizeof(WrenQuat));
+	new (quat) WrenQuat(glm::angleAxis(angle, glm::normalize(axis->value)));
 }
 
 // Quat.fromEuler(x, y, z) -> Quat (angles in radians)
 void wren_QuatFromEuler(WrenVM* vm)
 {
-    float x = (float)wrenGetSlotDouble(vm, 1);
-    float y = (float)wrenGetSlotDouble(vm, 2);
-    float z = (float)wrenGetSlotDouble(vm, 3);
-    
-    wrenGetVariable(vm, "game", "Quat", 1);  // Get class into slot 1
-    WrenQuat* quat = (WrenQuat*)wrenSetSlotNewForeign(vm, 0, 1, sizeof(WrenQuat));
-    new (quat) WrenQuat(glm::quat(glm::vec3(x, y, z)));
+	float x = (float)wrenGetSlotDouble(vm, 1);
+	float y = (float)wrenGetSlotDouble(vm, 2);
+	float z = (float)wrenGetSlotDouble(vm, 3);
+
+	wrenGetVariable(vm, "game", "Quat", 1);  // Get class into slot 1
+	WrenQuat* quat = (WrenQuat*)wrenSetSlotNewForeign(vm, 0, 1, sizeof(WrenQuat));
+	new (quat) WrenQuat(glm::quat(glm::vec3(x, y, z)));
 }
 
 // Quat.fromEulerDegrees(x, y, z) -> Quat (angles in degrees)
 void wren_QuatFromEulerDegrees(WrenVM* vm)
 {
-    float x = glm::radians((float)wrenGetSlotDouble(vm, 1));
-    float y = glm::radians((float)wrenGetSlotDouble(vm, 2));
-    float z = glm::radians((float)wrenGetSlotDouble(vm, 3));
-    
-    wrenGetVariable(vm, "game", "Quat", 1);  // Get class into slot 1
-    WrenQuat* quat = (WrenQuat*)wrenSetSlotNewForeign(vm, 0, 1, sizeof(WrenQuat));
-    new (quat) WrenQuat(glm::quat(glm::vec3(x, y, z)));
+	float x = glm::radians((float)wrenGetSlotDouble(vm, 1));
+	float y = glm::radians((float)wrenGetSlotDouble(vm, 2));
+	float z = glm::radians((float)wrenGetSlotDouble(vm, 3));
+
+	wrenGetVariable(vm, "game", "Quat", 1);  // Get class into slot 1
+	WrenQuat* quat = (WrenQuat*)wrenSetSlotNewForeign(vm, 0, 1, sizeof(WrenQuat));
+	new (quat) WrenQuat(glm::quat(glm::vec3(x, y, z)));
 }
 
 // Quat.lookAt(forward, up) -> Quat
 void wren_QuatLookAt(WrenVM* vm)
 {
-    WrenVec3* forward = (WrenVec3*)wrenGetSlotForeign(vm, 1);
-    WrenVec3* up = (WrenVec3*)wrenGetSlotForeign(vm, 2);
-    
-    if (!forward || !up)
+	WrenVec3* forward = (WrenVec3*)wrenGetSlotForeign(vm, 1);
+	WrenVec3* up = (WrenVec3*)wrenGetSlotForeign(vm, 2);
+
+	if (!forward || !up)
 	{
-        DEBUG_ERROR("Quat.lookAt: Invalid vectors");
-        wrenSetSlotNull(vm, 0);
-        return;
-    }
-    
-    wrenGetVariable(vm, "game", "Quat", 1);  // Get class into slot 1
-    WrenQuat* quat = (WrenQuat*)wrenSetSlotNewForeign(vm, 0, 1, sizeof(WrenQuat));
-    new (quat) WrenQuat(glm::quatLookAt(glm::normalize(forward->value), up->value));
+		DEBUG_ERROR("Quat.lookAt: Invalid vectors");
+		wrenSetSlotNull(vm, 0);
+		return;
+	}
+
+	wrenGetVariable(vm, "game", "Quat", 1);  // Get class into slot 1
+	WrenQuat* quat = (WrenQuat*)wrenSetSlotNewForeign(vm, 0, 1, sizeof(WrenQuat));
+	new (quat) WrenQuat(glm::quatLookAt(glm::normalize(forward->value), up->value));
 }
 
 // Instance methods
@@ -1340,87 +1343,87 @@ void wren_QuatLookAt(WrenVM* vm)
 // quat.normalize() -> Quat
 void wren_QuatNormalize(WrenVM* vm)
 {
-    WrenQuat* quat = (WrenQuat*)wrenGetSlotForeign(vm, 0);
-    
-    wrenGetVariable(vm, "game", "Quat", 1);  // Get class into slot 1
-    WrenQuat* result = (WrenQuat*)wrenSetSlotNewForeign(vm, 0, 1, sizeof(WrenQuat));
-    new (result) WrenQuat(glm::normalize(quat->value));
+	WrenQuat* quat = (WrenQuat*)wrenGetSlotForeign(vm, 0);
+
+	wrenGetVariable(vm, "game", "Quat", 1);  // Get class into slot 1
+	WrenQuat* result = (WrenQuat*)wrenSetSlotNewForeign(vm, 0, 1, sizeof(WrenQuat));
+	new (result) WrenQuat(glm::normalize(quat->value));
 }
 
 // quat.inverse() -> Quat
 void wren_QuatInverse(WrenVM* vm)
 {
-    WrenQuat* quat = (WrenQuat*)wrenGetSlotForeign(vm, 0);
-    
-    wrenGetVariable(vm, "game", "Quat", 1);  // Get class into slot 1
-    WrenQuat* result = (WrenQuat*)wrenSetSlotNewForeign(vm, 0, 1, sizeof(WrenQuat));
-    new (result) WrenQuat(glm::inverse(quat->value));
+	WrenQuat* quat = (WrenQuat*)wrenGetSlotForeign(vm, 0);
+
+	wrenGetVariable(vm, "game", "Quat", 1);  // Get class into slot 1
+	WrenQuat* result = (WrenQuat*)wrenSetSlotNewForeign(vm, 0, 1, sizeof(WrenQuat));
+	new (result) WrenQuat(glm::inverse(quat->value));
 }
 
 // quat.conjugate() -> Quat
 void wren_QuatConjugate(WrenVM* vm)
 {
-    WrenQuat* quat = (WrenQuat*)wrenGetSlotForeign(vm, 0);
-    
-    wrenGetVariable(vm, "game", "Quat", 1);  // Get class into slot 1
-    WrenQuat* result = (WrenQuat*)wrenSetSlotNewForeign(vm, 0, 1, sizeof(WrenQuat));
-    new (result) WrenQuat(glm::conjugate(quat->value));
+	WrenQuat* quat = (WrenQuat*)wrenGetSlotForeign(vm, 0);
+
+	wrenGetVariable(vm, "game", "Quat", 1);  // Get class into slot 1
+	WrenQuat* result = (WrenQuat*)wrenSetSlotNewForeign(vm, 0, 1, sizeof(WrenQuat));
+	new (result) WrenQuat(glm::conjugate(quat->value));
 }
 
 // quat.length -> Num
 void wren_QuatLength(WrenVM* vm)
 {
-    WrenQuat* quat = (WrenQuat*)wrenGetSlotForeign(vm, 0);
-    wrenSetSlotDouble(vm, 0, glm::length(quat->value));
+	WrenQuat* quat = (WrenQuat*)wrenGetSlotForeign(vm, 0);
+	wrenSetSlotDouble(vm, 0, glm::length(quat->value));
 }
 
 // quat.toEuler() -> Vec3 (radians)
 void wren_QuatToEuler(WrenVM* vm)
 {
-    WrenQuat* quat = (WrenQuat*)wrenGetSlotForeign(vm, 0);
-    
-    glm::vec3 euler = glm::eulerAngles(quat->value);
-    
-    wrenGetVariable(vm, "game", "Quat", 1);  // Get class into slot 1
-    WrenVec3* result = (WrenVec3*)wrenSetSlotNewForeign(vm, 0, 1, sizeof(WrenVec3));
-    new (result) WrenVec3(euler);
+	WrenQuat* quat = (WrenQuat*)wrenGetSlotForeign(vm, 0);
+
+	glm::vec3 euler = glm::eulerAngles(quat->value);
+
+	wrenGetVariable(vm, "game", "Quat", 1);  // Get class into slot 1
+	WrenVec3* result = (WrenVec3*)wrenSetSlotNewForeign(vm, 0, 1, sizeof(WrenVec3));
+	new (result) WrenVec3(euler);
 }
 
 // quat.toEulerDegrees() -> Vec3 (degrees)
 void wren_QuatToEulerDegrees(WrenVM* vm)
 {
-    WrenQuat* quat = (WrenQuat*)wrenGetSlotForeign(vm, 0);
-    
-    glm::vec3 euler = glm::eulerAngles(quat->value);
-    euler = glm::degrees(euler);
-    
-    wrenGetVariable(vm, "game", "Quat", 1);  // Get class into slot 1
-    WrenVec3* result = (WrenVec3*)wrenSetSlotNewForeign(vm, 0, 1, sizeof(WrenVec3));
-    new (result) WrenVec3(euler);
+	WrenQuat* quat = (WrenQuat*)wrenGetSlotForeign(vm, 0);
+
+	glm::vec3 euler = glm::eulerAngles(quat->value);
+	euler = glm::degrees(euler);
+
+	wrenGetVariable(vm, "game", "Quat", 1);  // Get class into slot 1
+	WrenVec3* result = (WrenVec3*)wrenSetSlotNewForeign(vm, 0, 1, sizeof(WrenVec3));
+	new (result) WrenVec3(euler);
 }
 
 // quat.toAxisAngle() -> Map {"axis": Vec3, "angle": Num}
 void wren_QuatToAxisAngle(WrenVM* vm)
 {
-    WrenQuat* quat = (WrenQuat*)wrenGetSlotForeign(vm, 0);
-    
-    float angle = glm::angle(quat->value);
-    glm::vec3 axis = glm::axis(quat->value);
-    
-    // Create map
-    wrenSetSlotNewMap(vm, 0);
-    
-    // Add axis
-    wrenSetSlotString(vm, 1, "axis");
-    wrenGetVariable(vm, "game", "Quat", 1);  // Get class into slot 1
-    WrenVec3* axisVec = (WrenVec3*)wrenSetSlotNewForeign(vm, 2, 1, sizeof(WrenVec3));
-    new (axisVec) WrenVec3(axis);
-    wrenSetMapValue(vm, 0, 1, 2);
-    
-    // Add angle
-    wrenSetSlotString(vm, 1, "angle");
-    wrenSetSlotDouble(vm, 2, angle);
-    wrenSetMapValue(vm, 0, 1, 2);
+	WrenQuat* quat = (WrenQuat*)wrenGetSlotForeign(vm, 0);
+
+	float angle = glm::angle(quat->value);
+	glm::vec3 axis = glm::axis(quat->value);
+
+	// Create map
+	wrenSetSlotNewMap(vm, 0);
+
+	// Add axis
+	wrenSetSlotString(vm, 1, "axis");
+	wrenGetVariable(vm, "game", "Quat", 1);  // Get class into slot 1
+	WrenVec3* axisVec = (WrenVec3*)wrenSetSlotNewForeign(vm, 2, 1, sizeof(WrenVec3));
+	new (axisVec) WrenVec3(axis);
+	wrenSetMapValue(vm, 0, 1, 2);
+
+	// Add angle
+	wrenSetSlotString(vm, 1, "angle");
+	wrenSetSlotDouble(vm, 2, angle);
+	wrenSetMapValue(vm, 0, 1, 2);
 }
 
 // Operators
@@ -1428,86 +1431,86 @@ void wren_QuatToAxisAngle(WrenVM* vm)
 // quat * quat -> Quat (quaternion multiplication)
 void wren_QuatMultiply(WrenVM* vm)
 {
-    WrenQuat* a = (WrenQuat*)wrenGetSlotForeign(vm, 0);
-    WrenQuat* b = (WrenQuat*)wrenGetSlotForeign(vm, 1);
-    
-    wrenGetVariable(vm, "game", "Quat", 1);  // Get class into slot 1
-    WrenQuat* result = (WrenQuat*)wrenSetSlotNewForeign(vm, 0, 1, sizeof(WrenQuat));
-    new (result) WrenQuat(a->value * b->value);
+	WrenQuat* a = (WrenQuat*)wrenGetSlotForeign(vm, 0);
+	WrenQuat* b = (WrenQuat*)wrenGetSlotForeign(vm, 1);
+
+	wrenGetVariable(vm, "game", "Quat", 1);  // Get class into slot 1
+	WrenQuat* result = (WrenQuat*)wrenSetSlotNewForeign(vm, 0, 1, sizeof(WrenQuat));
+	new (result) WrenQuat(a->value * b->value);
 }
 
 // quat.rotate(vec3) -> Vec3 (rotate vector by quaternion)
 void wren_QuatRotateVec3(WrenVM* vm)
 {
-    WrenQuat* quat = (WrenQuat*)wrenGetSlotForeign(vm, 0);
-    WrenVec3* vec = (WrenVec3*)wrenGetSlotForeign(vm, 1);
-    
-    if (!vec)
+	WrenQuat* quat = (WrenQuat*)wrenGetSlotForeign(vm, 0);
+	WrenVec3* vec = (WrenVec3*)wrenGetSlotForeign(vm, 1);
+
+	if (!vec)
 	{
-        DEBUG_ERROR("Quat.rotate: Invalid Vec3");
-        wrenSetSlotNull(vm, 0);
-        return;
-    }
-    
-    glm::vec3 rotated = quat->value * vec->value;
-    
-    wrenGetVariable(vm, "game", "Quat", 1);  // Get class into slot 1
-    WrenVec3* result = (WrenVec3*)wrenSetSlotNewForeign(vm, 0, 1, sizeof(WrenVec3));
-    new (result) WrenVec3(rotated);
+		DEBUG_ERROR("Quat.rotate: Invalid Vec3");
+		wrenSetSlotNull(vm, 0);
+		return;
+	}
+
+	glm::vec3 rotated = quat->value * vec->value;
+
+	wrenGetVariable(vm, "game", "Quat", 1);  // Get class into slot 1
+	WrenVec3* result = (WrenVec3*)wrenSetSlotNewForeign(vm, 0, 1, sizeof(WrenVec3));
+	new (result) WrenVec3(rotated);
 }
 
 // Quat.slerp(a, b, t) -> Quat (spherical linear interpolation)
 void wren_QuatSlerp(WrenVM* vm)
 {
-    WrenQuat* a = (WrenQuat*)wrenGetSlotForeign(vm, 1);
-    WrenQuat* b = (WrenQuat*)wrenGetSlotForeign(vm, 2);
-    float t = (float)wrenGetSlotDouble(vm, 3);
-    
-    if (!a || !b)
+	WrenQuat* a = (WrenQuat*)wrenGetSlotForeign(vm, 1);
+	WrenQuat* b = (WrenQuat*)wrenGetSlotForeign(vm, 2);
+	float t = (float)wrenGetSlotDouble(vm, 3);
+
+	if (!a || !b)
 	{
-        DEBUG_ERROR("Quat.slerp: Invalid quaternions");
-        wrenSetSlotNull(vm, 0);
-        return;
-    }
-    
-    wrenGetVariable(vm, "game", "Quat", 1);  // Get class into slot 1
-    WrenQuat* result = (WrenQuat*)wrenSetSlotNewForeign(vm, 0, 1, sizeof(WrenQuat));
-    new (result) WrenQuat(glm::slerp(a->value, b->value, t));
+		DEBUG_ERROR("Quat.slerp: Invalid quaternions");
+		wrenSetSlotNull(vm, 0);
+		return;
+	}
+
+	wrenGetVariable(vm, "game", "Quat", 1);  // Get class into slot 1
+	WrenQuat* result = (WrenQuat*)wrenSetSlotNewForeign(vm, 0, 1, sizeof(WrenQuat));
+	new (result) WrenQuat(glm::slerp(a->value, b->value, t));
 }
 
 // Quat.lerp(a, b, t) -> Quat (linear interpolation)
 void wren_QuatLerp(WrenVM* vm)
 {
-    WrenQuat* a = (WrenQuat*)wrenGetSlotForeign(vm, 1);
-    WrenQuat* b = (WrenQuat*)wrenGetSlotForeign(vm, 2);
-    float t = (float)wrenGetSlotDouble(vm, 3);
-    
-    if (!a || !b)
+	WrenQuat* a = (WrenQuat*)wrenGetSlotForeign(vm, 1);
+	WrenQuat* b = (WrenQuat*)wrenGetSlotForeign(vm, 2);
+	float t = (float)wrenGetSlotDouble(vm, 3);
+
+	if (!a || !b)
 	{
-        DEBUG_ERROR("Quat.lerp: Invalid quaternions");
-        wrenSetSlotNull(vm, 0);
-        return;
-    }
-    
-    wrenGetVariable(vm, "game", "Quat", 1);  // Get class into slot 1
-    WrenQuat* result = (WrenQuat*)wrenSetSlotNewForeign(vm, 0, 1, sizeof(WrenQuat));
-    new (result) WrenQuat(glm::lerp(a->value, b->value, t));
+		DEBUG_ERROR("Quat.lerp: Invalid quaternions");
+		wrenSetSlotNull(vm, 0);
+		return;
+	}
+
+	wrenGetVariable(vm, "game", "Quat", 1);  // Get class into slot 1
+	WrenQuat* result = (WrenQuat*)wrenSetSlotNewForeign(vm, 0, 1, sizeof(WrenQuat));
+	new (result) WrenQuat(glm::lerp(a->value, b->value, t));
 }
 
 // quat.dot(other) -> Num
 void wren_QuatDot(WrenVM* vm)
 {
-    WrenQuat* a = (WrenQuat*)wrenGetSlotForeign(vm, 0);
-    WrenQuat* b = (WrenQuat*)wrenGetSlotForeign(vm, 1);
-    
-    if (!b)
+	WrenQuat* a = (WrenQuat*)wrenGetSlotForeign(vm, 0);
+	WrenQuat* b = (WrenQuat*)wrenGetSlotForeign(vm, 1);
+
+	if (!b)
 	{
-        DEBUG_ERROR("Quat.dot: Invalid quaternion");
-        wrenSetSlotDouble(vm, 0, 0.0);
-        return;
-    }
-    
-    wrenSetSlotDouble(vm, 0, glm::dot(a->value, b->value));
+		DEBUG_ERROR("Quat.dot: Invalid quaternion");
+		wrenSetSlotDouble(vm, 0, 0.0);
+		return;
+	}
+
+	wrenSetSlotDouble(vm, 0, glm::dot(a->value, b->value));
 }
 
 // Helper: Get forward/up/right vectors from quaternion
@@ -1515,42 +1518,42 @@ void wren_QuatDot(WrenVM* vm)
 // quat.forward() -> Vec3
 void wren_QuatForward(WrenVM* vm)
 {
-    WrenQuat* quat = (WrenQuat*)wrenGetSlotForeign(vm, 0);
-    
-    glm::vec3 forward = quat->value * glm::vec3(0, 0, -1);
-    
-    wrenGetVariable(vm, "game", "Quat", 1);  // Get class into slot 1
-    WrenVec3* result = (WrenVec3*)wrenSetSlotNewForeign(vm, 0, 1, sizeof(WrenVec3));
-    new (result) WrenVec3(forward);
+	WrenQuat* quat = (WrenQuat*)wrenGetSlotForeign(vm, 0);
+
+	glm::vec3 forward = quat->value * glm::vec3(0, 0, -1);
+
+	wrenGetVariable(vm, "game", "Quat", 1);  // Get class into slot 1
+	WrenVec3* result = (WrenVec3*)wrenSetSlotNewForeign(vm, 0, 1, sizeof(WrenVec3));
+	new (result) WrenVec3(forward);
 }
 
 // quat.up() -> Vec3
 void wren_QuatUp(WrenVM* vm)
 {
-    WrenQuat* quat = (WrenQuat*)wrenGetSlotForeign(vm, 0);
-    
-    glm::vec3 up = quat->value * glm::vec3(0, 1, 0);
-    
-    wrenGetVariable(vm, "game", "Quat", 1);  // Get class into slot 1
-    WrenVec3* result = (WrenVec3*)wrenSetSlotNewForeign(vm, 0, 1, sizeof(WrenVec3));
-    new (result) WrenVec3(up);
+	WrenQuat* quat = (WrenQuat*)wrenGetSlotForeign(vm, 0);
+
+	glm::vec3 up = quat->value * glm::vec3(0, 1, 0);
+
+	wrenGetVariable(vm, "game", "Quat", 1);  // Get class into slot 1
+	WrenVec3* result = (WrenVec3*)wrenSetSlotNewForeign(vm, 0, 1, sizeof(WrenVec3));
+	new (result) WrenVec3(up);
 }
 
 // Quat.right() -> Vec3
 void wren_QuatRight(WrenVM* vm)
 {
-    WrenQuat* quat = (WrenQuat*)wrenGetSlotForeign(vm, 0);
-    
-    glm::vec3 right = quat->value * glm::vec3(1, 0, 0);
-    
-    wrenGetVariable(vm, "game", "Quat", 1);  // Get class into slot 1
-    WrenVec3* result = (WrenVec3*)wrenSetSlotNewForeign(vm, 0, 1, sizeof(WrenVec3));
-    new (result) WrenVec3(right);
+	WrenQuat* quat = (WrenQuat*)wrenGetSlotForeign(vm, 0);
+
+	glm::vec3 right = quat->value * glm::vec3(1, 0, 0);
+
+	wrenGetVariable(vm, "game", "Quat", 1);  // Get class into slot 1
+	WrenVec3* result = (WrenVec3*)wrenSetSlotNewForeign(vm, 0, 1, sizeof(WrenVec3));
+	new (result) WrenVec3(right);
 }
 
 // Register Quat foreign class
 WREN_FOREIGN_CLASS("game", "Quat", wren_QuatAllocate, wren_QuatFinalize,
-                   "Quaternion class for 3D rotations wrapping glm::quat");
+	"Quaternion class for 3D rotations wrapping glm::quat");
 
 // Register constructors
 WREN_CONSTRUCTOR_DOC("game", "Quat", wren_QuatAllocate, "Create identity quaternion", );
@@ -1597,121 +1600,121 @@ WREN_CLASS_STATIC("game", "Quat", "lerp(_,_,_)", wren_QuatLerp, "Linear interpol
 
 struct WrenTextureHandle
 {
-    Struktur::Resource::ResourcePtr<Struktur::Resource::TextureResource> resource;
-    
-    WrenTextureHandle() {}
-    WrenTextureHandle(const Struktur::Resource::ResourcePtr<Struktur::Resource::TextureResource>& res) : resource(res) {}
+	Struktur::Resource::ResourcePtr<Struktur::Resource::TextureResource> resource;
+
+	WrenTextureHandle() {}
+	WrenTextureHandle(const Struktur::Resource::ResourcePtr<Struktur::Resource::TextureResource>& res) : resource(res) {}
 };
 
 void wren_TextureAllocate(WrenVM* vm)
 {
-    wrenGetVariable(vm, "game", "Texture", 1);  // Get class into slot 1
-    WrenTextureHandle* handle = (WrenTextureHandle*)wrenSetSlotNewForeign(vm, 0, 1, sizeof(WrenTextureHandle));
-    new (handle) WrenTextureHandle();
+	wrenGetVariable(vm, "game", "Texture", 1);  // Get class into slot 1
+	WrenTextureHandle* handle = (WrenTextureHandle*)wrenSetSlotNewForeign(vm, 0, 1, sizeof(WrenTextureHandle));
+	new (handle) WrenTextureHandle();
 }
 
 void wren_TextureFinalize(void* data)
 {
-    WrenTextureHandle* handle = (WrenTextureHandle*)data;
-    handle->~WrenTextureHandle();
+	WrenTextureHandle* handle = (WrenTextureHandle*)data;
+	handle->~WrenTextureHandle();
 }
 
 // Texture.load(path) -> TextureHandle
 void wren_TextureLoad(WrenVM* vm)
 {
-    Struktur::GameContext* context = static_cast<Struktur::GameContext*>(wrenGetUserData(vm));
-    auto& resourceManager = context->GetResourceManager();
-    
-    const char* path = wrenGetSlotString(vm, 1);
-    
-    // Load texture through resource manager
-    Struktur::Resource::ResourcePtr<Struktur::Resource::TextureResource> texture = resourceManager.GetTexture(path);
-    
-    if (!texture)
+	Struktur::GameContext* context = static_cast<Struktur::GameContext*>(wrenGetUserData(vm));
+	auto& resourceManager = context->GetResourceManager();
+
+	const char* path = wrenGetSlotString(vm, 1);
+
+	// Load texture through resource manager
+	Struktur::Resource::ResourcePtr<Struktur::Resource::TextureResource> texture = resourceManager.GetTexture(path);
+
+	if (!texture)
 	{
-        DEBUG_ERROR("Failed to load texture: %s", path);
-        wrenSetSlotNull(vm, 0);
-        return;
-    }
-    
-    // Create foreign object with resource pointer
-    wrenGetVariable(vm, "game", "Texture", 1);  // Get class into slot 1
-    WrenTextureHandle* handle = (WrenTextureHandle*)wrenSetSlotNewForeign(vm, 0, 1, sizeof(WrenTextureHandle));
-    new (handle) WrenTextureHandle(texture);
+		DEBUG_ERROR("Failed to load texture: %s", path);
+		wrenSetSlotNull(vm, 0);
+		return;
+	}
+
+	// Create foreign object with resource pointer
+	wrenGetVariable(vm, "game", "Texture", 1);  // Get class into slot 1
+	WrenTextureHandle* handle = (WrenTextureHandle*)wrenSetSlotNewForeign(vm, 0, 1, sizeof(WrenTextureHandle));
+	new (handle) WrenTextureHandle(texture);
 }
 
 // texture.isValid -> Bool
 void wren_TextureIsValid(WrenVM* vm)
 {
-    WrenTextureHandle* handle = (WrenTextureHandle*)wrenGetSlotForeign(vm, 0);
-    wrenSetSlotBool(vm, 0, handle->resource.IsValid());
+	WrenTextureHandle* handle = (WrenTextureHandle*)wrenGetSlotForeign(vm, 0);
+	wrenSetSlotBool(vm, 0, handle->resource.IsValid());
 }
 
 // texture.path -> String
 void wren_TextureGetPath(WrenVM* vm)
 {
-    WrenTextureHandle* handle = (WrenTextureHandle*)wrenGetSlotForeign(vm, 0);
-    
-    if (!handle->resource)
+	WrenTextureHandle* handle = (WrenTextureHandle*)wrenGetSlotForeign(vm, 0);
+
+	if (!handle->resource)
 	{
-        wrenSetSlotNull(vm, 0);
-        return;
-    }
-    
-    wrenSetSlotString(vm, 0, handle->resource.GetFilePath().c_str());
+		wrenSetSlotNull(vm, 0);
+		return;
+	}
+
+	wrenSetSlotString(vm, 0, handle->resource.GetFilePath().c_str());
 }
 
 // texture.width -> Num
 void wren_TextureGetWidth(WrenVM* vm)
 {
-    WrenTextureHandle* handle = (WrenTextureHandle*)wrenGetSlotForeign(vm, 0);
-    
-    if (!handle->resource)
+	WrenTextureHandle* handle = (WrenTextureHandle*)wrenGetSlotForeign(vm, 0);
+
+	if (!handle->resource)
 	{
-        wrenSetSlotDouble(vm, 0, 0);
-        return;
-    }
-    
-    wrenSetSlotDouble(vm, 0, handle->resource->GetWidth());
+		wrenSetSlotDouble(vm, 0, 0);
+		return;
+	}
+
+	wrenSetSlotDouble(vm, 0, handle->resource->GetWidth());
 }
 
 // texture.height -> Num
 void wren_TextureGetHeight(WrenVM* vm)
 {
-    WrenTextureHandle* handle = (WrenTextureHandle*)wrenGetSlotForeign(vm, 0);
-    
-    if (!handle->resource)
+	WrenTextureHandle* handle = (WrenTextureHandle*)wrenGetSlotForeign(vm, 0);
+
+	if (!handle->resource)
 	{
-        wrenSetSlotDouble(vm, 0, 0);
-        return;
-    }
-    
-    wrenSetSlotDouble(vm, 0, handle->resource->GetHeight());
+		wrenSetSlotDouble(vm, 0, 0);
+		return;
+	}
+
+	wrenSetSlotDouble(vm, 0, handle->resource->GetHeight());
 }
 
 // texture.toString -> String
 void wren_TextureToString(WrenVM* vm)
 {
-    WrenTextureHandle* handle = (WrenTextureHandle*)wrenGetSlotForeign(vm, 0);
-    
-    if (!handle->resource)
+	WrenTextureHandle* handle = (WrenTextureHandle*)wrenGetSlotForeign(vm, 0);
+
+	if (!handle->resource)
 	{
-        wrenSetSlotString(vm, 0, "Texture(invalid)");
-        return;
-    }
-    
-    char buffer[256];
-    snprintf(buffer, sizeof(buffer), "Texture(%s, %dx%d)", 
-             handle->resource.GetFilePath().c_str(),
-             handle->resource->GetWidth(),
-             handle->resource->GetHeight());
-    
-    wrenSetSlotString(vm, 0, buffer);
+		wrenSetSlotString(vm, 0, "Texture(invalid)");
+		return;
+	}
+
+	char buffer[256];
+	snprintf(buffer, sizeof(buffer), "Texture(%s, %dx%d)",
+		handle->resource.GetFilePath().c_str(),
+		handle->resource->GetWidth(),
+		handle->resource->GetHeight());
+
+	wrenSetSlotString(vm, 0, buffer);
 }
 
 // Register Texture foreign class
 WREN_FOREIGN_CLASS("game", "Texture", wren_TextureAllocate, wren_TextureFinalize,
-                   "Texture resource handle");
+	"Texture resource handle");
 
 WREN_CLASS_STATIC("game", "Texture", "load(_)", wren_TextureLoad, "Load texture from path");
 WREN_CLASS_METHOD("game", "Texture", "isValid", wren_TextureIsValid, "Check if texture is valid");
@@ -1728,106 +1731,106 @@ WREN_CLASS_METHOD("game", "Texture", "toString", wren_TextureToString, "Convert 
 
 struct WrenFontHandle
 {
-    Struktur::Resource::ResourcePtr<Struktur::Resource::FontResource> resource;
-    
-    WrenFontHandle() {}
-    WrenFontHandle(const Struktur::Resource::ResourcePtr<Struktur::Resource::FontResource>& res) : resource(res) {}
+	Struktur::Resource::ResourcePtr<Struktur::Resource::FontResource> resource;
+
+	WrenFontHandle() {}
+	WrenFontHandle(const Struktur::Resource::ResourcePtr<Struktur::Resource::FontResource>& res) : resource(res) {}
 };
 
 void wren_FontAllocate(WrenVM* vm)
 {
-    wrenGetVariable(vm, "game", "Font", 1);  // Get class into slot 1
-    WrenFontHandle* handle = (WrenFontHandle*)wrenSetSlotNewForeign(vm, 0, 1, sizeof(WrenFontHandle));
-    new (handle) WrenFontHandle();
+	wrenGetVariable(vm, "game", "Font", 1);  // Get class into slot 1
+	WrenFontHandle* handle = (WrenFontHandle*)wrenSetSlotNewForeign(vm, 0, 1, sizeof(WrenFontHandle));
+	new (handle) WrenFontHandle();
 }
 
 void wren_FontFinalize(void* data)
 {
-    WrenFontHandle* handle = (WrenFontHandle*)data;
-    handle->~WrenFontHandle();
+	WrenFontHandle* handle = (WrenFontHandle*)data;
+	handle->~WrenFontHandle();
 }
 
 // Font.load(path) -> FontHandle
 void wren_FontLoad(WrenVM* vm)
 {
-    Struktur::GameContext* context = static_cast<Struktur::GameContext*>(wrenGetUserData(vm));
-    auto& resourceManager = context->GetResourceManager();
-    
-    const char* path = wrenGetSlotString(vm, 1);
-    
-    // Load texture through resource manager
-    Struktur::Resource::ResourcePtr<Struktur::Resource::FontResource> texture = resourceManager.GetFontResource(path);
-    
-    if (!texture)
+	Struktur::GameContext* context = static_cast<Struktur::GameContext*>(wrenGetUserData(vm));
+	auto& resourceManager = context->GetResourceManager();
+
+	const char* path = wrenGetSlotString(vm, 1);
+
+	// Load texture through resource manager
+	Struktur::Resource::ResourcePtr<Struktur::Resource::FontResource> texture = resourceManager.GetFontResource(path);
+
+	if (!texture)
 	{
-        DEBUG_ERROR("Failed to load texture: %s", path);
-        wrenSetSlotNull(vm, 0);
-        return;
-    }
-    
-    // Create foreign object with resource pointer
-    wrenGetVariable(vm, "game", "Font", 1);  // Get class into slot 1
-    WrenFontHandle* handle = (WrenFontHandle*)wrenSetSlotNewForeign(vm, 0, 1, sizeof(WrenFontHandle));
-    new (handle) WrenFontHandle(texture);
+		DEBUG_ERROR("Failed to load texture: %s", path);
+		wrenSetSlotNull(vm, 0);
+		return;
+	}
+
+	// Create foreign object with resource pointer
+	wrenGetVariable(vm, "game", "Font", 1);  // Get class into slot 1
+	WrenFontHandle* handle = (WrenFontHandle*)wrenSetSlotNewForeign(vm, 0, 1, sizeof(WrenFontHandle));
+	new (handle) WrenFontHandle(texture);
 }
 
 // font.isValid -> Bool
 void wren_FontIsValid(WrenVM* vm)
 {
-    WrenFontHandle* handle = (WrenFontHandle*)wrenGetSlotForeign(vm, 0);
-    wrenSetSlotBool(vm, 0, handle->resource.IsValid());
+	WrenFontHandle* handle = (WrenFontHandle*)wrenGetSlotForeign(vm, 0);
+	wrenSetSlotBool(vm, 0, handle->resource.IsValid());
 }
 
 // font.path -> String
 void wren_FontGetPath(WrenVM* vm)
 {
-    WrenFontHandle* handle = (WrenFontHandle*)wrenGetSlotForeign(vm, 0);
-    
-    if (!handle->resource)
+	WrenFontHandle* handle = (WrenFontHandle*)wrenGetSlotForeign(vm, 0);
+
+	if (!handle->resource)
 	{
-        wrenSetSlotNull(vm, 0);
-        return;
-    }
-    
-    wrenSetSlotString(vm, 0, handle->resource.GetFilePath().c_str());
+		wrenSetSlotNull(vm, 0);
+		return;
+	}
+
+	wrenSetSlotString(vm, 0, handle->resource.GetFilePath().c_str());
 }
 
 // font.size -> Num
 void wren_FontGetSize(WrenVM* vm)
 {
-    WrenFontHandle* handle = (WrenFontHandle*)wrenGetSlotForeign(vm, 0);
-    
-    if (!handle->resource)
+	WrenFontHandle* handle = (WrenFontHandle*)wrenGetSlotForeign(vm, 0);
+
+	if (!handle->resource)
 	{
-        wrenSetSlotDouble(vm, 0, 0);
-        return;
-    }
-    
-    wrenSetSlotDouble(vm, 0, handle->resource->GetFontSize());
+		wrenSetSlotDouble(vm, 0, 0);
+		return;
+	}
+
+	wrenSetSlotDouble(vm, 0, handle->resource->GetFontSize());
 }
 
 // font.toString -> String
 void wren_FontToString(WrenVM* vm)
 {
-    WrenFontHandle* handle = (WrenFontHandle*)wrenGetSlotForeign(vm, 0);
-    
-    if (!handle->resource)
+	WrenFontHandle* handle = (WrenFontHandle*)wrenGetSlotForeign(vm, 0);
+
+	if (!handle->resource)
 	{
-        wrenSetSlotString(vm, 0, "Font(invalid)");
-        return;
-    }
-    
-    char buffer[256];
-    snprintf(buffer, sizeof(buffer), "Font(%s, %d)", 
-             handle->resource.GetFilePath().c_str(),
-             handle->resource->GetFontSize());
-    
-    wrenSetSlotString(vm, 0, buffer);
+		wrenSetSlotString(vm, 0, "Font(invalid)");
+		return;
+	}
+
+	char buffer[256];
+	snprintf(buffer, sizeof(buffer), "Font(%s, %d)",
+		handle->resource.GetFilePath().c_str(),
+		handle->resource->GetFontSize());
+
+	wrenSetSlotString(vm, 0, buffer);
 }
 
 // Register Font foreign class
 WREN_FOREIGN_CLASS("game", "Font", wren_FontAllocate, wren_FontFinalize,
-                   "Font resource handle");
+	"Font resource handle");
 
 WREN_CLASS_STATIC("game", "Font", "load(_)", wren_FontLoad, "Load font from path");
 WREN_CLASS_METHOD("game", "Font", "isValid", wren_FontIsValid, "Check if font is valid");
@@ -1843,91 +1846,91 @@ WREN_CLASS_METHOD("game", "Font", "toString", wren_FontToString, "Convert to str
 
 struct WrenMusicHandle
 {
-    Struktur::Resource::ResourcePtr<Struktur::Resource::MusicResource> resource;
-    
-    WrenMusicHandle() {}
-    WrenMusicHandle(const Struktur::Resource::ResourcePtr<Struktur::Resource::MusicResource>& res) : resource(res) {}
+	Struktur::Resource::ResourcePtr<Struktur::Resource::MusicResource> resource;
+
+	WrenMusicHandle() {}
+	WrenMusicHandle(const Struktur::Resource::ResourcePtr<Struktur::Resource::MusicResource>& res) : resource(res) {}
 };
 
 void wren_MusicAllocate(WrenVM* vm)
 {
-    wrenGetVariable(vm, "game", "Music", 1);  // Get class into slot 1
-    WrenMusicHandle* handle = (WrenMusicHandle*)wrenSetSlotNewForeign(vm, 0, 1, sizeof(WrenMusicHandle));
-    new (handle) WrenMusicHandle();
+	wrenGetVariable(vm, "game", "Music", 1);  // Get class into slot 1
+	WrenMusicHandle* handle = (WrenMusicHandle*)wrenSetSlotNewForeign(vm, 0, 1, sizeof(WrenMusicHandle));
+	new (handle) WrenMusicHandle();
 }
 
 void wren_MusicFinalize(void* data)
 {
-    WrenMusicHandle* handle = (WrenMusicHandle*)data;
-    handle->~WrenMusicHandle();
+	WrenMusicHandle* handle = (WrenMusicHandle*)data;
+	handle->~WrenMusicHandle();
 }
 
 // Music.load(path) -> MusicHandle
 void wren_MusicLoad(WrenVM* vm)
 {
-    Struktur::GameContext* context = static_cast<Struktur::GameContext*>(wrenGetUserData(vm));
-    auto& resourceManager = context->GetResourceManager();
-    
-    const char* path = wrenGetSlotString(vm, 1);
-    
-    // Load music through resource manager
-    Struktur::Resource::ResourcePtr<Struktur::Resource::MusicResource> music = resourceManager.GetMusic(path);
-    
-    if (!music)
+	Struktur::GameContext* context = static_cast<Struktur::GameContext*>(wrenGetUserData(vm));
+	auto& resourceManager = context->GetResourceManager();
+
+	const char* path = wrenGetSlotString(vm, 1);
+
+	// Load music through resource manager
+	Struktur::Resource::ResourcePtr<Struktur::Resource::MusicResource> music = resourceManager.GetMusic(path);
+
+	if (!music)
 	{
-        DEBUG_ERROR("Failed to load music: %s", path);
-        wrenSetSlotNull(vm, 0);
-        return;
-    }
-    
-    // Create foreign object with resource pointer
-    wrenGetVariable(vm, "game", "Music", 1);  // Get class into slot 1
-    WrenMusicHandle* handle = (WrenMusicHandle*)wrenSetSlotNewForeign(vm, 0, 1, sizeof(WrenMusicHandle));
-    new (handle) WrenMusicHandle(music);
+		DEBUG_ERROR("Failed to load music: %s", path);
+		wrenSetSlotNull(vm, 0);
+		return;
+	}
+
+	// Create foreign object with resource pointer
+	wrenGetVariable(vm, "game", "Music", 1);  // Get class into slot 1
+	WrenMusicHandle* handle = (WrenMusicHandle*)wrenSetSlotNewForeign(vm, 0, 1, sizeof(WrenMusicHandle));
+	new (handle) WrenMusicHandle(music);
 }
 
 // Music.isValid -> Bool
 void wren_MusicIsValid(WrenVM* vm)
 {
-    WrenMusicHandle* handle = (WrenMusicHandle*)wrenGetSlotForeign(vm, 0);
-    wrenSetSlotBool(vm, 0, handle->resource.IsValid());
+	WrenMusicHandle* handle = (WrenMusicHandle*)wrenGetSlotForeign(vm, 0);
+	wrenSetSlotBool(vm, 0, handle->resource.IsValid());
 }
 
 // Music.path -> String
 void wren_MusicGetPath(WrenVM* vm)
 {
-    WrenMusicHandle* handle = (WrenMusicHandle*)wrenGetSlotForeign(vm, 0);
-    
-    if (!handle->resource)
+	WrenMusicHandle* handle = (WrenMusicHandle*)wrenGetSlotForeign(vm, 0);
+
+	if (!handle->resource)
 	{
-        wrenSetSlotNull(vm, 0);
-        return;
-    }
-    
-    wrenSetSlotString(vm, 0, handle->resource.GetFilePath().c_str());
+		wrenSetSlotNull(vm, 0);
+		return;
+	}
+
+	wrenSetSlotString(vm, 0, handle->resource.GetFilePath().c_str());
 }
 
 // Music.toString -> String
 void wren_MusicToString(WrenVM* vm)
 {
-    WrenMusicHandle* handle = (WrenMusicHandle*)wrenGetSlotForeign(vm, 0);
-    
-    if (!handle->resource)
+	WrenMusicHandle* handle = (WrenMusicHandle*)wrenGetSlotForeign(vm, 0);
+
+	if (!handle->resource)
 	{
-        wrenSetSlotString(vm, 0, "Music(invalid)");
-        return;
-    }
-    
-    char buffer[256];
-    snprintf(buffer, sizeof(buffer), "Music(%s)", 
-             handle->resource.GetFilePath().c_str());
-    
-    wrenSetSlotString(vm, 0, buffer);
+		wrenSetSlotString(vm, 0, "Music(invalid)");
+		return;
+	}
+
+	char buffer[256];
+	snprintf(buffer, sizeof(buffer), "Music(%s)",
+		handle->resource.GetFilePath().c_str());
+
+	wrenSetSlotString(vm, 0, buffer);
 }
 
 // Register Music foreign class
 WREN_FOREIGN_CLASS("game", "Music", wren_MusicAllocate, wren_FontFinalize,
-                   "Font resource handle");
+	"Font resource handle");
 
 WREN_CLASS_STATIC("game", "Music", "load(_)", wren_MusicLoad, "Load music from path");
 WREN_CLASS_METHOD("game", "Music", "isValid", wren_MusicIsValid, "Check if music is valid");
@@ -1942,90 +1945,90 @@ WREN_CLASS_METHOD("game", "Music", "toString", wren_MusicToString, "Convert to s
 
 struct WrenSoundHandle
 {
-    Struktur::Resource::ResourcePtr<Struktur::Resource::SoundResource> resource;
-    
-    WrenSoundHandle() {}
-    WrenSoundHandle(const Struktur::Resource::ResourcePtr<Struktur::Resource::SoundResource>& res) : resource(res) {}
+	Struktur::Resource::ResourcePtr<Struktur::Resource::SoundResource> resource;
+
+	WrenSoundHandle() {}
+	WrenSoundHandle(const Struktur::Resource::ResourcePtr<Struktur::Resource::SoundResource>& res) : resource(res) {}
 };
 
 void wren_SoundAllocate(WrenVM* vm)
 {
-    wrenGetVariable(vm, "game", "Sound", 1);  // Get class into slot 1
-    WrenSoundHandle* handle = (WrenSoundHandle*)wrenSetSlotNewForeign(vm, 0, 1, sizeof(WrenSoundHandle));
-    new (handle) WrenSoundHandle();
+	wrenGetVariable(vm, "game", "Sound", 1);  // Get class into slot 1
+	WrenSoundHandle* handle = (WrenSoundHandle*)wrenSetSlotNewForeign(vm, 0, 1, sizeof(WrenSoundHandle));
+	new (handle) WrenSoundHandle();
 }
 
 void wren_SoundFinalize(void* data)
 {
-    WrenSoundHandle* handle = (WrenSoundHandle*)data;
-    handle->~WrenSoundHandle();
+	WrenSoundHandle* handle = (WrenSoundHandle*)data;
+	handle->~WrenSoundHandle();
 }
 
 // Sound.load(path) -> SoundHandle
 void wren_SoundLoad(WrenVM* vm)
 {
-    Struktur::GameContext* context = static_cast<Struktur::GameContext*>(wrenGetUserData(vm));
-    auto& resourceManager = context->GetResourceManager();
-    
-    const char* path = wrenGetSlotString(vm, 1);
-    
-    // Load sound through resource manager
-    Struktur::Resource::ResourcePtr<Struktur::Resource::SoundResource> sound = resourceManager.GetSound(path);
-    
-    if (!sound)
+	Struktur::GameContext* context = static_cast<Struktur::GameContext*>(wrenGetUserData(vm));
+	auto& resourceManager = context->GetResourceManager();
+
+	const char* path = wrenGetSlotString(vm, 1);
+
+	// Load sound through resource manager
+	Struktur::Resource::ResourcePtr<Struktur::Resource::SoundResource> sound = resourceManager.GetSound(path);
+
+	if (!sound)
 	{
-        DEBUG_ERROR("Failed to load sound: %s", path);
-        wrenSetSlotNull(vm, 0);
-        return;
-    }
-    
-    // Create foreign object with resource pointer
-    WrenSoundHandle* handle = (WrenSoundHandle*)wrenSetSlotNewForeign(vm, 0, 0, sizeof(WrenSoundHandle));
-    new (handle) WrenSoundHandle(sound);
+		DEBUG_ERROR("Failed to load sound: %s", path);
+		wrenSetSlotNull(vm, 0);
+		return;
+	}
+
+	// Create foreign object with resource pointer
+	WrenSoundHandle* handle = (WrenSoundHandle*)wrenSetSlotNewForeign(vm, 0, 0, sizeof(WrenSoundHandle));
+	new (handle) WrenSoundHandle(sound);
 }
 
 // Sound.isValid -> Bool
 void wren_SoundIsValid(WrenVM* vm)
 {
-    WrenSoundHandle* handle = (WrenSoundHandle*)wrenGetSlotForeign(vm, 0);
-    wrenSetSlotBool(vm, 0, handle->resource.IsValid());
+	WrenSoundHandle* handle = (WrenSoundHandle*)wrenGetSlotForeign(vm, 0);
+	wrenSetSlotBool(vm, 0, handle->resource.IsValid());
 }
 
 // Sound.path -> String
 void wren_SoundGetPath(WrenVM* vm)
 {
-    WrenSoundHandle* handle = (WrenSoundHandle*)wrenGetSlotForeign(vm, 0);
-    
-    if (!handle->resource)
+	WrenSoundHandle* handle = (WrenSoundHandle*)wrenGetSlotForeign(vm, 0);
+
+	if (!handle->resource)
 	{
-        wrenSetSlotNull(vm, 0);
-        return;
-    }
-    
-    wrenSetSlotString(vm, 0, handle->resource.GetFilePath().c_str());
+		wrenSetSlotNull(vm, 0);
+		return;
+	}
+
+	wrenSetSlotString(vm, 0, handle->resource.GetFilePath().c_str());
 }
 
 // Sound.toString -> String
 void wren_SoundToString(WrenVM* vm)
 {
-    WrenSoundHandle* handle = (WrenSoundHandle*)wrenGetSlotForeign(vm, 0);
-    
-    if (!handle->resource)
+	WrenSoundHandle* handle = (WrenSoundHandle*)wrenGetSlotForeign(vm, 0);
+
+	if (!handle->resource)
 	{
-        wrenSetSlotString(vm, 0, "Sound(invalid)");
-        return;
-    }
-    
-    char buffer[256];
-    snprintf(buffer, sizeof(buffer), "Sound(%s)", 
-             handle->resource.GetFilePath().c_str());
-    
-    wrenSetSlotString(vm, 0, buffer);
+		wrenSetSlotString(vm, 0, "Sound(invalid)");
+		return;
+	}
+
+	char buffer[256];
+	snprintf(buffer, sizeof(buffer), "Sound(%s)",
+		handle->resource.GetFilePath().c_str());
+
+	wrenSetSlotString(vm, 0, buffer);
 }
 
 // Register Sound foreign class
 WREN_FOREIGN_CLASS("game", "Sound", wren_SoundAllocate, wren_FontFinalize,
-                   "Font resource handle");
+	"Font resource handle");
 
 WREN_CLASS_STATIC("game", "Sound", "load(_)", wren_SoundLoad, "Load sound from path");
 WREN_CLASS_METHOD("game", "Sound", "isValid", wren_SoundIsValid, "Check if sound is valid");
@@ -2040,90 +2043,90 @@ WREN_CLASS_METHOD("game", "Sound", "toString", wren_SoundToString, "Convert to s
 
 struct WrenUILabel
 {
-    Struktur::UI::UILabel* label;
+	Struktur::UI::UILabel* label;
 };
 
 // Allocator - called when UILabel.new(pixelPosition, percentagePosition, labelText, fontSize) is invoked
 void wren_UILabelAllocate(WrenVM* vm)
 {
-    // Allocate foreign object
-    wrenGetVariable(vm, "game", "UILabel", 1);  // Get class into slot 1
-    WrenUILabel* vec = (WrenUILabel*)wrenSetSlotNewForeign(vm, 0, 1, sizeof(WrenUILabel));
-    new (vec) WrenUILabel{nullptr};
+	// Allocate foreign object
+	wrenGetVariable(vm, "game", "UILabel", 1);  // Get class into slot 1
+	WrenUILabel* vec = (WrenUILabel*)wrenSetSlotNewForeign(vm, 0, 1, sizeof(WrenUILabel));
+	new (vec) WrenUILabel{ nullptr };
 }
 
 // Finalizer - called when garbage collected
 void wren_UILabelFinalize(void* data)
 {
-    WrenUILabel* vec = (WrenUILabel*)data;
-    vec->~WrenUILabel();
+	WrenUILabel* vec = (WrenUILabel*)data;
+	vec->~WrenUILabel();
 }
 
 // UILabel.setVisible(isVisible)
 void wren_UILabelSetVisible(WrenVM* vm)
 {
-    WrenUILabel* handle = static_cast<WrenUILabel*>(wrenGetSlotForeign(vm, 0));
-    if (!handle->label)
-    {
-        DEBUG_ERROR("UILabel.setVisible: label is Null");
-        return;
-    }
-    bool isVisible = wrenGetSlotBool(vm, 1);
-    handle->label->SetVisible(isVisible);
+	WrenUILabel* handle = static_cast<WrenUILabel*>(wrenGetSlotForeign(vm, 0));
+	if (!handle->label)
+	{
+		DEBUG_ERROR("UILabel.setVisible: label is Null");
+		return;
+	}
+	bool isVisible = wrenGetSlotBool(vm, 1);
+	handle->label->SetVisible(isVisible);
 }
 
 // UILabel.setFont(font)
 void wren_UILabelSetFont(WrenVM* vm)
 {
-    WrenUILabel* handle = static_cast<WrenUILabel*>(wrenGetSlotForeign(vm, 0));
-    if (!handle->label)
-    {
-        DEBUG_ERROR("UILabel.setFont: label is Null");
-        return;
-    }
-    WrenFontHandle* font = static_cast<WrenFontHandle*>(wrenGetSlotForeign(vm, 1));
-    handle->label->SetFont(font->resource);
+	WrenUILabel* handle = static_cast<WrenUILabel*>(wrenGetSlotForeign(vm, 0));
+	if (!handle->label)
+	{
+		DEBUG_ERROR("UILabel.setFont: label is Null");
+		return;
+	}
+	WrenFontHandle* font = static_cast<WrenFontHandle*>(wrenGetSlotForeign(vm, 1));
+	handle->label->SetFont(font->resource);
 }
 
 // UILabel.setTextColor(color)
 void wren_UILabelSetTextColor(WrenVM* vm)
 {
-    WrenUILabel* handle = static_cast<WrenUILabel*>(wrenGetSlotForeign(vm, 0));
-    if (!handle->label)
-    {
-        DEBUG_ERROR("UILabel.setTextColor: label is Null");
-        return;
-    }
-    WrenVec4* color = static_cast<WrenVec4*>(wrenGetSlotForeign(vm, 1));
-    ::Color rayColor {(unsigned char)color->value.r, (unsigned char)color->value.g, (unsigned char)color->value.b, (unsigned char)color->value.a};
-    handle->label->SetTextColor(rayColor);
+	WrenUILabel* handle = static_cast<WrenUILabel*>(wrenGetSlotForeign(vm, 0));
+	if (!handle->label)
+	{
+		DEBUG_ERROR("UILabel.setTextColor: label is Null");
+		return;
+	}
+	WrenVec4* color = static_cast<WrenVec4*>(wrenGetSlotForeign(vm, 1));
+	::Color rayColor{ (unsigned char)color->value.r, (unsigned char)color->value.g, (unsigned char)color->value.b, (unsigned char)color->value.a };
+	handle->label->SetTextColor(rayColor);
 }
 
 // UILabel.setPosition(positionPixel, positionPercentage)
 void wren_UILabelSetPosition(WrenVM* vm)
 {
-    WrenUILabel* handle = static_cast<WrenUILabel*>(wrenGetSlotForeign(vm, 0));
-    if (!handle->label)
-    {
-        DEBUG_ERROR("UILabel.setPosition: label is Null");
-        return;
-    }
-    WrenVec2* positionPixel = static_cast<WrenVec2*>(wrenGetSlotForeign(vm, 1));
-    WrenVec2* positionPercentage = static_cast<WrenVec2*>(wrenGetSlotForeign(vm, 2));
-    handle->label->SetPosition(positionPixel->value, positionPercentage->value);
+	WrenUILabel* handle = static_cast<WrenUILabel*>(wrenGetSlotForeign(vm, 0));
+	if (!handle->label)
+	{
+		DEBUG_ERROR("UILabel.setPosition: label is Null");
+		return;
+	}
+	WrenVec2* positionPixel = static_cast<WrenVec2*>(wrenGetSlotForeign(vm, 1));
+	WrenVec2* positionPercentage = static_cast<WrenVec2*>(wrenGetSlotForeign(vm, 2));
+	handle->label->SetPosition(positionPixel->value, positionPercentage->value);
 }
 
 // UILabel.setAnchorPoint(anchorPoint)
 void wren_UILabelSetAnchorPoint(WrenVM* vm)
 {
-    WrenUILabel* handle = static_cast<WrenUILabel*>(wrenGetSlotForeign(vm, 0));
-    if (!handle->label)
-    {
-        DEBUG_ERROR("UILabel.setAnchorPoint: label is Null");
-        return;
-    }
-    WrenVec2* anchorPoint = static_cast<WrenVec2*>(wrenGetSlotForeign(vm, 1));
-    handle->label->SetAnchorPoint(anchorPoint->value);
+	WrenUILabel* handle = static_cast<WrenUILabel*>(wrenGetSlotForeign(vm, 0));
+	if (!handle->label)
+	{
+		DEBUG_ERROR("UILabel.setAnchorPoint: label is Null");
+		return;
+	}
+	WrenVec2* anchorPoint = static_cast<WrenVec2*>(wrenGetSlotForeign(vm, 1));
+	handle->label->SetAnchorPoint(anchorPoint->value);
 }
 
 // Register Sound foreign class
@@ -2185,65 +2188,65 @@ void wren_GameObjectIsValid(WrenVM* vm)
 
 WREN_CLASS_STATIC("game", "GameObject", "isValid(_)", wren_GameObjectIsValid, "Check if an entity ID is valid.");
 
-// TODO move this to a seperate file.
+// TODO move this to a separate file.
 #define COMPONENT_LIST\
-	COMPONENT(Camera)\
-	COMPONENT(Level)\
-	COMPONENT(PhysicsBody)\
-	COMPONENT(Shader)\
-	COMPONENT(Sprite)\
-	COMPONENT(SpriteAnimation)\
-	COMPONENT(TileMap)\
-	COMPONENT(LocalTransform)\
-	COMPONENT(WorldTransform)\
-	COMPONENT(WrenScript)\
+	COMPONENT(Camera, "Camera")\
+	COMPONENT(Level, "Level")\
+	COMPONENT(PhysicsBody, "PhysicsBody")\
+	COMPONENT(Shader, "Shader")\
+	COMPONENT(Sprite, "Sprite")\
+	COMPONENT(SpriteAnimation, "SpriteAnimation")\
+	COMPONENT(TileMap, "TileMap")\
+	COMPONENT(LocalTransform, "LocalTransform")\
+	COMPONENT(WorldTransform, "WorldTransform")\
+	COMPONENT(WrenScript, "Script")\
 	// COMPONENT_LIST
 
 
 // GameObject.hasComponent(entity, componentName) ->bool
 void wren_GameObjecthasComponent(WrenVM* vm)
 {
-    Struktur::GameContext* context = static_cast<Struktur::GameContext*>(wrenGetUserData(vm));
-    auto& registry = context->GetRegistry();
-    
+	Struktur::GameContext* context = static_cast<Struktur::GameContext*>(wrenGetUserData(vm));
+	auto& registry = context->GetRegistry();
+
 	double entityId = wrenGetSlotDouble(vm, 1);
 	entt::entity entity = static_cast<entt::entity>(entityId);
 
-    const char* componentName = wrenGetSlotString(vm, 2);
-    bool hasComponent = false;
-#define COMPONENT(component_name) 											                    \
-	if (strcmp(componentName, #component_name) == 0) 						                    \
+	const char* componentName = wrenGetSlotString(vm, 2);
+	bool hasComponent = false;
+#define COMPONENT(component_name, component_name_string) 										\
+	if (strcmp(componentName, component_name_string) == 0) 						                \
 	{																		                    \
         auto* componentValue = registry.try_get<Struktur::Component::component_name>(entity);   \
         hasComponent = componentValue != nullptr;										        \
     } else
 	COMPONENT_LIST
 #undef COMPONENT
-	// need to handle last else statement
+		// need to handle last else statement
 	{
 		DEBUG_ERROR("%s is not a valid component type", componentName);
 	}
-    wrenSetSlotBool(vm, 1, hasComponent);
+	wrenSetSlotBool(vm, 1, hasComponent);
 }
 
-WREN_CLASS_STATIC("game", "GameObject", "hasComponent(_)", 
-                  wren_GameObjecthasComponent,
-                  "Checks if entity has a specific component.");
+WREN_CLASS_STATIC("game", "GameObject", "hasComponent(_)",
+	wren_GameObjecthasComponent,
+	"Checks if entity has a specific component.");
 
 // GameObject.getAllWithComponent(componentName) -> List
 void wren_GameObjectGetAllWithComponent(WrenVM* vm)
 {
-    Struktur::GameContext* context = static_cast<Struktur::GameContext*>(wrenGetUserData(vm));
-    auto& registry = context->GetRegistry();
-    
-    const char* componentName = wrenGetSlotString(vm, 1);
-    
-    wrenSetSlotNewList(vm, 0);
-    
-    int index = 0;
-    
-#define COMPONENT(component_name) 											\
-	if (strcmp(componentName, #component_name) == 0) 						\
+	Struktur::GameContext* context = static_cast<Struktur::GameContext*>(wrenGetUserData(vm));
+	auto& registry = context->GetRegistry();
+
+	const char* componentName = wrenGetSlotString(vm, 1);
+
+	wrenSetSlotNewList(vm, 0);
+
+	int index = 0;
+
+#define COMPONENT(component_name, component_name_string) 					\
+	if (strcmp(componentName, #component_name_string) == 0) 				\
 	{																		\
         auto view = registry.view<Struktur::Component::component_name>();	\
         for (auto entity : view)											\
@@ -2255,53 +2258,53 @@ void wren_GameObjectGetAllWithComponent(WrenVM* vm)
     } else
 	COMPONENT_LIST
 #undef COMPONENT
-	// need to handle last else statement
+		// need to handle last else statement
 	{
 		DEBUG_ERROR("%s is not a valid component type", componentName);
-	} 
+	}
 }
 
-WREN_CLASS_STATIC("game", "GameObject", "getAllWithComponent(_)", 
-                  wren_GameObjectGetAllWithComponent,
-                  "Get all entities with a specific component. Returns list of entity IDs.");
+WREN_CLASS_STATIC("game", "GameObject", "getAllWithComponent(_)",
+	wren_GameObjectGetAllWithComponent,
+	"Get all entities with a specific component. Returns list of entity IDs.");
 
 // GameObject.getAllWithComponents(componentList) -> List
 void wren_GameObjectGetAllWithComponents(WrenVM* vm)
 {
-    Struktur::GameContext* context = static_cast<Struktur::GameContext*>(wrenGetUserData(vm));
-    auto& registry = context->GetRegistry();
-    
-    // Slot 1 contains a Wren list of component names
-    if (wrenGetSlotType(vm, 1) != WREN_TYPE_LIST)
+	Struktur::GameContext* context = static_cast<Struktur::GameContext*>(wrenGetUserData(vm));
+	auto& registry = context->GetRegistry();
+
+	// Slot 1 contains a Wren list of component names
+	if (wrenGetSlotType(vm, 1) != WREN_TYPE_LIST)
 	{
 		DEBUG_ERROR("Slot 1 must contain a Wren list of component names");
-        wrenSetSlotNull(vm, 0);
-        return;
-    }
-    
-    int componentCount = wrenGetListCount(vm, 1);
-    
-    // Get component names from list
-    std::vector<std::string> components(componentCount);
-    for (int i = 0; i < componentCount; i++) {
-        wrenGetListElement(vm, 1, i, 2); // Get element into slot 2
-        const char* componentName = wrenGetSlotString(vm, 2);
-        components.push_back(componentName);
-    }
-    
-    // Now filter entities based on components
-    wrenSetSlotNewList(vm, 0);
-    int resultIndex = 0;
-    
-    // Iterate all entities and check if they have ALL required components
-    registry.each([&](auto entity)
-	{
-        bool hasAllComponents = true;
-        
-        for (const auto& compName : components)
+		wrenSetSlotNull(vm, 0);
+		return;
+	}
+
+	int componentCount = wrenGetListCount(vm, 1);
+
+	// Get component names from list
+	std::vector<std::string> components(componentCount);
+	for (int i = 0; i < componentCount; i++) {
+		wrenGetListElement(vm, 1, i, 2); // Get element into slot 2
+		const char* componentName = wrenGetSlotString(vm, 2);
+		components.emplace_back(componentName);
+	}
+
+	// Now filter entities based on components
+	wrenSetSlotNewList(vm, 0);
+	int resultIndex = 0;
+
+	// Iterate all entities and check if they have ALL required components
+	registry.each([&](auto entity)
 		{
-#define COMPONENT(component_name) 													\
-			if (compName == #component_name) 										\
+			bool hasAllComponents = true;
+
+			for (const auto& compName : components)
+			{
+#define COMPONENT(component_name, component_name_string) 							\
+            if (compName == component_name_string)                                  \
 			{																		\
 				if (!registry.any_of<Struktur::Component::component_name>(entity))	\
 				{																	\
@@ -2309,58 +2312,58 @@ void wren_GameObjectGetAllWithComponents(WrenVM* vm)
                     break;															\
                 }																	\
 			} else
-			COMPONENT_LIST
+				COMPONENT_LIST
 #undef COMPONENT
-			// need to handle last else statement
-			{
-				DEBUG_ERROR("%s is not a valid component type", compName.c_str());
+					// need to handle last else statement
+				{
+					DEBUG_ERROR("%s is not a valid component type", compName.c_str());
+				}
 			}
-        }
-        
-        if (hasAllComponents) {
-            wrenSetSlotDouble(vm, 2, static_cast<double>(entity));
-            wrenInsertInList(vm, 0, resultIndex, 2);
-            resultIndex++;
-        }
-    });
+
+			if (hasAllComponents) {
+				wrenSetSlotDouble(vm, 2, static_cast<double>(entity));
+				wrenInsertInList(vm, 0, resultIndex, 2);
+				resultIndex++;
+			}
+		});
 }
 
-WREN_CLASS_STATIC("game", "GameObject", "getAllWithComponents(_)", 
-                  wren_GameObjectGetAllWithComponents,
-                  "Get all entities with ALL specified components. Pass list of component names.");
+WREN_CLASS_STATIC("game", "GameObject", "getAllWithComponents(_)",
+	wren_GameObjectGetAllWithComponents,
+	"Get all entities with ALL specified components. Pass list of component names.");
 
 // GameObject.getAnyWithComponents(componentList) -> List
 void wren_GameObjectGetAnyWithComponents(WrenVM* vm)
 {
-    Struktur::GameContext* context = static_cast<Struktur::GameContext*>(wrenGetUserData(vm));
-    auto& registry = context->GetRegistry();
-    
-    if (wrenGetSlotType(vm, 1) != WREN_TYPE_LIST)
+	Struktur::GameContext* context = static_cast<Struktur::GameContext*>(wrenGetUserData(vm));
+	auto& registry = context->GetRegistry();
+
+	if (wrenGetSlotType(vm, 1) != WREN_TYPE_LIST)
 	{
 		DEBUG_ERROR("Slot 1 must contain a Wren list of component names");
-        wrenSetSlotNull(vm, 0);
-        return;
-    }
-    
-    int componentCount = wrenGetListCount(vm, 1);
-    
-    std::vector<std::string> components(componentCount);
-    for (int i = 0; i < componentCount; i++)
+		wrenSetSlotNull(vm, 0);
+		return;
+	}
+
+	int componentCount = wrenGetListCount(vm, 1);
+
+	std::vector<std::string> components(componentCount);
+	for (int i = 0; i < componentCount; i++)
 	{
-        wrenGetListElement(vm, 1, i, 2);
-        components.push_back(wrenGetSlotString(vm, 2));
-    }
-    
-    wrenSetSlotNewList(vm, 0);
-    int resultIndex = 0;
-    
-    registry.each([&](auto entity) {
-        bool hasAnyComponent = false;
-        
-        for (const auto& compName : components)
+		wrenGetListElement(vm, 1, i, 2);
+		components.emplace_back(wrenGetSlotString(vm, 2));
+	}
+
+	wrenSetSlotNewList(vm, 0);
+	int resultIndex = 0;
+
+	registry.each([&](auto entity) {
+		bool hasAnyComponent = false;
+
+		for (const auto& compName : components)
 		{
-#define COMPONENT(component_name) 													\
-			if (compName == #component_name) 										\
+#define COMPONENT(component_name, component_name_string) 							\
+	        if (compName == component_name_string)                                  \
 			{																		\
 				if (!registry.any_of<Struktur::Component::component_name>(entity))	\
 				{																	\
@@ -2370,61 +2373,61 @@ void wren_GameObjectGetAnyWithComponents(WrenVM* vm)
 			} else
 			COMPONENT_LIST
 #undef COMPONENT
-			// need to handle last else statement
+				// need to handle last else statement
 			{
 				DEBUG_ERROR("%s is not a valid component type", compName.c_str());
 			}
-        }
-        
-        if (hasAnyComponent) {
-            wrenSetSlotDouble(vm, 2, static_cast<double>(entity));
-            wrenInsertInList(vm, 0, resultIndex, 2);
-            resultIndex++;
-        }
-    });
+		}
+
+		if (hasAnyComponent) {
+			wrenSetSlotDouble(vm, 2, static_cast<double>(entity));
+			wrenInsertInList(vm, 0, resultIndex, 2);
+			resultIndex++;
+		}
+		});
 }
 
-WREN_CLASS_STATIC("game", "GameObject", "getAllWithAnyComponents(_)", 
-                  wren_GameObjectGetAnyWithComponents,
-                  "Get entities with ANY of the specified components.");
+WREN_CLASS_STATIC("game", "GameObject", "getAllWithAnyComponents(_)",
+	wren_GameObjectGetAnyWithComponents,
+	"Get entities with ANY of the specified components.");
 
 // GameObject.getAll() -> List of all entities
 void wren_GameObjectGetAll(WrenVM* vm)
 {
-    Struktur::GameContext* context = static_cast<Struktur::GameContext*>(wrenGetUserData(vm));
-    auto& registry = context->GetRegistry();
-    
-    wrenSetSlotNewList(vm, 0);
-    
-    int index = 0;
-    
-    // Iterate ALL entities
-    registry.each([&](auto entity)
-	{
-        wrenSetSlotDouble(vm, 1, static_cast<double>(entity));
-        wrenInsertInList(vm, 0, index, 1);
-        index++;
-    });
+	Struktur::GameContext* context = static_cast<Struktur::GameContext*>(wrenGetUserData(vm));
+	auto& registry = context->GetRegistry();
+
+	wrenSetSlotNewList(vm, 0);
+
+	int index = 0;
+
+	// Iterate ALL entities
+	registry.each([&](const auto& entity)
+		{
+			wrenSetSlotDouble(vm, 1, static_cast<double>(entity));
+			wrenInsertInList(vm, 0, index, 1);
+			index++;
+		});
 }
 
 WREN_CLASS_STATIC("game", "GameObject", "getAll()", wren_GameObjectGetAll,
-                  "Get all entities in the registry. Returns list of entity IDs.");
+	"Get all entities in the registry. Returns list of entity IDs.");
 
 // GameObject.getAllWithIdentifier(Identifier) -> List of entity IDs
 void wren_GameObjectGetAllWithIdentifier(WrenVM* vm) {
-    Struktur::GameContext* context = static_cast<Struktur::GameContext*>(wrenGetUserData(vm));
-    auto& registry = context->GetRegistry();
-    
-    const char* tag = wrenGetSlotString(vm, 1);
-    
-    // Create a Wren list for results
-    wrenSetSlotNewList(vm, 0);
-    
-    // Find all entities with matching tag/component
-    auto view = registry.view<Struktur::Component::Identifier>();
-    
-    int index = 0;
-    for (auto [entity, identifier] : view.each())
+	Struktur::GameContext* context = static_cast<Struktur::GameContext*>(wrenGetUserData(vm));
+	auto& registry = context->GetRegistry();
+
+	const char* tag = wrenGetSlotString(vm, 1);
+
+	// Create a Wren list for results
+	wrenSetSlotNewList(vm, 0);
+
+	// Find all entities with matching tag/component
+	auto view = registry.view<Struktur::Component::Identifier>();
+
+	int index = 0;
+	for (const auto& [entity, identifier] : view.each())
 	{
 		if (identifier.type == tag)
 		{
@@ -2433,48 +2436,48 @@ void wren_GameObjectGetAllWithIdentifier(WrenVM* vm) {
 			wrenInsertInList(vm, 0, index, 1);
 			index++;
 		}
-    }
-    
-    // Return list (already in slot 0)
+	}
+
+	// Return list (already in slot 0)
 }
 
 WREN_CLASS_STATIC("game", "GameObject", "getAllWithIdentifier(_)", wren_GameObjectGetAllWithIdentifier,
-                  "Get all entities with a specific identifier. Returns list of entity IDs.");
+	"Get all entities with a specific identifier. Returns list of entity IDs.");
 
 // GameObject.forEach(callback) - calls callback for each entity
 void wren_GameObjectForEach(WrenVM* vm) {
-    Struktur::GameContext* context = static_cast<Struktur::GameContext*>(wrenGetUserData(vm));
-    auto& registry = context->GetRegistry();
-    
-    // Callback is in slot 1
-    WrenHandle* callbackHandle = wrenGetSlotHandle(vm, 1);
-    
-    // Iterate all entities
-    registry.each([vm, callbackHandle](auto entity) {
-        // Call Wren callback with entity ID
-        wrenEnsureSlots(vm, 2);
-        wrenSetSlotHandle(vm, 0, callbackHandle);
-        wrenSetSlotDouble(vm, 1, static_cast<double>(entity));
-        
-        wrenCall(vm, callbackHandle);
-    });
-    
-    wrenReleaseHandle(vm, callbackHandle);
+	Struktur::GameContext* context = static_cast<Struktur::GameContext*>(wrenGetUserData(vm));
+	auto& registry = context->GetRegistry();
+
+	// Callback is in slot 1
+	WrenHandle* callbackHandle = wrenGetSlotHandle(vm, 1);
+
+	// Iterate all entities
+	registry.each([vm, callbackHandle](auto entity) {
+		// Call Wren callback with entity ID
+		wrenEnsureSlots(vm, 2);
+		wrenSetSlotHandle(vm, 0, callbackHandle);
+		wrenSetSlotDouble(vm, 1, static_cast<double>(entity));
+
+		wrenCall(vm, callbackHandle);
+		});
+
+	wrenReleaseHandle(vm, callbackHandle);
 }
 
 WREN_CLASS_STATIC("game", "GameObject", "forEach(_)", wren_GameObjectForEach,
-                  "Iterate all entities, calling callback for each.");
+	"Iterate all entities, calling callback for each.");
 
 // GameObject.forEachWithComponent(componentName, callback)
 void wren_GameObjectForEachWithComponent(WrenVM* vm) {
-    Struktur::GameContext* context = static_cast<Struktur::GameContext*>(wrenGetUserData(vm));
-    auto& registry = context->GetRegistry();
-    
-    const char* componentName = wrenGetSlotString(vm, 1);
-    WrenHandle* callbackHandle = wrenGetSlotHandle(vm, 2);
+	Struktur::GameContext* context = static_cast<Struktur::GameContext*>(wrenGetUserData(vm));
+	auto& registry = context->GetRegistry();
 
-#define COMPONENT(component_name) 											\
-	if (strcmp(componentName, #component_name) == 0) 						\
+	const char* componentName = wrenGetSlotString(vm, 1);
+	WrenHandle* callbackHandle = wrenGetSlotHandle(vm, 2);
+
+#define COMPONENT(component_name, component_name_string) 					\
+	if (strcmp(componentName, component_name_string) == 0) 					\
 	{																		\
         auto view = registry.view<Struktur::Component::component_name>();	\
         for (auto entity : view)											\
@@ -2487,50 +2490,50 @@ void wren_GameObjectForEachWithComponent(WrenVM* vm) {
     } else
 	COMPONENT_LIST
 #undef COMPONENT
-	// need to handle last else statement
+		// need to handle last else statement
 	{
 		DEBUG_ERROR("%s is not a valid component type", componentName);
-	} 
-    
-    wrenReleaseHandle(vm, callbackHandle);
+	}
+
+	wrenReleaseHandle(vm, callbackHandle);
 }
 
-WREN_CLASS_STATIC("game", "GameObject", "forEachWithComponent(_,_)", 
-                  wren_GameObjectForEachWithComponent,
-                  "Iterate entities with component, calling callback for each.");
+WREN_CLASS_STATIC("game", "GameObject", "forEachWithComponent(_,_)",
+	wren_GameObjectForEachWithComponent,
+	"Iterate entities with component, calling callback for each.");
 
 // GameObject.forEachWithComponents(componentName, callback)
 void wren_GameObjectForEachWithComponents(WrenVM* vm) {
-    Struktur::GameContext* context = static_cast<Struktur::GameContext*>(wrenGetUserData(vm));
-    auto& registry = context->GetRegistry();
-    
+	Struktur::GameContext* context = static_cast<Struktur::GameContext*>(wrenGetUserData(vm));
+	auto& registry = context->GetRegistry();
+
 	if (wrenGetSlotType(vm, 1) != WREN_TYPE_LIST)
 	{
 		DEBUG_ERROR("Slot 1 must contain a Wren list of component names");
-        wrenSetSlotNull(vm, 0);
-        return;
-    }
+		wrenSetSlotNull(vm, 0);
+		return;
+	}
 	WrenHandle* callbackHandle = wrenGetSlotHandle(vm, 2);
 
-    int componentCount = wrenGetListCount(vm, 1);
-    
-    // Get component names from list
-    std::vector<std::string> components(componentCount);
-    for (int i = 0; i < componentCount; i++) {
-        wrenGetListElement(vm, 1, i, 2); // Get element into slot 2
-        const char* componentName = wrenGetSlotString(vm, 2);
-        components.push_back(componentName);
-    }
-    
-    // Iterate all entities and check if they have ALL required components
-    registry.each([&](auto entity)
-	{
-        bool hasAllComponents = true;
-        
-        for (const auto& compName : components)
+	int componentCount = wrenGetListCount(vm, 1);
+
+	// Get component names from list
+	std::vector<std::string> components(componentCount);
+	for (int i = 0; i < componentCount; i++) {
+		wrenGetListElement(vm, 1, i, 2); // Get element into slot 2
+		const char* componentName = wrenGetSlotString(vm, 2);
+		components.emplace_back(componentName);
+	}
+
+	// Iterate all entities and check if they have ALL required components
+	registry.each([&](auto entity)
 		{
-#define COMPONENT(component_name) 													\
-			if (compName == #component_name) 										\
+			bool hasAllComponents = true;
+
+			for (const auto& compName : components)
+			{
+#define COMPONENT(component_name, component_name_string) 							\
+			if (compName == component_name_string) 									\
 			{																		\
 				if (!registry.any_of<Struktur::Component::component_name>(entity))	\
 				{																	\
@@ -2538,61 +2541,61 @@ void wren_GameObjectForEachWithComponents(WrenVM* vm) {
                     break;															\
                 }																	\
 			} else
-			COMPONENT_LIST
+				COMPONENT_LIST
 #undef COMPONENT
-			// need to handle last else statement
-			{
-				DEBUG_ERROR("%s is not a valid component type", compName.c_str());
+					// need to handle last else statement
+				{
+					DEBUG_ERROR("%s is not a valid component type", compName.c_str());
+				}
 			}
-        }
-        
-        if (hasAllComponents) {
-            wrenEnsureSlots(vm, 2);
-            wrenSetSlotHandle(vm, 0, callbackHandle);
-            wrenSetSlotDouble(vm, 1, static_cast<double>(entity));
-			wrenCall(vm, callbackHandle);
-        }
-    });
-    
-    wrenReleaseHandle(vm, callbackHandle);
+
+			if (hasAllComponents) {
+				wrenEnsureSlots(vm, 2);
+				wrenSetSlotHandle(vm, 0, callbackHandle);
+				wrenSetSlotDouble(vm, 1, static_cast<double>(entity));
+				wrenCall(vm, callbackHandle);
+			}
+		});
+
+	wrenReleaseHandle(vm, callbackHandle);
 }
 
-WREN_CLASS_STATIC("game", "GameObject", "forEachWithComponents(_,_)", 
-                  wren_GameObjectForEachWithComponents,
-                  "Iterate entities with component, calling callback for each.");
+WREN_CLASS_STATIC("game", "GameObject", "forEachWithComponents(_,_)",
+	wren_GameObjectForEachWithComponents,
+	"Iterate entities with component, calling callback for each.");
 
 // GameObject.forEachWithAnyComponents(componentName, callback)
 void wren_GameObjectForEachWithAnyComponents(WrenVM* vm) {
-    Struktur::GameContext* context = static_cast<Struktur::GameContext*>(wrenGetUserData(vm));
-    auto& registry = context->GetRegistry();
-    
+	Struktur::GameContext* context = static_cast<Struktur::GameContext*>(wrenGetUserData(vm));
+	auto& registry = context->GetRegistry();
+
 	if (wrenGetSlotType(vm, 1) != WREN_TYPE_LIST)
 	{
 		DEBUG_ERROR("Slot 1 must contain a Wren list of component names");
-        wrenSetSlotNull(vm, 0);
-        return;
-    }
+		wrenSetSlotNull(vm, 0);
+		return;
+	}
 	WrenHandle* callbackHandle = wrenGetSlotHandle(vm, 2);
 
-    int componentCount = wrenGetListCount(vm, 1);
-    
-    // Get component names from list
-    std::vector<std::string> components(componentCount);
-    for (int i = 0; i < componentCount; i++) {
-        wrenGetListElement(vm, 1, i, 2); // Get element into slot 2
-        const char* componentName = wrenGetSlotString(vm, 2);
-        components.push_back(componentName);
-    }
-    
-    // Iterate all entities and check if they have ANY required components
-    registry.each([&](auto entity)
-	{
-        bool hasAnyComponents = false;
-        
-        for (const auto& compName : components)
+	int componentCount = wrenGetListCount(vm, 1);
+
+	// Get component names from list
+	std::vector<std::string> components(componentCount);
+	for (int i = 0; i < componentCount; i++) {
+		wrenGetListElement(vm, 1, i, 2); // Get element into slot 2
+		const char* componentName = wrenGetSlotString(vm, 2);
+		components.emplace_back(componentName);
+	}
+
+	// Iterate all entities and check if they have ANY required components
+	registry.each([&](auto entity)
 		{
-#define COMPONENT(component_name) 													\
-			if (compName == #component_name) 										\
+			bool hasAnyComponents = false;
+
+			for (const auto& compName : components)
+			{
+#define COMPONENT(component_name, component_name_string) 							\
+			if (compName == component_name_string) 									\
 			{																		\
 				if (registry.any_of<Struktur::Component::component_name>(entity))	\
 				{																	\
@@ -2600,30 +2603,30 @@ void wren_GameObjectForEachWithAnyComponents(WrenVM* vm) {
                     break;															\
                 }																	\
 			} else
-			COMPONENT_LIST
+				COMPONENT_LIST
 #undef COMPONENT
-			// need to handle last else statement
-			{
-				DEBUG_ERROR("%s is not a valid component type", compName.c_str());
+					// need to handle last else statement
+				{
+					DEBUG_ERROR("%s is not a valid component type", compName.c_str());
+				}
 			}
-        }
-        
-        if (hasAnyComponents) {
-            wrenEnsureSlots(vm, 2);
-            wrenSetSlotHandle(vm, 0, callbackHandle);
-            wrenSetSlotDouble(vm, 1, static_cast<double>(entity));
-			wrenCall(vm, callbackHandle);
-        }
-    });
-    
-    wrenReleaseHandle(vm, callbackHandle);
+
+			if (hasAnyComponents) {
+				wrenEnsureSlots(vm, 2);
+				wrenSetSlotHandle(vm, 0, callbackHandle);
+				wrenSetSlotDouble(vm, 1, static_cast<double>(entity));
+				wrenCall(vm, callbackHandle);
+			}
+		});
+
+	wrenReleaseHandle(vm, callbackHandle);
 }
 
-WREN_CLASS_STATIC("game", "GameObject", "forEachWithAnyComponents(_,_)", 
-                  wren_GameObjectForEachWithAnyComponents,
-                  "Iterate entities with component, calling callback for each.");
+WREN_CLASS_STATIC("game", "GameObject", "forEachWithAnyComponents(_,_)",
+	wren_GameObjectForEachWithAnyComponents,
+	"Iterate entities with component, calling callback for each.");
 
-				  
+
 
 // ============================================================================
 // APPLICATION BINDINGS
@@ -2690,9 +2693,9 @@ void wren_TransformGetPosition(WrenVM* vm)
 	}
 
 	// Create Vec3 foreign object with position
-    wrenGetVariable(vm, "game", "Vec3", 1);  // Get class into slot 1
-    WrenVec3* vec = (WrenVec3*)wrenSetSlotNewForeign(vm, 0, 1, sizeof(WrenVec3));
-    new (vec) WrenVec3(transform->position);
+	wrenGetVariable(vm, "game", "Vec3", 1);  // Get class into slot 1
+	WrenVec3* vec = (WrenVec3*)wrenSetSlotNewForeign(vm, 0, 1, sizeof(WrenVec3));
+	new (vec) WrenVec3(transform->position);
 }
 
 WREN_CLASS_STATIC("game", "Transform", "getPosition(_)", wren_TransformGetPosition, "Get the world position of an entity. Returns vec3 or null if no transform.");
@@ -2708,14 +2711,14 @@ void wren_TransformSetPosition(WrenVM* vm)
 	entt::entity entity = static_cast<entt::entity>(entityId);
 
 	// Get Vec3 from slot 2
-    WrenVec3* vec = static_cast<WrenVec3*>(wrenGetSlotForeign(vm, 2));
+	WrenVec3* vec = static_cast<WrenVec3*>(wrenGetSlotForeign(vm, 2));
 
 	if (!vec)
 	{
-        DEBUG_ERROR("Transform.setPosition: Invalid Vec3");
-        return;
-    }
-	
+		DEBUG_ERROR("Transform.setPosition: Invalid Vec3");
+		return;
+	}
+
 	transformSystem.SetWorldTransform(*context, entity, vec->value, glm::vec3(1.0f), glm::quat(1, 0, 0, 0));
 }
 
@@ -2732,14 +2735,14 @@ void wren_TransformSetLocalPosition(WrenVM* vm)
 	entt::entity entity = static_cast<entt::entity>(entityId);
 
 	// Get Vec3 from slot 2
-    WrenVec3* vec = static_cast<WrenVec3*>(wrenGetSlotForeign(vm, 2));
+	WrenVec3* vec = static_cast<WrenVec3*>(wrenGetSlotForeign(vm, 2));
 
 	if (!vec)
 	{
-        DEBUG_ERROR("Transform.setPosition: Invalid Vec3");
-        return;
-    }
-	
+		DEBUG_ERROR("Transform.setPosition: Invalid Vec3");
+		return;
+	}
+
 	transformSystem.SetLocalTransform(*context, entity, vec->value, glm::vec3(1.0f), glm::quat(1, 0, 0, 0));
 }
 
@@ -2761,9 +2764,9 @@ void wren_TransformGetLocalPosition(WrenVM* vm)
 	}
 
 	// Create Vec3 foreign object with position
-    wrenGetVariable(vm, "game", "Vec3", 1);  // Get class into slot 1
-    WrenVec3* vec = (WrenVec3*)wrenSetSlotNewForeign(vm, 0, 1, sizeof(WrenVec3));
-    new (vec) WrenVec3(transform->position);
+	wrenGetVariable(vm, "game", "Vec3", 1);  // Get class into slot 1
+	WrenVec3* vec = (WrenVec3*)wrenSetSlotNewForeign(vm, 0, 1, sizeof(WrenVec3));
+	new (vec) WrenVec3(transform->position);
 }
 
 WREN_CLASS_STATIC("game", "Transform", "getLocalPosition(_)", wren_TransformGetLocalPosition, "Get the local position of an entity. Returns [x, y, z] or null if no transform.");
@@ -2771,82 +2774,82 @@ WREN_CLASS_STATIC("game", "Transform", "getLocalPosition(_)", wren_TransformGetL
 // Transform.getRotation(entity) -> Quat
 void wren_TransformGetRotation(WrenVM* vm)
 {
-    Struktur::GameContext* context = static_cast<Struktur::GameContext*>(wrenGetUserData(vm));
-    auto& registry = context->GetRegistry();
-    
-    double entityId = wrenGetSlotDouble(vm, 1);
-    entt::entity entity = static_cast<entt::entity>(entityId);
-    
-    auto* transform = registry.try_get<Struktur::Component::WorldTransform>(entity);
-    
-    if (!transform)
+	Struktur::GameContext* context = static_cast<Struktur::GameContext*>(wrenGetUserData(vm));
+	auto& registry = context->GetRegistry();
+
+	double entityId = wrenGetSlotDouble(vm, 1);
+	entt::entity entity = static_cast<entt::entity>(entityId);
+
+	auto* transform = registry.try_get<Struktur::Component::WorldTransform>(entity);
+
+	if (!transform)
 	{
-        wrenSetSlotNull(vm, 0);
-        return;
-    }
-    
-    // Create Quat foreign object with rotation
-    wrenGetVariable(vm, "game", "Quat", 1);  // Get class into slot 1
-    WrenQuat* quat = (WrenQuat*)wrenSetSlotNewForeign(vm, 0, 1, sizeof(WrenQuat));
-    new (quat) WrenQuat(transform->rotation);
+		wrenSetSlotNull(vm, 0);
+		return;
+	}
+
+	// Create Quat foreign object with rotation
+	wrenGetVariable(vm, "game", "Quat", 1);  // Get class into slot 1
+	WrenQuat* quat = (WrenQuat*)wrenSetSlotNewForeign(vm, 0, 1, sizeof(WrenQuat));
+	new (quat) WrenQuat(transform->rotation);
 }
 
 WREN_CLASS_STATIC("game", "Transform", "getRotation(_)", wren_TransformGetRotation, "Get rotation of entity as Quat.");
 
 // Transform.setLocalRotation(entity, quat)
 void wren_TransformSetLocalRotation(WrenVM* vm) {
-    Struktur::GameContext* context = static_cast<Struktur::GameContext*>(wrenGetUserData(vm));
-    auto& systemManager = context->GetSystemManager();
+	Struktur::GameContext* context = static_cast<Struktur::GameContext*>(wrenGetUserData(vm));
+	auto& systemManager = context->GetSystemManager();
 	auto& transformSystem = systemManager.GetSystem<Struktur::System::TransformSystem>();
-    
-    double entityId = wrenGetSlotDouble(vm, 1);
-    entt::entity entity = static_cast<entt::entity>(entityId);
-    
-    WrenQuat* quat = (WrenQuat*)wrenGetSlotForeign(vm, 2);
-    
-    if (!quat)
-	{
-        DEBUG_ERROR("Transform.setRotation: Invalid Quat");
-        return;
-    }
-    
-    // Get current transform
-    auto& registry = context->GetRegistry();
-    auto* transform = registry.try_get<Struktur::Component::LocalTransform>(entity);
 
-    if (transform)
+	double entityId = wrenGetSlotDouble(vm, 1);
+	entt::entity entity = static_cast<entt::entity>(entityId);
+
+	WrenQuat* quat = (WrenQuat*)wrenGetSlotForeign(vm, 2);
+
+	if (!quat)
 	{
-        transformSystem.SetLocalTransform(*context, entity, transform->position, transform->scale, quat->value);
-    }
+		DEBUG_ERROR("Transform.setRotation: Invalid Quat");
+		return;
+	}
+
+	// Get current transform
+	auto& registry = context->GetRegistry();
+	auto* transform = registry.try_get<Struktur::Component::LocalTransform>(entity);
+
+	if (transform)
+	{
+		transformSystem.SetLocalTransform(*context, entity, transform->position, transform->scale, quat->value);
+	}
 }
 
 WREN_CLASS_STATIC("game", "Transform", "setLocalRotation(_,_)", wren_TransformSetLocalRotation, "Set local rotation of entity from Quat.");
 
 // Transform.setRotation(entity, quat)
 void wren_TransformSetRotation(WrenVM* vm) {
-    Struktur::GameContext* context = static_cast<Struktur::GameContext*>(wrenGetUserData(vm));
-    auto& systemManager = context->GetSystemManager();
+	Struktur::GameContext* context = static_cast<Struktur::GameContext*>(wrenGetUserData(vm));
+	auto& systemManager = context->GetSystemManager();
 	auto& transformSystem = systemManager.GetSystem<Struktur::System::TransformSystem>();
-    
-    double entityId = wrenGetSlotDouble(vm, 1);
-    entt::entity entity = static_cast<entt::entity>(entityId);
-    
-    WrenQuat* quat = (WrenQuat*)wrenGetSlotForeign(vm, 2);
-    
-    if (!quat)
-	{
-        DEBUG_ERROR("Transform.setRotation: Invalid Quat");
-        return;
-    }
-    
-    // Get current transform
-    auto& registry = context->GetRegistry();
-    auto* transform = registry.try_get<Struktur::Component::WorldTransform>(entity);
 
-    if (transform)
+	double entityId = wrenGetSlotDouble(vm, 1);
+	entt::entity entity = static_cast<entt::entity>(entityId);
+
+	WrenQuat* quat = (WrenQuat*)wrenGetSlotForeign(vm, 2);
+
+	if (!quat)
 	{
-        transformSystem.SetWorldTransform(*context, entity, transform->position, transform->scale, quat->value);
-    }
+		DEBUG_ERROR("Transform.setRotation: Invalid Quat");
+		return;
+	}
+
+	// Get current transform
+	auto& registry = context->GetRegistry();
+	auto* transform = registry.try_get<Struktur::Component::WorldTransform>(entity);
+
+	if (transform)
+	{
+		transformSystem.SetWorldTransform(*context, entity, transform->position, transform->scale, quat->value);
+	}
 }
 
 WREN_CLASS_STATIC("game", "Transform", "setRotation(_,_)", wren_TransformSetRotation, "Set rotation of entity from Quat.");
@@ -2854,23 +2857,23 @@ WREN_CLASS_STATIC("game", "Transform", "setRotation(_,_)", wren_TransformSetRota
 // Transform.getLocalRotation(entity) -> Quat
 void wren_TransformGetLocalRotation(WrenVM* vm)
 {
-    Struktur::GameContext* context = static_cast<Struktur::GameContext*>(wrenGetUserData(vm));
-    auto& registry = context->GetRegistry();
-    
-    double entityId = wrenGetSlotDouble(vm, 1);
-    entt::entity entity = static_cast<entt::entity>(entityId);
-    
-    auto* transform = registry.try_get<Struktur::Component::LocalTransform>(entity);
-    
-    if (!transform)
-	{
-        wrenSetSlotNull(vm, 0);
-        return;
-    }
+	Struktur::GameContext* context = static_cast<Struktur::GameContext*>(wrenGetUserData(vm));
+	auto& registry = context->GetRegistry();
 
-    wrenGetVariable(vm, "game", "Vec3", 1);  // Get class into slot 1
-    WrenQuat* quat = (WrenQuat*)wrenSetSlotNewForeign(vm, 0, 1, sizeof(WrenQuat));
-    new (quat) WrenQuat(transform->rotation);
+	double entityId = wrenGetSlotDouble(vm, 1);
+	entt::entity entity = static_cast<entt::entity>(entityId);
+
+	auto* transform = registry.try_get<Struktur::Component::LocalTransform>(entity);
+
+	if (!transform)
+	{
+		wrenSetSlotNull(vm, 0);
+		return;
+	}
+
+	wrenGetVariable(vm, "game", "Vec3", 1);  // Get class into slot 1
+	WrenQuat* quat = (WrenQuat*)wrenSetSlotNewForeign(vm, 0, 1, sizeof(WrenQuat));
+	new (quat) WrenQuat(transform->rotation);
 }
 
 WREN_CLASS_STATIC("game", "Transform", "getLocalRotation(_)", wren_TransformGetLocalRotation, "Get local rotation of entity as Quat.");
@@ -2884,11 +2887,11 @@ void wren_InventoryContains(WrenVM* vm)
 {
 	Struktur::GameContext* context = static_cast<Struktur::GameContext*>(wrenGetUserData(vm));
 	auto& inventory = context->GetInventory();
-	
+
 	const char* itemName = wrenGetSlotString(vm, 1);
-	
+
 	bool containsItem = std::find(inventory.begin(), inventory.end(), itemName) != inventory.end();
-	
+
 	wrenSetSlotBool(vm, 0, containsItem);
 }
 
@@ -2906,15 +2909,15 @@ void wren_WorldGetLevelIndex(WrenVM* vm)
 
 	double entityId = wrenGetSlotDouble(vm, 1);
 	const char* levelName = wrenGetSlotString(vm, 2);
-    entt::entity entity = static_cast<entt::entity>(entityId);
+	entt::entity entity = static_cast<entt::entity>(entityId);
 
 	auto* worldComponent = registry.try_get<Struktur::Component::World>(entity);
-	
+
 	if (!worldComponent)
 	{
-        wrenSetSlotNull(vm, 0);
-        return;
-    }
+		wrenSetSlotNull(vm, 0);
+		return;
+	}
 
 	Struktur::FileLoading::LevelParser::World& worldMap = worldComponent->worldMap;
 
@@ -2930,12 +2933,12 @@ void wren_WorldGetLevelIndex(WrenVM* vm)
 
 	if (index == -1)
 	{
-        wrenSetSlotNull(vm, 0);
-        return;
-    }
+		wrenSetSlotNull(vm, 0);
+		return;
+	}
 
 	double doubleNumber = static_cast<double>(index);
-	
+
 	wrenSetSlotDouble(vm, 0, doubleNumber);
 }
 
@@ -2969,7 +2972,7 @@ void wren_LevelLoadLevelEntities(WrenVM* vm)
 
 	double levelDouble = wrenGetSlotDouble(vm, 2);
 	int levelIndex = static_cast<int>(levelDouble);
-	
+
 	entt::entity levelEntity = Struktur::GameResource::Level::LoadLevelEntities(*context, worldEntity, levelIndex);
 
 	entityId = static_cast<double>(levelEntity);
@@ -2990,9 +2993,9 @@ void wren_ResourceManagerGetFontResource(WrenVM* vm)
 
 	const char* fontPath = wrenGetSlotString(vm, 1);
 
-    wrenGetVariable(vm, "game", "Font", 1);  // Get class into slot 1
+	wrenGetVariable(vm, "game", "Font", 1);  // Get class into slot 1
 	WrenFontHandle* font = (WrenFontHandle*)wrenSetSlotNewForeign(vm, 0, 1, sizeof(WrenFontHandle));
-    new (font) WrenFontHandle(resourceManager.GetFontResource(fontPath));
+	new (font) WrenFontHandle(resourceManager.GetFontResource(fontPath));
 }
 
 WREN_CLASS_STATIC("game", "ResourceManager", "getFontResource(_)", wren_ResourceManagerGetFontResource, "Creates a pointer to the font resource in the resource pool.");
@@ -3005,9 +3008,9 @@ void wren_ResourceManagerGetTextureResource(WrenVM* vm)
 
 	const char* texturePath = wrenGetSlotString(vm, 1);
 
-    wrenGetVariable(vm, "game", "Texture", 1);  // Get class into slot 1
+	wrenGetVariable(vm, "game", "Texture", 1);  // Get class into slot 1
 	WrenTextureHandle* texture = (WrenTextureHandle*)wrenSetSlotNewForeign(vm, 0, 1, sizeof(WrenTextureHandle));
-    new (texture) WrenTextureHandle(resourceManager.GetTexture(texturePath));
+	new (texture) WrenTextureHandle(resourceManager.GetTexture(texturePath));
 }
 
 WREN_CLASS_STATIC("game", "ResourceManager", "getTextureResource(_)", wren_ResourceManagerGetTextureResource, "Creates a pointer to the texture resource in the resource pool.");
@@ -3019,9 +3022,9 @@ WREN_CLASS_STATIC("game", "ResourceManager", "getTextureResource(_)", wren_Resou
 // Sprite.create(spriteEntity, texture, color, offset, columns, rows, flipped, index, renderPriority) -> number
 void wren_SpriteCreate(WrenVM* vm)
 {
-    Struktur::GameContext* context = static_cast<Struktur::GameContext*>(wrenGetUserData(vm));
+	Struktur::GameContext* context = static_cast<Struktur::GameContext*>(wrenGetUserData(vm));
 	entt::registry& registry = context->GetRegistry();
-    
+
 	entt::entity levelEntity = static_cast<entt::entity>(wrenGetSlotDouble(vm, 1));
 	WrenTextureHandle* texture = static_cast<WrenTextureHandle*>(wrenGetSlotForeign(vm, 2));
 	WrenVec4* color = static_cast<WrenVec4*>(wrenGetSlotForeign(vm, 3));
@@ -3031,54 +3034,54 @@ void wren_SpriteCreate(WrenVM* vm)
 	bool flipped = wrenGetSlotBool(vm, 7);
 	int index = static_cast<int>(wrenGetSlotDouble(vm, 8));
 	int renderPriority = static_cast<int>(wrenGetSlotDouble(vm, 9));
-    
-    ::Color rayColor{ (unsigned char)color->value.r, (unsigned char)color->value.g, (unsigned char)color->value.b, (unsigned char)color->value.a };
-    
+
+	::Color rayColor{ (unsigned char)color->value.r, (unsigned char)color->value.g, (unsigned char)color->value.b, (unsigned char)color->value.a };
+
 	registry.emplace<Struktur::Component::Sprite>(levelEntity, texture->resource, rayColor, offset->value, columns, rows, flipped, index, renderPriority);
 }
 
 WREN_CLASS_STATIC("game", "Sprite", "create(_,_,_,_,_,_,_,_,_)", wren_SpriteCreate, "Creates the sprite Component.");
 
-// Script.setRenderPriority(entity, renderPriority)
-void wren_ScriptSetRenderPriority(WrenVM* vm)
+// Sprite.setRenderPriority(entity, renderPriority)
+void wren_SpriteSetRenderPriority(WrenVM* vm)
 {
-    Struktur::GameContext* context = static_cast<Struktur::GameContext*>(wrenGetUserData(vm));
-    auto& registry = context->GetRegistry();
-    
-    double entityId = wrenGetSlotDouble(vm, 1);
-    double renderPriority = wrenGetSlotDouble(vm, 2);
-    entt::entity entity = static_cast<entt::entity>(entityId);
-    
-    auto* sprite = registry.try_get<Struktur::Component::Sprite>(entity);
+	Struktur::GameContext* context = static_cast<Struktur::GameContext*>(wrenGetUserData(vm));
+	auto& registry = context->GetRegistry();
 
-    if (!sprite)
-    {
-        return;
-    }
+	double entityId = wrenGetSlotDouble(vm, 1);
+	double renderPriority = wrenGetSlotDouble(vm, 2);
+	entt::entity entity = static_cast<entt::entity>(entityId);
 
-    sprite->renderPriority = static_cast<int>(renderPriority);
+	auto* sprite = registry.try_get<Struktur::Component::Sprite>(entity);
+
+	if (!sprite)
+	{
+		return;
+	}
+
+	sprite->renderPriority = static_cast<int>(renderPriority);
 }
 
-WREN_CLASS_STATIC("game", "Script", "setRenderPriority(_,_)", wren_ScriptSetRenderPriority, "Sets the render priority of a sprite component");
+WREN_CLASS_STATIC("game", "Sprite", "setRenderPriority(_,_)", wren_SpriteSetRenderPriority, "Sets the render priority of a sprite component");
 
 // Script.setFlipped(entity, flipped)
 void wren_ScriptSetFlipped(WrenVM* vm)
 {
-    Struktur::GameContext* context = static_cast<Struktur::GameContext*>(wrenGetUserData(vm));
-    auto& registry = context->GetRegistry();
-    
-    double entityId = wrenGetSlotDouble(vm, 1);
-    bool flipped = wrenGetSlotBool(vm, 2);
-    entt::entity entity = static_cast<entt::entity>(entityId);
-    
-    auto* sprite = registry.try_get<Struktur::Component::Sprite>(entity);
+	Struktur::GameContext* context = static_cast<Struktur::GameContext*>(wrenGetUserData(vm));
+	auto& registry = context->GetRegistry();
 
-    if (!sprite)
-    {
-        return;
-    }
+	double entityId = wrenGetSlotDouble(vm, 1);
+	bool flipped = wrenGetSlotBool(vm, 2);
+	entt::entity entity = static_cast<entt::entity>(entityId);
 
-    sprite->flipped = flipped;
+	auto* sprite = registry.try_get<Struktur::Component::Sprite>(entity);
+
+	if (!sprite)
+	{
+		return;
+	}
+
+	sprite->flipped = flipped;
 }
 
 WREN_CLASS_STATIC("game", "Script", "setFlipped(_,_)", wren_ScriptSetFlipped, "Flips a sprite in a horizontal direction");
@@ -3096,8 +3099,8 @@ void wren_ScriptCreate(WrenVM* vm)
 	entt::registry& registry = context->GetRegistry();
 
 	entt::entity levelEntity = static_cast<entt::entity>(wrenGetSlotDouble(vm, 1));
-    const char* scriptPath = wrenGetSlotString(vm, 2);
-    const char* className = wrenGetSlotString(vm, 3);
+	const char* scriptPath = wrenGetSlotString(vm, 2);
+	const char* className = wrenGetSlotString(vm, 3);
 
 	registry.emplace<Struktur::Component::WrenScript>(levelEntity, scriptPath, className);
 }
@@ -3110,23 +3113,23 @@ void wren_ScriptCreateArg(WrenVM* vm)
 	Struktur::GameContext* context = static_cast<Struktur::GameContext*>(wrenGetUserData(vm));
 	entt::registry& registry = context->GetRegistry();
 	Struktur::System::SystemManager& systemManager = context->GetSystemManager();
-    Struktur::System::WrenScriptSystem& scriptSystem = systemManager.GetSystem<Struktur::System::WrenScriptSystem>();
+	Struktur::System::WrenScriptSystem& scriptSystem = systemManager.GetSystem<Struktur::System::WrenScriptSystem>();
 
 	entt::entity levelEntity = static_cast<entt::entity>(wrenGetSlotDouble(vm, 1));
-    const char* scriptPath = wrenGetSlotString(vm, 2);
-    const char* className = wrenGetSlotString(vm, 3);
-    const char* args = wrenGetSlotString(vm, 4);
+	const char* scriptPath = wrenGetSlotString(vm, 2);
+	const char* className = wrenGetSlotString(vm, 3);
+	const char* args = wrenGetSlotString(vm, 4);
 
 	auto& script = registry.emplace<Struktur::Component::WrenScript>(levelEntity, scriptPath, className, args);
 
-    // Initialise the script
-    
-    //if (!scriptSystem.InitialiseScript(*context, levelEntity, script))
-    //{
-    //    DEBUG_ERROR("Failed to create script: %s", scriptPath);
-    //    return;
-    //}
-    //scriptSystem.CallCreate(*context, levelEntity, script);
+	// Initialise the script
+
+	//if (!scriptSystem.InitialiseScript(*context, levelEntity, script))
+	//{
+	//    DEBUG_ERROR("Failed to create script: %s", scriptPath);
+	//    return;
+	//}
+	//scriptSystem.CallCreate(*context, levelEntity, script);
 }
 
 WREN_CLASS_STATIC("game", "Script", "createArg(_,_,_,_)", wren_ScriptCreateArg, "Creates the script Component with an arg.");
@@ -3134,32 +3137,32 @@ WREN_CLASS_STATIC("game", "Script", "createArg(_,_,_,_)", wren_ScriptCreateArg, 
 // Script.hasMethod(entity, methodName) -> Bool
 void wren_ScriptHasMethod(WrenVM* vm)
 {
-    Struktur::GameContext* context = static_cast<Struktur::GameContext*>(wrenGetUserData(vm));
-    auto& registry = context->GetRegistry();
-    
-    double entityId = wrenGetSlotDouble(vm, 1);
-    entt::entity entity = static_cast<entt::entity>(entityId);
-    
-    const char* methodName = wrenGetSlotString(vm, 2);
-    
-    auto* script = registry.try_get<Struktur::Component::WrenScript>(entity);
-    
-    if (!script || !script->isInitialised || script->hasError) {
-        wrenSetSlotBool(vm, 0, false);
-        return;
-    }
-    
-    // Check if the script's instance has this method
-    // We need to get the Wren instance and check if it responds to the method
-    
-    // For now, we'll just check if the script is valid
-    // You could implement a method registry in WrenScript component
-    wrenSetSlotBool(vm, 0, true);
+	Struktur::GameContext* context = static_cast<Struktur::GameContext*>(wrenGetUserData(vm));
+	auto& registry = context->GetRegistry();
+
+	double entityId = wrenGetSlotDouble(vm, 1);
+	entt::entity entity = static_cast<entt::entity>(entityId);
+
+	const char* methodName = wrenGetSlotString(vm, 2);
+
+	auto* script = registry.try_get<Struktur::Component::WrenScript>(entity);
+
+	if (!script || !script->isInitialised || script->hasError) {
+		wrenSetSlotBool(vm, 0, false);
+		return;
+	}
+
+	// Check if the script's instance has this method
+	// We need to get the Wren instance and check if it responds to the method
+
+	// For now, we'll just check if the script is valid
+	// You could implement a method registry in WrenScript component
+	wrenSetSlotBool(vm, 0, true);
 }
 
 WREN_CLASS_STATIC("game", "Script", "hasMethod(_,_)", wren_ScriptHasMethod, "Check if entity's script has a method");
 
-// Script.callArg(entity, methodName, ...args) -> result
+// Script.callArg(entity, methodName, argsList) -> result
 void wren_ScriptCallArg(WrenVM* vm)
 {
     Struktur::GameContext* context = static_cast<Struktur::GameContext*>(wrenGetUserData(vm));
@@ -3168,11 +3171,9 @@ void wren_ScriptCallArg(WrenVM* vm)
     
     double entityId = wrenGetSlotDouble(vm, 1);
     entt::entity entity = static_cast<entt::entity>(entityId);
-    
     const char* methodName = wrenGetSlotString(vm, 2);
     
     auto* script = registry.try_get<Struktur::Component::WrenScript>(entity);
-    
     if (!script || !script->isInitialised || script->hasError)
     {
         DEBUG_ERROR("Script.call: Entity has no valid script");
@@ -3190,9 +3191,14 @@ void wren_ScriptCallArg(WrenVM* vm)
         return;
     }
     
-    // Build method signature based on argument count
-    int argCount = wrenGetSlotCount(vm) - 3;  // Total - (receiver, entity, methodName)
+    // Get argument count from the list in slot 3
+    int argCount = 0;
+    if (wrenGetSlotType(vm, 3) == WREN_TYPE_LIST)
+    {
+        argCount = wrenGetListCount(vm, 3);
+    }
     
+    // Build method signature based on argument count
     std::string signature = methodName;
     if (argCount > 0)
     {
@@ -3210,7 +3216,6 @@ void wren_ScriptCallArg(WrenVM* vm)
     
     // Create call handle
     WrenHandle* methodHandle = wrenMakeCallHandle(wrenVM, signature.c_str());
-    
     if (!methodHandle)
     {
         DEBUG_ERROR("Script.call: Method '%s' not found", signature.c_str());
@@ -3218,36 +3223,43 @@ void wren_ScriptCallArg(WrenVM* vm)
         return;
     }
     
-    // Set up call
+    // Set up call in target VM
     wrenEnsureSlots(wrenVM, argCount + 1);
     wrenSetSlotHandle(wrenVM, 0, script->instanceHandle);
     
-    // Copy arguments from calling VM to target VM
+    // Use a temp slot in the calling VM that won't interfere
+    // We need slots 0-3 for receiver/entity/methodName/list
+    // Plus argCount + 1 slots for the target method call
+    // So use slot (4 + argCount) as temp to be safe
+    int tempSlot = 4 + argCount;
+    wrenEnsureSlots(vm, tempSlot + 1);
+    
+    // Copy arguments from list to target VM
     for (int i = 0; i < argCount; i++)
     {
-        int sourceSlot = i + 3;  // Skip receiver, entity, methodName
         int targetSlot = i + 1;
         
-        WrenType type = wrenGetSlotType(vm, sourceSlot);
+        // Get element from list into temp slot
+        wrenGetListElement(vm, 3, i, tempSlot);
         
+        WrenType type = wrenGetSlotType(vm, tempSlot);
         switch (type) {
-            case WREN_TYPE_BOOL:
-                wrenSetSlotBool(wrenVM, targetSlot, wrenGetSlotBool(vm, sourceSlot));
-                break;
-            case WREN_TYPE_NUM:
-                wrenSetSlotDouble(wrenVM, targetSlot, wrenGetSlotDouble(vm, sourceSlot));
-                break;
-            case WREN_TYPE_STRING:
-                wrenSetSlotString(wrenVM, targetSlot, wrenGetSlotString(vm, sourceSlot));
-                break;
-            case WREN_TYPE_NULL:
-                wrenSetSlotNull(wrenVM, targetSlot);
-                break;
-            default:
-                DEBUG_ERROR("Script.call: Type of '%s' not implemented", signature.c_str());
-                // For complex types, we'd need to handle them specially
-                wrenSetSlotNull(wrenVM, targetSlot);
-                break;
+        case WREN_TYPE_BOOL:
+            wrenSetSlotBool(wrenVM, targetSlot, wrenGetSlotBool(vm, tempSlot));
+            break;
+        case WREN_TYPE_NUM:
+            wrenSetSlotDouble(wrenVM, targetSlot, wrenGetSlotDouble(vm, tempSlot));
+            break;
+        case WREN_TYPE_STRING:
+            wrenSetSlotString(wrenVM, targetSlot, wrenGetSlotString(vm, tempSlot));
+            break;
+        case WREN_TYPE_NULL:
+            wrenSetSlotNull(wrenVM, targetSlot);
+            break;
+        default:
+            DEBUG_ERROR("Script.call: Unsupported argument type in list");
+            wrenSetSlotNull(wrenVM, targetSlot);
+            break;
         }
     }
     
@@ -3264,103 +3276,102 @@ void wren_ScriptCallArg(WrenVM* vm)
     
     // Copy return value back to calling VM
     WrenType returnType = wrenGetSlotType(wrenVM, 0);
-    
     switch (returnType)
     {
-        case WREN_TYPE_BOOL:
-            wrenSetSlotBool(vm, 0, wrenGetSlotBool(wrenVM, 0));
-            break;
-        case WREN_TYPE_NUM:
-            wrenSetSlotDouble(vm, 0, wrenGetSlotDouble(wrenVM, 0));
-            break;
-        case WREN_TYPE_STRING:
-            wrenSetSlotString(vm, 0, wrenGetSlotString(wrenVM, 0));
-            break;
-        case WREN_TYPE_NULL:
-            wrenSetSlotNull(vm, 0);
-            break;
-        default:
-            // For complex return types, we'd need special handling
-            wrenSetSlotNull(vm, 0);
-            break;
+    case WREN_TYPE_BOOL:
+        wrenSetSlotBool(vm, 0, wrenGetSlotBool(wrenVM, 0));
+        break;
+    case WREN_TYPE_NUM:
+        wrenSetSlotDouble(vm, 0, wrenGetSlotDouble(wrenVM, 0));
+        break;
+    case WREN_TYPE_STRING:
+        wrenSetSlotString(vm, 0, wrenGetSlotString(wrenVM, 0));
+        break;
+    case WREN_TYPE_NULL:
+        wrenSetSlotNull(vm, 0);
+        break;
+    default:
+        // For complex return types, we'd need special handling
+        wrenSetSlotNull(vm, 0);
+        break;
     }
 }
 
-WREN_CLASS_STATIC("game", "Script", "callArg(_,_,_)", wren_ScriptCallArg,"Call a method on another entity's script with arguments");
+WREN_CLASS_STATIC("game", "Script", "callArg(_,_,_)", wren_ScriptCallArg, "Call a method on another entity's script with arguments");
 
 // Script.call(entity, methodName) -> result
 void wren_ScriptCall(WrenVM* vm)
 {
-    Struktur::GameContext* context = static_cast<Struktur::GameContext*>(wrenGetUserData(vm));
-    auto& registry = context->GetRegistry();
-    auto& scriptEngine = context->GetWrenScriptEngine();
-    
-    double entityId = wrenGetSlotDouble(vm, 1);
-    entt::entity entity = static_cast<entt::entity>(entityId);
-    
-    const char* methodName = wrenGetSlotString(vm, 2);
-    
-    auto* script = registry.try_get<Struktur::Component::WrenScript>(entity);
-    
-    if (!script || !script->isInitialised || script->hasError)
-    {
-        DEBUG_ERROR("Script.call: Entity has no valid script");
-        wrenSetSlotNull(vm, 0);
-        return;
-    }
-    
-    WrenVM* wrenVM = scriptEngine.GetVM();
-    
-    // Get the script's instance
-    if (!script->instanceHandle)
-    {
-        DEBUG_ERROR("Script.call: No instance handle");
-        wrenSetSlotNull(vm, 0);
-        return;
-    }
-    
-    // Create call handle
-    std::string signature = std::string(methodName) + "()";
-    WrenHandle* methodHandle = wrenMakeCallHandle(wrenVM, signature.c_str());
-    
-    if (!methodHandle)
-    {
-        DEBUG_ERROR("Script.call: Method '%s' not found", signature.c_str());
-        wrenSetSlotNull(vm, 0);
-        return;
-    }
-    
-    // Set up call
-    wrenEnsureSlots(wrenVM, 1);
-    wrenSetSlotHandle(wrenVM, 0, script->instanceHandle);
-    
-    WrenInterpretResult result = wrenCall(wrenVM, methodHandle);
-    wrenReleaseHandle(wrenVM, methodHandle);
-    
-    if (result != WREN_RESULT_SUCCESS)
-    {
-        wrenSetSlotNull(vm, 0);
-        return;
-    }
-    
-    // Return value
-    WrenType returnType = wrenGetSlotType(wrenVM, 0);
-    
-    switch (returnType)
-    {
-        case WREN_TYPE_BOOL:
-            wrenSetSlotBool(vm, 0, wrenGetSlotBool(wrenVM, 0));
-            break;
-        case WREN_TYPE_NUM:
-            wrenSetSlotDouble(vm, 0, wrenGetSlotDouble(wrenVM, 0));
-            break;
-        case WREN_TYPE_STRING:
-            wrenSetSlotString(vm, 0, wrenGetSlotString(wrenVM, 0));
-            break;
-        default:
-            wrenSetSlotNull(vm, 0);
-            break;
-    }
+	Struktur::GameContext* context = static_cast<Struktur::GameContext*>(wrenGetUserData(vm));
+	auto& registry = context->GetRegistry();
+	auto& scriptEngine = context->GetWrenScriptEngine();
+
+	double entityId = wrenGetSlotDouble(vm, 1);
+	entt::entity entity = static_cast<entt::entity>(entityId);
+
+	const char* methodName = wrenGetSlotString(vm, 2);
+
+	auto* script = registry.try_get<Struktur::Component::WrenScript>(entity);
+
+	if (!script || !script->isInitialised || script->hasError)
+	{
+		DEBUG_ERROR("Script.call: Entity has no valid script");
+		wrenSetSlotNull(vm, 0);
+		return;
+	}
+
+	WrenVM* wrenVM = scriptEngine.GetVM();
+
+	// Get the script's instance
+	if (!script->instanceHandle)
+	{
+		DEBUG_ERROR("Script.call: No instance handle");
+		wrenSetSlotNull(vm, 0);
+		return;
+	}
+
+	// Create call handle
+	std::string signature = std::string(methodName) + "()";
+	WrenHandle* methodHandle = wrenMakeCallHandle(wrenVM, signature.c_str());
+
+	if (!methodHandle)
+	{
+		DEBUG_ERROR("Script.call: Method '%s' not found", signature.c_str());
+		wrenSetSlotNull(vm, 0);
+		return;
+	}
+
+	// Set up call
+	wrenEnsureSlots(wrenVM, 1);
+	wrenSetSlotHandle(wrenVM, 0, script->instanceHandle);
+
+	WrenInterpretResult result = wrenCall(wrenVM, methodHandle);
+	wrenReleaseHandle(wrenVM, methodHandle);
+
+	if (result != WREN_RESULT_SUCCESS)
+	{
+		wrenSetSlotNull(vm, 0);
+		return;
+	}
+
+	// Return value
+	WrenType returnType = wrenGetSlotType(wrenVM, 0);
+
+	switch (returnType)
+	{
+	case WREN_TYPE_BOOL:
+		wrenSetSlotBool(vm, 0, wrenGetSlotBool(wrenVM, 0));
+		break;
+	case WREN_TYPE_NUM:
+		wrenSetSlotDouble(vm, 0, wrenGetSlotDouble(wrenVM, 0));
+		break;
+	case WREN_TYPE_STRING:
+		wrenSetSlotString(vm, 0, wrenGetSlotString(wrenVM, 0));
+		break;
+	default:
+		wrenSetSlotNull(vm, 0);
+		break;
+	}
 }
 
 WREN_CLASS_STATIC("game", "Script", "call(_,_)", wren_ScriptCall, "Call a method on another entity's script");
@@ -3374,19 +3385,19 @@ void wren_UIManagerCreateUILabel(WrenVM* vm)
 {
 	Struktur::GameContext* context = static_cast<Struktur::GameContext*>(wrenGetUserData(vm));
 
-    WrenVec2* absolutePosition = static_cast<WrenVec2*>(wrenGetSlotForeign(vm, 1));
-    WrenVec2* relativePosition = static_cast<WrenVec2*>(wrenGetSlotForeign(vm, 2));
-    const char* labelText = wrenGetSlotString(vm, 3);
-    //TODO Make this optional
-    float fontSz = static_cast<float>(wrenGetSlotDouble(vm, 4));
+	WrenVec2* absolutePosition = static_cast<WrenVec2*>(wrenGetSlotForeign(vm, 1));
+	WrenVec2* relativePosition = static_cast<WrenVec2*>(wrenGetSlotForeign(vm, 2));
+	const char* labelText = wrenGetSlotString(vm, 3);
+	//TODO Make this optional
+	float fontSz = static_cast<float>(wrenGetSlotDouble(vm, 4));
 
-    Struktur::UI::UIManager& uiManager = context->GetUIManager();
-    auto* label = uiManager.CreateElement<Struktur::UI::UILabel>(*context, absolutePosition->value, relativePosition->value, labelText, fontSz);
+	Struktur::UI::UIManager& uiManager = context->GetUIManager();
+	auto* label = uiManager.CreateElement<Struktur::UI::UILabel>(*context, absolutePosition->value, relativePosition->value, labelText, fontSz);
 
-    // Allocate foreign object
-    wrenGetVariable(vm, "game", "UILabel", 1);  // Get class into slot 1
-    WrenUILabel* vec = (WrenUILabel*)wrenSetSlotNewForeign(vm, 0, 1, sizeof(WrenUILabel));
-    new (vec) WrenUILabel{label};
+	// Allocate foreign object
+	wrenGetVariable(vm, "game", "UILabel", 1);  // Get class into slot 1
+	WrenUILabel* vec = (WrenUILabel*)wrenSetSlotNewForeign(vm, 0, 1, sizeof(WrenUILabel));
+	new (vec) WrenUILabel{ label };
 }
 
 WREN_CLASS_STATIC("game", "UIManager", "createUILabel(_,_,_,_)", wren_UIManagerCreateUILabel, "Creates the UI component for UILabel.");
@@ -3395,13 +3406,13 @@ WREN_CLASS_STATIC("game", "UIManager", "createUILabel(_,_,_,_)", wren_UIManagerC
 void wren_UIManagerRemoveUILabel(WrenVM* vm)
 {
 	Struktur::GameContext* context = static_cast<Struktur::GameContext*>(wrenGetUserData(vm));
-    Struktur::UI::UIManager& uiManager = context->GetUIManager();
+	Struktur::UI::UIManager& uiManager = context->GetUIManager();
 
-    WrenUILabel* uiLabel = static_cast<WrenUILabel*>(wrenGetSlotForeign(vm, 1));
+	WrenUILabel* uiLabel = static_cast<WrenUILabel*>(wrenGetSlotForeign(vm, 1));
 
-    uiManager.RemoveElement(uiLabel->label);
+	uiManager.RemoveElement(uiLabel->label);
 
-    uiLabel->label = nullptr;
+	uiLabel->label = nullptr;
 }
 
 WREN_CLASS_STATIC("game", "UIManager", "removeUILabel(_)", wren_UIManagerRemoveUILabel, "Creates the UI component for UILabel.");
@@ -3411,37 +3422,133 @@ WREN_CLASS_STATIC("game", "UIManager", "removeUILabel(_)", wren_UIManagerRemoveU
 // CAMERA BINDINGS
 // ============================================================================
 
+struct WrenCamera
+{
+	entt::entity entity = entt::null;
+	Struktur::Component::Camera* camera = nullptr;
+
+	WrenCamera() : camera(nullptr), entity(entt::null) {}
+	WrenCamera(entt::entity entity, Struktur::Component::Camera* c) : camera(c), entity(entity) {}
+};
+
+// Allocator
+void wren_CameraAllocate(WrenVM* vm)
+{
+	wrenGetVariable(vm, "game", "Camera", 0);  // Get class into slot 1
+	WrenCamera* camera = (WrenCamera*)wrenSetSlotNewForeign(vm, 0, 0, sizeof(WrenCamera));
+
+	// Camera.new() - identity
+	new (camera) WrenCamera();
+}
+
+// Finalizer
+void wren_CameraFinalize(void* data)
+{
+	WrenCamera* camera = (WrenCamera*)data;
+	camera->~WrenCamera();
+}
+
+void wren_CameraGetZoom(WrenVM* vm)
+{
+	WrenCamera* camera = (WrenCamera*)wrenGetSlotForeign(vm, 0);
+	wrenSetSlotDouble(vm, 0, camera->camera->zoom);
+}
+
+void wren_CameraSetZoom(WrenVM* vm)
+{
+	WrenCamera* camera = (WrenCamera*)wrenGetSlotForeign(vm, 0);
+	camera->camera->zoom = (float)wrenGetSlotDouble(vm, 1);
+}
+
+void wren_CameraGetForcePosition(WrenVM* vm)
+{
+	WrenCamera* camera = (WrenCamera*)wrenGetSlotForeign(vm, 0);
+	wrenSetSlotBool(vm, 0, camera->camera->forcePosition);
+}
+
+void wren_CameraSetForcePosition(WrenVM* vm)
+{
+	WrenCamera* camera = (WrenCamera*)wrenGetSlotForeign(vm, 0);
+	camera->camera->forcePosition = wrenGetSlotBool(vm, 1);
+}
+
+void wren_CameraGetDamping(WrenVM* vm)
+{
+	WrenCamera* camera = (WrenCamera*)wrenGetSlotForeign(vm, 0);
+
+	wrenGetVariable(vm, "game", "Vec2", 1);  // Get class into slot 1
+	WrenVec2* vec2 = (WrenVec2*)wrenSetSlotNewForeign(vm, 0, 1, sizeof(WrenVec2));
+	new (vec2) WrenVec2(camera->camera->damping);
+}
+
+void wren_CameraSetDamping(WrenVM* vm)
+{
+	WrenCamera* camera = (WrenCamera*)wrenGetSlotForeign(vm, 0);
+	WrenVec2* damping = (WrenVec2*)wrenGetSlotForeign(vm, 1);
+	camera->camera->damping = damping->value;
+}
+
+// Camera.create(entity) -> Camera
+void wren_CameraCreate(WrenVM* vm)
+{
+	Struktur::GameContext* context = static_cast<Struktur::GameContext*>(wrenGetUserData(vm));
+	entt::registry& registry = context->GetRegistry();
+
+	double entityId = wrenGetSlotDouble(vm, 1);
+	entt::entity entity = static_cast<entt::entity>(entityId);
+
+	auto& cameraComponent = registry.emplace<Struktur::Component::Camera>(entity);
+
+	wrenGetVariable(vm, "game", "Camera", 1);  // Get class into slot 1
+	WrenCamera* camera = (WrenCamera*)wrenSetSlotNewForeign(vm, 0, 1, sizeof(WrenCamera));
+
+	// Camera.new() - identity
+	new (camera) WrenCamera(entity, &cameraComponent);
+}
+
 // Camera.worldPosToScreenPos(worldPos) -> Vec2
 void wren_CameraWorldPosToScreenPos(WrenVM* vm)
 {
 	Struktur::GameContext* context = static_cast<Struktur::GameContext*>(wrenGetUserData(vm));
-    Struktur::GameResource::Camera& camera = context->GetCamera();
+	Struktur::GameResource::Camera& camera = context->GetCamera();
 
-    WrenVec2* worldPos = static_cast<WrenVec2*>(wrenGetSlotForeign(vm, 1));
-    glm::vec2 screenPos = camera.WorldPosToScreenPos(worldPos->value);
+	WrenVec2* worldPos = static_cast<WrenVec2*>(wrenGetSlotForeign(vm, 1));
+	glm::vec2 screenPos = camera.WorldPosToScreenPos(worldPos->value);
 
-    wrenGetVariable(vm, "game", "Vec2", 1);  // Get class into slot 1
+	wrenGetVariable(vm, "game", "Vec2", 1);  // Get class into slot 1
 	WrenVec2* vec2 = (WrenVec2*)wrenSetSlotNewForeign(vm, 0, 1, sizeof(WrenVec2));
-    new (vec2) WrenVec2(screenPos);
+	new (vec2) WrenVec2(screenPos);
 }
-
-WREN_CLASS_STATIC("game", "Camera", "worldPosToScreenPos(_)", wren_CameraWorldPosToScreenPos, "Converts a world position to the screen position.");
 
 // Camera.screenPosToWorldPos(worldPos) -> Vec2
 void wren_CameraScreenPosToWorldPos(WrenVM* vm)
 {
 	Struktur::GameContext* context = static_cast<Struktur::GameContext*>(wrenGetUserData(vm));
-    Struktur::GameResource::Camera& camera = context->GetCamera();
+	Struktur::GameResource::Camera& camera = context->GetCamera();
 
-    WrenVec2* screenPos = static_cast<WrenVec2*>(wrenGetSlotForeign(vm, 1));
-    glm::vec2 worldPos = camera.ScreenPosToWorldPos(screenPos->value);
+	WrenVec2* screenPos = static_cast<WrenVec2*>(wrenGetSlotForeign(vm, 1));
+	glm::vec2 worldPos = camera.ScreenPosToWorldPos(screenPos->value);
 
-    wrenGetVariable(vm, "game", "Vec2", 1);  // Get class into slot 1
+	wrenGetVariable(vm, "game", "Vec2", 1);  // Get class into slot 1
 	WrenVec2* vec2 = (WrenVec2*)wrenSetSlotNewForeign(vm, 0, 1, sizeof(WrenVec2));
-    new (vec2) WrenVec2(worldPos);
+	new (vec2) WrenVec2(worldPos);
 }
 
-WREN_CLASS_STATIC("game", "Camera", "screenPosToWorldPos(_)", wren_CameraScreenPosToWorldPos, "Converts a screen position to the world position.");
+// Register Vec3 foreign class
+WREN_FOREIGN_CLASS("game", "Camera", wren_CameraAllocate, wren_CameraFinalize, "Camera component class");
+
+// Register methods
+WREN_CLASS_METHOD("game", "Camera", "zoom", wren_CameraGetZoom, "Get the zoom");
+WREN_CLASS_METHOD("game", "Camera", "zoom=(_)", wren_CameraSetZoom, "Set the zoom");
+WREN_CLASS_METHOD("game", "Camera", "forcePosition", wren_CameraGetForcePosition, "Get the forcePosition, will directly set the position of the next frame");
+WREN_CLASS_METHOD("game", "Camera", "forcePosition=(_)", wren_CameraSetForcePosition, "Set the forcePosition, will directly set the position of the next frame");
+WREN_CLASS_METHOD("game", "Camera", "damping", wren_CameraGetDamping, "Get the damping");
+WREN_CLASS_METHOD("game", "Camera", "damping=(_)", wren_CameraSetDamping, "Set the damping");
+
+// Register static methods
+WREN_CLASS_STATIC("game", "Camera", "create(_)", wren_CameraCreate, "Creates a camera component.");
+WREN_CLASS_STATIC("game", "Camera", "worldPosToScreenPos(_)", wren_CameraWorldPosToScreenPos, "Converts a world position to the screen position from the currently active camera.");
+WREN_CLASS_STATIC("game", "Camera", "screenPosToWorldPos(_)", wren_CameraScreenPosToWorldPos, "Converts a screen position to the world position from the currently active camera.");
 
 // ============================================================================
 // LEVEL BINDINGS
@@ -3451,15 +3558,15 @@ WREN_CLASS_STATIC("game", "Camera", "screenPosToWorldPos(_)", wren_CameraScreenP
 void wren_InputGetInputAxis2(WrenVM* vm)
 {
 	Struktur::GameContext* context = static_cast<Struktur::GameContext*>(wrenGetUserData(vm));
-    Struktur::Core::Input& input = context->GetInput();
+	Struktur::Core::Input& input = context->GetInput();
 
 	const char* inputKey = wrenGetSlotString(vm, 1);
 
-    glm::vec2 inputDir = input.GetInputAxis2(inputKey);
+	glm::vec2 inputDir = input.GetInputAxis2(inputKey);
 
-    wrenGetVariable(vm, "game", "Vec2", 1);  // Get class into slot 1
+	wrenGetVariable(vm, "game", "Vec2", 1);  // Get class into slot 1
 	WrenVec2* vec2 = (WrenVec2*)wrenSetSlotNewForeign(vm, 0, 1, sizeof(WrenVec2));
-    new (vec2) WrenVec2(inputDir);
+	new (vec2) WrenVec2(inputDir);
 }
 
 WREN_CLASS_STATIC("game", "Input", "getInputAxis2(_)", wren_InputGetInputAxis2, "Gets input dir of a key code.");
@@ -3468,11 +3575,11 @@ WREN_CLASS_STATIC("game", "Input", "getInputAxis2(_)", wren_InputGetInputAxis2, 
 void wren_InputIsInputJustReleased(WrenVM* vm)
 {
 	Struktur::GameContext* context = static_cast<Struktur::GameContext*>(wrenGetUserData(vm));
-    Struktur::Core::Input& input = context->GetInput();
+	Struktur::Core::Input& input = context->GetInput();
 
 	const char* inputKey = wrenGetSlotString(vm, 1);
 
-    bool inputJustReleased = input.IsInputJustReleased(inputKey);
+	bool inputJustReleased = input.IsInputJustReleased(inputKey);
 
 	wrenSetSlotBool(vm, 0, inputJustReleased);
 }
@@ -3480,82 +3587,747 @@ void wren_InputIsInputJustReleased(WrenVM* vm)
 WREN_CLASS_STATIC("game", "Input", "isInputJustReleased(_)", wren_InputIsInputJustReleased, "Gets input was just released.");
 
 // ============================================================================
-// PHYSICS BODY BINDINGS
+// BODY DEFINITION BINDINGS
 // ============================================================================
 
-// PhysicsBody.setLinearVelocity(entity, velocity)
-void wren_PhysicsBodySetLinearVelocity(WrenVM* vm)
+struct WrenBodyDefinition
 {
-	Struktur::GameContext* context = static_cast<Struktur::GameContext*>(wrenGetUserData(vm));
-    auto& registry = context->GetRegistry();
-    
-	double entityId = wrenGetSlotDouble(vm, 1);
-    WrenVec2* velocity = static_cast<WrenVec2*>(wrenGetSlotForeign(vm, 2));
-	entt::entity entity = static_cast<entt::entity>(entityId);
+	b2BodyDef bodyDef;
 
-    auto& physicsBody = registry.get<Struktur::Component::PhysicsBody>(entity);
-    b2Vec2 b2Velecity = b2Vec2(velocity->value.x, velocity->value.y);
-    physicsBody.body->SetLinearVelocity(b2Velecity);
+	WrenBodyDefinition() : bodyDef() {}
+	WrenBodyDefinition(const b2BodyDef& b) : bodyDef(b) {}
+};
+
+// Allocator
+void wren_BodyDefinitionAllocate(WrenVM* vm)
+{
+	wrenGetVariable(vm, "game", "BodyDefinition", 0);  // Get class into slot 1
+	WrenBodyDefinition* bodyDef = (WrenBodyDefinition*)wrenSetSlotNewForeign(vm, 0, 0, sizeof(WrenBodyDefinition));
+
+	// BodyDefinition.new() - identity
+	new (bodyDef) WrenBodyDefinition();
 }
 
-WREN_CLASS_STATIC("game", "PhysicsBody", "setLinearVelocity(_,_)", wren_PhysicsBodySetLinearVelocity, "Sets the linear velocity of a physics body.");
+// Finalizer
+void wren_BodyDefinitionFinalize(void* data)
+{
+	WrenBodyDefinition* bodyDef = (WrenBodyDefinition*)data;
+	bodyDef->~WrenBodyDefinition();
+}
+
+void wren_BodyDefinitionCreateDynamicBody(WrenVM* vm)
+{
+	wrenGetVariable(vm, "game", "BodyDefinition", 0);  // Get class into slot 1
+	WrenBodyDefinition* bodyDef = (WrenBodyDefinition*)wrenSetSlotNewForeign(vm, 0, 0, sizeof(WrenBodyDefinition));
+
+	bodyDef->bodyDef.type = b2_dynamicBody;
+
+	// BodyDefinition.new() - identity
+	new (bodyDef) WrenBodyDefinition();
+}
+
+void wren_BodyDefinitionCreateStaticBody(WrenVM* vm)
+{
+	wrenGetVariable(vm, "game", "BodyDefinition", 0);  // Get class into slot 1
+	WrenBodyDefinition* bodyDef = (WrenBodyDefinition*)wrenSetSlotNewForeign(vm, 0, 0, sizeof(WrenBodyDefinition));
+
+	bodyDef->bodyDef.type = b2_staticBody;
+
+	// BodyDefinition.new() - identity
+	new (bodyDef) WrenBodyDefinition();
+}
+
+void wren_BodyDefinitionCreateKinematicBody(WrenVM* vm)
+{
+	wrenGetVariable(vm, "game", "BodyDefinition", 0);  // Get class into slot 1
+	WrenBodyDefinition* bodyDef = (WrenBodyDefinition*)wrenSetSlotNewForeign(vm, 0, 0, sizeof(WrenBodyDefinition));
+
+	bodyDef->bodyDef.type = b2_kinematicBody;
+
+	// BodyDefinition.new() - identity
+	new (bodyDef) WrenBodyDefinition();
+}
+
+// Register BodyDefinition foreign class
+WREN_FOREIGN_CLASS("game", "BodyDefinition", wren_BodyDefinitionAllocate, wren_BodyDefinitionFinalize, "BodyDefinition class wraps b2BodyDef");
+
+// Register static methods
+WREN_CLASS_STATIC("game", "BodyDefinition", "createDynamicBody()", wren_BodyDefinitionCreateDynamicBody, "Get the BodyDefinition as a dynamic Body");
+WREN_CLASS_STATIC("game", "BodyDefinition", "createStaticBody()", wren_BodyDefinitionCreateStaticBody, "Get the BodyDefinition as a static Body");
+WREN_CLASS_STATIC("game", "BodyDefinition", "createKinematicBody()", wren_BodyDefinitionCreateKinematicBody, "Get the BodyDefinition as a kinematic Body");
+
+// ============================================================================
+// CIRCLE SHAPE BINDINGS
+// ============================================================================
+
+struct WrenPhysicsCircleShape
+{
+	b2CircleShape physicsShape;
+
+	WrenPhysicsCircleShape() : physicsShape() {}
+	WrenPhysicsCircleShape(const b2CircleShape& b) : physicsShape(b) {}
+	WrenPhysicsCircleShape(float radius) : physicsShape()
+	{
+		physicsShape.m_radius = radius;
+	}
+};
+
+// Allocator
+void wren_PhysicsCircleShapeAllocate(WrenVM* vm)
+{
+	wrenGetVariable(vm, "game", "PhysicsCircleShape", 0);  // Get class into slot 1
+	WrenPhysicsCircleShape* bodyDef = (WrenPhysicsCircleShape*)wrenSetSlotNewForeign(vm, 0, 0, sizeof(WrenPhysicsCircleShape));
+
+	// Initialise with constructor parameters if provided
+	if (wrenGetSlotCount(vm) >= 2)
+	{
+		float radius = (float)wrenGetSlotDouble(vm, 1);
+		new (bodyDef) WrenPhysicsCircleShape(radius);
+	}
+	else
+	{
+		new (bodyDef) WrenPhysicsCircleShape();
+	}
+}
+
+// Finalizer
+void wren_PhysicsCircleShapeFinalize(void* data)
+{
+	WrenPhysicsCircleShape* bodyDef = (WrenPhysicsCircleShape*)data;
+	bodyDef->~WrenPhysicsCircleShape();
+}
+
+
+void wren_PhysicsCircleShapeGetRadius(WrenVM* vm)
+{
+	WrenPhysicsCircleShape* physicsShape = (WrenPhysicsCircleShape*)wrenGetSlotForeign(vm, 0);
+	wrenSetSlotDouble(vm, 0, physicsShape->physicsShape.m_radius);
+}
+
+void wren_PhysicsCircleShapeSetRadius(WrenVM* vm)
+{
+	WrenPhysicsCircleShape* physicsShape = (WrenPhysicsCircleShape*)wrenGetSlotForeign(vm, 0);
+	physicsShape->physicsShape.m_radius = (float)wrenGetSlotDouble(vm, 1);
+}
+
+// Register BodyDefinition foreign class
+WREN_FOREIGN_CLASS("game", "PhysicsCircleShape", wren_PhysicsCircleShapeAllocate, wren_PhysicsCircleShapeFinalize, "BodyDefinition class wraps b2BodyDef");
+
+// Register constructors
+WREN_CONSTRUCTOR_DOC("game", "PhysicsCircleShape", wren_PhysicsCircleShapeAllocate, "Create physics circle shape", );
+WREN_CONSTRUCTOR_DOC("game", "PhysicsCircleShape", wren_PhysicsCircleShapeAllocate, "Create physics circle shape with a radius components", radius);
+
+// Register methods
+WREN_CLASS_METHOD("game", "PhysicsCircleShape", "radius", wren_PhysicsCircleShapeGetRadius, "Get physics circle shape's radius");
+WREN_CLASS_METHOD("game", "PhysicsCircleShape", "radius=(_)", wren_PhysicsCircleShapeSetRadius, "Set physics circle shape's radius");
+
+// ============================================================================
+// PHYSICS BODY BINDINGS
+// ============================================================================
+#include "System/PhysicsSystem.h"
+
+struct WrenPhysicsBody
+{
+	entt::entity entity = entt::null;
+	Struktur::Component::PhysicsBody* physicsBody = nullptr;
+
+	WrenPhysicsBody() {}
+	WrenPhysicsBody(entt::entity entity, Struktur::Component::PhysicsBody* physicsBody) : entity(entity), physicsBody(physicsBody) {}
+};
+
+// Allocator
+void wren_PhysicsBodyAllocate(WrenVM* vm)
+{
+	wrenGetVariable(vm, "game", "PhysicsBody", 0);  // Get class into slot 1
+	WrenPhysicsBody* physicsBody = (WrenPhysicsBody*)wrenSetSlotNewForeign(vm, 0, 0, sizeof(WrenPhysicsBody));
+
+	// Camera.new() - identity
+	new (physicsBody) WrenPhysicsBody();
+}
+
+// Finalizer
+void wren_PhysicsBodyFinalize(void* data)
+{
+	WrenPhysicsBody* physicsBody = (WrenPhysicsBody*)data;
+	physicsBody->~WrenPhysicsBody();
+}
+
+void wren_PhysicsBodySetFixedRotation(WrenVM* vm)
+{
+	WrenPhysicsBody* physicsBody = (WrenPhysicsBody*)wrenGetSlotForeign(vm, 0);
+	bool fixedRotation = (float)wrenGetSlotBool(vm, 1);
+	physicsBody->physicsBody->body->SetFixedRotation(fixedRotation);
+}
+
+void wren_PhysicsBodyGetSyncFromPhysics(WrenVM* vm)
+{
+	WrenPhysicsBody* physicsBody = (WrenPhysicsBody*)wrenGetSlotForeign(vm, 0);
+	wrenSetSlotBool(vm, 0, physicsBody->physicsBody->syncFromPhysics);
+}
+
+void wren_PhysicsBodySetSyncFromPhysics(WrenVM* vm)
+{
+	WrenPhysicsBody* physicsBody = (WrenPhysicsBody*)wrenGetSlotForeign(vm, 0);
+	physicsBody->physicsBody->syncFromPhysics = (float)wrenGetSlotBool(vm, 1);
+}
+
+void wren_PhysicsBodyGetSyncToPhysics(WrenVM* vm)
+{
+	WrenPhysicsBody* physicsBody = (WrenPhysicsBody*)wrenGetSlotForeign(vm, 0);
+	wrenSetSlotBool(vm, 0, physicsBody->physicsBody->syncToPhysics);
+}
+
+void wren_PhysicsBodySetSyncToPhysics(WrenVM* vm)
+{
+	WrenPhysicsBody* physicsBody = (WrenPhysicsBody*)wrenGetSlotForeign(vm, 0);
+	physicsBody->physicsBody->syncToPhysics = (float)wrenGetSlotBool(vm, 1);
+}
+
+// PhysicsBody.setLinearVelocity(entity, velocity)
+void wren_PhysicsBodyStaticSetLinearVelocity(WrenVM* vm)
+{
+	Struktur::GameContext* context = static_cast<Struktur::GameContext*>(wrenGetUserData(vm));
+	auto& registry = context->GetRegistry();
+	Struktur::System::SystemManager& systemManager = context->GetSystemManager();
+
+	double entityId = wrenGetSlotDouble(vm, 1);
+	entt::entity entity = static_cast<entt::entity>(entityId);
+	WrenVec2* velocity = static_cast<WrenVec2*>(wrenGetSlotForeign(vm, 2));
+
+	auto* physicsBodyComponent = registry.try_get<Struktur::Component::PhysicsBody>(entity);
+
+	if (!physicsBodyComponent)
+	{
+		return;
+	}
+
+	b2Vec2 b2Velecity = b2Vec2(velocity->value.x, velocity->value.y);
+	physicsBodyComponent->body->SetLinearVelocity(b2Velecity);
+}
+
+// PhysicsBody.linearVelocity = velocity
+void wren_PhysicsBodySetLinearVelocity(WrenVM* vm)
+{
+	WrenPhysicsBody* physicsBody = (WrenPhysicsBody*)wrenGetSlotForeign(vm, 0);
+
+	WrenVec2* velocity = static_cast<WrenVec2*>(wrenGetSlotForeign(vm, 1));
+
+	b2Vec2 b2Velecity = b2Vec2(velocity->value.x, velocity->value.y);
+	physicsBody->physicsBody->body->SetLinearVelocity(b2Velecity);
+}
+
+// PhysicsBody.create(entity, bodyDef, shape) -> PhysicsBody
+void wren_PhysicsBodyCreate(WrenVM* vm)
+{
+	Struktur::GameContext* context = static_cast<Struktur::GameContext*>(wrenGetUserData(vm));
+	entt::registry& registry = context->GetRegistry();
+	Struktur::System::SystemManager& systemManager = context->GetSystemManager();
+	auto& physicsSystem = systemManager.GetSystem<Struktur::System::PhysicsSystem>();
+
+	double entityId = wrenGetSlotDouble(vm, 1);
+	entt::entity entity = static_cast<entt::entity>(entityId);
+	WrenBodyDefinition* bodyDef = static_cast<WrenBodyDefinition*>(wrenGetSlotForeign(vm, 2));
+	WrenPhysicsCircleShape* shape = static_cast<WrenPhysicsCircleShape*>(wrenGetSlotForeign(vm, 3));
+
+	Struktur::Component::PhysicsBody& physicsBodyComponent = physicsSystem.CreatePhysicsBody(*context, entity, bodyDef->bodyDef, shape->physicsShape);
+
+	wrenGetVariable(vm, "game", "PhysicsBody", 1);  // Get class into slot 1
+	WrenPhysicsBody* physicsBody = (WrenPhysicsBody*)wrenSetSlotNewForeign(vm, 0, 1, sizeof(WrenPhysicsBody));
+
+	// PhysicsBody.new() - identity
+	new (physicsBody) WrenPhysicsBody(entity, &physicsBodyComponent);
+}
+
+// PhysicsBody.get(entity) -> PhysicsBody or null
+void wren_PhysicsBodyGet(WrenVM* vm)
+{
+	Struktur::GameContext* context = static_cast<Struktur::GameContext*>(wrenGetUserData(vm));
+	entt::registry& registry = context->GetRegistry();
+
+	double entityId = wrenGetSlotDouble(vm, 1);
+	entt::entity entity = static_cast<entt::entity>(entityId);
+	WrenBodyDefinition* bodyDef = static_cast<WrenBodyDefinition*>(wrenGetSlotForeign(vm, 2));
+	WrenPhysicsCircleShape* shape = static_cast<WrenPhysicsCircleShape*>(wrenGetSlotForeign(vm, 3));
+
+	auto* physicsBodyComponent = registry.try_get<Struktur::Component::PhysicsBody>(entity);
+
+	if (physicsBodyComponent)
+	{
+		wrenGetVariable(vm, "game", "PhysicsBody", 1);  // Get class into slot 1
+		WrenPhysicsBody* physicsBody = (WrenPhysicsBody*)wrenSetSlotNewForeign(vm, 0, 1, sizeof(WrenPhysicsBody));
+
+		// PhysicsBody.new() - identity
+		new (physicsBody) WrenPhysicsBody(entity, physicsBodyComponent);
+	}
+	else
+	{
+		wrenSetSlotNull(vm, 0);
+	}
+}
+
+// Register BodyDefinition foreign class
+WREN_FOREIGN_CLASS("game", "PhysicsBody", wren_PhysicsBodyAllocate, wren_PhysicsBodyFinalize, "PhysicsBody class wraps PhysicsBody component");
+
+// Register methods
+WREN_CLASS_METHOD("game", "PhysicsBody", "fixedRotation=(_)", wren_PhysicsBodySetFixedRotation, "Sets the physics body fixed rotation");
+WREN_CLASS_METHOD("game", "PhysicsBody", "syncFromPhysics", wren_PhysicsBodyGetSyncFromPhysics, "Get if physics bodys to transform sync with the physics position");
+WREN_CLASS_METHOD("game", "PhysicsBody", "syncFromPhysics=(_)", wren_PhysicsBodySetSyncFromPhysics, "Set if physics bodys to transform sync with the physics position");
+WREN_CLASS_METHOD("game", "PhysicsBody", "syncToPhysics", wren_PhysicsBodyGetSyncToPhysics, "Get if physics bodys to transform sync with the physics position");
+WREN_CLASS_METHOD("game", "PhysicsBody", "syncToPhysics=(_)", wren_PhysicsBodySetSyncToPhysics, "Set if physics bodys to transform sync with the physics position");
+WREN_CLASS_METHOD("game", "PhysicsBody", "linearVelocity", wren_PhysicsBodySetLinearVelocity, "Sets the linear velocity of a physics body.");
+
+// Register static methods
+WREN_CLASS_STATIC("game", "PhysicsBody", "create(_,_,_)", wren_PhysicsBodyCreate, "Create a physics body");
+WREN_CLASS_STATIC("game", "PhysicsBody", "get(_)", wren_PhysicsBodyGet, "Gets a physics body");
+WREN_CLASS_STATIC("game", "PhysicsBody", "setLinearVelocity(_,_)", wren_PhysicsBodyStaticSetLinearVelocity, "Sets the linear velocity of a physics body.");
+
+// ============================================================================
+// SPRITE ANIMATION DEFINITION BINDINGS
+// ============================================================================
+#include "Engine/ECS/System/AnimationSystem.h"
+
+struct WrenSpriteAnimationDefinition
+{
+	Struktur::Animation::SpriteAnimation spriteAnimation;
+
+	WrenSpriteAnimationDefinition() : spriteAnimation() {}
+	WrenSpriteAnimationDefinition(const Struktur::Animation::SpriteAnimation& spriteAnimation) : spriteAnimation(spriteAnimation) {}
+};
+
+// Allocator
+void wren_SpriteAnimationDefinitionAllocate(WrenVM* vm)
+{
+	wrenGetVariable(vm, "game", "SpriteAnimationDefinition", 0);  // Get class into slot 1
+	WrenSpriteAnimationDefinition* spriteAnimation = (WrenSpriteAnimationDefinition*)wrenSetSlotNewForeign(vm, 0, 0, sizeof(WrenSpriteAnimationDefinition));
+
+	// Initialise with constructor parameters if provided
+	if (wrenGetSlotCount(vm) >= 3)
+	{
+		unsigned int startFrame = static_cast<unsigned int>(wrenGetSlotDouble(vm, 1));
+		unsigned int endFrame = static_cast<unsigned int>(wrenGetSlotDouble(vm, 2));
+		float animationTime = static_cast<float>(wrenGetSlotDouble(vm, 3));
+		bool loop = wrenGetSlotBool(vm, 4);
+		new (spriteAnimation) WrenSpriteAnimationDefinition({ startFrame, endFrame, animationTime, loop });
+	}
+	else
+	{
+		new (spriteAnimation) WrenSpriteAnimationDefinition();
+	}
+}
+
+// Finalizer
+void wren_SpriteAnimationDefinitionFinalize(void* data)
+{
+	WrenSpriteAnimationDefinition* spriteAnimation = (WrenSpriteAnimationDefinition*)data;
+	spriteAnimation->~WrenSpriteAnimationDefinition();
+}
+
+void wren_SpriteAnimationGetStartFrame(WrenVM* vm)
+{
+	WrenSpriteAnimationDefinition* spriteAnimation = (WrenSpriteAnimationDefinition*)wrenGetSlotForeign(vm, 0);
+	wrenSetSlotDouble(vm, 0, spriteAnimation->spriteAnimation.startFrame);
+}
+
+void wren_SpriteAnimationSetStartFrame(WrenVM* vm)
+{
+	WrenSpriteAnimationDefinition* spriteAnimation = (WrenSpriteAnimationDefinition*)wrenGetSlotForeign(vm, 0);
+	spriteAnimation->spriteAnimation.startFrame = static_cast<unsigned int>(wrenGetSlotDouble(vm, 1));
+}
+
+void wren_SpriteAnimationGetEndFrame(WrenVM* vm)
+{
+	WrenSpriteAnimationDefinition* spriteAnimation = (WrenSpriteAnimationDefinition*)wrenGetSlotForeign(vm, 0);
+	wrenSetSlotDouble(vm, 0, spriteAnimation->spriteAnimation.endFrame);
+}
+
+void wren_SpriteAnimationSetEndFrame(WrenVM* vm)
+{
+	WrenSpriteAnimationDefinition* spriteAnimation = (WrenSpriteAnimationDefinition*)wrenGetSlotForeign(vm, 0);
+	spriteAnimation->spriteAnimation.endFrame = static_cast<unsigned int>(wrenGetSlotDouble(vm, 1));
+}
+
+void wren_SpriteAnimationGetAnimationTime(WrenVM* vm)
+{
+	WrenSpriteAnimationDefinition* spriteAnimation = (WrenSpriteAnimationDefinition*)wrenGetSlotForeign(vm, 0);
+	wrenSetSlotDouble(vm, 0, spriteAnimation->spriteAnimation.animationTime);
+}
+
+void wren_SpriteAnimationSetAnimationTime(WrenVM* vm)
+{
+	WrenSpriteAnimationDefinition* spriteAnimation = (WrenSpriteAnimationDefinition*)wrenGetSlotForeign(vm, 0);
+	spriteAnimation->spriteAnimation.animationTime = static_cast<float>(wrenGetSlotDouble(vm, 1));
+}
+
+void wren_SpriteAnimationGetLoop(WrenVM* vm)
+{
+	WrenSpriteAnimationDefinition* spriteAnimation = (WrenSpriteAnimationDefinition*)wrenGetSlotForeign(vm, 0);
+	wrenSetSlotBool(vm, 0, spriteAnimation->spriteAnimation.loop);
+}
+
+void wren_SpriteAnimationSetLoop(WrenVM* vm)
+{
+	WrenSpriteAnimationDefinition* spriteAnimation = (WrenSpriteAnimationDefinition*)wrenGetSlotForeign(vm, 0);
+	spriteAnimation->spriteAnimation.loop = wrenGetSlotBool(vm, 1);
+}
+
+// Register Quat foreign class
+WREN_FOREIGN_CLASS("game", "SpriteAnimationDefinition", wren_SpriteAnimationDefinitionAllocate, wren_SpriteAnimationDefinitionFinalize, "SpriteAnimationDefinition class for defining the frames of a sprite sheet and speed of a sprite animation");
+
+// Register constructors
+WREN_CONSTRUCTOR_DOC("game", "SpriteAnimationDefinition", wren_SpriteAnimationDefinitionAllocate, "Create empty SpriteAnimationDefinition", );
+WREN_CONSTRUCTOR_DOC("game", "SpriteAnimationDefinition", wren_SpriteAnimationDefinitionAllocate, "Create SpriteAnimationDefinition with startFrame, endFrame, animationTime, loop components", startFrame, endFrame, animationTime, loop);
+
+// Register methods
+WREN_CLASS_METHOD("game", "SpriteAnimationDefinition", "startFrame", wren_SpriteAnimationGetStartFrame, "Get startFrame");
+WREN_CLASS_METHOD("game", "SpriteAnimationDefinition", "startFrame=(_)", wren_SpriteAnimationSetStartFrame, "Set startFrame");
+WREN_CLASS_METHOD("game", "SpriteAnimationDefinition", "endFrame", wren_SpriteAnimationGetEndFrame, "Get endFrame");
+WREN_CLASS_METHOD("game", "SpriteAnimationDefinition", "endFrame=(_)", wren_SpriteAnimationSetEndFrame, "Set endFrame");
+WREN_CLASS_METHOD("game", "SpriteAnimationDefinition", "animationTime", wren_SpriteAnimationGetAnimationTime, "Get animationTime");
+WREN_CLASS_METHOD("game", "SpriteAnimationDefinition", "animationTime=(_)", wren_SpriteAnimationSetAnimationTime, "Set animationTime");
+WREN_CLASS_METHOD("game", "SpriteAnimationDefinition", "loop", wren_SpriteAnimationGetLoop, "Get loop");
+WREN_CLASS_METHOD("game", "SpriteAnimationDefinition", "loop=(_)", wren_SpriteAnimationSetLoop, "Set loop");
 
 // ============================================================================
 // SPRITE ANIMATION BINDINGS
 // ============================================================================
-#include "Engine/ECS/System/AnimationSystem.h"
 
-// SpriteAnimation.setCurrentAnimation(entity, animationName)
-void wren_SpriteAnimationSetCurrentAnimation(WrenVM* vm)
+struct WrenSpriteAnimation
 {
-	Struktur::GameContext* context = static_cast<Struktur::GameContext*>(wrenGetUserData(vm));
-    Struktur::System::SystemManager& systemManager = context->GetSystemManager();
-    auto& animationSystem = systemManager.GetSystem<Struktur::System::AnimationSystem>();
-    auto& registry = context->GetRegistry();
+	entt::entity entity = entt::null;
+	Struktur::Component::SpriteAnimation* spriteAnimation = nullptr;
 
-	double entityId = wrenGetSlotDouble(vm, 1);
-    const char* animationName = wrenGetSlotString(vm, 2);
-	entt::entity entity = static_cast<entt::entity>(entityId);
+	WrenSpriteAnimation() {}
+	WrenSpriteAnimation(entt::entity entity, Struktur::Component::SpriteAnimation* spriteAnimation) : entity(entity), spriteAnimation(spriteAnimation) {}
+};
 
-    if (!animationSystem.IsAnimationPlaying(*context, entity, animationName))
-    {
-        animationSystem.PlayAnimation(*context, entity, animationName);
-    }
+// Allocator
+void wren_SpriteAnimationAllocate(WrenVM* vm)
+{
+	wrenGetVariable(vm, "game", "SpriteAnimation", 0);  // Get class into slot 1
+	WrenSpriteAnimation* spriteAnimation = (WrenSpriteAnimation*)wrenSetSlotNewForeign(vm, 0, 0, sizeof(WrenSpriteAnimation));
+
+	// SpriteAnimation.new() - identity
+	new (spriteAnimation) WrenSpriteAnimation();
 }
 
-WREN_CLASS_STATIC("game", "SpriteAnimation", "setCurrentAnimation(_,_)", wren_SpriteAnimationSetCurrentAnimation, "Will set and play a current sprite animation, is already playing the animation continue it.");
+// Finalizer
+void wren_SpriteAnimationFinalize(void* data)
+{
+	WrenSpriteAnimation* spriteAnimation = (WrenSpriteAnimation*)data;
+	spriteAnimation->~WrenSpriteAnimation();
+}
+
+
+// SpriteAnimation.create(entity) -> PhysicsBody
+void wren_SpriteAnimationCreate(WrenVM* vm)
+{
+	Struktur::GameContext* context = static_cast<Struktur::GameContext*>(wrenGetUserData(vm));
+	entt::registry& registry = context->GetRegistry();
+
+	double entityId = wrenGetSlotDouble(vm, 1);
+	entt::entity entity = static_cast<entt::entity>(entityId);
+
+	Struktur::Component::SpriteAnimation& spriteAnimationComponent = registry.emplace<Struktur::Component::SpriteAnimation>(entity);
+
+	wrenGetVariable(vm, "game", "SpriteAnimation", 1);  // Get class into slot 1
+	WrenSpriteAnimation* spriteAnimation = (WrenSpriteAnimation*)wrenSetSlotNewForeign(vm, 0, 1, sizeof(WrenSpriteAnimation));
+
+	// SpriteAnimation.new() - identity
+	new (spriteAnimation) WrenSpriteAnimation(entity, &spriteAnimationComponent);
+}
+
+// SpriteAnimation.get(entity) -> PhysicsBody or null
+void wren_SpriteAnimationGet(WrenVM* vm)
+{
+	Struktur::GameContext* context = static_cast<Struktur::GameContext*>(wrenGetUserData(vm));
+	entt::registry& registry = context->GetRegistry();
+
+	double entityId = wrenGetSlotDouble(vm, 1);
+	entt::entity entity = static_cast<entt::entity>(entityId);
+
+	auto* spriteAnimationComponent = registry.try_get<Struktur::Component::SpriteAnimation>(entity);
+
+	if (spriteAnimationComponent)
+	{
+		wrenGetVariable(vm, "game", "SpriteAnimation", 1);  // Get class into slot 1
+		WrenSpriteAnimation* physicsBody = (WrenSpriteAnimation*)wrenSetSlotNewForeign(vm, 0, 1, sizeof(WrenSpriteAnimation));
+
+		// SpriteAnimation.new() - identity
+		new (physicsBody) WrenSpriteAnimation(entity, spriteAnimationComponent);
+	}
+	else
+	{
+		wrenSetSlotNull(vm, 0);
+	}
+}
+
+// SpriteAnimation.addAnimation(animationKey, animationDefinition)
+void wren_SpriteAnimationAddAnimation(WrenVM* vm)
+{
+	Struktur::GameContext* context = static_cast<Struktur::GameContext*>(wrenGetUserData(vm));
+	Struktur::System::SystemManager& systemManager = context->GetSystemManager();
+	Struktur::System::AnimationSystem& animationSystem = systemManager.GetSystem<Struktur::System::AnimationSystem>();
+
+	auto* spriteAnimation = static_cast<WrenSpriteAnimation*>(wrenGetSlotForeign(vm, 0));
+	const char* animationKey = wrenGetSlotString(vm, 1);
+	auto* animationDefinition = static_cast<WrenSpriteAnimationDefinition*>(wrenGetSlotForeign(vm, 2));
+
+	animationSystem.AddAnimation(*context, spriteAnimation->entity, animationKey, animationDefinition->spriteAnimation);
+}
+
+// SpriteAnimation.setCurrentAnimation(entity, animationName)
+void wren_SpriteAnimationStaticSetCurrentAnimation(WrenVM* vm)
+{
+	Struktur::GameContext* context = static_cast<Struktur::GameContext*>(wrenGetUserData(vm));
+	Struktur::System::SystemManager& systemManager = context->GetSystemManager();
+	auto& animationSystem = systemManager.GetSystem<Struktur::System::AnimationSystem>();
+	auto& registry = context->GetRegistry();
+
+	double entityId = wrenGetSlotDouble(vm, 1);
+	const char* animationName = wrenGetSlotString(vm, 2);
+	entt::entity entity = static_cast<entt::entity>(entityId);
+
+	if (!animationSystem.IsAnimationPlaying(*context, entity, animationName))
+	{
+		animationSystem.PlayAnimation(*context, entity, animationName);
+	}
+}
 
 // SpriteAnimation.playAnimation(entity, animationName)
 void wren_SpriteAnimationPlayAnimation(WrenVM* vm)
 {
 	Struktur::GameContext* context = static_cast<Struktur::GameContext*>(wrenGetUserData(vm));
-    Struktur::System::SystemManager& systemManager = context->GetSystemManager();
-    auto& animationSystem = systemManager.GetSystem<Struktur::System::AnimationSystem>();
-    auto& registry = context->GetRegistry();
+	Struktur::System::SystemManager& systemManager = context->GetSystemManager();
+	auto& animationSystem = systemManager.GetSystem<Struktur::System::AnimationSystem>();
+	auto& registry = context->GetRegistry();
 
 	double entityId = wrenGetSlotDouble(vm, 1);
-    const char* animationName = wrenGetSlotString(vm, 2);
+	const char* animationName = wrenGetSlotString(vm, 2);
 	entt::entity entity = static_cast<entt::entity>(entityId);
 
-    animationSystem.PlayAnimation(*context, entity, animationName);
+	animationSystem.PlayAnimation(*context, entity, animationName);
 }
-
-WREN_CLASS_STATIC("game", "SpriteAnimation", "forcePlayAnimation(_,_)", wren_SpriteAnimationPlayAnimation, "Will play a sprite animation, and if playering animation will forcibly restart it.");
 
 // SpriteAnimation.isAnimationPlaying(entity, animationName) -> bool
 void wren_SpriteAnimationIsAnimationPlaying(WrenVM* vm)
 {
 	Struktur::GameContext* context = static_cast<Struktur::GameContext*>(wrenGetUserData(vm));
-    Struktur::System::SystemManager& systemManager = context->GetSystemManager();
-    auto& animationSystem = systemManager.GetSystem<Struktur::System::AnimationSystem>();
-    auto& registry = context->GetRegistry();
+	Struktur::System::SystemManager& systemManager = context->GetSystemManager();
+	auto& animationSystem = systemManager.GetSystem<Struktur::System::AnimationSystem>();
+	auto& registry = context->GetRegistry();
 
 	double entityId = wrenGetSlotDouble(vm, 1);
-    const char* animationName = wrenGetSlotString(vm, 2);
+	const char* animationName = wrenGetSlotString(vm, 2);
 	entt::entity entity = static_cast<entt::entity>(entityId);
 
-    bool isAnimationPlaying = animationSystem.IsAnimationPlaying(*context, entity, animationName);
-    wrenSetSlotBool(vm, 0, isAnimationPlaying);
+	bool isAnimationPlaying = animationSystem.IsAnimationPlaying(*context, entity, animationName);
+	wrenSetSlotBool(vm, 0, isAnimationPlaying);
 }
 
+// Register BodyDefinition foreign class
+WREN_FOREIGN_CLASS("game", "SpriteAnimation", wren_SpriteAnimationAllocate, wren_SpriteAnimationFinalize, "Sprite animation class wraps SpriteAnimation component");
+
+// Register methods
+WREN_CLASS_METHOD("game", "SpriteAnimation", "addAnimation(_,_)", wren_SpriteAnimationAddAnimation, "Adds an animation to the sprite animation component");
+
+// Register static methods
+WREN_CLASS_STATIC("game", "SpriteAnimation", "create(_)", wren_SpriteAnimationCreate, "Create a Sprite animation");
+WREN_CLASS_STATIC("game", "SpriteAnimation", "get(_)", wren_SpriteAnimationGet, "Gets a Sprite animation");
+WREN_CLASS_STATIC("game", "SpriteAnimation", "setCurrentAnimation(_,_)", wren_SpriteAnimationStaticSetCurrentAnimation, "Will set and play a current sprite animation, is already playing the animation continue it.");
+WREN_CLASS_STATIC("game", "SpriteAnimation", "forcePlayAnimation(_,_)", wren_SpriteAnimationPlayAnimation, "Will play a sprite animation, and if playering animation will forcibly restart it.");
 WREN_CLASS_STATIC("game", "SpriteAnimation", "isAnimationPlaying(_,_)", wren_SpriteAnimationIsAnimationPlaying, "Checks if a cirtain animation is playing.");
+
+// ============================================================================
+// Reflection - Check if objects have methods
+// ============================================================================
+
+// Reflection.hasMethod(object, signature) -> Bool
+void wren_ReflectionHasMethod(WrenVM* vm)
+{
+	// Slot 0: Reflection class (receiver)
+	// Slot 1: object to check
+	// Slot 2: method signature (e.g., "update(_)")
+
+	// Check if object is null
+	if (wrenGetSlotType(vm, 1) == WREN_TYPE_NULL)
+	{
+		wrenSetSlotBool(vm, 0, false);
+		return;
+	}
+
+	// Get method signature
+	const char* signature = wrenGetSlotString(vm, 2);
+
+	// IMPORTANT: We need to preserve the object in slot 1
+	// Save it to a handle first
+	WrenHandle* objectHandle = wrenGetSlotHandle(vm, 1);
+
+	// Try to create a call handle for this method
+	// This will return NULL if the method doesn't exist
+	WrenHandle* methodHandle = wrenMakeCallHandle(vm, signature);
+
+	bool hasMethod = (methodHandle != nullptr);
+
+	// Clean up handles
+	if (methodHandle)
+	{
+		wrenReleaseHandle(vm, methodHandle);
+	}
+	wrenReleaseHandle(vm, objectHandle);
+
+	// Return result
+	wrenSetSlotBool(vm, 0, hasMethod);
+}
+
+WREN_CLASS_STATIC("game", "Reflection", "hasMethod(_,_)", wren_ReflectionHasMethod, "Check if object has method with given signature");
+
+// Reflection.safeCall(object, signature) -> result or null
+// Calls method if it exists, returns null if it doesn't
+void wren_ReflectionSafeCall(WrenVM* vm)
+{
+	// Slot 0: Reflection class
+	// Slot 1: object
+	// Slot 2: signature
+	// Slot 3+: arguments (not implemented in this version)
+
+	// Check if object is null
+	if (wrenGetSlotType(vm, 1) == WREN_TYPE_NULL)
+	{
+		wrenSetSlotNull(vm, 0);
+		return;
+	}
+
+	const char* signature = wrenGetSlotString(vm, 2);
+
+	// Try to make call handle
+	WrenHandle* methodHandle = wrenMakeCallHandle(vm, signature);
+
+	if (!methodHandle)
+	{
+		// Method doesn't exist
+		wrenSetSlotNull(vm, 0);
+		return;
+	}
+
+	// Get object handle
+	WrenHandle* objectHandle = wrenGetSlotHandle(vm, 1);
+
+	// Set up call: put object in slot 0
+	wrenEnsureSlots(vm, 1);
+	wrenSetSlotHandle(vm, 0, objectHandle);
+
+	// Call the method
+	WrenInterpretResult result = wrenCall(vm, methodHandle);
+
+	// Clean up
+	wrenReleaseHandle(vm, methodHandle);
+	wrenReleaseHandle(vm, objectHandle);
+
+	if (result != WREN_RESULT_SUCCESS)
+	{
+		// Call failed
+		wrenSetSlotNull(vm, 0);
+		return;
+	}
+
+	// Result is already in slot 0
+}
+
+WREN_CLASS_STATIC("game", "Reflection", "safeCall(_,_)", wren_ReflectionSafeCall, "Call method if it exists, return null otherwise");
+
+// Reflection.getTypeName(object) -> String
+void wren_ReflectionGetTypeName(WrenVM* vm)
+{
+	WrenType type = wrenGetSlotType(vm, 1);
+
+	switch (type)
+	{
+	case WREN_TYPE_BOOL:
+		wrenSetSlotString(vm, 0, "Bool");
+		break;
+	case WREN_TYPE_NUM:
+		wrenSetSlotString(vm, 0, "Num");
+		break;
+	case WREN_TYPE_FOREIGN:
+		wrenSetSlotString(vm, 0, "Foreign");
+		break;
+	case WREN_TYPE_LIST:
+		wrenSetSlotString(vm, 0, "List");
+		break;
+	case WREN_TYPE_MAP:
+		wrenSetSlotString(vm, 0, "Map");
+		break;
+	case WREN_TYPE_NULL:
+		wrenSetSlotString(vm, 0, "Null");
+		break;
+	case WREN_TYPE_STRING:
+		wrenSetSlotString(vm, 0, "String");
+		break;
+	case WREN_TYPE_UNKNOWN:
+	default:
+		wrenSetSlotString(vm, 0, "Unknown");
+		break;
+	}
+}
+
+WREN_CLASS_STATIC("game", "Reflection", "getTypeName(_)", wren_ReflectionGetTypeName, "Get the type name of an object");
+
+// Reflection.hasMethods(object, signatureList) -> Bool
+// Returns true only if ALL methods exist
+void wren_ReflectionHasMethods(WrenVM* vm)
+{
+	// Slot 1: object
+	// Slot 2: list of signatures
+
+	if (wrenGetSlotType(vm, 1) == WREN_TYPE_NULL)
+	{
+		wrenSetSlotBool(vm, 0, false);
+		return;
+	}
+
+	if (wrenGetSlotType(vm, 2) != WREN_TYPE_LIST)
+	{
+		DEBUG_ERROR("Reflection.hasMethods: Second argument must be a list");
+		wrenSetSlotBool(vm, 0, false);
+		return;
+	}
+
+	WrenHandle* objectHandle = wrenGetSlotHandle(vm, 1);
+
+	// Get list count
+	int count = wrenGetListCount(vm, 2);
+
+	bool allExist = true;
+
+	for (int i = 0; i < count; i++)
+	{
+		// Get signature from list
+		wrenGetListElement(vm, 2, i, 3);  // Put element in slot 3
+
+		if (wrenGetSlotType(vm, 3) != WREN_TYPE_STRING)
+		{
+			DEBUG_ERROR("Reflection.hasMethods: List must contain only strings");
+			allExist = false;
+			break;
+		}
+
+		const char* signature = wrenGetSlotString(vm, 3);
+
+		// Check if method exists
+		WrenHandle* methodHandle = wrenMakeCallHandle(vm, signature);
+
+		if (!methodHandle)
+		{
+			allExist = false;
+			break;
+		}
+
+		wrenReleaseHandle(vm, methodHandle);
+	}
+
+	wrenReleaseHandle(vm, objectHandle);
+
+	wrenSetSlotBool(vm, 0, allExist);
+}
+
+WREN_CLASS_STATIC("game", "Reflection", "hasMethods(_,_)", wren_ReflectionHasMethods, "Check if object has all methods in list");

@@ -455,6 +455,8 @@ class Level {
 class Sprite {
     // Creates the sprite Component.
     foreign static create(arg0,arg1,arg2,arg3,arg4,arg5,arg6,arg7,arg8)
+    // Sets the render priority of a sprite component
+    foreign static setRenderPriority(arg0,arg1)
 }
 
 class ResourceManager {
@@ -465,8 +467,6 @@ class ResourceManager {
 }
 
 class Script {
-    // Sets the render priority of a sprite component
-    foreign static setRenderPriority(arg0,arg1)
     // Flips a sprite in a horizontal direction
     foreign static setFlipped(arg0,arg1)
     // Creates the script Component.
@@ -488,24 +488,120 @@ class UIManager {
     foreign static removeUILabel(arg0)
 }
 
-class Camera {
-    // Converts a world position to the screen position.
+// Camera component class
+foreign class Camera {
+    // Get the zoom
+    foreign zoom
+    // Set the zoom
+    foreign zoom=(arg0)
+    // Get the forcePosition, will directly set the position of the next frame
+    foreign forcePosition
+    // Set the forcePosition, will directly set the position of the next frame
+    foreign forcePosition=(arg0)
+    // Get the damping
+    foreign damping
+    // Set the damping
+    foreign damping=(arg0)
+    // Creates a camera component.
+    foreign static create(arg0)
+    // Converts a world position to the screen position from the currently active camera.
     foreign static worldPosToScreenPos(arg0)
-    // Converts a screen position to the world position.
+    // Converts a screen position to the world position from the currently active camera.
     foreign static screenPosToWorldPos(arg0)
 }
 
-class PhysicsBody {
+// BodyDefinition class wraps b2BodyDef
+foreign class BodyDefinition {
+    // Get the BodyDefinition as a dynamic Body
+    foreign static createDynamicBody()
+    // Get the BodyDefinition as a static Body
+    foreign static createStaticBody()
+    // Get the BodyDefinition as a kinematic Body
+    foreign static createKinematicBody()
+}
+
+// BodyDefinition class wraps b2BodyDef
+foreign class PhysicsCircleShape {
+    // Create physics circle shape
+    foreign construct new()
+    // Create physics circle shape with a radius components
+    foreign construct new(radius)
+    // Get physics circle shape's radius
+    foreign radius
+    // Set physics circle shape's radius
+    foreign radius=(arg0)
+}
+
+// PhysicsBody class wraps PhysicsBody component
+foreign class PhysicsBody {
+    // Sets the physics body fixed rotation
+    foreign fixedRotation=(arg0)
+    // Get if physics bodys to transform sync with the physics position
+    foreign syncFromPhysics
+    // Set if physics bodys to transform sync with the physics position
+    foreign syncFromPhysics=(arg0)
+    // Get if physics bodys to transform sync with the physics position
+    foreign syncToPhysics
+    // Set if physics bodys to transform sync with the physics position
+    foreign syncToPhysics=(arg0)
+    // Sets the linear velocity of a physics body.
+    foreign linearVelocity
+    // Create a physics body
+    foreign static create(arg0,arg1,arg2)
+    // Gets a physics body
+    foreign static get(arg0)
     // Sets the linear velocity of a physics body.
     foreign static setLinearVelocity(arg0,arg1)
 }
 
-class SpriteAnimation {
+// SpriteAnimationDefinition class for defining the frames of a sprite sheet and speed of a sprite animation
+foreign class SpriteAnimationDefinition {
+    // Create empty SpriteAnimationDefinition
+    foreign construct new()
+    // Create SpriteAnimationDefinition with startFrame, endFrame, animationTime, loop components
+    foreign construct new(startFrame, endFrame, animationTime, loop)
+    // Get startFrame
+    foreign startFrame
+    // Set startFrame
+    foreign startFrame=(arg0)
+    // Get endFrame
+    foreign endFrame
+    // Set endFrame
+    foreign endFrame=(arg0)
+    // Get animationTime
+    foreign animationTime
+    // Set animationTime
+    foreign animationTime=(arg0)
+    // Get loop
+    foreign loop
+    // Set loop
+    foreign loop=(arg0)
+}
+
+// Sprite animation class wraps SpriteAnimation component
+foreign class SpriteAnimation {
+    // Adds an animation to the sprite animation component
+    foreign addAnimation(arg0,arg1)
+    // Create a Sprite animation
+    foreign static create(arg0)
+    // Gets a Sprite animation
+    foreign static get(arg0)
     // Will set and play a current sprite animation, is already playing the animation continue it.
     foreign static setCurrentAnimation(arg0,arg1)
     // Will play a sprite animation, and if playering animation will forcibly restart it.
     foreign static forcePlayAnimation(arg0,arg1)
     // Checks if a cirtain animation is playing.
     foreign static isAnimationPlaying(arg0,arg1)
+}
+
+class Reflection {
+    // Check if object has method with given signature
+    foreign static hasMethod(arg0,arg1)
+    // Call method if it exists, return null otherwise
+    foreign static safeCall(arg0,arg1)
+    // Get the type name of an object
+    foreign static getTypeName(arg0)
+    // Check if object has all methods in list
+    foreign static hasMethods(arg0,arg1)
 }
 

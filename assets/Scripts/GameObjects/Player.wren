@@ -1,6 +1,7 @@
-import "game" for Transform, Vec2, Vec3, PhysicsBody, SpriteAnimation, Math, GameObject, Sprite
+import "game" for Transform, Vec2, Vec3, Vec4, PhysicsBody, SpriteAnimation, Math, GameObject, Sprite, Script, SpriteAnimationDefinition, ResourceManager, Camera, BodyDefinition, PhysicsCircleShape
 
 var INTERACTABLE_DISTANCE = 64.0
+var WHITE = Vec4.new(255, 255, 255, 255)
 
 class Player {
     construct new(entity, name) {
@@ -11,41 +12,44 @@ class Player {
         _facing = Vec2.new()
         _speed = Vec2.new()
         
-        System.print("NPCBehavior constructed for: %(_name)")
+        System.print("Player constructed for: %(_name)")
     }
     
     // Called after C++ has created base components
     // Script configures/initializes component values
     create(entity) {
-        System.print("NPCBehavior.Create() called for: %(_name)")
-        
-        // Get the entity's position
-        var pos = Transform.getPosition(_entity)
-        if (pos != null) {
-            System.print("Initial position: %(pos.x), %(pos.y), %(pos.y)")
-        }
-        
-        _initialized = true
+        var texture = ResourceManager.getTextureResource("assets/Tiles/PlayerSpriteSheet.png")
+        Sprite.create(entity, texture, WHITE, Vec2.new(48, 64), 6, 3, false, 0, 3)
+        var camera = Camera.create(entity)
+        camera.zoom = 1.5
+        camera.forcePosition = true
+        camera.damping = Vec2.new(4, 4)
+        var bodyDef = BodyDefinition.createDynamicBody()
+        var playerShape = PhysicsCircleShape.new(0.25)
+        var physicsBody = PhysicsBody.create(entity, bodyDef, playerShape)
+        physicsBody.fixedRotation = true
+        physicsBody.syncFromPhysics = true
+        physicsBody.syncToPhysics = true
+
+        var spriteAnimation = SpriteAnimation.create(entity)
+
+        var downIdleAnimation = SpriteAnimationDefinition.new(0, 2, 1, true)
+        var upIdleAnimation = SpriteAnimationDefinition.new(6, 8, 1, true)
+        var sideIdleAnimation = SpriteAnimationDefinition.new(12, 14, 1, true)
+        var downRunAnimation = SpriteAnimationDefinition.new(2, 6, 0.7, true)
+        var upRunAnimation = SpriteAnimationDefinition.new(8, 12, 0.7, true)
+        var sideRunAnimation = SpriteAnimationDefinition.new(14, 18, 0.7, true)
+
+        spriteAnimation.addAnimation("upIdleAnimation", upIdleAnimation)
+        spriteAnimation.addAnimation("downIdleAnimation", downIdleAnimation)
+        spriteAnimation.addAnimation("sideIdleAnimation", sideIdleAnimation)
+        spriteAnimation.addAnimation("upRunAnimation", upRunAnimation)
+        spriteAnimation.addAnimation("downRunAnimation", downRunAnimation)
+        spriteAnimation.addAnimation("sideRunAnimation", sideRunAnimation)
     }
     
     update(dt) {
-        if (!_initialized) return
-        
-        _timeAccumulator = _timeAccumulator + dt
-        
-        // Example: Simple idle animation behavior
-        if (_timeAccumulator > 2.0) {
-            // Get current position
-            var pos = Transform.getPosition(_entity)
-            if (pos != null) {
-                // Move slightly (example behavior)
-                var newY = pos.y + 0.1
-                System.print("New position: %(pos.x), %(pos.y), %(pos.z)")
-                //Transform.setPosition(_entity, pos[0], newY, pos[2])
-            }
-            
-            _timeAccumulator = 0
-        }
+
     }
     
     onDestroy() {
@@ -80,7 +84,8 @@ class Player {
         SpriteAnimation.setCurrentAnimation(_entity, animation)
     }
 
-    playerControl(dir) {
+    playerControl(dirX, dirY) {
+        var dir = Vec2.new(dirX, dirY)
         // set player facing
         if (dir.length() > 0.001) {
             dir = dir.normalize()
@@ -111,7 +116,7 @@ class Player {
         var closestEntity = null
 
         Transform.setTransform()
-        GameObject.forEachWithComponent(["WorldTransform", "WrenScript"]) { |entity|
+        GameObject.forEachWithComponent(["WorldTransform", "Script"]) { |entity|
             if (!Script.call(entity, "isInteractable")) {
                 return
             }
@@ -119,7 +124,7 @@ class Player {
             var distance = Vec3.distance(interactableWorldPosition, playerWorldPosition)
             if (distance < closestDistance) {
                 closestDistance = distance
-                closestEntity = interactableEntity
+                closestEntity = entity
             }
         }
         if (closestDistance < INTERACTABLE_DISTANCE) {
