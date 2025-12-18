@@ -171,6 +171,7 @@ class GameWorldState is BaseState {
         }
 
         var inputDir = Input.getInputAxis2("Move")
+        inputDir.y = inputDir.y * -1
         var inputInteract = Input.isInputJustReleased("Interact")
         var inventoryInteract = Input.isInputJustReleased("Inventory")
 

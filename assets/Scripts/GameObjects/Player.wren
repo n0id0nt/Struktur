@@ -74,7 +74,7 @@ class Player {
         if (_facing.x > 0.01 || _facing.x < -0.01) {
             return "side%(animationType)Animation"
         }
-        if (_facing.y > 0.01) {
+        if (_facing.y < 0.01) {
             return "up%(animationType)Animation"
         }
         return "down%(animationType)Animation"
