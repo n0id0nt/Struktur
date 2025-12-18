@@ -102,12 +102,25 @@ void WrenScriptEngine::OnWrenWrite(WrenVM* vm, const char* text) {
 WrenLoadModuleResult WrenScriptEngine::OnLoadModule(WrenVM* vm, const char* name) {
     WrenLoadModuleResult result = {};
     
+	// Built-in optional modules
+    if (strcmp(name, "meta") == 0 || strcmp(name, "random") == 0)
+    {
+        result.source = NULL;
+        return result;
+    }
+    
+    // YOUR CUSTOM MODULE
+    if (strcmp(name, "reflect") == 0)
+    {
+        result.source = wrenReflectSource();
+        result.onComplete = NULL;  // Source is static, no cleanup needed
+        return result;
+    }
+
     // Try multiple paths for module loading
     std::vector<std::string> searchPaths = {
         std::string("assets/scripts/") + name + ".wren",
         std::string("assets/scripts/bindings/") + name + ".wren",
-        std::string("assets/scripts/behaviors/") + name + ".wren",
-        std::string("assets/scripts/states/") + name + ".wren",
     };
     
     std::string source;

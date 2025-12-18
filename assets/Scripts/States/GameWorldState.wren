@@ -158,7 +158,7 @@ class GameWorldState is BaseState {
         _loopCountLabel.setTextColor(WHITE) // Change this when the background is created.
         _loopCountLabel.setVisible(true)
 
-        _stateManager.changeState("PlayState")
+        //_stateManager.changeState("PlayState")
         
         System.print("Game world loaded")
     }
@@ -174,9 +174,6 @@ class GameWorldState is BaseState {
         var inputInteract = Input.isInputJustReleased("Interact")
         var inventoryInteract = Input.isInputJustReleased("Inventory")
 
-        System.print("Updated")
-        System.print("Input Dir: %(inputDir)")
-
         // TODO this should be an event.
         var playerEntities = GameObject.getAllWithIdentifier("Player")
         if (inventoryInteract) {
@@ -184,16 +181,22 @@ class GameWorldState is BaseState {
             //TODO also pause the game time to pause the players animation
             // just forcing player to idle for now
             for (entity in playerEntities) {
-                Script.call(entity, "playerForceStop")
+                var script = Script.get(entity)
+                script.playerForceStop()
             }
             _stateManager.changeState("inventoryState")
             return
         }
 
         for (entity in playerEntities) {
-            Script.callArg(entity, "playerControl", [inputDir.x, inputDir.y])
+            var script = Script.get(entity)
+            if (!script) {
+                continue
+            }
+            script.playerControl(inputDir)
 
-            var interactEntity = Script.call(entity, "getInteractEntity")
+            var interactEntity = null
+            script.getInteractEntity()
 
             if (interactEntity) {
                 _interactLabel.setVisible(true)
@@ -203,7 +206,7 @@ class GameWorldState is BaseState {
                 _interactLabel.setPosition(screenInteractPosition, Vec2.new(0, 0))
                 if (inputInteract) {
                     _interactLabel.setVisible(false)
-                    Script.call(entity, "playerForceStop")
+                    script.playerForceStop()
                     // Change state to interact state
                     _stateManager.ChangeState("interactState")
                     return
@@ -216,7 +219,7 @@ class GameWorldState is BaseState {
             var playerPosition = Transform.getPosition(entity)
             if (playerPosition.y > 1755.0) {
                 if (Inventory.contains("Red Pedestal Active") && Inventory.contains("Green Pedestal Active") && Inventory.contains("Yellow Pedestal Active") && Inventory.contains("Blue Pedestal Active")) {
-                    Script.call(entity, "playerForceStop")
+                    script.playerForceStop()
                     _stateManager.ChangeState("gameOverState")
                     return
                 } 
@@ -245,7 +248,7 @@ class GameWorldState is BaseState {
         System.print("Unloading game world...")
         
         // Exit sub-state manager
-        if (_stateManager != null && _stateManager.currentState != null) {
+        if (_stateManager && _stateManager.currentState) {
             _stateManager.currentState.exit()
         }
         

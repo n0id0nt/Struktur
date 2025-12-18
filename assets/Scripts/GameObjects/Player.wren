@@ -1,4 +1,5 @@
 import "game" for Transform, Vec2, Vec3, Vec4, PhysicsBody, SpriteAnimation, Math, GameObject, Sprite, Script, SpriteAnimationDefinition, ResourceManager, Camera, BodyDefinition, PhysicsCircleShape
+import "reflect" for Reflect
 
 var INTERACTABLE_DISTANCE = 64.0
 var WHITE = Vec4.new(255, 255, 255, 255)
@@ -10,7 +11,7 @@ class Player {
         _timeAccumulator = 0
         _initialized = false
         _facing = Vec2.new()
-        _speed = Vec2.new()
+        _speed = 5
         
         System.print("Player constructed for: %(_name)")
     }
@@ -19,19 +20,19 @@ class Player {
     // Script configures/initializes component values
     create(entity) {
         var texture = ResourceManager.getTextureResource("assets/Tiles/PlayerSpriteSheet.png")
-        Sprite.create(entity, texture, WHITE, Vec2.new(48, 64), 6, 3, false, 0, 3)
-        var camera = Camera.create(entity)
+        Sprite.create(_entity, texture, WHITE, Vec2.new(48, 64), 6, 3, false, 0, 3)
+        var camera = Camera.create(_entity)
         camera.zoom = 1.5
         camera.forcePosition = true
         camera.damping = Vec2.new(4, 4)
         var bodyDef = BodyDefinition.createDynamicBody()
         var playerShape = PhysicsCircleShape.new(0.25)
-        var physicsBody = PhysicsBody.create(entity, bodyDef, playerShape)
+        var physicsBody = PhysicsBody.create(_entity, bodyDef, playerShape)
         physicsBody.fixedRotation = true
         physicsBody.syncFromPhysics = true
         physicsBody.syncToPhysics = true
 
-        var spriteAnimation = SpriteAnimation.create(entity)
+        var spriteAnimation = SpriteAnimation.create(_entity)
 
         var downIdleAnimation = SpriteAnimationDefinition.new(0, 2, 1, true)
         var upIdleAnimation = SpriteAnimationDefinition.new(6, 8, 1, true)
@@ -46,6 +47,8 @@ class Player {
         spriteAnimation.addAnimation("upRunAnimation", upRunAnimation)
         spriteAnimation.addAnimation("downRunAnimation", downRunAnimation)
         spriteAnimation.addAnimation("sideRunAnimation", sideRunAnimation)
+
+        SpriteAnimation.setCurrentAnimation(_entity, "downIdleAnimation")
     }
     
     update(dt) {
@@ -84,8 +87,7 @@ class Player {
         SpriteAnimation.setCurrentAnimation(_entity, animation)
     }
 
-    playerControl(dirX, dirY) {
-        var dir = Vec2.new(dirX, dirY)
+    playerControl(dir) {
         // set player facing
         if (dir.length() > 0.001) {
             dir = dir.normalize()
@@ -110,14 +112,21 @@ class Player {
         }
     }
 
-    canInteract() {
+    getInteractEntity() {
         var closestDistance = Math.infinity
         var playerWorldPosition = Transform.getPosition(_entity)
         var closestEntity = null
 
-        Transform.setTransform()
-        GameObject.forEachWithComponent(["WorldTransform", "Script"]) { |entity|
-            if (!Script.call(entity, "isInteractable")) {
+        var interactEntities = GameObject.getAllWithComponents(["WorldTransform", "Script"])
+        for (entity in interactEntities) {
+            var script = Script.get(entity)
+            if (!script) {
+                return
+            }
+            if (!Reflect.hasMethod(script, "isInteractable()")) {
+                return
+            }
+            if (!script.isInteractable()) {
                 return
             }
             var interactableWorldPosition = Transform.getPosition(entity)

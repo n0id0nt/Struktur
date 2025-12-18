@@ -374,6 +374,7 @@ void wren_Vec2Normalize(WrenVM* vm)
 {
 	WrenVec2* vec = (WrenVec2*)wrenGetSlotForeign(vm, 0);
 
+	wrenEnsureSlots(vm, 2);
 	wrenGetVariable(vm, "game", "Vec2", 1);  // Get class into slot 1
 	WrenVec2* result = (WrenVec2*)wrenSetSlotNewForeign(vm, 0, 1, sizeof(WrenVec2));
 	new (result) WrenVec2(glm::normalize(vec->value));
@@ -527,7 +528,8 @@ WREN_CLASS_METHOD("game", "Vec2", "toString", wren_Vec2ToString, "Convert to str
 WREN_CLASS_METHOD("game", "Vec2", "+(_)", wren_Vec2Add, "Add two vectors");
 WREN_CLASS_METHOD("game", "Vec2", "-(_)", wren_Vec2Subtract, "Subtract vectors");
 WREN_CLASS_METHOD("game", "Vec2", "*(_)", wren_Vec2Multiply, "Multiply by scalar");
-WREN_CLASS_METHOD("game", "Vec2", "length", wren_Vec2Length, "Get vector length");
+WREN_CLASS_METHOD("game", "Vec2", "length()", wren_Vec2Length, "Get vector length");
+WREN_CLASS_METHOD("game", "Vec2", "lengthSquared()", wren_Vec2LengthSquared, "Get vector length squared");
 WREN_CLASS_METHOD("game", "Vec2", "normalize()", wren_Vec2Normalize, "Get normalized vector");
 
 // Static methods
@@ -867,12 +869,13 @@ WREN_CLASS_METHOD("game", "Vec3", "z", wren_Vec3GetZ, "Get Z component");
 WREN_CLASS_METHOD("game", "Vec3", "x=(_)", wren_Vec3SetX, "Set X component");
 WREN_CLASS_METHOD("game", "Vec3", "y=(_)", wren_Vec3SetY, "Set Y component");
 WREN_CLASS_METHOD("game", "Vec3", "z=(_)", wren_Vec3SetZ, "Set Z component");
-WREN_CLASS_METHOD("game", "Vec3", "toString", wren_Vec3ToString, "Convert to string");
+WREN_CLASS_METHOD("game", "Vec3", "toString()", wren_Vec3ToString, "Convert to string");
 WREN_CLASS_METHOD("game", "Vec3", "+(_)", wren_Vec3Add, "Add two vectors");
 WREN_CLASS_METHOD("game", "Vec3", "-(_)", wren_Vec3Subtract, "Subtract vectors");
 WREN_CLASS_METHOD("game", "Vec3", "*(_)", wren_Vec3Multiply, "Multiply by scalar");
-WREN_CLASS_METHOD("game", "Vec3", "length", wren_Vec3Length, "Get vector length");
-WREN_CLASS_METHOD("game", "Vec3", "normalize()", wren_Vec3Normalize, "Get normalized vector");
+WREN_CLASS_METHOD("game", "Vec3", "length()", wren_Vec3Length, "Get vector length");
+WREN_CLASS_METHOD("game", "Vec3", "lengthSquared()", wren_Vec3LengthSquared, "Get vector length squared");
+WREN_CLASS_METHOD("game", "Vec3", "normalize", wren_Vec3Normalize, "Get normalized vector");
 
 // Static methods
 WREN_CLASS_STATIC("game", "Vec3", "distance(_,_)", wren_Vec3Distance, "Distance between two vectors");
@@ -1148,11 +1151,12 @@ WREN_CLASS_METHOD("game", "Vec4", "x=(_)", wren_Vec4SetX, "Set X component");
 WREN_CLASS_METHOD("game", "Vec4", "y=(_)", wren_Vec4SetY, "Set Y component");
 WREN_CLASS_METHOD("game", "Vec4", "z=(_)", wren_Vec4SetZ, "Set Z component");
 WREN_CLASS_METHOD("game", "Vec4", "w=(_)", wren_Vec4SetW, "Set W component");
-WREN_CLASS_METHOD("game", "Vec4", "toString", wren_Vec4ToString, "Convert to string");
+WREN_CLASS_METHOD("game", "Vec4", "toString()", wren_Vec4ToString, "Convert to string");
 WREN_CLASS_METHOD("game", "Vec4", "+(_)", wren_Vec4Add, "Add two vectors");
 WREN_CLASS_METHOD("game", "Vec4", "-(_)", wren_Vec4Subtract, "Subtract vectors");
 WREN_CLASS_METHOD("game", "Vec4", "*(_)", wren_Vec4Multiply, "Multiply by scalar");
-WREN_CLASS_METHOD("game", "Vec4", "length", wren_Vec4Length, "Get vector length");
+WREN_CLASS_METHOD("game", "Vec4", "length()", wren_Vec4Length, "Get vector length");
+WREN_CLASS_METHOD("game", "Vec4", "lengthSquared()", wren_Vec4LengthSquared, "Get vector length squared");
 WREN_CLASS_METHOD("game", "Vec4", "normalize()", wren_Vec4Normalize, "Get normalized vector");
 
 // Static methods
@@ -1377,6 +1381,13 @@ void wren_QuatLength(WrenVM* vm)
 	wrenSetSlotDouble(vm, 0, glm::length(quat->value));
 }
 
+// quat.lengthSquared -> Num
+void wren_QuatLengthSquared(WrenVM* vm)
+{
+	WrenQuat* quat = (WrenQuat*)wrenGetSlotForeign(vm, 0);
+	wrenSetSlotDouble(vm, 0, glm::length2(quat->value));
+}
+
 // quat.toEuler() -> Vec3 (radians)
 void wren_QuatToEuler(WrenVM* vm)
 {
@@ -1497,11 +1508,11 @@ void wren_QuatLerp(WrenVM* vm)
 	new (result) WrenQuat(glm::lerp(a->value, b->value, t));
 }
 
-// quat.dot(other) -> Num
+// Quat.dot(a,b) -> Num
 void wren_QuatDot(WrenVM* vm)
 {
-	WrenQuat* a = (WrenQuat*)wrenGetSlotForeign(vm, 0);
-	WrenQuat* b = (WrenQuat*)wrenGetSlotForeign(vm, 1);
+	WrenQuat* a = (WrenQuat*)wrenGetSlotForeign(vm, 1);
+	WrenQuat* b = (WrenQuat*)wrenGetSlotForeign(vm, 2);
 
 	if (!b)
 	{
@@ -1568,22 +1579,23 @@ WREN_CLASS_METHOD("game", "Quat", "w=(_)", wren_QuatSetW, "Set W component");
 WREN_CLASS_METHOD("game", "Quat", "x=(_)", wren_QuatSetX, "Set X component");
 WREN_CLASS_METHOD("game", "Quat", "y=(_)", wren_QuatSetY, "Set Y component");
 WREN_CLASS_METHOD("game", "Quat", "z=(_)", wren_QuatSetZ, "Set Z component");
-WREN_CLASS_METHOD("game", "Quat", "toString", wren_QuatToString, "Convert to string");
+WREN_CLASS_METHOD("game", "Quat", "toString()", wren_QuatToString, "Convert to string");
 WREN_CLASS_METHOD("game", "Quat", "normalize()", wren_QuatNormalize, "Get normalized quaternion");
 WREN_CLASS_METHOD("game", "Quat", "inverse()", wren_QuatInverse, "Get inverse quaternion");
 WREN_CLASS_METHOD("game", "Quat", "conjugate()", wren_QuatConjugate, "Get conjugate quaternion");
-WREN_CLASS_METHOD("game", "Quat", "length", wren_QuatLength, "Get quaternion length");
+WREN_CLASS_METHOD("game", "Quat", "length()", wren_QuatLength, "Get quaternion length");
+WREN_CLASS_METHOD("game", "Quat", "lengthSquared()", wren_QuatLengthSquared, "Get quaternion length squared");
 WREN_CLASS_METHOD("game", "Quat", "toEuler()", wren_QuatToEuler, "Convert to Euler angles (radians)");
 WREN_CLASS_METHOD("game", "Quat", "toEulerDegrees()", wren_QuatToEulerDegrees, "Convert to Euler angles (degrees)");
 WREN_CLASS_METHOD("game", "Quat", "toAxisAngle()", wren_QuatToAxisAngle, "Convert to axis-angle representation");
 WREN_CLASS_METHOD("game", "Quat", "*(_)", wren_QuatMultiply, "Multiply quaternions");
 WREN_CLASS_METHOD("game", "Quat", "rotate(_)", wren_QuatRotateVec3, "Rotate vector by quaternion");
-WREN_CLASS_METHOD("game", "Quat", "dot(_)", wren_QuatDot, "Dot product");
 WREN_CLASS_METHOD("game", "Quat", "forward()", wren_QuatForward, "Get forward direction vector");
 WREN_CLASS_METHOD("game", "Quat", "up()", wren_QuatUp, "Get up direction vector");
 WREN_CLASS_METHOD("game", "Quat", "right()", wren_QuatRight, "Get right direction vector");
 
 // Register static methods
+WREN_CLASS_STATIC("game", "Quat", "dot(_,_)", wren_QuatDot, "Dot product");
 WREN_CLASS_STATIC("game", "Quat", "identity()", wren_QuatIdentity, "Create identity quaternion");
 WREN_CLASS_STATIC("game", "Quat", "fromAxisAngle(_,_)", wren_QuatFromAxisAngle, "Create quaternion from axis and angle");
 WREN_CLASS_STATIC("game", "Quat", "fromEuler(_,_,_)", wren_QuatFromEuler, "Create quaternion from Euler angles (radians)");
@@ -2284,8 +2296,9 @@ void wren_GameObjectGetAllWithComponents(WrenVM* vm)
 
 	int componentCount = wrenGetListCount(vm, 1);
 
+	wrenEnsureSlots(vm, 3);
 	// Get component names from list
-	std::vector<std::string> components(componentCount);
+	std::vector<std::string> components;
 	for (int i = 0; i < componentCount; i++) {
 		wrenGetListElement(vm, 1, i, 2); // Get element into slot 2
 		const char* componentName = wrenGetSlotString(vm, 2);
@@ -3064,8 +3077,8 @@ void wren_SpriteSetRenderPriority(WrenVM* vm)
 
 WREN_CLASS_STATIC("game", "Sprite", "setRenderPriority(_,_)", wren_SpriteSetRenderPriority, "Sets the render priority of a sprite component");
 
-// Script.setFlipped(entity, flipped)
-void wren_ScriptSetFlipped(WrenVM* vm)
+// Sprite.setFlipped(entity, flipped)
+void wren_SpriteSetFlipped(WrenVM* vm)
 {
 	Struktur::GameContext* context = static_cast<Struktur::GameContext*>(wrenGetUserData(vm));
 	auto& registry = context->GetRegistry();
@@ -3084,7 +3097,7 @@ void wren_ScriptSetFlipped(WrenVM* vm)
 	sprite->flipped = flipped;
 }
 
-WREN_CLASS_STATIC("game", "Script", "setFlipped(_,_)", wren_ScriptSetFlipped, "Flips a sprite in a horizontal direction");
+WREN_CLASS_STATIC("game", "Sprite", "setFlipped(_,_)", wren_SpriteSetFlipped, "Flips a sprite in a horizontal direction");
 
 // ============================================================================
 // SCRIPT BINDINGS
@@ -3134,8 +3147,8 @@ void wren_ScriptCreateArg(WrenVM* vm)
 
 WREN_CLASS_STATIC("game", "Script", "createArg(_,_,_,_)", wren_ScriptCreateArg, "Creates the script Component with an arg.");
 
-// Script.hasMethod(entity, methodName) -> Bool
-void wren_ScriptHasMethod(WrenVM* vm)
+// Script.get(entity) -> classHandle or null
+void wren_ScriptGet(WrenVM* vm)
 {
 	Struktur::GameContext* context = static_cast<Struktur::GameContext*>(wrenGetUserData(vm));
 	auto& registry = context->GetRegistry();
@@ -3143,238 +3156,37 @@ void wren_ScriptHasMethod(WrenVM* vm)
 	double entityId = wrenGetSlotDouble(vm, 1);
 	entt::entity entity = static_cast<entt::entity>(entityId);
 
-	const char* methodName = wrenGetSlotString(vm, 2);
-
 	auto* script = registry.try_get<Struktur::Component::WrenScript>(entity);
-
-	if (!script || !script->isInitialised || script->hasError) {
-		wrenSetSlotBool(vm, 0, false);
-		return;
-	}
-
-	// Check if the script's instance has this method
-	// We need to get the Wren instance and check if it responds to the method
-
-	// For now, we'll just check if the script is valid
-	// You could implement a method registry in WrenScript component
-	wrenSetSlotBool(vm, 0, true);
-}
-
-WREN_CLASS_STATIC("game", "Script", "hasMethod(_,_)", wren_ScriptHasMethod, "Check if entity's script has a method");
-
-// Script.callArg(entity, methodName, argsList) -> result
-void wren_ScriptCallArg(WrenVM* vm)
-{
-    Struktur::GameContext* context = static_cast<Struktur::GameContext*>(wrenGetUserData(vm));
-    auto& registry = context->GetRegistry();
-    auto& scriptEngine = context->GetWrenScriptEngine();
-    
-    double entityId = wrenGetSlotDouble(vm, 1);
-    entt::entity entity = static_cast<entt::entity>(entityId);
-    const char* methodName = wrenGetSlotString(vm, 2);
-    
-    auto* script = registry.try_get<Struktur::Component::WrenScript>(entity);
-    if (!script || !script->isInitialised || script->hasError)
-    {
-        DEBUG_ERROR("Script.call: Entity has no valid script");
-        wrenSetSlotNull(vm, 0);
-        return;
-    }
-    
-    WrenVM* wrenVM = scriptEngine.GetVM();
-    
-    // Get the script's instance
-    if (!script->instanceHandle)
-    {
-        DEBUG_ERROR("Script.call: No instance handle");
-        wrenSetSlotNull(vm, 0);
-        return;
-    }
-    
-    // Get argument count from the list in slot 3
-    int argCount = 0;
-    if (wrenGetSlotType(vm, 3) == WREN_TYPE_LIST)
-    {
-        argCount = wrenGetListCount(vm, 3);
-    }
-    
-    // Build method signature based on argument count
-    std::string signature = methodName;
-    if (argCount > 0)
-    {
-        signature += "(";
-        for (int i = 0; i < argCount; i++) {
-            if (i > 0) signature += ",";
-            signature += "_";
-        }
-        signature += ")";
-    }
-    else
-    {
-        signature += "()";
-    }
-    
-    // Create call handle
-    WrenHandle* methodHandle = wrenMakeCallHandle(wrenVM, signature.c_str());
-    if (!methodHandle)
-    {
-        DEBUG_ERROR("Script.call: Method '%s' not found", signature.c_str());
-        wrenSetSlotNull(vm, 0);
-        return;
-    }
-    
-    // Set up call in target VM
-    wrenEnsureSlots(wrenVM, argCount + 1);
-    wrenSetSlotHandle(wrenVM, 0, script->instanceHandle);
-    
-    // Use a temp slot in the calling VM that won't interfere
-    // We need slots 0-3 for receiver/entity/methodName/list
-    // Plus argCount + 1 slots for the target method call
-    // So use slot (4 + argCount) as temp to be safe
-    int tempSlot = 4 + argCount;
-    wrenEnsureSlots(vm, tempSlot + 1);
-    
-    // Copy arguments from list to target VM
-    for (int i = 0; i < argCount; i++)
-    {
-        int targetSlot = i + 1;
-        
-        // Get element from list into temp slot
-        wrenGetListElement(vm, 3, i, tempSlot);
-        
-        WrenType type = wrenGetSlotType(vm, tempSlot);
-        switch (type) {
-        case WREN_TYPE_BOOL:
-            wrenSetSlotBool(wrenVM, targetSlot, wrenGetSlotBool(vm, tempSlot));
-            break;
-        case WREN_TYPE_NUM:
-            wrenSetSlotDouble(wrenVM, targetSlot, wrenGetSlotDouble(vm, tempSlot));
-            break;
-        case WREN_TYPE_STRING:
-            wrenSetSlotString(wrenVM, targetSlot, wrenGetSlotString(vm, tempSlot));
-            break;
-        case WREN_TYPE_NULL:
-            wrenSetSlotNull(wrenVM, targetSlot);
-            break;
-        default:
-            DEBUG_ERROR("Script.call: Unsupported argument type in list");
-            wrenSetSlotNull(wrenVM, targetSlot);
-            break;
-        }
-    }
-    
-    // Call the method
-    WrenInterpretResult result = wrenCall(wrenVM, methodHandle);
-    wrenReleaseHandle(wrenVM, methodHandle);
-    
-    if (result != WREN_RESULT_SUCCESS)
-    {
-        DEBUG_ERROR("Script.call: Method call failed");
-        wrenSetSlotNull(vm, 0);
-        return;
-    }
-    
-    // Copy return value back to calling VM
-    WrenType returnType = wrenGetSlotType(wrenVM, 0);
-    switch (returnType)
-    {
-    case WREN_TYPE_BOOL:
-        wrenSetSlotBool(vm, 0, wrenGetSlotBool(wrenVM, 0));
-        break;
-    case WREN_TYPE_NUM:
-        wrenSetSlotDouble(vm, 0, wrenGetSlotDouble(wrenVM, 0));
-        break;
-    case WREN_TYPE_STRING:
-        wrenSetSlotString(vm, 0, wrenGetSlotString(wrenVM, 0));
-        break;
-    case WREN_TYPE_NULL:
-        wrenSetSlotNull(vm, 0);
-        break;
-    default:
-        // For complex return types, we'd need special handling
-        wrenSetSlotNull(vm, 0);
-        break;
-    }
-}
-
-WREN_CLASS_STATIC("game", "Script", "callArg(_,_,_)", wren_ScriptCallArg, "Call a method on another entity's script with arguments");
-
-// Script.call(entity, methodName) -> result
-void wren_ScriptCall(WrenVM* vm)
-{
-	Struktur::GameContext* context = static_cast<Struktur::GameContext*>(wrenGetUserData(vm));
-	auto& registry = context->GetRegistry();
-	auto& scriptEngine = context->GetWrenScriptEngine();
-
-	double entityId = wrenGetSlotDouble(vm, 1);
-	entt::entity entity = static_cast<entt::entity>(entityId);
-
-	const char* methodName = wrenGetSlotString(vm, 2);
-
-	auto* script = registry.try_get<Struktur::Component::WrenScript>(entity);
-
-	if (!script || !script->isInitialised || script->hasError)
+	if (!script)
 	{
-		DEBUG_ERROR("Script.call: Entity has no valid script");
+		DEBUG_ERROR("Script.get: Entity does not have script");
 		wrenSetSlotNull(vm, 0);
 		return;
 	}
-
-	WrenVM* wrenVM = scriptEngine.GetVM();
-
+	if (script->hasError)
+	{
+		DEBUG_WARNING("Script.get: Entity's script has an error. unable to call");
+		wrenSetSlotNull(vm, 0);
+		return;
+	}
+	if (!script->isInitialised)
+	{
+		DEBUG_WARNING("Script.get: Entity's script is not initialised");
+		wrenSetSlotNull(vm, 0);
+		return;
+	}
 	// Get the script's instance
 	if (!script->instanceHandle)
 	{
-		DEBUG_ERROR("Script.call: No instance handle");
+		DEBUG_ERROR("Script.get: No instance handle");
 		wrenSetSlotNull(vm, 0);
 		return;
 	}
 
-	// Create call handle
-	std::string signature = std::string(methodName) + "()";
-	WrenHandle* methodHandle = wrenMakeCallHandle(wrenVM, signature.c_str());
-
-	if (!methodHandle)
-	{
-		DEBUG_ERROR("Script.call: Method '%s' not found", signature.c_str());
-		wrenSetSlotNull(vm, 0);
-		return;
-	}
-
-	// Set up call
-	wrenEnsureSlots(wrenVM, 1);
-	wrenSetSlotHandle(wrenVM, 0, script->instanceHandle);
-
-	WrenInterpretResult result = wrenCall(wrenVM, methodHandle);
-	wrenReleaseHandle(wrenVM, methodHandle);
-
-	if (result != WREN_RESULT_SUCCESS)
-	{
-		wrenSetSlotNull(vm, 0);
-		return;
-	}
-
-	// Return value
-	WrenType returnType = wrenGetSlotType(wrenVM, 0);
-
-	switch (returnType)
-	{
-	case WREN_TYPE_BOOL:
-		wrenSetSlotBool(vm, 0, wrenGetSlotBool(wrenVM, 0));
-		break;
-	case WREN_TYPE_NUM:
-		wrenSetSlotDouble(vm, 0, wrenGetSlotDouble(wrenVM, 0));
-		break;
-	case WREN_TYPE_STRING:
-		wrenSetSlotString(vm, 0, wrenGetSlotString(wrenVM, 0));
-		break;
-	default:
-		wrenSetSlotNull(vm, 0);
-		break;
-	}
+	wrenSetSlotHandle(vm, 0, script->instanceHandle);
 }
 
-WREN_CLASS_STATIC("game", "Script", "call(_,_)", wren_ScriptCall, "Call a method on another entity's script");
+WREN_CLASS_STATIC("game", "Script", "get(_)", wren_ScriptGet, "Gets a method on an entity's script");
 
 // ============================================================================
 // UI MANAGER BINDINGS
@@ -3620,10 +3432,10 @@ void wren_BodyDefinitionCreateDynamicBody(WrenVM* vm)
 	wrenGetVariable(vm, "game", "BodyDefinition", 0);  // Get class into slot 1
 	WrenBodyDefinition* bodyDef = (WrenBodyDefinition*)wrenSetSlotNewForeign(vm, 0, 0, sizeof(WrenBodyDefinition));
 
-	bodyDef->bodyDef.type = b2_dynamicBody;
-
 	// BodyDefinition.new() - identity
 	new (bodyDef) WrenBodyDefinition();
+
+	bodyDef->bodyDef.type = b2_dynamicBody;
 }
 
 void wren_BodyDefinitionCreateStaticBody(WrenVM* vm)
@@ -3631,10 +3443,10 @@ void wren_BodyDefinitionCreateStaticBody(WrenVM* vm)
 	wrenGetVariable(vm, "game", "BodyDefinition", 0);  // Get class into slot 1
 	WrenBodyDefinition* bodyDef = (WrenBodyDefinition*)wrenSetSlotNewForeign(vm, 0, 0, sizeof(WrenBodyDefinition));
 
-	bodyDef->bodyDef.type = b2_staticBody;
-
 	// BodyDefinition.new() - identity
 	new (bodyDef) WrenBodyDefinition();
+
+	bodyDef->bodyDef.type = b2_staticBody;
 }
 
 void wren_BodyDefinitionCreateKinematicBody(WrenVM* vm)
@@ -3642,10 +3454,10 @@ void wren_BodyDefinitionCreateKinematicBody(WrenVM* vm)
 	wrenGetVariable(vm, "game", "BodyDefinition", 0);  // Get class into slot 1
 	WrenBodyDefinition* bodyDef = (WrenBodyDefinition*)wrenSetSlotNewForeign(vm, 0, 0, sizeof(WrenBodyDefinition));
 
-	bodyDef->bodyDef.type = b2_kinematicBody;
-
 	// BodyDefinition.new() - identity
 	new (bodyDef) WrenBodyDefinition();
+
+	bodyDef->bodyDef.type = b2_kinematicBody;
 }
 
 // Register BodyDefinition foreign class
@@ -3799,6 +3611,12 @@ void wren_PhysicsBodyStaticSetLinearVelocity(WrenVM* vm)
 	if (!physicsBodyComponent)
 	{
 		return;
+	}
+
+	if (velocity->value.x != 0 || velocity->value.y != 0)
+	{
+		b2Vec2 vec = physicsBodyComponent->body->GetLinearVelocity();
+		DEBUG_INFO("Changing from x:%d y:%d to x:%d y:%d", (int)vec.x, (int)vec.y, (int)velocity->value.x, (int)velocity->value.y);
 	}
 
 	b2Vec2 b2Velecity = b2Vec2(velocity->value.x, velocity->value.y);
@@ -4136,198 +3954,3 @@ WREN_CLASS_STATIC("game", "SpriteAnimation", "get(_)", wren_SpriteAnimationGet, 
 WREN_CLASS_STATIC("game", "SpriteAnimation", "setCurrentAnimation(_,_)", wren_SpriteAnimationStaticSetCurrentAnimation, "Will set and play a current sprite animation, is already playing the animation continue it.");
 WREN_CLASS_STATIC("game", "SpriteAnimation", "forcePlayAnimation(_,_)", wren_SpriteAnimationPlayAnimation, "Will play a sprite animation, and if playering animation will forcibly restart it.");
 WREN_CLASS_STATIC("game", "SpriteAnimation", "isAnimationPlaying(_,_)", wren_SpriteAnimationIsAnimationPlaying, "Checks if a cirtain animation is playing.");
-
-// ============================================================================
-// Reflection - Check if objects have methods
-// ============================================================================
-
-// Reflection.hasMethod(object, signature) -> Bool
-void wren_ReflectionHasMethod(WrenVM* vm)
-{
-	// Slot 0: Reflection class (receiver)
-	// Slot 1: object to check
-	// Slot 2: method signature (e.g., "update(_)")
-
-	// Check if object is null
-	if (wrenGetSlotType(vm, 1) == WREN_TYPE_NULL)
-	{
-		wrenSetSlotBool(vm, 0, false);
-		return;
-	}
-
-	// Get method signature
-	const char* signature = wrenGetSlotString(vm, 2);
-
-	// IMPORTANT: We need to preserve the object in slot 1
-	// Save it to a handle first
-	WrenHandle* objectHandle = wrenGetSlotHandle(vm, 1);
-
-	// Try to create a call handle for this method
-	// This will return NULL if the method doesn't exist
-	WrenHandle* methodHandle = wrenMakeCallHandle(vm, signature);
-
-	bool hasMethod = (methodHandle != nullptr);
-
-	// Clean up handles
-	if (methodHandle)
-	{
-		wrenReleaseHandle(vm, methodHandle);
-	}
-	wrenReleaseHandle(vm, objectHandle);
-
-	// Return result
-	wrenSetSlotBool(vm, 0, hasMethod);
-}
-
-WREN_CLASS_STATIC("game", "Reflection", "hasMethod(_,_)", wren_ReflectionHasMethod, "Check if object has method with given signature");
-
-// Reflection.safeCall(object, signature) -> result or null
-// Calls method if it exists, returns null if it doesn't
-void wren_ReflectionSafeCall(WrenVM* vm)
-{
-	// Slot 0: Reflection class
-	// Slot 1: object
-	// Slot 2: signature
-	// Slot 3+: arguments (not implemented in this version)
-
-	// Check if object is null
-	if (wrenGetSlotType(vm, 1) == WREN_TYPE_NULL)
-	{
-		wrenSetSlotNull(vm, 0);
-		return;
-	}
-
-	const char* signature = wrenGetSlotString(vm, 2);
-
-	// Try to make call handle
-	WrenHandle* methodHandle = wrenMakeCallHandle(vm, signature);
-
-	if (!methodHandle)
-	{
-		// Method doesn't exist
-		wrenSetSlotNull(vm, 0);
-		return;
-	}
-
-	// Get object handle
-	WrenHandle* objectHandle = wrenGetSlotHandle(vm, 1);
-
-	// Set up call: put object in slot 0
-	wrenEnsureSlots(vm, 1);
-	wrenSetSlotHandle(vm, 0, objectHandle);
-
-	// Call the method
-	WrenInterpretResult result = wrenCall(vm, methodHandle);
-
-	// Clean up
-	wrenReleaseHandle(vm, methodHandle);
-	wrenReleaseHandle(vm, objectHandle);
-
-	if (result != WREN_RESULT_SUCCESS)
-	{
-		// Call failed
-		wrenSetSlotNull(vm, 0);
-		return;
-	}
-
-	// Result is already in slot 0
-}
-
-WREN_CLASS_STATIC("game", "Reflection", "safeCall(_,_)", wren_ReflectionSafeCall, "Call method if it exists, return null otherwise");
-
-// Reflection.getTypeName(object) -> String
-void wren_ReflectionGetTypeName(WrenVM* vm)
-{
-	WrenType type = wrenGetSlotType(vm, 1);
-
-	switch (type)
-	{
-	case WREN_TYPE_BOOL:
-		wrenSetSlotString(vm, 0, "Bool");
-		break;
-	case WREN_TYPE_NUM:
-		wrenSetSlotString(vm, 0, "Num");
-		break;
-	case WREN_TYPE_FOREIGN:
-		wrenSetSlotString(vm, 0, "Foreign");
-		break;
-	case WREN_TYPE_LIST:
-		wrenSetSlotString(vm, 0, "List");
-		break;
-	case WREN_TYPE_MAP:
-		wrenSetSlotString(vm, 0, "Map");
-		break;
-	case WREN_TYPE_NULL:
-		wrenSetSlotString(vm, 0, "Null");
-		break;
-	case WREN_TYPE_STRING:
-		wrenSetSlotString(vm, 0, "String");
-		break;
-	case WREN_TYPE_UNKNOWN:
-	default:
-		wrenSetSlotString(vm, 0, "Unknown");
-		break;
-	}
-}
-
-WREN_CLASS_STATIC("game", "Reflection", "getTypeName(_)", wren_ReflectionGetTypeName, "Get the type name of an object");
-
-// Reflection.hasMethods(object, signatureList) -> Bool
-// Returns true only if ALL methods exist
-void wren_ReflectionHasMethods(WrenVM* vm)
-{
-	// Slot 1: object
-	// Slot 2: list of signatures
-
-	if (wrenGetSlotType(vm, 1) == WREN_TYPE_NULL)
-	{
-		wrenSetSlotBool(vm, 0, false);
-		return;
-	}
-
-	if (wrenGetSlotType(vm, 2) != WREN_TYPE_LIST)
-	{
-		DEBUG_ERROR("Reflection.hasMethods: Second argument must be a list");
-		wrenSetSlotBool(vm, 0, false);
-		return;
-	}
-
-	WrenHandle* objectHandle = wrenGetSlotHandle(vm, 1);
-
-	// Get list count
-	int count = wrenGetListCount(vm, 2);
-
-	bool allExist = true;
-
-	for (int i = 0; i < count; i++)
-	{
-		// Get signature from list
-		wrenGetListElement(vm, 2, i, 3);  // Put element in slot 3
-
-		if (wrenGetSlotType(vm, 3) != WREN_TYPE_STRING)
-		{
-			DEBUG_ERROR("Reflection.hasMethods: List must contain only strings");
-			allExist = false;
-			break;
-		}
-
-		const char* signature = wrenGetSlotString(vm, 3);
-
-		// Check if method exists
-		WrenHandle* methodHandle = wrenMakeCallHandle(vm, signature);
-
-		if (!methodHandle)
-		{
-			allExist = false;
-			break;
-		}
-
-		wrenReleaseHandle(vm, methodHandle);
-	}
-
-	wrenReleaseHandle(vm, objectHandle);
-
-	wrenSetSlotBool(vm, 0, allExist);
-}
-
-WREN_CLASS_STATIC("game", "Reflection", "hasMethods(_,_)", wren_ReflectionHasMethods, "Check if object has all methods in list");

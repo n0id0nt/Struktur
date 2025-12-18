@@ -48,6 +48,14 @@
 
 #include "Gameplay/GameplayStates/GameWorldState.h"
 
+#ifdef EDITOR
+#define SPLASHSCREENFONT "assets/Fonts/medieval_sharp/MedievalSharp-Bold.ttf_120"
+#define SPLASHSCREENTEXT "STRUKTUR"
+#else
+#define SPLASHSCREENFONT "assets/Fonts/medieval_sharp/MedievalSharp-Bold.ttf_120"
+#define SPLASHSCREENTEXT "Memory Palace"
+#endif
+
 void Struktur::InitialiseGame(GameContext& context)
 {
 	Core::GameData& gameData = context.GetGameData();
@@ -112,7 +120,7 @@ void Struktur::InitialiseGame(GameContext& context)
 	systemManager.AddRenderSystem<System::UIRenderSystem>();
 
 	DEBUG_INFO("Game Data Loaded");
-	
+
 	wrenStateManager.Start(context);
 }
 
@@ -128,10 +136,6 @@ void Struktur::ExitGame(GameContext& context)
 	Wren::WrenStateManager& wrenStateManager = context.GetWrenStateManager();
 	wrenStateManager.Shutdown(context);
 
-	DEBUG_INFO("[Clean Up] Wren Script Engine");
-	Wren::WrenScriptEngine& wrenScriptEngine = context.GetWrenScriptEngine();
-	wrenScriptEngine.Shutdown();
-
 	DEBUG_INFO("[Clean Up] UI Manager");
 	UI::UIManager& uiManager = context.GetUIManager();
 	uiManager.Clear();
@@ -144,6 +148,10 @@ void Struktur::ExitGame(GameContext& context)
 	Physics::PhysicsWorld& world = context.GetPhysicsWorld();
 	world.Clear();
 
+	DEBUG_INFO("[Clean Up] Wren Script Engine");
+	Wren::WrenScriptEngine& wrenScriptEngine = context.GetWrenScriptEngine();
+	wrenScriptEngine.Shutdown();
+
 	DEBUG_INFO("[Clean Up] Resource Manager");
 	Resource::ResourceManager& resourceManager = context.GetResourceManager();
 	resourceManager.Clear();
@@ -153,7 +161,7 @@ void Struktur::SplashScreenLoop(GameContext& context)
 {
 	Core::GameData& gameData = context.GetGameData();
 	Resource::ResourceManager& resourceManager = context.GetResourceManager();
-	Resource::ResourcePtr<Resource::FontResource> font = resourceManager.GetFontResource("assets/Fonts/medieval_sharp/MedievalSharp-Bold.ttf_120");
+	Resource::ResourcePtr<Resource::FontResource> font = resourceManager.GetFontResource(SPLASHSCREENFONT);
 	//fade in time
 	const double fadeInTime = 1.5;
 	const double holdTime = 1;
@@ -163,6 +171,9 @@ void Struktur::SplashScreenLoop(GameContext& context)
 	if (currentTime > startTime + fadeInTime + holdTime + fadeOutTime)
 	{
 		gameData.gameState = Core::GameState::GAME;
+#ifdef PLATFORM_WEB
+		emscripten_cancel_main_loop();
+#endif
 		DEBUG_INFO("Start Game Loop");
 	}
 
@@ -180,31 +191,21 @@ void Struktur::SplashScreenLoop(GameContext& context)
 		textAlpha *= Lerp(1.f, 0.f, t);
 	}
 
-	std::string splashScreenName = "Memory Palace";
+	std::string splashScreenName = SPLASHSCREENTEXT;
 	int fontSize = 120;
 	int fontWidth = ::MeasureTextEx(font->font, splashScreenName.c_str(), fontSize, 1.0f).x;
 	int width = gameData.applicationWidth;
 	int height = gameData.applicationHeight;
 
 	::BeginDrawing();
-	::ClearBackground(Color{ 0,0,0,255 });
+	::ClearBackground(BLACK);
 	::DrawTextEx(font->font, splashScreenName.c_str(), { (width - fontWidth) / 2.f, (height - fontSize) / 2.f }, fontSize, 5.0f, Color{ 255,255,255,(unsigned char)textAlpha });
 	::EndDrawing();
 }
 
 void Struktur::GameLoop(GameContext& context)
 {
-	Core::GameData& gameData = context.GetGameData();
-	entt::registry& registry = context.GetRegistry();
 	System::SystemManager& systemManager = context.GetSystemManager();
-
-#ifndef PLATFORM_WEB
-	if (WindowShouldClose())
-	{
-		gameData.gameState = Core::GameState::QUIT;
-	}
-#endif
-
 	systemManager.Update(context);
 
 	::BeginDrawing();
@@ -222,7 +223,36 @@ void Struktur::GameLoop(GameContext& context)
 	::EndDrawing();
 }
 
-void Struktur::UpdateLoop(void* userData)
+void Struktur::SplashScreenUpdateLoop(void* userData)
+{
+	auto* context = static_cast<GameContext*>(userData);
+	// Set the game data
+	Core::GameData& gameData = context->GetGameData();
+	gameData.deltaTime = ::GetFrameTime();
+	gameData.gameTime = ::GetTime();
+	gameData.applicationWidth = ::GetScreenWidth();
+	gameData.applicationHeight = ::GetScreenHeight();
+
+#ifndef PLATFORM_WEB
+	if (::WindowShouldClose())
+	{
+		gameData.gameState = Core::GameState::QUIT;
+	}
+#endif
+
+	switch (gameData.gameState)
+	{
+	case Core::GameState::SPLASH_SCREEN:
+		SplashScreenLoop(*context);
+		break;
+#ifdef PLATFORM_WEB
+	default:
+		emscripten_cancel_main_loop();
+#endif
+	}
+}
+
+void Struktur::MainUpdateLoop(void* userData)
 {
 	GameContext* context = static_cast<GameContext*>(userData);
 	// Set the game data
@@ -232,15 +262,22 @@ void Struktur::UpdateLoop(void* userData)
 	gameData.applicationWidth = ::GetScreenWidth();
 	gameData.applicationHeight = ::GetScreenHeight();
 
+#ifndef PLATFORM_WEB
+	if (::WindowShouldClose())
+	{
+		gameData.gameState = Core::GameState::QUIT;
+	}
+#endif
+
 	switch (gameData.gameState)
 	{
-	case Core::GameState::SPLASH_SCREEN:
-		SplashScreenLoop(*context);
-		break;
 	case Core::GameState::GAME:
 		GameLoop(*context);
 		break;
 	default:
+#ifdef PLATFORM_WEB
+		emscripten_cancel_main_loop();
+#endif
 		gameData.gameState = Core::GameState::QUIT;
 	}
 }
@@ -252,24 +289,37 @@ void Struktur::Game()
 	// Load resources
 	InitialiseGame(context);
 
-	{
-	Resource::ResourceManager& resourceManager = context.GetResourceManager();
-	Resource::ResourcePtr<Resource::FontResource> font = resourceManager.GetFontResource("assets/Fonts/medieval_sharp/MedievalSharp-Bold.ttf_120");
-
 	Core::GameData& gameData = context.GetGameData();
 	gameData.startTime = ::GetTime();
+	{
+		// create local scope to manage lifetime of splash screen font - TODO create a spash screen state and add it to the context.
+		Resource::ResourceManager& resourceManager = context.GetResourceManager();
+		Resource::ResourcePtr<Resource::FontResource> font = resourceManager.GetFontResource(SPLASHSCREENFONT);
+
+#ifdef PLATFORM_WEB
+		// Web platform - use emscripten main loop
+		emscripten_set_main_loop_arg(SplashScreenUpdateLoop, &context, 0, 1);
+#else
+		// Desktop platform - standard game loop
+		::SetTargetFPS(gameData.fps);
+
+		while (gameData.gameState == Core::GameState::SPLASH_SCREEN) {
+			SplashScreenUpdateLoop(&context);
+		}
+#endif
+	}
+
 #ifdef PLATFORM_WEB
 	// Web platform - use emscripten main loop
-	emscripten_set_main_loop_arg(UpdateLoop, &context, 0, 1);
+	emscripten_set_main_loop_arg(MainUpdateLoop, &context, 0, 1);
 #else
 	// Desktop platform - standard game loop
 	::SetTargetFPS(gameData.fps);
 
 	while (gameData.gameState != Core::GameState::QUIT) {
-		UpdateLoop(&context);
+		MainUpdateLoop(&context);
 	}
 #endif
-	}
 
 	// Cleanup
 	ExitGame(context);

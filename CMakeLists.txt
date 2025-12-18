@@ -187,15 +187,29 @@ if (NOT raylib_FOUND)
         file(GLOB WREN_SOURCES 
             ${wren_SOURCE_DIR}/src/vm/*.c
             ${wren_SOURCE_DIR}/src/optional/*.c
+            ${CMAKE_CURRENT_SOURCE_DIR}/Wren/CustomModules/*.c
         )
         
         add_library(wren STATIC ${WREN_SOURCES})
+
+        target_compile_definitions(wren PUBLIC
+            WREN_OPT_META=1
+            WREN_OPT_RANDOM=1
+            WREN_OPT_REFLECT=1
+        )
+
         target_include_directories(wren PUBLIC 
             ${wren_SOURCE_DIR}/src/include
             ${wren_SOURCE_DIR}/src/vm
             ${wren_SOURCE_DIR}/src/optional
+            ${CMAKE_CURRENT_SOURCE_DIR}/Wren/CustomModules 
         )
-        
+
+        target_include_directories(wren PRIVATE
+            ${wren_SOURCE_DIR}/src/vm       # Access to Wren internals
+            ${wren_SOURCE_DIR}/src/optional
+        )
+                
         # Platform-specific settings for Wren
         if(WIN32)
             target_compile_definitions(wren PRIVATE _CRT_SECURE_NO_WARNINGS)

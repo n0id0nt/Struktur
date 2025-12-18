@@ -84,7 +84,9 @@ foreign class Vec2 {
     // Multiply by scalar
     foreign *(arg0)
     // Get vector length
-    foreign length
+    foreign length()
+    // Get vector length squared
+    foreign lengthSquared()
     // Get normalized vector
     foreign normalize()
     // Distance between two vectors
@@ -136,7 +138,7 @@ foreign class Vec3 {
     // Set Z component
     foreign z=(arg0)
     // Convert to string
-    foreign toString
+    foreign toString()
     // Add two vectors
     foreign +(arg0)
     // Subtract vectors
@@ -144,9 +146,11 @@ foreign class Vec3 {
     // Multiply by scalar
     foreign *(arg0)
     // Get vector length
-    foreign length
+    foreign length()
+    // Get vector length squared
+    foreign lengthSquared()
     // Get normalized vector
-    foreign normalize()
+    foreign normalize
     // Distance between two vectors
     foreign static distance(arg0,arg1)
     // Squared distance
@@ -208,7 +212,7 @@ foreign class Vec4 {
     // Set W component
     foreign w=(arg0)
     // Convert to string
-    foreign toString
+    foreign toString()
     // Add two vectors
     foreign +(arg0)
     // Subtract vectors
@@ -216,7 +220,9 @@ foreign class Vec4 {
     // Multiply by scalar
     foreign *(arg0)
     // Get vector length
-    foreign length
+    foreign length()
+    // Get vector length squared
+    foreign lengthSquared()
     // Get normalized vector
     foreign normalize()
     // Distance between two vectors
@@ -262,7 +268,7 @@ foreign class Quat {
     // Set Z component
     foreign z=(arg0)
     // Convert to string
-    foreign toString
+    foreign toString()
     // Get normalized quaternion
     foreign normalize()
     // Get inverse quaternion
@@ -270,7 +276,9 @@ foreign class Quat {
     // Get conjugate quaternion
     foreign conjugate()
     // Get quaternion length
-    foreign length
+    foreign length()
+    // Get quaternion length squared
+    foreign lengthSquared()
     // Convert to Euler angles (radians)
     foreign toEuler()
     // Convert to Euler angles (degrees)
@@ -281,14 +289,14 @@ foreign class Quat {
     foreign *(arg0)
     // Rotate vector by quaternion
     foreign rotate(arg0)
-    // Dot product
-    foreign dot(arg0)
     // Get forward direction vector
     foreign forward()
     // Get up direction vector
     foreign up()
     // Get right direction vector
     foreign right()
+    // Dot product
+    foreign static dot(arg0,arg1)
     // Create identity quaternion
     foreign static identity()
     // Create quaternion from axis and angle
@@ -457,6 +465,8 @@ class Sprite {
     foreign static create(arg0,arg1,arg2,arg3,arg4,arg5,arg6,arg7,arg8)
     // Sets the render priority of a sprite component
     foreign static setRenderPriority(arg0,arg1)
+    // Flips a sprite in a horizontal direction
+    foreign static setFlipped(arg0,arg1)
 }
 
 class ResourceManager {
@@ -467,18 +477,12 @@ class ResourceManager {
 }
 
 class Script {
-    // Flips a sprite in a horizontal direction
-    foreign static setFlipped(arg0,arg1)
     // Creates the script Component.
     foreign static create(arg0,arg1,arg2)
     // Creates the script Component with an arg.
     foreign static createArg(arg0,arg1,arg2,arg3)
-    // Check if entity's script has a method
-    foreign static hasMethod(arg0,arg1)
-    // Call a method on another entity's script with arguments
-    foreign static callArg(arg0,arg1,arg2)
-    // Call a method on another entity's script
-    foreign static call(arg0,arg1)
+    // Gets a method on an entity's script
+    foreign static get(arg0)
 }
 
 class UIManager {
@@ -592,16 +596,5 @@ foreign class SpriteAnimation {
     foreign static forcePlayAnimation(arg0,arg1)
     // Checks if a cirtain animation is playing.
     foreign static isAnimationPlaying(arg0,arg1)
-}
-
-class Reflection {
-    // Check if object has method with given signature
-    foreign static hasMethod(arg0,arg1)
-    // Call method if it exists, return null otherwise
-    foreign static safeCall(arg0,arg1)
-    // Get the type name of an object
-    foreign static getTypeName(arg0)
-    // Check if object has all methods in list
-    foreign static hasMethods(arg0,arg1)
 }
 
