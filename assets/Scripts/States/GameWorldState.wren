@@ -196,10 +196,10 @@ class GameWorldState is BaseState {
             }
             script.playerControl(inputDir)
 
-            var interactEntity = null
-            script.getInteractEntity()
+            var interactEntity = script.getInteractEntity()
 
             if (interactEntity) {
+                System.print("Interact Entity")
                 _interactLabel.setVisible(true)
                 
                 var interactWorldPosition = Transform.getPosition(interactEntity)

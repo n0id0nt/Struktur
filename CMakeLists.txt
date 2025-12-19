@@ -187,7 +187,7 @@ if (NOT raylib_FOUND)
         file(GLOB WREN_SOURCES 
             ${wren_SOURCE_DIR}/src/vm/*.c
             ${wren_SOURCE_DIR}/src/optional/*.c
-            ${CMAKE_CURRENT_SOURCE_DIR}/Wren/CustomModules/*.c
+            ${CMAKE_CURRENT_SOURCE_DIR}/WrenExtensions/Modules/*.c
         )
         
         add_library(wren STATIC ${WREN_SOURCES})
@@ -302,7 +302,7 @@ set(SOURCES
     src/Engine/Resource/TextureResource.h       src/Engine/Resource/TextureResource.cpp
     
     src/Engine/ECS/SystemManager.h              src/Engine/ECS/SystemManager.cpp
-    src/Engine/ECS/GameObjectManager.h          src/Engine/ECS/GameObjectManager.cpp        src/Engine/ECS/GameObjectManager_wren.cpp
+    src/Engine/ECS/GameObjectManager.h          src/Engine/ECS/GameObjectManager.cpp
     
     src/Engine/ECS/Component/PhysicsBody.h
     src/Engine/ECS/Component/Player.h

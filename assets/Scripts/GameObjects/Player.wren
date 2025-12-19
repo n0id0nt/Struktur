@@ -10,7 +10,7 @@ class Player {
         _name = name
         _timeAccumulator = 0
         _initialized = false
-        _facing = Vec2.new()
+        _facing = Vec2.new(0, 1)
         _speed = 5
         
         System.print("Player constructed for: %(_name)")
@@ -121,21 +121,23 @@ class Player {
         for (entity in interactEntities) {
             var script = Script.get(entity)
             if (!script) {
-                return
+                continue
             }
             if (!Reflect.hasMethod(script, "isInteractable()")) {
-                return
+                continue
             }
             if (!script.isInteractable()) {
-                return
+                continue
             }
             var interactableWorldPosition = Transform.getPosition(entity)
             var distance = Vec3.distance(interactableWorldPosition, playerWorldPosition)
             if (distance < closestDistance) {
+                System.print(("Test the distance %(distance) for entity %(entity)"))
                 closestDistance = distance
                 closestEntity = entity
             }
         }
+        System.print(("Test for %(closestEntity) with %(closestDistance) < %(INTERACTABLE_DISTANCE)"))
         if (closestDistance < INTERACTABLE_DISTANCE) {
             return closestEntity
         }

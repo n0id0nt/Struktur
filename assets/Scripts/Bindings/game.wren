@@ -376,7 +376,7 @@ foreign class UILabel {
     // Sets the labels text color
     foreign setTextColor(arg0)
     // Sets the labels position
-    foreign setPosition(arg0)
+    foreign setPosition(arg0,arg1)
     // Sets the labels anchor point
     foreign setAnchorPoint(arg0)
 }
