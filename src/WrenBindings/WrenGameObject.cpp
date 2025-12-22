@@ -5,6 +5,8 @@
 #include "Engine/Scripting/WrenBindingRegistry.h"
 #include "Engine/GameContext.h"
 
+#include "ComponentListXMacro.h"
+
 // ============================================================================
 // GAME OBJECT MANAGER BINDINGS
 // ============================================================================

@@ -27,10 +27,19 @@ struct WrenVec4
 	WrenVec4(const glm::vec4& v) : value(v) {}
 };
 
-struct WrenQuat {
+struct WrenQuat
+{
 	glm::quat value;
 
 	WrenQuat() : value(1.0f, 0.0f, 0.0f, 0.0f) {}  // Identity quaternion
 	WrenQuat(float w, float x, float y, float z) : value(w, x, y, z) {}
 	WrenQuat(const glm::quat& q) : value(q) {}
+};
+
+struct WrenMat4
+{
+	glm::mat4 value;
+
+	WrenMat4() : value(1.0f) {}  // Identity Matrix
+	WrenMat4(const glm::mat4& m) : value(m) {}
 };

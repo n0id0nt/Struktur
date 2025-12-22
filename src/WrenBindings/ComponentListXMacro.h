@@ -1,6 +1,7 @@
 #define COMPONENT_LIST\
 	COMPONENT(Camera, "Camera")\
 	COMPONENT(Level, "Level")\
+	COMPONENT(World, "World")\
 	COMPONENT(PhysicsBody, "PhysicsBody")\
 	COMPONENT(Shader, "Shader")\
 	COMPONENT(Sprite, "Sprite")\

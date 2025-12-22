@@ -9,6 +9,8 @@
 
 #include "Engine/Scripting/WrenBindingRegistry.h"
 #include "Debug/Assertions.h"
+#include <type_ptr.hpp>
+#include <iomanip>
 
 // ============================================================================
 // Math utialaty functions
@@ -1517,8 +1519,7 @@ void wren_QuatRight(WrenVM* vm)
 }
 
 // Register Quat foreign class
-WREN_FOREIGN_CLASS("math", "Quat", wren_QuatAllocate, wren_QuatFinalize,
-	"Quaternion class for 3D rotations wrapping glm::quat");
+WREN_FOREIGN_CLASS("math", "Quat", wren_QuatAllocate, wren_QuatFinalize, "Quaternion class for 3D rotations wrapping glm::quat");
 
 // Register constructors
 WREN_CONSTRUCTOR_DOC("math", "Quat", wren_QuatAllocate, "Create identity quaternion", );
@@ -1557,3 +1558,211 @@ WREN_CLASS_STATIC("math", "Quat", "fromEulerDegrees(_,_,_)", wren_QuatFromEulerD
 WREN_CLASS_STATIC("math", "Quat", "lookAt(_,_)", wren_QuatLookAt, "Create quaternion from forward and up vectors");
 WREN_CLASS_STATIC("math", "Quat", "slerp(_,_,_)", wren_QuatSlerp, "Spherical linear interpolation");
 WREN_CLASS_STATIC("math", "Quat", "lerp(_,_,_)", wren_QuatLerp, "Linear interpolation");
+
+// ============================================================================
+// Mat4 - Foreign class wrapping glm::mat4
+// ============================================================================
+
+void wren_Mat4Allocate(WrenVM* vm)
+{
+	wrenGetVariable(vm, "math", "Mat4", 0);  // Get class into slot 1
+    WrenMat4* mat = static_cast<WrenMat4*>(wrenSetSlotNewForeign(vm, 0, 0, sizeof(WrenMat4)));
+    new (mat) WrenMat4();
+}
+
+// Finalize
+void wren_Mat4Finalize(void* data)
+{
+    WrenMat4* mat = static_cast<WrenMat4*>(data);
+    mat->~WrenMat4();
+}
+
+void wren_Mat4Identity(WrenVM* vm)
+{
+    wrenGetVariable(vm, "math", "Mat4", 0);  // Get class into slot 1
+    WrenMat4* mat = static_cast<WrenMat4*>(wrenSetSlotNewForeign(vm, 0, 0, sizeof(WrenMat4)));
+    new (mat) WrenMat4(glm::mat4(1.0f));
+}
+
+void wren_Mat4Perspective(WrenVM* vm)
+{
+    wrenGetVariable(vm, "math", "Mat4", 0);  // Get class into slot 1
+    WrenMat4* mat = static_cast<WrenMat4*>(wrenSetSlotNewForeign(vm, 0, 0, sizeof(WrenMat4)));
+    new (mat) WrenMat4(glm::mat4(1.0f));
+
+    float fov = static_cast<float>(wrenGetSlotDouble(vm, 1));
+    float aspect = static_cast<float>(wrenGetSlotDouble(vm, 2));
+    float near = static_cast<float>(wrenGetSlotDouble(vm, 3));
+    float far = static_cast<float>(wrenGetSlotDouble(vm, 4));
+    mat->value = glm::perspective(fov, aspect, near, far);
+}
+
+void wren_Mat4Ortho(WrenVM* vm)
+{
+    wrenGetVariable(vm, "math", "Mat4", 0);  // Get class into slot 1
+    WrenMat4* mat = static_cast<WrenMat4*>(wrenSetSlotNewForeign(vm, 0, 0, sizeof(WrenMat4)));
+    new (mat) WrenMat4(glm::mat4(1.0f));
+
+    float left = static_cast<float>(wrenGetSlotDouble(vm, 1));
+    float right = static_cast<float>(wrenGetSlotDouble(vm, 2));
+    float bottom = static_cast<float>(wrenGetSlotDouble(vm, 3));
+    float top = static_cast<float>(wrenGetSlotDouble(vm, 4));
+    float near = static_cast<float>(wrenGetSlotDouble(vm, 5));
+    float far = static_cast<float>(wrenGetSlotDouble(vm, 6));
+    mat->value = glm::ortho(left, right, bottom, top, near, far);
+}
+
+void wren_Mat4LookAt(WrenVM* vm)
+{
+    wrenGetVariable(vm, "math", "Mat4", 0);  // Get class into slot 1
+    WrenMat4* mat = static_cast<WrenMat4*>(wrenSetSlotNewForeign(vm, 0, 0, sizeof(WrenMat4)));
+    new (mat) WrenMat4(glm::mat4(1.0f));
+
+	WrenVec3* eye = static_cast<WrenVec3*>(wrenGetSlotForeign(vm, 1));
+	WrenVec3* center = static_cast<WrenVec3*>(wrenGetSlotForeign(vm, 1));
+	WrenVec3* up = static_cast<WrenVec3*>(wrenGetSlotForeign(vm, 1));
+    mat->value = glm::lookAt(eye->value, center->value, up->value);
+}
+
+// Operations
+void wren_Mat4Multiply(WrenVM* vm)
+{
+    WrenMat4* a = static_cast<WrenMat4*>(wrenGetSlotForeign(vm, 0));
+    WrenMat4* b = static_cast<WrenMat4*>(wrenGetSlotForeign(vm, 1));
+
+	wrenGetVariable(vm, "math", "Mat4", 1);  // Get class into slot 1
+	WrenMat4* result = static_cast<WrenMat4*>(wrenSetSlotNewForeign(vm, 0, 1, sizeof(WrenMat4)));
+	new (result) WrenMat4(a->value * b->value);
+}
+
+// Transformations (modify in place)
+void wren_Mat4Translate(WrenVM* vm)
+{
+    WrenMat4* mat = static_cast<WrenMat4*>(wrenGetSlotForeign(vm, 0));
+    WrenVec3* vec3 = static_cast<WrenVec3*>(wrenGetSlotForeign(vm, 1));
+    mat->value = glm::translate(mat->value, vec3->value);
+}
+
+void wren_Mat4Rotate(WrenVM* vm)
+{
+    WrenMat4* mat = static_cast<WrenMat4*>(wrenGetSlotForeign(vm, 0));
+    float angle = static_cast<float>(wrenGetSlotDouble(vm, 1));
+    WrenVec3* vec3 = static_cast<WrenVec3*>(wrenGetSlotForeign(vm, 2));
+    mat->value = glm::rotate(mat->value, angle, vec3->value);
+}
+
+void wren_Mat4Scale(WrenVM* vm)
+{
+    WrenMat4* mat = static_cast<WrenMat4*>(wrenGetSlotForeign(vm, 0));
+    WrenVec3* vec3 = static_cast<WrenVec3*>(wrenGetSlotForeign(vm, 1));
+    mat->value = glm::scale(mat->value, vec3->value);
+}
+
+// Access
+void wren_Mat4Get(WrenVM* vm)
+{
+    WrenMat4* mat = static_cast<WrenMat4*>(wrenGetSlotForeign(vm, 0));
+    int row = static_cast<int>(wrenGetSlotDouble(vm, 1));
+    int col = static_cast<int>(wrenGetSlotDouble(vm, 2));
+    
+    if (row < 0 || row >= 4 || col < 0 || col >= 4) {
+        wrenSetSlotString(vm, 0, "Index out of bounds");
+        wrenAbortFiber(vm, 0);
+        return;
+    }
+    
+    wrenSetSlotDouble(vm, 0, mat->value[col][row]);
+}
+
+void wren_Mat4Set(WrenVM* vm)
+{
+    WrenMat4* mat = static_cast<WrenMat4*>(wrenGetSlotForeign(vm, 0));
+    int row = static_cast<int>(wrenGetSlotDouble(vm, 1));
+    int col = static_cast<int>(wrenGetSlotDouble(vm, 2));
+    float value = static_cast<float>(wrenGetSlotDouble(vm, 3));
+    
+    if (row < 0 || row >= 4 || col < 0 || col >= 4) {
+        wrenSetSlotString(vm, 0, "Index out of bounds");
+        wrenAbortFiber(vm, 0);
+        return;
+    }
+    
+    mat->value[col][row] = value;
+}
+
+// Properties
+void wren_Mat4Determinant(WrenVM* vm)
+{
+    WrenMat4* mat = static_cast<WrenMat4*>(wrenGetSlotForeign(vm, 0));
+    wrenSetSlotDouble(vm, 0, glm::determinant(mat->value));
+}
+
+void wren_Mat4Inverse(WrenVM* vm)
+{
+    WrenMat4* mat = static_cast<WrenMat4*>(wrenGetSlotForeign(vm, 0));
+    mat->value = glm::inverse(mat->value);
+}
+
+void wren_Mat4Transpose(WrenVM* vm)
+{
+    WrenMat4* mat = static_cast<WrenMat4*>(wrenGetSlotForeign(vm, 0));
+    mat->value = glm::transpose(mat->value);
+}
+
+// Conversion
+void wren_Mat4ToList(WrenVM* vm)
+{
+    WrenMat4* mat = static_cast<WrenMat4*>(wrenGetSlotForeign(vm, 0));
+    const float* data = glm::value_ptr(mat->value);
+    
+    wrenSetSlotNewList(vm, 0);
+    for (int i = 0; i < 16; i++) {
+        wrenSetSlotDouble(vm, 1, data[i]);
+        wrenInsertInList(vm, 0, -1, 1);
+    }
+}
+
+void wren_Mat4ToString(WrenVM* vm)
+{
+    WrenMat4* mat = static_cast<WrenMat4*>(wrenGetSlotForeign(vm, 0));
+    
+    std::ostringstream oss;
+    oss << std::fixed << std::setprecision(2);
+    oss << "Mat4[\n";
+    for (int row = 0; row < 4; row++) {
+        oss << "  [";
+        for (int col = 0; col < 4; col++) {
+            oss << std::setw(8) << mat->value[col][row];
+            if (col < 3) oss << ", ";
+        }
+        oss << "]\n";
+    }
+    oss << "]";
+    
+    wrenSetSlotString(vm, 0, oss.str().c_str());
+}
+
+// Register Mat4 foreign class
+WREN_FOREIGN_CLASS("math", "Mat4", wren_Mat4Allocate, wren_Mat4Finalize, "Matix 4 class wrapping glm::mat4");
+
+// Register constructors
+WREN_CONSTRUCTOR_DOC("math", "Mat4", wren_Mat4Allocate, "Create identity Matix 4", );
+
+// Register instance methods
+WREN_CLASS_METHOD("math", "Mat4", "*(_)", wren_Mat4Multiply, "Multiply matix's");
+WREN_CLASS_METHOD("math", "Mat4", "translate(_)", wren_Mat4Translate, "Translate matix");
+WREN_CLASS_METHOD("math", "Mat4", "rotate(_,_)", wren_Mat4Rotate, "Rotate matix");
+WREN_CLASS_METHOD("math", "Mat4", "scale(_,_)", wren_Mat4Scale, "Scale matix");
+WREN_CLASS_METHOD("math", "Mat4", "get(_,_)", wren_Mat4Get, "Get matix element");
+WREN_CLASS_METHOD("math", "Mat4", "set(_,_)", wren_Mat4Set, "Set matix element");
+WREN_CLASS_METHOD("math", "Mat4", "determinant()", wren_Mat4Determinant, "Get matrix Determinant");
+WREN_CLASS_METHOD("math", "Mat4", "inverse()", wren_Mat4Inverse, "Get matrix Inverse");
+WREN_CLASS_METHOD("math", "Mat4", "transpose()", wren_Mat4Transpose, "Get matrix transpose");
+WREN_CLASS_METHOD("math", "Mat4", "toList()", wren_Mat4ToList, "Get matrix as list");
+WREN_CLASS_METHOD("math", "Mat4", "toString()", wren_Mat4ToString, "Convert to string");
+
+// Register static methods
+WREN_CLASS_STATIC("math", "Mat4", "identity()", wren_Mat4Identity, "Create identity Matix 4");
+WREN_CLASS_STATIC("math", "Mat4", "perspective(_,_,_,_)", wren_Mat4Perspective, "Dot product");
+WREN_CLASS_STATIC("math", "Mat4", "ortho(_,_,_,_,_,_)", wren_Mat4Ortho, "Create identity quaternion");
+WREN_CLASS_STATIC("math", "Mat4", "lookAt(_,_,_)", wren_Mat4LookAt, "Create quaternion from axis and angle");

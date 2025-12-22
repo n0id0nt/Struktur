@@ -40,5 +40,24 @@ void wren_ApplicationSetApplicationName(WrenVM* vm)
 	// this can be called before there is a window so need to handle that case as well
 }
 
-WREN_CLASS_STATIC("game", "Application", "setWindowSize(_,_)", wren_ApplicationSetWindowSize, "Change the size of the game window.");
-WREN_CLASS_STATIC("game", "Application", "setApplicationName(_)", wren_ApplicationSetApplicationName, "Changes the name of the game window.");
+WREN_CLASS_STATIC("app", "Application", "setWindowSize(_,_)", wren_ApplicationSetWindowSize, "Change the size of the game window.");
+WREN_CLASS_STATIC("app", "Application", "setApplicationName(_)", wren_ApplicationSetApplicationName, "Changes the name of the game window.");
+
+// ============================================================================
+// INVENTORY BINDINGS
+// ============================================================================
+
+// Inventory.contains(item) -> bool
+void wren_InventoryContains(WrenVM* vm)
+{
+	Struktur::GameContext* context = static_cast<Struktur::GameContext*>(wrenGetUserData(vm));
+	auto& inventory = context->GetInventory();
+
+	const char* itemName = wrenGetSlotString(vm, 1);
+
+	bool containsItem = std::find(inventory.begin(), inventory.end(), itemName) != inventory.end();
+
+	wrenSetSlotBool(vm, 0, containsItem);
+}
+
+WREN_CLASS_STATIC("app", "Inventory", "contains(_)", wren_InventoryContains, "Check if an item is contained in the inventorty.");

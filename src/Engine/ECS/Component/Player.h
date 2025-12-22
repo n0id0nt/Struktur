@@ -11,11 +11,5 @@ namespace Struktur
             float speed;
             glm::vec2 facing;
         };
-
-        struct Interactable
-        {
-            std::string interactionId;
-            bool canBeReturned;
-        };
     }
 }

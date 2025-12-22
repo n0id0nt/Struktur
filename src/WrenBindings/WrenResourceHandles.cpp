@@ -25,7 +25,7 @@ void wren_TextureFinalize(void* data)
 // Texture.load(path) -> TextureHandle
 void wren_TextureLoad(WrenVM* vm)
 {
-	Struktur::resourceManagerContext* context = static_cast<Struktur::resourceManagerContext*>(wrenGetUserData(vm));
+	Struktur::GameContext* context = static_cast<Struktur::GameContext*>(wrenGetUserData(vm));
 	auto& resourceManager = context->GetResourceManager();
 
 	const char* path = wrenGetSlotString(vm, 1);
@@ -145,7 +145,7 @@ void wren_FontFinalize(void* data)
 // Font.load(path) -> FontHandle
 void wren_FontLoad(WrenVM* vm)
 {
-	Struktur::resourceManagerContext* context = static_cast<Struktur::resourceManagerContext*>(wrenGetUserData(vm));
+	Struktur::GameContext* context = static_cast<Struktur::GameContext*>(wrenGetUserData(vm));
 	auto& resourceManager = context->GetResourceManager();
 
 	const char* path = wrenGetSlotString(vm, 1);
@@ -250,7 +250,7 @@ void wren_MusicFinalize(void* data)
 // Music.load(path) -> MusicHandle
 void wren_MusicLoad(WrenVM* vm)
 {
-	Struktur::resourceManagerContext* context = static_cast<Struktur::resourceManagerContext*>(wrenGetUserData(vm));
+	Struktur::GameContext* context = static_cast<Struktur::GameContext*>(wrenGetUserData(vm));
 	auto& resourceManager = context->GetResourceManager();
 
 	const char* path = wrenGetSlotString(vm, 1);
@@ -338,7 +338,7 @@ void wren_SoundFinalize(void* data)
 // Sound.load(path) -> SoundHandle
 void wren_SoundLoad(WrenVM* vm)
 {
-	Struktur::resourceManagerContext* context = static_cast<Struktur::resourceManagerContext*>(wrenGetUserData(vm));
+	Struktur::GameContext* context = static_cast<Struktur::GameContext*>(wrenGetUserData(vm));
 	auto& resourceManager = context->GetResourceManager();
 
 	const char* path = wrenGetSlotString(vm, 1);

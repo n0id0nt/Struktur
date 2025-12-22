@@ -10,6 +10,7 @@
 #include "Engine/ECS/Component/Camera.h"
 #include "Engine/ECS/Component/PhysicsBody.h"
 #include "Engine/ECS/Component/Level.h"
+#include "Engine/ECS/Component/World.h"
 #include "Engine/ECS/Component/WrenScript.h"
 
 #include "Engine/ECS/System/TransformSystem.h"
@@ -49,7 +50,7 @@ entt::entity Struktur::GameResource::Level::LoadLevelEntities(GameContext& conte
 	if (!worldComponent)
 	{
 		BREAK_MSG("Entity provided does not contain a World Component");
-		return entt::entity();
+		return entt::null;
 	}
 
 	FileLoading::LevelParser::Level levelToLoad = worldComponent->worldMap.levels[levelIndex];
