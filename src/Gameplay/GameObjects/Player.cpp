@@ -151,26 +151,5 @@ void Struktur::Player::PlayerControl(GameContext &context, entt::entity entity, 
 
 entt::entity Struktur::Player::CanInteract(GameContext &context, entt::entity entity)
 {
-    entt::registry& registry = context.GetRegistry();
-    glm::vec3& playerWorldPosition = registry.get<Component::WorldTransform>(entity).position;
-    entt::entity closestEntity = entt::null;
-    float closestDistance = std::numeric_limits<float>::infinity();
-
-    auto view = registry.view<Component::Interactable, Component::WorldTransform>();
-    for (auto& interactableEntity : view)
-    {
-        glm::vec3& interactableWorldPosition = registry.get<Component::WorldTransform>(interactableEntity).position;
-        float distance = glm::distance(interactableWorldPosition, playerWorldPosition);
-        if (distance < closestDistance)
-        {
-            closestDistance = distance;
-            closestEntity = interactableEntity;
-        }
-    }
-    if (closestDistance < INTERACTABLE_DISTANCE)
-    {
-        return closestEntity;
-    }
-
     return entt::null;
 }

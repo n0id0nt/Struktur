@@ -22,6 +22,7 @@
 #include "Engine/ECS/Component/PhysicsBody.h"
 #include "Engine/ECS/Component/Sprite.h"
 #include "Engine/ECS/Component/SpriteAnimation.h"
+#include "Engine/ECS/Component/World.h"
 
 #include "Engine/UI/UILabel.h"
 #include "Engine/UI/UIPanel.h"
@@ -32,7 +33,6 @@
 #include "Gameplay/GameplayStates/GameOverState.h"
 
 #include "GamePlay/GameObjects/Player.h"
-#include "GamePlay/GameObjects/Door.h"
 
 constexpr static const char* TILE_TEXTURE = "assets/Tiles/cavesofgallet_tiles.png";
 constexpr static const char* PLAYER_TEXTURE = "assets/Tiles/PlayerGrowthSprites.png";

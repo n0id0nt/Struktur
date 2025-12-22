@@ -86,8 +86,6 @@ namespace Struktur
                 Resource::ResourcePtr<Resource::TextureResource> texture = resourceManager.GetTexture("assets/Tiles/Items.png");
                 registry.emplace<Component::Sprite>(entity, texture, color, glm::vec2(32, 48), 9, 2, false, itemData.spriteIndex, 1);
             }
-
-            registry.emplace<Component::Interactable>(entity, name, canBeReturned);
         }
     }
 }

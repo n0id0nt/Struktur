@@ -386,23 +386,23 @@ namespace Struktur
                 m_continueDialogueLabel->SetVisible(false);
 
                 // Set State variables
-                Component::Interactable interactable = registry.get<Component::Interactable>(m_interactingEntity);
-
-                m_interaction = s_interactionMap[interactable.interactionId];
-
-                ASSERT_MSG(m_interaction.dialougeVector.size() > 0, std::format("No interaction set up for {}", interactable.interactionId).c_str());
-
-                int interactionStep = 0;
-                while (!TrySetInteractionStep(context, interactionStep))
-                {
-                    interactionStep++;
-                    if (interactionStep == m_interaction.dialougeVector.size())
-                    {
-                        BREAK_MSG("No valid interaction steps for this interaction");
-                        stateManager.ChangeState(context, std::unique_ptr<GameResource::IState>(nullptr));
-                        return;
-                    }
-                }
+                //Component::Identifier interactable = registry.get<Component::Identifier>(m_interactingEntity);
+//
+                //m_interaction = s_interactionMap[interactable.type];
+//
+                //ASSERT_MSG(m_interaction.dialougeVector.size() > 0, std::format("No interaction set up for {}", interactable.type).c_str());
+//
+                //int interactionStep = 0;
+                //while (!TrySetInteractionStep(context, interactionStep))
+                //{
+                //    interactionStep++;
+                //    if (interactionStep == m_interaction.dialougeVector.size())
+                //    {
+                //        BREAK_MSG("No valid interaction steps for this interaction");
+                //        stateManager.ChangeState(context, std::unique_ptr<GameResource::IState>(nullptr));
+                //        return;
+                //    }
+                //}
             }
 
             void Update(GameContext& context, GameResource::StateManager& stateManager) override
@@ -508,38 +508,38 @@ namespace Struktur
                 if (step.deleteInteractingEntity)
                 {
                     entt::registry& registry = context.GetRegistry();
-                    auto& interactableComponent = registry.get<Component::Interactable>(m_interactingEntity);
-                    if (interactableComponent.canBeReturned)
-                    {
-                        // TODO Change the items sprite (Toggle the sprite index)
-                        std::string& interactionId = interactableComponent.interactionId;
-                        const std::string suffix = " Return";
-                        auto* spriteComponent = registry.try_get<Component::Sprite>(m_interactingEntity);
-                        // Check if string ends with " returns"
-                        if (interactionId.length() >= suffix.length() && 
-                            interactionId.substr(interactionId.length() - suffix.length()) == suffix)
-                        {
-                            // Remove the suffix
-                            interactionId = interactionId.substr(0, interactionId.length() - suffix.length());
-                            if (spriteComponent)
-                            {
-                                spriteComponent->color = WHITE;
-                            }
-                        }
-                        else
-                        {
-                            // Add the suffix
-                            interactionId = interactionId + suffix;
-                            if (spriteComponent)
-                            {
-                                spriteComponent->color = ::Color{0,0,0,100};;
-                            }
-                        }
-                    }
-                    else
-                    {
-                        gameObjectManager.DestroyGameObject(context, m_interactingEntity);
-                    }                    
+                    //auto& interactableComponent = registry.get<Component::Identifier>(m_interactingEntity);
+                    //if (false)
+                    //{
+                    //    // TODO Change the items sprite (Toggle the sprite index)
+                    //    std::string& interactionId = interactableComponent.type;
+                    //    const std::string suffix = " Return";
+                    //    auto* spriteComponent = registry.try_get<Component::Sprite>(m_interactingEntity);
+                    //    // Check if string ends with " returns"
+                    //    if (interactionId.length() >= suffix.length() && 
+                    //        interactionId.substr(interactionId.length() - suffix.length()) == suffix)
+                    //    {
+                    //        // Remove the suffix
+                    //        interactionId = interactionId.substr(0, interactionId.length() - suffix.length());
+                    //        if (spriteComponent)
+                    //        {
+                    //            spriteComponent->color = WHITE;
+                    //        }
+                    //    }
+                    //    else
+                    //    {
+                    //        // Add the suffix
+                    //        interactionId = interactionId + suffix;
+                    //        if (spriteComponent)
+                    //        {
+                    //            spriteComponent->color = ::Color{0,0,0,100};;
+                    //        }
+                    //    }
+                    //}
+                    //else
+                    //{
+                    //    gameObjectManager.DestroyGameObject(context, m_interactingEntity);
+                    //}                    
                 }
 
                 if (step.applyCameraShake)

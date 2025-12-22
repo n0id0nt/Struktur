@@ -55,7 +55,6 @@ namespace Struktur
             const NPCData& npcData = s_spriteDataMap[name];
             auto& worldTransform = registry.get<Component::WorldTransform>(entity);
             registry.emplace<Component::Sprite>(entity, texture, WHITE, glm::vec2(npcData.xOffset, npcData.yOffset), 9, 1, false, npcData.spriteIndex, (int)worldTransform.position.y);
-            registry.emplace<Component::Interactable>(entity, name);
             b2BodyDef kinematicBodyDef;
             kinematicBodyDef.type = b2_staticBody;
             b2CircleShape playerShape;

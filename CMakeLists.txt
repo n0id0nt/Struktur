@@ -202,7 +202,7 @@ if (NOT raylib_FOUND)
             ${wren_SOURCE_DIR}/src/include
             ${wren_SOURCE_DIR}/src/vm
             ${wren_SOURCE_DIR}/src/optional
-            ${CMAKE_CURRENT_SOURCE_DIR}/Wren/CustomModules 
+            ${CMAKE_CURRENT_SOURCE_DIR}/WrenExtensions/Modules 
         )
 
         target_include_directories(wren PRIVATE
@@ -283,6 +283,20 @@ if(EDITOR)
     )
 endif()
 
+# Wren Scripting: Use source assets directly
+set(WREN_BINDING_SOURCES 
+    src/WrenBindings/ComponentListXMacro.h
+    src/WrenBindings/WrenAnimation.h            src/WrenBindings/WrenAnimation.cpp
+    src/WrenBindings/WrenGameObjectComponents.h src/WrenBindings/WrenGameObjectComponents.cpp
+    src/WrenBindings/WrenMath.h                 src/WrenBindings/WrenMath.cpp
+    src/WrenBindings/WrenPhysics.h              src/WrenBindings/WrenPhysics.cpp
+    src/WrenBindings/WrenResourceHandles.h      src/WrenBindings/WrenResourceHandles.cpp
+    src/WrenBindings/WrenUI.h                   src/WrenBindings/WrenUI.cpp
+                                                src/WrenBindings/WrenApplication.cpp
+                                                src/WrenBindings/WrenGameObject.cpp
+                                                src/WrenBindings/WrenInput.cpp
+)
+
 # Source files
 set(SOURCES
     src/Main.cpp
@@ -353,17 +367,9 @@ set(SOURCES
 
     src/Engine/Util/Noise.h                     src/Engine/Util/Noise.cpp
 
-    src/Gameplay/GameplayStates/GameWorldState.h
-    src/Gameplay/GameplayStates/InteractState.h
-    src/Gameplay/GameplayStates/InventoryState.h
-    src/Gameplay/GameplayStates/GameOverState.h
-
-    src/Gameplay/GameObjects/Player.h           src/Gameplay/GameObjects/Player.cpp
-    src/Gameplay/GameObjects/NPC.h
-    src/Gameplay/GameObjects/Item.h
-
     src/Debug/Assertions.h
 
+    ${WREN_BINDING_SOURCES}
     ${DEBUG_SOURCES}
     ${EDITOR_SOURCES}
 )

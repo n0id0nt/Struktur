@@ -58,7 +58,7 @@
         double entityId = wrenGetSlotDouble(vm, 1);                                                                                     \
         entt::entity entity = static_cast<entt::entity>(entityId);                                                                      \
         Struktur::Component::component_name* component = registry.try_get<Struktur::Component::component_name>(entity);                 \
-        if (value)                                                                                                                      \
+        if (component)                                                                                                                      \
         {                                                                                                                               \
             wrenGetVariable(vm, "gameObjectComponents", component_name_string, 1);                                                      \
             Wren##component_name* wrenComponent = (Wren##component_name*)wrenSetSlotNewForeign(vm, 0, 1, sizeof(Wren##component_name)); \
@@ -596,31 +596,6 @@ void wren_SpriteAnimationCreate(WrenVM* vm)
 	new (spriteAnimation) WrenSpriteAnimation(entity, &spriteAnimationComponent);
 }
 
-// SpriteAnimation.get(entity) -> gameObjectComponents or null
-void wren_SpriteAnimationGet(WrenVM* vm)
-{
-	Struktur::GameContext* context = static_cast<Struktur::GameContext*>(wrenGetUserData(vm));
-	entt::registry& registry = context->GetRegistry();
-
-	double entityId = wrenGetSlotDouble(vm, 1);
-	entt::entity entity = static_cast<entt::entity>(entityId);
-
-	auto* spriteAnimationComponent = registry.try_get<Struktur::Component::SpriteAnimation>(entity);
-
-	if (spriteAnimationComponent)
-	{
-		wrenGetVariable(vm, "gameObjectComponents", "SpriteAnimation", 1);  // Get class into slot 1
-		WrenSpriteAnimation* spriteAnimation = (WrenSpriteAnimation*)wrenSetSlotNewForeign(vm, 0, 1, sizeof(WrenSpriteAnimation));
-
-		// SpriteAnimation.new() - identity
-		new (spriteAnimation) WrenSpriteAnimation(entity, spriteAnimationComponent);
-	}
-	else
-	{
-		wrenSetSlotNull(vm, 0);
-	}
-}
-
 // SpriteAnimation.addAnimation(animationKey, animationDefinition)
 void wren_SpriteAnimationAddAnimation(WrenVM* vm)
 {
@@ -743,7 +718,7 @@ void wren_SpriteGetColor(WrenVM* vm)
 	WrenSprite* sprite = (WrenSprite*)wrenGetSlotForeign(vm, 0);
     wrenGetVariable(vm, "gameObjectComponents", "Sprite", 1);  // Get class into slot 1
 	WrenVec4* color = (WrenVec4*)wrenSetSlotNewForeign(vm, 0, 1, sizeof(WrenVec4));
-    glm::vec4 glmColor(sprite->component->color.r, sprite->component->color.g, sprite->component->color.b, sprite->component->color.a);
+    glm::vec4 glmColor((float)sprite->component->color.r, (float)sprite->component->color.g, (float)sprite->component->color.b, (float)sprite->component->color.a);
     new (color) WrenVec4(glmColor);
 }
 
@@ -751,7 +726,7 @@ void wren_SpriteSetColor(WrenVM* vm)
 {
     WrenSprite* sprite = (WrenSprite*)wrenGetSlotForeign(vm, 0);
 	WrenVec4* color = (WrenVec4*)wrenGetSlotForeign(vm, 1);
-    ::Color rayColor{color->value.r, color->value.g, color->value.b, color->value.a};
+    ::Color rayColor{(unsigned char)color->value.r, (unsigned char)color->value.g, (unsigned char)color->value.b, (unsigned char)color->value.a};
     sprite->component->color = rayColor;
 }
 
@@ -1225,7 +1200,7 @@ void wren_LocalTransformStaticSetMatrix(WrenVM* vm)
 }
 
 // Register BodyDefinition foreign class
-WREN_FOREIGN_CLASS("gameObjectComponents", "LocalTransform", wren_SpriteAllocate, wren_SpriteFinalize, "Sprite animation class wraps SpriteAnimation component");
+WREN_FOREIGN_CLASS("gameObjectComponents", "LocalTransform", wren_LocalTransformAllocate, wren_LocalTransformFinalize, "Sprite animation class wraps SpriteAnimation component");
 
 // Register methods
 WREN_CLASS_METHOD("gameObjectComponents", "LocalTransform", "position", wren_LocalTransformGetPosition, "Sets the sprites texture");
@@ -1561,7 +1536,7 @@ void wren_WorldTransformStaticSetMatrix(WrenVM* vm)
 }
 
 // Register BodyDefinition foreign class
-WREN_FOREIGN_CLASS("gameObjectComponents", "WorldTransform", wren_SpriteAllocate, wren_SpriteFinalize, "Sprite animation class wraps SpriteAnimation component");
+WREN_FOREIGN_CLASS("gameObjectComponents", "WorldTransform", wren_WorldTransformAllocate, wren_WorldTransformFinalize, "Sprite animation class wraps SpriteAnimation component");
 
 // Register methods
 WREN_CLASS_METHOD("gameObjectComponents", "WorldTransform", "position", wren_WorldTransformGetPosition, "Sets the sprites texture");

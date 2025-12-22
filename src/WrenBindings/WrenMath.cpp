@@ -3,15 +3,12 @@
 #include <limits>
 #define _USE_MATH_DEFINES
 #include <math.h>
-#define GLM_ENABLE_EXPERIMENTAL
-#include <glm/gtx/norm.hpp>
-#include "wren.hpp"
+#include <glm/gtc/type_ptr.hpp>
+#include <wren.hpp>
+#include <iomanip>
 
 #include "Engine/Scripting/WrenBindingRegistry.h"
 #include "Debug/Assertions.h"
-#include <type_ptr.hpp>
-#include <iomanip>
-
 // ============================================================================
 // Math utialaty functions
 // ============================================================================

@@ -46,8 +46,6 @@
 #include "rlImGui.h"
 #endif
 
-#include "Gameplay/GameplayStates/GameWorldState.h"
-
 #ifdef EDITOR
 #define SPLASHSCREENFONT "assets/Fonts/medieval_sharp/MedievalSharp-Bold.ttf_120"
 #define SPLASHSCREENTEXT "STRUKTUR"

@@ -1,11 +1,21 @@
-#include "WrenGameObject.h"
-
 #include "wren.hpp"
 
 #include "Engine/Scripting/WrenBindingRegistry.h"
 #include "Engine/GameContext.h"
 
 #include "ComponentListXMacro.h"
+
+#include "Engine/ECS/Component/Camera.h"
+#include "Engine/ECS/Component/Level.h"
+#include "Engine/ECS/Component/World.h"
+#include "Engine/ECS/Component/PhysicsBody.h"
+#include "Engine/ECS/Component/Shader.h"
+#include "Engine/ECS/Component/Sprite.h"
+#include "Engine/ECS/Component/WrenScript.h"
+#include "Engine/ECS/Component/SpriteAnimation.h"
+#include "Engine/ECS/Component/TileMap.h"
+#include "Engine/ECS/Component/Transform.h"
+#include "Engine/ECS/Component/Identifier.h"
 
 // ============================================================================
 // GAME OBJECT MANAGER BINDINGS
@@ -62,14 +72,14 @@ void wren_GameObjecthasComponent(WrenVM* vm)
     
 	const char* componentName = wrenGetSlotString(vm, 2);
 	bool hasComponent = false;
-    #define COMPONENT(component_name, component_name_string) 										\
+#define COMPONENT(component_name, component_name_string) 										\
 	if (strcmp(componentName, component_name_string) == 0) 						                \
 	{																		                    \
         auto* componentValue = registry.try_get<Struktur::Component::component_name>(entity);   \
         hasComponent = componentValue != nullptr;										        \
     } else
 	COMPONENT_LIST
-    #undef COMPONENT
+#undef COMPONENT
     // need to handle last else statement
 	{
         DEBUG_ERROR("%s is not a valid component type", componentName);
@@ -89,7 +99,7 @@ void wren_GameObjectGetAllWithComponent(WrenVM* vm)
     
 	int index = 0;
     
-    #define COMPONENT(component_name, component_name_string) 					\
+#define COMPONENT(component_name, component_name_string) 					\
 	if (strcmp(componentName, #component_name_string) == 0) 				\
 	{																		\
         auto view = registry.view<Struktur::Component::component_name>();	\
@@ -101,7 +111,7 @@ void wren_GameObjectGetAllWithComponent(WrenVM* vm)
         }																	\
     } else
 	COMPONENT_LIST
-    #undef COMPONENT
+#undef COMPONENT
     // need to handle last else statement
 	{
         DEBUG_ERROR("%s is not a valid component type", componentName);
