@@ -49,7 +49,7 @@ bool WrenScriptSystem::InitialiseScript(GameContext& context, entt::entity entit
     script.classHandle = wrenGetSlotHandle(vm, 0);
     
     // Instantiate the class
-    int numberOfSlots = script.constructorArgs.empty() ? 2 : 3;
+    int numberOfSlots = script.constructorArgs.empty() ? 2 : 5;
     wrenEnsureSlots(vm, numberOfSlots);
     wrenSetSlotHandle(vm, 0, script.classHandle);
     
@@ -61,7 +61,32 @@ bool WrenScriptSystem::InitialiseScript(GameContext& context, entt::entity entit
     if (!script.constructorArgs.empty())
     {
         // If constructor args exist, create signature with 2 params
-        wrenSetSlotString(vm, 2, script.constructorArgs.c_str());
+        wrenSetSlotNewMap(vm, 2);
+        for (const auto& arg : script.constructorArgs)
+        {
+            wrenSetSlotString(vm, 3, arg.identifier.c_str());
+            switch (arg.type)
+            {
+            case WrenType::WREN_TYPE_NUM:
+                wrenSetSlotDouble(vm, 4, std::any_cast<double>(arg.value));
+                break;
+
+            case WrenType::WREN_TYPE_BOOL:
+                wrenSetSlotBool(vm, 4, std::any_cast<bool>(arg.value));
+                break;
+
+            case WrenType::WREN_TYPE_STRING:
+                wrenSetSlotString(vm, 4, std::any_cast<std::string>(arg.value).c_str());
+                break;
+
+            default:
+                wrenSetSlotNull(vm, 4);
+                break;
+            }
+
+            // Append to the list
+            wrenSetMapValue(vm, 2, 3, 4);
+        }
         constructMethod = wrenMakeCallHandle(vm, "new(_,_)");
     }
     else

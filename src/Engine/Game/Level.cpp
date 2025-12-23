@@ -1,5 +1,7 @@
 #include "Level.h"
 
+#include <format>
+
 #include "Engine/GameContext.h"
 
 #include "Engine/ECS/Component/Transform.h"
@@ -16,6 +18,7 @@
 #include "Engine/ECS/System/TransformSystem.h"
 #include "Engine/ECS/System/PhysicsSystem.h"
 #include "Engine/ECS/System/AnimationSystem.h"
+#include "Engine/ECS/System/WrenScriptSystem.h"
 
 #include "Engine/FileLoading/LevelParser.h"
 #include "Engine/Physics/CollisionShapeGenerators/TileMapCollisionBodyGenerator.h"
@@ -100,7 +103,86 @@ entt::entity Struktur::GameResource::Level::LoadLevelEntities(GameContext& conte
 
 				std::string identifier = entityInstance.identifier;
 
-				//Component::WrenScript& scriptComponent = registry.emplace<Component::WrenScript>(layerInstaceEntity, std::format("Assets/Scripts/GameObjects/{}.wren", identifier), identifier);
+				// convert fieldInstances to wren map
+				std::vector<Wren::Item> wrenArgMap;
+				for (auto field : entityInstance.fieldInstances)
+				{
+					Wren::Item item { field.identifier };
+					switch (field.type)
+					{
+					case Struktur::FileLoading::LevelParser::FieldInstanceType::INTEGER:
+						item.type = WrenType::WREN_TYPE_NUM;
+						item.value = static_cast<double>(std::any_cast<int>(field.value));
+						break;
+						
+					case Struktur::FileLoading::LevelParser::FieldInstanceType::FLOAT:
+						item.type = WrenType::WREN_TYPE_NUM;
+						item.value = static_cast<double>(std::any_cast<float>(field.value));
+						break;
+						
+					case Struktur::FileLoading::LevelParser::FieldInstanceType::BOOLEAN:
+						item.type = WrenType::WREN_TYPE_BOOL;
+						item.value = field.value;
+						break;
+						
+					case Struktur::FileLoading::LevelParser::FieldInstanceType::STRING:
+					case Struktur::FileLoading::LevelParser::FieldInstanceType::MULTILINE:
+					case Struktur::FileLoading::LevelParser::FieldInstanceType::FILE_PATH:
+					case Struktur::FileLoading::LevelParser::FieldInstanceType::ENUM:
+						item.type = WrenType::WREN_TYPE_STRING;
+						item.value = field.value;
+						break;
+						
+					case Struktur::FileLoading::LevelParser::FieldInstanceType::COLOUR:
+					{
+						item.type = WrenType::WREN_TYPE_LIST;
+						auto color = std::any_cast<Color>(field.value);
+						// Create nested list [r, g, b, a]
+						std::vector<Wren::Item>	colorList;
+						Wren::Item r {"r", static_cast<double>(color.r), WrenType::WREN_TYPE_NUM};
+						colorList.emplace_back(r);
+						Wren::Item g {"g", static_cast<double>(color.g), WrenType::WREN_TYPE_NUM};
+						colorList.emplace_back(g);
+						Wren::Item b {"b", static_cast<double>(color.b), WrenType::WREN_TYPE_NUM};
+						colorList.emplace_back(b);
+						Wren::Item a {"a", static_cast<double>(color.a), WrenType::WREN_TYPE_NUM};
+						colorList.emplace_back(a);
+
+						item.value = colorList;
+						break;
+					}
+					
+					case Struktur::FileLoading::LevelParser::FieldInstanceType::POINT:
+					{
+						item.type = WrenType::WREN_TYPE_LIST;
+						auto point = std::any_cast<glm::vec2>(field.value);
+						// Create nested list [x, y]
+						std::vector<Wren::Item>	colorList;
+						Wren::Item x {"x", static_cast<double>(point.x), WrenType::WREN_TYPE_NUM};
+						colorList.emplace_back(x);
+						Wren::Item y {"y", static_cast<double>(point.y), WrenType::WREN_TYPE_NUM};
+						colorList.emplace_back(y);
+
+						item.value = colorList;
+						break;
+					}
+					
+					case Struktur::FileLoading::LevelParser::FieldInstanceType::TILE:
+					case Struktur::FileLoading::LevelParser::FieldInstanceType::ENTITY_REF:
+						item.type = WrenType::WREN_TYPE_STRING;
+						item.value = field.value;
+						break;
+						
+					default:
+						item.type = WrenType::WREN_TYPE_NULL;
+						item.value = 0;
+						break;
+					}
+					wrenArgMap.emplace_back(item);
+				}
+				Component::WrenScript& scriptComponent = registry.emplace<Component::WrenScript>(layerInstaceEntity, std::format("Assets/Scripts/GameObjects/{}.wren", identifier), identifier, wrenArgMap);
+				continue;
+				// below is for future reference
 				if (entityInstance.identifier == "NPC")
 				{
 					std::string name;

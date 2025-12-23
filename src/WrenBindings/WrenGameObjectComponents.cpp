@@ -1593,9 +1593,12 @@ void wren_ScriptCreateArg(WrenVM* vm)
 	entt::entity levelEntity = static_cast<entt::entity>(wrenGetSlotDouble(vm, 1));
 	const char* scriptPath = wrenGetSlotString(vm, 2);
 	const char* className = wrenGetSlotString(vm, 3);
+	//TODO should get args as map here
 	const char* args = wrenGetSlotString(vm, 4);
+	std::vector<Struktur::Wren::Item> wrenArgs;
+	Struktur::Wren::Item arg1{ "1", std::string(args), WrenType::WREN_TYPE_STRING };
 
-	auto& script = registry.emplace<Struktur::Component::WrenScript>(levelEntity, scriptPath, className, args);
+	auto& script = registry.emplace<Struktur::Component::WrenScript>(levelEntity, scriptPath, className, wrenArgs);
 
 	// Initialise the script
 
