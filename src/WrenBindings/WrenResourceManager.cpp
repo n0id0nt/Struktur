@@ -1,4 +1,4 @@
-#include "WrenResourceHandles.h"
+#include "WrenResourceManager.h"
 
 #include "wren.hpp"
 
@@ -44,6 +44,13 @@ void wren_TextureLoad(WrenVM* vm)
 	wrenGetVariable(vm, "resourceManager", "Texture", 1);  // Get class into slot 1
 	WrenTextureHandle* handle = (WrenTextureHandle*)wrenSetSlotNewForeign(vm, 0, 1, sizeof(WrenTextureHandle));
 	new (handle) WrenTextureHandle(texture);
+}
+
+// Texture.unload()
+void wren_TextureUnload(WrenVM* vm)
+{
+	WrenTextureHandle* handle = (WrenTextureHandle*)wrenGetSlotForeign(vm, 0);
+	handle->resource = Struktur::Resource::ResourcePtr<Struktur::Resource::TextureResource>();
 }
 
 // texture.isValid -> Bool
@@ -119,6 +126,7 @@ void wren_TextureToString(WrenVM* vm)
 WREN_FOREIGN_CLASS("resourceManager", "Texture", wren_TextureAllocate, wren_TextureFinalize, "Texture resource handle");
 
 WREN_CLASS_STATIC("resourceManager", "Texture", "load(_)", wren_TextureLoad, "Load texture from path");
+WREN_CLASS_METHOD("resourceManager", "Texture", "unload()", wren_TextureUnload, "Unload texture from path. Manually unload reference because even though wren's garbage collector will do it, it will happen at an unknown time.");
 WREN_CLASS_METHOD("resourceManager", "Texture", "isValid()", wren_TextureIsValid, "Check if texture is valid");
 WREN_CLASS_METHOD("resourceManager", "Texture", "path", wren_TextureGetPath, "Get texture path");
 WREN_CLASS_METHOD("resourceManager", "Texture", "width", wren_TextureGetWidth, "Get texture width");
@@ -164,6 +172,13 @@ void wren_FontLoad(WrenVM* vm)
 	wrenGetVariable(vm, "resourceManager", "Font", 1);  // Get class into slot 1
 	WrenFontHandle* handle = (WrenFontHandle*)wrenSetSlotNewForeign(vm, 0, 1, sizeof(WrenFontHandle));
 	new (handle) WrenFontHandle(texture);
+}
+
+// Font.unload()
+void wren_FontUnload(WrenVM* vm)
+{
+	WrenFontHandle* handle = (WrenFontHandle*)wrenGetSlotForeign(vm, 0);
+	handle->resource = Struktur::Resource::ResourcePtr<Struktur::Resource::FontResource>();
 }
 
 // font.isValid -> Bool
@@ -224,6 +239,7 @@ void wren_FontToString(WrenVM* vm)
 WREN_FOREIGN_CLASS("resourceManager", "Font", wren_FontAllocate, wren_FontFinalize, "Font resource handle");
 
 WREN_CLASS_STATIC("resourceManager", "Font", "load(_)", wren_FontLoad, "Load font from path");
+WREN_CLASS_METHOD("resourceManager", "Font", "unload()", wren_FontUnload, "Unload font from path. Manually unload reference because even though wren's garbage collector will do it, it will happen at an unknown time.");
 WREN_CLASS_METHOD("resourceManager", "Font", "isValid()", wren_FontIsValid, "Check if font is valid");
 WREN_CLASS_METHOD("resourceManager", "Font", "path", wren_FontGetPath, "Get font path");
 WREN_CLASS_METHOD("resourceManager", "Font", "size", wren_FontGetSize, "Get font size");
@@ -271,6 +287,14 @@ void wren_MusicLoad(WrenVM* vm)
 	new (handle) WrenMusicHandle(music);
 }
 
+
+// Music.unload()
+void wren_MusicUnload(WrenVM* vm)
+{
+	WrenMusicHandle* handle = (WrenMusicHandle*)wrenGetSlotForeign(vm, 0);
+	handle->resource = Struktur::Resource::ResourcePtr<Struktur::Resource::MusicResource>();
+}
+
 // Music.isValid -> Bool
 void wren_MusicIsValid(WrenVM* vm)
 {
@@ -314,6 +338,7 @@ void wren_MusicToString(WrenVM* vm)
 WREN_FOREIGN_CLASS("resourceManager", "Music", wren_MusicAllocate, wren_FontFinalize, "Font resource handle");
 
 WREN_CLASS_STATIC("resourceManager", "Music", "load(_)", wren_MusicLoad, "Load music from path");
+WREN_CLASS_METHOD("resourceManager", "Music", "unload()", wren_MusicUnload, "Unload music from path. Manually unload reference because even though wren's garbage collector will do it, it will happen at an unknown time.");
 WREN_CLASS_METHOD("resourceManager", "Music", "isValid()", wren_MusicIsValid, "Check if music is valid");
 WREN_CLASS_METHOD("resourceManager", "Music", "path", wren_MusicGetPath, "Get music path");
 WREN_CLASS_METHOD("resourceManager", "Music", "toString()", wren_MusicToString, "Convert to string");
@@ -356,6 +381,13 @@ void wren_SoundLoad(WrenVM* vm)
 	// Create foreign object with resource pointer
 	WrenSoundHandle* handle = (WrenSoundHandle*)wrenSetSlotNewForeign(vm, 0, 0, sizeof(WrenSoundHandle));
 	new (handle) WrenSoundHandle(sound);
+}
+
+// Sound.unload()
+void wren_SoundUnload(WrenVM* vm)
+{
+	WrenSoundHandle* handle = (WrenSoundHandle*)wrenGetSlotForeign(vm, 0);
+	handle->resource = Struktur::Resource::ResourcePtr<Struktur::Resource::SoundResource>();
 }
 
 // Sound.isValid -> Bool
@@ -401,6 +433,7 @@ void wren_SoundToString(WrenVM* vm)
 WREN_FOREIGN_CLASS("resourceManager", "Sound", wren_SoundAllocate, wren_FontFinalize, "Font resource handle");
 
 WREN_CLASS_STATIC("resourceManager", "Sound", "load(_)", wren_SoundLoad, "Load sound from path");
+WREN_CLASS_METHOD("resourceManager", "Sound", "unload()", wren_SoundUnload, "Unload sound from path. Manually unload reference because even though wren's garbage collector will do it, it will happen at an unknown time.");
 WREN_CLASS_METHOD("resourceManager", "Sound", "isValid()", wren_SoundIsValid, "Check if sound is valid");
 WREN_CLASS_METHOD("resourceManager", "Sound", "path", wren_SoundGetPath, "Get sound path");
 WREN_CLASS_METHOD("resourceManager", "Sound", "toString()", wren_SoundToString, "Convert to string");

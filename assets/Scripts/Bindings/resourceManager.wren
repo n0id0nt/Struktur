@@ -6,6 +6,8 @@
 foreign class Sound {
     // Load sound from path
     foreign static load(arg0)
+    // Unload sound from path. Manually unload reference because even though wren's garbage collector will do it, it will happen at an unknown time.
+    foreign unload()
     // Check if sound is valid
     foreign isValid()
     // Get sound path
@@ -18,6 +20,8 @@ foreign class Sound {
 foreign class Music {
     // Load music from path
     foreign static load(arg0)
+    // Unload music from path. Manually unload reference because even though wren's garbage collector will do it, it will happen at an unknown time.
+    foreign unload()
     // Check if music is valid
     foreign isValid()
     // Get music path
@@ -30,6 +34,8 @@ foreign class Music {
 foreign class Texture {
     // Load texture from path
     foreign static load(arg0)
+    // Unload texture from path. Manually unload reference because even though wren's garbage collector will do it, it will happen at an unknown time.
+    foreign unload()
     // Check if texture is valid
     foreign isValid()
     // Get texture path
@@ -46,6 +52,8 @@ foreign class Texture {
 foreign class Font {
     // Load font from path
     foreign static load(arg0)
+    // Unload font from path. Manually unload reference because even though wren's garbage collector will do it, it will happen at an unknown time.
+    foreign unload()
     // Check if font is valid
     foreign isValid()
     // Get font path

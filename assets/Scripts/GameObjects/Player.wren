@@ -27,6 +27,7 @@ class Player {
     create(entity) {
         var texture = Texture.load("assets/Tiles/PlayerSpriteSheet.png")
         Sprite.create(_entity, texture, WHITE, Vec2.new(48, 64), 6, 3, false, 0, 3)
+        texture.unload()
         var camera = Camera.create(_entity)
         camera.zoom = 1.5
         camera.forcePosition = true

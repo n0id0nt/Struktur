@@ -105,7 +105,7 @@ class GameWorldState is BaseState {
         var northRoomKey = getNorthRoom()
         var northRoomSpriteTexture = Texture.load("assets/Tiles/%(northRoomKey).png")
         Sprite.create(northRoomSpriteEntity, northRoomSpriteTexture, WHITE, Vec2.new(0, 0), 1, 1, false, 0, 0)
-        
+
         var eastRoom = World.loadLevelEntities(worldEntity, roomList[1])
         WorldTransform.setPosition(eastRoom, Vec3.new(1152.0, 576.0, 0.0))
         var eastRoomSpriteEntity = GameObject.create("eastRoomSprite", eastRoom)
@@ -113,7 +113,8 @@ class GameWorldState is BaseState {
         var eastRoomKey = getEastRoom()
         var eastRoomSpriteTexture = Texture.load("assets/Tiles/%(eastRoomKey).png")
         Sprite.create(eastRoomSpriteEntity, eastRoomSpriteTexture, WHITE, Vec2.new(0, 0), 1, 1, false, 0, 0)
-        
+        eastRoomSpriteTexture.unload()
+
         var westRoom = World.loadLevelEntities(worldEntity, roomList[2])
         WorldTransform.setPosition(westRoom, Vec3.new(0.0, 576.0, 0.0))
         var westRoomSpriteEntity = GameObject.create("westRoomSprite", westRoom)
@@ -121,7 +122,8 @@ class GameWorldState is BaseState {
         var westRoomKey = getWestRoom()
         var westRoomSpriteTexture = Texture.load("assets/Tiles/%(westRoomKey).png")
         Sprite.create(westRoomSpriteEntity, westRoomSpriteTexture, WHITE, Vec2.new(0, 0), 1, 1, false, 0, 0)
-        
+        westRoomSpriteTexture.unload()
+
         var southRoom = World.loadLevelEntities(worldEntity, roomList[3])
         WorldTransform.setPosition(southRoom, Vec3.new(576.0, 1152.0, 0.0))
         var southRoomSpriteEntity = GameObject.create("southRoomSprite", southRoom)
@@ -129,19 +131,22 @@ class GameWorldState is BaseState {
         var southRoomKey = getSouthRoom()
         var southRoomSpriteTexture = Texture.load("assets/Tiles/%(southRoomKey).png")
         Sprite.create(southRoomSpriteEntity, southRoomSpriteTexture, WHITE, Vec2.new(0, 0), 1, 1, false, 0, 0)
-        
+        southRoomSpriteTexture.unload()
+
         var courtyard = World.loadLevelEntities(worldEntity, roomList[4])
         WorldTransform.setPosition(courtyard, Vec3.new(576.0, 576.0, 0.0))
         var courtyardSpriteEntity = GameObject.create("courtyardSprite", courtyard)
         LocalTransform.setPosition(courtyardSpriteEntity, Vec3.new(0.0, 0.0, 0.0))
         var courtyardSpriteTexture = Texture.load("assets/Tiles/Courtyard.png")
         Sprite.create(courtyardSpriteEntity, courtyardSpriteTexture, WHITE, Vec2.new(0, 0), 1, 1, false, 0, 0)
-        
+        courtyardSpriteTexture.unload()
+
         var northRoomDupe = World.loadLevelEntities(worldEntity, roomList[0])
         WorldTransform.setPosition(northRoomDupe, Vec3.new(576.0, 1728.0, 0.0))
         var northRoomDupeSpriteEntity = GameObject.create("northRoomDupeSprite", northRoomDupe)
         LocalTransform.setPosition(northRoomDupeSpriteEntity, Vec3.new(0.0, 0.0, 0.0))
         Sprite.create(northRoomDupeSpriteEntity, northRoomSpriteTexture, WHITE, Vec2.new(0, 0), 1, 1, false, 0, 0)
+        northRoomSpriteTexture.unload()
 
         var playerEntity = GameObject.create("Player", worldEntity)
         Script.createArg(playerEntity, "Assets/Scripts/GameObjects/Player.wren", "Player", "Test Player Name")
@@ -163,7 +168,7 @@ class GameWorldState is BaseState {
         _loopCountLabel.setFont(font)
         _loopCountLabel.setTextColor(WHITE) // Change this when the background is created.
         _loopCountLabel.setVisible(true)
-
+        font.unload()
         //_stateManager.changeState("PlayState")
         
         System.print("Game world loaded")

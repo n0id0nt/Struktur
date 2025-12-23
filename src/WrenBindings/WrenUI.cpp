@@ -5,7 +5,7 @@
 #include "Engine/Scripting/WrenBindingRegistry.h"
 #include "Engine/GameContext.h"
 #include "WrenMath.h"
-#include "WrenResourceHandles.h"
+#include "WrenResourceManager.h"
 
 // ============================================================================
 // UI LABEL - Foreign class wrapping glm::vec2

@@ -290,7 +290,7 @@ set(WREN_BINDING_SOURCES
     src/WrenBindings/WrenGameObjectComponents.h src/WrenBindings/WrenGameObjectComponents.cpp
     src/WrenBindings/WrenMath.h                 src/WrenBindings/WrenMath.cpp
     src/WrenBindings/WrenPhysics.h              src/WrenBindings/WrenPhysics.cpp
-    src/WrenBindings/WrenResourceHandles.h      src/WrenBindings/WrenResourceHandles.cpp
+    src/WrenBindings/WrenResourceManager.h      src/WrenBindings/WrenResourceManager.cpp
     src/WrenBindings/WrenUI.h                   src/WrenBindings/WrenUI.cpp
                                                 src/WrenBindings/WrenApplication.cpp
                                                 src/WrenBindings/WrenGameObject.cpp

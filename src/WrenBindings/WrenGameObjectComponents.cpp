@@ -14,7 +14,7 @@
 #include "Engine/Game/Level.h"
 
 #include "WrenMath.h"
-#include "WrenResourceHandles.h"
+#include "WrenResourceManager.h"
 #include "WrenPhysics.h"
 #include "WrenAnimation.h"
 #include "ComponentListXMacro.h"
