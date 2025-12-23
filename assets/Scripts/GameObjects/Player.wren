@@ -1,4 +1,10 @@
-import "game" for Transform, Vec2, Vec3, Vec4, PhysicsBody, SpriteAnimation, Math, GameObject, Sprite, Script, SpriteAnimationDefinition, ResourceManager, Camera, BodyDefinition, PhysicsCircleShape
+import "gameObject" for GameObject
+import "gameObjectComponents" for WorldTransform, Script, Sprite, Camera, PhysicsBody, SpriteAnimation
+import "math" for Vec2, Vec3, Vec4, Math
+import "resourceManager" for Texture
+import "animation" for SpriteAnimationDefinition
+import "physics" for BodyDefinition, PhysicsCircleShape
+
 import "reflect" for Reflect
 
 var INTERACTABLE_DISTANCE = 64.0
@@ -19,7 +25,7 @@ class Player {
     // Called after C++ has created base components
     // Script configures/initializes component values
     create(entity) {
-        var texture = ResourceManager.getTextureResource("assets/Tiles/PlayerSpriteSheet.png")
+        var texture = Texture.load("assets/Tiles/PlayerSpriteSheet.png")
         Sprite.create(_entity, texture, WHITE, Vec2.new(48, 64), 6, 3, false, 0, 3)
         var camera = Camera.create(_entity)
         camera.zoom = 1.5
@@ -114,12 +120,12 @@ class Player {
 
     getInteractEntity() {
         var closestDistance = Math.infinity
-        var playerWorldPosition = Transform.getPosition(_entity)
+        var playerWorldPosition = WorldTransform.getPosition(_entity)
         var closestEntity = null
 
         var interactEntities = GameObject.getAllWithComponents(["WorldTransform", "Script"])
         for (entity in interactEntities) {
-            var script = Script.get(entity)
+            var script = Script.getInstance(entity)
             if (!script) {
                 continue
             }
@@ -129,15 +135,15 @@ class Player {
             if (!script.isInteractable()) {
                 continue
             }
-            var interactableWorldPosition = Transform.getPosition(entity)
+            var interactableWorldPosition = WorldTransform.getPosition(entity)
             var distance = Vec3.distance(interactableWorldPosition, playerWorldPosition)
             if (distance < closestDistance) {
-                System.print(("Test the distance %(distance) for entity %(entity)"))
+                //System.print(("Test the distance %(distance) for entity %(entity)"))
                 closestDistance = distance
                 closestEntity = entity
             }
         }
-        System.print(("Test for %(closestEntity) with %(closestDistance) < %(INTERACTABLE_DISTANCE)"))
+        //System.print(("Test for %(closestEntity) with %(closestDistance) < %(INTERACTABLE_DISTANCE)"))
         if (closestDistance < INTERACTABLE_DISTANCE) {
             return closestEntity
         }

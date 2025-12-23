@@ -122,7 +122,7 @@ void wren_CameraGetDamping(WrenVM* vm)
 {
 	WrenCamera* camera = (WrenCamera*)wrenGetSlotForeign(vm, 0);
 
-	wrenGetVariable(vm, "gameObjectComponents", "Vec2", 1);  // Get class into slot 1
+	wrenGetVariable(vm, "math", "Vec2", 1);  // Get class into slot 1
 	WrenVec2* vec2 = (WrenVec2*)wrenSetSlotNewForeign(vm, 0, 1, sizeof(WrenVec2));
 	new (vec2) WrenVec2(camera->component->damping);
 }
@@ -143,7 +143,7 @@ void wren_CameraWorldPosToScreenPos(WrenVM* vm)
 	WrenVec2* worldPos = static_cast<WrenVec2*>(wrenGetSlotForeign(vm, 1));
 	glm::vec2 screenPos = camera.WorldPosToScreenPos(worldPos->value);
 
-	wrenGetVariable(vm, "gameObjectComponents", "Vec2", 1);  // Get class into slot 1
+	wrenGetVariable(vm, "math", "Vec2", 1);  // Get class into slot 1
 	WrenVec2* vec2 = (WrenVec2*)wrenSetSlotNewForeign(vm, 0, 1, sizeof(WrenVec2));
 	new (vec2) WrenVec2(screenPos);
 }
@@ -157,7 +157,7 @@ void wren_CameraScreenPosToWorldPos(WrenVM* vm)
 	WrenVec2* screenPos = static_cast<WrenVec2*>(wrenGetSlotForeign(vm, 1));
 	glm::vec2 worldPos = camera.ScreenPosToWorldPos(screenPos->value);
 
-	wrenGetVariable(vm, "gameObjectComponents", "Vec2", 1);  // Get class into slot 1
+	wrenGetVariable(vm, "math", "Vec2", 1);  // Get class into slot 1
 	WrenVec2* vec2 = (WrenVec2*)wrenSetSlotNewForeign(vm, 0, 1, sizeof(WrenVec2));
 	new (vec2) WrenVec2(worldPos);
 }
@@ -378,7 +378,7 @@ void wren_PhysicsBodyCreate(WrenVM* vm)
 
 	Struktur::Component::PhysicsBody& physicsBodyComponent = physicsSystem.CreatePhysicsBody(*context, entity, bodyDef->bodyDef, shape->physicsShape);
 
-	wrenGetVariable(vm, "game", "PhysicsBody", 1);  // Get class into slot 1
+	wrenGetVariable(vm, "gameObjectComponents", "PhysicsBody", 1);  // Get class into slot 1
 	WrenPhysicsBody* physicsBody = (WrenPhysicsBody*)wrenSetSlotNewForeign(vm, 0, 1, sizeof(WrenPhysicsBody));
 
 	// PhysicsBody.new() - identity
@@ -660,17 +660,17 @@ void wren_SpriteAnimationIsAnimationPlaying(WrenVM* vm)
 }
 
 // Register BodyDefinition foreign class
-WREN_FOREIGN_CLASS("game", "SpriteAnimation", wren_SpriteAnimationAllocate, wren_SpriteAnimationFinalize, "Sprite animation class wraps SpriteAnimation component");
+WREN_FOREIGN_CLASS("gameObjectComponents", "SpriteAnimation", wren_SpriteAnimationAllocate, wren_SpriteAnimationFinalize, "Sprite animation class wraps SpriteAnimation component");
 
 // Register methods
-WREN_CLASS_METHOD("game", "SpriteAnimation", "addAnimation(_,_)", wren_SpriteAnimationAddAnimation, "Adds an animation to the sprite animation component");
+WREN_CLASS_METHOD("gameObjectComponents", "SpriteAnimation", "addAnimation(_,_)", wren_SpriteAnimationAddAnimation, "Adds an animation to the sprite animation component");
 
 // Register static methods
-WREN_CLASS_STATIC("game", "SpriteAnimation", "create(_)", wren_SpriteAnimationCreate, "Create a Sprite animation");
-WREN_CLASS_STATIC("game", "SpriteAnimation", "get(_)", wren_SpriteAnimationGet, "Gets a Sprite animation");
-WREN_CLASS_STATIC("game", "SpriteAnimation", "setCurrentAnimation(_,_)", wren_SpriteAnimationStaticSetCurrentAnimation, "Will set and play a current sprite animation, is already playing the animation continue it.");
-WREN_CLASS_STATIC("game", "SpriteAnimation", "forcePlayAnimation(_,_)", wren_SpriteAnimationPlayAnimation, "Will play a sprite animation, and if playering animation will forcibly restart it.");
-WREN_CLASS_STATIC("game", "SpriteAnimation", "isAnimationPlaying(_,_)", wren_SpriteAnimationIsAnimationPlaying, "Checks if a cirtain animation is playing.");
+WREN_CLASS_STATIC("gameObjectComponents", "SpriteAnimation", "create(_)", wren_SpriteAnimationCreate, "Create a Sprite animation");
+WREN_CLASS_STATIC("gameObjectComponents", "SpriteAnimation", "get(_)", wren_SpriteAnimationGet, "Gets a Sprite animation");
+WREN_CLASS_STATIC("gameObjectComponents", "SpriteAnimation", "setCurrentAnimation(_,_)", wren_SpriteAnimationStaticSetCurrentAnimation, "Will set and play a current sprite animation, is already playing the animation continue it.");
+WREN_CLASS_STATIC("gameObjectComponents", "SpriteAnimation", "forcePlayAnimation(_,_)", wren_SpriteAnimationPlayAnimation, "Will play a sprite animation, and if playering animation will forcibly restart it.");
+WREN_CLASS_STATIC("gameObjectComponents", "SpriteAnimation", "isAnimationPlaying(_,_)", wren_SpriteAnimationIsAnimationPlaying, "Checks if a cirtain animation is playing.");
 
 
 // ============================================================================
@@ -896,7 +896,7 @@ void wren_LocalTransformGetPosition(WrenVM* vm)
 {
     WrenLocalTransform* transform = (WrenLocalTransform*)wrenGetSlotForeign(vm, 0);
 	// Create Vec3 foreign object with position
-	wrenGetVariable(vm, "gameObjectComponents", "Vec3", 1);  // Get class into slot 1
+	wrenGetVariable(vm, "math", "Vec3", 1);  // Get class into slot 1
 	WrenVec3* vec = (WrenVec3*)wrenSetSlotNewForeign(vm, 0, 1, sizeof(WrenVec3));
 	new (vec) WrenVec3(transform->component->position);
 }
@@ -917,7 +917,7 @@ void wren_LocalTransformStaticGetPosition(WrenVM* vm)
 	}
     
 	// Create Vec3 foreign object with position
-	wrenGetVariable(vm, "gameObjectComponents", "Vec3", 1);  // Get class into slot 1
+	wrenGetVariable(vm, "math", "Vec3", 1);  // Get class into slot 1
 	WrenVec3* vec = (WrenVec3*)wrenSetSlotNewForeign(vm, 0, 1, sizeof(WrenVec3));
 	new (vec) WrenVec3(transform->position);
 }
@@ -963,7 +963,8 @@ void wren_LocalTransformStaticSetPosition(WrenVM* vm)
     
     auto* transform = registry.try_get<Struktur::Component::LocalTransform>(entity);
 	if (!transform) {
-        DEBUG_ERROR("No Transform");
+		// should always be a world transform so create one here
+		transformSystem.SetWorldTransform(*context, entity, vec->value, glm::vec3(1.0f), glm::quat(1.0f, 0.0f, 0.0f, 0.0f));
 		return;
 	}
 
@@ -975,7 +976,7 @@ void wren_LocalTransformGetScale(WrenVM* vm)
 {
     WrenLocalTransform* transform = (WrenLocalTransform*)wrenGetSlotForeign(vm, 0);
 	// Create Vec3 foreign object with scale
-	wrenGetVariable(vm, "gameObjectComponents", "Vec3", 1);  // Get class into slot 1
+	wrenGetVariable(vm, "math", "Vec3", 1);  // Get class into slot 1
 	WrenVec3* vec = (WrenVec3*)wrenSetSlotNewForeign(vm, 0, 1, sizeof(WrenVec3));
 	new (vec) WrenVec3(transform->component->scale);
 }
@@ -996,7 +997,7 @@ void wren_LocalTransformStaticGetScale(WrenVM* vm)
 	}
     
 	// Create Vec3 foreign object with scale
-	wrenGetVariable(vm, "gameObjectComponents", "Vec3", 1);  // Get class into slot 1
+	wrenGetVariable(vm, "math", "Vec3", 1);  // Get class into slot 1
 	WrenVec3* vec = (WrenVec3*)wrenSetSlotNewForeign(vm, 0, 1, sizeof(WrenVec3));
 	new (vec) WrenVec3(transform->scale);
 }
@@ -1042,7 +1043,8 @@ void wren_LocalTransformStaticSetScale(WrenVM* vm)
     
     auto* transform = registry.try_get<Struktur::Component::LocalTransform>(entity);
 	if (!transform) {
-        DEBUG_ERROR("No Transform");
+		// should always be a world transform so create one here
+		transformSystem.SetWorldTransform(*context, entity, glm::vec3(0.0f), vec->value, glm::quat(1.0f, 0.0f, 0.0f, 0.0f));
 		return;
 	}
 
@@ -1054,7 +1056,7 @@ void wren_LocalTransformGetRotation(WrenVM* vm)
 {
     WrenLocalTransform* transform = (WrenLocalTransform*)wrenGetSlotForeign(vm, 0);
 	// Create Vec3 foreign object with rotation
-	wrenGetVariable(vm, "gameObjectComponents", "Quat", 1);  // Get class into slot 1
+	wrenGetVariable(vm, "math", "Quat", 1);  // Get class into slot 1
 	WrenQuat* quat = (WrenQuat*)wrenSetSlotNewForeign(vm, 0, 1, sizeof(WrenQuat));
 	new (quat) WrenQuat(transform->component->rotation);
 }
@@ -1074,7 +1076,7 @@ void wren_LocalTransformStaticGetRotation(WrenVM* vm)
 		return;
 	}
     
-	wrenGetVariable(vm, "gameObjectComponents", "Quat", 1);  // Get class into slot 1
+	wrenGetVariable(vm, "math", "Quat", 1);  // Get class into slot 1
 	WrenQuat* quat = (WrenQuat*)wrenSetSlotNewForeign(vm, 0, 1, sizeof(WrenQuat));
 	new (quat) WrenQuat(transform->rotation);
 }
@@ -1120,7 +1122,8 @@ void wren_LocalTransformStaticSetRotation(WrenVM* vm)
     
     auto* transform = registry.try_get<Struktur::Component::LocalTransform>(entity);
 	if (!transform) {
-        DEBUG_ERROR("Transform.setRotation: No Transform");
+		// should always be a world transform so create one here
+		transformSystem.SetWorldTransform(*context, entity, glm::vec3(0.0f), glm::vec3(1.0f), quat->value);
 		return;
 	}
     
@@ -1232,7 +1235,7 @@ void wren_WorldTransformGetPosition(WrenVM* vm)
 {
     WrenWorldTransform* transform = (WrenWorldTransform*)wrenGetSlotForeign(vm, 0);
 	// Create Vec3 foreign object with position
-	wrenGetVariable(vm, "gameObjectComponents", "Vec3", 1);  // Get class into slot 1
+	wrenGetVariable(vm, "math", "Vec3", 1);  // Get class into slot 1
 	WrenVec3* vec = (WrenVec3*)wrenSetSlotNewForeign(vm, 0, 1, sizeof(WrenVec3));
 	new (vec) WrenVec3(transform->component->position);
 }
@@ -1253,7 +1256,7 @@ void wren_WorldTransformStaticGetPosition(WrenVM* vm)
 	}
     
 	// Create Vec3 foreign object with position
-	wrenGetVariable(vm, "gameObjectComponents", "Vec3", 1);  // Get class into slot 1
+	wrenGetVariable(vm, "math", "Vec3", 1);  // Get class into slot 1
 	WrenVec3* vec = (WrenVec3*)wrenSetSlotNewForeign(vm, 0, 1, sizeof(WrenVec3));
 	new (vec) WrenVec3(transform->position);
 }
@@ -1299,7 +1302,8 @@ void wren_WorldTransformStaticSetPosition(WrenVM* vm)
     
     auto* transform = registry.try_get<Struktur::Component::WorldTransform>(entity);
 	if (!transform) {
-        DEBUG_ERROR("No Transform");
+        // should always be a world transform so create one here
+		transformSystem.SetWorldTransform(*context, entity, vec->value, glm::vec3(1.0f), glm::quat(1.0f, 0.0f, 0.0f, 0.0f));
 		return;
 	}
 
@@ -1311,7 +1315,7 @@ void wren_WorldTransformGetScale(WrenVM* vm)
 {
     WrenWorldTransform* transform = (WrenWorldTransform*)wrenGetSlotForeign(vm, 0);
 	// Create Vec3 foreign object with scale
-	wrenGetVariable(vm, "gameObjectComponents", "Vec3", 1);  // Get class into slot 1
+	wrenGetVariable(vm, "math", "Vec3", 1);  // Get class into slot 1
 	WrenVec3* vec = (WrenVec3*)wrenSetSlotNewForeign(vm, 0, 1, sizeof(WrenVec3));
 	new (vec) WrenVec3(transform->component->scale);
 }
@@ -1332,7 +1336,7 @@ void wren_WorldTransformStaticGetScale(WrenVM* vm)
 	}
     
 	// Create Vec3 foreign object with scale
-	wrenGetVariable(vm, "gameObjectComponents", "Vec3", 1);  // Get class into slot 1
+	wrenGetVariable(vm, "math", "Vec3", 1);  // Get class into slot 1
 	WrenVec3* vec = (WrenVec3*)wrenSetSlotNewForeign(vm, 0, 1, sizeof(WrenVec3));
 	new (vec) WrenVec3(transform->scale);
 }
@@ -1378,7 +1382,8 @@ void wren_WorldTransformStaticSetScale(WrenVM* vm)
     
     auto* transform = registry.try_get<Struktur::Component::WorldTransform>(entity);
 	if (!transform) {
-        DEBUG_ERROR("No Transform");
+		// should always be a world transform so create one here
+		transformSystem.SetWorldTransform(*context, entity, glm::vec3(0.0f), vec->value, glm::quat(1.0f, 0.0f, 0.0f, 0.0f));
 		return;
 	}
 
@@ -1390,7 +1395,7 @@ void wren_WorldTransformGetRotation(WrenVM* vm)
 {
     WrenWorldTransform* transform = (WrenWorldTransform*)wrenGetSlotForeign(vm, 0);
 	// Create Vec3 foreign object with rotation
-	wrenGetVariable(vm, "gameObjectComponents", "Quat", 1);  // Get class into slot 1
+	wrenGetVariable(vm, "math", "Quat", 1);  // Get class into slot 1
 	WrenQuat* quat = (WrenQuat*)wrenSetSlotNewForeign(vm, 0, 1, sizeof(WrenQuat));
 	new (quat) WrenQuat(transform->component->rotation);
 }
@@ -1410,7 +1415,7 @@ void wren_WorldTransformStaticGetRotation(WrenVM* vm)
 		return;
 	}
     
-	wrenGetVariable(vm, "gameObjectComponents", "Quat", 1);  // Get class into slot 1
+	wrenGetVariable(vm, "math", "Quat", 1);  // Get class into slot 1
 	WrenQuat* quat = (WrenQuat*)wrenSetSlotNewForeign(vm, 0, 1, sizeof(WrenQuat));
 	new (quat) WrenQuat(transform->rotation);
 }
@@ -1456,7 +1461,8 @@ void wren_WorldTransformStaticSetRotation(WrenVM* vm)
     
     auto* transform = registry.try_get<Struktur::Component::WorldTransform>(entity);
 	if (!transform) {
-        DEBUG_ERROR("Transform.setRotation: No Transform");
+		// should always be a world transform so create one here
+		transformSystem.SetWorldTransform(*context, entity, glm::vec3(0.0f), glm::vec3(1.0f), quat->value);
 		return;
 	}
     
@@ -1468,7 +1474,7 @@ void wren_WorldTransformGetMatrix(WrenVM* vm)
 {
     WrenWorldTransform* transform = (WrenWorldTransform*)wrenGetSlotForeign(vm, 0);
 	// Create Vec3 foreign object with rotation
-	wrenGetVariable(vm, "gameObjectComponents", "Mat4", 1);  // Get class into slot 1
+	wrenGetVariable(vm, "math", "Mat4", 1);  // Get class into slot 1
 	WrenMat4* mat = (WrenMat4*)wrenSetSlotNewForeign(vm, 0, 1, sizeof(WrenMat4));
 	new (mat) WrenMat4(transform->component->matrix);
 }
@@ -1488,7 +1494,7 @@ void wren_WorldTransformStaticGetMatrix(WrenVM* vm)
 		return;
 	}
     
-	wrenGetVariable(vm, "gameObjectComponents", "Mat4", 1);  // Get class into slot 1
+	wrenGetVariable(vm, "math", "Mat4", 1);  // Get class into slot 1
 	WrenMat4* mat = (WrenMat4*)wrenSetSlotNewForeign(vm, 0, 1, sizeof(WrenMat4));
 	new (mat) WrenMat4(transform->matrix);
 }

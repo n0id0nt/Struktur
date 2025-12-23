@@ -1,4 +1,5 @@
-import "game" for BodyDefinition, PhysicsCircleShape, PhysicsBody
+import "physics" for BodyDefinition, PhysicsCircleShape
+import "gameObjectComponents" for PhysicsBody
 
 class Door {
     construct new(entity, name) {

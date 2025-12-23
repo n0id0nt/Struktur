@@ -175,7 +175,7 @@ void wren_InputGetInputAxis2(WrenVM* vm)
 
     glm::vec2 inputDir = input.GetInputAxis2(inputKey);
 
-    wrenGetVariable(vm, "game", "Vec2", 1);  // Get class into slot 1
+    wrenGetVariable(vm, "math", "Vec2", 1);  // Get class into slot 1
     WrenVec2* vec2 = (WrenVec2*)wrenSetSlotNewForeign(vm, 0, 1, sizeof(WrenVec2));
     new (vec2) WrenVec2(inputDir);
 }

@@ -13,7 +13,7 @@
 // Allocator
 void wren_BodyDefinitionAllocate(WrenVM* vm)
 {
-	wrenGetVariable(vm, "game", "BodyDefinition", 0);  // Get class into slot 1
+	wrenGetVariable(vm, "physics", "BodyDefinition", 0);  // Get class into slot 1
 	WrenBodyDefinition* bodyDef = (WrenBodyDefinition*)wrenSetSlotNewForeign(vm, 0, 0, sizeof(WrenBodyDefinition));
 
 	// BodyDefinition.new() - identity
@@ -29,7 +29,7 @@ void wren_BodyDefinitionFinalize(void* data)
 
 void wren_BodyDefinitionCreateDynamicBody(WrenVM* vm)
 {
-	wrenGetVariable(vm, "game", "BodyDefinition", 0);  // Get class into slot 1
+	wrenGetVariable(vm, "physics", "BodyDefinition", 0);  // Get class into slot 1
 	WrenBodyDefinition* bodyDef = (WrenBodyDefinition*)wrenSetSlotNewForeign(vm, 0, 0, sizeof(WrenBodyDefinition));
 
 	// BodyDefinition.new() - identity
@@ -40,7 +40,7 @@ void wren_BodyDefinitionCreateDynamicBody(WrenVM* vm)
 
 void wren_BodyDefinitionCreateStaticBody(WrenVM* vm)
 {
-	wrenGetVariable(vm, "game", "BodyDefinition", 0);  // Get class into slot 1
+	wrenGetVariable(vm, "physics", "BodyDefinition", 0);  // Get class into slot 1
 	WrenBodyDefinition* bodyDef = (WrenBodyDefinition*)wrenSetSlotNewForeign(vm, 0, 0, sizeof(WrenBodyDefinition));
 
 	// BodyDefinition.new() - identity
@@ -51,7 +51,7 @@ void wren_BodyDefinitionCreateStaticBody(WrenVM* vm)
 
 void wren_BodyDefinitionCreateKinematicBody(WrenVM* vm)
 {
-	wrenGetVariable(vm, "game", "BodyDefinition", 0);  // Get class into slot 1
+	wrenGetVariable(vm, "physics", "BodyDefinition", 0);  // Get class into slot 1
 	WrenBodyDefinition* bodyDef = (WrenBodyDefinition*)wrenSetSlotNewForeign(vm, 0, 0, sizeof(WrenBodyDefinition));
 
 	// BodyDefinition.new() - identity
@@ -61,12 +61,12 @@ void wren_BodyDefinitionCreateKinematicBody(WrenVM* vm)
 }
 
 // Register BodyDefinition foreign class
-WREN_FOREIGN_CLASS("game", "BodyDefinition", wren_BodyDefinitionAllocate, wren_BodyDefinitionFinalize, "BodyDefinition class wraps b2BodyDef");
+WREN_FOREIGN_CLASS("physics", "BodyDefinition", wren_BodyDefinitionAllocate, wren_BodyDefinitionFinalize, "BodyDefinition class wraps b2BodyDef");
 
 // Register static methods
-WREN_CLASS_STATIC("game", "BodyDefinition", "createDynamicBody()", wren_BodyDefinitionCreateDynamicBody, "Get the BodyDefinition as a dynamic Body");
-WREN_CLASS_STATIC("game", "BodyDefinition", "createStaticBody()", wren_BodyDefinitionCreateStaticBody, "Get the BodyDefinition as a static Body");
-WREN_CLASS_STATIC("game", "BodyDefinition", "createKinematicBody()", wren_BodyDefinitionCreateKinematicBody, "Get the BodyDefinition as a kinematic Body");
+WREN_CLASS_STATIC("physics", "BodyDefinition", "createDynamicBody()", wren_BodyDefinitionCreateDynamicBody, "Get the BodyDefinition as a dynamic Body");
+WREN_CLASS_STATIC("physics", "BodyDefinition", "createStaticBody()", wren_BodyDefinitionCreateStaticBody, "Get the BodyDefinition as a static Body");
+WREN_CLASS_STATIC("physics", "BodyDefinition", "createKinematicBody()", wren_BodyDefinitionCreateKinematicBody, "Get the BodyDefinition as a kinematic Body");
 
 // ============================================================================
 // CIRCLE SHAPE BINDINGS
@@ -75,7 +75,7 @@ WREN_CLASS_STATIC("game", "BodyDefinition", "createKinematicBody()", wren_BodyDe
 // Allocator
 void wren_PhysicsCircleShapeAllocate(WrenVM* vm)
 {
-	wrenGetVariable(vm, "game", "PhysicsCircleShape", 0);  // Get class into slot 1
+	wrenGetVariable(vm, "physics", "PhysicsCircleShape", 0);  // Get class into slot 1
 	WrenPhysicsCircleShape* bodyDef = (WrenPhysicsCircleShape*)wrenSetSlotNewForeign(vm, 0, 0, sizeof(WrenPhysicsCircleShape));
 
 	// Initialise with constructor parameters if provided
@@ -111,12 +111,12 @@ void wren_PhysicsCircleShapeSetRadius(WrenVM* vm)
 }
 
 // Register BodyDefinition foreign class
-WREN_FOREIGN_CLASS("game", "PhysicsCircleShape", wren_PhysicsCircleShapeAllocate, wren_PhysicsCircleShapeFinalize, "BodyDefinition class wraps b2BodyDef");
+WREN_FOREIGN_CLASS("physics", "PhysicsCircleShape", wren_PhysicsCircleShapeAllocate, wren_PhysicsCircleShapeFinalize, "BodyDefinition class wraps b2BodyDef");
 
 // Register constructors
-WREN_CONSTRUCTOR_DOC("game", "PhysicsCircleShape", wren_PhysicsCircleShapeAllocate, "Create physics circle shape", );
-WREN_CONSTRUCTOR_DOC("game", "PhysicsCircleShape", wren_PhysicsCircleShapeAllocate, "Create physics circle shape with a radius components", radius);
+WREN_CONSTRUCTOR_DOC("physics", "PhysicsCircleShape", wren_PhysicsCircleShapeAllocate, "Create physics circle shape", );
+WREN_CONSTRUCTOR_DOC("physics", "PhysicsCircleShape", wren_PhysicsCircleShapeAllocate, "Create physics circle shape with a radius components", radius);
 
 // Register methods
-WREN_CLASS_METHOD("game", "PhysicsCircleShape", "radius", wren_PhysicsCircleShapeGetRadius, "Get physics circle shape's radius");
-WREN_CLASS_METHOD("game", "PhysicsCircleShape", "radius=(_)", wren_PhysicsCircleShapeSetRadius, "Set physics circle shape's radius");
+WREN_CLASS_METHOD("physics", "PhysicsCircleShape", "radius", wren_PhysicsCircleShapeGetRadius, "Get physics circle shape's radius");
+WREN_CLASS_METHOD("physics", "PhysicsCircleShape", "radius=(_)", wren_PhysicsCircleShapeSetRadius, "Set physics circle shape's radius");

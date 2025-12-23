@@ -123,12 +123,12 @@ void wren_UIManagerCreateUILabel(WrenVM* vm)
 	auto* label = uiManager.CreateElement<Struktur::UI::UILabel>(*context, absolutePosition->value, relativePosition->value, labelText, fontSz);
 
 	// Allocate foreign object
-	wrenGetVariable(vm, "game", "UILabel", 1);  // Get class into slot 1
+	wrenGetVariable(vm, "ui", "UILabel", 1);  // Get class into slot 1
 	WrenUILabel* vec = (WrenUILabel*)wrenSetSlotNewForeign(vm, 0, 1, sizeof(WrenUILabel));
 	new (vec) WrenUILabel{ label };
 }
 
-WREN_CLASS_STATIC("game", "UIManager", "createUILabel(_,_,_,_)", wren_UIManagerCreateUILabel, "Creates the UI component for UILabel.");
+WREN_CLASS_STATIC("ui", "UIManager", "createUILabel(_,_,_,_)", wren_UIManagerCreateUILabel, "Creates the UI component for UILabel.");
 
 // UIManager.removeUILabel(label)
 void wren_UIManagerRemoveUILabel(WrenVM* vm)
@@ -143,4 +143,4 @@ void wren_UIManagerRemoveUILabel(WrenVM* vm)
 	uiLabel->label = nullptr;
 }
 
-WREN_CLASS_STATIC("game", "UIManager", "removeUILabel(_)", wren_UIManagerRemoveUILabel, "Creates the UI component for UILabel.");
+WREN_CLASS_STATIC("ui", "UIManager", "removeUILabel(_)", wren_UIManagerRemoveUILabel, "Creates the UI component for UILabel.");

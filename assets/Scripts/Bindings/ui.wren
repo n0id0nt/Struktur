@@ -16,3 +16,10 @@ foreign class UILabel {
     foreign setAnchorPoint(arg0)
 }
 
+class UIManager {
+    // Creates the UI component for UILabel.
+    foreign static createUILabel(arg0,arg1,arg2,arg3)
+    // Creates the UI component for UILabel.
+    foreign static removeUILabel(arg0)
+}
+

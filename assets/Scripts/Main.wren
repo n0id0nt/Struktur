@@ -2,7 +2,7 @@
 // Owns the state manager and provides game-wide services
 // Updated every frame by C++
 
-import "game" for Application
+import "app" for Application
 
 import "States/StateManager" for StateManager
 import "States/GameWorldState" for GameWorldState

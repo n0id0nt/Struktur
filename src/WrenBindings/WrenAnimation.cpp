@@ -12,7 +12,7 @@
 // Allocator
 void wren_SpriteAnimationDefinitionAllocate(WrenVM* vm)
 {
-	wrenGetVariable(vm, "animtaion", "SpriteAnimationDefinition", 0);  // Get class into slot 1
+	wrenGetVariable(vm, "animation", "SpriteAnimationDefinition", 0);  // Get class into slot 1
 	WrenSpriteAnimationDefinition* spriteAnimation = (WrenSpriteAnimationDefinition*)wrenSetSlotNewForeign(vm, 0, 0, sizeof(WrenSpriteAnimationDefinition));
 
 	// Initialise with constructor parameters if provided
