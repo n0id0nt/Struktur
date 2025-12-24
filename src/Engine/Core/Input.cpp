@@ -395,57 +395,33 @@ float Struktur::Core::Input::GetStringControllerAxisValue(const std::string& inp
 
 void Struktur::Core::Input::CreateButtonBinding(const std::string& input, KeyboardKey code)
 {
-	auto it = m_buttonBindings.find(input);
-	if (it == m_buttonBindings.end())
-		m_buttonBindings[input].keycodes = std::set{ code };
-	else
-		m_buttonBindings[input].keycodes.insert(code);
+	m_buttonBindings[input].keycodes.insert(code);
 }
 
 void Struktur::Core::Input::CreateButtonBinding(const std::string& input, GamepadButton code)
 {
-	auto it = m_buttonBindings.find(input);
-	if (it == m_buttonBindings.end())
-		m_buttonBindings[input].controllerButtons = std::set{ code };
-	else
-		m_buttonBindings[input].controllerButtons.insert(code);
+	m_buttonBindings[input].controllerButtons.insert(code);
 }
 
 void Struktur::Core::Input::CreateVairableBinding(const std::string& input, KeyboardKey code)
 {
-	auto it = m_variableBindings.find(input);
-	if (it == m_variableBindings.end())
-		m_variableBindings[input].keycodes = std::set{ code };
-	else
-		m_variableBindings[input].keycodes.insert(code);
+	m_variableBindings[input].keycodes.insert(code);
 }
 
 void Struktur::Core::Input::CreateVairableBinding(const std::string& input, GamepadButton code)
 {
-	auto it = m_variableBindings.find(input);
-	if (it == m_variableBindings.end())
-		m_variableBindings[input].controllerButtons = std::set{ code };
-	else
-		m_variableBindings[input].controllerButtons.insert(code);
+	m_variableBindings[input].controllerButtons.insert(code);
 }
 
 void Struktur::Core::Input::CreateAxisBinding(const std::string& input, KeyboardKey code, AxisComponent axis)
 {
-	auto it = m_axisBindings.find(input);
-	bool hasBinding = it == m_axisBindings.end();
 	switch (axis)
 	{
 	case AxisComponent::Positive:
-		if (hasBinding)
-			m_axisBindings[input].positive.keycodes = std::set{ code };
-		else
-			m_axisBindings[input].positive.keycodes.insert(code);
+		m_axisBindings[input].positive.keycodes.insert(code);
 		break;
 	case AxisComponent::Negetive:
-		if (hasBinding)
-			m_axisBindings[input].negetive.keycodes = std::set{ code };
-		else
-			m_axisBindings[input].negetive.keycodes.insert(code);
+		m_axisBindings[input].negetive.keycodes.insert(code);
 		break;
 	default:
 		ASSERT(false);
@@ -454,21 +430,13 @@ void Struktur::Core::Input::CreateAxisBinding(const std::string& input, Keyboard
 
 void Struktur::Core::Input::CreateAxisBinding(const std::string& input, GamepadButton code, AxisComponent axis)
 {
-	auto it = m_axisBindings.find(input);
-	bool hasBinding = it == m_axisBindings.end();
 	switch (axis)
 	{
 	case AxisComponent::Positive:
-		if (hasBinding)
-			m_axisBindings[input].positive.controllerButtons = std::set{ code };
-		else
-			m_axisBindings[input].positive.controllerButtons.insert(code);
+		m_axisBindings[input].positive.controllerButtons.insert(code);
 		break;
 	case AxisComponent::Negetive:
-		if (hasBinding)
-			m_axisBindings[input].negetive.controllerButtons = std::set{ code };
-		else
-			m_axisBindings[input].negetive.controllerButtons.insert(code);
+		m_axisBindings[input].negetive.controllerButtons.insert(code);
 		break;
 	default:
 		ASSERT(false);
@@ -477,42 +445,24 @@ void Struktur::Core::Input::CreateAxisBinding(const std::string& input, GamepadB
 
 void Struktur::Core::Input::CreateAxisBinding(const std::string& input, GamepadAxis code)
 {
-	auto it = m_axisBindings.find(input);
-	if (it == m_axisBindings.end())
-		m_axisBindings[input].controllerAxis = std::set{ code };
-	else
-		m_axisBindings[input].controllerAxis.insert(code);
+	m_axisBindings[input].controllerAxis.insert(code);
 }
 
 void Struktur::Core::Input::CreateAxis2Binding(const std::string& input, KeyboardKey code, Axis2Component axis)
 {
-	auto it = m_axis2Bindings.find(input);
-	bool hasBinding = it == m_axis2Bindings.end();
 	switch (axis)
 	{
 	case Axis2Component::Up:
-		if (hasBinding)
-			m_axis2Bindings[input].yAxis.positive.keycodes = std::set{ code };
-		else
-			m_axis2Bindings[input].yAxis.positive.keycodes.insert(code);
+		m_axis2Bindings[input].yAxis.positive.keycodes.insert(code);
 		break;
 	case Axis2Component::Down:
-		if (hasBinding)
-			m_axis2Bindings[input].yAxis.negetive.keycodes = std::set{ code };
-		else
-			m_axis2Bindings[input].yAxis.negetive.keycodes.insert(code);
+		m_axis2Bindings[input].yAxis.negetive.keycodes.insert(code);
 		break;
 	case Axis2Component::Left:
-		if (hasBinding)
-			m_axis2Bindings[input].xAxis.negetive.keycodes = std::set{ code };
-		else
-			m_axis2Bindings[input].xAxis.negetive.keycodes.insert(code);
+		m_axis2Bindings[input].xAxis.negetive.keycodes.insert(code);
 		break;
 	case Axis2Component::Right:
-		if (hasBinding)
-			m_axis2Bindings[input].xAxis.positive.keycodes = std::set{ code };
-		else
-			m_axis2Bindings[input].xAxis.positive.keycodes.insert(code);
+		m_axis2Bindings[input].xAxis.positive.keycodes.insert(code);
 		break;
 	default:
 		ASSERT(false);
@@ -521,33 +471,19 @@ void Struktur::Core::Input::CreateAxis2Binding(const std::string& input, Keyboar
 
 void Struktur::Core::Input::CreateAxis2Binding(const std::string& input, GamepadButton code, Axis2Component axis)
 {
-	auto it = m_axis2Bindings.find(input);
-	bool hasBinding = it == m_axis2Bindings.end();
 	switch (axis)
 	{
 	case Axis2Component::Up:
-		if (hasBinding)
-			m_axis2Bindings[input].yAxis.positive.controllerButtons = std::set{ code };
-		else
-			m_axis2Bindings[input].yAxis.positive.controllerButtons.insert(code);
+		m_axis2Bindings[input].yAxis.positive.controllerButtons.insert(code);
 		break;
 	case Axis2Component::Down:
-		if (hasBinding)
-			m_axis2Bindings[input].yAxis.negetive.controllerButtons = std::set{ code };
-		else
-			m_axis2Bindings[input].yAxis.negetive.controllerButtons.insert(code);
+		m_axis2Bindings[input].yAxis.negetive.controllerButtons.insert(code);
 		break;
 	case Axis2Component::Left:
-		if (hasBinding)
-			m_axis2Bindings[input].xAxis.negetive.controllerButtons = std::set{ code };
-		else
-			m_axis2Bindings[input].xAxis.negetive.controllerButtons.insert(code);
+		m_axis2Bindings[input].xAxis.negetive.controllerButtons.insert(code);
 		break;
 	case Axis2Component::Right:
-		if (hasBinding)
-			m_axis2Bindings[input].xAxis.positive.controllerButtons = std::set{ code };
-		else
-			m_axis2Bindings[input].xAxis.positive.controllerButtons.insert(code);
+		m_axis2Bindings[input].xAxis.positive.controllerButtons.insert(code);
 		break;
 	default:
 		ASSERT(false);
@@ -556,21 +492,13 @@ void Struktur::Core::Input::CreateAxis2Binding(const std::string& input, Gamepad
 
 void Struktur::Core::Input::CreateAxis2Binding(const std::string& input, GamepadAxis code, Axis2Direction axis)
 {
-	auto it = m_axis2Bindings.find(input);
-	bool hasBinding = it == m_axis2Bindings.end();
 	switch (axis)
 	{
 	case Axis2Direction::X:
-		if (hasBinding)
-			m_axis2Bindings[input].xAxis.controllerAxis = std::set{ code };
-		else
-			m_axis2Bindings[input].xAxis.controllerAxis.insert(code);
+		m_axis2Bindings[input].xAxis.controllerAxis.insert(code);
 		break;
 	case Axis2Direction::Y:
-		if (hasBinding)
-			m_axis2Bindings[input].yAxis.controllerAxis = std::set{ code };
-		else
-			m_axis2Bindings[input].yAxis.controllerAxis.insert(code);
+		m_axis2Bindings[input].yAxis.controllerAxis.insert(code);
 		break;
 	default:
 		ASSERT(false);

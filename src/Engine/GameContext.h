@@ -15,6 +15,7 @@
 #include "Engine/UI/UIManager.h"
 #include "Engine/Scripting/WrenScriptEngine.h"
 #include "Engine/Scripting/WrenStateManager.h"
+#include "Engine/Scripting/WrenScriptComponentRegistry.h"
 
 #include "Debug/Assertions.h"
 #ifdef EDITOR
@@ -36,12 +37,12 @@ namespace Struktur
             m_systemManager = std::make_unique<System::SystemManager>();
             m_gameObjectManager = std::make_unique<System::GameObjectManager>();
             m_camera = std::make_unique<GameResource::Camera>();
-            m_stateManager = std::make_unique<GameResource::StateManager>();
             m_uiManger = std::make_unique<UI::UIManager>();
             m_inventory = std::make_unique<Inventory>();
             m_physicsWorld = std::make_unique<Physics::PhysicsWorld>();
             m_wrenScriptEngine = std::make_unique<Wren::WrenScriptEngine>();
             m_wrenStateManager = std::make_unique<Wren::WrenStateManager>();
+            m_wrenScriptComponentRegistry = std::make_unique<Wren::WrenScriptComponentRegistry>();
 #ifdef EDITOR
             m_editor = std::make_unique<Debug::Editor>();
 #endif
@@ -95,12 +96,6 @@ namespace Struktur
             return *m_camera;
         }
 
-        GameResource::StateManager& GetStateManager() const
-        {
-            ASSERT_MSG(m_stateManager.get(), "State Manager not initialised");
-            return *m_stateManager;
-        }
-
         UI::UIManager& GetUIManager() const
         {
             ASSERT_MSG(m_uiManger.get(), "UI Manager not initialised");
@@ -125,6 +120,12 @@ namespace Struktur
             return *m_wrenStateManager;
         }
 
+        Wren::WrenScriptComponentRegistry& GetWrenScriptComponentRegistry() const
+        {
+            ASSERT_MSG(m_wrenScriptComponentRegistry.get(), "Wren State Manager not initialised");
+            return *m_wrenScriptComponentRegistry;
+        }
+
 #ifdef EDITOR
         Debug::Editor& GetEditor() const
         {
@@ -142,11 +143,11 @@ namespace Struktur
         std::unique_ptr<System::GameObjectManager> m_gameObjectManager;
         std::unique_ptr<Physics::PhysicsWorld> m_physicsWorld;
         std::unique_ptr<GameResource::Camera> m_camera;
-        std::unique_ptr<GameResource::StateManager> m_stateManager;
         std::unique_ptr<UI::UIManager> m_uiManger;
         std::unique_ptr<Inventory> m_inventory;
         std::unique_ptr<Wren::WrenScriptEngine> m_wrenScriptEngine;
         std::unique_ptr<Wren::WrenStateManager> m_wrenStateManager;
+        std::unique_ptr<Wren::WrenScriptComponentRegistry> m_wrenScriptComponentRegistry;
 #ifdef EDITOR
         std::unique_ptr<Debug::Editor> m_editor;
 #endif

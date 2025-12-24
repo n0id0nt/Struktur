@@ -18,6 +18,17 @@ class Game {
         Application.setWindowSize(windowWidth, windowHeight)
         Application.setApplicationName("Memory Palace")
 
+        var gameObjectsScripts = [
+            "Door",
+            "Item",
+            "NPC",
+            "Player",
+        ]
+
+        for (gameObjectsScript in gameObjectsScripts) {
+            Application.registerComponentScript("GameObjects/%(gameObjectsScript)", gameObjectsScript)
+        }
+
         // Create state manager
         _stateManager = StateManager.new()
     }

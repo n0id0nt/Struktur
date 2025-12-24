@@ -62,7 +62,7 @@ namespace Struktur
             physicsSystem.CreatePhysicsBody(context, entity, kinematicBodyDef, playerShape);
             Component::PhysicsBody& physicsBody = registry.get<Component::PhysicsBody>(entity);
             physicsBody.syncFromPhysics = true;  // Don't let physics drive transform
-            physicsBody.syncToPhysics = true;     // Let transform drive physics
+            physicsBody.syncToPhysics = true;    // Let transform drive physics
             
             ::Shader soulShader = ::LoadShader(0, "assets/Shaders/SoulEffect_100.fs");
             bool useShader = (soulShader.id > 0);

@@ -114,17 +114,14 @@ entt::entity Struktur::GameResource::Level::LoadLevelEntities(GameContext& conte
 						item.type = WrenType::WREN_TYPE_NUM;
 						item.value = static_cast<double>(std::any_cast<int>(field.value));
 						break;
-						
 					case Struktur::FileLoading::LevelParser::FieldInstanceType::FLOAT:
 						item.type = WrenType::WREN_TYPE_NUM;
 						item.value = static_cast<double>(std::any_cast<float>(field.value));
 						break;
-						
 					case Struktur::FileLoading::LevelParser::FieldInstanceType::BOOLEAN:
 						item.type = WrenType::WREN_TYPE_BOOL;
 						item.value = field.value;
 						break;
-						
 					case Struktur::FileLoading::LevelParser::FieldInstanceType::STRING:
 					case Struktur::FileLoading::LevelParser::FieldInstanceType::MULTILINE:
 					case Struktur::FileLoading::LevelParser::FieldInstanceType::FILE_PATH:
@@ -132,7 +129,6 @@ entt::entity Struktur::GameResource::Level::LoadLevelEntities(GameContext& conte
 						item.type = WrenType::WREN_TYPE_STRING;
 						item.value = field.value;
 						break;
-						
 					case Struktur::FileLoading::LevelParser::FieldInstanceType::COLOUR:
 					{
 						item.type = WrenType::WREN_TYPE_LIST;
@@ -151,7 +147,6 @@ entt::entity Struktur::GameResource::Level::LoadLevelEntities(GameContext& conte
 						item.value = colorList;
 						break;
 					}
-					
 					case Struktur::FileLoading::LevelParser::FieldInstanceType::POINT:
 					{
 						item.type = WrenType::WREN_TYPE_LIST;
@@ -166,13 +161,11 @@ entt::entity Struktur::GameResource::Level::LoadLevelEntities(GameContext& conte
 						item.value = colorList;
 						break;
 					}
-					
 					case Struktur::FileLoading::LevelParser::FieldInstanceType::TILE:
 					case Struktur::FileLoading::LevelParser::FieldInstanceType::ENTITY_REF:
 						item.type = WrenType::WREN_TYPE_STRING;
 						item.value = field.value;
 						break;
-						
 					default:
 						item.type = WrenType::WREN_TYPE_NULL;
 						item.value = 0;
@@ -180,7 +173,7 @@ entt::entity Struktur::GameResource::Level::LoadLevelEntities(GameContext& conte
 					}
 					wrenArgMap.emplace_back(item);
 				}
-				Component::WrenScript& scriptComponent = registry.emplace<Component::WrenScript>(layerInstaceEntity, std::format("Assets/Scripts/GameObjects/{}.wren", identifier), identifier, wrenArgMap);
+				Component::WrenScript& scriptComponent = registry.emplace<Component::WrenScript>(layerInstaceEntity, identifier, wrenArgMap);
 				continue;
 				// below is for future reference
 				if (entityInstance.identifier == "NPC")

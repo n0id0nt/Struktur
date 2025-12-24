@@ -363,6 +363,7 @@ set(SOURCES
     src/Engine/Scripting/WrenScriptEngine.h     src/Engine/Scripting/WrenScriptEngine.cpp
     src/Engine/Scripting/WrenBindingRegistry.h  src/Engine/Scripting/WrenBindingRegistry.cpp
     src/Engine/Scripting/WrenStateManager.h     src/Engine/Scripting/WrenStateManager.cpp
+    src/Engine/Scripting/WrenScriptComponentRegistry.h src/Engine/Scripting/WrenScriptComponentRegistry.cpp
     src/Engine/Scripting/WrenCodeGenerator.h
 
     src/Engine/Util/Noise.h                     src/Engine/Util/Noise.cpp

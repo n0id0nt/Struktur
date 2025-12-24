@@ -40,8 +40,20 @@ void wren_ApplicationSetApplicationName(WrenVM* vm)
 	// this can be called before there is a window so need to handle that case as well
 }
 
+// Application.registerComponentScript(module, className)
+void wren_ApplicationRegisterComponentScript(WrenVM* vm)
+{
+    Struktur::GameContext* context = static_cast<Struktur::GameContext*>(wrenGetUserData(vm));
+	auto& scriptComponentRegistry = context->GetWrenScriptComponentRegistry();
+	const char* module = wrenGetSlotString(vm, 1);
+	const char* className = wrenGetSlotString(vm, 2);
+    
+    scriptComponentRegistry.RegisterScriptComponent(module, className);
+}
+
 WREN_CLASS_STATIC("app", "Application", "setWindowSize(_,_)", wren_ApplicationSetWindowSize, "Change the size of the game window.");
 WREN_CLASS_STATIC("app", "Application", "setApplicationName(_)", wren_ApplicationSetApplicationName, "Changes the name of the game window.");
+WREN_CLASS_STATIC("app", "Application", "registerComponentScript(_,_)", wren_ApplicationRegisterComponentScript, "Changes the name of the game window.");
 
 // ============================================================================
 // INVENTORY BINDINGS

@@ -1,4 +1,6 @@
-import "game" for Transform, Vec2, Vec3, Vec4, PhysicsBody, SpriteAnimation, Math, GameObject, Sprite, Script, SpriteAnimationDefinition, ResourceManager, Camera, BodyDefinition, PhysicsCircleShape
+import "gameObjectComponents" for Sprite
+import "math" for Vec2, Vec3, Vec4
+import "resourceManager" for Texture
 
 var WHITE = Vec4.new(255, 255, 255, 255)
 var BLACK = Vec4.new(0, 0, 0, 255)
@@ -14,9 +16,10 @@ class ItemData {
 }
 
 class Item {
-    construct new(entity, name) {
+    construct new(entity, args) {
         _entity = entity
-        _name = name
+        _name = args["Name"]
+        _returnable = args["Returnable"]
         _spriteDataMap = {
             "Love Letter": ItemData.new(10),
             "Hammer": ItemData.new(9),
@@ -51,8 +54,8 @@ class Item {
     
     // Called after C++ has created base components
     // Script configures/initializes component values
-    create(entity) {
-        var texture = ResourceManager.getTextureResource("assets/Tiles/Items.png")
+    start() {
+        var texture = Texture.load("assets/Tiles/Items.png")
         if (!_itemsWithNoImage.contains(_name)) {
             var interactionId = _name
             var color = WHITE
@@ -64,9 +67,10 @@ class Item {
             var itemData = _spriteDataMap[interactionId]
             Sprite.create(_entity, texture, color, Vec2.new(32, 48), 9, 2, false, itemData.getSpriteIndex(), 1)
         }
+        texture.unload()
     }
     
-    update(dt) {
+    update() {
 
     }
     

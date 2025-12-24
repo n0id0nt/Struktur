@@ -243,9 +243,9 @@ foreign class Script {
     // Gets Scripts error message
     foreign errorMessage
     // Creates the script Component.
-    foreign static create(arg0,arg1,arg2)
+    foreign static create(arg0,arg1)
     // Creates the script Component with an arg.
-    foreign static createArg(arg0,arg1,arg2,arg3)
+    foreign static createArg(arg0,arg1,arg2)
     // Gets the script component
     foreign static get(arg0)
     // Gets a script instance

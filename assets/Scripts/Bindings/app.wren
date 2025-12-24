@@ -7,6 +7,8 @@ class Application {
     foreign static setWindowSize(arg0,arg1)
     // Changes the name of the game window.
     foreign static setApplicationName(arg0)
+    // Changes the name of the game window.
+    foreign static registerComponentScript(arg0,arg1)
 }
 
 class Inventory {

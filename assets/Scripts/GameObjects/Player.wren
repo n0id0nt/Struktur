@@ -11,9 +11,9 @@ var INTERACTABLE_DISTANCE = 64.0
 var WHITE = Vec4.new(255, 255, 255, 255)
 
 class Player {
-    construct new(entity, name) {
+    construct new(entity, args) {
         _entity = entity
-        _name = name
+        _name = args["1"]
         _timeAccumulator = 0
         _initialized = false
         _facing = Vec2.new(0, 1)
@@ -24,7 +24,7 @@ class Player {
     
     // Called after C++ has created base components
     // Script configures/initializes component values
-    create(entity) {
+    start() {
         var texture = Texture.load("assets/Tiles/PlayerSpriteSheet.png")
         Sprite.create(_entity, texture, WHITE, Vec2.new(48, 64), 6, 3, false, 0, 3)
         texture.unload()
@@ -58,7 +58,7 @@ class Player {
         SpriteAnimation.setCurrentAnimation(_entity, "downIdleAnimation")
     }
     
-    update(dt) {
+    update() {
 
     }
     

@@ -1,4 +1,7 @@
-import "game" for Transform, Vec2, Vec3, Vec4, PhysicsBody, SpriteAnimation, Math, GameObject, Sprite, Script, SpriteAnimationDefinition, ResourceManager, Camera, BodyDefinition, PhysicsCircleShape
+import "gameObjectComponents" for Sprite, PhysicsBody, Shader
+import "math" for Vec2, Vec3, Vec4
+import "resourceManager" for Texture
+import "physics" for BodyDefinition, PhysicsCircleShape
 
 var WHITE = Vec4.new(255, 255, 255, 255)
 
@@ -20,9 +23,9 @@ class NPCData {
 
 class NPC {
 
-    construct new(entity, name) {
+    construct new(entity, args) {
         _entity = entity
-        _name = name
+        _name = args["Name"]
         _spriteDataMap = {
             "Scholar": NPCData.new(0, 48, 64),
             "Gardener": NPCData.new(6, 48, 64),
@@ -38,32 +41,34 @@ class NPC {
     
     // Called after C++ has created base components
     // Script configures/initializes component values
-    create(entity) {
-        var texture = ResourceManager.getTextureResource("assets/Tiles/NPCs.png")
-        var ncpData = _spriteDataMap[_name]
+    start() {
+        var npcData = _spriteDataMap[_name]
+        var texture = Texture.load("assets/Tiles/NPCs.png")
         Sprite.create(_entity, texture, WHITE, npcData.getOffset(), 9, 1, false, npcData.getSpriteIndex(), 2)
+        texture.unload()
         var bodyDef = BodyDefinition.createStaticBody()
         var playerShape = PhysicsCircleShape.new(0.25)
-        var physicsBody = PhysicsBody.create(entity, bodyDef, playerShape)
+        var physicsBody = PhysicsBody.create(_entity, bodyDef, playerShape)
         physicsBody.syncFromPhysics = true
         physicsBody.syncToPhysics = true
-        var shader = ResourceManager.getShaderResource(null, "assets/Shaders/SoulEffect_100.fs")
-        var shaderComponent = Shader.create(_entity, shader)
-        shaderComponent.setUniform("soulColor", Vec3.new(0.3, 0.7, 1.0))
-        shaderComponent.setUniform("glowIntensity", 0.05)
-        shaderComponent.setUniform("rippleSpeed", 1.0)
-        shaderComponent.setUniform("rippleFrequency", 15.0)
-        shaderComponent.setUniform("waveAmplitude", 0.05)
-        shaderComponent.setUniform("waveFrequency", 8.0)
-        shaderComponent.setUniform("waveSpeed", 3.0)
-        shaderComponent.setUniform("waveDirection", Vec2.new(1.0, 0.3))
-        shaderComponent.setUniform("scanlineIntensity", 0.1)
-        shaderComponent.setUniform("chromaticAberration", 0.005)
-        shaderComponent.setUniform("glitchFrequency", 0.05)
-        shaderComponent.setUniform("holographicShift", 10.0)
+        //var shader = Shader.load(null, "assets/Shaders/SoulEffect_100.fs")
+        //var shaderComponent = Shader.create(_entity, shader)
+        //shader.unload()
+        //shaderComponent.setUniform("soulColor", Vec3.new(0.3, 0.7, 1.0))
+        //shaderComponent.setUniform("glowIntensity", 0.05)
+        //shaderComponent.setUniform("rippleSpeed", 1.0)
+        //shaderComponent.setUniform("rippleFrequency", 15.0)
+        //shaderComponent.setUniform("waveAmplitude", 0.05)
+        //shaderComponent.setUniform("waveFrequency", 8.0)
+        //shaderComponent.setUniform("waveSpeed", 3.0)
+        //shaderComponent.setUniform("waveDirection", Vec2.new(1.0, 0.3))
+        //shaderComponent.setUniform("scanlineIntensity", 0.1)
+        //shaderComponent.setUniform("chromaticAberration", 0.005)
+        //shaderComponent.setUniform("glitchFrequency", 0.05)
+        //shaderComponent.setUniform("holographicShift", 10.0)
     }
     
-    update(dt) {
+    update() {
 
     }
     

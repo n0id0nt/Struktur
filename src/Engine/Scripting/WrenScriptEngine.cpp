@@ -25,41 +25,56 @@ void WrenScriptEngine::Initialise(GameContext& context)
     DEBUG_INFO("Registered %zu constant bindings", Wren::GetConstantBindings().size());
 }
 
-void WrenScriptEngine::Shutdown() {
-    if (m_vm) {
+void WrenScriptEngine::Shutdown()
+{
+    if (m_vm)
+    {
         wrenFreeVM(m_vm);
         m_vm = nullptr;
     }
 }
 
-bool WrenScriptEngine::InterpretString(const char* module, const char* source) {
-    if (!m_vm) {
+bool WrenScriptEngine::InterpretString(const char* module, const char* source)
+{
+    if (!m_vm)
+    {
         DEBUG_ERROR("Wren VM not initialised");
         return false;
     }
     
     WrenInterpretResult result = wrenInterpret(m_vm, module, source);
     
-    if (result == WREN_RESULT_COMPILE_ERROR) {
+    if (result == WREN_RESULT_COMPILE_ERROR)
+    {
         DEBUG_ERROR("Wren compile error in module: %s", module);
         return false;
-    } else if (result == WREN_RESULT_RUNTIME_ERROR) {
+    }
+    else if (result == WREN_RESULT_RUNTIME_ERROR)
+    {
         DEBUG_ERROR("Wren runtime error in module: %s", module);
+        return false;
+    }
+    else if (result != WREN_RESULT_SUCCESS)
+    {
+        DEBUG_ERROR("Wren error in module: %s", module);
         return false;
     }
     
     return true;
 }
 
-bool WrenScriptEngine::InterpretFile(const char* path) {
-    if (!m_vm) {
+bool WrenScriptEngine::InterpretFile(const char* path)
+{
+    if (!m_vm)
+    {
         DEBUG_ERROR("Wren VM not initialised");
         return false;
     }
     
     // Load file
     std::ifstream file(path);
-    if (!file.is_open()) {
+    if (!file.is_open())
+    {
         DEBUG_ERROR("Failed to open Wren file: %s", path);
         return false;
     }
@@ -80,26 +95,30 @@ bool WrenScriptEngine::InterpretFile(const char* path) {
 // CALLBACK IMPLEMENTATIONS
 // ============================================================================
 
-void WrenScriptEngine::OnWrenError(WrenVM* vm, WrenErrorType type, 
-                                   const char* module, int line, const char* message) {
-    switch (type) {
-        case WREN_ERROR_COMPILE:
-            DEBUG_ERROR("[Wren Compile] %s:%d: %s", module, line, message);
-            break;
-        case WREN_ERROR_RUNTIME:
-            DEBUG_ERROR("[Wren Runtime] %s", message);
-            break;
-        case WREN_ERROR_STACK_TRACE:
-            DEBUG_ERROR("[Wren Trace] %s:%d: %s", module, line, message);
-            break;
+void WrenScriptEngine::OnWrenError(WrenVM* vm, WrenErrorType type, const char* module, int line, const char* message)
+{
+    switch (type)
+    {
+    case WREN_ERROR_COMPILE:
+        DEBUG_ERROR("[Wren Compile] %s:%d: %s", module, line, message);
+        break;
+    case WREN_ERROR_RUNTIME:
+        DEBUG_ERROR("[Wren Runtime] %s", message);
+        break;
+    case WREN_ERROR_STACK_TRACE:
+        DEBUG_ERROR("[Wren Trace] %s:%d: %s", module, line, message);
+        break;
     }
 }
 
-void WrenScriptEngine::OnWrenWrite(WrenVM* vm, const char* text) {
+void WrenScriptEngine::OnWrenWrite(WrenVM* vm, const char* text)
+{
+    if (strcmp(text, "\n") == 0) return;
     DEBUG_INFO("[Wren Print] %s", text);
 }
 
-WrenLoadModuleResult WrenScriptEngine::OnLoadModule(WrenVM* vm, const char* name) {
+WrenLoadModuleResult WrenScriptEngine::OnLoadModule(WrenVM* vm, const char* name)
+{
     WrenLoadModuleResult result = {};
     
 	// Built-in optional modules
@@ -126,9 +145,11 @@ WrenLoadModuleResult WrenScriptEngine::OnLoadModule(WrenVM* vm, const char* name
     std::string source;
     bool found = false;
     
-    for (const auto& path : searchPaths) {
+    for (const auto& path : searchPaths)
+    {
         std::ifstream file(path);
-        if (file.is_open()) {
+        if (file.is_open())
+        {
             std::stringstream buffer;
             buffer << file.rdbuf();
             source = buffer.str();
@@ -138,7 +159,8 @@ WrenLoadModuleResult WrenScriptEngine::OnLoadModule(WrenVM* vm, const char* name
         }
     }
     
-    if (!found) {
+    if (!found)
+    {
         DEBUG_ERROR("Failed to load Wren module: %s", name);
         return result;
     }

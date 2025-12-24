@@ -1569,20 +1569,31 @@ WREN_CLASS_STATIC("gameObjectComponents", "WorldTransform", "setMatrix(_,_)", wr
 // SCRIPT BINDINGS
 // ============================================================================
 
-// Script.create(spriteEntity, scriptPath, className) -> number
+// Script.create(spriteEntity, className) -> ScriptInstance
 void wren_ScriptCreate(WrenVM* vm)
 {
 	Struktur::GameContext* context = static_cast<Struktur::GameContext*>(wrenGetUserData(vm));
 	entt::registry& registry = context->GetRegistry();
+	Struktur::System::SystemManager& systemManager = context->GetSystemManager();
+	Struktur::System::WrenScriptSystem& scriptSystem = systemManager.GetSystem<Struktur::System::WrenScriptSystem>();
 
 	entt::entity levelEntity = static_cast<entt::entity>(wrenGetSlotDouble(vm, 1));
-	const char* scriptPath = wrenGetSlotString(vm, 2);
-	const char* className = wrenGetSlotString(vm, 3);
+	const char* className = wrenGetSlotString(vm, 2);
 
-	registry.emplace<Struktur::Component::WrenScript>(levelEntity, scriptPath, className);
+	auto& script = registry.emplace<Struktur::Component::WrenScript>(levelEntity, className);
+
+	// Initialise the script
+	//if (!scriptSystem.InitialiseScript(*context, levelEntity, script))
+	//{
+	//    DEBUG_ERROR("Failed to create script: %s", className);
+	//	wrenSetSlotNull(vm, 0);
+	//    return;
+	//}
+//
+	//wrenSetSlotHandle(vm, 0, script.instanceHandle);
 }
 
-// Script.createArg(spriteEntity, scriptPath, className, args) -> number
+// Script.createArg(spriteEntity, className, args) -> ScriptInstance
 void wren_ScriptCreateArg(WrenVM* vm)
 {
 	Struktur::GameContext* context = static_cast<Struktur::GameContext*>(wrenGetUserData(vm));
@@ -1591,25 +1602,24 @@ void wren_ScriptCreateArg(WrenVM* vm)
 	Struktur::System::WrenScriptSystem& scriptSystem = systemManager.GetSystem<Struktur::System::WrenScriptSystem>();
 
 	entt::entity levelEntity = static_cast<entt::entity>(wrenGetSlotDouble(vm, 1));
-	const char* scriptPath = wrenGetSlotString(vm, 2);
-	const char* className = wrenGetSlotString(vm, 3);
+	const char* className = wrenGetSlotString(vm, 2);
 	//TODO should get args as map here
-	const char* args = wrenGetSlotString(vm, 4);
+	const char* args = wrenGetSlotString(vm, 3);
 	std::vector<Struktur::Wren::Item> wrenArgs;
 	Struktur::Wren::Item arg1{ "1", std::string(args), WrenType::WREN_TYPE_STRING };
+	wrenArgs.emplace_back(arg1);
 
-	auto& script = registry.emplace<Struktur::Component::WrenScript>(levelEntity, scriptPath, className, wrenArgs);
+	auto& script = registry.emplace<Struktur::Component::WrenScript>(levelEntity, className, wrenArgs);
 
 	// Initialise the script
-
 	//if (!scriptSystem.InitialiseScript(*context, levelEntity, script))
 	//{
-	//    DEBUG_ERROR("Failed to create script: %s", scriptPath);
+	//    DEBUG_ERROR("Failed to create script: %s", className);
+	//	wrenSetSlotNull(vm, 0);
 	//    return;
 	//}
-	//scriptSystem.CallCreate(*context, levelEntity, script);
-
-
+//
+	//wrenSetSlotHandle(vm, 0, script.instanceHandle);
 }
 
 // Script.isInitialised -> bool
@@ -1667,7 +1677,7 @@ void wren_ScriptGetInstance(WrenVM* vm)
 	}
 	if (script->component->hasError)
 	{
-        DEBUG_WARNING("Script.get: Entity's script has an error. unable to call");
+        //DEBUG_WARNING("Script.get: Entity's script has an error. unable to call");
 		wrenSetSlotNull(vm, 0);
 		return;
 	}
@@ -1706,7 +1716,7 @@ void wren_ScriptStaticGetInstance(WrenVM* vm)
 	}
 	if (script->hasError)
 	{
-        DEBUG_WARNING("Script.get: Entity's script has an error. unable to call");
+        //DEBUG_WARNING("Script.get: Entity's script has an error. unable to call");
 		wrenSetSlotNull(vm, 0);
 		return;
 	}
@@ -1736,7 +1746,7 @@ WREN_CLASS_METHOD("gameObjectComponents", "Script", "isInitialised", wren_Script
 WREN_CLASS_METHOD("gameObjectComponents", "Script", "hasError", wren_ScriptHasError, "Checks if script has error");
 WREN_CLASS_METHOD("gameObjectComponents", "Script", "errorMessage", wren_ScriptGetErrorMessage, "Gets Scripts error message");
 
-WREN_CLASS_STATIC("gameObjectComponents", "Script", "create(_,_,_)", wren_ScriptCreate, "Creates the script Component.");
-WREN_CLASS_STATIC("gameObjectComponents", "Script", "createArg(_,_,_,_)", wren_ScriptCreateArg, "Creates the script Component with an arg.");
+WREN_CLASS_STATIC("gameObjectComponents", "Script", "create(_,_)", wren_ScriptCreate, "Creates the script Component.");
+WREN_CLASS_STATIC("gameObjectComponents", "Script", "createArg(_,_,_)", wren_ScriptCreateArg, "Creates the script Component with an arg.");
 WREN_CLASS_STATIC("gameObjectComponents", "Script", "get(_)", wren_WrenScriptGet, "Gets the script component");
 WREN_CLASS_STATIC("gameObjectComponents", "Script", "getInstance(_)", wren_ScriptStaticGetInstance, "Gets a script instance");

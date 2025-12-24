@@ -63,9 +63,11 @@ void Struktur::InitialiseGame(GameContext& context)
 	Physics::PhysicsWorld& physicsWorld = context.GetPhysicsWorld();
 	Wren::WrenScriptEngine& wrenScriptEngine = context.GetWrenScriptEngine();
 	Wren::WrenStateManager& wrenStateManager = context.GetWrenStateManager();
+	Wren::WrenScriptComponentRegistry& wrenScriptComponentRegistry = context.GetWrenScriptComponentRegistry();
 
 	wrenScriptEngine.Initialise(context);
 	wrenStateManager.Initialise(context);
+	wrenScriptComponentRegistry.LoadAllScriptComponents(context);
 
 #ifdef EDITOR
 	// In debug mode, create a larger window to fit ImGui panels
@@ -145,6 +147,10 @@ void Struktur::ExitGame(GameContext& context)
 	DEBUG_INFO("[Clean Up] Physics World");
 	Physics::PhysicsWorld& world = context.GetPhysicsWorld();
 	world.Clear();
+
+	DEBUG_INFO("[Clean Up] Wren Script Component Registry");
+	Wren::WrenScriptComponentRegistry& wrenScriptComponentRegistry = context.GetWrenScriptComponentRegistry();
+	wrenScriptComponentRegistry.Shutdown(context);
 
 	DEBUG_INFO("[Clean Up] Wren Script Engine");
 	Wren::WrenScriptEngine& wrenScriptEngine = context.GetWrenScriptEngine();
