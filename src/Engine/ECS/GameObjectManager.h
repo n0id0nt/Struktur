@@ -19,6 +19,8 @@ namespace Struktur
 
             entt::entity CreateGameObject(GameContext& context, const std::string& identifier, entt::entity parent = entt::null);
 
+            void SafeDeleteGameObject(GameContext& context, entt::entity entity);
+            void DeleteGameObjectsInSafeToDeleteQueue(GameContext& context);
             void DestroyGameObject(GameContext& context, entt::entity entity);
 
         private:
@@ -27,6 +29,7 @@ namespace Struktur
             void OnScriptDestory(entt::registry &reg, entt::entity entity);
 
             GameContext* m_context = nullptr;
+            std::vector<entt::entity> m_queueOfObjectsToSafeDelete;
         };
     }
 }

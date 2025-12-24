@@ -51,7 +51,21 @@ entt::entity Struktur::System::GameObjectManager::CreateGameObject(GameContext& 
     return entity;
 }
 
-void Struktur::System::GameObjectManager::DestroyGameObject(GameContext& context, entt::entity entity) 
+void Struktur::System::GameObjectManager::SafeDeleteGameObject(GameContext &context, entt::entity entity)
+{
+    m_queueOfObjectsToSafeDelete.emplace_back(entity);
+}
+
+void Struktur::System::GameObjectManager::DeleteGameObjectsInSafeToDeleteQueue(GameContext &context)
+{
+    for (auto& entity : m_queueOfObjectsToSafeDelete)
+    {
+        DestroyGameObject(context, entity);
+    }
+    m_queueOfObjectsToSafeDelete.clear();
+}
+
+void Struktur::System::GameObjectManager::DestroyGameObject(GameContext &context, entt::entity entity)
 {
     SystemManager& systemManager = context.GetSystemManager();
     HierarchySystem& hierarchySystem = systemManager.GetSystem<HierarchySystem>();

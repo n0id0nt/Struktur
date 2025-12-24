@@ -210,7 +210,9 @@ void Struktur::SplashScreenLoop(GameContext& context)
 void Struktur::GameLoop(GameContext& context)
 {
 	System::SystemManager& systemManager = context.GetSystemManager();
+	System::GameObjectManager& gameObjectManager = context.GetGameObjectManager();
 	systemManager.Update(context);
+	gameObjectManager.DeleteGameObjectsInSafeToDeleteQueue(context);
 
 	::BeginDrawing();
 #ifdef EDITOR

@@ -45,7 +45,7 @@ void wren_GameObjectDestroy(WrenVM* vm)
 	double entityId = wrenGetSlotDouble(vm, 1);
 	entt::entity entity = static_cast<entt::entity>(entityId);
     
-	gameObjectManager.DestroyGameObject(*context, entity);
+	gameObjectManager.SafeDeleteGameObject(*context, entity);
 }
 
 // GameObject.isValid(entity) -> bool
