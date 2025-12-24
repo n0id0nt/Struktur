@@ -80,4 +80,16 @@ class Item {
     onEvent(event) {
         
     }
+
+    isInteractable() {
+        return true
+    }
+
+    getEntity() {
+        return _entity
+    }
+
+    getInteractId() {
+        return "Entrance Door"
+    }
 }

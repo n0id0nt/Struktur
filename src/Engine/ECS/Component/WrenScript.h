@@ -12,7 +12,7 @@ namespace Struktur::Component
 struct WrenScript
 {
     std::string className;
-    std::vector<Wren::Item> constructorArgs;
+    std::vector<Wren::WrenItem> constructorArgs;
     
     WrenHandle* instanceHandle = nullptr;
     Wren::WrenScriptComponent* scriptComponent = nullptr;

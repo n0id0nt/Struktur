@@ -149,11 +149,11 @@ class GameWorldState is BaseState {
         northRoomSpriteTexture.unload()
 
         var playerEntity = GameObject.create("Player", worldEntity)
-        Script.createArg(playerEntity, "Player", "Test Player Name")
+        Script.createArg(playerEntity, "Player", ["Name"], ["Test Player Name"])
         WorldTransform.setPosition(playerEntity, Vec3.new(864.0, 32.0, 0.0))
 
         var lockedDoorEntity = GameObject.create("Entrance Door", worldEntity)
-        Script.createArg(lockedDoorEntity, "Door", "Test Door Name")
+        Script.createArg(lockedDoorEntity, "Door", ["Name"], ["Test Door Name"])
         WorldTransform.setPosition(lockedDoorEntity, Vec3.new(864.0, 0.0, 0.0))
         
         // Create the UI for the level.

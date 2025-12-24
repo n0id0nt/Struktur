@@ -1,4 +1,4 @@
-import "gameObjectComponents" for Sprite, PhysicsBody, Shader
+import "gameObjectComponents" for Sprite, PhysicsBody, Shader, WorldTransform
 import "math" for Vec2, Vec3, Vec4
 import "resourceManager" for Texture
 import "physics" for BodyDefinition, PhysicsCircleShape
@@ -44,7 +44,7 @@ class NPC {
     start() {
         var npcData = _spriteDataMap[_name]
         var texture = Texture.load("assets/Tiles/NPCs.png")
-        Sprite.create(_entity, texture, WHITE, npcData.getOffset(), 9, 1, false, npcData.getSpriteIndex(), 2)
+        Sprite.create(_entity, texture, WHITE, npcData.getOffset(), 9, 1, false, npcData.getSpriteIndex(), WorldTransform.getPosition(_entity).y)
         texture.unload()
         var bodyDef = BodyDefinition.createStaticBody()
         var playerShape = PhysicsCircleShape.new(0.25)
@@ -77,5 +77,17 @@ class NPC {
     
     onEvent(event) {
         
+    }
+    
+    isInteractable() {
+        return true
+    }
+
+    getEntity() {
+        return _entity
+    }
+
+    getInteractId() {
+        return "Entrance Door"
     }
 }

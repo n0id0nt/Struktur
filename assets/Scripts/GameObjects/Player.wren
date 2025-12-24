@@ -13,7 +13,7 @@ var WHITE = Vec4.new(255, 255, 255, 255)
 class Player {
     construct new(entity, args) {
         _entity = entity
-        _name = args["1"]
+        _name = args["Name"]
         _timeAccumulator = 0
         _initialized = false
         _facing = Vec2.new(0, 1)

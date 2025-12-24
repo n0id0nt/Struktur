@@ -4,7 +4,7 @@ import "gameObjectComponents" for PhysicsBody
 class Door {
     construct new(entity, args) {
         _entity = entity
-        _name = args["1"]
+        _name = args["Name"]
     }
     
     start() {        

@@ -1,3 +1,5 @@
+#pragma once
+
 #include "wren.hpp"
 
 #include <string>
@@ -6,7 +8,7 @@
 namespace Struktur::Wren
 {
 
-struct Item
+struct WrenItem
 {
     std::string identifier;
     std::any value;

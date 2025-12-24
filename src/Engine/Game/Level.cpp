@@ -104,10 +104,10 @@ entt::entity Struktur::GameResource::Level::LoadLevelEntities(GameContext& conte
 				std::string identifier = entityInstance.identifier;
 
 				// convert fieldInstances to wren map
-				std::vector<Wren::Item> wrenArgMap;
+				std::vector<Wren::WrenItem> wrenArgMap;
 				for (auto field : entityInstance.fieldInstances)
 				{
-					Wren::Item item { field.identifier };
+					Wren::WrenItem item { field.identifier };
 					switch (field.type)
 					{
 					case Struktur::FileLoading::LevelParser::FieldInstanceType::INTEGER:
@@ -134,14 +134,14 @@ entt::entity Struktur::GameResource::Level::LoadLevelEntities(GameContext& conte
 						item.type = WrenType::WREN_TYPE_LIST;
 						auto color = std::any_cast<Color>(field.value);
 						// Create nested list [r, g, b, a]
-						std::vector<Wren::Item>	colorList;
-						Wren::Item r {"r", static_cast<double>(color.r), WrenType::WREN_TYPE_NUM};
+						std::vector<Wren::WrenItem>	colorList;
+						Wren::WrenItem r {"r", static_cast<double>(color.r), WrenType::WREN_TYPE_NUM};
 						colorList.emplace_back(r);
-						Wren::Item g {"g", static_cast<double>(color.g), WrenType::WREN_TYPE_NUM};
+						Wren::WrenItem g {"g", static_cast<double>(color.g), WrenType::WREN_TYPE_NUM};
 						colorList.emplace_back(g);
-						Wren::Item b {"b", static_cast<double>(color.b), WrenType::WREN_TYPE_NUM};
+						Wren::WrenItem b {"b", static_cast<double>(color.b), WrenType::WREN_TYPE_NUM};
 						colorList.emplace_back(b);
-						Wren::Item a {"a", static_cast<double>(color.a), WrenType::WREN_TYPE_NUM};
+						Wren::WrenItem a {"a", static_cast<double>(color.a), WrenType::WREN_TYPE_NUM};
 						colorList.emplace_back(a);
 
 						item.value = colorList;
@@ -152,10 +152,10 @@ entt::entity Struktur::GameResource::Level::LoadLevelEntities(GameContext& conte
 						item.type = WrenType::WREN_TYPE_LIST;
 						auto point = std::any_cast<glm::vec2>(field.value);
 						// Create nested list [x, y]
-						std::vector<Wren::Item>	colorList;
-						Wren::Item x {"x", static_cast<double>(point.x), WrenType::WREN_TYPE_NUM};
+						std::vector<Wren::WrenItem>	colorList;
+						Wren::WrenItem x {"x", static_cast<double>(point.x), WrenType::WREN_TYPE_NUM};
 						colorList.emplace_back(x);
-						Wren::Item y {"y", static_cast<double>(point.y), WrenType::WREN_TYPE_NUM};
+						Wren::WrenItem y {"y", static_cast<double>(point.y), WrenType::WREN_TYPE_NUM};
 						colorList.emplace_back(y);
 
 						item.value = colorList;
