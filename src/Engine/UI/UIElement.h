@@ -48,35 +48,6 @@ namespace Struktur
         //=============================================================================
         class UIElement
         {
-        protected:
-            ::Rectangle m_bounds;
-            glm::vec2 m_absolutePosition;
-            glm::vec2 m_relativePosition;
-            glm::vec2 m_absoluteSize;
-            glm::vec2 m_relativeSize;
-            glm::vec2 m_anchorPoint;
-            ::Color m_backgroundColor;
-            ::Color m_borderColor;
-            float m_borderWidth;
-            bool m_visible;
-            bool m_enabled;
-            bool m_focusable;
-            UIElement* m_parent;
-            std::vector<std::unique_ptr<UIElement>> m_children;
-            std::string m_id;
-            int m_zIndex;
-            int m_tabIndex;
-            std::vector<UIElement*> m_navigationNeighbors[4]; // UP, DOWN, LEFT, RIGHT
-
-            // Callback functions
-            UIClickCallback m_onClickCallback;
-            UIFocusCallback m_onFocusCallback;
-            UIFocusCallback m_onLoseFocusCallback;
-            UIHoverCallback m_onHoverCallback;
-            UIActivateCallback m_onActivateCallback;
-            UIKeyCallback m_onKeyPressedCallback;
-            UIEventCallback m_onEventCallback; // Generic event callback
-
         public:
             UIElement(const glm::vec2& absolutePosition, const glm::vec2& relativePosition, const glm::vec2& absoluteSize, const glm::vec2& relativeSize);
             virtual ~UIElement() = default;
@@ -124,10 +95,10 @@ namespace Struktur
             void SetEnabled(bool en) { m_enabled = en; }
             bool IsVisible() const { return m_visible; }
             bool IsEnabled() const { return m_enabled; }
-            bool IsFocusable() const { return m_focusable; }
-
+            
             // Focus and navigation
             void SetFocusable(bool focus) { m_focusable = focus; }
+            bool IsFocusable() const { return m_focusable; }
             void SetTabIndex(int index) { m_tabIndex = index; }
             int GetTabIndex() const { return m_tabIndex; }
 
@@ -167,6 +138,34 @@ namespace Struktur
             void RenderChildren(GameContext& context);
 
             void UpdateBounds();
+
+            ::Rectangle m_bounds;
+            glm::vec2 m_absolutePosition;
+            glm::vec2 m_relativePosition;
+            glm::vec2 m_absoluteSize;
+            glm::vec2 m_relativeSize;
+            glm::vec2 m_anchorPoint;
+            ::Color m_backgroundColor;
+            ::Color m_borderColor;
+            float m_borderWidth;
+            bool m_visible;
+            bool m_enabled;
+            bool m_focusable;
+            UIElement* m_parent;
+            std::vector<std::unique_ptr<UIElement>> m_children;
+            std::string m_id;
+            int m_zIndex;
+            int m_tabIndex;
+            std::vector<UIElement*> m_navigationNeighbors[4]; // UP, DOWN, LEFT, RIGHT
+
+            // Callback functions
+            UIClickCallback m_onClickCallback;
+            UIFocusCallback m_onFocusCallback;
+            UIFocusCallback m_onLoseFocusCallback;
+            UIHoverCallback m_onHoverCallback;
+            UIActivateCallback m_onActivateCallback;
+            UIKeyCallback m_onKeyPressedCallback;
+            UIEventCallback m_onEventCallback; // Generic event callback
         };
     }
 }

@@ -25,7 +25,6 @@ namespace Struktur
 			int applicationWidth = 0;
 			int applicationHeight = 0;
 			bool isFullScreen = false;
-			int Loops = 0;
 			GameState gameState = GameState::SPLASH_SCREEN;
 
 			unsigned int fps = 60;

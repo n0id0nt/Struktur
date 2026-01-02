@@ -1,27 +1,23 @@
 #include "UIPanel.h"
 
 Struktur::UI::UIPanel::UIPanel(const glm::vec2& absolutePosition, const glm::vec2& relativePosition, const glm::vec2& absoluteSize, const glm::vec2& relativeSize)
-    : UIElement(absolutePosition, relativePosition, absoluteSize, relativeSize), m_panelColor(LIGHTGRAY), m_hasBackgroundTexture(false)
+    : UIElement(absolutePosition, relativePosition, absoluteSize, relativeSize), m_hasBackgroundTexture(false)
 {                
-    m_backgroundColor = m_panelColor;
+    m_backgroundColor = LIGHTGRAY;
     m_focusable = false; // Panels typically don't receive focus
 }
 
-void Struktur::UI::UIPanel::SetBackgroundColor(::Color color)
-{
-    m_panelColor = color;
-    m_backgroundColor = color;
-}
 
-void Struktur::UI::UIPanel::SetBackgroundTexture(Resource::ResourcePtr<Resource::TextureResource> texture)
+void Struktur::UI::UIPanel::SetBackgroundTexture(const Resource::ResourcePtr<Resource::TextureResource>& texture)
 {
-    m_backgroundTexture = std::move(texture);
+    m_backgroundTexture = texture;
     m_hasBackgroundTexture = true;
 }
 
 void Struktur::UI::UIPanel::ClearBackgroundTexture()
 {
     m_hasBackgroundTexture = false;
+    m_backgroundTexture = Resource::ResourcePtr<Resource::TextureResource>();
 }
 
 void Struktur::UI::UIPanel::Update(GameContext &context)

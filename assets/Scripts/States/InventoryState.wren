@@ -1,13 +1,13 @@
-// states/PlayState.wren
+// states/InventoryState.wren
 // Main gameplay state - handles player movement, interaction checks
 // This is the default state when playing the game
 
 import "States/BaseState" for BaseState
 
-class PlayState is BaseState {
+class InventoryState is BaseState {
     construct new() {
         super()
-        _name = "PlayState"
+        _name = "InventoryState"
     }
     
     enter() {

@@ -1,6 +1,5 @@
 // core/StateManager.wren
 // Manages state stack and transitions
-// Handles push/pop/change operations
 // Delegates update to active state
 
 class StateManager {
@@ -8,13 +7,13 @@ class StateManager {
         _currentState = null
         _stateFactory = {}
 
-        System.print("StateManager created")
+        System.print("[StateManager] created")
     }
     
     // Update active state
-    update(dt) {
+    update() {
         if (_currentState) {
-            _currentState.update(dt)
+            _currentState.update()
         }
     }
     
@@ -37,16 +36,16 @@ class StateManager {
         if (_currentState) {
             _currentState.exit()
         }
-        // TODO add some error handling here for when there is no state of given name
-        _currentState = _stateFactory[stateName].new() // TODO Decide where I want to call new() here or where the state factory is created
-        // TODO Assert that there is a new state here
+        _currentState = _stateFactory[stateName]
         if (_currentState) {
             _currentState.enter()
+        } else {
+            System.print("[StateManager] No state with name %(stateName) exists.")
         }
     }
 
     insertState(stateName, stateConstructor) {
-        _stateFactory[stateName] = stateConstructor
+        _stateFactory[stateName] = stateConstructor.new()
     }
     
     // Getters

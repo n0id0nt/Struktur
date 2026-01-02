@@ -1763,3 +1763,87 @@ WREN_CLASS_STATIC("math", "Mat4", "identity()", wren_Mat4Identity, "Create ident
 WREN_CLASS_STATIC("math", "Mat4", "perspective(_,_,_,_)", wren_Mat4Perspective, "Dot product");
 WREN_CLASS_STATIC("math", "Mat4", "ortho(_,_,_,_,_,_)", wren_Mat4Ortho, "Create identity quaternion");
 WREN_CLASS_STATIC("math", "Mat4", "lookAt(_,_,_)", wren_Mat4LookAt, "Create quaternion from axis and angle");
+
+// ============================================================================
+// Rect - Foreign class wrapping raylib ::Rect
+// ============================================================================
+
+void wren_RectAllocate(WrenVM* vm)
+{
+	wrenGetVariable(vm, "math", "Rect", 0);  // Get class into slot 1
+    WrenRect* rect = static_cast<WrenRect*>(wrenSetSlotNewForeign(vm, 0, 0, sizeof(WrenRect)));
+    new (rect) WrenRect({0.0f, 0.0f, 0.0f, 0.0f});
+}
+
+// Finalize
+void wren_RectFinalize(void* data)
+{
+    WrenRect* rect = static_cast<WrenRect*>(data);
+    rect->~WrenRect();
+}
+
+// Component getters
+void wren_RectGetX(WrenVM* vm)
+{
+	WrenRect* rect = (WrenRect*)wrenGetSlotForeign(vm, 0);
+	wrenSetSlotDouble(vm, 0, rect->value.x);
+}
+
+void wren_RectGetY(WrenVM* vm)
+{
+	WrenRect* rect = (WrenRect*)wrenGetSlotForeign(vm, 0);
+	wrenSetSlotDouble(vm, 0, rect->value.y);
+}
+
+void wren_RectGetWidth(WrenVM* vm)
+{
+	WrenRect* rect = (WrenRect*)wrenGetSlotForeign(vm, 0);
+	wrenSetSlotDouble(vm, 0, rect->value.width);
+}
+
+void wren_RectGetHeight(WrenVM* vm)
+{
+	WrenRect* rect = (WrenRect*)wrenGetSlotForeign(vm, 0);
+	wrenSetSlotDouble(vm, 0, rect->value.height);
+}
+
+// Component setters
+void wren_RectSetX(WrenVM* vm)
+{
+	WrenRect* rect = (WrenRect*)wrenGetSlotForeign(vm, 0);
+	rect->value.x = (float)wrenGetSlotDouble(vm, 1);
+}
+
+void wren_RectSetY(WrenVM* vm)
+{
+	WrenRect* rect = (WrenRect*)wrenGetSlotForeign(vm, 0);
+	rect->value.y = (float)wrenGetSlotDouble(vm, 1);
+}
+
+void wren_RectSetWidth(WrenVM* vm)
+{
+	WrenRect* rect = (WrenRect*)wrenGetSlotForeign(vm, 0);
+	rect->value.width = (float)wrenGetSlotDouble(vm, 1);
+}
+
+void wren_RectSetHeight(WrenVM* vm)
+{
+	WrenRect* rect = (WrenRect*)wrenGetSlotForeign(vm, 0);
+	rect->value.height = (float)wrenGetSlotDouble(vm, 1);
+}
+
+// Register Mat4 foreign class
+WREN_FOREIGN_CLASS("math", "Rect", wren_RectAllocate, wren_RectFinalize, "Rect class wrapping raylib ::Rect");
+
+// Register constructors
+WREN_CONSTRUCTOR_DOC("math", "Rect", wren_RectAllocate, "Create Rect", );
+
+// Register instance methods
+WREN_CLASS_METHOD("math", "Rect", "x", wren_RectGetX, "Get X component");
+WREN_CLASS_METHOD("math", "Rect", "y", wren_RectGetY, "Get Y component");
+WREN_CLASS_METHOD("math", "Rect", "width", wren_RectGetWidth, "Get Width component");
+WREN_CLASS_METHOD("math", "Rect", "height", wren_RectGetHeight, "Get height component");
+WREN_CLASS_METHOD("math", "Rect", "x=(_)", wren_RectSetX, "Set X component");
+WREN_CLASS_METHOD("math", "Rect", "y=(_)", wren_RectSetY, "Set Y component");
+WREN_CLASS_METHOD("math", "Rect", "width=(_)", wren_RectSetWidth, "Set Width component");
+WREN_CLASS_METHOD("math", "Rect", "height=(_)", wren_RectSetHeight, "Set Height component");

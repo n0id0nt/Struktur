@@ -63,7 +63,7 @@ bool WrenStateManager::Initialise(GameContext& context)
     wrenEnsureSlots(vm, 1);
     wrenSetSlotHandle(vm, 0, m_rootStateInstanceHandle);
     
-    m_updateMethodHandle = wrenMakeCallHandle(vm, "update(_)");
+    m_updateMethodHandle = wrenMakeCallHandle(vm, "update()");
     m_renderMethodHandle = wrenMakeCallHandle(vm, "render()");
     m_startMethodHandle = wrenMakeCallHandle(vm, "start()");
     m_quitMethodHandle = wrenMakeCallHandle(vm, "quit()");

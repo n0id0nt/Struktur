@@ -158,7 +158,7 @@ namespace Struktur::Wren
                 bool isForeignClass = false;
                 for (const auto* cls : classes)
                 {
-                    if (cls->className == className)
+                    if (cls->className == className && cls->moduleName == moduleName)
                     {
                         isForeignClass = true;
                         if (!cls->documentation.empty())
@@ -171,17 +171,29 @@ namespace Struktur::Wren
                 
                 if (isForeignClass)
                 {
-                    file << "foreign class " << className << " {\n";
+                    file << "foreign class " << className;
                 }
                 else
                 {
-                    file << "class " << className << " {\n";
+                    file << "class " << className;
                 }
+
+                // Generate parent class
+                for (const auto* cls : classes)
+                {
+                    if (cls->className == className && cls->moduleName == moduleName && !cls->parentClassName.empty())
+                    {
+                        file << " is " << cls->parentClassName;
+                        break;
+                    }
+                }
+
+                file << " {\n";
 
                 // Generate constuctors
                 for (const auto* cls : classes)
                 {
-                    if (cls->className == className)
+                    if (cls->className == className && cls->moduleName == moduleName)
                     {
                         for (const auto& ctor : cls->constructors)
                         {
@@ -206,7 +218,7 @@ namespace Struktur::Wren
                 // Add class constants
                 for (const auto* constant : constants)
                 {
-                    if (constant->className == className)
+                    if (constant->className == className && constant->moduleName == moduleName)
                     {
                         if (!constant->documentation.empty())
                         {

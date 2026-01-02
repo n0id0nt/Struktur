@@ -2,6 +2,28 @@
 // Generated from C++ bindings
 // Module: math
 
+// Rect class wrapping raylib ::Rect
+foreign class Rect {
+    // Create Rect
+    foreign construct new()
+    // Get X component
+    foreign x
+    // Get Y component
+    foreign y
+    // Get Width component
+    foreign width
+    // Get height component
+    foreign height
+    // Set X component
+    foreign x=(arg0)
+    // Set Y component
+    foreign y=(arg0)
+    // Set Width component
+    foreign width=(arg0)
+    // Set Height component
+    foreign height=(arg0)
+}
+
 class Math {
     // Positive infinity
     foreign static infinity

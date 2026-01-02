@@ -1,6 +1,7 @@
 #include "glm/glm.hpp"
 #define GLM_ENABLE_EXPERIMENTAL
 #include <glm/gtx/quaternion.hpp> 
+#include <raylib.h>
 
 struct WrenVec2
 {
@@ -44,4 +45,11 @@ struct WrenMat4
 
 	WrenMat4() : value(1.0f) {}  // Identity Matrix
 	WrenMat4(const glm::mat4& m) : value(m) {}
+};
+
+struct WrenRect
+{
+	::Rectangle value;
+
+	WrenRect(const ::Rectangle& m) : value(m) {}
 };

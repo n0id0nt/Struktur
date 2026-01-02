@@ -1,6 +1,6 @@
-#include "Engine/UI/UILabel.h"
+#include "Engine/UI/UIElement.h"
 
-struct WrenUILabel
+struct WrenUIElement
 {
-	Struktur::UI::UILabel* label;
+	Struktur::UI::UIElement* element;
 };

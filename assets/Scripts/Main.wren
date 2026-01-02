@@ -43,8 +43,8 @@ class Game {
     }
     
     // Called by C++ every frame
-    update(dt) {      
-        _stateManager.update(dt)
+    update() {      
+        _stateManager.update()
     }
     
     // Called by C++ for rendering

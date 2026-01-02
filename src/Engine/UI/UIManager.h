@@ -16,14 +16,6 @@ namespace Struktur
         //=============================================================================
         class UIManager
         {
-        private:
-            std::vector<std::unique_ptr<UIElement>> m_elements;
-            UIElement* m_focusedElement;
-            UIElement* m_hoveredElement;
-            ::Camera2D m_camera;
-            bool m_capturingInput;
-            std::unique_ptr<FocusNavigator> m_focusNavigator;
-
         public:
             UIManager();
 
@@ -54,8 +46,15 @@ namespace Struktur
             FocusNavigator* GetFocusNavigator() const;
 
         private:
-
             void HandleInput(GameContext& context);
+
+            std::vector<std::unique_ptr<UIElement>> m_elements;
+            UIElement* m_focusedElement;
+            UIElement* m_hoveredElement;
+            ::Camera2D m_camera;
+            bool m_capturingInput;
+            std::unique_ptr<FocusNavigator> m_focusNavigator;
+
         };
     }
 }

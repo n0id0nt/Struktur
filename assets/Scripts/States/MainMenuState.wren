@@ -21,7 +21,7 @@ class MainMenuState is BaseState {
         // UI.CreateButton("Quit", ...)
     }
     
-    update(dt) {
+    update() {
         // TODO: Handle input
         // if (Input.justPressed("Confirm")) {
         //     this.startGame()

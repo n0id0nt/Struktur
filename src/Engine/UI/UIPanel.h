@@ -15,15 +15,13 @@ namespace Struktur
         class UIPanel : public UIElement
         {
         private:
-            ::Color m_panelColor;
-            Resource::ResourcePtr<Resource::TextureResource> m_backgroundTexture; // TODO replace this with resoruce loader texture
+            Resource::ResourcePtr<Resource::TextureResource> m_backgroundTexture;
             bool m_hasBackgroundTexture;
 
         public:
             UIPanel(const glm::vec2& absolutePosition, const glm::vec2& relativePosition, const glm::vec2& absoluteSize, const glm::vec2& relativeSize);
 
-            void SetBackgroundColor(::Color color);
-            void SetBackgroundTexture(Resource::ResourcePtr<Resource::TextureResource> texture);
+            void SetBackgroundTexture(const Resource::ResourcePtr<Resource::TextureResource>& texture);
             void ClearBackgroundTexture();
 
             void Update(GameContext& context) override;

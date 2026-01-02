@@ -54,7 +54,7 @@ namespace Struktur
 
         private:
             WrenHandle* m_rootStateInstanceHandle;  // Handle to Wren Game object
-            WrenHandle* m_updateMethodHandle;       // Cached Game.update(_) method
+            WrenHandle* m_updateMethodHandle;       // Cached Game.update() method
             WrenHandle* m_renderMethodHandle;       // Cached Game.render() method
             WrenHandle* m_startMethodHandle;        // Cached Game.start() method
             WrenHandle* m_quitMethodHandle;         // Cached Game.quit() method

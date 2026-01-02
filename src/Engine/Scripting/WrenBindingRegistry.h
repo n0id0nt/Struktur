@@ -37,6 +37,7 @@ namespace Struktur::Wren
         WrenFinalizerFn finalize;
         std::vector<ConstructorSignature> constructors;
         std::string documentation;
+        std::string parentClassName;
     };
 
     struct EnumBinding {
@@ -120,13 +121,39 @@ namespace Struktur::Wren
             // Find the foreign class binding and add constructor signature
             auto& bindings = GetClassBindings();
             
-            for (auto& binding : bindings) {
-                if (binding.moduleName == moduleName && binding.className == className) {
+            for (auto& binding : bindings)
+            {
+                if (binding.moduleName == moduleName && binding.className == className)
+                {
                     ConstructorSignature sig;
                     sig.paramCount = paramCount;
                     sig.paramNames = paramNames;
                     sig.documentation = documentation;
                     binding.constructors.push_back(sig);
+                    return;
+                }
+            }
+            
+            // Class not found - this is an error
+            // In production, you might want to queue this and resolve later
+
+            // Also need a method Binding
+            //GetMethodBindings().push_back({moduleName, className, "init new()", false, alloc, documentation});
+        }
+    };
+
+    struct InheritanceRegistrar
+    {
+        InheritanceRegistrar(const char* module, const char* className, const char* parentClassName)
+        {
+                        // Find the foreign class binding and add constructor signature
+            auto& bindings = GetClassBindings();
+            
+            for (auto& binding : bindings)
+            {
+                if (binding.moduleName == module && binding.className == className)
+                {
+                    binding.parentClassName = parentClassName;
                     return;
                 }
             }
@@ -187,12 +214,18 @@ namespace Struktur::Wren
         module, className, alloc, \
         WREN_COUNT_ARGS(__VA_ARGS__), \
         std::vector<std::string>{WREN_STRINGIFY_ARGS(__VA_ARGS__)}, \
-        docs); \
+        docs);
 
+#define WREN_CLASS_INHERITANCE(module, className, parentClassName) \
+    static Struktur::Wren::InheritanceRegistrar WREN_UNIQUE_NAME(constructor_reg_)( \
+        module, className, parentClassName \
+        );
+
+#define WREN_ENUM_PAIR(k, v) std::pair{k, (int)v}
 // Enum binding: CollisionType { None = 0, Wall = 1, Enemy = 2 }
-#define WREN_ENUM(module, enumName, values, doc) \
+#define WREN_ENUM(module, enumName, doc, ...) \
     static Struktur::Wren::EnumRegistrar _wren_enum_##enumName( \
-        module, #enumName, values, doc)
+        module, #enumName, {__VA_ARGS__}, doc)
 
 // Class constant: Math.PI = 3.14159
 #define WREN_CLASS_CONSTANT(module, cls, name, value, doc) \

@@ -7,11 +7,15 @@ import "gameObjectComponents" for LocalTransform, WorldTransform, World, Level, 
 import "math" for Vec2, Vec3, Vec4
 import "app" for Inventory
 import "resourceManager" for Font, Texture
-import "ui" for UIManager
+import "ui" for UIManager, UILabel
 import "input" for Input
 
 import "States/BaseState" for BaseState
 import "States/StateManager" for StateManager
+import "States/PlayState" for PlayState
+import "States/InventoryState" for InventoryState
+import "States/InteractState" for InteractState
+import "States/GameOverState" for GameOverState
 
 var TILE_TEXTURE = "assets/Tiles/cavesofgallet_tiles.png"
 var PLAYER_TEXTURE = "assets/Tiles/PlayerGrowthSprites.png"
@@ -29,10 +33,10 @@ class GameWorldState is BaseState {
         _worldEntity = null //TODO Create an entity constant for invalid entity or null entity
         _stateManager = StateManager.new()
 
-        _stateManager.insertState("PlayState", BaseState)
-        _stateManager.insertState("inventoryState", BaseState)
-        _stateManager.insertState("interactState", BaseState)
-        _stateManager.insertState("gameOverState", BaseState)
+        _stateManager.insertState("PlayState", PlayState)
+        _stateManager.insertState("InventoryState", InventoryState)
+        _stateManager.insertState("InteractState", InteractState)
+        _stateManager.insertState("GameOverState", GameOverState)
     }
 
     getNorthRoom() {
@@ -157,27 +161,29 @@ class GameWorldState is BaseState {
         WorldTransform.setPosition(lockedDoorEntity, Vec3.new(864.0, 0.0, 0.0))
         
         // Create the UI for the level.
-        _interactLabel = UIManager.createUILabel(Vec2.new(0, 0), Vec2.new(0, 0), "Interact", 16.0)
+        _interactLabel = UILabel.new(Vec2.new(0, 0), Vec2.new(0, 0), "Interact", 16.0)
         _interactLabel.setVisible(false)
         _interactLabel.setFont(font)
         _interactLabel.setTextColor(WHITE) // Change this when the background is created.
         _interactLabel.setAnchorPoint(Vec2.new(0.5, 0.5))
+        UIManager.addUIElement(_interactLabel)
 
         var loops = Loops
-        _loopCountLabel = UIManager.createUILabel(Vec2.new(20, 20), Vec2.new(0, 0), "Loops: %(loops)", 30.0)
+        _loopCountLabel = UILabel.new(Vec2.new(20, 20), Vec2.new(0, 0), "Loops: %(loops)", 30.0)
         _loopCountLabel.setFont(font)
         _loopCountLabel.setTextColor(WHITE) // Change this when the background is created.
         _loopCountLabel.setVisible(true)
+        UIManager.addUIElement(_interactLabel)
         font.unload()
         //_stateManager.changeState("PlayState")
         
         System.print("Game world loaded")
     }
     
-    update(dt) {
+    update() {
         // if substate return out here
         if (_stateManager.currentState) {
-            _stateManager.update(dt)
+            _stateManager.update()
             return
         }
 
@@ -266,8 +272,8 @@ class GameWorldState is BaseState {
         
         GameObject.destroy(_worldEntity)
         
-        UIManager.removeUILabel(_interactLabel)
-        UIManager.removeUILabel(_loopCountLabel)
+        UIManager.removeUIElement(_interactLabel)
+        UIManager.removeUIElement(_loopCountLabel)
 
         System.print("Game world unloaded")
     }
