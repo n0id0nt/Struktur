@@ -15,9 +15,9 @@ Struktur::UI::UIElement* Struktur::UI::UIElement::AddChild(std::unique_ptr<UIEle
     if (child)
     {
         child->m_parent = this;
-        child->UpdateBounds();
         UIElement* childPtr = child.get();
         m_children.push_back(std::move(child));
+        childPtr->UpdateBounds();
         return childPtr;
     }
     return nullptr;
@@ -29,6 +29,7 @@ Struktur::UI::UIElement* Struktur::UI::UIElement::AddChild(UIElement* child)
     {
         child->m_parent = this;
         m_children.push_back(std::unique_ptr<UIElement>(child));
+        child->UpdateBounds();
         return child;
     }
     return nullptr;

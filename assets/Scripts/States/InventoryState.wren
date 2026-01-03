@@ -29,9 +29,8 @@ class InventoryState is BaseState {
         var focusedItemBackgroundPanelTexture = Texture.load("assets/Tiles/FocusedItemBackgroundPanel.png")
 
         _screenPanel = UIPanel.new(Vec2.new(0, 0), Vec2.new(0, 0), Vec2.new(Application.gameWidth, Application.gameHeight), Vec2.new(0, 0))
-        _screenPanel.setBackgroundColor(BLANK)
+        _screenPanel.setBackgroundColor(Vec4.new(0, 0, 0, 70))
         _screenPanel.setBorderColor(BLANK)
-        _screenPanel.setVisible(true)
         UIManager.addUIElement(_screenPanel)
 
         var inventoryBackgroundPanel = UIPanel.new(Vec2.new(0, 0), Vec2.new(0.3, 0.5), Vec2.new(394, 500), Vec2.new(0, 0))
