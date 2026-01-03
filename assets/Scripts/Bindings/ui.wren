@@ -36,6 +36,8 @@ class UIManager {
 foreign class UIElement {
     // Sets UI Element to be visible
     foreign isVisible=(arg0)
+    // Sets UI Element to be visible
+    foreign setVisible(arg0)
     // Gets UI Element to be visible
     foreign isVisible
     // Sets UI Element to be enabled
@@ -87,17 +89,69 @@ foreign class UIElement {
 }
 
 // UI Panel component
-foreign class UIPanel is UIElement {
+foreign class UIPanel {
     // Create UI panel with absolutePosition, relativePosition, absoluteSize, relativeSize components
     foreign construct new(absolutePosition, relativePosition, absoluteSize, relativeSize)
     // Sets the UI Panels background texture
     foreign setBackgroundTexture(arg0)
     // Clears the UI Panels background texture
     foreign ClearBackgroundTexture()
+    // Sets UI Element to be visible
+    foreign isVisible=(arg0)
+    // Sets UI Element to be visible
+    foreign setVisible(arg0)
+    // Gets UI Element to be visible
+    foreign isVisible
+    // Sets UI Element to be enabled
+    foreign IsEnabled=(arg0)
+    // Gets UI Element to be enabled
+    foreign IsEnabled
+    // Sets UI Element to be focusable
+    foreign IsFocusable=(arg0)
+    // Gets UI Element to be focusable
+    foreign IsFocusable
+    // Sets the UI Elements position
+    foreign setPosition(arg0,arg1)
+    // Gets the UI Elements position
+    foreign getPosition()
+    // Sets the UI Elements anchor point
+    foreign setAnchorPoint(arg0)
+    // Sets the UI Elements anchor point
+    foreign setSize(arg0)
+    // Gets the UI Elements size
+    foreign getSize()
+    // Gets the UI Elements bounds
+    foreign getBounds()
+    // Sets the UI Elements tab index
+    foreign setTabIndex(arg0)
+    // Gets the UI Elements tab index
+    foreign getTabIndex()
+    // adds a UI Element as a navigation neighbor
+    foreign setNavigationNeighbor(arg0,arg1)
+    // Gets a UI Element navigation neighbor from a direction
+    foreign getNavigationNeighbor(arg0)
+    // Sets the UI Elements background color
+    foreign setBackgroundColor(arg0)
+    // Sets the UI Elements border color
+    foreign setBorderColor(arg0)
+    // Sets the UI Elements border width
+    foreign setBorderWidth(arg0)
+    // Gets the UI Elements parent
+    foreign getParent()
+    // Sets the UI Elements children
+    foreign getChildren()
+    // Sets the UI Elements Z index
+    foreign setZIndex(arg0)
+    // Sets the UI Elements Z index
+    foreign getZIndex()
+    // Adds a UI Element to elements children
+    foreign addChild(arg0)
+    // Removes a UI Element from the children
+    foreign removeChild(arg0)
 }
 
 // UI Label component
-foreign class UILabel is UIElement {
+foreign class UILabel {
     // Create UI Label with absolutePosition, relativePosition, labelText components
     foreign construct new(absolutePosition, relativePosition, labelText)
     // Create UI Label with absolutePosition, relativePosition, labelText, fontSize components
@@ -116,5 +170,57 @@ foreign class UILabel is UIElement {
     foreign setText(arg0)
     // get the UI Labels text
     foreign getText()
+    // Sets UI Element to be visible
+    foreign isVisible=(arg0)
+    // Sets UI Element to be visible
+    foreign setVisible(arg0)
+    // Gets UI Element to be visible
+    foreign isVisible
+    // Sets UI Element to be enabled
+    foreign IsEnabled=(arg0)
+    // Gets UI Element to be enabled
+    foreign IsEnabled
+    // Sets UI Element to be focusable
+    foreign IsFocusable=(arg0)
+    // Gets UI Element to be focusable
+    foreign IsFocusable
+    // Sets the UI Elements position
+    foreign setPosition(arg0,arg1)
+    // Gets the UI Elements position
+    foreign getPosition()
+    // Sets the UI Elements anchor point
+    foreign setAnchorPoint(arg0)
+    // Sets the UI Elements anchor point
+    foreign setSize(arg0)
+    // Gets the UI Elements size
+    foreign getSize()
+    // Gets the UI Elements bounds
+    foreign getBounds()
+    // Sets the UI Elements tab index
+    foreign setTabIndex(arg0)
+    // Gets the UI Elements tab index
+    foreign getTabIndex()
+    // adds a UI Element as a navigation neighbor
+    foreign setNavigationNeighbor(arg0,arg1)
+    // Gets a UI Element navigation neighbor from a direction
+    foreign getNavigationNeighbor(arg0)
+    // Sets the UI Elements background color
+    foreign setBackgroundColor(arg0)
+    // Sets the UI Elements border color
+    foreign setBorderColor(arg0)
+    // Sets the UI Elements border width
+    foreign setBorderWidth(arg0)
+    // Gets the UI Elements parent
+    foreign getParent()
+    // Sets the UI Elements children
+    foreign getChildren()
+    // Sets the UI Elements Z index
+    foreign setZIndex(arg0)
+    // Sets the UI Elements Z index
+    foreign getZIndex()
+    // Adds a UI Element to elements children
+    foreign addChild(arg0)
+    // Removes a UI Element from the children
+    foreign removeChild(arg0)
 }
 

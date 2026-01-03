@@ -182,17 +182,17 @@ namespace Struktur::Wren
 
 // Class static method: Entity.create(name, parent)
 #define WREN_CLASS_STATIC(module, cls, sig, func, doc) \
-    static Struktur::Wren::MethodRegistrar _wren_reg_##func( \
+    static Struktur::Wren::MethodRegistrar WREN_UNIQUE_NAME(static_func_reg_)( \
         module, cls, sig, true, func, doc)
 
 // Class instance method: vector.normalize()
 #define WREN_CLASS_METHOD(module, cls, sig, func, doc) \
-    static Struktur::Wren::MethodRegistrar _wren_reg_##func( \
+    static Struktur::Wren::MethodRegistrar WREN_UNIQUE_NAME(method_reg_)( \
         module, cls, sig, false, func, doc)
 
 // Module-level function: lerp(a, b, t)
 #define WREN_FUNCTION(module, sig, func, doc) \
-    static Struktur::Wren::MethodRegistrar _wren_reg_##func( \
+    static Struktur::Wren::MethodRegistrar WREN_UNIQUE_NAME(funciton_reg_)( \
         module, "", sig, true, func, doc)
 
 // Foreign class with allocator and finalizer
@@ -217,7 +217,7 @@ namespace Struktur::Wren
         docs);
 
 #define WREN_CLASS_INHERITANCE(module, className, parentClassName) \
-    static Struktur::Wren::InheritanceRegistrar WREN_UNIQUE_NAME(constructor_reg_)( \
+    static Struktur::Wren::InheritanceRegistrar WREN_UNIQUE_NAME(inheritance_reg_)( \
         module, className, parentClassName \
         );
 

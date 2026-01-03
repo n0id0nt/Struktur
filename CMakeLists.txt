@@ -343,7 +343,7 @@ set(SOURCES
 
     src/Engine/Physics/PhysicsWorld.h           src/Engine/Physics/PhysicsWorld.cpp
     src/Engine/Physics/ContactListener.h        src/Engine/Physics/ContactListener.cpp
-    src/Engine/Physics/CollisionShapeGenerators/TileMapCollisionBodyGenerator.h     src/Engine/Physics/CollisionShapeGenerators/TileMapCollisionBodyGenerator.cpp
+    src/Engine/Physics/CollisionShapeGenerators/TileMapCollisionBodyGenerator.h src/Engine/Physics/CollisionShapeGenerators/TileMapCollisionBodyGenerator.cpp
 
     src/Engine/FileLoading/LevelParser.h        src/Engine/FileLoading/LevelParser.cpp
 
@@ -365,7 +365,7 @@ set(SOURCES
     src/Engine/Scripting/WrenStateManager.h     src/Engine/Scripting/WrenStateManager.cpp
     src/Engine/Scripting/WrenScriptComponentRegistry.h src/Engine/Scripting/WrenScriptComponentRegistry.cpp
     src/Engine/Scripting/WrenUtil.h             src/Engine/Scripting/WrenUtil.cpp
-    src/Engine/Scripting/WrenCodeGenerator.h
+    src/Engine/Scripting/WrenCodeGenerator.h    src/Engine/Scripting/WrenCodeGenerator.cpp
     src/Engine/Scripting/WrenValueWrapper.h
 
     src/Engine/Util/Noise.h                     src/Engine/Util/Noise.cpp

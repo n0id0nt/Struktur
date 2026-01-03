@@ -8,6 +8,7 @@
 #include "WrenResourceManager.h"
 #include "Engine/UI/UILabel.h"
 #include "Engine/UI/UIPanel.h"
+#include "Debug/Assertions.h"
 
 // ============================================================================
 // NAVIGATION DIRECTION BINDINGS
@@ -54,6 +55,7 @@ void wren_UIManagerAddUIElement(WrenVM* vm)
 	WrenUIElement* uiElement = static_cast<WrenUIElement*>(wrenGetSlotForeign(vm, 1));
 	
 	uiManager.AddElement(std::unique_ptr<Struktur::UI::UIElement>(uiElement->element));
+	uiElement->ownedByWren = false;
 }
 
 // UIManager.removeUIElement(UIElenent)
@@ -64,6 +66,7 @@ void wren_UIManagerRemoveUIElement(WrenVM* vm)
 	
 	WrenUIElement* uiElement = static_cast<WrenUIElement*>(wrenGetSlotForeign(vm, 1));
 	
+	ASSERT_MSG(!uiElement->ownedByWren, "UIElement is registered with the UI Manager.");
 	uiManager.RemoveElement(uiElement->element);
 	
 	uiElement->element = nullptr;
@@ -410,6 +413,7 @@ void wren_UIElementAddChild(WrenVM* vm)
 	}
 	WrenUIElement* child = static_cast<WrenUIElement*>(wrenGetSlotForeign(vm, 0));
 	uiElement->element->AddChild(child->element);
+	child->ownedByWren = false;
 }
 
 // UIElement.removeChild(child) -> bool
@@ -432,6 +436,7 @@ WREN_FOREIGN_CLASS("ui", "UIElement", wren_UIElementAllocate, wren_UIElementFina
 
 // Register instance methods
 WREN_CLASS_METHOD("ui", "UIElement", "isVisible=(_)", wren_UIElementSetVisible, "Sets UI Element to be visible");
+WREN_CLASS_METHOD("ui", "UIElement", "setVisible(_)", wren_UIElementSetVisible, "Sets UI Element to be visible");
 WREN_CLASS_METHOD("ui", "UIElement", "isVisible", wren_UIElementGetVisible, "Gets UI Element to be visible");
 WREN_CLASS_METHOD("ui", "UIElement", "IsEnabled=(_)", wren_UIElementSetEnabled, "Sets UI Element to be enabled");
 WREN_CLASS_METHOD("ui", "UIElement", "IsEnabled", wren_UIElementGetEnabled, "Gets UI Element to be enabled");

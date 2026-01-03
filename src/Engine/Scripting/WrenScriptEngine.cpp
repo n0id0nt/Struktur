@@ -177,4 +177,48 @@ WrenLoadModuleResult WrenScriptEngine::OnLoadModule(WrenVM* vm, const char* name
     return result;
 }
 
+WrenForeignMethodFn WrenScriptEngine::OnBindForeignMethod(WrenVM *vm, const char *module, const char *className, bool isStatic, const char *signature)
+{
+    WrenForeignMethodFn method;
+    if (strcmp(module, "reflect") == 0)
+    {
+        method = wrenReflectBindForeignMethod(vm, className, isStatic, signature);
+    }
+    else if (!isStatic && strncmp(signature, "init ", 5) == 0)
+    {
+        method = Wren::FindClass(module, className).allocate;
+    }
+    else
+    {
+        method = Wren::FindMethod(module, className, isStatic, signature);
+    }
+
+    // check for inherited methods
+    if (!method)
+    {
+        for (const auto& binding : GetClassBindings())
+        {
+            if (binding.moduleName == module && binding.className == className)
+            {
+                if (!binding.parentClassName.empty())
+                {
+                    method = Wren::FindMethod(module, binding.parentClassName.c_str(), isStatic, signature);
+                }
+                break;
+            }
+        }
+    }
+
+    if (!method)
+    {
+        DEBUG_WARNING("Wren binding not found: %s.%s.%s (static=%d)", module, className, signature, isStatic);
+    }
+
+    return method;
+}
+
+WrenForeignClassMethods WrenScriptEngine::OnBindForeignClass(WrenVM *vm, const char *module, const char *className)
+{
+    return Wren::FindClass(module, className);
+}
 }

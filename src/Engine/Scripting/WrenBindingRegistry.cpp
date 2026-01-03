@@ -32,8 +32,7 @@ namespace Struktur::Wren
     // LOOKUP IMPLEMENTATIONS
     // ============================================================================
 
-    WrenForeignMethodFn FindMethod(const char* module, const char* className,
-                                bool isStatic, const char* signature)
+    WrenForeignMethodFn FindMethod(const char* module, const char* className, bool isStatic, const char* signature)
     {
         for (const auto& binding : GetMethodBindings())
         {

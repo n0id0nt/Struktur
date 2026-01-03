@@ -173,7 +173,7 @@ class GameWorldState is BaseState {
         _loopCountLabel.setFont(font)
         _loopCountLabel.setTextColor(WHITE) // Change this when the background is created.
         _loopCountLabel.setVisible(true)
-        UIManager.addUIElement(_interactLabel)
+        UIManager.addUIElement(_loopCountLabel)
         font.unload()
         //_stateManager.changeState("PlayState")
         
@@ -226,7 +226,7 @@ class GameWorldState is BaseState {
                     _interactLabel.setVisible(false)
                     script.playerForceStop()
                     // Change state to interact state
-                    _stateManager.ChangeState("interactState")
+                    _stateManager.changeState("interactState")
                     return
                 }
             } else {
@@ -238,7 +238,7 @@ class GameWorldState is BaseState {
             if (playerPosition.y > 1755.0) {
                 if (Inventory.contains("Red Pedestal Active") && Inventory.contains("Green Pedestal Active") && Inventory.contains("Yellow Pedestal Active") && Inventory.contains("Blue Pedestal Active")) {
                     script.playerForceStop()
-                    _stateManager.ChangeState("gameOverState")
+                    _stateManager.changeState("gameOverState")
                     return
                 } 
 
