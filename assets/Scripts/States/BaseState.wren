@@ -19,7 +19,7 @@ class BaseState {
     }
     
     // Called every frame while active
-    update() {
+    update(stateManager) {
         // Override in derived states
     }
     

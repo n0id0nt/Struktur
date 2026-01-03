@@ -180,7 +180,7 @@ class GameWorldState is BaseState {
         System.print("Game world loaded")
     }
     
-    update() {
+    update(stateManager) {
         // if substate return out here
         if (_stateManager.currentState) {
             _stateManager.update()
@@ -195,14 +195,14 @@ class GameWorldState is BaseState {
         // TODO this should be an event.
         var playerEntities = GameObject.getAllWithIdentifier("Player")
         if (inventoryInteract) {
-            _interactLabel.SetVisible(false)
+            _interactLabel.setVisible(false)
             //TODO also pause the game time to pause the players animation
             // just forcing player to idle for now
             for (entity in playerEntities) {
                 var script = Script.getInstance(entity)
                 script.playerForceStop()
             }
-            _stateManager.changeState("inventoryState")
+            _stateManager.changeState("InventoryState")
             return
         }
 
@@ -226,7 +226,7 @@ class GameWorldState is BaseState {
                     _interactLabel.setVisible(false)
                     script.playerForceStop()
                     // Change state to interact state
-                    _stateManager.changeState("interactState")
+                    _stateManager.changeState("InteractState")
                     return
                 }
             } else {
@@ -274,6 +274,8 @@ class GameWorldState is BaseState {
         
         UIManager.removeUIElement(_interactLabel)
         UIManager.removeUIElement(_loopCountLabel)
+        _interactLabel = null
+        _loopCountLabel = null
 
         System.print("Game world unloaded")
     }

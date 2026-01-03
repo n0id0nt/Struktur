@@ -172,4 +172,21 @@ void wren_InventoryContains(WrenVM* vm)
 	wrenSetSlotBool(vm, 0, containsItem);
 }
 
-WREN_CLASS_STATIC("app", "Inventory", "contains(_)", wren_InventoryContains, "Check if an item is contained in the inventorty.");
+// Inventory.getItems() -> items
+void wren_InventoryGetItems(WrenVM* vm)
+{
+	Struktur::GameContext* context = static_cast<Struktur::GameContext*>(wrenGetUserData(vm));
+	auto& inventory = context->GetInventory();
+
+	wrenSetSlotNewList(vm, 0);
+	int index = 0;
+	for (auto& item : inventory)
+	{
+		wrenSetSlotString(vm, 1, item.c_str());
+		wrenInsertInList(vm, 0, index, 1);
+		index++;
+	}
+}
+
+WREN_CLASS_STATIC("app", "Inventory", "contains(_)", wren_InventoryContains, "Check if the inventory contains an item.");
+WREN_CLASS_STATIC("app", "Inventory", "getItems()", wren_InventoryGetItems, "Get a list of all items in inventory.");

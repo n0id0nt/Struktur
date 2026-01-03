@@ -36,7 +36,7 @@ class GameOverState is BaseState {
         _screenPanel.addChild(textBackgroundPanel)
     }
     
-    update() {
+    update(stateManger) {
 
     }
     
@@ -44,5 +44,6 @@ class GameOverState is BaseState {
         super.exit()
         
         UIManager.removeUIElement(_screenPanel)
+        _screenPanel = null
     }
 }

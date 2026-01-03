@@ -32,7 +32,9 @@ class Application {
 }
 
 class Inventory {
-    // Check if an item is contained in the inventorty.
+    // Check if the inventory contains an item.
     foreign static contains(arg0)
+    // Get a list of all items in inventory.
+    foreign static getItems()
 }
 

@@ -86,6 +86,18 @@ foreign class UIElement {
     foreign addChild(arg0)
     // Removes a UI Element from the children
     foreign removeChild(arg0)
+    // Sets the UI Elements on click callback
+    foreign setOnClick(arg0)
+    // Sets the UI Elements on focus callback
+    foreign setOnFocus(arg0)
+    // Sets the UI Elements on lose focus callback
+    foreign setOnLoseFocus(arg0)
+    // Sets the UI Elements on hover callback
+    foreign setOnHover(arg0)
+    // Sets the UI Elements on key pressed callback
+    foreign setOnKeyPressed(arg0)
+    // Sets the UI Elements on activate callback
+    foreign setOnActivate(arg0)
 }
 
 // UI Panel component
@@ -148,6 +160,18 @@ foreign class UIPanel {
     foreign addChild(arg0)
     // Removes a UI Element from the children
     foreign removeChild(arg0)
+    // Sets the UI Elements on click callback
+    foreign setOnClick(arg0)
+    // Sets the UI Elements on focus callback
+    foreign setOnFocus(arg0)
+    // Sets the UI Elements on lose focus callback
+    foreign setOnLoseFocus(arg0)
+    // Sets the UI Elements on hover callback
+    foreign setOnHover(arg0)
+    // Sets the UI Elements on key pressed callback
+    foreign setOnKeyPressed(arg0)
+    // Sets the UI Elements on activate callback
+    foreign setOnActivate(arg0)
 }
 
 // UI Label component
@@ -222,5 +246,17 @@ foreign class UILabel {
     foreign addChild(arg0)
     // Removes a UI Element from the children
     foreign removeChild(arg0)
+    // Sets the UI Elements on click callback
+    foreign setOnClick(arg0)
+    // Sets the UI Elements on focus callback
+    foreign setOnFocus(arg0)
+    // Sets the UI Elements on lose focus callback
+    foreign setOnLoseFocus(arg0)
+    // Sets the UI Elements on hover callback
+    foreign setOnHover(arg0)
+    // Sets the UI Elements on key pressed callback
+    foreign setOnKeyPressed(arg0)
+    // Sets the UI Elements on activate callback
+    foreign setOnActivate(arg0)
 }
 

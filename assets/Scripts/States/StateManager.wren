@@ -13,7 +13,7 @@ class StateManager {
     // Update active state
     update() {
         if (_currentState) {
-            _currentState.update()
+            _currentState.update(this)
         }
     }
     
@@ -42,6 +42,14 @@ class StateManager {
         } else {
             System.print("[StateManager] No state with name %(stateName) exists.")
         }
+    }
+
+    // clears current state
+    clearCurrentState() {
+        if (_currentState) {
+            _currentState.exit()
+        }
+        _currentState = null
     }
 
     insertState(stateName, stateConstructor) {

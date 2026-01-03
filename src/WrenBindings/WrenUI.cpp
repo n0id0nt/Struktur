@@ -411,7 +411,7 @@ void wren_UIElementAddChild(WrenVM* vm)
 		DEBUG_ERROR("UILabel.setPosition: uiElement is Null");
 		return;
 	}
-	WrenUIElement* child = static_cast<WrenUIElement*>(wrenGetSlotForeign(vm, 0));
+	WrenUIElement* child = static_cast<WrenUIElement*>(wrenGetSlotForeign(vm, 1));
 	uiElement->element->AddChild(child->element);
 	child->ownedByWren = false;
 }
@@ -430,6 +430,190 @@ void wren_UIElementRemoveChild(WrenVM* vm)
 	wrenSetSlotBool(vm, 0, success);
 }
 
+// UIElement.setOnClick { |sender, mousePos| ... }
+void wren_UIElementSetOnClick(WrenVM* vm)
+{
+	WrenUIElement* uiElement = static_cast<WrenUIElement*>(wrenGetSlotForeign(vm, 0));
+	if (!uiElement->element)
+	{
+		DEBUG_ERROR("UILabel.setPosition: uiElement is Null");
+		return;
+	}
+	WrenHandle* callback = wrenGetSlotHandle(vm, 1);
+
+	uiElement->element->SetOnClick([vm, callback](Struktur::UI::UIElement* sender, const glm::vec2& mousePos) {
+		wrenEnsureSlots(vm, 5);
+		wrenSetSlotHandle(vm, 0, callback);
+
+		wrenGetVariable(vm, "ui", "UIElement", 3);  // Get class into slot 3
+		WrenUIElement* wrenSender = static_cast<WrenUIElement*>(wrenSetSlotNewForeign(vm, 1, 3, sizeof(WrenUIElement)));
+		new (wrenSender) WrenUIElement{sender, false};
+
+		wrenGetVariable(vm, "math", "Vec2", 4);  // Get class into slot 4
+		WrenVec2* vec = static_cast<WrenVec2*>(wrenSetSlotNewForeign(vm, 2, 4, sizeof(WrenVec2)));
+		new (vec) WrenVec2{mousePos};
+
+		WrenHandle* method = wrenMakeCallHandle(vm, "call(_,_)");
+		wrenCall(vm, method);
+		wrenReleaseHandle(vm, method);
+	});
+}
+
+// UIElement.setOnFocus { |sender| ... }
+void wren_UIElementSetOnFocus(WrenVM* vm)
+{
+	WrenUIElement* uiElement = static_cast<WrenUIElement*>(wrenGetSlotForeign(vm, 0));
+	if (!uiElement->element)
+	{
+		DEBUG_ERROR("UILabel.setPosition: uiElement is Null");
+		return;
+	}
+	WrenHandle* callback = wrenGetSlotHandle(vm, 1);
+
+	uiElement->element->SetOnFocus([vm, callback](Struktur::UI::UIElement* sender) {
+		wrenEnsureSlots(vm, 3);
+		wrenSetSlotHandle(vm, 0, callback);
+
+		wrenGetVariable(vm, "ui", "UIElement", 2);  // Get class into slot 2
+		WrenUIElement* wrenSender = static_cast<WrenUIElement*>(wrenSetSlotNewForeign(vm, 1, 2, sizeof(WrenUIElement)));
+		new (wrenSender) WrenUIElement{sender, false};
+
+		WrenHandle* method = wrenMakeCallHandle(vm, "call(_)");
+		wrenCall(vm, method);
+		wrenReleaseHandle(vm, method);
+	});
+}
+
+// UIElement.setOnLoseFocus { |sender| ... }
+void wren_UIElementSetOnLoseFocus(WrenVM* vm)
+{
+	WrenUIElement* uiElement = static_cast<WrenUIElement*>(wrenGetSlotForeign(vm, 0));
+	if (!uiElement->element)
+	{
+		DEBUG_ERROR("UILabel.setPosition: uiElement is Null");
+		return;
+	}
+	WrenHandle* callback = wrenGetSlotHandle(vm, 1);
+
+	uiElement->element->SetOnLoseFocus([vm, callback](Struktur::UI::UIElement* sender) {
+		wrenEnsureSlots(vm, 3);
+		wrenSetSlotHandle(vm, 0, callback);
+
+		wrenGetVariable(vm, "ui", "UIElement", 2);  // Get class into slot 2
+		WrenUIElement* wrenSender = static_cast<WrenUIElement*>(wrenSetSlotNewForeign(vm, 1, 2, sizeof(WrenUIElement)));
+		new (wrenSender) WrenUIElement{sender, false};
+
+		WrenHandle* method = wrenMakeCallHandle(vm, "call(_)");
+		wrenCall(vm, method);
+		wrenReleaseHandle(vm, method);
+	});
+}
+
+// UIElement.setOnHover { |sender, mousePos| ... }
+void wren_UIElementSetOnHover(WrenVM* vm)
+{
+	WrenUIElement* uiElement = static_cast<WrenUIElement*>(wrenGetSlotForeign(vm, 0));
+	if (!uiElement->element)
+	{
+		DEBUG_ERROR("UILabel.setPosition: uiElement is Null");
+		return;
+	}
+	WrenHandle* callback = wrenGetSlotHandle(vm, 1);
+
+	uiElement->element->SetOnHover([vm, callback](Struktur::UI::UIElement* sender, const glm::vec2& mousePos) {
+		wrenEnsureSlots(vm, 5);
+		wrenSetSlotHandle(vm, 0, callback);
+
+		wrenGetVariable(vm, "ui", "UIElement", 3);  // Get class into slot 3
+		WrenUIElement* wrenSender = static_cast<WrenUIElement*>(wrenSetSlotNewForeign(vm, 1, 3, sizeof(WrenUIElement)));
+		new (wrenSender) WrenUIElement{sender, false};
+
+		wrenGetVariable(vm, "math", "Vec2", 4);  // Get class into slot 4
+		WrenVec2* vec = static_cast<WrenVec2*>(wrenSetSlotNewForeign(vm, 2, 4, sizeof(WrenVec2)));
+		new (vec) WrenVec2{mousePos};
+
+		WrenHandle* method = wrenMakeCallHandle(vm, "call(_,_)");
+		wrenCall(vm, method);
+		wrenReleaseHandle(vm, method);
+	});
+}
+
+// UIElement.setOnKeyPressed { |sender, key| ... }
+void wren_UIElementSetOnKeyPressed(WrenVM* vm)
+{
+	WrenUIElement* uiElement = static_cast<WrenUIElement*>(wrenGetSlotForeign(vm, 0));
+	if (!uiElement->element)
+	{
+		DEBUG_ERROR("UILabel.setPosition: uiElement is Null");
+		return;
+	}
+	WrenHandle* callback = wrenGetSlotHandle(vm, 1);
+
+	uiElement->element->SetOnKeyPressed([vm, callback](Struktur::UI::UIElement* sender, int key) {
+		wrenEnsureSlots(vm, 4);
+		wrenSetSlotHandle(vm, 0, callback);
+
+		wrenGetVariable(vm, "ui", "UIElement", 3);  // Get class into slot 3
+		WrenUIElement* wrenSender = static_cast<WrenUIElement*>(wrenSetSlotNewForeign(vm, 1, 3, sizeof(WrenUIElement)));
+		new (wrenSender) WrenUIElement{sender, false};
+
+		wrenSetSlotDouble(vm, 2, static_cast<double>(key));
+
+		WrenHandle* method = wrenMakeCallHandle(vm, "call(_,_)");
+		wrenCall(vm, method);
+		wrenReleaseHandle(vm, method);
+	});
+}
+
+// UIElement.setOnActivate { |sender| ... }
+void wren_UIElementSetOnActivate(WrenVM* vm)
+{
+	WrenUIElement* uiElement = static_cast<WrenUIElement*>(wrenGetSlotForeign(vm, 0));
+	if (!uiElement->element)
+	{
+		DEBUG_ERROR("UILabel.setPosition: uiElement is Null");
+		return;
+	}
+	WrenHandle* callback = wrenGetSlotHandle(vm, 1);
+
+	uiElement->element->SetOnActivate([vm, callback](Struktur::UI::UIElement* sender) {
+		wrenEnsureSlots(vm, 3);
+		wrenSetSlotHandle(vm, 0, callback);
+
+		wrenGetVariable(vm, "ui", "UIElement", 2);  // Get class into slot 2
+		WrenUIElement* wrenSender = static_cast<WrenUIElement*>(wrenSetSlotNewForeign(vm, 1, 2, sizeof(WrenUIElement)));
+		new (wrenSender) WrenUIElement{sender, false};
+
+		WrenHandle* method = wrenMakeCallHandle(vm, "call(_)");
+		wrenCall(vm, method);
+		wrenReleaseHandle(vm, method);
+	});
+}
+
+//// UIElement.setOnEvent { |sender| ... }
+//void wren_UIElementSetOnEvent(WrenVM* vm)
+//{
+//	WrenUIElement* uiElement = static_cast<WrenUIElement*>(wrenGetSlotForeign(vm, 0));
+//	if (!uiElement->element)
+//	{
+//		DEBUG_ERROR("UILabel.setPosition: uiElement is Null");
+//		return;
+//	}
+//	WrenHandle* callback = wrenGetSlotHandle(vm, 1);
+//
+//	uiElement->element->SetOnEvent([vm, callback](Struktur::UI::UIElement* sender) {
+//		wrenEnsureSlots(vm, 3);
+//		wrenSetSlotHandle(vm, 0, callback);
+//
+//		wrenGetVariable(vm, "ui", "UIElement", 2);  // Get class into slot 2
+//		WrenUIElement* wrenSender = static_cast<WrenUIElement*>(wrenSetSlotNewForeign(vm, 1, 2, sizeof(WrenUIElement)));
+//		new (wrenSender) WrenUIElement{sender, false};
+//
+//		WrenHandle* method = wrenMakeCallHandle(vm, "call(_)");
+//		wrenCall(vm, method);
+//		wrenReleaseHandle(vm, method);
+//	});
+//}
 
 // Register Sound foreign class
 WREN_FOREIGN_CLASS("ui", "UIElement", wren_UIElementAllocate, wren_UIElementFinalize, "UI Element component");
@@ -461,12 +645,12 @@ WREN_CLASS_METHOD("ui", "UIElement", "setZIndex(_)", wren_UIElementSetZIndex, "S
 WREN_CLASS_METHOD("ui", "UIElement", "getZIndex()", wren_UIElementGetZIndex, "Sets the UI Elements Z index");
 WREN_CLASS_METHOD("ui", "UIElement", "addChild(_)", wren_UIElementAddChild, "Adds a UI Element to elements children");
 WREN_CLASS_METHOD("ui", "UIElement", "removeChild(_)", wren_UIElementRemoveChild, "Removes a UI Element from the children");
-//WREN_CLASS_METHOD("ui", "UIElement", "setOnClick(_)", wren_UIElementSetOnClick, "Sets the UI Elements on click callback");
-//WREN_CLASS_METHOD("ui", "UIElement", "setOnFocus(_)", wren_UIElementSetOnFocus, "Sets the UI Elements on focus callback");
-//WREN_CLASS_METHOD("ui", "UIElement", "setOnLoseFocus(_)", wren_UIElementSetOnLoseFocus, "Sets the UI Elements on lose focus callback");
-//WREN_CLASS_METHOD("ui", "UIElement", "setOnHover(_)", wren_UIElementSetOnHover, "Sets the UI Elements on hover callback");
-//WREN_CLASS_METHOD("ui", "UIElement", "setOnKeyPressed(_)", wren_UIElementSetOnKeyPressed, "Sets the UI Elements on key pressed callback");
-//WREN_CLASS_METHOD("ui", "UIElement", "setOnActivate(_)", wren_UIElementSetOnActivate, "Sets the UI Elements on activate callback");
+WREN_CLASS_METHOD("ui", "UIElement", "setOnClick(_)", wren_UIElementSetOnClick, "Sets the UI Elements on click callback");
+WREN_CLASS_METHOD("ui", "UIElement", "setOnFocus(_)", wren_UIElementSetOnFocus, "Sets the UI Elements on focus callback");
+WREN_CLASS_METHOD("ui", "UIElement", "setOnLoseFocus(_)", wren_UIElementSetOnLoseFocus, "Sets the UI Elements on lose focus callback");
+WREN_CLASS_METHOD("ui", "UIElement", "setOnHover(_)", wren_UIElementSetOnHover, "Sets the UI Elements on hover callback");
+WREN_CLASS_METHOD("ui", "UIElement", "setOnKeyPressed(_)", wren_UIElementSetOnKeyPressed, "Sets the UI Elements on key pressed callback");
+WREN_CLASS_METHOD("ui", "UIElement", "setOnActivate(_)", wren_UIElementSetOnActivate, "Sets the UI Elements on activate callback");
 //WREN_CLASS_METHOD("ui", "UIElement", "setOnEvent(_)", wren_UIElementSetOnEvent, "Sets the UI Elements on event callback");
 
 // ============================================================================

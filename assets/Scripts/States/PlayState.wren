@@ -16,7 +16,7 @@ class PlayState is BaseState {
         System.print("Entering play mode")
     }
     
-    update() {
+    update(stateManager) {
 
     }
     
