@@ -188,5 +188,45 @@ void wren_InventoryGetItems(WrenVM* vm)
 	}
 }
 
+// Inventory.addItem(item) -> bool
+void wren_InventoryAddItem(WrenVM* vm)
+{
+	Struktur::GameContext* context = static_cast<Struktur::GameContext*>(wrenGetUserData(vm));
+	auto& inventory = context->GetInventory();
+
+	const char* itemName = wrenGetSlotString(vm, 1);
+
+	if (std::find(inventory.begin(), inventory.end(), itemName) == inventory.end())
+	{
+		inventory.push_back(itemName);
+		wrenSetSlotBool(vm, 0, true);
+	}
+	else
+	{
+		wrenSetSlotBool(vm, 0, false);
+	}
+}
+
+// Inventory.removeItem(item) -> bool
+void wren_InventoryRemoveItem(WrenVM* vm)
+{
+	Struktur::GameContext* context = static_cast<Struktur::GameContext*>(wrenGetUserData(vm));
+	auto& inventory = context->GetInventory();
+
+	const char* itemName = wrenGetSlotString(vm, 1);
+
+	if (std::find(inventory.begin(), inventory.end(), itemName) == inventory.end())
+	{
+		inventory.erase(std::find(inventory.begin(), inventory.end(), itemName));
+		wrenSetSlotBool(vm, 0, true);
+	}
+	else
+	{
+		wrenSetSlotBool(vm, 0, false);
+	}
+}
+
 WREN_CLASS_STATIC("app", "Inventory", "contains(_)", wren_InventoryContains, "Check if the inventory contains an item.");
 WREN_CLASS_STATIC("app", "Inventory", "getItems()", wren_InventoryGetItems, "Get a list of all items in inventory.");
+WREN_CLASS_STATIC("app", "Inventory", "addItem(_)", wren_InventoryAddItem, "add an item to the inventory.");
+WREN_CLASS_STATIC("app", "Inventory", "removeItem(_)", wren_InventoryRemoveItem, "remove an item to the inventory.");

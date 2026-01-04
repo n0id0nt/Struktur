@@ -38,6 +38,8 @@ foreign class Camera {
     foreign damping
     // Set the damping
     foreign damping=(arg0)
+    // Add Trauma to camera for screen shake
+    foreign addCameraTrauma(arg0)
     // Creates a camera component.
     foreign static create(arg0)
     // Gets a camera component.
@@ -46,6 +48,8 @@ foreign class Camera {
     foreign static worldPosToScreenPos(arg0)
     // Converts a screen position to the world position from the currently active camera.
     foreign static screenPosToWorldPos(arg0)
+    // Add Trauma to camera for screen shake active camera.
+    foreign static addCameraTrauma(arg0,arg1)
 }
 
 // Level component class

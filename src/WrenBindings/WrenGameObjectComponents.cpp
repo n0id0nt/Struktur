@@ -10,6 +10,7 @@
 #include "Engine/ECS/System/PhysicsSystem.h"
 #include "Engine/ECS/System/ShaderSystem.h"
 #include "Engine/ECS/System/AnimationSystem.h"
+#include "Engine/ECS/System/CameraSystem.h"
 
 #include "Engine/Game/Level.h"
 #include "Engine/Scripting/WrenUtil.h"
@@ -163,6 +164,30 @@ void wren_CameraScreenPosToWorldPos(WrenVM* vm)
 	new (vec2) WrenVec2(worldPos);
 }
 
+// Camera.addCameraTrauma(worldPos)
+void wren_CameraAddCameraTrauma(WrenVM* vm)
+{
+	Struktur::GameContext* context = static_cast<Struktur::GameContext*>(wrenGetUserData(vm));
+	Struktur::System::SystemManager& systemManager = context->GetSystemManager();
+	Struktur::System::CameraSystem& cameraSystem = systemManager.GetSystem<Struktur::System::CameraSystem>();
+
+	WrenCamera* camera = (WrenCamera*)wrenGetSlotForeign(vm, 0);
+	float trauma = (float)wrenGetSlotDouble(vm, 1);
+	cameraSystem.AddCameraTrauma(*context, camera->entity, trauma);
+}
+
+// Camera.addCameraTrauma(entity, worldPos)
+void wren_CameraStaticAddCameraTrauma(WrenVM* vm)
+{
+	Struktur::GameContext* context = static_cast<Struktur::GameContext*>(wrenGetUserData(vm));
+	Struktur::System::SystemManager& systemManager = context->GetSystemManager();
+	Struktur::System::CameraSystem& cameraSystem = systemManager.GetSystem<Struktur::System::CameraSystem>();
+
+	entt::entity entity = (entt::entity)wrenGetSlotDouble(vm, 1);
+	float trauma = (float)wrenGetSlotDouble(vm, 2);
+	cameraSystem.AddCameraTrauma(*context, entity, trauma);
+}
+
 // Register Camera Component foreign class
 WREN_FOREIGN_CLASS("gameObjectComponents", "Camera", wren_CameraAllocate, wren_CameraFinalize, "Camera component class");
 
@@ -173,12 +198,14 @@ WREN_CLASS_METHOD("gameObjectComponents", "Camera", "forcePosition", wren_Camera
 WREN_CLASS_METHOD("gameObjectComponents", "Camera", "forcePosition=(_)", wren_CameraSetForcePosition, "Set the forcePosition, will directly set the position of the next frame");
 WREN_CLASS_METHOD("gameObjectComponents", "Camera", "damping", wren_CameraGetDamping, "Get the damping");
 WREN_CLASS_METHOD("gameObjectComponents", "Camera", "damping=(_)", wren_CameraSetDamping, "Set the damping");
+WREN_CLASS_METHOD("gameObjectComponents", "Camera", "addCameraTrauma(_)", wren_CameraAddCameraTrauma, "Add Trauma to camera for screen shake");
 
 // Register static methods
 WREN_CLASS_STATIC("gameObjectComponents", "Camera", "create(_)", wren_CameraCreate, "Creates a camera component.");
 WREN_CLASS_STATIC("gameObjectComponents", "Camera", "get(_)", wren_CameraGet, "Gets a camera component.");
 WREN_CLASS_STATIC("gameObjectComponents", "Camera", "worldPosToScreenPos(_)", wren_CameraWorldPosToScreenPos, "Converts a world position to the screen position from the currently active camera.");
 WREN_CLASS_STATIC("gameObjectComponents", "Camera", "screenPosToWorldPos(_)", wren_CameraScreenPosToWorldPos, "Converts a screen position to the world position from the currently active camera.");
+WREN_CLASS_STATIC("gameObjectComponents", "Camera", "addCameraTrauma(_,_)", wren_CameraStaticAddCameraTrauma, "Add Trauma to camera for screen shake active camera.");
 
 // ============================================================================
 // LEVEL BINDINGS

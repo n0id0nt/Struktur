@@ -36,5 +36,9 @@ class Inventory {
     foreign static contains(arg0)
     // Get a list of all items in inventory.
     foreign static getItems()
+    // add an item to the inventory.
+    foreign static addItem(arg0)
+    // remove an item to the inventory.
+    foreign static removeItem(arg0)
 }
 
