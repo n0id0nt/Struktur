@@ -9,7 +9,7 @@ class BaseState {
     }
     
     // Called when state becomes active
-    enter() {
+    enter(stateManager, params) {
         System.print("%(name) entered")
     }
     

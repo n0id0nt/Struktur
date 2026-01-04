@@ -15,15 +15,20 @@ namespace Struktur::Debug
             ImGuiWindowFlags_NoScrollWithMouse |
             ImGuiWindowFlags_NoCollapse);
         
+        // Debug visualization toggles
+        auto& debugSettings = context.GetEditor().GetSettings().debugRender;
+
         // Play/Pause/Stop buttons
         if (ImGui::Button("Play"))
         {
             // Handle play
+            debugSettings.playGame = !debugSettings.playGame;
         }
         ImGui::SameLine();
         if (ImGui::Button("Pause"))
         {
             // Handle pause
+            debugSettings.playGame = !debugSettings.playGame;
         }
         ImGui::SameLine();
         if (ImGui::Button("Stop"))
@@ -55,9 +60,6 @@ namespace Struktur::Debug
         {
             // Handle scale tool
         }
-
-        // Debug visualization toggles
-        auto& debugSettings = context.GetEditor().GetSettings().debugRender;
         
         ImGui::PushStyleColor(ImGuiCol_Button, 
             debugSettings.showPhysicsShapes ? ImVec4(0.4f, 0.7f, 0.4f, 1.0f) : ImVec4(0.2f, 0.2f, 0.2f, 1.0f));

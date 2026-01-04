@@ -8,7 +8,7 @@ import "ui" for UIManager, UILabel, UIPanel, TextWrapping
 import "app" for Application, Inventory
 import "math" for Vec2, Vec3, Vec4
 import "input" for Input
-import "gameObjectComponents" for Camera
+import "gameObjectComponents" for Camera, Script
 import "gameObject" for GameObject
 
 var WHITE = Vec4.new(255, 255, 255, 255)
@@ -56,7 +56,7 @@ class InteractState is BaseState {
         _dialogueSrolling = false
         _breakAfterStep = false
         _interactionStep = 0
-        _currentString = null
+        _currentString = ""
 
         _currentDialogueStartTime = 0
 
@@ -106,8 +106,10 @@ class InteractState is BaseState {
         }
     }
     
-    enter() {
-        super.enter()
+    enter(stateManager, params) {
+        super.enter(stateManager, params)
+
+        _interactingEntity = params["interactingEntity"]
         
         var font = Font.load("assets/Fonts/medieval_sharp/MedievalSharp-Bold.ttf_30")
         var dialogueBackgroundPanelTexture = Texture.load("assets/Tiles/DialoguePanel.png")
@@ -139,6 +141,22 @@ class InteractState is BaseState {
         _continueDialogueLabel.setFont(font)
         _continueDialogueLabel.setVisible(false)
         textBackgroundPanel.addChild(_continueDialogueLabel)
+
+        // Set State variables
+        var interactable = Script.getInstance(_interactingEntity)
+        
+        _interaction = _interactionMap[interactable.name]
+                
+        var interactionStep = 0
+        while (!trySetInteractionStep(interactionStep)) {
+            interactionStep = interactionStep + 1
+            if (interactionStep == _interaction.count) {
+                System.print("No valid interaction steps for this interaction")
+                stateManager.clearCurrentState()
+                return
+            }
+        }
+        System.print("Set interaction step to %(interactionStep) for interactable %(interactable.name)")
     }
     
     update(stateManager) {
@@ -165,7 +183,7 @@ class InteractState is BaseState {
             }
         }
 
-        var numberOfCharactersToDraw = _dialogueSrolling ? ((gameTime - _currentDialogueStartTime) / TEXT_SCROLL_SPEED).floor : _currentString.count
+        var numberOfCharactersToDraw = _dialogueSrolling ? ((Application.gameTime - _currentDialogueStartTime) / TEXT_SCROLL_SPEED).floor : _currentString.count
         if (numberOfCharactersToDraw >= _currentString.count) {
             numberOfCharactersToDraw = _currentString.count
             _dialogueSrolling = false
@@ -206,11 +224,11 @@ class InteractState is BaseState {
         _currentDialogueStartTime = Application.gameTime
 
         for (item in step.itemAddVector) {
-            inventory.addItem(item)
+            Inventory.addItem(item)
         }
 
         for (item in step.itemRemoveVector) {
-            inventory.removeItem(item)
+            Inventory.removeItem(item)
         }
 
         //if (step.deleteInteractingEntity) {

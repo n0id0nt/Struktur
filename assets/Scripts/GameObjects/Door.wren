@@ -7,6 +7,8 @@ class Door {
         _name = args["Name"]
     }
     
+    name { _name }
+    
     start() {        
         var bodyDef = BodyDefinition.createStaticBody()
         var doorShape = PhysicsCircleShape.new(0.5)

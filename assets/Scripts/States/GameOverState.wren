@@ -19,8 +19,8 @@ class GameOverState is BaseState {
         _screenPanel = null
     }
     
-    enter() {
-        super.enter()
+    enter(stateManager, params) {
+        super.enter(stateManager, params)
         
         var font = Font.load("assets/Fonts/medieval_sharp/MedievalSharp-Bold.ttf_120")
 

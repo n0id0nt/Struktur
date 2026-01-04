@@ -19,8 +19,8 @@ class InventoryState is BaseState {
         _screenPanel = null
     }
     
-    enter() {
-        super.enter()
+    enter(stateManager, params) {
+        super.enter(stateManager, params)
 
         System.print("Entering Inventory")
         

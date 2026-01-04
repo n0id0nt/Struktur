@@ -25,6 +25,7 @@ namespace Struktur::Debug
             bool showLevelBounds = true;
             bool showEntityGizmos = false;
             bool showGrid = false;
+            bool playGame = true;
             
             float physicsShapeAlpha = 0.7f;
             float levelBoundsThickness = 2.0f;

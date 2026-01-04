@@ -629,7 +629,7 @@ WREN_CLASS_METHOD("ui", "UIElement", "IsFocusable", wren_UIElementGetFocusable, 
 WREN_CLASS_METHOD("ui", "UIElement", "setPosition(_,_)", wren_UIElementSetPosition, "Sets the UI Elements position");
 WREN_CLASS_METHOD("ui", "UIElement", "getPosition()", wren_UIElementGetPosition, "Gets the UI Elements position");
 WREN_CLASS_METHOD("ui", "UIElement", "setAnchorPoint(_)", wren_UIElementSetAnchorPoint, "Sets the UI Elements anchor point");
-WREN_CLASS_METHOD("ui", "UIElement", "setSize(_)", wren_UIElementSetSize, "Sets the UI Elements anchor point");
+WREN_CLASS_METHOD("ui", "UIElement", "setSize(_,_)", wren_UIElementSetSize, "Sets the UI Elements anchor point");
 WREN_CLASS_METHOD("ui", "UIElement", "getSize()", wren_UIElementGetSize, "Gets the UI Elements size");
 WREN_CLASS_METHOD("ui", "UIElement", "getBounds()", wren_UIElementGetBounds, "Gets the UI Elements bounds");
 WREN_CLASS_METHOD("ui", "UIElement", "setTabIndex(_)", wren_UIElementSetTabIndex, "Sets the UI Elements tab index");

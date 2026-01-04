@@ -88,8 +88,8 @@ class GameWorldState is BaseState {
         return [northRoom, eastRoom, westRoom, southRoom, courtyard]
     }
     
-    enter() {
-        super.enter()
+    enter(stateManager, params) {
+        super.enter(stateManager, params)
         
         System.print("Loading game world...")
 
@@ -226,7 +226,7 @@ class GameWorldState is BaseState {
                     _interactLabel.setVisible(false)
                     script.playerForceStop()
                     // Change state to interact state
-                    _stateManager.changeState("InteractState")
+                    _stateManager.changeState("InteractState", {"interactingEntity": interactEntity})
                     return
                 }
             } else {

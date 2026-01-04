@@ -22,6 +22,8 @@ class Player {
         System.print("Player constructed for: %(_name)")
     }
     
+    name { _name }
+
     // Called after C++ has created base components
     // Script configures/initializes component values
     start() {

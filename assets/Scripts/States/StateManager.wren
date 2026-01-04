@@ -33,12 +33,16 @@ class StateManager {
     
     // Create state instance from name
     changeState(stateName) {
+        changeState(stateName, {})
+    }
+
+    changeState(stateName, params) {
         if (_currentState) {
             _currentState.exit()
         }
         _currentState = _stateFactory[stateName]
         if (_currentState) {
-            _currentState.enter()
+            _currentState.enter(this, params)
         } else {
             System.print("[StateManager] No state with name %(stateName) exists.")
         }

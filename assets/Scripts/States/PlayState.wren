@@ -10,8 +10,8 @@ class PlayState is BaseState {
         _name = "PlayState"
     }
     
-    enter() {
-        super.enter()
+    enter(stateManager, params) {
+        super.enter(stateManager, params)
         
         System.print("Entering play mode")
     }

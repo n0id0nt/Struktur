@@ -52,6 +52,8 @@ class Item {
         ]
     }
     
+    name { _name }
+    
     // Called after C++ has created base components
     // Script configures/initializes component values
     start() {

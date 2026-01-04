@@ -211,7 +211,15 @@ void Struktur::GameLoop(GameContext& context)
 {
 	System::SystemManager& systemManager = context.GetSystemManager();
 	System::GameObjectManager& gameObjectManager = context.GetGameObjectManager();
+#ifdef EDITOR
+	auto& debugSettings = context.GetEditor().GetSettings().debugRender;
+	if (debugSettings.playGame)
+	{
+#endif
 	systemManager.Update(context);
+#ifdef EDITOR
+	}
+#endif
 	gameObjectManager.DeleteGameObjectsInSafeToDeleteQueue(context);
 
 	::BeginDrawing();

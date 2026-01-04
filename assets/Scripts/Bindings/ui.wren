@@ -55,7 +55,7 @@ foreign class UIElement {
     // Sets the UI Elements anchor point
     foreign setAnchorPoint(arg0)
     // Sets the UI Elements anchor point
-    foreign setSize(arg0)
+    foreign setSize(arg0,arg1)
     // Gets the UI Elements size
     foreign getSize()
     // Gets the UI Elements bounds
@@ -129,7 +129,7 @@ foreign class UIPanel {
     // Sets the UI Elements anchor point
     foreign setAnchorPoint(arg0)
     // Sets the UI Elements anchor point
-    foreign setSize(arg0)
+    foreign setSize(arg0,arg1)
     // Gets the UI Elements size
     foreign getSize()
     // Gets the UI Elements bounds
@@ -215,7 +215,7 @@ foreign class UILabel {
     // Sets the UI Elements anchor point
     foreign setAnchorPoint(arg0)
     // Sets the UI Elements anchor point
-    foreign setSize(arg0)
+    foreign setSize(arg0,arg1)
     // Gets the UI Elements size
     foreign getSize()
     // Gets the UI Elements bounds

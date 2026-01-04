@@ -10,8 +10,8 @@ class MainMenuState is BaseState {
         _name = "MainMenuState"
     }
     
-    enter() {
-        super.enter()
+    enter(stateManager, params) {
+        super.enter(stateManager, params)
         
         System.print("Main Menu - TODO: Create UI")
         // TODO: Create menu UI
