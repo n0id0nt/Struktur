@@ -243,9 +243,7 @@ class GameWorldState is BaseState {
                 } 
 
                 // reset the current state
-                //_stateManager.ChangeState("gameWorldState")
-                exit()
-                enter()
+                stateManager.changeState("GameWorld")
                 return
             }
 
