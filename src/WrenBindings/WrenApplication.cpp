@@ -177,9 +177,9 @@ void wren_InventoryGetItems(WrenVM* vm)
 {
 	Struktur::GameContext* context = static_cast<Struktur::GameContext*>(wrenGetUserData(vm));
 	auto& inventory = context->GetInventory();
-
 	wrenSetSlotNewList(vm, 0);
 	int index = 0;
+	wrenEnsureSlots(vm, 2);
 	for (auto& item : inventory)
 	{
 		wrenSetSlotString(vm, 1, item.c_str());

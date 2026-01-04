@@ -30,6 +30,10 @@ class UIManager {
     foreign static addUIElement(arg0)
     // Remove and clean up an element in the UI system.
     foreign static removeUIElement(arg0)
+    // Will set the focus of the current element.
+    foreign static setFocus(arg0)
+    // Will set the focus of the current element.
+    foreign static clearFocusElements()
 }
 
 // UI Element component
@@ -46,6 +50,8 @@ foreign class UIElement {
     foreign IsEnabled
     // Sets UI Element to be focusable
     foreign IsFocusable=(arg0)
+    // Sets UI Element to be focusable
+    foreign setFocusable(arg0)
     // Gets UI Element to be focusable
     foreign IsFocusable
     // Sets the UI Elements position
@@ -120,6 +126,8 @@ foreign class UIPanel {
     foreign IsEnabled
     // Sets UI Element to be focusable
     foreign IsFocusable=(arg0)
+    // Sets UI Element to be focusable
+    foreign setFocusable(arg0)
     // Gets UI Element to be focusable
     foreign IsFocusable
     // Sets the UI Elements position
@@ -206,6 +214,8 @@ foreign class UILabel {
     foreign IsEnabled
     // Sets UI Element to be focusable
     foreign IsFocusable=(arg0)
+    // Sets UI Element to be focusable
+    foreign setFocusable(arg0)
     // Gets UI Element to be focusable
     foreign IsFocusable
     // Sets the UI Elements position

@@ -3,7 +3,7 @@
 #include "Engine/GameContext.h"
 
 Struktur::UI::UIManager::UIManager()
-    : m_focusedElement(nullptr), m_hoveredElement(nullptr), m_capturingInput(false)
+    : m_focusedElement(nullptr), m_hoveredElement(nullptr), m_capturingInput(false), m_focusJustChanged(false), m_hoveredJustChanged(false)
 {
     m_camera = {{0, 0}, {0, 0}, 0.0f, 1.0f};
     m_focusNavigator = std::make_unique<FocusNavigator>();
@@ -56,6 +56,12 @@ void Struktur::UI::UIManager::Update(GameContext& context)
     }
     
     HandleInput(context);
+    // Process change in focus
+    if (m_focusJustChanged)
+    {
+        m_focusNavigator->SetFocus(m_focusedElement);
+        m_focusJustChanged = false;
+    }
 }
 
 Struktur::UI::UIElement *Struktur::UI::UIManager::GetElementAt(const glm::vec2 &position) const
@@ -121,8 +127,8 @@ Struktur::UI::FocusNavigator *Struktur::UI::UIManager::GetFocusNavigator() const
 
 void Struktur::UI::UIManager::SetFocus(UIElement* element)
 {
-    m_focusNavigator->SetFocus(element);
-    m_focusedElement = m_focusNavigator->GetCurrentFocus();
+    m_focusedElement = element;
+    m_focusJustChanged = true;
 }
 
 void Struktur::UI::UIManager::HandleInput(GameContext &context)

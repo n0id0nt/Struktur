@@ -197,7 +197,7 @@ class InteractState is BaseState {
         super.exit()
         
         System.print("Unloading InteractState...")
-                
+
         UIManager.removeUIElement(_screenPanel)
 
         System.print("InteractState unloaded")

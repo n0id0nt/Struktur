@@ -72,8 +72,36 @@ void wren_UIManagerRemoveUIElement(WrenVM* vm)
 	uiElement->element = nullptr;
 }
 
+// UIManager.setFocus(UIElenent)
+void wren_UIManagerSetFocus(WrenVM* vm)
+{
+	Struktur::GameContext* context = static_cast<Struktur::GameContext*>(wrenGetUserData(vm));
+	Struktur::UI::UIManager& uiManager = context->GetUIManager();
+	
+	WrenUIElement* uiElement = static_cast<WrenUIElement*>(wrenGetSlotForeign(vm, 1));
+	
+	if (!uiElement->element->IsFocusable())
+	{
+		BREAK_MSG("UIElement is not focusable can't be focused");
+		return;
+	}
+	uiManager.SetFocus(uiElement->element);
+}
+
+// UIManager.clearFocusElements()
+void wren_UIManagerClearFocusElements(WrenVM* vm)
+{
+	Struktur::GameContext* context = static_cast<Struktur::GameContext*>(wrenGetUserData(vm));
+	Struktur::UI::UIManager& uiManager = context->GetUIManager();
+	Struktur::UI::FocusNavigator* focusNavigator = uiManager.GetFocusNavigator();
+	uiManager.SetFocus(nullptr);
+	focusNavigator->Clear();
+}
+
 WREN_CLASS_STATIC("ui", "UIManager", "addUIElement(_)", wren_UIManagerAddUIElement, "Add a UI Element to the UI system.");
 WREN_CLASS_STATIC("ui", "UIManager", "removeUIElement(_)", wren_UIManagerRemoveUIElement, "Remove and clean up an element in the UI system.");
+WREN_CLASS_STATIC("ui", "UIManager", "setFocus(_)", wren_UIManagerSetFocus, "Will set the focus of the current element.");
+WREN_CLASS_STATIC("ui", "UIManager", "clearFocusElements()", wren_UIManagerClearFocusElements, "Will set the focus of the current element.");
 
 // ============================================================================
 // UI Element - Foreign class wrapping UILabel
@@ -148,6 +176,10 @@ void wren_UIElementGetEnabled(WrenVM* vm)
 // UIElement.setFocusable(isFocusable)
 void wren_UIElementSetFocusable(WrenVM* vm)
 {
+	Struktur::GameContext* context = static_cast<Struktur::GameContext*>(wrenGetUserData(vm));
+	Struktur::UI::UIManager& uiManager = context->GetUIManager();
+	Struktur::UI::FocusNavigator* focusNavigator = uiManager.GetFocusNavigator();
+
 	WrenUIElement* uiElement = static_cast<WrenUIElement*>(wrenGetSlotForeign(vm, 0));
 	if (!uiElement->element)
 	{
@@ -155,7 +187,8 @@ void wren_UIElementSetFocusable(WrenVM* vm)
 		return;
 	}
 	bool isFocusable = wrenGetSlotBool(vm, 1);
-	uiElement->element->SetVisible(isFocusable);
+	uiElement->element->SetFocusable(isFocusable);
+	focusNavigator->RegisterElement(uiElement->element);
 }
 
 // UIElement.getFocusable()
@@ -167,7 +200,7 @@ void wren_UIElementGetFocusable(WrenVM* vm)
 		DEBUG_ERROR("UIElement.getVisible: element is Null");
 		return;
 	}
-	wrenSetSlotBool(vm, 0, uiElement->element->IsVisible());
+	wrenSetSlotBool(vm, 0, uiElement->element->IsFocusable());
 }
 
 // UIElement.setPosition(positionPixel, positionPercentage)
@@ -625,6 +658,7 @@ WREN_CLASS_METHOD("ui", "UIElement", "isVisible", wren_UIElementGetVisible, "Get
 WREN_CLASS_METHOD("ui", "UIElement", "IsEnabled=(_)", wren_UIElementSetEnabled, "Sets UI Element to be enabled");
 WREN_CLASS_METHOD("ui", "UIElement", "IsEnabled", wren_UIElementGetEnabled, "Gets UI Element to be enabled");
 WREN_CLASS_METHOD("ui", "UIElement", "IsFocusable=(_)", wren_UIElementSetFocusable, "Sets UI Element to be focusable");
+WREN_CLASS_METHOD("ui", "UIElement", "setFocusable(_)", wren_UIElementSetFocusable, "Sets UI Element to be focusable");
 WREN_CLASS_METHOD("ui", "UIElement", "IsFocusable", wren_UIElementGetFocusable, "Gets UI Element to be focusable");
 WREN_CLASS_METHOD("ui", "UIElement", "setPosition(_,_)", wren_UIElementSetPosition, "Sets the UI Elements position");
 WREN_CLASS_METHOD("ui", "UIElement", "getPosition()", wren_UIElementGetPosition, "Gets the UI Elements position");

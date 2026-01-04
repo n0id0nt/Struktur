@@ -116,6 +116,7 @@ class InventoryState is BaseState {
         System.print("Unloading Inventory...")
         
         if (_screenPanel) {
+            UIManager.clearFocusElements()
             UIManager.removeUIElement(_screenPanel)
             _screenPanel = null
         }

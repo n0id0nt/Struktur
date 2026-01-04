@@ -50,11 +50,12 @@ namespace Struktur
 
             std::vector<std::unique_ptr<UIElement>> m_elements;
             UIElement* m_focusedElement;
+            bool m_focusJustChanged;
             UIElement* m_hoveredElement;
+            bool m_hoveredJustChanged;
             ::Camera2D m_camera;
             bool m_capturingInput;
             std::unique_ptr<FocusNavigator> m_focusNavigator;
-
         };
     }
 }
