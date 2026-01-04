@@ -133,6 +133,9 @@ namespace Struktur
             // Convenience method to trigger generic events
             void TriggerEvent(const std::string& eventType, float numericValue = 0.0f, bool boolValue = false);
 
+            void ForEachRecursive(std::function<void(UIElement*)> func);
+            void ForEachRecursivePostOrder(std::function<void(UIElement*)> func);
+
         protected:
             void UpdateChildren(GameContext& context);
             void RenderChildren(GameContext& context);

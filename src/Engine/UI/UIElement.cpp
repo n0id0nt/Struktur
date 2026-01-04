@@ -187,6 +187,26 @@ void Struktur::UI::UIElement::TriggerEvent(const std::string& eventType, float n
     }
 }
 
+void Struktur::UI::UIElement::ForEachRecursive(std::function<void(UIElement *)> func)
+{
+    func(this);  // Apply to self first
+        
+    for (auto& child : m_children)
+    {
+        child->ForEachRecursive(func);  // Recurse to children
+    }
+}
+
+void Struktur::UI::UIElement::ForEachRecursivePostOrder(std::function<void(UIElement *)> func)
+{
+    for (auto& child : m_children)
+    {
+        child->ForEachRecursivePostOrder(func);
+    }
+    
+    func(this);  // Apply to self last
+}
+
 void Struktur::UI::UIElement::OnClick(const glm::vec2& mousePos)
 {
     if (m_onClickCallback)

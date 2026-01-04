@@ -28,10 +28,17 @@ Struktur::UI::UIElement *Struktur::UI::UIManager::AddElement(std::unique_ptr<UIE
 
 void Struktur::UI::UIManager::RemoveElement(UIElement *element)
 {
-    if (m_focusedElement == element) m_focusedElement = nullptr;
-    if (m_hoveredElement == element) m_hoveredElement = nullptr;
+    if (!element) return;
     
-    m_focusNavigator->UnregisterElement(element);
+    // Process element and all its children recursively
+    element->ForEachRecursive([this](UIElement* elem) {
+        // Check if this element is focused
+        if (m_focusedElement == elem) m_focusedElement = nullptr;
+        if (m_hoveredElement == elem) m_hoveredElement = nullptr;
+        
+        // Remove from focus navigator
+        m_focusNavigator->UnregisterElement(elem);
+    });
     
     m_elements.erase(
         std::remove_if(m_elements.begin(), m_elements.end(),

@@ -125,6 +125,10 @@ void Struktur::UI::FocusNavigator::Clear()
         m_currentFocus->OnLoseFocus();
     }
     m_currentFocus = nullptr;
+    for (auto& focusable : m_focusableElements)
+    {
+        focusable->SetFocusable(false);
+    }
     m_focusableElements.clear();
 }
 
