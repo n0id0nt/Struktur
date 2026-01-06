@@ -6,6 +6,20 @@ set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)  # Disable compiler-specific extensions
 
+# Prevent all subprojects from installing
+set(CMAKE_SKIP_INSTALL_ALL_DEPENDENCY TRUE)
+set(SKIP_INSTALL_ALL ON)
+
+# Or more specifically:
+set(ENTT_INSTALL OFF CACHE BOOL "" FORCE)
+set(GLM_INSTALL_ENABLE OFF CACHE BOOL "" FORCE)
+set(JSON_Install OFF CACHE BOOL "" FORCE)
+set(PUGIXML_INSTALL OFF CACHE BOOL "" FORCE)
+set(BOX2D_BUILD_DOCS OFF CACHE BOOL "" FORCE)
+set(BOX2D_INSTALL OFF CACHE BOOL "" FORCE)
+set(BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
+set(RAYLIB_INSTALL OFF CACHE BOOL "" FORCE)
+
 ##########################################################################################
 # Configurable options
 ##########################################################################################
@@ -447,9 +461,15 @@ if(PLATFORM_WEB)
 elseif(PLATFORM_DESKTOP)
     # Desktop settings
     if(WIN32)
-        set_target_properties(${PROJECT_NAME} PROPERTIES
-            WIN32_EXECUTABLE False
-        )
+		if(CMAKE_BUILD_TYPE STREQUAL "Release")
+			set_target_properties(${PROJECT_NAME} PROPERTIES
+				WIN32_EXECUTABLE True
+			)
+		else()
+			set_target_properties(${PROJECT_NAME} PROPERTIES
+				WIN32_EXECUTABLE False
+			)
+		endif()
     endif()
     
     if(IS_DIRECTORY ${CMAKE_SOURCE_DIR}/assets)
@@ -471,4 +491,9 @@ elseif(PLATFORM_DESKTOP)
             )
         endif()
     endif()
+endif()
+
+install(TARGETS ${PROJECT_NAME} DESTINATION .)
+if(IS_DIRECTORY ${CMAKE_SOURCE_DIR}/assets)
+	install(DIRECTORY ${CMAKE_SOURCE_DIR}/assets DESTINATION .)
 endif()

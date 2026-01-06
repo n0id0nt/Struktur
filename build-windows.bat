@@ -20,10 +20,20 @@ if %errorlevel% neq 0 (
 
 echo.
 echo Build completed successfully!
-echo Executable: build-windows\Release\Struktur.exe
 echo.
 
-Release\Struktur.exe
+cmake --install . --prefix ./Dist --config Release
+if %errorlevel% neq 0 (
+    echo Install failed!
+    pause
+    exit /b 1
+)
+
+echo.
+echo Executable: build-windows\Dist\Struktur.exe
+echo.
+
+Dist\Struktur.exe
 
 cd ..
 pause
