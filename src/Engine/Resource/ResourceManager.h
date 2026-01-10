@@ -10,6 +10,7 @@
 #include "Engine/Resource/MusicResource.h"
 #include "Engine/Resource/TextureResource.h"
 #include "Engine/Resource/FontResource.h"
+#include "Engine/Resource/ShaderResource.h"
 
 namespace Struktur
 {
@@ -22,67 +23,23 @@ namespace Struktur
 			TexturePool m_texturePool;
 			SoundPool m_soundPool;
 			MusicPool m_musicPool;
-			FontPool m_fontResource;
+			FontPool m_fontPool;
+			ShaderPool m_shaderPool;
 			
 		public:
-			ResourcePtr<TextureResource> GetTexture(const std::string& name)
-			{
-				return m_texturePool.GetResource(name);
-			}
-			
-			ResourcePtr<SoundResource> GetSound(const std::string& name)
-			{
-				return m_soundPool.GetResource(name);
-			}
-			
-			ResourcePtr<MusicResource> GetMusic(const std::string& name)
-			{
-				return m_musicPool.GetResource(name);
-			}
-			
-			ResourcePtr<FontResource> GetFontResource(const std::string& name)
-			{
-				return m_fontResource.GetResource(name);
-			}
+			ResourcePtr<TextureResource> GetTexture(const std::string& filePath);			
+			ResourcePtr<SoundResource> GetSound(const std::string& filePath);			
+			ResourcePtr<MusicResource> GetMusic(const std::string& filePath);			
+			ResourcePtr<FontResource> GetFont(const std::string& filePath, int size);
+			ResourcePtr<ShaderResource> GetShader(const std::string& vsFilePath, const std::string& fsFilePath);
 
-			void Clear()
-			{
-				m_texturePool.Clear();
-				m_soundPool.Clear();
-				m_musicPool.Clear();
-				m_fontResource.Clear();
-			}
+			void Clear();
 			
 			// GPU-specific operations (only affect GPU resources)
-			void HandleGpuContextLost() {
-				DEBUG_INFO("=== GPU CONTEXT LOST ===");
-				m_texturePool.HandleGpuContextLost();
-				// Note: Sound and music pools are unaffected
-			}
+			void HandleGpuContextLost();			
+			void ReloadAllGpuResources();
 			
-			void ReloadAllGpuResources() {
-				DEBUG_INFO("=== RELOADING GPU RESOURCES ===");
-				m_texturePool.ReloadAllGpuResources();
-				// Note: Sound and music pools are unaffected
-			}
-			
-			void PrintResourceStats() const {
-				DEBUG_INFO("=== Resource Statistics ===");
-				// GPU resources
-				//std::cout << "GPU Resources (Textures):\n";
-				//std::cout << "  Count: " << m_texturePool.getLoadedCount() << "\n";
-				//std::cout << "  GPU Memory: " << m_texturePool.getGpuMemoryUsage() / 1024 / 1024 
-				//		<< "MB / " << m_texturePool.getMaxGpuMemory() / 1024 / 1024 
-				//		<< "MB (" << m_texturePool.getGpuMemoryUsagePercent() << "%)\n";
-				//std::cout << "  System Memory: " << m_texturePool.getTotalMemoryUsage() / 1024 / 1024 << "MB\n";
-				//
-				//// Non-GPU resources
-				//std::cout << "Audio Resources:\n";
-				//std::cout << "  Sounds: " << m_soundPool.getLoadedCount() 
-				//		<< " (" << m_soundPool.getTotalMemoryUsage() / 1024 / 1024 << "MB)\n";
-				//std::cout << "  Music: " << m_musicPool.getLoadedCount() 
-				//		<< " (" << m_musicPool.getTotalMemoryUsage() / 1024 / 1024 << "MB)\n";
-			}
+			void PrintResourceStats() const;
 		};
 	}
 }

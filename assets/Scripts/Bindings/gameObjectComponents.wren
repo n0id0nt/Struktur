@@ -83,19 +83,19 @@ foreign class World {
 // Shader class wraps Shader component
 foreign class Shader {
     // Sets the physics body fixed rotation
-    foreign SetFloatUniform(arg0)
+    foreign setFloatUniform(arg0,arg1)
     // Sets the physics body fixed rotation
-    foreign SetIntUniform(arg0)
+    foreign setIntUniform(arg0,arg1)
     // Sets the physics body fixed rotation
-    foreign SetVec2Uniform(arg0)
+    foreign setVec2Uniform(arg0,arg1)
     // Sets the physics body fixed rotation
-    foreign SetVec3Uniform(arg0)
+    foreign setVec3Uniform(arg0,arg1)
     // Sets the physics body fixed rotation
-    foreign SetVec4Uniform(arg0)
+    foreign setVec4Uniform(arg0,arg1)
     // Sets the physics body fixed rotation
-    foreign SetMat4Uniform(arg0)
+    foreign setMat4Uniform(arg0,arg1)
     // Create a Shader body
-    foreign static create(arg0)
+    foreign static create(arg0,arg1)
     // Gets a Shader body
     foreign static get(arg0)
 }

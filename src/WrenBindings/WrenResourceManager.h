@@ -1,4 +1,5 @@
 #include "Engine/Resource/TextureResource.h"
+#include "Engine/Resource/ShaderResource.h"
 #include "Engine/Resource/FontResource.h"
 #include "Engine/Resource/MusicResource.h"
 #include "Engine/Resource/SoundResource.h"
@@ -9,6 +10,14 @@ struct WrenTextureHandle
 
 	WrenTextureHandle() {}
 	WrenTextureHandle(const Struktur::Resource::ResourcePtr<Struktur::Resource::TextureResource>& res) : resource(res) {}
+};
+
+struct WrenShaderHandle
+{
+	Struktur::Resource::ResourcePtr<Struktur::Resource::ShaderResource> resource;
+
+	WrenShaderHandle() {}
+	WrenShaderHandle(const Struktur::Resource::ResourcePtr<Struktur::Resource::ShaderResource>& res) : resource(res) {}
 };
 
 struct WrenFontHandle

@@ -47,10 +47,10 @@
 #endif
 
 #ifdef EDITOR
-#define SPLASHSCREENFONT "assets/Fonts/medieval_sharp/MedievalSharp-Bold.ttf_120"
+#define SPLASHSCREENFONT "assets/Fonts/medieval_sharp/MedievalSharp-Bold.ttf"
 #define SPLASHSCREENTEXT "STRUKTUR"
 #else
-#define SPLASHSCREENFONT "assets/Fonts/medieval_sharp/MedievalSharp-Bold.ttf_120"
+#define SPLASHSCREENFONT "assets/Fonts/medieval_sharp/MedievalSharp-Bold.ttf"
 #define SPLASHSCREENTEXT "Memory Palace"
 #endif
 
@@ -65,27 +65,33 @@ void Struktur::InitialiseGame(GameContext& context)
 	Wren::WrenStateManager& wrenStateManager = context.GetWrenStateManager();
 	Wren::WrenScriptComponentRegistry& wrenScriptComponentRegistry = context.GetWrenScriptComponentRegistry();
 
-	wrenScriptEngine.Initialise(context);
-	wrenStateManager.Initialise(context);
-	wrenScriptComponentRegistry.LoadAllScriptComponents(context);
-
+	// Want to create a window before we start initialising systems
 #ifdef EDITOR
 	// In debug mode, create a larger window to fit ImGui panels
 	const int windowWidth = 1280;
 	const int windowHeight = 720;
+	gameData.gameWidth = windowWidth;
+	gameData.gameHeight = windowHeight;
 	::InitWindow(windowWidth, windowHeight, "Struktur");
 	::SetWindowState(FLAG_WINDOW_RESIZABLE);
-#else
+
+	::rlImGuiSetup(true);
+	ImGuiIO& io = ImGui::GetIO();
+	io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
+
+	Debug::Editor& editor = context.GetEditor();
+	editor.Initialise(context);
+#endif
+
+	wrenScriptEngine.Initialise(context);
+	wrenStateManager.Initialise(context);
+	wrenScriptComponentRegistry.LoadAllScriptComponents(context);
+
+#ifndef EDITOR
 	// In release mode, window matches game size
 	::InitWindow(gameData.gameWidth, gameData.gameHeight, gameData.projectName);
 #endif
 	::SetExitKey(KEY_NULL);
-
-#ifdef EDITOR
-	::rlImGuiSetup(true);
-	ImGuiIO& io = ImGui::GetIO();
-	io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
-#endif
 
 #ifdef DEBUG
 	Wren::CodeGenerator::GenerateBindingFiles("Assets/Scripts/Bindings");
@@ -96,11 +102,6 @@ void Struktur::InitialiseGame(GameContext& context)
 	input.LoadInputBindings(gameData.inputBindingsPath);
 	glm::vec2 gravity(0.0f, 0.0f);
 	physicsWorld.Initialise(gravity, gameData.velocityIterations, gameData.positionIterations, gameData.pixelsPerMeter);
-
-#ifdef EDITOR
-	Debug::Editor& editor = context.GetEditor();
-	editor.Initialise(context);
-#endif
 
 	// The order here also defines the order they are updated - TODO need a better way to determine render priority and also need a way to have helper systems with out an empty update
 	systemManager.AddHelperSystem<System::HierarchySystem>();
@@ -121,7 +122,9 @@ void Struktur::InitialiseGame(GameContext& context)
 
 	DEBUG_INFO("Game Data Loaded");
 
+#ifndef EDITOR
 	wrenStateManager.Start(context);
+#endif
 }
 
 void Struktur::ExitGame(GameContext& context)
@@ -150,7 +153,7 @@ void Struktur::ExitGame(GameContext& context)
 
 	DEBUG_INFO("[Clean Up] Wren Script Component Registry");
 	Wren::WrenScriptComponentRegistry& wrenScriptComponentRegistry = context.GetWrenScriptComponentRegistry();
-	wrenScriptComponentRegistry.Shutdown(context);
+	wrenScriptComponentRegistry.Clear(context);
 
 	DEBUG_INFO("[Clean Up] Wren Script Engine");
 	Wren::WrenScriptEngine& wrenScriptEngine = context.GetWrenScriptEngine();
@@ -165,7 +168,7 @@ void Struktur::SplashScreenLoop(GameContext& context)
 {
 	Core::GameData& gameData = context.GetGameData();
 	Resource::ResourceManager& resourceManager = context.GetResourceManager();
-	Resource::ResourcePtr<Resource::FontResource> font = resourceManager.GetFontResource(SPLASHSCREENFONT);
+	Resource::ResourcePtr<Resource::FontResource> font = resourceManager.GetFont(SPLASHSCREENFONT, 120);
 	//fade in time
 	const double fadeInTime = 1.5;
 	const double holdTime = 1;
@@ -213,10 +216,10 @@ void Struktur::GameLoop(GameContext& context)
 	System::GameObjectManager& gameObjectManager = context.GetGameObjectManager();
 #ifdef EDITOR
 	auto& debugSettings = context.GetEditor().GetSettings().debugRender;
-	if (debugSettings.playGame)
+	if (debugSettings.playingGame && !debugSettings.pausedGame)
 	{
 #endif
-	systemManager.Update(context);
+		systemManager.Update(context);
 #ifdef EDITOR
 	}
 #endif
@@ -308,7 +311,7 @@ void Struktur::Game()
 	{
 		// create local scope to manage lifetime of splash screen font - TODO create a spash screen state and add it to the context.
 		Resource::ResourceManager& resourceManager = context.GetResourceManager();
-		Resource::ResourcePtr<Resource::FontResource> font = resourceManager.GetFontResource(SPLASHSCREENFONT);
+		Resource::ResourcePtr<Resource::FontResource> font = resourceManager.GetFont(SPLASHSCREENFONT, 120);
 
 #ifdef PLATFORM_WEB
 		// Web platform - use emscripten main loop
@@ -342,3 +345,77 @@ void Struktur::Game()
 #endif
 	::CloseWindow();
 }
+
+#ifdef EDITOR
+void Struktur::StartDebugGame(GameContext& context)
+{
+	ClearGameSystems(context);
+	StartGameSystems(context);
+
+	DEBUG_INFO("[Start] Wren State");
+	Wren::WrenStateManager& wrenStateManager = context.GetWrenStateManager();
+	wrenStateManager.Start(context);
+}
+
+void Struktur::StopDebugGame(GameContext& context)
+{
+	ClearGameSystems(context);
+}
+
+void Struktur::ClearGameSystems(GameContext& context)
+{
+	DEBUG_INFO("[Clean Up] Wren State Manager");
+	Wren::WrenStateManager& wrenStateManager = context.GetWrenStateManager();
+	wrenStateManager.Shutdown(context);
+
+	DEBUG_INFO("[Clean Up] UI Manager");
+	UI::UIManager& uiManager = context.GetUIManager();
+	uiManager.Clear();
+
+	DEBUG_INFO("[Clean Up] Registry");
+	entt::registry& registry = context.GetRegistry();
+	registry.clear();
+
+	DEBUG_INFO("[Clean Up] Physics World");
+	Physics::PhysicsWorld& world = context.GetPhysicsWorld();
+	world.Clear();
+
+	DEBUG_INFO("[Clean Up] Wren Script Component Registry");
+	Wren::WrenScriptComponentRegistry& wrenScriptComponentRegistry = context.GetWrenScriptComponentRegistry();
+	wrenScriptComponentRegistry.Clear(context);
+
+	DEBUG_INFO("[Clean Up] Wren Script Engine");
+	Wren::WrenScriptEngine& wrenScriptEngine = context.GetWrenScriptEngine();
+	wrenScriptEngine.Shutdown();
+
+	DEBUG_INFO("[Clean Up] Resource Manager");
+	Resource::ResourceManager& resourceManager = context.GetResourceManager();
+	resourceManager.Clear();
+}
+
+void Struktur::StartGameSystems(GameContext& context)
+{
+	Core::GameData& gameData = context.GetGameData();
+
+	DEBUG_INFO("[Start] Wren State Engine");
+	Wren::WrenScriptEngine& wrenScriptEngine = context.GetWrenScriptEngine();
+	wrenScriptEngine.Initialise(context);
+
+	DEBUG_INFO("[Start] Wren State Manager");
+	Wren::WrenStateManager& wrenStateManager = context.GetWrenStateManager();
+	wrenStateManager.Initialise(context);
+
+	DEBUG_INFO("[Start] Wren Script Component Registry");
+	Wren::WrenScriptComponentRegistry& wrenScriptComponentRegistry = context.GetWrenScriptComponentRegistry();
+	wrenScriptComponentRegistry.LoadAllScriptComponents(context);
+
+	DEBUG_INFO("[Start] Input");
+	Core::Input& input = context.GetInput();
+	input.LoadInputBindings(gameData.inputBindingsPath);
+
+	DEBUG_INFO("[Start] Physics World");
+	Physics::PhysicsWorld& physicsWorld = context.GetPhysicsWorld();
+	glm::vec2 gravity(0.0f, 0.0f);
+	physicsWorld.Initialise(gravity, gameData.velocityIterations, gameData.positionIterations, gameData.pixelsPerMeter);
+}
+#endif

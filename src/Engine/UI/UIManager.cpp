@@ -132,6 +132,11 @@ Struktur::UI::FocusNavigator *Struktur::UI::UIManager::GetFocusNavigator() const
     return m_focusNavigator.get();
 }
 
+const std::vector<std::unique_ptr<Struktur::UI::UIElement>> &Struktur::UI::UIManager::GetElements() const
+{
+    return m_elements;
+}
+
 void Struktur::UI::UIManager::SetFocus(UIElement* element)
 {
     m_focusedElement = element;

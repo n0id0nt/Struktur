@@ -10,6 +10,7 @@
 #include "Debug/Editor/Windows/DebugInfoWindow.h"
 #include "Debug/Editor/Windows/ToolbarWindow.h"
 #include "Debug/Editor/Windows/HierarchyWindow.h"
+#include "Debug/Editor/Windows/UIHierarchyWindow.h"
 #include "Debug/Editor/Windows/InspectorWindow.h"
 #include "Debug/Editor/Windows/SettingsWindow.h"
 #include "Debug/Editor/Windows/PreviewWindow.h"
@@ -31,43 +32,34 @@ namespace Struktur::Debug
 		// Create and register all editor windows
 
 		// Game viewport (main rendering window)
-		auto gameViewport = std::make_shared<GameViewportWindow>();
-		m_gameViewport = gameViewport.get();
-		RegisterWindow(gameViewport);
+		m_gameViewport = CreateWindow<GameViewportWindow>();
 
 		// Hierarchy window (must be created before inspector)
-		auto hierarchy = std::make_shared<HierarchyWindow>();
-		auto hierarchyPtr = hierarchy.get();
-		RegisterWindow(hierarchy);
+		auto hierarchyPtr = CreateWindow<HierarchyWindow>();
+
+		// Hierarchy window (must be created before inspector)
+		auto uiHierarchyPtr = CreateWindow<UIHierarchyWindow>();
 
 		// Debug info panel
-		auto debugInfo = std::make_shared<DebugInfoWindow>(m_gameViewport);
-		RegisterWindow(debugInfo);
+		CreateWindow<DebugInfoWindow>(m_gameViewport);
 
 		// Toolbar
-		auto toolbar = std::make_shared<ToolbarWindow>();
-		RegisterWindow(toolbar);
+		CreateWindow<ToolbarWindow>();
 
 		// Settings window
-		auto settings = std::make_shared<SettingsWindow>();
-		RegisterWindow(settings);
+		CreateWindow<SettingsWindow>();
 
 		// Log window
-		auto log = std::make_shared<LogWindow>();
-		RegisterWindow(log);
+		CreateWindow<LogWindow>();
 
 		// Preview window (must be created before inspector and file explorer)
-		auto previewWindow = std::make_shared<PreviewWindow>();
-		auto previewPtr = previewWindow.get();
-		RegisterWindow(previewWindow);
+		auto previewPtr = CreateWindow<PreviewWindow>();
 
 		// File Explorer (depends on preview window)
-		auto fileExplorer = std::make_shared<FileExplorerWindow>(previewPtr, "assets");
-		RegisterWindow(fileExplorer);
+		CreateWindow<FileExplorerWindow>(previewPtr, "assets");
 
 		// Inspector window (depends on hierarchy)
-		auto inspector = std::make_shared<InspectorWindow>(hierarchyPtr, previewPtr);
-		RegisterWindow(inspector);
+		CreateWindow<InspectorWindow>(hierarchyPtr, uiHierarchyPtr, previewPtr);
 
 		// Initialise all windows
 		for (auto& window : m_windows)
@@ -127,12 +119,6 @@ namespace Struktur::Debug
 		::rlImGuiEnd();
 	}
 
-	void Editor::RegisterWindow(std::shared_ptr<EditorWindow> window)
-	{
-		m_windows.push_back(window);
-		m_windowMap[window->GetName()] = window.get();
-	}
-
 	EditorWindow* Editor::GetWindow(const std::string& name)
 	{
 		auto it = m_windowMap.find(name);
@@ -181,7 +167,7 @@ namespace Struktur::Debug
 		// Render all registered windows
 		for (auto& window : m_windows)
 		{
-			if (window->IsVisible())
+			if (window->IsOpen())
 			{
 				window->Render(context);
 			}
@@ -242,7 +228,7 @@ namespace Struktur::Debug
 					auto* settingsWindow = GetWindow("Editor Settings");
 					if (settingsWindow)
 					{
-						settingsWindow->SetVisible(true);
+						settingsWindow->SetOpen(true);
 					}
 				}
 				ImGui::EndMenu();
@@ -300,10 +286,10 @@ namespace Struktur::Debug
 		// Toggle visibility of each window
 		for (auto& window : m_windows)
 		{
-			bool isVisible = window->IsVisible();
-			if (ImGui::MenuItem(window->GetName().c_str(), nullptr, &isVisible))
+			bool isOpen = window->IsOpen();
+			if (ImGui::MenuItem(window->GetName().c_str(), nullptr, &isOpen))
 			{
-				window->SetVisible(isVisible);
+				window->SetOpen(isOpen);
 			}
 		}
 	}

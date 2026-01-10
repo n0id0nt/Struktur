@@ -159,7 +159,7 @@ namespace Struktur
                 System::GameObjectManager& gameObjectManger = context.GetGameObjectManager();
                 entt::registry& registry = context.GetRegistry();
 
-                Resource::ResourcePtr<Resource::FontResource> font = resourceManager.GetFontResource("assets/Fonts/medieval_sharp/MedievalSharp-Bold.ttf_60");
+                Resource::ResourcePtr<Resource::FontResource> font = resourceManager.GetFont("assets/Fonts/medieval_sharp/MedievalSharp-Bold.ttf", 60);
                 System::TransformSystem& transformSystem = systemManager.GetSystem<System::TransformSystem>();
 
                 entt::entity worldEntity = GameResource::Level::CreateWorldEntity(context, WORLD_FILE_PATH);

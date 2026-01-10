@@ -47,7 +47,7 @@ namespace Struktur
                 Inventory& inventory = context.GetInventory();
                 Core::GameData& gameDate = context.GetGameData();
                 Resource::ResourceManager& resourceManager = context.GetResourceManager();
-                Resource::ResourcePtr<Resource::FontResource> font = resourceManager.GetFontResource("assets/Fonts/medieval_sharp/MedievalSharp-Bold.ttf_120");
+                Resource::ResourcePtr<Resource::FontResource> font = resourceManager.GetFont("assets/Fonts/medieval_sharp/MedievalSharp-Bold.ttf", 120);
 
                 UI::UIManager& uiManager = context.GetUIManager();
                 UI::FocusNavigator* focusNavigator = uiManager.GetFocusNavigator();

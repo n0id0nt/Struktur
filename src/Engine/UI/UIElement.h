@@ -110,6 +110,10 @@ namespace Struktur
             void SetBorderColor(::Color color) { m_borderColor = color; }
             void SetBorderWidth(float width) { m_borderWidth = width; }
 
+            Color GetBackgroundColor() const { return m_backgroundColor; }
+            Color GetBorderColor() const { return m_borderColor; }
+            float GetBorderWidth() const { return m_borderWidth; }
+
             // Hierarchy
             UIElement* GetParent() const { return m_parent; }
             const std::vector<std::unique_ptr<UIElement>>& GetChildren() const { return m_children; }

@@ -1,6 +1,6 @@
 #include "Engine/Game.h"
 
-#if _WIN32
+#if WINDOWS_EXECUTABLE
 #include <windows.h>
 int main(int argc, char* argv[]);
 int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)

@@ -95,7 +95,7 @@ class GameWorldState is BaseState {
 
         Loops = Loops + 1 // increment the game loop count
         
-        var font = Font.load("assets/Fonts/medieval_sharp/MedievalSharp-Bold.ttf_60")
+        var font = Font.load("assets/Fonts/medieval_sharp/MedievalSharp-Bold.ttf", 60)
 
         var worldEntity = World.createWorldEntity(WORLD_FILE_PATH)
         _worldEntity = worldEntity

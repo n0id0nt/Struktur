@@ -44,6 +44,7 @@ namespace Struktur
             void Clear();
 
             FocusNavigator* GetFocusNavigator() const;
+            const std::vector<std::unique_ptr<UIElement>>& GetElements() const;
 
         private:
             void HandleInput(GameContext& context);

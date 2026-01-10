@@ -24,7 +24,7 @@ class InventoryState is BaseState {
 
         System.print("Entering Inventory")
         
-        var font = Font.load("assets/Fonts/medieval_sharp/MedievalSharp-Bold.ttf_120")
+        var font = Font.load("assets/Fonts/medieval_sharp/MedievalSharp-Bold.ttf", 120)
         var inventoryBackgroundPanelTexture = Texture.load("assets/Tiles/InventoryBackgroundPanel.png")
         var focusedItemBackgroundPanelTexture = Texture.load("assets/Tiles/FocusedItemBackgroundPanel.png")
 

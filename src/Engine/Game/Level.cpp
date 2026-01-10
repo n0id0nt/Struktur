@@ -23,9 +23,6 @@
 #include "Engine/FileLoading/LevelParser.h"
 #include "Engine/Physics/CollisionShapeGenerators/TileMapCollisionBodyGenerator.h"
 
-#include "Gameplay/GameObjects/NPC.h"
-#include "Gameplay/GameObjects/Item.h"
-
 entt::entity Struktur::GameResource::Level::CreateWorldEntity(GameContext& context, const std::string& filePath)
 {
 	entt::registry& registry = context.GetRegistry();
@@ -107,7 +104,7 @@ entt::entity Struktur::GameResource::Level::LoadLevelEntities(GameContext& conte
 				std::vector<Wren::WrenItem> wrenArgMap;
 				for (auto field : entityInstance.fieldInstances)
 				{
-					Wren::WrenItem item { field.identifier };
+					Wren::WrenItem item{ field.identifier };
 					switch (field.type)
 					{
 					case Struktur::FileLoading::LevelParser::FieldInstanceType::INTEGER:
@@ -135,13 +132,13 @@ entt::entity Struktur::GameResource::Level::LoadLevelEntities(GameContext& conte
 						auto color = std::any_cast<Color>(field.value);
 						// Create nested list [r, g, b, a]
 						std::vector<Wren::WrenItem>	colorList;
-						Wren::WrenItem r {"r", static_cast<double>(color.r), WrenType::WREN_TYPE_NUM};
+						Wren::WrenItem r{ "r", static_cast<double>(color.r), WrenType::WREN_TYPE_NUM };
 						colorList.emplace_back(r);
-						Wren::WrenItem g {"g", static_cast<double>(color.g), WrenType::WREN_TYPE_NUM};
+						Wren::WrenItem g{ "g", static_cast<double>(color.g), WrenType::WREN_TYPE_NUM };
 						colorList.emplace_back(g);
-						Wren::WrenItem b {"b", static_cast<double>(color.b), WrenType::WREN_TYPE_NUM};
+						Wren::WrenItem b{ "b", static_cast<double>(color.b), WrenType::WREN_TYPE_NUM };
 						colorList.emplace_back(b);
-						Wren::WrenItem a {"a", static_cast<double>(color.a), WrenType::WREN_TYPE_NUM};
+						Wren::WrenItem a{ "a", static_cast<double>(color.a), WrenType::WREN_TYPE_NUM };
 						colorList.emplace_back(a);
 
 						item.value = colorList;
@@ -153,9 +150,9 @@ entt::entity Struktur::GameResource::Level::LoadLevelEntities(GameContext& conte
 						auto point = std::any_cast<glm::vec2>(field.value);
 						// Create nested list [x, y]
 						std::vector<Wren::WrenItem>	colorList;
-						Wren::WrenItem x {"x", static_cast<double>(point.x), WrenType::WREN_TYPE_NUM};
+						Wren::WrenItem x{ "x", static_cast<double>(point.x), WrenType::WREN_TYPE_NUM };
 						colorList.emplace_back(x);
-						Wren::WrenItem y {"y", static_cast<double>(point.y), WrenType::WREN_TYPE_NUM};
+						Wren::WrenItem y{ "y", static_cast<double>(point.y), WrenType::WREN_TYPE_NUM };
 						colorList.emplace_back(y);
 
 						item.value = colorList;
@@ -174,94 +171,6 @@ entt::entity Struktur::GameResource::Level::LoadLevelEntities(GameContext& conte
 					wrenArgMap.emplace_back(item);
 				}
 				Component::WrenScript& scriptComponent = registry.emplace<Component::WrenScript>(layerInstaceEntity, identifier, wrenArgMap);
-				continue;
-				// below is for future reference
-				if (entityInstance.identifier == "NPC")
-				{
-					std::string name;
-					for (auto fieldInstance : entityInstance.fieldInstances)
-					{
-						switch (fieldInstance.type)
-						{
-						case Struktur::FileLoading::LevelParser::FieldInstanceType::STRING:
-						{
-							name = std::any_cast<std::string>(fieldInstance.value);
-							break;
-						}
-						default:
-							break;
-						}
-					}
-					NPC::Create(context, layerInstaceEntity, name);
-				}
-				else if (entityInstance.identifier == "Item")
-				{
-					std::string name;
-					bool returnable = false;
-					for (auto fieldInstance : entityInstance.fieldInstances)
-					{
-						switch (fieldInstance.type)
-						{
-						case Struktur::FileLoading::LevelParser::FieldInstanceType::STRING:
-						{
-							name = std::any_cast<std::string>(fieldInstance.value);
-							break;
-						}
-						case Struktur::FileLoading::LevelParser::FieldInstanceType::BOOLEAN:
-						{
-							returnable = std::any_cast<bool>(fieldInstance.value);
-							break;
-						}
-						default:
-							break;
-						}
-					}
-
-					Inventory& inventory = context.GetInventory();
-					if (returnable)
-					{
-						bool itemInInventory = std::find(inventory.begin(), inventory.end(), name) != inventory.end();
-						if (itemInInventory)
-						{
-							Item::Create(context, layerInstaceEntity, name + " Return", returnable);
-						}
-						else
-						{
-							Item::Create(context, layerInstaceEntity, name, returnable);
-						}
-					}
-					else
-					{
-						bool hasItemRecipt = std::find(inventory.begin(), inventory.end(), name + " Recipt") != inventory.end();
-						if (!hasItemRecipt)
-						{
-							Item::Create(context, layerInstaceEntity, name, returnable);
-						}
-					}
-				}
-
-				//auto& luaComponent = registry.emplace<Struktur::Component::LuaComponent>(layerInstaceEntity, false, luaState.CreateTable());
-				//for (auto fieldInstance : entityInstance.fieldInstances)
-				//{
-				//    switch (fieldInstance.type)
-				//    {
-				//    case Struktur::FileLoading::LevelParser::FieldInstanceType::FLOAT:
-				//    {
-				//        float value = std::any_cast<float>(fieldInstance.value);
-				//        luaComponent.table[fieldInstance.identifier] = value;
-				//        break;
-				//    }
-				//    case Struktur::FileLoading::LevelParser::FieldInstanceType::INTEGER:
-				//    {
-				//        int value = std::any_cast<int>(fieldInstance.value);
-				//        luaComponent.table[fieldInstance.identifier] = value;
-				//        break;
-				//    }
-				//    default:
-				//        assert(false);
-				//        break;
-				//    }
-				//}
 			}
 			break;
 		}

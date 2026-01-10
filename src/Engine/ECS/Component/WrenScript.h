@@ -9,17 +9,20 @@
 
 namespace Struktur::Component
 {
-struct WrenScript
-{
-    std::string className;
-    std::vector<Wren::WrenItem> constructorArgs;
-    
-    WrenHandle* instanceHandle = nullptr;
-    Wren::WrenScriptComponent* scriptComponent = nullptr;
-    
-    bool isInitialised = false;
-    bool hasError = false;
-    std::string errorMessage;
-};
+	struct WrenScript
+	{
+		std::string className;
+		std::vector<Wren::WrenItem> constructorArgs;
+
+		WrenHandle* instanceHandle = nullptr;
+		Wren::WrenScriptComponent* scriptComponent = nullptr;
+
+		bool isInitialised = false;
+		bool hasError = false;
+		std::string errorMessage;
+#ifdef DEBUG
+		std::string filePath;
+#endif
+	};
 
 } // namespace Struktur::Component

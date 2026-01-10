@@ -3,7 +3,6 @@
 #include <string>
 #include <sstream>
 #include <cstdio>
-#include <intrin.h>
 #include "raylib.h"
 
 // Platform detection
@@ -11,6 +10,7 @@
 #include <emscripten.h>
 #elif PLATFORM_DESKTOP && defined(_WIN32) || defined(_WIN64)
 #define PLATFORM_WINDOWS
+#include <intrin.h>
 #endif
 
 namespace Struktur

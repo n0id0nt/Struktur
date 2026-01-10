@@ -1,6 +1,7 @@
 import "gameObjectComponents" for Sprite
 import "math" for Vec2, Vec3, Vec4
 import "resourceManager" for Texture
+import "app" for Inventory
 
 var WHITE = Vec4.new(255, 255, 255, 255)
 var BLACK = Vec4.new(0, 0, 0, 255)
@@ -18,7 +19,6 @@ class ItemData {
 class Item {
     construct new(entity, args) {
         _entity = entity
-        _name = args["Name"]
         _returnable = args["Returnable"]
         _spriteDataMap = {
             "Love Letter": ItemData.new(10),
@@ -50,6 +50,19 @@ class Item {
             "Safe",
             "Memory Palace",
         ]
+        var name = args["Name"]
+
+        if (_returnable) {
+            if (Inventory.contains(name)) {
+                name = name + " Return"
+            }
+        } else {
+            if (Inventory.contains(name + " Recipt")) {
+                // TODO disable item 
+            }
+        }
+
+        _name = name
     }
     
     name { _name }

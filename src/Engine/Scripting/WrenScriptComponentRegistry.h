@@ -3,10 +3,20 @@
 #include <unordered_map>
 #include <wren.hpp>
 #include <string>
+#ifdef DEBUG
+#include <entt/entt.hpp>
+#endif
 
 namespace Struktur
 {
 	class GameContext;
+
+#ifdef DEBUG
+	namespace Component
+	{
+		struct WrenScript;
+	}
+#endif
 
 	namespace Wren
 	{
@@ -24,14 +34,6 @@ namespace Struktur
 
 		class WrenScriptComponentRegistry
 		{
-		private:
-#ifdef DEBUG
-			// Track which scripts have been loaded
-            //TODO make this a debug only feature
-            std::unordered_map<std::string, time_t> m_fileModificationTimes;
-#endif
-			std::unordered_map<std::string, WrenScriptComponent> m_scriptComponents;
-
 		public:
 			WrenScriptComponentRegistry() : m_scriptComponents() {}
 			~WrenScriptComponentRegistry() {}
@@ -39,16 +41,21 @@ namespace Struktur
 			void RegisterScriptComponent(std::string module, std::string className);
 			bool LoadAllScriptComponents(GameContext& context);
 			WrenScriptComponent* TryGetScriptComponent(std::string className);
-			void Shutdown(GameContext& context);
+			void Clear(GameContext& context);
 
 #ifdef DEBUG
-		// Hot reload support
-		void CheckForScriptChanges(GameContext& context);
-		void ReloadScript(GameContext& context);
+			// Hot reload support
+			void CheckForScriptChanges(GameContext& context);
+			void ReloadScript(GameContext& context, entt::entity entity, Component::WrenScript& script);
 
 		private:
-            time_t GetFileModificationTime(const std::string& path);
+			time_t GetFileModificationTime(const std::string& path);
+
+			// Track which scripts have been loaded
+			std::unordered_map<std::string, time_t> m_fileModificationTimes;
 #endif
-        };
-    }
+			std::unordered_map<std::string, WrenScriptComponent> m_scriptComponents;
+
+		};
+	}
 }

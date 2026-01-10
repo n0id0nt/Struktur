@@ -39,7 +39,8 @@ namespace Struktur::Debug
         ImGui::Separator();
         
         // File list
-        RenderFileList(context);
+        //RenderFileList(context);
+        RenderFileGrid(context);
         
         ImGui::End();
     }
@@ -169,6 +170,129 @@ namespace Struktur::Debug
             }
         }
     }
+
+    void FileExplorerWindow::RenderFileGrid(GameContext& context)
+    {
+		// Configuration
+		const float itemWidth = 100.0f;
+		const float itemHeight = 120.0f;
+		const float iconSize = 64.0f;
+		const float padding = 10.0f;
+
+		// Calculate how many items fit per row
+		float availWidth = ImGui::GetContentRegionAvail().x;
+		int itemsPerRow = std::max(1, (int)((availWidth + padding) / (itemWidth + padding)));
+
+		bool newFolderSelected = false;
+		bool newFileSelected = false;
+		const FileEntry* selectedFile = nullptr;
+
+		// Render grid
+		int itemIndex = 0;
+		for (const auto& file : m_files)
+		{
+			// Start new row if needed
+			if (itemIndex > 0 && itemIndex % itemsPerRow != 0)
+			{
+				ImGui::SameLine();
+			}
+
+			ImGui::PushID(file.path.c_str());
+
+			// Begin item group
+			ImVec2 cursorPos = ImGui::GetCursorPos();
+			bool isSelected = (m_selectedFile == file.path);
+
+			// Draw selection background
+			if (isSelected)
+			{
+				ImGui::PushStyleColor(ImGuiCol_ChildBg, ImVec4(0.3f, 0.5f, 0.8f, 0.3f));
+			}
+			else
+			{
+				ImGui::PushStyleColor(ImGuiCol_ChildBg, ImVec4(0.0f, 0.0f, 0.0f, 0.0f));
+			}
+
+			// Create clickable area
+			ImGui::BeginChild(("item_" + std::to_string(itemIndex)).c_str(),
+				ImVec2(itemWidth, itemHeight),
+				false,
+				ImGuiWindowFlags_NoScrollbar);
+
+			// Make entire area selectable
+			bool clicked = ImGui::InvisibleButton("##select", ImVec2(itemWidth - padding, itemHeight - padding));
+
+			// Draw icon/type indicator
+			ImGui::SetCursorPos(ImVec2((itemWidth - iconSize) * 0.5f, padding));
+
+			if (file.isDirectory)
+			{
+				// Directory icon (colored box)
+				ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.8f, 0.8f, 0.2f, 0.6f));
+				ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.9f, 0.9f, 0.3f, 0.8f));
+				ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(0.7f, 0.7f, 0.1f, 0.8f));
+				ImGui::Button("[DIR]", ImVec2(iconSize, iconSize));
+				ImGui::PopStyleColor(3);
+			}
+			else
+			{
+				// File icon (colored box based on extension)
+				ImVec4 color = GetFileTypeColor(file.extension);
+				ImGui::PushStyleColor(ImGuiCol_Button, color);
+				ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(color.x * 1.2f, color.y * 1.2f, color.z * 1.2f, color.w));
+				ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(color.x * 0.8f, color.y * 0.8f, color.z * 0.8f, color.w));
+
+				// Show extension on icon
+				ImGui::Button(file.extension.c_str(), ImVec2(iconSize, iconSize));
+				ImGui::PopStyleColor(3);
+			}
+
+			// Draw filename (wrapped text)
+			ImGui::SetCursorPosX(padding * 0.5f);
+			ImGui::PushTextWrapPos(itemWidth - padding);
+			ImGui::TextWrapped("%s", file.name.c_str());
+			ImGui::PopTextWrapPos();
+
+			// Draw file size for files
+			if (!file.isDirectory)
+			{
+				ImGui::SetCursorPosX(padding * 0.5f);
+				ImGui::TextDisabled("%s", FormatFileSize(file.fileSize).c_str());
+			}
+
+			ImGui::EndChild();
+			ImGui::PopStyleColor(); // ChildBg
+
+			// Handle click
+			if (clicked)
+			{
+				if (file.isDirectory)
+				{
+					m_currentPath = file.path;
+					newFolderSelected = true;
+				}
+				else
+				{
+					m_selectedFile = file.path;
+					selectedFile = &file;
+					newFileSelected = true;
+				}
+			}
+
+			ImGui::PopID();
+			itemIndex++;
+		}
+
+		// Handle selection events after rendering
+		if (newFolderSelected)
+		{
+			RefreshFileList();
+		}
+		else if (newFileSelected)
+		{
+			OnFileSelected(*selectedFile, context);
+		}
+    }
     
     void FileExplorerWindow::OnFileSelected(const FileEntry& file, GameContext& context)
     {
@@ -223,4 +347,15 @@ namespace Struktur::Debug
         snprintf(buffer, sizeof(buffer), "%.2f %s", size, units[unitIndex]);
         return std::string(buffer);
     }
+    ImVec4 FileExplorerWindow::GetFileTypeColor(const std::string& extension)
+	{
+        if (extension == ".txt" || extension == ".md")
+			return ImVec4(0.6f, 0.6f, 0.6f, 0.6f); // Gray for text
+		else if (extension == ".png" || extension == ".jpg" || extension == ".jpeg")
+			return ImVec4(0.9f, 0.4f, 0.6f, 0.6f); // Pink for images
+		else if (extension == ".wren")
+			return ImVec4(0.8f, 0.3f, 0.8f, 0.6f); // Purple for Wren scripts
+		else
+			return ImVec4(0.5f, 0.5f, 0.5f, 0.6f); // Default gray
+	}
 }

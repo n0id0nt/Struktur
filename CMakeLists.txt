@@ -272,7 +272,7 @@ if(EDITOR)
     # Debug: Use source assets directly
     set(EDITOR_SOURCES 
         src/Debug/Editor/Editor.h                   src/Debug/Editor/Editor.cpp
-        src/Debug/Editor/EditorLayoutManager.h
+        src/Debug/Editor/EditorLayoutManager.h      src/Debug/Editor/EditorLayoutManager.cpp
         src/Debug/Editor/EditorTheme.h
         src/Debug/Editor/EditorSettings.h           src/Debug/Editor/EditorSettings.cpp
 
@@ -280,6 +280,7 @@ if(EDITOR)
         src/Debug/Editor/Windows/DebugInfoWindow.h  src/Debug/Editor/Windows/DebugInfoWindow.cpp
         src/Debug/Editor/Windows/GameViewPortWindow.h src/Debug/Editor/Windows/GameViewPortWindow.cpp
         src/Debug/Editor/Windows/HierarchyWindow.h  src/Debug/Editor/Windows/HierarchyWindow.cpp
+        src/Debug/Editor/Windows/UIHierarchyWindow.h src/Debug/Editor/Windows/UIHierarchyWindow.cpp
         src/Debug/Editor/Windows/ToolbarWindow.h    src/Debug/Editor/Windows/ToolbarWindow.cpp
         src/Debug/Editor/Windows/InspectorWindow.h  src/Debug/Editor/Windows/InspectorWindow.cpp
         src/Debug/Editor/Windows/SettingsWindow.h   src/Debug/Editor/Windows/SettingsWindow.cpp
@@ -320,14 +321,16 @@ set(SOURCES
 
     src/Engine/Core/Gamedata.h                  src/Engine/Core/GameData.cpp
     src/Engine/Core/Input.h                     src/Engine/Core/Input.cpp
+
     src/Engine/Resource/ResourcePool.h
     src/Engine/Resource/Resource.h
     src/Engine/Resource/ResourcePtr.h
-    src/Engine/Resource/ResourceManager.h
-    src/Engine/Resource/SoundResource.h
-    src/Engine/Resource/FontResource.h
-    src/Engine/Resource/MusicResource.h
+    src/Engine/Resource/ResourceManager.h       src/Engine/Resource/ResourceManager.cpp
+    src/Engine/Resource/SoundResource.h         src/Engine/Resource/SoundResource.cpp
+    src/Engine/Resource/FontResource.h          src/Engine/Resource/FontResource.cpp
+    src/Engine/Resource/MusicResource.h         src/Engine/Resource/MusicResource.cpp
     src/Engine/Resource/TextureResource.h       src/Engine/Resource/TextureResource.cpp
+    src/Engine/Resource/ShaderResource.h        src/Engine/Resource/ShaderResource.cpp
     
     src/Engine/ECS/SystemManager.h              src/Engine/ECS/SystemManager.cpp
     src/Engine/ECS/GameObjectManager.h          src/Engine/ECS/GameObjectManager.cpp
@@ -370,8 +373,6 @@ set(SOURCES
     src/Engine/Game/Level.h                     src/Engine/Game/Level.cpp
     src/Engine/Game/TileMap.h                   src/Engine/Game/TileMap.cpp
     src/Engine/Game/Camera.h                    src/Engine/Game/Camera.cpp
-    src/Engine/Game/StateManager.h              src/Engine/Game/StateManager.cpp
-    src/Engine/Game/State.h
     src/Engine/Game/Curve.h
 
     src/Engine/Scripting/WrenScriptEngine.h     src/Engine/Scripting/WrenScriptEngine.cpp
@@ -465,6 +466,8 @@ elseif(PLATFORM_DESKTOP)
 			set_target_properties(${PROJECT_NAME} PROPERTIES
 				WIN32_EXECUTABLE True
 			)
+			set(WINDOWS_EXECUTABLE TRUE)
+			add_compile_definitions(WINDOWS_EXECUTABLE)
 		else()
 			set_target_properties(${PROJECT_NAME} PROPERTIES
 				WIN32_EXECUTABLE False

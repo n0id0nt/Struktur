@@ -51,7 +51,7 @@ foreign class Texture {
 // Font resource handle
 foreign class Font {
     // Load font from path
-    foreign static load(arg0)
+    foreign static load(arg0,arg1)
     // Unload font from path. Manually unload reference because even though wren's garbage collector will do it, it will happen at an unknown time.
     foreign unload()
     // Check if font is valid
@@ -60,6 +60,24 @@ foreign class Font {
     foreign path
     // Get font size
     foreign size
+    // Convert to string
+    foreign toString()
+}
+
+// Shader resource handle
+foreign class Shader {
+    // Load Shader from path
+    foreign static load(arg0,arg1)
+    // Unload Shader from path. Manually unload reference because even though wren's garbage collector will do it, it will happen at an unknown time.
+    foreign unload()
+    // Check if Shader is valid
+    foreign isValid()
+    // Get Shader path
+    foreign path
+    // Get vertex shader
+    foreign vsFilePath
+    // Get fragment shader
+    foreign fsFilePath
     // Convert to string
     foreign toString()
 }

@@ -6,7 +6,7 @@ Struktur::UI::UILabel::UILabel(GameContext& context, const glm::vec2& absolutePo
     : UIElement(absolutePosition, relativePosition, {0, 0}, {0, 0}), m_text(labelText), m_textColor(BLACK),
     m_alignment(TextAlignment::LEFT), m_wrapping(TextWrapping::NONE), m_fontSize(fontSz)
 {
-    m_font = context.GetResourceManager().GetFontResource("default");
+    m_font = context.GetResourceManager().GetFont("default", 32);
     
     // Auto-size based on text
     //::Vector2 textSize = ::MeasureTextEx(m_font->font, m_text.c_str(), m_fontSize, 1.0f);

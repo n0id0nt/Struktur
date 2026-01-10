@@ -32,7 +32,7 @@
         Wren##component_name* value = (Wren##component_name*)wrenSetSlotNewForeign(vm, 0, 0, sizeof(Wren##component_name)); \
         new (value) Wren##component_name();                                                                                 \
     }
-    COMPONENT_LIST
+COMPONENT_LIST
 #undef COMPONENT
 
 // ============================================================================
@@ -45,7 +45,7 @@
         Wren##component_name* value = (Wren##component_name*)data; \
         value->~Wren##component_name();                            \
     }
-    COMPONENT_LIST
+COMPONENT_LIST
 #undef COMPONENT
 
 // ============================================================================
@@ -71,7 +71,7 @@
             wrenSetSlotNull(vm, 0);                                                                                                     \
         }                                                                                                                               \
     }
-    COMPONENT_LIST
+COMPONENT_LIST
 #undef COMPONENT
 
 // ============================================================================
@@ -247,66 +247,66 @@ WREN_CLASS_STATIC("gameObjectComponents", "Level", "get(_)", wren_LevelGet, "Get
 // World.loadLevelEntities(levelIndex) -> number
 void wren_WorldLoadLevelEntities(WrenVM* vm)
 {
-    WrenWorld* world = (WrenWorld*)wrenGetSlotForeign(vm, 0);
+	WrenWorld* world = (WrenWorld*)wrenGetSlotForeign(vm, 0);
 
-    Struktur::GameContext* context = static_cast<Struktur::GameContext*>(wrenGetUserData(vm));
-    
+	Struktur::GameContext* context = static_cast<Struktur::GameContext*>(wrenGetUserData(vm));
+
 	double levelDouble = wrenGetSlotDouble(vm, 1);
 	int levelIndex = static_cast<int>(levelDouble);
-    
+
 	entt::entity levelEntity = Struktur::GameResource::Level::LoadLevelEntities(*context, world->entity, levelIndex);
 
-    if (levelEntity == entt::null)
-    {
-        wrenSetSlotNull(vm, 0);
-    }
-    else
-    {
-        double entityId = static_cast<double>(levelEntity);
-        wrenSetSlotDouble(vm, 0, entityId);
-    }
+	if (levelEntity == entt::null)
+	{
+		wrenSetSlotNull(vm, 0);
+	}
+	else
+	{
+		double entityId = static_cast<double>(levelEntity);
+		wrenSetSlotDouble(vm, 0, entityId);
+	}
 }
 
 // World.loadLevelEntities(worldEntity, levelIndex) -> number
 void wren_WorldStaticLoadLevelEntities(WrenVM* vm)
 {
-    Struktur::GameContext* context = static_cast<Struktur::GameContext*>(wrenGetUserData(vm));
-    
+	Struktur::GameContext* context = static_cast<Struktur::GameContext*>(wrenGetUserData(vm));
+
 	double entityId = wrenGetSlotDouble(vm, 1);
 	entt::entity worldEntity = static_cast<entt::entity>(entityId);
-    
+
 	double levelDouble = wrenGetSlotDouble(vm, 2);
 	int levelIndex = static_cast<int>(levelDouble);
-    
+
 	entt::entity levelEntity = Struktur::GameResource::Level::LoadLevelEntities(*context, worldEntity, levelIndex);
-    
+
 	if (levelEntity == entt::null)
-    {
-        wrenSetSlotNull(vm, 0);
-    }
-    else
-    {
-        double entityId = static_cast<double>(levelEntity);
-        wrenSetSlotDouble(vm, 0, entityId);
-    }
+	{
+		wrenSetSlotNull(vm, 0);
+	}
+	else
+	{
+		double entityId = static_cast<double>(levelEntity);
+		wrenSetSlotDouble(vm, 0, entityId);
+	}
 }
 
 // World.createWorldEntity(worldFilePath) -> number
 void wren_WorldCreateWorldEntity(WrenVM* vm)
 {
-    Struktur::GameContext* context = static_cast<Struktur::GameContext*>(wrenGetUserData(vm));
-    const char* worldFilePath = wrenGetSlotString(vm, 1);
-    entt::entity worldEntity = Struktur::GameResource::Level::CreateWorldEntity(*context, worldFilePath);
-    double entityId = static_cast<double>(worldEntity);
-    wrenSetSlotDouble(vm, 0, entityId);
+	Struktur::GameContext* context = static_cast<Struktur::GameContext*>(wrenGetUserData(vm));
+	const char* worldFilePath = wrenGetSlotString(vm, 1);
+	entt::entity worldEntity = Struktur::GameResource::Level::CreateWorldEntity(*context, worldFilePath);
+	double entityId = static_cast<double>(worldEntity);
+	wrenSetSlotDouble(vm, 0, entityId);
 }
 
 // World.getLevelIndex(levelName) -> number
 void wren_WorldGetLevelIndex(WrenVM* vm)
 {
-    Struktur::GameContext* context = static_cast<Struktur::GameContext*>(wrenGetUserData(vm));
-    
-    WrenWorld* world = (WrenWorld*)wrenGetSlotForeign(vm, 0);
+	Struktur::GameContext* context = static_cast<Struktur::GameContext*>(wrenGetUserData(vm));
+
+	WrenWorld* world = (WrenWorld*)wrenGetSlotForeign(vm, 0);
 	const char* levelName = wrenGetSlotString(vm, 1);
 
 	Struktur::FileLoading::LevelParser::World& worldMap = world->component->worldMap;
@@ -497,7 +497,7 @@ WREN_CLASS_STATIC("gameObjectComponents", "PhysicsBody", "setLinearVelocity(_,_)
 // SHADER BINDINGS
 // ============================================================================
 
-// Shader.create(entity) -> Shader
+// Shader.create(entity, shaderResourse) -> Shader
 void wren_ShaderCreate(WrenVM* vm)
 {
 	Struktur::GameContext* context = static_cast<Struktur::GameContext*>(wrenGetUserData(vm));
@@ -505,11 +505,12 @@ void wren_ShaderCreate(WrenVM* vm)
 
 	double entityId = wrenGetSlotDouble(vm, 1);
 	entt::entity entity = static_cast<entt::entity>(entityId);
+	WrenShaderHandle* shaderResource = static_cast<WrenShaderHandle*>(wrenGetSlotForeign(vm, 2));
 
-	auto& shaderComponent = registry.emplace<Struktur::Component::Shader>(entity);
+	auto& shaderComponent = registry.emplace<Struktur::Component::Shader>(entity, shaderResource->resource);
 
 	wrenGetVariable(vm, "gameObjectComponents", "Shader", 1);  // Get class into slot 1
-	WrenShader* shader = (WrenShader*)wrenSetSlotNewForeign(vm, 0, 1, sizeof(WrenShader));
+	WrenShader* shader = static_cast<WrenShader*>(wrenSetSlotNewForeign(vm, 0, 1, sizeof(WrenShader)));
 
 	// Shader.new() - identity
 	new (shader) WrenShader(entity, &shaderComponent);
@@ -517,73 +518,73 @@ void wren_ShaderCreate(WrenVM* vm)
 
 void wren_ShaderSetFloatUniform(WrenVM* vm)
 {
-    Struktur::GameContext* context = static_cast<Struktur::GameContext*>(wrenGetUserData(vm));
-    Struktur::System::SystemManager& systemManager = context->GetSystemManager();
-    auto& shaderSystem = systemManager.GetSystem<Struktur::System::ShaderSystem>();
+	Struktur::GameContext* context = static_cast<Struktur::GameContext*>(wrenGetUserData(vm));
+	Struktur::System::SystemManager& systemManager = context->GetSystemManager();
+	auto& shaderSystem = systemManager.GetSystem<Struktur::System::ShaderSystem>();
 
-	WrenShader* shader = (WrenShader*)wrenGetSlotForeign(vm, 0);
-    const char* name = wrenGetSlotString(vm, 1);
-    float value = static_cast<float>(wrenGetSlotDouble(vm, 2));
+	WrenShader* shader = static_cast<WrenShader*>(wrenGetSlotForeign(vm, 0));
+	const char* name = wrenGetSlotString(vm, 1);
+	float value = static_cast<float>(wrenGetSlotDouble(vm, 2));
 	shaderSystem.SetUniform(*context, shader->entity, name, value);
 }
 
 void wren_ShaderSetIntUniform(WrenVM* vm)
 {
-    Struktur::GameContext* context = static_cast<Struktur::GameContext*>(wrenGetUserData(vm));
-    Struktur::System::SystemManager& systemManager = context->GetSystemManager();
-    auto& shaderSystem = systemManager.GetSystem<Struktur::System::ShaderSystem>();
+	Struktur::GameContext* context = static_cast<Struktur::GameContext*>(wrenGetUserData(vm));
+	Struktur::System::SystemManager& systemManager = context->GetSystemManager();
+	auto& shaderSystem = systemManager.GetSystem<Struktur::System::ShaderSystem>();
 
-	WrenShader* shader = (WrenShader*)wrenGetSlotForeign(vm, 0);
-    const char* name = wrenGetSlotString(vm, 1);
-    int value = static_cast<int>(wrenGetSlotDouble(vm, 2));
+	WrenShader* shader = static_cast<WrenShader*>(wrenGetSlotForeign(vm, 0));
+	const char* name = wrenGetSlotString(vm, 1);
+	int value = static_cast<int>(wrenGetSlotDouble(vm, 2));
 	shaderSystem.SetUniform(*context, shader->entity, name, value);
 }
 
 void wren_ShaderSetVec2Uniform(WrenVM* vm)
 {
-    Struktur::GameContext* context = static_cast<Struktur::GameContext*>(wrenGetUserData(vm));
-    Struktur::System::SystemManager& systemManager = context->GetSystemManager();
-    auto& shaderSystem = systemManager.GetSystem<Struktur::System::ShaderSystem>();
+	Struktur::GameContext* context = static_cast<Struktur::GameContext*>(wrenGetUserData(vm));
+	Struktur::System::SystemManager& systemManager = context->GetSystemManager();
+	auto& shaderSystem = systemManager.GetSystem<Struktur::System::ShaderSystem>();
 
-	WrenShader* shader = (WrenShader*)wrenGetSlotForeign(vm, 0);
-    const char* name = wrenGetSlotString(vm, 1);
-    WrenVec2* value = static_cast<WrenVec2*>(wrenGetSlotForeign(vm, 2));
+	WrenShader* shader = static_cast<WrenShader*>(wrenGetSlotForeign(vm, 0));
+	const char* name = wrenGetSlotString(vm, 1);
+	WrenVec2* value = static_cast<WrenVec2*>(wrenGetSlotForeign(vm, 2));
 	shaderSystem.SetUniform(*context, shader->entity, name, value->value);
 }
 
 void wren_ShaderSetVec3Uniform(WrenVM* vm)
 {
-    Struktur::GameContext* context = static_cast<Struktur::GameContext*>(wrenGetUserData(vm));
-    Struktur::System::SystemManager& systemManager = context->GetSystemManager();
-    auto& shaderSystem = systemManager.GetSystem<Struktur::System::ShaderSystem>();
+	Struktur::GameContext* context = static_cast<Struktur::GameContext*>(wrenGetUserData(vm));
+	Struktur::System::SystemManager& systemManager = context->GetSystemManager();
+	auto& shaderSystem = systemManager.GetSystem<Struktur::System::ShaderSystem>();
 
-	WrenShader* shader = (WrenShader*)wrenGetSlotForeign(vm, 0);
-    const char* name = wrenGetSlotString(vm, 1);
-    WrenVec3* value = static_cast<WrenVec3*>(wrenGetSlotForeign(vm, 2));
+	WrenShader* shader = static_cast<WrenShader*>(wrenGetSlotForeign(vm, 0));
+	const char* name = wrenGetSlotString(vm, 1);
+	WrenVec3* value = static_cast<WrenVec3*>(wrenGetSlotForeign(vm, 2));
 	shaderSystem.SetUniform(*context, shader->entity, name, value->value);
 }
 
 void wren_ShaderSetVec4Uniform(WrenVM* vm)
 {
-    Struktur::GameContext* context = static_cast<Struktur::GameContext*>(wrenGetUserData(vm));
-    Struktur::System::SystemManager& systemManager = context->GetSystemManager();
-    auto& shaderSystem = systemManager.GetSystem<Struktur::System::ShaderSystem>();
+	Struktur::GameContext* context = static_cast<Struktur::GameContext*>(wrenGetUserData(vm));
+	Struktur::System::SystemManager& systemManager = context->GetSystemManager();
+	auto& shaderSystem = systemManager.GetSystem<Struktur::System::ShaderSystem>();
 
-	WrenShader* shader = (WrenShader*)wrenGetSlotForeign(vm, 0);
-    const char* name = wrenGetSlotString(vm, 1);
-    WrenVec4* value = static_cast<WrenVec4*>(wrenGetSlotForeign(vm, 2));
+	WrenShader* shader = static_cast<WrenShader*>(wrenGetSlotForeign(vm, 0));
+	const char* name = wrenGetSlotString(vm, 1);
+	WrenVec4* value = static_cast<WrenVec4*>(wrenGetSlotForeign(vm, 2));
 	shaderSystem.SetUniform(*context, shader->entity, name, value->value);
 }
 
 void wren_ShaderSetMat4Uniform(WrenVM* vm)
 {
-    Struktur::GameContext* context = static_cast<Struktur::GameContext*>(wrenGetUserData(vm));
-    Struktur::System::SystemManager& systemManager = context->GetSystemManager();
-    auto& shaderSystem = systemManager.GetSystem<Struktur::System::ShaderSystem>();
+	Struktur::GameContext* context = static_cast<Struktur::GameContext*>(wrenGetUserData(vm));
+	Struktur::System::SystemManager& systemManager = context->GetSystemManager();
+	auto& shaderSystem = systemManager.GetSystem<Struktur::System::ShaderSystem>();
 
-	WrenShader* shader = (WrenShader*)wrenGetSlotForeign(vm, 0);
-    const char* name = wrenGetSlotString(vm, 1);
-    WrenMat4* value = static_cast<WrenMat4*>(wrenGetSlotForeign(vm, 2));
+	WrenShader* shader = static_cast<WrenShader*>(wrenGetSlotForeign(vm, 0));
+	const char* name = wrenGetSlotString(vm, 1);
+	WrenMat4* value = static_cast<WrenMat4*>(wrenGetSlotForeign(vm, 2));
 	shaderSystem.SetUniform(*context, shader->entity, name, value->value);
 }
 
@@ -591,15 +592,15 @@ void wren_ShaderSetMat4Uniform(WrenVM* vm)
 WREN_FOREIGN_CLASS("gameObjectComponents", "Shader", wren_ShaderAllocate, wren_ShaderFinalize, "Shader class wraps Shader component");
 
 // Register methods
-WREN_CLASS_METHOD("gameObjectComponents", "Shader", "SetFloatUniform(_)", wren_ShaderSetFloatUniform, "Sets the physics body fixed rotation");
-WREN_CLASS_METHOD("gameObjectComponents", "Shader", "SetIntUniform(_)", wren_ShaderSetIntUniform, "Sets the physics body fixed rotation");
-WREN_CLASS_METHOD("gameObjectComponents", "Shader", "SetVec2Uniform(_)", wren_ShaderSetVec2Uniform, "Sets the physics body fixed rotation");
-WREN_CLASS_METHOD("gameObjectComponents", "Shader", "SetVec3Uniform(_)", wren_ShaderSetVec3Uniform, "Sets the physics body fixed rotation");
-WREN_CLASS_METHOD("gameObjectComponents", "Shader", "SetVec4Uniform(_)", wren_ShaderSetVec4Uniform, "Sets the physics body fixed rotation");
-WREN_CLASS_METHOD("gameObjectComponents", "Shader", "SetMat4Uniform(_)", wren_ShaderSetMat4Uniform, "Sets the physics body fixed rotation");
+WREN_CLASS_METHOD("gameObjectComponents", "Shader", "setFloatUniform(_,_)", wren_ShaderSetFloatUniform, "Sets the physics body fixed rotation");
+WREN_CLASS_METHOD("gameObjectComponents", "Shader", "setIntUniform(_,_)", wren_ShaderSetIntUniform, "Sets the physics body fixed rotation");
+WREN_CLASS_METHOD("gameObjectComponents", "Shader", "setVec2Uniform(_,_)", wren_ShaderSetVec2Uniform, "Sets the physics body fixed rotation");
+WREN_CLASS_METHOD("gameObjectComponents", "Shader", "setVec3Uniform(_,_)", wren_ShaderSetVec3Uniform, "Sets the physics body fixed rotation");
+WREN_CLASS_METHOD("gameObjectComponents", "Shader", "setVec4Uniform(_,_)", wren_ShaderSetVec4Uniform, "Sets the physics body fixed rotation");
+WREN_CLASS_METHOD("gameObjectComponents", "Shader", "setMat4Uniform(_,_)", wren_ShaderSetMat4Uniform, "Sets the physics body fixed rotation");
 
 // Register static methods
-WREN_CLASS_STATIC("gameObjectComponents", "Shader", "create(_)", wren_ShaderCreate, "Create a Shader body");
+WREN_CLASS_STATIC("gameObjectComponents", "Shader", "create(_,_)", wren_ShaderCreate, "Create a Shader body");
 WREN_CLASS_STATIC("gameObjectComponents", "Shader", "get(_)", wren_ShaderGet, "Gets a Shader body");
 
 // ============================================================================
@@ -618,7 +619,7 @@ void wren_SpriteAnimationCreate(WrenVM* vm)
 	Struktur::Component::SpriteAnimation& spriteAnimationComponent = registry.emplace<Struktur::Component::SpriteAnimation>(entity);
 
 	wrenGetVariable(vm, "gameObjectComponents", "SpriteAnimation", 1);  // Get class into slot 1
-	WrenSpriteAnimation* spriteAnimation = (WrenSpriteAnimation*)wrenSetSlotNewForeign(vm, 0, 1, sizeof(WrenSpriteAnimation));
+	WrenSpriteAnimation* spriteAnimation = static_cast<WrenSpriteAnimation*>(wrenSetSlotNewForeign(vm, 0, 1, sizeof(WrenSpriteAnimation)));
 
 	// SpriteAnimation.new() - identity
 	new (spriteAnimation) WrenSpriteAnimation(entity, &spriteAnimationComponent);
@@ -729,142 +730,142 @@ void wren_SpriteCreate(WrenVM* vm)
 void wren_SpriteGetTexture(WrenVM* vm)
 {
 	WrenSprite* sprite = (WrenSprite*)wrenGetSlotForeign(vm, 0);
-    wrenGetVariable(vm, "gameObjectComponents", "Sprite", 1);  // Get class into slot 1
+	wrenGetVariable(vm, "gameObjectComponents", "Sprite", 1);  // Get class into slot 1
 	WrenTextureHandle* texture = (WrenTextureHandle*)wrenSetSlotNewForeign(vm, 0, 1, sizeof(WrenTextureHandle));
-    new (texture) WrenTextureHandle(sprite->component->texture);
+	new (texture) WrenTextureHandle(sprite->component->texture);
 }
 
 void wren_SpriteSetTexture(WrenVM* vm)
 {
-    WrenSprite* sprite = (WrenSprite*)wrenGetSlotForeign(vm, 0);
+	WrenSprite* sprite = (WrenSprite*)wrenGetSlotForeign(vm, 0);
 	WrenTextureHandle* texture = (WrenTextureHandle*)wrenGetSlotForeign(vm, 1);
-    sprite->component->texture = texture->resource;
+	sprite->component->texture = texture->resource;
 }
 
 void wren_SpriteGetColor(WrenVM* vm)
 {
 	WrenSprite* sprite = (WrenSprite*)wrenGetSlotForeign(vm, 0);
-    wrenGetVariable(vm, "gameObjectComponents", "Sprite", 1);  // Get class into slot 1
+	wrenGetVariable(vm, "gameObjectComponents", "Sprite", 1);  // Get class into slot 1
 	WrenVec4* color = (WrenVec4*)wrenSetSlotNewForeign(vm, 0, 1, sizeof(WrenVec4));
-    glm::vec4 glmColor((float)sprite->component->color.r, (float)sprite->component->color.g, (float)sprite->component->color.b, (float)sprite->component->color.a);
-    new (color) WrenVec4(glmColor);
+	glm::vec4 glmColor((float)sprite->component->color.r, (float)sprite->component->color.g, (float)sprite->component->color.b, (float)sprite->component->color.a);
+	new (color) WrenVec4(glmColor);
 }
 
 void wren_SpriteSetColor(WrenVM* vm)
 {
-    WrenSprite* sprite = (WrenSprite*)wrenGetSlotForeign(vm, 0);
+	WrenSprite* sprite = (WrenSprite*)wrenGetSlotForeign(vm, 0);
 	WrenVec4* color = (WrenVec4*)wrenGetSlotForeign(vm, 1);
-    ::Color rayColor{(unsigned char)color->value.r, (unsigned char)color->value.g, (unsigned char)color->value.b, (unsigned char)color->value.a};
-    sprite->component->color = rayColor;
+	::Color rayColor{ (unsigned char)color->value.r, (unsigned char)color->value.g, (unsigned char)color->value.b, (unsigned char)color->value.a };
+	sprite->component->color = rayColor;
 }
 
 void wren_SpriteGetOffset(WrenVM* vm)
 {
 	WrenSprite* sprite = (WrenSprite*)wrenGetSlotForeign(vm, 0);
-    wrenGetVariable(vm, "gameObjectComponents", "Sprite", 1);  // Get class into slot 1
+	wrenGetVariable(vm, "gameObjectComponents", "Sprite", 1);  // Get class into slot 1
 	WrenVec2* offset = (WrenVec2*)wrenSetSlotNewForeign(vm, 0, 1, sizeof(WrenVec2));
-    new (offset) WrenVec2(sprite->component->offset);
+	new (offset) WrenVec2(sprite->component->offset);
 }
 
 void wren_SpriteSetOffset(WrenVM* vm)
 {
-    WrenSprite* sprite = (WrenSprite*)wrenGetSlotForeign(vm, 0);
+	WrenSprite* sprite = (WrenSprite*)wrenGetSlotForeign(vm, 0);
 	WrenVec2* offset = (WrenVec2*)wrenGetSlotForeign(vm, 1);
-    sprite->component->offset = offset->value;
+	sprite->component->offset = offset->value;
 }
 
 void wren_SpriteGetColumns(WrenVM* vm)
 {
 	WrenSprite* sprite = (WrenSprite*)wrenGetSlotForeign(vm, 0);
-    wrenGetVariable(vm, "gameObjectComponents", "Sprite", 1);  // Get class into slot 1
-    double columns = static_cast<double>(sprite->component->columns);
+	wrenGetVariable(vm, "gameObjectComponents", "Sprite", 1);  // Get class into slot 1
+	double columns = static_cast<double>(sprite->component->columns);
 	wrenSetSlotDouble(vm, 0, columns);
 }
 
 void wren_SpriteSetColumns(WrenVM* vm)
 {
-    WrenSprite* sprite = (WrenSprite*)wrenGetSlotForeign(vm, 0);
+	WrenSprite* sprite = (WrenSprite*)wrenGetSlotForeign(vm, 0);
 	int columns = static_cast<int>(wrenGetSlotDouble(vm, 1));
-    sprite->component->columns = columns;
+	sprite->component->columns = columns;
 }
 
 void wren_SpriteGetRows(WrenVM* vm)
 {
 	WrenSprite* sprite = (WrenSprite*)wrenGetSlotForeign(vm, 0);
-    wrenGetVariable(vm, "gameObjectComponents", "Sprite", 1);  // Get class into slot 1
-    double rows = static_cast<double>(sprite->component->rows);
+	wrenGetVariable(vm, "gameObjectComponents", "Sprite", 1);  // Get class into slot 1
+	double rows = static_cast<double>(sprite->component->rows);
 	wrenSetSlotDouble(vm, 0, rows);
 }
 
 void wren_SpriteSetRows(WrenVM* vm)
 {
-    WrenSprite* sprite = (WrenSprite*)wrenGetSlotForeign(vm, 0);
+	WrenSprite* sprite = (WrenSprite*)wrenGetSlotForeign(vm, 0);
 	int rows = static_cast<int>(wrenGetSlotDouble(vm, 1));
-    sprite->component->rows = rows;
+	sprite->component->rows = rows;
 }
 
 void wren_SpriteGetIndex(WrenVM* vm)
 {
 	WrenSprite* sprite = (WrenSprite*)wrenGetSlotForeign(vm, 0);
-    wrenGetVariable(vm, "gameObjectComponents", "Sprite", 1);  // Get class into slot 1
-    double index = static_cast<double>(sprite->component->index);
+	wrenGetVariable(vm, "gameObjectComponents", "Sprite", 1);  // Get class into slot 1
+	double index = static_cast<double>(sprite->component->index);
 	wrenSetSlotDouble(vm, 0, index);
 }
 
 void wren_SpriteSetIndex(WrenVM* vm)
 {
-    WrenSprite* sprite = (WrenSprite*)wrenGetSlotForeign(vm, 0);
+	WrenSprite* sprite = (WrenSprite*)wrenGetSlotForeign(vm, 0);
 	int index = static_cast<int>(wrenGetSlotDouble(vm, 1));
-    sprite->component->index = index;
+	sprite->component->index = index;
 }
 
 void wren_SpriteGetRenderPriority(WrenVM* vm)
 {
 	WrenSprite* sprite = (WrenSprite*)wrenGetSlotForeign(vm, 0);
-    wrenGetVariable(vm, "gameObjectComponents", "Sprite", 1);  // Get class into slot 1
-    double renderPriority = static_cast<double>(sprite->component->renderPriority);
+	wrenGetVariable(vm, "gameObjectComponents", "Sprite", 1);  // Get class into slot 1
+	double renderPriority = static_cast<double>(sprite->component->renderPriority);
 	wrenSetSlotDouble(vm, 0, renderPriority);
 }
 
 void wren_SpriteSetRenderPriority(WrenVM* vm)
 {
-    WrenSprite* sprite = (WrenSprite*)wrenGetSlotForeign(vm, 0);
+	WrenSprite* sprite = (WrenSprite*)wrenGetSlotForeign(vm, 0);
 	int renderPriority = static_cast<int>(wrenGetSlotDouble(vm, 1));
-    sprite->component->renderPriority = renderPriority;
+	sprite->component->renderPriority = renderPriority;
 }
 
 void wren_SpriteGetFlipped(WrenVM* vm)
 {
 	WrenSprite* sprite = (WrenSprite*)wrenGetSlotForeign(vm, 0);
-    wrenGetVariable(vm, "gameObjectComponents", "Sprite", 1);  // Get class into slot 1
-    bool flipped = sprite->component->flipped;
+	wrenGetVariable(vm, "gameObjectComponents", "Sprite", 1);  // Get class into slot 1
+	bool flipped = sprite->component->flipped;
 	wrenSetSlotBool(vm, 0, flipped);
 }
 
 void wren_SpriteSetFlipped(WrenVM* vm)
 {
-    WrenSprite* sprite = (WrenSprite*)wrenGetSlotForeign(vm, 0);
+	WrenSprite* sprite = (WrenSprite*)wrenGetSlotForeign(vm, 0);
 	bool flipped = wrenGetSlotBool(vm, 1);
-    sprite->component->flipped = flipped;
+	sprite->component->flipped = flipped;
 }
 
 // Sprite.setRenderPriority(entity, renderPriority)
 void wren_SpriteStaticSetRenderPriority(WrenVM* vm)
 {
-    Struktur::GameContext* context = static_cast<Struktur::GameContext*>(wrenGetUserData(vm));
+	Struktur::GameContext* context = static_cast<Struktur::GameContext*>(wrenGetUserData(vm));
 	auto& registry = context->GetRegistry();
-    
+
 	double entityId = wrenGetSlotDouble(vm, 1);
 	double renderPriority = wrenGetSlotDouble(vm, 2);
 	entt::entity entity = static_cast<entt::entity>(entityId);
-    
+
 	auto* sprite = registry.try_get<Struktur::Component::Sprite>(entity);
-    
+
 	if (!sprite)
 	{
-        return;
+		return;
 	}
-    
+
 	sprite->renderPriority = static_cast<int>(renderPriority);
 }
 
@@ -922,7 +923,7 @@ WREN_CLASS_STATIC("gameObjectComponents", "Sprite", "setFlipped(_,_)", wren_Spri
 // LocalTransform.getPosition() -> vec3 or null
 void wren_LocalTransformGetPosition(WrenVM* vm)
 {
-    WrenLocalTransform* transform = (WrenLocalTransform*)wrenGetSlotForeign(vm, 0);
+	WrenLocalTransform* transform = (WrenLocalTransform*)wrenGetSlotForeign(vm, 0);
 	// Create Vec3 foreign object with position
 	wrenGetVariable(vm, "math", "Vec3", 1);  // Get class into slot 1
 	WrenVec3* vec = (WrenVec3*)wrenSetSlotNewForeign(vm, 0, 1, sizeof(WrenVec3));
@@ -932,18 +933,18 @@ void wren_LocalTransformGetPosition(WrenVM* vm)
 // LocalTransform.getPosition(entity) -> vec3 or null
 void wren_LocalTransformStaticGetPosition(WrenVM* vm)
 {
-    Struktur::GameContext* context = static_cast<Struktur::GameContext*>(wrenGetUserData(vm));
+	Struktur::GameContext* context = static_cast<Struktur::GameContext*>(wrenGetUserData(vm));
 	auto& registry = context->GetRegistry();
-    
+
 	double entityId = wrenGetSlotDouble(vm, 1);
 	entt::entity entity = static_cast<entt::entity>(entityId);
-    
+
 	auto* transform = registry.try_get<Struktur::Component::LocalTransform>(entity);
 	if (!transform) {
-        wrenSetSlotNull(vm, 0);
+		wrenSetSlotNull(vm, 0);
 		return;
 	}
-    
+
 	// Create Vec3 foreign object with position
 	wrenGetVariable(vm, "math", "Vec3", 1);  // Get class into slot 1
 	WrenVec3* vec = (WrenVec3*)wrenSetSlotNewForeign(vm, 0, 1, sizeof(WrenVec3));
@@ -953,43 +954,43 @@ void wren_LocalTransformStaticGetPosition(WrenVM* vm)
 // LocalTransform.setPosition(vec3)
 void wren_LocalTransformSetPosition(WrenVM* vm)
 {
-    Struktur::GameContext* context = static_cast<Struktur::GameContext*>(wrenGetUserData(vm));
+	Struktur::GameContext* context = static_cast<Struktur::GameContext*>(wrenGetUserData(vm));
 	auto& systemManager = context->GetSystemManager();
 	auto& transformSystem = systemManager.GetSystem<Struktur::System::TransformSystem>();
-    
+
 	WrenLocalTransform* transform = (WrenLocalTransform*)wrenGetSlotForeign(vm, 0);
-    
+
 	WrenVec3* vec = static_cast<WrenVec3*>(wrenGetSlotForeign(vm, 1));
-    
+
 	if (!vec)
 	{
-        DEBUG_ERROR("Transform.setPosition: Invalid Vec3");
+		DEBUG_ERROR("Transform.setPosition: Invalid Vec3");
 		return;
 	}
-    
+
 	transformSystem.SetLocalTransform(*context, transform->entity, vec->value, transform->component->scale, transform->component->rotation);
 }
 
 // LocalTransform.setPosition(entity, vec3)
 void wren_LocalTransformStaticSetPosition(WrenVM* vm)
 {
-    Struktur::GameContext* context = static_cast<Struktur::GameContext*>(wrenGetUserData(vm));
-    auto& registry = context->GetRegistry();
+	Struktur::GameContext* context = static_cast<Struktur::GameContext*>(wrenGetUserData(vm));
+	auto& registry = context->GetRegistry();
 	auto& systemManager = context->GetSystemManager();
 	auto& transformSystem = systemManager.GetSystem<Struktur::System::TransformSystem>();
-    
+
 	double entityId = wrenGetSlotDouble(vm, 1);
 	entt::entity entity = static_cast<entt::entity>(entityId);
-    
+
 	WrenVec3* vec = static_cast<WrenVec3*>(wrenGetSlotForeign(vm, 2));
-    
+
 	if (!vec)
 	{
-        DEBUG_ERROR("Transform.setPosition: Invalid Vec3");
+		DEBUG_ERROR("Transform.setPosition: Invalid Vec3");
 		return;
 	}
-    
-    auto* transform = registry.try_get<Struktur::Component::LocalTransform>(entity);
+
+	auto* transform = registry.try_get<Struktur::Component::LocalTransform>(entity);
 	if (!transform) {
 		// should always be a world transform so create one here
 		transformSystem.SetWorldTransform(*context, entity, vec->value, glm::vec3(1.0f), glm::quat(1.0f, 0.0f, 0.0f, 0.0f));
@@ -1002,7 +1003,7 @@ void wren_LocalTransformStaticSetPosition(WrenVM* vm)
 // LocalTransform.getScale() -> vec3 or null
 void wren_LocalTransformGetScale(WrenVM* vm)
 {
-    WrenLocalTransform* transform = (WrenLocalTransform*)wrenGetSlotForeign(vm, 0);
+	WrenLocalTransform* transform = (WrenLocalTransform*)wrenGetSlotForeign(vm, 0);
 	// Create Vec3 foreign object with scale
 	wrenGetVariable(vm, "math", "Vec3", 1);  // Get class into slot 1
 	WrenVec3* vec = (WrenVec3*)wrenSetSlotNewForeign(vm, 0, 1, sizeof(WrenVec3));
@@ -1012,18 +1013,18 @@ void wren_LocalTransformGetScale(WrenVM* vm)
 // LocalTransform.getScale(entity) -> vec3 or null
 void wren_LocalTransformStaticGetScale(WrenVM* vm)
 {
-    Struktur::GameContext* context = static_cast<Struktur::GameContext*>(wrenGetUserData(vm));
+	Struktur::GameContext* context = static_cast<Struktur::GameContext*>(wrenGetUserData(vm));
 	auto& registry = context->GetRegistry();
-    
+
 	double entityId = wrenGetSlotDouble(vm, 1);
 	entt::entity entity = static_cast<entt::entity>(entityId);
-    
+
 	auto* transform = registry.try_get<Struktur::Component::LocalTransform>(entity);
 	if (!transform) {
-        wrenSetSlotNull(vm, 0);
+		wrenSetSlotNull(vm, 0);
 		return;
 	}
-    
+
 	// Create Vec3 foreign object with scale
 	wrenGetVariable(vm, "math", "Vec3", 1);  // Get class into slot 1
 	WrenVec3* vec = (WrenVec3*)wrenSetSlotNewForeign(vm, 0, 1, sizeof(WrenVec3));
@@ -1033,43 +1034,43 @@ void wren_LocalTransformStaticGetScale(WrenVM* vm)
 // LocalTransform.setScale(vec3)
 void wren_LocalTransformSetScale(WrenVM* vm)
 {
-    Struktur::GameContext* context = static_cast<Struktur::GameContext*>(wrenGetUserData(vm));
+	Struktur::GameContext* context = static_cast<Struktur::GameContext*>(wrenGetUserData(vm));
 	auto& systemManager = context->GetSystemManager();
 	auto& transformSystem = systemManager.GetSystem<Struktur::System::TransformSystem>();
-    
+
 	WrenLocalTransform* transform = (WrenLocalTransform*)wrenGetSlotForeign(vm, 0);
-    
+
 	WrenVec3* vec = static_cast<WrenVec3*>(wrenGetSlotForeign(vm, 1));
-    
+
 	if (!vec)
 	{
-        DEBUG_ERROR("Transform.setScale: Invalid Vec3");
+		DEBUG_ERROR("Transform.setScale: Invalid Vec3");
 		return;
 	}
-    
+
 	transformSystem.SetLocalTransform(*context, transform->entity, transform->component->position, vec->value, transform->component->rotation);
 }
 
 // LocalTransform.setScale(entity, vec3)
 void wren_LocalTransformStaticSetScale(WrenVM* vm)
 {
-    Struktur::GameContext* context = static_cast<Struktur::GameContext*>(wrenGetUserData(vm));
-    auto& registry = context->GetRegistry();
+	Struktur::GameContext* context = static_cast<Struktur::GameContext*>(wrenGetUserData(vm));
+	auto& registry = context->GetRegistry();
 	auto& systemManager = context->GetSystemManager();
 	auto& transformSystem = systemManager.GetSystem<Struktur::System::TransformSystem>();
-    
+
 	double entityId = wrenGetSlotDouble(vm, 1);
 	entt::entity entity = static_cast<entt::entity>(entityId);
-    
+
 	WrenVec3* vec = static_cast<WrenVec3*>(wrenGetSlotForeign(vm, 2));
-    
+
 	if (!vec)
 	{
-        DEBUG_ERROR("Transform.setScale: Invalid Vec3");
+		DEBUG_ERROR("Transform.setScale: Invalid Vec3");
 		return;
 	}
-    
-    auto* transform = registry.try_get<Struktur::Component::LocalTransform>(entity);
+
+	auto* transform = registry.try_get<Struktur::Component::LocalTransform>(entity);
 	if (!transform) {
 		// should always be a world transform so create one here
 		transformSystem.SetWorldTransform(*context, entity, glm::vec3(0.0f), vec->value, glm::quat(1.0f, 0.0f, 0.0f, 0.0f));
@@ -1082,7 +1083,7 @@ void wren_LocalTransformStaticSetScale(WrenVM* vm)
 // LocalTransform.getRotation() -> Quat or null
 void wren_LocalTransformGetRotation(WrenVM* vm)
 {
-    WrenLocalTransform* transform = (WrenLocalTransform*)wrenGetSlotForeign(vm, 0);
+	WrenLocalTransform* transform = (WrenLocalTransform*)wrenGetSlotForeign(vm, 0);
 	// Create Vec3 foreign object with rotation
 	wrenGetVariable(vm, "math", "Quat", 1);  // Get class into slot 1
 	WrenQuat* quat = (WrenQuat*)wrenSetSlotNewForeign(vm, 0, 1, sizeof(WrenQuat));
@@ -1092,18 +1093,18 @@ void wren_LocalTransformGetRotation(WrenVM* vm)
 // LocalTransform.getRotation(entity) -> Quat or null
 void wren_LocalTransformStaticGetRotation(WrenVM* vm)
 {
-    Struktur::GameContext* context = static_cast<Struktur::GameContext*>(wrenGetUserData(vm));
+	Struktur::GameContext* context = static_cast<Struktur::GameContext*>(wrenGetUserData(vm));
 	auto& registry = context->GetRegistry();
-    
+
 	double entityId = wrenGetSlotDouble(vm, 1);
 	entt::entity entity = static_cast<entt::entity>(entityId);
-    
+
 	auto* transform = registry.try_get<Struktur::Component::LocalTransform>(entity);
 	if (!transform) {
-        wrenSetSlotNull(vm, 0);
+		wrenSetSlotNull(vm, 0);
 		return;
 	}
-    
+
 	wrenGetVariable(vm, "math", "Quat", 1);  // Get class into slot 1
 	WrenQuat* quat = (WrenQuat*)wrenSetSlotNewForeign(vm, 0, 1, sizeof(WrenQuat));
 	new (quat) WrenQuat(transform->rotation);
@@ -1112,56 +1113,56 @@ void wren_LocalTransformStaticGetRotation(WrenVM* vm)
 // LocalTransform.setRotation(Quat)
 void wren_LocalTransformSetRotation(WrenVM* vm)
 {
-    Struktur::GameContext* context = static_cast<Struktur::GameContext*>(wrenGetUserData(vm));
+	Struktur::GameContext* context = static_cast<Struktur::GameContext*>(wrenGetUserData(vm));
 	auto& systemManager = context->GetSystemManager();
 	auto& transformSystem = systemManager.GetSystem<Struktur::System::TransformSystem>();
-    
+
 	WrenLocalTransform* transform = (WrenLocalTransform*)wrenGetSlotForeign(vm, 0);
-    
+
 	WrenQuat* quat = static_cast<WrenQuat*>(wrenGetSlotForeign(vm, 1));
-    
+
 	if (!quat)
 	{
-        DEBUG_ERROR("Transform.setRotation: Invalid Quat");
+		DEBUG_ERROR("Transform.setRotation: Invalid Quat");
 		return;
 	}
-    
+
 	transformSystem.SetLocalTransform(*context, transform->entity, transform->component->position, transform->component->scale, quat->value);
 }
 
 // LocalTransform.setPosition(entity, Quat)
 void wren_LocalTransformStaticSetRotation(WrenVM* vm)
 {
-    Struktur::GameContext* context = static_cast<Struktur::GameContext*>(wrenGetUserData(vm));
-    auto& registry = context->GetRegistry();
+	Struktur::GameContext* context = static_cast<Struktur::GameContext*>(wrenGetUserData(vm));
+	auto& registry = context->GetRegistry();
 	auto& systemManager = context->GetSystemManager();
 	auto& transformSystem = systemManager.GetSystem<Struktur::System::TransformSystem>();
-    
+
 	double entityId = wrenGetSlotDouble(vm, 1);
 	entt::entity entity = static_cast<entt::entity>(entityId);
-    
+
 	WrenQuat* quat = static_cast<WrenQuat*>(wrenGetSlotForeign(vm, 1));
-    
+
 	if (!quat)
 	{
-        DEBUG_ERROR("Transform.setRotation: Invalid Quat");
+		DEBUG_ERROR("Transform.setRotation: Invalid Quat");
 		return;
 	}
-    
-    auto* transform = registry.try_get<Struktur::Component::LocalTransform>(entity);
+
+	auto* transform = registry.try_get<Struktur::Component::LocalTransform>(entity);
 	if (!transform) {
 		// should always be a world transform so create one here
 		transformSystem.SetWorldTransform(*context, entity, glm::vec3(0.0f), glm::vec3(1.0f), quat->value);
 		return;
 	}
-    
+
 	transformSystem.SetLocalTransform(*context, entity, transform->position, transform->scale, quat->value);
 }
 
 // LocalTransform.getMatrix() -> Mat4 or null
 void wren_LocalTransformGetMatrix(WrenVM* vm)
 {
-    WrenLocalTransform* transform = (WrenLocalTransform*)wrenGetSlotForeign(vm, 0);
+	WrenLocalTransform* transform = (WrenLocalTransform*)wrenGetSlotForeign(vm, 0);
 	// Create Vec3 foreign object with rotation
 	wrenGetVariable(vm, "gameObjectComponents", "Mat4", 1);  // Get class into slot 1
 	WrenMat4* mat = (WrenMat4*)wrenSetSlotNewForeign(vm, 0, 1, sizeof(WrenMat4));
@@ -1171,18 +1172,18 @@ void wren_LocalTransformGetMatrix(WrenVM* vm)
 // LocalTransform.getMatrix(entity) -> Mat4 or null
 void wren_LocalTransformStaticGetMatrix(WrenVM* vm)
 {
-    Struktur::GameContext* context = static_cast<Struktur::GameContext*>(wrenGetUserData(vm));
+	Struktur::GameContext* context = static_cast<Struktur::GameContext*>(wrenGetUserData(vm));
 	auto& registry = context->GetRegistry();
-    
+
 	double entityId = wrenGetSlotDouble(vm, 1);
 	entt::entity entity = static_cast<entt::entity>(entityId);
-    
+
 	auto* transform = registry.try_get<Struktur::Component::LocalTransform>(entity);
 	if (!transform) {
-        wrenSetSlotNull(vm, 0);
+		wrenSetSlotNull(vm, 0);
 		return;
 	}
-    
+
 	wrenGetVariable(vm, "gameObjectComponents", "Mat4", 1);  // Get class into slot 1
 	WrenMat4* mat = (WrenMat4*)wrenSetSlotNewForeign(vm, 0, 1, sizeof(WrenMat4));
 	new (mat) WrenMat4(transform->matrix);
@@ -1191,42 +1192,42 @@ void wren_LocalTransformStaticGetMatrix(WrenVM* vm)
 // LocalTransform.setMatrix(mat4)
 void wren_LocalTransformSetMatrix(WrenVM* vm)
 {
-    Struktur::GameContext* context = static_cast<Struktur::GameContext*>(wrenGetUserData(vm));
+	Struktur::GameContext* context = static_cast<Struktur::GameContext*>(wrenGetUserData(vm));
 	auto& systemManager = context->GetSystemManager();
 	auto& transformSystem = systemManager.GetSystem<Struktur::System::TransformSystem>();
-    
+
 	WrenLocalTransform* transform = (WrenLocalTransform*)wrenGetSlotForeign(vm, 0);
-    
+
 	WrenMat4* mat = static_cast<WrenMat4*>(wrenGetSlotForeign(vm, 1));
-    
+
 	if (!mat)
 	{
-        DEBUG_ERROR("Transform.setmatrix: Invalid Mat4");
+		DEBUG_ERROR("Transform.setmatrix: Invalid Mat4");
 		return;
 	}
-    
+
 	transformSystem.SetLocalTransform(*context, transform->entity, mat->value);
 }
 
 // LocalTransform.setMatrix(entity, mat4)
 void wren_LocalTransformStaticSetMatrix(WrenVM* vm)
 {
-    Struktur::GameContext* context = static_cast<Struktur::GameContext*>(wrenGetUserData(vm));
-    auto& registry = context->GetRegistry();
+	Struktur::GameContext* context = static_cast<Struktur::GameContext*>(wrenGetUserData(vm));
+	auto& registry = context->GetRegistry();
 	auto& systemManager = context->GetSystemManager();
 	auto& transformSystem = systemManager.GetSystem<Struktur::System::TransformSystem>();
-    
+
 	double entityId = wrenGetSlotDouble(vm, 1);
 	entt::entity entity = static_cast<entt::entity>(entityId);
-    
+
 	WrenMat4* mat = static_cast<WrenMat4*>(wrenGetSlotForeign(vm, 1));
-    
+
 	if (!mat)
 	{
-        DEBUG_ERROR("Transform.setmatrix: Invalid Mat4");
+		DEBUG_ERROR("Transform.setmatrix: Invalid Mat4");
 		return;
 	}
-    
+
 	transformSystem.SetLocalTransform(*context, entity, mat->value);
 }
 
@@ -1261,7 +1262,7 @@ WREN_CLASS_STATIC("gameObjectComponents", "LocalTransform", "setMatrix(_,_)", wr
 // WorldTransform.getPosition() -> vec3 or null
 void wren_WorldTransformGetPosition(WrenVM* vm)
 {
-    WrenWorldTransform* transform = (WrenWorldTransform*)wrenGetSlotForeign(vm, 0);
+	WrenWorldTransform* transform = (WrenWorldTransform*)wrenGetSlotForeign(vm, 0);
 	// Create Vec3 foreign object with position
 	wrenGetVariable(vm, "math", "Vec3", 1);  // Get class into slot 1
 	WrenVec3* vec = (WrenVec3*)wrenSetSlotNewForeign(vm, 0, 1, sizeof(WrenVec3));
@@ -1271,18 +1272,18 @@ void wren_WorldTransformGetPosition(WrenVM* vm)
 // WorldTransform.getPosition(entity) -> vec3 or null
 void wren_WorldTransformStaticGetPosition(WrenVM* vm)
 {
-    Struktur::GameContext* context = static_cast<Struktur::GameContext*>(wrenGetUserData(vm));
+	Struktur::GameContext* context = static_cast<Struktur::GameContext*>(wrenGetUserData(vm));
 	auto& registry = context->GetRegistry();
-    
+
 	double entityId = wrenGetSlotDouble(vm, 1);
 	entt::entity entity = static_cast<entt::entity>(entityId);
-    
+
 	auto* transform = registry.try_get<Struktur::Component::WorldTransform>(entity);
 	if (!transform) {
-        wrenSetSlotNull(vm, 0);
+		wrenSetSlotNull(vm, 0);
 		return;
 	}
-    
+
 	// Create Vec3 foreign object with position
 	wrenGetVariable(vm, "math", "Vec3", 1);  // Get class into slot 1
 	WrenVec3* vec = (WrenVec3*)wrenSetSlotNewForeign(vm, 0, 1, sizeof(WrenVec3));
@@ -1292,45 +1293,45 @@ void wren_WorldTransformStaticGetPosition(WrenVM* vm)
 // WorldTransform.setPosition(vec3)
 void wren_WorldTransformSetPosition(WrenVM* vm)
 {
-    Struktur::GameContext* context = static_cast<Struktur::GameContext*>(wrenGetUserData(vm));
+	Struktur::GameContext* context = static_cast<Struktur::GameContext*>(wrenGetUserData(vm));
 	auto& systemManager = context->GetSystemManager();
 	auto& transformSystem = systemManager.GetSystem<Struktur::System::TransformSystem>();
-    
+
 	WrenWorldTransform* transform = (WrenWorldTransform*)wrenGetSlotForeign(vm, 0);
-    
+
 	WrenVec3* vec = static_cast<WrenVec3*>(wrenGetSlotForeign(vm, 1));
-    
+
 	if (!vec)
 	{
-        DEBUG_ERROR("Transform.setPosition: Invalid Vec3");
+		DEBUG_ERROR("Transform.setPosition: Invalid Vec3");
 		return;
 	}
-    
+
 	transformSystem.SetWorldTransform(*context, transform->entity, vec->value, transform->component->scale, transform->component->rotation);
 }
 
 // WorldTransform.setPosition(entity, vec3)
 void wren_WorldTransformStaticSetPosition(WrenVM* vm)
 {
-    Struktur::GameContext* context = static_cast<Struktur::GameContext*>(wrenGetUserData(vm));
-    auto& registry = context->GetRegistry();
+	Struktur::GameContext* context = static_cast<Struktur::GameContext*>(wrenGetUserData(vm));
+	auto& registry = context->GetRegistry();
 	auto& systemManager = context->GetSystemManager();
 	auto& transformSystem = systemManager.GetSystem<Struktur::System::TransformSystem>();
-    
+
 	double entityId = wrenGetSlotDouble(vm, 1);
 	entt::entity entity = static_cast<entt::entity>(entityId);
-    
+
 	WrenVec3* vec = static_cast<WrenVec3*>(wrenGetSlotForeign(vm, 2));
-    
+
 	if (!vec)
 	{
-        DEBUG_ERROR("Transform.setPosition: Invalid Vec3");
+		DEBUG_ERROR("Transform.setPosition: Invalid Vec3");
 		return;
 	}
-    
-    auto* transform = registry.try_get<Struktur::Component::WorldTransform>(entity);
+
+	auto* transform = registry.try_get<Struktur::Component::WorldTransform>(entity);
 	if (!transform) {
-        // should always be a world transform so create one here
+		// should always be a world transform so create one here
 		transformSystem.SetWorldTransform(*context, entity, vec->value, glm::vec3(1.0f), glm::quat(1.0f, 0.0f, 0.0f, 0.0f));
 		return;
 	}
@@ -1341,7 +1342,7 @@ void wren_WorldTransformStaticSetPosition(WrenVM* vm)
 // WorldTransform.getScale() -> vec3 or null
 void wren_WorldTransformGetScale(WrenVM* vm)
 {
-    WrenWorldTransform* transform = (WrenWorldTransform*)wrenGetSlotForeign(vm, 0);
+	WrenWorldTransform* transform = (WrenWorldTransform*)wrenGetSlotForeign(vm, 0);
 	// Create Vec3 foreign object with scale
 	wrenGetVariable(vm, "math", "Vec3", 1);  // Get class into slot 1
 	WrenVec3* vec = (WrenVec3*)wrenSetSlotNewForeign(vm, 0, 1, sizeof(WrenVec3));
@@ -1351,18 +1352,18 @@ void wren_WorldTransformGetScale(WrenVM* vm)
 // WorldTransform.getScale(entity) -> vec3 or null
 void wren_WorldTransformStaticGetScale(WrenVM* vm)
 {
-    Struktur::GameContext* context = static_cast<Struktur::GameContext*>(wrenGetUserData(vm));
+	Struktur::GameContext* context = static_cast<Struktur::GameContext*>(wrenGetUserData(vm));
 	auto& registry = context->GetRegistry();
-    
+
 	double entityId = wrenGetSlotDouble(vm, 1);
 	entt::entity entity = static_cast<entt::entity>(entityId);
-    
+
 	auto* transform = registry.try_get<Struktur::Component::WorldTransform>(entity);
 	if (!transform) {
-        wrenSetSlotNull(vm, 0);
+		wrenSetSlotNull(vm, 0);
 		return;
 	}
-    
+
 	// Create Vec3 foreign object with scale
 	wrenGetVariable(vm, "math", "Vec3", 1);  // Get class into slot 1
 	WrenVec3* vec = (WrenVec3*)wrenSetSlotNewForeign(vm, 0, 1, sizeof(WrenVec3));
@@ -1372,43 +1373,43 @@ void wren_WorldTransformStaticGetScale(WrenVM* vm)
 // WorldTransform.setScale(vec3)
 void wren_WorldTransformSetScale(WrenVM* vm)
 {
-    Struktur::GameContext* context = static_cast<Struktur::GameContext*>(wrenGetUserData(vm));
+	Struktur::GameContext* context = static_cast<Struktur::GameContext*>(wrenGetUserData(vm));
 	auto& systemManager = context->GetSystemManager();
 	auto& transformSystem = systemManager.GetSystem<Struktur::System::TransformSystem>();
-    
+
 	WrenWorldTransform* transform = (WrenWorldTransform*)wrenGetSlotForeign(vm, 0);
-    
+
 	WrenVec3* vec = static_cast<WrenVec3*>(wrenGetSlotForeign(vm, 1));
-    
+
 	if (!vec)
 	{
-        DEBUG_ERROR("Transform.setScale: Invalid Vec3");
+		DEBUG_ERROR("Transform.setScale: Invalid Vec3");
 		return;
 	}
-    
+
 	transformSystem.SetWorldTransform(*context, transform->entity, transform->component->position, vec->value, transform->component->rotation);
 }
 
 // WorldTransform.setScale(entity, vec3)
 void wren_WorldTransformStaticSetScale(WrenVM* vm)
 {
-    Struktur::GameContext* context = static_cast<Struktur::GameContext*>(wrenGetUserData(vm));
-    auto& registry = context->GetRegistry();
+	Struktur::GameContext* context = static_cast<Struktur::GameContext*>(wrenGetUserData(vm));
+	auto& registry = context->GetRegistry();
 	auto& systemManager = context->GetSystemManager();
 	auto& transformSystem = systemManager.GetSystem<Struktur::System::TransformSystem>();
-    
+
 	double entityId = wrenGetSlotDouble(vm, 1);
 	entt::entity entity = static_cast<entt::entity>(entityId);
-    
+
 	WrenVec3* vec = static_cast<WrenVec3*>(wrenGetSlotForeign(vm, 2));
-    
+
 	if (!vec)
 	{
-        DEBUG_ERROR("Transform.setScale: Invalid Vec3");
+		DEBUG_ERROR("Transform.setScale: Invalid Vec3");
 		return;
 	}
-    
-    auto* transform = registry.try_get<Struktur::Component::WorldTransform>(entity);
+
+	auto* transform = registry.try_get<Struktur::Component::WorldTransform>(entity);
 	if (!transform) {
 		// should always be a world transform so create one here
 		transformSystem.SetWorldTransform(*context, entity, glm::vec3(0.0f), vec->value, glm::quat(1.0f, 0.0f, 0.0f, 0.0f));
@@ -1421,7 +1422,7 @@ void wren_WorldTransformStaticSetScale(WrenVM* vm)
 // WorldTransform.getRotation() -> Quat or null
 void wren_WorldTransformGetRotation(WrenVM* vm)
 {
-    WrenWorldTransform* transform = (WrenWorldTransform*)wrenGetSlotForeign(vm, 0);
+	WrenWorldTransform* transform = (WrenWorldTransform*)wrenGetSlotForeign(vm, 0);
 	// Create Vec3 foreign object with rotation
 	wrenGetVariable(vm, "math", "Quat", 1);  // Get class into slot 1
 	WrenQuat* quat = (WrenQuat*)wrenSetSlotNewForeign(vm, 0, 1, sizeof(WrenQuat));
@@ -1431,18 +1432,18 @@ void wren_WorldTransformGetRotation(WrenVM* vm)
 // WorldTransform.getRotation(entity) -> Quat or null
 void wren_WorldTransformStaticGetRotation(WrenVM* vm)
 {
-    Struktur::GameContext* context = static_cast<Struktur::GameContext*>(wrenGetUserData(vm));
+	Struktur::GameContext* context = static_cast<Struktur::GameContext*>(wrenGetUserData(vm));
 	auto& registry = context->GetRegistry();
-    
+
 	double entityId = wrenGetSlotDouble(vm, 1);
 	entt::entity entity = static_cast<entt::entity>(entityId);
-    
+
 	auto* transform = registry.try_get<Struktur::Component::WorldTransform>(entity);
 	if (!transform) {
-        wrenSetSlotNull(vm, 0);
+		wrenSetSlotNull(vm, 0);
 		return;
 	}
-    
+
 	wrenGetVariable(vm, "math", "Quat", 1);  // Get class into slot 1
 	WrenQuat* quat = (WrenQuat*)wrenSetSlotNewForeign(vm, 0, 1, sizeof(WrenQuat));
 	new (quat) WrenQuat(transform->rotation);
@@ -1451,56 +1452,56 @@ void wren_WorldTransformStaticGetRotation(WrenVM* vm)
 // WorldTransform.setRotation(Quat)
 void wren_WorldTransformSetRotation(WrenVM* vm)
 {
-    Struktur::GameContext* context = static_cast<Struktur::GameContext*>(wrenGetUserData(vm));
+	Struktur::GameContext* context = static_cast<Struktur::GameContext*>(wrenGetUserData(vm));
 	auto& systemManager = context->GetSystemManager();
 	auto& transformSystem = systemManager.GetSystem<Struktur::System::TransformSystem>();
-    
+
 	WrenWorldTransform* transform = (WrenWorldTransform*)wrenGetSlotForeign(vm, 0);
-    
+
 	WrenQuat* quat = static_cast<WrenQuat*>(wrenGetSlotForeign(vm, 1));
-    
+
 	if (!quat)
 	{
-        DEBUG_ERROR("Transform.setRotation: Invalid Quat");
+		DEBUG_ERROR("Transform.setRotation: Invalid Quat");
 		return;
 	}
-    
+
 	transformSystem.SetWorldTransform(*context, transform->entity, transform->component->position, transform->component->scale, quat->value);
 }
 
 // WorldTransform.setPosition(entity, Quat)
 void wren_WorldTransformStaticSetRotation(WrenVM* vm)
 {
-    Struktur::GameContext* context = static_cast<Struktur::GameContext*>(wrenGetUserData(vm));
-    auto& registry = context->GetRegistry();
+	Struktur::GameContext* context = static_cast<Struktur::GameContext*>(wrenGetUserData(vm));
+	auto& registry = context->GetRegistry();
 	auto& systemManager = context->GetSystemManager();
 	auto& transformSystem = systemManager.GetSystem<Struktur::System::TransformSystem>();
-    
+
 	double entityId = wrenGetSlotDouble(vm, 1);
 	entt::entity entity = static_cast<entt::entity>(entityId);
-    
+
 	WrenQuat* quat = static_cast<WrenQuat*>(wrenGetSlotForeign(vm, 1));
-    
+
 	if (!quat)
 	{
-        DEBUG_ERROR("Transform.setRotation: Invalid Quat");
+		DEBUG_ERROR("Transform.setRotation: Invalid Quat");
 		return;
 	}
-    
-    auto* transform = registry.try_get<Struktur::Component::WorldTransform>(entity);
+
+	auto* transform = registry.try_get<Struktur::Component::WorldTransform>(entity);
 	if (!transform) {
 		// should always be a world transform so create one here
 		transformSystem.SetWorldTransform(*context, entity, glm::vec3(0.0f), glm::vec3(1.0f), quat->value);
 		return;
 	}
-    
+
 	transformSystem.SetWorldTransform(*context, entity, transform->position, transform->scale, quat->value);
 }
 
 // WorldTransform.getMatrix() -> Mat4 or null
 void wren_WorldTransformGetMatrix(WrenVM* vm)
 {
-    WrenWorldTransform* transform = (WrenWorldTransform*)wrenGetSlotForeign(vm, 0);
+	WrenWorldTransform* transform = (WrenWorldTransform*)wrenGetSlotForeign(vm, 0);
 	// Create Vec3 foreign object with rotation
 	wrenGetVariable(vm, "math", "Mat4", 1);  // Get class into slot 1
 	WrenMat4* mat = (WrenMat4*)wrenSetSlotNewForeign(vm, 0, 1, sizeof(WrenMat4));
@@ -1510,18 +1511,18 @@ void wren_WorldTransformGetMatrix(WrenVM* vm)
 // WorldTransform.getMatrix(entity) -> Mat4 or null
 void wren_WorldTransformStaticGetMatrix(WrenVM* vm)
 {
-    Struktur::GameContext* context = static_cast<Struktur::GameContext*>(wrenGetUserData(vm));
+	Struktur::GameContext* context = static_cast<Struktur::GameContext*>(wrenGetUserData(vm));
 	auto& registry = context->GetRegistry();
-    
+
 	double entityId = wrenGetSlotDouble(vm, 1);
 	entt::entity entity = static_cast<entt::entity>(entityId);
-    
+
 	auto* transform = registry.try_get<Struktur::Component::WorldTransform>(entity);
 	if (!transform) {
-        wrenSetSlotNull(vm, 0);
+		wrenSetSlotNull(vm, 0);
 		return;
 	}
-    
+
 	wrenGetVariable(vm, "math", "Mat4", 1);  // Get class into slot 1
 	WrenMat4* mat = (WrenMat4*)wrenSetSlotNewForeign(vm, 0, 1, sizeof(WrenMat4));
 	new (mat) WrenMat4(transform->matrix);
@@ -1530,42 +1531,42 @@ void wren_WorldTransformStaticGetMatrix(WrenVM* vm)
 // WorldTransform.setMatrix(mat4)
 void wren_WorldTransformSetMatrix(WrenVM* vm)
 {
-    Struktur::GameContext* context = static_cast<Struktur::GameContext*>(wrenGetUserData(vm));
+	Struktur::GameContext* context = static_cast<Struktur::GameContext*>(wrenGetUserData(vm));
 	auto& systemManager = context->GetSystemManager();
 	auto& transformSystem = systemManager.GetSystem<Struktur::System::TransformSystem>();
-    
+
 	WrenWorldTransform* transform = (WrenWorldTransform*)wrenGetSlotForeign(vm, 0);
-    
+
 	WrenMat4* mat = static_cast<WrenMat4*>(wrenGetSlotForeign(vm, 1));
-    
+
 	if (!mat)
 	{
-        DEBUG_ERROR("Transform.setmatrix: Invalid Mat4");
+		DEBUG_ERROR("Transform.setmatrix: Invalid Mat4");
 		return;
 	}
-    
+
 	transformSystem.SetWorldTransform(*context, transform->entity, mat->value);
 }
 
 // WorldTransform.setMatrix(entity, mat4)
 void wren_WorldTransformStaticSetMatrix(WrenVM* vm)
 {
-    Struktur::GameContext* context = static_cast<Struktur::GameContext*>(wrenGetUserData(vm));
-    auto& registry = context->GetRegistry();
+	Struktur::GameContext* context = static_cast<Struktur::GameContext*>(wrenGetUserData(vm));
+	auto& registry = context->GetRegistry();
 	auto& systemManager = context->GetSystemManager();
 	auto& transformSystem = systemManager.GetSystem<Struktur::System::TransformSystem>();
-    
+
 	double entityId = wrenGetSlotDouble(vm, 1);
 	entt::entity entity = static_cast<entt::entity>(entityId);
-    
+
 	WrenMat4* mat = static_cast<WrenMat4*>(wrenGetSlotForeign(vm, 1));
-    
+
 	if (!mat)
 	{
-        DEBUG_ERROR("Transform.setmatrix: Invalid Mat4");
+		DEBUG_ERROR("Transform.setmatrix: Invalid Mat4");
 		return;
 	}
-    
+
 	transformSystem.SetWorldTransform(*context, entity, mat->value);
 }
 
@@ -1630,7 +1631,7 @@ void wren_ScriptCreateArg(WrenVM* vm)
 	Struktur::System::WrenScriptSystem& scriptSystem = systemManager.GetSystem<Struktur::System::WrenScriptSystem>();
 
 	entt::entity entity = static_cast<entt::entity>(wrenGetSlotDouble(vm, 1));
-	const char* className = wrenGetSlotString(vm, 2);	
+	const char* className = wrenGetSlotString(vm, 2);
 	wrenEnsureSlots(vm, 7);
 	std::vector<Struktur::Wren::WrenItem> wrenArgs = Struktur::Wren::Util::GetWrenMapDoubleList(vm, 3, 4, 5);
 	auto& script = registry.emplace<Struktur::Component::WrenScript>(entity, className, wrenArgs);
@@ -1648,12 +1649,12 @@ void wren_ScriptCreateArg(WrenVM* vm)
 
 // Script.isInitialised -> bool
 void wren_ScriptIsInitialised(WrenVM* vm)
-{    
+{
 	auto* script = static_cast<WrenWrenScript*>(wrenGetSlotForeign(vm, 0));
 
 	if (!script->component)
 	{
-        DEBUG_ERROR("Script.get: Entity does not have script");
+		DEBUG_ERROR("Script.get: Entity does not have script");
 		wrenSetSlotNull(vm, 0);
 		return;
 	}
@@ -1662,12 +1663,12 @@ void wren_ScriptIsInitialised(WrenVM* vm)
 
 // Script.hasError -> bool
 void wren_ScriptHasError(WrenVM* vm)
-{    
+{
 	auto* script = static_cast<WrenWrenScript*>(wrenGetSlotForeign(vm, 0));
 
 	if (!script->component)
 	{
-        DEBUG_ERROR("Script.get: Entity does not have script");
+		DEBUG_ERROR("Script.get: Entity does not have script");
 		wrenSetSlotNull(vm, 0);
 		return;
 	}
@@ -1676,12 +1677,12 @@ void wren_ScriptHasError(WrenVM* vm)
 
 // Script.getErrorMessage -> string
 void wren_ScriptGetErrorMessage(WrenVM* vm)
-{    
+{
 	auto* script = static_cast<WrenWrenScript*>(wrenGetSlotForeign(vm, 0));
 
 	if (!script->component)
 	{
-        DEBUG_ERROR("Script.get: Entity does not have script");
+		DEBUG_ERROR("Script.get: Entity does not have script");
 		wrenSetSlotNull(vm, 0);
 		return;
 	}
@@ -1690,74 +1691,74 @@ void wren_ScriptGetErrorMessage(WrenVM* vm)
 
 // Script.getInstance() -> classHandle or null
 void wren_ScriptGetInstance(WrenVM* vm)
-{    
+{
 	auto* script = static_cast<WrenWrenScript*>(wrenGetSlotForeign(vm, 0));
 
 	if (!script->component)
 	{
-        DEBUG_ERROR("Script.get: Entity does not have script");
+		DEBUG_ERROR("Script.get: Entity does not have script");
 		wrenSetSlotNull(vm, 0);
 		return;
 	}
 	if (script->component->hasError)
 	{
-        //DEBUG_WARNING("Script.get: Entity's script has an error. unable to call");
+		//DEBUG_WARNING("Script.get: Entity's script has an error. unable to call");
 		wrenSetSlotNull(vm, 0);
 		return;
 	}
 	if (!script->component->isInitialised)
 	{
-        DEBUG_WARNING("Script.get: Entity's script is not initialised");
+		DEBUG_WARNING("Script.get: Entity's script is not initialised");
 		wrenSetSlotNull(vm, 0);
 		return;
 	}
 	// Get the script's instance
 	if (!script->component->instanceHandle)
 	{
-        DEBUG_ERROR("Script.get: No instance handle");
+		DEBUG_ERROR("Script.get: No instance handle");
 		wrenSetSlotNull(vm, 0);
 		return;
 	}
-    
+
 	wrenSetSlotHandle(vm, 0, script->component->instanceHandle);
 }
 
 // Script.getInstance(entity) -> classHandle or null
 void wren_ScriptStaticGetInstance(WrenVM* vm)
 {
-    Struktur::GameContext* context = static_cast<Struktur::GameContext*>(wrenGetUserData(vm));
+	Struktur::GameContext* context = static_cast<Struktur::GameContext*>(wrenGetUserData(vm));
 	auto& registry = context->GetRegistry();
-    
+
 	double entityId = wrenGetSlotDouble(vm, 1);
 	entt::entity entity = static_cast<entt::entity>(entityId);
-    
+
 	auto* script = registry.try_get<Struktur::Component::WrenScript>(entity);
 	if (!script)
 	{
-        DEBUG_ERROR("Script.get: Entity does not have script");
+		DEBUG_ERROR("Script.get: Entity does not have script");
 		wrenSetSlotNull(vm, 0);
 		return;
 	}
 	if (script->hasError)
 	{
-        //DEBUG_WARNING("Script.get: Entity's script has an error. unable to call");
+		//DEBUG_WARNING("Script.get: Entity's script has an error. unable to call");
 		wrenSetSlotNull(vm, 0);
 		return;
 	}
 	if (!script->isInitialised)
 	{
-        DEBUG_WARNING("Script.get: Entity's script is not initialised");
+		DEBUG_WARNING("Script.get: Entity's script is not initialised");
 		wrenSetSlotNull(vm, 0);
 		return;
 	}
 	// Get the script's instance
 	if (!script->instanceHandle)
 	{
-        DEBUG_ERROR("Script.get: No instance handle");
+		DEBUG_ERROR("Script.get: No instance handle");
 		wrenSetSlotNull(vm, 0);
 		return;
 	}
-    
+
 	wrenSetSlotHandle(vm, 0, script->instanceHandle);
 }
 

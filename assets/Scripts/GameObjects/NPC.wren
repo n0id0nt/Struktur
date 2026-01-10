@@ -1,6 +1,6 @@
-import "gameObjectComponents" for Sprite, PhysicsBody, Shader, WorldTransform
+import "gameObjectComponents" for Sprite, PhysicsBody, Shader as ShaderComponent, WorldTransform
 import "math" for Vec2, Vec3, Vec4
-import "resourceManager" for Texture
+import "resourceManager" for Texture, Shader as ShaderResource
 import "physics" for BodyDefinition, PhysicsCircleShape
 
 var WHITE = Vec4.new(255, 255, 255, 255)
@@ -53,21 +53,21 @@ class NPC {
         var physicsBody = PhysicsBody.create(_entity, bodyDef, playerShape)
         physicsBody.syncFromPhysics = true
         physicsBody.syncToPhysics = true
-        //var shader = Shader.load(null, "assets/Shaders/SoulEffect_100.fs")
-        //var shaderComponent = Shader.create(_entity, shader)
-        //shader.unload()
-        //shaderComponent.setUniform("soulColor", Vec3.new(0.3, 0.7, 1.0))
-        //shaderComponent.setUniform("glowIntensity", 0.05)
-        //shaderComponent.setUniform("rippleSpeed", 1.0)
-        //shaderComponent.setUniform("rippleFrequency", 15.0)
-        //shaderComponent.setUniform("waveAmplitude", 0.05)
-        //shaderComponent.setUniform("waveFrequency", 8.0)
-        //shaderComponent.setUniform("waveSpeed", 3.0)
-        //shaderComponent.setUniform("waveDirection", Vec2.new(1.0, 0.3))
-        //shaderComponent.setUniform("scanlineIntensity", 0.1)
-        //shaderComponent.setUniform("chromaticAberration", 0.005)
-        //shaderComponent.setUniform("glitchFrequency", 0.05)
-        //shaderComponent.setUniform("holographicShift", 10.0)
+        var shader = ShaderResource.load(null, "assets/Shaders/SoulEffect_100.fs")
+        var shaderComponent = ShaderComponent.create(_entity, shader)
+        shader.unload()
+        shaderComponent.setVec3Uniform("soulColor", Vec3.new(0.3, 0.7, 1.0))
+        shaderComponent.setFloatUniform("glowIntensity", 0.05)
+        shaderComponent.setFloatUniform("rippleSpeed", 1.0)
+        shaderComponent.setFloatUniform("rippleFrequency", 15.0)
+        shaderComponent.setFloatUniform("waveAmplitude", 0.05)
+        shaderComponent.setFloatUniform("waveFrequency", 8.0)
+        shaderComponent.setFloatUniform("waveSpeed", 3.0)
+        shaderComponent.setVec3Uniform("waveDirection", Vec2.new(1.0, 0.3))
+        shaderComponent.setFloatUniform("scanlineIntensity", 0.1)
+        shaderComponent.setFloatUniform("chromaticAberration", 0.005)
+        shaderComponent.setFloatUniform("glitchFrequency", 0.05)
+        shaderComponent.setFloatUniform("holographicShift", 10.0)
     }
     
     update() {

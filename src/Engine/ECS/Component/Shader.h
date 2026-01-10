@@ -2,6 +2,7 @@
 
 #include <unordered_map>
 #include "raylib.h"
+#include "Engine/Resource/ShaderResource.h"
 
 namespace Struktur
 {
@@ -9,7 +10,7 @@ namespace Struktur
 	{
         struct Shader
         {
-            ::Shader shader;
+            Resource::ResourcePtr<Resource::ShaderResource> shader;
 
             // Separate dictionaries for each uniform type
             std::unordered_map<std::string, float> floatUniforms;

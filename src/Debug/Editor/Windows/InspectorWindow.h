@@ -19,9 +19,15 @@ namespace Struktur
         struct Shader;
     }
 
+    namespace UI
+    {
+        class UIElement;
+    }
+
     namespace Debug
     {
         class HierarchyWindow;
+        class UIHierarchyWindow;
         class PreviewWindow;
         
         // Type-erased component renderer function
@@ -29,8 +35,17 @@ namespace Struktur
         
         class InspectorWindow : public EditorWindow
         {
+        private:
+            enum class InspectorDisplayType {
+                None,
+                Entity,
+                UIElement,
+
+                Count
+            };
+
         public:
-            InspectorWindow(HierarchyWindow* hierarchyWindow, PreviewWindow* previewWindow);
+            InspectorWindow(HierarchyWindow* hierarchyWindow, UIHierarchyWindow* uiHierarchyWindow, PreviewWindow* previewWindow);
             
             void Render(GameContext& context) override;
             
@@ -51,11 +66,15 @@ namespace Struktur
         private:
             void RegisterDefaultRenderers();
             
-            // Render entity info header
+            // Entity rendering
+            void RenderEntityInspector(GameContext& context, entt::entity entity);
             void RenderEntityHeader(GameContext& context, entt::entity entity);
-            
-            // Render all components of an entity
             void RenderComponents(GameContext& context, entt::entity entity);
+            
+            // UI Element rendering
+            void RenderUIElementInspector(GameContext& context, UI::UIElement* element);
+            void RenderUIElementHeader(UI::UIElement* element);
+            void RenderUIElementProperties(UI::UIElement* element);
             
             // Component-specific renderers
             void RenderLocalTransformComponent(GameContext& context, Component::LocalTransform& transform, 
@@ -76,11 +95,16 @@ namespace Struktur
             bool RenderVec4(const char* label, glm::vec4& vec);
             bool RenderQuat(const char* label, glm::quat& quat);
             bool RenderColor(const char* label, ::Color& color);
+            bool RenderRaylibVec2(const char* label, ::Vector2& vec);
+            bool RenderRectangle(const char* label, ::Rectangle& rect);
             
-        private:
             HierarchyWindow* m_hierarchyWindow;
+            UIHierarchyWindow* m_uiHierarchyWindow;
             PreviewWindow* m_previewWindow;
             std::unordered_map<std::string, ComponentRenderer> m_componentRenderers;
+            InspectorDisplayType m_displayType;
+            UI::UIElement* m_selectedUIElement;
+            entt::entity m_selectedEntity;
         };
     }
 }
