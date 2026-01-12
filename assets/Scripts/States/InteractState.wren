@@ -3,7 +3,7 @@
 // This is the default state when playing the game
 
 import "States/BaseState" for BaseState
-import "resourceManager" for Font, Texture
+import "resourceManager" for Font, Texture, Sound
 import "ui" for UIManager, UILabel, UIPanel, TextWrapping
 import "app" for Application, Inventory
 import "math" for Vec2, Vec3, Vec4
@@ -60,6 +60,8 @@ class InteractState is BaseState {
 
         _currentDialogueStartTime = 0
 
+        _menuMusic = null
+
         _interactionMap = { 
             // ===== NPC DIALOGUES =====
             "Scholar": [ // Source: Library
@@ -111,6 +113,8 @@ class InteractState is BaseState {
 
         _interactingEntity = params["interactingEntity"]
         
+        _menuMusic = Sound.load("assets/Sounds/menuMusic.wav")
+        _menuMusic.play()
         var font = Font.load("assets/Fonts/medieval_sharp/MedievalSharp-Bold.ttf", 30)
         var dialogueBackgroundPanelTexture = Texture.load("assets/Tiles/DialoguePanel.png")
 
@@ -199,6 +203,9 @@ class InteractState is BaseState {
         System.print("Unloading InteractState...")
 
         UIManager.removeUIElement(_screenPanel)
+        _menuMusic.stop()
+        _menuMusic.unload()
+        _menuMusic = null
 
         System.print("InteractState unloaded")
     }

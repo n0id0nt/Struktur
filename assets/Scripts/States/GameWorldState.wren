@@ -6,7 +6,7 @@ import "gameObject" for GameObject
 import "gameObjectComponents" for LocalTransform, WorldTransform, World, Level, Script, Sprite, Camera
 import "math" for Vec2, Vec3, Vec4
 import "app" for Inventory
-import "resourceManager" for Font, Texture
+import "resourceManager" for Font, Texture, Sound
 import "ui" for UIManager, UILabel
 import "input" for Input
 
@@ -37,6 +37,7 @@ class GameWorldState is BaseState {
         _stateManager.insertState("InventoryState", InventoryState)
         _stateManager.insertState("InteractState", InteractState)
         _stateManager.insertState("GameOverState", GameOverState)
+        _gameMusic = null
     }
 
     getNorthRoom() {
@@ -95,6 +96,11 @@ class GameWorldState is BaseState {
 
         Loops = Loops + 1 // increment the game loop count
         
+        _gameMusic = Sound.load("assets/Sounds/grow.wav")
+        if (_gameMusic) {
+            _gameMusic.play()
+        }
+
         var font = Font.load("assets/Fonts/medieval_sharp/MedievalSharp-Bold.ttf", 60)
 
         var worldEntity = World.createWorldEntity(WORLD_FILE_PATH)
@@ -186,7 +192,9 @@ class GameWorldState is BaseState {
             _stateManager.update()
             return
         }
-
+        if (_gameMusic) {
+            _gameMusic.resume()
+        }
         var inputDir = Input.getInputAxis2("Move")
         inputDir.y = inputDir.y * -1
         var inputInteract = Input.isInputJustReleased("Interact")
@@ -203,6 +211,9 @@ class GameWorldState is BaseState {
                 script.playerForceStop()
             }
             _stateManager.changeState("InventoryState")
+            if (_gameMusic) {
+                _gameMusic.stop()
+            }
             return
         }
 
@@ -227,6 +238,9 @@ class GameWorldState is BaseState {
                     script.playerForceStop()
                     // Change state to interact state
                     _stateManager.changeState("InteractState", {"interactingEntity": interactEntity})
+                    if (_gameMusic) {
+                        _gameMusic.stop()
+                    }
                     return
                 }
             } else {
@@ -239,6 +253,9 @@ class GameWorldState is BaseState {
                 if (Inventory.contains("Red Pedestal Active") && Inventory.contains("Green Pedestal Active") && Inventory.contains("Yellow Pedestal Active") && Inventory.contains("Blue Pedestal Active")) {
                     script.playerForceStop()
                     _stateManager.changeState("gameOverState")
+                    if (_gameMusic) {
+                        _gameMusic.stop()
+                    }
                     return
                 } 
 
@@ -274,6 +291,9 @@ class GameWorldState is BaseState {
         UIManager.removeUIElement(_loopCountLabel)
         _interactLabel = null
         _loopCountLabel = null
+        _gameMusic.stop()
+        _gameMusic.unload()
+        _gameMusic = null
 
         System.print("Game world unloaded")
     }

@@ -472,6 +472,17 @@ WREN_CLASS_METHOD("resourceManager", "Music", "unload()", wren_ResourceMusicUnlo
 WREN_CLASS_METHOD("resourceManager", "Music", "isValid()", wren_ResourceMusicIsValid, "Check if music is valid");
 WREN_CLASS_METHOD("resourceManager", "Music", "path", wren_ResourceMusicGetPath, "Get music path");
 WREN_CLASS_METHOD("resourceManager", "Music", "toString()", wren_ResourceMusicToString, "Convert to string");
+//WREN_CLASS_METHOD("resourceManager", "Music", "play()", wren_ResourceMusicToString, "Convert to string");
+//WREN_CLASS_METHOD("resourceManager", "Music", "isPlaying()", wren_ResourceMusicToString, "Convert to string");
+//WREN_CLASS_METHOD("resourceManager", "Music", "stopMusicStream()", wren_ResourceMusicToString, "Convert to string");
+//WREN_CLASS_METHOD("resourceManager", "Music", "pauseMusicStream()", wren_ResourceMusicToString, "Convert to string");
+//WREN_CLASS_METHOD("resourceManager", "Music", "resumeMusicStream()", wren_ResourceMusicToString, "Convert to string");
+//WREN_CLASS_METHOD("resourceManager", "Music", "seekMusicStream()", wren_ResourceMusicToString, "Convert to string");
+//WREN_CLASS_METHOD("resourceManager", "Music", "setMusicVolume()", wren_ResourceMusicToString, "Convert to string");
+//WREN_CLASS_METHOD("resourceManager", "Music", "setMusicPitch()", wren_ResourceMusicToString, "Convert to string");
+//WREN_CLASS_METHOD("resourceManager", "Music", "setMusicPan()", wren_ResourceMusicToString, "Convert to string");
+//WREN_CLASS_METHOD("resourceManager", "Music", "getMusicTimeLenth()", wren_ResourceMusicToString, "Convert to string");
+//WREN_CLASS_METHOD("resourceManager", "Music", "getMusicTimePlayed()", wren_ResourceMusicToString, "Convert to string");
 
 // ============================================================================
 // Sound Resource Handle
@@ -507,6 +518,14 @@ void wren_ResourceSoundLoad(WrenVM* vm)
 		wrenSetSlotNull(vm, 0);
 		return;
 	}
+
+	if (!sound->LoadToHardware())
+	{
+		DEBUG_ERROR("Failed to load sound: %s", path);
+		wrenSetSlotNull(vm, 0);
+		return;
+	}
+	sound->UnloadFromDisk();
 
 	// Create foreign object with resource pointer
 	WrenSoundHandle* handle = (WrenSoundHandle*)wrenSetSlotNewForeign(vm, 0, 0, sizeof(WrenSoundHandle));
@@ -559,6 +578,66 @@ void wren_ResourceSoundToString(WrenVM* vm)
 	wrenSetSlotString(vm, 0, buffer);
 }
 
+// Sound.play()
+void wren_ResourceSoundPlay(WrenVM* vm)
+{
+	WrenSoundHandle* handle = (WrenSoundHandle*)wrenGetSlotForeign(vm, 0);
+	::PlaySound(handle->resource->sound);
+}
+
+// Sound.stop()
+void wren_ResourceSoundStop(WrenVM* vm)
+{
+	WrenSoundHandle* handle = (WrenSoundHandle*)wrenGetSlotForeign(vm, 0);
+	::StopSound(handle->resource->sound);
+}
+
+// Sound.pause()
+void wren_ResourceSoundPause(WrenVM* vm)
+{
+	WrenSoundHandle* handle = (WrenSoundHandle*)wrenGetSlotForeign(vm, 0);
+	::PauseSound(handle->resource->sound);
+}
+
+// Sound.resume()
+void wren_ResourceSoundResume(WrenVM* vm)
+{
+	WrenSoundHandle* handle = (WrenSoundHandle*)wrenGetSlotForeign(vm, 0);
+	::ResumeSound(handle->resource->sound);
+}
+
+// Sound.isPlaying() -> bool
+void wren_ResourceSoundIsPlaying(WrenVM* vm)
+{
+	WrenSoundHandle* handle = (WrenSoundHandle*)wrenGetSlotForeign(vm, 0);
+	bool isPlaying = ::IsSoundPlaying(handle->resource->sound);
+	wrenSetSlotBool(vm, 0, isPlaying);
+}
+
+// Sound.setVolume(volume) -> bool
+void wren_ResourceSoundSetVolume(WrenVM* vm)
+{
+	WrenSoundHandle* handle = (WrenSoundHandle*)wrenGetSlotForeign(vm, 0);
+	float volume = (float)wrenGetSlotDouble(vm, 1);
+	::SetSoundVolume(handle->resource->sound, volume);
+}
+
+// Sound.setPitch(pitch) -> bool
+void wren_ResourceSoundSetPitch(WrenVM* vm)
+{
+	WrenSoundHandle* handle = (WrenSoundHandle*)wrenGetSlotForeign(vm, 0);
+	float pitch = (float)wrenGetSlotDouble(vm, 1);
+	::SetSoundPitch(handle->resource->sound, pitch);
+}
+
+// Sound.setPan(pan) -> bool
+void wren_ResourceSoundSetPan(WrenVM* vm)
+{
+	WrenSoundHandle* handle = (WrenSoundHandle*)wrenGetSlotForeign(vm, 0);
+	float pan = (float)wrenGetSlotDouble(vm, 1);
+	::SetSoundPan(handle->resource->sound, pan);
+}
+
 // Register Sound foreign class
 WREN_FOREIGN_CLASS("resourceManager", "Sound", wren_ResourceSoundAllocate, wren_ResourceFontFinalize, "Font resource handle");
 
@@ -567,3 +646,11 @@ WREN_CLASS_METHOD("resourceManager", "Sound", "unload()", wren_ResourceSoundUnlo
 WREN_CLASS_METHOD("resourceManager", "Sound", "isValid()", wren_ResourceSoundIsValid, "Check if sound is valid");
 WREN_CLASS_METHOD("resourceManager", "Sound", "path", wren_ResourceSoundGetPath, "Get sound path");
 WREN_CLASS_METHOD("resourceManager", "Sound", "toString()", wren_ResourceSoundToString, "Convert to string");
+WREN_CLASS_METHOD("resourceManager", "Sound", "play()", wren_ResourceSoundPlay, "Play the sound");
+WREN_CLASS_METHOD("resourceManager", "Sound", "stop()", wren_ResourceSoundStop, "Stop playing the sound");
+WREN_CLASS_METHOD("resourceManager", "Sound", "pause()", wren_ResourceSoundPause, "Pause the sound");
+WREN_CLASS_METHOD("resourceManager", "Sound", "resume()", wren_ResourceSoundResume, "Resume playing the sound");
+WREN_CLASS_METHOD("resourceManager", "Sound", "isPlaying()", wren_ResourceSoundIsPlaying, "Checks if sound is currently playing");
+WREN_CLASS_METHOD("resourceManager", "Sound", "setVolume(_)", wren_ResourceSoundSetVolume, "Set volume of the sound");
+WREN_CLASS_METHOD("resourceManager", "Sound", "setPitch(_)", wren_ResourceSoundSetPitch, "Set pitch of the sound");
+WREN_CLASS_METHOD("resourceManager", "Sound", "setPan(_)", wren_ResourceSoundSetPan, "Set pan of the sound");

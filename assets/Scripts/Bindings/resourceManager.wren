@@ -14,6 +14,22 @@ foreign class Sound {
     foreign path
     // Convert to string
     foreign toString()
+    // Play the sound
+    foreign play()
+    // Stop playing the sound
+    foreign stop()
+    // Pause the sound
+    foreign pause()
+    // Resume playing the sound
+    foreign resume()
+    // Checks if sound is currently playing
+    foreign isPlaying()
+    // Set volume of the sound
+    foreign setVolume(arg0)
+    // Set pitch of the sound
+    foreign setPitch(arg0)
+    // Set pan of the sound
+    foreign setPan(arg0)
 }
 
 // Font resource handle

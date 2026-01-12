@@ -28,7 +28,8 @@ bool Struktur::Resource::SoundResource::LoadFromDisk()
 
 void Struktur::Resource::SoundResource::UnloadFromDisk()
 {
-    if (m_waveData.frameCount > 0) {
+    if (m_waveData.frameCount > 0)
+    {
         ::UnloadWave(m_waveData);
         m_waveData.frameCount = 0;
     }

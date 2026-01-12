@@ -53,7 +53,8 @@ Struktur::Resource::MusicResource *Struktur::Resource::MusicPool::LoadResource(c
 {
     auto* music = new MusicResource(filePath);
     
-    if (!music->LoadFromDisk()) {
+    if (!music->LoadFromDisk())
+    {
         delete music;
         return nullptr;
     }
