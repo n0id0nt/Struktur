@@ -6,7 +6,7 @@ import "gameObject" for GameObject
 import "gameObjectComponents" for LocalTransform, WorldTransform, World, Level, Script, Sprite, Camera
 import "math" for Vec2, Vec3, Vec4
 import "app" for Inventory
-import "resourceManager" for Font, Texture, Sound
+import "resourceManager" for Font, Texture, Music
 import "ui" for UIManager, UILabel
 import "input" for Input
 
@@ -96,8 +96,9 @@ class GameWorldState is BaseState {
 
         Loops = Loops + 1 // increment the game loop count
         
-        _gameMusic = Sound.load("assets/Sounds/grow.wav")
+        _gameMusic = Music.load("assets/Sounds/gameMusic.wav")
         if (_gameMusic) {
+            _gameMusic.setLooping(true)
             _gameMusic.play()
         }
 

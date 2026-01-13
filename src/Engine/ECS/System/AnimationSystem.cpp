@@ -4,9 +4,11 @@
 
 #include "Engine/ECS/Component/SpriteAnimation.h"
 #include "Engine/ECS/Component/Sprite.h"
+#include "Debug/Profiling/Profiler.h"
 
 void Struktur::System::AnimationSystem::Update(GameContext& context)
 {
+	PROFILE_FUNCTION();
     entt::registry& registry = context.GetRegistry();
     Core::GameData& gameData = context.GetGameData();
     double gameTime = gameData.gameTime;

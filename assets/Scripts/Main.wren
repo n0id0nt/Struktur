@@ -3,6 +3,7 @@
 // Updated every frame by C++
 
 import "app" for Application
+import "input" for Input
 
 import "States/StateManager" for StateManager
 import "States/GameWorldState" for GameWorldState
@@ -17,6 +18,8 @@ class Game {
         var windowHeight = 720
         Application.setWindowSize(windowWidth, windowHeight)
         Application.setApplicationName("Memory Palace")
+
+        Input.loadInputBindings("assets/Settings/InputBindings/InputBindings.xml")
 
         var gameObjectsScripts = [
             "Door",

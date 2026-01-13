@@ -287,6 +287,7 @@ if(EDITOR)
         src/Debug/Editor/Windows/PreviewWindow.h    src/Debug/Editor/Windows/PreviewWindow.cpp
         src/Debug/Editor/Windows/FileExplorerWindow.h src/Debug/Editor/Windows/FileExplorerWindow.cpp
         src/Debug/Editor/Windows/LogWindow.h        src/Debug/Editor/Windows/LogWindow.cpp
+        src/Debug/Editor/Windows/ProfilerWindow.h   src/Debug/Editor/Windows/ProfilerWindow.cpp
 
         src/Debug/Editor/PreviewRenderers/PreviewRenderer.h
         src/Debug/Editor/PreviewRenderers/TexturePreviewRenderer.h src/Debug/Editor/PreviewRenderers/TexturePreviewRenderer.cpp
@@ -357,6 +358,7 @@ set(SOURCES
     src/Engine/ECS/System/ShaderSystem.h        src/Engine/ECS/System/ShaderSystem.cpp
     src/Engine/ECS/System/WrenScriptSystem.h    src/Engine/ECS/System/WrenScriptSystem.cpp
     src/Engine/ECS/System/WrenStateSystem.h     src/Engine/ECS/System/WrenStateSystem.cpp
+    src/Engine/ECS/System/SoundSystem.h         src/Engine/ECS/System/SoundSystem.cpp
 
     src/Engine/Physics/PhysicsWorld.h           src/Engine/Physics/PhysicsWorld.cpp
     src/Engine/Physics/ContactListener.h        src/Engine/Physics/ContactListener.cpp
@@ -386,6 +388,7 @@ set(SOURCES
     src/Engine/Util/Noise.h                     src/Engine/Util/Noise.cpp
 
     src/Debug/Assertions.h
+    src/Debug/Profiling/Profiler.h              src/Debug/Profiling/Profiler.cpp
 
     ${WREN_BINDING_SOURCES}
     ${DEBUG_SOURCES}

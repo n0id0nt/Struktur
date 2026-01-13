@@ -9,9 +9,11 @@
 #include "Engine/ECS/System/TransformSystem.h"
 #include "Engine/Physics/PhysicsWorld.h"
 #include "Engine/Game/TileMap.h"
+#include "Debug/Profiling/Profiler.h"
 
 void Struktur::System::PhysicsSystem::Update(GameContext &context)
 {
+    PROFILE_FUNCTION();
     float deltaTime = context.GetGameData().deltaTime;
     StepPhysics(context, deltaTime);
 }

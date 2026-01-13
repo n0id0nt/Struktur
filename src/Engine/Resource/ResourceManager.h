@@ -33,6 +33,12 @@ namespace Struktur
 			ResourcePtr<FontResource> GetFont(const std::string& filePath, int size);
 			ResourcePtr<ShaderResource> GetShader(const std::string& vsFilePath, const std::string& fsFilePath);
 
+            const TexturePool& GetTexturePool() { return m_texturePool; }
+            const SoundPool& GetSoundPool() { return m_soundPool; }
+            const MusicPool& GetMusicPool() { return m_musicPool; }
+            const FontPool& GetFontPool() { return m_fontPool; }
+            const ShaderPool& GetShaderPool() { return m_shaderPool; }
+
 			void Clear();
 			
 			// GPU-specific operations (only affect GPU resources)

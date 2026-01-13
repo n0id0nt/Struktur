@@ -152,7 +152,7 @@ std::unordered_map<std::string, ::GamepadAxis> Struktur::Core::Input::s_controll
 	{"rightTrigger",GAMEPAD_AXIS_RIGHT_TRIGGER},
 };
 
-Struktur::Core::Input::Input(int gamer) : m_buttonBindings(), m_variableBindings(), m_axisBindings(), m_axis2Bindings(), m_deadzone(), m_gamepadIndex(gamer)
+Struktur::Core::Input::Input(int gamer) : m_deadzone(0.0f), m_gamepadIndex(gamer)
 {
 	// check the controller is connected
 	if (IsGamepadAvailable(m_gamepadIndex))
@@ -314,6 +314,16 @@ void Struktur::Core::Input::LoadInputBindings(const std::string& file)
 			DEBUG_ERROR(std::format("{} is not a valid input type.", inputType).c_str());
 		}
 	}
+}
+
+void Struktur::Core::Input::Clear()
+{
+	m_buttonBindings.clear();
+	m_variableBindings.clear();
+	m_axisBindings.clear();
+	m_axis2Bindings.clear();
+
+	m_deadzone = 0.0f;
 }
 
 bool Struktur::Core::Input::IsKeyDown(KeyboardKey key)
@@ -509,14 +519,14 @@ bool Struktur::Core::Input::IsInputDown(const std::string& input)
 {
 	auto keys = m_buttonBindings.find(input);
 	ASSERT(keys != m_buttonBindings.end());
-	for (auto it = keys->second.keycodes.begin(); it != keys->second.keycodes.end(); ++it)
+	for (auto keycode : keys->second.keycodes)
 	{
-		if (IsKeyDown(*it))
+		if (IsKeyDown(keycode))
 			return true;
 	}
-	for (auto it = keys->second.controllerButtons.begin(); it != keys->second.controllerButtons.end(); ++it)
+	for (auto controllerButton : keys->second.controllerButtons)
 	{
-		if (IsControllerButtonDown(*it))
+		if (IsControllerButtonDown(controllerButton))
 			return true;
 	}
 	return false;
@@ -526,14 +536,14 @@ bool Struktur::Core::Input::IsInputJustPressed(const std::string& input)
 {
 	auto keys = m_buttonBindings.find(input);
 	ASSERT(keys != m_buttonBindings.end());
-	for (auto it = keys->second.keycodes.begin(); it != keys->second.keycodes.end(); ++it)
+	for (auto keycode : keys->second.keycodes)
 	{
-		if (IsKeyJustPressed(*it))
+		if (IsKeyJustPressed(keycode))
 			return true;
 	}
-	for (auto it = keys->second.controllerButtons.begin(); it != keys->second.controllerButtons.end(); ++it)
+	for (auto controllerButton : keys->second.controllerButtons)
 	{
-		if (IsControllerButtonJustPressed(*it))
+		if (IsControllerButtonJustPressed(controllerButton))
 			return true;
 	}
 	return false;
@@ -543,14 +553,14 @@ bool Struktur::Core::Input::IsInputJustReleased(const std::string& input)
 {
 	auto keys = m_buttonBindings.find(input);
 	ASSERT(keys != m_buttonBindings.end());
-	for (auto it = keys->second.keycodes.begin(); it != keys->second.keycodes.end(); ++it)
+	for (auto keycode : keys->second.keycodes)
 	{
-		if (IsKeyJustReleased(*it))
+		if (IsKeyJustReleased(keycode))
 			return true;
 	}
-	for (auto it = keys->second.controllerButtons.begin(); it != keys->second.controllerButtons.end(); ++it)
+	for (auto controllerButton : keys->second.controllerButtons)
 	{
-		if (IsControllerButtonJustReleased(*it))
+		if (IsControllerButtonJustReleased(controllerButton))
 			return true;
 	}
 	return false;
@@ -560,14 +570,14 @@ float Struktur::Core::Input::GetInputVariable(const std::string& input)
 {
 	auto keys = m_variableBindings.find(input);
 	ASSERT(keys != m_variableBindings.end());
-	for (auto it = keys->second.keycodes.begin(); it != keys->second.keycodes.end(); ++it)
+	for (auto keycode : keys->second.keycodes)
 	{
-		if (IsKeyDown(*it))
+		if (IsKeyDown(keycode))
 			return 1.f;
 	}
-	for (auto it = keys->second.controllerButtons.begin(); it != keys->second.controllerButtons.end(); ++it)
+	for (auto controllerButton : keys->second.controllerButtons)
 	{
-		if (IsControllerButtonDown(*it))
+		if (IsControllerButtonDown(controllerButton))
 			return 1.f;
 	}
 	return 0.f;
@@ -579,26 +589,26 @@ float Struktur::Core::Input::GetInputAxis(const std::string& input)
 	ASSERT(keys != m_axisBindings.end());
 
 	float positive = 0.f;
-	for (auto it = keys->second.positive.keycodes.begin(); it != keys->second.positive.keycodes.end(); ++it)
+	for (auto keycode : keys->second.positive.keycodes)
 	{
-		if (IsKeyDown(*it))
+		if (IsKeyDown(keycode))
 			positive = 1.f;
 	}
-	for (auto it = keys->second.positive.controllerButtons.begin(); it != keys->second.positive.controllerButtons.end(); ++it)
+	for (auto controllerButton : keys->second.positive.controllerButtons)
 	{
-		if (IsControllerButtonDown(*it))
+		if (IsControllerButtonDown(controllerButton))
 			positive = 1.f;
 	}
 
 	float negetive = 0.f;
-	for (auto it = keys->second.negetive.keycodes.begin(); it != keys->second.negetive.keycodes.end(); ++it)
+	for (auto keycode : keys->second.negetive.keycodes)
 	{
-		if (IsKeyDown(*it))
+		if (IsKeyDown(keycode))
 			negetive = 1.f;
 	}
-	for (auto it = keys->second.negetive.controllerButtons.begin(); it != keys->second.negetive.controllerButtons.end(); ++it)
+	for (auto controllerButton : keys->second.negetive.controllerButtons)
 	{
-		if (IsControllerButtonDown(*it))
+		if (IsControllerButtonDown(controllerButton))
 			negetive = 1.f;
 	}
 
@@ -606,9 +616,9 @@ float Struktur::Core::Input::GetInputAxis(const std::string& input)
 
 	if (!value)
 	{
-		for (auto it = keys->second.controllerAxis.begin(); it != keys->second.controllerAxis.end(); ++it)
+		for (auto controllerAxi : keys->second.controllerAxis)
 		{
-			value += GetControllerAxisValue(*it);
+			value += GetControllerAxisValue(controllerAxi);
 		}
 		value /= (float)keys->second.controllerAxis.size();
 	}
@@ -621,50 +631,50 @@ glm::vec2 Struktur::Core::Input::GetInputAxis2(const std::string& input)
 	ASSERT(keys != m_axis2Bindings.end());
 
 	float up = 0.f;
-	for (auto it = keys->second.yAxis.positive.keycodes.begin(); it != keys->second.yAxis.positive.keycodes.end(); ++it)
+	for (auto keycode : keys->second.yAxis.positive.keycodes)
 	{
-		if (IsKeyDown(*it))
+		if (IsKeyDown(keycode))
 			up = 1.f;
 	}
-	for (auto it = keys->second.yAxis.positive.controllerButtons.begin(); it != keys->second.yAxis.positive.controllerButtons.end(); ++it)
+	for (auto controllerButton : keys->second.yAxis.positive.controllerButtons)
 	{
-		if (IsControllerButtonDown(*it))
+		if (IsControllerButtonDown(controllerButton))
 			up = 1.f;
 	}
 
 	float down = 0.f;
-	for (auto it = keys->second.yAxis.negetive.keycodes.begin(); it != keys->second.yAxis.negetive.keycodes.end(); ++it)
+	for (auto keycode : keys->second.yAxis.negetive.keycodes)
 	{
-		if (IsKeyDown(*it))
+		if (IsKeyDown(keycode))
 			down = 1.f;
 	}
-	for (auto it = keys->second.yAxis.negetive.controllerButtons.begin(); it != keys->second.yAxis.negetive.controllerButtons.end(); ++it)
+	for (auto controllerButton : keys->second.yAxis.negetive.controllerButtons)
 	{
-		if (IsControllerButtonDown(*it))
+		if (IsControllerButtonDown(controllerButton))
 			down = 1.f;
 	}
 
 	float left = 0.f;
-	for (auto it = keys->second.xAxis.negetive.keycodes.begin(); it != keys->second.xAxis.negetive.keycodes.end(); ++it)
+	for (auto keycode : keys->second.xAxis.negetive.keycodes)
 	{
-		if (IsKeyDown(*it))
+		if (IsKeyDown(keycode))
 			left = 1.f;
 	}
-	for (auto it = keys->second.xAxis.negetive.controllerButtons.begin(); it != keys->second.xAxis.negetive.controllerButtons.end(); ++it)
+	for (auto controllerButton : keys->second.xAxis.negetive.controllerButtons)
 	{
-		if (IsControllerButtonDown(*it))
+		if (IsControllerButtonDown(controllerButton))
 			left = 1.f;
 	}
 
 	float right = 0.f;
-	for (auto it = keys->second.xAxis.positive.keycodes.begin(); it != keys->second.xAxis.positive.keycodes.end(); ++it)
+	for (auto keycode : keys->second.xAxis.positive.keycodes)
 	{
-		if (IsKeyDown(*it))
+		if (IsKeyDown(keycode))
 			right = 1.f;
 	}
-	for (auto it = keys->second.xAxis.positive.controllerButtons.begin(); it != keys->second.xAxis.positive.controllerButtons.end(); ++it)
+	for (auto controllerButton : keys->second.xAxis.positive.controllerButtons)
 	{
-		if (IsControllerButtonDown(*it))
+		if (IsControllerButtonDown(controllerButton))
 			right = 1.f;
 	}
 

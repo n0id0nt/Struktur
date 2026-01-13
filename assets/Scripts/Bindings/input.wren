@@ -29,5 +29,7 @@ class Input {
     foreign static getInputAxis(arg0)
     // Gets an x and y input values from -1 to 1.
     foreign static getInputAxis2(arg0)
+    // Loads the input bindings.
+    foreign static loadInputBindings(arg0)
 }
 

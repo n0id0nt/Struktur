@@ -4,6 +4,7 @@
 
 #include "Engine/ECS/Component/Level.h"
 #include "Engine/ECS/Component/Transform.h"
+#include "Debug/Profiling/Profiler.h"
 
 Struktur::System::DebugSystem::DebugSystem() : m_box2dRenderer()
 {
@@ -12,6 +13,7 @@ Struktur::System::DebugSystem::DebugSystem() : m_box2dRenderer()
 
 void Struktur::System::DebugSystem::Update(GameContext &context)
 {
+    PROFILE_FUNCTION();
     // Get editor settings from context
     auto& debugSettings = context.GetEditor().GetSettings().debugRender;
     

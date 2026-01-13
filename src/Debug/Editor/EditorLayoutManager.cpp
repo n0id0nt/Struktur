@@ -63,6 +63,14 @@ void Struktur::Debug::EditorLayoutManager::CreateDefaultLayout()
         "main"
     });
     
+    // Split right panel (30% - Inspector + Preview stacked)
+    defaultLayout.splits.push_back({
+        "Profiler",
+        ImGuiDir_None,
+        0.0f,
+        "Inspector"
+    });
+    
     defaultLayout.splits.push_back({
         "Preview",
         ImGuiDir_Down,

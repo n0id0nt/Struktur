@@ -3,7 +3,7 @@
 // This is the default state when playing the game
 
 import "States/BaseState" for BaseState
-import "resourceManager" for Font, Texture, Sound
+import "resourceManager" for Font, Texture, Music, Sound
 import "ui" for UIManager, UILabel, UIPanel
 import "app" for Application, Inventory
 import "math" for Vec2, Vec3, Vec4
@@ -18,6 +18,7 @@ class InventoryState is BaseState {
         _name = "InventoryState"
         _screenPanel = null
         _menuMusic = null
+        _itemFocusSound = null
     }
     
     enter(stateManager, params) {
@@ -25,8 +26,10 @@ class InventoryState is BaseState {
 
         System.print("Entering Inventory")
         
-        _menuMusic = Sound.load("assets/Sounds/menuMusic.wav")
+        _menuMusic = Music.load("assets/Sounds/menuMusic.wav")
+        _menuMusic.setLooping(true)
         _menuMusic.play()
+        _itemFocusSound = Sound.load("assets/Sounds/scroll.wav")
         var font = Font.load("assets/Fonts/medieval_sharp/MedievalSharp-Bold.ttf", 120)
         var inventoryBackgroundPanelTexture = Texture.load("assets/Tiles/InventoryBackgroundPanel.png")
         var focusedItemBackgroundPanelTexture = Texture.load("assets/Tiles/FocusedItemBackgroundPanel.png")
@@ -89,6 +92,7 @@ class InventoryState is BaseState {
             inventoryItemPanel.setOnFocus { |sender|
                 inventoryFocusedItemNameLabel.setText(item)
                 focusedItemPanel.setBackgroundTexture(texture)
+                _itemFocusSound.play()
             }
 
             curX = curX + 90
@@ -126,6 +130,8 @@ class InventoryState is BaseState {
         _menuMusic.stop()
         _menuMusic.unload()
         _menuMusic = null
+        _itemFocusSound.unload()
+        _itemFocusSound = null
         System.print("Inventory unloaded")
     }
 }

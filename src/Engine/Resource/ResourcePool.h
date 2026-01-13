@@ -112,6 +112,64 @@ namespace Struktur
 				}
 				return total;
 			}
+
+			class Iterator
+			{
+			private:
+				typename std::unordered_map<std::string, ResourceEntry>::iterator m_it;
+			
+			public:
+				using iterator_category = std::forward_iterator_tag;
+				using value_type = std::pair<const std::string&, T*>;
+				using difference_type = std::ptrdiff_t;
+				using pointer = value_type*;
+				using reference = value_type;
+
+				Iterator(typename std::unordered_map<std::string, ResourceEntry>::iterator it) : m_it(it) {}
+
+				std::pair<const std::string&, T*> operator*() const
+				{
+					return {m_it->first, m_it->second.resource};
+				}
+
+				Iterator& operator++() { ++m_it; return *this; }
+				Iterator operator++(int) { Iterator tmp = *this; ++(*this); return tmp; }
+				bool operator==(const Iterator& other) const { return m_it == other.m_it; }
+				bool operator!=(const Iterator& other) const { return m_it != other.m_it; }
+			};
+
+			// Const iterator
+			class ConstIterator
+			{
+			private:
+				typename std::unordered_map<std::string, ResourceEntry>::const_iterator m_it;
+			
+			public:
+				using iterator_category = std::forward_iterator_tag;
+				using value_type = std::pair<const std::string&, const T*>;
+				using difference_type = std::ptrdiff_t;
+				using pointer = value_type*;
+				using reference = value_type;
+
+				ConstIterator(typename std::unordered_map<std::string, ResourceEntry>::const_iterator it) : m_it(it) {}
+
+				std::pair<const std::string&, const T*> operator*() const
+				{
+					return {m_it->first, m_it->second.resource};
+				}
+
+				ConstIterator& operator++() { ++m_it; return *this; }
+				ConstIterator operator++(int) { ConstIterator tmp = *this; ++(*this); return tmp; }
+				bool operator==(const ConstIterator& other) const { return m_it == other.m_it; }
+				bool operator!=(const ConstIterator& other) const { return m_it != other.m_it; }
+			};
+
+			Iterator begin() { return Iterator(m_loadedResources.begin()); }
+			Iterator end() { return Iterator(m_loadedResources.end()); }
+			ConstIterator begin() const { return ConstIterator(m_loadedResources.begin()); }
+			ConstIterator end() const { return ConstIterator(m_loadedResources.end()); }
+			ConstIterator cbegin() const { return ConstIterator(m_loadedResources.cbegin()); }
+			ConstIterator cend() const { return ConstIterator(m_loadedResources.cend()); }
 		};
 
 		// GPU-specific resource pool

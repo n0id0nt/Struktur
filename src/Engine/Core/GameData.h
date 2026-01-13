@@ -33,7 +33,6 @@ namespace Struktur
 			int positionIterations = 10;
 			float pixelsPerMeter = 64.f;
 			const char* projectName = "Struktur";
-			const char* inputBindingsPath = "assets/Settings/InputBindings/InputBindings.xml";
 		};
 	}
 }

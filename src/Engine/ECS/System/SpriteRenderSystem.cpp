@@ -15,9 +15,11 @@
 #include "Engine/ECS/System/ShaderSystem.h"
 
 #include "Debug/Assertions.h"
+#include "Debug/Profiling/Profiler.h"
 
 void Struktur::System::SpriteRenderSystem::Update(GameContext &context)
 {
+    PROFILE_FUNCTION();
     entt::registry& registry = context.GetRegistry();
     GameResource::Camera& camera = context.GetCamera();
 

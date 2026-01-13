@@ -2,9 +2,11 @@
 
 #include "Engine/GameContext.h"
 #include "Engine/ECS/Component/Transform.h"
+#include "Debug/Profiling/Profiler.h"
 
 void Struktur::System::HierarchySystem::SetParent(GameContext& context, entt::entity child, entt::entity parent)
 {
+    PROFILE_FUNCTION();
     entt::registry& registry = context.GetRegistry();
     
     // Remove from current parent if exists

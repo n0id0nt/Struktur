@@ -44,6 +44,32 @@ foreign class Music {
     foreign path
     // Convert to string
     foreign toString()
+    // Play the music
+    foreign play()
+    // Stop the music
+    foreign stop()
+    // Pause the music
+    foreign pause()
+    // Resume the music
+    foreign resume()
+    // Check if music is playing
+    foreign isPlaying()
+    // Seek music to a certain position (in seconds)
+    foreign seek(arg0)
+    // Set the musics volume
+    foreign setVolume(arg0)
+    // Set the musics pitch
+    foreign setPitch(arg0)
+    // Set the musics pan
+    foreign setPan(arg0)
+    // Get music time length (in seconds)
+    foreign getTimeLength()
+    // Get current music time played (in seconds)
+    foreign getTimePlayed()
+    // Gets if the music should be looped
+    foreign getLooping()
+    // Gets if the music should be looped
+    foreign setLooping(arg0)
 }
 
 // Texture resource handle

@@ -16,6 +16,7 @@
 #include "Debug/Editor/Windows/PreviewWindow.h"
 #include "Debug/Editor/Windows/FileExplorerWindow.h"
 #include "Debug/Editor/Windows/LogWindow.h"
+#include "Debug/Editor/Windows/ProfilerWindow.h"
 #include "Debug/Editor/EditorTheme.h"
 
 namespace Struktur::Debug
@@ -51,6 +52,9 @@ namespace Struktur::Debug
 
 		// Log window
 		CreateWindow<LogWindow>();
+
+		// Profiler window
+		CreateWindow<ProfilerWindow>();
 
 		// Preview window (must be created before inspector and file explorer)
 		auto previewPtr = CreateWindow<PreviewWindow>();

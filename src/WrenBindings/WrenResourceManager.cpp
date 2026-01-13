@@ -464,6 +464,105 @@ void wren_ResourceMusicToString(WrenVM* vm)
 	wrenSetSlotString(vm, 0, buffer);
 }
 
+// Music.play()
+void wren_ResourceMusicPlay(WrenVM* vm)
+{
+	WrenMusicHandle* handle = (WrenMusicHandle*)wrenGetSlotForeign(vm, 0);
+	::PlayMusicStream(handle->resource->music);
+}
+
+// Music.stop()
+void wren_ResourceMusicStop(WrenVM* vm)
+{
+	WrenMusicHandle* handle = (WrenMusicHandle*)wrenGetSlotForeign(vm, 0);
+	::StopMusicStream(handle->resource->music);
+}
+
+// Music.pause()
+void wren_ResourceMusicPause(WrenVM* vm)
+{
+	WrenMusicHandle* handle = (WrenMusicHandle*)wrenGetSlotForeign(vm, 0);
+	::PauseMusicStream(handle->resource->music);
+}
+
+// Music.resume()
+void wren_ResourceMusicResume(WrenVM* vm)
+{
+	WrenMusicHandle* handle = (WrenMusicHandle*)wrenGetSlotForeign(vm, 0);
+	::ResumeMusicStream(handle->resource->music);
+}
+
+// Music.isPlaying() -> bool
+void wren_ResourceMusicIsPlaying(WrenVM* vm)
+{
+	WrenMusicHandle* handle = (WrenMusicHandle*)wrenGetSlotForeign(vm, 0);
+	bool isPlaying = ::IsMusicStreamPlaying(handle->resource->music);
+	wrenSetSlotBool(vm, 0, isPlaying);
+}
+
+// Music.seek(position) -> bool
+void wren_ResourceMusicSeek(WrenVM* vm)
+{
+	WrenMusicHandle* handle = (WrenMusicHandle*)wrenGetSlotForeign(vm, 0);
+	float position = (float)wrenGetSlotDouble(vm, 1);
+	::SeekMusicStream(handle->resource->music, position);
+}
+
+// Music.setVolume(volume) -> bool
+void wren_ResourceMusicSetVolume(WrenVM* vm)
+{
+	WrenMusicHandle* handle = (WrenMusicHandle*)wrenGetSlotForeign(vm, 0);
+	float volume = (float)wrenGetSlotDouble(vm, 1);
+	::SetMusicVolume(handle->resource->music, volume);
+}
+
+// Music.setPitch(pitch) -> bool
+void wren_ResourceMusicSetPitch(WrenVM* vm)
+{
+	WrenMusicHandle* handle = (WrenMusicHandle*)wrenGetSlotForeign(vm, 0);
+	float pitch = (float)wrenGetSlotDouble(vm, 1);
+	::SetMusicPitch(handle->resource->music, pitch);
+}
+
+// Music.setPan(pan) -> bool
+void wren_ResourceMusicSetPan(WrenVM* vm)
+{
+	WrenMusicHandle* handle = (WrenMusicHandle*)wrenGetSlotForeign(vm, 0);
+	float pan = (float)wrenGetSlotDouble(vm, 1);
+	::SetMusicPan(handle->resource->music, pan);
+}
+
+// Music.getTimeLength() -> num
+void wren_ResourceMusicGetTimeLength(WrenVM* vm)
+{
+	WrenMusicHandle* handle = (WrenMusicHandle*)wrenGetSlotForeign(vm, 0);
+	double timeLength = (double)::GetMusicTimeLength(handle->resource->music);
+	wrenSetSlotDouble(vm, 0, timeLength);
+}
+
+// Music.getTimePlayed() -> num
+void wren_ResourceMusicGetTimePlayed(WrenVM* vm)
+{
+	WrenMusicHandle* handle = (WrenMusicHandle*)wrenGetSlotForeign(vm, 0);
+	double timePlayed = (double)::GetMusicTimePlayed(handle->resource->music);
+	wrenSetSlotDouble(vm, 0, timePlayed);
+}
+
+// Music.getLooping() -> bool
+void wren_ResourceMusicGetLooping(WrenVM* vm)
+{
+	WrenMusicHandle* handle = (WrenMusicHandle*)wrenGetSlotForeign(vm, 0);
+	wrenSetSlotBool(vm, 0, handle->resource->music.looping);
+}
+
+// Music.setLooping(isLooping) -> bool
+void wren_ResourceMusicSetLooping(WrenVM* vm)
+{
+	WrenMusicHandle* handle = (WrenMusicHandle*)wrenGetSlotForeign(vm, 0);
+	bool isLooping = wrenGetSlotBool(vm, 1);
+	handle->resource->music.looping = isLooping;
+}
+
 // Register Music foreign class
 WREN_FOREIGN_CLASS("resourceManager", "Music", wren_ResourceMusicAllocate, wren_ResourceFontFinalize, "Font resource handle");
 
@@ -472,17 +571,19 @@ WREN_CLASS_METHOD("resourceManager", "Music", "unload()", wren_ResourceMusicUnlo
 WREN_CLASS_METHOD("resourceManager", "Music", "isValid()", wren_ResourceMusicIsValid, "Check if music is valid");
 WREN_CLASS_METHOD("resourceManager", "Music", "path", wren_ResourceMusicGetPath, "Get music path");
 WREN_CLASS_METHOD("resourceManager", "Music", "toString()", wren_ResourceMusicToString, "Convert to string");
-//WREN_CLASS_METHOD("resourceManager", "Music", "play()", wren_ResourceMusicToString, "Convert to string");
-//WREN_CLASS_METHOD("resourceManager", "Music", "isPlaying()", wren_ResourceMusicToString, "Convert to string");
-//WREN_CLASS_METHOD("resourceManager", "Music", "stopMusicStream()", wren_ResourceMusicToString, "Convert to string");
-//WREN_CLASS_METHOD("resourceManager", "Music", "pauseMusicStream()", wren_ResourceMusicToString, "Convert to string");
-//WREN_CLASS_METHOD("resourceManager", "Music", "resumeMusicStream()", wren_ResourceMusicToString, "Convert to string");
-//WREN_CLASS_METHOD("resourceManager", "Music", "seekMusicStream()", wren_ResourceMusicToString, "Convert to string");
-//WREN_CLASS_METHOD("resourceManager", "Music", "setMusicVolume()", wren_ResourceMusicToString, "Convert to string");
-//WREN_CLASS_METHOD("resourceManager", "Music", "setMusicPitch()", wren_ResourceMusicToString, "Convert to string");
-//WREN_CLASS_METHOD("resourceManager", "Music", "setMusicPan()", wren_ResourceMusicToString, "Convert to string");
-//WREN_CLASS_METHOD("resourceManager", "Music", "getMusicTimeLenth()", wren_ResourceMusicToString, "Convert to string");
-//WREN_CLASS_METHOD("resourceManager", "Music", "getMusicTimePlayed()", wren_ResourceMusicToString, "Convert to string");
+WREN_CLASS_METHOD("resourceManager", "Music", "play()", wren_ResourceMusicPlay, "Play the music");
+WREN_CLASS_METHOD("resourceManager", "Music", "stop()", wren_ResourceMusicStop, "Stop the music");
+WREN_CLASS_METHOD("resourceManager", "Music", "pause()", wren_ResourceMusicPause, "Pause the music");
+WREN_CLASS_METHOD("resourceManager", "Music", "resume()", wren_ResourceMusicResume, "Resume the music");
+WREN_CLASS_METHOD("resourceManager", "Music", "isPlaying()", wren_ResourceMusicIsPlaying, "Check if music is playing");
+WREN_CLASS_METHOD("resourceManager", "Music", "seek(_)", wren_ResourceMusicSeek, "Seek music to a certain position (in seconds)");
+WREN_CLASS_METHOD("resourceManager", "Music", "setVolume(_)", wren_ResourceMusicSetVolume, "Set the musics volume");
+WREN_CLASS_METHOD("resourceManager", "Music", "setPitch(_)", wren_ResourceMusicSetPitch, "Set the musics pitch");
+WREN_CLASS_METHOD("resourceManager", "Music", "setPan(_)", wren_ResourceMusicSetPan, "Set the musics pan");
+WREN_CLASS_METHOD("resourceManager", "Music", "getTimeLength()", wren_ResourceMusicGetTimeLength, "Get music time length (in seconds)");
+WREN_CLASS_METHOD("resourceManager", "Music", "getTimePlayed()", wren_ResourceMusicGetTimePlayed, "Get current music time played (in seconds)");
+WREN_CLASS_METHOD("resourceManager", "Music", "getLooping()", wren_ResourceMusicGetLooping, "Gets if the music should be looped");
+WREN_CLASS_METHOD("resourceManager", "Music", "setLooping(_)", wren_ResourceMusicSetLooping, "Gets if the music should be looped");
 
 // ============================================================================
 // Sound Resource Handle

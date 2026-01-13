@@ -11,6 +11,7 @@
 #endif
 
 #include "Debug/Assertions.h"
+#include "Debug/Profiling/Profiler.h"
 
 #include "Engine/GameContext.h"
 #include "Engine/Core/Input.h"
@@ -36,6 +37,7 @@
 #include "Engine/ECS/System/ShaderSystem.h"
 #include "Engine/ECS/System/WrenScriptSystem.h"
 #include "Engine/ECS/System/WrenStateSystem.h"
+#include "Engine/ECS/System/SoundSystem.h"
 
 #include "Engine/FileLoading/LevelParser.h"
 #include "Engine/Scripting/WrenCodeGenerator.h"
@@ -57,7 +59,6 @@
 void Struktur::InitialiseGame(GameContext& context)
 {
 	Core::GameData& gameData = context.GetGameData();
-	Core::Input& input = context.GetInput();
 	System::SystemManager& systemManager = context.GetSystemManager();
 	System::GameObjectManager& gameObjectManager = context.GetGameObjectManager();
 	Physics::PhysicsWorld& physicsWorld = context.GetPhysicsWorld();
@@ -92,6 +93,7 @@ void Struktur::InitialiseGame(GameContext& context)
 	::InitWindow(gameData.gameWidth, gameData.gameHeight, gameData.projectName);
 #endif
 	::SetExitKey(KEY_NULL);
+	::InitAudioDevice();
 
 #ifdef DEBUG
 	Wren::CodeGenerator::GenerateBindingFiles("Assets/Scripts/Bindings");
@@ -99,7 +101,6 @@ void Struktur::InitialiseGame(GameContext& context)
 
 	gameObjectManager.CreateDeleteObjectCallBack(context);
 
-	input.LoadInputBindings(gameData.inputBindingsPath);
 	glm::vec2 gravity(0.0f, 0.0f);
 	physicsWorld.Initialise(gravity, gameData.velocityIterations, gameData.positionIterations, gameData.pixelsPerMeter);
 
@@ -113,6 +114,7 @@ void Struktur::InitialiseGame(GameContext& context)
 	systemManager.AddUpdateSystem<System::PhysicsSystem>();
 	systemManager.AddUpdateSystem<System::AnimationSystem>();
 	systemManager.AddUpdateSystem<System::UISystem>();
+	systemManager.AddUpdateSystem<System::SoundSystem>();
 	systemManager.AddRenderSystem<System::SpriteRenderSystem>();
 	systemManager.AddRenderSystem<System::WrenStateRenderSystem>();
 #ifdef DEBUG
@@ -214,30 +216,36 @@ void Struktur::GameLoop(GameContext& context)
 {
 	System::SystemManager& systemManager = context.GetSystemManager();
 	System::GameObjectManager& gameObjectManager = context.GetGameObjectManager();
-#ifdef EDITOR
-	auto& debugSettings = context.GetEditor().GetSettings().debugRender;
-	if (debugSettings.playingGame && !debugSettings.pausedGame)
 	{
+		PROFILE_SCOPE("Update Processing");
+#ifdef EDITOR
+		auto& debugSettings = context.GetEditor().GetSettings().debugRender;
+		if (debugSettings.playingGame && !debugSettings.pausedGame)
+		{
 #endif
 		systemManager.Update(context);
 #ifdef EDITOR
+		}
+#endif
+		gameObjectManager.DeleteGameObjectsInSafeToDeleteQueue(context);
 	}
-#endif
-	gameObjectManager.DeleteGameObjectsInSafeToDeleteQueue(context);
 
-	::BeginDrawing();
+	{
+		PROFILE_SCOPE("Render Processing");
+		::BeginDrawing();
 #ifdef EDITOR
-	::ClearBackground(DARKGRAY);
-	Debug::Editor& editor = context.GetEditor();
-	editor.BeginUpdateLoop(context);
+		::ClearBackground(DARKGRAY);
+		Debug::Editor& editor = context.GetEditor();
+		editor.BeginUpdateLoop(context);
 #endif
-	::ClearBackground(BLACK);
-	systemManager.Render(context);
+		::ClearBackground(BLACK);
+		systemManager.Render(context);
 #ifdef EDITOR
-	editor.EndUpdateLoop(context);
-	editor.Update(context);
+		editor.EndUpdateLoop(context);
+		editor.Update(context);
 #endif
-	::EndDrawing();
+		::EndDrawing();
+	}
 }
 
 void Struktur::SplashScreenUpdateLoop(void* userData)
@@ -271,6 +279,7 @@ void Struktur::SplashScreenUpdateLoop(void* userData)
 
 void Struktur::MainUpdateLoop(void* userData)
 {
+	PROFILE_BEGIN_FRAME();
 	GameContext* context = static_cast<GameContext*>(userData);
 	// Set the game data
 	Core::GameData& gameData = context->GetGameData();
@@ -297,6 +306,7 @@ void Struktur::MainUpdateLoop(void* userData)
 #endif
 		gameData.gameState = Core::GameState::QUIT;
 	}
+	PROFILE_END_FRAME();
 }
 
 void Struktur::Game()
@@ -364,6 +374,10 @@ void Struktur::StopDebugGame(GameContext& context)
 
 void Struktur::ClearGameSystems(GameContext& context)
 {
+	DEBUG_INFO("[Clean Up] Input");
+	Core::Input& input = context.GetInput();
+	input.Clear();
+
 	DEBUG_INFO("[Clean Up] Wren State Manager");
 	Wren::WrenStateManager& wrenStateManager = context.GetWrenStateManager();
 	wrenStateManager.Shutdown(context);
@@ -408,10 +422,6 @@ void Struktur::StartGameSystems(GameContext& context)
 	DEBUG_INFO("[Start] Wren Script Component Registry");
 	Wren::WrenScriptComponentRegistry& wrenScriptComponentRegistry = context.GetWrenScriptComponentRegistry();
 	wrenScriptComponentRegistry.LoadAllScriptComponents(context);
-
-	DEBUG_INFO("[Start] Input");
-	Core::Input& input = context.GetInput();
-	input.LoadInputBindings(gameData.inputBindingsPath);
 
 	DEBUG_INFO("[Start] Physics World");
 	Physics::PhysicsWorld& physicsWorld = context.GetPhysicsWorld();

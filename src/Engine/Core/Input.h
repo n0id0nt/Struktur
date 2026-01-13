@@ -64,6 +64,7 @@ namespace Struktur
 			void Update();
 
 			void LoadInputBindings(const std::string& file);
+			void Clear();
 
 			bool IsKeyDown(KeyboardKey key);
 			bool IsKeyJustPressed(KeyboardKey key);
