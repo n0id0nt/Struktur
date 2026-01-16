@@ -27,8 +27,53 @@ void Struktur::UI::UILabel::SetText(const std::string& newText)
 
 void Struktur::UI::UILabel::SetBoundingBoxToText()
 {
-    ::Vector2 textSize = ::MeasureTextEx(m_font->font, m_text.c_str(), m_fontSize, 1.0f);
-    SetSize({textSize.x + 10, textSize.y + 5}, {0, 0});
+    const float extraX = 10.0f;
+    const float extraY = 5.0f;
+
+    if (m_text.empty())
+    {
+        SetSize({ extraX, extraY }, { 0, 0 });
+        return;
+    }
+
+    float lineHeight = GetLineHeight();
+    float maxWidth = 0.0f;
+    float totalHeight = 0.0f;
+
+    // Split text by newlines
+    size_t start = 0;
+    size_t end = 0;
+    int lineCount = 0;
+
+    while (end != std::string::npos)
+    {
+        end = m_text.find('\n', start);
+
+        // Get the substring for this line
+        std::string line = (end == std::string::npos)
+            ? m_text.substr(start)
+            : m_text.substr(start, end - start);
+
+        // Measure this line
+        ::Vector2 lineSize = ::MeasureTextEx(m_font->font, line.c_str(), m_fontSize, 1.0f);
+
+        // Track the widest line
+        if (lineSize.x > maxWidth)
+        {
+            maxWidth = lineSize.x;
+        }
+
+        lineCount++;
+        start = end + 1;
+    }
+
+    // Calculate total height: (lineCount - 1) * lineHeight + fontSize for the last line
+    if (lineCount > 0)
+    {
+        totalHeight = (lineCount - 1) * lineHeight + m_fontSize;
+    }
+
+    SetSize({ maxWidth + extraX, totalHeight + extraY }, { 0, 0 });
 }
 
 void Struktur::UI::UILabel::Update(GameContext &context)

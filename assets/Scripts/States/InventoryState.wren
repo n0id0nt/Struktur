@@ -92,6 +92,7 @@ class InventoryState is BaseState {
 
             inventoryItemPanel.setOnFocus { |sender|
                 inventoryFocusedItemNameLabel.setText(item)
+                inventoryFocusedItemNameLabel.setBoundingBoxToText()
                 focusedItemPanel.setBackgroundTexture(texture)
                 _itemFocusSound.play()
             }
