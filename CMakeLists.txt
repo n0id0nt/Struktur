@@ -311,6 +311,7 @@ set(WREN_BINDING_SOURCES
                                                 src/WrenBindings/WrenApplication.cpp
                                                 src/WrenBindings/WrenGameObject.cpp
                                                 src/WrenBindings/WrenInput.cpp
+                                                src/WrenBindings/WrenDebug.cpp
 )
 
 # Source files

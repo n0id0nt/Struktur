@@ -202,6 +202,8 @@ foreign class UILabel {
     foreign setText(arg0)
     // get the UI Labels text
     foreign getText()
+    // Will change the width and height to match the text
+    foreign setBoundingBoxToText()
     // Sets UI Element to be visible
     foreign isVisible=(arg0)
     // Sets UI Element to be visible

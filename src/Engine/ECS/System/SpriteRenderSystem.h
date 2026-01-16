@@ -29,6 +29,7 @@ namespace Struktur
 
         public:
             void Update(GameContext& context) override;
+            std::string Name() const override { return "Sprite Render System"; }
 
         private:
             std::vector<SpriteRenderData> m_spritesToRender;

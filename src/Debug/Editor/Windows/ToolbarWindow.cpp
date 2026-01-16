@@ -36,7 +36,7 @@ namespace Struktur::Debug
 		}
 		ImGui::SameLine();
 		ImGui::BeginDisabled(!debugSettings.playingGame);
-		if (ImGui::Button("Pause"))
+		if (ImGui::Button(debugSettings.pausedGame ? "Unpause" : "Pause"))
 		{
 			// Handle pause
 			debugSettings.pausedGame = !debugSettings.pausedGame;

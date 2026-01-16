@@ -44,7 +44,7 @@ class DialogueStep {
 class InteractState is BaseState {
     construct new() {
         super()
-        _name = "InteractState"
+        name = "InteractState"
         _screenPanel = null
         _dialogueLabel = null
         _continueDialogueLabel = null

@@ -24,6 +24,8 @@ namespace Struktur
             void AddAnimation(GameContext& context, entt::entity entity, const std::string& animationName, const Animation::SpriteAnimation& animation);
             void PlayAnimation(GameContext& context, entt::entity entity, const std::string& animationName);
             bool IsAnimationPlaying(GameContext& context, entt::entity entity, const std::string& animationName);
+
+            std::string Name() const override { return "Animation System"; }
 		};
 	}
 }

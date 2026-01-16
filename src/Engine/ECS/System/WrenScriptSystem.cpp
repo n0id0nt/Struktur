@@ -2,7 +2,6 @@
 #include "Engine/GameContext.h"
 #include <fstream>
 #include <sstream>
-#include "Debug/Profiling/Profiler.h"
 
 namespace Struktur::System {
 
@@ -126,7 +125,6 @@ bool WrenScriptSystem::CallStart(GameContext& context, Component::WrenScript& sc
 
 void WrenScriptSystem::Update(GameContext& context)
 {
-    PROFILE_FUNCTION();
     Wren::WrenScriptEngine& scriptEngine = context.GetWrenScriptEngine();
     WrenVM* vm = scriptEngine.GetVM();
     if (!vm) return;

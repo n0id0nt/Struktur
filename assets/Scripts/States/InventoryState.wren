@@ -15,7 +15,7 @@ var BLANK = Vec4.new(0, 0, 0, 0)
 class InventoryState is BaseState {
     construct new() {
         super()
-        _name = "InventoryState"
+        name = "InventoryState"
         _screenPanel = null
         _menuMusic = null
         _itemFocusSound = null
@@ -55,6 +55,7 @@ class InventoryState is BaseState {
 
         var inventoryFocusedItemNameLabel = UILabel.new(Vec2.new(0, 20), Vec2.new(0.5, 0.75), "No Items", 30.0)
         inventoryFocusedItemNameLabel.setTextColor(WHITE)
+        inventoryFocusedItemNameLabel.setBoundingBoxToText()
         inventoryFocusedItemNameLabel.setAnchorPoint(Vec2.new(0.5, 0))
         inventoryFocusedItemNameLabel.setFont(font)
         font.unload()

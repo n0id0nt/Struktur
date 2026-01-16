@@ -12,12 +12,14 @@ namespace Struktur
         {        
         public:
             void Update(GameContext& context) override;
+            std::string Name() const override { return "Wren State System"; }
         };
 
         class WrenStateRenderSystem : public ISystem
         {        
         public:
             void Update(GameContext& context) override;
+            std::string Name() const override { return "Wren State Render System"; }
         };
     }
 }

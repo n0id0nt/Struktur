@@ -9,11 +9,9 @@
 #include "Engine/ECS/Component/Transform.h"
 #include "Engine/Game/Camera.h"
 #include "Engine/Util/Noise.h"
-#include "Debug/Profiling/Profiler.h"
 
 void Struktur::System::CameraSystem::Update(GameContext& context)
 {
-    PROFILE_FUNCTION();
     entt::registry& registry = context.GetRegistry();
     Core::GameData& gameData = context.GetGameData();
 

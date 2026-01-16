@@ -21,6 +21,8 @@ namespace Struktur
             void SetParent(GameContext& context, entt::entity child, entt::entity parent);
             void RemoveFromParent(GameContext& context, entt::entity child, entt::entity parent);
             void DestroyEntity(GameContext& context, entt::entity entity);
+
+            std::string Name() const override { return "Hierarchy System"; }
         };
     }
 }

@@ -31,6 +31,8 @@ namespace Struktur
             void BeginShader(GameContext& context, entt::entity entity);
             void EndShader(GameContext& context, entt::entity entity);
 
+            std::string Name() const override { return "Shader System"; }
+
         private:
             int GetCachedLocation(Component::Shader& shader, const std::string& name);
         };

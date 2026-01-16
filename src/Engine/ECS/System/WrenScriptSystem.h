@@ -34,6 +34,8 @@ namespace Struktur
             // Send event to script
             void SendEvent(GameContext& context, entt::entity entity, Component::WrenScript& script, const std::string& eventType,
                 const std::unordered_map<std::string, double>& eventData);
+
+            std::string Name() const override { return "Wren Script System"; }
         };
     }
 }

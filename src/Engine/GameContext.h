@@ -20,6 +20,9 @@
 #ifdef EDITOR
 #include "Debug/Editor/Editor.h"
 #endif
+#ifdef DEBUG
+#include "Debug/Profiling/Profiler.h"
+#endif
 
 namespace Struktur
 {
@@ -44,6 +47,9 @@ namespace Struktur
 			m_wrenScriptComponentRegistry = std::make_unique<Wren::WrenScriptComponentRegistry>();
 #ifdef EDITOR
 			m_editor = std::make_unique<Debug::Editor>();
+#endif
+#ifdef DEBUG
+			m_profiler = std::make_unique<Debug::Profiler>();
 #endif
 		}
 
@@ -133,6 +139,14 @@ namespace Struktur
 		}
 #endif
 
+#ifdef DEBUG
+		Debug::Profiler& GetProfiler() const
+		{
+			ASSERT_MSG(m_profiler.get(), "Profiler not initialised");
+			return *m_profiler;
+		}
+#endif
+
 	private:
 		std::unique_ptr<Core::GameData> m_gameData;
 		std::unique_ptr<Core::Input> m_input;
@@ -149,6 +163,9 @@ namespace Struktur
 		std::unique_ptr<Wren::WrenScriptComponentRegistry> m_wrenScriptComponentRegistry;
 #ifdef EDITOR
 		std::unique_ptr<Debug::Editor> m_editor;
+#endif
+#ifdef DEBUG
+		std::unique_ptr<Debug::Profiler> m_profiler;
 #endif
 	};
 }

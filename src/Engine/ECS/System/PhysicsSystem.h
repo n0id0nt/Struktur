@@ -26,6 +26,8 @@ namespace Struktur
 
             Component::PhysicsBody& CreatePhysicsBody(GameContext& context, entt::entity entity, const b2BodyDef& bodyDef, const b2Shape& shape);
             Component::PhysicsBody& CreatePhysicsBody(GameContext& context, entt::entity entity, const b2BodyDef& bodyDef);
+
+            std::string Name() const override { return "Physics System"; }
         };
     }
 }

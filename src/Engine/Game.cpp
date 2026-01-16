@@ -214,38 +214,40 @@ void Struktur::SplashScreenLoop(GameContext& context)
 
 void Struktur::GameLoop(GameContext& context)
 {
+	PROFILE_BEGIN_SCOPE(gameLoop, "GAME LOOP");
 	System::SystemManager& systemManager = context.GetSystemManager();
 	System::GameObjectManager& gameObjectManager = context.GetGameObjectManager();
 	{
-		PROFILE_SCOPE("Update Processing");
+		PROFILE_SCOPE("UPDATE PROCESSING");
 #ifdef EDITOR
 		auto& debugSettings = context.GetEditor().GetSettings().debugRender;
 		if (debugSettings.playingGame && !debugSettings.pausedGame)
 		{
 #endif
-		systemManager.Update(context);
+			systemManager.Update(context);
 #ifdef EDITOR
 		}
 #endif
 		gameObjectManager.DeleteGameObjectsInSafeToDeleteQueue(context);
 	}
 
-	{
-		PROFILE_SCOPE("Render Processing");
-		::BeginDrawing();
+	::BeginDrawing();
 #ifdef EDITOR
-		::ClearBackground(DARKGRAY);
-		Debug::Editor& editor = context.GetEditor();
-		editor.BeginUpdateLoop(context);
+	::ClearBackground(DARKGRAY);
+	Debug::Editor& editor = context.GetEditor();
+	editor.BeginUpdateLoop(context);
 #endif
+	{
+		PROFILE_SCOPE("RENDER PROCESSING");
 		::ClearBackground(BLACK);
 		systemManager.Render(context);
-#ifdef EDITOR
-		editor.EndUpdateLoop(context);
-		editor.Update(context);
-#endif
-		::EndDrawing();
 	}
+	PROFILE_END_SCOPE(gameLoop); // Must close the scope before the editor is updated
+#ifdef EDITOR
+	editor.EndUpdateLoop(context);
+	editor.Update(context);
+#endif
+	::EndDrawing();
 }
 
 void Struktur::SplashScreenUpdateLoop(void* userData)
@@ -279,10 +281,10 @@ void Struktur::SplashScreenUpdateLoop(void* userData)
 
 void Struktur::MainUpdateLoop(void* userData)
 {
+	GameContext& context = *static_cast<GameContext*>(userData);
 	PROFILE_BEGIN_FRAME();
-	GameContext* context = static_cast<GameContext*>(userData);
 	// Set the game data
-	Core::GameData& gameData = context->GetGameData();
+	Core::GameData& gameData = context.GetGameData();
 	gameData.deltaTime = ::GetFrameTime();
 	gameData.gameTime = ::GetTime();
 	gameData.applicationWidth = ::GetScreenWidth();
@@ -298,7 +300,7 @@ void Struktur::MainUpdateLoop(void* userData)
 	switch (gameData.gameState)
 	{
 	case Core::GameState::GAME:
-		GameLoop(*context);
+		GameLoop(context);
 		break;
 	default:
 #ifdef PLATFORM_WEB

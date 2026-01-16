@@ -14,7 +14,7 @@ var BLANK = Vec4.new(0, 0, 0, 0)
 class GameOverState is BaseState {
     construct new() {
         super()
-        _name = "GameOverState"
+        name = "GameOverState"
 
         _screenPanel = null
     }

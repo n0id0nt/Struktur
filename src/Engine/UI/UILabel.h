@@ -41,6 +41,7 @@ namespace UI
             void SetAlignment(TextAlignment align) { m_alignment = align; }
             void SetFontSize(float size) { m_fontSize = size; }
             void SetWordWrap(TextWrapping wrap) { m_wrapping = wrap; }
+            void SetBoundingBoxToText();
 
             const std::string& GetText() const { return m_text; }
 

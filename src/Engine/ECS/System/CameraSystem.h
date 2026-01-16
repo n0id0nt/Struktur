@@ -30,6 +30,8 @@ namespace Struktur
 
 			void AddCameraTrauma(GameContext& context, entt::entity entity, float trauma);
 			void ResetCameraTrauma(GameContext& context, entt::entity entity);
+
+			std::string Name() const override { return "Camera System"; }
 		};
 	}
 }

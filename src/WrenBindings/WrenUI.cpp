@@ -822,6 +822,19 @@ void wren_UILabelGetText(WrenVM* vm)
 	wrenSetSlotString(vm, 1, label->GetText().c_str());
 }
 
+// UILabel.setBoundingBoxToText()
+void wren_UILabelSetBoundingBoxToText(WrenVM* vm)
+{
+	WrenUIElement* uiElement = static_cast<WrenUIElement*>(wrenGetSlotForeign(vm, 0));
+	if (!uiElement->element)
+	{
+		DEBUG_ERROR("UIElement.setBoundingBoxToText: label is Null");
+		return;
+	}
+	Struktur::UI::UILabel* label = dynamic_cast<Struktur::UI::UILabel*>(uiElement->element);
+	label->SetBoundingBoxToText();
+}
+
 // Register Quat foreign class
 WREN_FOREIGN_CLASS("ui", "UILabel", wren_UILabelAllocate, wren_UILabelFinalize, "UI Label component");
 WREN_CLASS_INHERITANCE("ui", "UILabel", "UIElement");
@@ -838,6 +851,7 @@ WREN_CLASS_METHOD("ui", "UILabel", "setFontSize(_)", wren_UILabelSetFontSize, "S
 WREN_CLASS_METHOD("ui", "UILabel", "setWordWrap(_)", wren_UILabelSetWordWrap, "Sets the UI Labels word wrap");
 WREN_CLASS_METHOD("ui", "UILabel", "setText(_)", wren_UILabelSetText, "set the UI Labels text");
 WREN_CLASS_METHOD("ui", "UILabel", "getText()", wren_UILabelGetText, "get the UI Labels text");
+WREN_CLASS_METHOD("ui", "UILabel", "setBoundingBoxToText()", wren_UILabelSetBoundingBoxToText, "Will change the width and height to match the text");
 
 // ============================================================================
 // UIPANEL BINDINGS

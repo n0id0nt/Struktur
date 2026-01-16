@@ -7,7 +7,7 @@ import "States/BaseState" for BaseState
 class MainMenuState is BaseState {
     construct new() {
         super()
-        _name = "MainMenuState"
+        name = "MainMenuState"
     }
     
     enter(stateManager, params) {

@@ -22,6 +22,8 @@ namespace Struktur
             void RenderEntityGizmos(GameContext &context);
             void RenderGrid(GameContext &context);
 
+            std::string Name() const override { return "Debug System"; }
+
         private:
 			Debug::Box2DDebugRenderer m_box2dRenderer;
         };

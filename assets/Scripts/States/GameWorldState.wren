@@ -26,7 +26,7 @@ var Loops = 0
 class GameWorldState is BaseState {
     construct new() {
         super()
-        _name = "GameWorldState"
+        name = "GameWorldState"
         
         _interactLabel = null
         _loopCountLabel = null
@@ -193,8 +193,8 @@ class GameWorldState is BaseState {
             _stateManager.update()
             return
         }
-        if (_gameMusic) {
-            _gameMusic.resume()
+        if (_gameMusic && !_gameMusic.isPlaying()) {
+            _gameMusic.play()
         }
         var inputDir = Input.getInputAxis2("Move")
         inputDir.y = inputDir.y * -1

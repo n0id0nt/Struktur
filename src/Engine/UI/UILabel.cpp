@@ -22,11 +22,16 @@ void Struktur::UI::UILabel::SetText(const std::string& newText)
 {
     m_text = newText;
     // Recalculate size
-    //::Vector2 textSize = ::MeasureTextEx(m_font->font, m_text.c_str(), m_fontSize, 1.0f);
-    //SetSize({textSize.x + 10, textSize.y + 5}, {0, 0});
+    //SetBoundingBoxToText();
 }
 
-void Struktur::UI::UILabel::Update(GameContext& context)
+void Struktur::UI::UILabel::SetBoundingBoxToText()
+{
+    ::Vector2 textSize = ::MeasureTextEx(m_font->font, m_text.c_str(), m_fontSize, 1.0f);
+    SetSize({textSize.x + 10, textSize.y + 5}, {0, 0});
+}
+
+void Struktur::UI::UILabel::Update(GameContext &context)
 {
     UpdateChildren(context);
 }

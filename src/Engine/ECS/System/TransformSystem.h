@@ -24,6 +24,7 @@ namespace Struktur
             void SetWorldTransform(GameContext& context, entt::entity entity, const glm::mat4& matrix);
             void SetWorldTransform(GameContext& context, entt::entity entity, const glm::vec3& position, const glm::vec3& scale, const glm::quat& rotation);
 
+            std::string Name() const override { return "Transform System"; }
         private:
             void UpdateWorldTransform(GameContext& context, entt::entity entity, const glm::mat4& parentMatrix);
         };

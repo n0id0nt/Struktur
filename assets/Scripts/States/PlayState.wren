@@ -7,7 +7,7 @@ import "States/BaseState" for BaseState
 class PlayState is BaseState {
     construct new() {
         super()
-        _name = "PlayState"
+        name = "PlayState"
     }
     
     enter(stateManager, params) {
