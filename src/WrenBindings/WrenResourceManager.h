@@ -1,3 +1,5 @@
+#pragma once
+
 #include "Engine/Resource/TextureResource.h"
 #include "Engine/Resource/ShaderResource.h"
 #include "Engine/Resource/FontResource.h"

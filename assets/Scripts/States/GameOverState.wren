@@ -33,6 +33,7 @@ class GameOverState is BaseState {
         textBackgroundPanel.setAnchorPoint(Vec2.new(0.5, 0.5))
         textBackgroundPanel.setTextColor(WHITE)
         textBackgroundPanel.setFont(font)
+        textBackgroundPanel.setBoundingBoxToText()
         _screenPanel.addChild(textBackgroundPanel)
     }
     

@@ -1,7 +1,5 @@
 #include "WrenUI.h"
 
-#include "wren.hpp"
-
 #include "Engine/Scripting/WrenBindingRegistry.h"
 #include "Engine/GameContext.h"
 #include "WrenMath.h"
@@ -472,7 +470,15 @@ void wren_UIElementSetOnClick(WrenVM* vm)
 		DEBUG_ERROR("UILabel.setPosition: uiElement is Null");
 		return;
 	}
+
+	// Store VM if not already set
+	if (!uiElement->vm)
+	{
+		uiElement->vm = vm;
+	}
+
 	WrenHandle* callback = wrenGetSlotHandle(vm, 1);
+	uiElement->handles.push_back(callback);  // Track it
 
 	uiElement->element->SetOnClick([vm, callback](Struktur::UI::UIElement* sender, const glm::vec2& mousePos) {
 		wrenEnsureSlots(vm, 5);
@@ -501,7 +507,15 @@ void wren_UIElementSetOnFocus(WrenVM* vm)
 		DEBUG_ERROR("UILabel.setPosition: uiElement is Null");
 		return;
 	}
+
+	// Store VM if not already set
+	if (!uiElement->vm)
+	{
+		uiElement->vm = vm;
+	}
+
 	WrenHandle* callback = wrenGetSlotHandle(vm, 1);
+	uiElement->handles.push_back(callback);  // Track it
 
 	uiElement->element->SetOnFocus([vm, callback](Struktur::UI::UIElement* sender) {
 		wrenEnsureSlots(vm, 3);
@@ -526,7 +540,15 @@ void wren_UIElementSetOnLoseFocus(WrenVM* vm)
 		DEBUG_ERROR("UILabel.setPosition: uiElement is Null");
 		return;
 	}
+
+	// Store VM if not already set
+	if (!uiElement->vm)
+	{
+		uiElement->vm = vm;
+	}
+
 	WrenHandle* callback = wrenGetSlotHandle(vm, 1);
+	uiElement->handles.push_back(callback);  // Track it
 
 	uiElement->element->SetOnLoseFocus([vm, callback](Struktur::UI::UIElement* sender) {
 		wrenEnsureSlots(vm, 3);
@@ -551,7 +573,15 @@ void wren_UIElementSetOnHover(WrenVM* vm)
 		DEBUG_ERROR("UILabel.setPosition: uiElement is Null");
 		return;
 	}
+
+	// Store VM if not already set
+	if (!uiElement->vm)
+	{
+		uiElement->vm = vm;
+	}
+
 	WrenHandle* callback = wrenGetSlotHandle(vm, 1);
+	uiElement->handles.push_back(callback);  // Track it
 
 	uiElement->element->SetOnHover([vm, callback](Struktur::UI::UIElement* sender, const glm::vec2& mousePos) {
 		wrenEnsureSlots(vm, 5);
@@ -580,7 +610,15 @@ void wren_UIElementSetOnKeyPressed(WrenVM* vm)
 		DEBUG_ERROR("UILabel.setPosition: uiElement is Null");
 		return;
 	}
+
+	// Store VM if not already set
+	if (!uiElement->vm)
+	{
+		uiElement->vm = vm;
+	}
+
 	WrenHandle* callback = wrenGetSlotHandle(vm, 1);
+	uiElement->handles.push_back(callback);  // Track it
 
 	uiElement->element->SetOnKeyPressed([vm, callback](Struktur::UI::UIElement* sender, int key) {
 		wrenEnsureSlots(vm, 4);
@@ -607,7 +645,15 @@ void wren_UIElementSetOnActivate(WrenVM* vm)
 		DEBUG_ERROR("UILabel.setPosition: uiElement is Null");
 		return;
 	}
+
+	// Store VM if not already set
+	if (!uiElement->vm)
+	{
+		uiElement->vm = vm;
+	}
+
 	WrenHandle* callback = wrenGetSlotHandle(vm, 1);
+	uiElement->handles.push_back(callback);  // Track it
 
 	uiElement->element->SetOnActivate([vm, callback](Struktur::UI::UIElement* sender) {
 		wrenEnsureSlots(vm, 3);

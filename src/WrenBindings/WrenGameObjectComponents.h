@@ -1,3 +1,5 @@
+#pragma once
+
 #include "Engine/ECS/Component/Camera.h"
 #include "Engine/ECS/Component/Level.h"
 #include "Engine/ECS/Component/World.h"

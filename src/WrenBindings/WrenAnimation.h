@@ -1,3 +1,5 @@
+#pragma once
+
 #include "Engine/Animation/SpriteAnimation.h"
 
 struct WrenSpriteAnimationDefinition

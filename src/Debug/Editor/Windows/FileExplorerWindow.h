@@ -1,4 +1,3 @@
-// FileExplorerWindow.h
 #pragma once
 
 #include "EditorWindow.h"

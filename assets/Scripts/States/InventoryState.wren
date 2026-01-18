@@ -53,13 +53,19 @@ class InventoryState is BaseState {
         focusedItemBackgroundPanelTexture.unload()
         _screenPanel.addChild(focusedBackgroundPanel)
 
-        var inventoryFocusedItemNameLabel = UILabel.new(Vec2.new(0, 20), Vec2.new(0.5, 0.75), "No Items", 30.0)
+        var inventoryFocusedItemNameLabel = UILabel.new(Vec2.new(0, 20), Vec2.new(0.5, 0.55), "No Items\nTest\n\n  Test two", 30.0)
         inventoryFocusedItemNameLabel.setTextColor(WHITE)
         inventoryFocusedItemNameLabel.setBoundingBoxToText()
         inventoryFocusedItemNameLabel.setAnchorPoint(Vec2.new(0.5, 0))
         inventoryFocusedItemNameLabel.setFont(font)
         font.unload()
         focusedBackgroundPanel.addChild(inventoryFocusedItemNameLabel)
+
+        var testPanel = UIPanel.new(Vec2.new(0, 0), Vec2.new(0.0, 0.0), Vec2.new(0, 0), Vec2.new(1, 1))
+        testPanel.setAnchorPoint(Vec2.new(0, 0))
+        testPanel.setBorderColor(Vec4.new(0, 0, 0, 100))
+        testPanel.setBackgroundColor(Vec4.new(0, 0, 0, 100))
+        inventoryFocusedItemNameLabel.addChild(testPanel)
 
         var focusedItemPanel = UIPanel.new(Vec2.new(0, 0), Vec2.new(0.5, 0.25), Vec2.new(250, 250), Vec2.new(0, 0))
         focusedItemPanel.setAnchorPoint(Vec2.new(0.5, 0.5))

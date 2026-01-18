@@ -1,3 +1,5 @@
+#pragma once
+
 #define COMPONENT_LIST\
 	COMPONENT(Camera, "Camera")\
 	COMPONENT(Level, "Level")\

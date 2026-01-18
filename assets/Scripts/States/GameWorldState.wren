@@ -173,6 +173,7 @@ class GameWorldState is BaseState {
         _interactLabel.setFont(font)
         _interactLabel.setTextColor(WHITE) // Change this when the background is created.
         _interactLabel.setAnchorPoint(Vec2.new(0.5, 0.5))
+        _interactLabel.setBoundingBoxToText()
         UIManager.addUIElement(_interactLabel)
 
         var loops = Loops
@@ -180,6 +181,7 @@ class GameWorldState is BaseState {
         _loopCountLabel.setFont(font)
         _loopCountLabel.setTextColor(WHITE) // Change this when the background is created.
         _loopCountLabel.setVisible(true)
+        _loopCountLabel.setBoundingBoxToText()
         UIManager.addUIElement(_loopCountLabel)
         font.unload()
         //_stateManager.changeState("PlayState")
