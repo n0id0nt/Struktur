@@ -24,13 +24,3 @@ foreign class PhysicsCircleShape {
     foreign radius=(arg0)
 }
 
-// BodyDefinition class wraps b2BodyDef
-foreign class PhysicsSquareShape {
-    // Create physics Square shape with width, height, center, and angle
-    foreign construct new(hx, hy, center, angle)
-    // Create physics Square shape with width and height
-    foreign construct new(hx, hy)
-    // Get physics Square shape's radius
-    foreign radius
-}
-

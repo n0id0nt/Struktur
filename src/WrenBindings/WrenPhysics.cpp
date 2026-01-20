@@ -4,7 +4,7 @@
 
 #include "Engine/Scripting/WrenBindingRegistry.h"
 #include "Engine/GameContext.h"
-#include "WrenMath.h"
+
 
 // ============================================================================
 // BODY DEFINITION BINDINGS
@@ -14,7 +14,7 @@
 void wren_BodyDefinitionAllocate(WrenVM* vm)
 {
 	wrenGetVariable(vm, "physics", "BodyDefinition", 0);  // Get class into slot 1
-	auto* bodyDef = static_cast<WrenBodyDefinition*>(wrenSetSlotNewForeign(vm, 0, 0, sizeof(WrenBodyDefinition)));
+	WrenBodyDefinition* bodyDef = (WrenBodyDefinition*)wrenSetSlotNewForeign(vm, 0, 0, sizeof(WrenBodyDefinition));
 
 	// BodyDefinition.new() - identity
 	new (bodyDef) WrenBodyDefinition();
@@ -23,41 +23,41 @@ void wren_BodyDefinitionAllocate(WrenVM* vm)
 // Finalizer
 void wren_BodyDefinitionFinalize(void* data)
 {
-	auto* bodyDef = static_cast<WrenBodyDefinition*>(data);
+	WrenBodyDefinition* bodyDef = (WrenBodyDefinition*)data;
 	bodyDef->~WrenBodyDefinition();
 }
 
 void wren_BodyDefinitionCreateDynamicBody(WrenVM* vm)
 {
 	wrenGetVariable(vm, "physics", "BodyDefinition", 0);  // Get class into slot 1
-	auto* bodyDef = static_cast<WrenBodyDefinition*>(wrenSetSlotNewForeign(vm, 0, 0, sizeof(WrenBodyDefinition)));
+	WrenBodyDefinition* bodyDef = (WrenBodyDefinition*)wrenSetSlotNewForeign(vm, 0, 0, sizeof(WrenBodyDefinition));
 
 	// BodyDefinition.new() - identity
 	new (bodyDef) WrenBodyDefinition();
 
-	bodyDef->type = b2_dynamicBody;
+	bodyDef->bodyDef.type = b2_dynamicBody;
 }
 
 void wren_BodyDefinitionCreateStaticBody(WrenVM* vm)
 {
 	wrenGetVariable(vm, "physics", "BodyDefinition", 0);  // Get class into slot 1
-	auto* bodyDef = static_cast<WrenBodyDefinition*>(wrenSetSlotNewForeign(vm, 0, 0, sizeof(WrenBodyDefinition)));
+	WrenBodyDefinition* bodyDef = (WrenBodyDefinition*)wrenSetSlotNewForeign(vm, 0, 0, sizeof(WrenBodyDefinition));
 
 	// BodyDefinition.new() - identity
 	new (bodyDef) WrenBodyDefinition();
 
-	bodyDef->type = b2_staticBody;
+	bodyDef->bodyDef.type = b2_staticBody;
 }
 
 void wren_BodyDefinitionCreateKinematicBody(WrenVM* vm)
 {
 	wrenGetVariable(vm, "physics", "BodyDefinition", 0);  // Get class into slot 1
-	auto* bodyDef = static_cast<WrenBodyDefinition*>(wrenSetSlotNewForeign(vm, 0, 0, sizeof(WrenBodyDefinition)));
+	WrenBodyDefinition* bodyDef = (WrenBodyDefinition*)wrenSetSlotNewForeign(vm, 0, 0, sizeof(WrenBodyDefinition));
 
 	// BodyDefinition.new() - identity
 	new (bodyDef) WrenBodyDefinition();
 
-	bodyDef->type = b2_kinematicBody;
+	bodyDef->bodyDef.type = b2_kinematicBody;
 }
 
 // Register BodyDefinition foreign class
@@ -76,51 +76,38 @@ WREN_CLASS_STATIC("physics", "BodyDefinition", "createKinematicBody()", wren_Bod
 void wren_PhysicsCircleShapeAllocate(WrenVM* vm)
 {
 	wrenGetVariable(vm, "physics", "PhysicsCircleShape", 0);  // Get class into slot 1
-	WrenPhysicsShape* shape = static_cast<WrenPhysicsShape*>(wrenSetSlotNewForeign(vm, 0, 0, sizeof(WrenPhysicsShape)));
+	WrenPhysicsCircleShape* bodyDef = (WrenPhysicsCircleShape*)wrenSetSlotNewForeign(vm, 0, 0, sizeof(WrenPhysicsCircleShape));
 
 	// Initialise with constructor parameters if provided
 	if (wrenGetSlotCount(vm) >= 2)
 	{
 		float radius = (float)wrenGetSlotDouble(vm, 1);
-		new (shape) b2CircleShape();
-		shape->m_radius = radius;
+		new (bodyDef) WrenPhysicsCircleShape(radius);
 	}
 	else
 	{
-		new (shape) b2CircleShape();
+		new (bodyDef) WrenPhysicsCircleShape();
 	}
 }
 
 // Finalizer
 void wren_PhysicsCircleShapeFinalize(void* data)
 {
-	WrenPhysicsShape* shape = static_cast<WrenPhysicsShape*>(data);
-	shape->~WrenPhysicsShape();
+	WrenPhysicsCircleShape* bodyDef = (WrenPhysicsCircleShape*)data;
+	bodyDef->~WrenPhysicsCircleShape();
 }
+
 
 void wren_PhysicsCircleShapeGetRadius(WrenVM* vm)
 {
-	WrenPhysicsShape* shape = static_cast<WrenPhysicsShape*>(wrenGetSlotForeign(vm, 0));
-	b2CircleShape* circleShape = dynamic_cast<b2CircleShape*>(shape);
-	if (!circleShape)
-	{
-		DEBUG_ERROR("PhysicsCircleShape.radius: shape is not a circle");
-		return;
-	}
-	wrenSetSlotDouble(vm, 0, circleShape->m_radius);
+	WrenPhysicsCircleShape* physicsShape = (WrenPhysicsCircleShape*)wrenGetSlotForeign(vm, 0);
+	wrenSetSlotDouble(vm, 0, physicsShape->physicsShape.m_radius);
 }
 
 void wren_PhysicsCircleShapeSetRadius(WrenVM* vm)
 {
-	WrenPhysicsShape* shape = static_cast<WrenPhysicsShape*>(wrenGetSlotForeign(vm, 0));
-	b2CircleShape* circleShape = dynamic_cast<b2CircleShape*>(shape);
-	if (!circleShape)
-	{
-		DEBUG_ERROR("PhysicsCircleShape.radius: shape is not a circle");
-		return;
-	}
-	float radius = static_cast<float>(wrenGetSlotDouble(vm, 1));
-	circleShape->m_radius = radius;
+	WrenPhysicsCircleShape* physicsShape = (WrenPhysicsCircleShape*)wrenGetSlotForeign(vm, 0);
+	physicsShape->physicsShape.m_radius = (float)wrenGetSlotDouble(vm, 1);
 }
 
 // Register BodyDefinition foreign class
@@ -133,63 +120,3 @@ WREN_CONSTRUCTOR_DOC("physics", "PhysicsCircleShape", wren_PhysicsCircleShapeAll
 // Register methods
 WREN_CLASS_METHOD("physics", "PhysicsCircleShape", "radius", wren_PhysicsCircleShapeGetRadius, "Get physics circle shape's radius");
 WREN_CLASS_METHOD("physics", "PhysicsCircleShape", "radius=(_)", wren_PhysicsCircleShapeSetRadius, "Set physics circle shape's radius");
-
-// ============================================================================
-// SQUARE SHAPE BINDINGS
-// ============================================================================
-
-// Allocator
-void wren_PhysicsSquareShapeAllocate(WrenVM* vm)
-{
-	wrenGetVariable(vm, "physics", "PhysicsCircleShape", 0);  // Get class into slot 1
-	WrenPhysicsShape* shape = static_cast<WrenPhysicsShape*>(wrenSetSlotNewForeign(vm, 0, 0, sizeof(WrenPhysicsShape)));
-
-	// Initialise with constructor parameters if provided
-	if (wrenGetSlotCount(vm) >= 5)
-	{
-		float hx = (float)wrenGetSlotDouble(vm, 1);
-		float hy = (float)wrenGetSlotDouble(vm, 2);
-		WrenVec2* center = static_cast<WrenVec2*>(wrenGetSlotForeign(vm, 3));
-		float angle = (float)wrenGetSlotDouble(vm, 4);
-		new (shape) b2PolygonShape();
-		b2PolygonShape* SquareShape = dynamic_cast<b2PolygonShape*>(shape);
-		SquareShape->SetAsBox(hx, hy, b2Vec2(center->value.x, center->value.y), angle);
-	}
-	else
-	{
-		float hx = (float)wrenGetSlotDouble(vm, 1);
-		float hy = (float)wrenGetSlotDouble(vm, 2);
-		new (shape) b2PolygonShape();
-		b2PolygonShape* SquareShape = dynamic_cast<b2PolygonShape*>(shape);
-		SquareShape->SetAsBox(hx, hy);
-	}
-}
-
-// Finalizer
-void wren_PhysicsSquareShapeFinalize(void* data)
-{
-	WrenPhysicsShape* shape = static_cast<WrenPhysicsShape*>(data);
-	shape->~WrenPhysicsShape();
-}
-
-void wren_PhysicsSquareShapeGetRadius(WrenVM* vm)
-{
-	WrenPhysicsShape* shape = static_cast<WrenPhysicsShape*>(wrenGetSlotForeign(vm, 0));
-	b2PolygonShape* SquareShape = dynamic_cast<b2PolygonShape*>(shape);
-	if (!SquareShape)
-	{
-		DEBUG_ERROR("PhysicsSquareShape.radius: shape is not a Square");
-		return;
-	}
-	wrenSetSlotDouble(vm, 0, SquareShape->m_radius);
-}
-
-// Register BodyDefinition foreign class
-WREN_FOREIGN_CLASS("physics", "PhysicsSquareShape", wren_PhysicsSquareShapeAllocate, wren_PhysicsSquareShapeFinalize, "BodyDefinition class wraps b2BodyDef");
-
-// Register constructors
-WREN_CONSTRUCTOR_DOC("physics", "PhysicsSquareShape", wren_PhysicsSquareShapeAllocate, "Create physics Square shape with width, height, center, and angle", hx, hy, center, angle);
-WREN_CONSTRUCTOR_DOC("physics", "PhysicsSquareShape", wren_PhysicsSquareShapeAllocate, "Create physics Square shape with width and height", hx, hy);
-
-// Register methods
-WREN_CLASS_METHOD("physics", "PhysicsSquareShape", "radius", wren_PhysicsSquareShapeGetRadius, "Get physics Square shape's radius");
