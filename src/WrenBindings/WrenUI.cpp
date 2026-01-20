@@ -6,7 +6,6 @@
 #include "WrenResourceManager.h"
 #include "Engine/UI/UILabel.h"
 #include "Engine/UI/UIPanel.h"
-#include "Debug/Assertions.h"
 
 // ============================================================================
 // NAVIGATION DIRECTION BINDINGS
@@ -471,14 +470,7 @@ void wren_UIElementSetOnClick(WrenVM* vm)
 		return;
 	}
 
-	// Store VM if not already set
-	if (!uiElement->vm)
-	{
-		uiElement->vm = vm;
-	}
-
 	WrenHandle* callback = wrenGetSlotHandle(vm, 1);
-	uiElement->handles.push_back(callback);  // Track it
 
 	uiElement->element->SetOnClick([vm, callback](Struktur::UI::UIElement* sender, const glm::vec2& mousePos) {
 		wrenEnsureSlots(vm, 5);
@@ -496,6 +488,10 @@ void wren_UIElementSetOnClick(WrenVM* vm)
 		wrenCall(vm, method);
 		wrenReleaseHandle(vm, method);
 	});
+
+	uiElement->element->SetOnClickDispose([vm, callback](Struktur::UI::UIElement* sender, Struktur::GameContext& context) {
+		wrenReleaseHandle(vm, callback);
+	});
 }
 
 // UIElement.setOnFocus { |sender| ... }
@@ -508,14 +504,7 @@ void wren_UIElementSetOnFocus(WrenVM* vm)
 		return;
 	}
 
-	// Store VM if not already set
-	if (!uiElement->vm)
-	{
-		uiElement->vm = vm;
-	}
-
 	WrenHandle* callback = wrenGetSlotHandle(vm, 1);
-	uiElement->handles.push_back(callback);  // Track it
 
 	uiElement->element->SetOnFocus([vm, callback](Struktur::UI::UIElement* sender) {
 		wrenEnsureSlots(vm, 3);
@@ -529,6 +518,10 @@ void wren_UIElementSetOnFocus(WrenVM* vm)
 		wrenCall(vm, method);
 		wrenReleaseHandle(vm, method);
 	});
+
+	uiElement->element->SetOnFocusDispose([vm, callback](Struktur::UI::UIElement* sender, Struktur::GameContext& context) {
+		wrenReleaseHandle(vm, callback);
+	});
 }
 
 // UIElement.setOnLoseFocus { |sender| ... }
@@ -541,14 +534,7 @@ void wren_UIElementSetOnLoseFocus(WrenVM* vm)
 		return;
 	}
 
-	// Store VM if not already set
-	if (!uiElement->vm)
-	{
-		uiElement->vm = vm;
-	}
-
 	WrenHandle* callback = wrenGetSlotHandle(vm, 1);
-	uiElement->handles.push_back(callback);  // Track it
 
 	uiElement->element->SetOnLoseFocus([vm, callback](Struktur::UI::UIElement* sender) {
 		wrenEnsureSlots(vm, 3);
@@ -562,6 +548,10 @@ void wren_UIElementSetOnLoseFocus(WrenVM* vm)
 		wrenCall(vm, method);
 		wrenReleaseHandle(vm, method);
 	});
+
+	uiElement->element->SetOnFocusDispose([vm, callback](Struktur::UI::UIElement* sender, Struktur::GameContext& context) {
+		wrenReleaseHandle(vm, callback);
+	});
 }
 
 // UIElement.setOnHover { |sender, mousePos| ... }
@@ -574,14 +564,7 @@ void wren_UIElementSetOnHover(WrenVM* vm)
 		return;
 	}
 
-	// Store VM if not already set
-	if (!uiElement->vm)
-	{
-		uiElement->vm = vm;
-	}
-
 	WrenHandle* callback = wrenGetSlotHandle(vm, 1);
-	uiElement->handles.push_back(callback);  // Track it
 
 	uiElement->element->SetOnHover([vm, callback](Struktur::UI::UIElement* sender, const glm::vec2& mousePos) {
 		wrenEnsureSlots(vm, 5);
@@ -599,6 +582,10 @@ void wren_UIElementSetOnHover(WrenVM* vm)
 		wrenCall(vm, method);
 		wrenReleaseHandle(vm, method);
 	});
+
+	uiElement->element->SetOnFocusDispose([vm, callback](Struktur::UI::UIElement* sender, Struktur::GameContext& context) {
+		wrenReleaseHandle(vm, callback);
+	});
 }
 
 // UIElement.setOnKeyPressed { |sender, key| ... }
@@ -611,14 +598,7 @@ void wren_UIElementSetOnKeyPressed(WrenVM* vm)
 		return;
 	}
 
-	// Store VM if not already set
-	if (!uiElement->vm)
-	{
-		uiElement->vm = vm;
-	}
-
 	WrenHandle* callback = wrenGetSlotHandle(vm, 1);
-	uiElement->handles.push_back(callback);  // Track it
 
 	uiElement->element->SetOnKeyPressed([vm, callback](Struktur::UI::UIElement* sender, int key) {
 		wrenEnsureSlots(vm, 4);
@@ -634,6 +614,10 @@ void wren_UIElementSetOnKeyPressed(WrenVM* vm)
 		wrenCall(vm, method);
 		wrenReleaseHandle(vm, method);
 	});
+
+	uiElement->element->SetOnFocusDispose([vm, callback](Struktur::UI::UIElement* sender, Struktur::GameContext& context) {
+		wrenReleaseHandle(vm, callback);
+	});
 }
 
 // UIElement.setOnActivate { |sender| ... }
@@ -646,14 +630,7 @@ void wren_UIElementSetOnActivate(WrenVM* vm)
 		return;
 	}
 
-	// Store VM if not already set
-	if (!uiElement->vm)
-	{
-		uiElement->vm = vm;
-	}
-
 	WrenHandle* callback = wrenGetSlotHandle(vm, 1);
-	uiElement->handles.push_back(callback);  // Track it
 
 	uiElement->element->SetOnActivate([vm, callback](Struktur::UI::UIElement* sender) {
 		wrenEnsureSlots(vm, 3);
@@ -666,6 +643,10 @@ void wren_UIElementSetOnActivate(WrenVM* vm)
 		WrenHandle* method = wrenMakeCallHandle(vm, "call(_)");
 		wrenCall(vm, method);
 		wrenReleaseHandle(vm, method);
+	});
+
+	uiElement->element->SetOnFocusDispose([vm, callback](Struktur::UI::UIElement* sender, Struktur::GameContext& context) {
+		wrenReleaseHandle(vm, callback);
 	});
 }
 
@@ -742,7 +723,6 @@ void wren_UILabelAllocate(WrenVM* vm)
 {
 	// Allocate foreign object
 	Struktur::GameContext* context = static_cast<Struktur::GameContext*>(wrenGetUserData(vm));
-	wrenGetVariable(vm, "ui", "UILabel", 0); 
 	WrenUIElement* uiElement = (WrenUIElement*)wrenSetSlotNewForeign(vm, 0, 0, sizeof(WrenUIElement));
 
 	// Initialise with constructor parameters if provided
@@ -760,7 +740,6 @@ void wren_UILabelAllocate(WrenVM* vm)
 		auto* label = new Struktur::UI::UILabel(*context, positionPixel->value, positionPercentage->value, labelText);
 		new (uiElement) WrenUIElement{ label };
 	}
-
 }
 
 // Finalizer - called when garbage collected

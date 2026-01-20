@@ -27,6 +27,7 @@ namespace Struktur
         using UIHoverCallback = std::function<void(UIElement* sender, const glm::vec2& mousePos)>;
         using UIActivateCallback = std::function<void(UIElement* sender)>;
         using UIKeyCallback = std::function<void(UIElement* sender, int key)>;
+        using DisposeCallback = std::function<void(UIElement* element, GameContext& context)>;
 
         // Event data structure for more complex events
         struct UIEventData {
@@ -59,6 +60,8 @@ namespace Struktur
             // Allow move constructor and move assignment operator
             UIElement(UIElement&&) = default;
             UIElement& operator=(UIElement&&) = default;
+
+            virtual void Dispose(GameContext& context);
 
             // Pure virtual methods that must be implemented
             virtual void Update(GameContext& context) = 0;
@@ -128,12 +131,19 @@ namespace Struktur
 
             // Callback setters - Fluent interface style
             UIElement* SetOnClick(UIClickCallback callback);
+            UIElement* SetOnClickDispose(DisposeCallback callback);
             UIElement* SetOnFocus(UIFocusCallback callback);
+            UIElement* SetOnFocusDispose(DisposeCallback callback);
             UIElement* SetOnLoseFocus(UIFocusCallback callback);
+            UIElement* SetOnLoseFocusDispose(DisposeCallback callback);
             UIElement* SetOnHover(UIHoverCallback callback);
+            UIElement* SetOnHoverDispose(DisposeCallback callback);
             UIElement* SetOnKeyPressed(UIKeyCallback callback);
+            UIElement* SetOnKeyPressedDispose(DisposeCallback callback);
             UIElement* SetOnActivate(UIActivateCallback callback);
+            UIElement* SetOnActivateDispose(DisposeCallback callback);
             UIElement* SetOnEvent(UIEventCallback callback);
+            UIElement* SetOnEventDispose(DisposeCallback callback);
             // Convenience method to trigger generic events
             void TriggerEvent(const std::string& eventType, float numericValue = 0.0f, bool boolValue = false);
 
@@ -145,6 +155,8 @@ namespace Struktur
             void RenderChildren(GameContext& context);
 
             void UpdateBounds();
+
+            bool m_disposed;
 
             ::Rectangle m_bounds;
             glm::vec2 m_absolutePosition;
@@ -167,12 +179,25 @@ namespace Struktur
 
             // Callback functions
             UIClickCallback m_onClickCallback;
+            DisposeCallback m_onClickCallbackDispose;
+
             UIFocusCallback m_onFocusCallback;
+            DisposeCallback m_onFocusCallbackDispose;
+
             UIFocusCallback m_onLoseFocusCallback;
+            DisposeCallback m_onLoseFocusCallbackDispose;
+
             UIHoverCallback m_onHoverCallback;
+            DisposeCallback m_onHoverCallbackDispose;
+
             UIActivateCallback m_onActivateCallback;
+            DisposeCallback m_onActivateCallbackDispose;
+
             UIKeyCallback m_onKeyPressedCallback;
+            DisposeCallback m_onKeyPressedCallbackDispose;
+
             UIEventCallback m_onEventCallback; // Generic event callback
+            DisposeCallback m_onEventCallbackDispose; // Generic event callback
         };
     }
 }

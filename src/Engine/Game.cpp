@@ -143,7 +143,7 @@ void Struktur::ExitGame(GameContext& context)
 
 	DEBUG_INFO("[Clean Up] UI Manager");
 	UI::UIManager& uiManager = context.GetUIManager();
-	uiManager.Clear();
+	uiManager.Clear(context);
 
 	DEBUG_INFO("[Clean Up] Registry");
 	entt::registry& registry = context.GetRegistry();
@@ -386,7 +386,7 @@ void Struktur::ClearGameSystems(GameContext& context)
 
 	DEBUG_INFO("[Clean Up] UI Manager");
 	UI::UIManager& uiManager = context.GetUIManager();
-	uiManager.Clear();
+	uiManager.Clear(context);
 
 	DEBUG_INFO("[Clean Up] Registry");
 	entt::registry& registry = context.GetRegistry();

@@ -85,6 +85,18 @@ Struktur::UI::UIElement *Struktur::UI::UIManager::GetElementAt(const glm::vec2 &
     return nullptr;
 }
 
+void Struktur::UI::UIManager::Clear(GameContext &context)
+{
+    m_focusNavigator->Clear();
+    m_focusedElement = nullptr;
+    m_hoveredElement = nullptr;
+    for (auto& element : m_elements)
+    {
+        element->Dispose(context);
+    }
+    m_elements.clear();
+}
+
 void Struktur::UI::UIManager::Render(GameContext& context)
 {
     ::BeginMode2D(m_camera);
@@ -117,14 +129,6 @@ void Struktur::UI::UIManager::Render(GameContext& context)
     }
     
     ::EndMode2D();
-}
-
-void Struktur::UI::UIManager::Clear()
-{
-    m_focusNavigator->Clear();
-    m_focusedElement = nullptr;
-    m_hoveredElement = nullptr;
-    m_elements.clear();
 }
 
 Struktur::UI::FocusNavigator *Struktur::UI::UIManager::GetFocusNavigator() const

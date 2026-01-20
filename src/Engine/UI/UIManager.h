@@ -41,7 +41,7 @@ namespace Struktur
 
             UIElement* GetElementAt(const glm::vec2& position) const;
 
-            void Clear();
+            void Clear(GameContext& context);
 
             FocusNavigator* GetFocusNavigator() const;
             const std::vector<std::unique_ptr<UIElement>>& GetElements() const;

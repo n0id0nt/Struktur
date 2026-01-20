@@ -5,7 +5,7 @@ Struktur::UI::UIElement::UIElement(const glm::vec2& absolutePosition, const glm:
     m_absoluteSize(absoluteSize), m_relativeSize(relativeSize), m_anchorPoint(glm::vec2()),
     m_backgroundColor(LIGHTGRAY), m_borderColor(DARKGRAY),
     m_borderWidth(1.0f), m_visible(true), m_enabled(true), m_focusable(false),
-    m_parent(nullptr), m_zIndex(0), m_tabIndex(-1)
+    m_parent(nullptr), m_zIndex(0), m_tabIndex(-1), m_disposed(false)
 {
     UpdateBounds();
 }
@@ -139,9 +139,21 @@ Struktur::UI::UIElement* Struktur::UI::UIElement::SetOnClick(UIClickCallback cal
     return this;
 }
 
+Struktur::UI::UIElement* Struktur::UI::UIElement::SetOnClickDispose(DisposeCallback callback)
+{
+    m_onClickCallbackDispose = callback;
+    return this;
+}
+
 Struktur::UI::UIElement* Struktur::UI::UIElement::SetOnFocus(UIFocusCallback callback)
 {
     m_onFocusCallback = callback;
+    return this;
+}
+
+Struktur::UI::UIElement* Struktur::UI::UIElement::SetOnFocusDispose(DisposeCallback callback)
+{
+    m_onFocusCallbackDispose = callback;
     return this;
 }
 
@@ -151,9 +163,21 @@ Struktur::UI::UIElement* Struktur::UI::UIElement::SetOnLoseFocus(UIFocusCallback
     return this;
 }
 
+Struktur::UI::UIElement* Struktur::UI::UIElement::SetOnLoseFocusDispose(DisposeCallback callback)
+{
+    m_onLoseFocusCallbackDispose = callback;
+    return this;
+}
+
 Struktur::UI::UIElement* Struktur::UI::UIElement::SetOnHover(UIHoverCallback callback)
 {
     m_onHoverCallback = callback;
+    return this;
+}
+
+Struktur::UI::UIElement* Struktur::UI::UIElement::SetOnHoverDispose(DisposeCallback callback)
+{
+    m_onHoverCallbackDispose = callback;
     return this;
 }
 
@@ -163,15 +187,33 @@ Struktur::UI::UIElement* Struktur::UI::UIElement::SetOnKeyPressed(UIKeyCallback 
     return this;
 }
 
+Struktur::UI::UIElement* Struktur::UI::UIElement::SetOnKeyPressedDispose(DisposeCallback callback)
+{
+    m_onKeyPressedCallbackDispose = callback;
+    return this;
+}
+
 Struktur::UI::UIElement* Struktur::UI::UIElement::SetOnActivate(UIActivateCallback callback)
 {
     m_onActivateCallback = callback;
     return this;
 }
 
+Struktur::UI::UIElement* Struktur::UI::UIElement::SetOnActivateDispose(DisposeCallback callback)
+{
+    m_onActivateCallbackDispose = callback;
+    return this;
+}
+
 Struktur::UI::UIElement* Struktur::UI::UIElement::SetOnEvent(UIEventCallback callback)
 {
-    m_onActivateCallback = callback;
+    m_onEventCallback = callback;
+    return this;
+}
+
+Struktur::UI::UIElement* Struktur::UI::UIElement::SetOnEventDispose(DisposeCallback callback)
+{
+    m_onEventCallbackDispose = callback;
     return this;
 }
 
@@ -207,7 +249,47 @@ void Struktur::UI::UIElement::ForEachRecursivePostOrder(std::function<void(UIEle
     func(this);  // Apply to self last
 }
 
-void Struktur::UI::UIElement::OnClick(const glm::vec2& mousePos)
+void Struktur::UI::UIElement::Dispose(GameContext &context)
+{
+    if (m_onClickCallbackDispose)
+    {
+        m_onClickCallbackDispose(this, context);
+    }
+    if (m_onFocusCallbackDispose)
+    {
+        m_onFocusCallbackDispose(this, context);
+    }
+    if (m_onLoseFocusCallbackDispose)
+    {
+        m_onLoseFocusCallbackDispose(this, context);
+    }
+    if (m_onHoverCallbackDispose)
+    {
+        m_onHoverCallbackDispose(this, context);
+    }
+    if (m_onActivateCallbackDispose)
+    {
+        m_onActivateCallbackDispose(this, context);
+    }
+    if (m_onKeyPressedCallbackDispose)
+    {
+        m_onKeyPressedCallbackDispose(this, context);
+    }
+    if (m_onEventCallbackDispose)
+    {
+        m_onEventCallbackDispose(this, context);
+    }
+
+    // Dispose children recursively
+    for (auto& child : m_children)
+    {
+        child->Dispose(context);
+    }
+
+    m_disposed = true;
+}
+
+void Struktur::UI::UIElement::OnClick(const glm::vec2 &mousePos)
 {
     if (m_onClickCallback)
     {
