@@ -1,4 +1,4 @@
-import "physics" for BodyDefinition, PhysicsCircleShape, BodyType
+import "physics" for BodyDefinition, PhysicsBoxShape, BodyType
 import "gameObjectComponents" for PhysicsBody
 
 class Door {
@@ -11,7 +11,7 @@ class Door {
     
     start() {        
         var bodyDef = BodyDefinition.new(BodyType.STATIC_BODY)
-        var doorShape = PhysicsCircleShape.new(0.5)
+        var doorShape = PhysicsBoxShape.new(1, 0.25)
         var physicsBody = PhysicsBody.create(_entity, bodyDef, doorShape)
         physicsBody.syncToPhysics = true
     }

@@ -400,9 +400,10 @@ void wren_PhysicsBodyCreate(WrenVM* vm)
 	double entityId = wrenGetSlotDouble(vm, 1);
 	entt::entity entity = static_cast<entt::entity>(entityId);
 	WrenBodyDefinition* bodyDef = static_cast<WrenBodyDefinition*>(wrenGetSlotForeign(vm, 2));
-	WrenPhysicsCircleShape* shape = static_cast<WrenPhysicsCircleShape*>(wrenGetSlotForeign(vm, 3));
+	// This can possibly cause issues if the underlying bs shape does not have a b2shape as its fist attribute
+	b2Shape* shape = static_cast<b2Shape*>(wrenGetSlotForeign(vm, 3)); 
 
-	Struktur::Component::PhysicsBody& physicsBodyComponent = physicsSystem.CreatePhysicsBody(*context, entity, bodyDef->bodyDef, shape->physicsShape);
+	Struktur::Component::PhysicsBody& physicsBodyComponent = physicsSystem.CreatePhysicsBody(*context, entity, bodyDef->bodyDef, *shape);
 
 	wrenGetVariable(vm, "gameObjectComponents", "PhysicsBody", 1);  // Get class into slot 1
 	WrenPhysicsBody* physicsBody = (WrenPhysicsBody*)wrenSetSlotNewForeign(vm, 0, 1, sizeof(WrenPhysicsBody));
