@@ -1,6 +1,10 @@
 #include "WrenScriptEngine.h"
-#include "Engine/GameContext.h"
+
 #include <filesystem>
+#include <Reflect/wren_reflect.h>
+#include <Trace/wren_trace.h>
+
+#include "Engine/GameContext.h"
 
 void Struktur::Wren::WrenScriptEngine::Initialise(GameContext& context)
 {
@@ -122,7 +126,7 @@ WrenLoadModuleResult Struktur::Wren::WrenScriptEngine::OnLoadModule(WrenVM* vm, 
 	// Built-in optional modules
 	if (strcmp(name, "meta") == 0 || strcmp(name, "random") == 0)
 	{
-		result.source = NULL;
+		result.source = nullptr;
 		return result;
 	}
 
@@ -130,7 +134,15 @@ WrenLoadModuleResult Struktur::Wren::WrenScriptEngine::OnLoadModule(WrenVM* vm, 
 	if (strcmp(name, "reflect") == 0)
 	{
 		result.source = wrenReflectSource();
-		result.onComplete = NULL;  // Source is static, no cleanup needed
+		result.onComplete = nullptr;  // Source is static, no cleanup needed
+		return result;
+	}
+
+	// Custom Reflection Module
+	if (strcmp(name, "trace") == 0)
+	{
+		result.source = wrenTraceSource();
+		result.onComplete = nullptr;  // Source is static, no cleanup needed
 		return result;
 	}
 
@@ -182,9 +194,13 @@ WrenForeignMethodFn Struktur::Wren::WrenScriptEngine::OnBindForeignMethod(WrenVM
 	{
 		method = wrenReflectBindForeignMethod(vm, className, isStatic, signature);
 	}
+	else if (strcmp(module, "trace") == 0)
+	{
+		method = wrenTraceBindForeignMethod(vm, className, isStatic, signature);
+	}
 	else if (!isStatic && strncmp(signature, "init ", 5) == 0)
 	{
-		method = Wren::FindClass(module, className).allocate;
+		method = Wren::FindMethod(module, className, isStatic, signature);
 	}
 	else
 	{

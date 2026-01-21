@@ -12,8 +12,20 @@
 // Allocator
 void wren_SpriteAnimationDefinitionAllocate(WrenVM* vm)
 {
-	wrenGetVariable(vm, "animation", "SpriteAnimationDefinition", 0);  // Get class into slot 1
-	WrenSpriteAnimationDefinition* spriteAnimation = (WrenSpriteAnimationDefinition*)wrenSetSlotNewForeign(vm, 0, 0, sizeof(WrenSpriteAnimationDefinition));
+	wrenSetSlotNewForeign(vm, 0, 0, sizeof(WrenSpriteAnimationDefinition));
+}
+
+// Finalizer
+void wren_SpriteAnimationDefinitionFinalize(void* data)
+{
+	WrenSpriteAnimationDefinition* spriteAnimation = (WrenSpriteAnimationDefinition*)data;
+	spriteAnimation->~WrenSpriteAnimationDefinition();
+}
+
+// SpriteAnimation.new(_)
+void wren_SpriteAnimationDefinitionNew(WrenVM* vm)
+{
+	WrenSpriteAnimationDefinition* spriteAnimation = static_cast<WrenSpriteAnimationDefinition*>(wrenGetSlotForeign(vm, 0));
 
 	// Initialise with constructor parameters if provided
 	if (wrenGetSlotCount(vm) >= 3)
@@ -30,67 +42,60 @@ void wren_SpriteAnimationDefinitionAllocate(WrenVM* vm)
 	}
 }
 
-// Finalizer
-void wren_SpriteAnimationDefinitionFinalize(void* data)
-{
-	WrenSpriteAnimationDefinition* spriteAnimation = (WrenSpriteAnimationDefinition*)data;
-	spriteAnimation->~WrenSpriteAnimationDefinition();
-}
-
 void wren_SpriteAnimationGetStartFrame(WrenVM* vm)
 {
-	WrenSpriteAnimationDefinition* spriteAnimation = (WrenSpriteAnimationDefinition*)wrenGetSlotForeign(vm, 0);
+	WrenSpriteAnimationDefinition* spriteAnimation = static_cast<WrenSpriteAnimationDefinition*>(wrenGetSlotForeign(vm, 0));
 	wrenSetSlotDouble(vm, 0, spriteAnimation->spriteAnimation.startFrame);
 }
 
 void wren_SpriteAnimationSetStartFrame(WrenVM* vm)
 {
-	WrenSpriteAnimationDefinition* spriteAnimation = (WrenSpriteAnimationDefinition*)wrenGetSlotForeign(vm, 0);
+	WrenSpriteAnimationDefinition* spriteAnimation = static_cast<WrenSpriteAnimationDefinition*>(wrenGetSlotForeign(vm, 0));
 	spriteAnimation->spriteAnimation.startFrame = static_cast<unsigned int>(wrenGetSlotDouble(vm, 1));
 }
 
 void wren_SpriteAnimationGetEndFrame(WrenVM* vm)
 {
-	WrenSpriteAnimationDefinition* spriteAnimation = (WrenSpriteAnimationDefinition*)wrenGetSlotForeign(vm, 0);
+	WrenSpriteAnimationDefinition* spriteAnimation = static_cast<WrenSpriteAnimationDefinition*>(wrenGetSlotForeign(vm, 0));
 	wrenSetSlotDouble(vm, 0, spriteAnimation->spriteAnimation.endFrame);
 }
 
 void wren_SpriteAnimationSetEndFrame(WrenVM* vm)
 {
-	WrenSpriteAnimationDefinition* spriteAnimation = (WrenSpriteAnimationDefinition*)wrenGetSlotForeign(vm, 0);
+	WrenSpriteAnimationDefinition* spriteAnimation = static_cast<WrenSpriteAnimationDefinition*>(wrenGetSlotForeign(vm, 0));
 	spriteAnimation->spriteAnimation.endFrame = static_cast<unsigned int>(wrenGetSlotDouble(vm, 1));
 }
 
 void wren_SpriteAnimationGetAnimationTime(WrenVM* vm)
 {
-	WrenSpriteAnimationDefinition* spriteAnimation = (WrenSpriteAnimationDefinition*)wrenGetSlotForeign(vm, 0);
+	WrenSpriteAnimationDefinition* spriteAnimation = static_cast<WrenSpriteAnimationDefinition*>(wrenGetSlotForeign(vm, 0));
 	wrenSetSlotDouble(vm, 0, spriteAnimation->spriteAnimation.animationTime);
 }
 
 void wren_SpriteAnimationSetAnimationTime(WrenVM* vm)
 {
-	WrenSpriteAnimationDefinition* spriteAnimation = (WrenSpriteAnimationDefinition*)wrenGetSlotForeign(vm, 0);
+	WrenSpriteAnimationDefinition* spriteAnimation = static_cast<WrenSpriteAnimationDefinition*>(wrenGetSlotForeign(vm, 0));
 	spriteAnimation->spriteAnimation.animationTime = static_cast<float>(wrenGetSlotDouble(vm, 1));
 }
 
 void wren_SpriteAnimationGetLoop(WrenVM* vm)
 {
-	WrenSpriteAnimationDefinition* spriteAnimation = (WrenSpriteAnimationDefinition*)wrenGetSlotForeign(vm, 0);
+	WrenSpriteAnimationDefinition* spriteAnimation = static_cast<WrenSpriteAnimationDefinition*>(wrenGetSlotForeign(vm, 0));
 	wrenSetSlotBool(vm, 0, spriteAnimation->spriteAnimation.loop);
 }
 
 void wren_SpriteAnimationSetLoop(WrenVM* vm)
 {
-	WrenSpriteAnimationDefinition* spriteAnimation = (WrenSpriteAnimationDefinition*)wrenGetSlotForeign(vm, 0);
+	WrenSpriteAnimationDefinition* spriteAnimation = static_cast<WrenSpriteAnimationDefinition*>(wrenGetSlotForeign(vm, 0));
 	spriteAnimation->spriteAnimation.loop = wrenGetSlotBool(vm, 1);
 }
 
-// Register Quat foreign class
+// Register SpriteAnimationDefinition foreign class
 WREN_FOREIGN_CLASS("animation", "SpriteAnimationDefinition", wren_SpriteAnimationDefinitionAllocate, wren_SpriteAnimationDefinitionFinalize, "SpriteAnimationDefinition class for defining the frames of a sprite sheet and speed of a sprite animation");
 
 // Register constructors
-WREN_CONSTRUCTOR_DOC("animation", "SpriteAnimationDefinition", wren_SpriteAnimationDefinitionAllocate, "Create empty SpriteAnimationDefinition", );
-WREN_CONSTRUCTOR_DOC("animation", "SpriteAnimationDefinition", wren_SpriteAnimationDefinitionAllocate, "Create SpriteAnimationDefinition with startFrame, endFrame, animationTime, loop components", startFrame, endFrame, animationTime, loop);
+WREN_CONSTRUCTOR("animation", "SpriteAnimationDefinition", "new()", wren_SpriteAnimationDefinitionNew, "Create empty SpriteAnimationDefinition");
+WREN_CONSTRUCTOR("animation", "SpriteAnimationDefinition", "new(_,_,_,_)", wren_SpriteAnimationDefinitionNew, "Create SpriteAnimationDefinition with startFrame, endFrame, animationTime, loop components");
 
 // Register methods
 WREN_CLASS_METHOD("animation", "SpriteAnimationDefinition", "startFrame", wren_SpriteAnimationGetStartFrame, "Get startFrame");

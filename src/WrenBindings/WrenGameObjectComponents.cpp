@@ -25,12 +25,10 @@
 // COMPONENT ALLOCATOR BINDINGS
 // ============================================================================
 
-#define COMPONENT(component_name, component_name_string) 					                                                \
-    void wren_##component_name##Allocate(WrenVM* vm)                                                                        \
-    {                                                                                                                       \
-        wrenGetVariable(vm, "gameObjectComponents", component_name_string, 0);                                              \
-        Wren##component_name* value = (Wren##component_name*)wrenSetSlotNewForeign(vm, 0, 0, sizeof(Wren##component_name)); \
-        new (value) Wren##component_name();                                                                                 \
+#define COMPONENT(component_name, component_name_string) 			   \
+    void wren_##component_name##Allocate(WrenVM* vm)                   \
+    {                                                                  \
+        wrenSetSlotNewForeign(vm, 0, 0, sizeof(Wren##component_name)); \
     }
 COMPONENT_LIST
 #undef COMPONENT

@@ -4,6 +4,8 @@
 
 // Rect class wrapping raylib ::Rect
 foreign class Rect {
+    // Create Rect, with components x, y, width, and height
+    foreign construct new(arg0,arg1,arg2,arg3)
     // Create Rect
     foreign construct new()
     // Get X component
@@ -88,7 +90,7 @@ foreign class Vec2 {
     // Create zero vector
     foreign construct new()
     // Create vector with x, y components
-    foreign construct new(x, y)
+    foreign construct new(arg0,arg1)
     // Get X component
     foreign x
     // Get Y component
@@ -146,7 +148,7 @@ foreign class Vec3 {
     // Create zero vector
     foreign construct new()
     // Create vector with x, y, z components
-    foreign construct new(x, y, z)
+    foreign construct new(arg0,arg1,arg2)
     // Get X component
     foreign x
     // Get Y component
@@ -252,7 +254,7 @@ foreign class Vec4 {
     // Create zero vector
     foreign construct new()
     // Create vector with x, y, z, w components
-    foreign construct new(x, y, z, w)
+    foreign construct new(arg0,arg1,arg2,arg3)
     // Get X component
     foreign x
     // Get Y component
@@ -308,7 +310,7 @@ foreign class Quat {
     // Create identity quaternion
     foreign construct new()
     // Create quaternion with w, x, y, z components
-    foreign construct new(w, x, y, z)
+    foreign construct new(arg0,arg1,arg2,arg3)
     // Get W component
     foreign w
     // Get X component

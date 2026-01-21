@@ -3,7 +3,7 @@ import "gameObjectComponents" for WorldTransform, Script, Sprite, Camera, Physic
 import "math" for Vec2, Vec3, Vec4, Math
 import "resourceManager" for Texture
 import "animation" for SpriteAnimationDefinition
-import "physics" for BodyDefinition, PhysicsCircleShape
+import "physics" for BodyDefinition, PhysicsCircleShape, BodyType
 
 import "reflect" for Reflect
 
@@ -34,7 +34,7 @@ class Player {
         camera.zoom = 1.5
         camera.forcePosition = true
         camera.damping = Vec2.new(4, 4)
-        var bodyDef = BodyDefinition.createDynamicBody()
+        var bodyDef = BodyDefinition.new(BodyType.DYNAMIC_BODY)
         var playerShape = PhysicsCircleShape.new(0.25)
         var physicsBody = PhysicsBody.create(_entity, bodyDef, playerShape)
         physicsBody.fixedRotation = true

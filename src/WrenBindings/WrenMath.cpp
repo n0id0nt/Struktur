@@ -6,6 +6,7 @@
 #include <glm/gtc/type_ptr.hpp>
 #include <wren.hpp>
 #include <iomanip>
+#include <format>
 
 #include "Engine/Scripting/WrenBindingRegistry.h"
 #include "Debug/Assertions.h"
@@ -245,20 +246,7 @@ WREN_CLASS_STATIC("math", "Math", "degrees(_)", wren_MathDegrees, "Convert radia
 void wren_Vec2Allocate(WrenVM* vm)
 {
 	// Allocate foreign object
-	wrenGetVariable(vm, "math", "Vec2", 0);  // Get class into slot 1
-	WrenVec2* vec = (WrenVec2*)wrenSetSlotNewForeign(vm, 0, 0, sizeof(WrenVec2));
-
-	// Initialise with constructor parameters if provided
-	if (wrenGetSlotCount(vm) >= 3)
-	{
-		float x = (float)wrenGetSlotDouble(vm, 1);
-		float y = (float)wrenGetSlotDouble(vm, 2);
-		new (vec) WrenVec2(x, y);
-	}
-	else
-	{
-		new (vec) WrenVec2();
-	}
+	wrenSetSlotNewForeign(vm, 0, 0, sizeof(WrenVec2));
 }
 
 // Finalizer - called when garbage collected
@@ -268,48 +256,65 @@ void wren_Vec2Finalize(void* data)
 	vec->~WrenVec2();
 }
 
+// Vec2.new(_)
+void wren_Vec2New(WrenVM* vm)
+{
+	WrenVec2* vec = static_cast<WrenVec2*>(wrenGetSlotForeign(vm, 0));
+
+	// Initialise with constructor parameters if provided
+	if (wrenGetSlotCount(vm) >= 3)
+	{
+		float x = static_cast<float>(wrenGetSlotDouble(vm, 1));
+		float y = static_cast<float>(wrenGetSlotDouble(vm, 2));
+		new (vec) WrenVec2(x, y);
+	}
+	else
+	{
+		new (vec) WrenVec2();
+	}
+}
+
 // Getters
 void wren_Vec2GetX(WrenVM* vm)
 {
-	WrenVec2* vec = (WrenVec2*)wrenGetSlotForeign(vm, 0);
+	WrenVec2* vec = static_cast<WrenVec2*>(wrenGetSlotForeign(vm, 0));
 	wrenSetSlotDouble(vm, 0, vec->value.x);
 }
 
 void wren_Vec2GetY(WrenVM* vm)
 {
-	WrenVec2* vec = (WrenVec2*)wrenGetSlotForeign(vm, 0);
+	WrenVec2* vec = static_cast<WrenVec2*>(wrenGetSlotForeign(vm, 0));
 	wrenSetSlotDouble(vm, 0, vec->value.y);
 }
 
 // Setters
 void wren_Vec2SetX(WrenVM* vm)
 {
-	WrenVec2* vec = (WrenVec2*)wrenGetSlotForeign(vm, 0);
-	vec->value.x = (float)wrenGetSlotDouble(vm, 1);
+	WrenVec2* vec = static_cast<WrenVec2*>(wrenGetSlotForeign(vm, 0));
+	vec->value.x = static_cast<float>(wrenGetSlotDouble(vm, 1));
 }
 
 void wren_Vec2SetY(WrenVM* vm)
 {
-	WrenVec2* vec = (WrenVec2*)wrenGetSlotForeign(vm, 0);
-	vec->value.y = (float)wrenGetSlotDouble(vm, 1);
+	WrenVec2* vec = static_cast<WrenVec2*>(wrenGetSlotForeign(vm, 0));
+	vec->value.y = static_cast<float>(wrenGetSlotDouble(vm, 1));
 }
 
 // toString()
 void wren_Vec2ToString(WrenVM* vm)
 {
-	WrenVec2* vec = (WrenVec2*)wrenGetSlotForeign(vm, 0);
+	WrenVec2* vec = static_cast<WrenVec2*>(wrenGetSlotForeign(vm, 0));
 
-	char buffer[64];
-	snprintf(buffer, sizeof(buffer), "Vec2(%.2f, %.2f)", vec->value.x, vec->value.y);
+	std::string buffer = std::format("Vec2({:.2f}, {:.2f})", vec->value.x, vec->value.y);
 
-	wrenSetSlotString(vm, 0, buffer);
+	wrenSetSlotString(vm, 0, buffer.c_str());
 }
 
 // Math operations
 void wren_Vec2Add(WrenVM* vm)
 {
-	WrenVec2* a = (WrenVec2*)wrenGetSlotForeign(vm, 0);
-	WrenVec2* b = (WrenVec2*)wrenGetSlotForeign(vm, 1);
+	WrenVec2* a = static_cast<WrenVec2*>(wrenGetSlotForeign(vm, 0));
+	WrenVec2* b = static_cast<WrenVec2*>(wrenGetSlotForeign(vm, 1));
 
 	// Create new Vec2 with result
 	wrenGetVariable(vm, "math", "Vec2", 1);  // Get class into slot 1
@@ -319,8 +324,8 @@ void wren_Vec2Add(WrenVM* vm)
 
 void wren_Vec2Subtract(WrenVM* vm)
 {
-	WrenVec2* a = (WrenVec2*)wrenGetSlotForeign(vm, 0);
-	WrenVec2* b = (WrenVec2*)wrenGetSlotForeign(vm, 1);
+	WrenVec2* a = static_cast<WrenVec2*>(wrenGetSlotForeign(vm, 0));
+	WrenVec2* b = static_cast<WrenVec2*>(wrenGetSlotForeign(vm, 1));
 
 	wrenGetVariable(vm, "math", "Vec2", 1);  // Get class into slot 1
 	WrenVec2* result = (WrenVec2*)wrenSetSlotNewForeign(vm, 0, 1, sizeof(WrenVec2));
@@ -329,7 +334,7 @@ void wren_Vec2Subtract(WrenVM* vm)
 
 void wren_Vec2Multiply(WrenVM* vm)
 {
-	WrenVec2* vec = (WrenVec2*)wrenGetSlotForeign(vm, 0);
+	WrenVec2* vec = static_cast<WrenVec2*>(wrenGetSlotForeign(vm, 0));
 	float scalar = (float)wrenGetSlotDouble(vm, 1);
 
 	wrenGetVariable(vm, "math", "Vec2", 1);  // Get class into slot 1
@@ -339,18 +344,18 @@ void wren_Vec2Multiply(WrenVM* vm)
 
 void wren_Vec2Length(WrenVM* vm)
 {
-	WrenVec2* vec = (WrenVec2*)wrenGetSlotForeign(vm, 0);
+	WrenVec2* vec = static_cast<WrenVec2*>(wrenGetSlotForeign(vm, 0));
 	wrenSetSlotDouble(vm, 0, glm::length(vec->value));
 }
 
 void wren_Vec2LengthSquared(WrenVM* vm) {
-	WrenVec2* vec = (WrenVec2*)wrenGetSlotForeign(vm, 0);
+	WrenVec2* vec = static_cast<WrenVec2*>(wrenGetSlotForeign(vm, 0));
 	wrenSetSlotDouble(vm, 0, glm::length2(vec->value));
 }
 
 void wren_Vec2Normalize(WrenVM* vm)
 {
-	WrenVec2* vec = (WrenVec2*)wrenGetSlotForeign(vm, 0);
+	WrenVec2* vec = static_cast<WrenVec2*>(wrenGetSlotForeign(vm, 0));
 
 	wrenEnsureSlots(vm, 2);
 	wrenGetVariable(vm, "math", "Vec2", 1);  // Get class into slot 1
@@ -361,8 +366,8 @@ void wren_Vec2Normalize(WrenVM* vm)
 // Vec2.distance(a, b) -> Num
 void wren_Vec2Distance(WrenVM* vm)
 {
-	WrenVec2* a = (WrenVec2*)wrenGetSlotForeign(vm, 1);
-	WrenVec2* b = (WrenVec2*)wrenGetSlotForeign(vm, 2);
+	WrenVec2* a = static_cast<WrenVec2*>(wrenGetSlotForeign(vm, 1));
+	WrenVec2* b = static_cast<WrenVec2*>(wrenGetSlotForeign(vm, 2));
 
 	wrenSetSlotDouble(vm, 0, glm::distance(a->value, b->value));
 }
@@ -370,8 +375,8 @@ void wren_Vec2Distance(WrenVM* vm)
 // Vec2.distanceSquared(a, b) -> Num
 void wren_Vec2DistanceSquared(WrenVM* vm)
 {
-	WrenVec2* a = (WrenVec2*)wrenGetSlotForeign(vm, 1);
-	WrenVec2* b = (WrenVec2*)wrenGetSlotForeign(vm, 2);
+	WrenVec2* a = static_cast<WrenVec2*>(wrenGetSlotForeign(vm, 1));
+	WrenVec2* b = static_cast<WrenVec2*>(wrenGetSlotForeign(vm, 2));
 
 	wrenSetSlotDouble(vm, 0, glm::distance2(a->value, b->value));
 }
@@ -379,8 +384,8 @@ void wren_Vec2DistanceSquared(WrenVM* vm)
 // Vec2.lerp(a, b, t) -> Vec2
 void wren_Vec2Lerp(WrenVM* vm)
 {
-	WrenVec2* a = (WrenVec2*)wrenGetSlotForeign(vm, 1);
-	WrenVec2* b = (WrenVec2*)wrenGetSlotForeign(vm, 2);
+	WrenVec2* a = static_cast<WrenVec2*>(wrenGetSlotForeign(vm, 1));
+	WrenVec2* b = static_cast<WrenVec2*>(wrenGetSlotForeign(vm, 2));
 	float t = (float)wrenGetSlotDouble(vm, 3);
 
 	wrenGetVariable(vm, "math", "Vec2", 1);  // Get class into slot 1
@@ -391,8 +396,8 @@ void wren_Vec2Lerp(WrenVM* vm)
 // Vec2.dot(a, b) -> Num
 void wren_Vec2DotStatic(WrenVM* vm)
 {
-	WrenVec2* a = (WrenVec2*)wrenGetSlotForeign(vm, 1);
-	WrenVec2* b = (WrenVec2*)wrenGetSlotForeign(vm, 2);
+	WrenVec2* a = static_cast<WrenVec2*>(wrenGetSlotForeign(vm, 1));
+	WrenVec2* b = static_cast<WrenVec2*>(wrenGetSlotForeign(vm, 2));
 
 	wrenSetSlotDouble(vm, 0, glm::dot(a->value, b->value));
 }
@@ -494,8 +499,8 @@ void wren_Vec2Down(WrenVM* vm)
 WREN_FOREIGN_CLASS("math", "Vec2", wren_Vec2Allocate, wren_Vec2Finalize, "2D vector class wrapping glm::vec2");
 
 // Register constructors
-WREN_CONSTRUCTOR_DOC("math", "Vec2", wren_Vec2Allocate, "Create zero vector", );
-WREN_CONSTRUCTOR_DOC("math", "Vec2", wren_Vec2Allocate, "Create vector with x, y components", x, y);
+WREN_CONSTRUCTOR("math", "Vec2", "new()", wren_Vec2New, "Create zero vector");
+WREN_CONSTRUCTOR("math", "Vec2", "new(_,_)", wren_Vec2New, "Create vector with x, y components");
 
 // Register methods
 WREN_CLASS_METHOD("math", "Vec2", "x", wren_Vec2GetX, "Get X component");
@@ -533,10 +538,22 @@ WREN_CLASS_STATIC("math", "Vec2", "down()", wren_Vec2Down, "Down vector (0, -1)"
 
 void wren_Vec3Allocate(WrenVM* vm)
 {
-	wrenGetVariable(vm, "math", "Vec3", 0);  // Get class into slot 4
-	WrenVec3* vec = (WrenVec3*)wrenSetSlotNewForeign(vm, 0, 0, sizeof(WrenVec3));
+	wrenSetSlotNewForeign(vm, 0, 0, sizeof(WrenVec3));
+}
 
-	if (wrenGetSlotCount(vm) >= 4)
+void wren_Vec3Finalize(void* data)
+{
+	WrenVec3* vec = (WrenVec3*)data;
+	vec->~WrenVec3();
+}
+
+// Vec3.new(_)
+void wren_Vec3New(WrenVM* vm)
+{
+	WrenVec3* vec = static_cast<WrenVec3*>(wrenGetSlotForeign(vm, 0));
+
+	// Initialise with constructor parameters if provided
+	if (wrenGetSlotCount(vm) >= 3)
 	{
 		float x = (float)wrenGetSlotDouble(vm, 1);
 		float y = (float)wrenGetSlotDouble(vm, 2);
@@ -547,12 +564,6 @@ void wren_Vec3Allocate(WrenVM* vm)
 	{
 		new (vec) WrenVec3();
 	}
-}
-
-void wren_Vec3Finalize(void* data)
-{
-	WrenVec3* vec = (WrenVec3*)data;
-	vec->~WrenVec3();
 }
 
 void wren_Vec3GetX(WrenVM* vm)
@@ -595,11 +606,9 @@ void wren_Vec3ToString(WrenVM* vm)
 {
 	WrenVec3* vec = (WrenVec3*)wrenGetSlotForeign(vm, 0);
 
-	char buffer[80];
-	snprintf(buffer, sizeof(buffer), "Vec3(%.2f, %.2f, %.2f)",
-		vec->value.x, vec->value.y, vec->value.z);
+	std::string buffer = std::format("Vec3({:.2f}, {:.2f}, {:.2f})", vec->value.x, vec->value.y, vec->value.z);
 
-	wrenSetSlotString(vm, 0, buffer);
+	wrenSetSlotString(vm, 0, buffer.c_str());
 }
 
 void wren_Vec3Add(WrenVM* vm)
@@ -829,8 +838,8 @@ void wren_Vec3Back(WrenVM* vm)
 WREN_FOREIGN_CLASS("math", "Vec3", wren_Vec3Allocate, wren_Vec3Finalize, "3D vector class wrapping glm::vec3");
 
 // Register constructors
-WREN_CONSTRUCTOR_DOC("math", "Vec3", wren_Vec3Allocate, "Create zero vector", );
-WREN_CONSTRUCTOR_DOC("math", "Vec3", wren_Vec3Allocate, "Create vector with x, y, z components", x, y, z);
+WREN_CONSTRUCTOR("math", "Vec3", "new()", wren_Vec3New, "Create zero vector");
+WREN_CONSTRUCTOR("math", "Vec3", "new(_,_,_)", wren_Vec3New, "Create vector with x, y, z components");
 
 // Register methods
 WREN_CLASS_METHOD("math", "Vec3", "x", wren_Vec3GetX, "Get X component");
@@ -873,9 +882,21 @@ WREN_CLASS_STATIC("math", "Vec3", "back()", wren_Vec3Back, "Back vector (0, 0, 1
 
 void wren_Vec4Allocate(WrenVM* vm)
 {
-	wrenGetVariable(vm, "math", "Vec4", 0);  // Get class into slot 1
-	WrenVec4* vec = static_cast<WrenVec4*>(wrenSetSlotNewForeign(vm, 0, 0, sizeof(WrenVec4)));
+	wrenSetSlotNewForeign(vm, 0, 0, sizeof(WrenVec4));
+}
 
+void wren_Vec4Finalize(void* data)
+{
+	WrenVec4* vec = (WrenVec4*)data;
+	vec->~WrenVec4();
+}
+
+// Vec4.new(_)
+void wren_Vec4New(WrenVM* vm)
+{
+	WrenVec4* vec = static_cast<WrenVec4*>(wrenGetSlotForeign(vm, 0));
+
+	// Initialise with constructor parameters if provided
 	if (wrenGetSlotCount(vm) >= 5)
 	{
 		float x = static_cast<int>(wrenGetSlotDouble(vm, 1));
@@ -888,12 +909,6 @@ void wren_Vec4Allocate(WrenVM* vm)
 	{
 		new (vec) WrenVec4();
 	}
-}
-
-void wren_Vec4Finalize(void* data)
-{
-	WrenVec4* vec = (WrenVec4*)data;
-	vec->~WrenVec4();
 }
 
 void wren_Vec4GetX(WrenVM* vm)
@@ -948,11 +963,9 @@ void wren_Vec4ToString(WrenVM* vm)
 {
 	WrenVec4* vec = (WrenVec4*)wrenGetSlotForeign(vm, 0);
 
-	char buffer[80];
-	snprintf(buffer, sizeof(buffer), "Vec4(%.2f, %.2f, %.2f)",
-		vec->value.x, vec->value.y, vec->value.z);
+	std::string buffer = std::format("Vec4({:.2f}, {:.2f}, {:.2f}, {:.2f})", vec->value.x, vec->value.y, vec->value.z, vec->value.w);
 
-	wrenSetSlotString(vm, 0, buffer);
+	wrenSetSlotString(vm, 0, buffer.c_str());
 }
 
 void wren_Vec4Add(WrenVM* vm)
@@ -1100,8 +1113,8 @@ void wren_Vec4One(WrenVM* vm)
 WREN_FOREIGN_CLASS("math", "Vec4", wren_Vec4Allocate, wren_Vec4Finalize, "4D vector class wrapping glm::vec4");
 
 // Register constructors
-WREN_CONSTRUCTOR_DOC("math", "Vec4", wren_Vec4Allocate, "Create zero vector", );
-WREN_CONSTRUCTOR_DOC("math", "Vec4", wren_Vec4Allocate, "Create vector with x, y, z, w components", x, y, z, w);
+WREN_CONSTRUCTOR("math", "Vec4", "new()", wren_Vec4New, "Create zero vector");
+WREN_CONSTRUCTOR("math", "Vec4", "new(_,_,_,_)", wren_Vec4New, "Create vector with x, y, z, w components");
 
 // Register methods
 WREN_CLASS_METHOD("math", "Vec4", "x", wren_Vec4GetX, "Get X component");
@@ -1138,9 +1151,22 @@ WREN_CLASS_STATIC("math", "Vec4", "one()", wren_Vec4One, "One vector (1, 1, 1, 1
 // Allocator
 void wren_QuatAllocate(WrenVM* vm)
 {
-	wrenGetVariable(vm, "math", "Quat", 0);  // Get class into slot 1
-	WrenQuat* quat = (WrenQuat*)wrenSetSlotNewForeign(vm, 0, 0, sizeof(WrenQuat));
+	wrenSetSlotNewForeign(vm, 0, 0, sizeof(WrenQuat));
+}
 
+// Finalizer
+void wren_QuatFinalize(void* data)
+{
+	WrenQuat* quat = (WrenQuat*)data;
+	quat->~WrenQuat();
+}
+
+// Quat.new(_)
+void wren_QuatNew(WrenVM* vm)
+{
+	WrenQuat* quat = static_cast<WrenQuat*>(wrenGetSlotForeign(vm, 0));
+
+	// Initialise with constructor parameters if provided
 	if (wrenGetSlotCount(vm) >= 5)
 	{
 		// Quat.new(w, x, y, z)
@@ -1154,13 +1180,6 @@ void wren_QuatAllocate(WrenVM* vm)
 		// Quat.new() - identity
 		new (quat) WrenQuat();
 	}
-}
-
-// Finalizer
-void wren_QuatFinalize(void* data)
-{
-	WrenQuat* quat = (WrenQuat*)data;
-	quat->~WrenQuat();
 }
 
 // Component getters
@@ -1218,11 +1237,9 @@ void wren_QuatToString(WrenVM* vm)
 {
 	WrenQuat* quat = (WrenQuat*)wrenGetSlotForeign(vm, 0);
 
-	char buffer[96];
-	snprintf(buffer, sizeof(buffer), "Quat(%.2f, %.2f, %.2f, %.2f)",
-		quat->value.w, quat->value.x, quat->value.y, quat->value.z);
+	std::string buffer = std::format("Quat({:.2f}, {:.2f}, {:.2f}, {:.2f})", quat->value.w, quat->value.x, quat->value.y, quat->value.z);
 
-	wrenSetSlotString(vm, 0, buffer);
+	wrenSetSlotString(vm, 0, buffer.c_str());
 }
 
 // Static constructors for common rotations
@@ -1519,8 +1536,8 @@ void wren_QuatRight(WrenVM* vm)
 WREN_FOREIGN_CLASS("math", "Quat", wren_QuatAllocate, wren_QuatFinalize, "Quaternion class for 3D rotations wrapping glm::quat");
 
 // Register constructors
-WREN_CONSTRUCTOR_DOC("math", "Quat", wren_QuatAllocate, "Create identity quaternion", );
-WREN_CONSTRUCTOR_DOC("math", "Quat", wren_QuatAllocate, "Create quaternion with w, x, y, z components", w, x, y, z);
+WREN_CONSTRUCTOR("math", "Quat", "new()", wren_QuatNew, "Create identity quaternion");
+WREN_CONSTRUCTOR("math", "Quat", "new(_,_,_,_)", wren_QuatNew, "Create quaternion with w, x, y, z components");
 
 // Register instance methods
 WREN_CLASS_METHOD("math", "Quat", "w", wren_QuatGetW, "Get W component");
@@ -1562,70 +1579,75 @@ WREN_CLASS_STATIC("math", "Quat", "lerp(_,_,_)", wren_QuatLerp, "Linear interpol
 
 void wren_Mat4Allocate(WrenVM* vm)
 {
-	wrenGetVariable(vm, "math", "Mat4", 0);  // Get class into slot 1
-    WrenMat4* mat = static_cast<WrenMat4*>(wrenSetSlotNewForeign(vm, 0, 0, sizeof(WrenMat4)));
-    new (mat) WrenMat4();
+	wrenSetSlotNewForeign(vm, 0, 0, sizeof(WrenMat4));
 }
 
 // Finalize
 void wren_Mat4Finalize(void* data)
 {
-    WrenMat4* mat = static_cast<WrenMat4*>(data);
-    mat->~WrenMat4();
+	WrenMat4* mat = static_cast<WrenMat4*>(data);
+	mat->~WrenMat4();
+}
+
+// Mat4.new(_)
+void wren_Mat4New(WrenVM* vm)
+{
+	WrenMat4* mat = static_cast<WrenMat4*>(wrenGetSlotForeign(vm, 0));
+	new (mat) WrenMat4();
 }
 
 void wren_Mat4Identity(WrenVM* vm)
 {
-    wrenGetVariable(vm, "math", "Mat4", 0);  // Get class into slot 1
-    WrenMat4* mat = static_cast<WrenMat4*>(wrenSetSlotNewForeign(vm, 0, 0, sizeof(WrenMat4)));
-    new (mat) WrenMat4(glm::mat4(1.0f));
+	wrenGetVariable(vm, "math", "Mat4", 0);  // Get class into slot 1
+	WrenMat4* mat = static_cast<WrenMat4*>(wrenSetSlotNewForeign(vm, 0, 0, sizeof(WrenMat4)));
+	new (mat) WrenMat4(glm::mat4(1.0f));
 }
 
 void wren_Mat4Perspective(WrenVM* vm)
 {
-    wrenGetVariable(vm, "math", "Mat4", 0);  // Get class into slot 1
-    WrenMat4* mat = static_cast<WrenMat4*>(wrenSetSlotNewForeign(vm, 0, 0, sizeof(WrenMat4)));
-    new (mat) WrenMat4(glm::mat4(1.0f));
+	wrenGetVariable(vm, "math", "Mat4", 0);  // Get class into slot 1
+	WrenMat4* mat = static_cast<WrenMat4*>(wrenSetSlotNewForeign(vm, 0, 0, sizeof(WrenMat4)));
+	new (mat) WrenMat4(glm::mat4(1.0f));
 
-    float fov = static_cast<float>(wrenGetSlotDouble(vm, 1));
-    float aspect = static_cast<float>(wrenGetSlotDouble(vm, 2));
-    float near = static_cast<float>(wrenGetSlotDouble(vm, 3));
-    float far = static_cast<float>(wrenGetSlotDouble(vm, 4));
-    mat->value = glm::perspective(fov, aspect, near, far);
+	float fov = static_cast<float>(wrenGetSlotDouble(vm, 1));
+	float aspect = static_cast<float>(wrenGetSlotDouble(vm, 2));
+	float near = static_cast<float>(wrenGetSlotDouble(vm, 3));
+	float far = static_cast<float>(wrenGetSlotDouble(vm, 4));
+	mat->value = glm::perspective(fov, aspect, near, far);
 }
 
 void wren_Mat4Ortho(WrenVM* vm)
 {
-    wrenGetVariable(vm, "math", "Mat4", 0);  // Get class into slot 1
-    WrenMat4* mat = static_cast<WrenMat4*>(wrenSetSlotNewForeign(vm, 0, 0, sizeof(WrenMat4)));
-    new (mat) WrenMat4(glm::mat4(1.0f));
+	wrenGetVariable(vm, "math", "Mat4", 0);  // Get class into slot 1
+	WrenMat4* mat = static_cast<WrenMat4*>(wrenSetSlotNewForeign(vm, 0, 0, sizeof(WrenMat4)));
+	new (mat) WrenMat4(glm::mat4(1.0f));
 
-    float left = static_cast<float>(wrenGetSlotDouble(vm, 1));
-    float right = static_cast<float>(wrenGetSlotDouble(vm, 2));
-    float bottom = static_cast<float>(wrenGetSlotDouble(vm, 3));
-    float top = static_cast<float>(wrenGetSlotDouble(vm, 4));
-    float near = static_cast<float>(wrenGetSlotDouble(vm, 5));
-    float far = static_cast<float>(wrenGetSlotDouble(vm, 6));
-    mat->value = glm::ortho(left, right, bottom, top, near, far);
+	float left = static_cast<float>(wrenGetSlotDouble(vm, 1));
+	float right = static_cast<float>(wrenGetSlotDouble(vm, 2));
+	float bottom = static_cast<float>(wrenGetSlotDouble(vm, 3));
+	float top = static_cast<float>(wrenGetSlotDouble(vm, 4));
+	float near = static_cast<float>(wrenGetSlotDouble(vm, 5));
+	float far = static_cast<float>(wrenGetSlotDouble(vm, 6));
+	mat->value = glm::ortho(left, right, bottom, top, near, far);
 }
 
 void wren_Mat4LookAt(WrenVM* vm)
 {
-    wrenGetVariable(vm, "math", "Mat4", 0);  // Get class into slot 1
-    WrenMat4* mat = static_cast<WrenMat4*>(wrenSetSlotNewForeign(vm, 0, 0, sizeof(WrenMat4)));
-    new (mat) WrenMat4(glm::mat4(1.0f));
+	wrenGetVariable(vm, "math", "Mat4", 0);  // Get class into slot 1
+	WrenMat4* mat = static_cast<WrenMat4*>(wrenSetSlotNewForeign(vm, 0, 0, sizeof(WrenMat4)));
+	new (mat) WrenMat4(glm::mat4(1.0f));
 
 	WrenVec3* eye = static_cast<WrenVec3*>(wrenGetSlotForeign(vm, 1));
 	WrenVec3* center = static_cast<WrenVec3*>(wrenGetSlotForeign(vm, 1));
 	WrenVec3* up = static_cast<WrenVec3*>(wrenGetSlotForeign(vm, 1));
-    mat->value = glm::lookAt(eye->value, center->value, up->value);
+	mat->value = glm::lookAt(eye->value, center->value, up->value);
 }
 
 // Operations
 void wren_Mat4Multiply(WrenVM* vm)
 {
-    WrenMat4* a = static_cast<WrenMat4*>(wrenGetSlotForeign(vm, 0));
-    WrenMat4* b = static_cast<WrenMat4*>(wrenGetSlotForeign(vm, 1));
+	WrenMat4* a = static_cast<WrenMat4*>(wrenGetSlotForeign(vm, 0));
+	WrenMat4* b = static_cast<WrenMat4*>(wrenGetSlotForeign(vm, 1));
 
 	wrenGetVariable(vm, "math", "Mat4", 1);  // Get class into slot 1
 	WrenMat4* result = static_cast<WrenMat4*>(wrenSetSlotNewForeign(vm, 0, 1, sizeof(WrenMat4)));
@@ -1635,115 +1657,115 @@ void wren_Mat4Multiply(WrenVM* vm)
 // Transformations (modify in place)
 void wren_Mat4Translate(WrenVM* vm)
 {
-    WrenMat4* mat = static_cast<WrenMat4*>(wrenGetSlotForeign(vm, 0));
-    WrenVec3* vec3 = static_cast<WrenVec3*>(wrenGetSlotForeign(vm, 1));
-    mat->value = glm::translate(mat->value, vec3->value);
+	WrenMat4* mat = static_cast<WrenMat4*>(wrenGetSlotForeign(vm, 0));
+	WrenVec3* vec3 = static_cast<WrenVec3*>(wrenGetSlotForeign(vm, 1));
+	mat->value = glm::translate(mat->value, vec3->value);
 }
 
 void wren_Mat4Rotate(WrenVM* vm)
 {
-    WrenMat4* mat = static_cast<WrenMat4*>(wrenGetSlotForeign(vm, 0));
-    float angle = static_cast<float>(wrenGetSlotDouble(vm, 1));
-    WrenVec3* vec3 = static_cast<WrenVec3*>(wrenGetSlotForeign(vm, 2));
-    mat->value = glm::rotate(mat->value, angle, vec3->value);
+	WrenMat4* mat = static_cast<WrenMat4*>(wrenGetSlotForeign(vm, 0));
+	float angle = static_cast<float>(wrenGetSlotDouble(vm, 1));
+	WrenVec3* vec3 = static_cast<WrenVec3*>(wrenGetSlotForeign(vm, 2));
+	mat->value = glm::rotate(mat->value, angle, vec3->value);
 }
 
 void wren_Mat4Scale(WrenVM* vm)
 {
-    WrenMat4* mat = static_cast<WrenMat4*>(wrenGetSlotForeign(vm, 0));
-    WrenVec3* vec3 = static_cast<WrenVec3*>(wrenGetSlotForeign(vm, 1));
-    mat->value = glm::scale(mat->value, vec3->value);
+	WrenMat4* mat = static_cast<WrenMat4*>(wrenGetSlotForeign(vm, 0));
+	WrenVec3* vec3 = static_cast<WrenVec3*>(wrenGetSlotForeign(vm, 1));
+	mat->value = glm::scale(mat->value, vec3->value);
 }
 
 // Access
 void wren_Mat4Get(WrenVM* vm)
 {
-    WrenMat4* mat = static_cast<WrenMat4*>(wrenGetSlotForeign(vm, 0));
-    int row = static_cast<int>(wrenGetSlotDouble(vm, 1));
-    int col = static_cast<int>(wrenGetSlotDouble(vm, 2));
-    
-    if (row < 0 || row >= 4 || col < 0 || col >= 4) {
-        wrenSetSlotString(vm, 0, "Index out of bounds");
-        wrenAbortFiber(vm, 0);
-        return;
-    }
-    
-    wrenSetSlotDouble(vm, 0, mat->value[col][row]);
+	WrenMat4* mat = static_cast<WrenMat4*>(wrenGetSlotForeign(vm, 0));
+	int row = static_cast<int>(wrenGetSlotDouble(vm, 1));
+	int col = static_cast<int>(wrenGetSlotDouble(vm, 2));
+
+	if (row < 0 || row >= 4 || col < 0 || col >= 4) {
+		wrenSetSlotString(vm, 0, "Index out of bounds");
+		wrenAbortFiber(vm, 0);
+		return;
+	}
+
+	wrenSetSlotDouble(vm, 0, mat->value[col][row]);
 }
 
 void wren_Mat4Set(WrenVM* vm)
 {
-    WrenMat4* mat = static_cast<WrenMat4*>(wrenGetSlotForeign(vm, 0));
-    int row = static_cast<int>(wrenGetSlotDouble(vm, 1));
-    int col = static_cast<int>(wrenGetSlotDouble(vm, 2));
-    float value = static_cast<float>(wrenGetSlotDouble(vm, 3));
-    
-    if (row < 0 || row >= 4 || col < 0 || col >= 4) {
-        wrenSetSlotString(vm, 0, "Index out of bounds");
-        wrenAbortFiber(vm, 0);
-        return;
-    }
-    
-    mat->value[col][row] = value;
+	WrenMat4* mat = static_cast<WrenMat4*>(wrenGetSlotForeign(vm, 0));
+	int row = static_cast<int>(wrenGetSlotDouble(vm, 1));
+	int col = static_cast<int>(wrenGetSlotDouble(vm, 2));
+	float value = static_cast<float>(wrenGetSlotDouble(vm, 3));
+
+	if (row < 0 || row >= 4 || col < 0 || col >= 4) {
+		wrenSetSlotString(vm, 0, "Index out of bounds");
+		wrenAbortFiber(vm, 0);
+		return;
+	}
+
+	mat->value[col][row] = value;
 }
 
 // Properties
 void wren_Mat4Determinant(WrenVM* vm)
 {
-    WrenMat4* mat = static_cast<WrenMat4*>(wrenGetSlotForeign(vm, 0));
-    wrenSetSlotDouble(vm, 0, glm::determinant(mat->value));
+	WrenMat4* mat = static_cast<WrenMat4*>(wrenGetSlotForeign(vm, 0));
+	wrenSetSlotDouble(vm, 0, glm::determinant(mat->value));
 }
 
 void wren_Mat4Inverse(WrenVM* vm)
 {
-    WrenMat4* mat = static_cast<WrenMat4*>(wrenGetSlotForeign(vm, 0));
-    mat->value = glm::inverse(mat->value);
+	WrenMat4* mat = static_cast<WrenMat4*>(wrenGetSlotForeign(vm, 0));
+	mat->value = glm::inverse(mat->value);
 }
 
 void wren_Mat4Transpose(WrenVM* vm)
 {
-    WrenMat4* mat = static_cast<WrenMat4*>(wrenGetSlotForeign(vm, 0));
-    mat->value = glm::transpose(mat->value);
+	WrenMat4* mat = static_cast<WrenMat4*>(wrenGetSlotForeign(vm, 0));
+	mat->value = glm::transpose(mat->value);
 }
 
 // Conversion
 void wren_Mat4ToList(WrenVM* vm)
 {
-    WrenMat4* mat = static_cast<WrenMat4*>(wrenGetSlotForeign(vm, 0));
-    const float* data = glm::value_ptr(mat->value);
-    
-    wrenSetSlotNewList(vm, 0);
-    for (int i = 0; i < 16; i++) {
-        wrenSetSlotDouble(vm, 1, data[i]);
-        wrenInsertInList(vm, 0, -1, 1);
-    }
+	WrenMat4* mat = static_cast<WrenMat4*>(wrenGetSlotForeign(vm, 0));
+	const float* data = glm::value_ptr(mat->value);
+
+	wrenSetSlotNewList(vm, 0);
+	for (int i = 0; i < 16; i++) {
+		wrenSetSlotDouble(vm, 1, data[i]);
+		wrenInsertInList(vm, 0, -1, 1);
+	}
 }
 
 void wren_Mat4ToString(WrenVM* vm)
 {
-    WrenMat4* mat = static_cast<WrenMat4*>(wrenGetSlotForeign(vm, 0));
-    
-    std::ostringstream oss;
-    oss << std::fixed << std::setprecision(2);
-    oss << "Mat4[\n";
-    for (int row = 0; row < 4; row++) {
-        oss << "  [";
-        for (int col = 0; col < 4; col++) {
-            oss << std::setw(8) << mat->value[col][row];
-            if (col < 3) oss << ", ";
-        }
-        oss << "]\n";
-    }
-    oss << "]";
-    
-    wrenSetSlotString(vm, 0, oss.str().c_str());
+	WrenMat4* mat = static_cast<WrenMat4*>(wrenGetSlotForeign(vm, 0));
+
+	std::ostringstream oss;
+	oss << std::fixed << std::setprecision(2);
+	oss << "Mat4[\n";
+	for (int row = 0; row < 4; row++) {
+		oss << "  [";
+		for (int col = 0; col < 4; col++) {
+			oss << std::setw(8) << mat->value[col][row];
+			if (col < 3) oss << ", ";
+		}
+		oss << "]\n";
+	}
+	oss << "]";
+
+	wrenSetSlotString(vm, 0, oss.str().c_str());
 }
 
 // Register Mat4 foreign class
 WREN_FOREIGN_CLASS("math", "Mat4", wren_Mat4Allocate, wren_Mat4Finalize, "Matix 4 class wrapping glm::mat4");
 
 // Register constructors
-WREN_CONSTRUCTOR_DOC("math", "Mat4", wren_Mat4Allocate, "Create identity Matix 4", );
+WREN_CONSTRUCTOR("math", "Mat4", "new()", wren_Mat4New, "Create identity Matix 4");
 
 // Register instance methods
 WREN_CLASS_METHOD("math", "Mat4", "*(_)", wren_Mat4Multiply, "Multiply matix's");
@@ -1771,15 +1793,35 @@ WREN_CLASS_STATIC("math", "Mat4", "lookAt(_,_,_)", wren_Mat4LookAt, "Create quat
 void wren_RectAllocate(WrenVM* vm)
 {
 	wrenGetVariable(vm, "math", "Rect", 0);  // Get class into slot 1
-    WrenRect* rect = static_cast<WrenRect*>(wrenSetSlotNewForeign(vm, 0, 0, sizeof(WrenRect)));
-    new (rect) WrenRect({0.0f, 0.0f, 0.0f, 0.0f});
+	WrenRect* rect = static_cast<WrenRect*>(wrenSetSlotNewForeign(vm, 0, 0, sizeof(WrenRect)));
+	new (rect) WrenRect({ 0.0f, 0.0f, 0.0f, 0.0f });
 }
 
 // Finalize
 void wren_RectFinalize(void* data)
 {
-    WrenRect* rect = static_cast<WrenRect*>(data);
-    rect->~WrenRect();
+	WrenRect* rect = static_cast<WrenRect*>(data);
+	rect->~WrenRect();
+}
+
+// Rect.new(_)
+void wren_RectNew(WrenVM* vm)
+{
+	WrenRect* rect = static_cast<WrenRect*>(wrenGetSlotForeign(vm, 0));
+
+	// Initialise with constructor parameters if provided
+	if (wrenGetSlotCount(vm) >= 5)
+	{
+		// Quat.new(w, x, y, z)
+		float x = (float)wrenGetSlotDouble(vm, 1);
+		float y = (float)wrenGetSlotDouble(vm, 2);
+		float width = (float)wrenGetSlotDouble(vm, 3);
+		float height = (float)wrenGetSlotDouble(vm, 4);
+		new (rect) WrenRect({ x, y, width, height });
+	}
+	else {
+		new(rect) WrenRect({ 0.0f, 0.0f, 0.0f, 0.0f });
+	}
 }
 
 // Component getters
@@ -1836,7 +1878,8 @@ void wren_RectSetHeight(WrenVM* vm)
 WREN_FOREIGN_CLASS("math", "Rect", wren_RectAllocate, wren_RectFinalize, "Rect class wrapping raylib ::Rect");
 
 // Register constructors
-WREN_CONSTRUCTOR_DOC("math", "Rect", wren_RectAllocate, "Create Rect", );
+WREN_CONSTRUCTOR("math", "Rect", "new(_,_,_,_)", wren_RectNew, "Create Rect, with components x, y, width, and height", x, y, width, height);
+WREN_CONSTRUCTOR("math", "Rect", "new()", wren_RectNew, "Create Rect");
 
 // Register instance methods
 WREN_CLASS_METHOD("math", "Rect", "x", wren_RectGetX, "Get X component");

@@ -1,7 +1,7 @@
 import "gameObjectComponents" for Sprite, PhysicsBody, Shader as ShaderComponent, WorldTransform
 import "math" for Vec2, Vec3, Vec4
 import "resourceManager" for Texture, Shader as ShaderResource
-import "physics" for BodyDefinition, PhysicsCircleShape
+import "physics" for BodyDefinition, PhysicsCircleShape, BodyType
 
 var WHITE = Vec4.new(255, 255, 255, 255)
 
@@ -48,7 +48,7 @@ class NPC {
         var texture = Texture.load("assets/Tiles/NPCs.png")
         Sprite.create(_entity, texture, WHITE, npcData.getOffset(), 9, 1, false, npcData.getSpriteIndex(), WorldTransform.getPosition(_entity).y)
         texture.unload()
-        var bodyDef = BodyDefinition.createStaticBody()
+        var bodyDef = BodyDefinition.new(BodyType.STATIC_BODY)
         var playerShape = PhysicsCircleShape.new(0.25)
         var physicsBody = PhysicsBody.create(_entity, bodyDef, playerShape)
         physicsBody.syncFromPhysics = true

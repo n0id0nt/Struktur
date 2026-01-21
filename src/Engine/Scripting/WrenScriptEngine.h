@@ -7,7 +7,6 @@
 
 #include "WrenBindingRegistry.h"
 #include "Debug/Assertions.h"
-#include <wren_reflect.h>
 
 namespace Struktur
 {

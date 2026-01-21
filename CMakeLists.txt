@@ -201,7 +201,8 @@ if (NOT raylib_FOUND)
         file(GLOB WREN_SOURCES 
             ${wren_SOURCE_DIR}/src/vm/*.c
             ${wren_SOURCE_DIR}/src/optional/*.c
-            ${CMAKE_CURRENT_SOURCE_DIR}/WrenExtensions/Modules/*.c
+            ${CMAKE_CURRENT_SOURCE_DIR}/WrenExtensions/Modules/Reflect/*.c
+            ${CMAKE_CURRENT_SOURCE_DIR}/WrenExtensions/Modules/Trace/*.c
         )
         
         add_library(wren STATIC ${WREN_SOURCES})

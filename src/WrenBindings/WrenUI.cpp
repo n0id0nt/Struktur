@@ -16,7 +16,7 @@ WREN_ENUM("ui", NavigationDirection, "Enum to set the navigation direction for U
 	WREN_ENUM_PAIR("DOWN", Struktur::UI::NavigationDirection::DOWN),
 	WREN_ENUM_PAIR("LEFT", Struktur::UI::NavigationDirection::LEFT),
 	WREN_ENUM_PAIR("RIGHT", Struktur::UI::NavigationDirection::RIGHT),
-);
+	);
 
 // ============================================================================
 // TEXT ALIGNMENT BINDINGS
@@ -27,7 +27,7 @@ WREN_ENUM("ui", TextAlignment, "Enum to set the text alignment for UI Labels",
 	WREN_ENUM_PAIR("CENTER", Struktur::UI::TextAlignment::CENTER),
 	WREN_ENUM_PAIR("RIGHT", Struktur::UI::TextAlignment::RIGHT),
 	WREN_ENUM_PAIR("JUSTIFY", Struktur::UI::TextAlignment::JUSTIFY),
-);
+	);
 
 // ============================================================================
 // WORD WRAPPING BINDINGS
@@ -37,7 +37,7 @@ WREN_ENUM("ui", TextWrapping, "Enum to set the text wrapping for UI Labels",
 	WREN_ENUM_PAIR("NONE", Struktur::UI::TextWrapping::NONE),
 	WREN_ENUM_PAIR("WORD_WRAP", Struktur::UI::TextWrapping::WORD_WRAP),
 	WREN_ENUM_PAIR("CHARACTER_WRAP", Struktur::UI::TextWrapping::CHARACTER_WRAP),
-);
+	);
 
 // ============================================================================
 // UI MANAGER BINDINGS
@@ -50,7 +50,7 @@ void wren_UIManagerAddUIElement(WrenVM* vm)
 	Struktur::UI::UIManager& uiManager = context->GetUIManager();
 
 	WrenUIElement* uiElement = static_cast<WrenUIElement*>(wrenGetSlotForeign(vm, 1));
-	
+
 	uiManager.AddElement(std::unique_ptr<Struktur::UI::UIElement>(uiElement->element));
 	uiElement->ownedByWren = false;
 }
@@ -60,12 +60,12 @@ void wren_UIManagerRemoveUIElement(WrenVM* vm)
 {
 	Struktur::GameContext* context = static_cast<Struktur::GameContext*>(wrenGetUserData(vm));
 	Struktur::UI::UIManager& uiManager = context->GetUIManager();
-	
+
 	WrenUIElement* uiElement = static_cast<WrenUIElement*>(wrenGetSlotForeign(vm, 1));
-	
+
 	ASSERT_MSG(!uiElement->ownedByWren, "UIElement is registered with the UI Manager.");
 	uiManager.RemoveElement(uiElement->element);
-	
+
 	uiElement->element = nullptr;
 }
 
@@ -74,9 +74,9 @@ void wren_UIManagerSetFocus(WrenVM* vm)
 {
 	Struktur::GameContext* context = static_cast<Struktur::GameContext*>(wrenGetUserData(vm));
 	Struktur::UI::UIManager& uiManager = context->GetUIManager();
-	
+
 	WrenUIElement* uiElement = static_cast<WrenUIElement*>(wrenGetSlotForeign(vm, 1));
-	
+
 	if (!uiElement->element->IsFocusable())
 	{
 		BREAK_MSG("UIElement is not focusable can't be focused");
@@ -108,9 +108,7 @@ WREN_CLASS_STATIC("ui", "UIManager", "clearFocusElements()", wren_UIManagerClear
 void wren_UIElementAllocate(WrenVM* vm)
 {
 	// Allocate foreign object
-	wrenGetVariable(vm, "ui", "UIElement", 0); 
 	WrenUIElement* uiElement = (WrenUIElement*)wrenSetSlotNewForeign(vm, 0, 0, sizeof(WrenUIElement));
-	new (uiElement) WrenUIElement{ nullptr };
 }
 
 // Finalizer - called when garbage collected
@@ -224,8 +222,8 @@ void wren_UIElementGetPosition(WrenVM* vm)
 		return;
 	}
 	wrenGetVariable(vm, "math", "Vec2", 1);  // Get class into slot 1
-    WrenVec2* vec2 = (WrenVec2*)wrenSetSlotNewForeign(vm, 0, 1, sizeof(WrenVec2));
-    new (vec2) WrenVec2(uiElement->element->GetPosition());
+	WrenVec2* vec2 = (WrenVec2*)wrenSetSlotNewForeign(vm, 0, 1, sizeof(WrenVec2));
+	new (vec2) WrenVec2(uiElement->element->GetPosition());
 }
 
 // UIElement.setAnchorPoint(anchorPoint)
@@ -265,8 +263,8 @@ void wren_UIElementGetSize(WrenVM* vm)
 		return;
 	}
 	wrenGetVariable(vm, "math", "Vec2", 1);  // Get class into slot 1
-    WrenVec2* vec2 = (WrenVec2*)wrenSetSlotNewForeign(vm, 0, 1, sizeof(WrenVec2));
-    new (vec2) WrenVec2(uiElement->element->GetSize());
+	WrenVec2* vec2 = (WrenVec2*)wrenSetSlotNewForeign(vm, 0, 1, sizeof(WrenVec2));
+	new (vec2) WrenVec2(uiElement->element->GetSize());
 }
 
 // UIElement.getBounds()
@@ -279,8 +277,8 @@ void wren_UIElementGetBounds(WrenVM* vm)
 		return;
 	}
 	wrenGetVariable(vm, "math", "Vec2", 1);  // Get class into slot 1
-    WrenRect* rect = (WrenRect*)wrenSetSlotNewForeign(vm, 0, 1, sizeof(WrenRect));
-    new (rect) WrenRect(uiElement->element->GetBounds());
+	WrenRect* rect = (WrenRect*)wrenSetSlotNewForeign(vm, 0, 1, sizeof(WrenRect));
+	new (rect) WrenRect(uiElement->element->GetBounds());
 }
 
 // UIElement.setTabIndex(tabIndex)
@@ -333,8 +331,8 @@ void wren_UIElementGetNavigationNeighbor(WrenVM* vm)
 	}
 	Struktur::UI::NavigationDirection dir = static_cast<Struktur::UI::NavigationDirection>(wrenGetSlotDouble(vm, 1));
 	wrenGetVariable(vm, "ui", "UIElement", 1);  // Get class into slot 1
-    WrenUIElement* neighborElement = (WrenUIElement*)wrenSetSlotNewForeign(vm, 0, 1, sizeof(WrenUIElement));
-    new (neighborElement) WrenUIElement{uiElement->element->GetNavigationNeighbor(dir)};
+	WrenUIElement* neighborElement = (WrenUIElement*)wrenSetSlotNewForeign(vm, 0, 1, sizeof(WrenUIElement));
+	new (neighborElement) WrenUIElement{ uiElement->element->GetNavigationNeighbor(dir) };
 }
 
 // UIElement.setBackgroundColor(color)
@@ -388,8 +386,8 @@ void wren_UIElementGetParent(WrenVM* vm)
 		return;
 	}
 	wrenGetVariable(vm, "ui", "UIElement", 1);  // Get class into slot 1
-    WrenUIElement* parentElement = (WrenUIElement*)wrenSetSlotNewForeign(vm, 0, 1, sizeof(WrenUIElement));
-    new (parentElement) WrenUIElement{uiElement->element->GetParent()};
+	WrenUIElement* parentElement = (WrenUIElement*)wrenSetSlotNewForeign(vm, 0, 1, sizeof(WrenUIElement));
+	new (parentElement) WrenUIElement{ uiElement->element->GetParent() };
 }
 
 // UIElement.getChildren()
@@ -403,8 +401,8 @@ void wren_UIElementGetChildren(WrenVM* vm)
 	}
 	// TODO return a list of elements 
 	//wrenGetVariable(vm, "ui", "UIElement", 1);  // Get class into slot 1
-    //WrenUIElement* parentElement = (WrenUIElement*)wrenSetSlotNewForeign(vm, 0, 1, sizeof(WrenUIElement));
-    //new (parentElement) WrenUIElement{uiElement->element->GetChildren()[0]};
+	//WrenUIElement* parentElement = (WrenUIElement*)wrenSetSlotNewForeign(vm, 0, 1, sizeof(WrenUIElement));
+	//new (parentElement) WrenUIElement{uiElement->element->GetChildren()[0]};
 }
 
 // UIElement.setZIndex(zIndex)
@@ -478,20 +476,20 @@ void wren_UIElementSetOnClick(WrenVM* vm)
 
 		wrenGetVariable(vm, "ui", "UIElement", 3);  // Get class into slot 3
 		WrenUIElement* wrenSender = static_cast<WrenUIElement*>(wrenSetSlotNewForeign(vm, 1, 3, sizeof(WrenUIElement)));
-		new (wrenSender) WrenUIElement{sender, false};
+		new (wrenSender) WrenUIElement{ sender, false };
 
 		wrenGetVariable(vm, "math", "Vec2", 4);  // Get class into slot 4
 		WrenVec2* vec = static_cast<WrenVec2*>(wrenSetSlotNewForeign(vm, 2, 4, sizeof(WrenVec2)));
-		new (vec) WrenVec2{mousePos};
+		new (vec) WrenVec2{ mousePos };
 
 		WrenHandle* method = wrenMakeCallHandle(vm, "call(_,_)");
 		wrenCall(vm, method);
 		wrenReleaseHandle(vm, method);
-	});
+		});
 
 	uiElement->element->SetOnClickDispose([vm, callback](Struktur::UI::UIElement* sender, Struktur::GameContext& context) {
 		wrenReleaseHandle(vm, callback);
-	});
+		});
 }
 
 // UIElement.setOnFocus { |sender| ... }
@@ -512,16 +510,16 @@ void wren_UIElementSetOnFocus(WrenVM* vm)
 
 		wrenGetVariable(vm, "ui", "UIElement", 2);  // Get class into slot 2
 		WrenUIElement* wrenSender = static_cast<WrenUIElement*>(wrenSetSlotNewForeign(vm, 1, 2, sizeof(WrenUIElement)));
-		new (wrenSender) WrenUIElement{sender, false};
+		new (wrenSender) WrenUIElement{ sender, false };
 
 		WrenHandle* method = wrenMakeCallHandle(vm, "call(_)");
 		wrenCall(vm, method);
 		wrenReleaseHandle(vm, method);
-	});
+		});
 
 	uiElement->element->SetOnFocusDispose([vm, callback](Struktur::UI::UIElement* sender, Struktur::GameContext& context) {
 		wrenReleaseHandle(vm, callback);
-	});
+		});
 }
 
 // UIElement.setOnLoseFocus { |sender| ... }
@@ -542,16 +540,16 @@ void wren_UIElementSetOnLoseFocus(WrenVM* vm)
 
 		wrenGetVariable(vm, "ui", "UIElement", 2);  // Get class into slot 2
 		WrenUIElement* wrenSender = static_cast<WrenUIElement*>(wrenSetSlotNewForeign(vm, 1, 2, sizeof(WrenUIElement)));
-		new (wrenSender) WrenUIElement{sender, false};
+		new (wrenSender) WrenUIElement{ sender, false };
 
 		WrenHandle* method = wrenMakeCallHandle(vm, "call(_)");
 		wrenCall(vm, method);
 		wrenReleaseHandle(vm, method);
-	});
+		});
 
 	uiElement->element->SetOnFocusDispose([vm, callback](Struktur::UI::UIElement* sender, Struktur::GameContext& context) {
 		wrenReleaseHandle(vm, callback);
-	});
+		});
 }
 
 // UIElement.setOnHover { |sender, mousePos| ... }
@@ -572,20 +570,20 @@ void wren_UIElementSetOnHover(WrenVM* vm)
 
 		wrenGetVariable(vm, "ui", "UIElement", 3);  // Get class into slot 3
 		WrenUIElement* wrenSender = static_cast<WrenUIElement*>(wrenSetSlotNewForeign(vm, 1, 3, sizeof(WrenUIElement)));
-		new (wrenSender) WrenUIElement{sender, false};
+		new (wrenSender) WrenUIElement{ sender, false };
 
 		wrenGetVariable(vm, "math", "Vec2", 4);  // Get class into slot 4
 		WrenVec2* vec = static_cast<WrenVec2*>(wrenSetSlotNewForeign(vm, 2, 4, sizeof(WrenVec2)));
-		new (vec) WrenVec2{mousePos};
+		new (vec) WrenVec2{ mousePos };
 
 		WrenHandle* method = wrenMakeCallHandle(vm, "call(_,_)");
 		wrenCall(vm, method);
 		wrenReleaseHandle(vm, method);
-	});
+		});
 
 	uiElement->element->SetOnFocusDispose([vm, callback](Struktur::UI::UIElement* sender, Struktur::GameContext& context) {
 		wrenReleaseHandle(vm, callback);
-	});
+		});
 }
 
 // UIElement.setOnKeyPressed { |sender, key| ... }
@@ -606,18 +604,18 @@ void wren_UIElementSetOnKeyPressed(WrenVM* vm)
 
 		wrenGetVariable(vm, "ui", "UIElement", 3);  // Get class into slot 3
 		WrenUIElement* wrenSender = static_cast<WrenUIElement*>(wrenSetSlotNewForeign(vm, 1, 3, sizeof(WrenUIElement)));
-		new (wrenSender) WrenUIElement{sender, false};
+		new (wrenSender) WrenUIElement{ sender, false };
 
 		wrenSetSlotDouble(vm, 2, static_cast<double>(key));
 
 		WrenHandle* method = wrenMakeCallHandle(vm, "call(_,_)");
 		wrenCall(vm, method);
 		wrenReleaseHandle(vm, method);
-	});
+		});
 
 	uiElement->element->SetOnFocusDispose([vm, callback](Struktur::UI::UIElement* sender, Struktur::GameContext& context) {
 		wrenReleaseHandle(vm, callback);
-	});
+		});
 }
 
 // UIElement.setOnActivate { |sender| ... }
@@ -638,16 +636,16 @@ void wren_UIElementSetOnActivate(WrenVM* vm)
 
 		wrenGetVariable(vm, "ui", "UIElement", 2);  // Get class into slot 2
 		WrenUIElement* wrenSender = static_cast<WrenUIElement*>(wrenSetSlotNewForeign(vm, 1, 2, sizeof(WrenUIElement)));
-		new (wrenSender) WrenUIElement{sender, false};
+		new (wrenSender) WrenUIElement{ sender, false };
 
 		WrenHandle* method = wrenMakeCallHandle(vm, "call(_)");
 		wrenCall(vm, method);
 		wrenReleaseHandle(vm, method);
-	});
+		});
 
 	uiElement->element->SetOnFocusDispose([vm, callback](Struktur::UI::UIElement* sender, Struktur::GameContext& context) {
 		wrenReleaseHandle(vm, callback);
-	});
+		});
 }
 
 //// UIElement.setOnEvent { |sender| ... }
@@ -722,8 +720,21 @@ WREN_CLASS_METHOD("ui", "UIElement", "setOnActivate(_)", wren_UIElementSetOnActi
 void wren_UILabelAllocate(WrenVM* vm)
 {
 	// Allocate foreign object
+	wrenSetSlotNewForeign(vm, 0, 0, sizeof(WrenUIElement));
+}
+
+// Finalizer - called when garbage collected
+void wren_UILabelFinalize(void* data)
+{
+	WrenUIElement* uiElement = static_cast<WrenUIElement*>(data);
+	uiElement->~WrenUIElement();
+}
+
+// UILabel.new(_,_,_)
+void wren_UILabelNew(WrenVM* vm)
+{
 	Struktur::GameContext* context = static_cast<Struktur::GameContext*>(wrenGetUserData(vm));
-	WrenUIElement* uiElement = (WrenUIElement*)wrenSetSlotNewForeign(vm, 0, 0, sizeof(WrenUIElement));
+	WrenUIElement* uiElement = static_cast<WrenUIElement*>(wrenGetSlotForeign(vm, 0));
 
 	// Initialise with constructor parameters if provided
 	WrenVec2* positionPixel = static_cast<WrenVec2*>(wrenGetSlotForeign(vm, 1));
@@ -740,13 +751,6 @@ void wren_UILabelAllocate(WrenVM* vm)
 		auto* label = new Struktur::UI::UILabel(*context, positionPixel->value, positionPercentage->value, labelText);
 		new (uiElement) WrenUIElement{ label };
 	}
-}
-
-// Finalizer - called when garbage collected
-void wren_UILabelFinalize(void* data)
-{
-	WrenUIElement* uiElement = (WrenUIElement*)data;
-	uiElement->~WrenUIElement();
 }
 
 // UILabel.setFont(font)
@@ -865,8 +869,8 @@ WREN_FOREIGN_CLASS("ui", "UILabel", wren_UILabelAllocate, wren_UILabelFinalize, 
 WREN_CLASS_INHERITANCE("ui", "UILabel", "UIElement");
 
 // Register constructors
-WREN_CONSTRUCTOR_DOC("ui", "UILabel", wren_UILabelAllocate, "Create UI Label with absolutePosition, relativePosition, labelText components", absolutePosition, relativePosition, labelText);
-WREN_CONSTRUCTOR_DOC("ui", "UILabel", wren_UILabelAllocate, "Create UI Label with absolutePosition, relativePosition, labelText, fontSize components", absolutePosition, relativePosition, labelText, fontSize);
+WREN_CONSTRUCTOR("ui", "UILabel", "new(_,_,_)", wren_UILabelNew, "Create UI Label with absolutePosition, relativePosition, labelText components");
+WREN_CONSTRUCTOR("ui", "UILabel", "new(_,_,_,_)", wren_UILabelNew, "Create UI Label with absolutePosition, relativePosition, labelText, fontSize components");
 
 // Register instance methods
 WREN_CLASS_METHOD("ui", "UILabel", "setFont(_)", wren_UILabelSetFont, "Sets the UI Labels Font");
@@ -886,8 +890,21 @@ WREN_CLASS_METHOD("ui", "UILabel", "setBoundingBoxToText()", wren_UILabelSetBoun
 void wren_UIPanelAllocate(WrenVM* vm)
 {
 	// Allocate foreign object
-	wrenGetVariable(vm, "ui", "UIPanel", 0); 
-	WrenUIElement* uiElement = (WrenUIElement*)wrenSetSlotNewForeign(vm, 0, 0, sizeof(WrenUIElement));
+	wrenSetSlotNewForeign(vm, 0, 0, sizeof(WrenUIElement));
+}
+
+// Finalizer - called when garbage collected
+void wren_UIPanelFinalize(void* data)
+{
+	WrenUIElement* uiElement = (WrenUIElement*)data;
+	uiElement->~WrenUIElement();
+}
+
+// UIPanel.new(_,_,_)
+void wren_UIPanelNew(WrenVM* vm)
+{
+	Struktur::GameContext* context = static_cast<Struktur::GameContext*>(wrenGetUserData(vm));
+	WrenUIElement* uiElement = static_cast<WrenUIElement*>(wrenGetSlotForeign(vm, 0));
 
 	// Initialise with constructor parameters if provided
 	WrenVec2* positionPixel = static_cast<WrenVec2*>(wrenGetSlotForeign(vm, 1));
@@ -896,13 +913,6 @@ void wren_UIPanelAllocate(WrenVM* vm)
 	WrenVec2* sizePercentage = static_cast<WrenVec2*>(wrenGetSlotForeign(vm, 4));
 	auto* panel = new Struktur::UI::UIPanel(positionPixel->value, positionPercentage->value, sizePixel->value, sizePercentage->value);
 	new (uiElement) WrenUIElement{ panel };
-}
-
-// Finalizer - called when garbage collected
-void wren_UIPanelFinalize(void* data)
-{
-	WrenUIElement* uiElement = (WrenUIElement*)data;
-	uiElement->~WrenUIElement();
 }
 
 // UIPanel.setBackgroundTexture(texture)
@@ -937,7 +947,7 @@ WREN_FOREIGN_CLASS("ui", "UIPanel", wren_UIPanelAllocate, wren_UIPanelFinalize, 
 WREN_CLASS_INHERITANCE("ui", "UIPanel", "UIElement");
 
 // Register constructors
-WREN_CONSTRUCTOR_DOC("ui", "UIPanel", wren_UIPanelAllocate, "Create UI panel with absolutePosition, relativePosition, absoluteSize, relativeSize components", absolutePosition, relativePosition, absoluteSize, relativeSize);
+WREN_CONSTRUCTOR("ui", "UIPanel", "new(_,_,_,_)", wren_UIPanelNew, "Create UI panel with absolutePosition, relativePosition, absoluteSize, relativeSize components");
 
 // Register instance methods
 WREN_CLASS_METHOD("ui", "UIPanel", "setBackgroundTexture(_)", wren_UIPanelSetBackgroundTexture, "Sets the UI Panels background texture");

@@ -7,7 +7,7 @@ foreign class SpriteAnimationDefinition {
     // Create empty SpriteAnimationDefinition
     foreign construct new()
     // Create SpriteAnimationDefinition with startFrame, endFrame, animationTime, loop components
-    foreign construct new(startFrame, endFrame, animationTime, loop)
+    foreign construct new(arg0,arg1,arg2,arg3)
     // Get startFrame
     foreign startFrame
     // Set startFrame

@@ -194,31 +194,6 @@ void CodeGenerator::GenerateModuleFile(
         }
 
         file << " {\n";
-
-        // Generate constuctors
-        for (const auto* cls : classes)
-        {
-            if (cls->className == className)
-            {
-                for (const auto& ctor : cls->constructors)
-                {
-                    if (!ctor.documentation.empty()) {
-                        file << "    // " << ctor.documentation << "\n";
-                    }
-                    
-                    file << "    foreign construct new(";
-                    
-                    // Generate parameter list
-                    for (size_t i = 0; i < ctor.paramNames.size(); i++) {
-                        if (i > 0) file << ", ";
-                        file << ctor.paramNames[i];
-                    }
-                    
-                    file << ")\n";
-                }
-                break;
-            }
-        }
         
         // Add class constants
         for (const auto* constant : constants)
@@ -237,6 +212,12 @@ void CodeGenerator::GenerateModuleFile(
         // Add methods
         for (const auto* method : classMethods)
         {
+            std::string signature = method->signature;
+            if (signature.starts_with("init "))
+            {
+                signature = "construct" + signature.substr(4);
+            }
+
             // Add documentation as comment
             if (!method->documentation.empty())
             {
@@ -254,7 +235,7 @@ void CodeGenerator::GenerateModuleFile(
             }
             
             // Convert signature to readable format
-            std::string readableSignature = ConvertSignature(method->signature);
+            std::string readableSignature = ConvertSignature(signature);
             file << readableSignature << "\n";
         }
         

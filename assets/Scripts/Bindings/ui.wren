@@ -109,7 +109,7 @@ foreign class UIElement {
 // UI Panel component
 foreign class UIPanel {
     // Create UI panel with absolutePosition, relativePosition, absoluteSize, relativeSize components
-    foreign construct new(absolutePosition, relativePosition, absoluteSize, relativeSize)
+    foreign construct new(arg0,arg1,arg2,arg3)
     // Sets the UI Panels background texture
     foreign setBackgroundTexture(arg0)
     // Clears the UI Panels background texture
@@ -185,9 +185,9 @@ foreign class UIPanel {
 // UI Label component
 foreign class UILabel {
     // Create UI Label with absolutePosition, relativePosition, labelText components
-    foreign construct new(absolutePosition, relativePosition, labelText)
+    foreign construct new(arg0,arg1,arg2)
     // Create UI Label with absolutePosition, relativePosition, labelText, fontSize components
-    foreign construct new(absolutePosition, relativePosition, labelText, fontSize)
+    foreign construct new(arg0,arg1,arg2,arg3)
     // Sets the UI Labels Font
     foreign setFont(arg0)
     // Sets the UI Labels text color

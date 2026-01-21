@@ -11,9 +11,7 @@
 
 void wren_ResourceTextureAllocate(WrenVM* vm)
 {
-	wrenGetVariable(vm, "resourceManager", "Texture", 1);  // Get class into slot 1
-	WrenTextureHandle* handle = (WrenTextureHandle*)wrenSetSlotNewForeign(vm, 0, 1, sizeof(WrenTextureHandle));
-	new (handle) WrenTextureHandle();
+	wrenSetSlotNewForeign(vm, 0, 0, sizeof(WrenTextureHandle));
 }
 
 void wren_ResourceTextureFinalize(void* data)
@@ -139,9 +137,7 @@ WREN_CLASS_METHOD("resourceManager", "Texture", "toString()", wren_ResourceTextu
 
 void wren_ResourceShaderAllocate(WrenVM* vm)
 {
-	wrenGetVariable(vm, "resourceManager", "Shader", 1);  // Get class into slot 1
-	WrenShaderHandle* handle = (WrenShaderHandle*)wrenSetSlotNewForeign(vm, 0, 1, sizeof(WrenShaderHandle));
-	new (handle) WrenShaderHandle();
+	wrenSetSlotNewForeign(vm, 0, 0, sizeof(WrenShaderHandle));
 }
 
 void wren_ResourceShaderFinalize(void* data)
@@ -268,9 +264,7 @@ WREN_CLASS_METHOD("resourceManager", "Shader", "toString()", wren_ResourceShader
 
 void wren_ResourceFontAllocate(WrenVM* vm)
 {
-	wrenGetVariable(vm, "resourceManager", "Font", 1);  // Get class into slot 1
-	WrenFontHandle* handle = (WrenFontHandle*)wrenSetSlotNewForeign(vm, 0, 1, sizeof(WrenFontHandle));
-	new (handle) WrenFontHandle();
+	wrenSetSlotNewForeign(vm, 0, 0, sizeof(WrenFontHandle));
 }
 
 void wren_ResourceFontFinalize(void* data)
@@ -382,9 +376,7 @@ WREN_CLASS_METHOD("resourceManager", "Font", "toString()", wren_ResourceFontToSt
 
 void wren_ResourceMusicAllocate(WrenVM* vm)
 {
-	wrenGetVariable(vm, "resourceManager", "Music", 1);  // Get class into slot 1
-	WrenMusicHandle* handle = (WrenMusicHandle*)wrenSetSlotNewForeign(vm, 0, 1, sizeof(WrenMusicHandle));
-	new (handle) WrenMusicHandle();
+	wrenSetSlotNewForeign(vm, 0, 0, sizeof(WrenMusicHandle));
 }
 
 void wren_ResourceMusicFinalize(void* data)
@@ -591,9 +583,7 @@ WREN_CLASS_METHOD("resourceManager", "Music", "setLooping(_)", wren_ResourceMusi
 
 void wren_ResourceSoundAllocate(WrenVM* vm)
 {
-	wrenGetVariable(vm, "resourceManager", "Sound", 1);  // Get class into slot 1
-	WrenSoundHandle* handle = (WrenSoundHandle*)wrenSetSlotNewForeign(vm, 0, 1, sizeof(WrenSoundHandle));
-	new (handle) WrenSoundHandle();
+	wrenSetSlotNewForeign(vm, 0, 0, sizeof(WrenSoundHandle));
 }
 
 void wren_ResourceSoundFinalize(void* data)
