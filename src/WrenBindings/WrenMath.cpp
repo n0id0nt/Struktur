@@ -10,6 +10,7 @@
 
 #include "Engine/Scripting/WrenBindingRegistry.h"
 #include "Debug/Assertions.h"
+
 // ============================================================================
 // Math utialaty functions
 // ============================================================================

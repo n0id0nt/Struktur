@@ -58,7 +58,7 @@ COMPONENT_LIST
         double entityId = wrenGetSlotDouble(vm, 1);                                                                                     \
         entt::entity entity = static_cast<entt::entity>(entityId);                                                                      \
         Struktur::Component::component_name* component = registry.try_get<Struktur::Component::component_name>(entity);                 \
-        if (component)                                                                                                                      \
+        if (component)                                                                                                                  \
         {                                                                                                                               \
             wrenGetVariable(vm, "gameObjectComponents", component_name_string, 1);                                                      \
             Wren##component_name* wrenComponent = (Wren##component_name*)wrenSetSlotNewForeign(vm, 0, 1, sizeof(Wren##component_name)); \

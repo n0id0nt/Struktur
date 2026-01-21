@@ -10,6 +10,7 @@ import "math" for Vec2, Vec3, Vec4
 import "input" for Input
 import "gameObjectComponents" for Camera, Script
 import "gameObject" for GameObject
+import "debug" for Debug
 
 var WHITE = Vec4.new(255, 255, 255, 255)
 var DARKGRAY = Vec4.new(80, 80, 80, 255)
@@ -111,6 +112,8 @@ class InteractState is BaseState {
     
     enter(stateManager, params) {
         super.enter(stateManager, params)
+
+        Debug.breakMsg("TEST TEST TEST")
 
         _interactingEntity = params["interactingEntity"]
         

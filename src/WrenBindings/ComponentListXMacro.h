@@ -13,5 +13,3 @@
 	COMPONENT(WorldTransform, "WorldTransform")\
 	COMPONENT(WrenScript, "Script")\
 	// COMPONENT_LIST
-
-    

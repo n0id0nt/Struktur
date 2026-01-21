@@ -12,20 +12,18 @@ const char* wrenTraceSource()
 	return traceModuleSource;
 }
 
-// Trace.printCallStack() -> String
-// Returns the current call stack as a formatted string
-static void trace_printCallStack(WrenVM* vm)
+const char* wrenTraceGetCallStackString(WrenVM* vm, char* buffer, size_t bufferSize)
 {
 	ObjFiber* fiber = vm->fiber;
 
 	if (fiber->numFrames == 0)
 	{
-		wrenSetSlotString(vm, 0, "Call stack is empty");
-		return;
+		snprintf(buffer, bufferSize, "Call stack is empty");
+		return buffer;
 	}
 
 	// Build the call stack string
-	char buffer[4096] = "Call stack:\n";
+	snprintf(buffer, bufferSize, "Call stack:\n");
 	size_t offset = strlen(buffer);
 
 	// Walk through all call frames from top to bottom
@@ -42,15 +40,15 @@ static void trace_printCallStack(WrenVM* vm)
 		const char* fnName = fn->debug->name ? fn->debug->name : "<script>";
 
 		// Get module name
-		const char* moduleName = fn->module->name ?
+		const char* moduleName = fn->module && fn->module->name ?
 			fn->module->name->value : "<unknown>";
 
 		// Append to buffer
-		int written = snprintf(buffer + offset, sizeof(buffer) - offset,
+		int written = snprintf(buffer + offset, bufferSize - offset,
 			"  [%d] %s in %s (line %d)\n",
 			fiber->numFrames - 1 - i, fnName, moduleName, line);
 
-		if (written < 0 || offset + written >= sizeof(buffer))
+		if (written < 0 || offset + written >= bufferSize)
 		{
 			// Buffer overflow protection
 			break;
@@ -59,7 +57,16 @@ static void trace_printCallStack(WrenVM* vm)
 		offset += written;
 	}
 
-	wrenSetSlotString(vm, 0, buffer);
+	return buffer;
+}
+
+// Trace.printCallStack() -> String
+// Returns the current call stack as a formatted string
+static void trace_printCallStack(WrenVM* vm)
+{
+	char buffer[4096];
+	const char* stackString = wrenTraceGetCallStackString(vm, buffer, sizeof(buffer));
+	wrenSetSlotString(vm, 0, stackString);
 }
 
 // Trace.getCallStack() -> List

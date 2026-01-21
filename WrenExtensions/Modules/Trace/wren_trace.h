@@ -15,6 +15,10 @@ extern "C" {
 
 	// Returns the Wren source code for the trace module
 	const char* wrenTraceSource();
+	
+	// Returns the current call stack as a formatted string
+	// Helper function that builds and returns the call stack string
+	const char* wrenTraceGetCallStackString(WrenVM* vm, char* buffer, size_t bufferSize);
 
 	// Binds foreign methods for the trace module
 	WrenForeignMethodFn wrenTraceBindForeignMethod(WrenVM* vm,
