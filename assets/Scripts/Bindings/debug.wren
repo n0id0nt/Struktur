@@ -23,8 +23,8 @@ class Debug {
     // Call Debug Assert with Message.
     foreign static assertMsg(arg0,arg1)
     // Call Debug Break.
-    foreign static breagk()
+    foreign static breakpoint()
     // Call Debug Break with Message.
-    foreign static breakMsg(arg0)
+    foreign static breakpointMsg(arg0)
 }
 

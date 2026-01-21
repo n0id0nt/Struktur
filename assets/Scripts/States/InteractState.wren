@@ -113,7 +113,7 @@ class InteractState is BaseState {
     enter(stateManager, params) {
         super.enter(stateManager, params)
 
-        Debug.breakMsg("TEST TEST TEST")
+        Debug.breakpointMsg("TEST TEST TEST")
 
         _interactingEntity = params["interactingEntity"]
         

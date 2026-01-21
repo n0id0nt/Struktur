@@ -131,5 +131,5 @@ WREN_CLASS_STATIC("debug", "Debug", "error(_)", wren_DebugError, "Call Debug Err
 WREN_CLASS_STATIC("debug", "Debug", "fatal(_)", wren_DebugFatal, "Call Debug Fatal.");
 WREN_CLASS_STATIC("debug", "Debug", "assert(_)", wren_DebugAssert, "Call Debug Assert.");
 WREN_CLASS_STATIC("debug", "Debug", "assertMsg(_,_)", wren_DebugAssertMsg, "Call Debug Assert with Message.");
-WREN_CLASS_STATIC("debug", "Debug", "breagk()", wren_DebugBreak, "Call Debug Break.");
-WREN_CLASS_STATIC("debug", "Debug", "breakMsg(_)", wren_DebugBreakMsg, "Call Debug Break with Message.");
+WREN_CLASS_STATIC("debug", "Debug", "breakpoint()", wren_DebugBreak, "Call Debug Break.");
+WREN_CLASS_STATIC("debug", "Debug", "breakpointMsg(_)", wren_DebugBreakMsg, "Call Debug Break with Message.");
