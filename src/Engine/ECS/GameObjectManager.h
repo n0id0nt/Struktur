@@ -13,9 +13,10 @@ namespace Struktur
         {
         public:
             GameObjectManager() {}
-            ~GameObjectManager();
+            ~GameObjectManager() {}
 
             void CreateDeleteObjectCallBack(GameContext& context);
+            void Shutdown(GameContext& context);
 
             entt::entity CreateGameObject(GameContext& context, const std::string& identifier, entt::entity parent = entt::null);
 

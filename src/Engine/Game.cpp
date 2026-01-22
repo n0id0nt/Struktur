@@ -149,6 +149,10 @@ void Struktur::ExitGame(GameContext& context)
 	entt::registry& registry = context.GetRegistry();
 	registry.clear();
 
+	DEBUG_INFO("[Clean Up] Game Object Manager");
+	System::GameObjectManager& gameObjectManager = context.GetGameObjectManager();
+	gameObjectManager.CreateDeleteObjectCallBack(context);
+
 	DEBUG_INFO("[Clean Up] Physics World");
 	Physics::PhysicsWorld& world = context.GetPhysicsWorld();
 	world.Clear();

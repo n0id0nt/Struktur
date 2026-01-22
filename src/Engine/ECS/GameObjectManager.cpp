@@ -13,16 +13,7 @@
 #include "Engine/ECS/Component/Identifier.h"
 #include "Engine/ECS/Component/WrenScript.h"
 
-Struktur::System::GameObjectManager::~GameObjectManager()
-{
-    entt::registry& registry = m_context->GetRegistry();
-
-    registry.on_destroy<Component::Children>().disconnect<&GameObjectManager::OnChildrenDestroy>(*this);
-    registry.on_destroy<Component::PhysicsBody>().disconnect<&GameObjectManager::OnPhysicsBodyDestory>(*this);
-    registry.on_destroy<Component::WrenScript>().disconnect<&GameObjectManager::OnScriptDestory>(*this);
-}
-
-void Struktur::System::GameObjectManager::CreateDeleteObjectCallBack(GameContext &context)
+void Struktur::System::GameObjectManager::CreateDeleteObjectCallBack(GameContext& context)
 {
     m_context = &context;
     entt::registry& registry = context.GetRegistry();
@@ -31,6 +22,15 @@ void Struktur::System::GameObjectManager::CreateDeleteObjectCallBack(GameContext
     registry.on_destroy<Component::Children>().connect<&GameObjectManager::OnChildrenDestroy>(*this);
     registry.on_destroy<Component::PhysicsBody>().connect<&GameObjectManager::OnPhysicsBodyDestory>(*this);
     registry.on_destroy<Component::WrenScript>().connect<&GameObjectManager::OnScriptDestory>(*this);
+}
+
+void Struktur::System::GameObjectManager::Shutdown(GameContext &context)
+{
+    entt::registry& registry = context.GetRegistry();
+
+    registry.on_destroy<Component::Children>().disconnect<&GameObjectManager::OnChildrenDestroy>(*this);
+    registry.on_destroy<Component::PhysicsBody>().disconnect<&GameObjectManager::OnPhysicsBodyDestory>(*this);
+    registry.on_destroy<Component::WrenScript>().disconnect<&GameObjectManager::OnScriptDestory>(*this);
 }
 
 entt::entity Struktur::System::GameObjectManager::CreateGameObject(GameContext& context, const std::string& identifier, entt::entity parent)
@@ -65,7 +65,7 @@ void Struktur::System::GameObjectManager::DeleteGameObjectsInSafeToDeleteQueue(G
     m_queueOfObjectsToSafeDelete.clear();
 }
 
-void Struktur::System::GameObjectManager::DestroyGameObject(GameContext &context, entt::entity entity)
+void Struktur::System::GameObjectManager::DestroyGameObject(GameContext& context, entt::entity entity)
 {
     SystemManager& systemManager = context.GetSystemManager();
     HierarchySystem& hierarchySystem = systemManager.GetSystem<HierarchySystem>();
@@ -87,7 +87,7 @@ void Struktur::System::GameObjectManager::OnChildrenDestroy(entt::registry& reg,
     }
 }
 
-void Struktur::System::GameObjectManager::OnPhysicsBodyDestory(entt::registry &reg, entt::entity entity)
+void Struktur::System::GameObjectManager::OnPhysicsBodyDestory(entt::registry& reg, entt::entity entity)
 {
     // remove physics bodies from entities from the physics worked
     auto& physicsBody = reg.get<Component::PhysicsBody>(entity);
