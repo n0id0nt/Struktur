@@ -2,8 +2,7 @@ import "gameObjectComponents" for Sprite, PhysicsBody, Shader as ShaderComponent
 import "math" for Vec2, Vec3, Vec4
 import "resourceManager" for Texture, Shader as ShaderResource
 import "physics" for BodyDefinition, PhysicsCircleShape, BodyType
-
-var WHITE = Vec4.new(255, 255, 255, 255)
+import "Colors" for WHITE
 
 class NPCData {
     construct new(spriteIndex, xOffset, yOffset) {

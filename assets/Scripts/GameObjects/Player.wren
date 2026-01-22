@@ -6,9 +6,9 @@ import "animation" for SpriteAnimationDefinition
 import "physics" for BodyDefinition, PhysicsCircleShape, BodyType
 
 import "reflect" for Reflect
+import "Colors" for WHITE
 
 var INTERACTABLE_DISTANCE = 64.0
-var WHITE = Vec4.new(255, 255, 255, 255)
 
 class Player {
     construct new(entity, args) {

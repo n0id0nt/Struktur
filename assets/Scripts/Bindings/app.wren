@@ -31,14 +31,3 @@ class Application {
     foreign static setPositionIterations(arg0)
 }
 
-class Inventory {
-    // Check if the inventory contains an item.
-    foreign static contains(arg0)
-    // Get a list of all items in inventory.
-    foreign static getItems()
-    // add an item to the inventory.
-    foreign static addItem(arg0)
-    // remove an item to the inventory.
-    foreign static removeItem(arg0)
-}
-

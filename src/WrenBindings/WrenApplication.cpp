@@ -29,13 +29,13 @@ void wren_ApplicationSetWindowSize(WrenVM* vm)
 // Application.setApplicationName(name)
 void wren_ApplicationSetApplicationName(WrenVM* vm)
 {
-    Struktur::GameContext* context = static_cast<Struktur::GameContext*>(wrenGetUserData(vm));
+	Struktur::GameContext* context = static_cast<Struktur::GameContext*>(wrenGetUserData(vm));
 	auto& gameData = context->GetGameData();
-    
+
 	const char* name = wrenGetSlotString(vm, 1);
-    
+
 	gameData.projectName = name;
-    
+
 	// TODO check if the window name needs to be changed here
 	// this can be called before there is a window so need to handle that case as well
 }
@@ -43,12 +43,12 @@ void wren_ApplicationSetApplicationName(WrenVM* vm)
 // Application.registerComponentScript(module, className)
 void wren_ApplicationRegisterComponentScript(WrenVM* vm)
 {
-    Struktur::GameContext* context = static_cast<Struktur::GameContext*>(wrenGetUserData(vm));
+	Struktur::GameContext* context = static_cast<Struktur::GameContext*>(wrenGetUserData(vm));
 	auto& scriptComponentRegistry = context->GetWrenScriptComponentRegistry();
 	const char* module = wrenGetSlotString(vm, 1);
 	const char* className = wrenGetSlotString(vm, 2);
-    
-    scriptComponentRegistry.RegisterScriptComponent(module, className);
+
+	scriptComponentRegistry.RegisterScriptComponent(module, className);
 }
 
 // Application.deltaTime -> number
@@ -154,79 +154,3 @@ WREN_CLASS_STATIC("app", "Application", "velocityIterations", wren_ApplicationGe
 WREN_CLASS_STATIC("app", "Application", "setVelocityIterations(_)", wren_ApplicationSetVelocityIterations, "Set the velocity iterations for the physics system.");
 WREN_CLASS_STATIC("app", "Application", "positionIterations", wren_ApplicationGetPositionIterations, "Get the position iterations for the physics system.");
 WREN_CLASS_STATIC("app", "Application", "setPositionIterations(_)", wren_ApplicationSetPositionIterations, "Set the position iterations for the physics system.");
-
-// ============================================================================
-// INVENTORY BINDINGS
-// ============================================================================
-
-// Inventory.contains(item) -> bool
-void wren_InventoryContains(WrenVM* vm)
-{
-	Struktur::GameContext* context = static_cast<Struktur::GameContext*>(wrenGetUserData(vm));
-	auto& inventory = context->GetInventory();
-
-	const char* itemName = wrenGetSlotString(vm, 1);
-
-	bool containsItem = std::find(inventory.begin(), inventory.end(), itemName) != inventory.end();
-
-	wrenSetSlotBool(vm, 0, containsItem);
-}
-
-// Inventory.getItems() -> items
-void wren_InventoryGetItems(WrenVM* vm)
-{
-	Struktur::GameContext* context = static_cast<Struktur::GameContext*>(wrenGetUserData(vm));
-	auto& inventory = context->GetInventory();
-	wrenSetSlotNewList(vm, 0);
-	int index = 0;
-	wrenEnsureSlots(vm, 2);
-	for (auto& item : inventory)
-	{
-		wrenSetSlotString(vm, 1, item.c_str());
-		wrenInsertInList(vm, 0, index, 1);
-		index++;
-	}
-}
-
-// Inventory.addItem(item) -> bool
-void wren_InventoryAddItem(WrenVM* vm)
-{
-	Struktur::GameContext* context = static_cast<Struktur::GameContext*>(wrenGetUserData(vm));
-	auto& inventory = context->GetInventory();
-
-	const char* itemName = wrenGetSlotString(vm, 1);
-
-	if (std::find(inventory.begin(), inventory.end(), itemName) == inventory.end())
-	{
-		inventory.push_back(itemName);
-		wrenSetSlotBool(vm, 0, true);
-	}
-	else
-	{
-		wrenSetSlotBool(vm, 0, false);
-	}
-}
-
-// Inventory.removeItem(item) -> bool
-void wren_InventoryRemoveItem(WrenVM* vm)
-{
-	Struktur::GameContext* context = static_cast<Struktur::GameContext*>(wrenGetUserData(vm));
-	auto& inventory = context->GetInventory();
-
-	const char* itemName = wrenGetSlotString(vm, 1);
-
-	if (std::find(inventory.begin(), inventory.end(), itemName) == inventory.end())
-	{
-		inventory.erase(std::find(inventory.begin(), inventory.end(), itemName));
-		wrenSetSlotBool(vm, 0, true);
-	}
-	else
-	{
-		wrenSetSlotBool(vm, 0, false);
-	}
-}
-
-WREN_CLASS_STATIC("app", "Inventory", "contains(_)", wren_InventoryContains, "Check if the inventory contains an item.");
-WREN_CLASS_STATIC("app", "Inventory", "getItems()", wren_InventoryGetItems, "Get a list of all items in inventory.");
-WREN_CLASS_STATIC("app", "Inventory", "addItem(_)", wren_InventoryAddItem, "add an item to the inventory.");
-WREN_CLASS_STATIC("app", "Inventory", "removeItem(_)", wren_InventoryRemoveItem, "remove an item to the inventory.");

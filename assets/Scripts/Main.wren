@@ -8,6 +8,7 @@ import "input" for Input
 import "States/StateManager" for StateManager
 import "States/GameWorldState" for GameWorldState
 import "States/MainMenuState" for MainMenuState
+import "Inventory" for Inventory
 
 class Game {
     // Called before the game window is created and will initial the project settings.
@@ -34,6 +35,7 @@ class Game {
 
         // Create state manager
         _stateManager = StateManager.new()
+        Inventory.init()
     }
 
     // Called after the all the systems are initialised 

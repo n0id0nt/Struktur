@@ -5,7 +5,6 @@
 import "gameObject" for GameObject
 import "gameObjectComponents" for LocalTransform, WorldTransform, World, Level, Script, Sprite, Camera
 import "math" for Vec2, Vec3, Vec4
-import "app" for Inventory
 import "resourceManager" for Font, Texture, Music
 import "ui" for UIManager, UILabel
 import "input" for Input
@@ -17,10 +16,12 @@ import "States/InventoryState" for InventoryState
 import "States/InteractState" for InteractState
 import "States/GameOverState" for GameOverState
 
+import "Colors" for WHITE
+import "Inventory" for Inventory
+
 var TILE_TEXTURE = "assets/Tiles/cavesofgallet_tiles.png"
 var PLAYER_TEXTURE = "assets/Tiles/PlayerGrowthSprites.png"
 var WORLD_FILE_PATH = "assets/Levels/MemoryPalace.ldtk"
-var WHITE = Vec4.new(255, 255, 255, 255)
 var Loops = 0
 
 class GameWorldState is BaseState {

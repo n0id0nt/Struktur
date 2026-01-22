@@ -7,9 +7,7 @@ import "math" for Vec2, Vec3, Vec4
 import "resourceManager" for Font
 import "ui" for UIManager, UILabel, UIPanel
 import "app" for Application
-
-var WHITE = Vec4.new(255, 255, 255, 255)
-var BLANK = Vec4.new(0, 0, 0, 0)
+import "Colors" for BLANK, WHITE
 
 class GameOverState is BaseState {
     construct new() {

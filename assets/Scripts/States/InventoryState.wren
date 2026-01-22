@@ -2,15 +2,15 @@
 // Main gameplay state - handles player movement, interaction checks
 // This is the default state when playing the game
 
-import "States/BaseState" for BaseState
 import "resourceManager" for Font, Texture, Music, Sound
 import "ui" for UIManager, UILabel, UIPanel
-import "app" for Application, Inventory
+import "app" for Application
 import "math" for Vec2, Vec3, Vec4
 import "input" for Input
 
-var WHITE = Vec4.new(255, 255, 255, 255)
-var BLANK = Vec4.new(0, 0, 0, 0)
+import "States/BaseState" for BaseState
+import "Colors" for BLANK, WHITE
+import "Inventory" for Inventory
 
 class InventoryState is BaseState {
     construct new() {

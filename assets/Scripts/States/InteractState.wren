@@ -5,17 +5,16 @@
 import "States/BaseState" for BaseState
 import "resourceManager" for Font, Texture, Music, Sound
 import "ui" for UIManager, UILabel, UIPanel, TextWrapping
-import "app" for Application, Inventory
+import "app" for Application
 import "math" for Vec2, Vec3, Vec4
 import "input" for Input
 import "gameObjectComponents" for Camera, Script
 import "gameObject" for GameObject
 import "debug" for Debug
 
-var WHITE = Vec4.new(255, 255, 255, 255)
-var DARKGRAY = Vec4.new(80, 80, 80, 255)
-var BLACK = Vec4.new(0, 0, 0, 255)
-var BLANK = Vec4.new(0, 0, 0, 0)
+import "Colors" for BLANK, BLACK, DARKGRAY, WHITE
+import "Inventory" for Inventory
+
 var TEXT_SCROLL_SPEED = 0.02
 
 class DialogueStep {
@@ -112,8 +111,6 @@ class InteractState is BaseState {
     
     enter(stateManager, params) {
         super.enter(stateManager, params)
-
-        Debug.breakpointMsg("TEST TEST TEST")
 
         _interactingEntity = params["interactingEntity"]
         

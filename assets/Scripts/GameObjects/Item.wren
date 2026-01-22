@@ -1,10 +1,8 @@
 import "gameObjectComponents" for Sprite
 import "math" for Vec2, Vec3, Vec4
 import "resourceManager" for Texture
-import "app" for Inventory
-
-var WHITE = Vec4.new(255, 255, 255, 255)
-var BLACK = Vec4.new(0, 0, 0, 255)
+import "Colors" for BLACK, WHITE
+import "Inventory" for Inventory
 
 class ItemData {
     construct new(spriteIndex) {

@@ -26,7 +26,6 @@
 
 namespace Struktur
 {
-	using Inventory = std::vector<std::string>;
 	class GameContext
 	{
 	public:
@@ -40,7 +39,6 @@ namespace Struktur
 			m_gameObjectManager = std::make_unique<System::GameObjectManager>();
 			m_camera = std::make_unique<GameResource::Camera>();
 			m_uiManger = std::make_unique<UI::UIManager>();
-			m_inventory = std::make_unique<Inventory>();
 			m_physicsWorld = std::make_unique<Physics::PhysicsWorld>();
 			m_wrenScriptEngine = std::make_unique<Wren::WrenScriptEngine>();
 			m_wrenStateManager = std::make_unique<Wren::WrenStateManager>();
@@ -107,12 +105,6 @@ namespace Struktur
 			return *m_uiManger;
 		}
 
-		Inventory& GetInventory() const
-		{
-			ASSERT_MSG(m_inventory.get(), "Inventory not initialised");
-			return *m_inventory;
-		}
-
 		Wren::WrenScriptEngine& GetWrenScriptEngine() const
 		{
 			ASSERT_MSG(m_wrenScriptEngine.get(), "Wren Script Engine not initialised");
@@ -157,7 +149,6 @@ namespace Struktur
 		std::unique_ptr<Physics::PhysicsWorld> m_physicsWorld;
 		std::unique_ptr<GameResource::Camera> m_camera;
 		std::unique_ptr<UI::UIManager> m_uiManger;
-		std::unique_ptr<Inventory> m_inventory;
 		std::unique_ptr<Wren::WrenScriptEngine> m_wrenScriptEngine;
 		std::unique_ptr<Wren::WrenStateManager> m_wrenStateManager;
 		std::unique_ptr<Wren::WrenScriptComponentRegistry> m_wrenScriptComponentRegistry;
