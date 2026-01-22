@@ -26,7 +26,7 @@ Struktur::UI::UIElement *Struktur::UI::UIManager::AddElement(std::unique_ptr<UIE
     return nullptr;
 }
 
-void Struktur::UI::UIManager::RemoveElement(UIElement *element)
+void Struktur::UI::UIManager::RemoveElement(GameContext& context, UIElement *element)
 {
     if (!element) return;
     
@@ -40,13 +40,12 @@ void Struktur::UI::UIManager::RemoveElement(UIElement *element)
         m_focusNavigator->UnregisterElement(elem);
     });
     
-    m_elements.erase(
-        std::remove_if(m_elements.begin(), m_elements.end(),
-            [element](const std::unique_ptr<UIElement>& ptr) {
-                return ptr.get() == element;
-            }),
-        m_elements.end()
-    );
+    element->Dispose(context);
+
+    std::erase_if(m_elements,
+        [element](const std::unique_ptr<UIElement>& ptr) {
+            return ptr.get() == element;
+        });
 }
 
 void Struktur::UI::UIManager::Update(GameContext& context)

@@ -1,5 +1,7 @@
 #include "UIElement.h"
 
+#include "Debug/Assertions.h"
+
 Struktur::UI::UIElement::UIElement(const glm::vec2& absolutePosition, const glm::vec2& relativePosition, const glm::vec2& absoluteSize, const glm::vec2& relativeSize)
     : m_absolutePosition(absolutePosition), m_relativePosition(relativePosition), 
     m_absoluteSize(absoluteSize), m_relativeSize(relativeSize), m_anchorPoint(glm::vec2()),
@@ -8,6 +10,11 @@ Struktur::UI::UIElement::UIElement(const glm::vec2& absolutePosition, const glm:
     m_parent(nullptr), m_zIndex(0), m_tabIndex(-1), m_disposed(false)
 {
     UpdateBounds();
+}
+
+Struktur::UI::UIElement::~UIElement()
+{
+    ASSERT_MSG(m_disposed, "UI Element has not been disposed");
 }
 
 Struktur::UI::UIElement* Struktur::UI::UIElement::AddChild(std::unique_ptr<UIElement> child)

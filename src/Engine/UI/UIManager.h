@@ -32,7 +32,7 @@ namespace Struktur
                 return ptr;
             }
 
-            void RemoveElement(UIElement* element);
+            void RemoveElement(GameContext& context, UIElement* element);
 
             void Update(GameContext& context);
             void Render(GameContext& context);

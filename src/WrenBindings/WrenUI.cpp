@@ -64,7 +64,7 @@ void wren_UIManagerRemoveUIElement(WrenVM* vm)
 	WrenUIElement* uiElement = static_cast<WrenUIElement*>(wrenGetSlotForeign(vm, 1));
 
 	ASSERT_MSG(!uiElement->ownedByWren, "UIElement is registered with the UI Manager.");
-	uiManager.RemoveElement(uiElement->element);
+	uiManager.RemoveElement(*context, uiElement->element);
 
 	uiElement->element = nullptr;
 }

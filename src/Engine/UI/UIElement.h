@@ -51,7 +51,7 @@ namespace Struktur
         {
         public:
             UIElement(const glm::vec2& absolutePosition, const glm::vec2& relativePosition, const glm::vec2& absoluteSize, const glm::vec2& relativeSize);
-            virtual ~UIElement() = default;
+            virtual ~UIElement();
 
             // Delete copy constructor and copy assignment operator
             UIElement(const UIElement&) = delete;
