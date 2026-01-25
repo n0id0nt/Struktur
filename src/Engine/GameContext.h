@@ -4,7 +4,7 @@
 #include <stdexcept>
 #include "entt/entt.hpp"
 
-#include "Engine/Core/Input.h"
+#include "Engine/Input/Input.h"
 #include "Engine/Core/GameData.h"
 #include "Engine/Resource/ResourceManager.h"
 #include "Engine/ECS/SystemManager.h"
@@ -31,7 +31,7 @@ namespace Struktur
 	public:
 		GameContext()
 		{
-			m_input = std::make_unique<Core::Input>(0);
+			m_input = std::make_unique<Input::Input>(0);
 			m_gameData = std::make_unique<Core::GameData>();
 			m_registry = std::make_unique<entt::registry>();
 			m_resourceManager = std::make_unique<Resource::ResourceManager>();
@@ -51,7 +51,7 @@ namespace Struktur
 #endif
 		}
 
-		Core::Input& GetInput() const
+		Input::Input& GetInput() const
 		{
 			ASSERT_MSG(m_input.get(), "Input not initialised");
 			return *m_input;
@@ -141,7 +141,7 @@ namespace Struktur
 
 	private:
 		std::unique_ptr<Core::GameData> m_gameData;
-		std::unique_ptr<Core::Input> m_input;
+		std::unique_ptr<Input::Input> m_input;
 		std::unique_ptr<entt::registry> m_registry;
 		std::unique_ptr<Resource::ResourceManager> m_resourceManager;
 		std::unique_ptr<System::SystemManager> m_systemManager;

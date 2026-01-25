@@ -13,7 +13,7 @@
 void wren_InputIsKeyDown(WrenVM* vm)
 {
 	Struktur::GameContext* context = static_cast<Struktur::GameContext*>(wrenGetUserData(vm));
-	Struktur::Core::Input& input = context->GetInput();
+	Struktur::Input::Input& input = context->GetInput();
 
 	const char* inputKey = wrenGetSlotString(vm, 1);
 
@@ -26,7 +26,7 @@ void wren_InputIsKeyDown(WrenVM* vm)
 void wren_InputIsKeyJustPressed(WrenVM* vm)
 {
 	Struktur::GameContext* context = static_cast<Struktur::GameContext*>(wrenGetUserData(vm));
-	Struktur::Core::Input& input = context->GetInput();
+	Struktur::Input::Input& input = context->GetInput();
 
 	const char* inputKey = wrenGetSlotString(vm, 1);
 
@@ -39,7 +39,7 @@ void wren_InputIsKeyJustPressed(WrenVM* vm)
 void wren_InputIsKeyJustReleased(WrenVM* vm)
 {
 	Struktur::GameContext* context = static_cast<Struktur::GameContext*>(wrenGetUserData(vm));
-	Struktur::Core::Input& input = context->GetInput();
+	Struktur::Input::Input& input = context->GetInput();
 
 	const char* inputKey = wrenGetSlotString(vm, 1);
 
@@ -52,7 +52,7 @@ void wren_InputIsKeyJustReleased(WrenVM* vm)
 void wren_InputIsControllerButtonDown(WrenVM* vm)
 {
 	Struktur::GameContext* context = static_cast<Struktur::GameContext*>(wrenGetUserData(vm));
-	Struktur::Core::Input& input = context->GetInput();
+	Struktur::Input::Input& input = context->GetInput();
 
 	const char* inputKey = wrenGetSlotString(vm, 1);
 
@@ -65,7 +65,7 @@ void wren_InputIsControllerButtonDown(WrenVM* vm)
 void wren_InputIsControllerButtonJustPressed(WrenVM* vm)
 {
 	Struktur::GameContext* context = static_cast<Struktur::GameContext*>(wrenGetUserData(vm));
-	Struktur::Core::Input& input = context->GetInput();
+	Struktur::Input::Input& input = context->GetInput();
 
 	const char* inputKey = wrenGetSlotString(vm, 1);
 
@@ -78,7 +78,7 @@ void wren_InputIsControllerButtonJustPressed(WrenVM* vm)
 void wren_InputIsControllerButtonJustReleased(WrenVM* vm)
 {
 	Struktur::GameContext* context = static_cast<Struktur::GameContext*>(wrenGetUserData(vm));
-	Struktur::Core::Input& input = context->GetInput();
+	Struktur::Input::Input& input = context->GetInput();
 
 	const char* inputKey = wrenGetSlotString(vm, 1);
 
@@ -91,7 +91,7 @@ void wren_InputIsControllerButtonJustReleased(WrenVM* vm)
 void wren_InputGetControllerAxisValue(WrenVM* vm)
 {
 	Struktur::GameContext* context = static_cast<Struktur::GameContext*>(wrenGetUserData(vm));
-	Struktur::Core::Input& input = context->GetInput();
+	Struktur::Input::Input& input = context->GetInput();
 
 	const char* inputKey = wrenGetSlotString(vm, 1);
 
@@ -104,7 +104,7 @@ void wren_InputGetControllerAxisValue(WrenVM* vm)
 void wren_InputIsInputDown(WrenVM* vm)
 {
 	Struktur::GameContext* context = static_cast<Struktur::GameContext*>(wrenGetUserData(vm));
-	Struktur::Core::Input& input = context->GetInput();
+	Struktur::Input::Input& input = context->GetInput();
 
 	const char* inputKey = wrenGetSlotString(vm, 1);
 
@@ -117,7 +117,7 @@ void wren_InputIsInputDown(WrenVM* vm)
 void wren_InputIsInputJustPressed(WrenVM* vm)
 {
 	Struktur::GameContext* context = static_cast<Struktur::GameContext*>(wrenGetUserData(vm));
-	Struktur::Core::Input& input = context->GetInput();
+	Struktur::Input::Input& input = context->GetInput();
 
 	const char* inputKey = wrenGetSlotString(vm, 1);
 
@@ -130,7 +130,7 @@ void wren_InputIsInputJustPressed(WrenVM* vm)
 void wren_InputIsInputJustReleased(WrenVM* vm)
 {
 	Struktur::GameContext* context = static_cast<Struktur::GameContext*>(wrenGetUserData(vm));
-	Struktur::Core::Input& input = context->GetInput();
+	Struktur::Input::Input& input = context->GetInput();
 
 	const char* inputKey = wrenGetSlotString(vm, 1);
 
@@ -143,7 +143,7 @@ void wren_InputIsInputJustReleased(WrenVM* vm)
 void wren_InputGetInputVariable(WrenVM* vm)
 {
 	Struktur::GameContext* context = static_cast<Struktur::GameContext*>(wrenGetUserData(vm));
-	Struktur::Core::Input& input = context->GetInput();
+	Struktur::Input::Input& input = context->GetInput();
 
 	const char* inputKey = wrenGetSlotString(vm, 1);
 
@@ -156,7 +156,7 @@ void wren_InputGetInputVariable(WrenVM* vm)
 void wren_InputGetInputAxis(WrenVM* vm)
 {
 	Struktur::GameContext* context = static_cast<Struktur::GameContext*>(wrenGetUserData(vm));
-	Struktur::Core::Input& input = context->GetInput();
+	Struktur::Input::Input& input = context->GetInput();
 
 	const char* inputKey = wrenGetSlotString(vm, 1);
 
@@ -169,7 +169,7 @@ void wren_InputGetInputAxis(WrenVM* vm)
 void wren_InputGetInputAxis2(WrenVM* vm)
 {
 	Struktur::GameContext* context = static_cast<Struktur::GameContext*>(wrenGetUserData(vm));
-	Struktur::Core::Input& input = context->GetInput();
+	Struktur::Input::Input& input = context->GetInput();
 
 	const char* inputKey = wrenGetSlotString(vm, 1);
 
@@ -184,7 +184,7 @@ void wren_InputGetInputAxis2(WrenVM* vm)
 void wren_InputLoadInputBindings(WrenVM* vm)
 {
 	Struktur::GameContext* context = static_cast<Struktur::GameContext*>(wrenGetUserData(vm));
-	Struktur::Core::Input& input = context->GetInput();
+	Struktur::Input::Input& input = context->GetInput();
 
 	const char* filePath = wrenGetSlotString(vm, 1);
 

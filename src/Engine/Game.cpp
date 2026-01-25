@@ -14,7 +14,7 @@
 #include "Debug/Profiling/Profiler.h"
 
 #include "Engine/GameContext.h"
-#include "Engine/Core/Input.h"
+#include "Engine/Input/Input.h"
 #include "Engine/Scripting/WrenScriptEngine.h"
 #include "Engine/ECS/SystemManager.h"
 
@@ -381,7 +381,7 @@ void Struktur::StopDebugGame(GameContext& context)
 void Struktur::ClearGameSystems(GameContext& context)
 {
 	DEBUG_INFO("[Clean Up] Input");
-	Core::Input& input = context.GetInput();
+	Input::Input& input = context.GetInput();
 	input.Clear();
 
 	DEBUG_INFO("[Clean Up] Wren State Manager");

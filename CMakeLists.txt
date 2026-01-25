@@ -323,7 +323,10 @@ set(SOURCES
     src/Engine/GameContext.h                    src/Engine/GameContext.cpp
 
     src/Engine/Core/Gamedata.h                  src/Engine/Core/GameData.cpp
-    src/Engine/Core/Input.h                     src/Engine/Core/Input.cpp
+
+    src/Engine/Input/Input.h                    src/Engine/Input/Input.cpp
+    src/Engine/Input/InputConfigLoader.h        src/Engine/Input/InputConfigLoader.cpp
+    src/Engine/Input/InputMaps.h                src/Engine/Input/InputMaps.cpp
 
     src/Engine/Resource/ResourcePool.h
     src/Engine/Resource/Resource.h

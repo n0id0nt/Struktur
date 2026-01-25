@@ -20,7 +20,7 @@ class Game {
         Application.setWindowSize(windowWidth, windowHeight)
         Application.setApplicationName("Memory Palace")
 
-        Input.loadInputBindings("assets/Settings/InputBindings/InputBindings.xml")
+        Input.loadInputBindings("assets/Settings/InputBindings/InputConfig.json")
 
         var gameObjectsScripts = [
             "Door",
