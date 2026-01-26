@@ -1,9 +1,10 @@
 // DialogueLoader.wren
 // Loads all dialogue definitions and passes them to the dialogue manager
 
-import "./GregDialogue" for GregDialogue
-import "./ItemInteractions" for ItemInteractions
-import "./NPCInteractions" for NPCInteractions
+import "dialogue" for DialogueManager
+import "Dialogue/GregDialogue" for GregDialogue
+import "Dialogue/ItemInteractions" for ItemInteractions
+import "Dialogue/NPCInteractions" for NPCInteractions
 
 class DialogueLoader {
     static loadAllDialogue() {

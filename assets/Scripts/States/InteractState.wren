@@ -1,6 +1,5 @@
 // states/InteractState.wren
-// Main gameplay state - handles player movement, interaction checks
-// This is the default state when playing the game
+// Interact state - handles NPC and item interactions using the dialogue system
 
 import "States/BaseState" for BaseState
 import "resourceManager" for Font, Texture, Music, Sound
@@ -14,32 +13,14 @@ import "debug" for Debug
 
 import "Colors" for BLANK, BLACK, DARKGRAY, WHITE
 import "Inventory" for Inventory
+import "dialogue" for DialogueManager
+
+import "Dialogue/DialogueLoader" for DialogueLoader
+import "Dialogue/GregDialogue" for GregDialogue
+import "Dialogue/ItemInteractions" for ItemInteractions
+import "Dialogue/NPCInteractions" for NPCInteractions
 
 var TEXT_SCROLL_SPEED = 0.02
-
-class DialogueStep {
-    construct new(dialogue, conditionContainsItemVector, conditionExcludeItemVector, itemAddVector, itemRemoveVector, applyCameraShake, deleteInteractingEntity, animateText, exitInteraction) {
-        _dialogue = dialogue
-        _conditionContainsItemVector = conditionContainsItemVector
-        _conditionExcludeItemVector = conditionExcludeItemVector
-        _itemAddVector = itemAddVector
-        _itemRemoveVector = itemRemoveVector
-        _applyCameraShake = applyCameraShake
-        _deleteInteractingEntity = deleteInteractingEntity
-        _animateText = animateText
-        _exitInteraction = exitInteraction
-    }
-
-    dialogue { _dialogue }
-    conditionContainsItemVector { _conditionContainsItemVector }
-    conditionExcludeItemVector { _conditionExcludeItemVector }
-    itemAddVector { _itemAddVector }
-    itemRemoveVector { _itemRemoveVector }
-    applyCameraShake { _applyCameraShake }
-    deleteInteractingEntity { _deleteInteractingEntity }
-    animateText { _animateText }
-    exitInteraction { _exitInteraction }
-}
 
 class InteractState is BaseState {
     construct new() {
@@ -48,65 +29,18 @@ class InteractState is BaseState {
         _screenPanel = null
         _dialogueLabel = null
         _continueDialogueLabel = null
+        _choiceLabels = []
 
         _interactingEntity = null
-
-        _interaction = null
         
         _dialogueSrolling = false
-        _breakAfterStep = false
-        _interactionStep = 0
         _currentString = ""
-
         _currentDialogueStartTime = 0
+        _currentResult = null
+        _waitingForChoice = false
 
         _menuMusic = null
         _textScrollSound = null
-
-        _interactionMap = { 
-            // ===== NPC DIALOGUES =====
-            "Scholar": [ // Source: Library
-                // After receiving Ancient Tome and giving Red Crystal Key
-                DialogueStep.new("Ah, my precious Ancient Tome! Years of research finally returned to me.\nThis knowledge belongs in my library, where it can illuminate minds for eternity.", ["Red Crystal Key"], [], [], [], false, false, true, true),
-                // Has Ancient Tome to trade
-                DialogueStep.new("Perfect! My lost research tome! This contains decades of study into the house's mysteries.", ["Scholar's Memory Note", "Ancient Tome"], ["Red Crystal Key"], [], [], false, false, true, false),
-                DialogueStep.new("In exchange for returning my life's work, I offer you this Crystal Key of Knowledge.\nMay it unlock the secrets you seek.", ["Scholar's Memory Note", "Ancient Tome"], ["Red Crystal Key"], ["Red Crystal Key"], ["Ancient Tome"], false, false, true, false),
-                DialogueStep.new("Obtained Red Crystal Key", ["Scholar's Memory Note", "Red Crystal Key"], [], [], [], false, false, false, true),
-                // Subsequent meetings without Ancient Tome
-                DialogueStep.new("My Ancient Tome is still missing - it contains all my research into this house's curse.", ["Scholar's Memory Note"], ["Ancient Tome"], [], [], false, false, true, true),
-                // First Meeting (Default)
-                DialogueStep.new("Welcome to my library, fellow seeker of knowledge.\nI've been trapped here since 1943, studying the curse that binds us all.", [], ["Scholar's Memory Note"], [], [], false, false, true, false),
-                DialogueStep.new("I had nearly solved the mystery when my research was scattered.\nIf you could find my Ancient Tome, I would gladly share a Crystal Key with you.", [], ["Scholar's Memory Note"], ["Scholar's Memory Note"], [], false, false, true, true),
-            ],
-            "Gardener": [ // Source: Garden (when Love Letter held)
-                // After receiving Ancient Tome and giving Red Crystal Key
-                DialogueStep.new("Oh, my beautiful rose! It belongs here among the other flowers, where love once bloomed eternal.\nThis garden is complete again.", ["Ancient Tome"], [], [], [], false, false, true, true),
-                // Has Rose to trade for Ancient Tome
-                DialogueStep.new("A lovely rose! Yes, I do have the Scholar's tome, but this garden feels incomplete without its most beautiful flower.", ["Gardener's Memory Note", "Rose"], ["Ancient Tome"], [], [], false, false, true, false),
-                DialogueStep.new("I'll gladly trade this dusty old book for something that belongs in a garden of eternal spring.", ["Gardener's Memory Note", "Rose"], ["Ancient Tome"], ["Ancient Tome"], ["Rose"], false, false, true, false),
-                DialogueStep.new("Obtained Ancient Tome", ["Gardener's Memory Note", "Ancient Tome"], [], [], [], false, false, false, true),
-                // Subsequent meetings without Rose
-                DialogueStep.new("Welcome to my garden where love once bloomed.\nI found the Scholar's tome among my flowers, but I won't trade it for just anything.", ["Gardener's Memory Note"], ["Rose"], [], [], false, false, true, false),
-                DialogueStep.new("Bring me a perfect rose", ["Gardener's Memory Note"], ["Rose"], [], [], false, false, true, true),
-                // First Meeting (Default)
-                DialogueStep.new("Welcome, dear visitor, to my sanctuary of eternal spring.\nI tend to memories as if they were flowers, nurturing what should grow and bloom.", [], ["Gardener's Memory Note"], [], [], false, false, true, false),
-                DialogueStep.new("I had nearly solved the mystery when my research was scattered.\nIf you could find my Ancient Tome, I would gladly share a Crystal Key with you.", [], ["Gardener's Memory Note"], ["Gardener's Memory Note"], [], false, false, true, true),
-            ],
-            "Cook": [ // Source: Kitchen
-                // After receiving Fresh Bread and giving Green Crystal Key
-                DialogueStep.new("My warm, fresh bread! The kitchen feels like home again with the scent of baking.\nThis Crystal Key has been keeping my recipes company - please, take it.", ["Green Crystal Key"], [], [], [], false, false, true, true),
-                // Has Rose to trade for Ancient Tome
-                DialogueStep.new("A lovely rose! Yes, I do have the Scholar's tome, but this garden feels incomplete without its most beautiful flower.", ["Gardener's Memory Note", "Rose"], ["Ancient Tome"], [], [], false, false, true, false),
-                DialogueStep.new("I'll gladly trade this dusty old book for something that belongs in a garden of eternal spring.", ["Gardener's Memory Note", "Rose"], ["Ancient Tome"], ["Ancient Tome"], ["Rose"], false, false, true, false),
-                DialogueStep.new("Obtained Ancient Tome", ["Gardener's Memory Note", "Ancient Tome"], [], [], [], false, false, false, true),
-                // Subsequent meetings without Rose
-                DialogueStep.new("Welcome to my garden where love once bloomed.\nI found the Scholar's tome among my flowers, but I won't trade it for just anything.", ["Gardener's Memory Note"], ["Rose"], [], [], false, false, true, false),
-                DialogueStep.new("Bring me a perfect rose", ["Gardener's Memory Note"], ["Rose"], [], [], false, false, true, true),
-                // First Meeting (Default)
-                DialogueStep.new("Welcome, dear visitor, to my sanctuary of eternal spring.\nI tend to memories as if they were flowers, nurturing what should grow and bloom.", [], ["Gardener's Memory Note"], [], [], false, false, true, false),
-                DialogueStep.new("I had nearly solved the mystery when my research was scattered.\nIf you could find my Ancient Tome, I would gladly share a Crystal Key with you.", [], ["Gardener's Memory Note"], ["Gardener's Memory Note"], [], false, false, true, true),
-            ],
-        }
     }
     
     enter(stateManager, params) {
@@ -121,6 +55,7 @@ class InteractState is BaseState {
         var font = Font.load("assets/Fonts/medieval_sharp/MedievalSharp-Bold.ttf", 30)
         var dialogueBackgroundPanelTexture = Texture.load("assets/Tiles/DialoguePanel.png")
 
+        // Create UI panel
         _screenPanel = UIPanel.new(Vec2.new(0, 0), Vec2.new(0, 0), Vec2.new(Application.gameWidth, Application.gameHeight), Vec2.new(0, 0))
         _screenPanel.setBackgroundColor(BLANK)
         _screenPanel.setBorderColor(BLANK)
@@ -139,65 +74,72 @@ class InteractState is BaseState {
         _dialogueLabel.setAnchorPoint(Vec2.new(0, 0))
         _dialogueLabel.setFont(font)
         _dialogueLabel.setWordWrap(TextWrapping.WORD_WRAP)
-        _dialogueLabel.setSize(Vec2.new(-40, -30), Vec2.new(1, 1))
+        _dialogueLabel.setSize(Vec2.new(-40, -80), Vec2.new(1, 1))
         textBackgroundPanel.addChild(_dialogueLabel)
 
-        _continueDialogueLabel = UILabel.new(Vec2.new(-40, -30), Vec2.new(0, 0), "Continue", 20.0)
+        _continueDialogueLabel = UILabel.new(Vec2.new(-40, -30), Vec2.new(1, 1), "Continue", 20.0)
         _continueDialogueLabel.setTextColor(BLACK)
         _continueDialogueLabel.setAnchorPoint(Vec2.new(1, 1))
         _continueDialogueLabel.setFont(font)
         _continueDialogueLabel.setVisible(false)
         textBackgroundPanel.addChild(_continueDialogueLabel)
 
-        // Set State variables
+        // Get the interactable entity and determine entry point
         var interactable = Script.getInstance(_interactingEntity)
+        var entryNodeId = getEntryPoint(interactable.name)
         
-        _interaction = _interactionMap[interactable.name]
-                
-        var interactionStep = 0
-        while (!trySetInteractionStep(interactionStep)) {
-            interactionStep = interactionStep + 1
-            if (interactionStep == _interaction.count) {
-                System.print("No valid interaction steps for this interaction")
-                stateManager.clearCurrentState()
-                return
-            }
+        if (entryNodeId == null) {
+            System.print("No dialogue entry point for %(interactable.name)")
+            stateManager.clearCurrentState()
+            return
         }
-        System.print("Set interaction step to %(interactionStep) for interactable %(interactable.name)")
+
+        System.print("Starting dialogue for %(interactable.name) at node %(entryNodeId)")
+        
+        // Start the dialogue
+        _currentResult = DialogueManager.startDialogue(entryNodeId)
+        processDialogueResult(_currentResult)
     }
     
     update(stateManager) {
         var inputInteract = Input.isInputJustReleased("Interact")
 
-        if (inputInteract) {
-            if (_dialogueSrolling) {
+        // Handle text scrolling
+        if (_dialogueSrolling) {
+            var numberOfCharactersToDraw = ((Application.gameTime - _currentDialogueStartTime) / TEXT_SCROLL_SPEED).floor
+            if (numberOfCharactersToDraw >= _currentString.count) {
+                numberOfCharactersToDraw = _currentString.count
                 _dialogueSrolling = false
-                _continueDialogueLabel.setVisible(false)
+                _continueDialogueLabel.setVisible(true)
+            }
+            var subString = _currentString[0...numberOfCharactersToDraw]
+            _dialogueLabel.setText(subString)
+            return
+        }
+
+        // Handle input
+        if (inputInteract) {
+            if (_waitingForChoice) {
+                // TODO: Handle choice selection via keyboard/gamepad
+                // For now, just continue if there's only one choice or no choices
+                if (_currentResult["choices"].count == 0) {
+                    continueDialogue(stateManager)
+                }
             } else {
-                if (_breakAfterStep) {
-                    stateManager.clearCurrentState()
-                    return // we are finished with the interaction.
-                }
-                var interactionStep = _interactionStep + 1
-                while (!trySetInteractionStep(interactionStep)) {
-                    interactionStep = interactionStep + 1
-                    if (_interaction && interactionStep == _interaction.count) {
-                        stateManager.clearCurrentState()
-                        return
-                    }
-                }
-                _continueDialogueLabel.setVisible(false)
+                continueDialogue(stateManager)
             }
         }
 
-        var numberOfCharactersToDraw = _dialogueSrolling ? ((Application.gameTime - _currentDialogueStartTime) / TEXT_SCROLL_SPEED).floor : _currentString.count
-        if (numberOfCharactersToDraw >= _currentString.count) {
-            numberOfCharactersToDraw = _currentString.count
-            _dialogueSrolling = false
-            _continueDialogueLabel.setVisible(false)
+        // Handle number key input for choices
+        if (_waitingForChoice && _currentResult["choices"].count > 0) {
+            for (i in 0..._currentResult["choices"].count) {
+                // Check for number keys 1-9
+                if (Input.isKeyJustPressed(49 + i)) { // KEY_ONE = 49
+                    makeChoice(stateManager, i)
+                    return
+                }
+            }
         }
-        var subString = _currentString[0...numberOfCharactersToDraw]
-        _dialogueLabel.setText(subString)
     }
     
     exit() {
@@ -205,6 +147,8 @@ class InteractState is BaseState {
         
         System.print("Unloading InteractState...")
 
+        DialogueManager.endDialogue()
+        
         UIManager.removeUIElement(_screenPanel)
         _menuMusic.stop()
         _menuMusic.unload()
@@ -215,45 +159,121 @@ class InteractState is BaseState {
         System.print("InteractState unloaded")
     }
 
-    trySetInteractionStep(stepIndex) {
-        var step = _interaction[stepIndex]
-        for (item in step.conditionContainsItemVector) {
-            if (!Inventory.contains(item)) {
-                return false
-            }
+    processDialogueResult(result) {
+        // Check if dialogue has ended
+        if (result["hasEnded"]) {
+            System.print("Dialogue ended")
+            return
         }
 
-        for (item in step.conditionExcludeItemVector) {
-            if (Inventory.contains(item)) {
-                return false
-            }
+        // Get the text and speaker
+        var speaker = result["speaker"]
+        var text = result["text"]
+        
+        // Format with speaker name if present
+        if (speaker != "") {
+            _currentString = "%(speaker):\n%(text)"
+        } else {
+            _currentString = text
         }
 
-        _currentString = step.dialogue
-        _dialogueSrolling = step.animateText
-        _breakAfterStep = step.exitInteraction
-        _interactionStep = stepIndex
+        // Start text scrolling animation
+        _dialogueSrolling = true
         _currentDialogueStartTime = Application.gameTime
+        _continueDialogueLabel.setVisible(false)
+        _waitingForChoice = false
 
-        for (item in step.itemAddVector) {
-            Inventory.addItem(item)
+        // Clear old choice labels
+        clearChoiceLabels()
+
+        // Check if there are choices
+        var choices = result["choices"]
+        if (choices.count > 0) {
+            _waitingForChoice = true
+            displayChoices(choices)
+        }
+    }
+
+    continueDialogue(stateManager) {
+        // If there are choices, we shouldn't continue automatically
+        if (_waitingForChoice && _currentResult["choices"].count > 0) {
+            return
         }
 
-        for (item in step.itemRemoveVector) {
-            Inventory.removeItem(item)
+        // Continue to next node
+        _currentResult = DialogueManager.continueDialogue()
+        
+        // Check if dialogue ended
+        if (_currentResult["hasEnded"] || _currentResult["status"] != 0) {
+            stateManager.clearCurrentState()
+            return
         }
 
-        //if (step.deleteInteractingEntity) {
-        //    
-        //}
+        processDialogueResult(_currentResult)
+    }
 
-        if (step.applyCameraShake) {
-            var cameraEntities = GameObject.getAllWithComponent("Camera")
-            for (cameraEntity in cameraEntities) {
-                Camera.addCameraTrauma(entity, 0.4)
-            }
+    makeChoice(stateManager, choiceIndex) {
+        System.print("Making choice %(choiceIndex)")
+        
+        _currentResult = DialogueManager.makeChoice(choiceIndex)
+        
+        // Check if dialogue ended
+        if (_currentResult["hasEnded"] || _currentResult["status"] != 0) {
+            stateManager.clearCurrentState()
+            return
         }
 
-        return true
+        processDialogueResult(_currentResult)
+    }
+
+    displayChoices(choices) {
+        // Create choice labels
+        var yOffset = -80
+        var font = Font.load("assets/Fonts/medieval_sharp/MedievalSharp-Bold.ttf", 18)
+        
+        for (i in 0...choices.count) {
+            var choice = choices[i]
+            var choiceText = "%(i + 1). %(choice["text"])"
+            
+            var choiceLabel = UILabel.new(Vec2.new(40, yOffset), Vec2.new(0, 1), choiceText, 18.0)
+            choiceLabel.setTextColor(BLACK)
+            choiceLabel.setAnchorPoint(Vec2.new(0, 1))
+            choiceLabel.setFont(font)
+            _screenPanel.addChild(choiceLabel)
+            _choiceLabels.add(choiceLabel)
+            
+            yOffset = yOffset - 25
+        }
+    }
+
+    clearChoiceLabels() {
+        for (label in _choiceLabels) {
+            _screenPanel.removeChild(label)
+        }
+        _choiceLabels.clear()
+    }
+
+    getEntryPoint(interactableName) {
+        // Determine which dialogue entry point to use based on the interactable
+        // This maps your old interaction names to the new dialogue system
+        
+        // NPCs
+        if (interactableName == "Scholar") return GregDialogue.getEntryPoint()
+        if (interactableName == "Gardener") return NPCInteractions.getEntryPoint("gardener")
+        if (interactableName == "Cook") return NPCInteractions.getEntryPoint("cook")
+        if (interactableName == "Merchant") return NPCInteractions.getEntryPoint("merchant")
+        if (interactableName == "Guard") return NPCInteractions.getEntryPoint("guard")
+        if (interactableName == "Librarian") return NPCInteractions.getEntryPoint("librarian")
+        
+        // Items
+        if (interactableName == "Ancient Tome") return ItemInteractions.getEntryPoint("ancient_book")
+        if (interactableName == "Rose") return ItemInteractions.getEntryPoint("rose")
+        if (interactableName == "Healing Potion") return ItemInteractions.getEntryPoint("healing_potion")
+        if (interactableName == "Mysterious Key") return ItemInteractions.getEntryPoint("mysterious_key")
+        if (interactableName == "Old Map") return ItemInteractions.getEntryPoint("old_map")
+        
+        // Default - no dialogue found
+        Debug.Warning("Warning: No dialogue entry point found for %(interactableName)")
+        return null
     }
 }

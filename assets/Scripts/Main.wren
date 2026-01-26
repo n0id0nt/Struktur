@@ -9,6 +9,7 @@ import "States/StateManager" for StateManager
 import "States/GameWorldState" for GameWorldState
 import "States/MainMenuState" for MainMenuState
 import "Inventory" for Inventory
+import "Dialogue/DialogueLoader" for DialogueLoader
 
 class Game {
     // Called before the game window is created and will initial the project settings.
@@ -40,6 +41,7 @@ class Game {
 
     // Called after the all the systems are initialised 
     start() {
+        DialogueLoader.loadAllDialogue()
         // Initial states
         _stateManager.insertState("GameWorld", GameWorldState)
         _stateManager.insertState("MainMenu", MainMenuState)

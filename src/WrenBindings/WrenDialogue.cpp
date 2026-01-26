@@ -11,8 +11,7 @@
 // Allocator
 void wren_DialogueDataAllocate(WrenVM* vm)
 {
-	WrenDialogueData* data = (WrenDialogueData*)wrenSetSlotNewForeign(vm, 0, 0, sizeof(WrenDialogueData));
-	new (data) WrenDialogueData();
+	wrenSetSlotNewForeign(vm, 0, 0, sizeof(WrenDialogueData));
 }
 
 // Finalizer
@@ -20,6 +19,13 @@ void wren_DialogueDataFinalize(void* data)
 {
 	WrenDialogueData* dialogueData = (WrenDialogueData*)data;
 	dialogueData->~WrenDialogueData();
+}
+
+// DialogueData.new(_)
+void wren_DialogueDataNew(WrenVM* vm)
+{
+	WrenDialogueData* dialogueData = static_cast<WrenDialogueData*>(wrenGetSlotForeign(vm, 0));
+	new (dialogueData) WrenDialogueData();
 }
 
 // Helper function to extract map values from Wren
@@ -44,6 +50,8 @@ std::vector<Struktur::Dialogue::ConditionData> GetConditionList(WrenVM* vm, int 
 	if (wrenGetSlotType(vm, listSlot) != WREN_TYPE_LIST)
 		return conditions;
 	
+	wrenEnsureSlots(vm, listSlot + 4);
+
 	int count = wrenGetListCount(vm, listSlot);
 	for (int i = 0; i < count; ++i)
 	{
@@ -91,6 +99,8 @@ std::vector<Struktur::Dialogue::CommandData> GetCommandList(WrenVM* vm, int list
 	if (wrenGetSlotType(vm, listSlot) != WREN_TYPE_LIST)
 		return commands;
 	
+	wrenEnsureSlots(vm, listSlot + 4);
+
 	int count = wrenGetListCount(vm, listSlot);
 	for (int i = 0; i < count; ++i)
 	{
@@ -138,6 +148,8 @@ std::vector<Struktur::Dialogue::ChoiceData> GetChoiceList(WrenVM* vm, int listSl
 	if (wrenGetSlotType(vm, listSlot) != WREN_TYPE_LIST)
 		return choices;
 	
+	wrenEnsureSlots(vm, listSlot + 3);
+
 	int count = wrenGetListCount(vm, listSlot);
 	for (int i = 0; i < count; ++i)
 	{
@@ -185,6 +197,7 @@ void wren_DialogueDataAddNode(WrenVM* vm)
 	
 	Struktur::Dialogue::NodeData nodeData;
 	
+	wrenEnsureSlots(vm, 4);
 	// Extract speaker
 	nodeData.speaker = GetMapString(vm, 2, "speaker", 3);
 	
@@ -226,7 +239,7 @@ void wren_DialogueDataAddNode(WrenVM* vm)
 WREN_FOREIGN_CLASS("dialogue", "DialogueData", wren_DialogueDataAllocate, wren_DialogueDataFinalize, "Container for dialogue data");
 
 // Register constructors and methods
-WREN_CONSTRUCTOR("dialogue", "DialogueData", "new()", wren_DialogueDataAllocate, "Create new DialogueData container");
+WREN_CONSTRUCTOR("dialogue", "DialogueData", "new()", wren_DialogueDataNew, "Create new DialogueData container");
 WREN_CLASS_METHOD("dialogue", "DialogueData", "addNode(_,_)", wren_DialogueDataAddNode, "Add a dialogue node");
 
 // ============================================================================
