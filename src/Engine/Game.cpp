@@ -165,6 +165,10 @@ void Struktur::ExitGame(GameContext& context)
 	Wren::WrenScriptEngine& wrenScriptEngine = context.GetWrenScriptEngine();
 	wrenScriptEngine.Shutdown();
 
+	DEBUG_INFO("[Clean Up] DialogueManager");
+	Dialogue::DialogueManager& dialogueManager = context.GetDialogueManager();
+	dialogueManager.Clear();
+
 	DEBUG_INFO("[Clean Up] Resource Manager");
 	Resource::ResourceManager& resourceManager = context.GetResourceManager();
 	resourceManager.Clear();
@@ -407,6 +411,10 @@ void Struktur::ClearGameSystems(GameContext& context)
 	DEBUG_INFO("[Clean Up] Wren Script Engine");
 	Wren::WrenScriptEngine& wrenScriptEngine = context.GetWrenScriptEngine();
 	wrenScriptEngine.Shutdown();
+		
+	DEBUG_INFO("[Clean Up] DialogueManager");
+	Dialogue::DialogueManager& dialogueManager = context.GetDialogueManager();
+	dialogueManager.Clear();
 
 	DEBUG_INFO("[Clean Up] Resource Manager");
 	Resource::ResourceManager& resourceManager = context.GetResourceManager();

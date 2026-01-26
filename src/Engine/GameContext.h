@@ -15,6 +15,8 @@
 #include "Engine/Scripting/WrenScriptEngine.h"
 #include "Engine/Scripting/WrenStateManager.h"
 #include "Engine/Scripting/WrenScriptComponentRegistry.h"
+#include "Engine/Flag/FlagManager.h"
+#include "Engine/Dialogue/DialogueManager.h"
 
 #include "Debug/Assertions.h"
 #ifdef EDITOR
@@ -43,6 +45,8 @@ namespace Struktur
 			m_wrenScriptEngine = std::make_unique<Wren::WrenScriptEngine>();
 			m_wrenStateManager = std::make_unique<Wren::WrenStateManager>();
 			m_wrenScriptComponentRegistry = std::make_unique<Wren::WrenScriptComponentRegistry>();
+			m_flagManager = std::make_unique<Flag::FlagManager>();
+			m_dialogueManager = std::make_unique<Dialogue::DialogueManager>();
 #ifdef EDITOR
 			m_editor = std::make_unique<Debug::Editor>();
 #endif
@@ -123,6 +127,18 @@ namespace Struktur
 			return *m_wrenScriptComponentRegistry;
 		}
 
+		Flag::FlagManager& GetFlagManager() const
+		{
+			ASSERT_MSG(m_flagManager.get(), "Flag Manager not initialised");
+			return *m_flagManager;
+		}
+
+		Dialogue::DialogueManager& GetDialogueManager() const
+		{
+			ASSERT_MSG(m_dialogueManager.get(), "Dialogue Manager not initialised");
+			return *m_dialogueManager;
+		}
+
 #ifdef EDITOR
 		Debug::Editor& GetEditor() const
 		{
@@ -152,6 +168,8 @@ namespace Struktur
 		std::unique_ptr<Wren::WrenScriptEngine> m_wrenScriptEngine;
 		std::unique_ptr<Wren::WrenStateManager> m_wrenStateManager;
 		std::unique_ptr<Wren::WrenScriptComponentRegistry> m_wrenScriptComponentRegistry;
+		std::unique_ptr<Flag::FlagManager> m_flagManager;
+		std::unique_ptr<Dialogue::DialogueManager> m_dialogueManager;
 #ifdef EDITOR
 		std::unique_ptr<Debug::Editor> m_editor;
 #endif

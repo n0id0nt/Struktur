@@ -309,6 +309,8 @@ set(WREN_BINDING_SOURCES
     src/WrenBindings/WrenPhysics.h              src/WrenBindings/WrenPhysics.cpp
     src/WrenBindings/WrenResourceManager.h      src/WrenBindings/WrenResourceManager.cpp
     src/WrenBindings/WrenUI.h                   src/WrenBindings/WrenUI.cpp
+    src/WrenBindings/WrenDialogue.h             src/WrenBindings/WrenDialogue.cpp
+                                                src/WrenBindings/WrenFlags.cpp
                                                 src/WrenBindings/WrenApplication.cpp
                                                 src/WrenBindings/WrenGameObject.cpp
                                                 src/WrenBindings/WrenInput.cpp
@@ -327,6 +329,16 @@ set(SOURCES
     src/Engine/Input/Input.h                    src/Engine/Input/Input.cpp
     src/Engine/Input/InputConfigLoader.h        src/Engine/Input/InputConfigLoader.cpp
     src/Engine/Input/InputMaps.h                src/Engine/Input/InputMaps.cpp
+
+    src/Engine/Flag/FlagManager.h               src/Engine/Flag/FlagManager.cpp
+
+    src/Engine/Dialogue/Commands.h              src/Engine/Dialogue/Commands.cpp
+    src/Engine/Dialogue/Conditions.h            src/Engine/Dialogue/Conditions.cpp
+    src/Engine/Dialogue/DialogueConverter.h     src/Engine/Dialogue/DialogueConverter.cpp
+    src/Engine/Dialogue/DialogueManager.h       src/Engine/Dialogue/DialogueManager.cpp
+    src/Engine/Dialogue/DialogueNode.h          src/Engine/Dialogue/DialogueNode.cpp
+    src/Engine/Dialogue/DialogueRegistry.h      src/Engine/Dialogue/DialogueRegistry.cpp
+    src/Engine/Dialogue/DialogueStructures.h
 
     src/Engine/Resource/ResourcePool.h
     src/Engine/Resource/Resource.h
