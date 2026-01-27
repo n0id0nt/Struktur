@@ -7,9 +7,8 @@
 
 namespace Struktur::Dialogue
 {
-	DialogueRegistry::DialogueRegistry(WrenVM* vm)
-		: m_vm(vm)
-		, m_conditionCallbacks()
+	DialogueRegistry::DialogueRegistry()
+		: m_conditionCallbacks()
 		, m_commandCallbacks()
 		, m_operatorCallbacks()
 	{
@@ -18,29 +17,35 @@ namespace Struktur::Dialogue
 
 	DialogueRegistry::~DialogueRegistry()
 	{
+
+	}
+
+    void DialogueRegistry::Clear(GameContext &context)
+    {
+		vm
 		DEBUG_INFO("DialogueRegistry destroyed, releasing %zu condition callbacks, %zu command callbacks, %zu operator callbacks",
-				   m_conditionCallbacks.size(), m_commandCallbacks.size(), m_operatorCallbacks.size());
+			m_conditionCallbacks.size(), m_commandCallbacks.size(), m_operatorCallbacks.size());
 
 		// Release all condition callbacks
 		for (auto& [type, callback] : m_conditionCallbacks)
 		{
-			wrenReleaseHandle(m_vm, callback);
+			wrenReleaseHandle(vm, callback);
 		}
 
 		// Release all command callbacks
 		for (auto& [type, callback] : m_commandCallbacks)
 		{
-			wrenReleaseHandle(m_vm, callback);
+			wrenReleaseHandle(vm, callback);
 		}
 
 		// Release all operator callbacks
 		for (auto& [op, callback] : m_operatorCallbacks)
 		{
-			wrenReleaseHandle(m_vm, callback);
+			wrenReleaseHandle(vm, callback);
 		}
-	}
+    }
 
-	void DialogueRegistry::RegisterConditionType(const std::string& type, WrenHandle* callback)
+    void DialogueRegistry::RegisterConditionType(const std::string& type, WrenHandle* callback)
 	{
 		// If type already exists, release old handle
 		auto it = m_conditionCallbacks.find(type);

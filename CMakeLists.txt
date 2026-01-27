@@ -332,13 +332,16 @@ set(SOURCES
 
     src/Engine/Flag/FlagManager.h               src/Engine/Flag/FlagManager.cpp
 
-    src/Engine/Dialogue/Commands.h              src/Engine/Dialogue/Commands.cpp
-    src/Engine/Dialogue/Conditions.h            src/Engine/Dialogue/Conditions.cpp
-    src/Engine/Dialogue/DialogueConverter.h     src/Engine/Dialogue/DialogueConverter.cpp
+    src/Engine/Dialogue/DialogueLoader.h        src/Engine/Dialogue/DialogueLoader.cpp
     src/Engine/Dialogue/DialogueManager.h       src/Engine/Dialogue/DialogueManager.cpp
     src/Engine/Dialogue/DialogueNode.h          src/Engine/Dialogue/DialogueNode.cpp
     src/Engine/Dialogue/DialogueRegistry.h      src/Engine/Dialogue/DialogueRegistry.cpp
-    src/Engine/Dialogue/DialogueStructures.h
+    src/Engine/Dialogue/DialogueValue.h         src/Engine/Dialogue/DialogueValue.cpp
+    src/Engine/Dialogue/WrenCommand.h           src/Engine/Dialogue/WrenCommand.cpp
+    src/Engine/Dialogue/WrenCondition.h         src/Engine/Dialogue/WrenCondition.cpp
+    src/Engine/Dialogue/Command.h
+    src/Engine/Dialogue/Condition.h
+    src/Engine/Dialogue/DialogueResult.h
 
     src/Engine/Resource/ResourcePool.h
     src/Engine/Resource/Resource.h

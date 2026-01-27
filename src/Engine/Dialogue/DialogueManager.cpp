@@ -23,7 +23,7 @@ namespace Struktur::Dialogue
 		DEBUG_INFO("Loaded %zu dialogue nodes", m_nodes.size());
 	}
 
-	void DialogueManager::ClearAllNodes()
+	void DialogueManager::Clear()
 	{
 		m_nodes.clear();
 		m_currentNode = nullptr;

@@ -15,6 +15,11 @@
 struct WrenVM;
 struct WrenHandle;
 
+namespace Struktur
+{
+	class GameContext;
+}
+
 namespace Struktur::Dialogue
 {
 	// Registry for dialogue conditions, commands, and operators
@@ -22,8 +27,10 @@ namespace Struktur::Dialogue
 	class DialogueRegistry
 	{
 	public:
-		explicit DialogueRegistry(WrenVM* vm);
+		explicit DialogueRegistry();
 		~DialogueRegistry();
+
+		void Clear(GameContext& context);
 
 		// Delete copy and move
 		DialogueRegistry(const DialogueRegistry&) = delete;
@@ -57,7 +64,6 @@ namespace Struktur::Dialogue
 		bool HasOperator(const std::string& op) const;
 
 	private:
-		WrenVM* m_vm;
 		std::map<std::string, WrenHandle*> m_conditionCallbacks;
 		std::map<std::string, WrenHandle*> m_commandCallbacks;
 		std::map<std::string, WrenHandle*> m_operatorCallbacks;

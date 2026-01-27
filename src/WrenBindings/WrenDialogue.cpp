@@ -1,13 +1,14 @@
 #include "WrenDialogue.h"
 
+#include "wren.h"
+
+#include "Debug/Assertions.h"
 #include "Engine/Scripting/WrenBindingRegistry.h"
 #include "Engine/GameContext.h"
-#include "Dialogue/DialogueManager.h"
-#include "Dialogue/DialogueRegistry.h"
-#include "Dialogue/DialogueLoader.h"
-#include "Dialogue/DialogueNode.h"
-#include "wren.h"
-#include "Debug/Assertions.h"
+#include "Engine/Dialogue/DialogueManager.h"
+#include "Engine/Dialogue/DialogueRegistry.h"
+#include "Engine/Dialogue/DialogueLoader.h"
+#include "Engine/Dialogue/DialogueNode.h"
 
 // ============================================================================
 // FOREIGN CLASS WRAPPERS
@@ -558,85 +559,76 @@ void wren_DialogueManagerClearAllNodes(WrenVM* vm)
 	Struktur::GameContext* context = static_cast<Struktur::GameContext*>(wrenGetUserData(vm));
 	Struktur::Dialogue::DialogueManager& manager = context->GetDialogueManager();
 
-	manager.ClearAllNodes();
+	manager.Clear();
 }
 
 // ============================================================================
 // BINDING REGISTRATION
 // ============================================================================
 
-void RegisterDialogueBindings()
-{
-	// DialogueData foreign class
-	WREN_FOREIGN_CLASS("dialogue", "DialogueData",
-					   wren_DialogueDataAllocate,
-					   wren_DialogueDataFinalize,
-					   "Container for dialogue data");
+// DialogueData foreign class
+WREN_FOREIGN_CLASS("dialogue", "DialogueData", wren_DialogueDataAllocate, wren_DialogueDataFinalize, "Container for dialogue data");
 
-	WREN_CLASS_METHOD("dialogue", "DialogueData",
-					  "addNodeSimple(_,_,_,_)",
-					  wren_DialogueDataAddNodeSimple,
-					  "Add a simple node with id, speaker, text, next");
+WREN_CLASS_METHOD("dialogue", "DialogueData", "addNodeSimple(_,_,_,_)", wren_DialogueDataAddNodeSimple, "Add a simple node with id, speaker, text, next");
 
-	WREN_CLASS_METHOD("dialogue", "DialogueData",
-					  "loadIntoManager()",
-					  wren_DialogueDataLoadIntoManager,
-					  "Load dialogue data into DialogueManager");
+WREN_CLASS_METHOD("dialogue", "DialogueData",
+					"loadIntoManager()",
+					wren_DialogueDataLoadIntoManager,
+					"Load dialogue data into DialogueManager");
 
-	// DialogueRegistry static methods
-	WREN_CLASS_STATIC("dialogue", "DialogueRegistry",
-					  "registerCondition(_,_)",
-					  wren_DialogueRegistryRegisterCondition,
-					  "Register a condition type with callback");
+// DialogueRegistry static methods
+WREN_CLASS_STATIC("dialogue", "DialogueRegistry",
+					"registerCondition(_,_)",
+					wren_DialogueRegistryRegisterCondition,
+					"Register a condition type with callback");
 
-	WREN_CLASS_STATIC("dialogue", "DialogueRegistry",
-					  "registerCommand(_,_)",
-					  wren_DialogueRegistryRegisterCommand,
-					  "Register a command type with callback");
+WREN_CLASS_STATIC("dialogue", "DialogueRegistry",
+					"registerCommand(_,_)",
+					wren_DialogueRegistryRegisterCommand,
+					"Register a command type with callback");
 
-	WREN_CLASS_STATIC("dialogue", "DialogueRegistry",
-					  "registerOperator(_,_)",
-					  wren_DialogueRegistryRegisterOperator,
-					  "Register an operator with callback");
+WREN_CLASS_STATIC("dialogue", "DialogueRegistry",
+					"registerOperator(_,_)",
+					wren_DialogueRegistryRegisterOperator,
+					"Register an operator with callback");
 
-	WREN_CLASS_STATIC("dialogue", "DialogueRegistry",
-					  "evalOperator(_,_,_)",
-					  wren_DialogueRegistryEvalOperator,
-					  "Evaluate operator with lhs and rhs");
+WREN_CLASS_STATIC("dialogue", "DialogueRegistry",
+					"evalOperator(_,_,_)",
+					wren_DialogueRegistryEvalOperator,
+					"Evaluate operator with lhs and rhs");
 
-	// DialogueManager static methods
-	WREN_CLASS_STATIC("dialogue", "DialogueManager",
-					  "startDialogue(_)",
-					  wren_DialogueManagerStartDialogue,
-					  "Start dialogue at a specific node");
+// DialogueManager static methods
+WREN_CLASS_STATIC("dialogue", "DialogueManager",
+					"startDialogue(_)",
+					wren_DialogueManagerStartDialogue,
+					"Start dialogue at a specific node");
 
-	WREN_CLASS_STATIC("dialogue", "DialogueManager",
-					  "makeChoice(_)",
-					  wren_DialogueManagerMakeChoice,
-					  "Make a choice in dialogue");
+WREN_CLASS_STATIC("dialogue", "DialogueManager",
+					"makeChoice(_)",
+					wren_DialogueManagerMakeChoice,
+					"Make a choice in dialogue");
 
-	WREN_CLASS_STATIC("dialogue", "DialogueManager",
-					  "continue()",
-					  wren_DialogueManagerContinue,
-					  "Continue to next node");
+WREN_CLASS_STATIC("dialogue", "DialogueManager",
+					"continue()",
+					wren_DialogueManagerContinue,
+					"Continue to next node");
 
-	WREN_CLASS_STATIC("dialogue", "DialogueManager",
-					  "isDialogueActive()",
-					  wren_DialogueManagerIsDialogueActive,
-					  "Check if dialogue is active");
+WREN_CLASS_STATIC("dialogue", "DialogueManager",
+					"isDialogueActive()",
+					wren_DialogueManagerIsDialogueActive,
+					"Check if dialogue is active");
 
-	WREN_CLASS_STATIC("dialogue", "DialogueManager",
-					  "getCurrentNodeId()",
-					  wren_DialogueManagerGetCurrentNodeId,
-					  "Get current node ID");
+WREN_CLASS_STATIC("dialogue", "DialogueManager",
+					"getCurrentNodeId()",
+					wren_DialogueManagerGetCurrentNodeId,
+					"Get current node ID");
 
-	WREN_CLASS_STATIC("dialogue", "DialogueManager",
-					  "getNodeCount()",
-					  wren_DialogueManagerGetNodeCount,
-					  "Get total number of loaded nodes");
+WREN_CLASS_STATIC("dialogue", "DialogueManager",
+					"getNodeCount()",
+					wren_DialogueManagerGetNodeCount,
+					"Get total number of loaded nodes");
 
-	WREN_CLASS_STATIC("dialogue", "DialogueManager",
-					  "clearAllNodes()",
-					  wren_DialogueManagerClearAllNodes,
-					  "Clear all loaded dialogue nodes");
-}
+WREN_CLASS_STATIC("dialogue", "DialogueManager",
+					"clearAllNodes()",
+					wren_DialogueManagerClearAllNodes,
+					"Clear all loaded dialogue nodes");

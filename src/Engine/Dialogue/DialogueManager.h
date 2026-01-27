@@ -37,7 +37,7 @@ namespace Struktur::Dialogue
 
 		// Loading
 		void LoadDialogueNodes(std::map<std::string, std::unique_ptr<DialogueNode>> nodes);
-		void ClearAllNodes();
+		void Clear();
 
 		// Flow control
 		DialogueResult StartDialogue(GameContext& context, const std::string& nodeId);
