@@ -1,15 +1,18 @@
+// DialogueManager.h
+// Main dialogue system manager - orchestrates dialogue flow
+// Part of the Struktur dialogue system
+
 #pragma once
 
 #include <string>
-#include <vector>
-#include <unordered_map>
-#include <unordered_set>
+#include <map>
 #include <memory>
+#include <vector>
+#include <optional>
 
 #include "DialogueNode.h"
-#include "DialogueStructures.h"
+#include "DialogueResult.h"
 #include "DialogueRegistry.h"
-#include "DialogueConverter.h"
 
 namespace Struktur
 {
@@ -18,46 +21,45 @@ namespace Struktur
 
 namespace Struktur::Dialogue
 {
+	// Main dialogue manager
+	// Manages dialogue flow, node processing, and condition/command execution
 	class DialogueManager
 	{
 	public:
 		DialogueManager();
 		~DialogueManager();
 
-		// Registry access
-		DialogueRegistry& GetRegistry() { return m_registry; }
-		const DialogueRegistry& GetRegistry() const { return m_registry; }
+		// Delete copy, allow move
+		DialogueManager(const DialogueManager&) = delete;
+		DialogueManager& operator=(const DialogueManager&) = delete;
+		DialogueManager(DialogueManager&&) noexcept = default;
+		DialogueManager& operator=(DialogueManager&&) noexcept = default;
 
-		// Data Loading
-		void LoadDialogueFromMap(const DialogueDataMap& data);
-		void UnloadDialogue(const std::string& dialogueSetName);
-		void Clear();
+		// Loading
+		void LoadDialogueNodes(std::map<std::string, std::unique_ptr<DialogueNode>> nodes);
+		void ClearAllNodes();
 
-		// Dialogue Flow Control
-		DialogueResult StartDialogue(const std::string& nodeId);
-		DialogueResult MakeChoice(int choiceIndex);
-		DialogueResult ContinueDialogue();
-		void EndDialogue();
+		// Flow control
+		DialogueResult StartDialogue(GameContext& context, const std::string& nodeId);
+		DialogueResult MakeChoice(GameContext& context, int choiceIndex);
+		DialogueResult Continue(GameContext& context);
 
-		// State Query
+		// Queries
 		bool IsDialogueActive() const;
-		std::string GetCurrentNodeId() const;
+		std::optional<std::string> GetCurrentNodeId() const;
 		const DialogueNode* GetNode(const std::string& nodeId) const;
-
-		// Validation & Debugging
-		std::vector<ValidationError> ValidateDialogue() const;
-		std::vector<std::string> GetUnreachableNodes() const;
-		std::vector<std::string> GetAllNodeIds() const;
+		size_t GetNodeCount() const { return m_nodes.size(); }
 
 	private:
-		DialogueRegistry m_registry;
-		std::unordered_map<std::string, std::unique_ptr<DialogueNode>> m_nodes;
+		// Node storage
+		std::map<std::string, std::unique_ptr<DialogueNode>> m_nodes;
 		DialogueNode* m_currentNode;
 		std::vector<std::string> m_history;
 
-		DialogueResult ProcessCurrentNode();
-		bool EvaluateConditions(const std::vector<std::unique_ptr<Condition>>& conditions);
-		void ExecuteCommands(const std::vector<std::unique_ptr<Command>>& commands);
-		std::vector<DialogueResult::ChoiceInfo> GetAvailableChoices();
+		// Internal processing
+		DialogueResult ProcessNode(GameContext& context, const std::string& nodeId);
+		std::optional<std::string> EvaluateTargets(GameContext& context, const std::vector<ConditionalTarget>& targets);
+		bool EvaluateConditions(GameContext& context, const std::vector<std::unique_ptr<Condition>>& conditions);
+		void ExecuteCommands(GameContext& context, const std::vector<std::unique_ptr<Command>>& commands);
 	};
 }

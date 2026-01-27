@@ -1,70 +1,185 @@
 #include "DialogueRegistry.h"
 
+#include "WrenCondition.h"
+#include "WrenCommand.h"
+#include "wren.h"
+#include "Debug/Assertions.h"
+
 namespace Struktur::Dialogue
 {
-	void DialogueRegistry::RegisterConditionType(const std::string& typeName, ConditionFactory factory)
+	DialogueRegistry::DialogueRegistry(WrenVM* vm)
+		: m_vm(vm)
+		, m_conditionCallbacks()
+		, m_commandCallbacks()
+		, m_operatorCallbacks()
 	{
-		m_conditionFactories[typeName] = std::move(factory);
+		DEBUG_INFO("DialogueRegistry initialized");
 	}
 
-	std::unique_ptr<Condition> DialogueRegistry::CreateCondition(
-		const std::string& typeName,
-		const std::unordered_map<std::string, std::string>& params
-	) const
+	DialogueRegistry::~DialogueRegistry()
 	{
-		auto it = m_conditionFactories.find(typeName);
-		if (it == m_conditionFactories.end())
+		DEBUG_INFO("DialogueRegistry destroyed, releasing %zu condition callbacks, %zu command callbacks, %zu operator callbacks",
+				   m_conditionCallbacks.size(), m_commandCallbacks.size(), m_operatorCallbacks.size());
+
+		// Release all condition callbacks
+		for (auto& [type, callback] : m_conditionCallbacks)
+		{
+			wrenReleaseHandle(m_vm, callback);
+		}
+
+		// Release all command callbacks
+		for (auto& [type, callback] : m_commandCallbacks)
+		{
+			wrenReleaseHandle(m_vm, callback);
+		}
+
+		// Release all operator callbacks
+		for (auto& [op, callback] : m_operatorCallbacks)
+		{
+			wrenReleaseHandle(m_vm, callback);
+		}
+	}
+
+	void DialogueRegistry::RegisterConditionType(const std::string& type, WrenHandle* callback)
+	{
+		// If type already exists, release old handle
+		auto it = m_conditionCallbacks.find(type);
+		if (it != m_conditionCallbacks.end())
+		{
+			DEBUG_WARNING("Condition type '%s' already registered, replacing", type.c_str());
+			wrenReleaseHandle(m_vm, it->second);
+		}
+
+		m_conditionCallbacks[type] = callback;
+		DEBUG_INFO("Registered condition type: %s", type.c_str());
+	}
+
+	void DialogueRegistry::RegisterCommandType(const std::string& type, WrenHandle* callback)
+	{
+		// If type already exists, release old handle
+		auto it = m_commandCallbacks.find(type);
+		if (it != m_commandCallbacks.end())
+		{
+			DEBUG_WARNING("Command type '%s' already registered, replacing", type.c_str());
+			wrenReleaseHandle(m_vm, it->second);
+		}
+
+		m_commandCallbacks[type] = callback;
+		DEBUG_INFO("Registered command type: %s", type.c_str());
+	}
+
+	void DialogueRegistry::RegisterOperator(const std::string& op, WrenHandle* callback)
+	{
+		// If operator already exists, release old handle
+		auto it = m_operatorCallbacks.find(op);
+		if (it != m_operatorCallbacks.end())
+		{
+			DEBUG_WARNING("Operator '%s' already registered, replacing", op.c_str());
+			wrenReleaseHandle(m_vm, it->second);
+		}
+
+		m_operatorCallbacks[op] = callback;
+		DEBUG_INFO("Registered operator: %s", op.c_str());
+	}
+
+	std::unique_ptr<Condition> DialogueRegistry::CreateCondition(const std::string& type,
+																 const std::map<std::string, DialogueValue>& params)
+	{
+		auto it = m_conditionCallbacks.find(type);
+		if (it == m_conditionCallbacks.end())
+		{
+			DEBUG_ERROR("Condition type '%s' not registered", type.c_str());
 			return nullptr;
-		
-		return it->second(params);
+		}
+
+		return std::make_unique<WrenCondition>(m_vm, it->second, params);
 	}
 
-	void DialogueRegistry::RegisterCommandType(const std::string& typeName, CommandFactory factory)
+	std::unique_ptr<Command> DialogueRegistry::CreateCommand(const std::string& type,
+															 const std::map<std::string, DialogueValue>& params)
 	{
-		m_commandFactories[typeName] = std::move(factory);
-	}
-
-	std::unique_ptr<Command> DialogueRegistry::CreateCommand(
-		const std::string& typeName,
-		const std::unordered_map<std::string, std::string>& params
-	) const
-	{
-		auto it = m_commandFactories.find(typeName);
-		if (it == m_commandFactories.end())
+		auto it = m_commandCallbacks.find(type);
+		if (it == m_commandCallbacks.end())
+		{
+			DEBUG_ERROR("Command type '%s' not registered", type.c_str());
 			return nullptr;
-		
-		return it->second(params);
+		}
+
+		return std::make_unique<WrenCommand>(m_vm, it->second, params);
 	}
 
-	std::vector<std::string> DialogueRegistry::GetRegisteredConditionTypes() const
+	bool DialogueRegistry::EvaluateOperator(const std::string& op, const DialogueValue& lhs, const DialogueValue& rhs)
 	{
-		std::vector<std::string> types;
-		types.reserve(m_conditionFactories.size());
-		
-		for (const auto& [type, _] : m_conditionFactories)
-			types.push_back(type);
-		
-		return types;
+		auto it = m_operatorCallbacks.find(op);
+		if (it == m_operatorCallbacks.end())
+		{
+			DEBUG_ERROR("Operator '%s' not registered", op.c_str());
+			return false;
+		}
+
+		wrenEnsureSlots(m_vm, 3);
+		wrenSetSlotHandle(m_vm, 0, it->second);
+
+		// Set lhs in slot 1
+		switch (lhs.type)
+		{
+			case DialogueValue::Type::STRING:
+				wrenSetSlotString(m_vm, 1, lhs.stringValue.c_str());
+				break;
+			case DialogueValue::Type::INT:
+				wrenSetSlotDouble(m_vm, 1, static_cast<double>(lhs.intValue));
+				break;
+			case DialogueValue::Type::BOOL:
+				wrenSetSlotBool(m_vm, 1, lhs.boolValue);
+				break;
+			case DialogueValue::Type::DOUBLE:
+				wrenSetSlotDouble(m_vm, 1, lhs.doubleValue);
+				break;
+		}
+
+		// Set rhs in slot 2
+		switch (rhs.type)
+		{
+			case DialogueValue::Type::STRING:
+				wrenSetSlotString(m_vm, 2, rhs.stringValue.c_str());
+				break;
+			case DialogueValue::Type::INT:
+				wrenSetSlotDouble(m_vm, 2, static_cast<double>(rhs.intValue));
+				break;
+			case DialogueValue::Type::BOOL:
+				wrenSetSlotBool(m_vm, 2, rhs.boolValue);
+				break;
+			case DialogueValue::Type::DOUBLE:
+				wrenSetSlotDouble(m_vm, 2, rhs.doubleValue);
+				break;
+		}
+
+		// Call: callback.call(lhs, rhs)
+		WrenHandle* method = wrenMakeCallHandle(m_vm, "call(_,_)");
+		WrenInterpretResult result = wrenCall(m_vm, method);
+		wrenReleaseHandle(m_vm, method);
+
+		if (result != WREN_RESULT_SUCCESS)
+		{
+			DEBUG_ERROR("Operator '%s' callback failed", op.c_str());
+			return false;
+		}
+
+		return wrenGetSlotBool(m_vm, 0);
 	}
 
-	std::vector<std::string> DialogueRegistry::GetRegisteredCommandTypes() const
+	bool DialogueRegistry::HasConditionType(const std::string& type) const
 	{
-		std::vector<std::string> types;
-		types.reserve(m_commandFactories.size());
-		
-		for (const auto& [type, _] : m_commandFactories)
-			types.push_back(type);
-		
-		return types;
+		return m_conditionCallbacks.find(type) != m_conditionCallbacks.end();
 	}
 
-	bool DialogueRegistry::HasConditionType(const std::string& typeName) const
+	bool DialogueRegistry::HasCommandType(const std::string& type) const
 	{
-		return m_conditionFactories.find(typeName) != m_conditionFactories.end();
+		return m_commandCallbacks.find(type) != m_commandCallbacks.end();
 	}
 
-	bool DialogueRegistry::HasCommandType(const std::string& typeName) const
+	bool DialogueRegistry::HasOperator(const std::string& op) const
 	{
-		return m_commandFactories.find(typeName) != m_commandFactories.end();
+		return m_operatorCallbacks.find(op) != m_operatorCallbacks.end();
 	}
 }
