@@ -1149,6 +1149,26 @@ std::string description = \"Flag '\" + flagName + \"' == \" + (value ? \"true\" 
 
 ---
 
+## Summary Checklist
+
+When writing code for Struktur, ensure:
+
+- ✅ **Pass dependencies as parameters by default** (especially GameContext)
+- ✅ Only store references when justified and documented
+- ✅ Use explicit Dispose methods instead of destructor dependencies
+- ✅ Member variables use `m_` prefix
+- ✅ Public methods use PascalCase
+- ✅ Wren bindings use `wren_ClassName` format and NO namespaces
+- ✅ Use `unique_ptr` for ownership, raw pointers for references
+- ✅ Use DEBUG_* macros and ASSERT_MSG for all error handling
+- ✅ Foreign class wrappers track ownership with bool flag
+- ✅ Use provided WREN_* macros for binding registration
+- ✅ Get GameContext in Wren bindings via `wrenGetUserData(vm)`
+- ✅ Document complex logic with WHY comments
+- ✅ Follow the established architecture patterns
+
+---
+
 **Document Version**: 1.1  
 **Last Updated**: 2026-01-27  
 **Engine**: Struktur Game Engine
