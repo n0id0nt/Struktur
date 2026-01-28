@@ -2,6 +2,7 @@
 
 #include "wren.h"
 #include "Debug/Assertions.h"
+#include "Engine/GameContext.h"
 
 namespace Struktur::Dialogue
 {
@@ -110,6 +111,7 @@ namespace Struktur::Dialogue
 	}
 
 	std::vector<ConditionalTarget> DialogueLoader::ParseTargets(
+		GameContext& context,
 		DialogueRegistry& registry,
 		WrenVM* vm,
 		int slot)
@@ -132,7 +134,7 @@ namespace Struktur::Dialogue
 			wrenGetMapValue(vm, slot + 1, slot + 2, slot + 3);
 			if (wrenGetSlotType(vm, slot + 3) != WREN_TYPE_NULL)
 			{
-				target.conditions = ParseConditions(registry, vm, slot + 3);
+				target.conditions = ParseConditions(context, registry, vm, slot + 3);
 			}
 
 			// Parse target node
@@ -147,6 +149,7 @@ namespace Struktur::Dialogue
 	}
 
 	std::vector<std::unique_ptr<Condition>> DialogueLoader::ParseConditions(
+		GameContext& context,
 		DialogueRegistry& registry,
 		WrenVM* vm,
 		int slot)
@@ -173,7 +176,7 @@ namespace Struktur::Dialogue
 			auto params = ParseParameters(vm, slot + 3);
 
 			// Create condition
-			auto condition = registry.CreateCondition(type, params);
+			auto condition = registry.CreateCondition(context, type, params);
 			if (condition)
 			{
 				conditions.push_back(std::move(condition));
@@ -184,6 +187,7 @@ namespace Struktur::Dialogue
 	}
 
 	std::vector<std::unique_ptr<Command>> DialogueLoader::ParseCommands(
+		GameContext& context,
 		DialogueRegistry& registry,
 		WrenVM* vm,
 		int slot)
@@ -210,7 +214,7 @@ namespace Struktur::Dialogue
 			auto params = ParseParameters(vm, slot + 3);
 
 			// Create command
-			auto command = registry.CreateCommand(type, params);
+			auto command = registry.CreateCommand(context, type, params);
 			if (command)
 			{
 				commands.push_back(std::move(command));

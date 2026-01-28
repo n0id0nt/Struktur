@@ -4,6 +4,7 @@
 #include "WrenCommand.h"
 #include "wren.h"
 #include "Debug/Assertions.h"
+#include "Engine/GameContext.h"
 
 namespace Struktur::Dialogue
 {
@@ -22,7 +23,7 @@ namespace Struktur::Dialogue
 
     void DialogueRegistry::Clear(GameContext &context)
     {
-		vm
+		WrenVM* vm = context.GetWrenScriptEngine().GetVM();
 		DEBUG_INFO("DialogueRegistry destroyed, releasing %zu condition callbacks, %zu command callbacks, %zu operator callbacks",
 			m_conditionCallbacks.size(), m_commandCallbacks.size(), m_operatorCallbacks.size());
 
@@ -45,51 +46,54 @@ namespace Struktur::Dialogue
 		}
     }
 
-    void DialogueRegistry::RegisterConditionType(const std::string& type, WrenHandle* callback)
+    void DialogueRegistry::RegisterConditionType(GameContext& context, const std::string& type, WrenHandle* callback)
 	{
+		WrenVM* vm = context.GetWrenScriptEngine().GetVM();
 		// If type already exists, release old handle
 		auto it = m_conditionCallbacks.find(type);
 		if (it != m_conditionCallbacks.end())
 		{
 			DEBUG_WARNING("Condition type '%s' already registered, replacing", type.c_str());
-			wrenReleaseHandle(m_vm, it->second);
+			wrenReleaseHandle(vm, it->second);
 		}
 
 		m_conditionCallbacks[type] = callback;
 		DEBUG_INFO("Registered condition type: %s", type.c_str());
 	}
 
-	void DialogueRegistry::RegisterCommandType(const std::string& type, WrenHandle* callback)
+	void DialogueRegistry::RegisterCommandType(GameContext& context, const std::string& type, WrenHandle* callback)
 	{
+		WrenVM* vm = context.GetWrenScriptEngine().GetVM();
 		// If type already exists, release old handle
 		auto it = m_commandCallbacks.find(type);
 		if (it != m_commandCallbacks.end())
 		{
 			DEBUG_WARNING("Command type '%s' already registered, replacing", type.c_str());
-			wrenReleaseHandle(m_vm, it->second);
+			wrenReleaseHandle(vm, it->second);
 		}
 
 		m_commandCallbacks[type] = callback;
 		DEBUG_INFO("Registered command type: %s", type.c_str());
 	}
 
-	void DialogueRegistry::RegisterOperator(const std::string& op, WrenHandle* callback)
+	void DialogueRegistry::RegisterOperator(GameContext& context, const std::string& op, WrenHandle* callback)
 	{
+		WrenVM* vm = context.GetWrenScriptEngine().GetVM();
 		// If operator already exists, release old handle
 		auto it = m_operatorCallbacks.find(op);
 		if (it != m_operatorCallbacks.end())
 		{
 			DEBUG_WARNING("Operator '%s' already registered, replacing", op.c_str());
-			wrenReleaseHandle(m_vm, it->second);
+			wrenReleaseHandle(vm, it->second);
 		}
 
 		m_operatorCallbacks[op] = callback;
 		DEBUG_INFO("Registered operator: %s", op.c_str());
 	}
 
-	std::unique_ptr<Condition> DialogueRegistry::CreateCondition(const std::string& type,
-																 const std::map<std::string, DialogueValue>& params)
+	std::unique_ptr<Condition> DialogueRegistry::CreateCondition(GameContext& context, const std::string& type, const std::map<std::string, DialogueValue>& params)
 	{
+		WrenVM* vm = context.GetWrenScriptEngine().GetVM();
 		auto it = m_conditionCallbacks.find(type);
 		if (it == m_conditionCallbacks.end())
 		{
@@ -97,12 +101,12 @@ namespace Struktur::Dialogue
 			return nullptr;
 		}
 
-		return std::make_unique<WrenCondition>(m_vm, it->second, params);
+		return std::make_unique<WrenCondition>(vm, it->second, params);
 	}
 
-	std::unique_ptr<Command> DialogueRegistry::CreateCommand(const std::string& type,
-															 const std::map<std::string, DialogueValue>& params)
+	std::unique_ptr<Command> DialogueRegistry::CreateCommand(GameContext& context, const std::string& type, const std::map<std::string, DialogueValue>& params)
 	{
+		WrenVM* vm = context.GetWrenScriptEngine().GetVM();
 		auto it = m_commandCallbacks.find(type);
 		if (it == m_commandCallbacks.end())
 		{
@@ -110,11 +114,12 @@ namespace Struktur::Dialogue
 			return nullptr;
 		}
 
-		return std::make_unique<WrenCommand>(m_vm, it->second, params);
+		return std::make_unique<WrenCommand>(vm, it->second, params);
 	}
 
-	bool DialogueRegistry::EvaluateOperator(const std::string& op, const DialogueValue& lhs, const DialogueValue& rhs)
+	bool DialogueRegistry::EvaluateOperator(GameContext& context, const std::string& op, const DialogueValue& lhs, const DialogueValue& rhs)
 	{
+		WrenVM* vm = context.GetWrenScriptEngine().GetVM();
 		auto it = m_operatorCallbacks.find(op);
 		if (it == m_operatorCallbacks.end())
 		{
@@ -122,23 +127,23 @@ namespace Struktur::Dialogue
 			return false;
 		}
 
-		wrenEnsureSlots(m_vm, 3);
-		wrenSetSlotHandle(m_vm, 0, it->second);
+		wrenEnsureSlots(vm, 3);
+		wrenSetSlotHandle(vm, 0, it->second);
 
 		// Set lhs in slot 1
 		switch (lhs.type)
 		{
 			case DialogueValue::Type::STRING:
-				wrenSetSlotString(m_vm, 1, lhs.stringValue.c_str());
+				wrenSetSlotString(vm, 1, lhs.stringValue.c_str());
 				break;
 			case DialogueValue::Type::INT:
-				wrenSetSlotDouble(m_vm, 1, static_cast<double>(lhs.intValue));
+				wrenSetSlotDouble(vm, 1, static_cast<double>(lhs.intValue));
 				break;
 			case DialogueValue::Type::BOOL:
-				wrenSetSlotBool(m_vm, 1, lhs.boolValue);
+				wrenSetSlotBool(vm, 1, lhs.boolValue);
 				break;
 			case DialogueValue::Type::DOUBLE:
-				wrenSetSlotDouble(m_vm, 1, lhs.doubleValue);
+				wrenSetSlotDouble(vm, 1, lhs.doubleValue);
 				break;
 		}
 
@@ -146,23 +151,23 @@ namespace Struktur::Dialogue
 		switch (rhs.type)
 		{
 			case DialogueValue::Type::STRING:
-				wrenSetSlotString(m_vm, 2, rhs.stringValue.c_str());
+				wrenSetSlotString(vm, 2, rhs.stringValue.c_str());
 				break;
 			case DialogueValue::Type::INT:
-				wrenSetSlotDouble(m_vm, 2, static_cast<double>(rhs.intValue));
+				wrenSetSlotDouble(vm, 2, static_cast<double>(rhs.intValue));
 				break;
 			case DialogueValue::Type::BOOL:
-				wrenSetSlotBool(m_vm, 2, rhs.boolValue);
+				wrenSetSlotBool(vm, 2, rhs.boolValue);
 				break;
 			case DialogueValue::Type::DOUBLE:
-				wrenSetSlotDouble(m_vm, 2, rhs.doubleValue);
+				wrenSetSlotDouble(vm, 2, rhs.doubleValue);
 				break;
 		}
 
 		// Call: callback.call(lhs, rhs)
-		WrenHandle* method = wrenMakeCallHandle(m_vm, "call(_,_)");
-		WrenInterpretResult result = wrenCall(m_vm, method);
-		wrenReleaseHandle(m_vm, method);
+		WrenHandle* method = wrenMakeCallHandle(vm, "call(_,_)");
+		WrenInterpretResult result = wrenCall(vm, method);
+		wrenReleaseHandle(vm, method);
 
 		if (result != WREN_RESULT_SUCCESS)
 		{
@@ -170,7 +175,7 @@ namespace Struktur::Dialogue
 			return false;
 		}
 
-		return wrenGetSlotBool(m_vm, 0);
+		return wrenGetSlotBool(vm, 0);
 	}
 
 	bool DialogueRegistry::HasConditionType(const std::string& type) const

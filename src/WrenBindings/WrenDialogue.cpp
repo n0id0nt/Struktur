@@ -145,6 +145,7 @@ static void ParseAndAddCommands(WrenVM* vm, int slot,
 								Struktur::Dialogue::DialogueRegistry& registry,
 								Struktur::Dialogue::DialogueNode* node)
 {
+	Struktur::GameContext* context = static_cast<Struktur::GameContext*>(wrenGetUserData(vm));
 	int count = wrenGetListCount(vm, slot);
 	for (int i = 0; i < count; ++i)
 	{
@@ -165,7 +166,7 @@ static void ParseAndAddCommands(WrenVM* vm, int slot,
 		// For now, manually get known parameters
 		// This would need to be more generic in production
 		
-		auto command = registry.CreateCommand(type, params);
+		auto command = registry.CreateCommand(*context, type, params);
 		if (command)
 		{
 			node->AddCommand(std::move(command));
@@ -177,6 +178,7 @@ static void ParseAndAddTargets(WrenVM* vm, int slot,
 							   Struktur::Dialogue::DialogueRegistry& registry,
 							   Struktur::Dialogue::DialogueNode* node)
 {
+	Struktur::GameContext* context = static_cast<Struktur::GameContext*>(wrenGetUserData(vm));
 	int count = wrenGetListCount(vm, slot);
 	for (int i = 0; i < count; ++i)
 	{
@@ -212,7 +214,7 @@ static void ParseAndAddTargets(WrenVM* vm, int slot,
 				std::map<std::string, Struktur::Dialogue::DialogueValue> params;
 				// Parse parameters (simplified)
 
-				auto condition = registry.CreateCondition(type, params);
+				auto condition = registry.CreateCondition(*context, type, params);
 				if (condition)
 				{
 					target.conditions.push_back(std::move(condition));
@@ -254,7 +256,7 @@ void wren_DialogueRegistryRegisterCondition(WrenVM* vm)
 	const char* type = wrenGetSlotString(vm, 1);
 	WrenHandle* callback = wrenGetSlotHandle(vm, 2);
 
-	registry.RegisterConditionType(type, callback);
+	registry.RegisterConditionType(*context, type, callback);
 }
 
 // DialogueRegistry.registerCommand(type, callback)
@@ -266,7 +268,7 @@ void wren_DialogueRegistryRegisterCommand(WrenVM* vm)
 	const char* type = wrenGetSlotString(vm, 1);
 	WrenHandle* callback = wrenGetSlotHandle(vm, 2);
 
-	registry.RegisterCommandType(type, callback);
+	registry.RegisterCommandType(*context, type, callback);
 }
 
 // DialogueRegistry.registerOperator(op, callback)
@@ -278,7 +280,7 @@ void wren_DialogueRegistryRegisterOperator(WrenVM* vm)
 	const char* op = wrenGetSlotString(vm, 1);
 	WrenHandle* callback = wrenGetSlotHandle(vm, 2);
 
-	registry.RegisterOperator(op, callback);
+	registry.RegisterOperator(*context, op, callback);
 }
 
 // DialogueRegistry.evalOperator(op, lhs, rhs) -> Bool
@@ -291,7 +293,7 @@ void wren_DialogueRegistryEvalOperator(WrenVM* vm)
 	Struktur::Dialogue::DialogueValue lhs = ParseDialogueValueFromSlot(vm, 2);
 	Struktur::Dialogue::DialogueValue rhs = ParseDialogueValueFromSlot(vm, 3);
 
-	bool result = registry.EvaluateOperator(op, lhs, rhs);
+	bool result = registry.EvaluateOperator(*context, op, lhs, rhs);
 	wrenSetSlotBool(vm, 0, result);
 }
 

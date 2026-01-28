@@ -14,6 +14,11 @@
 
 struct WrenVM;
 
+namespace Struktur
+{
+	class GameContext;
+}
+
 namespace Struktur::Dialogue
 {
 	// Temporary storage for dialogue data from Wren
@@ -44,18 +49,21 @@ namespace Struktur::Dialogue
 
 		// Parse targets array
 		static std::vector<ConditionalTarget> ParseTargets(
+			GameContext& context,
 			DialogueRegistry& registry,
 			WrenVM* vm,
 			int slot);
 
 		// Parse conditions array
 		static std::vector<std::unique_ptr<Condition>> ParseConditions(
+			GameContext& context,
 			DialogueRegistry& registry,
 			WrenVM* vm,
 			int slot);
 
 		// Parse commands array
 		static std::vector<std::unique_ptr<Command>> ParseCommands(
+			GameContext& context,
 			DialogueRegistry& registry,
 			WrenVM* vm,
 			int slot);

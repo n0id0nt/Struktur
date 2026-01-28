@@ -39,24 +39,22 @@ namespace Struktur::Dialogue
 		DialogueRegistry& operator=(DialogueRegistry&&) = delete;
 
 		// Register condition type with Wren callback
-		void RegisterConditionType(const std::string& type, WrenHandle* callback);
+		void RegisterConditionType(GameContext& context, const std::string& type, WrenHandle* callback);
 
 		// Register command type with Wren callback
-		void RegisterCommandType(const std::string& type, WrenHandle* callback);
+		void RegisterCommandType(GameContext& context, const std::string& type, WrenHandle* callback);
 
 		// Register operator with Wren callback
-		void RegisterOperator(const std::string& op, WrenHandle* callback);
+		void RegisterOperator(GameContext& context, const std::string& op, WrenHandle* callback);
 
 		// Create condition from registered type
-		std::unique_ptr<Condition> CreateCondition(const std::string& type, 
-													const std::map<std::string, DialogueValue>& params);
+		std::unique_ptr<Condition> CreateCondition(GameContext& context, const std::string& type, const std::map<std::string, DialogueValue>& params);
 
 		// Create command from registered type
-		std::unique_ptr<Command> CreateCommand(const std::string& type,
-											   const std::map<std::string, DialogueValue>& params);
+		std::unique_ptr<Command> CreateCommand(GameContext& context, const std::string& type, const std::map<std::string, DialogueValue>& params);
 
 		// Evaluate operator
-		bool EvaluateOperator(const std::string& op, const DialogueValue& lhs, const DialogueValue& rhs);
+		bool EvaluateOperator(GameContext& context, const std::string& op, const DialogueValue& lhs, const DialogueValue& rhs);
 
 		// Check if type/operator is registered
 		bool HasConditionType(const std::string& type) const;
