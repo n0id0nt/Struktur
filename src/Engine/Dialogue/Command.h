@@ -17,7 +17,8 @@ namespace Struktur::Dialogue
 	public:
 		virtual ~Command() = default;
 
-		// Execute the command in the given context
-		virtual void Execute(GameContext& context) = 0;
+		virtual void Execute(GameContext& context, const std::map<std::string, DialogueValue>& params) = 0;
+
+		virtual void Dispose(GameContext& context) {}
 	};
 }

@@ -17,8 +17,8 @@ namespace Struktur::Dialogue
 	public:
 		virtual ~Condition() = default;
 
-		// Evaluate the condition in the given context
-		// Returns true if condition passes, false otherwise
-		virtual bool Evaluate(GameContext& context) = 0;
+		virtual bool Evaluate(GameContext& context, const std::map<std::string, DialogueValue>& params) = 0;
+
+		virtual void Dispose(GameContext& context) {}
 	};
 }

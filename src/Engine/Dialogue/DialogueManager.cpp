@@ -14,10 +14,10 @@ namespace Struktur::Dialogue
 
 	DialogueManager::~DialogueManager()
 	{
-		DEBUG_INFO("DialogueManager destroyed");
+		ASSERT_MSG(m_nodes.empty(), "Dialogue manager has not been cleared");
 	}
 
-	void DialogueManager::LoadDialogueNodes(std::map<std::string, std::unique_ptr<DialogueNode>> nodes)
+	void DialogueManager::LoadDialogueNodes(std::map<std::string, std::unique_ptr<DialogueNode>>&& nodes)
 	{
 		m_nodes = std::move(nodes);
 		DEBUG_INFO("Loaded %zu dialogue nodes", m_nodes.size());

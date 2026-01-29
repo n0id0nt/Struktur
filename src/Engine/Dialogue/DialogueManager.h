@@ -29,14 +29,8 @@ namespace Struktur::Dialogue
 		DialogueManager();
 		~DialogueManager();
 
-		// Delete copy, allow move
-		DialogueManager(const DialogueManager&) = delete;
-		DialogueManager& operator=(const DialogueManager&) = delete;
-		DialogueManager(DialogueManager&&) noexcept = default;
-		DialogueManager& operator=(DialogueManager&&) noexcept = default;
-
 		// Loading
-		void LoadDialogueNodes(std::map<std::string, std::unique_ptr<DialogueNode>> nodes);
+		void LoadDialogueNodes(std::map<std::string, std::unique_ptr<DialogueNode>>&& nodes);
 		void Clear();
 
 		// Flow control

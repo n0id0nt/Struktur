@@ -337,8 +337,8 @@ set(SOURCES
     src/Engine/Dialogue/DialogueNode.h          src/Engine/Dialogue/DialogueNode.cpp
     src/Engine/Dialogue/DialogueRegistry.h      src/Engine/Dialogue/DialogueRegistry.cpp
     src/Engine/Dialogue/DialogueValue.h         src/Engine/Dialogue/DialogueValue.cpp
-    src/Engine/Dialogue/WrenCommand.h           src/Engine/Dialogue/WrenCommand.cpp
-    src/Engine/Dialogue/WrenCondition.h         src/Engine/Dialogue/WrenCondition.cpp
+    src/Engine/Dialogue/CallbackCommand.h       src/Engine/Dialogue/CallbackCommand.cpp
+    src/Engine/Dialogue/CallbackCondition.h     src/Engine/Dialogue/CallbackCondition.cpp
     src/Engine/Dialogue/Command.h
     src/Engine/Dialogue/Condition.h
     src/Engine/Dialogue/DialogueResult.h

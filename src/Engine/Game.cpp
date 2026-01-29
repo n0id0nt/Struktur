@@ -340,7 +340,8 @@ void Struktur::Game()
 		// Desktop platform - standard game loop
 		::SetTargetFPS(gameData.fps);
 
-		while (gameData.gameState == Core::GameState::SPLASH_SCREEN) {
+		while (gameData.gameState == Core::GameState::SPLASH_SCREEN)
+		{
 			SplashScreenUpdateLoop(&context);
 		}
 #endif
@@ -353,7 +354,8 @@ void Struktur::Game()
 	// Desktop platform - standard game loop
 	::SetTargetFPS(gameData.fps);
 
-	while (gameData.gameState != Core::GameState::QUIT) {
+	while (gameData.gameState != Core::GameState::QUIT)
+	{
 		MainUpdateLoop(&context);
 	}
 #endif

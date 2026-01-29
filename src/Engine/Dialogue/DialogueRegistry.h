@@ -12,9 +12,6 @@
 #include "Command.h"
 #include "DialogueValue.h"
 
-struct WrenVM;
-struct WrenHandle;
-
 namespace Struktur
 {
 	class GameContext;
