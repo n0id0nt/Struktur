@@ -8,30 +8,24 @@
 #include "DialogueValue.h"
 #include <map>
 #include <string>
-#include <functional>
 
 namespace Struktur::Dialogue
 {
 	// Command that executes by calling a Wren callback
 	class CallbackCommand : public Command
 	{
-	private:
-        using Callback = std::function<void(const std::map<std::string, DialogueValue>& params)>;
-		using DisposeCallback = std::function<void(GameContext& context)>;
-
 	public:
 		// Constructor
 		// callback is borrowed from DialogueRegistry, not owned
-		CallbackCommand(Callback callback, DisposeCallback disposeCallback);
+		CallbackCommand(std::string key, const std::map<std::string, DialogueValue>& params);
 		~CallbackCommand() override = default;
 
-		void Dispose(GameContext& context) override;
-
 		// Execute by calling Wren callback with parameters
-		void Execute(GameContext& context, const std::map<std::string, DialogueValue>& params) override;
+		void Execute(GameContext& context) const override;
 
 	private:
-		Callback m_callback;
-		DisposeCallback m_disposeCallback;
+		std::string m_key;
+		std::map<std::string, DialogueValue> m_params;
+
 	};
 }

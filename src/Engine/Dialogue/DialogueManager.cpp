@@ -17,7 +17,7 @@ namespace Struktur::Dialogue
 		ASSERT_MSG(m_nodes.empty(), "Dialogue manager has not been cleared");
 	}
 
-	void DialogueManager::LoadDialogueNodes(std::map<std::string, std::unique_ptr<DialogueNode>>&& nodes)
+	void DialogueManager::LoadDialogueNodes(std::map<std::string, DialogueNode>&& nodes)
 	{
 		m_nodes = std::move(nodes);
 		DEBUG_INFO("Loaded %zu dialogue nodes", m_nodes.size());
@@ -101,12 +101,12 @@ namespace Struktur::Dialogue
 		auto it = m_nodes.find(nodeId);
 		if (it != m_nodes.end())
 		{
-			return it->second.get();
+			return &it->second;
 		}
 		return nullptr;
 	}
 
-	DialogueResult DialogueManager::ProcessNode(GameContext& context, const std::string& nodeId)
+    DialogueResult DialogueManager::ProcessNode(GameContext& context, const std::string& nodeId)
 	{
 		// Find node
 		auto it = m_nodes.find(nodeId);
@@ -118,7 +118,7 @@ namespace Struktur::Dialogue
 		}
 
 		// Set as current node
-		m_currentNode = it->second.get();
+		m_currentNode = &it->second;
 		m_history.push_back(nodeId);
 
 		// Execute all commands in this node
@@ -190,12 +190,12 @@ namespace Struktur::Dialogue
 		return std::nullopt;
 	}
 
-	bool DialogueManager::EvaluateConditions(GameContext& context, const std::vector<std::unique_ptr<Condition>>& conditions)
+	bool DialogueManager::EvaluateConditions(GameContext& context, const std::vector<Condition>& conditions)
 	{
 		// All conditions must be true
 		for (const auto& condition : conditions)
 		{
-			if (!condition->Evaluate(context))
+			if (!condition.Evaluate(context))
 			{
 				return false;
 			}
@@ -203,11 +203,11 @@ namespace Struktur::Dialogue
 		return true;
 	}
 
-	void DialogueManager::ExecuteCommands(GameContext& context, const std::vector<std::unique_ptr<Command>>& commands)
+	void DialogueManager::ExecuteCommands(GameContext& context, const std::vector<Command>& commands)
 	{
 		for (const auto& command : commands)
 		{
-			command->Execute(context);
+			command.Execute(context);
 		}
 	}
 }

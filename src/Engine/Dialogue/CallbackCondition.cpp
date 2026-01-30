@@ -1,16 +1,15 @@
 #include "CallbackCondition.h"
 
-Struktur::Dialogue::CallbackCondition::CallbackCondition(Callback callback, DisposeCallback disposeCallback)
-    : m_callback(callback), m_disposeCallback(disposeCallback)
+#include "Engine/GameContext.h"
+
+Struktur::Dialogue::CallbackCondition::CallbackCondition(std::string key, const std::map<std::string, DialogueValue>& params)
+    : m_key(key), m_params(params)
 {
 }
 
-void Struktur::Dialogue::CallbackCondition::Dispose(GameContext &context)
+bool Struktur::Dialogue::CallbackCondition::Evaluate(GameContext &context) const
 {
-    m_disposeCallback(context);
-}
-
-bool Struktur::Dialogue::CallbackCondition::Evaluate(GameContext &context, const std::map<std::string, DialogueValue>& params)
-{
-    return m_callback(params);
+    DialogueRegistry& dialogueRegistry = context.GetDialogueRegistry();
+    auto callback = dialogueRegistry.GetCondition(m_key);
+    return callback(m_params);
 }

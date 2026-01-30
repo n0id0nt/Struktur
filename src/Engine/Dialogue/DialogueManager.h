@@ -30,7 +30,7 @@ namespace Struktur::Dialogue
 		~DialogueManager();
 
 		// Loading
-		void LoadDialogueNodes(std::map<std::string, std::unique_ptr<DialogueNode>>&& nodes);
+		void LoadDialogueNodes(std::map<std::string, DialogueNode>&& nodes);
 		void Clear();
 
 		// Flow control
@@ -45,15 +45,17 @@ namespace Struktur::Dialogue
 		size_t GetNodeCount() const { return m_nodes.size(); }
 
 	private:
+		// Internal processing
+		DialogueResult ProcessNode(GameContext& context, const std::string& nodeId);
+		//TODO move this to the node
+		std::optional<std::string> EvaluateTargets(GameContext& context, const std::vector<ConditionalTarget>& targets);
+		bool EvaluateConditions(GameContext& context, const std::vector<Condition>& conditions);
+		void ExecuteCommands(GameContext& context, const std::vector<Command>& commands);
+
 		// Node storage
-		std::map<std::string, std::unique_ptr<DialogueNode>> m_nodes;
+		std::map<std::string, DialogueNode> m_nodes;
 		DialogueNode* m_currentNode;
 		std::vector<std::string> m_history;
 
-		// Internal processing
-		DialogueResult ProcessNode(GameContext& context, const std::string& nodeId);
-		std::optional<std::string> EvaluateTargets(GameContext& context, const std::vector<ConditionalTarget>& targets);
-		bool EvaluateConditions(GameContext& context, const std::vector<std::unique_ptr<Condition>>& conditions);
-		void ExecuteCommands(GameContext& context, const std::vector<std::unique_ptr<Command>>& commands);
 	};
 }

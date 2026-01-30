@@ -1,12 +1,6 @@
-// WrenDialogue.h
-// Wren bindings for dialogue system
-// Part of the Struktur dialogue system
-
 #pragma once
 
 #include "Engine/Dialogue/DialogueLoader.h"
-
-struct WrenVM;
 
 // ============================================================================
 // FOREIGN CLASS WRAPPERS
@@ -15,9 +9,11 @@ struct WrenVM;
 // Wrapper for DialogueData - used to build dialogue data in Wren
 struct WrenDialogueData
 {
-	Struktur::Dialogue::DialogueDataMap* dataMap;
-	bool loadedIntoManager;
+	Struktur::Dialogue::DialogueDataMap dataMap;
+};
 
-	WrenDialogueData();
-	~WrenDialogueData();
+// Wrapper for DialogueResult
+struct WrenDialogueResult
+{
+	Struktur::Dialogue::DialogueResult dataResult;
 };

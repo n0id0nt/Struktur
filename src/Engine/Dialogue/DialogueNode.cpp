@@ -13,9 +13,9 @@ namespace Struktur::Dialogue
 	{
 	}
 
-	void DialogueNode::AddCommand(std::unique_ptr<Command> command)
+	void DialogueNode::AddCommand(const Command& command)
 	{
-		m_commands.push_back(std::move(command));
+		m_commands.push_back(command);
 	}
 
 	void DialogueNode::AddChoice(const Choice& choice)

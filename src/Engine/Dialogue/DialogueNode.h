@@ -27,7 +27,7 @@ namespace Struktur::Dialogue
 	// Represents a conditional branch with conditions and target
 	struct ConditionalTarget
 	{
-		std::vector<std::unique_ptr<Condition>> conditions;
+		std::vector<Condition> conditions;
 		std::string targetNode;
 
 		ConditionalTarget() : conditions(), targetNode("") {}
@@ -50,7 +50,7 @@ namespace Struktur::Dialogue
 		const std::string& GetId() const { return m_id; }
 		const std::optional<std::string>& GetSpeaker() const { return m_speaker; }
 		const std::optional<std::string>& GetText() const { return m_text; }
-		const std::vector<std::unique_ptr<Command>>& GetCommands() const { return m_commands; }
+		const std::vector<Command>& GetCommands() const { return m_commands; }
 		const std::vector<Choice>& GetChoices() const { return m_choices; }
 		const std::optional<std::string>& GetNext() const { return m_next; }
 		const std::vector<ConditionalTarget>& GetTargets() const { return m_targets; }
@@ -61,7 +61,7 @@ namespace Struktur::Dialogue
 		void SetNext(const std::string& next) { m_next = next; }
 
 		// Add methods
-		void AddCommand(std::unique_ptr<Command> command);
+		void AddCommand(const Command& command);
 		void AddChoice(const Choice& choice);
 		void AddTarget(ConditionalTarget&& target);
 
@@ -74,7 +74,7 @@ namespace Struktur::Dialogue
 		std::string m_id;
 		std::optional<std::string> m_speaker;
 		std::optional<std::string> m_text;
-		std::vector<std::unique_ptr<Command>> m_commands;
+		std::vector<Command> m_commands;
 		std::vector<Choice> m_choices;
 		std::optional<std::string> m_next;
 		std::vector<ConditionalTarget> m_targets;

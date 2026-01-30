@@ -4,6 +4,8 @@
 
 #pragma once
 
+#include "DialogueValue.h"
+
 namespace Struktur
 {
 	class GameContext;
@@ -12,10 +14,10 @@ namespace Struktur
 namespace Struktur::Dialogue
 {
 	// Base class for all dialogue conditions
-	class Condition
+	class Operator
 	{
 	public:
-		virtual ~Condition() = default;
+		virtual ~Operator() = default;
 
 		virtual bool Evaluate(GameContext& context) const = 0;
 	};
