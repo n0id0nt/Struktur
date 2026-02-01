@@ -23,7 +23,7 @@ namespace Struktur::Dialogue
 {
 	// Temporary storage for dialogue data from Wren
 	// Maps node ID to its data map
-	using DialogueDataMap = std::map<std::string, std::map<std::string, DialogueValue>>;
+	using DialogueDataMap = std::unordered_map<std::string, std::unordered_map<std::string, DialogueValue>>;
 
 	// Loads dialogue nodes from Wren data format
 	class DialogueLoader
@@ -31,7 +31,7 @@ namespace Struktur::Dialogue
 	public:
 		// Load dialogue nodes from data map
 		// Returns map of node ID to DialogueNode
-		static std::map<std::string, std::unique_ptr<DialogueNode>> LoadFromData(
+		static std::unordered_map<std::string, std::unique_ptr<DialogueNode>> LoadFromData(
 			DialogueRegistry& registry,
 			WrenVM* vm,
 			const DialogueDataMap& dataMap);
@@ -42,7 +42,7 @@ namespace Struktur::Dialogue
 			DialogueRegistry& registry,
 			WrenVM* vm,
 			const std::string& nodeId,
-			const std::map<std::string, DialogueValue>& nodeData);
+			const std::unordered_map<std::string, DialogueValue>& nodeData);
 
 		// Parse choices array
 		static std::vector<Choice> ParseChoices(WrenVM* vm, int slot);
@@ -69,6 +69,6 @@ namespace Struktur::Dialogue
 			int slot);
 
 		// Parse parameters map from Wren map
-		static std::map<std::string, DialogueValue> ParseParameters(WrenVM* vm, int slot);
+		static std::unordered_map<std::string, DialogueValue> ParseParameters(WrenVM* vm, int slot);
 	};
 }

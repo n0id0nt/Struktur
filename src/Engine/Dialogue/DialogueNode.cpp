@@ -23,8 +23,8 @@ namespace Struktur::Dialogue
 		m_choices.push_back(choice);
 	}
 
-	void DialogueNode::AddTarget(ConditionalTarget&& target)
+	void DialogueNode::AddTarget(const ConditionalTarget& target)
 	{
-		m_targets.push_back(std::move(target));
+		m_targets.push_back(target);
 	}
 }

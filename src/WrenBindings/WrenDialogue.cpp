@@ -9,15 +9,212 @@
 #include "Engine/Dialogue/DialogueRegistry.h"
 #include "Engine/Dialogue/DialogueLoader.h"
 #include "Engine/Dialogue/DialogueNode.h"
+#include "Engine/Dialogue/CallbackCommand.h"
+#include "Engine/Dialogue/CallbackCondition.h"
 
 static void AddDialogueValueToWren(WrenVM* vm, int slot, const Struktur::Dialogue::DialogueValue& dialogueValue)
 {
 	BREAK_MSG("Not Implemented");
 }
 
-static void ConvertParamsMapToWrenMap(WrenVM* vm, int slot, const std::map<std::string, Struktur::Dialogue::DialogueValue>& params)
+static void ConvertParamsMapToWrenMap(WrenVM* vm, int slot, const std::unordered_map<std::string, Struktur::Dialogue::DialogueValue>& params)
 {
 	BREAK_MSG("Not Implemented");
+}
+
+static Struktur::Dialogue::DialogueValue DialogueParseWrenDialogueValue(WrenVM* vm, int slot)
+{
+	switch(wrenGetSlotType(vm, slot))
+	{
+	case WrenType::WREN_TYPE_BOOL:
+		return Struktur::Dialogue::DialogueValue(wrenGetSlotBool(vm, slot));
+	case WrenType::WREN_TYPE_NUM:
+		return Struktur::Dialogue::DialogueValue(wrenGetSlotDouble(vm, slot));
+	case WrenType::WREN_TYPE_STRING:
+		return Struktur::Dialogue::DialogueValue(wrenGetSlotString(vm, slot));
+	}
+	return Struktur::Dialogue::DialogueValue();
+}
+
+static std::pair<std::string, Struktur::Dialogue::DialogueValue> DialogueParseWrenParameter(WrenVM* vm, int slot)
+{
+	wrenEnsureSlots(vm, slot + 3);
+	wrenSetSlotString(vm, slot + 1, "type");
+	wrenGetMapValue(vm, slot, slot + 1, slot + 2);
+	std::string type = wrenGetSlotString(vm, slot + 2);
+
+	wrenSetSlotString(vm, slot + 1, "value");
+	wrenGetMapValue(vm, slot, slot + 1, slot + 2);
+	Struktur::Dialogue::DialogueValue value = DialogueParseWrenDialogueValue(vm, slot + 2);
+
+	return {type, value};
+}
+
+static std::unordered_map<std::string, Struktur::Dialogue::DialogueValue> DialogueParseWrenParameters(WrenVM* vm, int slot)
+{
+	std::unordered_map<std::string, Struktur::Dialogue::DialogueValue> map;
+	wrenEnsureSlots(vm, slot + 2);
+	int count = wrenGetListCount(vm, slot);
+	for (int i = 0; i < count; i++)
+	{
+		wrenGetListElement(vm, slot, i, slot + 1);
+		auto dialoguePair = DialogueParseWrenParameter(vm, slot + 1);
+		map[dialoguePair.first] = dialoguePair.second;
+	}
+	return map;
+}
+
+static Struktur::Dialogue::CallbackCommand DialogueParseWrenCommand(WrenVM* vm, int slot)
+{
+	wrenEnsureSlots(vm, slot + 3);
+	wrenSetSlotString(vm, slot + 1, "type");
+	wrenGetMapValue(vm, slot, slot + 1, slot + 2);
+	std::string type = wrenGetSlotString(vm, slot + 2);
+
+	wrenSetSlotString(vm, slot + 1, "parameters");
+	wrenGetMapValue(vm, slot, slot + 1, slot + 2);
+	auto params = DialogueParseWrenParameters(vm, slot + 2);
+
+	return Struktur::Dialogue::CallbackCommand(type, params);
+}
+
+static Struktur::Dialogue::CallbackCondition DialogueParseWrenCondition(WrenVM* vm, int slot)
+{
+	wrenEnsureSlots(vm, slot + 3);
+	wrenSetSlotString(vm, slot + 1, "type");
+	wrenGetMapValue(vm, slot, slot + 1, slot + 2);
+	std::string type = wrenGetSlotString(vm, slot + 2);
+
+	wrenSetSlotString(vm, slot + 1, "parameters");
+	wrenGetMapValue(vm, slot, slot + 1, slot + 2);
+	auto params = DialogueParseWrenParameters(vm, slot + 2);
+
+	return Struktur::Dialogue::CallbackCondition(type, params);
+}
+
+static Struktur::Dialogue::Choice DialogueParseWrenChoice(WrenVM* vm, int slot)
+{
+	wrenEnsureSlots(vm, slot + 3);
+	wrenSetSlotString(vm, slot + 1, "text");
+	wrenGetMapValue(vm, slot, slot + 1, slot + 2);
+	std::string text = wrenGetSlotString(vm, slot + 2);
+
+	wrenSetSlotString(vm, slot + 1, "target");
+	wrenGetMapValue(vm, slot, slot + 1, slot + 2);
+	std::string target = wrenGetSlotString(vm, slot + 2);
+
+	return Struktur::Dialogue::Choice(text, target);
+}
+
+static Struktur::Dialogue::ConditionalTarget DialogueParseWrenConditionalTarget(WrenVM* vm, int slot)
+{
+	Struktur::Dialogue::ConditionalTarget conditionalTarget;
+
+	wrenSetSlotString(vm, slot + 1, "node");
+	wrenGetMapValue(vm, slot, slot + 1, slot + 2);
+	conditionalTarget.targetNode = wrenGetSlotString(vm, slot + 2);
+
+	int count = wrenGetListCount(vm, slot);
+	for (int i = 0; i < count; i++)
+	{
+		wrenGetListElement(vm, slot, i, slot + 1);
+		Struktur::Dialogue::CallbackCondition target = DialogueParseWrenCondition(vm, slot + 1);
+
+		conditionalTarget.conditions.push_back(target);
+	}
+
+	return conditionalTarget;
+}
+
+static Struktur::Dialogue::DialogueNode DialogueParseWrenNodeData(WrenVM* vm, int slot, std::string id)
+{
+	wrenEnsureSlots(vm, slot + 4);
+	Struktur::Dialogue::DialogueNode node(id);
+
+	wrenSetSlotString(vm, slot + 1, "speaker");
+	if (wrenGetMapContainsKey(vm, slot, slot + 1))
+	{
+		wrenGetMapValue(vm, slot, slot + 1, slot + 2);
+		std::string speaker = wrenGetSlotString(vm, slot + 2);
+		node.SetSpeaker(speaker);
+	}
+
+	wrenSetSlotString(vm, slot + 1, "text");
+	if (wrenGetMapContainsKey(vm, slot, slot + 1))
+	{
+		wrenGetMapValue(vm, slot, slot + 1, slot + 2);
+		int count = wrenGetListCount(vm, slot + 2);
+		for (int i = 0; i < count; i++)
+		{
+			wrenGetListElement(vm, slot + 2, i, slot + 3);
+			std::string text = wrenGetSlotString(vm, slot + 3);
+			node.SetText(text);
+		} 
+	}
+
+	wrenSetSlotString(vm, slot + 1, "commands");
+	if (wrenGetMapContainsKey(vm, slot, slot + 1))
+	{
+		wrenGetMapValue(vm, slot, slot + 1, slot + 2);
+		int count = wrenGetListCount(vm, slot + 2);
+		for (int i = 0; i < count; i++)
+		{
+			wrenGetListElement(vm, slot + 2, i, slot + 3);
+			Struktur::Dialogue::CallbackCommand command = DialogueParseWrenCommand(vm, slot + 3);
+			node.AddCommand(command);
+		}
+	}
+
+	wrenSetSlotString(vm, slot + 1, "choices");
+	if (wrenGetMapContainsKey(vm, slot, slot + 1))
+	{
+		wrenGetMapValue(vm, slot, slot + 1, slot + 2);
+		int count = wrenGetListCount(vm, slot + 2);
+		for (int i = 0; i < count; i++)
+		{
+			wrenGetListElement(vm, slot + 2, i, slot + 3);
+			Struktur::Dialogue::Choice choice = DialogueParseWrenChoice(vm, slot + 3);
+			node.AddChoice(choice);
+		}
+	}
+
+	wrenSetSlotString(vm, slot + 1, "next");
+	if (wrenGetMapContainsKey(vm, slot, slot + 1))
+	{
+		wrenGetMapValue(vm, slot, slot + 1, slot + 2);
+		std::string next = wrenGetSlotString(vm, slot + 2);
+		node.SetNext(next);
+	}
+
+	wrenSetSlotString(vm, slot + 1, "targets");
+	if (wrenGetMapContainsKey(vm, slot, slot + 1))
+	{
+		wrenGetMapValue(vm, slot, slot + 1, slot + 2);
+		int count = wrenGetListCount(vm, slot + 2);
+		for (int i = 0; i < count; i++)
+		{
+			wrenGetListElement(vm, slot + 2, i, slot + 3);
+			Struktur::Dialogue::ConditionalTarget target = DialogueParseWrenConditionalTarget(vm, slot + 3);
+			node.AddTarget(target);
+		}
+	}
+
+	return node;
+}
+
+static std::pair<std::string, Struktur::Dialogue::DialogueNode> DialogueParseWrenNodeKeyPair(WrenVM* vm, int slot)
+{
+	wrenEnsureSlots(vm, slot + 3);
+
+	wrenSetSlotString(vm, slot + 1, "node");
+	wrenGetMapValue(vm, slot, slot + 1, slot + 2);
+	std::string nodeKey = wrenGetSlotString(vm, slot + 2);
+
+	wrenSetSlotString(vm, slot + 1, "data");
+	wrenGetMapValue(vm, slot, slot + 1, slot + 2);
+	Struktur::Dialogue::DialogueNode node = DialogueParseWrenNodeData(vm, slot + 2, nodeKey);
+
+	return {nodeKey, node};
 }
 
 // ============================================================================
@@ -31,85 +228,6 @@ WREN_ENUM("dialogue", DialogueStatus, "Enum for the status codes for dialogue op
 	WREN_ENUM_PAIR("NODE_NOT_FOUND", Struktur::Dialogue::DialogueStatus::NODE_NOT_FOUND),
 	WREN_ENUM_PAIR("ERROR", Struktur::Dialogue::DialogueStatus::ERROR),
 	);
-
-// ============================================================================
-// DIALOGUE DATA BINDINGS
-// ============================================================================
-
-void wren_DialogueDataAllocate(WrenVM* vm)
-{
-	wrenSetSlotNewForeign(vm, 0, 0, sizeof(WrenDialogueData));
-}
-
-void wren_DialogueDataFinalize(void* data)
-{
-	WrenDialogueData* dialogueData = static_cast<WrenDialogueData*>(data);
-	dialogueData->~WrenDialogueData();
-}
-
-// DialogueData.new()
-void wren_DialogueDataNew(WrenVM* vm)
-{
-	WrenDialogueData* data = static_cast<WrenDialogueData*>(wrenGetSlotForeign(vm, 0));
-	new (data) WrenDialogueData();
-}
-
-// DialogueData.addNodeSimple(nodeId, speaker, text, next)
-// Simplified version for nodes with just basic fields
-void wren_DialogueDataAddNodeSimple(WrenVM* vm)
-{
-	WrenDialogueData* data = static_cast<WrenDialogueData*>(wrenGetSlotForeign(vm, 0));
-	const char* nodeId = wrenGetSlotString(vm, 1);
-
-	std::map<std::string, Struktur::Dialogue::DialogueValue> nodeData;
-
-	// Parse optional fields
-	if (wrenGetSlotType(vm, 2) != WREN_TYPE_NULL)
-	{
-		nodeData["speaker"] = Struktur::Dialogue::DialogueValue(wrenGetSlotString(vm, 2));
-	}
-
-	if (wrenGetSlotType(vm, 3) != WREN_TYPE_NULL)
-	{
-		nodeData["text"] = Struktur::Dialogue::DialogueValue(wrenGetSlotString(vm, 3));
-	}
-
-	if (wrenGetSlotType(vm, 4) != WREN_TYPE_NULL)
-	{
-		nodeData["next"] = Struktur::Dialogue::DialogueValue(wrenGetSlotString(vm, 4));
-	}
-
-	data->dataMap[nodeId] = nodeData;
-}
-
-// DialogueData.loadIntoManager()
-void wren_DialogueDataLoadIntoManager(WrenVM* vm)
-{
-	WrenDialogueData* data = static_cast<WrenDialogueData*>(wrenGetSlotForeign(vm, 0));
-	Struktur::GameContext* context = static_cast<Struktur::GameContext*>(wrenGetUserData(vm));
-	Struktur::Dialogue::DialogueManager& manager = context->GetDialogueManager();
-	Struktur::Dialogue::DialogueRegistry& registry = context->GetDialogueRegistry();
-
-	// Load nodes from data map
-	auto nodes = Struktur::Dialogue::DialogueLoader::LoadFromData(registry, vm, data->dataMap);
-	manager.LoadDialogueNodes(std::move(nodes));
-
-	data->loadedIntoManager = true;
-
-	DEBUG_INFO("Loaded dialogue data into manager");
-}
-
-// ============================================================================
-// BINDING REGISTRATION
-// ============================================================================
-
-// DialogueData foreign class
-WREN_FOREIGN_CLASS("dialogue", "DialogueData", wren_DialogueDataAllocate, wren_DialogueDataFinalize, "Container for dialogue data");
-
-WREN_CONSTRUCTOR("dialogue", "DialogueData", "new()", wren_DialogueDataNew, "Constructor to create DialogueData");
-
-WREN_CLASS_METHOD("dialogue", "DialogueData", "addNodeSimple(_,_,_,_)", wren_DialogueDataAddNodeSimple, "Add a simple node with id, speaker, text, next");
-WREN_CLASS_METHOD("dialogue", "DialogueData", "loadIntoManager()", wren_DialogueDataLoadIntoManager, "Load dialogue data into DialogueManager");
 
 // ============================================================================
 // DIALOGUE RESULT BINDINGS
@@ -215,17 +333,17 @@ void wren_DialogueResultGetShouldAutoAdvance(WrenVM* vm)
 // ============================================================================
 
 // DialogueData foreign class
-WREN_FOREIGN_CLASS("dialogue", "DialogueData", wren_DialogueDataAllocate, wren_DialogueDataFinalize, "Container for dialogue data");
+WREN_FOREIGN_CLASS("dialogue", "DialogueResult", wren_DialogueResultAllocate, wren_DialogueResultFinalize, "Container for dialogue data");
 
-WREN_CONSTRUCTOR("dialogue", "DialogueData", "new()", wren_DialogueDataNew, "Constructor to create DialogueData");
+WREN_CONSTRUCTOR("dialogue", "DialogueResult", "new()", wren_DialogueResultNew, "Constructor to create DialogueData");
 
-WREN_CLASS_METHOD("dialogue", "DialogueData", "status", wren_DialogueResultGetStatus, "Get the status of the dialogue result");
-WREN_CLASS_METHOD("dialogue", "DialogueData", "nodeId", wren_DialogueResultGetNodeId, "Get the status of the node id");
-WREN_CLASS_METHOD("dialogue", "DialogueData", "speaker", wren_DialogueResultGetSpeaker, "Get the status speaker of the node");
-WREN_CLASS_METHOD("dialogue", "DialogueData", "text", wren_DialogueResultGetText, "Get the status text of the node");
-WREN_CLASS_METHOD("dialogue", "DialogueData", "choices", wren_DialogueResultGetChoices, "Get the text choices");
-WREN_CLASS_METHOD("dialogue", "DialogueData", "hasEnded", wren_DialogueResultGetHasEnded, "Get the text has ended");
-WREN_CLASS_METHOD("dialogue", "DialogueData", "shouldAutoAdvance", wren_DialogueResultGetShouldAutoAdvance, "Get the text should auto advance");
+WREN_CLASS_METHOD("dialogue", "DialogueResult", "status", wren_DialogueResultGetStatus, "Get the status of the dialogue result");
+WREN_CLASS_METHOD("dialogue", "DialogueResult", "nodeId", wren_DialogueResultGetNodeId, "Get the status of the node id");
+WREN_CLASS_METHOD("dialogue", "DialogueResult", "speaker", wren_DialogueResultGetSpeaker, "Get the status speaker of the node");
+WREN_CLASS_METHOD("dialogue", "DialogueResult", "text", wren_DialogueResultGetText, "Get the status text of the node");
+WREN_CLASS_METHOD("dialogue", "DialogueResult", "choices", wren_DialogueResultGetChoices, "Get the text choices");
+WREN_CLASS_METHOD("dialogue", "DialogueResult", "hasEnded", wren_DialogueResultGetHasEnded, "Get the text has ended");
+WREN_CLASS_METHOD("dialogue", "DialogueResult", "shouldAutoAdvance", wren_DialogueResultGetShouldAutoAdvance, "Get the text should auto advance");
 
 // ============================================================================
 // DIALOGUE REGISTRY BINDINGS
@@ -240,7 +358,7 @@ void wren_DialogueRegistryRegisterCondition(WrenVM* vm)
 	const char* type = wrenGetSlotString(vm, 1);
 	WrenHandle* callback = wrenGetSlotHandle(vm, 2);
 
-	Struktur::Dialogue::ConditionCallback conditionCallback = [vm, callback](const std::map<std::string, Struktur::Dialogue::DialogueValue>& params) -> bool {
+	Struktur::Dialogue::ConditionCallback conditionCallback = [vm, callback](const std::unordered_map<std::string, Struktur::Dialogue::DialogueValue>& params) -> bool {
 		wrenEnsureSlots(vm, 4);
 		wrenSetSlotHandle(vm, 0, callback);
 		
@@ -267,7 +385,7 @@ void wren_DialogueRegistryRegisterCommand(WrenVM* vm)
 	const char* type = wrenGetSlotString(vm, 1);
 	WrenHandle* callback = wrenGetSlotHandle(vm, 2);
 
-	Struktur::Dialogue::CommandCallback conditionCallback = [vm, callback](const std::map<std::string, Struktur::Dialogue::DialogueValue>& params) {
+	Struktur::Dialogue::CommandCallback conditionCallback = [vm, callback](const std::unordered_map<std::string, Struktur::Dialogue::DialogueValue>& params) {
 		wrenEnsureSlots(vm, 4);
 		wrenSetSlotHandle(vm, 0, callback);
 		
@@ -414,13 +532,20 @@ void wren_DialogueManagerClearAllNodes(WrenVM* vm)
 	manager.Clear();
 }
 
-// DialogueManager.loadDialogueData()
+// DialogueManager.loadDialogueData(_)
 void wren_DialogueManagerLoadDialogueData(WrenVM* vm)
 {
 	Struktur::GameContext* context = static_cast<Struktur::GameContext*>(wrenGetUserData(vm));
 	Struktur::Dialogue::DialogueManager& manager = context->GetDialogueManager();
+	wrenEnsureSlots(vm, 3);
 
-	manager.Clear();
+	int count = wrenGetListCount(vm, 1);
+	for (int i = 0; i < count; i++)
+	{
+		wrenGetListElement(vm, 1, i, 2);
+		auto node = DialogueParseWrenNodeKeyPair(vm, 2);
+		manager.AddNode(node.first, node.second);
+	}
 }
 
 // ============================================================================

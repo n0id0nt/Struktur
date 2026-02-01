@@ -332,7 +332,6 @@ set(SOURCES
 
     src/Engine/Flag/FlagManager.h               src/Engine/Flag/FlagManager.cpp
 
-    src/Engine/Dialogue/DialogueLoader.h        src/Engine/Dialogue/DialogueLoader.cpp
     src/Engine/Dialogue/DialogueManager.h       src/Engine/Dialogue/DialogueManager.cpp
     src/Engine/Dialogue/DialogueNode.h          src/Engine/Dialogue/DialogueNode.cpp
     src/Engine/Dialogue/DialogueRegistry.h      src/Engine/Dialogue/DialogueRegistry.cpp

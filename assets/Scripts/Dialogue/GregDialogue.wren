@@ -6,20 +6,69 @@ class GregDialogue {
                     "targets": [
                         {
                             "conditions": [
-                                {"type": "intFlag", "parameters": {"flag": "greg_quest_state", "op": "==", "value": "3"}},
+                                {
+                                    "type": "intFlag", "parameters": [
+                                        {
+                                            "type": "flag",
+                                            "value": "greg_quest_state"
+                                        },
+                                        {
+                                            "type": "op",
+                                            "value": "=="
+                                        },
+                                        {
+                                            "type": "value",
+                                            "value": 3
+                                        },
+                                    ]
+                                },
                             ],
                             "node": "greg_complete".
                         },
                         {
                             "conditions": [
-                                {"type": "intFlag", "parameters": {"flag": "greg_quest_state", "op": "==", "value": "1"}},
-                                {"type": "hasItem", "parameters": {"item": "ancient_book"}},
+                                {"type": "intFlag", "parameters": [
+                                        {
+                                            "type": "flag",
+                                            "value": "greg_quest_state"
+                                        },
+                                        {
+                                            "type": "op",
+                                            "value": "=="
+                                        },
+                                        {
+                                            "type": "value",
+                                            "value": 1
+                                        },
+                                    ]
+                                },
+                                {"type": "hasItem", "parameters": [
+                                        {
+                                            "type": "item",
+                                            "value": "ancient_book"
+                                        },
+                                    ]
+                                },
                             ],
                             "node": "greg_has_book_1".
                         },
                         {
                             "conditions": [
-                                {"type": "intFlag", "parameters": {"flag": "greg_quest_state", "op": "==", "value": "1"}},
+                                {"type": "intFlag", "parameters": [
+                                        {
+                                            "type": "flag",
+                                            "value": "greg_quest_state"
+                                        },
+                                        {
+                                            "type": "op",
+                                            "value": "=="
+                                        },
+                                        {
+                                            "type": "value",
+                                            "value": 1
+                                        },
+                                    ]
+                                },
                             ],
                             "node": "greg_needs_book".
                         },
@@ -47,9 +96,35 @@ class GregDialogue {
                     "speaker": "Greg",
                     "text": "In exchange for returning my life's work, I offer you this rare gem.\nMay it serve you well in your travels.",
                     "commands": [
-                        {"type": "giveItem", "parameters": {"item": "rare_gem"}},
-                        {"type": "removeItem", "parameters": {"item": "ancient_book"}},
-                        {"type": "setInt", "parameters": {"flag": "greg_quest_state", "value": "3"}}
+                        {"type": "giveItem", "parameters": [
+                                {
+                                    "type": "item",
+                                    "value": "rare_gem"
+                                },
+                            ]
+                        },
+                        {"type": "removeItem", "parameters": [
+                                {
+                                    "type": "item",
+                                    "value": "ancient_book"
+                                },
+                            ]
+                        },
+                        {"type": "setInt", "parameters": [
+                                {
+                                    "type": "flag",
+                                    "value": "greg_quest_state"
+                                },
+                                {
+                                    "type": "op",
+                                    "value": "=="
+                                },
+                                {
+                                    "type": "value",
+                                    "value": 3
+                                },
+                            ]
+                        }
                     ],
                     "next": "greg_has_book_3"
                 },

@@ -6,14 +6,10 @@
 // FOREIGN CLASS WRAPPERS
 // ============================================================================
 
-// Wrapper for DialogueData - used to build dialogue data in Wren
-struct WrenDialogueData
-{
-	Struktur::Dialogue::DialogueDataMap dataMap;
-};
-
 // Wrapper for DialogueResult
 struct WrenDialogueResult
 {
 	Struktur::Dialogue::DialogueResult dataResult;
+
+	WrenDialogueResult(Struktur::Dialogue::DialogueResult& dataResult) : dataResult(dataResult) {}
 };

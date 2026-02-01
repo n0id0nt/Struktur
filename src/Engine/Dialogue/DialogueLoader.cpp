@@ -6,12 +6,12 @@
 
 namespace Struktur::Dialogue
 {
-	std::map<std::string, std::unique_ptr<DialogueNode>> DialogueLoader::LoadFromData(
+	std::unordered_map<std::string, std::unique_ptr<DialogueNode>> DialogueLoader::LoadFromData(
 		DialogueRegistry& registry,
 		WrenVM* vm,
 		const DialogueDataMap& dataMap)
 	{
-		std::map<std::string, std::unique_ptr<DialogueNode>> nodes;
+		std::unordered_map<std::string, std::unique_ptr<DialogueNode>> nodes;
 
 		for (const auto& [nodeId, nodeData] : dataMap)
 		{
@@ -30,7 +30,7 @@ namespace Struktur::Dialogue
 		DialogueRegistry& registry,
 		WrenVM* vm,
 		const std::string& nodeId,
-		const std::map<std::string, DialogueValue>& nodeData)
+		const std::unordered_map<std::string, DialogueValue>& nodeData)
 	{
 		auto node = std::make_unique<DialogueNode>(nodeId);
 
@@ -224,11 +224,11 @@ namespace Struktur::Dialogue
 		return commands;
 	}
 
-	std::map<std::string, DialogueValue> DialogueLoader::ParseParameters(WrenVM* vm, int slot)
+	std::unordered_map<std::string, DialogueValue> DialogueLoader::ParseParameters(WrenVM* vm, int slot)
 	{
 		wrenEnsureSlots(vm, slot + 4);
 		
-		std::map<std::string, DialogueValue> params;
+		std::unordered_map<std::string, DialogueValue> params;
 
 		// Iterate through map
 		// Note: Wren doesn't have a direct API to iterate maps, so this assumes

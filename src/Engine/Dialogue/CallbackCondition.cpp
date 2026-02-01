@@ -2,7 +2,7 @@
 
 #include "Engine/GameContext.h"
 
-Struktur::Dialogue::CallbackCondition::CallbackCondition(std::string key, const std::map<std::string, DialogueValue>& params)
+Struktur::Dialogue::CallbackCondition::CallbackCondition(std::string key, const std::unordered_map<std::string, DialogueValue>& params)
     : m_key(key), m_params(params)
 {
 }

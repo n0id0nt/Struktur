@@ -5,7 +5,7 @@
 #pragma once
 
 #include <string>
-#include <map>
+#include <unordered_map>
 #include <memory>
 #include <vector>
 #include <optional>
@@ -30,7 +30,7 @@ namespace Struktur::Dialogue
 		~DialogueManager();
 
 		// Loading
-		void LoadDialogueNodes(std::map<std::string, DialogueNode>&& nodes);
+		void AddNode(std::string nodeKey, DialogueNode node);
 		void Clear();
 
 		// Flow control
@@ -53,7 +53,7 @@ namespace Struktur::Dialogue
 		void ExecuteCommands(GameContext& context, const std::vector<Command>& commands);
 
 		// Node storage
-		std::map<std::string, DialogueNode> m_nodes;
+		std::unordered_map<std::string, DialogueNode> m_nodes;
 		DialogueNode* m_currentNode;
 		std::vector<std::string> m_history;
 

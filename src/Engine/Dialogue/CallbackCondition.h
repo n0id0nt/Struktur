@@ -6,7 +6,7 @@
 
 #include "Condition.h"
 #include "DialogueValue.h"
-#include <map>
+#include <unordered_map>
 #include <string>
 
 namespace Struktur::Dialogue
@@ -17,7 +17,7 @@ namespace Struktur::Dialogue
 	public:
 		// Constructor
 		// callback is borrowed from DialogueRegistry, not owned
-		CallbackCondition(std::string key, const std::map<std::string, DialogueValue>& params);
+		CallbackCondition(std::string key, const std::unordered_map<std::string, DialogueValue>& params);
 		~CallbackCondition() override = default;
 
 		// Execute by calling Wren callback with parameters
@@ -25,7 +25,7 @@ namespace Struktur::Dialogue
 
 	private:
 		std::string m_key;
-		std::map<std::string, DialogueValue> m_params;
+		std::unordered_map<std::string, DialogueValue> m_params;
 		
 	};
 }

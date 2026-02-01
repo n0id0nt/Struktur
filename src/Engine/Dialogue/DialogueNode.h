@@ -40,12 +40,6 @@ namespace Struktur::Dialogue
 		DialogueNode(const std::string& id);
 		~DialogueNode() = default;
 
-		// Delete copy, allow move
-		DialogueNode(const DialogueNode&) = delete;
-		DialogueNode& operator=(const DialogueNode&) = delete;
-		DialogueNode(DialogueNode&&) noexcept = default;
-		DialogueNode& operator=(DialogueNode&&) noexcept = default;
-
 		// Getters
 		const std::string& GetId() const { return m_id; }
 		const std::optional<std::string>& GetSpeaker() const { return m_speaker; }
@@ -63,7 +57,7 @@ namespace Struktur::Dialogue
 		// Add methods
 		void AddCommand(const Command& command);
 		void AddChoice(const Choice& choice);
-		void AddTarget(ConditionalTarget&& target);
+		void AddTarget(const ConditionalTarget& target);
 
 		// Check node type
 		bool HasChoices() const { return !m_choices.empty(); }

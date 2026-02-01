@@ -17,13 +17,12 @@ namespace Struktur::Dialogue
 		ASSERT_MSG(m_nodes.empty(), "Dialogue manager has not been cleared");
 	}
 
-	void DialogueManager::LoadDialogueNodes(std::map<std::string, DialogueNode>&& nodes)
-	{
-		m_nodes = std::move(nodes);
-		DEBUG_INFO("Loaded %zu dialogue nodes", m_nodes.size());
-	}
+    void DialogueManager::AddNode(std::string nodeKey, DialogueNode node)
+    {
+		m_nodes[nodeKey] = node;
+    }
 
-	void DialogueManager::Clear()
+    void DialogueManager::Clear()
 	{
 		m_nodes.clear();
 		m_currentNode = nullptr;

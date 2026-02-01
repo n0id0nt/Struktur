@@ -5,7 +5,7 @@
 #pragma once
 
 #include <string>
-#include <map>
+#include <unordered_map>
 #include <memory>
 #include <functional>
 
@@ -20,8 +20,8 @@ namespace Struktur
 
 namespace Struktur::Dialogue
 {
-	using ConditionCallback = std::function<bool(const std::map<std::string, DialogueValue>& params)>;
-	using CommandCallback = std::function<void(const std::map<std::string, DialogueValue>& params)>;
+	using ConditionCallback = std::function<bool(const std::unordered_map<std::string, DialogueValue>& params)>;
+	using CommandCallback = std::function<void(const std::unordered_map<std::string, DialogueValue>& params)>;
 	using OperatorCallback = std::function<bool(const DialogueValue& lhs, const DialogueValue& rhs)>;
 	using DisposeCallback = std::function<void(GameContext& context)>;
 
@@ -71,8 +71,8 @@ namespace Struktur::Dialogue
 		OperatorCallback& GetOperator(const std::string& op);
 
 	private:
-		std::map<std::string, CallBackPair<ConditionCallback>> m_conditionCallbacks;
-		std::map<std::string, CallBackPair<CommandCallback>> m_commandCallbacks;
-		std::map<std::string, CallBackPair<OperatorCallback>> m_operatorCallbacks;
+		std::unordered_map<std::string, CallBackPair<ConditionCallback>> m_conditionCallbacks;
+		std::unordered_map<std::string, CallBackPair<CommandCallback>> m_commandCallbacks;
+		std::unordered_map<std::string, CallBackPair<OperatorCallback>> m_operatorCallbacks;
 	};
 }
