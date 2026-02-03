@@ -6,7 +6,7 @@
 
 #include "Command.h"
 #include "DialogueValue.h"
-#include <map>
+#include <unordered_map>
 #include <string>
 
 namespace Struktur::Dialogue
@@ -18,7 +18,7 @@ namespace Struktur::Dialogue
 		// Constructor
 		// callback is borrowed from DialogueRegistry, not owned
 		CallbackCommand(std::string key, const std::unordered_map<std::string, DialogueValue>& params);
-		~CallbackCommand() override = default;
+		~CallbackCommand() = default;
 
 		// Execute by calling Wren callback with parameters
 		void Execute(GameContext& context) const override;

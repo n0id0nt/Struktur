@@ -17,12 +17,12 @@ namespace Struktur::Dialogue
 		ASSERT_MSG(m_nodes.empty(), "Dialogue manager has not been cleared");
 	}
 
-    void DialogueManager::AddNode(std::string nodeKey, DialogueNode node)
-    {
-		m_nodes[nodeKey] = node;
-    }
+	void DialogueManager::AddNode(std::string nodeKey, std::unique_ptr<DialogueNode> node)
+	{
+		m_nodes[nodeKey] = std::move(node);
+	}
 
-    void DialogueManager::Clear()
+	void DialogueManager::Clear()
 	{
 		m_nodes.clear();
 		m_currentNode = nullptr;
@@ -55,7 +55,7 @@ namespace Struktur::Dialogue
 			return DialogueResult::InvalidChoice();
 		}
 
-		const std::string& targetNode = choices[choiceIndex].targetNode;
+		const std::string& targetNode = choices[choiceIndex]->targetNode;
 		DEBUG_INFO("Player chose option %d, jumping to node: %s", choiceIndex, targetNode.c_str());
 
 		return ProcessNode(context, targetNode);
@@ -100,12 +100,12 @@ namespace Struktur::Dialogue
 		auto it = m_nodes.find(nodeId);
 		if (it != m_nodes.end())
 		{
-			return &it->second;
+			return it->second.get();
 		}
 		return nullptr;
 	}
 
-    DialogueResult DialogueManager::ProcessNode(GameContext& context, const std::string& nodeId)
+	DialogueResult DialogueManager::ProcessNode(GameContext& context, const std::string& nodeId)
 	{
 		// Find node
 		auto it = m_nodes.find(nodeId);
@@ -117,7 +117,7 @@ namespace Struktur::Dialogue
 		}
 
 		// Set as current node
-		m_currentNode = &it->second;
+		m_currentNode = it->second.get();
 		m_history.push_back(nodeId);
 
 		// Execute all commands in this node
@@ -151,7 +151,7 @@ namespace Struktur::Dialogue
 			const auto& choices = m_currentNode->GetChoices();
 			for (size_t i = 0; i < choices.size(); ++i)
 			{
-				result.choices.emplace_back(static_cast<int>(i), choices[i].text);
+				result.choices.emplace_back(static_cast<int>(i), choices[i]->text);
 			}
 		}
 		else if (m_currentNode->HasNext())
@@ -169,32 +169,32 @@ namespace Struktur::Dialogue
 		return result;
 	}
 
-	std::optional<std::string> DialogueManager::EvaluateTargets(GameContext& context, const std::vector<ConditionalTarget>& targets)
+	std::optional<std::string> DialogueManager::EvaluateTargets(GameContext& context, const ConditionalTargetList& targets)
 	{
 		for (const auto& target : targets)
 		{
 			// If no conditions, this target always matches
-			if (target.conditions.empty())
+			if (target->conditions.empty())
 			{
-				return target.targetNode;
+				return target->targetNode;
 			}
 
 			// Evaluate all conditions
-			if (EvaluateConditions(context, target.conditions))
+			if (EvaluateConditions(context, target->conditions))
 			{
-				return target.targetNode;
+				return target->targetNode;
 			}
 		}
 
 		return std::nullopt;
 	}
 
-	bool DialogueManager::EvaluateConditions(GameContext& context, const std::vector<Condition>& conditions)
+	bool DialogueManager::EvaluateConditions(GameContext& context, const ConditionList& conditions)
 	{
 		// All conditions must be true
 		for (const auto& condition : conditions)
 		{
-			if (!condition.Evaluate(context))
+			if (!condition->Evaluate(context))
 			{
 				return false;
 			}
@@ -202,11 +202,11 @@ namespace Struktur::Dialogue
 		return true;
 	}
 
-	void DialogueManager::ExecuteCommands(GameContext& context, const std::vector<Command>& commands)
+	void DialogueManager::ExecuteCommands(GameContext& context, const CommandList& commands)
 	{
 		for (const auto& command : commands)
 		{
-			command.Execute(context);
+			command->Execute(context);
 		}
 	}
 }

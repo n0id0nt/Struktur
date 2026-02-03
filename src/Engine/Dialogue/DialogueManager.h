@@ -30,7 +30,7 @@ namespace Struktur::Dialogue
 		~DialogueManager();
 
 		// Loading
-		void AddNode(std::string nodeKey, DialogueNode node);
+		void AddNode(std::string nodeKey, std::unique_ptr<DialogueNode> node);
 		void Clear();
 
 		// Flow control
@@ -48,12 +48,12 @@ namespace Struktur::Dialogue
 		// Internal processing
 		DialogueResult ProcessNode(GameContext& context, const std::string& nodeId);
 		//TODO move this to the node
-		std::optional<std::string> EvaluateTargets(GameContext& context, const std::vector<ConditionalTarget>& targets);
-		bool EvaluateConditions(GameContext& context, const std::vector<Condition>& conditions);
-		void ExecuteCommands(GameContext& context, const std::vector<Command>& commands);
+		std::optional<std::string> EvaluateTargets(GameContext& context, const ConditionalTargetList& targets);
+		bool EvaluateConditions(GameContext& context, const ConditionList& conditions);
+		void ExecuteCommands(GameContext& context, const CommandList& commands);
 
 		// Node storage
-		std::unordered_map<std::string, DialogueNode> m_nodes;
+		std::unordered_map<std::string, std::unique_ptr<DialogueNode>> m_nodes;
 		DialogueNode* m_currentNode;
 		std::vector<std::string> m_history;
 

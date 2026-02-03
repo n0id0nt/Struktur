@@ -15,8 +15,6 @@ namespace Struktur::Dialogue
 	class Command
 	{
 	public:
-		virtual ~Command() = default;
-
 		virtual void Execute(GameContext& context) const = 0;
 	};
 }

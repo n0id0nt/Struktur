@@ -13,18 +13,18 @@ namespace Struktur::Dialogue
 	{
 	}
 
-	void DialogueNode::AddCommand(const Command& command)
+	void DialogueNode::AddCommand(std::unique_ptr<Command> command)
 	{
-		m_commands.push_back(command);
+		m_commands.push_back(std::move(command));
 	}
 
-	void DialogueNode::AddChoice(const Choice& choice)
+	void DialogueNode::AddChoice(std::unique_ptr<Choice> choice)
 	{
-		m_choices.push_back(choice);
+		m_choices.push_back(std::move(choice));
 	}
 
-	void DialogueNode::AddTarget(const ConditionalTarget& target)
+	void DialogueNode::AddTarget(std::unique_ptr<ConditionalTarget> target)
 	{
-		m_targets.push_back(target);
+		m_targets.push_back(std::move(target));
 	}
 }

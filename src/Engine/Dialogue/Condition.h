@@ -15,8 +15,6 @@ namespace Struktur::Dialogue
 	class Condition
 	{
 	public:
-		virtual ~Condition() = default;
-
 		virtual bool Evaluate(GameContext& context) const = 0;
 	};
 }

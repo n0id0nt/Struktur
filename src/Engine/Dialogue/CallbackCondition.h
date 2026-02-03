@@ -18,7 +18,7 @@ namespace Struktur::Dialogue
 		// Constructor
 		// callback is borrowed from DialogueRegistry, not owned
 		CallbackCondition(std::string key, const std::unordered_map<std::string, DialogueValue>& params);
-		~CallbackCondition() override = default;
+		~CallbackCondition() = default;
 
 		// Execute by calling Wren callback with parameters
 		bool Evaluate(GameContext& context) const override;
@@ -26,6 +26,6 @@ namespace Struktur::Dialogue
 	private:
 		std::string m_key;
 		std::unordered_map<std::string, DialogueValue> m_params;
-		
+
 	};
 }
