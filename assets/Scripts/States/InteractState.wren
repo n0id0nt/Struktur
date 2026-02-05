@@ -15,10 +15,10 @@ import "Colors" for BLANK, BLACK, DARKGRAY, WHITE
 import "Inventory" for Inventory
 import "dialogue" for DialogueManager
 
-import "Dialogue/DialogueLoader" for DialogueLoader
+//import "Dialogue/DialogueLoader" for DialogueLoader
 import "Dialogue/GregDialogue" for GregDialogue
-import "Dialogue/ItemInteractions" for ItemInteractions
-import "Dialogue/NPCInteractions" for NPCInteractions
+//import "Dialogue/ItemInteractions" for ItemInteractions
+//import "Dialogue/NPCInteractions" for NPCInteractions
 
 var TEXT_SCROLL_SPEED = 0.02
 
@@ -259,18 +259,18 @@ class InteractState is BaseState {
         
         // NPCs
         if (interactableName == "Scholar") return GregDialogue.getEntryPoint()
-        if (interactableName == "Gardener") return NPCInteractions.getEntryPoint("gardener")
-        if (interactableName == "Cook") return NPCInteractions.getEntryPoint("cook")
-        if (interactableName == "Merchant") return NPCInteractions.getEntryPoint("merchant")
-        if (interactableName == "Guard") return NPCInteractions.getEntryPoint("guard")
-        if (interactableName == "Librarian") return NPCInteractions.getEntryPoint("librarian")
-        
-        // Items
-        if (interactableName == "Ancient Tome") return ItemInteractions.getEntryPoint("ancient_book")
-        if (interactableName == "Rose") return ItemInteractions.getEntryPoint("rose")
-        if (interactableName == "Healing Potion") return ItemInteractions.getEntryPoint("healing_potion")
-        if (interactableName == "Mysterious Key") return ItemInteractions.getEntryPoint("mysterious_key")
-        if (interactableName == "Old Map") return ItemInteractions.getEntryPoint("old_map")
+        //if (interactableName == "Gardener") return NPCInteractions.getEntryPoint("gardener")
+        //if (interactableName == "Cook") return NPCInteractions.getEntryPoint("cook")
+        //if (interactableName == "Merchant") return NPCInteractions.getEntryPoint("merchant")
+        //if (interactableName == "Guard") return NPCInteractions.getEntryPoint("guard")
+        //if (interactableName == "Librarian") return NPCInteractions.getEntryPoint("librarian")
+        //
+        //// Items
+        //if (interactableName == "Ancient Tome") return ItemInteractions.getEntryPoint("ancient_book")
+        //if (interactableName == "Rose") return ItemInteractions.getEntryPoint("rose")
+        //if (interactableName == "Healing Potion") return ItemInteractions.getEntryPoint("healing_potion")
+        //if (interactableName == "Mysterious Key") return ItemInteractions.getEntryPoint("mysterious_key")
+        //if (interactableName == "Old Map") return ItemInteractions.getEntryPoint("old_map")
         
         // Default - no dialogue found
         Debug.Warning("Warning: No dialogue entry point found for %(interactableName)")

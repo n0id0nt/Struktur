@@ -23,7 +23,7 @@ class GregDialogue {
                                     ]
                                 },
                             ],
-                            "node": "greg_complete".
+                            "node": "greg_complete",
                         },
                         {
                             "conditions": [
@@ -50,7 +50,7 @@ class GregDialogue {
                                     ]
                                 },
                             ],
-                            "node": "greg_has_book_1".
+                            "node": "greg_has_book_1",
                         },
                         {
                             "conditions": [
@@ -70,10 +70,10 @@ class GregDialogue {
                                     ]
                                 },
                             ],
-                            "node": "greg_needs_book".
+                            "node": "greg_needs_book",
                         },
                         {
-                            "node": "greg_first_1".
+                            "node": "greg_first_1",
                         },
                     ]
                 },
@@ -114,10 +114,6 @@ class GregDialogue {
                                 {
                                     "type": "flag",
                                     "value": "greg_quest_state"
-                                },
-                                {
-                                    "type": "op",
-                                    "value": "=="
                                 },
                                 {
                                     "type": "value",
@@ -177,7 +173,17 @@ class GregDialogue {
                     "speaker": "Greg",
                     "text": "I had an Ancient Tome - a very special book - but I seem to have misplaced it.\nIf you could find it, I would gladly trade you something valuable.",
                     "commands": [
-                        {"type": "setInt", "parameters": {"flag": "greg_quest_state", "value": "1"}}
+                        {"type": "setInt", "parameters": [
+                                {
+                                    "type": "flag",
+                                    "value": "greg_quest_state"
+                                },
+                                {
+                                    "type": "value",
+                                    "value": 1
+                                },
+                            ]
+                        }
                     ]
                 },
             },

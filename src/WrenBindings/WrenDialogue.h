@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Engine/Dialogue/DialogueLoader.h"
+#include "Engine/Dialogue/DialogueResult.h"
 
 // ============================================================================
 // FOREIGN CLASS WRAPPERS
