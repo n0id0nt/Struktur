@@ -161,17 +161,17 @@ class InteractState is BaseState {
 
     processDialogueResult(result) {
         // Check if dialogue has ended
-        if (result["hasEnded"]) {
+        if (result.hasEnded) {
             System.print("Dialogue ended")
             return
         }
 
         // Get the text and speaker
-        var speaker = result["speaker"]
-        var text = result["text"]
+        var speaker = result.speaker
+        var text = result.text
         
         // Format with speaker name if present
-        if (speaker != "") {
+        if (speaker && speaker != "") {
             _currentString = "%(speaker):\n%(text)"
         } else {
             _currentString = text
@@ -187,7 +187,7 @@ class InteractState is BaseState {
         clearChoiceLabels()
 
         // Check if there are choices
-        var choices = result["choices"]
+        var choices = result.choices
         if (choices.count > 0) {
             _waitingForChoice = true
             displayChoices(choices)
@@ -196,7 +196,7 @@ class InteractState is BaseState {
 
     continueDialogue(stateManager) {
         // If there are choices, we shouldn't continue automatically
-        if (_waitingForChoice && _currentResult["choices"].count > 0) {
+        if (_waitingForChoice && _currentResult.choices.count > 0) {
             return
         }
 
@@ -204,7 +204,7 @@ class InteractState is BaseState {
         _currentResult = DialogueManager.continueDialogue()
         
         // Check if dialogue ended
-        if (_currentResult["hasEnded"] || _currentResult["status"] != 0) {
+        if (_currentResul.hasEnded || _currentResult.speaker != 0) {
             stateManager.clearCurrentState()
             return
         }
@@ -218,7 +218,7 @@ class InteractState is BaseState {
         _currentResult = DialogueManager.makeChoice(choiceIndex)
         
         // Check if dialogue ended
-        if (_currentResult["hasEnded"] || _currentResult["status"] != 0) {
+        if (_currentResul.hasEnded || _currentResult.status != 0) {
             stateManager.clearCurrentState()
             return
         }
@@ -258,7 +258,7 @@ class InteractState is BaseState {
         // This maps your old interaction names to the new dialogue system
         
         // NPCs
-        if (interactableName == "Scholar") return GregDialogue.getEntryPoint()
+        if (interactableName == "Scholar") return "greg_complete"
         //if (interactableName == "Gardener") return NPCInteractions.getEntryPoint("gardener")
         //if (interactableName == "Cook") return NPCInteractions.getEntryPoint("cook")
         //if (interactableName == "Merchant") return NPCInteractions.getEntryPoint("merchant")

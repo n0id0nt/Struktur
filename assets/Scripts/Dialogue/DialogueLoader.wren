@@ -3,6 +3,8 @@
 
 import "dialogue" for DialogueManager
 import "Dialogue/GregDialogue" for GregDialogue
+import "Dialogue/RegisteredFunctions/Commands" for Commands
+import "Dialogue/RegisteredFunctions/Conditions" for Conditions
 //import "Dialogue/ItemInteractions" for ItemInteractions
 //import "Dialogue/NPCInteractions" for NPCInteractions
 
@@ -26,18 +28,8 @@ class DialogueLoader {
         //System.print("Loaded NPC interactions")
         
         System.print("All dialogue loaded successfully")
+
+        Commands.registerFunctions()
+        Conditions.registerFunctions()
     }
-    
-    // Get entry point for a specific interaction
-    static getGregEntryPoint() {
-        return GregDialogue.getEntryPoint()
-    }
-    
-    //static getItemInteractionEntry(itemType) {
-    //    return ItemInteractions.getEntryPoint(itemType)
-    //}
-    //
-    //static getNPCInteractionEntry(npcName) {
-    //    return NPCInteractions.getEntryPoint(npcName)
-    //}
 }

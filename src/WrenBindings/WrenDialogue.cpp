@@ -15,12 +15,47 @@
 
 static void AddDialogueValueToWren(WrenVM* vm, int slot, const Struktur::Dialogue::DialogueValue& dialogueValue)
 {
-	BREAK_MSG("Not Implemented");
+	// Set the value in slot+2 based on its type
+	switch (dialogueValue.type)
+	{
+	case Struktur::Dialogue::DialogueValue::Type::STRING:
+		wrenSetSlotString(vm, slot, dialogueValue.stringValue.c_str());
+		break;
+
+	case Struktur::Dialogue::DialogueValue::Type::INT:
+		wrenSetSlotDouble(vm, slot, static_cast<double>(dialogueValue.intValue));
+		break;
+
+	case Struktur::Dialogue::DialogueValue::Type::BOOL:
+		wrenSetSlotBool(vm, slot, dialogueValue.boolValue);
+		break;
+
+	case Struktur::Dialogue::DialogueValue::Type::DOUBLE:
+		wrenSetSlotDouble(vm, slot, dialogueValue.doubleValue);
+		break;
+	default:
+		wrenSetSlotNull(vm, slot);
+		break;
+	}
 }
 
 static void ConvertParamsMapToWrenMap(WrenVM* vm, int slot, const std::unordered_map<std::string, Struktur::Dialogue::DialogueValue>& params)
 {
-	BREAK_MSG("Not Implemented");
+	// Create a new Wren map in the specified slot
+	wrenEnsureSlots(vm, slot + 3); // Need extra slots for key, value, and map operations
+	wrenSetSlotNewMap(vm, slot);
+
+	// Iterate through the params map
+	for (const auto& [key, value] : params)
+	{
+		// Set the key (always a string) in slot+1
+		wrenSetSlotString(vm, slot + 1, key.c_str());
+
+		AddDialogueValueToWren(vm, slot + 2, value);
+
+		// Insert the key-value pair into the map
+		wrenSetMapValue(vm, slot, slot + 1, slot + 2);
+	}
 }
 
 static Struktur::Dialogue::DialogueValue DialogueParseWrenDialogueValue(WrenVM* vm, int slot)
@@ -452,6 +487,7 @@ void wren_DialogueManagerStartDialogue(WrenVM* vm)
 
 	auto result = manager.StartDialogue(*context, nodeId);
 
+	wrenGetVariable(vm, "dialogue", "DialogueResult", 1);
 	WrenDialogueResult* dialigueResult = static_cast<WrenDialogueResult*>(wrenSetSlotNewForeign(vm, 0, 1, sizeof(WrenDialogueResult)));
 	new (dialigueResult) WrenDialogueResult{ result };
 }
@@ -466,6 +502,7 @@ void wren_DialogueManagerMakeChoice(WrenVM* vm)
 
 	auto result = manager.MakeChoice(*context, choiceIndex);
 
+	wrenGetVariable(vm, "dialogue", "DialogueResult", 1);
 	WrenDialogueResult* dialigueResult = static_cast<WrenDialogueResult*>(wrenSetSlotNewForeign(vm, 0, 1, sizeof(WrenDialogueResult)));
 	new (dialigueResult) WrenDialogueResult{ result };
 }
@@ -478,6 +515,7 @@ void wren_DialogueManagerContinue(WrenVM* vm)
 
 	auto result = manager.Continue(*context);
 
+	wrenGetVariable(vm, "dialogue", "DialogueResult", 1);
 	WrenDialogueResult* dialigueResult = static_cast<WrenDialogueResult*>(wrenSetSlotNewForeign(vm, 0, 1, sizeof(WrenDialogueResult)));
 	new (dialigueResult) WrenDialogueResult{ result };
 }

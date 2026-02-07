@@ -7,7 +7,7 @@ class GregDialogue {
                         {
                             "conditions": [
                                 {
-                                    "type": "intFlag", "parameters": [
+                                    "type": "hasIntFlag", "parameters": [
                                         {
                                             "type": "flag",
                                             "value": "greg_quest_state"
@@ -27,7 +27,7 @@ class GregDialogue {
                         },
                         {
                             "conditions": [
-                                {"type": "intFlag", "parameters": [
+                                {"type": "hasIntFlag", "parameters": [
                                         {
                                             "type": "flag",
                                             "value": "greg_quest_state"
@@ -54,7 +54,7 @@ class GregDialogue {
                         },
                         {
                             "conditions": [
-                                {"type": "intFlag", "parameters": [
+                                {"type": "hasIntFlag", "parameters": [
                                         {
                                             "type": "flag",
                                             "value": "greg_quest_state"
@@ -110,7 +110,7 @@ class GregDialogue {
                                 },
                             ]
                         },
-                        {"type": "setInt", "parameters": [
+                        {"type": "sethasIntFlag", "parameters": [
                                 {
                                     "type": "flag",
                                     "value": "greg_quest_state"
