@@ -114,15 +114,18 @@ class InteractState is BaseState {
             }
             var subString = _currentString[0...numberOfCharactersToDraw]
             _dialogueLabel.setText(subString)
-            return
         }
 
         // Handle input
         if (inputInteract) {
-            if (_waitingForChoice) {
+            if (_dialogueSrolling) {
+                _dialogueSrolling = false
+                _continueDialogueLabel.setVisible(true)
+                _dialogueLabel.setText(_currentString)
+            } else if (_waitingForChoice) {
                 // TODO: Handle choice selection via keyboard/gamepad
                 // For now, just continue if there's only one choice or no choices
-                if (_currentResult["choices"].count == 0) {
+                if (!_currentResult.choices && _currentResult.choices.count == 0) {
                     continueDialogue(stateManager)
                 }
             } else {
@@ -131,8 +134,8 @@ class InteractState is BaseState {
         }
 
         // Handle number key input for choices
-        if (_waitingForChoice && _currentResult["choices"].count > 0) {
-            for (i in 0..._currentResult["choices"].count) {
+        if (_waitingForChoice && _currentResult.choices && _currentResult.choices.count > 0) {
+            for (i in 0..._currentResult.choices.count) {
                 // Check for number keys 1-9
                 if (Input.isKeyJustPressed(49 + i)) { // KEY_ONE = 49
                     makeChoice(stateManager, i)
@@ -160,22 +163,19 @@ class InteractState is BaseState {
     }
 
     processDialogueResult(result) {
-        // Check if dialogue has ended
-        if (result.hasEnded) {
-            System.print("Dialogue ended")
-            return
-        }
-
         // Get the text and speaker
         var speaker = result.speaker
         var text = result.text
         
         // Format with speaker name if present
-        if (speaker && speaker != "") {
-            _currentString = "%(speaker):\n%(text)"
-        } else {
-            _currentString = text
+        if (text) {
+            if (speaker && speaker != "") {
+                _currentString = "%(speaker):\n%(text)"
+            } else {
+                _currentString = text
+            }
         }
+
 
         // Start text scrolling animation
         _dialogueSrolling = true
@@ -188,7 +188,7 @@ class InteractState is BaseState {
 
         // Check if there are choices
         var choices = result.choices
-        if (choices.count > 0) {
+        if (choices && choices.count > 0) {
             _waitingForChoice = true
             displayChoices(choices)
         }
@@ -196,18 +196,19 @@ class InteractState is BaseState {
 
     continueDialogue(stateManager) {
         // If there are choices, we shouldn't continue automatically
-        if (_waitingForChoice && _currentResult.choices.count > 0) {
+        if (_waitingForChoice && _currentResult.choices && _currentResult.choices.count > 0) {
+            return
+        }
+
+        // Check if dialogue ended
+        if (_currentResult.hasEnded) {
+            stateManager.clearCurrentState()
             return
         }
 
         // Continue to next node
         _currentResult = DialogueManager.continueDialogue()
         
-        // Check if dialogue ended
-        if (_currentResul.hasEnded || _currentResult.speaker != 0) {
-            stateManager.clearCurrentState()
-            return
-        }
 
         processDialogueResult(_currentResult)
     }
@@ -218,7 +219,7 @@ class InteractState is BaseState {
         _currentResult = DialogueManager.makeChoice(choiceIndex)
         
         // Check if dialogue ended
-        if (_currentResul.hasEnded || _currentResult.status != 0) {
+        if (_currentResult.hasEnded || _currentResult.status != 0) {
             stateManager.clearCurrentState()
             return
         }

@@ -157,6 +157,10 @@ void Struktur::ExitGame(GameContext& context)
 	Physics::PhysicsWorld& world = context.GetPhysicsWorld();
 	world.Clear();
 
+	DEBUG_INFO("[Clean Up] Dialogue Registry");
+	Dialogue::DialogueRegistry& dialogueRegistry = context.GetDialogueRegistry();
+	dialogueRegistry.Clear(context);
+
 	DEBUG_INFO("[Clean Up] Wren Script Component Registry");
 	Wren::WrenScriptComponentRegistry& wrenScriptComponentRegistry = context.GetWrenScriptComponentRegistry();
 	wrenScriptComponentRegistry.Clear(context);
@@ -406,6 +410,10 @@ void Struktur::ClearGameSystems(GameContext& context)
 	Physics::PhysicsWorld& world = context.GetPhysicsWorld();
 	world.Clear();
 
+	DEBUG_INFO("[Clean Up] Dialogue Registry");
+	Dialogue::DialogueRegistry& dialogueRegistry = context.GetDialogueRegistry();
+	dialogueRegistry.Clear(context);
+
 	DEBUG_INFO("[Clean Up] Wren Script Component Registry");
 	Wren::WrenScriptComponentRegistry& wrenScriptComponentRegistry = context.GetWrenScriptComponentRegistry();
 	wrenScriptComponentRegistry.Clear(context);
@@ -414,7 +422,7 @@ void Struktur::ClearGameSystems(GameContext& context)
 	Wren::WrenScriptEngine& wrenScriptEngine = context.GetWrenScriptEngine();
 	wrenScriptEngine.Shutdown();
 		
-	DEBUG_INFO("[Clean Up] DialogueManager");
+	DEBUG_INFO("[Clean Up] Dialogue Manager");
 	Dialogue::DialogueManager& dialogueManager = context.GetDialogueManager();
 	dialogueManager.Clear();
 

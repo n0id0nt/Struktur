@@ -487,6 +487,7 @@ void wren_DialogueManagerStartDialogue(WrenVM* vm)
 
 	auto result = manager.StartDialogue(*context, nodeId);
 
+	wrenEnsureSlots(vm, 2);
 	wrenGetVariable(vm, "dialogue", "DialogueResult", 1);
 	WrenDialogueResult* dialigueResult = static_cast<WrenDialogueResult*>(wrenSetSlotNewForeign(vm, 0, 1, sizeof(WrenDialogueResult)));
 	new (dialigueResult) WrenDialogueResult{ result };
@@ -502,6 +503,7 @@ void wren_DialogueManagerMakeChoice(WrenVM* vm)
 
 	auto result = manager.MakeChoice(*context, choiceIndex);
 
+	wrenEnsureSlots(vm, 2);
 	wrenGetVariable(vm, "dialogue", "DialogueResult", 1);
 	WrenDialogueResult* dialigueResult = static_cast<WrenDialogueResult*>(wrenSetSlotNewForeign(vm, 0, 1, sizeof(WrenDialogueResult)));
 	new (dialigueResult) WrenDialogueResult{ result };
@@ -515,6 +517,7 @@ void wren_DialogueManagerContinue(WrenVM* vm)
 
 	auto result = manager.Continue(*context);
 
+	wrenEnsureSlots(vm, 2);
 	wrenGetVariable(vm, "dialogue", "DialogueResult", 1);
 	WrenDialogueResult* dialigueResult = static_cast<WrenDialogueResult*>(wrenSetSlotNewForeign(vm, 0, 1, sizeof(WrenDialogueResult)));
 	new (dialigueResult) WrenDialogueResult{ result };
@@ -582,6 +585,14 @@ void wren_DialogueManagerLoadDialogueData(WrenVM* vm)
 	}
 }
 
+// DialogueManager.endDialogue()
+void wren_DialogueManagerEndDialogue(WrenVM* vm)
+{
+	Struktur::GameContext* context = static_cast<Struktur::GameContext*>(wrenGetUserData(vm));
+	Struktur::Dialogue::DialogueManager& manager = context->GetDialogueManager();
+	manager.EndDialogue(*context);
+}
+
 // ============================================================================
 // BINDING REGISTRATION
 // ============================================================================
@@ -595,3 +606,4 @@ WREN_CLASS_STATIC("dialogue", "DialogueManager", "getCurrentNodeId()", wren_Dial
 WREN_CLASS_STATIC("dialogue", "DialogueManager", "getNodeCount()", wren_DialogueManagerGetNodeCount, "Get total number of loaded nodes");
 WREN_CLASS_STATIC("dialogue", "DialogueManager", "clearAllNodes()", wren_DialogueManagerClearAllNodes, "Clear all loaded dialogue nodes");
 WREN_CLASS_STATIC("dialogue", "DialogueManager", "loadDialogueData(_)", wren_DialogueManagerLoadDialogueData, "Loads in and interprets a wren map as dialogue");
+WREN_CLASS_STATIC("dialogue", "DialogueManager", "endDialogue()", wren_DialogueManagerEndDialogue, "End the current dialogue interaction");

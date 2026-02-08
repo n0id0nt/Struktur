@@ -28,6 +28,8 @@ class DialogueManager {
     foreign static clearAllNodes()
     // Loads in and interprets a wren map as dialogue
     foreign static loadDialogueData(arg0)
+    // End the current dialogue interaction
+    foreign static endDialogue()
 }
 
 // Container for dialogue data
