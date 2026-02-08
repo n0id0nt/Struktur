@@ -22,6 +22,56 @@ import "Dialogue/GregDialogue" for GregDialogue
 
 var TEXT_SCROLL_SPEED = 0.02
 
+class DialogueManagerHelper {
+    static evaluateTargets(targets) {
+
+    }
+    
+    static processNode(nodeId) {
+        var node = DialogueManager.setActiveNode(nodeId)
+
+        var commands = node.commands
+
+        for (command in commands)
+        {
+            command.call()
+        }
+
+        var result = DialogueResult.Success(nodeId)
+        result.speaker = node.speaker
+        result.text = node.text
+
+        if (node.hasTargets()) {
+            var targetNode = evaluateTargets(node.targets)
+            if (targetNode.hasValue()) {
+                return ProcessNode(targetNode.value);
+            } else {
+                Debug.warning("No target conditions matched in node '%(nodeId)', ending dialogue")
+                DialogueManager.setActiveNode(null)
+                result.hasEnded = true
+            }
+        } else if (node.hasChoices()) {
+            var choices = node.choices
+        }
+    }
+
+    static startDialogue(startNodeId) {
+        return DialogueManager.startDialogue(startNodeId)
+    }
+
+    static endDialogue() {
+        return DialogueManager.endDialogue()
+    }
+
+    static continueDialogue() {
+        return DialogueManager.continueDialogue()
+    }
+
+    static makeChoice(choiceIndex) {
+        return DialogueManager.makeChoice(choiceIndex)
+    }
+}
+
 class InteractState is BaseState {
     construct new() {
         super()
@@ -259,7 +309,7 @@ class InteractState is BaseState {
         // This maps your old interaction names to the new dialogue system
         
         // NPCs
-        if (interactableName == "Scholar") return "greg_complete"
+        if (interactableName == "Scholar") return "greg_has_book_1"
         //if (interactableName == "Gardener") return NPCInteractions.getEntryPoint("gardener")
         //if (interactableName == "Cook") return NPCInteractions.getEntryPoint("cook")
         //if (interactableName == "Merchant") return NPCInteractions.getEntryPoint("merchant")
