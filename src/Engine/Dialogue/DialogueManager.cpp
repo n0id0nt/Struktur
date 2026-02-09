@@ -81,7 +81,7 @@ namespace Struktur::Dialogue
 		return ProcessNode(context, nextNode);
 	}
 
-    void DialogueManager::EndDialogue(GameContext &context)
+    void DialogueManager::ClearDialogue(GameContext &context)
     {
 		m_currentNode = nullptr;
 		m_history.clear();

@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Engine/Dialogue/DialogueResult.h"
+#include "Engine/Dialogue/DialogueNode.h"
 
 // ============================================================================
 // FOREIGN CLASS WRAPPERS
@@ -12,4 +13,20 @@ struct WrenDialogueResult
 	Struktur::Dialogue::DialogueResult dataResult;
 
 	WrenDialogueResult(Struktur::Dialogue::DialogueResult& dataResult) : dataResult(dataResult) {}
+};
+
+// Wrapper for DialogueNode
+struct WrenDialogueNode
+{
+	Struktur::Dialogue::DialogueNode* dataNode;
+
+	WrenDialogueNode(Struktur::Dialogue::DialogueNode* dataNode) : dataNode(dataNode) {}
+};
+
+// Wrapper for ConditionalTarget
+struct WrenConditionalTarget
+{
+	Struktur::Dialogue::ConditionalTarget* target;
+
+	WrenConditionalTarget(Struktur::Dialogue::ConditionalTarget* target) : target(target) {}
 };

@@ -320,7 +320,7 @@ void wren_DialogueResultGetText(WrenVM* vm)
 	}
 	else
 	{
-
+		wrenSetSlotNull(vm, 0);
 	}
 }
 
@@ -364,15 +364,243 @@ void wren_DialogueResultGetShouldAutoAdvance(WrenVM* vm)
 // ============================================================================
 
 // DialogueData foreign class
-WREN_FOREIGN_CLASS("dialogue", "DialogueResult", wren_DialogueResultAllocate, wren_DialogueResultFinalize, "Container for dialogue data");
+WREN_FOREIGN_CLASS("dialogue", "DialogueResult", wren_DialogueResultAllocate, wren_DialogueResultFinalize, "Container for dialogue Result data");
 
 WREN_CLASS_METHOD("dialogue", "DialogueResult", "status", wren_DialogueResultGetStatus, "Get the status of the dialogue result");
-WREN_CLASS_METHOD("dialogue", "DialogueResult", "nodeId", wren_DialogueResultGetNodeId, "Get the status of the node id");
-WREN_CLASS_METHOD("dialogue", "DialogueResult", "speaker", wren_DialogueResultGetSpeaker, "Get the status speaker of the node");
-WREN_CLASS_METHOD("dialogue", "DialogueResult", "text", wren_DialogueResultGetText, "Get the status text of the node");
+WREN_CLASS_METHOD("dialogue", "DialogueResult", "nodeId", wren_DialogueResultGetNodeId, "Get of the node id");
+WREN_CLASS_METHOD("dialogue", "DialogueResult", "speaker", wren_DialogueResultGetSpeaker, "Get the speaker of the node");
+WREN_CLASS_METHOD("dialogue", "DialogueResult", "text", wren_DialogueResultGetText, "Get the text of the node");
 WREN_CLASS_METHOD("dialogue", "DialogueResult", "choices", wren_DialogueResultGetChoices, "Get the text choices");
 WREN_CLASS_METHOD("dialogue", "DialogueResult", "hasEnded", wren_DialogueResultGetHasEnded, "Get the text has ended");
 WREN_CLASS_METHOD("dialogue", "DialogueResult", "shouldAutoAdvance", wren_DialogueResultGetShouldAutoAdvance, "Get the text should auto advance");
+
+// ============================================================================
+// CONDITIONAL TARGET BINDINGS
+// ============================================================================
+
+void wren_ConditionalTargetAllocate(WrenVM* vm)
+{
+	wrenSetSlotNewForeign(vm, 0, 0, sizeof(WrenConditionalTarget));
+}
+
+void wren_ConditionalTargetFinalize(void* data)
+{
+	WrenConditionalTarget* conditionalTarget = static_cast<WrenConditionalTarget*>(data);
+	conditionalTarget->~WrenConditionalTarget();
+}
+
+// ConditionalTarget.conditions
+void wren_ConditionalTargetGetConditions(WrenVM* vm)
+{
+	WrenConditionalTarget* target = static_cast<WrenConditionalTarget*>(wrenGetSlotForeign(vm, 0));
+	auto& conditions = target->target->conditions;
+
+	int conditionsCount = conditions.size();
+	if (conditionsCount == 0)
+	{
+		wrenSetSlotNull(vm, 0);
+		return;
+	}
+
+	wrenEnsureSlots(vm, 2);
+	wrenSetSlotNewList(vm, 0);
+	for (int i = 0; i > conditionsCount; i++)
+	{
+		// TODO make this a handle
+		wrenSetSlotHandle(vm, 1, conditions[i]);
+		wrenSetListElement(vm, 0, i, 1);
+	}
+}
+
+// ConditionalTarget.targetNode
+void wren_ConditionalTargetGetTargetNode(WrenVM* vm)
+{
+	WrenConditionalTarget* target = static_cast<WrenConditionalTarget*>(wrenGetSlotForeign(vm, 0));
+	wrenSetSlotString(vm, 0, target->target->targetNode.c_str());
+}
+
+// ============================================================================
+// BINDING REGISTRATION
+// ============================================================================
+
+// DialogueData foreign class
+WREN_FOREIGN_CLASS("dialogue", "ConditionalTarget", wren_ConditionalTargetAllocate, wren_ConditionalTargetFinalize, "Container for dialogue Result data");
+
+WREN_CLASS_METHOD("dialogue", "ConditionalTarget", "conditions", wren_ConditionalTargetGetConditions, "Get the conditions of the Conditional Target");
+WREN_CLASS_METHOD("dialogue", "ConditionalTarget", "targetNode", wren_ConditionalTargetGetTargetNode, "Get the target node of the Conditional Target");
+
+// ============================================================================
+// DIALOGUE RESULT BINDINGS
+// ============================================================================
+
+void wren_DialogueNodeAllocate(WrenVM* vm)
+{
+	wrenSetSlotNewForeign(vm, 0, 0, sizeof(WrenDialogueNode));
+}
+
+void wren_DialogueNodeFinalize(void* data)
+{
+	WrenDialogueNode* dialogueNode = static_cast<WrenDialogueNode*>(data);
+	dialogueNode->~WrenDialogueNode();
+}
+
+// DialogueNode.id
+void wren_DialogueNodeGetId(WrenVM* vm)
+{
+	WrenDialogueNode* node = static_cast<WrenDialogueNode*>(wrenGetSlotForeign(vm, 0));
+	wrenSetSlotString(vm, 0, node->dataNode->GetId().c_str());
+}
+
+// DialogueNode.speaker
+void wren_DialogueNodeGetSpeaker(WrenVM* vm)
+{
+	WrenDialogueNode* node = static_cast<WrenDialogueNode*>(wrenGetSlotForeign(vm, 0));
+	if (node->dataNode->GetSpeaker().has_value())
+	{
+		wrenSetSlotString(vm, 0, node->dataNode->GetSpeaker().value().c_str());
+	}
+	else
+	{
+		wrenSetSlotNull(vm, 0);
+	}
+}
+
+// DialogueNode.text
+void wren_DialogueNodeGetText(WrenVM* vm)
+{
+	WrenDialogueNode* node = static_cast<WrenDialogueNode*>(wrenGetSlotForeign(vm, 0));
+	if (node->dataNode->GetText().has_value())
+	{
+		wrenSetSlotString(vm, 0, node->dataNode->GetText().value().c_str());
+	}
+	else
+	{
+		wrenSetSlotNull(vm, 0);
+	}
+}
+
+// DialogueNode.targets
+void wren_DialogueNodeGetTargets(WrenVM* vm)
+{
+	WrenDialogueNode* node = static_cast<WrenDialogueNode*>(wrenGetSlotForeign(vm, 0));
+	auto& targets = node->dataNode->GetTargets();
+
+	int targetsCount = targets.size();
+	if (targetsCount == 0)
+	{
+		wrenSetSlotNull(vm, 0);
+		return;
+	}
+
+	wrenEnsureSlots(vm, 3);
+	wrenSetSlotNewList(vm, 0);
+	for (int i = 0; i > targetsCount; i++)
+	{
+		wrenGetVariable(vm, "dialogue", "ConditionalTarget", 2);
+		WrenConditionalTarget* target = static_cast<WrenConditionalTarget*>(wrenSetSlotNewForeign(vm, 1, 2, sizeof(WrenConditionalTarget)));
+		new (target) WrenConditionalTarget{ targets[i].get() };
+
+		wrenSetListElement(vm, 0, i, 1);
+	}
+}
+
+// DialogueNode.commands
+void wren_DialogueNodeGetCommands(WrenVM* vm)
+{
+	WrenDialogueNode* node = static_cast<WrenDialogueNode*>(wrenGetSlotForeign(vm, 0));
+	auto& commands = node->dataNode->GetCommands();
+
+	int commandsCount = commands.size();
+	if (commandsCount == 0)
+	{
+		wrenSetSlotNull(vm, 0);
+		return;
+	}
+
+	wrenEnsureSlots(vm, 2);
+	wrenSetSlotNewList(vm, 0);
+	for (int i = 0; i > commandsCount; i++)
+	{
+		// TODO make this a handle
+		wrenSetSlotHandle(vm, 1, commands[i]);
+		wrenSetListElement(vm, 0, i, 1);
+	}
+}
+
+// DialogueNode.choices
+void wren_DialogueNodeGetChoices(WrenVM* vm)
+{
+	WrenDialogueNode* node = static_cast<WrenDialogueNode*>(wrenGetSlotForeign(vm, 0));
+	auto& choices = node->dataNode->GetChoices();
+
+	int choicesCount = choices.size();
+	if (choicesCount == 0)
+	{
+		wrenSetSlotNull(vm, 0);
+		return;
+	}
+
+	wrenEnsureSlots(vm, 2);
+	wrenSetSlotNewList(vm, 0);
+	for (int i = 0; i > choicesCount; i++)
+	{
+		wrenSetSlotString(vm, 1, choices[i]->text.c_str());
+		wrenSetListElement(vm, 0, i, 1);
+	}
+}
+
+// DialogueNode.next
+void wren_DialogueNodeGetNext(WrenVM* vm)
+{
+	WrenDialogueNode* node = static_cast<WrenDialogueNode*>(wrenGetSlotForeign(vm, 0));
+	if (node->dataNode->GetNext().has_value())
+	{
+		wrenSetSlotString(vm, 0, node->dataNode->GetNext().value().c_str());
+	}
+	else
+	{
+		wrenSetSlotNull(vm, 0);
+	}
+}
+
+// DialogueNode.hasChoices()
+void wren_DialogueNodeHasChoices(WrenVM* vm)
+{
+	WrenDialogueNode* node = static_cast<WrenDialogueNode*>(wrenGetSlotForeign(vm, 0));
+	wrenSetSlotBool(vm, 0, node->dataNode->HasChoices());
+}
+
+// DialogueNode.hasNext()
+void wren_DialogueNodeGetHasNext(WrenVM* vm)
+{
+	WrenDialogueNode* node = static_cast<WrenDialogueNode*>(wrenGetSlotForeign(vm, 0));
+	wrenSetSlotBool(vm, 0, node->dataNode->HasNext());
+}
+
+// DialogueNode.hasTargets()
+void wren_DialogueNodeHasTargets(WrenVM* vm)
+{
+	WrenDialogueNode* node = static_cast<WrenDialogueNode*>(wrenGetSlotForeign(vm, 0));
+	wrenSetSlotBool(vm, 0, node->dataNode->HasTargets());
+}
+
+// ============================================================================
+// BINDING REGISTRATION
+// ============================================================================
+
+// DialogueData foreign class
+WREN_FOREIGN_CLASS("dialogue", "DialogueNode", wren_DialogueNodeAllocate, wren_DialogueNodeFinalize, "Container for dialogue Node data");
+
+WREN_CLASS_METHOD("dialogue", "DialogueNode", "id", wren_DialogueNodeGetId, "Get the node id");
+WREN_CLASS_METHOD("dialogue", "DialogueNode", "speaker", wren_DialogueNodeGetSpeaker, "Get the speaker of the node");
+WREN_CLASS_METHOD("dialogue", "DialogueNode", "text", wren_DialogueNodeGetText, "Get the text of the node");
+WREN_CLASS_METHOD("dialogue", "DialogueNode", "commands", wren_DialogueNodeGetCommands, "Get the commands of the node");
+WREN_CLASS_METHOD("dialogue", "DialogueNode", "choices", wren_DialogueNodeGetChoices, "Get the choices of the node");
+WREN_CLASS_METHOD("dialogue", "DialogueNode", "next", wren_DialogueNodeGetNext, "Get the next node");
+WREN_CLASS_METHOD("dialogue", "DialogueNode", "targets", wren_DialogueNodeGetTargets, "Get the conditional targets of the node");
+WREN_CLASS_METHOD("dialogue", "DialogueNode", "hasChoices()", wren_DialogueNodeHasChoices, "Check if node has choices");
+WREN_CLASS_METHOD("dialogue", "DialogueNode", "hasNext()", wren_DialogueNodeGetHasNext, "Check if node has next target");
+WREN_CLASS_METHOD("dialogue", "DialogueNode", "hasTargets()", wren_DialogueNodeHasTargets, "Check if node has conditional targets");
 
 // ============================================================================
 // DIALOGUE REGISTRY BINDINGS
@@ -585,12 +813,12 @@ void wren_DialogueManagerLoadDialogueData(WrenVM* vm)
 	}
 }
 
-// DialogueManager.endDialogue()
-void wren_DialogueManagerEndDialogue(WrenVM* vm)
+// DialogueManager.clearDialogue()
+void wren_DialogueManagerClearDialogue(WrenVM* vm)
 {
 	Struktur::GameContext* context = static_cast<Struktur::GameContext*>(wrenGetUserData(vm));
 	Struktur::Dialogue::DialogueManager& manager = context->GetDialogueManager();
-	manager.EndDialogue(*context);
+	manager.ClearDialogue(*context);
 }
 
 // ============================================================================
@@ -606,4 +834,4 @@ WREN_CLASS_STATIC("dialogue", "DialogueManager", "getCurrentNodeId()", wren_Dial
 WREN_CLASS_STATIC("dialogue", "DialogueManager", "getNodeCount()", wren_DialogueManagerGetNodeCount, "Get total number of loaded nodes");
 WREN_CLASS_STATIC("dialogue", "DialogueManager", "clearAllNodes()", wren_DialogueManagerClearAllNodes, "Clear all loaded dialogue nodes");
 WREN_CLASS_STATIC("dialogue", "DialogueManager", "loadDialogueData(_)", wren_DialogueManagerLoadDialogueData, "Loads in and interprets a wren map as dialogue");
-WREN_CLASS_STATIC("dialogue", "DialogueManager", "endDialogue()", wren_DialogueManagerEndDialogue, "End the current dialogue interaction");
+WREN_CLASS_STATIC("dialogue", "DialogueManager", "clearDialogue()", wren_DialogueManagerClearDialogue, "Clear the current dialogue interaction");

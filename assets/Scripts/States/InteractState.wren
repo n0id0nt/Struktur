@@ -13,7 +13,7 @@ import "debug" for Debug
 
 import "Colors" for BLANK, BLACK, DARKGRAY, WHITE
 import "Inventory" for Inventory
-import "dialogue" for DialogueManager
+import "dialogue" for DialogueManager, DialogueResult
 
 //import "Dialogue/DialogueLoader" for DialogueLoader
 import "Dialogue/GregDialogue" for GregDialogue
@@ -23,52 +23,99 @@ import "Dialogue/GregDialogue" for GregDialogue
 var TEXT_SCROLL_SPEED = 0.02
 
 class DialogueManagerHelper {
-    static evaluateTargets(targets) {
-
-    }
-    
-    static processNode(nodeId) {
-        var node = DialogueManager.setActiveNode(nodeId)
-
-        var commands = node.commands
-
+    static executeCommands(commands) {
         for (command in commands)
         {
             command.call()
         }
+    }
 
-        var result = DialogueResult.Success(nodeId)
-        result.speaker = node.speaker
-        result.text = node.text
+    static evaluateConditions(conditions) {
+        for (condition in conditions)
+        {
+            if (!condition.call()) {
+                return false
+            }
+        }
+        return true
+    } 
 
+    static evaluateTargets(targets) {
+        for (target in targets)
+        {
+            if (target.conditions.count == 0) {
+                return target.targetNode
+            }
+
+            if (evaluateConditions(target.conditions)) {
+                return target.targetNode
+            }
+        }
+
+        return null
+    }
+    
+    static processNode(nodeId) {
+        var node = DialogueManager.setActiveNode(nodeId)
+        executeCommands(node.commands)
         if (node.hasTargets()) {
             var targetNode = evaluateTargets(node.targets)
-            if (targetNode.hasValue()) {
-                return ProcessNode(targetNode.value);
-            } else {
-                Debug.warning("No target conditions matched in node '%(nodeId)', ending dialogue")
-                DialogueManager.setActiveNode(null)
-                result.hasEnded = true
+            if (targetNode) {
+                return processNode(targetNode.value)
             }
-        } else if (node.hasChoices()) {
-            var choices = node.choices
+            Debug.warning("No target conditions matched in node '%(nodeId)', ending dialogue")
+            DialogueManager.setActiveNode(null)
+            return DialogueResult.endDialogue(node)
         }
+        if (node.hasChoices()) {
+            var choices = node.choices
+            return DialogueResult.choices(node)
+        }
+        if (node.hasNext()) {
+            return DialogueResult.advance(node)
+        }
+        return DialogueResult.endDialogue(node)
     }
 
     static startDialogue(startNodeId) {
-        return DialogueManager.startDialogue(startNodeId)
+        Debug.info("Starting dialogue at node: %(startNodeId)")
+        DialogueManager.clearDialogue()
+        return processNode(startNodeId)
     }
 
     static endDialogue() {
-        return DialogueManager.endDialogue()
+        return DialogueManager.clearDialogue()
     }
 
     static continueDialogue() {
-        return DialogueManager.continueDialogue()
+        var currentNode = DialogueManager.currentNode
+        if (!currentNode) {
+            Debug.warning("Continue called but no active dialogue node")
+            return DialogueResult.noActiveNode()
+        }
+        if (!currentNode.hasNext()) {
+            Debug.warning("Continue called but current node has no 'next'")
+            return DialogueResult.noActiveNode()
+        }
+        var nextNodeId = currentNode.getNext()
+        Debug.info("Continuing to node: %(nextNodeId)")
+        return processNode(nextNodeId)
     }
 
     static makeChoice(choiceIndex) {
-        return DialogueManager.makeChoice(choiceIndex)
+        var currentNode = DialogueManager.currentNode
+        if (!currentNode) {
+            Debug.warning("Continue called but no active dialogue node")
+            return DialogueResult.noActiveNode()
+        }
+        var choices = currentNode.choices
+        if (choiceIndex < 0 || choiceIndex >= choices.count) {
+            Debug.error("Invalid choice index %(choiceIndex) (available: %(choices.count))")
+            return DialogueResult.invalidChoice()
+        }
+        var targetNodeId = choices[choiceIndex]
+        Debug.info("Player chose option %(choiceIndex), jumping to node: %(targetNodeId)")
+        return processNode(targetNodeId)
     }
 }
 
@@ -147,7 +194,7 @@ class InteractState is BaseState {
         System.print("Starting dialogue for %(interactable.name) at node %(entryNodeId)")
         
         // Start the dialogue
-        _currentResult = DialogueManager.startDialogue(entryNodeId)
+        _currentResult = DialogueManagerHelper.startDialogue(entryNodeId)
         processDialogueResult(_currentResult)
     }
     
@@ -200,7 +247,7 @@ class InteractState is BaseState {
         
         System.print("Unloading InteractState...")
 
-        DialogueManager.endDialogue()
+        DialogueManagerHelper.endDialogue()
         
         UIManager.removeUIElement(_screenPanel)
         _menuMusic.stop()
@@ -257,7 +304,7 @@ class InteractState is BaseState {
         }
 
         // Continue to next node
-        _currentResult = DialogueManager.continueDialogue()
+        _currentResult = DialogueManagerHelper.continueDialogue()
         
 
         processDialogueResult(_currentResult)
@@ -266,7 +313,7 @@ class InteractState is BaseState {
     makeChoice(stateManager, choiceIndex) {
         System.print("Making choice %(choiceIndex)")
         
-        _currentResult = DialogueManager.makeChoice(choiceIndex)
+        _currentResult = DialogueManagerHelper.makeChoice(choiceIndex)
         
         // Check if dialogue ended
         if (_currentResult.hasEnded || _currentResult.status != 0) {
@@ -309,7 +356,7 @@ class InteractState is BaseState {
         // This maps your old interaction names to the new dialogue system
         
         // NPCs
-        if (interactableName == "Scholar") return "greg_has_book_1"
+        if (interactableName == "Scholar") return "greg"
         //if (interactableName == "Gardener") return NPCInteractions.getEntryPoint("gardener")
         //if (interactableName == "Cook") return NPCInteractions.getEntryPoint("cook")
         //if (interactableName == "Merchant") return NPCInteractions.getEntryPoint("merchant")

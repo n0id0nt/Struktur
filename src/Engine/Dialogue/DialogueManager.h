@@ -37,7 +37,7 @@ namespace Struktur::Dialogue
 		DialogueResult StartDialogue(GameContext& context, const std::string& nodeId);
 		DialogueResult MakeChoice(GameContext& context, int choiceIndex);
 		DialogueResult Continue(GameContext& context);
-		void EndDialogue(GameContext& context);
+		void ClearDialogue(GameContext& context);
 
 		// Queries
 		bool IsDialogueActive() const;
