@@ -1,7 +1,3 @@
-// DialogueLoader.h
-// Loads dialogue data from Wren map format into DialogueNode structures
-// Part of the Struktur dialogue system
-
 #pragma once
 
 #include "DialogueNode.h"

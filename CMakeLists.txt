@@ -310,6 +310,7 @@ set(WREN_BINDING_SOURCES
     src/WrenBindings/WrenResourceManager.h      src/WrenBindings/WrenResourceManager.cpp
     src/WrenBindings/WrenUI.h                   src/WrenBindings/WrenUI.cpp
     src/WrenBindings/WrenDialogue.h             src/WrenBindings/WrenDialogue.cpp
+    src/WrenBindings/WrenFunctionCallback.h     src/WrenBindings/WrenFunctionCallback.cpp
                                                 src/WrenBindings/WrenFlags.cpp
                                                 src/WrenBindings/WrenApplication.cpp
                                                 src/WrenBindings/WrenGameObject.cpp
@@ -332,12 +333,19 @@ set(SOURCES
 
     src/Engine/Flag/FlagManager.h               src/Engine/Flag/FlagManager.cpp
 
+    src/Engine/Callback/Callback.h 
+    src/Engine/Callback/Variant.h
+    src/Engine/Callback/CallbackHelperFunctions.h src/Engine/Callback/CallbackHelperFunctions.cpp
+    src/Engine/Callback/FunctionCallback.h      src/Engine/Callback/FunctionCallback.cpp
+    src/Engine/Callback/WrenCallback.h          src/Engine/Callback/WrenCallback.cpp
+
     src/Engine/Dialogue/DialogueManager.h       src/Engine/Dialogue/DialogueManager.cpp
     src/Engine/Dialogue/DialogueNode.h          src/Engine/Dialogue/DialogueNode.cpp
     src/Engine/Dialogue/DialogueRegistry.h      src/Engine/Dialogue/DialogueRegistry.cpp
     src/Engine/Dialogue/DialogueValue.h         src/Engine/Dialogue/DialogueValue.cpp
     src/Engine/Dialogue/CallbackCommand.h       src/Engine/Dialogue/CallbackCommand.cpp
     src/Engine/Dialogue/CallbackCondition.h     src/Engine/Dialogue/CallbackCondition.cpp
+    src/Engine/Dialogue/DialogueHelperFunctions.h src/Engine/Dialogue/DialogueHelperFunctions.cpp
     src/Engine/Dialogue/Command.h
     src/Engine/Dialogue/Condition.h
     src/Engine/Dialogue/DialogueResult.h

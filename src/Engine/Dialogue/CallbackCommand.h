@@ -1,13 +1,14 @@
-// WrenCommand.h
-// Command implementation that calls Wren callbacks
-// Part of the Struktur dialogue system
-
 #pragma once
 
 #include "Command.h"
 #include "DialogueValue.h"
 #include <unordered_map>
 #include <string>
+
+namespace Struktur::Callback
+{
+	class ICallback;
+}
 
 namespace Struktur::Dialogue
 {
@@ -22,6 +23,7 @@ namespace Struktur::Dialogue
 
 		// Execute by calling Wren callback with parameters
 		void Execute(GameContext& context) const override;
+		Callback::ICallback* GetCallback(GameContext &context) const;
 
 	private:
 		std::string m_key;

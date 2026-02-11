@@ -12,31 +12,77 @@
 #include "Engine/Dialogue/DialogueNode.h"
 #include "Engine/Dialogue/CallbackCommand.h"
 #include "Engine/Dialogue/CallbackCondition.h"
+#include "Engine/Callback/WrenCallback.h"
+#include "Engine/Callback/CallbackHelperFunctions.h"
+#include "WrenFunctionCallback.h"
 
 static void AddDialogueValueToWren(WrenVM* vm, int slot, const Struktur::Dialogue::DialogueValue& dialogueValue)
 {
-	// Set the value in slot+2 based on its type
-	switch (dialogueValue.type)
-	{
-	case Struktur::Dialogue::DialogueValue::Type::STRING:
-		wrenSetSlotString(vm, slot, dialogueValue.stringValue.c_str());
-		break;
+    std::visit([vm, slot](auto&& arg)
+    {
+        using T = std::decay_t<decltype(arg)>;
 
-	case Struktur::Dialogue::DialogueValue::Type::INT:
-		wrenSetSlotDouble(vm, slot, static_cast<double>(dialogueValue.intValue));
-		break;
+        if constexpr (std::is_same_v<T, std::string>)
+        {
+            wrenSetSlotString(vm, slot, arg.c_str());
+        }
+        else if constexpr (std::is_same_v<T, int>)
+        {
+            wrenSetSlotDouble(vm, slot, static_cast<double>(arg));
+        }
+        else if constexpr (std::is_same_v<T, bool>)
+        {
+            wrenSetSlotBool(vm, slot, arg);
+        }
+        else if constexpr (std::is_same_v<T, double>)
+        {
+            wrenSetSlotDouble(vm, slot, arg);
+        }
+        else if constexpr (std::is_same_v<T, std::shared_ptr<Struktur::Callback::VariantList>>)
+        {
+            if (!arg)
+            {
+                wrenSetSlotNull(vm, slot);
+                return;
+            }
 
-	case Struktur::Dialogue::DialogueValue::Type::BOOL:
-		wrenSetSlotBool(vm, slot, dialogueValue.boolValue);
-		break;
+            wrenEnsureSlots(vm, slot + 2);
+            wrenSetSlotNewList(vm, slot);
 
-	case Struktur::Dialogue::DialogueValue::Type::DOUBLE:
-		wrenSetSlotDouble(vm, slot, dialogueValue.doubleValue);
-		break;
-	default:
-		wrenSetSlotNull(vm, slot);
-		break;
-	}
+            // Use slot + 1 as scratch space for each element
+            int elementSlot = slot + 1;
+            for (const auto& item : arg->items)
+            {
+				Struktur::Callback::HelperFunctions::VariantToWrenSlot(vm, elementSlot, item);
+                wrenInsertInList(vm, slot, -1, elementSlot);
+            }
+        }
+        else if constexpr (std::is_same_v<T, std::shared_ptr<Struktur::Callback::VariantMap>>)
+        {
+            if (!arg)
+            {
+                wrenSetSlotNull(vm, slot);
+                return;
+            }
+
+            wrenEnsureSlots(vm, slot + 3);
+            wrenSetSlotNewMap(vm, slot);
+
+            // Use slot + 1 and slot + 2 as scratch space for key and value
+            int keySlot = slot + 1;
+            int valueSlot = slot + 2;
+            for (const auto& [key, value] : arg->items)
+            {
+                wrenSetSlotString(vm, keySlot, key.c_str());
+				Struktur::Callback::HelperFunctions::VariantToWrenSlot(vm, valueSlot, value);
+                wrenSetMapValue(vm, slot, keySlot, valueSlot);
+            }
+        }
+        else
+        {
+            wrenSetSlotNull(vm, slot);
+        }
+    }, dialogueValue.GetVariant());
 }
 
 static void ConvertParamsMapToWrenMap(WrenVM* vm, int slot, const std::unordered_map<std::string, Struktur::Dialogue::DialogueValue>& params)
@@ -392,6 +438,7 @@ void wren_ConditionalTargetFinalize(void* data)
 // ConditionalTarget.conditions
 void wren_ConditionalTargetGetConditions(WrenVM* vm)
 {
+	Struktur::GameContext* context = static_cast<Struktur::GameContext*>(wrenGetUserData(vm));
 	WrenConditionalTarget* target = static_cast<WrenConditionalTarget*>(wrenGetSlotForeign(vm, 0));
 	auto& conditions = target->target->conditions;
 
@@ -406,8 +453,10 @@ void wren_ConditionalTargetGetConditions(WrenVM* vm)
 	wrenSetSlotNewList(vm, 0);
 	for (int i = 0; i > conditionsCount; i++)
 	{
-		// TODO make this a handle
-		wrenSetSlotHandle(vm, 1, conditions[i]);
+		// TODO Remove this dynmaic cast and make all conditions callback conditions
+		auto* condition = dynamic_cast<Struktur::Dialogue::CallbackCondition*>(conditions[i].get());
+		ASSERT_MSG(condition, "condition must be a CallbackCondition");
+		wrenSetSlotCallback(vm, 1, condition->GetCallback(*context));
 		wrenSetListElement(vm, 0, i, 1);
 	}
 }
@@ -507,6 +556,8 @@ void wren_DialogueNodeGetTargets(WrenVM* vm)
 // DialogueNode.commands
 void wren_DialogueNodeGetCommands(WrenVM* vm)
 {
+	Struktur::GameContext* context = static_cast<Struktur::GameContext*>(wrenGetUserData(vm));
+
 	WrenDialogueNode* node = static_cast<WrenDialogueNode*>(wrenGetSlotForeign(vm, 0));
 	auto& commands = node->dataNode->GetCommands();
 
@@ -521,8 +572,10 @@ void wren_DialogueNodeGetCommands(WrenVM* vm)
 	wrenSetSlotNewList(vm, 0);
 	for (int i = 0; i > commandsCount; i++)
 	{
-		// TODO make this a handle
-		wrenSetSlotHandle(vm, 1, commands[i]);
+		// TODO Remove this dynmaic cast and make all commands callback commands
+		auto* command = dynamic_cast<Struktur::Dialogue::CallbackCondition*>(commands[i].get());
+		ASSERT_MSG(command, "condition must be a command");
+		wrenSetSlotCallback(vm, 1, command->GetCallback(*context));
 		wrenSetListElement(vm, 0, i, 1);
 	}
 }
@@ -615,23 +668,7 @@ void wren_DialogueRegistryRegisterCondition(WrenVM* vm)
 	const char* type = wrenGetSlotString(vm, 1);
 	WrenHandle* callback = wrenGetSlotHandle(vm, 2);
 
-	Struktur::Dialogue::ConditionCallback conditionCallback = [vm, callback](const std::unordered_map<std::string, Struktur::Dialogue::DialogueValue>& params) -> bool {
-		wrenEnsureSlots(vm, 4);
-		wrenSetSlotHandle(vm, 0, callback);
-
-		ConvertParamsMapToWrenMap(vm, 1, params);
-
-		WrenHandle* method = wrenMakeCallHandle(vm, "call(_)");
-		wrenCall(vm, method);
-		wrenReleaseHandle(vm, method);
-		return wrenGetSlotBool(vm, 0);
-		};
-
-	Struktur::Dialogue::DisposeCallback disposeCallback = [vm, callback](const Struktur::GameContext& params) {
-		wrenReleaseHandle(vm, callback);
-		};
-
-	registry.RegisterConditionType(*context, type, std::move(conditionCallback), std::move(disposeCallback));
+	registry.RegisterConditionType(*context, type, std::make_unique<Struktur::Callback::WrenCallback>(callback));
 }
 
 // DialogueRegistry.registerCommand(type) { |params| ... }
@@ -643,51 +680,7 @@ void wren_DialogueRegistryRegisterCommand(WrenVM* vm)
 	const char* type = wrenGetSlotString(vm, 1);
 	WrenHandle* callback = wrenGetSlotHandle(vm, 2);
 
-	Struktur::Dialogue::CommandCallback conditionCallback = [vm, callback](const std::unordered_map<std::string, Struktur::Dialogue::DialogueValue>& params) {
-		wrenEnsureSlots(vm, 4);
-		wrenSetSlotHandle(vm, 0, callback);
-
-		ConvertParamsMapToWrenMap(vm, 1, params);
-
-		WrenHandle* method = wrenMakeCallHandle(vm, "call(_)");
-		wrenCall(vm, method);
-		wrenReleaseHandle(vm, method);
-		};
-
-	Struktur::Dialogue::DisposeCallback disposeCallback = [vm, callback](const Struktur::GameContext& params) {
-		wrenReleaseHandle(vm, callback);
-		};
-
-	registry.RegisterCommandType(*context, type, std::move(conditionCallback), std::move(disposeCallback));
-}
-
-// DialogueRegistry.registerOperator(op) { |lhs, rhs| ... }
-void wren_DialogueRegistryRegisterOperator(WrenVM* vm)
-{
-	Struktur::GameContext* context = static_cast<Struktur::GameContext*>(wrenGetUserData(vm));
-	Struktur::Dialogue::DialogueRegistry& registry = context->GetDialogueRegistry();
-
-	const char* op = wrenGetSlotString(vm, 1);
-	WrenHandle* callback = wrenGetSlotHandle(vm, 2);
-
-	Struktur::Dialogue::OperatorCallback conditionCallback = [vm, callback](const Struktur::Dialogue::DialogueValue& lhs, const Struktur::Dialogue::DialogueValue& rhs) -> bool {
-		wrenEnsureSlots(vm, 4);
-		wrenSetSlotHandle(vm, 0, callback);
-
-		AddDialogueValueToWren(vm, 1, lhs);
-		AddDialogueValueToWren(vm, 2, rhs);
-
-		WrenHandle* method = wrenMakeCallHandle(vm, "call(_,_)");
-		wrenCall(vm, method);
-		wrenReleaseHandle(vm, method);
-		return wrenGetSlotBool(vm, 0);
-		};
-
-	Struktur::Dialogue::DisposeCallback disposeCallback = [vm, callback](const Struktur::GameContext& params) {
-		wrenReleaseHandle(vm, callback);
-		};
-
-	registry.RegisterOperator(*context, op, std::move(conditionCallback), std::move(disposeCallback));
+	registry.RegisterCommandType(*context, type, std::make_unique<Struktur::Callback::WrenCallback>(callback));
 }
 
 // ============================================================================
@@ -697,7 +690,6 @@ void wren_DialogueRegistryRegisterOperator(WrenVM* vm)
 // DialogueRegistry static methods
 WREN_CLASS_STATIC("dialogue", "DialogueRegistry", "registerCondition(_,_)", wren_DialogueRegistryRegisterCondition, "Register a condition type with callback");
 WREN_CLASS_STATIC("dialogue", "DialogueRegistry", "registerCommand(_,_)", wren_DialogueRegistryRegisterCommand, "Register a command type with callback");
-WREN_CLASS_STATIC("dialogue", "DialogueRegistry", "registerOperator(_,_)", wren_DialogueRegistryRegisterOperator, "Register an operator with callback");
 
 // ============================================================================
 // DIALOGUE MANAGER BINDINGS

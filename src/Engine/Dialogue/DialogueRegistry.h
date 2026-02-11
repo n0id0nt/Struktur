@@ -7,11 +7,12 @@
 #include <string>
 #include <unordered_map>
 #include <memory>
-#include <functional>
 
 #include "Condition.h"
 #include "Command.h"
 #include "DialogueValue.h"
+
+#include "Engine/Callback/Callback.h"
 
 namespace Struktur
 {
@@ -20,20 +21,6 @@ namespace Struktur
 
 namespace Struktur::Dialogue
 {
-	using ConditionCallback = std::function<bool(const std::unordered_map<std::string, DialogueValue>& params)>;
-	using CommandCallback = std::function<void(const std::unordered_map<std::string, DialogueValue>& params)>;
-	using OperatorCallback = std::function<bool(const DialogueValue& lhs, const DialogueValue& rhs)>;
-	using DisposeCallback = std::function<void(GameContext& context)>;
-
-	template<typename CallBack>
-	struct CallBackPair
-	{
-		CallBack callback;
-		DisposeCallback disposeCallBack;
-	};
-
-	// Registry for dialogue conditions, commands, and operators
-	// Stores Wren callback handles for runtime evaluation/execution
 	class DialogueRegistry
 	{
 	public:
@@ -49,30 +36,21 @@ namespace Struktur::Dialogue
 		DialogueRegistry& operator=(DialogueRegistry&&) = delete;
 
 		// Register condition type with Wren callback
-		void RegisterConditionType(GameContext& context, const std::string& type, ConditionCallback&& callback, DisposeCallback&& DisposeCallback);
+		void RegisterConditionType(GameContext& context, const std::string& type, std::unique_ptr<Callback::ICallback> callback);
 
 		// Register command type with Wren callback
-		void RegisterCommandType(GameContext& context, const std::string& type, CommandCallback&& callback, DisposeCallback&& DisposeCallback);
+		void RegisterCommandType(GameContext& context, const std::string& type, std::unique_ptr<Callback::ICallback> callback);
 
-		// Register operator with Wren callback
-		void RegisterOperator(GameContext& context, const std::string& op, OperatorCallback&& callback, DisposeCallback&& DisposeCallback);
-
-		// Evaluate operator
-		bool EvaluateOperator(GameContext& context, const std::string& op, const DialogueValue& lhs, const DialogueValue& rhs);
-
-		// Check if type/operator is registered
+		// Check if type is registered
 		bool HasConditionType(const std::string& type) const;
 		bool HasCommandType(const std::string& type) const;
-		bool HasOperator(const std::string& op) const;
 
-		// Check if type/operator is registered
-		ConditionCallback& GetCondition(const std::string& type);
-		CommandCallback& GetCommand(const std::string& type);
-		OperatorCallback& GetOperator(const std::string& op);
+		// Check if type is registered
+		Callback::ICallback* GetCondition(const std::string& type);
+		Callback::ICallback* GetCommand(const std::string& type);
 
 	private:
-		std::unordered_map<std::string, CallBackPair<ConditionCallback>> m_conditionCallbacks;
-		std::unordered_map<std::string, CallBackPair<CommandCallback>> m_commandCallbacks;
-		std::unordered_map<std::string, CallBackPair<OperatorCallback>> m_operatorCallbacks;
+		std::unordered_map<std::string, std::unique_ptr<Callback::ICallback>> m_conditionCallbacks;
+		std::unordered_map<std::string, std::unique_ptr<Callback::ICallback>> m_commandCallbacks;
 	};
 }

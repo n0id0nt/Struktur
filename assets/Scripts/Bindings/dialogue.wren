@@ -28,19 +28,19 @@ class DialogueManager {
     foreign static clearAllNodes()
     // Loads in and interprets a wren map as dialogue
     foreign static loadDialogueData(arg0)
-    // End the current dialogue interaction
-    foreign static endDialogue()
+    // Clear the current dialogue interaction
+    foreign static clearDialogue()
 }
 
-// Container for dialogue data
+// Container for dialogue Result data
 foreign class DialogueResult {
     // Get the status of the dialogue result
     foreign status
-    // Get the status of the node id
+    // Get of the node id
     foreign nodeId
-    // Get the status speaker of the node
+    // Get the speaker of the node
     foreign speaker
-    // Get the status text of the node
+    // Get the text of the node
     foreign text
     // Get the text choices
     foreign choices
@@ -50,12 +50,42 @@ foreign class DialogueResult {
     foreign shouldAutoAdvance
 }
 
+// Container for dialogue Result data
+foreign class ConditionalTarget {
+    // Get the conditions of the Conditional Target
+    foreign conditions
+    // Get the target node of the Conditional Target
+    foreign targetNode
+}
+
+// Container for dialogue Node data
+foreign class DialogueNode {
+    // Get the node id
+    foreign id
+    // Get the speaker of the node
+    foreign speaker
+    // Get the text of the node
+    foreign text
+    // Get the commands of the node
+    foreign commands
+    // Get the choices of the node
+    foreign choices
+    // Get the next node
+    foreign next
+    // Get the conditional targets of the node
+    foreign targets
+    // Check if node has choices
+    foreign hasChoices()
+    // Check if node has next target
+    foreign hasNext()
+    // Check if node has conditional targets
+    foreign hasTargets()
+}
+
 class DialogueRegistry {
     // Register a condition type with callback
     foreign static registerCondition(arg0,arg1)
     // Register a command type with callback
     foreign static registerCommand(arg0,arg1)
-    // Register an operator with callback
-    foreign static registerOperator(arg0,arg1)
 }
 
