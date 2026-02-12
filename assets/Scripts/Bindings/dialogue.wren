@@ -12,12 +12,6 @@ class DialogueStatus {
 }
 
 class DialogueManager {
-    // Start dialogue at a specific node
-    foreign static startDialogue(arg0)
-    // Make a choice in dialogue
-    foreign static makeChoice(arg0)
-    // Continue to next node
-    foreign static continueDialogue()
     // Check if dialogue is active
     foreign static isDialogueActive()
     // Get current node ID
@@ -30,10 +24,36 @@ class DialogueManager {
     foreign static loadDialogueData(arg0)
     // Clear the current dialogue interaction
     foreign static clearDialogue()
+    // Get the current node in of the dialogue
+    foreign static currentNode
+    // Set the active node in the dialogue
+    foreign static setActiveNode(arg0)
+}
+
+// Container for dialogue Result data
+foreign class Command {
+    // Get the callback handle
+    foreign callback
+    // Get the conditions params
+    foreign params
 }
 
 // Container for dialogue Result data
 foreign class DialogueResult {
+    // Node not found result
+    foreign construct nodeNotFound(arg0)
+    // End dialogue result
+    foreign construct endDialogue(arg0)
+    // Choices result
+    foreign construct choices(arg0)
+    // Advance result
+    foreign construct advance(arg0)
+    // Invalid choice result
+    foreign construct invalidChoice()
+    // No active node result
+    foreign construct noActivaNode()
+    // Error result
+    foreign construct error()
     // Get the status of the dialogue result
     foreign status
     // Get of the node id
@@ -51,7 +71,17 @@ foreign class DialogueResult {
 }
 
 // Container for dialogue Result data
+foreign class Condition {
+    // Get the callback handle
+    foreign callback
+    // Get the conditions params
+    foreign params
+}
+
+// Container for dialogue Result data
 foreign class ConditionalTarget {
+    // Does the Target have conditions?
+    foreign hasConditions()
     // Get the conditions of the Conditional Target
     foreign conditions
     // Get the target node of the Conditional Target

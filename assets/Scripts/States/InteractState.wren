@@ -24,16 +24,16 @@ var TEXT_SCROLL_SPEED = 0.02
 
 class DialogueManagerHelper {
     static executeCommands(commands) {
-        for (command in commands)
-        {
-            command.call()
+        for (command in commands) {
+            var params = command.params
+            command.callback.call(params)
         }
     }
 
     static evaluateConditions(conditions) {
-        for (condition in conditions)
-        {
-            if (!condition.call()) {
+        for (condition in conditions) {
+            var params = condition.params
+            if (!condition.callback.call(params)) {
                 return false
             }
         }
@@ -41,8 +41,11 @@ class DialogueManagerHelper {
     } 
 
     static evaluateTargets(targets) {
-        for (target in targets)
-        {
+        for (target in targets) {
+            if (!target.hasConditions()) {
+                return target.targetNode
+            }
+
             if (target.conditions.count == 0) {
                 return target.targetNode
             }
@@ -56,15 +59,21 @@ class DialogueManagerHelper {
     }
     
     static processNode(nodeId) {
+        Debug.info("Processing dialogue at node: %(nodeId)")
         var node = DialogueManager.setActiveNode(nodeId)
-        executeCommands(node.commands)
+        if (!node) {
+            return DialogueResult.nodeNotFound(node)
+        }
+        if (node.commands) {
+            executeCommands(node.commands)
+        }
         if (node.hasTargets()) {
-            var targetNode = evaluateTargets(node.targets)
-            if (targetNode) {
-                return processNode(targetNode.value)
+            var targetNodeId = evaluateTargets(node.targets)
+            if (targetNodeId) {
+                return processNode(targetNodeId)
             }
             Debug.warning("No target conditions matched in node '%(nodeId)', ending dialogue")
-            DialogueManager.setActiveNode(null)
+            DialogueManager.clearDialogue()
             return DialogueResult.endDialogue(node)
         }
         if (node.hasChoices()) {
@@ -78,7 +87,6 @@ class DialogueManagerHelper {
     }
 
     static startDialogue(startNodeId) {
-        Debug.info("Starting dialogue at node: %(startNodeId)")
         DialogueManager.clearDialogue()
         return processNode(startNodeId)
     }
@@ -97,7 +105,7 @@ class DialogueManagerHelper {
             Debug.warning("Continue called but current node has no 'next'")
             return DialogueResult.noActiveNode()
         }
-        var nextNodeId = currentNode.getNext()
+        var nextNodeId = currentNode.next
         Debug.info("Continuing to node: %(nextNodeId)")
         return processNode(nextNodeId)
     }
@@ -234,7 +242,7 @@ class InteractState is BaseState {
         if (_waitingForChoice && _currentResult.choices && _currentResult.choices.count > 0) {
             for (i in 0..._currentResult.choices.count) {
                 // Check for number keys 1-9
-                if (Input.isKeyJustPressed(49 + i)) { // KEY_ONE = 49
+                if (Input.isKeyJustReleased((i + 1).toString)) { // KEY_ONE = 49
                     makeChoice(stateManager, i)
                     return
                 }
@@ -331,7 +339,7 @@ class InteractState is BaseState {
         
         for (i in 0...choices.count) {
             var choice = choices[i]
-            var choiceText = "%(i + 1). %(choice["text"])"
+            var choiceText = "%(i + 1). %(choice)"
             
             var choiceLabel = UILabel.new(Vec2.new(40, yOffset), Vec2.new(0, 1), choiceText, 18.0)
             choiceLabel.setTextColor(BLACK)

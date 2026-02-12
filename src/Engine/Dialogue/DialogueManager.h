@@ -38,12 +38,14 @@ namespace Struktur::Dialogue
 		DialogueResult MakeChoice(GameContext& context, int choiceIndex);
 		DialogueResult Continue(GameContext& context);
 		void ClearDialogue(GameContext& context);
+		DialogueNode* SetActiveNode(GameContext& context, const std::string& nodeId);
 
 		// Queries
 		bool IsDialogueActive() const;
 		std::optional<std::string> GetCurrentNodeId() const;
+		DialogueNode* GetCurrentNode() const;
 		const DialogueNode* GetNode(const std::string& nodeId) const;
-		size_t GetNodeCount() const { return m_nodes.size(); }
+		size_t GetNodeCount() const;
 
 	private:
 		// Internal processing

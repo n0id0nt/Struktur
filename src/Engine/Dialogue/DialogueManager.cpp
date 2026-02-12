@@ -87,6 +87,23 @@ namespace Struktur::Dialogue
 		m_history.clear();
     }
 
+	DialogueNode* DialogueManager::SetActiveNode(GameContext& context, const std::string& nodeId)
+	{
+		// Find node
+		auto it = m_nodes.find(nodeId);
+		if (it == m_nodes.end())
+		{
+			DEBUG_ERROR("Node '%s' not found", nodeId.c_str());
+			m_currentNode = nullptr;
+			return nullptr;
+		}
+
+		// Set as current node
+		m_currentNode = it->second.get();
+		m_history.push_back(nodeId);
+		return m_currentNode;
+	}
+
     bool DialogueManager::IsDialogueActive() const
 	{
 		return m_currentNode != nullptr;
@@ -101,6 +118,11 @@ namespace Struktur::Dialogue
 		return std::nullopt;
 	}
 
+	DialogueNode* DialogueManager::GetCurrentNode() const
+	{
+		return m_currentNode;
+	}
+
 	const DialogueNode* DialogueManager::GetNode(const std::string& nodeId) const
 	{
 		auto it = m_nodes.find(nodeId);
@@ -109,6 +131,11 @@ namespace Struktur::Dialogue
 			return it->second.get();
 		}
 		return nullptr;
+	}
+
+	size_t DialogueManager::GetNodeCount() const
+	{
+		return m_nodes.size();
 	}
 
 	DialogueResult DialogueManager::ProcessNode(GameContext& context, const std::string& nodeId)

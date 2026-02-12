@@ -22,3 +22,8 @@ Struktur::Callback::ICallback *Struktur::Dialogue::CallbackCommand::GetCallback(
     DialogueRegistry& dialogueRegistry = context.GetDialogueRegistry();
     return dialogueRegistry.GetCondition(m_key);
 }
+
+const std::unordered_map<std::string, Struktur::Dialogue::DialogueValue>& Struktur::Dialogue::CallbackCommand::GetParams() const
+{
+    return m_params;
+}

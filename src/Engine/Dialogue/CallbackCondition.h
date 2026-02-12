@@ -24,6 +24,7 @@ namespace Struktur::Dialogue
 		// Execute by calling Wren callback with parameters
 		bool Evaluate(GameContext& context) const override;
 		Callback::ICallback* GetCallback(GameContext &context) const;
+		const std::unordered_map<std::string, DialogueValue>& GetParams() const;
 
 	private:
 		std::string m_key;

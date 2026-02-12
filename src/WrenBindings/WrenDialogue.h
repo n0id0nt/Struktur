@@ -30,3 +30,19 @@ struct WrenConditionalTarget
 
 	WrenConditionalTarget(Struktur::Dialogue::ConditionalTarget* target) : target(target) {}
 };
+
+// Wrapper for Dialogue Condition
+struct WrenCondition
+{
+	Struktur::Dialogue::Condition* condition;
+
+	WrenCondition(Struktur::Dialogue::Condition* condition) : condition(condition) {}
+};
+
+// Wrapper for Dialogue Command
+struct WrenCommand
+{
+	Struktur::Dialogue::Command* command;
+
+	WrenCommand(Struktur::Dialogue::Command* command) : command(command) {}
+};
