@@ -20,7 +20,7 @@ void Struktur::Dialogue::CallbackCommand::Execute(GameContext& context) const
 Struktur::Callback::ICallback *Struktur::Dialogue::CallbackCommand::GetCallback(GameContext &context) const
 {
     DialogueRegistry& dialogueRegistry = context.GetDialogueRegistry();
-    return dialogueRegistry.GetCondition(m_key);
+    return dialogueRegistry.GetCommand(m_key);
 }
 
 const std::unordered_map<std::string, Struktur::Dialogue::DialogueValue>& Struktur::Dialogue::CallbackCommand::GetParams() const

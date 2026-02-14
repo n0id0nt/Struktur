@@ -25,6 +25,7 @@ namespace Struktur::Dialogue
 		bool Evaluate(GameContext& context) const override;
 		Callback::ICallback* GetCallback(GameContext &context) const;
 		const std::unordered_map<std::string, DialogueValue>& GetParams() const;
+		const std::string& GetKey() { return m_key; }
 
 	private:
 		std::string m_key;

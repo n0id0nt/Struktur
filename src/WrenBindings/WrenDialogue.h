@@ -46,3 +46,11 @@ struct WrenCommand
 
 	WrenCommand(Struktur::Dialogue::Command* command) : command(command) {}
 };
+
+// Wrapper for Dialogue Choice
+struct WrenChoice
+{
+	Struktur::Dialogue::Choice* choice;
+
+	WrenChoice(Struktur::Dialogue::Choice* choice) : choice(choice) {}
+};

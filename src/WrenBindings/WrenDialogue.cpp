@@ -560,7 +560,7 @@ void wren_ConditionalTargetGetTargetNode(WrenVM* vm)
 // ============================================================================
 
 // DialogueData foreign class
-WREN_FOREIGN_CLASS("dialogue", "ConditionalTarget", wren_ConditionalTargetAllocate, wren_ConditionalTargetFinalize, "Container for dialogue Result data");
+WREN_FOREIGN_CLASS("dialogue", "ConditionalTarget", wren_ConditionalTargetAllocate, wren_ConditionalTargetFinalize, "Container for dialogue conditional target data");
 
 WREN_CLASS_METHOD("dialogue", "ConditionalTarget", "hasConditions()", wren_ConditionalTargetHasConditions, "Does the Target have conditions?");
 WREN_CLASS_METHOD("dialogue", "ConditionalTarget", "conditions", wren_ConditionalTargetGetConditions, "Get the conditions of the Conditional Target");
@@ -589,7 +589,9 @@ void wren_ConditionGetCallback(WrenVM* vm)
 	// TODO Remove this dynmaic cast and make all conditions callback conditions
 	auto* condition = dynamic_cast<Struktur::Dialogue::CallbackCondition*>(wrenCondition->condition);
 	ASSERT_MSG(condition, "condition must be a CallbackCondition");
-	wrenSetSlotCallback(vm, 0, condition->GetCallback(*context));
+	auto* callback = condition->GetCallback(*context);
+	ASSERT_MSG(callback, "condition callback %s not found, likley not registered", condition->GetKey().c_str());
+	wrenSetSlotCallback(vm, 0, callback);
 }
 
 // Condition.params -> map
@@ -607,7 +609,7 @@ void wren_ConditionGetParams(WrenVM* vm)
 // ============================================================================
 
 // DialogueData foreign class
-WREN_FOREIGN_CLASS("dialogue", "Condition", wren_ConditionAllocate, wren_ConditionFinalize, "Container for dialogue Result data");
+WREN_FOREIGN_CLASS("dialogue", "Condition", wren_ConditionAllocate, wren_ConditionFinalize, "Container for dialogue condition data");
 
 WREN_CLASS_METHOD("dialogue", "Condition", "callback", wren_ConditionGetCallback, "Get the callback handle");
 WREN_CLASS_METHOD("dialogue", "Condition", "params", wren_ConditionGetParams, "Get the conditions params");
@@ -618,7 +620,7 @@ WREN_CLASS_METHOD("dialogue", "Condition", "params", wren_ConditionGetParams, "G
 
 void wren_CommandAllocate(WrenVM* vm)
 {
-	wrenSetSlotNewForeign(vm, 0, 0, sizeof(WrenCondition));
+	wrenSetSlotNewForeign(vm, 0, 0, sizeof(WrenCommand));
 }
 
 void wren_CommandFinalize(void* data)
@@ -633,9 +635,11 @@ void wren_CommandGetCallback(WrenVM* vm)
 	Struktur::GameContext* context = static_cast<Struktur::GameContext*>(wrenGetUserData(vm));
 	WrenCommand* wrenCommand = static_cast<WrenCommand*>(wrenGetSlotForeign(vm, 0));
 	// TODO Remove this dynmaic cast and make all commands callback commands
-	auto* command = dynamic_cast<Struktur::Dialogue::CallbackCondition*>(wrenCommand->command);
+	auto* command = dynamic_cast<Struktur::Dialogue::CallbackCommand*>(wrenCommand->command);
 	ASSERT_MSG(command, "command must be a CallbackCommand");
-	wrenSetSlotCallback(vm, 0, command->GetCallback(*context));
+	auto* callback = command->GetCallback(*context);
+	ASSERT_MSG(callback, "command callback %s not found, likley not registered", command->GetKey().c_str());
+	wrenSetSlotCallback(vm, 0, callback);
 }
 
 // Command.params -> map
@@ -643,7 +647,7 @@ void wren_CommandGetParams(WrenVM* vm)
 {
 	WrenCommand* wrenCommand = static_cast<WrenCommand*>(wrenGetSlotForeign(vm, 0));
 	// TODO Remove this dynmaic cast and make all commands callback commands
-	auto* command = dynamic_cast<Struktur::Dialogue::CallbackCondition*>(wrenCommand->command);
+	auto* command = dynamic_cast<Struktur::Dialogue::CallbackCommand*>(wrenCommand->command);
 	ASSERT_MSG(command, "command must be a CallbackCommand");
 	ConvertParamsMapToWrenMap(vm, 0, command->GetParams());
 }
@@ -653,10 +657,49 @@ void wren_CommandGetParams(WrenVM* vm)
 // ============================================================================
 
 // DialogueData foreign class
-WREN_FOREIGN_CLASS("dialogue", "Command", wren_CommandAllocate, wren_CommandFinalize, "Container for dialogue Result data");
+WREN_FOREIGN_CLASS("dialogue", "Command", wren_CommandAllocate, wren_CommandFinalize, "Container for dialogue command data");
 
 WREN_CLASS_METHOD("dialogue", "Command", "callback", wren_CommandGetCallback, "Get the callback handle");
 WREN_CLASS_METHOD("dialogue", "Command", "params", wren_CommandGetParams, "Get the conditions params");
+
+// ============================================================================
+// CHOICE BINDINGS
+// ============================================================================
+
+void wren_ChoiceAllocate(WrenVM* vm)
+{
+	wrenSetSlotNewForeign(vm, 0, 0, sizeof(WrenChoice));
+}
+
+void wren_ChoiceFinalize(void* data)
+{
+	WrenChoice* choice = static_cast<WrenChoice*>(data);
+	choice->~WrenChoice();
+}
+
+// Choice.text -> string
+void wren_ChoiceGetText(WrenVM* vm)
+{
+	WrenChoice* choice = static_cast<WrenChoice*>(wrenGetSlotForeign(vm, 0));
+	wrenSetSlotString(vm, 0, choice->choice->text.c_str());
+}
+
+// Choice.targetNodeId -> string
+void wren_ChoiceGetTargetNode(WrenVM* vm)
+{
+	WrenChoice* choice = static_cast<WrenChoice*>(wrenGetSlotForeign(vm, 0));
+	wrenSetSlotString(vm, 0, choice->choice->targetNode.c_str());
+}
+
+// ============================================================================
+// BINDING REGISTRATION
+// ============================================================================
+
+// DialogueData foreign class
+WREN_FOREIGN_CLASS("dialogue", "Choice", wren_ChoiceAllocate, wren_ChoiceFinalize, "Container for dialogue chioce data");
+
+WREN_CLASS_METHOD("dialogue", "Choice", "text", wren_ChoiceGetText, "Get the text");
+WREN_CLASS_METHOD("dialogue", "Choice", "targetNodeId", wren_ChoiceGetTargetNode, "Get the target node id");
 
 // ============================================================================
 // DIALOGUE RESULT BINDINGS
@@ -772,11 +815,13 @@ void wren_DialogueNodeGetChoices(WrenVM* vm)
 		return;
 	}
 
-	wrenEnsureSlots(vm, 2);
+	wrenEnsureSlots(vm, 3);
 	wrenSetSlotNewList(vm, 0);
-	for (int i = 0; i > choicesCount; i++)
+	wrenGetVariable(vm, "dialogue", "Choice", 2);
+	for (int i = 0; i < choicesCount; i++)
 	{
-		wrenSetSlotString(vm, 1, choices[i]->text.c_str());
+		WrenChoice* wrenChoive = static_cast<WrenChoice*>(wrenSetSlotNewForeign(vm, 1, 2, sizeof(WrenChoice)));
+		new (wrenChoive) WrenChoice{ choices[i].get() };
 		wrenInsertInList(vm, 0, i, 1);
 	}
 }
@@ -962,6 +1007,11 @@ void wren_DialogueManagerSetActiveNode(WrenVM* vm)
 	Struktur::Dialogue::DialogueManager& manager = context->GetDialogueManager();
 	std::string nodeId = wrenGetSlotString(vm, 1);
 	Struktur::Dialogue::DialogueNode* dialogueNode = manager.SetActiveNode(*context, nodeId);
+	if (!dialogueNode)
+	{
+		wrenSetSlotNull(vm, 0);
+		return;
+	}
 	wrenEnsureSlots(vm, 2);
 	wrenGetVariable(vm, "dialogue", "DialogueNode", 1);
 	WrenDialogueNode* node = static_cast<WrenDialogueNode*>(wrenSetSlotNewForeign(vm, 0, 1, sizeof(WrenDialogueNode)));

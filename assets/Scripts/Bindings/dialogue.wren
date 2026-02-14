@@ -30,7 +30,7 @@ class DialogueManager {
     foreign static setActiveNode(arg0)
 }
 
-// Container for dialogue Result data
+// Container for dialogue command data
 foreign class Command {
     // Get the callback handle
     foreign callback
@@ -70,7 +70,15 @@ foreign class DialogueResult {
     foreign shouldAutoAdvance
 }
 
-// Container for dialogue Result data
+// Container for dialogue chioce data
+foreign class Choice {
+    // Get the text
+    foreign text
+    // Get the target node id
+    foreign targetNodeId
+}
+
+// Container for dialogue condition data
 foreign class Condition {
     // Get the callback handle
     foreign callback
@@ -78,7 +86,7 @@ foreign class Condition {
     foreign params
 }
 
-// Container for dialogue Result data
+// Container for dialogue conditional target data
 foreign class ConditionalTarget {
     // Does the Target have conditions?
     foreign hasConditions()

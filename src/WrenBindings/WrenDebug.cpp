@@ -1,5 +1,6 @@
 #include "wren.hpp"
 
+#include <string.h>
 #include <Trace/wren_trace.h>
 
 #include "Engine/Scripting/WrenBindingRegistry.h"
@@ -35,8 +36,10 @@ WREN_CLASS_STATIC("debug", "Profile", "end()", wren_ProfileStaticProfileEnd, "En
 void wren_DebugInfo(WrenVM* vm)
 {
 #ifdef DEBUG
+	char stackBuffer[4096];
+	const char* stack = wrenTraceGetCallStackString(vm, stackBuffer, sizeof(stackBuffer));
 	const char* message = wrenGetSlotString(vm, 1);
-	DEBUG_INFO(message);
+	DEBUG_INFO("%s\n%s", message, stack);
 #endif
 }
 
@@ -44,8 +47,10 @@ void wren_DebugInfo(WrenVM* vm)
 void wren_DebugWarning(WrenVM* vm)
 {
 #ifdef DEBUG
+	char stackBuffer[4096];
+	const char* stack = wrenTraceGetCallStackString(vm, stackBuffer, sizeof(stackBuffer));
 	const char* message = wrenGetSlotString(vm, 1);
-	DEBUG_INFO(message);
+	DEBUG_WARNING("%s\n%s", message, stack);
 #endif
 }
 
@@ -53,8 +58,10 @@ void wren_DebugWarning(WrenVM* vm)
 void wren_DebugError(WrenVM* vm)
 {
 #ifdef DEBUG
+	char stackBuffer[4096];
+	const char* stack = wrenTraceGetCallStackString(vm, stackBuffer, sizeof(stackBuffer));
 	const char* message = wrenGetSlotString(vm, 1);
-	DEBUG_INFO(message);
+	DEBUG_ERROR("%s\n%s", message, stack);
 #endif
 }
 
@@ -62,8 +69,10 @@ void wren_DebugError(WrenVM* vm)
 void wren_DebugFatal(WrenVM* vm)
 {
 #ifdef DEBUG
+	char stackBuffer[4096];
+	const char* stack = wrenTraceGetCallStackString(vm, stackBuffer, sizeof(stackBuffer));
 	const char* message = wrenGetSlotString(vm, 1);
-	DEBUG_INFO(message);
+	DEBUG_FATAL("%s\n%s", message, stack);
 #endif
 }
 
@@ -93,8 +102,7 @@ void wren_DebugAssertMsg(WrenVM* vm)
 		const char* message = wrenGetSlotString(vm, 2);
 		char stackBuffer[4096];
 		const char* stack = wrenTraceGetCallStackString(vm, stackBuffer, sizeof(stackBuffer));
-		DEBUG_FATAL(stack);
-		DEBUG_FATAL(message);
+		DEBUG_FATAL("%s\n%s", message, stack);
 		BREAK;
 		// TODO pause the editor
 	}
@@ -119,8 +127,7 @@ void wren_DebugBreakMsg(WrenVM* vm)
 	const char* message = wrenGetSlotString(vm, 1);
 	char stackBuffer[4096];
 	const char* stack = wrenTraceGetCallStackString(vm, stackBuffer, sizeof(stackBuffer));
-	DEBUG_FATAL(stack);
-	DEBUG_FATAL(message);
+	DEBUG_FATAL("%s\n%s", message, stack);
 	BREAK;
 #endif
 }

@@ -62,10 +62,12 @@ class DialogueManagerHelper {
         Debug.info("Processing dialogue at node: %(nodeId)")
         var node = DialogueManager.setActiveNode(nodeId)
         if (!node) {
+            Debug.breakpointMsg("Node not found '%(nodeId)'")
             return DialogueResult.nodeNotFound(node)
         }
-        if (node.commands) {
-            executeCommands(node.commands)
+        var commands = node.commands
+        if (commands) {
+            executeCommands(commands)
         }
         if (node.hasTargets()) {
             var targetNodeId = evaluateTargets(node.targets)
@@ -117,11 +119,15 @@ class DialogueManagerHelper {
             return DialogueResult.noActiveNode()
         }
         var choices = currentNode.choices
-        if (choiceIndex < 0 || choiceIndex >= choices.count) {
-            Debug.error("Invalid choice index %(choiceIndex) (available: %(choices.count))")
+        if (!choices) {
+            Debug.error("Choice index %(choiceIndex) for node %(currentNode.id) when there is no choices associated with node")
             return DialogueResult.invalidChoice()
         }
-        var targetNodeId = choices[choiceIndex]
+        if (choiceIndex < 0 || choiceIndex >= choices.count) {
+            Debug.error("Invalid choice index %(choiceIndex) (available: %(choices.count)) for node %(currentNode.id)")
+            return DialogueResult.invalidChoice()
+        }
+        var targetNodeId = choices[choiceIndex].targetNodeId
         Debug.info("Player chose option %(choiceIndex), jumping to node: %(targetNodeId)")
         return processNode(targetNodeId)
     }
@@ -242,7 +248,7 @@ class InteractState is BaseState {
         if (_waitingForChoice && _currentResult.choices && _currentResult.choices.count > 0) {
             for (i in 0..._currentResult.choices.count) {
                 // Check for number keys 1-9
-                if (Input.isKeyJustReleased((i + 1).toString)) { // KEY_ONE = 49
+                if (Input.isKeyJustReleased((i + 1).toString)) {
                     makeChoice(stateManager, i)
                     return
                 }

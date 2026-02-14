@@ -159,7 +159,7 @@ class GregDialogue {
                 "node": "greg_legends_1", "data": {
                     "speaker": "Greg",
                     "text": "There are stories of an old monastery that burned down long ago. They say monks collected rare texts there.",
-                    "next": "librarian_legends_2",
+                    "next": "greg_legends_2",
                 },
             },
             { 
@@ -173,7 +173,7 @@ class GregDialogue {
                     "speaker": "Greg",
                     "text": "I had an Ancient Tome - a very special book - but I seem to have misplaced it.\nIf you could find it, I would gladly trade you something valuable.",
                     "commands": [
-                        {"type": "setInt", "parameters": [
+                        {"type": "setIntFlag", "parameters": [
                                 {
                                     "type": "flag",
                                     "value": "greg_quest_state"
