@@ -1,5 +1,8 @@
 #include "WrenUI.h"
 
+#ifdef DEBUG
+#include <Trace/wren_trace.h>
+#endif
 #include "Engine/Scripting/WrenBindingRegistry.h"
 #include "Engine/GameContext.h"
 #include "WrenMath.h"
@@ -485,7 +488,7 @@ void wren_UIElementSetOnFocus(WrenVM* vm)
 	}
 
 	WrenHandle* callback = wrenGetSlotHandle(vm, 1);
-
+	
 	uiElement->element->SetOnFocus(Struktur::UI::UIFocusCallback(std::make_unique<Struktur::Callback::WrenCallback>(callback)));
 }
 
@@ -611,7 +614,6 @@ void wren_UILabelNew(WrenVM* vm)
 {
 	Struktur::GameContext* context = static_cast<Struktur::GameContext*>(wrenGetUserData(vm));
 	WrenUIElement* uiElement = static_cast<WrenUIElement*>(wrenGetSlotForeign(vm, 0));
-
 	// Initialise with constructor parameters if provided
 	WrenVec2* positionPixel = static_cast<WrenVec2*>(wrenGetSlotForeign(vm, 1));
 	WrenVec2* positionPercentage = static_cast<WrenVec2*>(wrenGetSlotForeign(vm, 2));
@@ -627,6 +629,10 @@ void wren_UILabelNew(WrenVM* vm)
 		auto* label = new Struktur::UI::UILabel(*context, positionPixel->value, positionPercentage->value, labelText);
 		new (uiElement) WrenUIElement{ label };
 	}
+#ifdef DEBUG
+	char stackBuffer[4096];
+	uiElement->callstack = wrenTraceGetCallStackString(vm, stackBuffer, sizeof(stackBuffer));
+#endif
 }
 
 // UILabel.setFont(font)
@@ -789,6 +795,10 @@ void wren_UIPanelNew(WrenVM* vm)
 	WrenVec2* sizePercentage = static_cast<WrenVec2*>(wrenGetSlotForeign(vm, 4));
 	auto* panel = new Struktur::UI::UIPanel(positionPixel->value, positionPercentage->value, sizePixel->value, sizePercentage->value);
 	new (uiElement) WrenUIElement{ panel };
+#ifdef DEBUG
+	char stackBuffer[4096];
+	uiElement->callstack = wrenTraceGetCallStackString(vm, stackBuffer, sizeof(stackBuffer));
+#endif
 }
 
 // UIPanel.setBackgroundTexture(texture)

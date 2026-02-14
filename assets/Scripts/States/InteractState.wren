@@ -15,11 +15,6 @@ import "Colors" for BLANK, BLACK, DARKGRAY, WHITE
 import "Inventory" for Inventory
 import "dialogue" for DialogueManager, DialogueResult
 
-//import "Dialogue/DialogueLoader" for DialogueLoader
-import "Dialogue/GregDialogue" for GregDialogue
-//import "Dialogue/ItemInteractions" for ItemInteractions
-//import "Dialogue/NPCInteractions" for NPCInteractions
-
 var TEXT_SCROLL_SPEED = 0.02
 
 class DialogueManagerHelper {
@@ -363,19 +358,24 @@ class InteractState is BaseState {
         // This maps your old interaction names to the new dialogue system
         
         // NPCs
-        if (interactableName == "Scholar") return "greg"
-        //if (interactableName == "Gardener") return NPCInteractions.getEntryPoint("gardener")
-        //if (interactableName == "Cook") return NPCInteractions.getEntryPoint("cook")
-        //if (interactableName == "Merchant") return NPCInteractions.getEntryPoint("merchant")
-        //if (interactableName == "Guard") return NPCInteractions.getEntryPoint("guard")
-        //if (interactableName == "Librarian") return NPCInteractions.getEntryPoint("librarian")
-        //
-        //// Items
-        //if (interactableName == "Ancient Tome") return ItemInteractions.getEntryPoint("ancient_book")
-        //if (interactableName == "Rose") return ItemInteractions.getEntryPoint("rose")
-        //if (interactableName == "Healing Potion") return ItemInteractions.getEntryPoint("healing_potion")
-        //if (interactableName == "Mysterious Key") return ItemInteractions.getEntryPoint("mysterious_key")
-        //if (interactableName == "Old Map") return ItemInteractions.getEntryPoint("old_map")
+        if (interactableName == "Scholar") return "scholar"
+        if (interactableName == "Gardener") return "gardener"
+        if (interactableName == "Cook") return "cook"
+        if (interactableName == "Merchant") return "merchant"
+        if (interactableName == "Guard") return "guard"
+        if (interactableName == "Librarian") return "librarian"
+        if (interactableName == "Astronomer") return "astronomer"
+        if (interactableName == "Cordelia") return "cordelia"
+        if (interactableName == "Dreamer") return "dreamer"
+        if (interactableName == "Guardian") return "guardian"
+        if (interactableName == "Inventor") return "inventor"
+        
+        // Items
+        if (interactableName == "Ancient Tome") return "ancient_book"
+        if (interactableName == "Rose") return "rose"
+        if (interactableName == "Healing Potion") return "healing_potion"
+        if (interactableName == "Mysterious Key") return "mysterious_key"
+        if (interactableName == "Old Map") return "old_map"
         
         // Default - no dialogue found
         Debug.Warning("Warning: No dialogue entry point found for %(interactableName)")

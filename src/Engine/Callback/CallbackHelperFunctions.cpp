@@ -79,8 +79,7 @@ void Struktur::Callback::HelperFunctions::VariantToWrenSlot(WrenVM* vm, int slot
 				wrenEnsureSlots(vm, slot + 2);
 				wrenGetVariable(vm, "ui", "UIElement", slot + 1);
 				WrenUIElement* foreign = static_cast<WrenUIElement*>(wrenSetSlotNewForeign(vm, slot, slot + 1, sizeof(WrenUIElement)));
-				new (foreign) WrenUIElement();
-				foreign->element = arg;
+				new (foreign) WrenUIElement{ arg, false };
 			}
 			else if constexpr (std::is_same_v<T, VariantList>)
 			{

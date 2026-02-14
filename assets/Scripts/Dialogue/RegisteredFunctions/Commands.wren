@@ -21,5 +21,11 @@ class Commands {
             var intFlag = FlagManager.setIntFlag(flag, value)
             Debug.info("[Dialogue Command] Set Int Flag for %(flag): %(value)")
         }
+        DialogueRegistry.registerCommand("camerShake") { |params|
+            var flag = params["flag"]
+            var value = params["value"]
+            var intFlag = FlagManager.setIntFlag(flag, value)
+            Debug.info("[Dialogue Command] Set Int Flag for %(flag): %(value)")
+        }
     }
 }

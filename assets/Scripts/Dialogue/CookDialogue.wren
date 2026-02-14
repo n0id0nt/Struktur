@@ -1,16 +1,15 @@
-class GregDialogue {
+class CookDialogue {
     static getData() {
         return [
             { 
-                "node": "greg", "data": {
+                "node": "cook", "data": {
                     "targets": [
                         {
                             "conditions": [
-                                {
-                                    "type": "hasIntFlag", "parameters": [
+                                {"type": "hasIntFlag", "parameters": [
                                         {
                                             "type": "flag",
-                                            "value": "greg_quest_state"
+                                            "value": "cook_quest_state"
                                         },
                                         {
                                             "type": "op",
@@ -23,14 +22,14 @@ class GregDialogue {
                                     ]
                                 },
                             ],
-                            "node": "greg_complete",
+                            "node": "cook_complete",
                         },
                         {
                             "conditions": [
                                 {"type": "hasIntFlag", "parameters": [
                                         {
                                             "type": "flag",
-                                            "value": "greg_quest_state"
+                                            "value": "cook_quest_state"
                                         },
                                         {
                                             "type": "op",
@@ -45,19 +44,19 @@ class GregDialogue {
                                 {"type": "hasItem", "parameters": [
                                         {
                                             "type": "item",
-                                            "value": "ancient_book"
+                                            "value": "Fresh Bread"
                                         },
                                     ]
                                 },
                             ],
-                            "node": "greg_has_book_1",
+                            "node": "cook_has_bread_1",
                         },
                         {
                             "conditions": [
                                 {"type": "hasIntFlag", "parameters": [
                                         {
                                             "type": "flag",
-                                            "value": "greg_quest_state"
+                                            "value": "cook_quest_state"
                                         },
                                         {
                                             "type": "op",
@@ -70,127 +69,97 @@ class GregDialogue {
                                     ]
                                 },
                             ],
-                            "node": "greg_needs_book",
+                            "node": "cook_needs_bread",
                         },
                         {
-                            "node": "greg_first_1",
+                            "node": "cook_first_1",
                         },
                     ]
                 },
             },
             { 
-                "node": "greg_complete", "data": {
-                    "speaker": "Greg",
-                    "text": "Ah, my precious Ancient Tome! Years of research finally returned to me.\nThis knowledge belongs in my library, where it can illuminate minds for eternity.",
+                "node": "cook_complete", "data": {
+                    "speaker": "Cook",
+                    "text": "My warm, fresh bread! The kitchen feels like home again with the scent of baking.\nThis Crystal Key has been keeping my recipes company - please, take it.",
                 },
             },
             { 
-                "node": "greg_has_book_1", "data": {
-                    "speaker": "Greg",
-                    "text": "Perfect! My lost research tome! This contains decades of study into ancient mysteries.",
-                    "next": "greg_has_book_2"
+                "node": "cook_has_bread_1", "data": {
+                    "speaker": "Cook",
+                    "text": "Oh, wonderful! Fresh bread, still warm from the oven!\nThe heart of any kitchen is the bread that feeds the family.",
+                    "next": "cook_has_bread_2"
                 },
             },
             { 
-                "node": "greg_has_book_2", "data": {
-                    "speaker": "Greg",
-                    "text": "In exchange for returning my life's work, I offer you this rare gem.\nMay it serve you well in your travels.",
+                "node": "cook_has_bread_2", "data": {
+                    "speaker": "Cook",
+                    "text": "For bringing warmth back to my kitchen, I'll give you this Crystal Key I've been safeguarding.",
                     "commands": [
                         {"type": "giveItem", "parameters": [
                                 {
                                     "type": "item",
-                                    "value": "rare_gem"
+                                    "value": "Green Crystal Key"
                                 },
                             ]
                         },
                         {"type": "removeItem", "parameters": [
                                 {
                                     "type": "item",
-                                    "value": "ancient_book"
+                                    "value": "Fresh Bread"
                                 },
                             ]
                         },
-                        {"type": "sethasIntFlag", "parameters": [
+                        {"type": "setIntFlag", "parameters": [
                                 {
                                     "type": "flag",
-                                    "value": "greg_quest_state"
+                                    "value": "cook_quest_state"
                                 },
                                 {
                                     "type": "value",
                                     "value": 3
                                 },
                             ]
-                        }
+                        },
                     ],
-                    "next": "greg_has_book_3"
+                    "next": "cook_has_bread_3"
                 },
             },
             { 
-                "node": "greg_has_book_3", "data": {
-                    "speaker": "Greg",
-                    "text": "Obtained Rare Gem"
+                "node": "cook_has_bread_3", "data": {
+                    "speaker": "Cook",
+                    "text": "Obtained Green Crystal Key"
                 },
             },
             { 
-                "node": "greg_needs_book", "data": {
-                    "speaker": "Greg",
-                    "text": "My Ancient Tome is still missing - it contains all my research into forgotten lore.",
+                "node": "cook_needs_bread", "data": {
+                    "speaker": "Cook",
+                    "text": "My kitchen feels so empty without the warmth of fresh bread.",
                 },
             },
             { 
-                "node": "greg_first_1", "data": {
-                    "speaker": "Greg",
-                    "text": "Welcome, fellow seeker of knowledge.\nI'm a collector of rare books and ancient texts.",
-                    "next": "greg_first_2"
+                "node": "cook_first_1", "data": {
+                    "speaker": "Cook",
+                    "text": "Welcome to my kitchen, dear!\nI've been preparing the same Christmas feast for decades,\nwaiting for family to gather.",
+                    "next": "cook_first_2"
                 },
             },
             { 
-                "node": "greg_first_2", "data": {
-                    "speaker": "Greg",
-                    "text": "Welcome, fellow seeker of knowledge.\nI'm a collector of rare books and ancient texts.",
-                    "choices": [
-                        {"text": "Tell me about local legends", "target": "greg_legends_1"},
-                        {"text": "You look agitated, what is the issue?", "target": "greg_quest"},
-                        {"text": "I'll browse", "target": "greg_goodbye"},
-                    ],
-                },
-            },
-            { 
-                "node": "greg_legends_1", "data": {
-                    "speaker": "Greg",
-                    "text": "There are stories of an old monastery that burned down long ago. They say monks collected rare texts there.",
-                    "next": "greg_legends_2",
-                },
-            },
-            { 
-                "node": "greg_legends_2", "data": {
-                    "speaker": "Greg",
-                    "text": "There are stories of an old monastery that burned down long ago. They say monks collected rare texts there.",
-                },
-            },
-            { 
-                "node": "greg_quest", "data": {
-                    "speaker": "Greg",
-                    "text": "I had an Ancient Tome - a very special book - but I seem to have misplaced it.\nIf you could find it, I would gladly trade you something valuable.",
+                "node": "cook_first_2", "data": {
+                    "speaker": "Cook",
+                    "text": "A kitchen without fresh bread is like a hearth without fire.\nBring me the bread that belongs here, and I'll share something precious in return.",
                     "commands": [
                         {"type": "setIntFlag", "parameters": [
                                 {
                                     "type": "flag",
-                                    "value": "greg_quest_state"
+                                    "value": "cook_quest_state"
                                 },
                                 {
                                     "type": "value",
                                     "value": 1
                                 },
                             ]
-                        }
-                    ]
-                },
-            },
-            { 
-                "node": "greg_goodbye", "data": {
-                    "speaker": "Greg",
-                    "text": "Happy reading!",
+                        },
+                    ],
                 },
             },
         ]

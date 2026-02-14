@@ -23,5 +23,12 @@ class Conditions {
             Debug.info("[Dialogue Condition] Checking condition inventory has %(item) = %(result)")
             return result
         }
+        DialogueRegistry.registerCondition("notHasItem") { |params|
+            var item = params["item"]
+
+            var result = Inventory.contains(item)
+            Debug.info("[Dialogue Condition] Checking condition inventory has %(item) = %(result)")
+            return !result
+        }
     }
 }
