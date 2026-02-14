@@ -1,20 +1,39 @@
-// Condition.h
-// Base interface for dialogue conditions
-// Part of the Struktur dialogue system
-
 #pragma once
+
+#include "DialogueValue.h"
+#include <unordered_map>
+#include <string>
 
 namespace Struktur
 {
 	class GameContext;
 }
 
+namespace Struktur::Callback
+{
+	class ICallback;
+}
+
 namespace Struktur::Dialogue
 {
-	// Base class for all dialogue conditions
+	// Command that executes by calling a Wren callback
 	class Condition
 	{
 	public:
-		virtual bool Evaluate(GameContext& context) const = 0;
+		// Constructor
+		// callback is borrowed from DialogueRegistry, not owned
+		Condition(std::string key, const std::unordered_map<std::string, DialogueValue>& params);
+		~Condition() = default;
+
+		// Execute by calling Wren callback with parameters
+		bool Evaluate(GameContext& context) const;
+		Callback::ICallback* GetCallback(GameContext &context) const;
+		const std::unordered_map<std::string, DialogueValue>& GetParams() const;
+		const std::string& GetKey() { return m_key; }
+
+	private:
+		std::string m_key;
+		std::unordered_map<std::string, DialogueValue> m_params;
+
 	};
 }

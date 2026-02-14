@@ -1,15 +1,15 @@
-#include "CallbackCondition.h"
+#include "Condition.h"
 
 #include "Engine/GameContext.h"
 #include "DialogueHelperFunctions.h"
 #include "Engine/Callback/Callback.h"
 
-Struktur::Dialogue::CallbackCondition::CallbackCondition(std::string key, const std::unordered_map<std::string, DialogueValue>& params)
+Struktur::Dialogue::Condition::Condition(std::string key, const std::unordered_map<std::string, DialogueValue>& params)
     : m_key(key), m_params(params)
 {
 }
 
-bool Struktur::Dialogue::CallbackCondition::Evaluate(GameContext &context) const
+bool Struktur::Dialogue::Condition::Evaluate(GameContext &context) const
 {
     auto* callback = GetCallback(context);
 
@@ -24,13 +24,13 @@ bool Struktur::Dialogue::CallbackCondition::Evaluate(GameContext &context) const
     return std::get<bool>(result);
 }
 
-Struktur::Callback::ICallback *Struktur::Dialogue::CallbackCondition::GetCallback(GameContext &context) const
+Struktur::Callback::ICallback *Struktur::Dialogue::Condition::GetCallback(GameContext &context) const
 {
     DialogueRegistry& dialogueRegistry = context.GetDialogueRegistry();
     return dialogueRegistry.GetCondition(m_key);
 }
 
-const std::unordered_map<std::string, Struktur::Dialogue::DialogueValue>& Struktur::Dialogue::CallbackCondition::GetParams() const
+const std::unordered_map<std::string, Struktur::Dialogue::DialogueValue>& Struktur::Dialogue::Condition::GetParams() const
 {
     return m_params;
 }

@@ -9,8 +9,8 @@
 #include "Engine/Dialogue/DialogueManager.h"
 #include "Engine/Dialogue/DialogueRegistry.h"
 #include "Engine/Dialogue/DialogueNode.h"
-#include "Engine/Dialogue/CallbackCommand.h"
-#include "Engine/Dialogue/CallbackCondition.h"
+#include "Engine/Dialogue/Command.h"
+#include "Engine/Dialogue/Condition.h"
 #include "Engine/Callback/WrenCallback.h"
 #include "Engine/Callback/CallbackHelperFunctions.h"
 #include "WrenFunctionCallback.h"
@@ -145,7 +145,7 @@ static std::unordered_map<std::string, Struktur::Dialogue::DialogueValue> Dialog
 	return map;
 }
 
-static std::unique_ptr<Struktur::Dialogue::CallbackCommand> DialogueParseWrenCommand(WrenVM* vm, int slot)
+static std::unique_ptr<Struktur::Dialogue::Command> DialogueParseWrenCommand(WrenVM* vm, int slot)
 {
 	wrenEnsureSlots(vm, slot + 3);
 	wrenSetSlotString(vm, slot + 1, "type");
@@ -156,10 +156,10 @@ static std::unique_ptr<Struktur::Dialogue::CallbackCommand> DialogueParseWrenCom
 	wrenGetMapValue(vm, slot, slot + 1, slot + 2);
 	auto params = DialogueParseWrenParameters(vm, slot + 2);
 
-	return std::make_unique<Struktur::Dialogue::CallbackCommand>(type, params);
+	return std::make_unique<Struktur::Dialogue::Command>(type, params);
 }
 
-static std::unique_ptr<Struktur::Dialogue::CallbackCondition> DialogueParseWrenCondition(WrenVM* vm, int slot)
+static std::unique_ptr<Struktur::Dialogue::Condition> DialogueParseWrenCondition(WrenVM* vm, int slot)
 {
 	wrenEnsureSlots(vm, slot + 3);
 	wrenSetSlotString(vm, slot + 1, "type");
@@ -170,7 +170,7 @@ static std::unique_ptr<Struktur::Dialogue::CallbackCondition> DialogueParseWrenC
 	wrenGetMapValue(vm, slot, slot + 1, slot + 2);
 	auto params = DialogueParseWrenParameters(vm, slot + 2);
 
-	return std::make_unique<Struktur::Dialogue::CallbackCondition>(type, params);
+	return std::make_unique<Struktur::Dialogue::Condition>(type, params);
 }
 
 static std::unique_ptr<Struktur::Dialogue::Choice> DialogueParseWrenChoice(WrenVM* vm, int slot)
@@ -205,7 +205,7 @@ static std::unique_ptr<Struktur::Dialogue::ConditionalTarget> DialogueParseWrenC
 		for (int i = 0; i < count; i++)
 		{
 			wrenGetListElement(vm, slot + 2, i, slot + 3);
-			std::unique_ptr<Struktur::Dialogue::CallbackCondition> target = DialogueParseWrenCondition(vm, slot + 3);
+			std::unique_ptr<Struktur::Dialogue::Condition> target = DialogueParseWrenCondition(vm, slot + 3);
 
 			conditionalTarget->conditions.push_back(std::move(target));
 		}
@@ -243,7 +243,7 @@ static std::unique_ptr<Struktur::Dialogue::DialogueNode> DialogueParseWrenNodeDa
 		for (int i = 0; i < count; i++)
 		{
 			wrenGetListElement(vm, slot + 2, i, slot + 3);
-			std::unique_ptr<Struktur::Dialogue::CallbackCommand> command = DialogueParseWrenCommand(vm, slot + 3);
+			std::unique_ptr<Struktur::Dialogue::Command> command = DialogueParseWrenCommand(vm, slot + 3);
 			node->AddCommand(std::move(command));
 		}
 	}
@@ -586,11 +586,8 @@ void wren_ConditionGetCallback(WrenVM* vm)
 {
 	Struktur::GameContext* context = static_cast<Struktur::GameContext*>(wrenGetUserData(vm));
 	WrenCondition* wrenCondition = static_cast<WrenCondition*>(wrenGetSlotForeign(vm, 0));
-	// TODO Remove this dynmaic cast and make all conditions callback conditions
-	auto* condition = dynamic_cast<Struktur::Dialogue::CallbackCondition*>(wrenCondition->condition);
-	ASSERT_MSG(condition, "condition must be a CallbackCondition");
-	auto* callback = condition->GetCallback(*context);
-	ASSERT_MSG(callback, "condition callback %s not found, likley not registered", condition->GetKey().c_str());
+	auto* callback = wrenCondition->condition->GetCallback(*context);
+	ASSERT_MSG(callback, "condition callback %s not found, likley not registered", wrenCondition->condition->GetKey().c_str());
 	wrenSetSlotCallback(vm, 0, callback);
 }
 
@@ -598,10 +595,7 @@ void wren_ConditionGetCallback(WrenVM* vm)
 void wren_ConditionGetParams(WrenVM* vm)
 {
 	WrenCondition* wrenCondition = static_cast<WrenCondition*>(wrenGetSlotForeign(vm, 0));
-	// TODO Remove this dynmaic cast and make all conditions callback conditions
-	auto* condition = dynamic_cast<Struktur::Dialogue::CallbackCondition*>(wrenCondition->condition);
-	ASSERT_MSG(condition, "condition must be a CallbackCondition");
-	ConvertParamsMapToWrenMap(vm, 0, condition->GetParams());
+	ConvertParamsMapToWrenMap(vm, 0, wrenCondition->condition->GetParams());
 }
 
 // ============================================================================
@@ -634,11 +628,8 @@ void wren_CommandGetCallback(WrenVM* vm)
 {
 	Struktur::GameContext* context = static_cast<Struktur::GameContext*>(wrenGetUserData(vm));
 	WrenCommand* wrenCommand = static_cast<WrenCommand*>(wrenGetSlotForeign(vm, 0));
-	// TODO Remove this dynmaic cast and make all commands callback commands
-	auto* command = dynamic_cast<Struktur::Dialogue::CallbackCommand*>(wrenCommand->command);
-	ASSERT_MSG(command, "command must be a CallbackCommand");
-	auto* callback = command->GetCallback(*context);
-	ASSERT_MSG(callback, "command callback %s not found, likley not registered", command->GetKey().c_str());
+	auto* callback = wrenCommand->command->GetCallback(*context);
+	ASSERT_MSG(callback, "command callback %s not found, likley not registered", wrenCommand->command->GetKey().c_str());
 	wrenSetSlotCallback(vm, 0, callback);
 }
 
@@ -646,10 +637,7 @@ void wren_CommandGetCallback(WrenVM* vm)
 void wren_CommandGetParams(WrenVM* vm)
 {
 	WrenCommand* wrenCommand = static_cast<WrenCommand*>(wrenGetSlotForeign(vm, 0));
-	// TODO Remove this dynmaic cast and make all commands callback commands
-	auto* command = dynamic_cast<Struktur::Dialogue::CallbackCommand*>(wrenCommand->command);
-	ASSERT_MSG(command, "command must be a CallbackCommand");
-	ConvertParamsMapToWrenMap(vm, 0, command->GetParams());
+	ConvertParamsMapToWrenMap(vm, 0, wrenCommand->command->GetParams());
 }
 
 // ============================================================================
