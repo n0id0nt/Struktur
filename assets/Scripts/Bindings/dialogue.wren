@@ -51,7 +51,7 @@ foreign class DialogueResult {
     // Invalid choice result
     foreign construct invalidChoice()
     // No active node result
-    foreign construct noActivaNode()
+    foreign construct noActiveNode()
     // Error result
     foreign construct error()
     // Get the status of the dialogue result

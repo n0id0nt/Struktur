@@ -1,4 +1,5 @@
 #include "UIPanel.h"
+#include "Engine/GameContext.h"
 
 Struktur::UI::UIPanel::UIPanel(const glm::vec2& absolutePosition, const glm::vec2& relativePosition, const glm::vec2& absoluteSize, const glm::vec2& relativeSize)
     : UIElement(absolutePosition, relativePosition, absoluteSize, relativeSize), m_hasBackgroundTexture(false)

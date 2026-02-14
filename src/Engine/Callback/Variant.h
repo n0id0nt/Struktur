@@ -5,6 +5,12 @@
 #include <memory>
 #include <vector>
 #include <unordered_map>
+#include "glm/glm.hpp"
+
+namespace Struktur::UI
+{
+	class UIElement;
+}
 
 namespace Struktur::Callback
 {
@@ -20,6 +26,10 @@ namespace Struktur::Callback
 		float,
 		double,
 		std::string,
+		glm::vec2,
+		glm::vec3,
+		glm::vec4,
+		UI::UIElement*,
 		VariantList,
 		VariantMap
 	>;

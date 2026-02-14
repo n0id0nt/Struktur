@@ -15,7 +15,7 @@ struct WrenUIElement
 	{
 		if (ownedByWren) 
 		{
-			BREAK_MSG("Item is not handed to the UI Manager. This can cause issues with released handles");
+			BREAK_MSG("Item is not handed to the UI Manager. This can cause issues with unreleased handles");
 			delete element;
 		}
 	}

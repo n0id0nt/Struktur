@@ -6,6 +6,7 @@
 #include "WrenResourceManager.h"
 #include "Engine/UI/UILabel.h"
 #include "Engine/UI/UIPanel.h"
+#include "Engine/Callback/WrenCallback.h"
 
 // ============================================================================
 // NAVIGATION DIRECTION BINDINGS
@@ -92,7 +93,7 @@ void wren_UIManagerClearFocusElements(WrenVM* vm)
 	Struktur::UI::UIManager& uiManager = context->GetUIManager();
 	Struktur::UI::FocusNavigator* focusNavigator = uiManager.GetFocusNavigator();
 	uiManager.SetFocus(nullptr);
-	focusNavigator->Clear();
+	focusNavigator->Clear(*context);
 }
 
 WREN_CLASS_STATIC("ui", "UIManager", "addUIElement(_)", wren_UIManagerAddUIElement, "Add a UI Element to the UI system.");
@@ -470,26 +471,7 @@ void wren_UIElementSetOnClick(WrenVM* vm)
 
 	WrenHandle* callback = wrenGetSlotHandle(vm, 1);
 
-	uiElement->element->SetOnClick([vm, callback](Struktur::UI::UIElement* sender, const glm::vec2& mousePos) {
-		wrenEnsureSlots(vm, 5);
-		wrenSetSlotHandle(vm, 0, callback);
-
-		wrenGetVariable(vm, "ui", "UIElement", 3);  // Get class into slot 3
-		WrenUIElement* wrenSender = static_cast<WrenUIElement*>(wrenSetSlotNewForeign(vm, 1, 3, sizeof(WrenUIElement)));
-		new (wrenSender) WrenUIElement{ sender, false };
-
-		wrenGetVariable(vm, "math", "Vec2", 4);  // Get class into slot 4
-		WrenVec2* vec = static_cast<WrenVec2*>(wrenSetSlotNewForeign(vm, 2, 4, sizeof(WrenVec2)));
-		new (vec) WrenVec2{ mousePos };
-
-		WrenHandle* method = wrenMakeCallHandle(vm, "call(_,_)");
-		wrenCall(vm, method);
-		wrenReleaseHandle(vm, method);
-		});
-
-	uiElement->element->SetOnClickDispose([vm, callback](Struktur::UI::UIElement* sender, Struktur::GameContext& context) {
-		wrenReleaseHandle(vm, callback);
-		});
+	uiElement->element->SetOnClick(Struktur::UI::UIClickCallback(std::make_unique<Struktur::Callback::WrenCallback>(callback)));
 }
 
 // UIElement.setOnFocus { |sender| ... }
@@ -504,22 +486,7 @@ void wren_UIElementSetOnFocus(WrenVM* vm)
 
 	WrenHandle* callback = wrenGetSlotHandle(vm, 1);
 
-	uiElement->element->SetOnFocus([vm, callback](Struktur::UI::UIElement* sender) {
-		wrenEnsureSlots(vm, 3);
-		wrenSetSlotHandle(vm, 0, callback);
-
-		wrenGetVariable(vm, "ui", "UIElement", 2);  // Get class into slot 2
-		WrenUIElement* wrenSender = static_cast<WrenUIElement*>(wrenSetSlotNewForeign(vm, 1, 2, sizeof(WrenUIElement)));
-		new (wrenSender) WrenUIElement{ sender, false };
-
-		WrenHandle* method = wrenMakeCallHandle(vm, "call(_)");
-		wrenCall(vm, method);
-		wrenReleaseHandle(vm, method);
-		});
-
-	uiElement->element->SetOnFocusDispose([vm, callback](Struktur::UI::UIElement* sender, Struktur::GameContext& context) {
-		wrenReleaseHandle(vm, callback);
-		});
+	uiElement->element->SetOnFocus(Struktur::UI::UIFocusCallback(std::make_unique<Struktur::Callback::WrenCallback>(callback)));
 }
 
 // UIElement.setOnLoseFocus { |sender| ... }
@@ -534,22 +501,7 @@ void wren_UIElementSetOnLoseFocus(WrenVM* vm)
 
 	WrenHandle* callback = wrenGetSlotHandle(vm, 1);
 
-	uiElement->element->SetOnLoseFocus([vm, callback](Struktur::UI::UIElement* sender) {
-		wrenEnsureSlots(vm, 3);
-		wrenSetSlotHandle(vm, 0, callback);
-
-		wrenGetVariable(vm, "ui", "UIElement", 2);  // Get class into slot 2
-		WrenUIElement* wrenSender = static_cast<WrenUIElement*>(wrenSetSlotNewForeign(vm, 1, 2, sizeof(WrenUIElement)));
-		new (wrenSender) WrenUIElement{ sender, false };
-
-		WrenHandle* method = wrenMakeCallHandle(vm, "call(_)");
-		wrenCall(vm, method);
-		wrenReleaseHandle(vm, method);
-		});
-
-	uiElement->element->SetOnFocusDispose([vm, callback](Struktur::UI::UIElement* sender, Struktur::GameContext& context) {
-		wrenReleaseHandle(vm, callback);
-		});
+	uiElement->element->SetOnLoseFocus(Struktur::UI::UIFocusCallback(std::make_unique<Struktur::Callback::WrenCallback>(callback)));
 }
 
 // UIElement.setOnHover { |sender, mousePos| ... }
@@ -564,26 +516,7 @@ void wren_UIElementSetOnHover(WrenVM* vm)
 
 	WrenHandle* callback = wrenGetSlotHandle(vm, 1);
 
-	uiElement->element->SetOnHover([vm, callback](Struktur::UI::UIElement* sender, const glm::vec2& mousePos) {
-		wrenEnsureSlots(vm, 5);
-		wrenSetSlotHandle(vm, 0, callback);
-
-		wrenGetVariable(vm, "ui", "UIElement", 3);  // Get class into slot 3
-		WrenUIElement* wrenSender = static_cast<WrenUIElement*>(wrenSetSlotNewForeign(vm, 1, 3, sizeof(WrenUIElement)));
-		new (wrenSender) WrenUIElement{ sender, false };
-
-		wrenGetVariable(vm, "math", "Vec2", 4);  // Get class into slot 4
-		WrenVec2* vec = static_cast<WrenVec2*>(wrenSetSlotNewForeign(vm, 2, 4, sizeof(WrenVec2)));
-		new (vec) WrenVec2{ mousePos };
-
-		WrenHandle* method = wrenMakeCallHandle(vm, "call(_,_)");
-		wrenCall(vm, method);
-		wrenReleaseHandle(vm, method);
-		});
-
-	uiElement->element->SetOnFocusDispose([vm, callback](Struktur::UI::UIElement* sender, Struktur::GameContext& context) {
-		wrenReleaseHandle(vm, callback);
-		});
+	uiElement->element->SetOnHover(Struktur::UI::UIHoverCallback(std::make_unique<Struktur::Callback::WrenCallback>(callback)));
 }
 
 // UIElement.setOnKeyPressed { |sender, key| ... }
@@ -598,24 +531,7 @@ void wren_UIElementSetOnKeyPressed(WrenVM* vm)
 
 	WrenHandle* callback = wrenGetSlotHandle(vm, 1);
 
-	uiElement->element->SetOnKeyPressed([vm, callback](Struktur::UI::UIElement* sender, int key) {
-		wrenEnsureSlots(vm, 4);
-		wrenSetSlotHandle(vm, 0, callback);
-
-		wrenGetVariable(vm, "ui", "UIElement", 3);  // Get class into slot 3
-		WrenUIElement* wrenSender = static_cast<WrenUIElement*>(wrenSetSlotNewForeign(vm, 1, 3, sizeof(WrenUIElement)));
-		new (wrenSender) WrenUIElement{ sender, false };
-
-		wrenSetSlotDouble(vm, 2, static_cast<double>(key));
-
-		WrenHandle* method = wrenMakeCallHandle(vm, "call(_,_)");
-		wrenCall(vm, method);
-		wrenReleaseHandle(vm, method);
-		});
-
-	uiElement->element->SetOnFocusDispose([vm, callback](Struktur::UI::UIElement* sender, Struktur::GameContext& context) {
-		wrenReleaseHandle(vm, callback);
-		});
+	uiElement->element->SetOnKeyPressed(Struktur::UI::UIKeyCallback(std::make_unique<Struktur::Callback::WrenCallback>(callback)));
 }
 
 // UIElement.setOnActivate { |sender| ... }
@@ -630,48 +546,8 @@ void wren_UIElementSetOnActivate(WrenVM* vm)
 
 	WrenHandle* callback = wrenGetSlotHandle(vm, 1);
 
-	uiElement->element->SetOnActivate([vm, callback](Struktur::UI::UIElement* sender) {
-		wrenEnsureSlots(vm, 3);
-		wrenSetSlotHandle(vm, 0, callback);
-
-		wrenGetVariable(vm, "ui", "UIElement", 2);  // Get class into slot 2
-		WrenUIElement* wrenSender = static_cast<WrenUIElement*>(wrenSetSlotNewForeign(vm, 1, 2, sizeof(WrenUIElement)));
-		new (wrenSender) WrenUIElement{ sender, false };
-
-		WrenHandle* method = wrenMakeCallHandle(vm, "call(_)");
-		wrenCall(vm, method);
-		wrenReleaseHandle(vm, method);
-		});
-
-	uiElement->element->SetOnFocusDispose([vm, callback](Struktur::UI::UIElement* sender, Struktur::GameContext& context) {
-		wrenReleaseHandle(vm, callback);
-		});
+	uiElement->element->SetOnActivate(Struktur::UI::UIActivateCallback(std::make_unique<Struktur::Callback::WrenCallback>(callback)));
 }
-
-//// UIElement.setOnEvent { |sender| ... }
-//void wren_UIElementSetOnEvent(WrenVM* vm)
-//{
-//	WrenUIElement* uiElement = static_cast<WrenUIElement*>(wrenGetSlotForeign(vm, 0));
-//	if (!uiElement->element)
-//	{
-//		DEBUG_ERROR("UILabel.setPosition: uiElement is Null");
-//		return;
-//	}
-//	WrenHandle* callback = wrenGetSlotHandle(vm, 1);
-//
-//	uiElement->element->SetOnEvent([vm, callback](Struktur::UI::UIElement* sender) {
-//		wrenEnsureSlots(vm, 3);
-//		wrenSetSlotHandle(vm, 0, callback);
-//
-//		wrenGetVariable(vm, "ui", "UIElement", 2);  // Get class into slot 2
-//		WrenUIElement* wrenSender = static_cast<WrenUIElement*>(wrenSetSlotNewForeign(vm, 1, 2, sizeof(WrenUIElement)));
-//		new (wrenSender) WrenUIElement{sender, false};
-//
-//		WrenHandle* method = wrenMakeCallHandle(vm, "call(_)");
-//		wrenCall(vm, method);
-//		wrenReleaseHandle(vm, method);
-//	});
-//}
 
 // Register Sound foreign class
 WREN_FOREIGN_CLASS("ui", "UIElement", wren_UIElementAllocate, wren_UIElementFinalize, "UI Element component");

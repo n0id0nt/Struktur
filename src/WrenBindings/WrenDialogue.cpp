@@ -490,7 +490,7 @@ WREN_CONSTRUCTOR("dialogue", "DialogueResult", "endDialogue(_)", wren_DialogueRe
 WREN_CONSTRUCTOR("dialogue", "DialogueResult", "choices(_)", wren_DialogueResultChoices, "Choices result");
 WREN_CONSTRUCTOR("dialogue", "DialogueResult", "advance(_)", wren_DialogueResultAdvance, "Advance result");
 WREN_CONSTRUCTOR("dialogue", "DialogueResult", "invalidChoice()", wren_DialogueResultInvalidChoice, "Invalid choice result");
-WREN_CONSTRUCTOR("dialogue", "DialogueResult", "noActivaNode()", wren_DialogueResultNoActiveNode, "No active node result");
+WREN_CONSTRUCTOR("dialogue", "DialogueResult", "noActiveNode()", wren_DialogueResultNoActiveNode, "No active node result");
 WREN_CONSTRUCTOR("dialogue", "DialogueResult", "error()", wren_DialogueResultError, "Error result");
 
 WREN_CLASS_METHOD("dialogue", "DialogueResult", "status", wren_DialogueResultGetStatus, "Get the status of the dialogue result");

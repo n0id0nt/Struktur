@@ -65,7 +65,7 @@ void Struktur::UI::UIManager::Update(GameContext& context)
 	// Process change in focus
 	if (m_focusJustChanged)
 	{
-		m_focusNavigator->SetFocus(m_focusedElement);
+		m_focusNavigator->SetFocus(context, m_focusedElement);
 		m_focusJustChanged = false;
 	}
 }
@@ -86,7 +86,7 @@ Struktur::UI::UIElement* Struktur::UI::UIManager::GetElementAt(const glm::vec2& 
 
 void Struktur::UI::UIManager::Clear(GameContext& context)
 {
-	m_focusNavigator->Clear();
+	m_focusNavigator->Clear(context);
 	m_focusedElement = nullptr;
 	m_hoveredElement = nullptr;
 	for (auto& element : m_elements)
@@ -205,7 +205,7 @@ void Struktur::UI::UIManager::HandleInput(GameContext& context)
 		{
 			navigationDirection = NavigationDirection::RIGHT;
 		}
-		if (m_focusNavigator->NavigateDirection(navigationDirection))
+		if (m_focusNavigator->NavigateDirection(context, navigationDirection))
 		{
 			SetFocus(m_focusNavigator->GetCurrentFocus());
 		}
@@ -218,7 +218,7 @@ void Struktur::UI::UIManager::HandleInput(GameContext& context)
 		bool accept = input.IsInputJustReleased("UIAccept");
 		if (accept)
 		{
-			currentFocus->OnActivate();
+			currentFocus->OnActivate(context);
 		}
 		//if (keyboard.lastKeyPressed != 0)
 		//{

@@ -26,6 +26,6 @@ namespace Struktur::Callback
 	
 	bool FunctionCallback::IsValid() const
 	{
-		return m_function != nullptr;
+		return (bool)m_function;
 	}
 }

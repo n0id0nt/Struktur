@@ -322,13 +322,6 @@ class InteractState is BaseState {
         System.print("Making choice %(choiceIndex)")
         
         _currentResult = DialogueManagerHelper.makeChoice(choiceIndex)
-        
-        // Check if dialogue ended
-        if (_currentResult.hasEnded || _currentResult.status != 0) {
-            stateManager.clearCurrentState()
-            return
-        }
-
         processDialogueResult(_currentResult)
     }
 
