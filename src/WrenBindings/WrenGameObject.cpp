@@ -70,13 +70,13 @@ void wren_GameObjecthasComponent(WrenVM* vm)
 	double entityId = wrenGetSlotDouble(vm, 1);
 	entt::entity entity = static_cast<entt::entity>(entityId);
     
-	const char* componentName = wrenGetSlotString(vm, 2);
+	std::string componentName = wrenGetSlotString(vm, 2);
 	bool hasComponent = false;
 #define COMPONENT(component_name, component_name_string) 										\
-	if (strcmp(componentName, component_name_string) == 0) 						                \
-	{																		                    \
-        auto* componentValue = registry.try_get<Struktur::Component::component_name>(entity);   \
-        hasComponent = componentValue != nullptr;										        \
+	if (componentName == component_name_string) 												\
+	{																							\
+        auto* componentValue = registry.try_get<Struktur::Component::component_name>(entity);	\
+        hasComponent = componentValue != nullptr;												\
     } else
 	COMPONENT_LIST
 #undef COMPONENT
@@ -93,14 +93,14 @@ void wren_GameObjectGetAllWithComponent(WrenVM* vm)
     Struktur::GameContext* context = static_cast<Struktur::GameContext*>(wrenGetUserData(vm));
 	auto& registry = context->GetRegistry();
     
-	const char* componentName = wrenGetSlotString(vm, 1);
+	std::string componentName = wrenGetSlotString(vm, 1);
     
 	wrenSetSlotNewList(vm, 0);
     
 	int index = 0;
     
 #define COMPONENT(component_name, component_name_string) 					\
-	if (strcmp(componentName, #component_name_string) == 0) 				\
+	if (componentName == component_name_string)								\
 	{																		\
         auto view = registry.view<Struktur::Component::component_name>();	\
         for (auto entity : view)											\
@@ -120,14 +120,14 @@ void wren_GameObjectGetAllWithComponent(WrenVM* vm)
 
 // GameObject.getAllWithComponents(componentList) -> List
 void wren_GameObjectGetAllWithComponents(WrenVM* vm)
+{
+    Struktur::GameContext* context = static_cast<Struktur::GameContext*>(wrenGetUserData(vm));
+    auto& registry = context->GetRegistry();
+
+    // Slot 1 contains a Wren list of component names
+    if (wrenGetSlotType(vm, 1) != WREN_TYPE_LIST)
     {
-        Struktur::GameContext* context = static_cast<Struktur::GameContext*>(wrenGetUserData(vm));
-        auto& registry = context->GetRegistry();
-        
-        // Slot 1 contains a Wren list of component names
-        if (wrenGetSlotType(vm, 1) != WREN_TYPE_LIST)
-        {
-            DEBUG_ERROR("Slot 1 must contain a Wren list of component names");
+        DEBUG_ERROR("Slot 1 must contain a Wren list of component names");
 		wrenSetSlotNull(vm, 0);
 		return;
 	}
@@ -148,24 +148,23 @@ void wren_GameObjectGetAllWithComponents(WrenVM* vm)
 	int resultIndex = 0;
 
 	// Iterate all entities and check if they have ALL required components
-	registry.each([&](auto entity)
-		{
+	registry.each([&](auto entity) {
 			bool hasAllComponents = true;
 
 			for (const auto& compName : components)
 			{
-#define COMPONENT(component_name, component_name_string) 							\
-            if (compName == component_name_string)                                  \
-			{																		\
-				if (!registry.any_of<Struktur::Component::component_name>(entity))	\
-				{																	\
-                    hasAllComponents = false;										\
-                    break;															\
-                }																	\
-			} else
+#define COMPONENT(component_name, component_name_string) 								\
+				if (compName == component_name_string)                                  \
+				{																		\
+					if (!registry.any_of<Struktur::Component::component_name>(entity))	\
+					{																	\
+						hasAllComponents = false;										\
+						break;															\
+					}																	\
+				} else
 				COMPONENT_LIST
 #undef COMPONENT
-					// need to handle last else statement
+				// need to handle last else statement
 				{
 					DEBUG_ERROR("%s is not a valid component type", compName.c_str());
 				}

@@ -376,9 +376,13 @@ class InteractState is BaseState {
         if (interactableName == "Healing Potion") return "healing_potion"
         if (interactableName == "Mysterious Key") return "mysterious_key"
         if (interactableName == "Old Map") return "old_map"
+        if (interactableName == "Love Letter") return "love_letter"
+        if (interactableName == "Hammer") return "hammer"
+        if (interactableName == "Star Chart") return "star_chart"
+        if (interactableName == "Ornate Key") return "ornate_key"
         
         // Default - no dialogue found
-        Debug.Warning("Warning: No dialogue entry point found for %(interactableName)")
+        Debug.warning("Warning: No dialogue entry point found for %(interactableName)")
         return null
     }
 }

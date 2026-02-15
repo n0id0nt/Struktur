@@ -174,7 +174,7 @@ void wren_CameraAddCameraTrauma(WrenVM* vm)
 	cameraSystem.AddCameraTrauma(*context, camera->entity, trauma);
 }
 
-// Camera.addCameraTrauma(entity, worldPos)
+// Camera.addCameraTrauma(entity, trauma)
 void wren_CameraStaticAddCameraTrauma(WrenVM* vm)
 {
 	Struktur::GameContext* context = static_cast<Struktur::GameContext*>(wrenGetUserData(vm));
