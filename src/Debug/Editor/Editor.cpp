@@ -17,6 +17,7 @@
 #include "Debug/Editor/Windows/FileExplorerWindow.h"
 #include "Debug/Editor/Windows/LogWindow.h"
 #include "Debug/Editor/Windows/ProfilerWindow.h"
+#include "Debug/Editor/Windows/DialogueEditorWindow.h"
 #include "Debug/Editor/EditorTheme.h"
 
 namespace Struktur::Debug
@@ -64,6 +65,9 @@ namespace Struktur::Debug
 
 		// Inspector window (depends on hierarchy)
 		CreateWindow<InspectorWindow>(hierarchyPtr, uiHierarchyPtr, previewPtr);
+
+		// Inspector window (depends on hierarchy)
+		CreateWindow<DialogueEditorWindow>(previewPtr);
 
 		// Initialise all windows
 		for (auto& window : m_windows)

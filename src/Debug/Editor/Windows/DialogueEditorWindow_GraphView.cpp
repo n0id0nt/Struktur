@@ -3,6 +3,8 @@
 // Append this to DialogueEditorWindow.cpp or include as needed
 
 #include "DialogueEditorWindow.h"
+
+#include <set>
 #include <imgui.h>
 #include <imgui_internal.h>
 
@@ -311,7 +313,7 @@ namespace Struktur::Debug
 			// Draw choice connections (blue)
 			for (const auto& choice : node->GetChoices())
 			{
-				auto targetIt = m_nodes.find(choice.targetNode);
+				auto targetIt = m_nodes.find(choice->targetNode);
 				if (targetIt != m_nodes.end())
 				{
 					ImVec2 toPos = ImVec2(
@@ -326,7 +328,7 @@ namespace Struktur::Debug
 			// Draw target connections (yellow)
 			for (const auto& target : node->GetTargets())
 			{
-				auto targetIt = m_nodes.find(target.targetNode);
+				auto targetIt = m_nodes.find(target->targetNode);
 				if (targetIt != m_nodes.end())
 				{
 					ImVec2 toPos = ImVec2(
@@ -387,12 +389,12 @@ namespace Struktur::Debug
 
 			for (const auto& choice : node->GetChoices())
 			{
-				processTarget(choice.targetNode);
+				processTarget(choice->targetNode);
 			}
 
 			for (const auto& target : node->GetTargets())
 			{
-				processTarget(target.targetNode);
+				processTarget(target->targetNode);
 			}
 		}
 

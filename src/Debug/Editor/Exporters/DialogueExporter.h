@@ -4,10 +4,10 @@
 
 #pragma once
 
-#include "Dialogue/DialogueNode.h"
 #include <string>
 #include <map>
 #include <memory>
+#include "Engine/Dialogue/DialogueNode.h"
 
 namespace Struktur::Dialogue
 {

@@ -1,10 +1,9 @@
 #include "DialogueEditorWindow.h"
 
 #include "Engine/GameContext.h"
-#include "Dialogue/DialogueManager.h"
-#include "Dialogue/DialogueRegistry.h"
-#include "Dialogue/DialogueVariableRegistry.h"
-#include "DialogueExporter.h"
+#include "Engine/Dialogue/DialogueManager.h"
+#include "Engine/Dialogue/DialogueRegistry.h"
+#include "Debug/Editor/Exporters/DialogueExporter.h"
 #include "Debug/Editor/Windows/PreviewWindow.h"
 #include "Debug/Assertions.h"
 #include <imgui.h>
@@ -108,7 +107,7 @@ namespace Struktur::Debug
 			{
 				bool isEdit = (m_viewMode == ViewMode::Edit);
 				bool isPlayback = (m_viewMode == ViewMode::Playback);
-				
+
 				if (ImGui::MenuItem("Edit Mode", nullptr, isEdit))
 				{
 					m_viewMode = ViewMode::Edit;
@@ -141,7 +140,7 @@ namespace Struktur::Debug
 		{
 			ImGui::TextColored(ImVec4(0.3f, 0.8f, 0.3f, 1.0f), "○ Saved");
 		}
-		
+
 		ImGui::SameLine();
 		if (!m_currentFile.empty())
 		{
@@ -154,7 +153,7 @@ namespace Struktur::Debug
 
 		ImGui::SameLine();
 		ImGui::Text("| Nodes: %zu", m_nodes.size());
-		
+
 		if (!m_errors.empty())
 		{
 			ImGui::SameLine();
@@ -185,7 +184,7 @@ namespace Struktur::Debug
 		// Center view (graph or playback)
 		const float centerWidth = ImGui::GetContentRegionAvail().x - nodeEditorWidth - 10.0f;
 		ImGui::BeginChild("CenterView", ImVec2(centerWidth, 0), true);
-		
+
 		if (m_viewMode == ViewMode::Edit)
 		{
 			RenderGraphView(context);
@@ -194,7 +193,7 @@ namespace Struktur::Debug
 		{
 			RenderPlaybackView(context);
 		}
-		
+
 		ImGui::EndChild();
 
 		ImGui::SameLine();
@@ -231,7 +230,7 @@ namespace Struktur::Debug
 		{
 			static char filepathBuffer[256] = "assets/dialogue/";
 			ImGui::InputText("Filepath", filepathBuffer, sizeof(filepathBuffer));
-			
+
 			if (ImGui::Button("Load"))
 			{
 				LoadDialogueFile(context, filepathBuffer);
@@ -242,7 +241,7 @@ namespace Struktur::Debug
 			{
 				ImGui::CloseCurrentPopup();
 			}
-			
+
 			ImGui::EndPopup();
 		}
 
@@ -256,7 +255,7 @@ namespace Struktur::Debug
 			static char classNameBuffer[128] = "";
 			ImGui::InputText("Class Name", classNameBuffer, sizeof(classNameBuffer));
 			ImGui::TextWrapped("e.g., 'GregDialogue', 'MerchantDialogue'");
-			
+
 			if (ImGui::Button("Create"))
 			{
 				CreateNewDialogue(classNameBuffer);
@@ -267,7 +266,7 @@ namespace Struktur::Debug
 			{
 				ImGui::CloseCurrentPopup();
 			}
-			
+
 			ImGui::EndPopup();
 		}
 
@@ -282,7 +281,7 @@ namespace Struktur::Debug
 			if (!m_entryNodeId.empty())
 			{
 				ImGui::TextColored(ImVec4(0.3f, 0.8f, 0.3f, 1.0f), "%s", m_entryNodeId.c_str());
-				
+
 				if (ImGui::SmallButton("Go To Entry"))
 				{
 					SelectNode(m_entryNodeId);
@@ -300,18 +299,18 @@ namespace Struktur::Debug
 		if (!m_nodes.empty())
 		{
 			ImGui::Text("Nodes (%zu):", m_nodes.size());
-			
+
 			// Search filter
 			ImGui::InputText("##Search", m_searchBuffer, sizeof(m_searchBuffer));
 			ImGui::SameLine();
 			ImGui::Text("🔍");
 
 			ImGui::BeginChild("NodeList", ImVec2(0, 0), false);
-			
+
 			for (const auto& [nodeId, nodeData] : m_nodes)
 			{
 				// Filter by search
-				if (m_searchBuffer[0] != '\0' && 
+				if (m_searchBuffer[0] != '\0' &&
 					strstr(nodeId.c_str(), m_searchBuffer) == nullptr)
 				{
 					continue;
@@ -322,12 +321,12 @@ namespace Struktur::Debug
 
 				ImVec4 color = isEntry ? ImVec4(0.3f, 0.8f, 0.3f, 1.0f) : ImVec4(1.0f, 1.0f, 1.0f, 1.0f);
 				ImGui::PushStyleColor(ImGuiCol_Text, color);
-				
+
 				if (ImGui::Selectable(nodeId.c_str(), isSelected))
 				{
 					SelectNode(nodeId);
 				}
-				
+
 				ImGui::PopStyleColor();
 
 				// Context menu
@@ -349,7 +348,7 @@ namespace Struktur::Debug
 					ImGui::EndPopup();
 				}
 			}
-			
+
 			ImGui::EndChild();
 		}
 		else

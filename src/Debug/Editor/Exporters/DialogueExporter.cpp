@@ -85,7 +85,7 @@ namespace Struktur::Dialogue
 				{
 					if (!firstChoice) output << ",\n";
 					firstChoice = false;
-					output << ExportChoice(choice, 6);
+					output << ExportChoice(*choice.get(), 6);
 				}
 
 				output << "\n" << Indent(5) << "]";
@@ -103,7 +103,7 @@ namespace Struktur::Dialogue
 				{
 					if (!firstTarget) output << ",\n";
 					firstTarget = false;
-					output << ExportTarget(target, 6);
+					output << ExportTarget(*target.get(), 6);
 				}
 
 				output << "\n" << Indent(5) << "]";
@@ -135,13 +135,13 @@ namespace Struktur::Dialogue
 	std::string DialogueExporter::ExportCommand(const Command& command, int indent)
 	{
 		std::ostringstream output;
-		output << Indent(indent) << "{\"type\": \"" << EscapeString(command.GetType()) << "\", ";
+		output << Indent(indent) << "{\"type\": \"" << EscapeString(command.GetKey()) << "\", ";
 		output << "\"parameters\": {";
 
 		// Export parameters
 		// Note: This assumes Command has a GetParameters() method
 		// You'll need to add this to Command interface or use a different approach
-		const auto& params = command.GetParameters();
+		const auto& params = command.GetParams();
 		bool first = true;
 		for (const auto& [key, value] : params)
 		{
@@ -150,21 +150,7 @@ namespace Struktur::Dialogue
 
 			output << "\"" << EscapeString(key) << "\": ";
 
-			switch (value.type)
-			{
-				case DialogueValue::Type::STRING:
-					output << "\"" << EscapeString(value.stringValue) << "\"";
-					break;
-				case DialogueValue::Type::INT:
-					output << value.intValue;
-					break;
-				case DialogueValue::Type::BOOL:
-					output << (value.boolValue ? "true" : "false");
-					break;
-				case DialogueValue::Type::DOUBLE:
-					output << value.doubleValue;
-					break;
-			}
+			output << value.AsString();
 		}
 
 		output << "}}";
@@ -174,11 +160,11 @@ namespace Struktur::Dialogue
 	std::string DialogueExporter::ExportCondition(const Condition& condition, int indent)
 	{
 		std::ostringstream output;
-		output << Indent(indent) << "{\"type\": \"" << EscapeString(condition.GetType()) << "\", ";
+		output << Indent(indent) << "{\"type\": \"" << EscapeString(condition.GetKey()) << "\", ";
 		output << "\"parameters\": {";
 
 		// Export parameters
-		const auto& params = condition.GetParameters();
+		const auto& params = condition.GetParams();
 		bool first = true;
 		for (const auto& [key, value] : params)
 		{
@@ -187,21 +173,7 @@ namespace Struktur::Dialogue
 
 			output << "\"" << EscapeString(key) << "\": ";
 
-			switch (value.type)
-			{
-				case DialogueValue::Type::STRING:
-					output << "\"" << EscapeString(value.stringValue) << "\"";
-					break;
-				case DialogueValue::Type::INT:
-					output << value.intValue;
-					break;
-				case DialogueValue::Type::BOOL:
-					output << (value.boolValue ? "true" : "false");
-					break;
-				case DialogueValue::Type::DOUBLE:
-					output << value.doubleValue;
-					break;
-			}
+			output << value.AsString();
 		}
 
 		output << "}}";

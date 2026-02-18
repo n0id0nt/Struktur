@@ -5,8 +5,8 @@
 #pragma once
 
 #include "Debug/Editor/Windows/EditorWindow.h"
-#include "Dialogue/DialogueNode.h"
-#include "Dialogue/DialogueResult.h"
+#include "Engine/Dialogue/DialogueNode.h"
+#include "Engine/Dialogue/DialogueResult.h"
 #include "glm/glm.hpp"
 #include <map>
 #include <memory>

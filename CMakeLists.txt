@@ -274,9 +274,11 @@ if(EDITOR)
     set(EDITOR_SOURCES 
         src/Debug/Editor/Editor.h                   src/Debug/Editor/Editor.cpp
         src/Debug/Editor/EditorLayoutManager.h      src/Debug/Editor/EditorLayoutManager.cpp
-        src/Debug/Editor/EditorTheme.h
         src/Debug/Editor/EditorSettings.h           src/Debug/Editor/EditorSettings.cpp
+        src/Debug/Editor/Exporters/DialogueExporter.h src/Debug/Editor/Exporters/DialogueExporter.cpp
 
+        src/Debug/Editor/EditorSettings.h           src/Debug/Editor/EditorSettings.cpp
+        
         src/Debug/Editor/Windows/EditorWindow.h     src/Debug/Editor/Windows/EditorWindow.cpp
         src/Debug/Editor/Windows/DebugInfoWindow.h  src/Debug/Editor/Windows/DebugInfoWindow.cpp
         src/Debug/Editor/Windows/GameViewPortWindow.h src/Debug/Editor/Windows/GameViewPortWindow.cpp
@@ -289,6 +291,9 @@ if(EDITOR)
         src/Debug/Editor/Windows/FileExplorerWindow.h src/Debug/Editor/Windows/FileExplorerWindow.cpp
         src/Debug/Editor/Windows/LogWindow.h        src/Debug/Editor/Windows/LogWindow.cpp
         src/Debug/Editor/Windows/ProfilerWindow.h   src/Debug/Editor/Windows/ProfilerWindow.cpp
+        src/Debug/Editor/Windows/DialogueEditorWindow.h src/Debug/Editor/Windows/DialogueEditorWindow.cpp
+                                                    src/Debug/Editor/Windows/DialogueEditorWindow_GraphView.cpp
+                                                    src/Debug/Editor/Windows/DialogueEditorWindow_Operations.cpp
 
         src/Debug/Editor/PreviewRenderers/PreviewRenderer.h
         src/Debug/Editor/PreviewRenderers/TexturePreviewRenderer.h src/Debug/Editor/PreviewRenderers/TexturePreviewRenderer.cpp
