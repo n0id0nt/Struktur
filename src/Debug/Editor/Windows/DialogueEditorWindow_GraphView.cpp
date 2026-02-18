@@ -14,11 +14,38 @@ namespace Struktur::Debug
 	{
 		ImGui::Text("Dialogue Graph");
 		ImGui::SameLine();
-		ImGui::TextColored(ImVec4(0.6f, 0.6f, 0.6f, 1.0f), "(Pan: Middle Mouse, Zoom: Scroll)");
+		ImGui::TextColored(ImVec4(0.6f, 0.6f, 0.6f, 1.0f), "(Pan: Middle Mouse, Zoom: Scroll, Right-Click: Add Node, Drag: Move Nodes)");
 
 		if (m_nodes.empty())
 		{
 			ImGui::TextWrapped("No nodes to display. Create or load a dialogue to see the graph.");
+			
+			// Allow creating first node even when empty
+			if (ImGui::Button("Create Entry Node"))
+			{
+				ImGui::OpenPopup("CreateFirstNode");
+			}
+			
+			if (ImGui::BeginPopup("CreateFirstNode"))
+			{
+				static char firstNodeId[128] = "entry";
+				ImGui::InputText("Node ID", firstNodeId, sizeof(firstNodeId));
+				
+				if (ImGui::Button("Create"))
+				{
+					AddNode(firstNodeId);
+					m_entryNodeId = firstNodeId;
+					ImGui::CloseCurrentPopup();
+				}
+				ImGui::SameLine();
+				if (ImGui::Button("Cancel"))
+				{
+					ImGui::CloseCurrentPopup();
+				}
+				
+				ImGui::EndPopup();
+			}
+			
 			return;
 		}
 
@@ -26,10 +53,14 @@ namespace Struktur::Debug
 		ImVec2 canvasPos = ImGui::GetCursorScreenPos();
 		ImVec2 canvasSize = ImGui::GetContentRegionAvail();
 
+		// Create invisible button for the entire canvas to capture input
+		ImGui::InvisibleButton("canvas", canvasSize, ImGuiButtonFlags_MouseButtonLeft | ImGuiButtonFlags_MouseButtonRight | ImGuiButtonFlags_MouseButtonMiddle);
+		bool isCanvasHovered = ImGui::IsItemHovered();
+
 		// Handle pan and zoom
-		if (ImGui::IsWindowHovered())
+		if (isCanvasHovered)
 		{
-			// Pan with middle mouse button
+			// Pan with middle mouse button (only if not dragging a node)
 			if (ImGui::IsMouseDragging(ImGuiMouseButton_Middle))
 			{
 				ImVec2 delta = ImGui::GetIO().MouseDelta;
@@ -44,6 +75,52 @@ namespace Struktur::Debug
 				m_graphZoom += wheel * 0.1f;
 				m_graphZoom = glm::clamp(m_graphZoom, 0.25f, 2.0f);
 			}
+
+			// Right-click context menu for adding nodes
+			if (ImGui::IsMouseClicked(ImGuiMouseButton_Right))
+			{
+				ImGui::OpenPopup("GraphContextMenu");
+			}
+		}
+
+		// Context menu for graph
+		if (ImGui::BeginPopup("GraphContextMenu"))
+		{
+			ImGui::Text("Add New Node");
+			ImGui::Separator();
+			
+			static char newNodeIdBuffer[128] = "";
+			ImGui::InputText("Node ID", newNodeIdBuffer, sizeof(newNodeIdBuffer));
+			
+			if (ImGui::Button("Create Node"))
+			{
+				if (newNodeIdBuffer[0] != '\0')
+				{
+					// Get mouse position in graph space
+					ImVec2 mousePos = ImGui::GetMousePosOnOpeningCurrentPopup();
+					float graphX = (mousePos.x - canvasPos.x - m_graphPanOffset.x) / m_graphZoom;
+					float graphY = (mousePos.y - canvasPos.y - m_graphPanOffset.y) / m_graphZoom;
+					
+					AddNode(newNodeIdBuffer);
+					
+					// Set position to where user clicked
+					auto it = m_nodes.find(newNodeIdBuffer);
+					if (it != m_nodes.end())
+					{
+						it->second.visualPosition = glm::vec2(graphX, graphY);
+					}
+					
+					newNodeIdBuffer[0] = '\0';
+					ImGui::CloseCurrentPopup();
+				}
+			}
+			ImGui::SameLine();
+			if (ImGui::Button("Cancel"))
+			{
+				ImGui::CloseCurrentPopup();
+			}
+			
+			ImGui::EndPopup();
 		}
 
 		// Draw grid
@@ -71,6 +148,11 @@ namespace Struktur::Debug
 		// Render connections first (behind nodes)
 		RenderNodeConnections(context);
 
+		// Track which node is being dragged
+		static std::string draggedNodeId = "";
+		static glm::vec2 dragStartPos(0.0f, 0.0f);
+		static glm::vec2 nodeStartPos(0.0f, 0.0f);
+
 		// Render nodes
 		for (const auto& [nodeId, nodeData] : m_nodes)
 		{
@@ -82,8 +164,8 @@ namespace Struktur::Debug
 			RenderNode(context, nodeId, screenPos);
 		}
 
-		// Handle node selection on click
-		if (ImGui::IsMouseClicked(ImGuiMouseButton_Left) && ImGui::IsWindowHovered())
+		// Handle node dragging
+		if (ImGui::IsMouseClicked(ImGuiMouseButton_Left) && isCanvasHovered)
 		{
 			ImVec2 mousePos = ImGui::GetMousePos();
 			
@@ -104,6 +186,12 @@ namespace Struktur::Debug
 				{
 					SelectNode(nodeId);
 					clickedNode = true;
+					
+					// Start dragging this node
+					draggedNodeId = nodeId;
+					dragStartPos = glm::vec2(mousePos.x, mousePos.y);
+					nodeStartPos = nodeData.visualPosition;
+					
 					break;
 				}
 			}
@@ -111,7 +199,29 @@ namespace Struktur::Debug
 			if (!clickedNode)
 			{
 				m_selectedNodeId = "";
+				draggedNodeId = "";
 			}
+		}
+
+		// Update dragged node position
+		if (!draggedNodeId.empty() && ImGui::IsMouseDragging(ImGuiMouseButton_Left))
+		{
+			ImVec2 mousePos = ImGui::GetMousePos();
+			glm::vec2 currentMousePos(mousePos.x, mousePos.y);
+			glm::vec2 delta = (currentMousePos - dragStartPos) / m_graphZoom;
+			
+			auto it = m_nodes.find(draggedNodeId);
+			if (it != m_nodes.end())
+			{
+				it->second.visualPosition = nodeStartPos + delta;
+				m_hasUnsavedChanges = true;
+			}
+		}
+
+		// Stop dragging
+		if (ImGui::IsMouseReleased(ImGuiMouseButton_Left))
+		{
+			draggedNodeId = "";
 		}
 	}
 
@@ -260,6 +370,46 @@ namespace Struktur::Debug
 				cmdText.c_str()
 			);
 		}
+
+		// Invisible button for interaction
+		ImGui::SetCursorScreenPos(position);
+		ImGui::PushID(nodeId.c_str());
+		ImGui::InvisibleButton("node", ImVec2(nodeWidth, nodeHeight));
+		
+		// Right-click context menu
+		if (ImGui::BeginPopupContextItem())
+		{
+			ImGui::Text("Node: %s", nodeId.c_str());
+			ImGui::Separator();
+			
+			if (ImGui::MenuItem("Set as Entry Node"))
+			{
+				m_entryNodeId = nodeId;
+				m_hasUnsavedChanges = true;
+			}
+			
+			ImGui::Separator();
+			
+			if (ImGui::MenuItem("Duplicate"))
+			{
+				DuplicateNode(nodeId);
+			}
+			
+			if (ImGui::MenuItem("Delete", nullptr, false, nodeId != m_entryNodeId))
+			{
+				DeleteNode(nodeId);
+			}
+			
+			ImGui::EndPopup();
+		}
+		
+		// Double-click to focus in editor
+		if (ImGui::IsItemHovered() && ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left))
+		{
+			SelectNode(nodeId);
+		}
+		
+		ImGui::PopID();
 	}
 
 	void DialogueEditorWindow::RenderNodeConnections(GameContext& context)
