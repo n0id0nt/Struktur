@@ -19,18 +19,18 @@ namespace Struktur::Debug
 		if (m_nodes.empty())
 		{
 			ImGui::TextWrapped("No nodes to display. Create or load a dialogue to see the graph.");
-			
+
 			// Allow creating first node even when empty
 			if (ImGui::Button("Create Entry Node"))
 			{
 				ImGui::OpenPopup("CreateFirstNode");
 			}
-			
+
 			if (ImGui::BeginPopup("CreateFirstNode"))
 			{
 				static char firstNodeId[128] = "entry";
 				ImGui::InputText("Node ID", firstNodeId, sizeof(firstNodeId));
-				
+
 				if (ImGui::Button("Create"))
 				{
 					AddNode(firstNodeId);
@@ -42,10 +42,10 @@ namespace Struktur::Debug
 				{
 					ImGui::CloseCurrentPopup();
 				}
-				
+
 				ImGui::EndPopup();
 			}
-			
+
 			return;
 		}
 
@@ -88,10 +88,10 @@ namespace Struktur::Debug
 		{
 			ImGui::Text("Add New Node");
 			ImGui::Separator();
-			
+
 			static char newNodeIdBuffer[128] = "";
 			ImGui::InputText("Node ID", newNodeIdBuffer, sizeof(newNodeIdBuffer));
-			
+
 			if (ImGui::Button("Create Node"))
 			{
 				if (newNodeIdBuffer[0] != '\0')
@@ -100,16 +100,16 @@ namespace Struktur::Debug
 					ImVec2 mousePos = ImGui::GetMousePosOnOpeningCurrentPopup();
 					float graphX = (mousePos.x - canvasPos.x - m_graphPanOffset.x) / m_graphZoom;
 					float graphY = (mousePos.y - canvasPos.y - m_graphPanOffset.y) / m_graphZoom;
-					
+
 					AddNode(newNodeIdBuffer);
-					
+
 					// Set position to where user clicked
 					auto it = m_nodes.find(newNodeIdBuffer);
 					if (it != m_nodes.end())
 					{
 						it->second.visualPosition = glm::vec2(graphX, graphY);
 					}
-					
+
 					newNodeIdBuffer[0] = '\0';
 					ImGui::CloseCurrentPopup();
 				}
@@ -119,14 +119,14 @@ namespace Struktur::Debug
 			{
 				ImGui::CloseCurrentPopup();
 			}
-			
+
 			ImGui::EndPopup();
 		}
 
 		// Draw grid
 		const float gridStep = 64.0f * m_graphZoom;
 		ImU32 gridColor = IM_COL32(50, 50, 50, 255);
-		
+
 		for (float x = fmodf(m_graphPanOffset.x, gridStep); x < canvasSize.x; x += gridStep)
 		{
 			drawList->AddLine(
@@ -135,7 +135,7 @@ namespace Struktur::Debug
 				gridColor
 			);
 		}
-		
+
 		for (float y = fmodf(m_graphPanOffset.y, gridStep); y < canvasSize.y; y += gridStep)
 		{
 			drawList->AddLine(
@@ -168,7 +168,7 @@ namespace Struktur::Debug
 		if (ImGui::IsMouseClicked(ImGuiMouseButton_Left) && isCanvasHovered)
 		{
 			ImVec2 mousePos = ImGui::GetMousePos();
-			
+
 			// Check if clicked on a node
 			bool clickedNode = false;
 			for (const auto& [nodeId, nodeData] : m_nodes)
@@ -186,12 +186,12 @@ namespace Struktur::Debug
 				{
 					SelectNode(nodeId);
 					clickedNode = true;
-					
+
 					// Start dragging this node
 					draggedNodeId = nodeId;
 					dragStartPos = glm::vec2(mousePos.x, mousePos.y);
 					nodeStartPos = nodeData.visualPosition;
-					
+
 					break;
 				}
 			}
@@ -209,7 +209,7 @@ namespace Struktur::Debug
 			ImVec2 mousePos = ImGui::GetMousePos();
 			glm::vec2 currentMousePos(mousePos.x, mousePos.y);
 			glm::vec2 delta = (currentMousePos - dragStartPos) / m_graphZoom;
-			
+
 			auto it = m_nodes.find(draggedNodeId);
 			if (it != m_nodes.end())
 			{
@@ -323,7 +323,7 @@ namespace Struktur::Debug
 			{
 				textPreview = textPreview.substr(0, 27) + "...";
 			}
-			
+
 			drawList->AddText(
 				ImGui::GetFont(),
 				fontSize * 0.75f,
@@ -335,7 +335,7 @@ namespace Struktur::Debug
 
 		// Draw node info at bottom
 		textPos.y = position.y + nodeHeight - fontSize - 5;
-		
+
 		if (node->HasNext())
 		{
 			drawList->AddText(
@@ -371,44 +371,258 @@ namespace Struktur::Debug
 			);
 		}
 
+		// ========================================================================
+		// CONTINUATION DETAILS BOX (below main node)
+		// ========================================================================
+		const float detailsYOffset = 5.0f * m_graphZoom;
+		ImVec2 detailsPos = ImVec2(position.x, position.y + nodeHeight + detailsYOffset);
+		const float detailsWidth = nodeWidth;
+		const float detailsFontSize = fontSize * 0.7f;
+		const float lineHeight = detailsFontSize + 2.0f;
+
+		// Next Node Details
+		if (node->HasNext())
+		{
+			const std::string& nextId = node->GetNext().value();
+			float boxHeight = lineHeight + 10.0f;
+
+			// Background
+			drawList->AddRectFilled(
+				detailsPos,
+				ImVec2(detailsPos.x + detailsWidth, detailsPos.y + boxHeight),
+				IM_COL32(40, 60, 40, 220),  // Dark green
+				3.0f
+			);
+
+			// Border
+			drawList->AddRect(
+				detailsPos,
+				ImVec2(detailsPos.x + detailsWidth, detailsPos.y + boxHeight),
+				IM_COL32(100, 255, 100, 200),
+				3.0f,
+				0,
+				1.5f
+			);
+
+			// Text
+			ImVec2 textPos = ImVec2(detailsPos.x + 5, detailsPos.y + 5);
+			std::string nextText = "→ " + nextId;
+			drawList->AddText(
+				ImGui::GetFont(),
+				detailsFontSize,
+				textPos,
+				IM_COL32(150, 255, 150, 255),
+				nextText.c_str()
+			);
+		}
+		// Choices Details
+		else if (!node->GetChoices().empty())
+		{
+			const auto& choices = node->GetChoices();
+			float boxHeight = (choices.size() * lineHeight) + 10.0f;
+
+			// Background
+			drawList->AddRectFilled(
+				detailsPos,
+				ImVec2(detailsPos.x + detailsWidth, detailsPos.y + boxHeight),
+				IM_COL32(40, 50, 80, 220),  // Dark blue
+				3.0f
+			);
+
+			// Border
+			drawList->AddRect(
+				detailsPos,
+				ImVec2(detailsPos.x + detailsWidth, detailsPos.y + boxHeight),
+				IM_COL32(100, 150, 255, 200),
+				3.0f,
+				0,
+				1.5f
+			);
+
+			// List choices
+			for (size_t i = 0; i < choices.size(); ++i)
+			{
+				ImVec2 choicePos = ImVec2(
+					detailsPos.x + 5,
+					detailsPos.y + 5 + (i * lineHeight)
+				);
+
+				std::string choiceText = "• " + choices[i]->text;
+				if (choiceText.length() > 25)
+				{
+					choiceText = choiceText.substr(0, 22) + "...";
+				}
+				choiceText += " → " + choices[i]->targetNode;
+
+				// Truncate target if combined text is too long
+				if (choiceText.length() > 35)
+				{
+					choiceText = choiceText.substr(0, 32) + "...";
+				}
+
+				drawList->AddText(
+					ImGui::GetFont(),
+					detailsFontSize,
+					choicePos,
+					IM_COL32(180, 200, 255, 255),
+					choiceText.c_str()
+				);
+			}
+		}
+		// Conditional Targets Details
+		else if (!node->GetTargets().empty())
+		{
+			const auto& targets = node->GetTargets();
+
+			// Calculate height (target + conditions)
+			int totalLines = 0;
+			for (const auto& target : targets)
+			{
+				totalLines += 1;  // Target line
+				totalLines += static_cast<int>(target->conditions.size());  // Condition lines
+			}
+			float boxHeight = (totalLines * lineHeight) + 10.0f;
+
+			// Background
+			drawList->AddRectFilled(
+				detailsPos,
+				ImVec2(detailsPos.x + detailsWidth, detailsPos.y + boxHeight),
+				IM_COL32(80, 60, 40, 220),  // Dark yellow/orange
+				3.0f
+			);
+
+			// Border
+			drawList->AddRect(
+				detailsPos,
+				ImVec2(detailsPos.x + detailsWidth, detailsPos.y + boxHeight),
+				IM_COL32(255, 200, 100, 200),
+				3.0f,
+				0,
+				1.5f
+			);
+
+			// List targets and conditions
+			int lineNum = 0;
+			for (size_t i = 0; i < targets.size(); ++i)
+			{
+				const auto& target = targets[i];
+
+				// Target node
+				ImVec2 targetPos = ImVec2(
+					detailsPos.x + 5,
+					detailsPos.y + 5 + (lineNum * lineHeight)
+				);
+
+				std::string targetText = "→ " + target->targetNode;
+				if (targetText.length() > 30)
+				{
+					targetText = targetText.substr(0, 27) + "...";
+				}
+
+				drawList->AddText(
+					ImGui::GetFont(),
+					detailsFontSize,
+					targetPos,
+					IM_COL32(255, 220, 150, 255),
+					targetText.c_str()
+				);
+				lineNum++;
+
+				// Conditions (indented)
+				for (const auto& condition : target->conditions)
+				{
+					ImVec2 condPos = ImVec2(
+						detailsPos.x + 15,  // Indent
+						detailsPos.y + 5 + (lineNum * lineHeight)
+					);
+
+					// Format condition: "type: param=value"
+					std::string condText = "  ⟡ " + condition->GetKey();
+
+					// Add key parameters
+					const auto& params = condition->GetParams();
+					if (params.count("flag"))
+					{
+						condText += ": " + params.at("flag").AsString();
+
+						if (params.count("op"))
+						{
+							condText += " " + params.at("op").AsString();
+						}
+
+						if (params.count("value"))
+						{
+							condText += " " + params.at("value").AsString();
+						}
+					}
+					else if (params.count("item"))
+					{
+						condText += ": " + params.at("item").AsString();
+					}
+					else if (params.count("level"))
+					{
+						condText += ": lvl " + params.at("level").AsString();
+					}
+
+					// Truncate if too long
+					if (condText.length() > 32)
+					{
+						condText = condText.substr(0, 29) + "...";
+					}
+
+					drawList->AddText(
+						ImGui::GetFont(),
+						detailsFontSize,
+						condPos,
+						IM_COL32(200, 180, 120, 255),
+						condText.c_str()
+					);
+					lineNum++;
+				}
+			}
+		}
+		// ========================================================================
+		// END CONTINUATION DETAILS
+		// ========================================================================
+
 		// Invisible button for interaction
 		ImGui::SetCursorScreenPos(position);
 		ImGui::PushID(nodeId.c_str());
 		ImGui::InvisibleButton("node", ImVec2(nodeWidth, nodeHeight));
-		
+
 		// Right-click context menu
 		if (ImGui::BeginPopupContextItem())
 		{
 			ImGui::Text("Node: %s", nodeId.c_str());
 			ImGui::Separator();
-			
+
 			if (ImGui::MenuItem("Set as Entry Node"))
 			{
 				m_entryNodeId = nodeId;
 				m_hasUnsavedChanges = true;
 			}
-			
+
 			ImGui::Separator();
-			
+
 			if (ImGui::MenuItem("Duplicate"))
 			{
 				DuplicateNode(nodeId);
 			}
-			
+
 			if (ImGui::MenuItem("Delete", nullptr, false, nodeId != m_entryNodeId))
 			{
 				DeleteNode(nodeId);
 			}
-			
+
 			ImGui::EndPopup();
 		}
-		
+
 		// Double-click to focus in editor
 		if (ImGui::IsItemHovered() && ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left))
 		{
 			SelectNode(nodeId);
 		}
-		
+
 		ImGui::PopID();
 	}
 
@@ -423,7 +637,7 @@ namespace Struktur::Debug
 		for (const auto& [nodeId, nodeData] : m_nodes)
 		{
 			const Dialogue::DialogueNode* node = nodeData.node.get();
-			
+
 			ImVec2 fromPos = ImVec2(
 				canvasPos.x + (nodeData.visualPosition.x * m_graphZoom) + m_graphPanOffset.x + nodeWidth / 2,
 				canvasPos.y + (nodeData.visualPosition.y * m_graphZoom) + m_graphPanOffset.y + nodeHeight
@@ -441,7 +655,7 @@ namespace Struktur::Debug
 					);
 
 					drawList->AddLine(fromPos, toPos, IM_COL32(100, 255, 100, 255), 2.0f * m_graphZoom);
-					
+
 					// Draw arrow
 					ImVec2 dir = ImVec2(toPos.x - fromPos.x, toPos.y - fromPos.y);
 					float len = sqrtf(dir.x * dir.x + dir.y * dir.y);
@@ -449,12 +663,12 @@ namespace Struktur::Debug
 					{
 						dir.x /= len;
 						dir.y /= len;
-						
+
 						float arrowSize = 10.0f * m_graphZoom;
 						ImVec2 arrowTip = ImVec2(toPos.x - dir.x * arrowSize, toPos.y - dir.y * arrowSize);
 						ImVec2 arrowLeft = ImVec2(arrowTip.x - dir.y * arrowSize * 0.5f, arrowTip.y + dir.x * arrowSize * 0.5f);
 						ImVec2 arrowRight = ImVec2(arrowTip.x + dir.y * arrowSize * 0.5f, arrowTip.y - dir.x * arrowSize * 0.5f);
-						
+
 						drawList->AddTriangleFilled(toPos, arrowLeft, arrowRight, IM_COL32(100, 255, 100, 255));
 					}
 				}
@@ -504,7 +718,7 @@ namespace Struktur::Debug
 		// BFS to assign levels
 		std::vector<std::string> queue;
 		std::set<std::string> visited;
-		
+
 		queue.push_back(m_entryNodeId);
 		levels[m_entryNodeId] = 0;
 		visited.insert(m_entryNodeId);
@@ -523,14 +737,14 @@ namespace Struktur::Debug
 
 			// Process connections
 			auto processTarget = [&](const std::string& targetId)
-			{
-				if (visited.find(targetId) == visited.end())
 				{
-					levels[targetId] = currentLevel + 1;
-					visited.insert(targetId);
-					queue.push_back(targetId);
-				}
-			};
+					if (visited.find(targetId) == visited.end())
+					{
+						levels[targetId] = currentLevel + 1;
+						visited.insert(targetId);
+						queue.push_back(targetId);
+					}
+				};
 
 			if (node->HasNext())
 			{

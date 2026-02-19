@@ -65,14 +65,6 @@ void Struktur::Debug::EditorLayoutManager::CreateDefaultLayout()
     
     // Split right panel (30% - Inspector + Preview stacked)
     defaultLayout.splits.push_back({
-        "Profiler",
-        ImGuiDir_None,
-        0.0f,
-        "Inspector"
-    });
-    
-    // Split right panel (30% - Inspector + Preview stacked)
-    defaultLayout.splits.push_back({
         "Dialogue Editor",
         ImGuiDir_None,
         0.0f,
@@ -97,6 +89,14 @@ void Struktur::Debug::EditorLayoutManager::CreateDefaultLayout()
     // Doc console with file explore
     defaultLayout.splits.push_back({
         "Console",
+        ImGuiDir_None,
+        0.0f,
+        "File Explorer"
+    });
+
+    // Split right panel (30% - Inspector + Preview stacked)
+    defaultLayout.splits.push_back({
+        "Profiler",
         ImGuiDir_None,
         0.0f,
         "File Explorer"

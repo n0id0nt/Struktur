@@ -20,7 +20,7 @@ namespace Struktur::Debug
 		{
 			ImGui::TextWrapped("Select a node from the graph or file panel to edit its properties.");
 			ImGui::Separator();
-			ImGui::TextColored(ImVec4(0.6f, 0.6f, 0.6f, 1.0f), 
+			ImGui::TextColored(ImVec4(0.6f, 0.6f, 0.6f, 1.0f),
 				"💡 Tip: Click a node in the graph view or select from the file panel");
 			return;
 		}
@@ -52,26 +52,55 @@ namespace Struktur::Debug
 
 		ImGui::Separator();
 
-		// Choices
-		if (ImGui::CollapsingHeader("Choices", ImGuiTreeNodeFlags_DefaultOpen))
+		// Only show the active continuation section based on what the node has
+		bool hasNext = node->GetNext().has_value();
+		bool hasChoices = !node->GetChoices().empty();
+		bool hasTargets = !node->GetTargets().empty();
+
+		// Next Node Section
+		if (hasNext)
 		{
-			RenderNodeChoices(context, node);
+			if (ImGui::CollapsingHeader("Next Node", ImGuiTreeNodeFlags_DefaultOpen))
+			{
+				std::string currentNext = node->GetNext().value();
+				if (NodeSelector("Next Node", currentNext))
+				{
+					node->SetNext(currentNext);
+					m_hasUnsavedChanges = true;
+				}
+
+				ImGui::TextColored(ImVec4(0.7f, 0.7f, 0.7f, 1.0f),
+					"Dialogue will automatically advance to this node");
+			}
+		}
+		// Choices Section
+		else if (hasChoices)
+		{
+			if (ImGui::CollapsingHeader("Player Choices", ImGuiTreeNodeFlags_DefaultOpen))
+			{
+				RenderNodeChoices(context, node);
+			}
+		}
+		// Conditional Targets Section
+		else if (hasTargets)
+		{
+			if (ImGui::CollapsingHeader("Conditional Targets", ImGuiTreeNodeFlags_DefaultOpen))
+			{
+				RenderNodeTargets(context, node);
+			}
+		}
+		// No continuation
+		else
+		{
+			ImGui::TextColored(ImVec4(1.0f, 0.7f, 0.3f, 1.0f), "⚠️ This node has no continuation (dialogue will end here)");
 		}
 
 		ImGui::Separator();
 
-		// Commands
+		// Commands (always available)
 		if (ImGui::CollapsingHeader("Commands"))
 		{
 			RenderNodeCommands(context, node);
-		}
-
-		ImGui::Separator();
-
-		// Conditional Targets
-		if (ImGui::CollapsingHeader("Conditional Targets"))
-		{
-			RenderNodeTargets(context, node);
 		}
 	}
 
@@ -84,7 +113,7 @@ namespace Struktur::Debug
 		ImGui::Text("Basic Properties");
 		ImGui::Separator();
 
-		// Node ID (read-only, shown for reference)
+		// Node ID (read-only)
 		char nodeIdBuffer[128];
 		strncpy_s(nodeIdBuffer, m_selectedNodeId.c_str(), sizeof(nodeIdBuffer) - 1);
 		ImGui::InputText("Node ID", nodeIdBuffer, sizeof(nodeIdBuffer), ImGuiInputTextFlags_ReadOnly);
@@ -110,13 +139,12 @@ namespace Struktur::Debug
 			}
 			else
 			{
-				// Clear speaker - would need DialogueNode::ClearSpeaker() method
 				node->SetSpeaker("");
 			}
 			m_hasUnsavedChanges = true;
 		}
 
-		// Text with variable insertion
+		// Text
 		static char textBuffer[2048];
 		if (node->GetText().has_value())
 		{
@@ -168,20 +196,68 @@ namespace Struktur::Debug
 			ImGui::EndPopup();
 		}
 
-		// Next node
-		std::string currentNext = node->GetNext().has_value() ? node->GetNext().value() : "";
-		if (NodeSelector("Next Node", currentNext))
+		ImGui::Separator();
+
+		// Continuation Type Selector - Actually switches types!
+		ImGui::Text("Continuation Type:");
+
+		// Determine current type
+		enum class ContinuationType { None, Next, Choices, Targets };
+		ContinuationType currentType = ContinuationType::None;
+
+		if (node->GetNext().has_value())
+			currentType = ContinuationType::Next;
+		else if (!node->GetChoices().empty())
+			currentType = ContinuationType::Choices;
+		else if (!node->GetTargets().empty())
+			currentType = ContinuationType::Targets;
+
+		int continuationTypeIndex = static_cast<int>(currentType);
+		const char* continuationTypes[] = { "None (End)", "Next Node", "Player Choices", "Conditional Targets" };
+
+		if (ImGui::Combo("##ContinuationType", &continuationTypeIndex, continuationTypes, IM_ARRAYSIZE(continuationTypes)))
 		{
-			if (currentNext.empty())
+			// User changed type - actually create the new type!
+			ContinuationType newType = static_cast<ContinuationType>(continuationTypeIndex);
+
+			if (newType != currentType)
 			{
-				// Clear next - would need DialogueNode::ClearNext() method
+				switch (newType)
+				{
+				case ContinuationType::None:
+					// Just clear everything - node becomes an end node
+					// Note: Existing data stays but won't be used
+					break;
+
+				case ContinuationType::Next:
+					// Set an empty next node that user must fill in
+					node->SetNext("");
+					break;
+
+				case ContinuationType::Choices:
+					// Add a default choice
+				{
+					auto newChoice = std::make_unique<Dialogue::Choice>("New choice", "");
+					node->AddChoice(std::move(newChoice));
+				}
+				break;
+
+				case ContinuationType::Targets:
+					// Add a default target
+				{
+					auto newTarget = std::make_unique<Dialogue::ConditionalTarget>();
+					newTarget->targetNode = "";
+					node->AddTarget(std::move(newTarget));
+				}
+				break;
+				}
+
+				m_hasUnsavedChanges = true;
 			}
-			else
-			{
-				node->SetNext(currentNext);
-			}
-			m_hasUnsavedChanges = true;
 		}
+
+		ImGui::TextColored(ImVec4(0.7f, 0.7f, 0.7f, 1.0f),
+			"💡 Choose how this dialogue node continues");
 	}
 
 	// ============================================================================
@@ -190,7 +266,7 @@ namespace Struktur::Debug
 
 	void DialogueEditorWindow::RenderNodeChoices(GameContext& context, Dialogue::DialogueNode* node)
 	{
-		const auto& choices = node->GetChoices();
+		auto& choices = node->GetChoices();
 
 		if (choices.empty())
 		{
@@ -202,9 +278,15 @@ namespace Struktur::Debug
 		{
 			ImGui::PushID(static_cast<int>(i));
 
-			// Choice header
+			// Choice header with number
+			std::string headerLabel = "Choice " + std::to_string(i + 1) + ": " + choices[i]->text;
+			if (headerLabel.length() > 40)
+			{
+				headerLabel = headerLabel.substr(0, 37) + "...";
+			}
+
 			bool isOpen = ImGui::TreeNodeEx(
-				("Choice " + std::to_string(i + 1)).c_str(),
+				headerLabel.c_str(),
 				ImGuiTreeNodeFlags_DefaultOpen | ImGuiTreeNodeFlags_Framed
 			);
 
@@ -238,22 +320,26 @@ namespace Struktur::Debug
 
 			if (isOpen)
 			{
-				// Choice text
-				static char choiceTextBuffer[256];
+				// Choice text input with unique ID
+				char choiceTextBuffer[256];
 				strncpy_s(choiceTextBuffer, choices[i]->text.c_str(), sizeof(choiceTextBuffer) - 1);
 
-				if (ImGui::InputText("Text", choiceTextBuffer, sizeof(choiceTextBuffer)))
+				std::string textLabel = "Text##choice_text_" + std::to_string(i);
+				if (ImGui::InputText(textLabel.c_str(), choiceTextBuffer, sizeof(choiceTextBuffer)))
 				{
 					// TODO: Update choice text
-					// Would need DialogueNode::UpdateChoice(index, newChoice) method
+					// Would need DialogueNode::UpdateChoiceText(index, newText) method
 					m_hasUnsavedChanges = true;
 				}
 
-				// Target node
+				// Target node selector
 				std::string targetNode = choices[i]->targetNode;
-				if (NodeSelector("Target", targetNode))
+				std::string targetLabel = "Target##choice_target_" + std::to_string(i);
+
+				if (NodeSelector(targetLabel.c_str(), targetNode))
 				{
 					// TODO: Update choice target
+					// Would need DialogueNode::UpdateChoiceTarget(index, newTarget) method
 					m_hasUnsavedChanges = true;
 				}
 
@@ -267,6 +353,11 @@ namespace Struktur::Debug
 					}
 				}
 
+				// Show current values (read-only for now)
+				ImGui::Separator();
+				ImGui::TextColored(ImVec4(0.7f, 0.7f, 0.7f, 1.0f), "Current: \"%s\" -> %s",
+					choices[i]->text.c_str(), choices[i]->targetNode.c_str());
+
 				ImGui::TreePop();
 			}
 
@@ -274,12 +365,16 @@ namespace Struktur::Debug
 		}
 
 		// Add choice button
-		if (ImGui::Button("+ Add Choice"))
+		ImGui::Separator();
+		if (ImGui::Button("+ Add Choice", ImVec2(-1, 0)))
 		{
 			auto newChoice = std::make_unique<Dialogue::Choice>("New choice", "");
 			node->AddChoice(std::move(newChoice));
 			m_hasUnsavedChanges = true;
 		}
+
+		ImGui::TextColored(ImVec4(0.7f, 0.7f, 0.7f, 1.0f),
+			"💡 Player will choose one of these options");
 	}
 
 	// ============================================================================
@@ -311,7 +406,6 @@ namespace Struktur::Debug
 			if (ImGui::SmallButton("Delete"))
 			{
 				// TODO: Implement command deletion
-				// Would need DialogueNode::RemoveCommand(index) method
 				ImGui::TreePop();
 				ImGui::PopID();
 				m_hasUnsavedChanges = true;
@@ -320,17 +414,16 @@ namespace Struktur::Debug
 
 			if (isOpen)
 			{
-				// Render command parameters
 				RenderCommandParameters(context, commands[i].get());
-
 				ImGui::TreePop();
 			}
 
 			ImGui::PopID();
 		}
 
-		// Add command button
-		if (ImGui::Button("+ Add Command"))
+		// Add command button - NOW WORKING!
+		ImGui::Separator();
+		if (ImGui::Button("+ Add Command", ImVec2(-1, 0)))
 		{
 			ImGui::OpenPopup("AddCommandPopup");
 		}
@@ -340,37 +433,67 @@ namespace Struktur::Debug
 			ImGui::Text("Select Command Type:");
 			ImGui::Separator();
 
-			// Common command types
+			// Create commands with default parameters
 			if (ImGui::Selectable("setInt - Set integer flag"))
 			{
-				// TODO: Create and add command
-				// Would need to create WrenCommand with empty parameters
+				std::unordered_map<std::string, Dialogue::DialogueValue> params;
+				params["flag"] = Dialogue::DialogueValue("flag_name");
+				params["value"] = Dialogue::DialogueValue(0);
+
+				node->AddCommand(std::make_unique<Dialogue::Command>(std::string("setInt"), params));
 				m_hasUnsavedChanges = true;
+				ImGui::CloseCurrentPopup();
 			}
 
 			if (ImGui::Selectable("setBool - Set boolean flag"))
 			{
+				std::unordered_map<std::string, Dialogue::DialogueValue> params;
+				params["flag"] = Dialogue::DialogueValue("flag_name");
+				params["value"] = Dialogue::DialogueValue(false);
+
+				node->AddCommand(std::make_unique<Dialogue::Command>("setBool", params));
 				m_hasUnsavedChanges = true;
+				ImGui::CloseCurrentPopup();
 			}
 
 			if (ImGui::Selectable("giveItem - Give item to inventory"))
 			{
+				std::unordered_map<std::string, Dialogue::DialogueValue> params;
+				params["item"] = Dialogue::DialogueValue("item_name");
+
+				node->AddCommand(std::make_unique<Dialogue::Command>("giveItem", params));
 				m_hasUnsavedChanges = true;
+				ImGui::CloseCurrentPopup();
 			}
 
-			if (ImGui::Selectable("removeItem - Remove item from inventory"))
+			if (ImGui::Selectable("removeItem - Remove item"))
 			{
+				std::unordered_map<std::string, Dialogue::DialogueValue> params;
+				params["item"] = Dialogue::DialogueValue("item_name");
+
+				node->AddCommand(std::make_unique<Dialogue::Command>("removeItem", params));
 				m_hasUnsavedChanges = true;
+				ImGui::CloseCurrentPopup();
 			}
 
 			if (ImGui::Selectable("giveExp - Give experience"))
 			{
+				std::unordered_map<std::string, Dialogue::DialogueValue> params;
+				params["amount"] = Dialogue::DialogueValue(100);
+
+				node->AddCommand(std::make_unique<Dialogue::Command>("giveExp", params));
 				m_hasUnsavedChanges = true;
+				ImGui::CloseCurrentPopup();
 			}
 
 			if (ImGui::Selectable("playSound - Play sound effect"))
 			{
+				std::unordered_map<std::string, Dialogue::DialogueValue> params;
+				params["sound"] = Dialogue::DialogueValue("sound_name");
+
+				node->AddCommand(std::make_unique<Dialogue::Command>("playSound", params));
 				m_hasUnsavedChanges = true;
+				ImGui::CloseCurrentPopup();
 			}
 
 			ImGui::EndPopup();
@@ -474,7 +597,7 @@ namespace Struktur::Debug
 		else
 		{
 			// Generic parameter display for unknown command types
-			ImGui::TextColored(ImVec4(0.7f, 0.7f, 0.7f, 1.0f), 
+			ImGui::TextColored(ImVec4(0.7f, 0.7f, 0.7f, 1.0f),
 				"Custom command - parameters not editable in UI");
 		}
 
@@ -487,7 +610,7 @@ namespace Struktur::Debug
 
 	void DialogueEditorWindow::RenderNodeTargets(GameContext& context, Dialogue::DialogueNode* node)
 	{
-		const auto& targets = node->GetTargets();
+		auto& targets = node->GetTargets();
 
 		if (targets.empty())
 		{
@@ -500,8 +623,9 @@ namespace Struktur::Debug
 		{
 			ImGui::PushID(static_cast<int>(i));
 
+			std::string headerLabel = "Target " + std::to_string(i + 1) + ": " + targets[i]->targetNode;
 			bool isOpen = ImGui::TreeNodeEx(
-				("Target " + std::to_string(i + 1)).c_str(),
+				headerLabel.c_str(),
 				ImGuiTreeNodeFlags_DefaultOpen | ImGuiTreeNodeFlags_Framed
 			);
 
@@ -510,6 +634,7 @@ namespace Struktur::Debug
 			if (ImGui::SmallButton("Delete"))
 			{
 				// TODO: Implement target deletion
+				// Would need DialogueNode::RemoveTarget(index) method
 				ImGui::TreePop();
 				ImGui::PopID();
 				m_hasUnsavedChanges = true;
@@ -520,9 +645,12 @@ namespace Struktur::Debug
 			{
 				// Target node selector
 				std::string targetNode = targets[i]->targetNode;
-				if (NodeSelector("Target Node", targetNode))
+				std::string targetLabel = "Target Node##target_" + std::to_string(i);
+
+				if (NodeSelector(targetLabel.c_str(), targetNode))
 				{
 					// TODO: Update target node
+					// Would need DialogueNode::UpdateTargetNode(index, newNode) method
 					m_hasUnsavedChanges = true;
 				}
 
@@ -534,7 +662,7 @@ namespace Struktur::Debug
 
 				if (conditions.empty())
 				{
-					ImGui::TextColored(ImVec4(1.0f, 0.7f, 0.3f, 1.0f), 
+					ImGui::TextColored(ImVec4(1.0f, 0.7f, 0.3f, 1.0f),
 						"⚠️ No conditions - this target will always match");
 				}
 
@@ -549,6 +677,7 @@ namespace Struktur::Debug
 					if (ImGui::SmallButton("Delete"))
 					{
 						// TODO: Implement condition deletion
+						// Would need DialogueNode::RemoveTargetCondition(targetIndex, conditionIndex) method
 						ImGui::PopID();
 						m_hasUnsavedChanges = true;
 						break;
@@ -575,17 +704,23 @@ namespace Struktur::Debug
 					if (ImGui::Selectable("intFlag - Check integer flag"))
 					{
 						// TODO: Create and add condition
+						// Would need DialogueNode::AddTargetCondition(targetIndex, condition) method
 						m_hasUnsavedChanges = true;
+						ImGui::CloseCurrentPopup();
 					}
 
 					if (ImGui::Selectable("boolFlag - Check boolean flag"))
 					{
+						// TODO: Create and add condition
 						m_hasUnsavedChanges = true;
+						ImGui::CloseCurrentPopup();
 					}
 
 					if (ImGui::Selectable("hasItem - Check for item"))
 					{
+						// TODO: Create and add condition
 						m_hasUnsavedChanges = true;
+						ImGui::CloseCurrentPopup();
 					}
 
 					ImGui::EndPopup();
@@ -598,9 +733,13 @@ namespace Struktur::Debug
 		}
 
 		// Add target button
-		if (ImGui::Button("+ Add Conditional Target"))
+		ImGui::Separator();
+		if (ImGui::Button("+ Add Conditional Target", ImVec2(-1, 0)))
 		{
-			// TODO: Create and add conditional target
+			// Create new target with empty conditions
+			std::unique_ptr<Dialogue::ConditionalTarget> newTarget = std::make_unique<Dialogue::ConditionalTarget>();
+			newTarget->targetNode = "";
+			node->AddTarget(std::move(newTarget));
 			m_hasUnsavedChanges = true;
 		}
 
@@ -704,7 +843,7 @@ namespace Struktur::Debug
 		bool changed = false;
 
 		// Common speakers for quick selection
-		static const char* commonSpeakers[] = {"Greg", "Player", "Narrator", "Mei", "Baron"};
+		static const char* commonSpeakers[] = { "Greg", "Player", "Narrator", "Mei", "Baron" };
 
 		if (ImGui::BeginCombo("Speaker", buffer))
 		{
