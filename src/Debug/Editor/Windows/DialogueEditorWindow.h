@@ -111,6 +111,8 @@ namespace Struktur::Debug
 		bool SpeakerInput(char* buffer, size_t bufferSize);
 		void InsertVariableAtCursor(char* buffer, size_t bufferSize, const char* variable);
 
+		void SwitchNodeContinuationType(Dialogue::DialogueNode* node, int newType);
+
 		// View mode
 		ViewMode m_viewMode;
 

@@ -198,66 +198,138 @@ namespace Struktur::Debug
 
 		ImGui::Separator();
 
-		// Continuation Type Selector - Actually switches types!
+		// Continuation Type Selector - SAFE VERSION
 		ImGui::Text("Continuation Type:");
 
-		// Determine current type
-		enum class ContinuationType { None, Next, Choices, Targets };
-		ContinuationType currentType = ContinuationType::None;
+		// Determine current type based on what's present
+		// Priority: Next > Choices > Targets
+		int currentTypeIndex = 0;  // 0=None, 1=Next, 2=Choices, 3=Targets
 
 		if (node->GetNext().has_value())
-			currentType = ContinuationType::Next;
+			currentTypeIndex = 1;
 		else if (!node->GetChoices().empty())
-			currentType = ContinuationType::Choices;
+			currentTypeIndex = 2;
 		else if (!node->GetTargets().empty())
-			currentType = ContinuationType::Targets;
+			currentTypeIndex = 3;
 
-		int continuationTypeIndex = static_cast<int>(currentType);
 		const char* continuationTypes[] = { "None (End)", "Next Node", "Player Choices", "Conditional Targets" };
 
-		if (ImGui::Combo("##ContinuationType", &continuationTypeIndex, continuationTypes, IM_ARRAYSIZE(continuationTypes)))
+		// Store previous index to detect changes
+		static int lastTypeIndex = currentTypeIndex;
+		int selectedIndex = currentTypeIndex;
+
+		if (ImGui::Combo("##ContinuationType", &selectedIndex, continuationTypes, IM_ARRAYSIZE(continuationTypes)))
 		{
-			// User changed type - actually create the new type!
-			ContinuationType newType = static_cast<ContinuationType>(continuationTypeIndex);
-
-			if (newType != currentType)
+			// User changed type
+			if (selectedIndex != currentTypeIndex)
 			{
-				switch (newType)
+				// Add the new continuation type
+				// Note: We can't remove the old ones without Clear methods,
+				// but the dialogue system prioritizes: Next > Choices > Targets
+				// So we just need to add the higher-priority one
+
+				switch (selectedIndex)
 				{
-				case ContinuationType::None:
-					// Just clear everything - node becomes an end node
-					// Note: Existing data stays but won't be used
+				case 0: // None
+					// To make a node "None", we just don't add anything
+					// Old data stays but won't be used if it's lower priority
+					ImGui::OpenPopup("CannotClearWarning");
 					break;
 
-				case ContinuationType::Next:
-					// Set an empty next node that user must fill in
+				case 1: // Next Node
+					// Set next - this takes priority over choices/targets
 					node->SetNext("");
+					m_hasUnsavedChanges = true;
 					break;
 
-				case ContinuationType::Choices:
-					// Add a default choice
-				{
-					auto newChoice = std::make_unique<Dialogue::Choice>("New choice", "");
-					node->AddChoice(std::move(newChoice));
-				}
-				break;
+				case 2: // Choices
+					// Need to clear Next first if it exists
+					if (node->GetNext().has_value())
+					{
+						ImGui::OpenPopup("CannotClearWarning");
+					}
+					else
+					{
+						// Add a choice - takes priority over targets
+						auto newChoice = std::make_unique<Dialogue::Choice>("New choice", "");
+						node->AddChoice(std::move(newChoice));
+						m_hasUnsavedChanges = true;
+					}
+					break;
 
-				case ContinuationType::Targets:
-					// Add a default target
-				{
-					auto newTarget = std::make_unique<Dialogue::ConditionalTarget>();
-					newTarget->targetNode = "";
-					node->AddTarget(std::move(newTarget));
+				case 3: // Targets
+					// Need to clear Next and Choices first if they exist
+					if (node->GetNext().has_value() || !node->GetChoices().empty())
+					{
+						ImGui::OpenPopup("CannotClearWarning");
+					}
+					else
+					{
+						// Add a target - lowest priority
+						std::unique_ptr<Dialogue::ConditionalTarget> newTarget = std::make_unique<Dialogue::ConditionalTarget>();
+						newTarget->targetNode = "";
+						node->AddTarget(std::move(newTarget));
+						m_hasUnsavedChanges = true;
+					}
+					break;
 				}
-				break;
-				}
-
-				m_hasUnsavedChanges = true;
 			}
+		}
+
+		// Warning popup for unsupported operations
+		if (ImGui::BeginPopup("CannotClearWarning"))
+		{
+			ImGui::TextColored(ImVec4(1.0f, 0.7f, 0.3f, 1.0f), "Cannot Change Continuation Type");
+			ImGui::Separator();
+			ImGui::TextWrapped("Changing from a higher-priority continuation type (Next or Choices) to a lower-priority one requires Clear methods that aren't implemented yet.");
+			ImGui::Separator();
+			ImGui::TextWrapped("Current priority: Next > Choices > Targets");
+			ImGui::Separator();
+			ImGui::TextWrapped("You can:");
+			ImGui::BulletText("Add Next when node has Choices or Targets");
+			ImGui::BulletText("Add Choices when node has only Targets");
+			ImGui::BulletText("Add Targets when node has nothing");
+			ImGui::Separator();
+			ImGui::TextWrapped("To change to a lower-priority type, manually edit the Wren file or delete and recreate the node.");
+
+			if (ImGui::Button("OK"))
+			{
+				ImGui::CloseCurrentPopup();
+			}
+
+			ImGui::EndPopup();
 		}
 
 		ImGui::TextColored(ImVec4(0.7f, 0.7f, 0.7f, 1.0f),
 			"💡 Choose how this dialogue node continues");
+
+		ImGui::Separator();
+
+		// Show current hierarchy
+		ImGui::TextColored(ImVec4(0.6f, 0.6f, 0.6f, 1.0f), "Active continuations:");
+		ImGui::Indent();
+
+		if (node->GetNext().has_value())
+		{
+			ImGui::TextColored(ImVec4(0.3f, 1.0f, 0.3f, 1.0f), "✓ Next Node (highest priority)");
+		}
+
+		if (!node->GetChoices().empty())
+		{
+			ImGui::TextColored(ImVec4(0.5f, 0.7f, 1.0f, 1.0f), "✓ Choices (%zu)", node->GetChoices().size());
+		}
+
+		if (!node->GetTargets().empty())
+		{
+			ImGui::TextColored(ImVec4(1.0f, 0.8f, 0.3f, 1.0f), "✓ Targets (%zu)", node->GetTargets().size());
+		}
+
+		if (!node->GetNext().has_value() && node->GetChoices().empty() && node->GetTargets().empty())
+		{
+			ImGui::TextColored(ImVec4(1.0f, 0.7f, 0.3f, 1.0f), "None (dialogue ends)");
+		}
+
+		ImGui::Unindent();
 	}
 
 	// ============================================================================
@@ -884,5 +956,64 @@ namespace Struktur::Debug
 		{
 			strcat_s(buffer, bufferSize, variable);
 		}
+	}
+
+	void DialogueEditorWindow::SwitchNodeContinuationType(Dialogue::DialogueNode* node, int newType)
+	{
+		// newType: 0=None, 1=Next, 2=Choices, 3=Targets
+
+		// Since we don't have Clear methods on DialogueNode, we'll work around it
+		// by rebuilding the node with only the new continuation type
+
+		std::string nodeId = m_selectedNodeId;
+		auto it = m_nodes.find(nodeId);
+		if (it == m_nodes.end())
+			return;
+
+		// Save current basic properties
+		std::optional<std::string> savedSpeaker = node->GetSpeaker();
+		std::optional<std::string> savedText = node->GetText();
+		glm::vec2 savedPosition = it->second.visualPosition;
+
+		// Create new node with same ID
+		auto newNode = std::make_unique<Dialogue::DialogueNode>(nodeId);
+
+		// Restore basic properties
+		if (savedSpeaker.has_value())
+			newNode->SetSpeaker(savedSpeaker.value());
+		if (savedText.has_value())
+			newNode->SetText(savedText.value());
+
+		// Set up the new continuation type
+		switch (newType)
+		{
+		case 0: // None - don't add anything
+			break;
+
+		case 1: // Next Node
+			newNode->SetNext("");
+			break;
+
+		case 2: // Choices
+		{
+			auto newChoice = std::make_unique<Dialogue::Choice>("New choice", "");
+			newNode->AddChoice(std::move(newChoice));
+		}
+		break;
+
+		case 3: // Targets
+		{
+			std::unique_ptr<Dialogue::ConditionalTarget> newTarget = std::make_unique<Dialogue::ConditionalTarget>();
+			newTarget->targetNode = "";
+			newNode->AddTarget(std::move(newTarget));
+		}
+		break;
+		}
+
+		// Replace the old node
+		it->second.node = std::move(newNode);
+		it->second.visualPosition = savedPosition;
+
+		m_hasUnsavedChanges = true;
 	}
 }
