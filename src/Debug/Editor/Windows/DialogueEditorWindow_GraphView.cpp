@@ -146,7 +146,7 @@ namespace Struktur::Debug
 		}
 
 		// Render connections first (behind nodes)
-		RenderNodeConnections(context);
+		RenderNodeConnections(context, canvasPos);
 
 		// Track which node is being dragged
 		static std::string draggedNodeId = "";
@@ -626,21 +626,31 @@ namespace Struktur::Debug
 		ImGui::PopID();
 	}
 
-	void DialogueEditorWindow::RenderNodeConnections(GameContext& context)
+	void DialogueEditorWindow::RenderNodeConnections(GameContext& context, ImVec2 canvasPos)
 	{
 		ImDrawList* drawList = ImGui::GetWindowDrawList();
-		ImVec2 canvasPos = ImGui::GetCursorScreenPos();
 
 		const float nodeWidth = 200.0f * m_graphZoom;
 		const float nodeHeight = 100.0f * m_graphZoom;
+		const float detailsYOffset = 5.0f * m_graphZoom;
+		const float detailsFontSize = 14.0f * 0.7f * m_graphZoom;
+		const float lineHeight = detailsFontSize + 2.0f;
+		const float textYOffset = 5.0f;  // Padding inside details box
 
 		for (const auto& [nodeId, nodeData] : m_nodes)
 		{
 			const Dialogue::DialogueNode* node = nodeData.node.get();
 
-			ImVec2 fromPos = ImVec2(
-				canvasPos.x + (nodeData.visualPosition.x * m_graphZoom) + m_graphPanOffset.x + nodeWidth / 2,
-				canvasPos.y + (nodeData.visualPosition.y * m_graphZoom) + m_graphPanOffset.y + nodeHeight
+			// Calculate node screen position (same as in RenderNode)
+			ImVec2 nodeScreenPos = ImVec2(
+				canvasPos.x + (nodeData.visualPosition.x * m_graphZoom) + m_graphPanOffset.x,
+				canvasPos.y + (nodeData.visualPosition.y * m_graphZoom) + m_graphPanOffset.y
+			);
+
+			// Details box starts below the main node (same calculation as in RenderNode)
+			ImVec2 detailsPos = ImVec2(
+				nodeScreenPos.x,
+				nodeScreenPos.y + nodeHeight + detailsYOffset
 			);
 
 			// Draw "next" connection (green)
@@ -649,14 +659,26 @@ namespace Struktur::Debug
 				auto targetIt = m_nodes.find(node->GetNext().value());
 				if (targetIt != m_nodes.end())
 				{
-					ImVec2 toPos = ImVec2(
-						canvasPos.x + (targetIt->second.visualPosition.x * m_graphZoom) + m_graphPanOffset.x + nodeWidth / 2,
-						canvasPos.y + (targetIt->second.visualPosition.y * m_graphZoom) + m_graphPanOffset.y
+					// Start from center of the "next" text line in details box
+					ImVec2 fromPos = ImVec2(
+						detailsPos.x + (nodeWidth / 2.0f),
+						detailsPos.y + textYOffset + (lineHeight / 2.0f)  // Center of text line
 					);
 
+					// End at top-center of target node
+					ImVec2 targetNodePos = ImVec2(
+						canvasPos.x + (targetIt->second.visualPosition.x * m_graphZoom) + m_graphPanOffset.x,
+						canvasPos.y + (targetIt->second.visualPosition.y * m_graphZoom) + m_graphPanOffset.y
+					);
+					ImVec2 toPos = ImVec2(
+						targetNodePos.x + (nodeWidth / 2.0f),
+						targetNodePos.y
+					);
+
+					// Draw line
 					drawList->AddLine(fromPos, toPos, IM_COL32(100, 255, 100, 255), 2.0f * m_graphZoom);
 
-					// Draw arrow
+					// Draw arrow at end
 					ImVec2 dir = ImVec2(toPos.x - fromPos.x, toPos.y - fromPos.y);
 					float len = sqrtf(dir.x * dir.x + dir.y * dir.y);
 					if (len > 0.0f)
@@ -673,34 +695,105 @@ namespace Struktur::Debug
 					}
 				}
 			}
-
 			// Draw choice connections (blue)
-			for (const auto& choice : node->GetChoices())
+			else if (!node->GetChoices().empty())
 			{
-				auto targetIt = m_nodes.find(choice->targetNode);
-				if (targetIt != m_nodes.end())
-				{
-					ImVec2 toPos = ImVec2(
-						canvasPos.x + (targetIt->second.visualPosition.x * m_graphZoom) + m_graphPanOffset.x + nodeWidth / 2,
-						canvasPos.y + (targetIt->second.visualPosition.y * m_graphZoom) + m_graphPanOffset.y
-					);
+				const auto& choices = node->GetChoices();
 
-					drawList->AddLine(fromPos, toPos, IM_COL32(100, 150, 255, 255), 2.0f * m_graphZoom);
+				for (size_t i = 0; i < choices.size(); ++i)
+				{
+					auto targetIt = m_nodes.find(choices[i]->targetNode);
+					if (targetIt != m_nodes.end())
+					{
+						// Start from the specific choice line in details box
+						ImVec2 fromPos = ImVec2(
+							detailsPos.x + (nodeWidth / 2.0f),
+							detailsPos.y + textYOffset + (i * lineHeight) + (lineHeight / 2.0f)  // Center of this choice's line
+						);
+
+						// End at top-center of target node
+						ImVec2 targetNodePos = ImVec2(
+							canvasPos.x + (targetIt->second.visualPosition.x * m_graphZoom) + m_graphPanOffset.x,
+							canvasPos.y + (targetIt->second.visualPosition.y * m_graphZoom) + m_graphPanOffset.y
+						);
+						ImVec2 toPos = ImVec2(
+							targetNodePos.x + (nodeWidth / 2.0f),
+							targetNodePos.y
+						);
+
+						// Draw line
+						drawList->AddLine(fromPos, toPos, IM_COL32(100, 150, 255, 255), 2.0f * m_graphZoom);
+
+						// Draw arrow at end
+						ImVec2 dir = ImVec2(toPos.x - fromPos.x, toPos.y - fromPos.y);
+						float len = sqrtf(dir.x * dir.x + dir.y * dir.y);
+						if (len > 0.0f)
+						{
+							dir.x /= len;
+							dir.y /= len;
+
+							float arrowSize = 8.0f * m_graphZoom;
+							ImVec2 arrowTip = ImVec2(toPos.x - dir.x * arrowSize, toPos.y - dir.y * arrowSize);
+							ImVec2 arrowLeft = ImVec2(arrowTip.x - dir.y * arrowSize * 0.5f, arrowTip.y + dir.x * arrowSize * 0.5f);
+							ImVec2 arrowRight = ImVec2(arrowTip.x + dir.y * arrowSize * 0.5f, arrowTip.y - dir.x * arrowSize * 0.5f);
+
+							drawList->AddTriangleFilled(toPos, arrowLeft, arrowRight, IM_COL32(100, 150, 255, 255));
+						}
+					}
 				}
 			}
-
-			// Draw target connections (yellow)
-			for (const auto& target : node->GetTargets())
+			// Draw conditional target connections (yellow)
+			else if (!node->GetTargets().empty())
 			{
-				auto targetIt = m_nodes.find(target->targetNode);
-				if (targetIt != m_nodes.end())
-				{
-					ImVec2 toPos = ImVec2(
-						canvasPos.x + (targetIt->second.visualPosition.x * m_graphZoom) + m_graphPanOffset.x + nodeWidth / 2,
-						canvasPos.y + (targetIt->second.visualPosition.y * m_graphZoom) + m_graphPanOffset.y
-					);
+				const auto& targets = node->GetTargets();
+				int lineNum = 0;
 
-					drawList->AddLine(fromPos, toPos, IM_COL32(255, 200, 100, 255), 2.0f * m_graphZoom);
+				for (size_t i = 0; i < targets.size(); ++i)
+				{
+					const auto& target = targets[i];
+					auto targetIt = m_nodes.find(target->targetNode);
+
+					if (targetIt != m_nodes.end())
+					{
+						// Start from the target line (not the conditions)
+						ImVec2 fromPos = ImVec2(
+							detailsPos.x + (nodeWidth / 2.0f),
+							detailsPos.y + textYOffset + (lineNum * lineHeight) + (lineHeight / 2.0f)  // Center of target line
+						);
+
+						// End at top-center of target node
+						ImVec2 targetNodePos = ImVec2(
+							canvasPos.x + (targetIt->second.visualPosition.x * m_graphZoom) + m_graphPanOffset.x,
+							canvasPos.y + (targetIt->second.visualPosition.y * m_graphZoom) + m_graphPanOffset.y
+						);
+						ImVec2 toPos = ImVec2(
+							targetNodePos.x + (nodeWidth / 2.0f),
+							targetNodePos.y
+						);
+
+						// Draw line
+						drawList->AddLine(fromPos, toPos, IM_COL32(255, 200, 100, 255), 2.0f * m_graphZoom);
+
+						// Draw arrow at end
+						ImVec2 dir = ImVec2(toPos.x - fromPos.x, toPos.y - fromPos.y);
+						float len = sqrtf(dir.x * dir.x + dir.y * dir.y);
+						if (len > 0.0f)
+						{
+							dir.x /= len;
+							dir.y /= len;
+
+							float arrowSize = 8.0f * m_graphZoom;
+							ImVec2 arrowTip = ImVec2(toPos.x - dir.x * arrowSize, toPos.y - dir.y * arrowSize);
+							ImVec2 arrowLeft = ImVec2(arrowTip.x - dir.y * arrowSize * 0.5f, arrowTip.y + dir.x * arrowSize * 0.5f);
+							ImVec2 arrowRight = ImVec2(arrowTip.x + dir.y * arrowSize * 0.5f, arrowTip.y - dir.x * arrowSize * 0.5f);
+
+							drawList->AddTriangleFilled(toPos, arrowLeft, arrowRight, IM_COL32(255, 200, 100, 255));
+						}
+					}
+
+					// Advance line count (target + all its conditions)
+					lineNum += 1;  // Target line
+					lineNum += static_cast<int>(target->conditions.size());  // Condition lines
 				}
 			}
 		}

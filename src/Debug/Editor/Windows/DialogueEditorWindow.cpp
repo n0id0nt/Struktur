@@ -47,91 +47,11 @@ namespace Struktur::Debug
 		ImGui::SetNextWindowSize(ImVec2(1400, 900), ImGuiCond_FirstUseEver);
 		ImGui::Begin(m_name.c_str(), &m_isOpen);
 
-		// Top toolbar
-		if (ImGui::BeginMenuBar())
-		{
-			if (ImGui::BeginMenu("File"))
-			{
-				if (ImGui::MenuItem("New", "Ctrl+N"))
-				{
-					// TODO: Show new dialogue dialog
-				}
-				if (ImGui::MenuItem("Open", "Ctrl+O"))
-				{
-					// TODO: Show file browser
-				}
-				if (ImGui::MenuItem("Save", "Ctrl+S", false, m_hasUnsavedChanges))
-				{
-					if (!m_currentFile.empty())
-					{
-						SaveDialogueFile(m_currentFile);
-					}
-				}
-				if (ImGui::MenuItem("Save As..."))
-				{
-					// TODO: Show save dialog
-				}
-				ImGui::Separator();
-				if (ImGui::MenuItem("Close"))
-				{
-					m_nodes.clear();
-					m_currentFile = "";
-					m_hasUnsavedChanges = false;
-				}
-				ImGui::EndMenu();
-			}
+		// ========================================================================
+		// TOOLBAR (replaces menu bar)
+		// ========================================================================
 
-			if (ImGui::BeginMenu("Edit"))
-			{
-				if (ImGui::MenuItem("Add Node", "Insert", false, !m_nodes.empty()))
-				{
-					ImGui::OpenPopup("AddNodePopup");
-				}
-				if (ImGui::MenuItem("Delete Node", "Delete", false, !m_selectedNodeId.empty()))
-				{
-					DeleteNode(m_selectedNodeId);
-				}
-				if (ImGui::MenuItem("Duplicate Node", "Ctrl+D", false, !m_selectedNodeId.empty()))
-				{
-					DuplicateNode(m_selectedNodeId);
-				}
-				ImGui::Separator();
-				if (ImGui::MenuItem("Validate", "Ctrl+V"))
-				{
-					ValidateDialogue();
-				}
-				ImGui::EndMenu();
-			}
-
-			if (ImGui::BeginMenu("View"))
-			{
-				bool isEdit = (m_viewMode == ViewMode::Edit);
-				bool isPlayback = (m_viewMode == ViewMode::Playback);
-
-				if (ImGui::MenuItem("Edit Mode", nullptr, isEdit))
-				{
-					m_viewMode = ViewMode::Edit;
-					if (m_isPlaybackActive)
-					{
-						StopPlayback(context);
-					}
-				}
-				if (ImGui::MenuItem("Playback Mode", nullptr, isPlayback, !m_nodes.empty()))
-				{
-					m_viewMode = ViewMode::Playback;
-				}
-				ImGui::Separator();
-				if (ImGui::MenuItem("Reset Layout"))
-				{
-					CalculateGraphLayout();
-				}
-				ImGui::EndMenu();
-			}
-
-			ImGui::EndMenuBar();
-		}
-
-		// Status bar at top
+		// Status and save button on same line
 		if (m_hasUnsavedChanges)
 		{
 			ImGui::TextColored(ImVec4(1.0f, 0.7f, 0.3f, 1.0f), "● Modified");
@@ -165,9 +85,253 @@ namespace Struktur::Debug
 			ImGui::TextColored(ImVec4(1.0f, 0.7f, 0.3f, 1.0f), "| Warnings: %zu", m_warnings.size());
 		}
 
+		// Toolbar buttons
 		ImGui::Separator();
 
-		// Main content area
+		// File operations
+		if (ImGui::Button("📄 New"))
+		{
+			ImGui::OpenPopup("NewDialoguePopup");
+		}
+		ImGui::SameLine();
+
+		if (ImGui::Button("📂 Open"))
+		{
+			ImGui::OpenPopup("OpenDialoguePopup");
+		}
+		ImGui::SameLine();
+
+		if (ImGui::Button("💾 Save"))
+		{
+			if (!m_currentFile.empty())
+			{
+				SaveDialogueFile(m_currentFile);
+			}
+			else
+			{
+				ImGui::OpenPopup("SaveAsPopup");
+			}
+		}
+
+		if (!m_hasUnsavedChanges)
+		{
+			ImGui::BeginDisabled();
+		}
+
+		ImGui::SameLine();
+		if (ImGui::Button("💾 Save As"))
+		{
+			ImGui::OpenPopup("SaveAsPopup");
+		}
+
+		if (!m_hasUnsavedChanges)
+		{
+			ImGui::EndDisabled();
+		}
+
+		ImGui::SameLine();
+		ImGui::Separator();
+		ImGui::SameLine();
+
+		// Edit operations
+		if (ImGui::Button("➕ Add Node"))
+		{
+			ImGui::OpenPopup("AddNodePopup");
+		}
+
+		if (m_selectedNodeId.empty())
+		{
+			ImGui::BeginDisabled();
+		}
+
+		ImGui::SameLine();
+		if (ImGui::Button("🗑️ Delete"))
+		{
+			if (!m_selectedNodeId.empty())
+			{
+				DeleteNode(m_selectedNodeId);
+			}
+		}
+		ImGui::SameLine();
+		if (ImGui::Button("📋 Duplicate"))
+		{
+			if (!m_selectedNodeId.empty())
+			{
+				DuplicateNode(m_selectedNodeId);
+			}
+		}
+
+		if (m_selectedNodeId.empty())
+		{
+			ImGui::EndDisabled();
+		}
+
+		ImGui::SameLine();
+		ImGui::Separator();
+		ImGui::SameLine();
+
+		// View operations
+		if (ImGui::Button("✓ Validate"))
+		{
+			ValidateDialogue();
+		}
+		ImGui::SameLine();
+		if (ImGui::Button("🔄 Auto Layout"))
+		{
+			CalculateGraphLayout();
+		}
+
+		ImGui::SameLine();
+		ImGui::Separator();
+		ImGui::SameLine();
+
+		// Mode switch
+		const char* modeText = (m_viewMode == ViewMode::Edit) ? "✏️ Edit Mode" : "▶️ Playback Mode";
+		ImVec4 modeColor = (m_viewMode == ViewMode::Edit) ? ImVec4(0.3f, 0.8f, 1.0f, 1.0f) : ImVec4(0.3f, 1.0f, 0.3f, 1.0f);
+		ImGui::TextColored(modeColor, "%s", modeText);
+
+		if (m_nodes.empty())
+		{
+			ImGui::BeginDisabled();
+		}
+
+		ImGui::SameLine();
+		if (ImGui::Button("Switch Mode"))
+		{
+			if (m_viewMode == ViewMode::Edit)
+			{
+				m_viewMode = ViewMode::Playback;
+			}
+			else
+			{
+				m_viewMode = ViewMode::Edit;
+				if (m_isPlaybackActive)
+				{
+					StopPlayback(context);
+				}
+			}
+		}
+
+		if (m_nodes.empty())
+		{
+			ImGui::EndDisabled();
+		}
+
+		// ========================================================================
+		// POPUPS for toolbar actions
+		// ========================================================================
+
+		// New Dialogue Popup
+		if (ImGui::BeginPopup("NewDialoguePopup"))
+		{
+			ImGui::Text("Create New Dialogue");
+			ImGui::Separator();
+
+			static char classNameBuffer[128] = "";
+			ImGui::InputText("Class Name", classNameBuffer, sizeof(classNameBuffer));
+			ImGui::TextWrapped("e.g., 'GregDialogue', 'MerchantDialogue'");
+
+			if (ImGui::Button("Create", ImVec2(120, 0)))
+			{
+				if (classNameBuffer[0] != '\0')
+				{
+					CreateNewDialogue(classNameBuffer);
+					classNameBuffer[0] = '\0';
+					ImGui::CloseCurrentPopup();
+				}
+			}
+			ImGui::SameLine();
+			if (ImGui::Button("Cancel", ImVec2(120, 0)))
+			{
+				classNameBuffer[0] = '\0';
+				ImGui::CloseCurrentPopup();
+			}
+
+			ImGui::EndPopup();
+		}
+
+		// Open Dialogue Popup
+		if (ImGui::BeginPopup("OpenDialoguePopup"))
+		{
+			ImGui::Text("Load Dialogue File");
+			ImGui::Separator();
+
+			static char filepathBuffer[256] = "assets/dialogue/";
+			ImGui::InputText("Filepath", filepathBuffer, sizeof(filepathBuffer));
+
+			if (ImGui::Button("Load", ImVec2(120, 0)))
+			{
+				LoadDialogueFile(context, filepathBuffer);
+				ImGui::CloseCurrentPopup();
+			}
+			ImGui::SameLine();
+			if (ImGui::Button("Cancel", ImVec2(120, 0)))
+			{
+				ImGui::CloseCurrentPopup();
+			}
+
+			ImGui::EndPopup();
+		}
+
+		// Save As Popup
+		if (ImGui::BeginPopup("SaveAsPopup"))
+		{
+			ImGui::Text("Save Dialogue As");
+			ImGui::Separator();
+
+			static char savePathBuffer[256] = "assets/dialogue/";
+			ImGui::InputText("Filepath", savePathBuffer, sizeof(savePathBuffer));
+
+			if (ImGui::Button("Save", ImVec2(120, 0)))
+			{
+				if (savePathBuffer[0] != '\0')
+				{
+					SaveDialogueFile(savePathBuffer);
+					ImGui::CloseCurrentPopup();
+				}
+			}
+			ImGui::SameLine();
+			if (ImGui::Button("Cancel", ImVec2(120, 0)))
+			{
+				ImGui::CloseCurrentPopup();
+			}
+
+			ImGui::EndPopup();
+		}
+
+		// Add Node Popup
+		if (ImGui::BeginPopup("AddNodePopup"))
+		{
+			ImGui::Text("Add New Node");
+			ImGui::Separator();
+
+			ImGui::InputText("Node ID", m_newNodeIdBuffer, sizeof(m_newNodeIdBuffer));
+
+			if (ImGui::Button("Add", ImVec2(120, 0)))
+			{
+				if (m_newNodeIdBuffer[0] != '\0')
+				{
+					AddNode(m_newNodeIdBuffer);
+					m_newNodeIdBuffer[0] = '\0';
+					ImGui::CloseCurrentPopup();
+				}
+			}
+			ImGui::SameLine();
+			if (ImGui::Button("Cancel", ImVec2(120, 0)))
+			{
+				m_newNodeIdBuffer[0] = '\0';
+				ImGui::CloseCurrentPopup();
+			}
+
+			ImGui::EndPopup();
+		}
+
+		ImGui::Separator();
+
+		// ========================================================================
+		// MAIN CONTENT AREA
+		// ========================================================================
+
 		ImGui::BeginChild("MainContent", ImVec2(0, -150), false);
 
 		// Three-panel layout: File panel | Graph/Playback view | Node editor

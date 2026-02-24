@@ -90,7 +90,7 @@ namespace Struktur::Debug
 
 		// Graph view helpers
 		void RenderNode(GameContext& context, const std::string& nodeId, ImVec2 position);
-		void RenderNodeConnections(GameContext& context);
+		void RenderNodeConnections(GameContext& context, ImVec2 canvasPos);
 		void CalculateGraphLayout();
 
 		// Node editor helpers

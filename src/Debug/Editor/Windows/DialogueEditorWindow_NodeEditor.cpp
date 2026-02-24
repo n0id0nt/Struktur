@@ -63,7 +63,7 @@ namespace Struktur::Debug
 			if (ImGui::CollapsingHeader("Next Node", ImGuiTreeNodeFlags_DefaultOpen))
 			{
 				std::string currentNext = node->GetNext().value();
-				if (NodeSelector("Next Node", currentNext))
+				if (NodeSelector("Target", currentNext))
 				{
 					node->SetNext(currentNext);
 					m_hasUnsavedChanges = true;
@@ -223,17 +223,14 @@ namespace Struktur::Debug
 			// User changed type
 			if (selectedIndex != currentTypeIndex)
 			{
-				// Add the new continuation type
-				// Note: We can't remove the old ones without Clear methods,
-				// but the dialogue system prioritizes: Next > Choices > Targets
-				// So we just need to add the higher-priority one
+				node->ClearNext();
+				node->ClearChoices();
+				node->ClearTargets();
 
+				// Add the new continuation type
 				switch (selectedIndex)
 				{
 				case 0: // None
-					// To make a node "None", we just don't add anything
-					// Old data stays but won't be used if it's lower priority
-					ImGui::OpenPopup("CannotClearWarning");
 					break;
 
 				case 1: // Next Node
@@ -243,61 +240,25 @@ namespace Struktur::Debug
 					break;
 
 				case 2: // Choices
-					// Need to clear Next first if it exists
-					if (node->GetNext().has_value())
-					{
-						ImGui::OpenPopup("CannotClearWarning");
-					}
-					else
-					{
-						// Add a choice - takes priority over targets
-						auto newChoice = std::make_unique<Dialogue::Choice>("New choice", "");
-						node->AddChoice(std::move(newChoice));
-						m_hasUnsavedChanges = true;
-					}
-					break;
+				{
+					// Add a choice - takes priority over targets
+					auto newChoice = std::make_unique<Dialogue::Choice>("New choice", "");
+					node->AddChoice(std::move(newChoice));
+					m_hasUnsavedChanges = true;
+				}
+				break;
 
 				case 3: // Targets
-					// Need to clear Next and Choices first if they exist
-					if (node->GetNext().has_value() || !node->GetChoices().empty())
-					{
-						ImGui::OpenPopup("CannotClearWarning");
-					}
-					else
-					{
-						// Add a target - lowest priority
-						std::unique_ptr<Dialogue::ConditionalTarget> newTarget = std::make_unique<Dialogue::ConditionalTarget>();
-						newTarget->targetNode = "";
-						node->AddTarget(std::move(newTarget));
-						m_hasUnsavedChanges = true;
-					}
-					break;
+				{
+					// Add a target - lowest priority
+					std::unique_ptr<Dialogue::ConditionalTarget> newTarget = std::make_unique<Dialogue::ConditionalTarget>();
+					newTarget->targetNode = "";
+					node->AddTarget(std::move(newTarget));
+					m_hasUnsavedChanges = true;
+				}
+				break;
 				}
 			}
-		}
-
-		// Warning popup for unsupported operations
-		if (ImGui::BeginPopup("CannotClearWarning"))
-		{
-			ImGui::TextColored(ImVec4(1.0f, 0.7f, 0.3f, 1.0f), "Cannot Change Continuation Type");
-			ImGui::Separator();
-			ImGui::TextWrapped("Changing from a higher-priority continuation type (Next or Choices) to a lower-priority one requires Clear methods that aren't implemented yet.");
-			ImGui::Separator();
-			ImGui::TextWrapped("Current priority: Next > Choices > Targets");
-			ImGui::Separator();
-			ImGui::TextWrapped("You can:");
-			ImGui::BulletText("Add Next when node has Choices or Targets");
-			ImGui::BulletText("Add Choices when node has only Targets");
-			ImGui::BulletText("Add Targets when node has nothing");
-			ImGui::Separator();
-			ImGui::TextWrapped("To change to a lower-priority type, manually edit the Wren file or delete and recreate the node.");
-
-			if (ImGui::Button("OK"))
-			{
-				ImGui::CloseCurrentPopup();
-			}
-
-			ImGui::EndPopup();
 		}
 
 		ImGui::TextColored(ImVec4(0.7f, 0.7f, 0.7f, 1.0f),
@@ -363,32 +324,28 @@ namespace Struktur::Debug
 			);
 
 			// Delete button
-			ImGui::SameLine();
-			if (ImGui::SmallButton("Delete"))
-			{
-				// TODO: Implement choice deletion
-				// Would need DialogueNode::RemoveChoice(index) method
-				ImGui::TreePop();
-				ImGui::PopID();
-				m_hasUnsavedChanges = true;
-				break;
-			}
-
-			// Move up/down buttons
-			ImGui::SameLine();
-			if (i > 0 && ImGui::ArrowButton("Up", ImGuiDir_Up))
-			{
-				// TODO: Implement choice reordering
-				// Would need DialogueNode::SwapChoices(i, i-1) method
-				m_hasUnsavedChanges = true;
-			}
-
-			ImGui::SameLine();
-			if (i < choices.size() - 1 && ImGui::ArrowButton("Down", ImGuiDir_Down))
-			{
-				// TODO: Implement choice reordering
-				m_hasUnsavedChanges = true;
-			}
+			//if (ImGui::SmallButton("Delete"))
+			//{
+			//	// TODO: Implement choice deletion
+			//	// Would need DialogueNode::RemoveChoice(index) method
+			//	m_hasUnsavedChanges = true;
+			//}
+			//
+			//// Move up/down buttons
+			//ImGui::SameLine();
+			//if (i > 0 && ImGui::ArrowButton("Up", ImGuiDir_Up))
+			//{
+			//	// TODO: Implement choice reordering
+			//	// Would need DialogueNode::SwapChoices(i, i-1) method
+			//	m_hasUnsavedChanges = true;
+			//}
+			//
+			//ImGui::SameLine();
+			//if (i < choices.size() - 1 && ImGui::ArrowButton("Down", ImGuiDir_Down))
+			//{
+			//	// TODO: Implement choice reordering
+			//	m_hasUnsavedChanges = true;
+			//}
 
 			if (isOpen)
 			{
@@ -399,8 +356,7 @@ namespace Struktur::Debug
 				std::string textLabel = "Text##choice_text_" + std::to_string(i);
 				if (ImGui::InputText(textLabel.c_str(), choiceTextBuffer, sizeof(choiceTextBuffer)))
 				{
-					// TODO: Update choice text
-					// Would need DialogueNode::UpdateChoiceText(index, newText) method
+					choices[i]->text = choiceTextBuffer;
 					m_hasUnsavedChanges = true;
 				}
 
@@ -410,15 +366,13 @@ namespace Struktur::Debug
 
 				if (NodeSelector(targetLabel.c_str(), targetNode))
 				{
-					// TODO: Update choice target
-					// Would need DialogueNode::UpdateChoiceTarget(index, newTarget) method
+					choices[i]->targetNode = targetNode;
 					m_hasUnsavedChanges = true;
 				}
 
 				// Go to target button
 				if (!targetNode.empty())
 				{
-					ImGui::SameLine();
 					if (ImGui::SmallButton("Go To"))
 					{
 						SelectNode(targetNode);
@@ -701,17 +655,17 @@ namespace Struktur::Debug
 				ImGuiTreeNodeFlags_DefaultOpen | ImGuiTreeNodeFlags_Framed
 			);
 
-			// Delete button
-			ImGui::SameLine();
-			if (ImGui::SmallButton("Delete"))
-			{
-				// TODO: Implement target deletion
-				// Would need DialogueNode::RemoveTarget(index) method
-				ImGui::TreePop();
-				ImGui::PopID();
-				m_hasUnsavedChanges = true;
-				break;
-			}
+			//// Delete button
+			//ImGui::SameLine();
+			//if (ImGui::SmallButton("Delete"))
+			//{
+			//	// TODO: Implement target deletion
+			//	// Would need DialogueNode::RemoveTarget(index) method
+			//	ImGui::TreePop();
+			//	ImGui::PopID();
+			//	m_hasUnsavedChanges = true;
+			//	break;
+			//}
 
 			if (isOpen)
 			{
@@ -721,8 +675,7 @@ namespace Struktur::Debug
 
 				if (NodeSelector(targetLabel.c_str(), targetNode))
 				{
-					// TODO: Update target node
-					// Would need DialogueNode::UpdateTargetNode(index, newNode) method
+					targets[i]->targetNode = targetNode;
 					m_hasUnsavedChanges = true;
 				}
 
@@ -730,7 +683,7 @@ namespace Struktur::Debug
 
 				// Conditions
 				ImGui::Text("Conditions (ALL must be true):");
-				const auto& conditions = targets[i]->conditions;
+				auto& conditions = targets[i]->conditions;
 
 				if (conditions.empty())
 				{
@@ -745,15 +698,15 @@ namespace Struktur::Debug
 					std::string conditionType = conditions[j]->GetKey();
 					ImGui::BulletText("Condition: %s", conditionType.c_str());
 
-					ImGui::SameLine();
-					if (ImGui::SmallButton("Delete"))
-					{
-						// TODO: Implement condition deletion
-						// Would need DialogueNode::RemoveTargetCondition(targetIndex, conditionIndex) method
-						ImGui::PopID();
-						m_hasUnsavedChanges = true;
-						break;
-					}
+					//ImGui::SameLine();
+					//if (ImGui::SmallButton("Delete"))
+					//{
+					//	// TODO: Implement condition deletion
+					//	// Would need DialogueNode::RemoveTargetCondition(targetIndex, conditionIndex) method
+					//	ImGui::PopID();
+					//	m_hasUnsavedChanges = true;
+					//	break;
+					//}
 
 					ImGui::Indent();
 					RenderConditionParameters(context, conditions[j].get());
@@ -773,24 +726,38 @@ namespace Struktur::Debug
 					ImGui::Text("Select Condition Type:");
 					ImGui::Separator();
 
+					if (ImGui::Selectable("empty - Create your own"))
+					{
+						std::unordered_map<std::string, Dialogue::DialogueValue> params;
+						auto condition = std::make_unique<Dialogue::Condition>("", params);
+						conditions.push_back(std::move(condition));
+						m_hasUnsavedChanges = true;
+						ImGui::CloseCurrentPopup();
+					}
+
 					if (ImGui::Selectable("intFlag - Check integer flag"))
 					{
-						// TODO: Create and add condition
-						// Would need DialogueNode::AddTargetCondition(targetIndex, condition) method
+						std::unordered_map<std::string, Dialogue::DialogueValue> params;
+						auto condition = std::make_unique<Dialogue::Condition>("intFlag", params);
+						conditions.push_back(std::move(condition));
 						m_hasUnsavedChanges = true;
 						ImGui::CloseCurrentPopup();
 					}
 
 					if (ImGui::Selectable("boolFlag - Check boolean flag"))
 					{
-						// TODO: Create and add condition
+						std::unordered_map<std::string, Dialogue::DialogueValue> params;
+						auto condition = std::make_unique<Dialogue::Condition>("boolFlag", params);
+						conditions.push_back(std::move(condition));
 						m_hasUnsavedChanges = true;
 						ImGui::CloseCurrentPopup();
 					}
 
 					if (ImGui::Selectable("hasItem - Check for item"))
 					{
-						// TODO: Create and add condition
+						std::unordered_map<std::string, Dialogue::DialogueValue> params;
+						auto condition = std::make_unique<Dialogue::Condition>("hasItem", params);
+						conditions.push_back(std::move(condition));
 						m_hasUnsavedChanges = true;
 						ImGui::CloseCurrentPopup();
 					}

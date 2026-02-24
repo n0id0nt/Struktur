@@ -27,4 +27,19 @@ namespace Struktur::Dialogue
 	{
 		m_targets.push_back(std::move(target));
 	}
+
+	void DialogueNode::ClearNext()
+	{
+		m_next.reset();
+	}
+
+	void DialogueNode::ClearChoices()
+	{
+		m_choices.clear();
+	}
+
+	void DialogueNode::ClearTargets()
+	{
+		m_targets.clear();
+	}
 }

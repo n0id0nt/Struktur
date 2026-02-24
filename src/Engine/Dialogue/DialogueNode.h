@@ -80,6 +80,11 @@ namespace Struktur::Dialogue
 		bool HasNext() const { return m_next.has_value(); }
 		bool HasTargets() const { return !m_targets.empty(); }
 
+		// Clear methods
+		void ClearNext();
+		void ClearChoices();
+		void ClearTargets();
+
 	private:
 		std::string m_id;
 		std::optional<std::string> m_speaker;
