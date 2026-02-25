@@ -10,6 +10,8 @@
 #include <fstream>
 #include <sstream>
 
+#define DIALOGUE_FILE_PATH "assets/Scripts/Dialogue/"
+
 namespace Struktur::Debug
 {
 	DialogueEditorWindow::DialogueEditorWindow(PreviewWindow* previewWindow)
@@ -256,7 +258,7 @@ namespace Struktur::Debug
 			ImGui::Text("Load Dialogue File");
 			ImGui::Separator();
 
-			static char filepathBuffer[256] = "assets/dialogue/";
+			static char filepathBuffer[256] = DIALOGUE_FILE_PATH;
 			ImGui::InputText("Filepath", filepathBuffer, sizeof(filepathBuffer));
 
 			if (ImGui::Button("Load", ImVec2(120, 0)))
@@ -279,7 +281,7 @@ namespace Struktur::Debug
 			ImGui::Text("Save Dialogue As");
 			ImGui::Separator();
 
-			static char savePathBuffer[256] = "assets/dialogue/";
+			static char savePathBuffer[256] = DIALOGUE_FILE_PATH;
 			ImGui::InputText("Filepath", savePathBuffer, sizeof(savePathBuffer));
 
 			if (ImGui::Button("Save", ImVec2(120, 0)))
@@ -392,7 +394,7 @@ namespace Struktur::Debug
 
 		if (ImGui::BeginPopup("LoadDialoguePopup"))
 		{
-			static char filepathBuffer[256] = "assets/dialogue/";
+			static char filepathBuffer[256] = DIALOGUE_FILE_PATH;
 			ImGui::InputText("Filepath", filepathBuffer, sizeof(filepathBuffer));
 
 			if (ImGui::Button("Load"))

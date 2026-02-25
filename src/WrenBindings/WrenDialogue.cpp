@@ -384,7 +384,6 @@ void wren_DialogueResultGetChoices(WrenVM* vm)
 	wrenSetSlotNewList(vm, 0);
 	for (int i = 0; i < choicesCount; i++)
 	{
-
 		wrenSetSlotString(vm, 1, result->dataResult.choices[i].text.c_str());
 		wrenInsertInList(vm, 0, i, 1);
 	}

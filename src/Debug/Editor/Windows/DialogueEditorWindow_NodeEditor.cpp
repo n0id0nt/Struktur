@@ -312,7 +312,7 @@ namespace Struktur::Debug
 			ImGui::PushID(static_cast<int>(i));
 
 			// Choice header with number
-			std::string headerLabel = "Choice " + std::to_string(i + 1) + ": " + choices[i]->text;
+			std::string headerLabel = "Choice " + std::to_string(i + 1);// +": " + choices[i]->text;
 			if (headerLabel.length() > 40)
 			{
 				headerLabel = headerLabel.substr(0, 37) + "...";

@@ -29,7 +29,7 @@ class Commands {
                 Camera.addCameraTrauma(cameraId, 0.4)
             }
         }
-        DialogueRegistry.registerCommand("deleteEntity") { |params|
+        DialogueRegistry.registerCommand("pickupEntity") { |params|
             //var cameras = GameObject.getAllWithComponents(["Camera"])
             //for (cameraId in cameras) {
             //    Camera.addCameraTrauma(cameraId, 0.4)

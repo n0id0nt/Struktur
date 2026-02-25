@@ -112,6 +112,9 @@ namespace Struktur::Debug
 		void InsertVariableAtCursor(char* buffer, size_t bufferSize, const char* variable);
 
 		void SwitchNodeContinuationType(Dialogue::DialogueNode* node, int newType);
+		void ParseDialogueDataFromWren(GameContext& context, WrenVM* vm);
+		void LoadViaDialogueManager(GameContext& context, WrenVM* vm);
+		void ExtractNodesFromDialogue(const Dialogue::Dialogue* dialogue);
 
 		// View mode
 		ViewMode m_viewMode;
@@ -119,6 +122,7 @@ namespace Struktur::Debug
 		// Current file info
 		std::string m_currentFile;
 		std::string m_currentClassName;
+		std::string m_currentModulePath;
 		bool m_hasUnsavedChanges;
 
 		// Node data

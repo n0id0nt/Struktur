@@ -242,7 +242,7 @@ namespace Struktur::Debug
 		ImU32 bgColor;
 		if (nodeId == m_entryNodeId)
 		{
-			bgColor = IM_COL32(50, 150, 50, 255);  // Green for entry
+			bgColor = IM_COL32(70, 70, 70, 255);  // Gray for entry
 		}
 		else if (!node->GetChoices().empty())
 		{
@@ -252,13 +252,13 @@ namespace Struktur::Debug
 		{
 			bgColor = IM_COL32(200, 150, 50, 255);  // Yellow for conditionals
 		}
-		else if (!node->GetNext().has_value() && node->GetChoices().empty())
+		else if (node->GetNext().has_value())
 		{
-			bgColor = IM_COL32(150, 50, 50, 255);  // Red for dead end
+			bgColor = IM_COL32(50, 150, 50, 255);  // Green for next
 		}
 		else
 		{
-			bgColor = IM_COL32(70, 70, 70, 255);  // Gray for normal
+			bgColor = IM_COL32(150, 50, 50, 255);  // Red for dead end
 		}
 
 		// Highlight if selected
