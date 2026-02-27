@@ -22,7 +22,7 @@ namespace Struktur::Debug
 	// FILE OPERATIONS
 	// ============================================================================
 
-	void DialogueEditorWindow::LoadDialogueFile(GameContext& context, const std::string& filepath)
+	void DialogueEditorWindow::LoadDialogueFile(GameContext& context, const std::string& filepath, const std::string& className)
 	{
 		// Clear existing data
 		m_nodes.clear();
@@ -30,11 +30,7 @@ namespace Struktur::Debug
 		m_entryNodeId = "";
 		m_errors.clear();
 		m_warnings.clear();
-
-		// Extract class name from filepath
-		// Example: "assets/Scripts/Dialogue/ScholarDialogue.wren" -> "ScholarDialogue"
-		std::filesystem::path path(filepath);
-		m_currentClassName = path.stem().string();
+		m_currentClassName = className;
 
 		// Extract module path (without extension, relative to assets)
 		// Example: "assets/Scripts/Dialogue/ScholarDialogue.wren" -> "dialogue/scholar"
@@ -777,6 +773,10 @@ namespace Struktur::Debug
 	void DialogueEditorWindow::ParseDialogueDataFromWren(GameContext& context, WrenVM* vm, int slot)
 	{
 		auto nodeList = Dialogue::HelperFunctions::GetNodeListFromWren(vm, slot);
+
+		if (nodeList.empty()) return;
+
+		m_entryNodeId = nodeList[0]->GetId();
 
 		for (auto& node : nodeList)
 		{

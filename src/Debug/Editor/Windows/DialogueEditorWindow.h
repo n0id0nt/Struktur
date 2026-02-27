@@ -61,7 +61,7 @@ namespace Struktur::Debug
 		void Render(GameContext& context) override;
 
 		// File operations
-		void LoadDialogueFile(GameContext& context, const std::string& filepath);
+		void LoadDialogueFile(GameContext& context, const std::string& filepath, const std::string& className);
 		void SaveDialogueFile(const std::string& filepath);
 		void CreateNewDialogue(const std::string& className);
 
