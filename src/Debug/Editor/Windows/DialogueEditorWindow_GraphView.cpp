@@ -1,7 +1,3 @@
-// DialogueEditorWindow_GraphView.cpp
-// Graph view rendering for dialogue editor
-// Append this to DialogueEditorWindow.cpp or include as needed
-
 #include "DialogueEditorWindow.h"
 
 #include <set>
@@ -805,8 +801,8 @@ namespace Struktur::Debug
 			return;
 
 		// Simple hierarchical layout
-		std::map<std::string, int> levels;
-		std::map<int, int> levelCounts;
+		std::unordered_map<std::string, int> levels;
+		std::unordered_map<int, int> levelCounts;
 
 		// BFS to assign levels
 		std::vector<std::string> queue;

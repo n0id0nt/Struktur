@@ -1,14 +1,14 @@
 #include "DialogueEditorWindow.h"
 
+#include <fstream>
+#include <sstream>
+#include <imgui.h>
+
 #include "Engine/GameContext.h"
-#include "Engine/Dialogue/DialogueManager.h"
 #include "Engine/Dialogue/DialogueRegistry.h"
 #include "Debug/Editor/Exporters/DialogueExporter.h"
 #include "Debug/Editor/Windows/PreviewWindow.h"
 #include "Debug/Assertions.h"
-#include <imgui.h>
-#include <fstream>
-#include <sstream>
 
 #define DIALOGUE_FILE_PATH "assets/Scripts/Dialogue/"
 

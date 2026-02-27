@@ -1,5 +1,7 @@
 #pragma once
 
+#include "wren.hpp"
+
 #include "Engine/Dialogue/DialogueResult.h"
 #include "Engine/Dialogue/DialogueNode.h"
 

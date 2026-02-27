@@ -12,6 +12,7 @@
 #include "Engine/GameContext.h"
 #include "Engine/Dialogue/DialogueManager.h"
 #include "Engine/Dialogue/DialogueRegistry.h"
+#include "Engine/Dialogue/DialogueHelperFunctions.h"
 #include "Debug/Editor/Exporters/DialogueExporter.h"
 #include "Debug/Assertions.h"
 
@@ -29,73 +30,88 @@ namespace Struktur::Debug
 		m_entryNodeId = "";
 		m_errors.clear();
 		m_warnings.clear();
-		
+
 		// Extract class name from filepath
-		// Example: "assets/dialogue/ScholarDialogue.wren" -> "ScholarDialogue"
+		// Example: "assets/Scripts/Dialogue/ScholarDialogue.wren" -> "ScholarDialogue"
 		std::filesystem::path path(filepath);
 		m_currentClassName = path.stem().string();
-		
+
 		// Extract module path (without extension, relative to assets)
-		// Example: "assets/dialogue/ScholarDialogue.wren" -> "dialogue/scholar"
+		// Example: "assets/Scripts/Dialogue/ScholarDialogue.wren" -> "dialogue/scholar"
 		std::string modulePath = filepath;
-		
-		// Remove "assets/" prefix if present
-		size_t assetsPos = modulePath.find("assets/");
+
+		// Remove "assets/Scripts/" prefix if present
+		size_t assetsPos = modulePath.find("assets/Scripts");
 		if (assetsPos != std::string::npos)
 		{
-			modulePath = modulePath.substr(assetsPos + 7); // Skip "assets/"
+			modulePath = modulePath.substr(assetsPos + 15); // Skip "assets/Scripts/"
 		}
-		
+
 		// Remove .wren extension
 		if (modulePath.ends_with(".wren"))
 		{
 			modulePath = modulePath.substr(0, modulePath.length() - 5);
 		}
-		
+
 		m_currentModulePath = modulePath;
 		m_currentFile = filepath;
-		
+
 		// Execute Wren code to load the dialogue
-		WrenVM* vm = context.GetWrenVM();
-		
+		WrenVM* vm = context.GetWrenScriptEngine().GetVM();
+
 		// Build the loading script
 		std::stringstream script;
 		script << "import \"" << modulePath << "\" for " << m_currentClassName << "\n";
-		script << "var dialogueData = " << m_currentClassName << ".getData()\n";
-		script << "return dialogueData\n";
-		
+		script << "class DialogueDataLoader {\n";
+		script << "    static getData() {\n";
+		script << "        var dialogueData = " << m_currentClassName << ".getData()\n";
+		script << "        return dialogueData\n";
+		script << "    }\n";
+		script << "}\n";
+
 		// Execute and get the dialogue data
 		wrenEnsureSlots(vm, 1);
 		WrenInterpretResult result = wrenInterpret(vm, "dialogue_loader", script.str().c_str());
-		
+
 		if (result != WREN_RESULT_SUCCESS)
 		{
 			DEBUG_ERROR("Failed to load dialogue from %s", filepath.c_str());
 			m_errors.push_back(ValidationError{
+				ValidationError::Type::CircularDependency,
+				filepath.c_str(),
 				"LOAD_ERROR",
 				"Failed to execute Wren script to load dialogue"
-			});
+				});
 			return;
 		}
-		
+
+		wrenEnsureSlots(vm, 1);
+		wrenGetVariable(vm, "dialogue_loader", "DialogueDataLoader", 0);
+		WrenHandle* loaderClass = wrenGetSlotHandle(vm, 0);
+
+		WrenHandle* getDataMethod = wrenMakeCallHandle(vm, "getData()");
+
+		wrenSetSlotHandle(vm, 0, loaderClass);
+		wrenCall(vm, getDataMethod);
+
 		// Now we need to extract the dialogue data from Wren
 		// The dialogue data should be in slot 0
-		ParseDialogueDataFromWren(context, vm);
-		
+		ParseDialogueDataFromWren(context, vm, 0);
+
 		// Try to load layout file
-		std::string layoutPath = filepath + ".layout.json";
-		if (std::filesystem::exists(layoutPath))
-		{
-			LoadLayoutFromFile(layoutPath);
-		}
-		else
+		//std::string layoutPath = filepath + ".layout.json";
+		//if (std::filesystem::exists(layoutPath))
+		//{
+		//	LoadLayoutFromFile(layoutPath);
+		//}
+		//else
 		{
 			// Auto-generate layout
 			CalculateGraphLayout();
 		}
-		
+
 		m_hasUnsavedChanges = false;
-		
+
 		DEBUG_INFO("Loaded dialogue: %s (%zu nodes)", m_currentClassName.c_str(), m_nodes.size());
 	}
 
@@ -131,7 +147,7 @@ namespace Struktur::Debug
 			for (const auto& choice : nodeData.node->GetChoices())
 			{
 				auto choiceCopy = std::make_unique<Dialogue::Choice>(choice->text, choice->targetNode);
-                nodeCopy->AddChoice(std::move(choiceCopy));
+				nodeCopy->AddChoice(std::move(choiceCopy));
 			}
 
 			// Copy commands (deep copy needed)
@@ -325,7 +341,7 @@ namespace Struktur::Debug
 		for (const auto& choice : sourceNode->GetChoices())
 		{
 			auto choiceCopy = std::make_unique<Dialogue::Choice>(choice->text, choice->targetNode);
-            duplicateNode->AddChoice(std::move(choiceCopy));
+			duplicateNode->AddChoice(std::move(choiceCopy));
 		}
 
 		// Note: Commands and targets would need deep copying
@@ -633,8 +649,8 @@ namespace Struktur::Debug
 		// Display current dialogue
 		if (m_currentPlaybackResult.speaker.has_value())
 		{
-			ImGui::TextColored(ImVec4(0.8f, 0.9f, 1.0f, 1.0f), 
-							  "%s:", m_currentPlaybackResult.speaker.value().c_str());
+			ImGui::TextColored(ImVec4(0.8f, 0.9f, 1.0f, 1.0f),
+				"%s:", m_currentPlaybackResult.speaker.value().c_str());
 		}
 
 		if (m_currentPlaybackResult.text.has_value())
@@ -758,103 +774,14 @@ namespace Struktur::Debug
 		ImGui::EndTabBar();
 	}
 
-	void DialogueEditorWindow::ParseDialogueDataFromWren(GameContext& context, WrenVM* vm)
+	void DialogueEditorWindow::ParseDialogueDataFromWren(GameContext& context, WrenVM* vm, int slot)
 	{
-		// The dialogue data should be a map returned by getData()
-		// Structure: { "entry": "node_id", "nodes": { "node_id": {...}, ... } }
-		
-		if (wrenGetSlotType(vm, 0) != WREN_TYPE_MAP)
-		{
-			DEBUG_ERROR("Dialogue data is not a map");
-			return;
-		}
-		
-		// Get the entry node
-		wrenEnsureSlots(vm, 3);
-		wrenSetSlotString(vm, 1, "entry");
-		wrenGetMapValue(vm, 0, 1, 2);
-		
-		if (wrenGetSlotType(vm, 2) == WREN_TYPE_STRING)
-		{
-			m_entryNodeId = wrenGetSlotString(vm, 2);
-		}
-		
-		// Get the nodes map
-		wrenSetSlotString(vm, 1, "nodes");
-		wrenGetMapValue(vm, 0, 1, 2);
-		
-		if (wrenGetSlotType(vm, 2) != WREN_TYPE_MAP)
-		{
-			DEBUG_ERROR("Nodes data is not a map");
-			return;
-		}
-		
-		// Iterate through nodes map
-		// We need to use DialogueRegistry to create nodes from the data
-		auto& registry = context.GetDialogueRegistry();
-		
-		// Unfortunately, Wren doesn't provide a direct way to iterate maps
-		// We need to call a helper function or use the dialogue manager
-		
-		// Alternative approach: Use DialogueManager to load, then extract
-		LoadViaDialogueManager(context, vm);
-	}
+		auto nodeList = Dialogue::HelperFunctions::GetNodeListFromWren(vm, slot);
 
-	void DialogueEditorWindow::LoadViaDialogueManager(GameContext& context, WrenVM* vm)
-	{
-		// Build script to load into DialogueManager
-		std::stringstream script;
-		script << "import \"" << m_currentModulePath << "\" for " << m_currentClassName << "\n";
-		script << "import \"engine/dialogue_manager\" for DialogueManager\n\n";
-		script << "var dialogueData = " << m_currentClassName << ".getData()\n";
-		script << "DialogueManager.loadDialogueData(dialogueData)\n";
-		
-		wrenEnsureSlots(vm, 1);
-		WrenInterpretResult result = wrenInterpret(vm, "dialogue_loader", script.str().c_str());
-		
-		if (result != WREN_RESULT_SUCCESS)
+		for (auto& node : nodeList)
 		{
-			DEBUG_ERROR("Failed to load dialogue into DialogueManager");
-			return;
-		}
-		
-		// Now extract from DialogueManager
-		// DialogueManager should have the dialogue loaded with ID = m_currentClassName
-		auto& dialogueManager = context.GetDialogueManager();
-		
-		// Get the dialogue data
-		// Assuming DialogueManager has a method to get dialogue by ID
-		const auto* dialogue = dialogueManager.GetDialogue(m_currentClassName);
-		
-		if (!dialogue)
-		{
-			DEBUG_ERROR("Dialogue not found in DialogueManager: %s", m_currentClassName.c_str());
-			return;
-		}
-		
-		// Extract nodes from the loaded dialogue
-		ExtractNodesFromDialogue(dialogue);
-	}
-
-	void DialogueEditorWindow::ExtractNodesFromDialogue(const Dialogue::Dialogue* dialogue)
-	{
-		// Get all nodes from the dialogue
-		const auto& nodes = dialogue->GetNodes();
-		
-		for (const auto& [nodeId, node] : nodes)
-		{
-			// Create editor node data
-			NodeData nodeData;
-			nodeData.node = std::make_unique<Dialogue::DialogueNode>(*node); // Copy the node
-			nodeData.visualPosition = glm::vec2(0.0f, 0.0f); // Will be set by layout
-			
-			m_nodes[nodeId] = std::move(nodeData);
-		}
-		
-		// Entry node should already be set from the dialogue
-		if (dialogue->GetEntryNode().has_value())
-		{
-			m_entryNodeId = dialogue->GetEntryNode().value();
+			std::string key = node->GetId();
+			m_nodes[key] = { std::move(node), glm::vec2() };
 		}
 	}
 }

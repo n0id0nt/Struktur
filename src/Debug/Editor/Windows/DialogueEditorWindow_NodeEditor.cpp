@@ -1,12 +1,10 @@
-// DialogueEditorWindow_NodeEditor.cpp
-// Complete node editor implementation with ImGui controls
-// This provides full editing capabilities for dialogue nodes
-
 #include "DialogueEditorWindow.h"
+
+#include <imgui.h>
+
 #include "Engine/GameContext.h"
 #include "Engine/Dialogue/DialogueManager.h"
 #include "Engine/Dialogue/DialogueRegistry.h"
-#include <imgui.h>
 
 namespace Struktur::Debug
 {

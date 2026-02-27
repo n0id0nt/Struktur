@@ -4,14 +4,17 @@
 
 #pragma once
 
-#include "Debug/Editor/Windows/EditorWindow.h"
-#include "Engine/Dialogue/DialogueNode.h"
-#include "Engine/Dialogue/DialogueResult.h"
-#include "glm/glm.hpp"
-#include <map>
+#include <unordered_map>
 #include <memory>
 #include <vector>
 #include <string>
+
+#include "glm/glm.hpp"
+#include "wren.hpp"
+
+#include "Debug/Editor/Windows/EditorWindow.h"
+#include "Engine/Dialogue/DialogueNode.h"
+#include "Engine/Dialogue/DialogueResult.h"
 
 namespace Struktur::Debug
 {
@@ -112,9 +115,7 @@ namespace Struktur::Debug
 		void InsertVariableAtCursor(char* buffer, size_t bufferSize, const char* variable);
 
 		void SwitchNodeContinuationType(Dialogue::DialogueNode* node, int newType);
-		void ParseDialogueDataFromWren(GameContext& context, WrenVM* vm);
-		void LoadViaDialogueManager(GameContext& context, WrenVM* vm);
-		void ExtractNodesFromDialogue(const Dialogue::Dialogue* dialogue);
+		void ParseDialogueDataFromWren(GameContext& context, WrenVM* vm, int slot);
 
 		// View mode
 		ViewMode m_viewMode;
@@ -131,7 +132,7 @@ namespace Struktur::Debug
 			std::unique_ptr<Dialogue::DialogueNode> node;
 			glm::vec2 visualPosition;
 		};
-		std::map<std::string, NodeData> m_nodes;
+		std::unordered_map<std::string, NodeData> m_nodes;
 		std::string m_entryNodeId;
 		std::string m_selectedNodeId;
 
@@ -144,8 +145,8 @@ namespace Struktur::Debug
 		// Playback state
 		bool m_isPlaybackActive;
 		Dialogue::DialogueResult m_currentPlaybackResult;
-		std::map<std::string, int> m_playbackIntFlags;
-		std::map<std::string, bool> m_playbackBoolFlags;
+		std::unordered_map<std::string, int> m_playbackIntFlags;
+		std::unordered_map<std::string, bool> m_playbackBoolFlags;
 		std::vector<std::string> m_playbackInventory;
 		std::vector<std::string> m_playbackHistory;
 
