@@ -36,6 +36,7 @@ namespace Struktur::Debug
 		, m_errors()
 		, m_warnings()
 		, m_previewWindow(previewWindow)
+		, m_importCount(0u)
 	{
 		m_newNodeIdBuffer[0] = '\0';
 		m_searchBuffer[0] = '\0';

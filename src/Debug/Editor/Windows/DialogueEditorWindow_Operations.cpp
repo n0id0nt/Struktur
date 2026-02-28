@@ -55,19 +55,22 @@ namespace Struktur::Debug
 		// Execute Wren code to load the dialogue
 		WrenVM* vm = context.GetWrenScriptEngine().GetVM();
 
+		std::string classDataName = "classData_" + std::to_string(m_importCount);
+		std::string moduleName = "loader_" + std::to_string(m_importCount);
+		m_importCount++;
+
 		// Build the loading script
 		std::stringstream script;
 		script << "import \"" << modulePath << "\" for " << m_currentClassName << "\n";
-		script << "class DialogueDataLoader {\n";
+		script << "class " << classDataName << " {\n";
 		script << "    static getData() {\n";
-		script << "        var dialogueData = " << m_currentClassName << ".getData()\n";
-		script << "        return dialogueData\n";
+		script << "        return " << m_currentClassName << ".getData()\n";
 		script << "    }\n";
 		script << "}\n";
 
 		// Execute and get the dialogue data
 		wrenEnsureSlots(vm, 1);
-		WrenInterpretResult result = wrenInterpret(vm, "dialogue_loader", script.str().c_str());
+		WrenInterpretResult result = wrenInterpret(vm, moduleName.c_str(), script.str().c_str());
 
 		if (result != WREN_RESULT_SUCCESS)
 		{
@@ -82,13 +85,15 @@ namespace Struktur::Debug
 		}
 
 		wrenEnsureSlots(vm, 1);
-		wrenGetVariable(vm, "dialogue_loader", "DialogueDataLoader", 0);
+		wrenGetVariable(vm, moduleName.c_str(), classDataName.c_str(), 0);
 		WrenHandle* loaderClass = wrenGetSlotHandle(vm, 0);
 
 		WrenHandle* getDataMethod = wrenMakeCallHandle(vm, "getData()");
 
 		wrenSetSlotHandle(vm, 0, loaderClass);
 		wrenCall(vm, getDataMethod);
+
+		wrenReleaseHandle(vm, getDataMethod);
 
 		// Now we need to extract the dialogue data from Wren
 		// The dialogue data should be in slot 0

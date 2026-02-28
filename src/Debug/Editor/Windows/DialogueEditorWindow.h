@@ -126,6 +126,8 @@ namespace Struktur::Debug
 		std::string m_currentModulePath;
 		bool m_hasUnsavedChanges;
 
+		unsigned int m_importCount; // used to ensure dialogue is 
+
 		// Node data
 		struct NodeData
 		{
