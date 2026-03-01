@@ -14,8 +14,7 @@ import "Dialogue/GardenerDialogue" for GardenerDialogue
 import "Dialogue/GuardianDialogue" for GuardianDialogue
 import "Dialogue/InventorDialogue" for InventorDialogue
 import "Dialogue/MerchantDialogue" for MerchantDialogue
-import "Dialogue/TransformationItemsDialogue" for ItemDialogue
-//import "Dialogue/ItemInteractions" for ItemInteractions
+import "Dialogue/ItemsDialogue" for ItemDialogue
 
 class DialogueLoader {
     static loadAllDialogue() {
