@@ -30,6 +30,7 @@ namespace Struktur::Dialogue
 		Callback::ICallback* GetCallback(GameContext& context) const;
 		const std::unordered_map<std::string, DialogueValue>& GetParams() const;
 		const std::string& GetKey() const { return m_key; }
+		void SetKey(const std::string& key) { m_key = key; }
 
 	private:
 		std::string m_key;

@@ -421,12 +421,11 @@ namespace Struktur::Debug
 
 			std::string commandType = commands[i]->GetKey();
 			bool isOpen = ImGui::TreeNodeEx(
-				("Command: " + commandType).c_str(),
+				("Command: " + std::to_string(i + 1)).c_str(),
 				ImGuiTreeNodeFlags_DefaultOpen | ImGuiTreeNodeFlags_Framed
 			);
 
 			// Delete button
-			ImGui::SameLine();
 			if (ImGui::SmallButton("Delete"))
 			{
 				// TODO: Implement command deletion
@@ -456,6 +455,15 @@ namespace Struktur::Debug
 		{
 			ImGui::Text("Select Command Type:");
 			ImGui::Separator();
+
+			// Create commands with default parameters
+			if (ImGui::Selectable("None"))
+			{
+				std::unordered_map<std::string, Dialogue::DialogueValue> params;
+				node->AddCommand(std::make_unique<Dialogue::Command>(std::string("setInt"), params));
+				m_hasUnsavedChanges = true;
+				ImGui::CloseCurrentPopup();
+			}
 
 			// Create commands with default parameters
 			if (ImGui::Selectable("setInt - Set integer flag"))
@@ -529,103 +537,136 @@ namespace Struktur::Debug
 		const std::string& type = command->GetKey();
 		auto& params = command->GetParams();
 
-		ImGui::Text("Parameters:");
-		ImGui::Indent();
+		// Flag name
+		static char typeBuffer[128] = "";
+		strncpy_s(typeBuffer, type.c_str(), sizeof(typeBuffer) - 1);
+		if (ImGui::InputText("Type", typeBuffer, sizeof(typeBuffer)))
+		{
+			command->SetKey(typeBuffer);
+			m_hasUnsavedChanges = true;
+		}
 
-		if (type == "setInt" || type == "setBool")
+		ImGui::Text("Parameters:");
+
+		for (auto& param : params)
 		{
 			// Flag name
-			static char flagBuffer[128] = "";
-			if (params.count("flag"))
-			{
-				strncpy_s(flagBuffer, params.at("flag").AsString().c_str(), sizeof(flagBuffer) - 1);
-			}
+			static char paramTypeBuffer[128] = "";
+			strncpy_s(paramTypeBuffer, param.first.c_str(), sizeof(paramTypeBuffer) - 1);
 
-			if (ImGui::InputText("Flag", flagBuffer, sizeof(flagBuffer)))
+			if (ImGui::InputText("Type", paramTypeBuffer, sizeof(paramTypeBuffer)))
 			{
-				// TODO: Update parameter
-				// Would need Command::SetParameter() method
 				m_hasUnsavedChanges = true;
 			}
 
-			// Value
-			if (type == "setInt")
-			{
-				static int intValue = 0;
-				if (params.count("value"))
-				{
-					intValue = params.at("value").AsInt();
-				}
+			// define the value type variable
+			// Determine current type based on what's present
+			int currentTypeIndex = 0;  // 0=None, 1=Next, 2=Choices, 3=Targets
 
-				if (ImGui::InputInt("Value", &intValue))
+			const Dialogue::DialogueValue& paramValue = param.second;
+
+			if (paramValue.IsBool())
+				currentTypeIndex = 1;
+			else if (paramValue.IsDouble())
+				currentTypeIndex = 2;
+			else if (paramValue.IsInt())
+				currentTypeIndex = 3;
+			else if (paramValue.IsString())
+				currentTypeIndex = 4;
+
+			const char* ParamTypes[] = { "Bool", "Double", "Int (Will be saved as Double)", "String" };
+
+			// Store previous index to detect changes
+			static int lastTypeIndex = currentTypeIndex;
+			int selectedIndex = currentTypeIndex;
+
+			if (ImGui::Combo("##ParamType", &selectedIndex, ParamTypes, IM_ARRAYSIZE(ParamTypes)))
+			{
+				// User changed type
+				if (selectedIndex != currentTypeIndex)
 				{
+					Dialogue::DialogueValue newParamValue;
+					switch (selectedIndex)
+					{
+					case 1: // bool
+						newParamValue = Dialogue::DialogueValue(paramValue.AsBool());
+						break;
+					case 2: // double
+						newParamValue = Dialogue::DialogueValue(paramValue.AsDouble());
+						break;
+					case 3: // int
+						newParamValue = Dialogue::DialogueValue(paramValue.AsInt());
+						break;
+					case 4: // string
+						newParamValue = Dialogue::DialogueValue(paramValue.AsString());
+						break;
+					default: // error
+						BREAK_MSG("[DIALOGUE EDITOR] selected type %d is not a compatible type", currentTypeIndex);
+						break;
+					}
 					m_hasUnsavedChanges = true;
+					// TODO Set the param value here
 				}
 			}
-			else // setBool
+			
+			// change the type value
+			switch (selectedIndex)
 			{
-				static bool boolValue = false;
-				if (params.count("value"))
+			case 1: // bool
 				{
-					boolValue = params.at("value").AsBool();
+					bool boolValue = paramValue.AsInt();
+					if (ImGui::Checkbox("Value", &boolValue))
+					{
+						m_hasUnsavedChanges = true;
+						// Set the value here
+					}
 				}
-
-				if (ImGui::Checkbox("Value", &boolValue))
+				break;
+			case 2: // double
 				{
-					m_hasUnsavedChanges = true;
+					float doubleValue = (float)paramValue.AsDouble();
+					if (ImGui::InputFloat("Value", &doubleValue))
+					{
+						m_hasUnsavedChanges = true;
+						// set the value here
+					}
 				}
-			}
-		}
-		else if (type == "giveItem" || type == "removeItem")
-		{
-			// Item name
-			static char itemBuffer[128] = "";
-			if (params.count("item"))
-			{
-				strncpy_s(itemBuffer, params.at("item").AsString().c_str(), sizeof(itemBuffer) - 1);
-			}
+				break;
+			case 3: // int
+				{
+					int intValue = paramValue.AsInt();
+					if (ImGui::InputInt("Value", &intValue))
+					{
+						m_hasUnsavedChanges = true;
+						// set the value here
+					}
+				}
+				break;
+			case 4: // string
+				{
+					// Flag name
+					static char valueBuffer[128] = "";
+					strncpy_s(valueBuffer, paramValue.AsString().c_str(), sizeof(valueBuffer) - 1);
 
-			if (ImGui::InputText("Item", itemBuffer, sizeof(itemBuffer)))
-			{
-				m_hasUnsavedChanges = true;
+					if (ImGui::InputText("String", valueBuffer, sizeof(valueBuffer)))
+					{
+						// TODO: Update parameter
+						// Would need Command::SetParameter() method
+						m_hasUnsavedChanges = true;
+					}
+				}
+				break;
+			default: // error
+				BREAK_MSG("[DIALOGUE EDITOR] Current type %d is not a compatible type", currentTypeIndex);
+				break;
 			}
-		}
-		else if (type == "giveExp")
-		{
-			// Amount
-			static int amount = 0;
-			if (params.count("amount"))
-			{
-				amount = params.at("amount").AsInt();
-			}
-
-			if (ImGui::InputInt("Amount", &amount))
-			{
-				m_hasUnsavedChanges = true;
-			}
-		}
-		else if (type == "playSound")
-		{
-			// Sound name
-			static char soundBuffer[128] = "";
-			if (params.count("sound"))
-			{
-				strncpy_s(soundBuffer, params.at("sound").AsString().c_str(), sizeof(soundBuffer) - 1);
-			}
-
-			if (ImGui::InputText("Sound", soundBuffer, sizeof(soundBuffer)))
-			{
-				m_hasUnsavedChanges = true;
-			}
-		}
-		else
-		{
-			// Generic parameter display for unknown command types
-			ImGui::TextColored(ImVec4(0.7f, 0.7f, 0.7f, 1.0f),
-				"Custom command - parameters not editable in UI");
 		}
 
-		ImGui::Unindent();
+		// add button 
+		//if ()
+		//{
+//
+		//}
 	}
 
 	// ============================================================================

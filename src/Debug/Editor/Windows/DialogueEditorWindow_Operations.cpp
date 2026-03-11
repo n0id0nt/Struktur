@@ -94,6 +94,7 @@ namespace Struktur::Debug
 		wrenCall(vm, getDataMethod);
 
 		wrenReleaseHandle(vm, getDataMethod);
+		wrenReleaseHandle(vm, loaderClass);
 
 		// Now we need to extract the dialogue data from Wren
 		// The dialogue data should be in slot 0
