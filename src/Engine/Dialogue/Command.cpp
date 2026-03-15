@@ -32,3 +32,8 @@ void Struktur::Dialogue::Command::SetParameter(const std::string &key, const Dia
 {
 	m_params[key] = value;
 }
+
+void Struktur::Dialogue::Command::RemoveParameter(const std::string &key)
+{
+	m_params.erase(key);
+}

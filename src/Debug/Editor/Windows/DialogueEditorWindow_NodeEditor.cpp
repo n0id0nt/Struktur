@@ -548,39 +548,49 @@ namespace Struktur::Debug
 
 		ImGui::Text("Parameters:");
 
+		std::string deleteParam;
+		int i = 0;
 		for (auto& param : params)
 		{
 			// Flag name
 			static char paramTypeBuffer[128] = "";
 			strncpy_s(paramTypeBuffer, param.first.c_str(), sizeof(paramTypeBuffer) - 1);
 
-			if (ImGui::InputText("Param Type", paramTypeBuffer, sizeof(paramTypeBuffer)))
+			std::string paramTypeLabel = "Param Type##param_type_" + std::to_string(i);
+			if (ImGui::InputText(paramTypeLabel.c_str(), paramTypeBuffer, sizeof(paramTypeBuffer)))
 			{
 				m_hasUnsavedChanges = true;
 			}
 
 			// define the value type variable
 			// Determine current type based on what's present
-			int currentTypeIndex = 0;  // 0=None, 1=Next, 2=Choices, 3=Targets
+			int currentTypeIndex = -1;  // 0=None, 1=Next, 2=Choices, 3=Targets
 
 			const Dialogue::DialogueValue& paramValue = param.second;
 
 			if (paramValue.IsBool())
-				currentTypeIndex = 1;
+			{
+				currentTypeIndex = 0;
+			}
 			else if (paramValue.IsDouble())
-				currentTypeIndex = 2;
+			{
+				currentTypeIndex = 1;
+			}
 			else if (paramValue.IsInt())
-				currentTypeIndex = 3;
+			{
+				currentTypeIndex = 2;
+			}
 			else if (paramValue.IsString())
-				currentTypeIndex = 4;
+			{
+				currentTypeIndex = 3;
+			}
 
 			const char* ParamTypes[] = { "Bool", "Double", "Int (Will be saved as Double)", "String" };
 
-			// Store previous index to detect changes
-			static int lastTypeIndex = currentTypeIndex;
 			int selectedIndex = currentTypeIndex;
 
-			if (ImGui::Combo("##ParamType", &selectedIndex, ParamTypes, IM_ARRAYSIZE(ParamTypes)))
+			std::string paramValueTypeLabel = "Param Value Type##param_value_type_" + std::to_string(i);
+			if (ImGui::Combo(paramValueTypeLabel.c_str(), &selectedIndex, ParamTypes, IM_ARRAYSIZE(ParamTypes)))
 			{
 				// User changed type
 				if (selectedIndex != currentTypeIndex)
@@ -588,16 +598,16 @@ namespace Struktur::Debug
 					Dialogue::DialogueValue newParamValue;
 					switch (selectedIndex)
 					{
-					case 1: // bool
+					case 0: // bool
 						newParamValue = Dialogue::DialogueValue(paramValue.AsBool());
 						break;
-					case 2: // double
+					case 1: // double
 						newParamValue = Dialogue::DialogueValue(paramValue.AsDouble());
 						break;
-					case 3: // int
+					case 2: // int
 						newParamValue = Dialogue::DialogueValue(paramValue.AsInt());
 						break;
-					case 4: // string
+					case 3: // string
 						newParamValue = Dialogue::DialogueValue(paramValue.AsString());
 						break;
 					default: // error
@@ -611,45 +621,46 @@ namespace Struktur::Debug
 			}
 			
 			// change the type value
+			std::string valueTypeLabel = "Value##value_" + std::to_string(i);
 			switch (selectedIndex)
 			{
-			case 1: // bool
+			case 0: // bool
 				{
 					bool boolValue = paramValue.AsInt();
-					if (ImGui::Checkbox("Value", &boolValue))
+					if (ImGui::Checkbox(valueTypeLabel.c_str(), &boolValue))
 					{
 						m_hasUnsavedChanges = true;
 						// Set the value here
 					}
 				}
 				break;
-			case 2: // double
+			case 1: // double
 				{
 					float doubleValue = (float)paramValue.AsDouble();
-					if (ImGui::InputFloat("Value", &doubleValue))
+					if (ImGui::InputFloat(valueTypeLabel.c_str(), &doubleValue))
 					{
 						m_hasUnsavedChanges = true;
 						// set the value here
 					}
 				}
 				break;
-			case 3: // int
+			case 2: // int
 				{
 					int intValue = paramValue.AsInt();
-					if (ImGui::InputInt("Value", &intValue))
+					if (ImGui::InputInt(valueTypeLabel.c_str(), &intValue))
 					{
 						m_hasUnsavedChanges = true;
 						// set the value here
 					}
 				}
 				break;
-			case 4: // string
+			case 3: // string
 				{
 					// Flag name
 					static char valueBuffer[128] = "";
 					strncpy_s(valueBuffer, paramValue.AsString().c_str(), sizeof(valueBuffer) - 1);
 
-					if (ImGui::InputText("String", valueBuffer, sizeof(valueBuffer)))
+					if (ImGui::InputText(valueTypeLabel.c_str(), valueBuffer, sizeof(valueBuffer)))
 					{
 						// TODO: Update parameter
 						// Would need Command::SetParameter() method
@@ -661,6 +672,18 @@ namespace Struktur::Debug
 				BREAK_MSG("[DIALOGUE EDITOR] Current type %d is not a compatible type", currentTypeIndex);
 				break;
 			}
+
+			std::string deleteLabel = "- Delete Param##button_" + std::to_string(i);
+			if (ImGui::Button(deleteLabel.c_str()))
+			{
+				deleteParam = param.first;
+			}
+			i++;
+		}
+
+		if (!deleteParam.empty())
+		{
+			command->RemoveParameter(deleteParam);
 		}
 
 		// add button 
@@ -684,13 +707,14 @@ namespace Struktur::Debug
 				if (!params.count(key))
 				{
 					paramAdded = true;
-					command->SetParameter(key, "");
+					Dialogue::DialogueValue value("");
+					command->SetParameter(key, value);
 				}
 				else
 				{
 					newParamIndex++;
 				}
-			} while (paramAdded);
+			} while (!paramAdded);
 			m_hasUnsavedChanges = true;
 		}
 	}
