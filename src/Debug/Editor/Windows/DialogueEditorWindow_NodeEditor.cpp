@@ -554,7 +554,7 @@ namespace Struktur::Debug
 			static char paramTypeBuffer[128] = "";
 			strncpy_s(paramTypeBuffer, param.first.c_str(), sizeof(paramTypeBuffer) - 1);
 
-			if (ImGui::InputText("Type", paramTypeBuffer, sizeof(paramTypeBuffer)))
+			if (ImGui::InputText("Param Type", paramTypeBuffer, sizeof(paramTypeBuffer)))
 			{
 				m_hasUnsavedChanges = true;
 			}
@@ -606,6 +606,7 @@ namespace Struktur::Debug
 					}
 					m_hasUnsavedChanges = true;
 					// TODO Set the param value here
+					command->SetParameter(param.first, newParamValue);
 				}
 			}
 			
@@ -663,10 +664,35 @@ namespace Struktur::Debug
 		}
 
 		// add button 
-		//if ()
-		//{
-//
-		//}
+		if (ImGui::Button("+ Add Param"))
+		{
+			std::string newParamName = "New Param";
+			int newParamIndex = 0;
+			bool paramAdded = false;
+			do 
+			{
+				std::string key;
+				if (newParamIndex == 0)
+				{
+					key = newParamName;
+				}
+				else
+				{
+					key = newParamName + " " + std::to_string(newParamIndex);
+				}
+
+				if (!params.count(key))
+				{
+					paramAdded = true;
+					command->SetParameter(key, "");
+				}
+				else
+				{
+					newParamIndex++;
+				}
+			} while (paramAdded);
+			m_hasUnsavedChanges = true;
+		}
 	}
 
 	// ============================================================================

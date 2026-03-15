@@ -27,3 +27,8 @@ const std::unordered_map<std::string, Struktur::Dialogue::DialogueValue>& Strukt
 {
 	return m_params;
 }
+
+void Struktur::Dialogue::Command::SetParameter(const std::string &key, const DialogueValue &value)
+{
+	m_params[key] = value;
+}
