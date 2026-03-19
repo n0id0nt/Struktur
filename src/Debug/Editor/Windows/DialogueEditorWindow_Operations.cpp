@@ -22,7 +22,7 @@ namespace Struktur::Debug
 	// FILE OPERATIONS
 	// ============================================================================
 
-	void DialogueEditorWindow::LoadDialogueFile(GameContext& context, const std::string& filepath, const std::string& className)
+	void DialogueEditorWindow::LoadDialogueFile(GameContext& context, const std::string& filepath, const std::string& className, const std::string& entryNode)
 	{
 		// Clear existing data
 		m_nodes.clear();
@@ -31,6 +31,7 @@ namespace Struktur::Debug
 		m_errors.clear();
 		m_warnings.clear();
 		m_currentClassName = className;
+		m_entryNodeId = entryNode;
 
 		// Extract module path (without extension, relative to assets)
 		// Example: "assets/Scripts/Dialogue/ScholarDialogue.wren" -> "dialogue/scholar"
@@ -76,7 +77,7 @@ namespace Struktur::Debug
 		{
 			DEBUG_ERROR("Failed to load dialogue from %s", filepath.c_str());
 			m_errors.push_back(ValidationError{
-				ValidationError::Type::CircularDependency,
+				ValidationError::Type::InvalidReference,
 				filepath.c_str(),
 				"LOAD_ERROR",
 				"Failed to execute Wren script to load dialogue"
@@ -122,41 +123,11 @@ namespace Struktur::Debug
 		DEBUG_INFO("Saving dialogue file: %s", filepath.c_str());
 
 		// Convert nodes to unique_ptr map for exporter
-		std::map<std::string, std::unique_ptr<Dialogue::DialogueNode>> nodesToExport;
+		std::unordered_map<std::string, Dialogue::DialogueNode*> nodesToExport;
 
 		for (auto& [nodeId, nodeData] : m_nodes)
 		{
-			// Create a copy of the node for export
-			auto nodeCopy = std::make_unique<Dialogue::DialogueNode>(nodeId);
-
-			// Copy all node data
-			if (nodeData.node->GetSpeaker().has_value())
-			{
-				nodeCopy->SetSpeaker(nodeData.node->GetSpeaker().value());
-			}
-
-			if (nodeData.node->GetText().has_value())
-			{
-				nodeCopy->SetText(nodeData.node->GetText().value());
-			}
-
-			if (nodeData.node->GetNext().has_value())
-			{
-				nodeCopy->SetNext(nodeData.node->GetNext().value());
-			}
-
-			// Copy choices
-			for (const auto& choice : nodeData.node->GetChoices())
-			{
-				auto choiceCopy = std::make_unique<Dialogue::Choice>(choice->text, choice->targetNode);
-				nodeCopy->AddChoice(std::move(choiceCopy));
-			}
-
-			// Copy commands (deep copy needed)
-			// Note: This is simplified - full implementation would need proper command copying
-			// For now, commands/targets aren't copied as they need special handling
-
-			nodesToExport[nodeId] = std::move(nodeCopy);
+			nodesToExport[nodeId] = nodeData.node.get();
 		}
 
 		// Export to Wren format
@@ -782,12 +753,15 @@ namespace Struktur::Debug
 
 		if (nodeList.empty()) return;
 
-		m_entryNodeId = nodeList[0]->GetId();
-
 		for (auto& node : nodeList)
 		{
 			std::string key = node->GetId();
 			m_nodes[key] = { std::move(node), glm::vec2() };
+		}
+
+		if (!m_nodes.contains(m_entryNodeId))
+		{
+			m_entryNodeId = m_nodes.begin()->first;
 		}
 	}
 }

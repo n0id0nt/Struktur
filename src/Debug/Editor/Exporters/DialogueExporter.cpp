@@ -6,7 +6,7 @@
 namespace Struktur::Dialogue
 {
 	std::string DialogueExporter::ExportToWren(
-		const std::map<std::string, std::unique_ptr<DialogueNode>>& nodes,
+		const std::unordered_map<std::string, Dialogue::DialogueNode*>& nodes,
 		const std::string& className)
 	{
 		std::ostringstream output;
@@ -128,15 +128,16 @@ namespace Struktur::Dialogue
 	{
 		std::ostringstream output;
 		output << Indent(indent) << "{\"text\": \"" << EscapeString(choice.text)
-			   << "\", \"target\": \"" << EscapeString(choice.targetNode) << "\"}";
+			<< "\", \"target\": \"" << EscapeString(choice.targetNode) << "\"}";
 		return output.str();
 	}
 
 	std::string DialogueExporter::ExportCommand(const Command& command, int indent)
 	{
 		std::ostringstream output;
-		output << Indent(indent) << "{\"type\": \"" << EscapeString(command.GetKey()) << "\", ";
-		output << "\"parameters\": {";
+		output << Indent(indent) << "{\n";
+		output << Indent(indent + 1) << "\"type\": \"" << EscapeString(command.GetKey()) << "\", ";
+		output << "\"parameters\": [\n";
 
 		// Export parameters
 		// Note: This assumes Command has a GetParameters() method
@@ -145,38 +146,47 @@ namespace Struktur::Dialogue
 		bool first = true;
 		for (const auto& [key, value] : params)
 		{
-			if (!first) output << ", ";
+			if (!first) output << ",\n";
 			first = false;
 
-			output << "\"" << EscapeString(key) << "\": ";
+			output << Indent(indent + 2) << "{\n";
 
-			output << value.AsString();
+			output << Indent(indent + 3) << "\"type\": \"" << EscapeString(key) << "\",\n";
+			output << Indent(indent + 3) << "\"value\": " << value.ExportValue() << "\n";
+
+			output << Indent(indent + 2) << "}";
 		}
 
-		output << "}}";
+		output << "\n" << Indent(indent + 1) << "]\n";
+		output << Indent(indent) << "}";
 		return output.str();
 	}
 
 	std::string DialogueExporter::ExportCondition(const Condition& condition, int indent)
 	{
 		std::ostringstream output;
-		output << Indent(indent) << "{\"type\": \"" << EscapeString(condition.GetKey()) << "\", ";
-		output << "\"parameters\": {";
+		output << Indent(indent) << "{\n";
+		output << Indent(indent + 1) << "\"type\": \"" << EscapeString(condition.GetKey()) << "\", ";
+		output << "\"parameters\": [\n";
 
 		// Export parameters
 		const auto& params = condition.GetParams();
 		bool first = true;
 		for (const auto& [key, value] : params)
 		{
-			if (!first) output << ", ";
+			if (!first) output << ",\n";
 			first = false;
 
-			output << "\"" << EscapeString(key) << "\": ";
+			output << Indent(indent + 2) << "{\n";
 
-			output << value.AsString();
+			output << Indent(indent + 3) << "\"type\": \"" << EscapeString(key) << "\",\n";
+			output << Indent(indent + 3) << "\"value\": " << value.ExportValue() << "\n";
+
+			output << Indent(indent + 2) << "}";
 		}
 
-		output << "}}";
+		output << "\n" << Indent(indent + 1) << "]\n";
+		output << Indent(indent) << "}";
 		return output.str();
 	}
 
@@ -222,12 +232,12 @@ namespace Struktur::Dialogue
 		{
 			switch (c)
 			{
-				case '"':  result += "\\\""; break;
-				case '\\': result += "\\\\"; break;
-				case '\n': result += "\\n"; break;
-				case '\r': result += "\\r"; break;
-				case '\t': result += "\\t"; break;
-				default:   result += c; break;
+			case '"':  result += "\\\""; break;
+			case '\\': result += "\\\\"; break;
+			case '\n': result += "\\n"; break;
+			case '\r': result += "\\r"; break;
+			case '\t': result += "\\t"; break;
+			default:   result += c; break;
 			}
 		}
 

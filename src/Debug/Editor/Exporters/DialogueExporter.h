@@ -5,7 +5,7 @@
 #pragma once
 
 #include <string>
-#include <map>
+#include <unordered_map>
 #include <memory>
 #include "Engine/Dialogue/DialogueNode.h"
 
@@ -17,7 +17,7 @@ namespace Struktur::Dialogue
 	public:
 		// Export entire dialogue to Wren format
 		static std::string ExportToWren(
-			const std::map<std::string, std::unique_ptr<DialogueNode>>& nodes,
+			const std::unordered_map<std::string, Dialogue::DialogueNode*>& nodes,
 			const std::string& className);
 
 	private:

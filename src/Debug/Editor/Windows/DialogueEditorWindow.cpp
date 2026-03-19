@@ -261,13 +261,16 @@ namespace Struktur::Debug
 
 			static char filepathBuffer[256] = DIALOGUE_FILE_PATH;
 			ImGui::InputText("Filepath", filepathBuffer, sizeof(filepathBuffer));
-			
+
 			static char classNameBuffer[256] = "";
 			ImGui::InputText("Class Name", classNameBuffer, sizeof(classNameBuffer));
 
+			static char entryNodeBuffer[256] = "";
+			ImGui::InputText("Entry Node", entryNodeBuffer, sizeof(entryNodeBuffer));
+
 			if (ImGui::Button("Load", ImVec2(120, 0)))
 			{
-				LoadDialogueFile(context, filepathBuffer, classNameBuffer);
+				LoadDialogueFile(context, filepathBuffer, classNameBuffer, entryNodeBuffer);
 				ImGui::CloseCurrentPopup();
 			}
 			ImGui::SameLine();
@@ -404,9 +407,12 @@ namespace Struktur::Debug
 			static char classNameBuffer[256] = "";
 			ImGui::InputText("Class Name", classNameBuffer, sizeof(classNameBuffer));
 
+			static char entryNodeBuffer[256] = "";
+			ImGui::InputText("Entry Node", entryNodeBuffer, sizeof(entryNodeBuffer));
+
 			if (ImGui::Button("Load"))
 			{
-				LoadDialogueFile(context, filepathBuffer, classNameBuffer);
+				LoadDialogueFile(context, filepathBuffer, classNameBuffer, entryNodeBuffer);
 				ImGui::CloseCurrentPopup();
 			}
 			ImGui::SameLine();
