@@ -35,6 +35,7 @@ namespace Struktur::Dialogue
 
 		void SetParameter(const std::string& key, const DialogueValue& value);
 		void RemoveParameter(const std::string& key);
+		void ChangeParameterKey(const std::string& oldKey, const std::string& newKey);
 
 	private:
 		std::string m_key;

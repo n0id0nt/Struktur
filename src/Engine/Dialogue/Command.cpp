@@ -28,12 +28,21 @@ const std::unordered_map<std::string, Struktur::Dialogue::DialogueValue>& Strukt
 	return m_params;
 }
 
-void Struktur::Dialogue::Command::SetParameter(const std::string &key, const DialogueValue &value)
+void Struktur::Dialogue::Command::SetParameter(const std::string& key, const DialogueValue& value)
 {
 	m_params[key] = value;
 }
 
-void Struktur::Dialogue::Command::RemoveParameter(const std::string &key)
+void Struktur::Dialogue::Command::RemoveParameter(const std::string& key)
 {
 	m_params.erase(key);
+}
+
+void Struktur::Dialogue::Command::ChangeParameterKey(const std::string& oldKey, const std::string& newKey)
+{
+	auto it = m_params.find(oldKey);
+	if (it != m_params.end()) {
+		m_params.emplace(newKey, std::move(it->second)); // move the value to avoid copying
+		m_params.erase(it);
+	}
 }

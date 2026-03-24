@@ -29,8 +29,14 @@ namespace Struktur::Dialogue
 		bool Evaluate(GameContext& context) const;
 		Callback::ICallback* GetCallback(GameContext& context) const;
 		const std::unordered_map<std::string, DialogueValue>& GetParams() const;
-		const std::string& GetKey() const { return m_key; }
 
+		const std::string& GetKey() const { return m_key; }
+		void SetKey(const std::string& key) { m_key = key; }
+
+		void SetParameter(const std::string& key, const DialogueValue& value);
+		void RemoveParameter(const std::string& key);
+		void ChangeParameterKey(const std::string& oldKey, const std::string& newKey);\
+		
 	private:
 		std::string m_key;
 		std::unordered_map<std::string, DialogueValue> m_params;
