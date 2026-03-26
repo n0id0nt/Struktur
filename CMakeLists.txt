@@ -17,6 +17,7 @@ set(JSON_Install OFF CACHE BOOL "" FORCE)
 set(PUGIXML_INSTALL OFF CACHE BOOL "" FORCE)
 set(BOX2D_BUILD_DOCS OFF CACHE BOOL "" FORCE)
 set(BOX2D_INSTALL OFF CACHE BOOL "" FORCE)
+set(PHYSFS_INSTALL OFF CACHE BOOL "" FORCE)
 set(BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
 set(RAYLIB_INSTALL OFF CACHE BOOL "" FORCE)
 
@@ -157,6 +158,13 @@ if (NOT raylib_FOUND)
         GIT_TAG 0105acf1bfba22e883688e5b9ffb1af0536739e2
     )
 
+    # PhysicsFS - Virtual filesystem / asset packing
+    FetchContent_Declare(
+        physfs
+        GIT_REPOSITORY https://github.com/icculus/physfs.git
+        GIT_TAG release-3.2.0
+    )
+
     # Configure library options before making available
     
     # RayLib options
@@ -176,9 +184,15 @@ if (NOT raylib_FOUND)
     # Box2D options
     set(BOX2D_BUILD_UNIT_TESTS OFF CACHE BOOL "" FORCE)
     set(BOX2D_BUILD_TESTBED OFF CACHE BOOL "" FORCE)
+
+    # PhysicsFS options
+    set(PHYSFS_BUILD_STATIC TRUE CACHE BOOL "" FORCE)
+    set(PHYSFS_BUILD_SHARED FALSE CACHE BOOL "" FORCE)
+    set(PHYSFS_BUILD_TEST FALSE CACHE BOOL "" FORCE)
+    set(PHYSFS_BUILD_DOCS FALSE CACHE BOOL "" FORCE)
     
     # Make libraries available
-    FetchContent_MakeAvailable(raylib entt glm nlohmann_json pugixml box2d)
+    FetchContent_MakeAvailable(raylib entt glm nlohmann_json pugixml box2d physfs)
     
     # Handle rlImGui (depends on ImGui)
     FetchContent_GetProperties(rlimgui)
@@ -443,6 +457,7 @@ target_link_libraries(${PROJECT_NAME}
     box2d
     imgui
     rlimgui
+    PhysFS::PhysFS-static
 )
 
 # Platform-specific settings
