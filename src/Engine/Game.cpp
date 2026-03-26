@@ -3,6 +3,7 @@
 #include <string>
 #include <memory>
 #include <variant>
+#include "physfs.h"
 #include "raylib.h"
 #include "raymath.h"
 #ifdef PLATFORM_WEB
@@ -65,6 +66,14 @@ void Struktur::InitialiseGame(GameContext& context)
 	Wren::WrenScriptEngine& wrenScriptEngine = context.GetWrenScriptEngine();
 	Wren::WrenStateManager& wrenStateManager = context.GetWrenStateManager();
 	Wren::WrenScriptComponentRegistry& wrenScriptComponentRegistry = context.GetWrenScriptComponentRegistry();
+
+	PHYSFS_init(GetWorkingDirectory());
+#ifdef EDITOR
+	PHYSFS_mount("assets/", "/", 1);
+#else
+	PHYSFS_mount("game_data.pak", "/", 1);
+#endif
+
 
 	// Want to create a window before we start initialising systems
 #ifdef EDITOR
@@ -176,6 +185,8 @@ void Struktur::ExitGame(GameContext& context)
 	DEBUG_INFO("[Clean Up] Resource Manager");
 	Resource::ResourceManager& resourceManager = context.GetResourceManager();
 	resourceManager.Clear();
+
+	PHYSFS_deinit();
 }
 
 void Struktur::SplashScreenLoop(GameContext& context)
