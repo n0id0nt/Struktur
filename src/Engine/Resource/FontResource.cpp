@@ -32,8 +32,10 @@ bool Struktur::Resource::FontResource::LoadFromDisk()
     }
     
     // Load custom font - this loads both disk data and creates GPU texture
-    font = ::LoadFontEx(filePath.c_str(), m_fontSize, m_codepoints, m_codepointCount);
-    
+    auto memory = LoadFile(filePath);
+    const char* ext = ::GetFileExtension(filePath.c_str());
+    font = ::LoadFontFromMemory(ext, memory.data(), memory.size(), m_fontSize, m_codepoints, m_codepointCount);
+
     if (font.texture.id == 0)
     {
         BREAK_MSG(std::format("Failed to load font: {}", filePath).c_str());

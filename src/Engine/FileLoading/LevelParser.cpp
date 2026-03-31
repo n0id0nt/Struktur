@@ -1,8 +1,9 @@
 #include "LevelParser.h"
 
 #include <fstream>
-#include "raylib.h"
 #include <format>
+#include "raylib.h"
+#include "physfs.h"
 
 #include "Engine/GameContext.h"
 #include "Debug/Assertions.h"
@@ -15,10 +16,15 @@ glm::vec2 Struktur::FileLoading::LevelParser::LoadJsonVector2(const nlohmann::js
 
 Struktur::FileLoading::LevelParser::World Struktur::FileLoading::LevelParser::LoadWorldMap(GameContext& context, const std::string& filePath)
 {
-	std::ifstream file(filePath);
-	assert(file);
-	nlohmann::json data = nlohmann::json::parse(file);
-	file.close();
+	PHYSFS_File* file = PHYSFS_openRead(filePath.c_str());
+	ASSERT(file);
+
+	PHYSFS_sint64 size = PHYSFS_fileLength(file);
+	std::string buffer(size, '\0');
+	PHYSFS_readBytes(file, buffer.data(), size);
+	PHYSFS_close(file);
+
+	nlohmann::json data = nlohmann::json::parse(buffer);
 
 	DEBUG_INFO("Loading world");
 

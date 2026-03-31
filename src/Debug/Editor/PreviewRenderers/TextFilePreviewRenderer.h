@@ -4,6 +4,7 @@
 #include <string>
 #include <fstream>
 #include <sstream>
+#include "physfs.h"
 
 namespace Struktur::Debug
 {
@@ -35,13 +36,14 @@ namespace Struktur::Debug
     private:
         void LoadFile()
         {
-            std::ifstream file(m_filePath);
-            if (file.is_open())
+            PHYSFS_File* file = PHYSFS_openRead(m_filePath.c_str());
+            if (file)
             {
-                std::stringstream buffer;
-                buffer << file.rdbuf();
-                m_fileContent = buffer.str();
-                file.close();
+                PHYSFS_sint64 size = PHYSFS_fileLength(file);
+                std::string buffer(size, '\0');
+                PHYSFS_readBytes(file, buffer.data(), size);
+                PHYSFS_close(file);
+                m_fileContent = std::move(buffer);
             }
             else
             {

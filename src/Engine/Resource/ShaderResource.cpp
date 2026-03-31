@@ -34,10 +34,28 @@ bool Struktur::Resource::ShaderResource::LoadToGpu()
     if (!LoadFromDisk()) return false;
     if (IsGpuResourceValid()) return true;
 
-    const char* vsFilePath = m_vsFilePath.empty() ? nullptr : m_vsFilePath.c_str();
-    const char* fsFilePath = m_fsFilePath.empty() ? nullptr : m_fsFilePath.c_str();
+    // Helper lambda to load shader source via PhysicsFS
+    auto loadShaderSource = [](const std::string& path) -> std::string
+    {
+        if (path.empty()) return {};
 
-    shader = ::LoadShader(vsFilePath, fsFilePath);
+        PHYSFS_File* file = PHYSFS_openRead(path.c_str());
+        ASSERT(file);
+
+        PHYSFS_sint64 size = PHYSFS_fileLength(file);
+        std::string buffer(size, '\0');
+        PHYSFS_readBytes(file, buffer.data(), size);
+        PHYSFS_close(file);
+        return buffer;
+    };
+
+    std::string vsSource = loadShaderSource(m_vsFilePath);
+    std::string fsSource = loadShaderSource(m_fsFilePath);
+
+    const char* vs = vsSource.empty() ? nullptr : vsSource.c_str();
+    const char* fs = fsSource.empty() ? nullptr : fsSource.c_str();
+
+    shader = ::LoadShaderFromMemory(vs, fs);
     return shader.id != 0;
 }
 

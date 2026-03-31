@@ -22,10 +22,10 @@ bool WrenStateManager::Initialise(GameContext& context)
     DEBUG_INFO("[WrenStateManager] Initializing Main.wren");
     
     // Load Main.wren
-    if (!scriptEngine.InterpretFile("assets/scripts/Main.wren"))
+    if (!scriptEngine.InterpretFile("scripts/Main.wren"))
     {
         DEBUG_ERROR("[WrenStateManager] Failed to load Main.wren");
-        DEBUG_ERROR("[WrenStateManager] Main.wren must be in the assets/scripts folder");
+        DEBUG_ERROR("[WrenStateManager] Main.wren must be in the scripts folder");
         return false;
     }
     

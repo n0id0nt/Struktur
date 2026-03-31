@@ -1,8 +1,9 @@
 #include "WrenScriptEngine.h"
 
 #include <filesystem>
-#include <Reflect/wren_reflect.h>
-#include <Trace/wren_trace.h>
+#include "physfs.h"
+#include "Reflect/wren_reflect.h"
+#include "Trace/wren_trace.h"
 
 #include "Engine/GameContext.h"
 
@@ -74,23 +75,23 @@ bool Struktur::Wren::WrenScriptEngine::InterpretFile(const char* path)
 	}
 
 	// Load file
-	std::ifstream file(path);
-	if (!file.is_open())
+	PHYSFS_File* file = PHYSFS_openRead(path);
+	if (!file)
 	{
 		DEBUG_ERROR("Failed to open Wren file: %s", path);
 		return false;
 	}
 
-	std::stringstream buffer;
-	buffer << file.rdbuf();
-	std::string source = buffer.str();
-	file.close();
+	PHYSFS_sint64 size = PHYSFS_fileLength(file);
+	std::string buffer(size, '\0');
+	PHYSFS_readBytes(file, buffer.data(), size);
+	PHYSFS_close(file);
 
 	// Extract module name from path (remove extension)
 	std::filesystem::path filepath(path);
 	std::string module = filepath.stem().string();
 
-	return InterpretString(module.c_str(), source.c_str());
+	return InterpretString(module.c_str(), buffer.c_str());
 }
 
 // ============================================================================
@@ -148,8 +149,8 @@ WrenLoadModuleResult Struktur::Wren::WrenScriptEngine::OnLoadModule(WrenVM* vm, 
 
 	// Try multiple paths for module loading
 	std::vector<std::string> searchPaths = {
-		std::string("assets/scripts/") + name + ".wren",
-		std::string("assets/scripts/bindings/") + name + ".wren",
+		std::string("scripts/") + name + ".wren",
+		std::string("scripts/bindings/") + name + ".wren",
 	};
 
 	std::string source;
@@ -157,12 +158,13 @@ WrenLoadModuleResult Struktur::Wren::WrenScriptEngine::OnLoadModule(WrenVM* vm, 
 
 	for (const auto& path : searchPaths)
 	{
-		std::ifstream file(path);
-		if (file.is_open())
+		PHYSFS_File* file = PHYSFS_openRead(path.c_str());
+		if (file)
 		{
-			std::stringstream buffer;
-			buffer << file.rdbuf();
-			source = buffer.str();
+			PHYSFS_sint64 size = PHYSFS_fileLength(file);
+			source = std::string(size, '\0');
+			PHYSFS_readBytes(file, source.data(), size);
+			PHYSFS_close(file);
 			found = true;
 			DEBUG_INFO("Loaded Wren module: %s from %s", name, path.c_str());
 			break;

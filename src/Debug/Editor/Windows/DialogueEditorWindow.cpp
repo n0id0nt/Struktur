@@ -10,7 +10,7 @@
 #include "Debug/Editor/Windows/PreviewWindow.h"
 #include "Debug/Assertions.h"
 
-#define DIALOGUE_FILE_PATH "assets/Scripts/Dialogue/"
+#define DIALOGUE_FILE_PATH "Scripts/Dialogue/"
 
 namespace Struktur::Debug
 {

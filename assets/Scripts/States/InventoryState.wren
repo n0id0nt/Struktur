@@ -26,13 +26,13 @@ class InventoryState is BaseState {
 
         System.print("Entering Inventory")
         
-        _menuMusic = Music.load("assets/Sounds/menuMusic.wav")
+        _menuMusic = Music.load("Sounds/menuMusic.wav")
         _menuMusic.setLooping(true)
         _menuMusic.play()
-        _itemFocusSound = Sound.load("assets/Sounds/scroll.wav")
-        var font = Font.load("assets/Fonts/medieval_sharp/MedievalSharp-Bold.ttf", 120)
-        var inventoryBackgroundPanelTexture = Texture.load("assets/Tiles/InventoryBackgroundPanel.png")
-        var focusedItemBackgroundPanelTexture = Texture.load("assets/Tiles/FocusedItemBackgroundPanel.png")
+        _itemFocusSound = Sound.load("Sounds/scroll.wav")
+        var font = Font.load("Fonts/medieval_sharp/MedievalSharp-Bold.ttf", 120)
+        var inventoryBackgroundPanelTexture = Texture.load("Tiles/InventoryBackgroundPanel.png")
+        var focusedItemBackgroundPanelTexture = Texture.load("Tiles/FocusedItemBackgroundPanel.png")
 
         _screenPanel = UIPanel.new(Vec2.new(0, 0), Vec2.new(0, 0), Vec2.new(Application.gameWidth, Application.gameHeight), Vec2.new(0, 0))
         _screenPanel.setBackgroundColor(Vec4.new(0, 0, 0, 70))
@@ -89,9 +89,9 @@ class InventoryState is BaseState {
             var suffix1 = " Note"
             var suffix2 = " Recipt"
             if (item.endsWith(suffix1) || item.endsWith(suffix2)) {
-                texture = Texture.load("assets/Tiles/Items/Recipt.png")
+                texture = Texture.load("Tiles/Items/Recipt.png")
             } else {
-                texture = Texture.load("assets/Tiles/Items/%(item).png")
+                texture = Texture.load("Tiles/Items/%(item).png")
             }
 
             inventoryItemPanel.setBackgroundTexture(texture)

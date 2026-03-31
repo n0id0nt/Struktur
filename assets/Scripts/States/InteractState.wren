@@ -154,12 +154,12 @@ class InteractState is BaseState {
 
         _interactingEntity = params["interactingEntity"]
         
-        _menuMusic = Music.load("assets/Sounds/menuMusic.wav")
+        _menuMusic = Music.load("Sounds/menuMusic.wav")
         _menuMusic.setLooping(true)
         _menuMusic.play()
-        _textScrollSound = Sound.load("assets/Sounds/scroll.wav")
-        var font = Font.load("assets/Fonts/medieval_sharp/MedievalSharp-Bold.ttf", 30)
-        var dialogueBackgroundPanelTexture = Texture.load("assets/Tiles/DialoguePanel.png")
+        _textScrollSound = Sound.load("Sounds/scroll.wav")
+        var font = Font.load("Fonts/medieval_sharp/MedievalSharp-Bold.ttf", 30)
+        var dialogueBackgroundPanelTexture = Texture.load("Tiles/DialoguePanel.png")
 
         // Create UI panel
         _screenPanel = UIPanel.new(Vec2.new(0, 0), Vec2.new(0, 0), Vec2.new(Application.gameWidth, Application.gameHeight), Vec2.new(0, 0))
@@ -329,7 +329,7 @@ class InteractState is BaseState {
     displayChoices(choices) {
         // Create choice labels
         var yOffset = -80
-        var font = Font.load("assets/Fonts/medieval_sharp/MedievalSharp-Bold.ttf", 18)
+        var font = Font.load("Fonts/medieval_sharp/MedievalSharp-Bold.ttf", 18)
         
         for (i in 0...choices.count) {
             var choice = choices[i]

@@ -1,6 +1,10 @@
 #pragma once
 
 #include <string>
+#include <vector>
+#include "physfs.h"
+
+#include "Debug/Assertions.h"
 
 namespace Struktur
 {
@@ -21,6 +25,19 @@ namespace Struktur
 			virtual bool LoadFromDisk() = 0;
 			virtual void UnloadFromDisk() = 0;
 			virtual size_t GetMemoryUsage() const = 0;
+
+			static std::vector<uint8_t> LoadFile(const std::string& filePath)
+			{
+				PHYSFS_File* file = PHYSFS_openRead(filePath.c_str());
+				ASSERT(file);
+
+				PHYSFS_sint64 size = PHYSFS_fileLength(file);
+				std::vector<uint8_t> buffer(size);
+				PHYSFS_readBytes(file, buffer.data(), size);
+				PHYSFS_close(file);
+
+				return buffer;
+			}
 		};
 
 		// GPU resource base class

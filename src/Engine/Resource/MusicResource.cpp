@@ -16,7 +16,10 @@ bool Struktur::Resource::MusicResource::LoadFromDisk()
 {
     if (isLoaded) return true;
     
-    music = LoadMusicStream(filePath.c_str());
+    auto memory = LoadFile(filePath);
+    const char* ext = ::GetFileExtension(filePath.c_str());
+    music = ::LoadMusicStreamFromMemory(ext, memory.data(), memory.size());
+
     if (music.frameCount == 0) return false;
     
     isLoaded = true;

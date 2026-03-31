@@ -68,7 +68,7 @@ class Item {
     // Called after C++ has created base components
     // Script configures/initializes component values
     start() {
-        var texture = Texture.load("assets/Tiles/Items.png")
+        var texture = Texture.load("Tiles/Items.png")
         if (!_itemsWithNoImage.contains(_name)) {
             var interactionId = _name
             var color = WHITE

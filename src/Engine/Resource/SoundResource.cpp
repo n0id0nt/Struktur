@@ -18,7 +18,10 @@ bool Struktur::Resource::SoundResource::LoadFromDisk()
 {
     if (isLoaded) return true;
     
-    m_waveData = ::LoadWave(filePath.c_str());
+    auto memory = LoadFile(filePath);
+    const char* ext = ::GetFileExtension(filePath.c_str());
+
+    m_waveData = ::LoadWaveFromMemory(ext, memory.data(), memory.size());
     if (m_waveData.frameCount == 0) return false;
     
     isLoaded = true;

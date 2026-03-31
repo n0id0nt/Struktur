@@ -34,14 +34,14 @@ namespace Struktur::Debug
 		m_entryNodeId = entryNode;
 
 		// Extract module path (without extension, relative to assets)
-		// Example: "assets/Scripts/Dialogue/ScholarDialogue.wren" -> "dialogue/scholar"
+		// Example: "Scripts/Dialogue/ScholarDialogue.wren" -> "dialogue/scholar"
 		std::string modulePath = filepath;
 
-		// Remove "assets/Scripts/" prefix if present
-		size_t assetsPos = modulePath.find("assets/Scripts");
+		// Remove "Scripts/" prefix if present
+		size_t assetsPos = modulePath.find("Scripts");
 		if (assetsPos != std::string::npos)
 		{
-			modulePath = modulePath.substr(assetsPos + 15); // Skip "assets/Scripts/"
+			modulePath = modulePath.substr(assetsPos + 15); // Skip "Scripts/"
 		}
 
 		// Remove .wren extension

@@ -20,7 +20,7 @@ class GameOverState is BaseState {
     enter(stateManager, params) {
         super.enter(stateManager, params)
         
-        var font = Font.load("assets/Fonts/medieval_sharp/MedievalSharp-Bold.ttf", 120)
+        var font = Font.load("Fonts/medieval_sharp/MedievalSharp-Bold.ttf", 120)
 
         _screenPanel = UIPanel.new(Vec2.new(0, 0), Vec2.new(0, 0), Vec2.new(Application.gameWidth, Application.gameHeight), Vec2.new(0, 0))
         _screenPanel.setBackgroundColor(Vec4.new(0, 0, 0, 200))

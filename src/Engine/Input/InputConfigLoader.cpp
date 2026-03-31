@@ -1,44 +1,35 @@
 #include "InputConfigLoader.h"
 
-#include <nlohmann/json.hpp>
 #include <fstream>
 #include <format>
+#include "nlohmann/json.hpp"
+#include "physfs.h"
 
 #include "Input.h"
 #include "InputMaps.h"
 #include "Debug/Assertions.h"
 
-using json = nlohmann::json;
-
 namespace Struktur::Input
 {
 
 // Forward declarations of helper functions
-static void LoadButtonBindings(Input& input, const std::string& name, const json& bindings, InputMaps& maps);
-static void LoadVariableBindings(Input& input, const std::string& name, const json& bindings, InputMaps& maps);
-static void LoadAxisBindings(Input& input, const std::string& name, const json& bindings, InputMaps& maps);
-static void LoadAxis2Bindings(Input& input, const std::string& name, const json& bindings, InputMaps& maps);
+static void LoadButtonBindings(Input& input, const std::string& name, const nlohmann::json& bindings, InputMaps& maps);
+static void LoadVariableBindings(Input& input, const std::string& name, const nlohmann::json& bindings, InputMaps& maps);
+static void LoadAxisBindings(Input& input, const std::string& name, const nlohmann::json& bindings, InputMaps& maps);
+static void LoadAxis2Bindings(Input& input, const std::string& name, const nlohmann::json& bindings, InputMaps& maps);
 
 bool InputConfigLoader::LoadFromFile(Input& input, const std::string& filepath)
 {
 	// Open and parse JSON file
-	std::ifstream file(filepath);
-	if (!file.is_open())
-	{
-		DEBUG_ERROR(std::format("Failed to open input config file: {}", filepath).c_str());
-		return false;
-	}
+	PHYSFS_File* file = PHYSFS_openRead(filepath.c_str());
+	ASSERT(file);
 
-	json config;
-	try
-	{
-		file >> config;
-	}
-	catch (const json::exception& e)
-	{
-		DEBUG_ERROR(std::format("Failed to parse JSON in {}: {}", filepath, e.what()).c_str());
-		return false;
-	}
+	PHYSFS_sint64 size = PHYSFS_fileLength(file);
+	std::string buffer(size, '\0');
+	PHYSFS_readBytes(file, buffer.data(), size);
+	PHYSFS_close(file);
+
+	nlohmann::json config = nlohmann::json::parse(buffer);
 
 	// Clear existing bindings
 	input.Clear();
@@ -124,7 +115,7 @@ bool InputConfigLoader::LoadFromFile(Input& input, const std::string& filepath)
 static void LoadButtonBindings(
 	Input& input,
 	const std::string& name,
-	const json& bindings,
+	const nlohmann::json& bindings,
 	InputMaps& maps)
 {
 	for (const auto& binding : bindings)
@@ -156,7 +147,7 @@ static void LoadButtonBindings(
 static void LoadVariableBindings(
 	Input& input,
 	const std::string& name,
-	const json& bindings,
+	const nlohmann::json& bindings,
 	InputMaps& maps)
 {
 	for (const auto& binding : bindings)
@@ -200,7 +191,7 @@ static void LoadVariableBindings(
 static void LoadAxisBindings(
 	Input& input,
 	const std::string& name,
-	const json& bindings,
+	const nlohmann::json& bindings,
 	InputMaps& maps)
 {
 	for (const auto& binding : bindings)
@@ -252,7 +243,7 @@ static void LoadAxisBindings(
 static void LoadAxis2Bindings(
 	Input& input,
 	const std::string& name,
-	const json& bindings,
+	const nlohmann::json& bindings,
 	InputMaps& maps)
 {
 	for (const auto& binding : bindings)

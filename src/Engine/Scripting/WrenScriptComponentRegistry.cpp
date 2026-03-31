@@ -45,10 +45,10 @@ bool Struktur::Wren::WrenScriptComponentRegistry::LoadAllScriptComponents(GameCo
 		DEBUG_INFO("[WrenScriptComponentRegistry] Initializing %s.wren", module.c_str());
 
 		// Load 
-		if (!scriptEngine.InterpretFile(std::format("Assets/Scripts/{}.wren", module).c_str()))
+		if (!scriptEngine.InterpretFile(std::format("Scripts/{}.wren", module).c_str()))
 		{
 			DEBUG_ERROR("[WrenScriptComponentRegistry] Failed to load %s.wren", module.c_str());
-			DEBUG_ERROR("[WrenScriptComponentRegistry] %s.wren must be in the assets/scripts folder", module.c_str());
+			DEBUG_ERROR("[WrenScriptComponentRegistry] %s.wren must be in the scripts folder", module.c_str());
 			successful = false;
 			continue;
 		}

@@ -19,7 +19,10 @@ bool Struktur::Resource::TextureResource::LoadFromDisk()
 {
     if (isLoaded) return true;
     
-    m_sourceImage = ::LoadImage(filePath.c_str());
+    auto memory = LoadFile(filePath);
+    const char* ext = ::GetFileExtension(filePath.c_str());
+    m_sourceImage = ::LoadImageFromMemory(ext, memory.data(), memory.size());
+
     if (m_sourceImage.data == nullptr)
     {
         DEBUG_ERROR(std::format("Failed to load image: {}", filePath).c_str());

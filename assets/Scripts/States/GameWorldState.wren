@@ -19,9 +19,9 @@ import "States/GameOverState" for GameOverState
 import "Colors" for WHITE
 import "Inventory" for Inventory
 
-var TILE_TEXTURE = "assets/Tiles/cavesofgallet_tiles.png"
-var PLAYER_TEXTURE = "assets/Tiles/PlayerGrowthSprites.png"
-var WORLD_FILE_PATH = "assets/Levels/MemoryPalace.ldtk"
+var TILE_TEXTURE = "Tiles/cavesofgallet_tiles.png"
+var PLAYER_TEXTURE = "Tiles/PlayerGrowthSprites.png"
+var WORLD_FILE_PATH = "Levels/MemoryPalace.ldtk"
 var Loops = 0
 
 class GameWorldState is BaseState {
@@ -97,13 +97,13 @@ class GameWorldState is BaseState {
 
         Loops = Loops + 1 // increment the game loop count
         
-        _gameMusic = Music.load("assets/Sounds/gameMusic.wav")
+        _gameMusic = Music.load("Sounds/gameMusic.wav")
         if (_gameMusic) {
             _gameMusic.setLooping(true)
             _gameMusic.play()
         }
 
-        var font = Font.load("assets/Fonts/medieval_sharp/MedievalSharp-Bold.ttf", 60)
+        var font = Font.load("Fonts/medieval_sharp/MedievalSharp-Bold.ttf", 60)
 
         var worldEntity = World.createWorldEntity(WORLD_FILE_PATH)
         _worldEntity = worldEntity
@@ -115,7 +115,7 @@ class GameWorldState is BaseState {
         var northRoomSpriteEntity = GameObject.create("northRoomSprite", northRoom)
         LocalTransform.setPosition(northRoomSpriteEntity, Vec3.new(0.0, 0.0, 0.0))
         var northRoomKey = getNorthRoom()
-        var northRoomSpriteTexture = Texture.load("assets/Tiles/%(northRoomKey).png")
+        var northRoomSpriteTexture = Texture.load("Tiles/%(northRoomKey).png")
         Sprite.create(northRoomSpriteEntity, northRoomSpriteTexture, WHITE, Vec2.new(0, 0), 1, 1, false, 0, 0)
 
         var eastRoom = World.loadLevelEntities(worldEntity, roomList[1])
@@ -123,7 +123,7 @@ class GameWorldState is BaseState {
         var eastRoomSpriteEntity = GameObject.create("eastRoomSprite", eastRoom)
         LocalTransform.setPosition(eastRoomSpriteEntity, Vec3.new(0.0, 0.0, 0.0))
         var eastRoomKey = getEastRoom()
-        var eastRoomSpriteTexture = Texture.load("assets/Tiles/%(eastRoomKey).png")
+        var eastRoomSpriteTexture = Texture.load("Tiles/%(eastRoomKey).png")
         Sprite.create(eastRoomSpriteEntity, eastRoomSpriteTexture, WHITE, Vec2.new(0, 0), 1, 1, false, 0, 0)
         eastRoomSpriteTexture.unload()
 
@@ -132,7 +132,7 @@ class GameWorldState is BaseState {
         var westRoomSpriteEntity = GameObject.create("westRoomSprite", westRoom)
         LocalTransform.setPosition(westRoomSpriteEntity, Vec3.new(0.0, 0.0, 0.0))
         var westRoomKey = getWestRoom()
-        var westRoomSpriteTexture = Texture.load("assets/Tiles/%(westRoomKey).png")
+        var westRoomSpriteTexture = Texture.load("Tiles/%(westRoomKey).png")
         Sprite.create(westRoomSpriteEntity, westRoomSpriteTexture, WHITE, Vec2.new(0, 0), 1, 1, false, 0, 0)
         westRoomSpriteTexture.unload()
 
@@ -141,7 +141,7 @@ class GameWorldState is BaseState {
         var southRoomSpriteEntity = GameObject.create("southRoomSprite", southRoom)
         LocalTransform.setPosition(southRoomSpriteEntity, Vec3.new(0.0, 0.0, 0.0))
         var southRoomKey = getSouthRoom()
-        var southRoomSpriteTexture = Texture.load("assets/Tiles/%(southRoomKey).png")
+        var southRoomSpriteTexture = Texture.load("Tiles/%(southRoomKey).png")
         Sprite.create(southRoomSpriteEntity, southRoomSpriteTexture, WHITE, Vec2.new(0, 0), 1, 1, false, 0, 0)
         southRoomSpriteTexture.unload()
 
@@ -149,7 +149,7 @@ class GameWorldState is BaseState {
         WorldTransform.setPosition(courtyard, Vec3.new(576.0, 576.0, 0.0))
         var courtyardSpriteEntity = GameObject.create("courtyardSprite", courtyard)
         LocalTransform.setPosition(courtyardSpriteEntity, Vec3.new(0.0, 0.0, 0.0))
-        var courtyardSpriteTexture = Texture.load("assets/Tiles/Courtyard.png")
+        var courtyardSpriteTexture = Texture.load("Tiles/Courtyard.png")
         Sprite.create(courtyardSpriteEntity, courtyardSpriteTexture, WHITE, Vec2.new(0, 0), 1, 1, false, 0, 0)
         courtyardSpriteTexture.unload()
 

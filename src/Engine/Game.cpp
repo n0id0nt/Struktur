@@ -50,10 +50,10 @@
 #endif
 
 #ifdef EDITOR
-#define SPLASHSCREENFONT "assets/Fonts/medieval_sharp/MedievalSharp-Bold.ttf"
+#define SPLASHSCREENFONT "Fonts/medieval_sharp/MedievalSharp-Bold.ttf"
 #define SPLASHSCREENTEXT "STRUKTUR"
 #else
-#define SPLASHSCREENFONT "assets/Fonts/medieval_sharp/MedievalSharp-Bold.ttf"
+#define SPLASHSCREENFONT "Fonts/medieval_sharp/MedievalSharp-Bold.ttf"
 #define SPLASHSCREENTEXT "Memory Palace"
 #endif
 
@@ -68,7 +68,11 @@ void Struktur::InitialiseGame(GameContext& context)
 	Wren::WrenScriptComponentRegistry& wrenScriptComponentRegistry = context.GetWrenScriptComponentRegistry();
 
 	PHYSFS_init(GetWorkingDirectory());
-#ifdef EDITOR
+#if defined(PLATFORM_WEB)
+	// Emscripten preloads assets into its virtual FS
+	// Mount the preloaded assets directory directly
+	PHYSFS_mount("/assets", "/", 1);
+#elif defined(DEBUG)
 	PHYSFS_mount("assets/", "/", 1);
 #else
 	PHYSFS_mount("game_data.pak", "/", 1);
@@ -105,7 +109,7 @@ void Struktur::InitialiseGame(GameContext& context)
 	::InitAudioDevice();
 
 #ifdef DEBUG
-	Wren::CodeGenerator::GenerateBindingFiles("Assets/Scripts/Bindings");
+	Wren::CodeGenerator::GenerateBindingFiles("Scripts/Bindings");
 #endif
 
 	gameObjectManager.CreateDeleteObjectCallBack(context);

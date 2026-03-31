@@ -44,7 +44,7 @@ class NPC {
     // Script configures/initializes component values
     start() {
         var npcData = _spriteDataMap[_name]
-        var texture = Texture.load("assets/Tiles/NPCs.png")
+        var texture = Texture.load("Tiles/NPCs.png")
         Sprite.create(_entity, texture, WHITE, npcData.getOffset(), 9, 1, false, npcData.getSpriteIndex(), WorldTransform.getPosition(_entity).y)
         texture.unload()
         var bodyDef = BodyDefinition.new(BodyType.STATIC_BODY)
@@ -52,7 +52,7 @@ class NPC {
         var physicsBody = PhysicsBody.create(_entity, bodyDef, playerShape)
         physicsBody.syncFromPhysics = true
         physicsBody.syncToPhysics = true
-        var shader = ShaderResource.load(null, "assets/Shaders/SoulEffect_100.fs")
+        var shader = ShaderResource.load(null, "Shaders/SoulEffect_100.fs")
         var shaderComponent = ShaderComponent.create(_entity, shader)
         shader.unload()
         shaderComponent.setVec3Uniform("soulColor", Vec3.new(0.3, 0.7, 1.0))
