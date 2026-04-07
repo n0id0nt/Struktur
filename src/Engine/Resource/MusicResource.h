@@ -16,7 +16,8 @@ namespace Struktur
 		{
 		public:
 			Music music;
-			
+			std::vector<uint8_t> buffer; // TODO sore this in the music pool instead so that the memory can more easily be accessed and retrieved
+
 			MusicResource(const std::string& filePath);			
 			~MusicResource();
 			

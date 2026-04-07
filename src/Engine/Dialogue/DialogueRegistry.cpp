@@ -23,14 +23,16 @@ namespace Struktur::Dialogue
 		// Release all condition callbacks
 		for (auto& [type, callback] : m_conditionCallbacks)
 		{
-			callback->Dispose(context);
+			if (callback)
+				callback->Dispose(context);
 		}
 		m_conditionCallbacks.clear();
 
 		// Release all command callbacks
 		for (auto& [type, callback] : m_commandCallbacks)
 		{
-			callback->Dispose(context);
+			if (callback)
+				callback->Dispose(context);
 		}
 		m_commandCallbacks.clear();
     }

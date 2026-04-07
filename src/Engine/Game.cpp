@@ -50,6 +50,8 @@
 #endif
 
 #ifdef EDITOR
+#include "tinyfiledialogs.h"
+
 #define SPLASHSCREENFONT "Fonts/medieval_sharp/MedievalSharp-Bold.ttf"
 #define SPLASHSCREENTEXT "STRUKTUR"
 #else
@@ -72,6 +74,16 @@ void Struktur::InitialiseGame(GameContext& context)
 	// Emscripten preloads assets into its virtual FS
 	// Mount the preloaded assets directory directly
 	PHYSFS_mount("/assets", "/", 1);
+#elif defined(EDITOR)
+	// Open native OS folder picker before mounting
+	const char* selectedPath = tinyfd_selectFolderDialog(
+		"Select Project Directory",  // dialog title
+		GetWorkingDirectory()         // default path
+	);
+
+	// Fall back to default assets/ if user cancels
+	const char* mountPath = selectedPath ? selectedPath : "assets/";
+	PHYSFS_mount(mountPath, "/", 1);
 #elif defined(DEBUG)
 	PHYSFS_mount("assets/", "/", 1);
 #else

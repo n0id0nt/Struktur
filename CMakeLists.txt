@@ -165,6 +165,13 @@ if (NOT raylib_FOUND)
         GIT_TAG release-3.2.0
     )
 
+    # tinyfiledialogs - native file dialogs (editor only)
+    FetchContent_Declare(
+        tinyfiledialogs
+        GIT_REPOSITORY https://github.com/native-toolkit/tinyfiledialogs.git
+        GIT_TAG master
+    )
+
     # Configure library options before making available
     
     # RayLib options
@@ -273,6 +280,18 @@ if (NOT raylib_FOUND)
         target_compile_definitions(imgui PUBLIC IMGUI_DISABLE_OBSOLETE_FUNCTIONS)
     endif()
     
+    
+    FetchContent_GetProperties(tinyfiledialogs)
+    if(NOT tinyfiledialogs_POPULATED)
+        FetchContent_Populate(tinyfiledialogs)
+        add_library(tinyfiledialogs STATIC 
+            ${tinyfiledialogs_SOURCE_DIR}/tinyfiledialogs.c
+        )
+        target_include_directories(tinyfiledialogs PUBLIC 
+            ${tinyfiledialogs_SOURCE_DIR}
+        )
+    endif()
+
 endif()
 
 if(DEBUG)
@@ -458,6 +477,7 @@ target_link_libraries(${PROJECT_NAME}
     imgui
     rlimgui
     PhysFS::PhysFS-static
+    $<$<BOOL:${EDITOR}>:tinyfiledialogs>
 )
 
 # Platform-specific settings
