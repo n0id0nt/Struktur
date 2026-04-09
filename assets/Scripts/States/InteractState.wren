@@ -371,15 +371,20 @@ class InteractState is BaseState {
         if (interactableName == "Inventor") return "inventor"
         
         // Items
-        if (interactableName == "Ancient Tome") return "ancient_book"
-        if (interactableName == "Rose") return "rose"
-        if (interactableName == "Healing Potion") return "healing_potion"
-        if (interactableName == "Mysterious Key") return "mysterious_key"
-        if (interactableName == "Old Map") return "old_map"
-        if (interactableName == "Love Letter") return "love_letter"
-        if (interactableName == "Hammer") return "hammer"
-        if (interactableName == "Star Chart") return "star_chart"
-        if (interactableName == "Ornate Key") return "ornate_key"
+        var suffex = ""
+        if (Inventory.contains(interactableName)) {
+            suffex = "_return"
+        }
+
+        if (interactableName == "Ancient Tome") return "ancient_book" + suffex
+        if (interactableName == "Rose") return "rose" + suffex
+        if (interactableName == "Healing Potion") return "healing_potion" + suffex
+        if (interactableName == "Mysterious Key") return "mysterious_key" + suffex
+        if (interactableName == "Old Map") return "old_map" + suffex
+        if (interactableName == "Love Letter") return "love_letter" + suffex
+        if (interactableName == "Hammer") return "hammer" + suffex
+        if (interactableName == "Star Chart") return "star_chart" + suffex
+        if (interactableName == "Ornate Key") return "ornate_key" + suffex
         
         // Default - no dialogue found
         Debug.warning("Warning: No dialogue entry point found for %(interactableName)")

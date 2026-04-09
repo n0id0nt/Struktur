@@ -48,19 +48,14 @@ class Item {
             "Safe",
             "Memory Palace",
         ]
-        var name = args["Name"]
+        _name = args["Name"]
+        _isShadow = false
 
         if (_returnable) {
             if (Inventory.contains(name)) {
-                name = name + " Return"
-            }
-        } else {
-            if (Inventory.contains(name + " Recipt")) {
-                // TODO disable item 
+                _isShadow = true
             }
         }
-
-        _name = name
     }
     
     name { _name }
@@ -72,10 +67,8 @@ class Item {
         if (!_itemsWithNoImage.contains(_name)) {
             var interactionId = _name
             var color = WHITE
-            var suffix = " Return"
-            if (interactionId.endsWith(suffix)) {
+            if (_isShadow) {
                 color = BLACK
-                interactionId = interactionId[0...interactionId.count - suffix.count]
             }
             var itemData = _spriteDataMap[interactionId]
             Sprite.create(_entity, texture, color, Vec2.new(32, 48), 9, 2, false, itemData.getSpriteIndex(), 1)
@@ -104,5 +97,16 @@ class Item {
 
     getInteractId() {
         return "Entrance Door"
+    }
+
+    setIsShadow(isShadow) {
+        _isShadow = isShadow
+        var color = WHITE
+        if (_isShadow) {
+            color = BLACK
+        }
+        System.print("adding item %(_entity) to inventory")
+        var sprite = Sprite.get(_entity)
+        sprite.color = color
     }
 }

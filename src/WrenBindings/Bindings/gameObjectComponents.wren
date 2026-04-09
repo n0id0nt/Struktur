@@ -190,7 +190,7 @@ foreign class Sprite {
     foreign renderPriority=(arg0)
     // Creates the sprite Component.
     foreign static create(arg0,arg1,arg2,arg3,arg4,arg5,arg6,arg7,arg8)
-    // Gets a Sprite animation
+    // Gets a Sprite Component
     foreign static get(arg0)
     // Sets the render priority of a sprite component
     foreign static setRenderPriority(arg0,arg1)

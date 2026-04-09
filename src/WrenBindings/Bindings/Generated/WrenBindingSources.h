@@ -661,7 +661,7 @@ inline const char* wrengameObjectComponentsSource()
     "    foreign renderPriority=(arg0)\n"
     "    // Creates the sprite Component.\n"
     "    foreign static create(arg0,arg1,arg2,arg3,arg4,arg5,arg6,arg7,arg8)\n"
-    "    // Gets a Sprite animation\n"
+    "    // Gets a Sprite Component\n"
     "    foreign static get(arg0)\n"
     "    // Sets the render priority of a sprite component\n"
     "    foreign static setRenderPriority(arg0,arg1)\n"

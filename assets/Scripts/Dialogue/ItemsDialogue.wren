@@ -42,7 +42,13 @@ class ItemDialogue {
                                 },
                             ]
                         },
-                        {"type": "deleteEntity", "parameters": []},
+                        {"type": "pickupEntity", "parameters": [
+                                {
+                                    "type": "name",
+                                    "value": "Love Letter"
+                                },
+                            ]
+                        },
                     ],
                 },
             },
@@ -93,7 +99,13 @@ class ItemDialogue {
                                 },
                             ]
                         },
-                        {"type": "deleteEntity", "parameters": []},
+                        {"type": "putdownEntity", "parameters": [
+                                {
+                                    "type": "name",
+                                    "value": "Love Letter"
+                                },
+                            ]
+                        },
                     ],
                 },
             },
@@ -135,7 +147,13 @@ class ItemDialogue {
                                 },
                             ]
                         },
-                        {"type": "deleteEntity", "parameters": []},
+                        {"type": "pickupEntity", "parameters": [
+                                {
+                                    "type": "name",
+                                    "value": "Hammer"
+                                },
+                            ]
+                        },
                     ],
                 },
             },
@@ -186,7 +204,13 @@ class ItemDialogue {
                                 },
                             ]
                         },
-                        {"type": "deleteEntity", "parameters": []},
+                        {"type": "putdownEntity", "parameters": [
+                                {
+                                    "type": "name",
+                                    "value": "Hammer"
+                                },
+                            ]
+                        },
                     ],
                 },
             },
@@ -228,7 +252,13 @@ class ItemDialogue {
                                 },
                             ]
                         },
-                        {"type": "deleteEntity", "parameters": []},
+                        {"type": "pickupEntity", "parameters": [
+                                {
+                                    "type": "name",
+                                    "value": "Star Chart"
+                                },
+                            ]
+                        },
                     ],
                 },
             },
@@ -279,7 +309,13 @@ class ItemDialogue {
                                 },
                             ]
                         },
-                        {"type": "deleteEntity", "parameters": []},
+                        {"type": "putdownEntity", "parameters": [
+                                {
+                                    "type": "name",
+                                    "value": "Star Chart"
+                                },
+                            ]
+                        },
                     ],
                 },
             },
@@ -321,7 +357,13 @@ class ItemDialogue {
                                 },
                             ]
                         },
-                        {"type": "deleteEntity", "parameters": []},
+                        {"type": "pickupEntity", "parameters": [
+                                {
+                                    "type": "name",
+                                    "value": "Ornate Key"
+                                },
+                            ]
+                        },
                     ],
                 },
             },
@@ -372,7 +414,13 @@ class ItemDialogue {
                                 },
                             ]
                         },
-                        {"type": "deleteEntity", "parameters": []},
+                        {"type": "putdownEntity", "parameters": [
+                                {
+                                    "type": "name",
+                                    "value": "Ornate Key"
+                                },
+                            ]
+                        },
                     ],
                 },
             },

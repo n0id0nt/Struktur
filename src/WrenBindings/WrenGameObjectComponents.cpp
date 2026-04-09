@@ -911,7 +911,7 @@ WREN_CLASS_METHOD("gameObjectComponents", "Sprite", "renderPriority=(_)", wren_S
 
 // Register static methods
 WREN_CLASS_STATIC("gameObjectComponents", "Sprite", "create(_,_,_,_,_,_,_,_,_)", wren_SpriteCreate, "Creates the sprite Component.");
-WREN_CLASS_STATIC("gameObjectComponents", "Sprite", "get(_)", wren_SpriteGet, "Gets a Sprite animation");
+WREN_CLASS_STATIC("gameObjectComponents", "Sprite", "get(_)", wren_SpriteGet, "Gets a Sprite Component");
 WREN_CLASS_STATIC("gameObjectComponents", "Sprite", "setRenderPriority(_,_)", wren_SpriteStaticSetRenderPriority, "Sets the render priority of a sprite component");
 WREN_CLASS_STATIC("gameObjectComponents", "Sprite", "setFlipped(_,_)", wren_SpriteStaticSetFlipped, "Flips a sprite in a horizontal direction");
 

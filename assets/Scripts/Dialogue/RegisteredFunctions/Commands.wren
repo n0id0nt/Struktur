@@ -2,7 +2,7 @@ import "dialogue" for DialogueRegistry
 import "flags" for FlagManager
 import "Inventory" for Inventory
 import "debug" for Debug
-import "gameObjectComponents" for Camera
+import "gameObjectComponents" for Camera, Script
 import "gameObject" for GameObject
 
 class Commands {
@@ -31,10 +31,28 @@ class Commands {
             }
         }
         DialogueRegistry.registerCommand("pickupEntity") { |params|
-            //var cameras = GameObject.getAllWithComponents(["Camera"])
-            //for (cameraId in cameras) {
-            //    Camera.addCameraTrauma(cameraId, 0.4)
-            //}
+            var entityName = params["name"]
+            var itemEntities = GameObject.getAllWithIdentifier("Item")
+
+            for (entity in itemEntities) {
+                var script = Script.getInstance(entity)
+                if (script && script.name == entityName) {
+                    script.setIsShadow(true)
+                    Debug.info("[Dialogue Command] Picked up Item %(name): %(entityId)")
+                }
+            }
+        }
+        DialogueRegistry.registerCommand("putdownEntity") { |params|
+            var entityName = params["name"]
+            var itemEntities = GameObject.getAllWithIdentifier("Item")
+
+            for (entity in itemEntities) {
+                var script = Script.getInstance(entity)
+                if (script && script.name == entityName) {
+                    script.setIsShadow(false)
+                    Debug.info("[Dialogue Command] Put down Item %(name): %(entityId)")
+                }
+            }
         }
     }
 }
