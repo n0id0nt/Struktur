@@ -22,6 +22,7 @@ class Game {
         var windowHeight = 720
         Application.setWindowSize(windowWidth, windowHeight)
         Application.setApplicationName("Memory Palace")
+        Application.setIsFullScreen(true)
 
         var gameObjectsScripts = [
             "Door",

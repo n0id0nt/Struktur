@@ -21,10 +21,10 @@ class Application {
     foreign static velocityIterations
     // Set the velocity iterations for the physics system.
     foreign static setVelocityIterations(arg0)
-    // Get the position iterations for the physics system.
-    foreign static positionIterations
-    // Set the position iterations for the physics system.
-    foreign static setPositionIterations(arg0)
+    // Get the if the application is funning in full screen.
+    foreign static isFullScreen
+    // Set the if the application is funning in full screen.
+    foreign static setIsFullScreen(arg0)
 }
 
 class Time {

@@ -1,5 +1,7 @@
 #include "wren.hpp"
 
+#include "raylib.h"
+
 #include "Engine/Scripting/WrenBindingRegistry.h"
 #include "Engine/GameContext.h"
 
@@ -105,22 +107,28 @@ void wren_ApplicationSetVelocityIterations(WrenVM* vm)
 	gameData.velocityIterations = static_cast<int>(velocityIterations);
 }
 
-// Application.positionIterations -> number
-void wren_ApplicationGetPositionIterations(WrenVM* vm)
+// Application.isFullScreen -> bool
+void wren_ApplicationGetIsFullScreen(WrenVM* vm)
 {
 	Struktur::GameContext* context = static_cast<Struktur::GameContext*>(wrenGetUserData(vm));
 	auto& gameData = context->GetGameData();
-	double positionIterations = static_cast<double>(gameData.positionIterations);
-	wrenSetSlotDouble(vm, 0, positionIterations);
+	wrenSetSlotBool(vm, 0, gameData.isFullScreen);
 }
 
-// Application.setPositionIterations(number)
-void wren_ApplicationSetPositionIterations(WrenVM* vm)
+// Application.setIsFullScreen(bool)
+void wren_ApplicationSetIsFullScreen(WrenVM* vm)
 {
 	Struktur::GameContext* context = static_cast<Struktur::GameContext*>(wrenGetUserData(vm));
 	auto& gameData = context->GetGameData();
-	double positionIterations = wrenGetSlotDouble(vm, 1);
-	gameData.positionIterations = static_cast<int>(positionIterations);
+	bool isFullScreen = wrenGetSlotBool(vm, 1);
+	gameData.isFullScreen = isFullScreen;
+#ifndef EDITOR
+	if (::IsWindowReady() && gameData.isFullScreen != ::IsWindowFullscreen())
+	{
+		::ToggleFullscreen();
+
+	}
+#endif
 }
 
 WREN_CLASS_STATIC("app", "Application", "setWindowSize(_,_)", wren_ApplicationSetWindowSize, "Change the size of the game window.");
@@ -132,8 +140,8 @@ WREN_CLASS_STATIC("app", "Application", "pixelsPerMeter", wren_ApplicationGetPix
 WREN_CLASS_STATIC("app", "Application", "setPixelsPerMeter(_)", wren_ApplicationSetPixelsPerMeter, "Set the pixels per meter for the physics system.");
 WREN_CLASS_STATIC("app", "Application", "velocityIterations", wren_ApplicationGetVelocityIterations, "Get the velocity iterations for the physics system.");
 WREN_CLASS_STATIC("app", "Application", "setVelocityIterations(_)", wren_ApplicationSetVelocityIterations, "Set the velocity iterations for the physics system.");
-WREN_CLASS_STATIC("app", "Application", "positionIterations", wren_ApplicationGetPositionIterations, "Get the position iterations for the physics system.");
-WREN_CLASS_STATIC("app", "Application", "setPositionIterations(_)", wren_ApplicationSetPositionIterations, "Set the position iterations for the physics system.");
+WREN_CLASS_STATIC("app", "Application", "isFullScreen", wren_ApplicationGetIsFullScreen, "Get the if the application is funning in full screen.");
+WREN_CLASS_STATIC("app", "Application", "setIsFullScreen(_)", wren_ApplicationSetIsFullScreen, "Set the if the application is funning in full screen.");
 
 // ============================================================================
 // TIME BINDINGS
