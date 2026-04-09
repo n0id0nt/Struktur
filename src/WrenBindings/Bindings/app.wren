@@ -9,10 +9,6 @@ class Application {
     foreign static setApplicationName(arg0)
     // Changes the name of the game window.
     foreign static registerComponentScript(arg0,arg1)
-    // Get the games delta time.
-    foreign static deltaTime
-    // Get the games time.
-    foreign static gameTime
     // Get the games width.
     foreign static gameWidth
     // Get the games height.
@@ -29,5 +25,20 @@ class Application {
     foreign static positionIterations
     // Set the position iterations for the physics system.
     foreign static setPositionIterations(arg0)
+}
+
+class Time {
+    // Gets the unsclaled delta time.
+    foreign static unscaledDelta
+    // Gets the sclaled delta time.
+    foreign static scaledDelta
+    // Get the unsclaled time.
+    foreign static unscaledTime
+    // Get the sclaled time.
+    foreign static scaledTime
+    // Get the sclaled time.
+    foreign static timeScale
+    // Set the time scale.
+    foreign static setTimeScale(arg0)
 }
 

@@ -3,7 +3,6 @@
 #include <string>
 #include <memory>
 #include <variant>
-#include "physfs.h"
 #include "raylib.h"
 #include "raymath.h"
 #ifdef PLATFORM_WEB
@@ -15,6 +14,7 @@
 #include "Debug/Profiling/Profiler.h"
 
 #include "Engine/GameContext.h"
+#include "Engine/Core/FileSystem.h"
 #include "Engine/Input/Input.h"
 #include "Engine/Scripting/WrenScriptEngine.h"
 #include "Engine/ECS/SystemManager.h"
@@ -41,17 +41,15 @@
 #include "Engine/ECS/System/SoundSystem.h"
 
 #include "Engine/FileLoading/LevelParser.h"
-#include "Engine/Scripting/WrenCodeGenerator.h"
 
 #include "Engine/Game/Level.h"
 
 #ifdef DEBUG
+#include "Engine/Scripting/WrenCodeGenerator.h"
 #include "rlImGui.h"
 #endif
 
 #ifdef EDITOR
-#include "tinyfiledialogs.h"
-
 #define SPLASHSCREENFONT "Fonts/medieval_sharp/MedievalSharp-Bold.ttf"
 #define SPLASHSCREENTEXT "STRUKTUR"
 #else
@@ -69,27 +67,22 @@ void Struktur::InitialiseGame(GameContext& context)
 	Wren::WrenStateManager& wrenStateManager = context.GetWrenStateManager();
 	Wren::WrenScriptComponentRegistry& wrenScriptComponentRegistry = context.GetWrenScriptComponentRegistry();
 
-	PHYSFS_init(GetWorkingDirectory());
+	FileSystem::Init(::GetWorkingDirectory());
 #if defined(PLATFORM_WEB)
 	// Emscripten preloads assets into its virtual FS
 	// Mount the preloaded assets directory directly
-	PHYSFS_mount("/assets", "/", 1);
+	FileSystem::Mount("/assets");
 #elif defined(EDITOR)
-	// Open native OS folder picker before mounting
-	const char* selectedPath = tinyfd_selectFolderDialog(
-		"Select Project Directory",  // dialog title
-		GetWorkingDirectory()         // default path
-	);
+	// Project folder selection at startup
+	std::string projectPath = FileSystem::OpenFolderDialog("Select Project Directory", ::GetWorkingDirectory());
 
 	// Fall back to default assets/ if user cancels
-	const char* mountPath = selectedPath ? selectedPath : "assets/";
-	PHYSFS_mount(mountPath, "/", 1);
+	FileSystem::Mount(projectPath.empty() ? "assets/" : projectPath);
 #elif defined(DEBUG)
-	PHYSFS_mount("assets/", "/", 1);
+	FileSystem::Mount("assets/");
 #else
-	PHYSFS_mount("game_data.pak", "/", 1);
+	FileSystem::Mount("data.pak");
 #endif
-
 
 	// Want to create a window before we start initialising systems
 #ifdef EDITOR
@@ -116,12 +109,26 @@ void Struktur::InitialiseGame(GameContext& context)
 #ifndef EDITOR
 	// In release mode, window matches game size
 	::InitWindow(gameData.gameWidth, gameData.gameHeight, gameData.projectName);
+	if (gameData.isFullScreen != ::IsWindowFullscreen())
+	{
+		::ToggleFullscreen();
+	}
 #endif
+
+#if defined(PLATFORM_WEB)
+	std::string saveDir = "/saves"; // Emscripten virtual path
+#elif defined(EDITOR)
+	std::string saveDir = (projectPath.empty() ? "" : projectPath) + "/../saves";
+#else
+	std::string saveDir = FileSystem::GetSaveDir("StrukturGames", gameData.projectName);
+#endif
+	FileSystem::SetWriteDir(saveDir);
+	FileSystem::Mount(saveDir, "/", false);
 	::SetExitKey(KEY_NULL);
 	::InitAudioDevice();
 
 #ifdef DEBUG
-	Wren::CodeGenerator::GenerateBindingFiles("Scripts/Bindings");
+	Wren::CodeGenerator::GenerateBindingFiles(std::string(::GetWorkingDirectory()) + "/../src/WrenBindings/Bindings");
 #endif
 
 	gameObjectManager.CreateDeleteObjectCallBack(context);
@@ -202,20 +209,21 @@ void Struktur::ExitGame(GameContext& context)
 	Resource::ResourceManager& resourceManager = context.GetResourceManager();
 	resourceManager.Clear();
 
-	PHYSFS_deinit();
+	FileSystem::Shutdown();
 }
 
 void Struktur::SplashScreenLoop(GameContext& context)
 {
 	Core::GameData& gameData = context.GetGameData();
+	Core::TimeSystem& timeSystem = context.GetTimeSystem();
 	Resource::ResourceManager& resourceManager = context.GetResourceManager();
 	Resource::ResourcePtr<Resource::FontResource> font = resourceManager.GetFont(SPLASHSCREENFONT, 120);
 	//fade in time
 	const double fadeInTime = 1.5;
 	const double holdTime = 1;
 	const double fadeOutTime = 1.5;
-	const double currentTime = gameData.gameTime;
-	const double startTime = gameData.startTime;
+	const double currentTime = timeSystem.unscaledTime;
+	const double startTime = 0;
 	if (currentTime > startTime + fadeInTime + holdTime + fadeOutTime)
 	{
 		gameData.gameState = Core::GameState::GAME;
@@ -294,10 +302,10 @@ void Struktur::SplashScreenUpdateLoop(void* userData)
 	auto* context = static_cast<GameContext*>(userData);
 	// Set the game data
 	Core::GameData& gameData = context->GetGameData();
-	gameData.deltaTime = ::GetFrameTime();
-	gameData.gameTime = ::GetTime();
+	Core::TimeSystem& timeSystem = context->GetTimeSystem();
 	gameData.applicationWidth = ::GetScreenWidth();
 	gameData.applicationHeight = ::GetScreenHeight();
+	timeSystem.Update();
 
 #ifndef PLATFORM_WEB
 	if (::WindowShouldClose())
@@ -324,10 +332,10 @@ void Struktur::MainUpdateLoop(void* userData)
 	PROFILE_BEGIN_FRAME();
 	// Set the game data
 	Core::GameData& gameData = context.GetGameData();
-	gameData.deltaTime = ::GetFrameTime();
-	gameData.gameTime = ::GetTime();
+	Core::TimeSystem& timeSystem = context.GetTimeSystem();
 	gameData.applicationWidth = ::GetScreenWidth();
 	gameData.applicationHeight = ::GetScreenHeight();
+	timeSystem.Update();
 
 #ifndef PLATFORM_WEB
 	if (::WindowShouldClose())
@@ -358,7 +366,6 @@ void Struktur::Game()
 	InitialiseGame(context);
 
 	Core::GameData& gameData = context.GetGameData();
-	gameData.startTime = ::GetTime();
 	{
 		// create local scope to manage lifetime of splash screen font - TODO create a spash screen state and add it to the context.
 		Resource::ResourceManager& resourceManager = context.GetResourceManager();
@@ -417,6 +424,10 @@ void Struktur::StopDebugGame(GameContext& context)
 
 void Struktur::ClearGameSystems(GameContext& context)
 {
+	DEBUG_INFO("[Clean Up] FlagManager");
+	Flag::FlagManager& flagManager = context.GetFlagManager();
+	flagManager.Clear();
+
 	DEBUG_INFO("[Clean Up] Input");
 	Input::Input& input = context.GetInput();
 	input.Clear();
@@ -448,7 +459,7 @@ void Struktur::ClearGameSystems(GameContext& context)
 	DEBUG_INFO("[Clean Up] Wren Script Engine");
 	Wren::WrenScriptEngine& wrenScriptEngine = context.GetWrenScriptEngine();
 	wrenScriptEngine.Shutdown();
-		
+
 	DEBUG_INFO("[Clean Up] Dialogue Manager");
 	Dialogue::DialogueManager& dialogueManager = context.GetDialogueManager();
 	dialogueManager.Clear();

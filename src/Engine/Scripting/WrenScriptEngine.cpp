@@ -1,11 +1,14 @@
 #include "WrenScriptEngine.h"
 
 #include <filesystem>
-#include "physfs.h"
 #include "Reflect/wren_reflect.h"
 #include "Trace/wren_trace.h"
 
+#include "Engine/Core/FileSystem.h"
 #include "Engine/GameContext.h"
+#ifndef DEBUG
+#include "WrenBindings/Bindings/Generated/WrenBindingSources.h"
+#endif
 
 void Struktur::Wren::WrenScriptEngine::Initialise(GameContext& context)
 {
@@ -73,25 +76,20 @@ bool Struktur::Wren::WrenScriptEngine::InterpretFile(const char* path)
 		DEBUG_ERROR("Wren VM not initialised");
 		return false;
 	}
+	
+	auto result = FileSystem::ReadString(path);
 
-	// Load file
-	PHYSFS_File* file = PHYSFS_openRead(path);
-	if (!file)
+	if (!result)
 	{
-		DEBUG_ERROR("Failed to open Wren file: %s", path);
+		DEBUG_ERROR("Failed to open Wren file: %s, Error: %s", path, result.errorMessage.c_str());
 		return false;
 	}
-
-	PHYSFS_sint64 size = PHYSFS_fileLength(file);
-	std::string buffer(size, '\0');
-	PHYSFS_readBytes(file, buffer.data(), size);
-	PHYSFS_close(file);
 
 	// Extract module name from path (remove extension)
 	std::filesystem::path filepath(path);
 	std::string module = filepath.stem().string();
 
-	return InterpretString(module.c_str(), buffer.c_str());
+	return InterpretString(module.c_str(), result.value.c_str());
 }
 
 // ============================================================================
@@ -147,27 +145,45 @@ WrenLoadModuleResult Struktur::Wren::WrenScriptEngine::OnLoadModule(WrenVM* vm, 
 		return result;
 	}
 
-	// Try multiple paths for module loading
-	std::vector<std::string> searchPaths = {
-		std::string("scripts/") + name + ".wren",
-		std::string("scripts/bindings/") + name + ".wren",
-	};
-
 	std::string source;
 	bool found = false;
 
-	for (const auto& path : searchPaths)
+#ifndef DEBUG
 	{
-		PHYSFS_File* file = PHYSFS_openRead(path.c_str());
+		// Auto-generated dispatch map
+		const auto& sources = GetWrenBindingSources();
+		auto it = sources.find(name);
+		if (it != sources.end())
+		{
+			result.source = it->second();
+			result.onComplete = nullptr;
+			return result;
+		}
+	}
+#else
+	{
+		std::string searchPath = std::string(::GetWorkingDirectory()) + "/../src/WrenBindings/Bindings/" + name + ".wren";
+		std::ifstream file(searchPath);
 		if (file)
 		{
-			PHYSFS_sint64 size = PHYSFS_fileLength(file);
-			source = std::string(size, '\0');
-			PHYSFS_readBytes(file, source.data(), size);
-			PHYSFS_close(file);
+			std::stringstream buffer;
+			buffer << file.rdbuf();
+			source = buffer.str();
 			found = true;
-			DEBUG_INFO("Loaded Wren module: %s from %s", name, path.c_str());
-			break;
+			DEBUG_INFO("Loaded Wren module: %s from %s", name, searchPath.c_str());
+		}
+	}
+
+	if (!found)
+#endif
+	{
+		std::string searchPath = std::string("Scripts/") + name + ".wren";
+		auto result = FileSystem::ReadString(searchPath);
+		if (result)
+		{
+			source = std::move(result.value);
+			found = true;
+			DEBUG_INFO("Loaded Wren module: %s from %s", name, searchPath.c_str());
 		}
 	}
 

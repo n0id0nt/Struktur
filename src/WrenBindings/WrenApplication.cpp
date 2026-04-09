@@ -51,24 +51,6 @@ void wren_ApplicationRegisterComponentScript(WrenVM* vm)
 	scriptComponentRegistry.RegisterScriptComponent(module, className);
 }
 
-// Application.deltaTime -> number
-void wren_ApplicationGetDeltaTime(WrenVM* vm)
-{
-	Struktur::GameContext* context = static_cast<Struktur::GameContext*>(wrenGetUserData(vm));
-	auto& gameData = context->GetGameData();
-	double deltaTime = static_cast<double>(gameData.deltaTime);
-	wrenSetSlotDouble(vm, 0, deltaTime);
-}
-
-// Application.gameTime -> number
-void wren_ApplicationGetGameTime(WrenVM* vm)
-{
-	Struktur::GameContext* context = static_cast<Struktur::GameContext*>(wrenGetUserData(vm));
-	auto& gameData = context->GetGameData();
-	double gameTime = static_cast<double>(gameData.gameTime);
-	wrenSetSlotDouble(vm, 0, gameTime);
-}
-
 // Application.gameWidth -> number
 void wren_ApplicationGetGameWidth(WrenVM* vm)
 {
@@ -144,8 +126,6 @@ void wren_ApplicationSetPositionIterations(WrenVM* vm)
 WREN_CLASS_STATIC("app", "Application", "setWindowSize(_,_)", wren_ApplicationSetWindowSize, "Change the size of the game window.");
 WREN_CLASS_STATIC("app", "Application", "setApplicationName(_)", wren_ApplicationSetApplicationName, "Changes the name of the game window.");
 WREN_CLASS_STATIC("app", "Application", "registerComponentScript(_,_)", wren_ApplicationRegisterComponentScript, "Changes the name of the game window.");
-WREN_CLASS_STATIC("app", "Application", "deltaTime", wren_ApplicationGetDeltaTime, "Get the games delta time.");
-WREN_CLASS_STATIC("app", "Application", "gameTime", wren_ApplicationGetGameTime, "Get the games time.");
 WREN_CLASS_STATIC("app", "Application", "gameWidth", wren_ApplicationGetGameWidth, "Get the games width.");
 WREN_CLASS_STATIC("app", "Application", "gameHeight", wren_ApplicationGetGameHeight, "Get the games height.");
 WREN_CLASS_STATIC("app", "Application", "pixelsPerMeter", wren_ApplicationGetPixelsPerMeter, "Get the pixels per meter for the physics system.");
@@ -154,3 +134,63 @@ WREN_CLASS_STATIC("app", "Application", "velocityIterations", wren_ApplicationGe
 WREN_CLASS_STATIC("app", "Application", "setVelocityIterations(_)", wren_ApplicationSetVelocityIterations, "Set the velocity iterations for the physics system.");
 WREN_CLASS_STATIC("app", "Application", "positionIterations", wren_ApplicationGetPositionIterations, "Get the position iterations for the physics system.");
 WREN_CLASS_STATIC("app", "Application", "setPositionIterations(_)", wren_ApplicationSetPositionIterations, "Set the position iterations for the physics system.");
+
+// ============================================================================
+// TIME BINDINGS
+// ============================================================================
+
+// Time.unscaledDelta -> number
+void wren_TimeGetUnscaledDelta(WrenVM* vm)
+{
+	Struktur::GameContext* context = static_cast<Struktur::GameContext*>(wrenGetUserData(vm));
+	auto& timeSystem = context->GetTimeSystem();
+	wrenSetSlotDouble(vm, 0, timeSystem.unscaledDelta);
+}
+
+// Time.scaledDelta -> number
+void wren_TimeGetScaledDelta(WrenVM* vm)
+{
+	Struktur::GameContext* context = static_cast<Struktur::GameContext*>(wrenGetUserData(vm));
+	auto& timeSystem = context->GetTimeSystem();
+	wrenSetSlotDouble(vm, 0, timeSystem.scaledDelta);
+}
+
+// Time.unscaledTime -> number
+void wren_TimeGetUnscaledTime(WrenVM* vm)
+{
+	Struktur::GameContext* context = static_cast<Struktur::GameContext*>(wrenGetUserData(vm));
+	auto& timeSystem = context->GetTimeSystem();
+	wrenSetSlotDouble(vm, 0, timeSystem.unscaledTime);
+}
+
+// Time.scaledTime -> number
+void wren_TimeGetScaledTime(WrenVM* vm)
+{
+	Struktur::GameContext* context = static_cast<Struktur::GameContext*>(wrenGetUserData(vm));
+	auto& timeSystem = context->GetTimeSystem();
+	wrenSetSlotDouble(vm, 0, timeSystem.scaledTime);
+}
+
+// Time.timeScale -> number
+void wren_TimeGetTimeScale(WrenVM* vm)
+{
+	Struktur::GameContext* context = static_cast<Struktur::GameContext*>(wrenGetUserData(vm));
+	auto& timeSystem = context->GetTimeSystem();
+	wrenSetSlotDouble(vm, 0, timeSystem.timeScale);
+}
+
+// Time.setTimeScale(number)
+void wren_TimeSetTimeScale(WrenVM* vm)
+{
+	Struktur::GameContext* context = static_cast<Struktur::GameContext*>(wrenGetUserData(vm));
+	auto& timeSystem = context->GetTimeSystem();
+	double timeScale = wrenGetSlotDouble(vm, 1);
+	timeSystem.SetTimeScale(timeScale);
+}
+
+WREN_CLASS_STATIC("app", "Time", "unscaledDelta", wren_TimeGetUnscaledDelta, "Gets the unsclaled delta time.");
+WREN_CLASS_STATIC("app", "Time", "scaledDelta", wren_TimeGetScaledDelta, "Gets the sclaled delta time.");
+WREN_CLASS_STATIC("app", "Time", "unscaledTime", wren_TimeGetUnscaledTime, "Get the unsclaled time.");
+WREN_CLASS_STATIC("app", "Time", "scaledTime", wren_TimeGetScaledTime, "Get the sclaled time.");
+WREN_CLASS_STATIC("app", "Time", "timeScale", wren_TimeGetTimeScale, "Get the sclaled time.");
+WREN_CLASS_STATIC("app", "Time", "setTimeScale(_)", wren_TimeSetTimeScale, "Set the time scale.");

@@ -37,5 +37,9 @@ class FlagManager {
     foreign static removeStringFlag(arg0)
     // Clear all flags
     foreign static clear()
+    // Save flags to file
+    foreign static save(arg0)
+    // Load in flags from file
+    foreign static load(arg0)
 }
 

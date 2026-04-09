@@ -13,7 +13,7 @@ void wren_FlagManagerGetFlag(WrenVM* vm)
 {
 	Struktur::GameContext* context = static_cast<Struktur::GameContext*>(wrenGetUserData(vm));
 	Struktur::Flag::FlagManager& flagManager = context->GetFlagManager();
-	
+
 	const char* flagName = wrenGetSlotString(vm, 1);
 	bool value = flagManager.GetFlag(flagName);
 	wrenSetSlotBool(vm, 0, value);
@@ -24,7 +24,7 @@ void wren_FlagManagerSetFlag(WrenVM* vm)
 {
 	Struktur::GameContext* context = static_cast<Struktur::GameContext*>(wrenGetUserData(vm));
 	Struktur::Flag::FlagManager& flagManager = context->GetFlagManager();
-	
+
 	const char* flagName = wrenGetSlotString(vm, 1);
 	bool value = wrenGetSlotBool(vm, 2);
 	flagManager.SetFlag(flagName, value);
@@ -35,7 +35,7 @@ void wren_FlagManagerHasFlag(WrenVM* vm)
 {
 	Struktur::GameContext* context = static_cast<Struktur::GameContext*>(wrenGetUserData(vm));
 	Struktur::Flag::FlagManager& flagManager = context->GetFlagManager();
-	
+
 	const char* flagName = wrenGetSlotString(vm, 1);
 	bool exists = flagManager.HasFlag(flagName);
 	wrenSetSlotBool(vm, 0, exists);
@@ -46,7 +46,7 @@ void wren_FlagManagerRemoveFlag(WrenVM* vm)
 {
 	Struktur::GameContext* context = static_cast<Struktur::GameContext*>(wrenGetUserData(vm));
 	Struktur::Flag::FlagManager& flagManager = context->GetFlagManager();
-	
+
 	const char* flagName = wrenGetSlotString(vm, 1);
 	flagManager.RemoveFlag(flagName);
 }
@@ -60,7 +60,7 @@ void wren_FlagManagerGetIntFlag(WrenVM* vm)
 {
 	Struktur::GameContext* context = static_cast<Struktur::GameContext*>(wrenGetUserData(vm));
 	Struktur::Flag::FlagManager& flagManager = context->GetFlagManager();
-	
+
 	const char* flagName = wrenGetSlotString(vm, 1);
 	int value = flagManager.GetIntFlag(flagName);
 	wrenSetSlotDouble(vm, 0, static_cast<double>(value));
@@ -71,7 +71,7 @@ void wren_FlagManagerSetIntFlag(WrenVM* vm)
 {
 	Struktur::GameContext* context = static_cast<Struktur::GameContext*>(wrenGetUserData(vm));
 	Struktur::Flag::FlagManager& flagManager = context->GetFlagManager();
-	
+
 	const char* flagName = wrenGetSlotString(vm, 1);
 	int value = static_cast<int>(wrenGetSlotDouble(vm, 2));
 	flagManager.SetIntFlag(flagName, value);
@@ -82,7 +82,7 @@ void wren_FlagManagerHasIntFlag(WrenVM* vm)
 {
 	Struktur::GameContext* context = static_cast<Struktur::GameContext*>(wrenGetUserData(vm));
 	Struktur::Flag::FlagManager& flagManager = context->GetFlagManager();
-	
+
 	const char* flagName = wrenGetSlotString(vm, 1);
 	bool exists = flagManager.HasIntFlag(flagName);
 	wrenSetSlotBool(vm, 0, exists);
@@ -93,7 +93,7 @@ void wren_FlagManagerRemoveIntFlag(WrenVM* vm)
 {
 	Struktur::GameContext* context = static_cast<Struktur::GameContext*>(wrenGetUserData(vm));
 	Struktur::Flag::FlagManager& flagManager = context->GetFlagManager();
-	
+
 	const char* flagName = wrenGetSlotString(vm, 1);
 	flagManager.RemoveIntFlag(flagName);
 }
@@ -107,7 +107,7 @@ void wren_FlagManagerGetFloatFlag(WrenVM* vm)
 {
 	Struktur::GameContext* context = static_cast<Struktur::GameContext*>(wrenGetUserData(vm));
 	Struktur::Flag::FlagManager& flagManager = context->GetFlagManager();
-	
+
 	const char* flagName = wrenGetSlotString(vm, 1);
 	float value = flagManager.GetFloatFlag(flagName);
 	wrenSetSlotDouble(vm, 0, static_cast<double>(value));
@@ -118,7 +118,7 @@ void wren_FlagManagerSetFloatFlag(WrenVM* vm)
 {
 	Struktur::GameContext* context = static_cast<Struktur::GameContext*>(wrenGetUserData(vm));
 	Struktur::Flag::FlagManager& flagManager = context->GetFlagManager();
-	
+
 	const char* flagName = wrenGetSlotString(vm, 1);
 	float value = static_cast<float>(wrenGetSlotDouble(vm, 2));
 	flagManager.SetFloatFlag(flagName, value);
@@ -129,7 +129,7 @@ void wren_FlagManagerHasFloatFlag(WrenVM* vm)
 {
 	Struktur::GameContext* context = static_cast<Struktur::GameContext*>(wrenGetUserData(vm));
 	Struktur::Flag::FlagManager& flagManager = context->GetFlagManager();
-	
+
 	const char* flagName = wrenGetSlotString(vm, 1);
 	bool exists = flagManager.HasFloatFlag(flagName);
 	wrenSetSlotBool(vm, 0, exists);
@@ -140,7 +140,7 @@ void wren_FlagManagerRemoveFloatFlag(WrenVM* vm)
 {
 	Struktur::GameContext* context = static_cast<Struktur::GameContext*>(wrenGetUserData(vm));
 	Struktur::Flag::FlagManager& flagManager = context->GetFlagManager();
-	
+
 	const char* flagName = wrenGetSlotString(vm, 1);
 	flagManager.RemoveFloatFlag(flagName);
 }
@@ -154,7 +154,7 @@ void wren_FlagManagerGetStringFlag(WrenVM* vm)
 {
 	Struktur::GameContext* context = static_cast<Struktur::GameContext*>(wrenGetUserData(vm));
 	Struktur::Flag::FlagManager& flagManager = context->GetFlagManager();
-	
+
 	const char* flagName = wrenGetSlotString(vm, 1);
 	std::string value = flagManager.GetStringFlag(flagName);
 	wrenSetSlotString(vm, 0, value.c_str());
@@ -165,7 +165,7 @@ void wren_FlagManagerSetStringFlag(WrenVM* vm)
 {
 	Struktur::GameContext* context = static_cast<Struktur::GameContext*>(wrenGetUserData(vm));
 	Struktur::Flag::FlagManager& flagManager = context->GetFlagManager();
-	
+
 	const char* flagName = wrenGetSlotString(vm, 1);
 	const char* value = wrenGetSlotString(vm, 2);
 	flagManager.SetStringFlag(flagName, value);
@@ -176,7 +176,7 @@ void wren_FlagManagerHasStringFlag(WrenVM* vm)
 {
 	Struktur::GameContext* context = static_cast<Struktur::GameContext*>(wrenGetUserData(vm));
 	Struktur::Flag::FlagManager& flagManager = context->GetFlagManager();
-	
+
 	const char* flagName = wrenGetSlotString(vm, 1);
 	bool exists = flagManager.HasStringFlag(flagName);
 	wrenSetSlotBool(vm, 0, exists);
@@ -187,7 +187,7 @@ void wren_FlagManagerRemoveStringFlag(WrenVM* vm)
 {
 	Struktur::GameContext* context = static_cast<Struktur::GameContext*>(wrenGetUserData(vm));
 	Struktur::Flag::FlagManager& flagManager = context->GetFlagManager();
-	
+
 	const char* flagName = wrenGetSlotString(vm, 1);
 	flagManager.RemoveStringFlag(flagName);
 }
@@ -202,6 +202,26 @@ void wren_FlagManagerClear(WrenVM* vm)
 	Struktur::GameContext* context = static_cast<Struktur::GameContext*>(wrenGetUserData(vm));
 	Struktur::Flag::FlagManager& flagManager = context->GetFlagManager();
 	flagManager.Clear();
+}
+
+// FlagManager.save(filePath)
+void wren_FlagManagerSave(WrenVM* vm)
+{
+	Struktur::GameContext* context = static_cast<Struktur::GameContext*>(wrenGetUserData(vm));
+	Struktur::Flag::FlagManager& flagManager = context->GetFlagManager();
+
+	const char* filePath = wrenGetSlotString(vm, 1);
+	flagManager.Save(filePath);
+}
+
+// FlagManager.load(filePath)
+void wren_FlagManagerLoad(WrenVM* vm)
+{
+	Struktur::GameContext* context = static_cast<Struktur::GameContext*>(wrenGetUserData(vm));
+	Struktur::Flag::FlagManager& flagManager = context->GetFlagManager();
+
+	const char* filePath = wrenGetSlotString(vm, 1);
+	flagManager.Load(filePath);
 }
 
 // Register FlagManager static methods
@@ -226,3 +246,5 @@ WREN_CLASS_STATIC("flags", "FlagManager", "hasStringFlag(_)", wren_FlagManagerHa
 WREN_CLASS_STATIC("flags", "FlagManager", "removeStringFlag(_)", wren_FlagManagerRemoveStringFlag, "Remove a string flag");
 
 WREN_CLASS_STATIC("flags", "FlagManager", "clear()", wren_FlagManagerClear, "Clear all flags");
+WREN_CLASS_STATIC("flags", "FlagManager", "save(_)", wren_FlagManagerSave, "Save flags to file");
+WREN_CLASS_STATIC("flags", "FlagManager", "load(_)", wren_FlagManagerLoad, "Load in flags from file");

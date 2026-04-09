@@ -14,7 +14,6 @@ set(SKIP_INSTALL_ALL ON)
 set(ENTT_INSTALL OFF CACHE BOOL "" FORCE)
 set(GLM_INSTALL_ENABLE OFF CACHE BOOL "" FORCE)
 set(JSON_Install OFF CACHE BOOL "" FORCE)
-set(PUGIXML_INSTALL OFF CACHE BOOL "" FORCE)
 set(BOX2D_BUILD_DOCS OFF CACHE BOOL "" FORCE)
 set(BOX2D_INSTALL OFF CACHE BOOL "" FORCE)
 set(PHYSFS_INSTALL OFF CACHE BOOL "" FORCE)
@@ -117,13 +116,6 @@ if (NOT raylib_FOUND)
         GIT_TAG v3.11.3
     )
     
-    # PugiXML - XML library
-    FetchContent_Declare(
-        pugixml
-        GIT_REPOSITORY https://github.com/zeux/pugixml.git
-        GIT_TAG v1.14
-    )
-    
     # RayGUI - Immediate mode GUI for RayLib
     FetchContent_Declare(
         raygui
@@ -163,6 +155,7 @@ if (NOT raylib_FOUND)
         physfs
         GIT_REPOSITORY https://github.com/icculus/physfs.git
         GIT_TAG release-3.2.0
+        OVERRIDE_FIND_PACKAGE
     )
 
     # tinyfiledialogs - native file dialogs (editor only)
@@ -185,9 +178,6 @@ if (NOT raylib_FOUND)
     set(JSON_BuildTests OFF CACHE BOOL "" FORCE)
     set(JSON_Install OFF CACHE BOOL "" FORCE)
     
-    # PugiXML options
-    set(PUGIXML_BUILD_TESTS OFF CACHE BOOL "" FORCE)
-    
     # Box2D options
     set(BOX2D_BUILD_UNIT_TESTS OFF CACHE BOOL "" FORCE)
     set(BOX2D_BUILD_TESTBED OFF CACHE BOOL "" FORCE)
@@ -199,8 +189,10 @@ if (NOT raylib_FOUND)
     set(PHYSFS_BUILD_DOCS FALSE CACHE BOOL "" FORCE)
     
     # Make libraries available
-    FetchContent_MakeAvailable(raylib entt glm nlohmann_json pugixml box2d physfs)
-    
+    set(CMAKE_POLICY_VERSION_MINIMUM 3.5)
+    FetchContent_MakeAvailable(raylib entt glm nlohmann_json box2d physfs)
+    unset(CMAKE_POLICY_VERSION_MINIMUM)
+
     # Handle rlImGui (depends on ImGui)
     FetchContent_GetProperties(rlimgui)
     if(NOT rlimgui_POPULATED)
@@ -299,6 +291,8 @@ if(DEBUG)
         src/Debug/Box2DDebugRenderer.h
 
         src/Engine/ECS/System/DebugSystem.h         src/Engine/ECS/System/DebugSystem.cpp
+
+        src/Engine/Scripting/WrenCodeGenerator.h    src/Engine/Scripting/WrenCodeGenerator.cpp
     )
 endif()
 
@@ -350,6 +344,7 @@ set(WREN_BINDING_SOURCES
     src/WrenBindings/WrenUI.h                   src/WrenBindings/WrenUI.cpp
     src/WrenBindings/WrenDialogue.h             src/WrenBindings/WrenDialogue.cpp
     src/WrenBindings/WrenFunctionCallback.h     src/WrenBindings/WrenFunctionCallback.cpp
+    src/WrenBindings/WrenFileSystem.h           src/WrenBindings/WrenFileSystem.cpp
                                                 src/WrenBindings/WrenFlags.cpp
                                                 src/WrenBindings/WrenApplication.cpp
                                                 src/WrenBindings/WrenGameObject.cpp
@@ -365,6 +360,8 @@ set(SOURCES
     src/Engine/GameContext.h                    src/Engine/GameContext.cpp
 
     src/Engine/Core/Gamedata.h                  src/Engine/Core/GameData.cpp
+    src/Engine/Core/TimeSystem.h                src/Engine/Core/TimeSystem.cpp
+    src/Engine/Core/FileSystem.h                src/Engine/Core/FileSystem.cpp
 
     src/Engine/Input/Input.h                    src/Engine/Input/Input.cpp
     src/Engine/Input/InputConfigLoader.h        src/Engine/Input/InputConfigLoader.cpp
@@ -446,7 +443,6 @@ set(SOURCES
     src/Engine/Scripting/WrenStateManager.h     src/Engine/Scripting/WrenStateManager.cpp
     src/Engine/Scripting/WrenScriptComponentRegistry.h src/Engine/Scripting/WrenScriptComponentRegistry.cpp
     src/Engine/Scripting/WrenUtil.h             src/Engine/Scripting/WrenUtil.cpp
-    src/Engine/Scripting/WrenCodeGenerator.h    src/Engine/Scripting/WrenCodeGenerator.cpp
     src/Engine/Scripting/WrenValueWrapper.h
 
     src/Engine/Util/Noise.h                     src/Engine/Util/Noise.cpp
@@ -471,12 +467,11 @@ target_link_libraries(${PROJECT_NAME}
     glm::glm
     wren
     nlohmann_json::nlohmann_json
-    pugixml
     raygui
     box2d
-    imgui
-    rlimgui
     PhysFS::PhysFS-static
+    $<$<BOOL:${EDITOR}>:imgui>
+    $<$<BOOL:${EDITOR}>:rlimgui>
     $<$<BOOL:${EDITOR}>:tinyfiledialogs>
 )
 
@@ -544,28 +539,6 @@ elseif(PLATFORM_DESKTOP)
 		endif()
     endif()
     
-    if(IS_DIRECTORY ${CMAKE_SOURCE_DIR}/assets)
-        if(CMAKE_BUILD_TYPE STREQUAL "Release")
-            # Copy assets for release builds
-            add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
-                COMMAND ${CMAKE_COMMAND} -E copy_directory
-                ${CMAKE_SOURCE_DIR}/assets
-                ${CMAKE_BINARY_DIR}/assets
-                COMMENT "Copying assets to build directory (Release)"
-            )
-        else()
-            # Create symlink for debug builds (faster, uses source directly)
-            add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
-                COMMAND ${CMAKE_COMMAND} -E create_symlink
-                ${CMAKE_SOURCE_DIR}/assets
-                ${CMAKE_BINARY_DIR}/assets
-                COMMENT "Creating symlink to assets (Debug)"
-            )
-        endif()
-    endif()
 endif()
 
 install(TARGETS ${PROJECT_NAME} DESTINATION .)
-if(IS_DIRECTORY ${CMAKE_SOURCE_DIR}/assets)
-	install(DIRECTORY ${CMAKE_SOURCE_DIR}/assets DESTINATION .)
-endif()

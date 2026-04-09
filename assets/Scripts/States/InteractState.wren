@@ -4,7 +4,7 @@
 import "States/BaseState" for BaseState
 import "resourceManager" for Font, Texture, Music, Sound
 import "ui" for UIManager, UILabel, UIPanel, TextWrapping
-import "app" for Application
+import "app" for Application, Time
 import "math" for Vec2, Vec3, Vec4
 import "input" for Input
 import "gameObjectComponents" for Camera, Script
@@ -212,7 +212,7 @@ class InteractState is BaseState {
 
         // Handle text scrolling
         if (_dialogueSrolling) {
-            var numberOfCharactersToDraw = ((Application.gameTime - _currentDialogueStartTime) / TEXT_SCROLL_SPEED).floor
+            var numberOfCharactersToDraw = ((Time.scaledTime - _currentDialogueStartTime) / TEXT_SCROLL_SPEED).floor
             if (numberOfCharactersToDraw >= _currentString.count) {
                 numberOfCharactersToDraw = _currentString.count
                 _dialogueSrolling = false
@@ -285,7 +285,7 @@ class InteractState is BaseState {
 
         // Start text scrolling animation
         _dialogueSrolling = true
-        _currentDialogueStartTime = Application.gameTime
+        _currentDialogueStartTime = Time.scaledTime
         _continueDialogueLabel.setVisible(false)
         _waitingForChoice = false
 

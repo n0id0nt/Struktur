@@ -6,6 +6,7 @@
 
 #include "Engine/Input/Input.h"
 #include "Engine/Core/GameData.h"
+#include "Engine/Core/TimeSystem.h"
 #include "Engine/Resource/ResourceManager.h"
 #include "Engine/ECS/SystemManager.h"
 #include "Engine/ECS/GameObjectManager.h"
@@ -36,6 +37,7 @@ namespace Struktur
 		{
 			m_input = std::make_unique<Input::Input>(0);
 			m_gameData = std::make_unique<Core::GameData>();
+			m_timeSystem = std::make_unique<Core::TimeSystem>();
 			m_registry = std::make_unique<entt::registry>();
 			m_resourceManager = std::make_unique<Resource::ResourceManager>();
 			m_systemManager = std::make_unique<System::SystemManager>();
@@ -67,6 +69,12 @@ namespace Struktur
 		{
 			ASSERT_MSG(m_gameData.get(), "GameData not initialised");
 			return *m_gameData;
+		}
+
+		Core::TimeSystem& GetTimeSystem() const
+		{
+			ASSERT_MSG(m_timeSystem.get(), "TimeSystem not initialised");
+			return *m_timeSystem;
 		}
 
 		entt::registry& GetRegistry() const
@@ -165,6 +173,7 @@ namespace Struktur
 
 	private:
 		std::unique_ptr<Core::GameData> m_gameData;
+		std::unique_ptr<Core::TimeSystem> m_timeSystem;
 		std::unique_ptr<Input::Input> m_input;
 		std::unique_ptr<entt::registry> m_registry;
 		std::unique_ptr<Resource::ResourceManager> m_resourceManager;

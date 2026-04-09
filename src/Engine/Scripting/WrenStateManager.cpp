@@ -22,7 +22,7 @@ bool WrenStateManager::Initialise(GameContext& context)
     DEBUG_INFO("[WrenStateManager] Initializing Main.wren");
     
     // Load Main.wren
-    if (!scriptEngine.InterpretFile("scripts/Main.wren"))
+    if (!scriptEngine.InterpretFile("Scripts/Main.wren"))
     {
         DEBUG_ERROR("[WrenStateManager] Failed to load Main.wren");
         DEBUG_ERROR("[WrenStateManager] Main.wren must be in the scripts folder");
@@ -115,7 +115,7 @@ void WrenStateManager::Update(GameContext& context)
     // Call Game.update(dt)
     wrenEnsureSlots(vm, 2);
     wrenSetSlotHandle(vm, 0, m_rootStateInstanceHandle);
-    wrenSetSlotDouble(vm, 1, context.GetGameData().deltaTime);
+    wrenSetSlotDouble(vm, 1, context.GetTimeSystem().scaledDelta);
     
     WrenInterpretResult result = wrenCall(vm, m_updateMethodHandle);
     

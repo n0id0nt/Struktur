@@ -4,7 +4,7 @@
 
 void Struktur::UI::FocusNavigator::Update(GameContext& context)
 {
-	float deltaTime = context.GetGameData().deltaTime;
+	float deltaTime = context.GetTimeSystem().unscaledDelta;
 	m_currentCooldownTimer -= deltaTime;
 }
 

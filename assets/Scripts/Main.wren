@@ -4,6 +4,8 @@
 
 import "app" for Application
 import "input" for Input
+import "flags" for FlagManager
+import "fileSystem" for FileSystem
 
 import "States/StateManager" for StateManager
 import "States/GameWorldState" for GameWorldState
@@ -12,16 +14,14 @@ import "Inventory" for Inventory
 import "Dialogue/DialogueLoader" for DialogueLoader
 
 class Game {
-    // Called before the game window is created and will initial the project settings.
-    construct new() {        
-        
+    // Called before the game window is created and will initialise the project settings.
+    // Don't load or set any files that are in the write directory here
+    construct new() {
         // TODO Define the window, spash screen Text/Image and window name game icon ect
         var windowWidth = 1280
         var windowHeight = 720
         Application.setWindowSize(windowWidth, windowHeight)
         Application.setApplicationName("Memory Palace")
-
-        Input.loadInputBindings("Settings/InputBindings/InputConfig.json")
 
         var gameObjectsScripts = [
             "Door",
@@ -41,6 +41,10 @@ class Game {
 
     // Called after the all the systems are initialised 
     start() {
+        FileSystem.seedFromDefaults("Settings/InputBindings/InputConfig.json", "InputConfig.json")
+        Input.loadInputBindings("Settings/InputBindings/InputConfig.json")
+        FlagManager.load("flags.sav")
+
         DialogueLoader.loadAllDialogue()
         // Initial states
         _stateManager.insertState("GameWorld", GameWorldState)

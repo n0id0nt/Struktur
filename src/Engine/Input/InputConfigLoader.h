@@ -20,7 +20,7 @@ namespace Struktur::Input
 		 * @param filepath Path to the JSON configuration file
 		 * @return True if successful, false otherwise
 		 */
-		static bool LoadFromFile(Input& input, const std::string& filepath);
+		static bool LoadFromFile(Input& input, const std::string& filePath);
 
 	private:
 		InputConfigLoader() = delete;  // Static class, no instances

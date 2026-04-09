@@ -1,123 +1,121 @@
 #include "ShaderResource.h"
 
-Struktur::Resource::ShaderResource::ShaderResource(const std::string &vsFilePath, const std::string &fsFilePath)
-    : GpuResource(vsFilePath + "," + fsFilePath), m_vsFilePath(vsFilePath), m_fsFilePath(fsFilePath)
+#include "Engine/Core/FileSystem.h"
+#include "Debug/Assertions.h"
+
+Struktur::Resource::ShaderResource::ShaderResource(const std::string& vsFilePath, const std::string& fsFilePath)
+	: GpuResource(vsFilePath + "," + fsFilePath), m_vsFilePath(vsFilePath), m_fsFilePath(fsFilePath)
 {
-    shader.id = 0;
-    shader.locs = nullptr;
+	shader.id = 0;
+	shader.locs = nullptr;
 }
 
 Struktur::Resource::ShaderResource::~ShaderResource()
 {
-    UnloadFromGpu();
-    UnloadFromDisk();
+	UnloadFromGpu();
+	UnloadFromDisk();
 }
 
 bool Struktur::Resource::ShaderResource::LoadFromDisk()
 {
-    if (isLoaded) return true;
+	if (isLoaded) return true;
 
-    isLoaded = true;
-    // TODO store the entire shader file into a string
-    DEBUG_INFO("Loaded shader from disk: vs = %s, fs = %s", m_vsFilePath.c_str(), m_fsFilePath.c_str());
-    return true;
+	isLoaded = true;
+	// TODO store the entire shader file into a string
+	DEBUG_INFO("Loaded shader from disk: vs = %s, fs = %s", m_vsFilePath.c_str(), m_fsFilePath.c_str());
+	return true;
 }
 
 void Struktur::Resource::ShaderResource::UnloadFromDisk()
 {
-    // TODO once the shader loads to CPU clear it here
-    isLoaded = false;
+	// TODO once the shader loads to CPU clear it here
+	isLoaded = false;
 }
 
 bool Struktur::Resource::ShaderResource::LoadToGpu()
 {
-    if (!LoadFromDisk()) return false;
-    if (IsGpuResourceValid()) return true;
+	if (!LoadFromDisk()) return false;
+	if (IsGpuResourceValid()) return true;
 
-    // Helper lambda to load shader source via PhysicsFS
-    auto loadShaderSource = [](const std::string& path) -> std::string
-    {
-        if (path.empty()) return {};
+	// Helper lambda to load shader source via PhysicsFS
+	auto loadShaderSource = [](const std::string& path) -> std::string
+		{
+			if (path.empty()) return {};
 
-        PHYSFS_File* file = PHYSFS_openRead(path.c_str());
-        ASSERT(file);
+			auto result = FileSystem::ReadString(path);
+			ASSERT_MSG(result.success, "Failed to load config: %s", result.errorMessage.c_str());
+			return result.value;
+		};
 
-        PHYSFS_sint64 size = PHYSFS_fileLength(file);
-        std::string buffer(size, '\0');
-        PHYSFS_readBytes(file, buffer.data(), size);
-        PHYSFS_close(file);
-        return buffer;
-    };
+	std::string vsSource = loadShaderSource(m_vsFilePath);
+	std::string fsSource = loadShaderSource(m_fsFilePath);
 
-    std::string vsSource = loadShaderSource(m_vsFilePath);
-    std::string fsSource = loadShaderSource(m_fsFilePath);
+	const char* vs = vsSource.empty() ? nullptr : vsSource.c_str();
+	const char* fs = fsSource.empty() ? nullptr : fsSource.c_str();
 
-    const char* vs = vsSource.empty() ? nullptr : vsSource.c_str();
-    const char* fs = fsSource.empty() ? nullptr : fsSource.c_str();
-
-    shader = ::LoadShaderFromMemory(vs, fs);
-    return shader.id != 0;
+	shader = ::LoadShaderFromMemory(vs, fs);
+	return shader.id != 0;
 }
 
 void Struktur::Resource::ShaderResource::UnloadFromGpu()
 {
-    if (shader.id != 0)
-    {
-        ::UnloadShader(shader);
-        shader.id = 0;
-        shader.locs = nullptr;
-    }
+	if (shader.id != 0)
+	{
+		::UnloadShader(shader);
+		shader.id = 0;
+		shader.locs = nullptr;
+	}
 }
 
 bool Struktur::Resource::ShaderResource::IsGpuResourceValid() const
 {
-    return shader.id != 0;
+	return shader.id != 0;
 }
 
 size_t Struktur::Resource::ShaderResource::GetMemoryUsage() const
 {
-    if (!isLoaded) return 0;
+	if (!isLoaded) return 0;
 
-    // Estimate: glyph data + texture data
-    size_t vsSize = m_vsFilePath.size();
-    size_t fsSize = m_fsFilePath.size();
-    return vsSize + fsSize;
+	// Estimate: glyph data + texture data
+	size_t vsSize = m_vsFilePath.size();
+	size_t fsSize = m_fsFilePath.size();
+	return vsSize + fsSize;
 }
 
 size_t Struktur::Resource::ShaderResource::GetGpuMemoryUsage() const
 {
-    return GetMemoryUsage();
+	return GetMemoryUsage();
 }
 
-const std::string &Struktur::Resource::ShaderResource::GetVSFilePath() const
+const std::string& Struktur::Resource::ShaderResource::GetVSFilePath() const
 {
-    return m_vsFilePath;
+	return m_vsFilePath;
 }
 
-const std::string &Struktur::Resource::ShaderResource::GetFSFilePath() const
+const std::string& Struktur::Resource::ShaderResource::GetFSFilePath() const
 {
-    return m_fsFilePath;
+	return m_fsFilePath;
 }
 
-Struktur::Resource::ShaderResource *Struktur::Resource::ShaderPool::LoadResource(const std::string &resourceString)
+Struktur::Resource::ShaderResource* Struktur::Resource::ShaderPool::LoadResource(const std::string& resourceString)
 {
-    std::string vsFilePath;
-    std::string fsFilePath;
-    size_t commerPos = resourceString.find_last_of(',');
-    if (commerPos != std::string::npos)
-    {
-        vsFilePath = resourceString.substr(0, commerPos);
-        fsFilePath = resourceString.substr(commerPos + 1);
-    }
+	std::string vsFilePath;
+	std::string fsFilePath;
+	size_t commerPos = resourceString.find_last_of(',');
+	if (commerPos != std::string::npos)
+	{
+		vsFilePath = resourceString.substr(0, commerPos);
+		fsFilePath = resourceString.substr(commerPos + 1);
+	}
 
-    auto* shader = new ShaderResource(vsFilePath, fsFilePath);
+	auto* shader = new ShaderResource(vsFilePath, fsFilePath);
 
-    if (!shader->LoadFromDisk())
-    {
-        delete shader;
-        return nullptr;
-    }
+	if (!shader->LoadFromDisk())
+	{
+		delete shader;
+		return nullptr;
+	}
 
-    AddGpuResource(shader);
-    return shader;
+	AddGpuResource(shader);
+	return shader;
 }

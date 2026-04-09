@@ -1,6 +1,14 @@
+# Visual Studio Code files
+.vscode
+
+# Build Folders
 build-web
 build-windows
 build-windows-debug
+
+# ImGui
 imgui
-.vscode
 imgui.ini
+
+# Editor save data
+saves/

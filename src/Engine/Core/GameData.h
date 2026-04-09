@@ -16,10 +16,6 @@ namespace Struktur
 
 		struct GameData
 		{
-			double pausedTime = 0.0f; // TODO is this the best way to handle this maybe flip it to the opposite (Will also better handle slomo)
-			double deltaTime = 0.0f;
-			double gameTime = 0.0f;
-			double startTime = 0.0f;
 			int gameWidth = 0;
 			int gameHeight = 0;
 			int applicationWidth = 0;

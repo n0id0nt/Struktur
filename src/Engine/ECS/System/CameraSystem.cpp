@@ -13,10 +13,9 @@
 void Struktur::System::CameraSystem::Update(GameContext& context)
 {
     entt::registry& registry = context.GetRegistry();
-    Core::GameData& gameData = context.GetGameData();
-
+    
     auto view = registry.view<Struktur::Component::Camera, Struktur::Component::WorldTransform>();
-
+    
     entt::entity focusedCameraEntity;
     Struktur::Component::Camera* focusedCameraComponent = nullptr;
     Struktur::Component::WorldTransform* focusedTransformComponent = nullptr;
@@ -31,13 +30,16 @@ void Struktur::System::CameraSystem::Update(GameContext& context)
             focusedTransformComponent = &worldTransform;
         }
     }
-
+    
     if (focusedCameraComponent && focusedTransformComponent)
     {
+        Core::GameData& gameData = context.GetGameData();
+        Core::TimeSystem& timeSystem = context.GetTimeSystem();
+
         glm::vec3 euler = glm::eulerAngles(focusedTransformComponent->rotation);
 
-        float gameTime = gameData.gameTime;
-        float deltaTime = gameData.deltaTime;
+        float gameTime = timeSystem.scaledTime;
+        float deltaTime = timeSystem.scaledDelta;
         int screenWidth = gameData.gameWidth;
         int screenHeight = gameData.gameHeight;
         GameResource::Camera& out_camera = context.GetCamera();

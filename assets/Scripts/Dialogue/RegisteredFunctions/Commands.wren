@@ -21,6 +21,7 @@ class Commands {
             var flag = params["flag"]
             var value = params["value"]
             var intFlag = FlagManager.setIntFlag(flag, value)
+            FlagManager.save("flags.sav")
             Debug.info("[Dialogue Command] Set Int Flag for %(flag): %(value)")
         }
         DialogueRegistry.registerCommand("cameraShake") { |params|

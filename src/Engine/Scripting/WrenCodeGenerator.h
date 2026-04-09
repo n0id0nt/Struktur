@@ -27,5 +27,7 @@ namespace Struktur::Wren
             const std::vector<const ConstantBinding*>& constants);
         
         static std::string ConvertSignature(const std::string& signature);
+
+		static void GenerateAllHeaders(const std::string& wrenSourceDir, const std::string& headerOutputDir);
     };
 }

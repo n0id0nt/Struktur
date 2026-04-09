@@ -16,7 +16,7 @@
 
 void Struktur::System::PhysicsSystem::Update(GameContext& context)
 {
-	float deltaTime = context.GetGameData().deltaTime;
+	float deltaTime = context.GetTimeSystem().scaledDelta;
 	StepPhysics(context, deltaTime);
 }
 

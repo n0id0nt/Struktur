@@ -3,9 +3,9 @@
 #include <fstream>
 #include <format>
 #include "raylib.h"
-#include "physfs.h"
 
 #include "Engine/GameContext.h"
+#include "Engine/Core/FileSystem.h"
 #include "Debug/Assertions.h"
 
 glm::vec2 Struktur::FileLoading::LevelParser::LoadJsonVector2(const nlohmann::json& json)
@@ -16,15 +16,10 @@ glm::vec2 Struktur::FileLoading::LevelParser::LoadJsonVector2(const nlohmann::js
 
 Struktur::FileLoading::LevelParser::World Struktur::FileLoading::LevelParser::LoadWorldMap(GameContext& context, const std::string& filePath)
 {
-	PHYSFS_File* file = PHYSFS_openRead(filePath.c_str());
-	ASSERT(file);
+	auto result = FileSystem::ReadString(filePath);
+	ASSERT_MSG(result.success, "Failed to load config: %s", result.errorMessage.c_str());
 
-	PHYSFS_sint64 size = PHYSFS_fileLength(file);
-	std::string buffer(size, '\0');
-	PHYSFS_readBytes(file, buffer.data(), size);
-	PHYSFS_close(file);
-
-	nlohmann::json data = nlohmann::json::parse(buffer);
+	nlohmann::json data = nlohmann::json::parse(result.value);
 
 	DEBUG_INFO("Loading world");
 
@@ -83,7 +78,7 @@ void Struktur::FileLoading::LevelParser::LoadLayers(Level& level, const nlohmann
 				LoadAutoLayerTiles(layer, layerJson["autoLayerTiles"]);
 			}
 		}
-		
+
 		layer.identifier = layerName;
 		layer.Iid = layerJson["iid"];
 		layer.cWid = layerJson["__cWid"];
@@ -137,7 +132,7 @@ void Struktur::FileLoading::LevelParser::LoadFieldInstances(Entity& entity, cons
 			int fieldValue = fieldInstanceJson["__value"];
 			field.value = fieldValue;
 			break;
-		}		
+		}
 		case Struktur::FileLoading::LevelParser::FieldInstanceType::FLOAT:
 		{
 			float fieldValue = fieldInstanceJson["__value"];

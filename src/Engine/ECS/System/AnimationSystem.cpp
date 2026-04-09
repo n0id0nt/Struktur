@@ -8,8 +8,8 @@
 void Struktur::System::AnimationSystem::Update(GameContext& context)
 {
     entt::registry& registry = context.GetRegistry();
-    Core::GameData& gameData = context.GetGameData();
-    double gameTime = gameData.gameTime;
+    Core::TimeSystem& timeSystem = context.GetTimeSystem();
+    double gameTime = timeSystem.scaledTime;
 
     auto view = registry.view<Component::Sprite, Component::SpriteAnimation>();
 	for (auto [entity, sprite, spriteAnimation] : view.each())
@@ -52,8 +52,8 @@ void Struktur::System::AnimationSystem::PlayAnimation(GameContext& context, entt
     entt::registry& registry = context.GetRegistry();
 	auto& animationComponent = registry.get<Component::SpriteAnimation>(entity);
     
-    Core::GameData& gameData = context.GetGameData();
-    double gameTime = gameData.gameTime;
+    Core::TimeSystem& timeSystem = context.GetTimeSystem();
+    double gameTime = timeSystem.scaledTime;
 
 	animationComponent.curAnimation = animationName;
 	animationComponent.animationStartTime = gameTime;
@@ -75,8 +75,8 @@ bool Struktur::System::AnimationSystem::IsAnimationPlaying(GameContext& context,
         return true;
     }
 
-    Core::GameData& gameData = context.GetGameData();
-    double gameTime = gameData.gameTime;
+    Core::TimeSystem& timeSystem = context.GetTimeSystem();
+    double gameTime = timeSystem.scaledTime;
 
 	float animationTime = gameTime - animationComponent.animationStartTime;
 	return animationTime <= curAnimation.animationTime;

@@ -1,10 +1,13 @@
 #pragma once
 
 #include "PreviewRenderer.h"
+
 #include <string>
 #include <fstream>
 #include <sstream>
+
 #include "physfs.h"
+#include "Engine/Core/FileSystem.h"
 
 namespace Struktur::Debug
 {
@@ -36,14 +39,10 @@ namespace Struktur::Debug
     private:
         void LoadFile()
         {
-            PHYSFS_File* file = PHYSFS_openRead(m_filePath.c_str());
-            if (file)
+            auto result = FileSystem::ReadString(m_filePath);
+            if (result)
             {
-                PHYSFS_sint64 size = PHYSFS_fileLength(file);
-                std::string buffer(size, '\0');
-                PHYSFS_readBytes(file, buffer.data(), size);
-                PHYSFS_close(file);
-                m_fileContent = std::move(buffer);
+                m_fileContent = std::move(result.value);
             }
             else
             {

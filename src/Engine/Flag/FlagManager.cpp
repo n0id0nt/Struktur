@@ -1,5 +1,11 @@
 #include "FlagManager.h"
 
+#include "nlohmann/json.hpp"
+#include "raylib.h"
+
+#include "Engine/Core/FileSystem.h"
+#include "Debug/Assertions.h"
+
 namespace Struktur::Flag
 {
 	FlagManager::FlagManager()
@@ -14,7 +20,10 @@ namespace Struktur::Flag
 	{
 	}
 
+	//////////////////////////////////////////////////////////////////////////////////////////
 	// Boolean flags
+	//////////////////////////////////////////////////////////////////////////////////////////
+
 	bool FlagManager::GetFlag(const std::string& name) const
 	{
 		auto it = m_boolFlags.find(name);
@@ -36,7 +45,10 @@ namespace Struktur::Flag
 		m_boolFlags.erase(name);
 	}
 
+	//////////////////////////////////////////////////////////////////////////////////////////
 	// Integer flags
+	//////////////////////////////////////////////////////////////////////////////////////////
+
 	int FlagManager::GetIntFlag(const std::string& name) const
 	{
 		auto it = m_intFlags.find(name);
@@ -58,7 +70,10 @@ namespace Struktur::Flag
 		m_intFlags.erase(name);
 	}
 
+	//////////////////////////////////////////////////////////////////////////////////////////
 	// Float flags
+	//////////////////////////////////////////////////////////////////////////////////////////
+
 	float FlagManager::GetFloatFlag(const std::string& name) const
 	{
 		auto it = m_floatFlags.find(name);
@@ -80,7 +95,10 @@ namespace Struktur::Flag
 		m_floatFlags.erase(name);
 	}
 
+	//////////////////////////////////////////////////////////////////////////////////////////
 	// String flags
+	//////////////////////////////////////////////////////////////////////////////////////////
+
 	std::string FlagManager::GetStringFlag(const std::string& name) const
 	{
 		auto it = m_stringFlags.find(name);
@@ -102,7 +120,10 @@ namespace Struktur::Flag
 		m_stringFlags.erase(name);
 	}
 
+	//////////////////////////////////////////////////////////////////////////////////////////
 	// Utility
+	//////////////////////////////////////////////////////////////////////////////////////////
+
 	void FlagManager::Clear()
 	{
 		m_boolFlags.clear();
@@ -111,23 +132,113 @@ namespace Struktur::Flag
 		m_stringFlags.clear();
 	}
 
-	void FlagManager::ClearBoolFlags()
+	void FlagManager::ClearBoolFlags() { m_boolFlags.clear(); }
+	void FlagManager::ClearIntFlags() { m_intFlags.clear(); }
+	void FlagManager::ClearFloatFlags() { m_floatFlags.clear(); }
+	void FlagManager::ClearStringFlags() { m_stringFlags.clear(); }
+
+	//////////////////////////////////////////////////////////////////////////////////////////
+	// Persistence
+	//////////////////////////////////////////////////////////////////////////////////////////
+
+	std::string FlagManager::Serialise() const
 	{
-		m_boolFlags.clear();
+		nlohmann::json json;
+
+		for (const auto& [key, value] : m_boolFlags)
+			json["bool"][key] = value;
+		for (const auto& [key, value] : m_intFlags)
+			json["int"][key] = value;
+		for (const auto& [key, value] : m_floatFlags)
+			json["float"][key] = value;
+		for (const auto& [key, value] : m_stringFlags)
+			json["string"][key] = value;
+
+		return json.dump(4);
 	}
 
-	void FlagManager::ClearIntFlags()
+	bool FlagManager::Deserialise(const std::string& data)
 	{
-		m_intFlags.clear();
+		nlohmann::json json;
+		try
+		{
+			json = nlohmann::json::parse(data);
+		}
+		catch (const nlohmann::json::parse_error& e)
+		{
+			DEBUG_ERROR("FLAGMANAGER: JSON parse error - %s", e.what());
+			return false;
+		}
+
+		if (json.contains("bool") && json["bool"].is_object())
+			for (const auto& [key, value] : json["bool"].items())
+				m_boolFlags[key] = value.get<bool>();
+
+		if (json.contains("int") && json["int"].is_object())
+			for (const auto& [key, value] : json["int"].items())
+				m_intFlags[key] = value.get<int>();
+
+		if (json.contains("float") && json["float"].is_object())
+			for (const auto& [key, value] : json["float"].items())
+				m_floatFlags[key] = value.get<float>();
+
+		if (json.contains("string") && json["string"].is_object())
+			for (const auto& [key, value] : json["string"].items())
+				m_stringFlags[key] = value.get<std::string>();
+
+		return true;
 	}
 
-	void FlagManager::ClearFloatFlags()
+	bool FlagManager::Save(const std::string& filePath) const
 	{
-		m_floatFlags.clear();
+		std::string data = Serialise();
+
+#ifdef EDITOR
+		auto result = FileSystem::WriteString(filePath, data);
+#else
+		auto result = FileSystem::WriteEncrypted(filePath, data);
+#endif
+
+		if (!result)
+		{
+			DEBUG_ERROR("FLAGMANAGER: Failed to save flags to %s - %s",
+				filePath.c_str(), result.errorMessage.c_str());
+			return false;
+		}
+
+		FileSystem::SyncSaves();
+		DEBUG_INFO("FLAGMANAGER: Saved flags to %s", filePath.c_str());
+		return true;
 	}
 
-	void FlagManager::ClearStringFlags()
+	bool FlagManager::Load(const std::string& filePath)
 	{
-		m_stringFlags.clear();
+		if (!FileSystem::Exists(filePath))
+		{
+			DEBUG_INFO("FLAGMANAGER: No save found at %s, using defaults", filePath.c_str());
+			return false;
+		}
+
+#ifdef EDITOR
+		auto result = FileSystem::ReadString(filePath);
+#else
+		auto result = FileSystem::ReadEncrypted(filePath);
+#endif
+
+		if (!result)
+		{
+			DEBUG_ERROR("FLAGMANAGER: Failed to load flags from %s - %s",
+				filePath.c_str(), result.errorMessage.c_str());
+			return false;
+		}
+
+		if (!Deserialise(result.value))
+		{
+			DEBUG_ERROR("FLAGMANAGER: Failed to deserialise flags from %s", filePath.c_str());
+			return false;
+		}
+
+		DEBUG_INFO("FLAGMANAGER: Loaded flags from %s", filePath.c_str());
+		return true;
 	}
 }

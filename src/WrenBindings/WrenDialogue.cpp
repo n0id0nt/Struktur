@@ -1,7 +1,6 @@
 #include "WrenDialogue.h"
 
 #include <memory>
-#include "wren.hpp"
 
 #include "Debug/Assertions.h"
 #include "Engine/Scripting/WrenBindingRegistry.h"
