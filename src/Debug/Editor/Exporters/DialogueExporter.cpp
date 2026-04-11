@@ -1,7 +1,8 @@
 #include "DialogueExporter.h"
 
-#include "Debug/Assertions.h"
 #include <sstream>
+
+#include "Debug/Assertions.h"
 
 namespace Struktur::Dialogue
 {
@@ -67,7 +68,7 @@ namespace Struktur::Dialogue
 				{
 					if (!firstCmd) output << ",\n";
 					firstCmd = false;
-					output << ExportCommand(*command, 6);
+					output << ExportCommandWren(*command, 6);
 				}
 
 				output << "\n" << Indent(5) << "]";
@@ -85,7 +86,7 @@ namespace Struktur::Dialogue
 				{
 					if (!firstChoice) output << ",\n";
 					firstChoice = false;
-					output << ExportChoice(*choice.get(), 6);
+					output << ExportChoiceWren(*choice.get(), 6);
 				}
 
 				output << "\n" << Indent(5) << "]";
@@ -103,7 +104,7 @@ namespace Struktur::Dialogue
 				{
 					if (!firstTarget) output << ",\n";
 					firstTarget = false;
-					output << ExportTarget(*target.get(), 6);
+					output << ExportTargetWren(*target.get(), 6);
 				}
 
 				output << "\n" << Indent(5) << "]";
@@ -124,7 +125,63 @@ namespace Struktur::Dialogue
 		return output.str();
 	}
 
-	std::string DialogueExporter::ExportChoice(const Choice& choice, int indent)
+	std::string DialogueExporter::ExportToJson(const std::unordered_map<std::string, Dialogue::DialogueNode*>& nodes)
+	{
+		nlohmann::json root = nlohmann::json::array();
+
+		for (const auto& [nodeId, node] : nodes)
+		{
+			nlohmann::json nodeData = nlohmann::json::object();
+
+			// Speaker
+			if (node->GetSpeaker().has_value())
+				nodeData["speaker"] = node->GetSpeaker().value();
+
+			// Text
+			if (node->GetText().has_value())
+				nodeData["text"] = node->GetText().value();
+
+			// Next
+			if (node->GetNext().has_value())
+				nodeData["next"] = node->GetNext().value();
+
+			// Commands
+			if (!node->GetCommands().empty())
+			{
+				nlohmann::json commands = nlohmann::json::array();
+				for (const auto& command : node->GetCommands())
+					commands.push_back(ExportCommandJson(*command));
+				nodeData["commands"] = commands;
+			}
+
+			// Choices
+			if (!node->GetChoices().empty())
+			{
+				nlohmann::json choices = nlohmann::json::array();
+				for (const auto& choice : node->GetChoices())
+					choices.push_back(ExportChoiceJson(*choice.get()));
+				nodeData["choices"] = choices;
+			}
+
+			// Targets
+			if (!node->GetTargets().empty())
+			{
+				nlohmann::json targets = nlohmann::json::array();
+				for (const auto& target : node->GetTargets())
+					targets.push_back(ExportTargetJson(*target.get()));
+				nodeData["targets"] = targets;
+			}
+
+			root.push_back({
+				{ "node", nodeId },
+				{ "data", nodeData }
+				});
+		}
+
+		return root.dump(2);
+	}
+
+	std::string DialogueExporter::ExportChoiceWren(const Choice& choice, int indent)
 	{
 		std::ostringstream output;
 		output << Indent(indent) << "{\"text\": \"" << EscapeString(choice.text)
@@ -132,7 +189,7 @@ namespace Struktur::Dialogue
 		return output.str();
 	}
 
-	std::string DialogueExporter::ExportCommand(const Command& command, int indent)
+	std::string DialogueExporter::ExportCommandWren(const Command& command, int indent)
 	{
 		std::ostringstream output;
 		output << Indent(indent) << "{\n";
@@ -162,7 +219,7 @@ namespace Struktur::Dialogue
 		return output.str();
 	}
 
-	std::string DialogueExporter::ExportCondition(const Condition& condition, int indent)
+	std::string DialogueExporter::ExportConditionWren(const Condition& condition, int indent)
 	{
 		std::ostringstream output;
 		output << Indent(indent) << "{\n";
@@ -190,7 +247,7 @@ namespace Struktur::Dialogue
 		return output.str();
 	}
 
-	std::string DialogueExporter::ExportTarget(const ConditionalTarget& target, int indent)
+	std::string DialogueExporter::ExportTargetWren(const ConditionalTarget& target, int indent)
 	{
 		std::ostringstream output;
 		output << Indent(indent) << "{\n";
@@ -205,7 +262,7 @@ namespace Struktur::Dialogue
 			{
 				if (!first) output << ",\n";
 				first = false;
-				output << ExportCondition(*condition, indent + 2);
+				output << ExportConditionWren(*condition, indent + 2);
 			}
 
 			output << "\n" << Indent(indent + 1) << "],\n";
@@ -216,6 +273,64 @@ namespace Struktur::Dialogue
 		output << Indent(indent) << "}";
 
 		return output.str();
+	}
+
+	nlohmann::json DialogueExporter::ExportChoiceJson(const Choice& choice)
+	{
+		return {
+			{ "text",   choice.text       },
+			{ "target", choice.targetNode }
+		};
+	}
+
+	nlohmann::json DialogueExporter::ExportCommandJson(const Command& command)
+	{
+		nlohmann::json params = nlohmann::json::array();
+		for (const auto& [key, value] : command.GetParams())
+		{
+			params.push_back({
+				{ "type",  key                  },
+				{ "value", value.AsJson()  }
+				});
+		}
+
+		return {
+			{ "type",       command.GetKey() },
+			{ "parameters", params           }
+		};
+	}
+
+	nlohmann::json DialogueExporter::ExportConditionJson(const Condition& condition)
+	{
+		nlohmann::json params = nlohmann::json::array();
+		for (const auto& [key, value] : condition.GetParams())
+		{
+			params.push_back({
+				{ "type",  key                  },
+				{ "value", value.AsJson()  }
+				});
+		}
+
+		return {
+			{ "type",       condition.GetKey() },
+			{ "parameters", params             }
+		};
+	}
+
+	nlohmann::json DialogueExporter::ExportTargetJson(const ConditionalTarget& target)
+	{
+		nlohmann::json j = nlohmann::json::object();
+
+		if (!target.conditions.empty())
+		{
+			nlohmann::json conditions = nlohmann::json::array();
+			for (const auto& condition : target.conditions)
+				conditions.push_back(ExportConditionJson(*condition));
+			j["conditions"] = conditions;
+		}
+
+		j["node"] = target.targetNode;
+		return j;
 	}
 
 	std::string DialogueExporter::Indent(int level)

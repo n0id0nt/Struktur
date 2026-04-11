@@ -116,13 +116,6 @@ if (NOT raylib_FOUND)
         GIT_TAG v3.11.3
     )
     
-    # RayGUI - Immediate mode GUI for RayLib
-    FetchContent_Declare(
-        raygui
-        GIT_REPOSITORY https://github.com/raysan5/raygui.git
-        GIT_TAG 4.0
-    )
-    
     # Box2D - 2D Physics Engine
     FetchContent_Declare(
         box2d
@@ -136,19 +129,6 @@ if (NOT raylib_FOUND)
         GIT_REPOSITORY https://github.com/wren-lang/wren.git
         GIT_TAG 0.4.0
     )
-    
-    # Dear ImGui - Immediate mode GUI (RayLib compatible version)
-    FetchContent_Declare(
-        imgui
-        URL https://github.com/ocornut/imgui/archive/refs/tags/v1.91.8-docking.tar.gz
-    )
-
-    # rlImGui - RayLib ImGui integration
-    FetchContent_Declare(
-        rlimgui
-        GIT_REPOSITORY https://github.com/raylib-extras/rlImGui.git
-        GIT_TAG 0105acf1bfba22e883688e5b9ffb1af0536739e2
-    )
 
     # PhysicsFS - Virtual filesystem / asset packing
     FetchContent_Declare(
@@ -157,13 +137,28 @@ if (NOT raylib_FOUND)
         GIT_TAG release-3.2.0
         OVERRIDE_FIND_PACKAGE
     )
+   
+    if(EDITOR)
+        # Dear ImGui - Immediate mode GUI (RayLib compatible version)
+        FetchContent_Declare(
+            imgui
+            URL https://github.com/ocornut/imgui/archive/refs/tags/v1.91.8-docking.tar.gz
+        )
 
-    # tinyfiledialogs - native file dialogs (editor only)
-    FetchContent_Declare(
-        tinyfiledialogs
-        GIT_REPOSITORY https://github.com/native-toolkit/tinyfiledialogs.git
-        GIT_TAG master
-    )
+        # rlImGui - RayLib ImGui integration
+        FetchContent_Declare(
+            rlimgui
+            GIT_REPOSITORY https://github.com/raylib-extras/rlImGui.git
+            GIT_TAG 0105acf1bfba22e883688e5b9ffb1af0536739e2
+        )
+
+        # tinyfiledialogs - native file dialogs (editor only)
+        FetchContent_Declare(
+            tinyfiledialogs
+            GIT_REPOSITORY https://github.com/native-toolkit/tinyfiledialogs.git
+            GIT_TAG master
+        )
+    endif()
 
     # Configure library options before making available
     
@@ -192,18 +187,6 @@ if (NOT raylib_FOUND)
     set(CMAKE_POLICY_VERSION_MINIMUM 3.5)
     FetchContent_MakeAvailable(raylib entt glm nlohmann_json box2d physfs)
     unset(CMAKE_POLICY_VERSION_MINIMUM)
-
-    # Handle rlImGui (depends on ImGui)
-    FetchContent_GetProperties(rlimgui)
-    if(NOT rlimgui_POPULATED)
-        FetchContent_Populate(rlimgui)
-        add_library(rlimgui STATIC ${rlimgui_SOURCE_DIR}/rlImGui.cpp)
-        target_include_directories(rlimgui PUBLIC 
-            ${rlimgui_SOURCE_DIR}
-            ${imgui_SOURCE_DIR}
-        )
-        target_link_libraries(rlimgui PUBLIC raylib imgui)
-    endif()
     
     # Handle Wren (cross-platform scripting)
     FetchContent_GetProperties(wren)
@@ -244,46 +227,50 @@ if (NOT raylib_FOUND)
         endif()
     endif()
 
-    # Handle RayGUI (header-only)
-    FetchContent_GetProperties(raygui)
-    if(NOT raygui_POPULATED)
-        FetchContent_Populate(raygui)
-        add_library(raygui INTERFACE)
-        target_include_directories(raygui INTERFACE ${raygui_SOURCE_DIR}/src)
-        target_link_libraries(raygui INTERFACE raylib)
-    endif()
-    
-    # Handle Dear ImGui (custom build for rlImGui compatibility)
-    FetchContent_GetProperties(imgui)
-    if(NOT imgui_POPULATED)
-        FetchContent_Populate(imgui)
+    if(EDITOR)
+        # Handle Dear ImGui (custom build for rlImGui compatibility)
+        FetchContent_GetProperties(imgui)
+        if(NOT imgui_POPULATED)
+            FetchContent_Populate(imgui)
         
-        # ImGui core files
-        set(IMGUI_SOURCES
-            ${imgui_SOURCE_DIR}/imgui.cpp
-            ${imgui_SOURCE_DIR}/imgui_demo.cpp
-            ${imgui_SOURCE_DIR}/imgui_draw.cpp
-            ${imgui_SOURCE_DIR}/imgui_tables.cpp
-            ${imgui_SOURCE_DIR}/imgui_widgets.cpp
-        )
+            # ImGui core files
+            set(IMGUI_SOURCES
+                ${imgui_SOURCE_DIR}/imgui.cpp
+                ${imgui_SOURCE_DIR}/imgui_demo.cpp
+                ${imgui_SOURCE_DIR}/imgui_draw.cpp
+                ${imgui_SOURCE_DIR}/imgui_tables.cpp
+                ${imgui_SOURCE_DIR}/imgui_widgets.cpp
+            )
         
-        add_library(imgui STATIC ${IMGUI_SOURCES})
-        target_include_directories(imgui PUBLIC ${imgui_SOURCE_DIR})
-        target_compile_definitions(imgui PUBLIC IMGUI_DISABLE_OBSOLETE_FUNCTIONS)
-    endif()
+            add_library(imgui STATIC ${IMGUI_SOURCES})
+            target_include_directories(imgui PUBLIC ${imgui_SOURCE_DIR})
+            target_compile_definitions(imgui PUBLIC IMGUI_DISABLE_OBSOLETE_FUNCTIONS)
+        endif()
     
     
-    FetchContent_GetProperties(tinyfiledialogs)
-    if(NOT tinyfiledialogs_POPULATED)
-        FetchContent_Populate(tinyfiledialogs)
-        add_library(tinyfiledialogs STATIC 
-            ${tinyfiledialogs_SOURCE_DIR}/tinyfiledialogs.c
-        )
-        target_include_directories(tinyfiledialogs PUBLIC 
-            ${tinyfiledialogs_SOURCE_DIR}
-        )
+        # Handle rlImGui (depends on ImGui)
+        FetchContent_GetProperties(rlimgui)
+        if(NOT rlimgui_POPULATED)
+            FetchContent_Populate(rlimgui)
+            add_library(rlimgui STATIC ${rlimgui_SOURCE_DIR}/rlImGui.cpp)
+            target_include_directories(rlimgui PUBLIC 
+                ${rlimgui_SOURCE_DIR}
+                ${imgui_SOURCE_DIR}
+            )
+            target_link_libraries(rlimgui PUBLIC raylib imgui)
+        endif()
+    
+        FetchContent_GetProperties(tinyfiledialogs)
+        if(NOT tinyfiledialogs_POPULATED)
+            FetchContent_Populate(tinyfiledialogs)
+            add_library(tinyfiledialogs STATIC 
+                ${tinyfiledialogs_SOURCE_DIR}/tinyfiledialogs.c
+            )
+            target_include_directories(tinyfiledialogs PUBLIC 
+                ${tinyfiledialogs_SOURCE_DIR}
+            )
+        endif()
     endif()
-
 endif()
 
 if(DEBUG)
@@ -350,6 +337,7 @@ set(WREN_BINDING_SOURCES
                                                 src/WrenBindings/WrenGameObject.cpp
                                                 src/WrenBindings/WrenInput.cpp
                                                 src/WrenBindings/WrenDebug.cpp
+                                                src/WrenBindings/WrenSerialisation.cpp
 )
 
 # Source files
@@ -467,7 +455,6 @@ target_link_libraries(${PROJECT_NAME}
     glm::glm
     wren
     nlohmann_json::nlohmann_json
-    raygui
     box2d
     PhysFS::PhysFS-static
     $<$<BOOL:${EDITOR}>:imgui>

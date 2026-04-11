@@ -15,6 +15,7 @@
 #include "Debug/Editor/Windows/EditorWindow.h"
 #include "Engine/Dialogue/DialogueNode.h"
 #include "Engine/Dialogue/DialogueResult.h"
+#include "Debug/Editor/Exporters/DialogueExporter.h"
 
 namespace Struktur::Debug
 {
@@ -62,7 +63,7 @@ namespace Struktur::Debug
 
 		// File operations
 		void LoadDialogueFile(GameContext& context, const std::string& filepath, const std::string& className, const std::string& entryNode);
-		void SaveDialogueFile(const std::string& filepath);
+		void SaveDialogueFile(const std::string& filepath, Dialogue::DialogueExporter::DialogueSaveFormat format);
 		void CreateNewDialogue(const std::string& className);
 
 		// Node operations
@@ -83,6 +84,16 @@ namespace Struktur::Debug
 			Edit,
 			Playback
 		};
+
+		// File operations
+		bool LoadDialogueFileWren(GameContext& context, const std::string& filepath, const std::string& className);
+		bool LoadDialogueFileJson(GameContext& context, const std::string& filepath);
+		void ParseDialogueDataFromJson(GameContext& context, const nlohmann::json& root);
+		std::unique_ptr<Dialogue::Command> ParseCommandFromJson(const nlohmann::json& j);
+		std::unique_ptr<Dialogue::Choice> ParseChoiceFromJson(const nlohmann::json& j);
+		std::unique_ptr<Dialogue::ConditionalTarget> ParseTargetFromJson(const nlohmann::json& j);
+		static Dialogue::DialogueValue ParseDialogueValueFromJson(const nlohmann::json& value);
+		void RenderOpenDialogueOptionsPopup(GameContext& context);
 
 		// Main render sections
 		void RenderFilePanel(GameContext& context);
@@ -116,6 +127,10 @@ namespace Struktur::Debug
 
 		void SwitchNodeContinuationType(Dialogue::DialogueNode* node, int newType);
 		void ParseDialogueDataFromWren(GameContext& context, WrenVM* vm, int slot);
+
+		void SaveFileWithPicker();
+		void OpenFileWithPicker(GameContext& context);
+		static Dialogue::DialogueExporter::DialogueSaveFormat FormatFromExtension(const std::string& filepath);
 
 		// View mode
 		ViewMode m_viewMode;
@@ -161,5 +176,12 @@ namespace Struktur::Debug
 		char m_searchBuffer[128];
 
 		PreviewWindow* m_previewWindow;
+
+		Dialogue::DialogueExporter::DialogueSaveFormat m_currentSaveFormat = Dialogue::DialogueExporter::DialogueSaveFormat::Wren;
+
+		// Pending load state for the open options popup
+		std::string m_pendingLoadFilepath;
+		std::string m_pendingLoadClassName;
+		std::string m_pendingLoadEntryNode;
 	};
 }

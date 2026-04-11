@@ -27,40 +27,57 @@ namespace Struktur::Debug
 		// Clear existing data
 		m_nodes.clear();
 		m_selectedNodeId = "";
-		m_entryNodeId = "";
+		m_entryNodeId = entryNode;
 		m_errors.clear();
 		m_warnings.clear();
 		m_currentClassName = className;
-		m_entryNodeId = entryNode;
+		m_currentFile = filepath;
 
+		bool success = false;
+
+		Dialogue::DialogueExporter::DialogueSaveFormat format = FormatFromExtension(filepath);
+		switch (format)
+		{
+		case Dialogue::DialogueExporter::DialogueSaveFormat::Wren:
+			success = LoadDialogueFileWren(context, filepath, className);
+			break;
+		case Dialogue::DialogueExporter::DialogueSaveFormat::Json:
+			success = LoadDialogueFileJson(context, filepath);
+			break;
+		}
+
+		if (!success)
+			return;
+
+		m_currentSaveFormat = format;
+
+		CalculateGraphLayout();
+		m_hasUnsavedChanges = false;
+		DEBUG_INFO("Loaded dialogue: %s (%zu nodes)", m_currentClassName.c_str(), m_nodes.size());
+	}
+
+	bool DialogueEditorWindow::LoadDialogueFileWren(GameContext& context, const std::string& filepath, const std::string& className)
+	{
 		// Extract module path (without extension, relative to assets)
 		// Example: "Scripts/Dialogue/ScholarDialogue.wren" -> "dialogue/scholar"
 		std::string modulePath = filepath;
 
-		// Remove "Scripts/" prefix if present
+		std::replace(modulePath.begin(), modulePath.end(), '\\', '/');
+
 		size_t assetsPos = modulePath.find("Scripts");
 		if (assetsPos != std::string::npos)
-		{
-			modulePath = modulePath.substr(assetsPos + 15); // Skip "Scripts/"
-		}
+			modulePath = modulePath.substr(assetsPos + 8); // Skip "Scripts/"
 
-		// Remove .wren extension
 		if (modulePath.ends_with(".wren"))
-		{
 			modulePath = modulePath.substr(0, modulePath.length() - 5);
-		}
 
 		m_currentModulePath = modulePath;
-		m_currentFile = filepath;
 
-		// Execute Wren code to load the dialogue
 		WrenVM* vm = context.GetWrenScriptEngine().GetVM();
-
 		std::string classDataName = "classData_" + std::to_string(m_importCount);
 		std::string moduleName = "loader_" + std::to_string(m_importCount);
 		m_importCount++;
 
-		// Build the loading script
 		std::stringstream script;
 		script << "import \"" << modulePath << "\" for " << m_currentClassName << "\n";
 		script << "class " << classDataName << " {\n";
@@ -69,26 +86,23 @@ namespace Struktur::Debug
 		script << "    }\n";
 		script << "}\n";
 
-		// Execute and get the dialogue data
 		wrenEnsureSlots(vm, 1);
 		WrenInterpretResult result = wrenInterpret(vm, moduleName.c_str(), script.str().c_str());
-
 		if (result != WREN_RESULT_SUCCESS)
 		{
-			DEBUG_ERROR("Failed to load dialogue from %s", filepath.c_str());
+			DEBUG_ERROR("Failed to load Wren dialogue from %s", filepath.c_str());
 			m_errors.push_back(ValidationError{
 				ValidationError::Type::InvalidReference,
 				filepath.c_str(),
 				"LOAD_ERROR",
 				"Failed to execute Wren script to load dialogue"
 				});
-			return;
+			return false;
 		}
 
 		wrenEnsureSlots(vm, 1);
 		wrenGetVariable(vm, moduleName.c_str(), classDataName.c_str(), 0);
 		WrenHandle* loaderClass = wrenGetSlotHandle(vm, 0);
-
 		WrenHandle* getDataMethod = wrenMakeCallHandle(vm, "getData()");
 
 		wrenSetSlotHandle(vm, 0, loaderClass);
@@ -97,52 +111,220 @@ namespace Struktur::Debug
 		wrenReleaseHandle(vm, getDataMethod);
 		wrenReleaseHandle(vm, loaderClass);
 
-		// Now we need to extract the dialogue data from Wren
-		// The dialogue data should be in slot 0
 		ParseDialogueDataFromWren(context, vm, 0);
-
-		// Try to load layout file
-		//std::string layoutPath = filepath + ".layout.json";
-		//if (std::filesystem::exists(layoutPath))
-		//{
-		//	LoadLayoutFromFile(layoutPath);
-		//}
-		//else
-		{
-			// Auto-generate layout
-			CalculateGraphLayout();
-		}
-
-		m_hasUnsavedChanges = false;
-
-		DEBUG_INFO("Loaded dialogue: %s (%zu nodes)", m_currentClassName.c_str(), m_nodes.size());
+		return true;
 	}
 
-	void DialogueEditorWindow::SaveDialogueFile(const std::string& filepath)
+	bool DialogueEditorWindow::LoadDialogueFileJson(GameContext& context, const std::string& filepath)
+	{
+		std::ifstream file(filepath);
+		if (!file.is_open())
+		{
+			DEBUG_ERROR("Failed to open JSON dialogue file: %s", filepath.c_str());
+			m_errors.push_back(ValidationError{
+				ValidationError::Type::InvalidReference,
+				filepath.c_str(),
+				"LOAD_ERROR",
+				"Failed to open JSON dialogue file"
+				});
+			return false;
+		}
+
+		nlohmann::json root;
+		try
+		{
+			file >> root;
+		}
+		catch (const nlohmann::json::parse_error& e)
+		{
+			DEBUG_ERROR("Failed to parse JSON dialogue file %s: %s", filepath.c_str(), e.what());
+			m_errors.push_back(ValidationError{
+				ValidationError::Type::InvalidReference,
+				filepath.c_str(),
+				"PARSE_ERROR",
+				std::string("JSON parse error: ") + e.what()
+				});
+			return false;
+		}
+
+		if (!root.is_array())
+		{
+			DEBUG_ERROR("JSON dialogue file root must be an array: %s", filepath.c_str());
+			m_errors.push_back(ValidationError{
+				ValidationError::Type::InvalidReference,
+				filepath.c_str(),
+				"PARSE_ERROR",
+				"JSON dialogue root must be an array of nodes"
+				});
+			return false;
+		}
+
+		ParseDialogueDataFromJson(context, root);
+		return true;
+	}
+
+	void DialogueEditorWindow::ParseDialogueDataFromJson(GameContext& context, const nlohmann::json& root)
+	{
+		for (const auto& entry : root)
+		{
+			if (!entry.contains("node") || !entry.contains("data"))
+				continue;
+
+			std::string nodeId = entry["node"].get<std::string>();
+			const auto& data = entry["data"];
+
+			// Create a new node and populate it
+			auto node = std::make_unique<Dialogue::DialogueNode>(nodeId);
+
+			if (data.contains("speaker"))
+				node->SetSpeaker(data["speaker"].get<std::string>());
+
+			if (data.contains("text"))
+				node->SetText(data["text"].get<std::string>());
+
+			if (data.contains("next"))
+				node->SetNext(data["next"].get<std::string>());
+
+			if (data.contains("commands") && data["commands"].is_array())
+			{
+				for (const auto& cmdJson : data["commands"])
+					node->AddCommand(ParseCommandFromJson(cmdJson));
+			}
+
+			if (data.contains("choices") && data["choices"].is_array())
+			{
+				for (const auto& choiceJson : data["choices"])
+					node->AddChoice(ParseChoiceFromJson(choiceJson));
+			}
+
+			if (data.contains("targets") && data["targets"].is_array())
+			{
+				for (const auto& targetJson : data["targets"])
+					node->AddTarget(ParseTargetFromJson(targetJson));
+			}
+
+			NodeData nodeData;
+			nodeData.node = std::move(node);
+			m_nodes[nodeId] = std::move(nodeData);
+
+			if (!m_nodes.contains(m_entryNodeId))
+			{
+				m_entryNodeId = m_nodes.begin()->first;
+			}
+		}
+	}
+
+	std::unique_ptr<Dialogue::Command> DialogueEditorWindow::ParseCommandFromJson(const nlohmann::json& j)
+	{
+		std::string key = j.value("type", "");
+
+		std::unordered_map<std::string, Dialogue::DialogueValue> params;
+		if (j.contains("parameters") && j["parameters"].is_array())
+		{
+			for (const auto& param : j["parameters"])
+			{
+				std::string paramKey = param.value("type", "");
+				Dialogue::DialogueValue paramVal = param.contains("value")
+					? ParseDialogueValueFromJson(param["value"])
+					: Dialogue::DialogueValue();
+				params[paramKey] = paramVal;
+			}
+		}
+
+		return std::make_unique<Dialogue::Command>(key, params);
+	}
+
+	std::unique_ptr<Dialogue::Choice> DialogueEditorWindow::ParseChoiceFromJson(const nlohmann::json& j)
+	{
+		auto choice = std::make_unique<Dialogue::Choice>();
+		choice->text = j.value("text", "");
+		choice->targetNode = j.value("target", "");
+		return choice;
+	}
+
+	std::unique_ptr<Dialogue::ConditionalTarget> DialogueEditorWindow::ParseTargetFromJson(const nlohmann::json& j)
+	{
+		auto target = std::make_unique<Dialogue::ConditionalTarget>();
+		target->targetNode = j.value("node", "");
+
+		if (j.contains("conditions") && j["conditions"].is_array())
+		{
+			for (const auto& condJson : j["conditions"])
+			{
+				std::string key = condJson.value("type", "");
+
+				std::unordered_map<std::string, Dialogue::DialogueValue> params;
+				if (condJson.contains("parameters") && condJson["parameters"].is_array())
+				{
+					for (const auto& param : condJson["parameters"])
+					{
+						std::string paramKey = param.value("type", "");
+						Dialogue::DialogueValue paramVal = param.contains("value")
+							? ParseDialogueValueFromJson(param["value"])
+							: Dialogue::DialogueValue();
+						params[paramKey] = paramVal;
+					}
+				}
+
+				target->conditions.push_back(
+					std::make_unique<Dialogue::Condition>(key, params)
+				);
+			}
+		}
+
+		return target;
+	}
+
+	Dialogue::DialogueValue DialogueEditorWindow::ParseDialogueValueFromJson(const nlohmann::json& value)
+	{
+		switch (value.type())
+		{
+		case nlohmann::json::value_t::boolean:
+			return Dialogue::DialogueValue(value.get<bool>());
+		case nlohmann::json::value_t::number_integer:
+		case nlohmann::json::value_t::number_unsigned:
+			return Dialogue::DialogueValue(value.get<int>());
+		case nlohmann::json::value_t::number_float:
+			return Dialogue::DialogueValue(value.get<double>());
+		case nlohmann::json::value_t::string:
+			return Dialogue::DialogueValue(value.get<std::string>());
+		default:
+			return Dialogue::DialogueValue(); // null or unsupported -> empty string
+		}
+	}
+
+	void DialogueEditorWindow::SaveDialogueFile(const std::string& filepath, Dialogue::DialogueExporter::DialogueSaveFormat format)
 	{
 		DEBUG_INFO("Saving dialogue file: %s", filepath.c_str());
 
-		// Convert nodes to unique_ptr map for exporter
+		// Convert nodes to raw pointer map for exporter
 		std::unordered_map<std::string, Dialogue::DialogueNode*> nodesToExport;
-
 		for (auto& [nodeId, nodeData] : m_nodes)
 		{
 			nodesToExport[nodeId] = nodeData.node.get();
 		}
 
-		// Export to Wren format
-		std::string wrenOutput = Dialogue::DialogueExporter::ExportToWren(nodesToExport, m_currentClassName);
+		// Export to selected format
+		std::string output;
+		switch (format)
+		{
+		case Dialogue::DialogueExporter::DialogueSaveFormat::Wren:
+			output = Dialogue::DialogueExporter::ExportToWren(nodesToExport, m_currentClassName);
+			break;
+		case Dialogue::DialogueExporter::DialogueSaveFormat::Json:
+			output = Dialogue::DialogueExporter::ExportToJson(nodesToExport);
+			break;
+		}
 
 		// Write to file
 		std::ofstream file(filepath);
 		if (file.is_open())
 		{
-			file << wrenOutput;
+			file << output;
 			file.close();
-
 			m_currentFile = filepath;
+			m_currentSaveFormat = format;
 			m_hasUnsavedChanges = false;
-
 			DEBUG_INFO("Dialogue saved successfully");
 		}
 		else
@@ -595,6 +777,13 @@ namespace Struktur::Debug
 			m_currentPlaybackResult.shouldAutoAdvance = targetNode->HasNext();
 			m_currentPlaybackResult.hasEnded = !targetNode->HasNext() && targetChoices.empty() && targetNode->GetTargets().empty();
 		}
+	}
+
+	Dialogue::DialogueExporter::DialogueSaveFormat DialogueEditorWindow::FormatFromExtension(const std::string& filepath)
+	{
+		if (filepath.size() >= 5 && filepath.substr(filepath.size() - 5) == ".wren")
+			return Dialogue::DialogueExporter::DialogueSaveFormat::Wren;
+		return Dialogue::DialogueExporter::DialogueSaveFormat::Json;  // default
 	}
 
 	void DialogueEditorWindow::RenderPlaybackView(GameContext& context)

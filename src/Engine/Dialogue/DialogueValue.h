@@ -2,6 +2,7 @@
 
 #include <string>
 #include <variant>
+#include "nlohmann/json.hpp"
 
 namespace Struktur::Dialogue
 {
@@ -25,6 +26,7 @@ namespace Struktur::Dialogue
 		int AsInt() const;
 		bool AsBool() const;
 		double AsDouble() const;
+		nlohmann::json AsJson() const;
 
 		// Type checking
 		bool IsString() const { return std::holds_alternative<std::string>(m_value); }

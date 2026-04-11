@@ -126,3 +126,8 @@ double Struktur::Dialogue::DialogueValue::AsDouble() const
 			}
 		}, m_value);
 }
+
+nlohmann::json Struktur::Dialogue::DialogueValue::AsJson() const
+{
+	return std::visit([](const auto& v) -> nlohmann::json { return v; }, m_value);
+}

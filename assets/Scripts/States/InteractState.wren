@@ -354,9 +354,7 @@ class InteractState is BaseState {
     }
 
     getEntryPoint(interactableName) {
-        // Determine which dialogue entry point to use based on the interactable
-        // This maps your old interaction names to the new dialogue system
-        
+        // Determine which dialogue entry point to use based on the interactable        
         // NPCs
         if (interactableName == "Scholar") return "scholar"
         if (interactableName == "Gardener") return "gardener"
@@ -369,18 +367,32 @@ class InteractState is BaseState {
         if (interactableName == "Dreamer") return "dreamer"
         if (interactableName == "Guardian") return "guardian"
         if (interactableName == "Inventor") return "inventor"
+
+        // Immoveable Items
+        if (interactableName == "Safe") return "safe"
+        if (interactableName == "Red Pedestal Inactive") return "red_pedestal_inactive"
+        if (interactableName == "Red Pedestal Active") return "red_pedestal_active"
+        if (interactableName == "Blue Pedestal Inactive") return "blue_pedestal_inactive"
+        if (interactableName == "Blue Pedestal Active") return "blue_pedestal_active"
+        if (interactableName == "Green Pedestal Inactive") return "green_pedestal_inactive"
+        if (interactableName == "Green Pedestal Active") return "green_pedestal_active"
+        if (interactableName == "Yellow Pedestal Inactive") return "yellow_pedestal_inactive"
+        if (interactableName == "Yellow Pedestal Active") return "yellow_pedestal_active"
+        if (interactableName == "Entrance Door") return "entrance_door"
         
         // Items
+        if (interactableName == "Rose") return "rose"
+        if (interactableName == "Tool Box") return "tool_box"
+        if (interactableName == "Telescope") return "telescope"
+        if (interactableName == "Ancient Seal") return "ancient_seal"
+        
+        // Returnable Items
         var suffex = ""
         if (Inventory.contains(interactableName)) {
             suffex = "_return"
         }
 
         if (interactableName == "Ancient Tome") return "ancient_book" + suffex
-        if (interactableName == "Rose") return "rose" + suffex
-        if (interactableName == "Healing Potion") return "healing_potion" + suffex
-        if (interactableName == "Mysterious Key") return "mysterious_key" + suffex
-        if (interactableName == "Old Map") return "old_map" + suffex
         if (interactableName == "Love Letter") return "love_letter" + suffex
         if (interactableName == "Hammer") return "hammer" + suffex
         if (interactableName == "Star Chart") return "star_chart" + suffex

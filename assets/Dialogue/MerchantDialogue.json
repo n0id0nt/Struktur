@@ -1,0 +1,187 @@
+[
+  {
+    "data": {
+      "speaker": "Merchant",
+      "text": "Ah, my precious gold! These coins represent years of careful investment and trade.\nThis Crystal Key is the most valuable thing I possess - a fair exchange for my life's wealth."
+    },
+    "node": "merchant_complete"
+  },
+  {
+    "data": {
+      "targets": [
+        {
+          "conditions": [
+            {
+              "parameters": [
+                {
+                  "type": "flag",
+                  "value": "merchant_quest_state"
+                },
+                {
+                  "type": "op",
+                  "value": "=="
+                },
+                {
+                  "type": "value",
+                  "value": 3.0
+                }
+              ],
+              "type": "hasIntFlag"
+            }
+          ],
+          "node": "merchant_complete"
+        },
+        {
+          "conditions": [
+            {
+              "parameters": [
+                {
+                  "type": "flag",
+                  "value": "merchant_quest_state"
+                },
+                {
+                  "type": "op",
+                  "value": "=="
+                },
+                {
+                  "type": "value",
+                  "value": 1.0
+                }
+              ],
+              "type": "hasIntFlag"
+            },
+            {
+              "parameters": [
+                {
+                  "type": "item",
+                  "value": "Gold Coins"
+                }
+              ],
+              "type": "hasItem"
+            }
+          ],
+          "node": "merchant_has_gold_1"
+        },
+        {
+          "conditions": [
+            {
+              "parameters": [
+                {
+                  "type": "flag",
+                  "value": "merchant_quest_state"
+                },
+                {
+                  "type": "op",
+                  "value": "=="
+                },
+                {
+                  "type": "value",
+                  "value": 1.0
+                }
+              ],
+              "type": "hasIntFlag"
+            }
+          ],
+          "node": "merchant_needs_gold"
+        },
+        {
+          "node": "merchant_first_1"
+        }
+      ]
+    },
+    "node": "merchant"
+  },
+  {
+    "data": {
+      "next": "merchant_has_gold_2",
+      "speaker": "Merchant",
+      "text": "My gold coins! The foundation of all wealth and prosperity in this house's golden days."
+    },
+    "node": "merchant_has_gold_1"
+  },
+  {
+    "data": {
+      "commands": [
+        {
+          "parameters": [
+            {
+              "type": "flag",
+              "value": "merchant_quest_state"
+            },
+            {
+              "type": "value",
+              "value": 1.0
+            }
+          ],
+          "type": "setIntFlag"
+        }
+      ],
+      "speaker": "Merchant",
+      "text": "I've learned that some treasures can't be bought or sold, but gold still has its place in the world.\nBring me my coins, and I'll trade you something more valuable than money."
+    },
+    "node": "merchant_first_2"
+  },
+  {
+    "data": {
+      "commands": [
+        {
+          "parameters": [
+            {
+              "type": "item",
+              "value": "Blue Crystal Key"
+            }
+          ],
+          "type": "giveItem"
+        },
+        {
+          "parameters": [
+            {
+              "type": "item",
+              "value": "Gold Coins"
+            }
+          ],
+          "type": "removeItem"
+        },
+        {
+          "parameters": [
+            {
+              "type": "flag",
+              "value": "merchant_quest_state"
+            },
+            {
+              "type": "value",
+              "value": 3.0
+            }
+          ],
+          "type": "setIntFlag"
+        }
+      ],
+      "next": "merchant_has_gold_3",
+      "speaker": "Merchant",
+      "text": "For returning my fortune, I'll give you this Crystal Key - the most valuable treasure in my collection."
+    },
+    "node": "merchant_has_gold_2"
+  },
+  {
+    "data": {
+      "next": "merchant_first_2",
+      "speaker": "Merchant",
+      "text": "Welcome to my treasury!\nI am Augustus Goldstein, and I've spent decades learning what truly has value in this cursed place."
+    },
+    "node": "merchant_first_1"
+  },
+  {
+    "data": {
+      "speaker": "Merchant",
+      "text": "Obtained Blue Crystal Key"
+    },
+    "node": "merchant_has_gold_3"
+  },
+  {
+    "data": {
+      "speaker": "Merchant",
+      "text": "My treasury feels empty without my gold coins - the foundation of all true wealth."
+    },
+    "node": "merchant_needs_gold"
+  }
+]

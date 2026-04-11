@@ -1,0 +1,195 @@
+[
+  {
+    "data": {
+      "targets": [
+        {
+          "conditions": [
+            {
+              "parameters": [
+                {
+                  "type": "flag",
+                  "value": "gardener_quest_state"
+                },
+                {
+                  "type": "op",
+                  "value": "=="
+                },
+                {
+                  "type": "value",
+                  "value": 3.0
+                }
+              ],
+              "type": "hasIntFlag"
+            }
+          ],
+          "node": "gardener_complete"
+        },
+        {
+          "conditions": [
+            {
+              "parameters": [
+                {
+                  "type": "flag",
+                  "value": "gardener_quest_state"
+                },
+                {
+                  "type": "op",
+                  "value": "=="
+                },
+                {
+                  "type": "value",
+                  "value": 1.0
+                }
+              ],
+              "type": "hasIntFlag"
+            },
+            {
+              "parameters": [
+                {
+                  "type": "item",
+                  "value": "Rose"
+                }
+              ],
+              "type": "hasItem"
+            }
+          ],
+          "node": "gardener_has_rose_1"
+        },
+        {
+          "conditions": [
+            {
+              "parameters": [
+                {
+                  "type": "flag",
+                  "value": "gardener_quest_state"
+                },
+                {
+                  "type": "op",
+                  "value": "=="
+                },
+                {
+                  "type": "value",
+                  "value": 1.0
+                }
+              ],
+              "type": "hasIntFlag"
+            }
+          ],
+          "node": "gardener_needs_rose_1"
+        },
+        {
+          "node": "gardener_first_1"
+        }
+      ]
+    },
+    "node": "gardener"
+  },
+  {
+    "data": {
+      "speaker": "Gardener",
+      "text": "Oh, my beautiful rose! It belongs here among the other flowers, where love once bloomed eternal.\nThis garden is complete again."
+    },
+    "node": "gardener_complete"
+  },
+  {
+    "data": {
+      "next": "gardener_has_rose_2",
+      "speaker": "Gardener",
+      "text": "A lovely rose! Yes, I do have the Scholar's tome, but this garden feels incomplete without its most beautiful flower."
+    },
+    "node": "gardener_has_rose_1"
+  },
+  {
+    "data": {
+      "next": "gardener_first_2",
+      "speaker": "Gardener",
+      "text": "Welcome, dear visitor, to my sanctuary of eternal spring.\nI tend to memories as if they were flowers, nurturing what should grow and bloom."
+    },
+    "node": "gardener_first_1"
+  },
+  {
+    "data": {
+      "commands": [
+        {
+          "parameters": [
+            {
+              "type": "item",
+              "value": "Ancient Tome"
+            }
+          ],
+          "type": "giveItem"
+        },
+        {
+          "parameters": [
+            {
+              "type": "item",
+              "value": "Rose"
+            }
+          ],
+          "type": "removeItem"
+        },
+        {
+          "parameters": [
+            {
+              "type": "flag",
+              "value": "gardener_quest_state"
+            },
+            {
+              "type": "value",
+              "value": 3.0
+            }
+          ],
+          "type": "setIntFlag"
+        }
+      ],
+      "next": "gardener_has_rose_3",
+      "speaker": "Gardener",
+      "text": "I'll gladly trade this dusty old book for something that belongs in a garden of eternal spring."
+    },
+    "node": "gardener_has_rose_2"
+  },
+  {
+    "data": {
+      "speaker": "Gardener",
+      "text": "Obtained Ancient Tome"
+    },
+    "node": "gardener_has_rose_3"
+  },
+  {
+    "data": {
+      "speaker": "Gardener",
+      "text": "Bring me a perfect rose"
+    },
+    "node": "gardener_needs_rose_2"
+  },
+  {
+    "data": {
+      "next": "gardener_needs_rose_2",
+      "speaker": "Gardener",
+      "text": "Welcome to my garden where love once bloomed.\nI found the Scholar's tome among my flowers, but I won't trade it for just anything."
+    },
+    "node": "gardener_needs_rose_1"
+  },
+  {
+    "data": {
+      "commands": [
+        {
+          "parameters": [
+            {
+              "type": "flag",
+              "value": "gardener_quest_state"
+            },
+            {
+              "type": "value",
+              "value": 1.0
+            }
+          ],
+          "type": "setIntFlag"
+        }
+      ],
+      "speaker": "Gardener",
+      "text": "Love requires patience and care, just like any garden.\nSome things belong together - a rose belongs among flowers, not gathering dust in workshops."
+    },
+    "node": "gardener_first_2"
+  }
+]

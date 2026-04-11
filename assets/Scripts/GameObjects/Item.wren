@@ -59,6 +59,8 @@ class Item {
     }
     
     name { _name }
+
+    returnable { _returnable }
     
     // Called after C++ has created base components
     // Script configures/initializes component values

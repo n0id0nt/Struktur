@@ -10,11 +10,13 @@ class Commands {
         DialogueRegistry.registerCommand("giveItem") { |params|
             var item = params["item"]
             Inventory.addItem(item)
+            Inventory.save("inventory.sav")
             Debug.info("[Dialogue Command] Added item to inventory %(item)")
         }
         DialogueRegistry.registerCommand("removeItem") { |params|
             var item = params["item"]
             Inventory.removeItem(item)
+            Inventory.save("inventory.sav")
             Debug.info("[Dialogue Command] Removed item from inventory %(item)")
         }
         DialogueRegistry.registerCommand("setIntFlag") { |params|
@@ -34,11 +36,15 @@ class Commands {
             var entityName = params["name"]
             var itemEntities = GameObject.getAllWithIdentifier("Item")
 
-            for (entity in itemEntities) {
-                var script = Script.getInstance(entity)
-                if (script && script.name == entityName) {
-                    script.setIsShadow(true)
-                    Debug.info("[Dialogue Command] Picked up Item %(name): %(entityId)")
+            for (itemEntity in itemEntities) {
+                var item = Script.getInstance(itemEntity)
+                if (item && item.name == entityName) {
+                    if (item.returnable) {
+                        item.setIsShadow(true)
+                    } else {
+                        GameObject.destroy(itemEntity)
+                    }
+                    Debug.info("[Dialogue Command] Picked up Item %(name): %(itemEntity)")
                 }
             }
         }
@@ -46,11 +52,11 @@ class Commands {
             var entityName = params["name"]
             var itemEntities = GameObject.getAllWithIdentifier("Item")
 
-            for (entity in itemEntities) {
-                var script = Script.getInstance(entity)
-                if (script && script.name == entityName) {
-                    script.setIsShadow(false)
-                    Debug.info("[Dialogue Command] Put down Item %(name): %(entityId)")
+            for (itemEntity in itemEntities) {
+                var item = Script.getInstance(itemEntity)
+                if (item && item.name == entityName) {
+                    item.setIsShadow(false)
+                    Debug.info("[Dialogue Command] Put down Item %(name): %(itemEntity)")
                 }
             }
         }

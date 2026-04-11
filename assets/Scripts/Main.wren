@@ -45,6 +45,7 @@ class Game {
         FileSystem.seedFromDefaults("Settings/InputBindings/InputConfig.json", "InputConfig.json")
         Input.loadInputBindings("Settings/InputBindings/InputConfig.json")
         FlagManager.load("flags.sav")
+        Inventory.load("inventory.sav")
 
         DialogueLoader.loadAllDialogue()
         // Initial states

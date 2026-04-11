@@ -1,0 +1,187 @@
+[
+  {
+    "data": {
+      "commands": [
+        {
+          "parameters": [
+            {
+              "type": "flag",
+              "value": "inventor_quest_state"
+            },
+            {
+              "type": "value",
+              "value": 1.0
+            }
+          ],
+          "type": "setIntFlag"
+        }
+      ],
+      "speaker": "Inventor",
+      "text": "Every problem has a practical solution if you have the right tools.\nBring me my complete tool box, and I'll trade you something nourishing in return."
+    },
+    "node": "inventor_first_2"
+  },
+  {
+    "data": {
+      "targets": [
+        {
+          "conditions": [
+            {
+              "parameters": [
+                {
+                  "type": "flag",
+                  "value": "inventor_quest_state"
+                },
+                {
+                  "type": "op",
+                  "value": "=="
+                },
+                {
+                  "type": "value",
+                  "value": 3.0
+                }
+              ],
+              "type": "hasIntFlag"
+            }
+          ],
+          "node": "inventor_complete"
+        },
+        {
+          "conditions": [
+            {
+              "parameters": [
+                {
+                  "type": "flag",
+                  "value": "inventor_quest_state"
+                },
+                {
+                  "type": "op",
+                  "value": "=="
+                },
+                {
+                  "type": "value",
+                  "value": 1.0
+                }
+              ],
+              "type": "hasIntFlag"
+            },
+            {
+              "parameters": [
+                {
+                  "type": "item",
+                  "value": "Tool Box"
+                }
+              ],
+              "type": "hasItem"
+            }
+          ],
+          "node": "inventor_has_toolbox_1"
+        },
+        {
+          "conditions": [
+            {
+              "parameters": [
+                {
+                  "type": "flag",
+                  "value": "inventor_quest_state"
+                },
+                {
+                  "type": "op",
+                  "value": "=="
+                },
+                {
+                  "type": "value",
+                  "value": 1.0
+                }
+              ],
+              "type": "hasIntFlag"
+            }
+          ],
+          "node": "inventor_needs_toolbox"
+        },
+        {
+          "node": "inventor_first_1"
+        }
+      ]
+    },
+    "node": "inventor"
+  },
+  {
+    "data": {
+      "commands": [
+        {
+          "parameters": [
+            {
+              "type": "item",
+              "value": "Fresh Bread"
+            }
+          ],
+          "type": "giveItem"
+        },
+        {
+          "parameters": [
+            {
+              "type": "item",
+              "value": "Tool Box"
+            }
+          ],
+          "type": "removeItem"
+        },
+        {
+          "parameters": [
+            {
+              "type": "flag",
+              "value": "inventor_quest_state"
+            },
+            {
+              "type": "value",
+              "value": 3.0
+            }
+          ],
+          "type": "setIntFlag"
+        }
+      ],
+      "next": "inventor_has_toolbox_3",
+      "speaker": "Inventor",
+      "text": "I've been saving this fresh bread for sustenance during long projects.\nA fair trade - tools for nourishment!"
+    },
+    "node": "inventor_has_toolbox_2"
+  },
+  {
+    "data": {
+      "speaker": "Inventor",
+      "text": "My tool box! Every craftsman needs his complete set of implements.\nThis bread was keeping me fed during long work sessions, but you've earned it."
+    },
+    "node": "inventor_complete"
+  },
+  {
+    "data": {
+      "next": "inventor_has_toolbox_2",
+      "speaker": "Inventor",
+      "text": "Ah, my missing tool box!\nI've been making do with individual tools, but a craftsman needs his complete kit."
+    },
+    "node": "inventor_has_toolbox_1"
+  },
+  {
+    "data": {
+      "speaker": "Inventor",
+      "text": "Obtained Fresh Bread"
+    },
+    "node": "inventor_has_toolbox_3"
+  },
+  {
+    "data": {
+      "speaker": "Inventor",
+      "text": "My workshop isn't complete without my full set of tools."
+    },
+    "node": "inventor_needs_toolbox"
+  },
+  {
+    "data": {
+      "next": "inventor_first_2",
+      "speaker": "Inventor",
+      "text": "Welcome to my workshop! I've been trying to build our way out of this cursed house for decades."
+    },
+    "node": "inventor_first_1"
+  }
+]

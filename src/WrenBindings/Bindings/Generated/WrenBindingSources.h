@@ -1367,6 +1367,23 @@ inline const char* wrenresourceManagerSource()
     "";
 }
 
+// Module: serialisation
+inline const char* wrenserialisationSource()
+{
+    return "// AUTO-GENERATED FILE - DO NOT EDIT\n"
+    "// Generated from C++ bindings\n"
+    "// Module: serialisation\n"
+    "\n"
+    "class Json {\n"
+    "    // Takes a json file as a string and returns a wren map or list\n"
+    "    foreign static parse(arg0)\n"
+    "    // Takes a wren map or list and returns a json file as a string\n"
+    "    foreign static stringify(arg0)\n"
+    "}\n"
+    "\n"
+    "";
+}
+
 // Module: ui
 inline const char* wrenuiSource()
 {
@@ -1663,6 +1680,7 @@ inline const std::unordered_map<std::string, const char*(*)()>& GetWrenBindingSo
         { "math", wrenmathSource },
         { "physics", wrenphysicsSource },
         { "resourceManager", wrenresourceManagerSource },
+        { "serialisation", wrenserialisationSource },
         { "ui", wrenuiSource },
     };
     return k_sources;

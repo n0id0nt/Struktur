@@ -1,0 +1,187 @@
+[
+  {
+    "data": {
+      "targets": [
+        {
+          "conditions": [
+            {
+              "parameters": [
+                {
+                  "type": "flag",
+                  "value": "astronomer_quest_state"
+                },
+                {
+                  "type": "op",
+                  "value": "=="
+                },
+                {
+                  "type": "value",
+                  "value": 3.0
+                }
+              ],
+              "type": "hasIntFlag"
+            }
+          ],
+          "node": "astronomer_complete"
+        },
+        {
+          "conditions": [
+            {
+              "parameters": [
+                {
+                  "type": "flag",
+                  "value": "astronomer_quest_state"
+                },
+                {
+                  "type": "op",
+                  "value": "=="
+                },
+                {
+                  "type": "value",
+                  "value": 1.0
+                }
+              ],
+              "type": "hasIntFlag"
+            },
+            {
+              "parameters": [
+                {
+                  "type": "item",
+                  "value": "Telescope"
+                }
+              ],
+              "type": "hasItem"
+            }
+          ],
+          "node": "astronomer_has_telescope_1"
+        },
+        {
+          "conditions": [
+            {
+              "parameters": [
+                {
+                  "type": "flag",
+                  "value": "astronomer_quest_state"
+                },
+                {
+                  "type": "op",
+                  "value": "=="
+                },
+                {
+                  "type": "value",
+                  "value": 1.0
+                }
+              ],
+              "type": "hasIntFlag"
+            }
+          ],
+          "node": "astronomer_needs_telescope"
+        },
+        {
+          "node": "astronomer_first_1"
+        }
+      ]
+    },
+    "node": "astronomer"
+  },
+  {
+    "data": {
+      "speaker": "Astronomer",
+      "text": "My precious telescope! Now I can properly observe the celestial patterns that govern this house.\nThis diary contains earthly dreams, but the stars hold greater truths."
+    },
+    "node": "astronomer_complete"
+  },
+  {
+    "data": {
+      "next": "astronomer_has_telescope_2",
+      "speaker": "Astronomer",
+      "text": "Magnificent! My telescope for studying the stars and their influence on temporal anomalies!"
+    },
+    "node": "astronomer_has_telescope_1"
+  },
+  {
+    "data": {
+      "commands": [
+        {
+          "parameters": [
+            {
+              "type": "flag",
+              "value": "astronomer_quest_state"
+            },
+            {
+              "type": "value",
+              "value": 1.0
+            }
+          ],
+          "type": "setIntFlag"
+        }
+      ],
+      "speaker": "Astronomer",
+      "text": "I've been studying how the stars affect this house's temporal anomalies.\nBring me my telescope, and I'll trade you this diary I've been analyzing for cosmic patterns."
+    },
+    "node": "astronomer_first_2"
+  },
+  {
+    "data": {
+      "commands": [
+        {
+          "parameters": [
+            {
+              "type": "item",
+              "value": "Personal Diary"
+            }
+          ],
+          "type": "giveItem"
+        },
+        {
+          "parameters": [
+            {
+              "type": "item",
+              "value": "Telescope"
+            }
+          ],
+          "type": "removeItem"
+        },
+        {
+          "parameters": [
+            {
+              "type": "flag",
+              "value": "astronomer_quest_state"
+            },
+            {
+              "type": "value",
+              "value": 3.0
+            }
+          ],
+          "type": "setIntFlag"
+        }
+      ],
+      "next": "astronomer_has_telescope_3",
+      "speaker": "Astronomer",
+      "text": "I've been analyzing the Dreamer's diary for cosmic patterns, but I need my telescope more.\nA fair exchange - earthly dreams for celestial observations."
+    },
+    "node": "astronomer_has_telescope_2"
+  },
+  {
+    "data": {
+      "next": "astronomer_first_2",
+      "speaker": "Astronomer",
+      "text": "Greetings, earthbound traveler!\nI am Professor Orion Starweaver, astronomer and calculator of celestial influences."
+    },
+    "node": "astronomer_first_1"
+  },
+  {
+    "data": {
+      "speaker": "Astronomer",
+      "text": "Obtained Personal Diary"
+    },
+    "node": "astronomer_has_telescope_3"
+  },
+  {
+    "data": {
+      "speaker": "Astronomer",
+      "text": "I've been calculating the house's temporal distortions, but I need my telescope for proper astronomical observations."
+    },
+    "node": "astronomer_needs_telescope"
+  }
+]
