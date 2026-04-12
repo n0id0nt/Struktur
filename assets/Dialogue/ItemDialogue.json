@@ -480,6 +480,19 @@
             }
           ],
           "type": "removeItem"
+        },
+        {
+          "parameters": [
+            {
+              "type": "flag",
+              "value": "yellow_pedestal_active"
+            },
+            {
+              "type": "value",
+              "value": true
+            }
+          ],
+          "type": "setFlag"
         }
       ],
       "speaker": "Narrator",
@@ -736,6 +749,19 @@
             }
           ],
           "type": "removeItem"
+        },
+        {
+          "parameters": [
+            {
+              "type": "flag",
+              "value": "blue_pedestal_active"
+            },
+            {
+              "type": "value",
+              "value": true
+            }
+          ],
+          "type": "setFlag"
         }
       ],
       "speaker": "Narrator",
@@ -804,6 +830,19 @@
             }
           ],
           "type": "removeItem"
+        },
+        {
+          "parameters": [
+            {
+              "type": "flag",
+              "value": "red_pedestal_active"
+            },
+            {
+              "type": "value",
+              "value": true
+            }
+          ],
+          "type": "setFlag"
         }
       ],
       "speaker": "Narrator",
@@ -837,6 +876,19 @@
             }
           ],
           "type": "removeItem"
+        },
+        {
+          "parameters": [
+            {
+              "type": "flag",
+              "value": "green_pedestal_active"
+            },
+            {
+              "type": "value",
+              "value": true
+            }
+          ],
+          "type": "setFlag"
         }
       ],
       "speaker": "Narrator",

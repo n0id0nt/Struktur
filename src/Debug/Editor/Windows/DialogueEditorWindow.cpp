@@ -112,7 +112,8 @@ namespace Struktur::Debug
 		RenderOpenDialogueOptionsPopup(context);
 		ImGui::SameLine();
 
-		if (!m_hasUnsavedChanges)
+		bool saveDisabled = !m_hasUnsavedChanges;
+		if (saveDisabled)
 			ImGui::BeginDisabled();
 
 		if (ImGui::Button("Save"))
@@ -127,7 +128,7 @@ namespace Struktur::Debug
 			}
 		}
 
-		if (!m_hasUnsavedChanges)
+		if (saveDisabled)
 			ImGui::EndDisabled();
 
 		if (m_nodes.empty())

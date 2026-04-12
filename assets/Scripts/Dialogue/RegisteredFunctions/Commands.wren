@@ -26,6 +26,13 @@ class Commands {
             FlagManager.save("flags.sav")
             Debug.info("[Dialogue Command] Set Int Flag for %(flag): %(value)")
         }
+        DialogueRegistry.registerCommand("setFlag") { |params|
+            var flag = params["flag"]
+            var value = params["value"]
+            var intFlag = FlagManager.setFlag(flag, value)
+            FlagManager.save("flags.sav")
+            Debug.info("[Dialogue Command] Set Bool Flag for %(flag): %(value)")
+        }
         DialogueRegistry.registerCommand("cameraShake") { |params|
             var cameras = GameObject.getAllWithComponent("Camera")
             for (cameraId in cameras) {

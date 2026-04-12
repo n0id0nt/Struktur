@@ -1,6 +1,7 @@
 #include "WrenDialogue.h"
 
 #include <memory>
+#include <Trace/wren_trace.h>
 
 #include "Debug/Assertions.h"
 #include "Engine/Scripting/WrenBindingRegistry.h"
@@ -674,6 +675,14 @@ void wren_DialogueManagerLoadDialogueData(WrenVM* vm)
 	Struktur::Dialogue::DialogueManager& manager = context->GetDialogueManager();
 	wrenEnsureSlots(vm, 3);
 
+	auto type = wrenGetSlotType(vm, 1);
+	if (type != WREN_TYPE_LIST)
+	{
+		char stackBuffer[4096];
+		const char* stack = wrenTraceGetCallStackString(vm, stackBuffer, sizeof(stackBuffer));
+		BREAK_MSG("[Dialogue error] failed to load following dialigue as dilogue provided is not a list, %s", stack);
+		return;
+	}
 	int count = wrenGetListCount(vm, 1);
 	for (int i = 0; i < count; i++)
 	{

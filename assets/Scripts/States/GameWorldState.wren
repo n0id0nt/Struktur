@@ -8,6 +8,7 @@ import "math" for Vec2, Vec3, Vec4
 import "resourceManager" for Font, Texture, Music
 import "ui" for UIManager, UILabel
 import "input" for Input
+import "flags" for FlagManager
 
 import "States/BaseState" for BaseState
 import "States/StateManager" for StateManager
@@ -254,7 +255,7 @@ class GameWorldState is BaseState {
             // check player at bottom of screen
             var playerPosition = WorldTransform.getPosition(entity)
             if (playerPosition.y > 1755.0) {
-                if (Inventory.contains("Red Pedestal Active") && Inventory.contains("Green Pedestal Active") && Inventory.contains("Yellow Pedestal Active") && Inventory.contains("Blue Pedestal Active")) {
+                if (FlagManager.getFlag("red_pedestal_active") && FlagManager.getFlag("green_pedestal_active") && FlagManager.getFlag("yellow_pedestal_active") && FlagManager.getFlag("blue_pedestal_active")) {
                     script.playerForceStop()
                     _stateManager.changeState("gameOverState")
                     if (_gameMusic) {
