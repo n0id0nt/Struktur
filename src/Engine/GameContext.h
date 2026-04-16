@@ -19,6 +19,7 @@
 #include "Engine/Flag/FlagManager.h"
 #include "Engine/Dialogue/DialogueManager.h"
 #include "Engine/Dialogue/DialogueRegistry.h"
+#include "Engine/Dialogue/TextSystems/VariableSubstitutionSystem.h"
 
 #include "Debug/Assertions.h"
 #ifdef EDITOR
@@ -51,6 +52,7 @@ namespace Struktur
 			m_flagManager = std::make_unique<Flag::FlagManager>();
 			m_dialogueManager = std::make_unique<Dialogue::DialogueManager>();
 			m_dialogueRegistry = std::make_unique<Dialogue::DialogueRegistry>();
+			m_variableSubstitutionSystem = std::make_unique<Dialogue::VariableSubstitutionSystem>();
 #ifdef EDITOR
 			m_editor = std::make_unique<Debug::Editor>();
 #endif
@@ -155,6 +157,12 @@ namespace Struktur
 			return *m_dialogueRegistry;
 		}
 
+		Dialogue::VariableSubstitutionSystem& GetVariableSubstitutionSystem() const
+		{
+			ASSERT_MSG(m_variableSubstitutionSystem.get(), "Variable Substitution System not initialised");
+			return *m_variableSubstitutionSystem;
+		}
+
 #ifdef EDITOR
 		Debug::Editor& GetEditor() const
 		{
@@ -188,6 +196,7 @@ namespace Struktur
 		std::unique_ptr<Flag::FlagManager> m_flagManager;
 		std::unique_ptr<Dialogue::DialogueManager> m_dialogueManager;
 		std::unique_ptr<Dialogue::DialogueRegistry> m_dialogueRegistry;
+		std::unique_ptr<Dialogue::VariableSubstitutionSystem> m_variableSubstitutionSystem;
 #ifdef EDITOR
 		std::unique_ptr<Debug::Editor> m_editor;
 #endif

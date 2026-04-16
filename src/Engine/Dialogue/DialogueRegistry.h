@@ -41,16 +41,22 @@ namespace Struktur::Dialogue
 		// Register command type with Wren callback
 		void RegisterCommandType(GameContext& context, const std::string& type, std::unique_ptr<Callback::ICallback> callback);
 
+		// Register variable type with Wren callback
+		void RegisterVariableType(GameContext& context, const std::string& type, std::unique_ptr<Callback::ICallback> callback);
+
 		// Check if type is registered
 		bool HasConditionType(const std::string& type) const;
 		bool HasCommandType(const std::string& type) const;
+		bool HasVariableType(const std::string& type) const;
 
 		// Check if type is registered
-		Callback::ICallback* GetCondition(const std::string& type);
-		Callback::ICallback* GetCommand(const std::string& type);
+		Callback::ICallback* GetCondition(const std::string& type) const;
+		Callback::ICallback* GetCommand(const std::string& type) const;
+		Callback::ICallback* GetVariable(const std::string& type) const;
 
 	private:
 		std::unordered_map<std::string, std::unique_ptr<Callback::ICallback>> m_conditionCallbacks;
 		std::unordered_map<std::string, std::unique_ptr<Callback::ICallback>> m_commandCallbacks;
+		std::unordered_map<std::string, std::unique_ptr<Callback::ICallback>> m_variableCallbacks;
 	};
 }

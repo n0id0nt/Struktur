@@ -8,6 +8,7 @@ namespace Struktur::Dialogue
 	DialogueRegistry::DialogueRegistry()
 		: m_conditionCallbacks()
 		, m_commandCallbacks()
+		, m_variableCallbacks()
 	{
 	}
 
@@ -65,7 +66,21 @@ namespace Struktur::Dialogue
 		DEBUG_INFO("Registered command type: %s", type.c_str());
 	}
 
-	bool DialogueRegistry::HasConditionType(const std::string& type) const
+    void DialogueRegistry::RegisterVariableType(GameContext &context, const std::string &type, std::unique_ptr<Callback::ICallback> callback)
+	{
+		// If type already exists, release old handle
+		auto it = m_variableCallbacks.find(type);
+		if (it != m_variableCallbacks.end())
+		{
+			DEBUG_WARNING("Variable type '%s' already registered, replacing", type.c_str());
+			it->second->Dispose(context);
+		}
+
+		m_variableCallbacks[type] = std::move(callback);
+		DEBUG_INFO("Registered variable type: %s", type.c_str());
+	}
+
+    bool DialogueRegistry::HasConditionType(const std::string& type) const
 	{
 		return m_conditionCallbacks.find(type) != m_conditionCallbacks.end();
 	}
@@ -75,13 +90,26 @@ namespace Struktur::Dialogue
 		return m_commandCallbacks.find(type) != m_commandCallbacks.end();
 	}
 
-    Callback::ICallback* DialogueRegistry::GetCondition(const std::string &type)
+    bool DialogueRegistry::HasVariableType(const std::string &type) const
     {
-        return m_conditionCallbacks[type].get();
+        return m_variableCallbacks.find(type) != m_variableCallbacks.end();
     }
 
-    Callback::ICallback* DialogueRegistry::GetCommand(const std::string &type)
+    Callback::ICallback* DialogueRegistry::GetCondition(const std::string &type) const
     {
-        return m_commandCallbacks[type].get();
+		auto it = m_conditionCallbacks.find(type);
+        return (it != m_conditionCallbacks.end()) ? it->second.get() : nullptr;
+    }
+
+    Callback::ICallback* DialogueRegistry::GetCommand(const std::string &type) const
+    {
+		auto it = m_commandCallbacks.find(type);
+        return (it != m_commandCallbacks.end()) ? it->second.get() : nullptr;
+    }
+
+    Callback::ICallback *DialogueRegistry::GetVariable(const std::string &type) const
+    {
+		auto it = m_variableCallbacks.find(type);
+        return (it != m_variableCallbacks.end()) ? it->second.get() : nullptr;
     }
 }

@@ -8,6 +8,8 @@ foreign class Rect {
     foreign construct new(arg0,arg1,arg2,arg3)
     // Create Rect
     foreign construct new()
+    // Copy a Rect
+    foreign construct copy(arg0)
     // Get X component
     foreign x
     // Get Y component
@@ -91,6 +93,8 @@ foreign class Vec2 {
     foreign construct new()
     // Create vector with x, y components
     foreign construct new(arg0,arg1)
+    // Copy a vector
+    foreign construct copy(arg0)
     // Get X component
     foreign x
     // Get Y component
@@ -149,6 +153,8 @@ foreign class Vec3 {
     foreign construct new()
     // Create vector with x, y, z components
     foreign construct new(arg0,arg1,arg2)
+    // Copy a vector
+    foreign construct copy(arg0)
     // Get X component
     foreign x
     // Get Y component
@@ -217,6 +223,8 @@ foreign class Vec3 {
 foreign class Mat4 {
     // Create identity Matix 4
     foreign construct new()
+    // Copy a Matix 4
+    foreign construct copy(arg0)
     // Multiply matix's
     foreign *(arg0)
     // Translate matix
@@ -255,6 +263,8 @@ foreign class Vec4 {
     foreign construct new()
     // Create vector with x, y, z, w components
     foreign construct new(arg0,arg1,arg2,arg3)
+    // Copy a vector
+    foreign construct copy(arg0)
     // Get X component
     foreign x
     // Get Y component
@@ -311,6 +321,8 @@ foreign class Quat {
     foreign construct new()
     // Create quaternion with w, x, y, z components
     foreign construct new(arg0,arg1,arg2,arg3)
+    // Copy a quaternion
+    foreign construct copy(arg0)
     // Get W component
     foreign w
     // Get X component

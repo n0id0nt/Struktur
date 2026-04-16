@@ -2,6 +2,33 @@
 
 namespace Struktur::Dialogue::HelperFunctions
 {
+	DialogueValue ConvertVariantToDialogueValue(Callback::Variant variant)
+	{
+		DialogueValue value;
+		std::visit([&value](auto&& arg)
+			{
+				using T = std::decay_t<decltype(arg)>;
+
+				if constexpr (std::is_same_v<T, std::string>)
+				{
+					value = DialogueValue(arg.c_str());
+				}
+				else if constexpr (std::is_same_v<T, int>)
+				{
+					value = DialogueValue(static_cast<double>(arg));
+				}
+				else if constexpr (std::is_same_v<T, bool>)
+				{
+					value = DialogueValue(arg);
+				}
+				else if constexpr (std::is_same_v<T, double>)
+				{
+					value = DialogueValue(arg);
+				}
+			}, variant);
+		return value;
+	}
+
 	std::vector<Callback::Variant> ConvertParamsToVariant(std::unordered_map<std::string, DialogueValue> params)
 	{
 		Callback::VariantMap variantMap;

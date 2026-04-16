@@ -136,14 +136,18 @@ static nlohmann::json pullWrenValue(WrenVM* vm, int slot)
 void wren_JsonParse(WrenVM* vm)
 {
     const char* str = wrenGetSlotString(vm, 1);
+
+	// Copy the string out before anything else since slots can move
+	std::string jsonStr(str);
+
     nlohmann::json json;
     try
     {
-        json = nlohmann::json::parse(str);
+        json = nlohmann::json::parse(jsonStr);
     }
     catch (const nlohmann::json::parse_error& e)
     {
-        DEBUG_ERROR("WREN SERIALISATION: JSON parse error - %s", e.what());
+        BREAK_MSG("WREN SERIALISATION: JSON parse error - %s", e.what());
         wrenSetSlotNull(vm, 0);
         return;
     }

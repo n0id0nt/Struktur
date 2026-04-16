@@ -275,6 +275,14 @@ void wren_Vec2New(WrenVM* vm)
 	}
 }
 
+// Vec2.copy(_)
+void wren_Vec2Copy(WrenVM* vm)
+{
+	WrenVec2* vec = static_cast<WrenVec2*>(wrenGetSlotForeign(vm, 0));
+	WrenVec2* other = static_cast<WrenVec2*>(wrenGetSlotForeign(vm, 1));
+	new (vec) WrenVec2(*other);
+}
+
 // Getters
 void wren_Vec2GetX(WrenVM* vm)
 {
@@ -502,6 +510,7 @@ WREN_FOREIGN_CLASS("math", "Vec2", wren_Vec2Allocate, wren_Vec2Finalize, "2D vec
 // Register constructors
 WREN_CONSTRUCTOR("math", "Vec2", "new()", wren_Vec2New, "Create zero vector");
 WREN_CONSTRUCTOR("math", "Vec2", "new(_,_)", wren_Vec2New, "Create vector with x, y components");
+WREN_CONSTRUCTOR("math", "Vec2", "copy(_)", wren_Vec2Copy, "Copy a vector");
 
 // Register methods
 WREN_CLASS_METHOD("math", "Vec2", "x", wren_Vec2GetX, "Get X component");
@@ -565,6 +574,14 @@ void wren_Vec3New(WrenVM* vm)
 	{
 		new (vec) WrenVec3();
 	}
+}
+
+// Vec3.copy(_)
+void wren_Vec3Copy(WrenVM* vm)
+{
+	WrenVec3* vec = static_cast<WrenVec3*>(wrenGetSlotForeign(vm, 0));
+	WrenVec3* other = static_cast<WrenVec3*>(wrenGetSlotForeign(vm, 1));
+	new (vec) WrenVec3(*other);
 }
 
 void wren_Vec3GetX(WrenVM* vm)
@@ -841,6 +858,7 @@ WREN_FOREIGN_CLASS("math", "Vec3", wren_Vec3Allocate, wren_Vec3Finalize, "3D vec
 // Register constructors
 WREN_CONSTRUCTOR("math", "Vec3", "new()", wren_Vec3New, "Create zero vector");
 WREN_CONSTRUCTOR("math", "Vec3", "new(_,_,_)", wren_Vec3New, "Create vector with x, y, z components");
+WREN_CONSTRUCTOR("math", "Vec3", "copy(_)", wren_Vec3Copy, "Copy a vector");
 
 // Register methods
 WREN_CLASS_METHOD("math", "Vec3", "x", wren_Vec3GetX, "Get X component");
@@ -910,6 +928,14 @@ void wren_Vec4New(WrenVM* vm)
 	{
 		new (vec) WrenVec4();
 	}
+}
+
+// Vec4.copy(_)
+void wren_Vec4Copy(WrenVM* vm)
+{
+	WrenVec4* vec = static_cast<WrenVec4*>(wrenGetSlotForeign(vm, 0));
+	WrenVec4* other = static_cast<WrenVec4*>(wrenGetSlotForeign(vm, 1));
+	new (vec) WrenVec4(*other);
 }
 
 void wren_Vec4GetX(WrenVM* vm)
@@ -1116,6 +1142,7 @@ WREN_FOREIGN_CLASS("math", "Vec4", wren_Vec4Allocate, wren_Vec4Finalize, "4D vec
 // Register constructors
 WREN_CONSTRUCTOR("math", "Vec4", "new()", wren_Vec4New, "Create zero vector");
 WREN_CONSTRUCTOR("math", "Vec4", "new(_,_,_,_)", wren_Vec4New, "Create vector with x, y, z, w components");
+WREN_CONSTRUCTOR("math", "Vec4", "copy(_)", wren_Vec4Copy, "Copy a vector");
 
 // Register methods
 WREN_CLASS_METHOD("math", "Vec4", "x", wren_Vec4GetX, "Get X component");
@@ -1181,6 +1208,14 @@ void wren_QuatNew(WrenVM* vm)
 		// Quat.new() - identity
 		new (quat) WrenQuat();
 	}
+}
+
+// Quat.copy(_)
+void wren_QuatCopy(WrenVM* vm)
+{
+	WrenQuat* quat = static_cast<WrenQuat*>(wrenGetSlotForeign(vm, 0));
+	WrenQuat* other = static_cast<WrenQuat*>(wrenGetSlotForeign(vm, 1));
+	new (quat) WrenQuat(*other);
 }
 
 // Component getters
@@ -1539,6 +1574,7 @@ WREN_FOREIGN_CLASS("math", "Quat", wren_QuatAllocate, wren_QuatFinalize, "Quater
 // Register constructors
 WREN_CONSTRUCTOR("math", "Quat", "new()", wren_QuatNew, "Create identity quaternion");
 WREN_CONSTRUCTOR("math", "Quat", "new(_,_,_,_)", wren_QuatNew, "Create quaternion with w, x, y, z components");
+WREN_CONSTRUCTOR("math", "Quat", "copy(_)", wren_QuatCopy, "Copy a quaternion");
 
 // Register instance methods
 WREN_CLASS_METHOD("math", "Quat", "w", wren_QuatGetW, "Get W component");
@@ -1595,6 +1631,14 @@ void wren_Mat4New(WrenVM* vm)
 {
 	WrenMat4* mat = static_cast<WrenMat4*>(wrenGetSlotForeign(vm, 0));
 	new (mat) WrenMat4();
+}
+
+// Mat4.copy(_)
+void wren_Mat4Copy(WrenVM* vm)
+{
+	WrenMat4* mat = static_cast<WrenMat4*>(wrenGetSlotForeign(vm, 0));
+	WrenMat4* other = static_cast<WrenMat4*>(wrenGetSlotForeign(vm, 1));
+	new (mat) WrenMat4(*other);
 }
 
 void wren_Mat4Identity(WrenVM* vm)
@@ -1767,6 +1811,7 @@ WREN_FOREIGN_CLASS("math", "Mat4", wren_Mat4Allocate, wren_Mat4Finalize, "Matix 
 
 // Register constructors
 WREN_CONSTRUCTOR("math", "Mat4", "new()", wren_Mat4New, "Create identity Matix 4");
+WREN_CONSTRUCTOR("math", "Mat4", "copy(_)", wren_Mat4Copy, "Copy a Matix 4");
 
 // Register instance methods
 WREN_CLASS_METHOD("math", "Mat4", "*(_)", wren_Mat4Multiply, "Multiply matix's");
@@ -1825,6 +1870,14 @@ void wren_RectNew(WrenVM* vm)
 	}
 }
 
+// Rect.copy(_)
+void wren_RectCopy(WrenVM* vm)
+{
+	WrenRect* rect = static_cast<WrenRect*>(wrenGetSlotForeign(vm, 0));
+	WrenRect* other = static_cast<WrenRect*>(wrenGetSlotForeign(vm, 1));
+	new (rect) WrenRect(*other);
+}
+
 // Component getters
 void wren_RectGetX(WrenVM* vm)
 {
@@ -1881,6 +1934,7 @@ WREN_FOREIGN_CLASS("math", "Rect", wren_RectAllocate, wren_RectFinalize, "Rect c
 // Register constructors
 WREN_CONSTRUCTOR("math", "Rect", "new(_,_,_,_)", wren_RectNew, "Create Rect, with components x, y, width, and height", x, y, width, height);
 WREN_CONSTRUCTOR("math", "Rect", "new()", wren_RectNew, "Create Rect");
+WREN_CONSTRUCTOR("math", "Rect", "copy(_)", wren_RectCopy, "Copy a Rect");
 
 // Register instance methods
 WREN_CLASS_METHOD("math", "Rect", "x", wren_RectGetX, "Get X component");

@@ -11,6 +11,7 @@
 
 namespace Struktur::Dialogue::HelperFunctions
 {
+	DialogueValue ConvertVariantToDialogueValue(Callback::Variant variant);
 	std::vector<Callback::Variant> ConvertParamsToVariant(std::unordered_map<std::string, DialogueValue> params);
 
 	std::vector<std::unique_ptr<DialogueNode>> GetNodeListFromWren(WrenVM* vm, int slot);

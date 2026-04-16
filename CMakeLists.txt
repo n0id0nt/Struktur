@@ -370,6 +370,7 @@ set(SOURCES
     src/Engine/Dialogue/Command.h               src/Engine/Dialogue/Command.cpp
     src/Engine/Dialogue/Condition.h             src/Engine/Dialogue/Condition.cpp
     src/Engine/Dialogue/DialogueHelperFunctions.h src/Engine/Dialogue/DialogueHelperFunctions.cpp
+    src/Engine/Dialogue/TextSystems/VariableSubstitutionSystem.h src/Engine/Dialogue/TextSystems/VariableSubstitutionSystem.cpp
     src/Engine/Dialogue/DialogueResult.h
 
     src/Engine/Resource/ResourcePool.h
