@@ -257,7 +257,7 @@ class GameWorldState is BaseState {
             if (playerPosition.y > 1755.0) {
                 if (FlagManager.getFlag("red_pedestal_active") && FlagManager.getFlag("green_pedestal_active") && FlagManager.getFlag("yellow_pedestal_active") && FlagManager.getFlag("blue_pedestal_active")) {
                     script.playerForceStop()
-                    _stateManager.changeState("gameOverState")
+                    _stateManager.changeState("GameOverState")
                     if (_gameMusic) {
                         _gameMusic.stop()
                     }

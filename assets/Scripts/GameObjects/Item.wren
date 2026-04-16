@@ -1,8 +1,12 @@
 import "gameObjectComponents" for Sprite
 import "math" for Vec2, Vec3, Vec4
 import "resourceManager" for Texture
-import "Colors" for BLACK, WHITE
+import "Colors" for BLACK, WHITE, BLANK
 import "Inventory" for Inventory
+import "flags" for FlagManager
+
+var SHADOW_COLOR = Vec4.copy(BLACK)
+SHADOW_COLOR.w = 100
 
 class ItemData {
     construct new(spriteIndex) {
@@ -16,6 +20,7 @@ class ItemData {
 
 class Item {
     construct new(entity, args) {
+        _interactable = true
         _entity = entity
         _returnable = args["Returnable"]
         _spriteDataMap = {
@@ -50,12 +55,18 @@ class Item {
         ]
         _name = args["Name"]
         _isShadow = false
+        _disabled = false
 
         if (_returnable) {
             if (Inventory.contains(name)) {
                 _isShadow = true
             }
+        } else {
+            if (FlagManager.getFlag(name)) {
+                _disabled = true
+            }
         }
+
     }
     
     name { _name }
@@ -70,12 +81,15 @@ class Item {
             var interactionId = _name
             var color = WHITE
             if (_isShadow) {
-                color = BLACK
+                color = SHADOW_COLOR
             }
             var itemData = _spriteDataMap[interactionId]
             Sprite.create(_entity, texture, color, Vec2.new(32, 48), 9, 2, false, itemData.getSpriteIndex(), 1)
         }
         texture.unload()
+        if (_disabled) {
+            disableItem()
+        }
     }
     
     update() {
@@ -90,7 +104,7 @@ class Item {
     }
 
     isInteractable() {
-        return true
+        return _interactable
     }
 
     getEntity() {
@@ -105,10 +119,21 @@ class Item {
         _isShadow = isShadow
         var color = WHITE
         if (_isShadow) {
-            color = BLACK
+            color = SHADOW_COLOR
         }
         System.print("adding item %(_entity) to inventory")
         var sprite = Sprite.get(_entity)
-        sprite.color = color
+        if (sprite) {
+            sprite.color = color
+        }
+    }
+
+    disableItem() {
+        _disabled = true
+        _interactable = false
+        var sprite = Sprite.get(_entity)
+        if (sprite) {
+            sprite.color = BLANK
+        }
     }
 }

@@ -22,14 +22,14 @@ class Commands {
         DialogueRegistry.registerCommand("setIntFlag") { |params|
             var flag = params["flag"]
             var value = params["value"]
-            var intFlag = FlagManager.setIntFlag(flag, value)
+            FlagManager.setIntFlag(flag, value)
             FlagManager.save("flags.sav")
             Debug.info("[Dialogue Command] Set Int Flag for %(flag): %(value)")
         }
         DialogueRegistry.registerCommand("setFlag") { |params|
             var flag = params["flag"]
             var value = params["value"]
-            var intFlag = FlagManager.setFlag(flag, value)
+            FlagManager.setFlag(flag, value)
             FlagManager.save("flags.sav")
             Debug.info("[Dialogue Command] Set Bool Flag for %(flag): %(value)")
         }
@@ -49,6 +49,8 @@ class Commands {
                     if (item.returnable) {
                         item.setIsShadow(true)
                     } else {
+                        FlagManager.setFlag(entityName, true)
+                        FlagManager.save("flags.sav")
                         GameObject.destroy(itemEntity)
                     }
                     Debug.info("[Dialogue Command] Picked up Item %(name): %(itemEntity)")
