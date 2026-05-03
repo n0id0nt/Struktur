@@ -44,7 +44,7 @@ namespace Struktur
 			m_systemManager = std::make_unique<System::SystemManager>();
 			m_gameObjectManager = std::make_unique<System::GameObjectManager>();
 			m_camera = std::make_unique<GameResource::Camera>();
-			m_uiManger = std::make_unique<UI::UIManager>();
+			m_uiManager = std::make_unique<UI::UIManager>();
 			m_physicsWorld = std::make_unique<Physics::PhysicsWorld>();
 			m_wrenScriptEngine = std::make_unique<Wren::WrenScriptEngine>();
 			m_wrenStateManager = std::make_unique<Wren::WrenStateManager>();
@@ -117,8 +117,8 @@ namespace Struktur
 
 		UI::UIManager& GetUIManager() const
 		{
-			ASSERT_MSG(m_uiManger.get(), "UI Manager not initialised");
-			return *m_uiManger;
+			ASSERT_MSG(m_uiManager.get(), "UI Manager not initialised");
+			return *m_uiManager;
 		}
 
 		Wren::WrenScriptEngine& GetWrenScriptEngine() const
@@ -189,7 +189,7 @@ namespace Struktur
 		std::unique_ptr<System::GameObjectManager> m_gameObjectManager;
 		std::unique_ptr<Physics::PhysicsWorld> m_physicsWorld;
 		std::unique_ptr<GameResource::Camera> m_camera;
-		std::unique_ptr<UI::UIManager> m_uiManger;
+		std::unique_ptr<UI::UIManager> m_uiManager;
 		std::unique_ptr<Wren::WrenScriptEngine> m_wrenScriptEngine;
 		std::unique_ptr<Wren::WrenStateManager> m_wrenStateManager;
 		std::unique_ptr<Wren::WrenScriptComponentRegistry> m_wrenScriptComponentRegistry;

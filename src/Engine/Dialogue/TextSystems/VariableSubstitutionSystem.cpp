@@ -26,17 +26,9 @@ namespace Struktur::Dialogue
 
 	VariableSubstitutionSystem::~VariableSubstitutionSystem() = default;
 
-	std::string VariableSubstitutionSystem::Process(GameContext& context, const std::string& text) const
+	std::string VariableSubstitutionSystem::ApplyModifiers(GameContext& context, const DialogueValue& value, const std::string& modifierChain)
 	{
-		return ProcessInternal(context, text, nullptr);
-	}
-
-	std::string VariableSubstitutionSystem::ProcessWithVars(
-		GameContext& context,
-		const std::string& text,
-		const std::map<std::string, DialogueValue>& vars) const
-	{
-		return ProcessInternal(context, text, &vars);
+		return ApplyModifierChain(context, value, modifierChain);
 	}
 
 	void VariableSubstitutionSystem::RegisterModifier(const std::string& name,
@@ -65,72 +57,10 @@ namespace Struktur::Dialogue
 		return (it != m_templates.end()) ? std::optional(it->second) : std::nullopt;
 	}
 
-	std::string VariableSubstitutionSystem::ProcessInternal(
-		GameContext& context,
-		const std::string& text,
-		const std::map<std::string, DialogueValue>* explicitVars) const
-	{
-		// Pattern: {variable|modifier1|modifier2:arg|...}
-		std::regex pattern(R"(\{([^|}]+)(?:\|([^}]+))?\})");
-
-		std::string result = text;
-		std::smatch match;
-		std::string::const_iterator searchStart(result.cbegin());
-
-		while (std::regex_search(searchStart, result.cend(), match, pattern))
-		{
-			std::string varName = match[1].str();
-			std::string modifierChain = (match.size() > 2) ? match[2].str() : "";
-
-			// Trim whitespace from variable name
-			varName.erase(0, varName.find_first_not_of(" \t"));
-			varName.erase(varName.find_last_not_of(" \t") + 1);
-
-			// Get variable value
-			DialogueValue value = GetVariable(context, varName, explicitVars);
-
-			// Apply modifiers
-			std::string formatted = ApplyModifierChain(context, value, modifierChain, explicitVars);
-
-			// Replace in string
-			size_t matchPos = match.position(0);
-			size_t matchLen = match.length(0);
-			result.replace(matchPos, matchLen, formatted);
-
-			// Update search position
-			searchStart = result.cbegin() + matchPos + formatted.length();
-		}
-
-		return result;
-	}
-
-	DialogueValue VariableSubstitutionSystem::GetVariable(
-		GameContext& context,
-		const std::string& name,
-		const std::map<std::string, DialogueValue>* explicitVars) const
-	{
-		// Check explicit vars first
-		if (explicitVars)
-		{
-			auto it = explicitVars->find(name);
-			if (it != explicitVars->end())
-			{
-				return it->second;
-			}
-		}
-
-		// Check registry
-		auto& dialogueRegistry = context.GetDialogueRegistry();
-		auto* callback = dialogueRegistry.GetVariable(name);
-		auto result = callback->Invoke(context, {});
-		return HelperFunctions::ConvertVariantToDialogueValue(result);
-	}
-
 	std::string VariableSubstitutionSystem::ApplyModifierChain(
 		GameContext& context,
 		const DialogueValue& value,
-		const std::string& modifierChain,
-		const std::map<std::string, DialogueValue>* explicitVars) const
+		const std::string& modifierChain) const
 	{
 		if (modifierChain.empty())
 		{
@@ -171,7 +101,7 @@ namespace Struktur::Dialogue
 
 		for (const auto& modStr : modifiers)
 		{
-			resultStr = ApplySingleModifier(context, DialogueValue(resultStr), modStr, explicitVars);
+			resultStr = ApplySingleModifier(context, DialogueValue(resultStr), modStr);
 		}
 
 		return resultStr;
@@ -180,8 +110,7 @@ namespace Struktur::Dialogue
 	std::string VariableSubstitutionSystem::ApplySingleModifier(
 		GameContext& context,
 		const DialogueValue& value,
-		const std::string& modifierStr,
-		const std::map<std::string, DialogueValue>* explicitVars) const
+		const std::string& modifierStr) const
 	{
 		// Parse modifier: "name:arg"
 		size_t colonPos = modifierStr.find(':');
@@ -456,7 +385,7 @@ namespace Struktur::Dialogue
 
 		for (const auto& modStr : templ->modifiers)
 		{
-			resultStr = variableSubstitutionSystem.ApplySingleModifier(context, DialogueValue(resultStr), modStr, nullptr);
+			resultStr = variableSubstitutionSystem.ApplySingleModifier(context, DialogueValue(resultStr), modStr);
 		}
 
 		return resultStr;

@@ -180,7 +180,7 @@
   {
     "data": {
       "speaker": "Scholar",
-      "text": "My Ancient Tome is still missing - it contains all my research into this house's curse."
+      "text": "My Ancient Tome is still missing - it contains all my research into this house's curse. {testVar}"
     },
     "node": "scholar_needs_tome"
   }

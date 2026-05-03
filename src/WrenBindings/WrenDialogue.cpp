@@ -610,6 +610,32 @@ void wren_DialogueRegistryRegisterCommand(WrenVM* vm)
 	registry.RegisterCommandType(*context, type, std::make_unique<Struktur::Callback::WrenCallback>(callback));
 }
 
+// DialogueRegistry.registerVariable(type) { |params| ... }
+void wren_DialogueRegistryRegisterVariable(WrenVM* vm)
+{
+	Struktur::GameContext* context = static_cast<Struktur::GameContext*>(wrenGetUserData(vm));
+	Struktur::Dialogue::DialogueRegistry& registry = context->GetDialogueRegistry();
+
+	const char* type = wrenGetSlotString(vm, 1);
+	WrenHandle* callback = wrenGetSlotHandle(vm, 2);
+
+	registry.RegisterVariableType(*context, type, std::make_unique<Struktur::Callback::WrenCallback>(callback));
+}
+
+// DialogueRegistry.getRegisteredVariable(type) -> callback
+void wren_DialogueRegistryGetRegisteredVariable(WrenVM* vm)
+{
+	Struktur::GameContext* context = static_cast<Struktur::GameContext*>(wrenGetUserData(vm));
+	Struktur::Dialogue::DialogueRegistry& registry = context->GetDialogueRegistry();
+
+	const char* type = wrenGetSlotString(vm, 1);
+
+	auto* callback = registry.GetVariable(type);
+
+	ASSERT_MSG(callback, "variable callback %s not found, likley not registered", type);
+	wrenSetSlotCallback(vm, 0, callback);
+}
+
 // ============================================================================
 // BINDING REGISTRATION
 // ============================================================================
@@ -617,6 +643,8 @@ void wren_DialogueRegistryRegisterCommand(WrenVM* vm)
 // DialogueRegistry static methods
 WREN_CLASS_STATIC("dialogue", "DialogueRegistry", "registerCondition(_,_)", wren_DialogueRegistryRegisterCondition, "Register a condition type with callback");
 WREN_CLASS_STATIC("dialogue", "DialogueRegistry", "registerCommand(_,_)", wren_DialogueRegistryRegisterCommand, "Register a command type with callback");
+WREN_CLASS_STATIC("dialogue", "DialogueRegistry", "registerVariable(_,_)", wren_DialogueRegistryRegisterVariable, "Register a variable type with callback");
+WREN_CLASS_STATIC("dialogue", "DialogueRegistry", "getRegisteredVariable(_)", wren_DialogueRegistryGetRegisteredVariable, "Get the call back for a registered variable");
 
 // ============================================================================
 // DIALOGUE MANAGER BINDINGS

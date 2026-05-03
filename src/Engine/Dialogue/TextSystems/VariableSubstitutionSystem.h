@@ -56,12 +56,7 @@ namespace Struktur::Dialogue
 		VariableSubstitutionSystem();
 		~VariableSubstitutionSystem();
 
-		// Process a string with variable substitution using the registry
-		std::string Process(GameContext& context, const std::string& text) const;
-
-		// Process with explicit variable map (doesn't use registry)
-		std::string ProcessWithVars(GameContext& context, const std::string& text,
-			const std::map<std::string, DialogueValue>& vars) const;
+		std::string ApplyModifiers(GameContext& context, const DialogueValue& value, const std::string& modifierChain);
 
 		// Register a custom modifier
 		void RegisterModifier(const std::string& name, std::unique_ptr<VariableModifier> modifier);
@@ -77,23 +72,11 @@ namespace Struktur::Dialogue
 		std::map<std::string, std::unique_ptr<VariableModifier>> m_modifiers;
 		std::map<std::string, VariableTemplate> m_templates;
 
-		// Internal processing
-		std::string ProcessInternal(GameContext& context, const std::string& text,
-			const std::map<std::string, DialogueValue>* explicitVars) const;
-
 		// Apply a chain of modifiers to a value
-		std::string ApplyModifierChain(GameContext& context, const DialogueValue& value,
-			const std::string& modifierChain,
-			const std::map<std::string, DialogueValue>* explicitVars) const;
+		std::string ApplyModifierChain(GameContext& context, const DialogueValue& value, const std::string& modifierChain) const;
 
 		// Apply a single modifier
-		std::string ApplySingleModifier(GameContext& context, const DialogueValue& value,
-			const std::string& modifierStr,
-			const std::map<std::string, DialogueValue>* explicitVars) const;
-
-		// Get a variable value (from registry or explicit vars)
-		DialogueValue GetVariable(GameContext& context, const std::string& name,
-			const std::map<std::string, DialogueValue>* explicitVars) const;
+		std::string ApplySingleModifier(GameContext& context, const DialogueValue& value, const std::string& modifierStr) const;
 
 		// Register built-in modifiers
 		void RegisterBuiltInModifiers();

@@ -4,6 +4,7 @@
 import "dialogue" for DialogueManager
 import "Dialogue/RegisteredFunctions/Commands" for Commands
 import "Dialogue/RegisteredFunctions/Conditions" for Conditions
+import "Dialogue/RegisteredFunctions/Variables" for Variables
 import "fileSystem" for FileSystem
 import "serialisation" for Json
 import "debug" for Debug
@@ -84,5 +85,6 @@ class DialogueLoader {
 
         Commands.registerFunctions()
         Conditions.registerFunctions()
+        Variables.registerFunctions()
     }
 }

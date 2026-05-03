@@ -13,7 +13,7 @@ import "debug" for Debug
 
 import "Colors" for BLANK, BLACK, DARKGRAY, WHITE
 import "Inventory" for Inventory
-import "dialogue" for DialogueManager, DialogueResult
+import "dialogue" for DialogueRegistry, DialogueManager, DialogueResult, VariableSubstitution
 
 var TEXT_SCROLL_SPEED = 0.02
 
@@ -90,6 +90,59 @@ class DialogueManagerHelper {
 
     static endDialogue() {
         return DialogueManager.clearDialogue()
+    }
+
+    static processString(text) {
+        return processString(text, null)
+    }
+
+    static processString(text, overrides) {
+        if (text == null || text == "") return text
+
+        var result = text
+        var offset = 0
+        
+        while (offset < result.count) {
+            // Find next placeholder
+            var startIdx = result.indexOf("{", offset)
+            if (startIdx == -1) break
+            
+            var endIdx = result.indexOf("}", startIdx)
+            if (endIdx == -1) break
+            
+            // Extract expression: "variable|modifiers"
+            var expression = result[startIdx + 1...endIdx]
+            
+            if (expression == "") {
+                offset = endIdx + 1
+                continue
+            }
+
+            // Split on pipe
+            var parts = expression.split("|")
+            var varName = parts[0].trim()
+            var modifiers = parts.count > 1 ? parts[1..-1].join("|") : ""
+            
+            // Get value from Wren registry
+            var value
+            if (overrides != null && overrides.containsKey(varName)) {
+                value = overrides[varName]
+            } else {
+                var params = []
+                value = DialogueRegistry.getRegisteredVariable(varName).call(params)
+            }
+            if (value == null) {
+                value = varName
+            }
+
+            var formatted = VariableSubstitution.applyModifiers(value, modifiers)
+            
+            result = result[0...startIdx] + formatted + result[endIdx + 1..-1]
+            
+            offset = startIdx + formatted.count
+        }
+        
+        return result
     }
 
     static continueDialogue() {
@@ -219,7 +272,7 @@ class InteractState is BaseState {
                 _continueDialogueLabel.setVisible(true)
             }
             var subString = _currentString[0...numberOfCharactersToDraw]
-            _dialogueLabel.setText(subString)
+            _dialogueLabel.setText(DialogueManagerHelper.processString(subString))
         }
 
         // Handle input
@@ -227,7 +280,7 @@ class InteractState is BaseState {
             if (_dialogueSrolling) {
                 _dialogueSrolling = false
                 _continueDialogueLabel.setVisible(true)
-                _dialogueLabel.setText(_currentString)
+                _dialogueLabel.setText(DialogueManagerHelper.processString(_currentString))
             } else if (_waitingForChoice) {
                 // TODO: Handle choice selection via keyboard/gamepad
                 // For now, just continue if there's only one choice or no choices

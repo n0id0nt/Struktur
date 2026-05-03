@@ -338,6 +338,7 @@ set(WREN_BINDING_SOURCES
                                                 src/WrenBindings/WrenInput.cpp
                                                 src/WrenBindings/WrenDebug.cpp
                                                 src/WrenBindings/WrenSerialisation.cpp
+                                                src/WrenBindings/WrenVariableSubstitutionSystem.cpp
 )
 
 # Source files

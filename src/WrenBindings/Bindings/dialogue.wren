@@ -125,5 +125,14 @@ class DialogueRegistry {
     foreign static registerCondition(arg0,arg1)
     // Register a command type with callback
     foreign static registerCommand(arg0,arg1)
+    // Register a variable type with callback
+    foreign static registerVariable(arg0,arg1)
+    // Get the call back for a registered variable
+    foreign static getRegisteredVariable(arg0)
+}
+
+class VariableSubstitution {
+    // Process the value through modifiers.
+    foreign static applyModifiers(arg0,arg1)
 }
 
