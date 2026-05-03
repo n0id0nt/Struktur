@@ -7,7 +7,7 @@ import "debug" for Debug
 class Variables {
     static registerFunctions() {
         DialogueRegistry.registerVariable("testVar") { |params|
-            return "Test Var Result"
+            return 2
         }
     }
 }

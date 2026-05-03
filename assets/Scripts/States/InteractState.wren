@@ -265,14 +265,15 @@ class InteractState is BaseState {
 
         // Handle text scrolling
         if (_dialogueSrolling) {
+            var currentString = DialogueManagerHelper.processString(_currentString)
             var numberOfCharactersToDraw = ((Time.scaledTime - _currentDialogueStartTime) / TEXT_SCROLL_SPEED).floor
-            if (numberOfCharactersToDraw >= _currentString.count) {
-                numberOfCharactersToDraw = _currentString.count
+            if (numberOfCharactersToDraw >= currentString.count) {
+                numberOfCharactersToDraw = currentString.count
                 _dialogueSrolling = false
                 _continueDialogueLabel.setVisible(true)
             }
-            var subString = _currentString[0...numberOfCharactersToDraw]
-            _dialogueLabel.setText(DialogueManagerHelper.processString(subString))
+            var subString = currentString[0...numberOfCharactersToDraw]
+            _dialogueLabel.setText(subString)
         }
 
         // Handle input

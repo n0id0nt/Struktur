@@ -36,6 +36,14 @@ namespace Struktur::Dialogue
 				callback->Dispose(context);
 		}
 		m_commandCallbacks.clear();
+
+		// Release all variable callbacks
+		for (auto& [type, callback] : m_variableCallbacks)
+		{
+			if (callback)
+				callback->Dispose(context);
+		}
+		m_variableCallbacks.clear();
     }
 
     void DialogueRegistry::RegisterConditionType(GameContext& context, const std::string& type, std::unique_ptr<Callback::ICallback> callback)
