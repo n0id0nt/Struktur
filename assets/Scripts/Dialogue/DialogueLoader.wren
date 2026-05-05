@@ -55,28 +55,36 @@ class DialogueLoader {
         System.print("Loading all dialogue...")
         
         var dialogueFiles = [
+            "Dialogue/GardenerDialogue.json",
             "Dialogue/ScholarDialogue.json",
             "Dialogue/AstronomerDialogue.json",
             "Dialogue/CookDialogue.json",
             "Dialogue/CordeliaDialogue.json",
             "Dialogue/DreamerDialogue.json",
-            "Dialogue/GardenerDialogue.json",
             "Dialogue/GuardianDialogue.json",
             "Dialogue/InventorDialogue.json",
             "Dialogue/MerchantDialogue.json",
             "Dialogue/ItemDialogue.json"
-            ]
+        ]
 
         for (filePath in dialogueFiles) {
             var result = FileSystem.readString(filePath)
-            if (result.success) {
-                var data = Json.parse(result.value)
-                if (!(data is List)) {
-                    var string = DebugPrintMap.toString(data)
-                    Debug.breakpointMsg("type check: List %(data is List), Map %(data is Map), Num %(data is Num), String %(data is String), Bool %(data is Bool) file:%(filePath) JSON:%(result.value) WREN:%(string)")
+            var success = result.success
+            if (success) {
+                var value = result.value
+                var data = Json.parse(value)
+                if (data) {
+                    if (data is List) {
+                        Debug.breakpointMsg("is List")
+                    }
+                    if (data is Num) {
+                        Debug.breakpointMsg("is number")
+                    }
+                    DialogueManager.loadDialogueData(data)
+                    Debug.info("[Dialogue Loading] succesfuly loaded %(filePath)")
+                } else {
+                    Debug.error("[Dialogue Loading] failed to parse %(filePath), error message: %(value)")
                 }
-                DialogueManager.loadDialogueData(data)
-                Debug.info("[Dialogue Loading] succesfuly loaded %(filePath)")
             } else {
                 Debug.error("[Dialogue Loading] failed to load %(filePath), error message: %(result.errorMessage)")
             }

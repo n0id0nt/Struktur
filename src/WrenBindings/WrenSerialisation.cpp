@@ -34,7 +34,7 @@ static void pushJsonValue(WrenVM* vm, const nlohmann::json& j, int slot, int scr
     }
     else if (j.is_array())
     {
-        wrenEnsureSlots(vm, scratchBase + 2);
+        wrenEnsureSlots(vm, scratchBase + 1);
         wrenSetSlotNewList(vm, slot);
         int elemSlot = scratchBase;
         for (auto& elem : j)
@@ -45,7 +45,7 @@ static void pushJsonValue(WrenVM* vm, const nlohmann::json& j, int slot, int scr
     }
     else if (j.is_object())
     {
-        wrenEnsureSlots(vm, scratchBase + 3);
+        wrenEnsureSlots(vm, scratchBase + 2);
         wrenSetSlotNewMap(vm, slot);
         int keySlot = scratchBase;
         int valSlot = scratchBase + 1;
@@ -152,7 +152,6 @@ void wren_JsonParse(WrenVM* vm)
         return;
     }
 
-    wrenEnsureSlots(vm, 4);
     pushJsonValue(vm, json, 0, 1);
 }
 
