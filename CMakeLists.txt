@@ -67,6 +67,7 @@ if(CMAKE_BUILD_TYPE STREQUAL "Debug")
     set(EDITOR TRUE)
     add_compile_definitions(EDITOR)
 endif()
+
 ##########################################################################################
 # MSVC runtime linking
 ##########################################################################################
@@ -80,197 +81,92 @@ if(CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
     endif()
 endif()
 
-# Find or fetch libraries
-find_package(raylib QUIET)
-if (NOT raylib_FOUND)
-    include(FetchContent)
-    
-    # Set FetchContent properties for better control
-    set(FETCHCONTENT_QUIET FALSE)
-    
-    # RayLib - Main graphics library
-    FetchContent_Declare(
-        raylib
-        GIT_REPOSITORY https://github.com/raysan5/raylib.git
-        GIT_TAG 5.5
+##########################################################################################
+# Dependencies (git submodules)
+##########################################################################################
+
+# Ensure submodules are initialised
+find_package(Git QUIET)
+if(GIT_FOUND AND EXISTS "${PROJECT_SOURCE_DIR}/.git")
+    execute_process(
+        COMMAND ${GIT_EXECUTABLE} submodule update --init --recursive --no-fetch
+        WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
     )
-    
-    # EnTT - Entity Component System
-    FetchContent_Declare(
-        entt
-        GIT_REPOSITORY https://github.com/skypjack/entt.git
-        GIT_TAG v3.12.2
+endif()
+
+# RayLib
+set(BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
+set(BUILD_GAMES    OFF CACHE BOOL "" FORCE)
+add_subdirectory(third_party/raylib)
+
+# EnTT
+add_subdirectory(third_party/entt)
+
+# GLM
+set(GLM_TEST_ENABLE OFF CACHE BOOL "" FORCE)
+add_subdirectory(third_party/glm)
+
+# nlohmann/json
+set(JSON_BuildTests OFF CACHE BOOL "" FORCE)
+add_subdirectory(third_party/json)
+
+# Box2D
+set(BOX2D_BUILD_UNIT_TESTS OFF CACHE BOOL "" FORCE)
+set(BOX2D_BUILD_TESTBED    OFF CACHE BOOL "" FORCE)
+add_subdirectory(third_party/box2d)
+
+# PhysicsFS
+set(PHYSFS_BUILD_STATIC TRUE  CACHE BOOL "" FORCE)
+set(PHYSFS_BUILD_SHARED FALSE CACHE BOOL "" FORCE)
+set(PHYSFS_BUILD_TEST   FALSE CACHE BOOL "" FORCE)
+set(PHYSFS_BUILD_DOCS   FALSE CACHE BOOL "" FORCE)
+set(PHYSFS_TARGETNAME_UNINSTALL "physfs_uninstall" CACHE STRING "" FORCE)
+add_subdirectory(third_party/physfs)
+
+# Wren (manual build — same as before, just different source path)
+file(GLOB WREN_SOURCES
+    ${CMAKE_CURRENT_SOURCE_DIR}/third_party/wren/src/vm/*.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/third_party/wren/src/optional/*.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/WrenExtensions/Modules/Reflect/*.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/WrenExtensions/Modules/Trace/*.c
+)
+add_library(wren STATIC ${WREN_SOURCES})
+target_compile_definitions(wren PUBLIC WREN_OPT_META=1 WREN_OPT_RANDOM=1 WREN_OPT_REFLECT=1)
+target_include_directories(wren PUBLIC
+    third_party/wren/src/include
+    third_party/wren/src/optional
+    ${CMAKE_CURRENT_SOURCE_DIR}/WrenExtensions/Modules
+)
+target_include_directories(wren PRIVATE
+    third_party/wren/src/vm
+    third_party/wren/src/optional
+)
+if(WIN32)
+    target_compile_definitions(wren PRIVATE _CRT_SECURE_NO_WARNINGS)
+endif()
+
+# Editor-only libs
+if(EDITOR)
+    # ImGui
+    set(IMGUI_SOURCES
+        third_party/imgui/imgui.cpp
+        third_party/imgui/imgui_demo.cpp
+        third_party/imgui/imgui_draw.cpp
+        third_party/imgui/imgui_tables.cpp
+        third_party/imgui/imgui_widgets.cpp
     )
-    
-    # GLM - OpenGL Mathematics
-    FetchContent_Declare(
-        glm
-        GIT_REPOSITORY https://github.com/g-truc/glm.git
-        GIT_TAG 1.0.1
-    )
-    
-    # nlohmann/json - JSON library
-    FetchContent_Declare(
-        nlohmann_json
-        GIT_REPOSITORY https://github.com/nlohmann/json.git
-        GIT_TAG v3.11.3
-    )
-    
-    # Box2D - 2D Physics Engine
-    FetchContent_Declare(
-        box2d
-        GIT_REPOSITORY https://github.com/erincatto/box2d.git
-        GIT_TAG v2.4.1
-    )
-    
-    # Wren - Lightweight scripting language (cross-platform compatible)
-    FetchContent_Declare(
-        wren
-        GIT_REPOSITORY https://github.com/wren-lang/wren.git
-        GIT_TAG 0.4.0
-    )
+    add_library(imgui STATIC ${IMGUI_SOURCES})
+    target_include_directories(imgui PUBLIC third_party/imgui)
+    target_compile_definitions(imgui PUBLIC IMGUI_DISABLE_OBSOLETE_FUNCTIONS)
 
-    # PhysicsFS - Virtual filesystem / asset packing
-    FetchContent_Declare(
-        physfs
-        GIT_REPOSITORY https://github.com/icculus/physfs.git
-        GIT_TAG release-3.2.0
-        OVERRIDE_FIND_PACKAGE
-    )
-   
-    if(EDITOR)
-        # Dear ImGui - Immediate mode GUI (RayLib compatible version)
-        FetchContent_Declare(
-            imgui
-            URL https://github.com/ocornut/imgui/archive/refs/tags/v1.91.8-docking.tar.gz
-        )
+    # rlImGui
+    add_library(rlimgui STATIC third_party/rlimgui/rlImGui.cpp)
+    target_include_directories(rlimgui PUBLIC third_party/rlimgui third_party/imgui)
+    target_link_libraries(rlimgui PUBLIC raylib imgui)
 
-        # rlImGui - RayLib ImGui integration
-        FetchContent_Declare(
-            rlimgui
-            GIT_REPOSITORY https://github.com/raylib-extras/rlImGui.git
-            GIT_TAG 0105acf1bfba22e883688e5b9ffb1af0536739e2
-        )
-
-        # tinyfiledialogs - native file dialogs (editor only)
-        FetchContent_Declare(
-            tinyfiledialogs
-            GIT_REPOSITORY https://github.com/native-toolkit/tinyfiledialogs.git
-            GIT_TAG master
-        )
-    endif()
-
-    # Configure library options before making available
-    
-    # RayLib options
-    set(BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
-    set(BUILD_GAMES OFF CACHE BOOL "" FORCE)
-    
-    # GLM options
-    set(GLM_TEST_ENABLE OFF CACHE BOOL "" FORCE)
-    
-    # JSON options
-    set(JSON_BuildTests OFF CACHE BOOL "" FORCE)
-    set(JSON_Install OFF CACHE BOOL "" FORCE)
-    
-    # Box2D options
-    set(BOX2D_BUILD_UNIT_TESTS OFF CACHE BOOL "" FORCE)
-    set(BOX2D_BUILD_TESTBED OFF CACHE BOOL "" FORCE)
-
-    # PhysicsFS options
-    set(PHYSFS_BUILD_STATIC TRUE CACHE BOOL "" FORCE)
-    set(PHYSFS_BUILD_SHARED FALSE CACHE BOOL "" FORCE)
-    set(PHYSFS_BUILD_TEST FALSE CACHE BOOL "" FORCE)
-    set(PHYSFS_BUILD_DOCS FALSE CACHE BOOL "" FORCE)
-    
-    # Make libraries available
-    set(CMAKE_POLICY_VERSION_MINIMUM 3.5)
-    FetchContent_MakeAvailable(raylib entt glm nlohmann_json box2d physfs)
-    unset(CMAKE_POLICY_VERSION_MINIMUM)
-    
-    # Handle Wren (cross-platform scripting)
-    FetchContent_GetProperties(wren)
-    if(NOT wren_POPULATED)
-        FetchContent_Populate(wren)
-        
-        # Build Wren VM from source
-        file(GLOB WREN_SOURCES 
-            ${wren_SOURCE_DIR}/src/vm/*.c
-            ${wren_SOURCE_DIR}/src/optional/*.c
-            ${CMAKE_CURRENT_SOURCE_DIR}/WrenExtensions/Modules/Reflect/*.c
-            ${CMAKE_CURRENT_SOURCE_DIR}/WrenExtensions/Modules/Trace/*.c
-        )
-        
-        add_library(wren STATIC ${WREN_SOURCES})
-
-        target_compile_definitions(wren PUBLIC
-            WREN_OPT_META=1
-            WREN_OPT_RANDOM=1
-            WREN_OPT_REFLECT=1
-        )
-
-        target_include_directories(wren PUBLIC 
-            ${wren_SOURCE_DIR}/src/include
-            ${wren_SOURCE_DIR}/src/vm
-            ${wren_SOURCE_DIR}/src/optional
-            ${CMAKE_CURRENT_SOURCE_DIR}/WrenExtensions/Modules 
-        )
-
-        target_include_directories(wren PRIVATE
-            ${wren_SOURCE_DIR}/src/vm       # Access to Wren internals
-            ${wren_SOURCE_DIR}/src/optional
-        )
-                
-        # Platform-specific settings for Wren
-        if(WIN32)
-            target_compile_definitions(wren PRIVATE _CRT_SECURE_NO_WARNINGS)
-        endif()
-    endif()
-
-    if(EDITOR)
-        # Handle Dear ImGui (custom build for rlImGui compatibility)
-        FetchContent_GetProperties(imgui)
-        if(NOT imgui_POPULATED)
-            FetchContent_Populate(imgui)
-        
-            # ImGui core files
-            set(IMGUI_SOURCES
-                ${imgui_SOURCE_DIR}/imgui.cpp
-                ${imgui_SOURCE_DIR}/imgui_demo.cpp
-                ${imgui_SOURCE_DIR}/imgui_draw.cpp
-                ${imgui_SOURCE_DIR}/imgui_tables.cpp
-                ${imgui_SOURCE_DIR}/imgui_widgets.cpp
-            )
-        
-            add_library(imgui STATIC ${IMGUI_SOURCES})
-            target_include_directories(imgui PUBLIC ${imgui_SOURCE_DIR})
-            target_compile_definitions(imgui PUBLIC IMGUI_DISABLE_OBSOLETE_FUNCTIONS)
-        endif()
-    
-    
-        # Handle rlImGui (depends on ImGui)
-        FetchContent_GetProperties(rlimgui)
-        if(NOT rlimgui_POPULATED)
-            FetchContent_Populate(rlimgui)
-            add_library(rlimgui STATIC ${rlimgui_SOURCE_DIR}/rlImGui.cpp)
-            target_include_directories(rlimgui PUBLIC 
-                ${rlimgui_SOURCE_DIR}
-                ${imgui_SOURCE_DIR}
-            )
-            target_link_libraries(rlimgui PUBLIC raylib imgui)
-        endif()
-    
-        FetchContent_GetProperties(tinyfiledialogs)
-        if(NOT tinyfiledialogs_POPULATED)
-            FetchContent_Populate(tinyfiledialogs)
-            add_library(tinyfiledialogs STATIC 
-                ${tinyfiledialogs_SOURCE_DIR}/tinyfiledialogs.c
-            )
-            target_include_directories(tinyfiledialogs PUBLIC 
-                ${tinyfiledialogs_SOURCE_DIR}
-            )
-        endif()
-    endif()
+    # tinyfiledialogs
+    add_library(tinyfiledialogs STATIC third_party/tinyfiledialogs/tinyfiledialogs.c)
+    target_include_directories(tinyfiledialogs PUBLIC third_party/tinyfiledialogs)
 endif()
 
 if(DEBUG)

@@ -1,0 +1,30 @@
+[submodule "third_party/raylib"]
+	path = third_party/raylib
+	url = https://github.com/raysan5/raylib.git
+[submodule "third_party/entt"]
+	path = third_party/entt
+	url = https://github.com/skypjack/entt.git
+[submodule "third_party/glm"]
+	path = third_party/glm
+	url = https://github.com/g-truc/glm.git
+[submodule "third_party/json"]
+	path = third_party/json
+	url = https://github.com/nlohmann/json.git
+[submodule "third_party/box2d"]
+	path = third_party/box2d
+	url = https://github.com/erincatto/box2d.git
+[submodule "third_party/wren"]
+	path = third_party/wren
+	url = https://github.com/wren-lang/wren.git
+[submodule "third_party/physfs"]
+	path = third_party/physfs
+	url = https://github.com/icculus/physfs.git
+[submodule "third_party/tinyfiledialogs"]
+	path = third_party/tinyfiledialogs
+	url = https://github.com/native-toolkit/tinyfiledialogs.git
+[submodule "third_party/imgui"]
+	path = third_party/imgui
+	url = https://github.com/ocornut/imgui.git
+[submodule "third_party/rlimgui"]
+	path = third_party/rlimgui
+	url = https://github.com/raylib-extras/rlImGui.git

@@ -4,6 +4,7 @@
 #include "wren_common.h"
 
 #include <string.h>
+#include <stdio.h>
 #include "wren_trace.wren.inc"
 
 // The Wren source code (can be auto-generated from .wren file)

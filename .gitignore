@@ -7,7 +7,6 @@ build-windows
 build-windows-debug
 
 # ImGui
-imgui
 imgui.ini
 
 # Editor save data
