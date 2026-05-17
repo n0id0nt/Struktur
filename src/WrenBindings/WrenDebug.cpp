@@ -28,10 +28,6 @@ void wren_ProfileStaticProfileEnd(WrenVM* vm)
 #endif
 }
 
-WREN_CLASS_STATIC("debug", "Profile", "begin(_)", wren_ProfileStaticProfileBegin, "Begin a profile scope.");
-WREN_CLASS_STATIC("debug", "Profile", "end()", wren_ProfileStaticProfileEnd, "End a profile scope.");
-
-
 // Debug.info(string)
 void wren_DebugInfo(WrenVM* vm)
 {
@@ -132,11 +128,17 @@ void wren_DebugBreakMsg(WrenVM* vm)
 #endif
 }
 
-WREN_CLASS_STATIC("debug", "Debug", "info(_)", wren_DebugInfo, "Call Debug Info.");
-WREN_CLASS_STATIC("debug", "Debug", "warning(_)", wren_DebugWarning, "Call Debug Warning.");
-WREN_CLASS_STATIC("debug", "Debug", "error(_)", wren_DebugError, "Call Debug Error.");
-WREN_CLASS_STATIC("debug", "Debug", "fatal(_)", wren_DebugFatal, "Call Debug Fatal.");
-WREN_CLASS_STATIC("debug", "Debug", "assert(_)", wren_DebugAssert, "Call Debug Assert.");
-WREN_CLASS_STATIC("debug", "Debug", "assertMsg(_,_)", wren_DebugAssertMsg, "Call Debug Assert with Message.");
-WREN_CLASS_STATIC("debug", "Debug", "breakpoint()", wren_DebugBreak, "Call Debug Break.");
-WREN_CLASS_STATIC("debug", "Debug", "breakpointMsg(_)", wren_DebugBreakMsg, "Call Debug Break with Message.");
+WREN_BINDING_MODULE(Debug)
+{
+	WREN_CLASS_STATIC(registry, "debug", "Profile", "begin(_)", wren_ProfileStaticProfileBegin, "Begin a profile scope.");
+	WREN_CLASS_STATIC(registry, "debug", "Profile", "end()", wren_ProfileStaticProfileEnd, "End a profile scope.");
+
+	WREN_CLASS_STATIC(registry, "debug", "Debug", "info(_)", wren_DebugInfo, "Call Debug Info.");
+	WREN_CLASS_STATIC(registry, "debug", "Debug", "warning(_)", wren_DebugWarning, "Call Debug Warning.");
+	WREN_CLASS_STATIC(registry, "debug", "Debug", "error(_)", wren_DebugError, "Call Debug Error.");
+	WREN_CLASS_STATIC(registry, "debug", "Debug", "fatal(_)", wren_DebugFatal, "Call Debug Fatal.");
+	WREN_CLASS_STATIC(registry, "debug", "Debug", "assert(_)", wren_DebugAssert, "Call Debug Assert.");
+	WREN_CLASS_STATIC(registry, "debug", "Debug", "assertMsg(_,_)", wren_DebugAssertMsg, "Call Debug Assert with Message.");
+	WREN_CLASS_STATIC(registry, "debug", "Debug", "breakpoint()", wren_DebugBreak, "Call Debug Break.");
+	WREN_CLASS_STATIC(registry, "debug", "Debug", "breakpointMsg(_)", wren_DebugBreakMsg, "Call Debug Break with Message.");
+}

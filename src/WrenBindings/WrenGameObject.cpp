@@ -447,16 +447,22 @@ void wren_GameObjectForEachWithAnyComponents(WrenVM* vm) {
 	wrenReleaseHandle(vm, callbackHandle);
 }
 
-WREN_CLASS_STATIC("gameObject", "GameObject", "destroy(_)", wren_GameObjectDestroy, "Destroy an Game Object and all its children.");
-WREN_CLASS_STATIC("gameObject", "GameObject", "create(_,_)", wren_GameObjectCreate, "Create a new Game Object with the given name and parent. Returns entity ID.");
-WREN_CLASS_STATIC("gameObject", "GameObject", "isValid(_)", wren_GameObjectIsValid, "Check if an entity ID is valid.");
-WREN_CLASS_STATIC("gameObject", "GameObject", "hasComponent(_)", wren_GameObjecthasComponent, "Checks if entity has a specific component.");
-WREN_CLASS_STATIC("gameObject", "GameObject", "getAllWithComponent(_)", wren_GameObjectGetAllWithComponent, "Get all entities with a specific component. Returns list of entity IDs.");
-WREN_CLASS_STATIC("gameObject", "GameObject", "getAllWithComponents(_)", wren_GameObjectGetAllWithComponents, "Get all entities with ALL specified components. Pass list of component names.");
-WREN_CLASS_STATIC("gameObject", "GameObject", "getAllWithAnyComponents(_)", wren_GameObjectGetAnyWithComponents, "Get entities with ANY of the specified components.");
-WREN_CLASS_STATIC("gameObject", "GameObject", "getAll()", wren_GameObjectGetAll, "Get all entities in the registry. Returns list of entity IDs.");
-WREN_CLASS_STATIC("gameObject", "GameObject", "getAllWithIdentifier(_)", wren_GameObjectGetAllWithIdentifier, "Get all entities with a specific identifier. Returns list of entity IDs.");
-WREN_CLASS_STATIC("gameObject", "GameObject", "forEach(_)", wren_GameObjectForEach, "Iterate all entities, calling callback for each.");
-WREN_CLASS_STATIC("gameObject", "GameObject", "forEachWithComponent(_,_)",wren_GameObjectForEachWithComponent, "Iterate entities with component, calling callback for each.");
-WREN_CLASS_STATIC("gameObject", "GameObject", "forEachWithComponents(_,_)", wren_GameObjectForEachWithComponents, "Iterate entities with component, calling callback for each.");
-WREN_CLASS_STATIC("gameObject", "GameObject", "forEachWithAnyComponents(_,_)", wren_GameObjectForEachWithAnyComponents, "Iterate entities with component, calling callback for each.");
+// ============================================================================
+// BINDING REGISTRATION
+// ============================================================================
+WREN_BINDING_MODULE(GameObject)
+{
+	WREN_CLASS_STATIC(registry, "gameObject", "GameObject", "destroy(_)", wren_GameObjectDestroy, "Destroy an Game Object and all its children.");
+	WREN_CLASS_STATIC(registry, "gameObject", "GameObject", "create(_,_)", wren_GameObjectCreate, "Create a new Game Object with the given name and parent. Returns entity ID.");
+	WREN_CLASS_STATIC(registry, "gameObject", "GameObject", "isValid(_)", wren_GameObjectIsValid, "Check if an entity ID is valid.");
+	WREN_CLASS_STATIC(registry, "gameObject", "GameObject", "hasComponent(_)", wren_GameObjecthasComponent, "Checks if entity has a specific component.");
+	WREN_CLASS_STATIC(registry, "gameObject", "GameObject", "getAllWithComponent(_)", wren_GameObjectGetAllWithComponent, "Get all entities with a specific component. Returns list of entity IDs.");
+	WREN_CLASS_STATIC(registry, "gameObject", "GameObject", "getAllWithComponents(_)", wren_GameObjectGetAllWithComponents, "Get all entities with ALL specified components. Pass list of component names.");
+	WREN_CLASS_STATIC(registry, "gameObject", "GameObject", "getAllWithAnyComponents(_)", wren_GameObjectGetAnyWithComponents, "Get entities with ANY of the specified components.");
+	WREN_CLASS_STATIC(registry, "gameObject", "GameObject", "getAll()", wren_GameObjectGetAll, "Get all entities in the registry. Returns list of entity IDs.");
+	WREN_CLASS_STATIC(registry, "gameObject", "GameObject", "getAllWithIdentifier(_)", wren_GameObjectGetAllWithIdentifier, "Get all entities with a specific identifier. Returns list of entity IDs.");
+	WREN_CLASS_STATIC(registry, "gameObject", "GameObject", "forEach(_)", wren_GameObjectForEach, "Iterate all entities, calling callback for each.");
+	WREN_CLASS_STATIC(registry, "gameObject", "GameObject", "forEachWithComponent(_,_)",wren_GameObjectForEachWithComponent, "Iterate entities with component, calling callback for each.");
+	WREN_CLASS_STATIC(registry, "gameObject", "GameObject", "forEachWithComponents(_,_)", wren_GameObjectForEachWithComponents, "Iterate entities with component, calling callback for each.");
+	WREN_CLASS_STATIC(registry, "gameObject", "GameObject", "forEachWithAnyComponents(_,_)", wren_GameObjectForEachWithAnyComponents, "Iterate entities with component, calling callback for each.");
+}

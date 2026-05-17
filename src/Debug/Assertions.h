@@ -37,18 +37,24 @@ namespace Struktur
 			}
 		}
 
+		template<typename T>
+		auto ToVarArg(T&& t) {
+			if constexpr (std::is_same_v<std::decay_t<T>, std::string>) {
+				return std::forward<T>(t).c_str();
+			} else {
+				return std::forward<T>(t);
+			}
+		}
+		
 		// Variadic template function for printf-style formatting
 		template<typename... Args>
 		inline std::string FormatString(const char* format, Args&&... args)
 		{
-			// Calculate required buffer size
-			int size = snprintf(nullptr, 0, format, std::forward<Args>(args)...) + 1;
+			int size = snprintf(nullptr, 0, format, ToVarArg(std::forward<Args>(args))...) + 1;
 			if (size <= 0) return std::string(format);
-
-			// Allocate buffer and format string
 			std::string result(size, '\0');
-			snprintf(&result[0], size, format, std::forward<Args>(args)...);
-			result.resize(size - 1); // Remove null terminator
+			snprintf(&result[0], size, format, ToVarArg(std::forward<Args>(args))...);
+			result.resize(size - 1);
 			return result;
 		}
 

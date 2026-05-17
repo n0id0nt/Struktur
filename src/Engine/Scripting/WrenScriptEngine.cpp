@@ -12,84 +12,86 @@
 
 void Struktur::Wren::WrenScriptEngine::Initialise(GameContext& context)
 {
-	WrenConfiguration config;
-	wrenInitConfiguration(&config);
+    // Register all bindings explicitly
+    RegisterAllBindings(m_registry);
 
-	config.errorFn = OnWrenError;
-	config.writeFn = OnWrenWrite;
-	config.loadModuleFn = OnLoadModule;
-	config.bindForeignMethodFn = OnBindForeignMethod;
-	config.bindForeignClassFn = OnBindForeignClass;
+    WrenConfiguration config;
+    wrenInitConfiguration(&config);
 
-	m_vm = wrenNewVM(&config);
-	wrenSetUserData(m_vm, &context);
+    config.errorFn             = OnWrenError;
+    config.writeFn             = OnWrenWrite;
+    config.loadModuleFn        = OnLoadModule;
+    config.bindForeignMethodFn = OnBindForeignMethod;
+    config.bindForeignClassFn  = OnBindForeignClass;
 
-	DEBUG_INFO("Wren VM initialised");
-	DEBUG_INFO("Registered %zu method bindings", Wren::GetMethodBindings().size());
-	DEBUG_INFO("Registered %zu class bindings", Wren::GetClassBindings().size());
-	DEBUG_INFO("Registered %zu enum bindings", Wren::GetEnumBindings().size());
-	DEBUG_INFO("Registered %zu constant bindings", Wren::GetConstantBindings().size());
+    m_vm = wrenNewVM(&config);
+    wrenSetUserData(m_vm, &context);
+
+    DEBUG_INFO("Wren VM initialised");
+    DEBUG_INFO("Registered %zu method bindings",   m_registry.methods.size());
+    DEBUG_INFO("Registered %zu class bindings",    m_registry.classes.size());
+    DEBUG_INFO("Registered %zu enum bindings",     m_registry.enums.size());
+    DEBUG_INFO("Registered %zu constant bindings", m_registry.constants.size());
 }
 
 void Struktur::Wren::WrenScriptEngine::Shutdown()
 {
-	if (m_vm)
-	{
-		wrenFreeVM(m_vm);
-		m_vm = nullptr;
-	}
+    if (m_vm)
+    {
+        wrenFreeVM(m_vm);
+        m_vm = nullptr;
+    }
 }
 
 bool Struktur::Wren::WrenScriptEngine::InterpretString(const char* module, const char* source)
 {
-	if (!m_vm)
-	{
-		DEBUG_ERROR("Wren VM not initialised");
-		return false;
-	}
+    if (!m_vm)
+    {
+        DEBUG_ERROR("Wren VM not initialised");
+        return false;
+    }
 
-	WrenInterpretResult result = wrenInterpret(m_vm, module, source);
+    WrenInterpretResult result = wrenInterpret(m_vm, module, source);
 
-	if (result == WREN_RESULT_COMPILE_ERROR)
-	{
-		DEBUG_ERROR("Wren compile error in module: %s", module);
-		return false;
-	}
-	else if (result == WREN_RESULT_RUNTIME_ERROR)
-	{
-		DEBUG_ERROR("Wren runtime error in module: %s", module);
-		return false;
-	}
-	else if (result != WREN_RESULT_SUCCESS)
-	{
-		DEBUG_ERROR("Wren error in module: %s", module);
-		return false;
-	}
+    if (result == WREN_RESULT_COMPILE_ERROR)
+    {
+        DEBUG_ERROR("Wren compile error in module: %s", module);
+        return false;
+    }
+    else if (result == WREN_RESULT_RUNTIME_ERROR)
+    {
+        DEBUG_ERROR("Wren runtime error in module: %s", module);
+        return false;
+    }
+    else if (result != WREN_RESULT_SUCCESS)
+    {
+        DEBUG_ERROR("Wren error in module: %s", module);
+        return false;
+    }
 
-	return true;
+    return true;
 }
 
 bool Struktur::Wren::WrenScriptEngine::InterpretFile(const char* path)
 {
-	if (!m_vm)
-	{
-		DEBUG_ERROR("Wren VM not initialised");
-		return false;
-	}
-	
-	auto result = FileSystem::ReadString(path);
+    if (!m_vm)
+    {
+        DEBUG_ERROR("Wren VM not initialised");
+        return false;
+    }
 
-	if (!result)
-	{
-		DEBUG_ERROR("Failed to open Wren file: %s, Error: %s", path, result.errorMessage.c_str());
-		return false;
-	}
+    auto result = FileSystem::ReadString(path);
 
-	// Extract module name from path (remove extension)
-	std::filesystem::path filepath(path);
-	std::string module = filepath.stem().string();
+    if (!result)
+    {
+        DEBUG_ERROR("Failed to open Wren file: %s, Error: %s", path, result.errorMessage.c_str());
+        return false;
+    }
 
-	return InterpretString(module.c_str(), result.value.c_str());
+    std::filesystem::path filepath(path);
+    std::string module = filepath.stem().string();
+
+    return InterpretString(module.c_str(), result.value.c_str());
 }
 
 // ============================================================================
@@ -98,158 +100,155 @@ bool Struktur::Wren::WrenScriptEngine::InterpretFile(const char* path)
 
 void Struktur::Wren::WrenScriptEngine::OnWrenError(WrenVM* vm, WrenErrorType type, const char* module, int line, const char* message)
 {
-	switch (type)
-	{
-	case WREN_ERROR_COMPILE:
-		DEBUG_ERROR("[Wren Compile] %s:%d: %s", module, line, message);
-		break;
-	case WREN_ERROR_RUNTIME:
-		DEBUG_ERROR("[Wren Runtime] %s", message);
-		break;
-	case WREN_ERROR_STACK_TRACE:
-		DEBUG_ERROR("[Wren Trace] %s:%d: %s", module, line, message);
-		break;
-	}
+    switch (type)
+    {
+    case WREN_ERROR_COMPILE:
+        DEBUG_ERROR("[Wren Compile] %s:%d: %s", module, line, message);
+        break;
+    case WREN_ERROR_RUNTIME:
+        DEBUG_ERROR("[Wren Runtime] %s", message);
+        break;
+    case WREN_ERROR_STACK_TRACE:
+        DEBUG_ERROR("[Wren Trace] %s:%d: %s", module, line, message);
+        break;
+    }
 }
 
 void Struktur::Wren::WrenScriptEngine::OnWrenWrite(WrenVM* vm, const char* text)
 {
-	if (strcmp(text, "\n") == 0) return;
-	DEBUG_INFO("[Wren Print] %s", text);
+    if (strcmp(text, "\n") == 0) return;
+    DEBUG_INFO("[Wren Print] %s", text);
 }
 
 WrenLoadModuleResult Struktur::Wren::WrenScriptEngine::OnLoadModule(WrenVM* vm, const char* name)
 {
-	WrenLoadModuleResult result = {};
+    WrenLoadModuleResult result = {};
 
-	// Built-in optional modules
-	if (strcmp(name, "meta") == 0 || strcmp(name, "random") == 0)
-	{
-		result.source = nullptr;
-		return result;
-	}
+    if (strcmp(name, "meta") == 0 || strcmp(name, "random") == 0)
+    {
+        result.source = nullptr;
+        return result;
+    }
 
-	// Custom Reflection Module
-	if (strcmp(name, "reflect") == 0)
-	{
-		result.source = wrenReflectSource();
-		result.onComplete = nullptr;  // Source is static, no cleanup needed
-		return result;
-	}
+    if (strcmp(name, "reflect") == 0)
+    {
+        result.source   = wrenReflectSource();
+        result.onComplete = nullptr;
+        return result;
+    }
 
-	// Custom Reflection Module
-	if (strcmp(name, "trace") == 0)
-	{
-		result.source = wrenTraceSource();
-		result.onComplete = nullptr;  // Source is static, no cleanup needed
-		return result;
-	}
+    if (strcmp(name, "trace") == 0)
+    {
+        result.source   = wrenTraceSource();
+        result.onComplete = nullptr;
+        return result;
+    }
 
-	std::string source;
-	bool found = false;
+    std::string source;
+    bool found = false;
 
 #ifndef DEBUG
-	{
-		// Auto-generated dispatch map
-		const auto& sources = GetWrenBindingSources();
-		auto it = sources.find(name);
-		if (it != sources.end())
-		{
-			result.source = it->second();
-			result.onComplete = nullptr;
-			return result;
-		}
-	}
+    {
+        const auto& sources = GetWrenBindingSources();
+        auto it = sources.find(name);
+        if (it != sources.end())
+        {
+            result.source     = it->second();
+            result.onComplete = nullptr;
+            return result;
+        }
+    }
 #else
-	{
-		std::string searchPath = std::string(::GetWorkingDirectory()) + "/../src/WrenBindings/Bindings/" + name + ".wren";
-		std::ifstream file(searchPath);
-		if (file)
-		{
-			std::stringstream buffer;
-			buffer << file.rdbuf();
-			source = buffer.str();
-			found = true;
-			DEBUG_INFO("Loaded Wren module: %s from %s", name, searchPath.c_str());
-		}
-	}
+    {
+        std::string searchPath = std::string(::GetWorkingDirectory()) + "/../src/WrenBindings/Bindings/" + name + ".wren";
+        std::ifstream file(searchPath);
+        if (file)
+        {
+            std::stringstream buffer;
+            buffer << file.rdbuf();
+            source = buffer.str();
+            found  = true;
+            DEBUG_INFO("Loaded Wren module: %s from %s", name, searchPath.c_str());
+        }
+    }
 
-	if (!found)
+    if (!found)
 #endif
-	{
-		std::string searchPath = std::string("Scripts/") + name + ".wren";
-		auto result = FileSystem::ReadString(searchPath);
-		if (result)
-		{
-			source = std::move(result.value);
-			found = true;
-			DEBUG_INFO("Loaded Wren module: %s from %s", name, searchPath.c_str());
-		}
-	}
+    {
+        std::string searchPath = std::string("Scripts/") + name + ".wren";
+        auto fsResult = FileSystem::ReadString(searchPath);
+        if (fsResult)
+        {
+            source = std::move(fsResult.value);
+            found  = true;
+            DEBUG_INFO("Loaded Wren module: %s from %s", name, searchPath.c_str());
+        }
+    }
 
-	if (!found)
-	{
-		DEBUG_ERROR("Failed to load Wren module: %s", name);
-		return result;
-	}
+    if (!found)
+    {
+        DEBUG_ERROR("Failed to load Wren module: %s", name);
+        return result;
+    }
 
-	// Allocate memory for Wren (Wren will free it)
-	char* source_copy = new char[source.size() + 1];
-	strcpy(source_copy, source.c_str());
+    char* source_copy = new char[source.size() + 1];
+    strcpy(source_copy, source.c_str());
 
-	result.source = source_copy;
-	result.onComplete = [](WrenVM* vm, const char* name, WrenLoadModuleResult result) {
-		delete[] result.source;
-		};
+    result.source     = source_copy;
+    result.onComplete = [](WrenVM* vm, const char* name, WrenLoadModuleResult result) {
+        delete[] result.source;
+    };
 
-	return result;
+    return result;
 }
 
 WrenForeignMethodFn Struktur::Wren::WrenScriptEngine::OnBindForeignMethod(WrenVM* vm, const char* module, const char* className, bool isStatic, const char* signature)
 {
-	WrenForeignMethodFn method;
-	if (strcmp(module, "reflect") == 0)
-	{
-		method = wrenReflectBindForeignMethod(vm, className, isStatic, signature);
-	}
-	else if (strcmp(module, "trace") == 0)
-	{
-		method = wrenTraceBindForeignMethod(vm, className, isStatic, signature);
-	}
-	else if (!isStatic && strncmp(signature, "init ", 5) == 0)
-	{
-		method = Wren::FindMethod(module, className, isStatic, signature);
-	}
-	else
-	{
-		method = Wren::FindMethod(module, className, isStatic, signature);
-	}
+    Struktur::GameContext* context = static_cast<Struktur::GameContext*>(wrenGetUserData(vm));
+	auto& scriptEngine = context->GetWrenScriptEngine();
+	auto& registry = scriptEngine.GetRegistry();
 
-	// check for inherited methods
-	if (!method)
-	{
-		for (const auto& binding : GetClassBindings())
-		{
-			if (binding.moduleName == module && binding.className == className)
-			{
-				if (!binding.parentClassName.empty())
-				{
-					method = Wren::FindMethod(module, binding.parentClassName.c_str(), isStatic, signature);
-				}
-				break;
-			}
-		}
-	}
+    WrenForeignMethodFn method = nullptr;
 
-	if (!method)
-	{
-		DEBUG_WARNING("Wren binding not found: %s.%s.%s (static=%d)", module, className, signature, isStatic);
-	}
+    if (strcmp(module, "reflect") == 0)
+    {
+        method = wrenReflectBindForeignMethod(vm, className, isStatic, signature);
+    }
+    else if (strcmp(module, "trace") == 0)
+    {
+        method = wrenTraceBindForeignMethod(vm, className, isStatic, signature);
+    }
+    else
+    {
+        method = registry.FindMethod(module, className, isStatic, signature);
+    }
 
-	return method;
+    // Check for inherited methods
+    if (!method)
+    {
+        for (const auto& binding : registry.classes)
+        {
+            if (binding.moduleName == module && binding.className == className)
+            {
+                if (!binding.parentClassName.empty())
+                    method = registry.FindMethod(module, binding.parentClassName.c_str(), isStatic, signature);
+                break;
+            }
+        }
+    }
+
+    if (!method)
+    {
+        DEBUG_WARNING("Wren binding not found: %s.%s.%s (static=%d)", module, className, signature, isStatic);
+    }
+
+    return method;
 }
 
 WrenForeignClassMethods Struktur::Wren::WrenScriptEngine::OnBindForeignClass(WrenVM* vm, const char* module, const char* className)
 {
-	return Wren::FindClass(module, className);
+	Struktur::GameContext* context = static_cast<Struktur::GameContext*>(wrenGetUserData(vm));
+	auto& scriptEngine = context->GetWrenScriptEngine();
+	auto& registry = scriptEngine.GetRegistry();
+    return registry.FindClass(module, className);
 }

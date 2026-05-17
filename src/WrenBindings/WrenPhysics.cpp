@@ -7,16 +7,6 @@
 #include "WrenMath.h"
 
 // ============================================================================
-// BODY TYPES
-// ============================================================================
-
-WREN_ENUM("physics", BodyType, "Enum of the different phyics body types",
-	WREN_ENUM_PAIR("STATIC_BODY", b2_staticBody),
-	WREN_ENUM_PAIR("KINEMATIC_BODY", b2_kinematicBody),
-	WREN_ENUM_PAIR("DYNAMIC_BODY", b2_dynamicBody),
-	);
-
-// ============================================================================
 // BODY DEFINITION BINDINGS
 // ============================================================================
 
@@ -62,16 +52,6 @@ void wren_BodyDefinitionSetType(WrenVM* vm)
 	bodyDef->bodyDef.type = bodyType;
 }
 
-// Register BodyDefinition foreign class
-WREN_FOREIGN_CLASS("physics", "BodyDefinition", wren_BodyDefinitionAllocate, wren_BodyDefinitionFinalize, "BodyDefinition class wraps b2BodyDef");
-
-// Register constructors
-WREN_CONSTRUCTOR("physics", "BodyDefinition", "new(_)", wren_BodyDefinitionNew, "Create the physics body definition, takes the body type as the argement");
-
-// Register static methods
-WREN_CLASS_METHOD("physics", "BodyDefinition", "type", wren_BodyDefinitionGetType, "Gets the Body Definition Type");
-WREN_CLASS_METHOD("physics", "BodyDefinition", "type=(_)", wren_BodyDefinitionSetType, "Sets the Body Definition Type");
-
 // ============================================================================
 // CIRCLE SHAPE BINDINGS
 // ============================================================================
@@ -116,17 +96,6 @@ void wren_PhysicsCircleShapeSetRadius(WrenVM* vm)
 	WrenPhysicsCircleShape* physicsShape = static_cast<WrenPhysicsCircleShape*>(wrenGetSlotForeign(vm, 0));
 	physicsShape->physicsShape.m_radius = static_cast<float>(wrenGetSlotDouble(vm, 1));
 }
-
-// Register PhysicsCircleShape foreign class
-WREN_FOREIGN_CLASS("physics", "PhysicsCircleShape", wren_PhysicsCircleShapeAllocate, wren_PhysicsCircleShapeFinalize, "PhysicsCircleShape class wraps b2CircleShape");
-
-// Register constructors
-WREN_CONSTRUCTOR("physics", "PhysicsCircleShape", "new()", wren_PhysicsCircleNew, "Create physics circle shape");
-WREN_CONSTRUCTOR("physics", "PhysicsCircleShape", "new(_)", wren_PhysicsCircleNew, "Create physics circle shape with radius");
-
-// Register methods
-WREN_CLASS_METHOD("physics", "PhysicsCircleShape", "radius", wren_PhysicsCircleShapeGetRadius, "Get physics circle shape's radius");
-WREN_CLASS_METHOD("physics", "PhysicsCircleShape", "radius=(_)", wren_PhysicsCircleShapeSetRadius, "Set physics circle shape's radius");
 
 // ============================================================================
 // BOX SHAPE BINDINGS
@@ -195,18 +164,6 @@ void wren_PhysicsBoxShapeSetAsBox(WrenVM* vm)
 	}
 }
 
-// Register PhysicsBoxShape foreign class
-WREN_FOREIGN_CLASS("physics", "PhysicsBoxShape", wren_PhysicsBoxShapeAllocate, wren_PhysicsBoxShapeFinalize, "PhysicsBoxShape class wraps b2PolygonShape as box");
-
-// Register constructors
-WREN_CONSTRUCTOR("physics", "PhysicsBoxShape", "new()", wren_PhysicsBoxNew, "Create physics box shape");
-WREN_CONSTRUCTOR("physics", "PhysicsBoxShape", "new(_,_)", wren_PhysicsBoxNew, "Create physics box shape with half-width and half-height");
-WREN_CONSTRUCTOR("physics", "PhysicsBoxShape", "new(_,_,_,_,_)", wren_PhysicsBoxNew, "Create physics box shape with half-width, half-height, center, and angle");
-
-// Register methods
-WREN_CLASS_METHOD("physics", "PhysicsBoxShape", "setAsBox(_,_)", wren_PhysicsBoxShapeSetAsBox, "Set as box with half-width and half-height");
-WREN_CLASS_METHOD("physics", "PhysicsBoxShape", "setAsBox(_,_,_,_,_)", wren_PhysicsBoxShapeSetAsBox, "Set as box with half-width, half-height, center, and angle");
-
 // ============================================================================
 // POLYGON SHAPE BINDINGS
 // ============================================================================
@@ -264,15 +221,6 @@ void wren_PhysicsPolygonShapeSetVertices(WrenVM* vm)
 
 	physicsShape->physicsShape.Set(vertices.data(), static_cast<int32>(vertices.size()));
 }
-
-// Register PhysicsPolygonShape foreign class
-WREN_FOREIGN_CLASS("physics", "PhysicsPolygonShape", wren_PhysicsPolygonShapeAllocate, wren_PhysicsPolygonShapeFinalize, "PhysicsPolygonShape class wraps b2PolygonShape");
-
-// Register constructors
-WREN_CONSTRUCTOR("physics", "PhysicsPolygonShape", "new()", wren_PhysicsPolygonNew, "Create physics polygon shape");
-
-// Register methods
-WREN_CLASS_METHOD("physics", "PhysicsPolygonShape", "setVertices(_)", wren_PhysicsPolygonShapeSetVertices, "Set polygon vertices from list of Vec2");
 
 // ============================================================================
 // EDGE SHAPE BINDINGS
@@ -341,17 +289,6 @@ void wren_PhysicsEdgeShapeSetOneSided(WrenVM* vm)
 		b2Vec2(g3x, g3y)
 	);
 }
-
-// Register PhysicsEdgeShape foreign class
-WREN_FOREIGN_CLASS("physics", "PhysicsEdgeShape", wren_PhysicsEdgeShapeAllocate, wren_PhysicsEdgeShapeFinalize, "PhysicsEdgeShape class wraps b2EdgeShape");
-
-// Register constructors
-WREN_CONSTRUCTOR("physics", "PhysicsEdgeShape", "new()", wren_PhysicsEdgeNew, "Create physics edge shape");
-WREN_CONSTRUCTOR("physics", "PhysicsEdgeShape", "new(_,_,_,_)", wren_PhysicsEdgeNew, "Create physics edge shape with two points");
-
-// Register methods
-WREN_CLASS_METHOD("physics", "PhysicsEdgeShape", "setTwoSided(_,_,_,_)", wren_PhysicsEdgeShapeSetTwoSided, "Set two-sided edge with two points");
-WREN_CLASS_METHOD("physics", "PhysicsEdgeShape", "setOneSided(_,_,_,_,_,_,_,_)", wren_PhysicsEdgeShapeSetOneSided, "Set one-sided edge with ghost vertices");
 
 // ============================================================================
 // CHAIN SHAPE BINDINGS
@@ -443,12 +380,77 @@ void wren_PhysicsChainShapeCreateChain(WrenVM* vm)
 	physicsShape->physicsShape.CreateChain(vertices.data(), static_cast<int32>(vertices.size()), b2Vec2_zero, b2Vec2_zero);
 }
 
-// Register PhysicsChainShape foreign class
-WREN_FOREIGN_CLASS("physics", "PhysicsChainShape", wren_PhysicsChainShapeAllocate, wren_PhysicsChainShapeFinalize, "PhysicsChainShape class wraps b2ChainShape");
+// ============================================================================
+// BINDING REGISTRATION
+// ============================================================================
+WREN_BINDING_MODULE(Physics)
+{
+	WREN_ENUM(registry, "physics", BodyType, "Enum of the different phyics body types",
+		WREN_ENUM_PAIR("STATIC_BODY", b2_staticBody),
+		WREN_ENUM_PAIR("KINEMATIC_BODY", b2_kinematicBody),
+		WREN_ENUM_PAIR("DYNAMIC_BODY", b2_dynamicBody),
+		);
+		
+	// Register BodyDefinition foreign class
+	WREN_FOREIGN_CLASS(registry, "physics", "BodyDefinition", wren_BodyDefinitionAllocate, wren_BodyDefinitionFinalize, "BodyDefinition class wraps b2BodyDef");
 
-// Register constructors
-WREN_CONSTRUCTOR("physics", "PhysicsChainShape", "new()", wren_PhysicsChainNew, "Create physics chain shape");
+	// Register constructors
+	WREN_CONSTRUCTOR(registry, "physics", "BodyDefinition", "new(_)", wren_BodyDefinitionNew, "Create the physics body definition, takes the body type as the argement");
 
-// Register methods
-WREN_CLASS_METHOD("physics", "PhysicsChainShape", "createLoop(_)", wren_PhysicsChainShapeCreateLoop, "Create closed loop from list of Vec2");
-WREN_CLASS_METHOD("physics", "PhysicsChainShape", "createChain(_)", wren_PhysicsChainShapeCreateChain, "Create open chain from list of Vec2");
+	// Register static methods
+	WREN_CLASS_METHOD(registry, "physics", "BodyDefinition", "type", wren_BodyDefinitionGetType, "Gets the Body Definition Type");
+	WREN_CLASS_METHOD(registry, "physics", "BodyDefinition", "type=(_)", wren_BodyDefinitionSetType, "Sets the Body Definition Type");
+
+	// Register PhysicsCircleShape foreign class
+	WREN_FOREIGN_CLASS(registry, "physics", "PhysicsCircleShape", wren_PhysicsCircleShapeAllocate, wren_PhysicsCircleShapeFinalize, "PhysicsCircleShape class wraps b2CircleShape");
+
+	// Register constructors
+	WREN_CONSTRUCTOR(registry, "physics", "PhysicsCircleShape", "new()", wren_PhysicsCircleNew, "Create physics circle shape");
+	WREN_CONSTRUCTOR(registry, "physics", "PhysicsCircleShape", "new(_)", wren_PhysicsCircleNew, "Create physics circle shape with radius");
+
+	// Register methods
+	WREN_CLASS_METHOD(registry, "physics", "PhysicsCircleShape", "radius", wren_PhysicsCircleShapeGetRadius, "Get physics circle shape's radius");
+	WREN_CLASS_METHOD(registry, "physics", "PhysicsCircleShape", "radius=(_)", wren_PhysicsCircleShapeSetRadius, "Set physics circle shape's radius");
+
+	// Register PhysicsBoxShape foreign class
+	WREN_FOREIGN_CLASS(registry, "physics", "PhysicsBoxShape", wren_PhysicsBoxShapeAllocate, wren_PhysicsBoxShapeFinalize, "PhysicsBoxShape class wraps b2PolygonShape as box");
+
+	// Register constructors
+	WREN_CONSTRUCTOR(registry, "physics", "PhysicsBoxShape", "new()", wren_PhysicsBoxNew, "Create physics box shape");
+	WREN_CONSTRUCTOR(registry, "physics", "PhysicsBoxShape", "new(_,_)", wren_PhysicsBoxNew, "Create physics box shape with half-width and half-height");
+	WREN_CONSTRUCTOR(registry, "physics", "PhysicsBoxShape", "new(_,_,_,_,_)", wren_PhysicsBoxNew, "Create physics box shape with half-width, half-height, center, and angle");
+
+	// Register methods
+	WREN_CLASS_METHOD(registry, "physics", "PhysicsBoxShape", "setAsBox(_,_)", wren_PhysicsBoxShapeSetAsBox, "Set as box with half-width and half-height");
+	WREN_CLASS_METHOD(registry, "physics", "PhysicsBoxShape", "setAsBox(_,_,_,_,_)", wren_PhysicsBoxShapeSetAsBox, "Set as box with half-width, half-height, center, and angle");
+
+	// Register PhysicsPolygonShape foreign class
+	WREN_FOREIGN_CLASS(registry, "physics", "PhysicsPolygonShape", wren_PhysicsPolygonShapeAllocate, wren_PhysicsPolygonShapeFinalize, "PhysicsPolygonShape class wraps b2PolygonShape");
+
+	// Register constructors
+	WREN_CONSTRUCTOR(registry, "physics", "PhysicsPolygonShape", "new()", wren_PhysicsPolygonNew, "Create physics polygon shape");
+
+	// Register methods
+	WREN_CLASS_METHOD(registry, "physics", "PhysicsPolygonShape", "setVertices(_)", wren_PhysicsPolygonShapeSetVertices, "Set polygon vertices from list of Vec2");
+
+	// Register PhysicsEdgeShape foreign class
+	WREN_FOREIGN_CLASS(registry, "physics", "PhysicsEdgeShape", wren_PhysicsEdgeShapeAllocate, wren_PhysicsEdgeShapeFinalize, "PhysicsEdgeShape class wraps b2EdgeShape");
+
+	// Register constructors
+	WREN_CONSTRUCTOR(registry, "physics", "PhysicsEdgeShape", "new()", wren_PhysicsEdgeNew, "Create physics edge shape");
+	WREN_CONSTRUCTOR(registry, "physics", "PhysicsEdgeShape", "new(_,_,_,_)", wren_PhysicsEdgeNew, "Create physics edge shape with two points");
+
+	// Register methods
+	WREN_CLASS_METHOD(registry, "physics", "PhysicsEdgeShape", "setTwoSided(_,_,_,_)", wren_PhysicsEdgeShapeSetTwoSided, "Set two-sided edge with two points");
+	WREN_CLASS_METHOD(registry, "physics", "PhysicsEdgeShape", "setOneSided(_,_,_,_,_,_,_,_)", wren_PhysicsEdgeShapeSetOneSided, "Set one-sided edge with ghost vertices");
+
+	// Register PhysicsChainShape foreign class
+	WREN_FOREIGN_CLASS(registry, "physics", "PhysicsChainShape", wren_PhysicsChainShapeAllocate, wren_PhysicsChainShapeFinalize, "PhysicsChainShape class wraps b2ChainShape");
+
+	// Register constructors
+	WREN_CONSTRUCTOR(registry, "physics", "PhysicsChainShape", "new()", wren_PhysicsChainNew, "Create physics chain shape");
+
+	// Register methods
+	WREN_CLASS_METHOD(registry, "physics", "PhysicsChainShape", "createLoop(_)", wren_PhysicsChainShapeCreateLoop, "Create closed loop from list of Vec2");
+	WREN_CLASS_METHOD(registry, "physics", "PhysicsChainShape", "createChain(_)", wren_PhysicsChainShapeCreateChain, "Create open chain from list of Vec2");
+}

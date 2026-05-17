@@ -5,21 +5,6 @@
 #include "Engine/GameContext.h"
 
 // ============================================================================
-// FILE SYSTEM ERROR BINDINGS
-// ============================================================================
-
-WREN_ENUM("fileSystem", FileSystemError, "Enum for the error codes for the file system",
-	WREN_ENUM_PAIR("FileNotFound", Struktur::FileSystemError::FileNotFound),
-	WREN_ENUM_PAIR("PermissionDenied", Struktur::FileSystemError::PermissionDenied),
-	WREN_ENUM_PAIR("InvalidPath", Struktur::FileSystemError::InvalidPath),
-	WREN_ENUM_PAIR("ReadError", Struktur::FileSystemError::ReadError),
-	WREN_ENUM_PAIR("WriteError", Struktur::FileSystemError::WriteError),
-	WREN_ENUM_PAIR("MountFailed", Struktur::FileSystemError::MountFailed),
-	WREN_ENUM_PAIR("NotInitialised", Struktur::FileSystemError::NotInitialised),
-	WREN_ENUM_PAIR("Unknown", Struktur::FileSystemError::Unknown),
-	);
-
-// ============================================================================
 // FILE SYSTEM RESULT BINDINGS
 // ============================================================================
 
@@ -54,17 +39,6 @@ void wren_FileSystemResultGetErrorMessage(WrenVM* vm)
 	WrenFileResult* result = static_cast<WrenFileResult*>(wrenGetSlotForeign(vm, 0));
 	wrenSetSlotString(vm, 0, result->fileResult.errorMessage.c_str());
 }
-
-// ============================================================================
-// BINDING REGISTRATION
-// ============================================================================
-
-// DialogueData foreign class
-WREN_FOREIGN_CLASS("fileSystem", "Result", wren_FileSystemResultAllocate, wren_FileSystemResultFinalize, "Container for File System Result data");
-
-WREN_CLASS_METHOD("fileSystem", "Result", "success", wren_FileSystemResultGetSuccess, "Get the success of the File System Result");
-WREN_CLASS_METHOD("fileSystem", "Result", "error", wren_FileSystemResultGetError, "Get the error of the File System Result");
-WREN_CLASS_METHOD("fileSystem", "Result", "errorMessage", wren_FileSystemResultGetErrorMessage, "Get the error message of the File System Result");
 
 // ============================================================================
 // FILE SYSTEM BYTES RESULT BINDINGS
@@ -128,18 +102,6 @@ void wren_FileSystemBytesResultGetErrorMessage(WrenVM* vm)
 }
 
 // ============================================================================
-// BINDING REGISTRATION
-// ============================================================================
-
-// DialogueData foreign class
-WREN_FOREIGN_CLASS("fileSystem", "BytesResult", wren_FileSystemBytesResultAllocate, wren_FileSystemBytesResultFinalize, "Container for File System Bytes Result data");
-
-WREN_CLASS_METHOD("fileSystem", "BytesResult", "success", wren_FileSystemBytesResultGetSuccess, "Get the success of the File System Bytes Result");
-WREN_CLASS_METHOD("fileSystem", "BytesResult", "value", wren_FileSystemBytesResultGetValue, "Get the success of the File System Bytes Result");
-WREN_CLASS_METHOD("fileSystem", "BytesResult", "error", wren_FileSystemBytesResultGetError, "Get the error of the File System Bytes Result");
-WREN_CLASS_METHOD("fileSystem", "BytesResult", "errorMessage", wren_FileSystemBytesResultGetErrorMessage, "Get the error message of the File System Bytes Result");
-
-// ============================================================================
 // FILE SYSTEM STRING RESULT BINDINGS
 // ============================================================================
 
@@ -181,18 +143,6 @@ void wren_FileSystemStringResultGetErrorMessage(WrenVM* vm)
 	WrenFileResultString* result = static_cast<WrenFileResultString*>(wrenGetSlotForeign(vm, 0));
 	wrenSetSlotString(vm, 0, result->fileResult.errorMessage.c_str());
 }
-
-// ============================================================================
-// BINDING REGISTRATION
-// ============================================================================
-
-// DialogueData foreign class
-WREN_FOREIGN_CLASS("fileSystem", "StringResult", wren_FileSystemStringResultAllocate, wren_FileSystemStringResultFinalize, "Container for File System String Result data");
-
-WREN_CLASS_METHOD("fileSystem", "StringResult", "success", wren_FileSystemStringResultGetSuccess, "Get the success of the File System String Result");
-WREN_CLASS_METHOD("fileSystem", "StringResult", "value", wren_FileSystemStringResultGetValue, "Get the success of the File System String Result");
-WREN_CLASS_METHOD("fileSystem", "StringResult", "error", wren_FileSystemStringResultGetError, "Get the error of the File System String Result");
-WREN_CLASS_METHOD("fileSystem", "StringResult", "errorMessage", wren_FileSystemStringResultGetErrorMessage, "Get the error message of the File System String Result");
 
 // ============================================================================
 // FILE SYSTEM BINDINGS
@@ -306,13 +256,50 @@ void wren_DialogueManagerExists(WrenVM* vm)
 // BINDING REGISTRATION
 // ============================================================================
 
-// FileSystem static methods
-WREN_CLASS_STATIC("fileSystem", "FileSystem", "seedFromDefaults(_,_)", wren_DialogueManagerSeedFromDefaults, "Copy a file from the read dir to the write dir");
-WREN_CLASS_STATIC("fileSystem", "FileSystem", "readBytes(_)", wren_DialogueManagerReadBytes, "Read data from a file as bytes");
-WREN_CLASS_STATIC("fileSystem", "FileSystem", "readString(_)", wren_DialogueManagerReadString, "Read data from a file as String");
-WREN_CLASS_STATIC("fileSystem", "FileSystem", "readEncrypted(_)", wren_DialogueManagerReadEncrypted, "Read encrypted data from a file as string");
-WREN_CLASS_STATIC("fileSystem", "FileSystem", "writeBytes(_,_)", wren_DialogueManagerWriteBytes, "Write data to a file as bytes");
-WREN_CLASS_STATIC("fileSystem", "FileSystem", "writeString(_,_)", wren_DialogueManagerWriteString, "Write data to a file as String");
-WREN_CLASS_STATIC("fileSystem", "FileSystem", "writeEncrypted(_,_)", wren_DialogueManagerWriteEncrypted, "Write encrypted data to a file as string");
-WREN_CLASS_STATIC("fileSystem", "FileSystem", "syncSaves()", wren_DialogueManagerSyncSaves, "Syncs in-memory writes to IndexedDB so they persist between sessions: needed for wasm builds");
-WREN_CLASS_STATIC("fileSystem", "FileSystem", "exists(_)", wren_DialogueManagerExists, "Check if a file exists in the file system");
+WREN_BINDING_MODULE(FileSystem)
+{
+	WREN_ENUM(registry, "fileSystem", FileSystemError, "Enum for the error codes for the file system",
+		WREN_ENUM_PAIR("FileNotFound", Struktur::FileSystemError::FileNotFound),
+		WREN_ENUM_PAIR("PermissionDenied", Struktur::FileSystemError::PermissionDenied),
+		WREN_ENUM_PAIR("InvalidPath", Struktur::FileSystemError::InvalidPath),
+		WREN_ENUM_PAIR("ReadError", Struktur::FileSystemError::ReadError),
+		WREN_ENUM_PAIR("WriteError", Struktur::FileSystemError::WriteError),
+		WREN_ENUM_PAIR("MountFailed", Struktur::FileSystemError::MountFailed),
+		WREN_ENUM_PAIR("NotInitialised", Struktur::FileSystemError::NotInitialised),
+		WREN_ENUM_PAIR("Unknown", Struktur::FileSystemError::Unknown),
+		);
+
+	// DialogueData foreign class
+	WREN_FOREIGN_CLASS(registry, "fileSystem", "Result", wren_FileSystemResultAllocate, wren_FileSystemResultFinalize, "Container for File System Result data");
+
+	WREN_CLASS_METHOD(registry, "fileSystem", "Result", "success", wren_FileSystemResultGetSuccess, "Get the success of the File System Result");
+	WREN_CLASS_METHOD(registry, "fileSystem", "Result", "error", wren_FileSystemResultGetError, "Get the error of the File System Result");
+	WREN_CLASS_METHOD(registry, "fileSystem", "Result", "errorMessage", wren_FileSystemResultGetErrorMessage, "Get the error message of the File System Result");
+
+	// DialogueData foreign class
+	WREN_FOREIGN_CLASS(registry, "fileSystem", "BytesResult", wren_FileSystemBytesResultAllocate, wren_FileSystemBytesResultFinalize, "Container for File System Bytes Result data");
+
+	WREN_CLASS_METHOD(registry, "fileSystem", "BytesResult", "success", wren_FileSystemBytesResultGetSuccess, "Get the success of the File System Bytes Result");
+	WREN_CLASS_METHOD(registry, "fileSystem", "BytesResult", "value", wren_FileSystemBytesResultGetValue, "Get the success of the File System Bytes Result");
+	WREN_CLASS_METHOD(registry, "fileSystem", "BytesResult", "error", wren_FileSystemBytesResultGetError, "Get the error of the File System Bytes Result");
+	WREN_CLASS_METHOD(registry, "fileSystem", "BytesResult", "errorMessage", wren_FileSystemBytesResultGetErrorMessage, "Get the error message of the File System Bytes Result");
+
+	// DialogueData foreign class
+	WREN_FOREIGN_CLASS(registry, "fileSystem", "StringResult", wren_FileSystemStringResultAllocate, wren_FileSystemStringResultFinalize, "Container for File System String Result data");
+
+	WREN_CLASS_METHOD(registry, "fileSystem", "StringResult", "success", wren_FileSystemStringResultGetSuccess, "Get the success of the File System String Result");
+	WREN_CLASS_METHOD(registry, "fileSystem", "StringResult", "value", wren_FileSystemStringResultGetValue, "Get the success of the File System String Result");
+	WREN_CLASS_METHOD(registry, "fileSystem", "StringResult", "error", wren_FileSystemStringResultGetError, "Get the error of the File System String Result");
+	WREN_CLASS_METHOD(registry, "fileSystem", "StringResult", "errorMessage", wren_FileSystemStringResultGetErrorMessage, "Get the error message of the File System String Result");
+
+	// FileSystem static methods
+	WREN_CLASS_STATIC(registry, "fileSystem", "FileSystem", "seedFromDefaults(_,_)", wren_DialogueManagerSeedFromDefaults, "Copy a file from the read dir to the write dir");
+	WREN_CLASS_STATIC(registry, "fileSystem", "FileSystem", "readBytes(_)", wren_DialogueManagerReadBytes, "Read data from a file as bytes");
+	WREN_CLASS_STATIC(registry, "fileSystem", "FileSystem", "readString(_)", wren_DialogueManagerReadString, "Read data from a file as String");
+	WREN_CLASS_STATIC(registry, "fileSystem", "FileSystem", "readEncrypted(_)", wren_DialogueManagerReadEncrypted, "Read encrypted data from a file as string");
+	WREN_CLASS_STATIC(registry, "fileSystem", "FileSystem", "writeBytes(_,_)", wren_DialogueManagerWriteBytes, "Write data to a file as bytes");
+	WREN_CLASS_STATIC(registry, "fileSystem", "FileSystem", "writeString(_,_)", wren_DialogueManagerWriteString, "Write data to a file as String");
+	WREN_CLASS_STATIC(registry, "fileSystem", "FileSystem", "writeEncrypted(_,_)", wren_DialogueManagerWriteEncrypted, "Write encrypted data to a file as string");
+	WREN_CLASS_STATIC(registry, "fileSystem", "FileSystem", "syncSaves()", wren_DialogueManagerSyncSaves, "Syncs in-memory writes to IndexedDB so they persist between sessions: needed for wasm builds");
+	WREN_CLASS_STATIC(registry, "fileSystem", "FileSystem", "exists(_)", wren_DialogueManagerExists, "Check if a file exists in the file system");
+}

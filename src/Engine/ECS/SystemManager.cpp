@@ -8,6 +8,7 @@ void Struktur::System::SystemManager::Update(GameContext& context)
 	for (auto& systemId : m_updateSystems)
 	{
 		auto* system = m_systemMap[systemId].get();
+		DEBUG_INFO("Updating: %s", system->Name());
 		PROFILE_SCOPE(system->Name());
 		system->Update(context);
 	}

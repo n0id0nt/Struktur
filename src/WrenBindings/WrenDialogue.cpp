@@ -17,18 +17,6 @@
 #include "WrenFunctionCallback.h"
 
 // ============================================================================
-// DIALOGUE STATUS BINDINGS
-// ============================================================================
-
-WREN_ENUM("dialogue", DialogueStatus, "Enum for the status codes for dialogue operations",
-	WREN_ENUM_PAIR("SUCCESS", Struktur::Dialogue::DialogueStatus::SUCCESS),
-	WREN_ENUM_PAIR("NO_ACTIVE_NODE", Struktur::Dialogue::DialogueStatus::NO_ACTIVE_NODE),
-	WREN_ENUM_PAIR("INVALID_CHOICE", Struktur::Dialogue::DialogueStatus::INVALID_CHOICE),
-	WREN_ENUM_PAIR("NODE_NOT_FOUND", Struktur::Dialogue::DialogueStatus::NODE_NOT_FOUND),
-	WREN_ENUM_PAIR("ERROR", Struktur::Dialogue::DialogueStatus::ERROR),
-	);
-
-// ============================================================================
 // DIALOGUE RESULT BINDINGS
 // ============================================================================
 
@@ -194,29 +182,6 @@ void wren_DialogueResultError(WrenVM* vm)
 }
 
 // ============================================================================
-// BINDING REGISTRATION
-// ============================================================================
-
-// DialogueData foreign class
-WREN_FOREIGN_CLASS("dialogue", "DialogueResult", wren_DialogueResultAllocate, wren_DialogueResultFinalize, "Container for dialogue Result data");
-
-WREN_CONSTRUCTOR("dialogue", "DialogueResult", "nodeNotFound(_)", wren_DialogueResultNodeNotFound, "Node not found result");
-WREN_CONSTRUCTOR("dialogue", "DialogueResult", "endDialogue(_)", wren_DialogueResultEndDialogue, "End dialogue result");
-WREN_CONSTRUCTOR("dialogue", "DialogueResult", "choices(_)", wren_DialogueResultChoices, "Choices result");
-WREN_CONSTRUCTOR("dialogue", "DialogueResult", "advance(_)", wren_DialogueResultAdvance, "Advance result");
-WREN_CONSTRUCTOR("dialogue", "DialogueResult", "invalidChoice()", wren_DialogueResultInvalidChoice, "Invalid choice result");
-WREN_CONSTRUCTOR("dialogue", "DialogueResult", "noActiveNode()", wren_DialogueResultNoActiveNode, "No active node result");
-WREN_CONSTRUCTOR("dialogue", "DialogueResult", "error()", wren_DialogueResultError, "Error result");
-
-WREN_CLASS_METHOD("dialogue", "DialogueResult", "status", wren_DialogueResultGetStatus, "Get the status of the dialogue result");
-WREN_CLASS_METHOD("dialogue", "DialogueResult", "nodeId", wren_DialogueResultGetNodeId, "Get of the node id");
-WREN_CLASS_METHOD("dialogue", "DialogueResult", "speaker", wren_DialogueResultGetSpeaker, "Get the speaker of the node");
-WREN_CLASS_METHOD("dialogue", "DialogueResult", "text", wren_DialogueResultGetText, "Get the text of the node");
-WREN_CLASS_METHOD("dialogue", "DialogueResult", "choices", wren_DialogueResultGetChoices, "Get the text choices");
-WREN_CLASS_METHOD("dialogue", "DialogueResult", "hasEnded", wren_DialogueResultGetHasEnded, "Get the text has ended");
-WREN_CLASS_METHOD("dialogue", "DialogueResult", "shouldAutoAdvance", wren_DialogueResultGetShouldAutoAdvance, "Get the text should auto advance");
-
-// ============================================================================
 // CONDITIONAL TARGET BINDINGS
 // ============================================================================
 
@@ -271,17 +236,6 @@ void wren_ConditionalTargetGetTargetNode(WrenVM* vm)
 }
 
 // ============================================================================
-// BINDING REGISTRATION
-// ============================================================================
-
-// DialogueData foreign class
-WREN_FOREIGN_CLASS("dialogue", "ConditionalTarget", wren_ConditionalTargetAllocate, wren_ConditionalTargetFinalize, "Container for dialogue conditional target data");
-
-WREN_CLASS_METHOD("dialogue", "ConditionalTarget", "hasConditions()", wren_ConditionalTargetHasConditions, "Does the Target have conditions?");
-WREN_CLASS_METHOD("dialogue", "ConditionalTarget", "conditions", wren_ConditionalTargetGetConditions, "Get the conditions of the Conditional Target");
-WREN_CLASS_METHOD("dialogue", "ConditionalTarget", "targetNode", wren_ConditionalTargetGetTargetNode, "Get the target node of the Conditional Target");
-
-// ============================================================================
 // CONDITION BINDINGS
 // ============================================================================
 
@@ -312,16 +266,6 @@ void wren_ConditionGetParams(WrenVM* vm)
 	WrenCondition* wrenCondition = static_cast<WrenCondition*>(wrenGetSlotForeign(vm, 0));
 	Struktur::Dialogue::HelperFunctions::ConvertParamsMapToWrenMap(vm, 0, wrenCondition->condition->GetParams());
 }
-
-// ============================================================================
-// BINDING REGISTRATION
-// ============================================================================
-
-// DialogueData foreign class
-WREN_FOREIGN_CLASS("dialogue", "Condition", wren_ConditionAllocate, wren_ConditionFinalize, "Container for dialogue condition data");
-
-WREN_CLASS_METHOD("dialogue", "Condition", "callback", wren_ConditionGetCallback, "Get the callback handle");
-WREN_CLASS_METHOD("dialogue", "Condition", "params", wren_ConditionGetParams, "Get the conditions params");
 
 // ============================================================================
 // COMMAND BINDINGS
@@ -356,16 +300,6 @@ void wren_CommandGetParams(WrenVM* vm)
 }
 
 // ============================================================================
-// BINDING REGISTRATION
-// ============================================================================
-
-// DialogueData foreign class
-WREN_FOREIGN_CLASS("dialogue", "Command", wren_CommandAllocate, wren_CommandFinalize, "Container for dialogue command data");
-
-WREN_CLASS_METHOD("dialogue", "Command", "callback", wren_CommandGetCallback, "Get the callback handle");
-WREN_CLASS_METHOD("dialogue", "Command", "params", wren_CommandGetParams, "Get the conditions params");
-
-// ============================================================================
 // CHOICE BINDINGS
 // ============================================================================
 
@@ -393,16 +327,6 @@ void wren_ChoiceGetTargetNode(WrenVM* vm)
 	WrenChoice* choice = static_cast<WrenChoice*>(wrenGetSlotForeign(vm, 0));
 	wrenSetSlotString(vm, 0, choice->choice->targetNode.c_str());
 }
-
-// ============================================================================
-// BINDING REGISTRATION
-// ============================================================================
-
-// DialogueData foreign class
-WREN_FOREIGN_CLASS("dialogue", "Choice", wren_ChoiceAllocate, wren_ChoiceFinalize, "Container for dialogue chioce data");
-
-WREN_CLASS_METHOD("dialogue", "Choice", "text", wren_ChoiceGetText, "Get the text");
-WREN_CLASS_METHOD("dialogue", "Choice", "targetNodeId", wren_ChoiceGetTargetNode, "Get the target node id");
 
 // ============================================================================
 // DIALOGUE RESULT BINDINGS
@@ -565,24 +489,6 @@ void wren_DialogueNodeHasTargets(WrenVM* vm)
 }
 
 // ============================================================================
-// BINDING REGISTRATION
-// ============================================================================
-
-// DialogueData foreign class
-WREN_FOREIGN_CLASS("dialogue", "DialogueNode", wren_DialogueNodeAllocate, wren_DialogueNodeFinalize, "Container for dialogue Node data");
-
-WREN_CLASS_METHOD("dialogue", "DialogueNode", "id", wren_DialogueNodeGetId, "Get the node id");
-WREN_CLASS_METHOD("dialogue", "DialogueNode", "speaker", wren_DialogueNodeGetSpeaker, "Get the speaker of the node");
-WREN_CLASS_METHOD("dialogue", "DialogueNode", "text", wren_DialogueNodeGetText, "Get the text of the node");
-WREN_CLASS_METHOD("dialogue", "DialogueNode", "commands", wren_DialogueNodeGetCommands, "Get the commands of the node");
-WREN_CLASS_METHOD("dialogue", "DialogueNode", "choices", wren_DialogueNodeGetChoices, "Get the choices of the node");
-WREN_CLASS_METHOD("dialogue", "DialogueNode", "next", wren_DialogueNodeGetNext, "Get the next node");
-WREN_CLASS_METHOD("dialogue", "DialogueNode", "targets", wren_DialogueNodeGetTargets, "Get the conditional targets of the node");
-WREN_CLASS_METHOD("dialogue", "DialogueNode", "hasChoices()", wren_DialogueNodeHasChoices, "Check if node has choices");
-WREN_CLASS_METHOD("dialogue", "DialogueNode", "hasNext()", wren_DialogueNodeGetHasNext, "Check if node has next target");
-WREN_CLASS_METHOD("dialogue", "DialogueNode", "hasTargets()", wren_DialogueNodeHasTargets, "Check if node has conditional targets");
-
-// ============================================================================
 // DIALOGUE REGISTRY BINDINGS
 // ============================================================================
 
@@ -635,16 +541,6 @@ void wren_DialogueRegistryGetRegisteredVariable(WrenVM* vm)
 	ASSERT_MSG(callback, "variable callback %s not found, likley not registered", type);
 	wrenSetSlotCallback(vm, 0, callback);
 }
-
-// ============================================================================
-// BINDING REGISTRATION
-// ============================================================================
-
-// DialogueRegistry static methods
-WREN_CLASS_STATIC("dialogue", "DialogueRegistry", "registerCondition(_,_)", wren_DialogueRegistryRegisterCondition, "Register a condition type with callback");
-WREN_CLASS_STATIC("dialogue", "DialogueRegistry", "registerCommand(_,_)", wren_DialogueRegistryRegisterCommand, "Register a command type with callback");
-WREN_CLASS_STATIC("dialogue", "DialogueRegistry", "registerVariable(_,_)", wren_DialogueRegistryRegisterVariable, "Register a variable type with callback");
-WREN_CLASS_STATIC("dialogue", "DialogueRegistry", "getRegisteredVariable(_)", wren_DialogueRegistryGetRegisteredVariable, "Get the call back for a registered variable");
 
 // ============================================================================
 // DIALOGUE MANAGER BINDINGS
@@ -761,12 +657,88 @@ void wren_DialogueManagerSetActiveNode(WrenVM* vm)
 // BINDING REGISTRATION
 // ============================================================================
 
-// DialogueManager static methods
-WREN_CLASS_STATIC("dialogue", "DialogueManager", "isDialogueActive()", wren_DialogueManagerIsDialogueActive, "Check if dialogue is active");
-WREN_CLASS_STATIC("dialogue", "DialogueManager", "getCurrentNodeId()", wren_DialogueManagerGetCurrentNodeId, "Get current node ID");
-WREN_CLASS_STATIC("dialogue", "DialogueManager", "getNodeCount()", wren_DialogueManagerGetNodeCount, "Get total number of loaded nodes");
-WREN_CLASS_STATIC("dialogue", "DialogueManager", "clearAllNodes()", wren_DialogueManagerClearAllNodes, "Clear all loaded dialogue nodes");
-WREN_CLASS_STATIC("dialogue", "DialogueManager", "loadDialogueData(_)", wren_DialogueManagerLoadDialogueData, "Loads in and interprets a wren map as dialogue");
-WREN_CLASS_STATIC("dialogue", "DialogueManager", "clearDialogue()", wren_DialogueManagerClearDialogue, "Clear the current dialogue interaction");
-WREN_CLASS_STATIC("dialogue", "DialogueManager", "currentNode", wren_DialogueManagerGetCurrentNode, "Get the current node in of the dialogue");
-WREN_CLASS_STATIC("dialogue", "DialogueManager", "setActiveNode(_)", wren_DialogueManagerSetActiveNode, "Set the active node in the dialogue");
+WREN_BINDING_MODULE(Dialogue)
+{
+	WREN_ENUM(registry, "dialogue", DialogueStatus, "Enum for the status codes for dialogue operations",
+		WREN_ENUM_PAIR("SUCCESS", Struktur::Dialogue::DialogueStatus::SUCCESS),
+		WREN_ENUM_PAIR("NO_ACTIVE_NODE", Struktur::Dialogue::DialogueStatus::NO_ACTIVE_NODE),
+		WREN_ENUM_PAIR("INVALID_CHOICE", Struktur::Dialogue::DialogueStatus::INVALID_CHOICE),
+		WREN_ENUM_PAIR("NODE_NOT_FOUND", Struktur::Dialogue::DialogueStatus::NODE_NOT_FOUND),
+		WREN_ENUM_PAIR("ERROR", Struktur::Dialogue::DialogueStatus::ERROR),
+		);
+
+
+	// DialogueData foreign class
+	WREN_FOREIGN_CLASS(registry, "dialogue", "DialogueResult", wren_DialogueResultAllocate, wren_DialogueResultFinalize, "Container for dialogue Result data");
+
+	WREN_CONSTRUCTOR(registry, "dialogue", "DialogueResult", "nodeNotFound(_)", wren_DialogueResultNodeNotFound, "Node not found result");
+	WREN_CONSTRUCTOR(registry, "dialogue", "DialogueResult", "endDialogue(_)", wren_DialogueResultEndDialogue, "End dialogue result");
+	WREN_CONSTRUCTOR(registry, "dialogue", "DialogueResult", "choices(_)", wren_DialogueResultChoices, "Choices result");
+	WREN_CONSTRUCTOR(registry, "dialogue", "DialogueResult", "advance(_)", wren_DialogueResultAdvance, "Advance result");
+	WREN_CONSTRUCTOR(registry, "dialogue", "DialogueResult", "invalidChoice()", wren_DialogueResultInvalidChoice, "Invalid choice result");
+	WREN_CONSTRUCTOR(registry, "dialogue", "DialogueResult", "noActiveNode()", wren_DialogueResultNoActiveNode, "No active node result");
+	WREN_CONSTRUCTOR(registry, "dialogue", "DialogueResult", "error()", wren_DialogueResultError, "Error result");
+
+	WREN_CLASS_METHOD(registry, "dialogue", "DialogueResult", "status", wren_DialogueResultGetStatus, "Get the status of the dialogue result");
+	WREN_CLASS_METHOD(registry, "dialogue", "DialogueResult", "nodeId", wren_DialogueResultGetNodeId, "Get of the node id");
+	WREN_CLASS_METHOD(registry, "dialogue", "DialogueResult", "speaker", wren_DialogueResultGetSpeaker, "Get the speaker of the node");
+	WREN_CLASS_METHOD(registry, "dialogue", "DialogueResult", "text", wren_DialogueResultGetText, "Get the text of the node");
+	WREN_CLASS_METHOD(registry, "dialogue", "DialogueResult", "choices", wren_DialogueResultGetChoices, "Get the text choices");
+	WREN_CLASS_METHOD(registry, "dialogue", "DialogueResult", "hasEnded", wren_DialogueResultGetHasEnded, "Get the text has ended");
+	WREN_CLASS_METHOD(registry, "dialogue", "DialogueResult", "shouldAutoAdvance", wren_DialogueResultGetShouldAutoAdvance, "Get the text should auto advance");
+
+	// DialogueData foreign class
+	WREN_FOREIGN_CLASS(registry, "dialogue", "ConditionalTarget", wren_ConditionalTargetAllocate, wren_ConditionalTargetFinalize, "Container for dialogue conditional target data");
+
+	WREN_CLASS_METHOD(registry, "dialogue", "ConditionalTarget", "hasConditions()", wren_ConditionalTargetHasConditions, "Does the Target have conditions?");
+	WREN_CLASS_METHOD(registry, "dialogue", "ConditionalTarget", "conditions", wren_ConditionalTargetGetConditions, "Get the conditions of the Conditional Target");
+	WREN_CLASS_METHOD(registry, "dialogue", "ConditionalTarget", "targetNode", wren_ConditionalTargetGetTargetNode, "Get the target node of the Conditional Target");
+
+	// DialogueData foreign class
+	WREN_FOREIGN_CLASS(registry, "dialogue", "Condition", wren_ConditionAllocate, wren_ConditionFinalize, "Container for dialogue condition data");
+
+	WREN_CLASS_METHOD(registry, "dialogue", "Condition", "callback", wren_ConditionGetCallback, "Get the callback handle");
+	WREN_CLASS_METHOD(registry, "dialogue", "Condition", "params", wren_ConditionGetParams, "Get the conditions params");
+
+	// DialogueData foreign class
+	WREN_FOREIGN_CLASS(registry, "dialogue", "Command", wren_CommandAllocate, wren_CommandFinalize, "Container for dialogue command data");
+
+	WREN_CLASS_METHOD(registry, "dialogue", "Command", "callback", wren_CommandGetCallback, "Get the callback handle");
+	WREN_CLASS_METHOD(registry, "dialogue", "Command", "params", wren_CommandGetParams, "Get the conditions params");
+
+	// DialogueData foreign class
+	WREN_FOREIGN_CLASS(registry, "dialogue", "Choice", wren_ChoiceAllocate, wren_ChoiceFinalize, "Container for dialogue chioce data");
+
+	WREN_CLASS_METHOD(registry, "dialogue", "Choice", "text", wren_ChoiceGetText, "Get the text");
+	WREN_CLASS_METHOD(registry, "dialogue", "Choice", "targetNodeId", wren_ChoiceGetTargetNode, "Get the target node id");
+
+	// DialogueData foreign class
+	WREN_FOREIGN_CLASS(registry, "dialogue", "DialogueNode", wren_DialogueNodeAllocate, wren_DialogueNodeFinalize, "Container for dialogue Node data");
+
+	WREN_CLASS_METHOD(registry, "dialogue", "DialogueNode", "id", wren_DialogueNodeGetId, "Get the node id");
+	WREN_CLASS_METHOD(registry, "dialogue", "DialogueNode", "speaker", wren_DialogueNodeGetSpeaker, "Get the speaker of the node");
+	WREN_CLASS_METHOD(registry, "dialogue", "DialogueNode", "text", wren_DialogueNodeGetText, "Get the text of the node");
+	WREN_CLASS_METHOD(registry, "dialogue", "DialogueNode", "commands", wren_DialogueNodeGetCommands, "Get the commands of the node");
+	WREN_CLASS_METHOD(registry, "dialogue", "DialogueNode", "choices", wren_DialogueNodeGetChoices, "Get the choices of the node");
+	WREN_CLASS_METHOD(registry, "dialogue", "DialogueNode", "next", wren_DialogueNodeGetNext, "Get the next node");
+	WREN_CLASS_METHOD(registry, "dialogue", "DialogueNode", "targets", wren_DialogueNodeGetTargets, "Get the conditional targets of the node");
+	WREN_CLASS_METHOD(registry, "dialogue", "DialogueNode", "hasChoices()", wren_DialogueNodeHasChoices, "Check if node has choices");
+	WREN_CLASS_METHOD(registry, "dialogue", "DialogueNode", "hasNext()", wren_DialogueNodeGetHasNext, "Check if node has next target");
+	WREN_CLASS_METHOD(registry, "dialogue", "DialogueNode", "hasTargets()", wren_DialogueNodeHasTargets, "Check if node has conditional targets");
+
+	// DialogueRegistry static methods
+	WREN_CLASS_STATIC(registry, "dialogue", "DialogueRegistry", "registerCondition(_,_)", wren_DialogueRegistryRegisterCondition, "Register a condition type with callback");
+	WREN_CLASS_STATIC(registry, "dialogue", "DialogueRegistry", "registerCommand(_,_)", wren_DialogueRegistryRegisterCommand, "Register a command type with callback");
+	WREN_CLASS_STATIC(registry, "dialogue", "DialogueRegistry", "registerVariable(_,_)", wren_DialogueRegistryRegisterVariable, "Register a variable type with callback");
+	WREN_CLASS_STATIC(registry, "dialogue", "DialogueRegistry", "getRegisteredVariable(_)", wren_DialogueRegistryGetRegisteredVariable, "Get the call back for a registered variable");
+
+	// DialogueManager static methods
+	WREN_CLASS_STATIC(registry, "dialogue", "DialogueManager", "isDialogueActive()", wren_DialogueManagerIsDialogueActive, "Check if dialogue is active");
+	WREN_CLASS_STATIC(registry, "dialogue", "DialogueManager", "getCurrentNodeId()", wren_DialogueManagerGetCurrentNodeId, "Get current node ID");
+	WREN_CLASS_STATIC(registry, "dialogue", "DialogueManager", "getNodeCount()", wren_DialogueManagerGetNodeCount, "Get total number of loaded nodes");
+	WREN_CLASS_STATIC(registry, "dialogue", "DialogueManager", "clearAllNodes()", wren_DialogueManagerClearAllNodes, "Clear all loaded dialogue nodes");
+	WREN_CLASS_STATIC(registry, "dialogue", "DialogueManager", "loadDialogueData(_)", wren_DialogueManagerLoadDialogueData, "Loads in and interprets a wren map as dialogue");
+	WREN_CLASS_STATIC(registry, "dialogue", "DialogueManager", "clearDialogue()", wren_DialogueManagerClearDialogue, "Clear the current dialogue interaction");
+	WREN_CLASS_STATIC(registry, "dialogue", "DialogueManager", "currentNode", wren_DialogueManagerGetCurrentNode, "Get the current node in of the dialogue");
+	WREN_CLASS_STATIC(registry, "dialogue", "DialogueManager", "setActiveNode(_)", wren_DialogueManagerSetActiveNode, "Set the active node in the dialogue");
+}

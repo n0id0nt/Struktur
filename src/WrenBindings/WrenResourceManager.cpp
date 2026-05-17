@@ -120,17 +120,6 @@ void wren_ResourceTextureToString(WrenVM* vm)
 	wrenSetSlotString(vm, 0, buffer);
 }
 
-// Register Texture foreign class
-WREN_FOREIGN_CLASS("resourceManager", "Texture", wren_ResourceTextureAllocate, wren_ResourceTextureFinalize, "Texture resource handle");
-
-WREN_CLASS_STATIC("resourceManager", "Texture", "load(_)", wren_ResourceTextureLoad, "Load texture from path");
-WREN_CLASS_METHOD("resourceManager", "Texture", "unload()", wren_ResourceTextureUnload, "Unload texture from path. Manually unload reference because even though wren's garbage collector will do it, it will happen at an unknown time.");
-WREN_CLASS_METHOD("resourceManager", "Texture", "isValid()", wren_ResourceTextureIsValid, "Check if texture is valid");
-WREN_CLASS_METHOD("resourceManager", "Texture", "path", wren_ResourceTextureGetPath, "Get texture path");
-WREN_CLASS_METHOD("resourceManager", "Texture", "width", wren_ResourceTextureGetWidth, "Get texture width");
-WREN_CLASS_METHOD("resourceManager", "Texture", "height", wren_ResourceTextureGetHeight, "Get texture height");
-WREN_CLASS_METHOD("resourceManager", "Texture", "toString()", wren_ResourceTextureToString, "Convert to string");
-
 // ============================================================================
 // Shader Resource Handle
 // ============================================================================
@@ -247,17 +236,6 @@ void wren_ResourceShaderToString(WrenVM* vm)
 	wrenSetSlotString(vm, 0, buffer);
 }
 
-// Register Shader foreign class
-WREN_FOREIGN_CLASS("resourceManager", "Shader", wren_ResourceShaderAllocate, wren_ResourceShaderFinalize, "Shader resource handle");
-
-WREN_CLASS_STATIC("resourceManager", "Shader", "load(_,_)", wren_ResourceShaderLoad, "Load Shader from path");
-WREN_CLASS_METHOD("resourceManager", "Shader", "unload()", wren_ResourceShaderUnload, "Unload Shader from path. Manually unload reference because even though wren's garbage collector will do it, it will happen at an unknown time.");
-WREN_CLASS_METHOD("resourceManager", "Shader", "isValid()", wren_ResourceShaderIsValid, "Check if Shader is valid");
-WREN_CLASS_METHOD("resourceManager", "Shader", "path", wren_ResourceShaderGetPath, "Get Shader path");
-WREN_CLASS_METHOD("resourceManager", "Shader", "vsFilePath", wren_ResourceShaderGetVSFilePath, "Get vertex shader");
-WREN_CLASS_METHOD("resourceManager", "Shader", "fsFilePath", wren_ResourceShaderGetFSFilePath, "Get fragment shader");
-WREN_CLASS_METHOD("resourceManager", "Shader", "toString()", wren_ResourceShaderToString, "Convert to string");
-
 // ============================================================================
 // Font Resource Handle
 // ============================================================================
@@ -358,17 +336,6 @@ void wren_ResourceFontToString(WrenVM* vm)
 
 	wrenSetSlotString(vm, 0, buffer);
 }
-
-// Register Font foreign class
-WREN_FOREIGN_CLASS("resourceManager", "Font", wren_ResourceFontAllocate, wren_ResourceFontFinalize, "Font resource handle");
-
-WREN_CLASS_STATIC("resourceManager", "Font", "load(_,_)", wren_ResourceFontLoad, "Load font from path");
-WREN_CLASS_METHOD("resourceManager", "Font", "unload()", wren_ResourceFontUnload, "Unload font from path. Manually unload reference because even though wren's garbage collector will do it, it will happen at an unknown time.");
-WREN_CLASS_METHOD("resourceManager", "Font", "isValid()", wren_ResourceFontIsValid, "Check if font is valid");
-WREN_CLASS_METHOD("resourceManager", "Font", "path", wren_ResourceFontGetPath, "Get font path");
-WREN_CLASS_METHOD("resourceManager", "Font", "size", wren_ResourceFontGetSize, "Get font size");
-WREN_CLASS_METHOD("resourceManager", "Font", "toString()", wren_ResourceFontToString, "Convert to string");
-
 
 // ============================================================================
 // Music Resource Handle
@@ -555,28 +522,6 @@ void wren_ResourceMusicSetLooping(WrenVM* vm)
 	handle->resource->music.looping = isLooping;
 }
 
-// Register Music foreign class
-WREN_FOREIGN_CLASS("resourceManager", "Music", wren_ResourceMusicAllocate, wren_ResourceFontFinalize, "Font resource handle");
-
-WREN_CLASS_STATIC("resourceManager", "Music", "load(_)", wren_ResourceMusicLoad, "Load music from path");
-WREN_CLASS_METHOD("resourceManager", "Music", "unload()", wren_ResourceMusicUnload, "Unload music from path. Manually unload reference because even though wren's garbage collector will do it, it will happen at an unknown time.");
-WREN_CLASS_METHOD("resourceManager", "Music", "isValid()", wren_ResourceMusicIsValid, "Check if music is valid");
-WREN_CLASS_METHOD("resourceManager", "Music", "path", wren_ResourceMusicGetPath, "Get music path");
-WREN_CLASS_METHOD("resourceManager", "Music", "toString()", wren_ResourceMusicToString, "Convert to string");
-WREN_CLASS_METHOD("resourceManager", "Music", "play()", wren_ResourceMusicPlay, "Play the music");
-WREN_CLASS_METHOD("resourceManager", "Music", "stop()", wren_ResourceMusicStop, "Stop the music");
-WREN_CLASS_METHOD("resourceManager", "Music", "pause()", wren_ResourceMusicPause, "Pause the music");
-WREN_CLASS_METHOD("resourceManager", "Music", "resume()", wren_ResourceMusicResume, "Resume the music");
-WREN_CLASS_METHOD("resourceManager", "Music", "isPlaying()", wren_ResourceMusicIsPlaying, "Check if music is playing");
-WREN_CLASS_METHOD("resourceManager", "Music", "seek(_)", wren_ResourceMusicSeek, "Seek music to a certain position (in seconds)");
-WREN_CLASS_METHOD("resourceManager", "Music", "setVolume(_)", wren_ResourceMusicSetVolume, "Set the musics volume");
-WREN_CLASS_METHOD("resourceManager", "Music", "setPitch(_)", wren_ResourceMusicSetPitch, "Set the musics pitch");
-WREN_CLASS_METHOD("resourceManager", "Music", "setPan(_)", wren_ResourceMusicSetPan, "Set the musics pan");
-WREN_CLASS_METHOD("resourceManager", "Music", "getTimeLength()", wren_ResourceMusicGetTimeLength, "Get music time length (in seconds)");
-WREN_CLASS_METHOD("resourceManager", "Music", "getTimePlayed()", wren_ResourceMusicGetTimePlayed, "Get current music time played (in seconds)");
-WREN_CLASS_METHOD("resourceManager", "Music", "getLooping()", wren_ResourceMusicGetLooping, "Gets if the music should be looped");
-WREN_CLASS_METHOD("resourceManager", "Music", "setLooping(_)", wren_ResourceMusicSetLooping, "Gets if the music should be looped");
-
 // ============================================================================
 // Sound Resource Handle
 // ============================================================================
@@ -729,19 +674,79 @@ void wren_ResourceSoundSetPan(WrenVM* vm)
 	::SetSoundPan(handle->resource->sound, pan);
 }
 
-// Register Sound foreign class
-WREN_FOREIGN_CLASS("resourceManager", "Sound", wren_ResourceSoundAllocate, wren_ResourceFontFinalize, "Font resource handle");
+// ============================================================================
+// BINDING REGISTRATION
+// ============================================================================
+WREN_BINDING_MODULE(ResourceManager)
+{
+	// Register Texture foreign class
+	WREN_FOREIGN_CLASS(registry, "resourceManager", "Texture", wren_ResourceTextureAllocate, wren_ResourceTextureFinalize, "Texture resource handle");
 
-WREN_CLASS_STATIC("resourceManager", "Sound", "load(_)", wren_ResourceSoundLoad, "Load sound from path");
-WREN_CLASS_METHOD("resourceManager", "Sound", "unload()", wren_ResourceSoundUnload, "Unload sound from path. Manually unload reference because even though wren's garbage collector will do it, it will happen at an unknown time.");
-WREN_CLASS_METHOD("resourceManager", "Sound", "isValid()", wren_ResourceSoundIsValid, "Check if sound is valid");
-WREN_CLASS_METHOD("resourceManager", "Sound", "path", wren_ResourceSoundGetPath, "Get sound path");
-WREN_CLASS_METHOD("resourceManager", "Sound", "toString()", wren_ResourceSoundToString, "Convert to string");
-WREN_CLASS_METHOD("resourceManager", "Sound", "play()", wren_ResourceSoundPlay, "Play the sound");
-WREN_CLASS_METHOD("resourceManager", "Sound", "stop()", wren_ResourceSoundStop, "Stop playing the sound");
-WREN_CLASS_METHOD("resourceManager", "Sound", "pause()", wren_ResourceSoundPause, "Pause the sound");
-WREN_CLASS_METHOD("resourceManager", "Sound", "resume()", wren_ResourceSoundResume, "Resume playing the sound");
-WREN_CLASS_METHOD("resourceManager", "Sound", "isPlaying()", wren_ResourceSoundIsPlaying, "Checks if sound is currently playing");
-WREN_CLASS_METHOD("resourceManager", "Sound", "setVolume(_)", wren_ResourceSoundSetVolume, "Set volume of the sound");
-WREN_CLASS_METHOD("resourceManager", "Sound", "setPitch(_)", wren_ResourceSoundSetPitch, "Set pitch of the sound");
-WREN_CLASS_METHOD("resourceManager", "Sound", "setPan(_)", wren_ResourceSoundSetPan, "Set pan of the sound");
+	WREN_CLASS_STATIC(registry, "resourceManager", "Texture", "load(_)", wren_ResourceTextureLoad, "Load texture from path");
+	WREN_CLASS_METHOD(registry, "resourceManager", "Texture", "unload()", wren_ResourceTextureUnload, "Unload texture from path. Manually unload reference because even though wren's garbage collector will do it, it will happen at an unknown time.");
+	WREN_CLASS_METHOD(registry, "resourceManager", "Texture", "isValid()", wren_ResourceTextureIsValid, "Check if texture is valid");
+	WREN_CLASS_METHOD(registry, "resourceManager", "Texture", "path", wren_ResourceTextureGetPath, "Get texture path");
+	WREN_CLASS_METHOD(registry, "resourceManager", "Texture", "width", wren_ResourceTextureGetWidth, "Get texture width");
+	WREN_CLASS_METHOD(registry, "resourceManager", "Texture", "height", wren_ResourceTextureGetHeight, "Get texture height");
+	WREN_CLASS_METHOD(registry, "resourceManager", "Texture", "toString()", wren_ResourceTextureToString, "Convert to string");
+
+	// Register Shader foreign class
+	WREN_FOREIGN_CLASS(registry, "resourceManager", "Shader", wren_ResourceShaderAllocate, wren_ResourceShaderFinalize, "Shader resource handle");
+
+	WREN_CLASS_STATIC(registry, "resourceManager", "Shader", "load(_,_)", wren_ResourceShaderLoad, "Load Shader from path");
+	WREN_CLASS_METHOD(registry, "resourceManager", "Shader", "unload()", wren_ResourceShaderUnload, "Unload Shader from path. Manually unload reference because even though wren's garbage collector will do it, it will happen at an unknown time.");
+	WREN_CLASS_METHOD(registry, "resourceManager", "Shader", "isValid()", wren_ResourceShaderIsValid, "Check if Shader is valid");
+	WREN_CLASS_METHOD(registry, "resourceManager", "Shader", "path", wren_ResourceShaderGetPath, "Get Shader path");
+	WREN_CLASS_METHOD(registry, "resourceManager", "Shader", "vsFilePath", wren_ResourceShaderGetVSFilePath, "Get vertex shader");
+	WREN_CLASS_METHOD(registry, "resourceManager", "Shader", "fsFilePath", wren_ResourceShaderGetFSFilePath, "Get fragment shader");
+	WREN_CLASS_METHOD(registry, "resourceManager", "Shader", "toString()", wren_ResourceShaderToString, "Convert to string");
+
+	// Register Font foreign class
+	WREN_FOREIGN_CLASS(registry, "resourceManager", "Font", wren_ResourceFontAllocate, wren_ResourceFontFinalize, "Font resource handle");
+
+	WREN_CLASS_STATIC(registry, "resourceManager", "Font", "load(_,_)", wren_ResourceFontLoad, "Load font from path");
+	WREN_CLASS_METHOD(registry, "resourceManager", "Font", "unload()", wren_ResourceFontUnload, "Unload font from path. Manually unload reference because even though wren's garbage collector will do it, it will happen at an unknown time.");
+	WREN_CLASS_METHOD(registry, "resourceManager", "Font", "isValid()", wren_ResourceFontIsValid, "Check if font is valid");
+	WREN_CLASS_METHOD(registry, "resourceManager", "Font", "path", wren_ResourceFontGetPath, "Get font path");
+	WREN_CLASS_METHOD(registry, "resourceManager", "Font", "size", wren_ResourceFontGetSize, "Get font size");
+	WREN_CLASS_METHOD(registry, "resourceManager", "Font", "toString()", wren_ResourceFontToString, "Convert to string");
+
+	// Register Music foreign class
+	WREN_FOREIGN_CLASS(registry, "resourceManager", "Music", wren_ResourceMusicAllocate, wren_ResourceFontFinalize, "Font resource handle");
+
+	WREN_CLASS_STATIC(registry, "resourceManager", "Music", "load(_)", wren_ResourceMusicLoad, "Load music from path");
+	WREN_CLASS_METHOD(registry, "resourceManager", "Music", "unload()", wren_ResourceMusicUnload, "Unload music from path. Manually unload reference because even though wren's garbage collector will do it, it will happen at an unknown time.");
+	WREN_CLASS_METHOD(registry, "resourceManager", "Music", "isValid()", wren_ResourceMusicIsValid, "Check if music is valid");
+	WREN_CLASS_METHOD(registry, "resourceManager", "Music", "path", wren_ResourceMusicGetPath, "Get music path");
+	WREN_CLASS_METHOD(registry, "resourceManager", "Music", "toString()", wren_ResourceMusicToString, "Convert to string");
+	WREN_CLASS_METHOD(registry, "resourceManager", "Music", "play()", wren_ResourceMusicPlay, "Play the music");
+	WREN_CLASS_METHOD(registry, "resourceManager", "Music", "stop()", wren_ResourceMusicStop, "Stop the music");
+	WREN_CLASS_METHOD(registry, "resourceManager", "Music", "pause()", wren_ResourceMusicPause, "Pause the music");
+	WREN_CLASS_METHOD(registry, "resourceManager", "Music", "resume()", wren_ResourceMusicResume, "Resume the music");
+	WREN_CLASS_METHOD(registry, "resourceManager", "Music", "isPlaying()", wren_ResourceMusicIsPlaying, "Check if music is playing");
+	WREN_CLASS_METHOD(registry, "resourceManager", "Music", "seek(_)", wren_ResourceMusicSeek, "Seek music to a certain position (in seconds)");
+	WREN_CLASS_METHOD(registry, "resourceManager", "Music", "setVolume(_)", wren_ResourceMusicSetVolume, "Set the musics volume");
+	WREN_CLASS_METHOD(registry, "resourceManager", "Music", "setPitch(_)", wren_ResourceMusicSetPitch, "Set the musics pitch");
+	WREN_CLASS_METHOD(registry, "resourceManager", "Music", "setPan(_)", wren_ResourceMusicSetPan, "Set the musics pan");
+	WREN_CLASS_METHOD(registry, "resourceManager", "Music", "getTimeLength()", wren_ResourceMusicGetTimeLength, "Get music time length (in seconds)");
+	WREN_CLASS_METHOD(registry, "resourceManager", "Music", "getTimePlayed()", wren_ResourceMusicGetTimePlayed, "Get current music time played (in seconds)");
+	WREN_CLASS_METHOD(registry, "resourceManager", "Music", "getLooping()", wren_ResourceMusicGetLooping, "Gets if the music should be looped");
+	WREN_CLASS_METHOD(registry, "resourceManager", "Music", "setLooping(_)", wren_ResourceMusicSetLooping, "Gets if the music should be looped");
+
+	// Register Sound foreign class
+	WREN_FOREIGN_CLASS(registry, "resourceManager", "Sound", wren_ResourceSoundAllocate, wren_ResourceFontFinalize, "Font resource handle");
+
+	WREN_CLASS_STATIC(registry, "resourceManager", "Sound", "load(_)", wren_ResourceSoundLoad, "Load sound from path");
+	WREN_CLASS_METHOD(registry, "resourceManager", "Sound", "unload()", wren_ResourceSoundUnload, "Unload sound from path. Manually unload reference because even though wren's garbage collector will do it, it will happen at an unknown time.");
+	WREN_CLASS_METHOD(registry, "resourceManager", "Sound", "isValid()", wren_ResourceSoundIsValid, "Check if sound is valid");
+	WREN_CLASS_METHOD(registry, "resourceManager", "Sound", "path", wren_ResourceSoundGetPath, "Get sound path");
+	WREN_CLASS_METHOD(registry, "resourceManager", "Sound", "toString()", wren_ResourceSoundToString, "Convert to string");
+	WREN_CLASS_METHOD(registry, "resourceManager", "Sound", "play()", wren_ResourceSoundPlay, "Play the sound");
+	WREN_CLASS_METHOD(registry, "resourceManager", "Sound", "stop()", wren_ResourceSoundStop, "Stop playing the sound");
+	WREN_CLASS_METHOD(registry, "resourceManager", "Sound", "pause()", wren_ResourceSoundPause, "Pause the sound");
+	WREN_CLASS_METHOD(registry, "resourceManager", "Sound", "resume()", wren_ResourceSoundResume, "Resume playing the sound");
+	WREN_CLASS_METHOD(registry, "resourceManager", "Sound", "isPlaying()", wren_ResourceSoundIsPlaying, "Checks if sound is currently playing");
+	WREN_CLASS_METHOD(registry, "resourceManager", "Sound", "setVolume(_)", wren_ResourceSoundSetVolume, "Set volume of the sound");
+	WREN_CLASS_METHOD(registry, "resourceManager", "Sound", "setPitch(_)", wren_ResourceSoundSetPitch, "Set pitch of the sound");
+	WREN_CLASS_METHOD(registry, "resourceManager", "Sound", "setPan(_)", wren_ResourceSoundSetPan, "Set pan of the sound");
+}

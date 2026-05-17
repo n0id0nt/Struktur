@@ -67,28 +67,28 @@ class DialogueLoader {
             "Dialogue/ItemDialogue.json"
         ]
 
-        for (filePath in dialogueFiles) {
-            var result = FileSystem.readString(filePath)
-            var success = result.success
-            if (success) {
-                var value = result.value
-                var data = Json.parse(value)
-                if (data) {
-                    if (data is List) {
-                        Debug.breakpointMsg("is List")
-                    }
-                    if (data is Num) {
-                        Debug.breakpointMsg("is number")
-                    }
-                    DialogueManager.loadDialogueData(data)
-                    Debug.info("[Dialogue Loading] succesfuly loaded %(filePath)")
-                } else {
-                    Debug.error("[Dialogue Loading] failed to parse %(filePath), error message: %(value)")
-                }
-            } else {
-                Debug.error("[Dialogue Loading] failed to load %(filePath), error message: %(result.errorMessage)")
-            }
-        }        
+        //for (filePath in dialogueFiles) {
+        //    var result = FileSystem.readString(filePath)
+        //    var success = result.success
+        //    if (success) {
+        //        var value = result.value
+        //        var data = Json.parse(value)
+        //        if (data) {
+        //            if (data is List) {
+        //                Debug.breakpointMsg("is List")
+        //            }
+        //            if (data is Num) {
+        //                Debug.breakpointMsg("is number")
+        //            }
+        //            DialogueManager.loadDialogueData(data)
+        //            Debug.info("[Dialogue Loading] succesfuly loaded %(filePath)")
+        //        } else {
+        //            Debug.error("[Dialogue Loading] failed to parse %(filePath), error message: %(value)")
+        //        }
+        //    } else {
+        //        Debug.error("[Dialogue Loading] failed to load %(filePath), error message: %(result.errorMessage)")
+        //    }
+        //}        
         Debug.info("All dialogue loaded")
 
         Commands.registerFunctions()

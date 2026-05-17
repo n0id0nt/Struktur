@@ -224,27 +224,30 @@ void wren_FlagManagerLoad(WrenVM* vm)
 	flagManager.Load(filePath);
 }
 
-// Register FlagManager static methods
-WREN_CLASS_STATIC("flags", "FlagManager", "getFlag(_)", wren_FlagManagerGetFlag, "Get a boolean flag value");
-WREN_CLASS_STATIC("flags", "FlagManager", "setFlag(_,_)", wren_FlagManagerSetFlag, "Set a boolean flag value");
-WREN_CLASS_STATIC("flags", "FlagManager", "hasFlag(_)", wren_FlagManagerHasFlag, "Check if a boolean flag exists");
-WREN_CLASS_STATIC("flags", "FlagManager", "removeFlag(_)", wren_FlagManagerRemoveFlag, "Remove a boolean flag");
+WREN_BINDING_MODULE(Flags)
+{
+	// Register FlagManager static methods
+	WREN_CLASS_STATIC(registry, "flags", "FlagManager", "getFlag(_)", wren_FlagManagerGetFlag, "Get a boolean flag value");
+	WREN_CLASS_STATIC(registry, "flags", "FlagManager", "setFlag(_,_)", wren_FlagManagerSetFlag, "Set a boolean flag value");
+	WREN_CLASS_STATIC(registry, "flags", "FlagManager", "hasFlag(_)", wren_FlagManagerHasFlag, "Check if a boolean flag exists");
+	WREN_CLASS_STATIC(registry, "flags", "FlagManager", "removeFlag(_)", wren_FlagManagerRemoveFlag, "Remove a boolean flag");
 
-WREN_CLASS_STATIC("flags", "FlagManager", "getIntFlag(_)", wren_FlagManagerGetIntFlag, "Get an integer flag value");
-WREN_CLASS_STATIC("flags", "FlagManager", "setIntFlag(_,_)", wren_FlagManagerSetIntFlag, "Set an integer flag value");
-WREN_CLASS_STATIC("flags", "FlagManager", "hasIntFlag(_)", wren_FlagManagerHasIntFlag, "Check if an integer flag exists");
-WREN_CLASS_STATIC("flags", "FlagManager", "removeIntFlag(_)", wren_FlagManagerRemoveIntFlag, "Remove an integer flag");
+	WREN_CLASS_STATIC(registry, "flags", "FlagManager", "getIntFlag(_)", wren_FlagManagerGetIntFlag, "Get an integer flag value");
+	WREN_CLASS_STATIC(registry, "flags", "FlagManager", "setIntFlag(_,_)", wren_FlagManagerSetIntFlag, "Set an integer flag value");
+	WREN_CLASS_STATIC(registry, "flags", "FlagManager", "hasIntFlag(_)", wren_FlagManagerHasIntFlag, "Check if an integer flag exists");
+	WREN_CLASS_STATIC(registry, "flags", "FlagManager", "removeIntFlag(_)", wren_FlagManagerRemoveIntFlag, "Remove an integer flag");
 
-WREN_CLASS_STATIC("flags", "FlagManager", "getFloatFlag(_)", wren_FlagManagerGetFloatFlag, "Get a float flag value");
-WREN_CLASS_STATIC("flags", "FlagManager", "setFloatFlag(_,_)", wren_FlagManagerSetFloatFlag, "Set a float flag value");
-WREN_CLASS_STATIC("flags", "FlagManager", "hasFloatFlag(_)", wren_FlagManagerHasFloatFlag, "Check if a float flag exists");
-WREN_CLASS_STATIC("flags", "FlagManager", "removeFloatFlag(_)", wren_FlagManagerRemoveFloatFlag, "Remove a float flag");
+	WREN_CLASS_STATIC(registry, "flags", "FlagManager", "getFloatFlag(_)", wren_FlagManagerGetFloatFlag, "Get a float flag value");
+	WREN_CLASS_STATIC(registry, "flags", "FlagManager", "setFloatFlag(_,_)", wren_FlagManagerSetFloatFlag, "Set a float flag value");
+	WREN_CLASS_STATIC(registry, "flags", "FlagManager", "hasFloatFlag(_)", wren_FlagManagerHasFloatFlag, "Check if a float flag exists");
+	WREN_CLASS_STATIC(registry, "flags", "FlagManager", "removeFloatFlag(_)", wren_FlagManagerRemoveFloatFlag, "Remove a float flag");
 
-WREN_CLASS_STATIC("flags", "FlagManager", "getStringFlag(_)", wren_FlagManagerGetStringFlag, "Get a string flag value");
-WREN_CLASS_STATIC("flags", "FlagManager", "setStringFlag(_,_)", wren_FlagManagerSetStringFlag, "Set a string flag value");
-WREN_CLASS_STATIC("flags", "FlagManager", "hasStringFlag(_)", wren_FlagManagerHasStringFlag, "Check if a string flag exists");
-WREN_CLASS_STATIC("flags", "FlagManager", "removeStringFlag(_)", wren_FlagManagerRemoveStringFlag, "Remove a string flag");
+	WREN_CLASS_STATIC(registry, "flags", "FlagManager", "getStringFlag(_)", wren_FlagManagerGetStringFlag, "Get a string flag value");
+	WREN_CLASS_STATIC(registry, "flags", "FlagManager", "setStringFlag(_,_)", wren_FlagManagerSetStringFlag, "Set a string flag value");
+	WREN_CLASS_STATIC(registry, "flags", "FlagManager", "hasStringFlag(_)", wren_FlagManagerHasStringFlag, "Check if a string flag exists");
+	WREN_CLASS_STATIC(registry, "flags", "FlagManager", "removeStringFlag(_)", wren_FlagManagerRemoveStringFlag, "Remove a string flag");
 
-WREN_CLASS_STATIC("flags", "FlagManager", "clear()", wren_FlagManagerClear, "Clear all flags");
-WREN_CLASS_STATIC("flags", "FlagManager", "save(_)", wren_FlagManagerSave, "Save flags to file");
-WREN_CLASS_STATIC("flags", "FlagManager", "load(_)", wren_FlagManagerLoad, "Load in flags from file");
+	WREN_CLASS_STATIC(registry, "flags", "FlagManager", "clear()", wren_FlagManagerClear, "Clear all flags");
+	WREN_CLASS_STATIC(registry, "flags", "FlagManager", "save(_)", wren_FlagManagerSave, "Save flags to file");
+	WREN_CLASS_STATIC(registry, "flags", "FlagManager", "load(_)", wren_FlagManagerLoad, "Load in flags from file");
+}

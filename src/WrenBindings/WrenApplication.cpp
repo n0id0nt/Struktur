@@ -131,18 +131,6 @@ void wren_ApplicationSetIsFullScreen(WrenVM* vm)
 #endif
 }
 
-WREN_CLASS_STATIC("app", "Application", "setWindowSize(_,_)", wren_ApplicationSetWindowSize, "Change the size of the game window.");
-WREN_CLASS_STATIC("app", "Application", "setApplicationName(_)", wren_ApplicationSetApplicationName, "Changes the name of the game window.");
-WREN_CLASS_STATIC("app", "Application", "registerComponentScript(_,_)", wren_ApplicationRegisterComponentScript, "Changes the name of the game window.");
-WREN_CLASS_STATIC("app", "Application", "gameWidth", wren_ApplicationGetGameWidth, "Get the games width.");
-WREN_CLASS_STATIC("app", "Application", "gameHeight", wren_ApplicationGetGameHeight, "Get the games height.");
-WREN_CLASS_STATIC("app", "Application", "pixelsPerMeter", wren_ApplicationGetPixelsPerMeter, "Get the pixels per meter for the physics system.");
-WREN_CLASS_STATIC("app", "Application", "setPixelsPerMeter(_)", wren_ApplicationSetPixelsPerMeter, "Set the pixels per meter for the physics system.");
-WREN_CLASS_STATIC("app", "Application", "velocityIterations", wren_ApplicationGetVelocityIterations, "Get the velocity iterations for the physics system.");
-WREN_CLASS_STATIC("app", "Application", "setVelocityIterations(_)", wren_ApplicationSetVelocityIterations, "Set the velocity iterations for the physics system.");
-WREN_CLASS_STATIC("app", "Application", "isFullScreen", wren_ApplicationGetIsFullScreen, "Get the if the application is funning in full screen.");
-WREN_CLASS_STATIC("app", "Application", "setIsFullScreen(_)", wren_ApplicationSetIsFullScreen, "Set the if the application is funning in full screen.");
-
 // ============================================================================
 // TIME BINDINGS
 // ============================================================================
@@ -196,9 +184,24 @@ void wren_TimeSetTimeScale(WrenVM* vm)
 	timeSystem.SetTimeScale(timeScale);
 }
 
-WREN_CLASS_STATIC("app", "Time", "unscaledDelta", wren_TimeGetUnscaledDelta, "Gets the unsclaled delta time.");
-WREN_CLASS_STATIC("app", "Time", "scaledDelta", wren_TimeGetScaledDelta, "Gets the sclaled delta time.");
-WREN_CLASS_STATIC("app", "Time", "unscaledTime", wren_TimeGetUnscaledTime, "Get the unsclaled time.");
-WREN_CLASS_STATIC("app", "Time", "scaledTime", wren_TimeGetScaledTime, "Get the sclaled time.");
-WREN_CLASS_STATIC("app", "Time", "timeScale", wren_TimeGetTimeScale, "Get the sclaled time.");
-WREN_CLASS_STATIC("app", "Time", "setTimeScale(_)", wren_TimeSetTimeScale, "Set the time scale.");
+WREN_BINDING_MODULE(Application)
+{
+	WREN_CLASS_STATIC(registry, "app", "Application", "setWindowSize(_,_)", wren_ApplicationSetWindowSize, "Change the size of the game window.");
+	WREN_CLASS_STATIC(registry, "app", "Application", "setApplicationName(_)", wren_ApplicationSetApplicationName, "Changes the name of the game window.");
+	WREN_CLASS_STATIC(registry, "app", "Application", "registerComponentScript(_,_)", wren_ApplicationRegisterComponentScript, "Changes the name of the game window.");
+	WREN_CLASS_STATIC(registry, "app", "Application", "gameWidth", wren_ApplicationGetGameWidth, "Get the games width.");
+	WREN_CLASS_STATIC(registry, "app", "Application", "gameHeight", wren_ApplicationGetGameHeight, "Get the games height.");
+	WREN_CLASS_STATIC(registry, "app", "Application", "pixelsPerMeter", wren_ApplicationGetPixelsPerMeter, "Get the pixels per meter for the physics system.");
+	WREN_CLASS_STATIC(registry, "app", "Application", "setPixelsPerMeter(_)", wren_ApplicationSetPixelsPerMeter, "Set the pixels per meter for the physics system.");
+	WREN_CLASS_STATIC(registry, "app", "Application", "velocityIterations", wren_ApplicationGetVelocityIterations, "Get the velocity iterations for the physics system.");
+	WREN_CLASS_STATIC(registry, "app", "Application", "setVelocityIterations(_)", wren_ApplicationSetVelocityIterations, "Set the velocity iterations for the physics system.");
+	WREN_CLASS_STATIC(registry, "app", "Application", "isFullScreen", wren_ApplicationGetIsFullScreen, "Get the if the application is funning in full screen.");
+	WREN_CLASS_STATIC(registry, "app", "Application", "setIsFullScreen(_)", wren_ApplicationSetIsFullScreen, "Set the if the application is funning in full screen.");
+
+	WREN_CLASS_STATIC(registry, "app", "Time", "unscaledDelta", wren_TimeGetUnscaledDelta, "Gets the unsclaled delta time.");
+	WREN_CLASS_STATIC(registry, "app", "Time", "scaledDelta", wren_TimeGetScaledDelta, "Gets the sclaled delta time.");
+	WREN_CLASS_STATIC(registry, "app", "Time", "unscaledTime", wren_TimeGetUnscaledTime, "Get the unsclaled time.");
+	WREN_CLASS_STATIC(registry, "app", "Time", "scaledTime", wren_TimeGetScaledTime, "Get the sclaled time.");
+	WREN_CLASS_STATIC(registry, "app", "Time", "timeScale", wren_TimeGetTimeScale, "Get the sclaled time.");
+	WREN_CLASS_STATIC(registry, "app", "Time", "setTimeScale(_)", wren_TimeSetTimeScale, "Set the time scale.");
+}

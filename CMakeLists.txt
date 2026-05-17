@@ -370,41 +370,52 @@ if(PLATFORM_WEB)
         message(STATUS "Building web version WITHOUT ASYNCIFY")
     endif()
     
+    set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -s EXPORTED_RUNTIME_METHODS=['HEAPF32','HEAPU8','HEAPU16','HEAPU32','HEAP32','HEAP8']")
     # Export C++ functions for JavaScript
     #set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -s EXPORTED_FUNCTIONS='[\"_main\",\"_RequestFullscreenFromC\",\"_ExitFullscreenFromC\",\"_IsFullscreenSupported\"]'")
     #set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -s EXPORTED_RUNTIME_METHODS='[\"ccall\",\"cwrap\"]'")
     
-    # Preload assets for web builds
-    if(IS_DIRECTORY ${CMAKE_SOURCE_DIR}/assets)
-        file(GLOB_RECURSE ASSET_FILES "${CMAKE_SOURCE_DIR}/assets/*")
-        if(ASSET_FILES)
-            set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} --preload-file \"${CMAKE_SOURCE_DIR}/assets@/assets\"")
-            message(STATUS "Preloading assets directory for web build")
-        else()
-            message(STATUS "Assets directory exists but is empty")
-        endif()
+    # Assets folder
+    if(DEFINED PROJECT_ASSETS_FOLDER)
+        set(ASSETS_DIR "${PROJECT_ASSETS_FOLDER}")
     else()
-        message(STATUS "No assets directory found - creating example structure")
+        set(ASSETS_DIR "${CMAKE_SOURCE_DIR}/assets")
     endif()
-    
+
+    # Preload assets fozr web builds
+    if(IS_DIRECTORY ${ASSETS_DIR})
+        file(GLOB_RECURSE ASSET_FILES "${ASSETS_DIR}/*")
+        if(ASSET_FILES)
+            set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} --preload-file \"${ASSETS_DIR}@/assets\"")
+            message(STATUS "Preloading assets from: ${ASSETS_DIR}")
+        endif()
+    endif()
+
     # Include favicon if it exists
     if(EXISTS ${CMAKE_SOURCE_DIR}/favicon.ico)
         set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} --preload-file \"${CMAKE_SOURCE_DIR}/favicon.ico@/favicon.ico\"")
         message(STATUS "Including favicon.ico")
     endif()
-    
+
+
+    # Shell file
+    if(DEFINED WEB_SHELL_FILE)
+        set(SHELL_FILE "${WEB_SHELL_FILE}")
+    else()
+        set(SHELL_FILE "${CMAKE_SOURCE_DIR}/web/shell.html")
+    endif()
+
+    if(EXISTS "${SHELL_FILE}")
+        set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} --shell-file \"${SHELL_FILE}\"")
+        message(STATUS "Using shell: ${SHELL_FILE}")
+    else()
+        message(STATUS "No shell file found, using Emscripten default")
+    endif()
+
     # Include web assets (favicons, etc.)
     if(IS_DIRECTORY ${CMAKE_SOURCE_DIR}/web/assets)
         set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} --preload-file \"${CMAKE_SOURCE_DIR}/web/assets@/\"")
         message(STATUS "Including web assets")
-    endif()
-    
-    # Use custom shell if it exists
-    if(EXISTS ${CMAKE_SOURCE_DIR}/web/shell.html)
-        set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} --shell-file \"${CMAKE_SOURCE_DIR}/web/shell.html\"")
-        message(STATUS "Using custom shell.html")
-    else()
-        message(STATUS "Using default Emscripten shell")
     endif()
     
     set(CMAKE_EXECUTABLE_SUFFIX ".html")

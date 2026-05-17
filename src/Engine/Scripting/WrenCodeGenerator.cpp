@@ -3,38 +3,27 @@
 namespace Struktur::Wren
 {
 
-void CodeGenerator::GenerateBindingFiles(const std::string &outputDir)
+void CodeGenerator::GenerateBindingFiles(const BindingRegistry& registry, const std::string& outputDir)
 {
-    // Create output directory if it doesn't exist
     std::filesystem::create_directories(outputDir);
     
-    // Group bindings by module
-    std::unordered_map<std::string, std::vector<const MethodBinding*>> methodsByModule;
-    std::unordered_map<std::string, std::vector<const ClassBinding*>> classesByModule;
-    std::unordered_map<std::string, std::vector<const EnumBinding*>> enumsByModule;
+    std::unordered_map<std::string, std::vector<const MethodBinding*>>   methodsByModule;
+    std::unordered_map<std::string, std::vector<const ClassBinding*>>    classesByModule;
+    std::unordered_map<std::string, std::vector<const EnumBinding*>>     enumsByModule;
     std::unordered_map<std::string, std::vector<const ConstantBinding*>> constantsByModule;
     
-    for (const auto& method : GetMethodBindings())
-    {
+    for (const auto& method : registry.methods)
         methodsByModule[method.moduleName].push_back(&method);
-    }
     
-    for (const auto& cls : GetClassBindings())
-    {
+    for (const auto& cls : registry.classes)
         classesByModule[cls.moduleName].push_back(&cls);
-    }
     
-    for (const auto& enumBinding : GetEnumBindings())
-    {
+    for (const auto& enumBinding : registry.enums)
         enumsByModule[enumBinding.moduleName].push_back(&enumBinding);
-    }
     
-    for (const auto& constant : GetConstantBindings())
-    {
+    for (const auto& constant : registry.constants)
         constantsByModule[constant.moduleName].push_back(&constant);
-    }
     
-    // Generate a .wren file for each module
     for (const auto& [moduleName, methods] : methodsByModule)
     {
         GenerateModuleFile(
@@ -50,11 +39,9 @@ void CodeGenerator::GenerateBindingFiles(const std::string &outputDir)
     DEBUG_INFO("Generated %zu Wren binding file(s) in: %s", 
             methodsByModule.size(), outputDir.c_str());
 
-	// Also generate the release headers from the .wren files we just wrote
-	// These get compiled into the binary for non-debug builds
-	std::string headerOutputDir = outputDir + "/Generated";
-	GenerateAllHeaders(outputDir, headerOutputDir);
-	DEBUG_INFO("Generated release headers in: %s", headerOutputDir.c_str());
+    std::string headerOutputDir = outputDir + "/Generated";
+    GenerateAllHeaders(outputDir, headerOutputDir);
+    DEBUG_INFO("Generated release headers in: %s", headerOutputDir.c_str());
 }
 
 void CodeGenerator::GenerateModuleFile(

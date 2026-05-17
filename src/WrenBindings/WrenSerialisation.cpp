@@ -6,7 +6,7 @@
 #include "Engine/GameContext.h"
 
 
-// ── helpers ──────────────────────────────────────────────────────────────────
+// -- helpers ----------------------------------------------------------------------
 
 // Push a json value onto the Wren stack as a Wren Map, List, or primitive.
 // `slot` is the destination slot; scratch slots start at `scratchBase`.
@@ -166,6 +166,9 @@ void wren_JsonStringify(WrenVM* vm)
 // BINDING REGISTRATION
 // ============================================================================
 
-// FileSystem static methods
-WREN_CLASS_STATIC("serialisation", "Json", "parse(_)", wren_JsonParse, "Takes a json file as a string and returns a wren map or list");
-WREN_CLASS_STATIC("serialisation", "Json", "stringify(_)", wren_JsonStringify, "Takes a wren map or list and returns a json file as a string");
+WREN_BINDING_MODULE(Serialisation)
+{
+    // FileSystem static methods
+    WREN_CLASS_STATIC(registry, "serialisation", "Json", "parse(_)", wren_JsonParse, "Takes a json file as a string and returns a wren map or list");
+    WREN_CLASS_STATIC(registry, "serialisation", "Json", "stringify(_)", wren_JsonStringify, "Takes a wren map or list and returns a json file as a string");
+}

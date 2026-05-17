@@ -1,7 +1,7 @@
 #pragma once
 
 #include <vector>
-#include <Wren.hpp>
+#include "wren.hpp"
 
 #include "Engine/Scripting/WrenValueWrapper.h"
 

@@ -13,8 +13,8 @@ namespace Struktur::Wren
     // ============================================================================
 
     struct ConstructorSignature {
-        std::string signature;                   // Parameter names for documentation
-        std::string documentation;               // Constructor documentation
+        std::string signature;
+        std::string documentation;
     };
 
     // ============================================================================
@@ -49,97 +49,73 @@ namespace Struktur::Wren
 
     struct ConstantBinding {
         std::string moduleName;
-        std::string className;  // Empty for module-level constants
+        std::string className;
         std::string name;
-        double value;  // Wren only has number type
+        double value;
         std::string documentation;
     };
 
     // ============================================================================
-    // GLOBAL REGISTRIES
+    // REGISTRY — owns all binding data, passed explicitly
     // ============================================================================
 
-    extern std::vector<MethodBinding>& GetMethodBindings();
-    extern std::vector<ClassBinding>& GetClassBindings();
-    extern std::vector<EnumBinding>& GetEnumBindings();
-    extern std::vector<ConstantBinding>& GetConstantBindings();
-
-    // ============================================================================
-    // REGISTRAR HELPERS (Static initialization)
-    // ============================================================================
-
-    struct MethodRegistrar
+    struct BindingRegistry
     {
-        MethodRegistrar(const char* module, const char* className, const char* signature, bool isStatic, WrenForeignMethodFn func, const char* doc)
+        std::vector<MethodBinding>   methods;
+        std::vector<ClassBinding>    classes;
+        std::vector<EnumBinding>     enums;
+        std::vector<ConstantBinding> constants;
+
+        // --- Registration helpers ---
+
+        void AddMethod(const char* module, const char* className, const char* signature,
+                       bool isStatic, WrenForeignMethodFn func, const char* doc)
         {
-            GetMethodBindings().push_back({module, className, signature, isStatic, func, doc});
+            methods.push_back({module, className, signature, isStatic, func, doc});
         }
-    };
 
-    struct ClassRegistrar
-    {
-        ClassRegistrar(const char* module, const char* className, WrenForeignMethodFn alloc, WrenFinalizerFn fin, const char* doc)
+        void AddClass(const char* module, const char* className,
+                      WrenForeignMethodFn alloc, WrenFinalizerFn fin, const char* doc)
         {
-            GetClassBindings().push_back({module, className, alloc, fin, {}, doc});
+            classes.push_back({module, className, alloc, fin, {}, doc, ""});
         }
-    };
 
-    struct EnumRegistrar
-    {
-        EnumRegistrar(const char* module, const char* enumName, std::initializer_list<std::pair<const char*, int>> values, const char* doc)
+        void AddConstructor(const char* module, const char* className,
+                            const char* signature, WrenForeignMethodFn func, const char* doc)
         {
-            EnumBinding binding;
-            binding.moduleName = module;
-            binding.enumName = enumName;
-            binding.documentation = doc;
-            for (const auto& [name, value] : values)
-            {
-                binding.values.push_back({name, value});
-            }
-            GetEnumBindings().push_back(binding);
-        }
-    };
-
-    struct ConstantRegistrar
-    {
-        ConstantRegistrar(const char* module, const char* className, const char* name, double value, const char* doc)
-        {
-            GetConstantBindings().push_back({module, className, name, value, doc});
-        }
-    };
-
-    struct ConstructorRegistrar
-    {
-        ConstructorRegistrar(const char* module, const char* className, const char* signature, WrenForeignMethodFn func, const char* doc)
-        {
-            // Find the foreign class binding and add constructor signature
-            auto& bindings = GetClassBindings();
-            
-            for (auto& binding : bindings)
+            for (auto& binding : classes)
             {
                 if (binding.moduleName == module && binding.className == className)
                 {
-                    ConstructorSignature sig;
-                    sig.signature = signature;
-                    sig.documentation = doc;
-                    binding.constructors.push_back(sig);
+                    binding.constructors.push_back({signature, doc});
                     break;
                 }
             }
-            
             std::string formattedSignature = std::format("init {}", signature);
-            GetMethodBindings().push_back({ module, className, formattedSignature, false, func, doc });
+            methods.push_back({module, className, formattedSignature, false, func, doc});
         }
-    };
 
-    struct InheritanceRegistrar
-    {
-        InheritanceRegistrar(const char* module, const char* className, const char* parentClassName)
+        void AddEnum(const char* module, const char* enumName,
+                     std::initializer_list<std::pair<const char*, int>> vals, const char* doc)
         {
-                        // Find the foreign class binding and add constructor signature
-            auto& bindings = GetClassBindings();
-            
-            for (auto& binding : bindings)
+            EnumBinding binding;
+            binding.moduleName  = module;
+            binding.enumName    = enumName;
+            binding.documentation = doc;
+            for (const auto& [name, value] : vals)
+                binding.values.push_back({name, value});
+            enums.push_back(std::move(binding));
+        }
+
+        void AddConstant(const char* module, const char* className,
+                         const char* name, double value, const char* doc)
+        {
+            constants.push_back({module, className, name, value, doc});
+        }
+
+        void AddInheritance(const char* module, const char* className, const char* parentClassName)
+        {
+            for (auto& binding : classes)
             {
                 if (binding.moduleName == module && binding.className == className)
                 {
@@ -147,77 +123,103 @@ namespace Struktur::Wren
                     return;
                 }
             }
-            
-            // Class not found - this is an error
-            // In production, you might want to queue this and resolve later
+        }
+
+        // --- Lookup ---
+
+        WrenForeignMethodFn FindMethod(const char* module, const char* className,
+                                       bool isStatic, const char* signature) const
+        {
+            for (const auto& b : methods)
+            {
+                if (b.moduleName == module && b.className == className &&
+                    b.isStatic == isStatic && b.signature == signature)
+                    return b.function;
+            }
+            return nullptr;
+        }
+
+        WrenForeignClassMethods FindClass(const char* module, const char* className) const
+        {
+            WrenForeignClassMethods result = {};
+            for (const auto& b : classes)
+            {
+                if (b.moduleName == module && b.className == className)
+                {
+                    result.allocate = b.allocate;
+                    result.finalize = b.finalize;
+                    return result;
+                }
+            }
+            return result;
         }
     };
 
     // ============================================================================
-    // LOOKUP FUNCTIONS
+    // Each binding module implements this signature
     // ============================================================================
+    // Forward declarations — implemented in each WrenBinding*.cpp
+    void RegisterAnimationBindings(BindingRegistry& registry);
+    void RegisterGameObjectBindings(BindingRegistry& registry);
+    void RegisterGameObjectComponentBindings(BindingRegistry& registry);
+    void RegisterMathBindings(BindingRegistry& registry);
+    void RegisterPhysicsBindings(BindingRegistry& registry);
+    void RegisterResourceManagerBindings(BindingRegistry& registry);
+    void RegisterUIBindings(BindingRegistry& registry);
+    void RegisterDialogueBindings(BindingRegistry& registry);
+    void RegisterFunctionCallbackBindings(BindingRegistry& registry);
+    void RegisterFileSystemBindings(BindingRegistry& registry);
+    void RegisterFlagsBindings(BindingRegistry& registry);
+    void RegisterApplicationBindings(BindingRegistry& registry);
+    void RegisterInputBindings(BindingRegistry& registry);
+    void RegisterDebugBindings(BindingRegistry& registry);
+    void RegisterSerialisationBindings(BindingRegistry& registry);
+    void RegisterVariableSubstitutionBindings(BindingRegistry& registry);
 
-    WrenForeignMethodFn FindMethod(const char* module, const char* className,
-                                bool isStatic, const char* signature);
-    WrenForeignClassMethods FindClass(const char* module, const char* className);
+    // Call this once at startup
+    void RegisterAllBindings(BindingRegistry& registry);
 
-}
-
-// ============================================================================
-// REGISTRATION MACROS
-// ============================================================================
-
-// Class static method: Entity.create(name, parent)
-#define WREN_CLASS_STATIC(module, cls, sig, func, doc) \
-    static Struktur::Wren::MethodRegistrar WREN_UNIQUE_NAME(static_func_reg_)(module, cls, sig, true, func, doc)
-
-// Class instance method: vector.normalize()
-#define WREN_CLASS_METHOD(module, cls, sig, func, doc) \
-    static Struktur::Wren::MethodRegistrar WREN_UNIQUE_NAME(method_reg_)(module, cls, sig, false, func, doc)
-
-// Module-level function: lerp(a, b, t)
-#define WREN_FUNCTION(module, sig, func, doc) \
-    static Struktur::Wren::MethodRegistrar WREN_UNIQUE_NAME(funciton_reg_)(module, "", sig, true, func, doc)
-
-// Foreign class with allocator and finalizer
-#define WREN_FOREIGN_CLASS(module, cls, alloc, fin, doc) \
-    static Struktur::Wren::ClassRegistrar WREN_UNIQUE_NAME(class_reg_)(module, cls, alloc, fin, doc)
-
-// Register a constructor signature for a foreign class
-#define WREN_CONSTRUCTOR(module, cls, sig, func, doc) \
-    static Struktur::Wren::ConstructorRegistrar WREN_UNIQUE_NAME(constructor_reg_)(module, cls, sig, func, doc)
-
-#define WREN_CLASS_INHERITANCE(module, className, parentClassName) \
-    static Struktur::Wren::InheritanceRegistrar WREN_UNIQUE_NAME(inheritance_reg_)(module, className, parentClassName);
-
-#define WREN_ENUM_PAIR(k, v) std::pair{k, (int)v}
-
-// Enum binding: CollisionType { None = 0, Wall = 1, Enemy = 2 }
-#define WREN_ENUM(module, enumName, doc, ...) \
-    static Struktur::Wren::EnumRegistrar WREN_UNIQUE_NAME(enum_reg_)(module, #enumName, {__VA_ARGS__}, doc)
-
-// Class constant: Math.PI = 3.14159
-#define WREN_CLASS_CONSTANT(module, cls, name, value, doc) \
-    static Struktur::Wren::ConstantRegistrar WREN_UNIQUE_NAME(class_const_reg_)(module, cls, #name, static_cast<double>(value), doc)
-
-// Module-level constant: PI = 3.14159
-#define WREN_CONSTANT(module, name, value, doc) \
-    static Struktur::Wren::ConstantRegistrar WREN_UNIQUE_NAME(const_reg_)(module, "", #name, static_cast<double>(value), doc)
-
-// Read-only variable (getter only): Time.delta
-#define WREN_VARIABLE_READONLY(module, cls, name, getterFunc, doc) \
-    static Struktur::Wren::MethodRegistrar WREN_UNIQUE_NAME(readonly_var_reg_)(module, cls, #name, true, getterFunc, doc)
-
-// Read-write variable (getter + setter): Game.speed
-#define WREN_VARIABLE(module, cls, name, getterFunc, setterFunc, doc) \
-    static Struktur::Wren::MethodRegistrar WREN_UNIQUE_NAME(getter_reg_)(module, cls, #name, true, getterFunc, doc); \
-    static Struktur::Wren::MethodRegistrar WREN_UNIQUE_NAME(setter_reg_)(module, cls, #name "=(_)", true, setterFunc, doc " (setter)")
+} // namespace Struktur::Wren
 
 // ============================================================================
-// Utility Macros
+// REGISTRATION MACROS — now take registry as first arg
 // ============================================================================
 
-// Generate unique variable names
-#define WREN_CONCAT_IMPL(x, y) x##y
-#define WREN_CONCAT(x, y) WREN_CONCAT_IMPL(x, y)
-#define WREN_UNIQUE_NAME(prefix) WREN_CONCAT(prefix, __LINE__)
+#define WREN_BINDING_MODULE(ModuleName) \
+    void Struktur::Wren::Register##ModuleName##Bindings(Struktur::Wren::BindingRegistry& registry)
+
+#define WREN_CLASS_STATIC(registry, module, cls, sig, func, doc) \
+    (registry).AddMethod(module, cls, sig, true, func, doc)
+
+#define WREN_CLASS_METHOD(registry, module, cls, sig, func, doc) \
+    (registry).AddMethod(module, cls, sig, false, func, doc)
+
+#define WREN_FUNCTION(registry, module, sig, func, doc) \
+    (registry).AddMethod(module, "", sig, true, func, doc)
+
+#define WREN_FOREIGN_CLASS(registry, module, cls, alloc, fin, doc) \
+    (registry).AddClass(module, cls, alloc, fin, doc)
+
+#define WREN_CONSTRUCTOR(registry, module, cls, sig, func, doc) \
+    (registry).AddConstructor(module, cls, sig, func, doc)
+
+#define WREN_CLASS_INHERITANCE(registry, module, className, parentClassName) \
+    (registry).AddInheritance(module, className, parentClassName)
+
+#define WREN_ENUM_PAIR(k, v) std::pair<const char*, int>{k, (int)v}
+
+#define WREN_ENUM(registry, module, enumName, doc, ...) \
+    (registry).AddEnum(module, #enumName, {__VA_ARGS__}, doc)
+
+#define WREN_CLASS_CONSTANT(registry, module, cls, name, value, doc) \
+    (registry).AddConstant(module, cls, #name, static_cast<double>(value), doc)
+
+#define WREN_CONSTANT(registry, module, name, value, doc) \
+    (registry).AddConstant(module, "", #name, static_cast<double>(value), doc)
+
+#define WREN_VARIABLE_READONLY(registry, module, cls, name, getterFunc, doc) \
+    (registry).AddMethod(module, cls, #name, true, getterFunc, doc)
+
+#define WREN_VARIABLE(registry, module, cls, name, getterFunc, setterFunc, doc) \
+    (registry).AddMethod(module, cls, #name, true, getterFunc, doc); \
+    (registry).AddMethod(module, cls, #name "=(_)", true, setterFunc, doc " (setter)")

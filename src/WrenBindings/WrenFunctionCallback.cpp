@@ -71,19 +71,21 @@ void wren_FunctionCallbackCall(WrenVM* vm)
 // ============================================================================
 // BINDING REGISTRATION
 // ============================================================================
+WREN_BINDING_MODULE(FunctionCallback)
+{
+    // DialogueData foreign class
+    WREN_FOREIGN_CLASS(registry, "callback", "FunctionCallback", wren_FunctionCallbackAllocate, wren_FunctionCallbackFinalize, "Container for Callback");
 
-// DialogueData foreign class
-WREN_FOREIGN_CLASS("callback", "FunctionCallback", wren_FunctionCallbackAllocate, wren_FunctionCallbackFinalize, "Container for Callback");
-
-WREN_CLASS_METHOD("callback", "FunctionCallback", "call()", wren_FunctionCallbackCall, "Execute the callback");
-WREN_CLASS_METHOD("callback", "FunctionCallback", "call(_)", wren_FunctionCallbackCall, "Execute the callback");
-WREN_CLASS_METHOD("callback", "FunctionCallback", "call(_,_)", wren_FunctionCallbackCall, "Execute the callback");
-WREN_CLASS_METHOD("callback", "FunctionCallback", "call(_,_,_)", wren_FunctionCallbackCall, "Execute the callback");
-WREN_CLASS_METHOD("callback", "FunctionCallback", "call(_,_,_,_)", wren_FunctionCallbackCall, "Execute the callback");
-WREN_CLASS_METHOD("callback", "FunctionCallback", "call(_,_,_,_,_)", wren_FunctionCallbackCall, "Execute the callback");
-WREN_CLASS_METHOD("callback", "FunctionCallback", "call(_,_,_,_,_,_)", wren_FunctionCallbackCall, "Execute the callback");
-WREN_CLASS_METHOD("callback", "FunctionCallback", "call(_,_,_,_,_,_,_)", wren_FunctionCallbackCall, "Execute the callback");
-WREN_CLASS_METHOD("callback", "FunctionCallback", "call(_,_,_,_,_,_,_,_)", wren_FunctionCallbackCall, "Execute the callback");
-WREN_CLASS_METHOD("callback", "FunctionCallback", "call(_,_,_,_,_,_,_,_,_)", wren_FunctionCallbackCall, "Execute the callback");
-WREN_CLASS_METHOD("callback", "FunctionCallback", "call(_,_,_,_,_,_,_,_,_,_)", wren_FunctionCallbackCall, "Execute the callback");
-WREN_CLASS_METHOD("callback", "FunctionCallback", "call(_,_,_,_,_,_,_,_,_,_,_)", wren_FunctionCallbackCall, "Execute the callback");
+    WREN_CLASS_METHOD(registry, "callback", "FunctionCallback", "call()", wren_FunctionCallbackCall, "Execute the callback");
+    WREN_CLASS_METHOD(registry, "callback", "FunctionCallback", "call(_)", wren_FunctionCallbackCall, "Execute the callback");
+    WREN_CLASS_METHOD(registry, "callback", "FunctionCallback", "call(_,_)", wren_FunctionCallbackCall, "Execute the callback");
+    WREN_CLASS_METHOD(registry, "callback", "FunctionCallback", "call(_,_,_)", wren_FunctionCallbackCall, "Execute the callback");
+    WREN_CLASS_METHOD(registry, "callback", "FunctionCallback", "call(_,_,_,_)", wren_FunctionCallbackCall, "Execute the callback");
+    WREN_CLASS_METHOD(registry, "callback", "FunctionCallback", "call(_,_,_,_,_)", wren_FunctionCallbackCall, "Execute the callback");
+    WREN_CLASS_METHOD(registry, "callback", "FunctionCallback", "call(_,_,_,_,_,_)", wren_FunctionCallbackCall, "Execute the callback");
+    WREN_CLASS_METHOD(registry, "callback", "FunctionCallback", "call(_,_,_,_,_,_,_)", wren_FunctionCallbackCall, "Execute the callback");
+    WREN_CLASS_METHOD(registry, "callback", "FunctionCallback", "call(_,_,_,_,_,_,_,_)", wren_FunctionCallbackCall, "Execute the callback");
+    WREN_CLASS_METHOD(registry, "callback", "FunctionCallback", "call(_,_,_,_,_,_,_,_,_)", wren_FunctionCallbackCall, "Execute the callback");
+    WREN_CLASS_METHOD(registry, "callback", "FunctionCallback", "call(_,_,_,_,_,_,_,_,_,_)", wren_FunctionCallbackCall, "Execute the callback");
+    WREN_CLASS_METHOD(registry, "callback", "FunctionCallback", "call(_,_,_,_,_,_,_,_,_,_,_)", wren_FunctionCallbackCall, "Execute the callback");
+}

@@ -199,46 +199,6 @@ void wren_MathDegrees(WrenVM* vm) {
 	wrenSetSlotDouble(vm, 0, radians * 180.0 / M_PI);
 }
 
-// Constants (as static getters)
-WREN_CLASS_STATIC("math", "Math", "infinity", wren_MathInfinity, "Positive infinity");
-WREN_CLASS_STATIC("math", "Math", "negInfinity", wren_MathNegInfinity, "Negative infinity");
-WREN_CLASS_STATIC("math", "Math", "nan", wren_MathNaN, "Not a Number");
-WREN_CLASS_STATIC("math", "Math", "pi", wren_MathPi, "Pi constant");
-WREN_CLASS_STATIC("math", "Math", "e", wren_MathE, "Euler's number");
-
-// Utility functions
-WREN_CLASS_STATIC("math", "Math", "max(_,_)", wren_MathMax, "Maximum of two numbers");
-WREN_CLASS_STATIC("math", "Math", "min(_,_)", wren_MathMin, "Minimum of two numbers");
-WREN_CLASS_STATIC("math", "Math", "clamp(_,_,_)", wren_MathClamp, "Clamp value between min and max");
-WREN_CLASS_STATIC("math", "Math", "abs(_)", wren_MathAbs, "Absolute value");
-WREN_CLASS_STATIC("math", "Math", "sqrt(_)", wren_MathSqrt, "Square root");
-WREN_CLASS_STATIC("math", "Math", "pow(_,_)", wren_MathPow, "Power");
-WREN_CLASS_STATIC("math", "Math", "lerp(_,_,_)", wren_MathLerp, "Linear interpolation");
-WREN_CLASS_STATIC("math", "Math", "sign(_)", wren_MathSign, "Sign of number (-1, 0, 1)");
-
-// Trigonometry
-WREN_CLASS_STATIC("math", "Math", "sin(_)", wren_MathSin, "Sine");
-WREN_CLASS_STATIC("math", "Math", "cos(_)", wren_MathCos, "Cosine");
-WREN_CLASS_STATIC("math", "Math", "tan(_)", wren_MathTan, "Tangent");
-WREN_CLASS_STATIC("math", "Math", "asin(_)", wren_MathAsin, "Arc sine");
-WREN_CLASS_STATIC("math", "Math", "acos(_)", wren_MathAcos, "Arc cosine");
-WREN_CLASS_STATIC("math", "Math", "atan(_)", wren_MathAtan, "Arc tangent");
-WREN_CLASS_STATIC("math", "Math", "atan2(_,_)", wren_MathAtan2, "Arc tangent of y/x");
-
-// Rounding
-WREN_CLASS_STATIC("math", "Math", "floor(_)", wren_MathFloor, "Floor");
-WREN_CLASS_STATIC("math", "Math", "ceil(_)", wren_MathCeil, "Ceiling");
-WREN_CLASS_STATIC("math", "Math", "round(_)", wren_MathRound, "Round to nearest integer");
-
-// Checks
-WREN_CLASS_STATIC("math", "Math", "isInfinite(_)", wren_MathIsInfinite, "Check if infinite");
-WREN_CLASS_STATIC("math", "Math", "isNaN(_)", wren_MathIsNaN, "Check if NaN");
-WREN_CLASS_STATIC("math", "Math", "isFinite(_)", wren_MathIsFinite, "Check if finite");
-
-// Conversions
-WREN_CLASS_STATIC("math", "Math", "radians(_)", wren_MathRadians, "Convert degrees to radians");
-WREN_CLASS_STATIC("math", "Math", "degrees(_)", wren_MathDegrees, "Convert radians to degrees");
-
 // ============================================================================
 // Vec2 - Foreign class wrapping glm::vec2
 // ============================================================================
@@ -503,44 +463,6 @@ void wren_Vec2Down(WrenVM* vm)
 	WrenVec2* result = (WrenVec2*)wrenSetSlotNewForeign(vm, 0, 0, sizeof(WrenVec2));
 	new (result) WrenVec2(0.0f, -1.0f);
 }
-
-// Register Vec2 foreign class
-WREN_FOREIGN_CLASS("math", "Vec2", wren_Vec2Allocate, wren_Vec2Finalize, "2D vector class wrapping glm::vec2");
-
-// Register constructors
-WREN_CONSTRUCTOR("math", "Vec2", "new()", wren_Vec2New, "Create zero vector");
-WREN_CONSTRUCTOR("math", "Vec2", "new(_,_)", wren_Vec2New, "Create vector with x, y components");
-WREN_CONSTRUCTOR("math", "Vec2", "copy(_)", wren_Vec2Copy, "Copy a vector");
-
-// Register methods
-WREN_CLASS_METHOD("math", "Vec2", "x", wren_Vec2GetX, "Get X component");
-WREN_CLASS_METHOD("math", "Vec2", "y", wren_Vec2GetY, "Get Y component");
-WREN_CLASS_METHOD("math", "Vec2", "x=(_)", wren_Vec2SetX, "Set X component");
-WREN_CLASS_METHOD("math", "Vec2", "y=(_)", wren_Vec2SetY, "Set Y component");
-WREN_CLASS_METHOD("math", "Vec2", "toString", wren_Vec2ToString, "Convert to string");
-WREN_CLASS_METHOD("math", "Vec2", "+(_)", wren_Vec2Add, "Add two vectors");
-WREN_CLASS_METHOD("math", "Vec2", "-(_)", wren_Vec2Subtract, "Subtract vectors");
-WREN_CLASS_METHOD("math", "Vec2", "*(_)", wren_Vec2Multiply, "Multiply by scalar");
-WREN_CLASS_METHOD("math", "Vec2", "length()", wren_Vec2Length, "Get vector length");
-WREN_CLASS_METHOD("math", "Vec2", "lengthSquared()", wren_Vec2LengthSquared, "Get vector length squared");
-WREN_CLASS_METHOD("math", "Vec2", "normalize()", wren_Vec2Normalize, "Get normalized vector");
-
-// Static methods
-WREN_CLASS_STATIC("math", "Vec2", "distance(_,_)", wren_Vec2Distance, "Distance between two vectors");
-WREN_CLASS_STATIC("math", "Vec2", "distanceSquared(_,_)", wren_Vec2DistanceSquared, "Squared distance");
-WREN_CLASS_STATIC("math", "Vec2", "lerp(_,_,_)", wren_Vec2Lerp, "Linear interpolation");
-WREN_CLASS_STATIC("math", "Vec2", "dot(_,_)", wren_Vec2DotStatic, "Dot product (static)");
-WREN_CLASS_STATIC("math", "Vec2", "reflect(_,_)", wren_Vec2Reflect, "Reflect vector");
-WREN_CLASS_STATIC("math", "Vec2", "min(_,_)", wren_Vec2Min, "Component-wise minimum");
-WREN_CLASS_STATIC("math", "Vec2", "max(_,_)", wren_Vec2Max, "Component-wise maximum");
-WREN_CLASS_STATIC("math", "Vec2", "clamp(_,_,_)", wren_Vec2Clamp, "Clamp vector");
-WREN_CLASS_STATIC("math", "Vec2", "zero()", wren_Vec2Zero, "Zero vector (0, 0)");
-WREN_CLASS_STATIC("math", "Vec2", "one()", wren_Vec2One, "One vector (1, 1)");
-WREN_CLASS_STATIC("math", "Vec2", "right()", wren_Vec2Right, "Right vector (1, 0)");
-WREN_CLASS_STATIC("math", "Vec2", "up()", wren_Vec2Up, "Up vector (0, 1)");
-WREN_CLASS_STATIC("math", "Vec2", "left()", wren_Vec2Left, "Left vector (-1, 0)");
-WREN_CLASS_STATIC("math", "Vec2", "down()", wren_Vec2Down, "Down vector (0, -1)");
-
 
 // ============================================================================
 // Vec3 - Foreign class wrapping glm::vec3
@@ -852,49 +774,6 @@ void wren_Vec3Back(WrenVM* vm)
 	new (result) WrenVec3(0.0f, 0.0f, 1.0f);
 }
 
-// Register Vec3 foreign class
-WREN_FOREIGN_CLASS("math", "Vec3", wren_Vec3Allocate, wren_Vec3Finalize, "3D vector class wrapping glm::vec3");
-
-// Register constructors
-WREN_CONSTRUCTOR("math", "Vec3", "new()", wren_Vec3New, "Create zero vector");
-WREN_CONSTRUCTOR("math", "Vec3", "new(_,_,_)", wren_Vec3New, "Create vector with x, y, z components");
-WREN_CONSTRUCTOR("math", "Vec3", "copy(_)", wren_Vec3Copy, "Copy a vector");
-
-// Register methods
-WREN_CLASS_METHOD("math", "Vec3", "x", wren_Vec3GetX, "Get X component");
-WREN_CLASS_METHOD("math", "Vec3", "y", wren_Vec3GetY, "Get Y component");
-WREN_CLASS_METHOD("math", "Vec3", "z", wren_Vec3GetZ, "Get Z component");
-WREN_CLASS_METHOD("math", "Vec3", "x=(_)", wren_Vec3SetX, "Set X component");
-WREN_CLASS_METHOD("math", "Vec3", "y=(_)", wren_Vec3SetY, "Set Y component");
-WREN_CLASS_METHOD("math", "Vec3", "z=(_)", wren_Vec3SetZ, "Set Z component");
-WREN_CLASS_METHOD("math", "Vec3", "toString()", wren_Vec3ToString, "Convert to string");
-WREN_CLASS_METHOD("math", "Vec3", "+(_)", wren_Vec3Add, "Add two vectors");
-WREN_CLASS_METHOD("math", "Vec3", "-(_)", wren_Vec3Subtract, "Subtract vectors");
-WREN_CLASS_METHOD("math", "Vec3", "*(_)", wren_Vec3Multiply, "Multiply by scalar");
-WREN_CLASS_METHOD("math", "Vec3", "length()", wren_Vec3Length, "Get vector length");
-WREN_CLASS_METHOD("math", "Vec3", "lengthSquared()", wren_Vec3LengthSquared, "Get vector length squared");
-WREN_CLASS_METHOD("math", "Vec3", "normalize", wren_Vec3Normalize, "Get normalized vector");
-
-// Static methods
-WREN_CLASS_STATIC("math", "Vec3", "distance(_,_)", wren_Vec3Distance, "Distance between two vectors");
-WREN_CLASS_STATIC("math", "Vec3", "distanceSquared(_,_)", wren_Vec3DistanceSquared, "Squared distance");
-WREN_CLASS_STATIC("math", "Vec3", "lerp(_,_,_)", wren_Vec3Lerp, "Linear interpolation");
-WREN_CLASS_STATIC("math", "Vec3", "dot(_,_)", wren_Vec3DotStatic, "Dot product (static)");
-WREN_CLASS_STATIC("math", "Vec3", "cross(_,_)", wren_Vec3CrossStatic, "Cross product (static)");
-WREN_CLASS_STATIC("math", "Vec3", "reflect(_,_)", wren_Vec3Reflect, "Reflect vector");
-WREN_CLASS_STATIC("math", "Vec3", "refract(_,_,_)", wren_Vec3Refract, "Refract vector");
-WREN_CLASS_STATIC("math", "Vec3", "min(_,_)", wren_Vec3Min, "Component-wise minimum");
-WREN_CLASS_STATIC("math", "Vec3", "max(_,_)", wren_Vec3Max, "Component-wise maximum");
-WREN_CLASS_STATIC("math", "Vec3", "clamp(_,_,_)", wren_Vec3Clamp, "Clamp vector");
-WREN_CLASS_STATIC("math", "Vec3", "zero()", wren_Vec3Zero, "Zero vector (0, 0, 0)");
-WREN_CLASS_STATIC("math", "Vec3", "one()", wren_Vec3One, "One vector (1, 1, 1)");
-WREN_CLASS_STATIC("math", "Vec3", "right()", wren_Vec3Right, "Right vector (1, 0, 0)");
-WREN_CLASS_STATIC("math", "Vec3", "up()", wren_Vec3Up, "Up vector (0, 1, 0)");
-WREN_CLASS_STATIC("math", "Vec3", "forward()", wren_Vec3Forward, "Forward vector (0, 0, -1)");
-WREN_CLASS_STATIC("math", "Vec3", "left()", wren_Vec3Left, "Left vector (-1, 0, 0)");
-WREN_CLASS_STATIC("math", "Vec3", "down()", wren_Vec3Down, "Down vector (0, -1, 0)");
-WREN_CLASS_STATIC("math", "Vec3", "back()", wren_Vec3Back, "Back vector (0, 0, 1)");
-
 // ============================================================================
 // Vec4 - Foreign class wrapping glm::vec4
 // ============================================================================
@@ -1135,42 +1014,6 @@ void wren_Vec4One(WrenVM* vm)
 	WrenVec4* result = (WrenVec4*)wrenSetSlotNewForeign(vm, 0, 1, sizeof(WrenVec4));
 	new (result) WrenVec4(1.0f, 1.0f, 1.0f, 1.0f);
 }
-
-// Register Vec3 foreign class
-WREN_FOREIGN_CLASS("math", "Vec4", wren_Vec4Allocate, wren_Vec4Finalize, "4D vector class wrapping glm::vec4");
-
-// Register constructors
-WREN_CONSTRUCTOR("math", "Vec4", "new()", wren_Vec4New, "Create zero vector");
-WREN_CONSTRUCTOR("math", "Vec4", "new(_,_,_,_)", wren_Vec4New, "Create vector with x, y, z, w components");
-WREN_CONSTRUCTOR("math", "Vec4", "copy(_)", wren_Vec4Copy, "Copy a vector");
-
-// Register methods
-WREN_CLASS_METHOD("math", "Vec4", "x", wren_Vec4GetX, "Get X component");
-WREN_CLASS_METHOD("math", "Vec4", "y", wren_Vec4GetY, "Get Y component");
-WREN_CLASS_METHOD("math", "Vec4", "z", wren_Vec4GetZ, "Get Z component");
-WREN_CLASS_METHOD("math", "Vec4", "w", wren_Vec4GetW, "Get W component");
-WREN_CLASS_METHOD("math", "Vec4", "x=(_)", wren_Vec4SetX, "Set X component");
-WREN_CLASS_METHOD("math", "Vec4", "y=(_)", wren_Vec4SetY, "Set Y component");
-WREN_CLASS_METHOD("math", "Vec4", "z=(_)", wren_Vec4SetZ, "Set Z component");
-WREN_CLASS_METHOD("math", "Vec4", "w=(_)", wren_Vec4SetW, "Set W component");
-WREN_CLASS_METHOD("math", "Vec4", "toString()", wren_Vec4ToString, "Convert to string");
-WREN_CLASS_METHOD("math", "Vec4", "+(_)", wren_Vec4Add, "Add two vectors");
-WREN_CLASS_METHOD("math", "Vec4", "-(_)", wren_Vec4Subtract, "Subtract vectors");
-WREN_CLASS_METHOD("math", "Vec4", "*(_)", wren_Vec4Multiply, "Multiply by scalar");
-WREN_CLASS_METHOD("math", "Vec4", "length()", wren_Vec4Length, "Get vector length");
-WREN_CLASS_METHOD("math", "Vec4", "lengthSquared()", wren_Vec4LengthSquared, "Get vector length squared");
-WREN_CLASS_METHOD("math", "Vec4", "normalize()", wren_Vec4Normalize, "Get normalized vector");
-
-// Static methods
-WREN_CLASS_STATIC("math", "Vec4", "distance(_,_)", wren_Vec4Distance, "Distance between two vectors");
-WREN_CLASS_STATIC("math", "Vec4", "distanceSquared(_,_)", wren_Vec4DistanceSquared, "Squared distance");
-WREN_CLASS_STATIC("math", "Vec4", "lerp(_,_,_)", wren_Vec4Lerp, "Linear interpolation");
-WREN_CLASS_STATIC("math", "Vec4", "dot(_,_)", wren_Vec4DotStatic, "Dot product (static)");
-WREN_CLASS_STATIC("math", "Vec4", "min(_,_)", wren_Vec4Min, "Component-wise minimum");
-WREN_CLASS_STATIC("math", "Vec4", "max(_,_)", wren_Vec4Max, "Component-wise maximum");
-WREN_CLASS_STATIC("math", "Vec4", "clamp(_,_,_)", wren_Vec4Clamp, "Clamp vector");
-WREN_CLASS_STATIC("math", "Vec4", "zero()", wren_Vec4Zero, "Zero vector (0, 0, 0, 0)");
-WREN_CLASS_STATIC("math", "Vec4", "one()", wren_Vec4One, "One vector (1, 1, 1, 1)");
 
 // ============================================================================
 // Quat - Foreign class wrapping glm::quat
@@ -1568,48 +1411,6 @@ void wren_QuatRight(WrenVM* vm)
 	new (result) WrenVec3(right);
 }
 
-// Register Quat foreign class
-WREN_FOREIGN_CLASS("math", "Quat", wren_QuatAllocate, wren_QuatFinalize, "Quaternion class for 3D rotations wrapping glm::quat");
-
-// Register constructors
-WREN_CONSTRUCTOR("math", "Quat", "new()", wren_QuatNew, "Create identity quaternion");
-WREN_CONSTRUCTOR("math", "Quat", "new(_,_,_,_)", wren_QuatNew, "Create quaternion with w, x, y, z components");
-WREN_CONSTRUCTOR("math", "Quat", "copy(_)", wren_QuatCopy, "Copy a quaternion");
-
-// Register instance methods
-WREN_CLASS_METHOD("math", "Quat", "w", wren_QuatGetW, "Get W component");
-WREN_CLASS_METHOD("math", "Quat", "x", wren_QuatGetX, "Get X component");
-WREN_CLASS_METHOD("math", "Quat", "y", wren_QuatGetY, "Get Y component");
-WREN_CLASS_METHOD("math", "Quat", "z", wren_QuatGetZ, "Get Z component");
-WREN_CLASS_METHOD("math", "Quat", "w=(_)", wren_QuatSetW, "Set W component");
-WREN_CLASS_METHOD("math", "Quat", "x=(_)", wren_QuatSetX, "Set X component");
-WREN_CLASS_METHOD("math", "Quat", "y=(_)", wren_QuatSetY, "Set Y component");
-WREN_CLASS_METHOD("math", "Quat", "z=(_)", wren_QuatSetZ, "Set Z component");
-WREN_CLASS_METHOD("math", "Quat", "toString()", wren_QuatToString, "Convert to string");
-WREN_CLASS_METHOD("math", "Quat", "normalize()", wren_QuatNormalize, "Get normalized quaternion");
-WREN_CLASS_METHOD("math", "Quat", "inverse()", wren_QuatInverse, "Get inverse quaternion");
-WREN_CLASS_METHOD("math", "Quat", "conjugate()", wren_QuatConjugate, "Get conjugate quaternion");
-WREN_CLASS_METHOD("math", "Quat", "length()", wren_QuatLength, "Get quaternion length");
-WREN_CLASS_METHOD("math", "Quat", "lengthSquared()", wren_QuatLengthSquared, "Get quaternion length squared");
-WREN_CLASS_METHOD("math", "Quat", "toEuler()", wren_QuatToEuler, "Convert to Euler angles (radians)");
-WREN_CLASS_METHOD("math", "Quat", "toEulerDegrees()", wren_QuatToEulerDegrees, "Convert to Euler angles (degrees)");
-WREN_CLASS_METHOD("math", "Quat", "toAxisAngle()", wren_QuatToAxisAngle, "Convert to axis-angle representation");
-WREN_CLASS_METHOD("math", "Quat", "*(_)", wren_QuatMultiply, "Multiply quaternions");
-WREN_CLASS_METHOD("math", "Quat", "rotate(_)", wren_QuatRotateVec3, "Rotate vector by quaternion");
-WREN_CLASS_METHOD("math", "Quat", "forward()", wren_QuatForward, "Get forward direction vector");
-WREN_CLASS_METHOD("math", "Quat", "up()", wren_QuatUp, "Get up direction vector");
-WREN_CLASS_METHOD("math", "Quat", "right()", wren_QuatRight, "Get right direction vector");
-
-// Register static methods
-WREN_CLASS_STATIC("math", "Quat", "dot(_,_)", wren_QuatDot, "Dot product");
-WREN_CLASS_STATIC("math", "Quat", "identity()", wren_QuatIdentity, "Create identity quaternion");
-WREN_CLASS_STATIC("math", "Quat", "fromAxisAngle(_,_)", wren_QuatFromAxisAngle, "Create quaternion from axis and angle");
-WREN_CLASS_STATIC("math", "Quat", "fromEuler(_,_,_)", wren_QuatFromEuler, "Create quaternion from Euler angles (radians)");
-WREN_CLASS_STATIC("math", "Quat", "fromEulerDegrees(_,_,_)", wren_QuatFromEulerDegrees, "Create quaternion from Euler angles (degrees)");
-WREN_CLASS_STATIC("math", "Quat", "lookAt(_,_)", wren_QuatLookAt, "Create quaternion from forward and up vectors");
-WREN_CLASS_STATIC("math", "Quat", "slerp(_,_,_)", wren_QuatSlerp, "Spherical linear interpolation");
-WREN_CLASS_STATIC("math", "Quat", "lerp(_,_,_)", wren_QuatLerp, "Linear interpolation");
-
 // ============================================================================
 // Mat4 - Foreign class wrapping glm::mat4
 // ============================================================================
@@ -1806,32 +1607,6 @@ void wren_Mat4ToString(WrenVM* vm)
 	wrenSetSlotString(vm, 0, oss.str().c_str());
 }
 
-// Register Mat4 foreign class
-WREN_FOREIGN_CLASS("math", "Mat4", wren_Mat4Allocate, wren_Mat4Finalize, "Matix 4 class wrapping glm::mat4");
-
-// Register constructors
-WREN_CONSTRUCTOR("math", "Mat4", "new()", wren_Mat4New, "Create identity Matix 4");
-WREN_CONSTRUCTOR("math", "Mat4", "copy(_)", wren_Mat4Copy, "Copy a Matix 4");
-
-// Register instance methods
-WREN_CLASS_METHOD("math", "Mat4", "*(_)", wren_Mat4Multiply, "Multiply matix's");
-WREN_CLASS_METHOD("math", "Mat4", "translate(_)", wren_Mat4Translate, "Translate matix");
-WREN_CLASS_METHOD("math", "Mat4", "rotate(_,_)", wren_Mat4Rotate, "Rotate matix");
-WREN_CLASS_METHOD("math", "Mat4", "scale(_,_)", wren_Mat4Scale, "Scale matix");
-WREN_CLASS_METHOD("math", "Mat4", "get(_,_)", wren_Mat4Get, "Get matix element");
-WREN_CLASS_METHOD("math", "Mat4", "set(_,_)", wren_Mat4Set, "Set matix element");
-WREN_CLASS_METHOD("math", "Mat4", "determinant()", wren_Mat4Determinant, "Get matrix Determinant");
-WREN_CLASS_METHOD("math", "Mat4", "inverse()", wren_Mat4Inverse, "Get matrix Inverse");
-WREN_CLASS_METHOD("math", "Mat4", "transpose()", wren_Mat4Transpose, "Get matrix transpose");
-WREN_CLASS_METHOD("math", "Mat4", "toList()", wren_Mat4ToList, "Get matrix as list");
-WREN_CLASS_METHOD("math", "Mat4", "toString()", wren_Mat4ToString, "Convert to string");
-
-// Register static methods
-WREN_CLASS_STATIC("math", "Mat4", "identity()", wren_Mat4Identity, "Create identity Matix 4");
-WREN_CLASS_STATIC("math", "Mat4", "perspective(_,_,_,_)", wren_Mat4Perspective, "Dot product");
-WREN_CLASS_STATIC("math", "Mat4", "ortho(_,_,_,_,_,_)", wren_Mat4Ortho, "Create identity quaternion");
-WREN_CLASS_STATIC("math", "Mat4", "lookAt(_,_,_)", wren_Mat4LookAt, "Create quaternion from axis and angle");
-
 // ============================================================================
 // Rect - Foreign class wrapping raylib ::Rect
 // ============================================================================
@@ -1928,20 +1703,250 @@ void wren_RectSetHeight(WrenVM* vm)
 	rect->value.height = (float)wrenGetSlotDouble(vm, 1);
 }
 
-// Register Mat4 foreign class
-WREN_FOREIGN_CLASS("math", "Rect", wren_RectAllocate, wren_RectFinalize, "Rect class wrapping raylib ::Rect");
+// ============================================================================
+// BINDING REGISTRATION
+// ============================================================================
+WREN_BINDING_MODULE(Math)
+{
+	// Constants (as static getters)
+	WREN_CLASS_STATIC(registry, "math", "Math", "infinity", wren_MathInfinity, "Positive infinity");
+	WREN_CLASS_STATIC(registry, "math", "Math", "negInfinity", wren_MathNegInfinity, "Negative infinity");
+	WREN_CLASS_STATIC(registry, "math", "Math", "nan", wren_MathNaN, "Not a Number");
+	WREN_CLASS_STATIC(registry, "math", "Math", "pi", wren_MathPi, "Pi constant");
+	WREN_CLASS_STATIC(registry, "math", "Math", "e", wren_MathE, "Euler's number");
 
-// Register constructors
-WREN_CONSTRUCTOR("math", "Rect", "new(_,_,_,_)", wren_RectNew, "Create Rect, with components x, y, width, and height", x, y, width, height);
-WREN_CONSTRUCTOR("math", "Rect", "new()", wren_RectNew, "Create Rect");
-WREN_CONSTRUCTOR("math", "Rect", "copy(_)", wren_RectCopy, "Copy a Rect");
+	// Utility functions
+	WREN_CLASS_STATIC(registry, "math", "Math", "max(_,_)", wren_MathMax, "Maximum of two numbers");
+	WREN_CLASS_STATIC(registry, "math", "Math", "min(_,_)", wren_MathMin, "Minimum of two numbers");
+	WREN_CLASS_STATIC(registry, "math", "Math", "clamp(_,_,_)", wren_MathClamp, "Clamp value between min and max");
+	WREN_CLASS_STATIC(registry, "math", "Math", "abs(_)", wren_MathAbs, "Absolute value");
+	WREN_CLASS_STATIC(registry, "math", "Math", "sqrt(_)", wren_MathSqrt, "Square root");
+	WREN_CLASS_STATIC(registry, "math", "Math", "pow(_,_)", wren_MathPow, "Power");
+	WREN_CLASS_STATIC(registry, "math", "Math", "lerp(_,_,_)", wren_MathLerp, "Linear interpolation");
+	WREN_CLASS_STATIC(registry, "math", "Math", "sign(_)", wren_MathSign, "Sign of number (-1, 0, 1)");
 
-// Register instance methods
-WREN_CLASS_METHOD("math", "Rect", "x", wren_RectGetX, "Get X component");
-WREN_CLASS_METHOD("math", "Rect", "y", wren_RectGetY, "Get Y component");
-WREN_CLASS_METHOD("math", "Rect", "width", wren_RectGetWidth, "Get Width component");
-WREN_CLASS_METHOD("math", "Rect", "height", wren_RectGetHeight, "Get height component");
-WREN_CLASS_METHOD("math", "Rect", "x=(_)", wren_RectSetX, "Set X component");
-WREN_CLASS_METHOD("math", "Rect", "y=(_)", wren_RectSetY, "Set Y component");
-WREN_CLASS_METHOD("math", "Rect", "width=(_)", wren_RectSetWidth, "Set Width component");
-WREN_CLASS_METHOD("math", "Rect", "height=(_)", wren_RectSetHeight, "Set Height component");
+	// Trigonometry
+	WREN_CLASS_STATIC(registry, "math", "Math", "sin(_)", wren_MathSin, "Sine");
+	WREN_CLASS_STATIC(registry, "math", "Math", "cos(_)", wren_MathCos, "Cosine");
+	WREN_CLASS_STATIC(registry, "math", "Math", "tan(_)", wren_MathTan, "Tangent");
+	WREN_CLASS_STATIC(registry, "math", "Math", "asin(_)", wren_MathAsin, "Arc sine");
+	WREN_CLASS_STATIC(registry, "math", "Math", "acos(_)", wren_MathAcos, "Arc cosine");
+	WREN_CLASS_STATIC(registry, "math", "Math", "atan(_)", wren_MathAtan, "Arc tangent");
+	WREN_CLASS_STATIC(registry, "math", "Math", "atan2(_,_)", wren_MathAtan2, "Arc tangent of y/x");
+
+	// Rounding
+	WREN_CLASS_STATIC(registry, "math", "Math", "floor(_)", wren_MathFloor, "Floor");
+	WREN_CLASS_STATIC(registry, "math", "Math", "ceil(_)", wren_MathCeil, "Ceiling");
+	WREN_CLASS_STATIC(registry, "math", "Math", "round(_)", wren_MathRound, "Round to nearest integer");
+
+	// Checks
+	WREN_CLASS_STATIC(registry, "math", "Math", "isInfinite(_)", wren_MathIsInfinite, "Check if infinite");
+	WREN_CLASS_STATIC(registry, "math", "Math", "isNaN(_)", wren_MathIsNaN, "Check if NaN");
+	WREN_CLASS_STATIC(registry, "math", "Math", "isFinite(_)", wren_MathIsFinite, "Check if finite");
+
+	// Conversions
+	WREN_CLASS_STATIC(registry, "math", "Math", "radians(_)", wren_MathRadians, "Convert degrees to radians");
+	WREN_CLASS_STATIC(registry, "math", "Math", "degrees(_)", wren_MathDegrees, "Convert radians to degrees");
+
+	// Register Vec2 foreign class
+	WREN_FOREIGN_CLASS(registry, "math", "Vec2", wren_Vec2Allocate, wren_Vec2Finalize, "2D vector class wrapping glm::vec2");
+
+	// Register constructors
+	WREN_CONSTRUCTOR(registry, "math", "Vec2", "new()", wren_Vec2New, "Create zero vector");
+	WREN_CONSTRUCTOR(registry, "math", "Vec2", "new(_,_)", wren_Vec2New, "Create vector with x, y components");
+	WREN_CONSTRUCTOR(registry, "math", "Vec2", "copy(_)", wren_Vec2Copy, "Copy a vector");
+
+	// Register methods
+	WREN_CLASS_METHOD(registry, "math", "Vec2", "x", wren_Vec2GetX, "Get X component");
+	WREN_CLASS_METHOD(registry, "math", "Vec2", "y", wren_Vec2GetY, "Get Y component");
+	WREN_CLASS_METHOD(registry, "math", "Vec2", "x=(_)", wren_Vec2SetX, "Set X component");
+	WREN_CLASS_METHOD(registry, "math", "Vec2", "y=(_)", wren_Vec2SetY, "Set Y component");
+	WREN_CLASS_METHOD(registry, "math", "Vec2", "toString", wren_Vec2ToString, "Convert to string");
+	WREN_CLASS_METHOD(registry, "math", "Vec2", "+(_)", wren_Vec2Add, "Add two vectors");
+	WREN_CLASS_METHOD(registry, "math", "Vec2", "-(_)", wren_Vec2Subtract, "Subtract vectors");
+	WREN_CLASS_METHOD(registry, "math", "Vec2", "*(_)", wren_Vec2Multiply, "Multiply by scalar");
+	WREN_CLASS_METHOD(registry, "math", "Vec2", "length()", wren_Vec2Length, "Get vector length");
+	WREN_CLASS_METHOD(registry, "math", "Vec2", "lengthSquared()", wren_Vec2LengthSquared, "Get vector length squared");
+	WREN_CLASS_METHOD(registry, "math", "Vec2", "normalize()", wren_Vec2Normalize, "Get normalized vector");
+
+	// Static methods
+	WREN_CLASS_STATIC(registry, "math", "Vec2", "distance(_,_)", wren_Vec2Distance, "Distance between two vectors");
+	WREN_CLASS_STATIC(registry, "math", "Vec2", "distanceSquared(_,_)", wren_Vec2DistanceSquared, "Squared distance");
+	WREN_CLASS_STATIC(registry, "math", "Vec2", "lerp(_,_,_)", wren_Vec2Lerp, "Linear interpolation");
+	WREN_CLASS_STATIC(registry, "math", "Vec2", "dot(_,_)", wren_Vec2DotStatic, "Dot product (static)");
+	WREN_CLASS_STATIC(registry, "math", "Vec2", "reflect(_,_)", wren_Vec2Reflect, "Reflect vector");
+	WREN_CLASS_STATIC(registry, "math", "Vec2", "min(_,_)", wren_Vec2Min, "Component-wise minimum");
+	WREN_CLASS_STATIC(registry, "math", "Vec2", "max(_,_)", wren_Vec2Max, "Component-wise maximum");
+	WREN_CLASS_STATIC(registry, "math", "Vec2", "clamp(_,_,_)", wren_Vec2Clamp, "Clamp vector");
+	WREN_CLASS_STATIC(registry, "math", "Vec2", "zero()", wren_Vec2Zero, "Zero vector (0, 0)");
+	WREN_CLASS_STATIC(registry, "math", "Vec2", "one()", wren_Vec2One, "One vector (1, 1)");
+	WREN_CLASS_STATIC(registry, "math", "Vec2", "right()", wren_Vec2Right, "Right vector (1, 0)");
+	WREN_CLASS_STATIC(registry, "math", "Vec2", "up()", wren_Vec2Up, "Up vector (0, 1)");
+	WREN_CLASS_STATIC(registry, "math", "Vec2", "left()", wren_Vec2Left, "Left vector (-1, 0)");
+	WREN_CLASS_STATIC(registry, "math", "Vec2", "down()", wren_Vec2Down, "Down vector (0, -1)");
+
+	// Register Vec3 foreign class
+	WREN_FOREIGN_CLASS(registry, "math", "Vec3", wren_Vec3Allocate, wren_Vec3Finalize, "3D vector class wrapping glm::vec3");
+
+	// Register constructors
+	WREN_CONSTRUCTOR(registry, "math", "Vec3", "new()", wren_Vec3New, "Create zero vector");
+	WREN_CONSTRUCTOR(registry, "math", "Vec3", "new(_,_,_)", wren_Vec3New, "Create vector with x, y, z components");
+	WREN_CONSTRUCTOR(registry, "math", "Vec3", "copy(_)", wren_Vec3Copy, "Copy a vector");
+
+	// Register methods
+	WREN_CLASS_METHOD(registry, "math", "Vec3", "x", wren_Vec3GetX, "Get X component");
+	WREN_CLASS_METHOD(registry, "math", "Vec3", "y", wren_Vec3GetY, "Get Y component");
+	WREN_CLASS_METHOD(registry, "math", "Vec3", "z", wren_Vec3GetZ, "Get Z component");
+	WREN_CLASS_METHOD(registry, "math", "Vec3", "x=(_)", wren_Vec3SetX, "Set X component");
+	WREN_CLASS_METHOD(registry, "math", "Vec3", "y=(_)", wren_Vec3SetY, "Set Y component");
+	WREN_CLASS_METHOD(registry, "math", "Vec3", "z=(_)", wren_Vec3SetZ, "Set Z component");
+	WREN_CLASS_METHOD(registry, "math", "Vec3", "toString()", wren_Vec3ToString, "Convert to string");
+	WREN_CLASS_METHOD(registry, "math", "Vec3", "+(_)", wren_Vec3Add, "Add two vectors");
+	WREN_CLASS_METHOD(registry, "math", "Vec3", "-(_)", wren_Vec3Subtract, "Subtract vectors");
+	WREN_CLASS_METHOD(registry, "math", "Vec3", "*(_)", wren_Vec3Multiply, "Multiply by scalar");
+	WREN_CLASS_METHOD(registry, "math", "Vec3", "length()", wren_Vec3Length, "Get vector length");
+	WREN_CLASS_METHOD(registry, "math", "Vec3", "lengthSquared()", wren_Vec3LengthSquared, "Get vector length squared");
+	WREN_CLASS_METHOD(registry, "math", "Vec3", "normalize", wren_Vec3Normalize, "Get normalized vector");
+
+	// Static methods
+	WREN_CLASS_STATIC(registry, "math", "Vec3", "distance(_,_)", wren_Vec3Distance, "Distance between two vectors");
+	WREN_CLASS_STATIC(registry, "math", "Vec3", "distanceSquared(_,_)", wren_Vec3DistanceSquared, "Squared distance");
+	WREN_CLASS_STATIC(registry, "math", "Vec3", "lerp(_,_,_)", wren_Vec3Lerp, "Linear interpolation");
+	WREN_CLASS_STATIC(registry, "math", "Vec3", "dot(_,_)", wren_Vec3DotStatic, "Dot product (static)");
+	WREN_CLASS_STATIC(registry, "math", "Vec3", "cross(_,_)", wren_Vec3CrossStatic, "Cross product (static)");
+	WREN_CLASS_STATIC(registry, "math", "Vec3", "reflect(_,_)", wren_Vec3Reflect, "Reflect vector");
+	WREN_CLASS_STATIC(registry, "math", "Vec3", "refract(_,_,_)", wren_Vec3Refract, "Refract vector");
+	WREN_CLASS_STATIC(registry, "math", "Vec3", "min(_,_)", wren_Vec3Min, "Component-wise minimum");
+	WREN_CLASS_STATIC(registry, "math", "Vec3", "max(_,_)", wren_Vec3Max, "Component-wise maximum");
+	WREN_CLASS_STATIC(registry, "math", "Vec3", "clamp(_,_,_)", wren_Vec3Clamp, "Clamp vector");
+	WREN_CLASS_STATIC(registry, "math", "Vec3", "zero()", wren_Vec3Zero, "Zero vector (0, 0, 0)");
+	WREN_CLASS_STATIC(registry, "math", "Vec3", "one()", wren_Vec3One, "One vector (1, 1, 1)");
+	WREN_CLASS_STATIC(registry, "math", "Vec3", "right()", wren_Vec3Right, "Right vector (1, 0, 0)");
+	WREN_CLASS_STATIC(registry, "math", "Vec3", "up()", wren_Vec3Up, "Up vector (0, 1, 0)");
+	WREN_CLASS_STATIC(registry, "math", "Vec3", "forward()", wren_Vec3Forward, "Forward vector (0, 0, -1)");
+	WREN_CLASS_STATIC(registry, "math", "Vec3", "left()", wren_Vec3Left, "Left vector (-1, 0, 0)");
+	WREN_CLASS_STATIC(registry, "math", "Vec3", "down()", wren_Vec3Down, "Down vector (0, -1, 0)");
+	WREN_CLASS_STATIC(registry, "math", "Vec3", "back()", wren_Vec3Back, "Back vector (0, 0, 1)");
+
+	// Register Vec3 foreign class
+	WREN_FOREIGN_CLASS(registry, "math", "Vec4", wren_Vec4Allocate, wren_Vec4Finalize, "4D vector class wrapping glm::vec4");
+
+	// Register constructors
+	WREN_CONSTRUCTOR(registry, "math", "Vec4", "new()", wren_Vec4New, "Create zero vector");
+	WREN_CONSTRUCTOR(registry, "math", "Vec4", "new(_,_,_,_)", wren_Vec4New, "Create vector with x, y, z, w components");
+	WREN_CONSTRUCTOR(registry, "math", "Vec4", "copy(_)", wren_Vec4Copy, "Copy a vector");
+
+	// Register methods
+	WREN_CLASS_METHOD(registry, "math", "Vec4", "x", wren_Vec4GetX, "Get X component");
+	WREN_CLASS_METHOD(registry, "math", "Vec4", "y", wren_Vec4GetY, "Get Y component");
+	WREN_CLASS_METHOD(registry, "math", "Vec4", "z", wren_Vec4GetZ, "Get Z component");
+	WREN_CLASS_METHOD(registry, "math", "Vec4", "w", wren_Vec4GetW, "Get W component");
+	WREN_CLASS_METHOD(registry, "math", "Vec4", "x=(_)", wren_Vec4SetX, "Set X component");
+	WREN_CLASS_METHOD(registry, "math", "Vec4", "y=(_)", wren_Vec4SetY, "Set Y component");
+	WREN_CLASS_METHOD(registry, "math", "Vec4", "z=(_)", wren_Vec4SetZ, "Set Z component");
+	WREN_CLASS_METHOD(registry, "math", "Vec4", "w=(_)", wren_Vec4SetW, "Set W component");
+	WREN_CLASS_METHOD(registry, "math", "Vec4", "toString()", wren_Vec4ToString, "Convert to string");
+	WREN_CLASS_METHOD(registry, "math", "Vec4", "+(_)", wren_Vec4Add, "Add two vectors");
+	WREN_CLASS_METHOD(registry, "math", "Vec4", "-(_)", wren_Vec4Subtract, "Subtract vectors");
+	WREN_CLASS_METHOD(registry, "math", "Vec4", "*(_)", wren_Vec4Multiply, "Multiply by scalar");
+	WREN_CLASS_METHOD(registry, "math", "Vec4", "length()", wren_Vec4Length, "Get vector length");
+	WREN_CLASS_METHOD(registry, "math", "Vec4", "lengthSquared()", wren_Vec4LengthSquared, "Get vector length squared");
+	WREN_CLASS_METHOD(registry, "math", "Vec4", "normalize()", wren_Vec4Normalize, "Get normalized vector");
+
+	// Static methods
+	WREN_CLASS_STATIC(registry, "math", "Vec4", "distance(_,_)", wren_Vec4Distance, "Distance between two vectors");
+	WREN_CLASS_STATIC(registry, "math", "Vec4", "distanceSquared(_,_)", wren_Vec4DistanceSquared, "Squared distance");
+	WREN_CLASS_STATIC(registry, "math", "Vec4", "lerp(_,_,_)", wren_Vec4Lerp, "Linear interpolation");
+	WREN_CLASS_STATIC(registry, "math", "Vec4", "dot(_,_)", wren_Vec4DotStatic, "Dot product (static)");
+	WREN_CLASS_STATIC(registry, "math", "Vec4", "min(_,_)", wren_Vec4Min, "Component-wise minimum");
+	WREN_CLASS_STATIC(registry, "math", "Vec4", "max(_,_)", wren_Vec4Max, "Component-wise maximum");
+	WREN_CLASS_STATIC(registry, "math", "Vec4", "clamp(_,_,_)", wren_Vec4Clamp, "Clamp vector");
+	WREN_CLASS_STATIC(registry, "math", "Vec4", "zero()", wren_Vec4Zero, "Zero vector (0, 0, 0, 0)");
+	WREN_CLASS_STATIC(registry, "math", "Vec4", "one()", wren_Vec4One, "One vector (1, 1, 1, 1)");
+
+	// Register Quat foreign class
+	WREN_FOREIGN_CLASS(registry, "math", "Quat", wren_QuatAllocate, wren_QuatFinalize, "Quaternion class for 3D rotations wrapping glm::quat");
+
+	// Register constructors
+	WREN_CONSTRUCTOR(registry, "math", "Quat", "new()", wren_QuatNew, "Create identity quaternion");
+	WREN_CONSTRUCTOR(registry, "math", "Quat", "new(_,_,_,_)", wren_QuatNew, "Create quaternion with w, x, y, z components");
+	WREN_CONSTRUCTOR(registry, "math", "Quat", "copy(_)", wren_QuatCopy, "Copy a quaternion");
+
+	// Register instance methods
+	WREN_CLASS_METHOD(registry, "math", "Quat", "w", wren_QuatGetW, "Get W component");
+	WREN_CLASS_METHOD(registry, "math", "Quat", "x", wren_QuatGetX, "Get X component");
+	WREN_CLASS_METHOD(registry, "math", "Quat", "y", wren_QuatGetY, "Get Y component");
+	WREN_CLASS_METHOD(registry, "math", "Quat", "z", wren_QuatGetZ, "Get Z component");
+	WREN_CLASS_METHOD(registry, "math", "Quat", "w=(_)", wren_QuatSetW, "Set W component");
+	WREN_CLASS_METHOD(registry, "math", "Quat", "x=(_)", wren_QuatSetX, "Set X component");
+	WREN_CLASS_METHOD(registry, "math", "Quat", "y=(_)", wren_QuatSetY, "Set Y component");
+	WREN_CLASS_METHOD(registry, "math", "Quat", "z=(_)", wren_QuatSetZ, "Set Z component");
+	WREN_CLASS_METHOD(registry, "math", "Quat", "toString()", wren_QuatToString, "Convert to string");
+	WREN_CLASS_METHOD(registry, "math", "Quat", "normalize()", wren_QuatNormalize, "Get normalized quaternion");
+	WREN_CLASS_METHOD(registry, "math", "Quat", "inverse()", wren_QuatInverse, "Get inverse quaternion");
+	WREN_CLASS_METHOD(registry, "math", "Quat", "conjugate()", wren_QuatConjugate, "Get conjugate quaternion");
+	WREN_CLASS_METHOD(registry, "math", "Quat", "length()", wren_QuatLength, "Get quaternion length");
+	WREN_CLASS_METHOD(registry, "math", "Quat", "lengthSquared()", wren_QuatLengthSquared, "Get quaternion length squared");
+	WREN_CLASS_METHOD(registry, "math", "Quat", "toEuler()", wren_QuatToEuler, "Convert to Euler angles (radians)");
+	WREN_CLASS_METHOD(registry, "math", "Quat", "toEulerDegrees()", wren_QuatToEulerDegrees, "Convert to Euler angles (degrees)");
+	WREN_CLASS_METHOD(registry, "math", "Quat", "toAxisAngle()", wren_QuatToAxisAngle, "Convert to axis-angle representation");
+	WREN_CLASS_METHOD(registry, "math", "Quat", "*(_)", wren_QuatMultiply, "Multiply quaternions");
+	WREN_CLASS_METHOD(registry, "math", "Quat", "rotate(_)", wren_QuatRotateVec3, "Rotate vector by quaternion");
+	WREN_CLASS_METHOD(registry, "math", "Quat", "forward()", wren_QuatForward, "Get forward direction vector");
+	WREN_CLASS_METHOD(registry, "math", "Quat", "up()", wren_QuatUp, "Get up direction vector");
+	WREN_CLASS_METHOD(registry, "math", "Quat", "right()", wren_QuatRight, "Get right direction vector");
+
+	// Register static methods
+	WREN_CLASS_STATIC(registry, "math", "Quat", "dot(_,_)", wren_QuatDot, "Dot product");
+	WREN_CLASS_STATIC(registry, "math", "Quat", "identity()", wren_QuatIdentity, "Create identity quaternion");
+	WREN_CLASS_STATIC(registry, "math", "Quat", "fromAxisAngle(_,_)", wren_QuatFromAxisAngle, "Create quaternion from axis and angle");
+	WREN_CLASS_STATIC(registry, "math", "Quat", "fromEuler(_,_,_)", wren_QuatFromEuler, "Create quaternion from Euler angles (radians)");
+	WREN_CLASS_STATIC(registry, "math", "Quat", "fromEulerDegrees(_,_,_)", wren_QuatFromEulerDegrees, "Create quaternion from Euler angles (degrees)");
+	WREN_CLASS_STATIC(registry, "math", "Quat", "lookAt(_,_)", wren_QuatLookAt, "Create quaternion from forward and up vectors");
+	WREN_CLASS_STATIC(registry, "math", "Quat", "slerp(_,_,_)", wren_QuatSlerp, "Spherical linear interpolation");
+	WREN_CLASS_STATIC(registry, "math", "Quat", "lerp(_,_,_)", wren_QuatLerp, "Linear interpolation");
+
+	// Register Mat4 foreign class
+	WREN_FOREIGN_CLASS(registry, "math", "Mat4", wren_Mat4Allocate, wren_Mat4Finalize, "Matix 4 class wrapping glm::mat4");
+
+	// Register constructors
+	WREN_CONSTRUCTOR(registry, "math", "Mat4", "new()", wren_Mat4New, "Create identity Matix 4");
+	WREN_CONSTRUCTOR(registry, "math", "Mat4", "copy(_)", wren_Mat4Copy, "Copy a Matix 4");
+
+	// Register instance methods
+	WREN_CLASS_METHOD(registry, "math", "Mat4", "*(_)", wren_Mat4Multiply, "Multiply matix's");
+	WREN_CLASS_METHOD(registry, "math", "Mat4", "translate(_)", wren_Mat4Translate, "Translate matix");
+	WREN_CLASS_METHOD(registry, "math", "Mat4", "rotate(_,_)", wren_Mat4Rotate, "Rotate matix");
+	WREN_CLASS_METHOD(registry, "math", "Mat4", "scale(_,_)", wren_Mat4Scale, "Scale matix");
+	WREN_CLASS_METHOD(registry, "math", "Mat4", "get(_,_)", wren_Mat4Get, "Get matix element");
+	WREN_CLASS_METHOD(registry, "math", "Mat4", "set(_,_)", wren_Mat4Set, "Set matix element");
+	WREN_CLASS_METHOD(registry, "math", "Mat4", "determinant()", wren_Mat4Determinant, "Get matrix Determinant");
+	WREN_CLASS_METHOD(registry, "math", "Mat4", "inverse()", wren_Mat4Inverse, "Get matrix Inverse");
+	WREN_CLASS_METHOD(registry, "math", "Mat4", "transpose()", wren_Mat4Transpose, "Get matrix transpose");
+	WREN_CLASS_METHOD(registry, "math", "Mat4", "toList()", wren_Mat4ToList, "Get matrix as list");
+	WREN_CLASS_METHOD(registry, "math", "Mat4", "toString()", wren_Mat4ToString, "Convert to string");
+
+	// Register static methods
+	WREN_CLASS_STATIC(registry, "math", "Mat4", "identity()", wren_Mat4Identity, "Create identity Matix 4");
+	WREN_CLASS_STATIC(registry, "math", "Mat4", "perspective(_,_,_,_)", wren_Mat4Perspective, "Dot product");
+	WREN_CLASS_STATIC(registry, "math", "Mat4", "ortho(_,_,_,_,_,_)", wren_Mat4Ortho, "Create identity quaternion");
+	WREN_CLASS_STATIC(registry, "math", "Mat4", "lookAt(_,_,_)", wren_Mat4LookAt, "Create quaternion from axis and angle");
+
+	// Register Mat4 foreign class
+	WREN_FOREIGN_CLASS(registry, "math", "Rect", wren_RectAllocate, wren_RectFinalize, "Rect class wrapping raylib ::Rect");
+
+	// Register constructors
+	WREN_CONSTRUCTOR(registry, "math", "Rect", "new(_,_,_,_)", wren_RectNew, "Create Rect, with components x, y, width, and height");
+	WREN_CONSTRUCTOR(registry, "math", "Rect", "new()", wren_RectNew, "Create Rect");
+	WREN_CONSTRUCTOR(registry, "math", "Rect", "copy(_)", wren_RectCopy, "Copy a Rect");
+
+	// Register instance methods
+	WREN_CLASS_METHOD(registry, "math", "Rect", "x", wren_RectGetX, "Get X component");
+	WREN_CLASS_METHOD(registry, "math", "Rect", "y", wren_RectGetY, "Get Y component");
+	WREN_CLASS_METHOD(registry, "math", "Rect", "width", wren_RectGetWidth, "Get Width component");
+	WREN_CLASS_METHOD(registry, "math", "Rect", "height", wren_RectGetHeight, "Get height component");
+	WREN_CLASS_METHOD(registry, "math", "Rect", "x=(_)", wren_RectSetX, "Set X component");
+	WREN_CLASS_METHOD(registry, "math", "Rect", "y=(_)", wren_RectSetY, "Set Y component");
+	WREN_CLASS_METHOD(registry, "math", "Rect", "width=(_)", wren_RectSetWidth, "Set Width component");
+	WREN_CLASS_METHOD(registry, "math", "Rect", "height=(_)", wren_RectSetHeight, "Set Height component");
+}

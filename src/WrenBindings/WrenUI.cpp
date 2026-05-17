@@ -12,38 +12,6 @@
 #include "Engine/Callback/WrenCallback.h"
 
 // ============================================================================
-// NAVIGATION DIRECTION BINDINGS
-// ============================================================================
-
-WREN_ENUM("ui", NavigationDirection, "Enum to set the navigation direction for UI Elements",
-	WREN_ENUM_PAIR("UP", Struktur::UI::NavigationDirection::UP),
-	WREN_ENUM_PAIR("DOWN", Struktur::UI::NavigationDirection::DOWN),
-	WREN_ENUM_PAIR("LEFT", Struktur::UI::NavigationDirection::LEFT),
-	WREN_ENUM_PAIR("RIGHT", Struktur::UI::NavigationDirection::RIGHT),
-	);
-
-// ============================================================================
-// TEXT ALIGNMENT BINDINGS
-// ============================================================================
-
-WREN_ENUM("ui", TextAlignment, "Enum to set the text alignment for UI Labels",
-	WREN_ENUM_PAIR("LEFT", Struktur::UI::TextAlignment::LEFT),
-	WREN_ENUM_PAIR("CENTER", Struktur::UI::TextAlignment::CENTER),
-	WREN_ENUM_PAIR("RIGHT", Struktur::UI::TextAlignment::RIGHT),
-	WREN_ENUM_PAIR("JUSTIFY", Struktur::UI::TextAlignment::JUSTIFY),
-	);
-
-// ============================================================================
-// WORD WRAPPING BINDINGS
-// ============================================================================
-
-WREN_ENUM("ui", TextWrapping, "Enum to set the text wrapping for UI Labels",
-	WREN_ENUM_PAIR("NONE", Struktur::UI::TextWrapping::NONE),
-	WREN_ENUM_PAIR("WORD_WRAP", Struktur::UI::TextWrapping::WORD_WRAP),
-	WREN_ENUM_PAIR("CHARACTER_WRAP", Struktur::UI::TextWrapping::CHARACTER_WRAP),
-	);
-
-// ============================================================================
 // UI MANAGER BINDINGS
 // ============================================================================
 
@@ -98,11 +66,6 @@ void wren_UIManagerClearFocusElements(WrenVM* vm)
 	uiManager.SetFocus(nullptr);
 	focusNavigator->Clear(*context);
 }
-
-WREN_CLASS_STATIC("ui", "UIManager", "addUIElement(_)", wren_UIManagerAddUIElement, "Add a UI Element to the UI system.");
-WREN_CLASS_STATIC("ui", "UIManager", "removeUIElement(_)", wren_UIManagerRemoveUIElement, "Remove and clean up an element in the UI system.");
-WREN_CLASS_STATIC("ui", "UIManager", "setFocus(_)", wren_UIManagerSetFocus, "Will set the focus of the current element.");
-WREN_CLASS_STATIC("ui", "UIManager", "clearFocusElements()", wren_UIManagerClearFocusElements, "Will set the focus of the current element.");
 
 // ============================================================================
 // UI Element - Foreign class wrapping UILabel
@@ -552,45 +515,6 @@ void wren_UIElementSetOnActivate(WrenVM* vm)
 	uiElement->element->SetOnActivate(Struktur::UI::UIActivateCallback(std::make_unique<Struktur::Callback::WrenCallback>(callback)));
 }
 
-// Register Sound foreign class
-WREN_FOREIGN_CLASS("ui", "UIElement", wren_UIElementAllocate, wren_UIElementFinalize, "UI Element component");
-
-// Register instance methods
-WREN_CLASS_METHOD("ui", "UIElement", "isVisible=(_)", wren_UIElementSetVisible, "Sets UI Element to be visible");
-WREN_CLASS_METHOD("ui", "UIElement", "setVisible(_)", wren_UIElementSetVisible, "Sets UI Element to be visible");
-WREN_CLASS_METHOD("ui", "UIElement", "isVisible", wren_UIElementGetVisible, "Gets UI Element to be visible");
-WREN_CLASS_METHOD("ui", "UIElement", "IsEnabled=(_)", wren_UIElementSetEnabled, "Sets UI Element to be enabled");
-WREN_CLASS_METHOD("ui", "UIElement", "IsEnabled", wren_UIElementGetEnabled, "Gets UI Element to be enabled");
-WREN_CLASS_METHOD("ui", "UIElement", "IsFocusable=(_)", wren_UIElementSetFocusable, "Sets UI Element to be focusable");
-WREN_CLASS_METHOD("ui", "UIElement", "setFocusable(_)", wren_UIElementSetFocusable, "Sets UI Element to be focusable");
-WREN_CLASS_METHOD("ui", "UIElement", "IsFocusable", wren_UIElementGetFocusable, "Gets UI Element to be focusable");
-WREN_CLASS_METHOD("ui", "UIElement", "setPosition(_,_)", wren_UIElementSetPosition, "Sets the UI Elements position");
-WREN_CLASS_METHOD("ui", "UIElement", "getPosition()", wren_UIElementGetPosition, "Gets the UI Elements position");
-WREN_CLASS_METHOD("ui", "UIElement", "setAnchorPoint(_)", wren_UIElementSetAnchorPoint, "Sets the UI Elements anchor point");
-WREN_CLASS_METHOD("ui", "UIElement", "setSize(_,_)", wren_UIElementSetSize, "Sets the UI Elements anchor point");
-WREN_CLASS_METHOD("ui", "UIElement", "getSize()", wren_UIElementGetSize, "Gets the UI Elements size");
-WREN_CLASS_METHOD("ui", "UIElement", "getBounds()", wren_UIElementGetBounds, "Gets the UI Elements bounds");
-WREN_CLASS_METHOD("ui", "UIElement", "setTabIndex(_)", wren_UIElementSetTabIndex, "Sets the UI Elements tab index");
-WREN_CLASS_METHOD("ui", "UIElement", "getTabIndex()", wren_UIElementGetTabIndex, "Gets the UI Elements tab index");
-WREN_CLASS_METHOD("ui", "UIElement", "setNavigationNeighbor(_,_)", wren_UIElementSetNavigationNeighbor, "adds a UI Element as a navigation neighbor");
-WREN_CLASS_METHOD("ui", "UIElement", "getNavigationNeighbor(_)", wren_UIElementGetNavigationNeighbor, "Gets a UI Element navigation neighbor from a direction");
-WREN_CLASS_METHOD("ui", "UIElement", "setBackgroundColor(_)", wren_UIElementSetBackgroundColor, "Sets the UI Elements background color");
-WREN_CLASS_METHOD("ui", "UIElement", "setBorderColor(_)", wren_UIElementSetBorderColor, "Sets the UI Elements border color");
-WREN_CLASS_METHOD("ui", "UIElement", "setBorderWidth(_)", wren_UIElementSetBorderWidth, "Sets the UI Elements border width");
-WREN_CLASS_METHOD("ui", "UIElement", "getParent()", wren_UIElementGetParent, "Gets the UI Elements parent");
-WREN_CLASS_METHOD("ui", "UIElement", "getChildren()", wren_UIElementGetChildren, "Sets the UI Elements children");
-WREN_CLASS_METHOD("ui", "UIElement", "setZIndex(_)", wren_UIElementSetZIndex, "Sets the UI Elements Z index");
-WREN_CLASS_METHOD("ui", "UIElement", "getZIndex()", wren_UIElementGetZIndex, "Sets the UI Elements Z index");
-WREN_CLASS_METHOD("ui", "UIElement", "addChild(_)", wren_UIElementAddChild, "Adds a UI Element to elements children");
-WREN_CLASS_METHOD("ui", "UIElement", "removeChild(_)", wren_UIElementRemoveChild, "Removes a UI Element from the children");
-WREN_CLASS_METHOD("ui", "UIElement", "setOnClick(_)", wren_UIElementSetOnClick, "Sets the UI Elements on click callback");
-WREN_CLASS_METHOD("ui", "UIElement", "setOnFocus(_)", wren_UIElementSetOnFocus, "Sets the UI Elements on focus callback");
-WREN_CLASS_METHOD("ui", "UIElement", "setOnLoseFocus(_)", wren_UIElementSetOnLoseFocus, "Sets the UI Elements on lose focus callback");
-WREN_CLASS_METHOD("ui", "UIElement", "setOnHover(_)", wren_UIElementSetOnHover, "Sets the UI Elements on hover callback");
-WREN_CLASS_METHOD("ui", "UIElement", "setOnKeyPressed(_)", wren_UIElementSetOnKeyPressed, "Sets the UI Elements on key pressed callback");
-WREN_CLASS_METHOD("ui", "UIElement", "setOnActivate(_)", wren_UIElementSetOnActivate, "Sets the UI Elements on activate callback");
-//WREN_CLASS_METHOD("ui", "UIElement", "setOnEvent(_)", wren_UIElementSetOnEvent, "Sets the UI Elements on event callback");
-
 // ============================================================================
 // UILABEL BINDINGS
 // ============================================================================
@@ -746,24 +670,6 @@ void wren_UILabelSetBoundingBoxToText(WrenVM* vm)
 	label->SetBoundingBoxToText();
 }
 
-// Register Quat foreign class
-WREN_FOREIGN_CLASS("ui", "UILabel", wren_UILabelAllocate, wren_UILabelFinalize, "UI Label component");
-WREN_CLASS_INHERITANCE("ui", "UILabel", "UIElement");
-
-// Register constructors
-WREN_CONSTRUCTOR("ui", "UILabel", "new(_,_,_)", wren_UILabelNew, "Create UI Label with absolutePosition, relativePosition, labelText components");
-WREN_CONSTRUCTOR("ui", "UILabel", "new(_,_,_,_)", wren_UILabelNew, "Create UI Label with absolutePosition, relativePosition, labelText, fontSize components");
-
-// Register instance methods
-WREN_CLASS_METHOD("ui", "UILabel", "setFont(_)", wren_UILabelSetFont, "Sets the UI Labels Font");
-WREN_CLASS_METHOD("ui", "UILabel", "setTextColor(_)", wren_UILabelSetTextColor, "Sets the UI Labels text color");
-WREN_CLASS_METHOD("ui", "UILabel", "setAlignment(_)", wren_UILabelSetAlignment, "Sets the UI Labels alignment");
-WREN_CLASS_METHOD("ui", "UILabel", "setFontSize(_)", wren_UILabelSetFontSize, "Sets the UI Labels font size");
-WREN_CLASS_METHOD("ui", "UILabel", "setWordWrap(_)", wren_UILabelSetWordWrap, "Sets the UI Labels word wrap");
-WREN_CLASS_METHOD("ui", "UILabel", "setText(_)", wren_UILabelSetText, "set the UI Labels text");
-WREN_CLASS_METHOD("ui", "UILabel", "getText()", wren_UILabelGetText, "get the UI Labels text");
-WREN_CLASS_METHOD("ui", "UILabel", "setBoundingBoxToText()", wren_UILabelSetBoundingBoxToText, "Will change the width and height to match the text");
-
 // ============================================================================
 // UIPANEL BINDINGS
 // ============================================================================
@@ -828,13 +734,102 @@ void wren_UIPanelClearBackgroundTexture(WrenVM* vm)
 	panel->ClearBackgroundTexture();
 }
 
-// Register Quat foreign class
-WREN_FOREIGN_CLASS("ui", "UIPanel", wren_UIPanelAllocate, wren_UIPanelFinalize, "UI Panel component");
-WREN_CLASS_INHERITANCE("ui", "UIPanel", "UIElement");
+WREN_BINDING_MODULE(UI)
+{
+	// NAVIGATION DIRECTION BINDINGS
+	WREN_ENUM(registry, "ui", NavigationDirection, "Enum to set the navigation direction for UI Elements",
+		WREN_ENUM_PAIR("UP", Struktur::UI::NavigationDirection::UP),
+		WREN_ENUM_PAIR("DOWN", Struktur::UI::NavigationDirection::DOWN),
+		WREN_ENUM_PAIR("LEFT", Struktur::UI::NavigationDirection::LEFT),
+		WREN_ENUM_PAIR("RIGHT", Struktur::UI::NavigationDirection::RIGHT),
+		);
 
-// Register constructors
-WREN_CONSTRUCTOR("ui", "UIPanel", "new(_,_,_,_)", wren_UIPanelNew, "Create UI panel with absolutePosition, relativePosition, absoluteSize, relativeSize components");
+	// TEXT ALIGNMENT BINDINGS
+	WREN_ENUM(registry, "ui", TextAlignment, "Enum to set the text alignment for UI Labels",
+		WREN_ENUM_PAIR("LEFT", Struktur::UI::TextAlignment::LEFT),
+		WREN_ENUM_PAIR("CENTER", Struktur::UI::TextAlignment::CENTER),
+		WREN_ENUM_PAIR("RIGHT", Struktur::UI::TextAlignment::RIGHT),
+		WREN_ENUM_PAIR("JUSTIFY", Struktur::UI::TextAlignment::JUSTIFY),
+		);
 
-// Register instance methods
-WREN_CLASS_METHOD("ui", "UIPanel", "setBackgroundTexture(_)", wren_UIPanelSetBackgroundTexture, "Sets the UI Panels background texture");
-WREN_CLASS_METHOD("ui", "UIPanel", "ClearBackgroundTexture()", wren_UIPanelClearBackgroundTexture, "Clears the UI Panels background texture");
+	// WORD WRAPPING BINDINGS
+	WREN_ENUM(registry, "ui", TextWrapping, "Enum to set the text wrapping for UI Labels",
+		WREN_ENUM_PAIR("NONE", Struktur::UI::TextWrapping::NONE),
+		WREN_ENUM_PAIR("WORD_WRAP", Struktur::UI::TextWrapping::WORD_WRAP),
+		WREN_ENUM_PAIR("CHARACTER_WRAP", Struktur::UI::TextWrapping::CHARACTER_WRAP),
+		);
+
+
+	WREN_CLASS_STATIC(registry, "ui", "UIManager", "addUIElement(_)", wren_UIManagerAddUIElement, "Add a UI Element to the UI system.");
+	WREN_CLASS_STATIC(registry, "ui", "UIManager", "removeUIElement(_)", wren_UIManagerRemoveUIElement, "Remove and clean up an element in the UI system.");
+	WREN_CLASS_STATIC(registry, "ui", "UIManager", "setFocus(_)", wren_UIManagerSetFocus, "Will set the focus of the current element.");
+	WREN_CLASS_STATIC(registry, "ui", "UIManager", "clearFocusElements()", wren_UIManagerClearFocusElements, "Will set the focus of the current element.");
+
+	// Register Sound foreign class
+	WREN_FOREIGN_CLASS(registry, "ui", "UIElement", wren_UIElementAllocate, wren_UIElementFinalize, "UI Element component");
+
+	// Register instance methods
+	WREN_CLASS_METHOD(registry, "ui", "UIElement", "isVisible=(_)", wren_UIElementSetVisible, "Sets UI Element to be visible");
+	WREN_CLASS_METHOD(registry, "ui", "UIElement", "setVisible(_)", wren_UIElementSetVisible, "Sets UI Element to be visible");
+	WREN_CLASS_METHOD(registry, "ui", "UIElement", "isVisible", wren_UIElementGetVisible, "Gets UI Element to be visible");
+	WREN_CLASS_METHOD(registry, "ui", "UIElement", "IsEnabled=(_)", wren_UIElementSetEnabled, "Sets UI Element to be enabled");
+	WREN_CLASS_METHOD(registry, "ui", "UIElement", "IsEnabled", wren_UIElementGetEnabled, "Gets UI Element to be enabled");
+	WREN_CLASS_METHOD(registry, "ui", "UIElement", "IsFocusable=(_)", wren_UIElementSetFocusable, "Sets UI Element to be focusable");
+	WREN_CLASS_METHOD(registry, "ui", "UIElement", "setFocusable(_)", wren_UIElementSetFocusable, "Sets UI Element to be focusable");
+	WREN_CLASS_METHOD(registry, "ui", "UIElement", "IsFocusable", wren_UIElementGetFocusable, "Gets UI Element to be focusable");
+	WREN_CLASS_METHOD(registry, "ui", "UIElement", "setPosition(_,_)", wren_UIElementSetPosition, "Sets the UI Elements position");
+	WREN_CLASS_METHOD(registry, "ui", "UIElement", "getPosition()", wren_UIElementGetPosition, "Gets the UI Elements position");
+	WREN_CLASS_METHOD(registry, "ui", "UIElement", "setAnchorPoint(_)", wren_UIElementSetAnchorPoint, "Sets the UI Elements anchor point");
+	WREN_CLASS_METHOD(registry, "ui", "UIElement", "setSize(_,_)", wren_UIElementSetSize, "Sets the UI Elements anchor point");
+	WREN_CLASS_METHOD(registry, "ui", "UIElement", "getSize()", wren_UIElementGetSize, "Gets the UI Elements size");
+	WREN_CLASS_METHOD(registry, "ui", "UIElement", "getBounds()", wren_UIElementGetBounds, "Gets the UI Elements bounds");
+	WREN_CLASS_METHOD(registry, "ui", "UIElement", "setTabIndex(_)", wren_UIElementSetTabIndex, "Sets the UI Elements tab index");
+	WREN_CLASS_METHOD(registry, "ui", "UIElement", "getTabIndex()", wren_UIElementGetTabIndex, "Gets the UI Elements tab index");
+	WREN_CLASS_METHOD(registry, "ui", "UIElement", "setNavigationNeighbor(_,_)", wren_UIElementSetNavigationNeighbor, "adds a UI Element as a navigation neighbor");
+	WREN_CLASS_METHOD(registry, "ui", "UIElement", "getNavigationNeighbor(_)", wren_UIElementGetNavigationNeighbor, "Gets a UI Element navigation neighbor from a direction");
+	WREN_CLASS_METHOD(registry, "ui", "UIElement", "setBackgroundColor(_)", wren_UIElementSetBackgroundColor, "Sets the UI Elements background color");
+	WREN_CLASS_METHOD(registry, "ui", "UIElement", "setBorderColor(_)", wren_UIElementSetBorderColor, "Sets the UI Elements border color");
+	WREN_CLASS_METHOD(registry, "ui", "UIElement", "setBorderWidth(_)", wren_UIElementSetBorderWidth, "Sets the UI Elements border width");
+	WREN_CLASS_METHOD(registry, "ui", "UIElement", "getParent()", wren_UIElementGetParent, "Gets the UI Elements parent");
+	WREN_CLASS_METHOD(registry, "ui", "UIElement", "getChildren()", wren_UIElementGetChildren, "Sets the UI Elements children");
+	WREN_CLASS_METHOD(registry, "ui", "UIElement", "setZIndex(_)", wren_UIElementSetZIndex, "Sets the UI Elements Z index");
+	WREN_CLASS_METHOD(registry, "ui", "UIElement", "getZIndex()", wren_UIElementGetZIndex, "Sets the UI Elements Z index");
+	WREN_CLASS_METHOD(registry, "ui", "UIElement", "addChild(_)", wren_UIElementAddChild, "Adds a UI Element to elements children");
+	WREN_CLASS_METHOD(registry, "ui", "UIElement", "removeChild(_)", wren_UIElementRemoveChild, "Removes a UI Element from the children");
+	WREN_CLASS_METHOD(registry, "ui", "UIElement", "setOnClick(_)", wren_UIElementSetOnClick, "Sets the UI Elements on click callback");
+	WREN_CLASS_METHOD(registry, "ui", "UIElement", "setOnFocus(_)", wren_UIElementSetOnFocus, "Sets the UI Elements on focus callback");
+	WREN_CLASS_METHOD(registry, "ui", "UIElement", "setOnLoseFocus(_)", wren_UIElementSetOnLoseFocus, "Sets the UI Elements on lose focus callback");
+	WREN_CLASS_METHOD(registry, "ui", "UIElement", "setOnHover(_)", wren_UIElementSetOnHover, "Sets the UI Elements on hover callback");
+	WREN_CLASS_METHOD(registry, "ui", "UIElement", "setOnKeyPressed(_)", wren_UIElementSetOnKeyPressed, "Sets the UI Elements on key pressed callback");
+	WREN_CLASS_METHOD(registry, "ui", "UIElement", "setOnActivate(_)", wren_UIElementSetOnActivate, "Sets the UI Elements on activate callback");
+	//WREN_CLASS_METHOD("ui", "UIElement", "setOnEvent(_)", wren_UIElementSetOnEvent, "Sets the UI Elements on event callback");
+
+	// Register Quat foreign class
+	WREN_FOREIGN_CLASS(registry, "ui", "UILabel", wren_UILabelAllocate, wren_UILabelFinalize, "UI Label component");
+	WREN_CLASS_INHERITANCE(registry, "ui", "UILabel", "UIElement");
+
+	// Register constructors
+	WREN_CONSTRUCTOR(registry, "ui", "UILabel", "new(_,_,_)", wren_UILabelNew, "Create UI Label with absolutePosition, relativePosition, labelText components");
+	WREN_CONSTRUCTOR(registry, "ui", "UILabel", "new(_,_,_,_)", wren_UILabelNew, "Create UI Label with absolutePosition, relativePosition, labelText, fontSize components");
+
+	// Register instance methods
+	WREN_CLASS_METHOD(registry, "ui", "UILabel", "setFont(_)", wren_UILabelSetFont, "Sets the UI Labels Font");
+	WREN_CLASS_METHOD(registry, "ui", "UILabel", "setTextColor(_)", wren_UILabelSetTextColor, "Sets the UI Labels text color");
+	WREN_CLASS_METHOD(registry, "ui", "UILabel", "setAlignment(_)", wren_UILabelSetAlignment, "Sets the UI Labels alignment");
+	WREN_CLASS_METHOD(registry, "ui", "UILabel", "setFontSize(_)", wren_UILabelSetFontSize, "Sets the UI Labels font size");
+	WREN_CLASS_METHOD(registry, "ui", "UILabel", "setWordWrap(_)", wren_UILabelSetWordWrap, "Sets the UI Labels word wrap");
+	WREN_CLASS_METHOD(registry, "ui", "UILabel", "setText(_)", wren_UILabelSetText, "set the UI Labels text");
+	WREN_CLASS_METHOD(registry, "ui", "UILabel", "getText()", wren_UILabelGetText, "get the UI Labels text");
+	WREN_CLASS_METHOD(registry, "ui", "UILabel", "setBoundingBoxToText()", wren_UILabelSetBoundingBoxToText, "Will change the width and height to match the text");
+
+	// Register Quat foreign class
+	WREN_FOREIGN_CLASS(registry, "ui", "UIPanel", wren_UIPanelAllocate, wren_UIPanelFinalize, "UI Panel component");
+	WREN_CLASS_INHERITANCE(registry, "ui", "UIPanel", "UIElement");
+
+	// Register constructors
+	WREN_CONSTRUCTOR(registry, "ui", "UIPanel", "new(_,_,_,_)", wren_UIPanelNew, "Create UI panel with absolutePosition, relativePosition, absoluteSize, relativeSize components");
+
+	// Register instance methods
+	WREN_CLASS_METHOD(registry, "ui", "UIPanel", "setBackgroundTexture(_)", wren_UIPanelSetBackgroundTexture, "Sets the UI Panels background texture");
+	WREN_CLASS_METHOD(registry, "ui", "UIPanel", "ClearBackgroundTexture()", wren_UIPanelClearBackgroundTexture, "Clears the UI Panels background texture");
+}

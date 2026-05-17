@@ -10,39 +10,33 @@
 
 namespace Struktur
 {
+    class GameContext;
 
-	class GameContext;
+    namespace Wren
+    {
+        class WrenScriptEngine
+        {
+        public:
+            WrenScriptEngine() : m_vm(nullptr) {}
 
-	namespace Wren
-	{
-		class WrenScriptEngine
-		{
-		public:
-			WrenScriptEngine() : m_vm(nullptr) {}
+            void Initialise(GameContext& ctx);
+            void Shutdown();
 
-			void Initialise(GameContext& ctx);
-			void Shutdown();
+            WrenVM*          GetVM()       { return m_vm; }
+            BindingRegistry& GetRegistry() { return m_registry; }
 
-			WrenVM* GetVM() { return m_vm; }
+            bool InterpretString(const char* module, const char* source);
+            bool InterpretFile(const char* path);
 
-			// Compile and run a Wren script
-			bool InterpretString(const char* module, const char* source);
+        private:
+            WrenVM*         m_vm;
+            BindingRegistry m_registry;
 
-			// Load and run a Wren file
-			bool InterpretFile(const char* path);
-
-		private:
-			WrenVM* m_vm;
-
-			// CALLBACKS
-			static void OnWrenError(WrenVM* vm, WrenErrorType type, const char* module, int line, const char* message);
-			static void OnWrenWrite(WrenVM* vm, const char* text);
-			static WrenLoadModuleResult OnLoadModule(WrenVM* vm, const char* name);
-
-			// Binding callbacks - delegate to registry
-			static WrenForeignMethodFn OnBindForeignMethod(WrenVM* vm, const char* module, const char* className, bool isStatic, const char* signature);
-			static WrenForeignClassMethods OnBindForeignClass(WrenVM* vm, const char* module, const char* className);
-
-		};
-	}
+            static void                  OnWrenError(WrenVM* vm, WrenErrorType type, const char* module, int line, const char* message);
+            static void                  OnWrenWrite(WrenVM* vm, const char* text);
+            static WrenLoadModuleResult  OnLoadModule(WrenVM* vm, const char* name);
+            static WrenForeignMethodFn   OnBindForeignMethod(WrenVM* vm, const char* module, const char* className, bool isStatic, const char* signature);
+            static WrenForeignClassMethods OnBindForeignClass(WrenVM* vm, const char* module, const char* className);
+        };
+    }
 }

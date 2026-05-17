@@ -191,19 +191,25 @@ void wren_InputLoadInputBindings(WrenVM* vm)
 	input.LoadInputBindings(filePath);
 }
 
-WREN_CLASS_STATIC("input", "Input", "isKeyDown(_)", wren_InputIsKeyDown, "Gets input is currently down.");
-WREN_CLASS_STATIC("input", "Input", "isKeyJustPressed(_)", wren_InputIsKeyJustPressed, "Gets input was just pressed.");
-WREN_CLASS_STATIC("input", "Input", "isKeyJustReleased(_)", wren_InputIsKeyJustReleased, "Gets input was just released.");
-WREN_CLASS_STATIC("input", "Input", "isControllerButtonDown(_)", wren_InputIsControllerButtonDown, "Gets input is currently down.");
-WREN_CLASS_STATIC("input", "Input", "isControllerButtonJustPressed(_)", wren_InputIsControllerButtonJustPressed, "Gets input was just pressed.");
-WREN_CLASS_STATIC("input", "Input", "isControllerButtonJustReleased(_)", wren_InputIsControllerButtonJustReleased, "Gets input was just released.");
-WREN_CLASS_STATIC("input", "Input", "getControllerAxisValue(_)", wren_InputGetControllerAxisValue, "Gets input value from -1 to 1.");
+// ============================================================================
+// BINDING REGISTRATION
+// ============================================================================
+WREN_BINDING_MODULE(Input)
+{
+	WREN_CLASS_STATIC(registry, "input", "Input", "isKeyDown(_)", wren_InputIsKeyDown, "Gets input is currently down.");
+	WREN_CLASS_STATIC(registry, "input", "Input", "isKeyJustPressed(_)", wren_InputIsKeyJustPressed, "Gets input was just pressed.");
+	WREN_CLASS_STATIC(registry, "input", "Input", "isKeyJustReleased(_)", wren_InputIsKeyJustReleased, "Gets input was just released.");
+	WREN_CLASS_STATIC(registry, "input", "Input", "isControllerButtonDown(_)", wren_InputIsControllerButtonDown, "Gets input is currently down.");
+	WREN_CLASS_STATIC(registry, "input", "Input", "isControllerButtonJustPressed(_)", wren_InputIsControllerButtonJustPressed, "Gets input was just pressed.");
+	WREN_CLASS_STATIC(registry, "input", "Input", "isControllerButtonJustReleased(_)", wren_InputIsControllerButtonJustReleased, "Gets input was just released.");
+	WREN_CLASS_STATIC(registry, "input", "Input", "getControllerAxisValue(_)", wren_InputGetControllerAxisValue, "Gets input value from -1 to 1.");
+ 
+	WREN_CLASS_STATIC(registry, "input", "Input", "isInputDown(_)", wren_InputIsInputDown, "Gets input is currently down.");
+	WREN_CLASS_STATIC(registry, "input", "Input", "isInputJustPressed(_)", wren_InputIsInputJustPressed, "Gets input was just pressed.");
+	WREN_CLASS_STATIC(registry, "input", "Input", "isInputJustReleased(_)", wren_InputIsInputJustReleased, "Gets input was just released.");
+	WREN_CLASS_STATIC(registry, "input", "Input", "getInputVariable(_)", wren_InputGetInputVariable, "Gets input value from 0 to 1.");
+	WREN_CLASS_STATIC(registry, "input", "Input", "getInputAxis(_)", wren_InputGetInputAxis, "Gets input value from -1 to 1.");
+	WREN_CLASS_STATIC(registry, "input", "Input", "getInputAxis2(_)", wren_InputGetInputAxis2, "Gets an x and y input values from -1 to 1.");
 
-WREN_CLASS_STATIC("input", "Input", "isInputDown(_)", wren_InputIsInputDown, "Gets input is currently down.");
-WREN_CLASS_STATIC("input", "Input", "isInputJustPressed(_)", wren_InputIsInputJustPressed, "Gets input was just pressed.");
-WREN_CLASS_STATIC("input", "Input", "isInputJustReleased(_)", wren_InputIsInputJustReleased, "Gets input was just released.");
-WREN_CLASS_STATIC("input", "Input", "getInputVariable(_)", wren_InputGetInputVariable, "Gets input value from 0 to 1.");
-WREN_CLASS_STATIC("input", "Input", "getInputAxis(_)", wren_InputGetInputAxis, "Gets input value from -1 to 1.");
-WREN_CLASS_STATIC("input", "Input", "getInputAxis2(_)", wren_InputGetInputAxis2, "Gets an x and y input values from -1 to 1.");
-
-WREN_CLASS_STATIC("input", "Input", "loadInputBindings(_)", wren_InputLoadInputBindings, "Loads the input bindings.");
+	WREN_CLASS_STATIC(registry, "input", "Input", "loadInputBindings(_)", wren_InputLoadInputBindings, "Loads the input bindings.");
+}

@@ -28,5 +28,8 @@ void wren_VariableSubstitutionApplyModifiers(WrenVM* vm)
 // BINDING REGISTRATION
 // ============================================================================
 
-// FileSystem static methods
-WREN_CLASS_STATIC("dialogue", "VariableSubstitution", "applyModifiers(_,_)", wren_VariableSubstitutionApplyModifiers, "Process the value through modifiers.");
+WREN_BINDING_MODULE(VariableSubstitution)
+{
+    // FileSystem static methods
+    WREN_CLASS_STATIC(registry, "dialogue", "VariableSubstitution", "applyModifiers(_,_)", wren_VariableSubstitutionApplyModifiers, "Process the value through modifiers.");
+}

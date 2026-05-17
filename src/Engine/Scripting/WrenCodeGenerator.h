@@ -14,8 +14,7 @@ namespace Struktur::Wren
     class CodeGenerator
     {
     public:
-        // Generate all .wren declaration files from registered bindings
-        static void GenerateBindingFiles(const std::string& outputDir);
+        static void GenerateBindingFiles(const BindingRegistry& registry, const std::string& outputDir);
         
     private:
         static void GenerateModuleFile(
@@ -28,6 +27,6 @@ namespace Struktur::Wren
         
         static std::string ConvertSignature(const std::string& signature);
 
-		static void GenerateAllHeaders(const std::string& wrenSourceDir, const std::string& headerOutputDir);
+        static void GenerateAllHeaders(const std::string& wrenSourceDir, const std::string& headerOutputDir);
     };
 }

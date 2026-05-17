@@ -90,19 +90,22 @@ void wren_SpriteAnimationSetLoop(WrenVM* vm)
 	spriteAnimation->spriteAnimation.loop = wrenGetSlotBool(vm, 1);
 }
 
-// Register SpriteAnimationDefinition foreign class
-WREN_FOREIGN_CLASS("animation", "SpriteAnimationDefinition", wren_SpriteAnimationDefinitionAllocate, wren_SpriteAnimationDefinitionFinalize, "SpriteAnimationDefinition class for defining the frames of a sprite sheet and speed of a sprite animation");
+WREN_BINDING_MODULE(Animation)
+{
+	// Register SpriteAnimationDefinition foreign class
+	WREN_FOREIGN_CLASS(registry, "animation", "SpriteAnimationDefinition", wren_SpriteAnimationDefinitionAllocate, wren_SpriteAnimationDefinitionFinalize, "SpriteAnimationDefinition class for defining the frames of a sprite sheet and speed of a sprite animation");
 
-// Register constructors
-WREN_CONSTRUCTOR("animation", "SpriteAnimationDefinition", "new()", wren_SpriteAnimationDefinitionNew, "Create empty SpriteAnimationDefinition");
-WREN_CONSTRUCTOR("animation", "SpriteAnimationDefinition", "new(_,_,_,_)", wren_SpriteAnimationDefinitionNew, "Create SpriteAnimationDefinition with startFrame, endFrame, animationTime, loop components");
+	// Register constructors
+	WREN_CONSTRUCTOR(registry, "animation", "SpriteAnimationDefinition", "new()", wren_SpriteAnimationDefinitionNew, "Create empty SpriteAnimationDefinition");
+	WREN_CONSTRUCTOR(registry, "animation", "SpriteAnimationDefinition", "new(_,_,_,_)", wren_SpriteAnimationDefinitionNew, "Create SpriteAnimationDefinition with startFrame, endFrame, animationTime, loop components");
 
-// Register methods
-WREN_CLASS_METHOD("animation", "SpriteAnimationDefinition", "startFrame", wren_SpriteAnimationGetStartFrame, "Get startFrame");
-WREN_CLASS_METHOD("animation", "SpriteAnimationDefinition", "startFrame=(_)", wren_SpriteAnimationSetStartFrame, "Set startFrame");
-WREN_CLASS_METHOD("animation", "SpriteAnimationDefinition", "endFrame", wren_SpriteAnimationGetEndFrame, "Get endFrame");
-WREN_CLASS_METHOD("animation", "SpriteAnimationDefinition", "endFrame=(_)", wren_SpriteAnimationSetEndFrame, "Set endFrame");
-WREN_CLASS_METHOD("animation", "SpriteAnimationDefinition", "animationTime", wren_SpriteAnimationGetAnimationTime, "Get animationTime");
-WREN_CLASS_METHOD("animation", "SpriteAnimationDefinition", "animationTime=(_)", wren_SpriteAnimationSetAnimationTime, "Set animationTime");
-WREN_CLASS_METHOD("animation", "SpriteAnimationDefinition", "loop", wren_SpriteAnimationGetLoop, "Get loop");
-WREN_CLASS_METHOD("animation", "SpriteAnimationDefinition", "loop=(_)", wren_SpriteAnimationSetLoop, "Set loop");
+	// Register methods
+	WREN_CLASS_METHOD(registry, "animation", "SpriteAnimationDefinition", "startFrame", wren_SpriteAnimationGetStartFrame, "Get startFrame");
+	WREN_CLASS_METHOD(registry, "animation", "SpriteAnimationDefinition", "startFrame=(_)", wren_SpriteAnimationSetStartFrame, "Set startFrame");
+	WREN_CLASS_METHOD(registry, "animation", "SpriteAnimationDefinition", "endFrame", wren_SpriteAnimationGetEndFrame, "Get endFrame");
+	WREN_CLASS_METHOD(registry, "animation", "SpriteAnimationDefinition", "endFrame=(_)", wren_SpriteAnimationSetEndFrame, "Set endFrame");
+	WREN_CLASS_METHOD(registry, "animation", "SpriteAnimationDefinition", "animationTime", wren_SpriteAnimationGetAnimationTime, "Get animationTime");
+	WREN_CLASS_METHOD(registry, "animation", "SpriteAnimationDefinition", "animationTime=(_)", wren_SpriteAnimationSetAnimationTime, "Set animationTime");
+	WREN_CLASS_METHOD(registry, "animation", "SpriteAnimationDefinition", "loop", wren_SpriteAnimationGetLoop, "Get loop");
+	WREN_CLASS_METHOD(registry, "animation", "SpriteAnimationDefinition", "loop=(_)", wren_SpriteAnimationSetLoop, "Set loop");
+}
