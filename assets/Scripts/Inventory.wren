@@ -27,7 +27,7 @@ class Inventory {
                 }
                 return map
             } else {
-                // Plain list — recurse into elements
+                // Plain list - recurse into elements
                 return value.map { |elem| pairsToMap(elem) }.toList
             }
         } else {

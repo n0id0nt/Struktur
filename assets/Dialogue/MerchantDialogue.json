@@ -1,187 +1,125 @@
 [
   {
     "data": {
-      "speaker": "Merchant",
-      "text": "Ah, my precious gold! These coins represent years of careful investment and trade.\nThis Crystal Key is the most valuable thing I possess - a fair exchange for my life's wealth."
-    },
-    "node": "merchant_complete"
-  },
-  {
-    "data": {
       "targets": [
         {
           "conditions": [
-            {
-              "parameters": [
-                {
-                  "type": "flag",
-                  "value": "merchant_quest_state"
-                },
-                {
-                  "type": "op",
-                  "value": "=="
-                },
-                {
-                  "type": "value",
-                  "value": 3.0
-                }
-              ],
-              "type": "hasIntFlag"
-            }
+            { "parameters": [{ "type": "flag", "value": "merchant_quest_state" }, { "type": "op", "value": "==" }, { "type": "value", "value": 5.0 }], "type": "hasIntFlag" }
           ],
           "node": "merchant_complete"
         },
         {
           "conditions": [
-            {
-              "parameters": [
-                {
-                  "type": "flag",
-                  "value": "merchant_quest_state"
-                },
-                {
-                  "type": "op",
-                  "value": "=="
-                },
-                {
-                  "type": "value",
-                  "value": 1.0
-                }
-              ],
-              "type": "hasIntFlag"
-            },
-            {
-              "parameters": [
-                {
-                  "type": "item",
-                  "value": "Gold Coins"
-                }
-              ],
-              "type": "hasItem"
-            }
+            { "parameters": [{ "type": "flag", "value": "merchant_quest_state" }, { "type": "op", "value": "==" }, { "type": "value", "value": 2.0 }], "type": "hasIntFlag" },
+            { "parameters": [{ "type": "item", "value": "Gold Coins" }], "type": "hasItem" }
           ],
           "node": "merchant_has_gold_1"
         },
         {
           "conditions": [
-            {
-              "parameters": [
-                {
-                  "type": "flag",
-                  "value": "merchant_quest_state"
-                },
-                {
-                  "type": "op",
-                  "value": "=="
-                },
-                {
-                  "type": "value",
-                  "value": 1.0
-                }
-              ],
-              "type": "hasIntFlag"
-            }
+            { "parameters": [{ "type": "flag", "value": "merchant_quest_state" }, { "type": "op", "value": "==" }, { "type": "value", "value": 2.0 }], "type": "hasIntFlag" }
           ],
           "node": "merchant_needs_gold"
         },
-        {
-          "node": "merchant_first_1"
-        }
+        { "node": "merchant_first_1" }
       ]
     },
     "node": "merchant"
   },
   {
     "data": {
+      "next": "merchant_first_2",
+      "speaker": "Merchant",
+      "text": "Ah. A visitor who actually looks like they're going somewhere.\nMost people in this house have given up moving with any purpose.\nAugustus Goldstein. Merchant. Eighty years in this place and my instincts are still sharp."
+    },
+    "node": "merchant_first_1"
+  },
+  {
+    "data": {
+      "choices": [
+        { "target": "merchant_ask_cedric", "text": "What do you know about the Guardian?" },
+        { "target": "merchant_ask_vault", "text": "What's in the vault?" },
+        { "target": "merchant_ask_help", "text": "I need the Blue Crystal Key." }
+      ],
+      "speaker": "Merchant",
+      "text": "I suspect you're here about the Blue Crystal Key.\nI know where it is. Whether I help you depends on whether we can do business."
+    },
+    "node": "merchant_first_2"
+  },
+  {
+    "data": {
+      "next": "merchant_the_deal",
+      "speaker": "Merchant",
+      "text": "Cedric is principled, which I respect, even when it's inconvenient.\nHe confiscated my ledger about forty years ago. He claimed it was for safekeeping.\nI maintain it was an overreach. He maintains it was procedure.\nWe have not reached an agreement on this point."
+    },
+    "node": "merchant_ask_cedric"
+  },
+  {
+    "data": {
+      "next": "merchant_the_deal",
+      "speaker": "Merchant",
+      "text": "The Blue Crystal Key, among other things.\nAlso my ledger, which Cedric confiscated on technical grounds I still dispute.\nHe won't open the vault without two conditions — the Seal secured and the ledger returned.\nWhich means I need the ledger back before either of us gets what we want."
+    },
+    "node": "merchant_ask_vault"
+  },
+  {
+    "data": {
+      "next": "merchant_the_deal",
+      "speaker": "Merchant",
+      "text": "It's in Cedric's vault. He won't open it without two conditions — the Ancient Seal secured, and my ledger returned.\nI can help you with Cedric if you help me first.\nThat's how business works, even here."
+    },
+    "node": "merchant_ask_help"
+  },
+  {
+    "data": {
+      "commands": [
+        { "parameters": [{ "type": "flag", "value": "merchant_quest_state" }, { "type": "value", "value": 2.0 }], "type": "setIntFlag" }
+      ],
+      "speaker": "Merchant",
+      "text": "My gold coins went missing in all of this. They're in the house somewhere — I couldn't tell you exactly where.\nBring them back to me and I'll write you a letter of introduction for Cedric.\nHe trusts procedure. A voucher from me gives you standing.\nThat's the deal."
+    },
+    "node": "merchant_the_deal"
+  },
+  {
+    "data": {
+      "speaker": "Merchant",
+      "text": "My gold coins — somewhere in the house.\nYou have {item_count:Gold Coins|bool:them/not found them yet}.\nBring them back and I'll write you the letter for Cedric."
+    },
+    "node": "merchant_needs_gold"
+  },
+  {
+    "data": {
       "next": "merchant_has_gold_2",
       "speaker": "Merchant",
-      "text": "My gold coins! The foundation of all wealth and prosperity in this house's golden days."
+      "text": "My coins. Still exactly the right weight.\n*he counts them without looking down*\nSplendid. A deal's a deal."
     },
     "node": "merchant_has_gold_1"
   },
   {
     "data": {
       "commands": [
-        {
-          "parameters": [
-            {
-              "type": "flag",
-              "value": "merchant_quest_state"
-            },
-            {
-              "type": "value",
-              "value": 1.0
-            }
-          ],
-          "type": "setIntFlag"
-        }
-      ],
-      "speaker": "Merchant",
-      "text": "I've learned that some treasures can't be bought or sold, but gold still has its place in the world.\nBring me my coins, and I'll trade you something more valuable than money."
-    },
-    "node": "merchant_first_2"
-  },
-  {
-    "data": {
-      "commands": [
-        {
-          "parameters": [
-            {
-              "type": "item",
-              "value": "Blue Crystal Key"
-            }
-          ],
-          "type": "giveItem"
-        },
-        {
-          "parameters": [
-            {
-              "type": "item",
-              "value": "Gold Coins"
-            }
-          ],
-          "type": "removeItem"
-        },
-        {
-          "parameters": [
-            {
-              "type": "flag",
-              "value": "merchant_quest_state"
-            },
-            {
-              "type": "value",
-              "value": 3.0
-            }
-          ],
-          "type": "setIntFlag"
-        }
+        { "parameters": [{ "type": "item", "value": "Merchant Voucher" }], "type": "giveItem" },
+        { "parameters": [{ "type": "item", "value": "Gold Coins" }], "type": "removeItem" },
+        { "parameters": [{ "type": "flag", "value": "merchant_quest_state" }, { "type": "value", "value": 5.0 }], "type": "setIntFlag" }
       ],
       "next": "merchant_has_gold_3",
       "speaker": "Merchant",
-      "text": "For returning my fortune, I'll give you this Crystal Key - the most valuable treasure in my collection."
+      "text": "Here — a letter of introduction. Show it to Cedric alongside the Seal and the Ledger.\nI wrote it out years ago on the off chance someone came through here with actual initiative.\nThe Blue Crystal Key is in that vault. Get it, use it on the blue pedestal in the main hall.\nAll four pedestals — that's the end of this."
     },
     "node": "merchant_has_gold_2"
   },
   {
     "data": {
-      "next": "merchant_first_2",
       "speaker": "Merchant",
-      "text": "Welcome to my treasury!\nI am Augustus Goldstein, and I've spent decades learning what truly has value in this cursed place."
-    },
-    "node": "merchant_first_1"
-  },
-  {
-    "data": {
-      "speaker": "Merchant",
-      "text": "Obtained Blue Crystal Key"
+      "text": "Obtained Merchant Voucher\nYou now have {keys_collected|round} of 4 Crystal Keys."
     },
     "node": "merchant_has_gold_3"
   },
   {
     "data": {
       "speaker": "Merchant",
-      "text": "My treasury feels empty without my gold coins - the foundation of all true wealth."
+      "text": "The vault opened, the key is in your hands.\nI've been waiting eighty years for someone with enough sense to do this.\nI want it noted that I was helpful."
     },
-    "node": "merchant_needs_gold"
+    "node": "merchant_complete"
   }
 ]

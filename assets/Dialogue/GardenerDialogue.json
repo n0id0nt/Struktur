@@ -4,192 +4,138 @@
       "targets": [
         {
           "conditions": [
-            {
-              "parameters": [
-                {
-                  "type": "flag",
-                  "value": "gardener_quest_state"
-                },
-                {
-                  "type": "op",
-                  "value": "=="
-                },
-                {
-                  "type": "value",
-                  "value": 3.0
-                }
-              ],
-              "type": "hasIntFlag"
-            }
+            { "parameters": [{ "type": "flag", "value": "gardener_quest_state" }, { "type": "op", "value": "==" }, { "type": "value", "value": 5.0 }], "type": "hasIntFlag" }
           ],
           "node": "gardener_complete"
         },
         {
           "conditions": [
-            {
-              "parameters": [
-                {
-                  "type": "flag",
-                  "value": "gardener_quest_state"
-                },
-                {
-                  "type": "op",
-                  "value": "=="
-                },
-                {
-                  "type": "value",
-                  "value": 1.0
-                }
-              ],
-              "type": "hasIntFlag"
-            },
-            {
-              "parameters": [
-                {
-                  "type": "item",
-                  "value": "Rose"
-                }
-              ],
-              "type": "hasItem"
-            }
+            { "parameters": [{ "type": "flag", "value": "gardener_quest_state" }, { "type": "op", "value": "==" }, { "type": "value", "value": 2.0 }], "type": "hasIntFlag" },
+            { "parameters": [{ "type": "item", "value": "Rose" }, { "type": "quantity", "value": 3.0 }], "type": "hasItem" }
           ],
-          "node": "gardener_has_rose_1"
+          "node": "gardener_has_roses_1"
         },
         {
           "conditions": [
-            {
-              "parameters": [
-                {
-                  "type": "flag",
-                  "value": "gardener_quest_state"
-                },
-                {
-                  "type": "op",
-                  "value": "=="
-                },
-                {
-                  "type": "value",
-                  "value": 1.0
-                }
-              ],
-              "type": "hasIntFlag"
-            }
+            { "parameters": [{ "type": "flag", "value": "gardener_quest_state" }, { "type": "op", "value": "==" }, { "type": "value", "value": 2.0 }], "type": "hasIntFlag" }
           ],
-          "node": "gardener_needs_rose_1"
+          "node": "gardener_needs_roses"
         },
         {
-          "node": "gardener_first_1"
-        }
+          "conditions": [
+            { "parameters": [{ "type": "flag", "value": "gardener_quest_state" }, { "type": "op", "value": "==" }, { "type": "value", "value": 1.0 }], "type": "hasIntFlag" }
+          ],
+          "node": "gardener_sent_by_scholar"
+        },
+        { "node": "gardener_first_1" }
       ]
     },
     "node": "gardener"
   },
   {
     "data": {
-      "speaker": "Gardener",
-      "text": "Oh, my beautiful rose! It belongs here among the other flowers, where love once bloomed eternal.\nThis garden is complete again."
-    },
-    "node": "gardener_complete"
-  },
-  {
-    "data": {
-      "next": "gardener_has_rose_2",
-      "speaker": "Gardener",
-      "text": "A lovely rose! Yes, I do have the Scholar's tome, but this garden feels incomplete without its most beautiful flower."
-    },
-    "node": "gardener_has_rose_1"
-  },
-  {
-    "data": {
       "next": "gardener_first_2",
       "speaker": "Gardener",
-      "text": "Welcome, dear visitor, to my sanctuary of eternal spring.\nI tend to memories as if they were flowers, nurturing what should grow and bloom."
+      "text": "Oh, a visitor. How lovely.\nWelcome to my garden — though I suppose it's been autumn here for some time now.\nI am Elara. I tend to what remains.\nThings still grow here, if you encourage them properly."
     },
     "node": "gardener_first_1"
   },
   {
     "data": {
-      "commands": [
-        {
-          "parameters": [
-            {
-              "type": "item",
-              "value": "Ancient Tome"
-            }
-          ],
-          "type": "giveItem"
-        },
-        {
-          "parameters": [
-            {
-              "type": "item",
-              "value": "Rose"
-            }
-          ],
-          "type": "removeItem"
-        },
-        {
-          "parameters": [
-            {
-              "type": "flag",
-              "value": "gardener_quest_state"
-            },
-            {
-              "type": "value",
-              "value": 3.0
-            }
-          ],
-          "type": "setIntFlag"
-        }
-      ],
-      "next": "gardener_has_rose_3",
-      "speaker": "Gardener",
-      "text": "I'll gladly trade this dusty old book for something that belongs in a garden of eternal spring."
-    },
-    "node": "gardener_has_rose_2"
-  },
-  {
-    "data": {
-      "speaker": "Gardener",
-      "text": "Obtained Ancient Tome"
-    },
-    "node": "gardener_has_rose_3"
-  },
-  {
-    "data": {
-      "speaker": "Gardener",
-      "text": "Bring me a perfect rose"
-    },
-    "node": "gardener_needs_rose_2"
-  },
-  {
-    "data": {
-      "next": "gardener_needs_rose_2",
-      "speaker": "Gardener",
-      "text": "Welcome to my garden where love once bloomed.\nI found the Scholar's tome among my flowers, but I won't trade it for just anything."
-    },
-    "node": "gardener_needs_rose_1"
-  },
-  {
-    "data": {
-      "commands": [
-        {
-          "parameters": [
-            {
-              "type": "flag",
-              "value": "gardener_quest_state"
-            },
-            {
-              "type": "value",
-              "value": 1.0
-            }
-          ],
-          "type": "setIntFlag"
-        }
+      "choices": [
+        { "target": "gardener_ask_garden", "text": "Tell me about this garden." },
+        { "target": "gardener_ask_cabinet", "text": "I'm looking for a cabinet key." },
+        { "target": "gardener_ask_scholar", "text": "Edmund Ashfield sent me." }
       ],
       "speaker": "Gardener",
-      "text": "Love requires patience and care, just like any garden.\nSome things belong together - a rose belongs among flowers, not gathering dust in workshops."
+      "text": "Is there something I can help you with, dear?"
     },
     "node": "gardener_first_2"
+  },
+  {
+    "data": {
+      "next": "gardener_ask_cabinet",
+      "speaker": "Gardener",
+      "text": "It used to be full of roses along the east wall. Three of them in particular — deep red, always in bloom.\nWhen the curse came, they went into the display case as if to preserve themselves.\nI've missed them terribly. But you were asking about something else?"
+    },
+    "node": "gardener_ask_garden"
+  },
+  {
+    "data": {
+      "next": "gardener_rose_request",
+      "speaker": "Gardener",
+      "text": "Yes, I have it. Edmund gave it to me once — a long time ago now.\nI still do.\nBut the garden has been missing something. Perhaps we can help each other."
+    },
+    "node": "gardener_ask_cabinet"
+  },
+  {
+    "data": {
+      "next": "gardener_rose_request",
+      "speaker": "Gardener",
+      "text": "Edmund sent you?\n*a small quiet pause*\nHe still thinks of the key, then."
+    },
+    "node": "gardener_ask_scholar"
+  },
+  {
+    "data": {
+      "commands": [
+        { "parameters": [{ "type": "flag", "value": "gardener_quest_state" }, { "type": "value", "value": 2.0 }], "type": "setIntFlag" }
+      ],
+      "speaker": "Gardener",
+      "text": "Three red roses — they're in the old display case in the east room.\nThe case has three weighted panels. You'll need something heavy on each one at the same time to release the latch.\nHave a look around the room for what's there.\nBring all three roses back here and I'll give you the key."
+    },
+    "node": "gardener_rose_request"
+  },
+  {
+    "data": {
+      "commands": [
+        { "parameters": [{ "type": "flag", "value": "gardener_quest_state" }, { "type": "value", "value": 2.0 }], "type": "setIntFlag" }
+      ],
+      "speaker": "Gardener",
+      "text": "Edmund sent you?\n*a small quiet pause*\nHe still thinks of the key, then.\nThree red roses — east room display case. Three weighted panels, all at once to open it.\nBring them here and I'll give you the key."
+    },
+    "node": "gardener_sent_by_scholar"
+  },
+  {
+    "data": {
+      "speaker": "Gardener",
+      "text": "You have {item_count:Rose|round} of 3 roses so far.\nThe display case is in the east room — three weighted panels, all pressed at the same time.\nFind something heavy for each one and they'll all release together."
+    },
+    "node": "gardener_needs_roses"
+  },
+  {
+    "data": {
+      "next": "gardener_has_roses_2",
+      "speaker": "Gardener",
+      "text": "Three roses. Oh, they're perfect.\n*she cups them gently*\nThey smell exactly as they should. Some things the curse couldn't touch after all."
+    },
+    "node": "gardener_has_roses_1"
+  },
+  {
+    "data": {
+      "commands": [
+        { "parameters": [{ "type": "item", "value": "Cabinet Key" }], "type": "giveItem" },
+        { "parameters": [{ "type": "item", "value": "Rose" }, { "type": "quantity", "value": 3.0 }], "type": "removeItem" },
+        { "parameters": [{ "type": "flag", "value": "gardener_quest_state" }, { "type": "value", "value": 5.0 }], "type": "setIntFlag" }
+      ],
+      "next": "gardener_has_roses_3",
+      "speaker": "Gardener",
+      "text": "Here — the cabinet key.\nTell Edmund the garden is blooming again.\nHe used to say that's all anything needed — the right conditions, and a little patience."
+    },
+    "node": "gardener_has_roses_2"
+  },
+  {
+    "data": {
+      "speaker": "Gardener",
+      "text": "Obtained Cabinet Key"
+    },
+    "node": "gardener_has_roses_3"
+  },
+  {
+    "data": {
+      "speaker": "Gardener",
+      "text": "The roses are back where they belong.\nHelp Edmund find what he's looking for.\nHe always worked so hard. He deserved better than all this."
+    },
+    "node": "gardener_complete"
   }
 ]

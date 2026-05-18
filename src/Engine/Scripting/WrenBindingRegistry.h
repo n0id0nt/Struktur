@@ -56,7 +56,7 @@ namespace Struktur::Wren
     };
 
     // ============================================================================
-    // REGISTRY — owns all binding data, passed explicitly
+    // REGISTRY - owns all binding data, passed explicitly
     // ============================================================================
 
     struct BindingRegistry
@@ -158,7 +158,7 @@ namespace Struktur::Wren
     // ============================================================================
     // Each binding module implements this signature
     // ============================================================================
-    // Forward declarations — implemented in each WrenBinding*.cpp
+    // Forward declarations - implemented in each WrenBinding*.cpp
     void RegisterAnimationBindings(BindingRegistry& registry);
     void RegisterGameObjectBindings(BindingRegistry& registry);
     void RegisterGameObjectComponentBindings(BindingRegistry& registry);
@@ -182,7 +182,7 @@ namespace Struktur::Wren
 } // namespace Struktur::Wren
 
 // ============================================================================
-// REGISTRATION MACROS — now take registry as first arg
+// REGISTRATION MACROS - now take registry as first arg
 // ============================================================================
 
 #define WREN_BINDING_MODULE(ModuleName) \

@@ -89,7 +89,7 @@ static nlohmann::json pullWrenValue(WrenVM* vm, int slot)
                         wrenGetListElement(vm, elemSlot, 1, innerSlot);
                         if (wrenGetSlotType(vm, innerSlot) == WREN_TYPE_STRING && std::string(wrenGetSlotString(vm, innerSlot)) == "map")
                         {
-                            // It's an encoded map — pairs start at index 1
+                            // It's an encoded map - pairs start at index 1
                             nlohmann::json obj = nlohmann::json::object();
                             for (int i = 1; i < count; ++i)
                             {
@@ -106,7 +106,7 @@ static nlohmann::json pullWrenValue(WrenVM* vm, int slot)
                 }
             }
 
-            // No sentinel — treat as a plain JSON array
+            // No sentinel - treat as a plain JSON array
             nlohmann::json arr = nlohmann::json::array();
             for (int i = 0; i < count; ++i) {
                 wrenGetListElement(vm, slot, i, elemSlot);
@@ -123,7 +123,7 @@ static nlohmann::json pullWrenValue(WrenVM* vm, int slot)
             // so we ask the caller to encode maps as [[key,val],...] arrays
             // OR you use a known schema. For a general solution, see note below.
             //
-            // Simple approach: treat as opaque and return null — override with
+            // Simple approach: treat as opaque and return null - override with
             // your own schema-aware version if needed.
             return nullptr;
         }

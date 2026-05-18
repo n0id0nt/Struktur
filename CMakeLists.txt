@@ -123,7 +123,7 @@ set(PHYSFS_BUILD_DOCS   FALSE CACHE BOOL "" FORCE)
 set(PHYSFS_TARGETNAME_UNINSTALL "physfs_uninstall" CACHE STRING "" FORCE)
 add_subdirectory(third_party/physfs)
 
-# Wren (manual build — same as before, just different source path)
+# Wren (manual build - same as before, just different source path)
 file(GLOB WREN_SOURCES
     ${CMAKE_CURRENT_SOURCE_DIR}/third_party/wren/src/vm/*.c
     ${CMAKE_CURRENT_SOURCE_DIR}/third_party/wren/src/optional/*.c

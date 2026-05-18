@@ -4,184 +4,139 @@
       "targets": [
         {
           "conditions": [
-            {
-              "parameters": [
-                {
-                  "type": "flag",
-                  "value": "cook_quest_state"
-                },
-                {
-                  "type": "op",
-                  "value": "=="
-                },
-                {
-                  "type": "value",
-                  "value": 3.0
-                }
-              ],
-              "type": "hasIntFlag"
-            }
+            { "parameters": [{ "type": "flag", "value": "cook_quest_state" }, { "type": "op", "value": "==" }, { "type": "value", "value": 5.0 }], "type": "hasIntFlag" }
           ],
           "node": "cook_complete"
         },
         {
           "conditions": [
-            {
-              "parameters": [
-                {
-                  "type": "flag",
-                  "value": "cook_quest_state"
-                },
-                {
-                  "type": "op",
-                  "value": "=="
-                },
-                {
-                  "type": "value",
-                  "value": 1.0
-                }
-              ],
-              "type": "hasIntFlag"
-            },
-            {
-              "parameters": [
-                {
-                  "type": "item",
-                  "value": "Fresh Bread"
-                }
-              ],
-              "type": "hasItem"
-            }
+            { "parameters": [{ "type": "flag", "value": "cook_quest_state" }, { "type": "op", "value": "==" }, { "type": "value", "value": 2.0 }], "type": "hasIntFlag" },
+            { "parameters": [{ "type": "item", "value": "Flour Sack" }], "type": "hasItem" },
+            { "parameters": [{ "type": "item", "value": "Jar of Honey" }], "type": "hasItem" },
+            { "parameters": [{ "type": "item", "value": "Dried Herbs" }], "type": "hasItem" }
           ],
-          "node": "cook_has_bread_1"
+          "node": "cook_has_all_1"
         },
         {
           "conditions": [
-            {
-              "parameters": [
-                {
-                  "type": "flag",
-                  "value": "cook_quest_state"
-                },
-                {
-                  "type": "op",
-                  "value": "=="
-                },
-                {
-                  "type": "value",
-                  "value": 1.0
-                }
-              ],
-              "type": "hasIntFlag"
-            }
+            { "parameters": [{ "type": "flag", "value": "cook_quest_state" }, { "type": "op", "value": "==" }, { "type": "value", "value": 2.0 }], "type": "hasIntFlag" }
           ],
-          "node": "cook_needs_bread"
+          "node": "cook_needs_ingredients"
         },
         {
-          "node": "cook_first_1"
-        }
+          "conditions": [
+            { "parameters": [{ "type": "flag", "value": "cook_quest_state" }, { "type": "op", "value": "==" }, { "type": "value", "value": 1.0 }], "type": "hasIntFlag" }
+          ],
+          "node": "cook_waiting_for_pantry"
+        },
+        { "node": "cook_first_1" }
       ]
     },
     "node": "cook"
   },
   {
     "data": {
+      "next": "cook_first_2",
       "speaker": "Cook",
-      "text": "My warm, fresh bread! The kitchen feels like home again with the scent of baking.\nThis Crystal Key has been keeping my recipes company - please, take it."
+      "text": "Oh, come in, come in — mind the step, it's always been uneven.\nI'm Margaret. I've been cooking in this kitchen for longer than makes sense now.\nI was meant to be making the Christmas feast. The family was coming.\nI've been keeping everything ready, just in case."
     },
-    "node": "cook_complete"
+    "node": "cook_first_1"
   },
   {
     "data": {
-      "next": "cook_has_bread_2",
-      "speaker": "Cook",
-      "text": "Oh, wonderful! Fresh bread, still warm from the oven!\nThe heart of any kitchen is the bread that feeds the family."
-    },
-    "node": "cook_has_bread_1"
-  },
-  {
-    "data": {
-      "commands": [
-        {
-          "parameters": [
-            {
-              "type": "item",
-              "value": "Green Crystal Key"
-            }
-          ],
-          "type": "giveItem"
-        },
-        {
-          "parameters": [
-            {
-              "type": "item",
-              "value": "Fresh Bread"
-            }
-          ],
-          "type": "removeItem"
-        },
-        {
-          "parameters": [
-            {
-              "type": "flag",
-              "value": "cook_quest_state"
-            },
-            {
-              "type": "value",
-              "value": 3.0
-            }
-          ],
-          "type": "setIntFlag"
-        }
-      ],
-      "next": "cook_has_bread_3",
-      "speaker": "Cook",
-      "text": "For bringing warmth back to my kitchen, I'll give you this Crystal Key I've been safeguarding."
-    },
-    "node": "cook_has_bread_2"
-  },
-  {
-    "data": {
-      "speaker": "Cook",
-      "text": "My kitchen feels so empty without the warmth of fresh bread."
-    },
-    "node": "cook_needs_bread"
-  },
-  {
-    "data": {
-      "speaker": "Cook",
-      "text": "Obtained Green Crystal Key"
-    },
-    "node": "cook_has_bread_3"
-  },
-  {
-    "data": {
-      "commands": [
-        {
-          "parameters": [
-            {
-              "type": "flag",
-              "value": "cook_quest_state"
-            },
-            {
-              "type": "value",
-              "value": 1.0
-            }
-          ],
-          "type": "setIntFlag"
-        }
+      "choices": [
+        { "target": "cook_ask_family", "text": "Who were you cooking for?" },
+        { "target": "cook_ask_pantry", "text": "What's wrong with the pantry?" },
+        { "target": "cook_ask_help", "text": "Can I help you get what you need?" }
       ],
       "speaker": "Cook",
-      "text": "A kitchen without fresh bread is like a hearth without fire.\nBring me the bread that belongs here, and I'll share something precious in return."
+      "text": "A proper feast loaf — that's what this kitchen needs. Not just bread.\nBut the pantry's been stuck for years and I can't get to the flour."
     },
     "node": "cook_first_2"
   },
   {
     "data": {
-      "next": "cook_first_2",
+      "next": "cook_ingredients_ask",
       "speaker": "Cook",
-      "text": "Welcome to my kitchen, dear!\nI've been preparing the same Christmas feast for decades,\nwaiting for family to gather."
+      "text": "The Ashfields. The whole family — they were all coming for Christmas in 1943.\nI had everything planned. Then the house... changed.\nI've kept cooking. I thought if I stayed ready, eventually they'd come back.\n*a quiet pause*\nWell. Perhaps now they will."
     },
-    "node": "cook_first_1"
+    "node": "cook_ask_family"
+  },
+  {
+    "data": {
+      "next": "cook_ingredients_ask",
+      "speaker": "Cook",
+      "text": "The latch jammed years ago and I've never been strong enough to force it.\nI asked Cornelius — the Inventor in the workshop — to fix it but he lost his tools.\nIf you've already helped him, it should be open now. If not, he's in the workshop."
+    },
+    "node": "cook_ask_pantry"
+  },
+  {
+    "data": {
+      "next": "cook_ingredients_ask",
+      "speaker": "Cook",
+      "text": "Oh, bless you. Yes.\nThe pantry needs to be open first — talk to Cornelius in the workshop if it isn't already.\nOnce it's open, I need three things."
+    },
+    "node": "cook_ask_help"
+  },
+  {
+    "data": {
+      "commands": [
+        { "parameters": [{ "type": "flag", "value": "cook_quest_state" }, { "type": "value", "value": 1.0 }], "type": "setIntFlag" }
+      ],
+      "speaker": "Cook",
+      "text": "Flour — in the pantry, once Cornelius fixes the door.\nHoney — in the larder, just through that door there.\nDried herbs — hanging above the stove, been there for years.\nBring me all three and I can bake something worth giving."
+    },
+    "node": "cook_ingredients_ask"
+  },
+  {
+    "data": {
+      "speaker": "Cook",
+      "text": "Cornelius in the workshop — he can fix the pantry door once he has his toolbox.\nOnce it's open: flour's in the pantry, honey's in the larder, herbs above the stove.\nBring me all three."
+    },
+    "node": "cook_waiting_for_pantry"
+  },
+  {
+    "data": {
+      "speaker": "Cook",
+      "text": "Three ingredients — I need all of them before I can start.\nFlour: {item_count:Flour Sack|bool:got it/pantry, now open}.\nHoney: {item_count:Jar of Honey|bool:got it/larder, through that door}.\nHerbs: {item_count:Dried Herbs|bool:got it/hanging above the stove}."
+    },
+    "node": "cook_needs_ingredients"
+  },
+  {
+    "data": {
+      "next": "cook_has_all_2",
+      "speaker": "Cook",
+      "text": "Flour, honey, herbs — oh my goodness, all three.\n*she clasps her hands*\nThis is everything I need.\nNow step back and let me work."
+    },
+    "node": "cook_has_all_1"
+  },
+  {
+    "data": {
+      "commands": [
+        { "parameters": [{ "type": "item", "value": "Green Crystal Key" }], "type": "giveItem" },
+        { "parameters": [{ "type": "item", "value": "Flour Sack" }], "type": "removeItem" },
+        { "parameters": [{ "type": "item", "value": "Jar of Honey" }], "type": "removeItem" },
+        { "parameters": [{ "type": "item", "value": "Dried Herbs" }], "type": "removeItem" },
+        { "parameters": [{ "type": "flag", "value": "cook_quest_state" }, { "type": "value", "value": 5.0 }], "type": "setIntFlag" }
+      ],
+      "next": "cook_has_all_3",
+      "speaker": "Cook",
+      "text": "There. The feast loaf — smell that.\nI found this Crystal Key tucked inside the recipe box years ago. I've been keeping it safe the way you keep anything precious.\nTake it. The green pedestal in the main hall — that's where it belongs.\nGo on now. The others are waiting."
+    },
+    "node": "cook_has_all_2"
+  },
+  {
+    "data": {
+      "speaker": "Cook",
+      "text": "Obtained Green Crystal Key\nYou now have {keys_collected|round} of 4 Crystal Keys."
+    },
+    "node": "cook_has_all_3"
+  },
+  {
+    "data": {
+      "speaker": "Cook",
+      "text": "The kitchen smells right again.\nI always thought if I kept cooking, eventually the family would come back.\nMaybe after all this, they will."
+    },
+    "node": "cook_complete"
   }
 ]

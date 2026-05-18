@@ -519,7 +519,7 @@ namespace Struktur::Debug
 			ImGui::Separator();
 			ImGui::Spacing();
 
-			// Class name — pre-filled with derived value, user can override
+			// Class name - pre-filled with derived value, user can override
 			static char classNameBuf[128];
 			static char entryNodeBuf[128];
 			static bool initialised = false;

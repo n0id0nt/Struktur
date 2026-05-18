@@ -4,184 +4,152 @@
       "targets": [
         {
           "conditions": [
-            {
-              "parameters": [
-                {
-                  "type": "flag",
-                  "value": "astronomer_quest_state"
-                },
-                {
-                  "type": "op",
-                  "value": "=="
-                },
-                {
-                  "type": "value",
-                  "value": 3.0
-                }
-              ],
-              "type": "hasIntFlag"
-            }
+            { "parameters": [{ "type": "flag", "value": "astronomer_quest_state" }, { "type": "op", "value": "==" }, { "type": "value", "value": 5.0 }], "type": "hasIntFlag" }
           ],
           "node": "astronomer_complete"
         },
         {
           "conditions": [
-            {
-              "parameters": [
-                {
-                  "type": "flag",
-                  "value": "astronomer_quest_state"
-                },
-                {
-                  "type": "op",
-                  "value": "=="
-                },
-                {
-                  "type": "value",
-                  "value": 1.0
-                }
-              ],
-              "type": "hasIntFlag"
-            },
-            {
-              "parameters": [
-                {
-                  "type": "item",
-                  "value": "Telescope"
-                }
-              ],
-              "type": "hasItem"
-            }
+            { "parameters": [{ "type": "flag", "value": "astronomer_quest_state" }, { "type": "op", "value": "==" }, { "type": "value", "value": 2.0 }], "type": "hasIntFlag" },
+            { "parameters": [{ "type": "item", "value": "Telescope" }], "type": "hasItem" },
+            { "parameters": [{ "type": "item", "value": "Star Chart" }], "type": "hasItem" }
           ],
-          "node": "astronomer_has_telescope_1"
+          "node": "astronomer_has_both_1"
         },
         {
           "conditions": [
-            {
-              "parameters": [
-                {
-                  "type": "flag",
-                  "value": "astronomer_quest_state"
-                },
-                {
-                  "type": "op",
-                  "value": "=="
-                },
-                {
-                  "type": "value",
-                  "value": 1.0
-                }
-              ],
-              "type": "hasIntFlag"
-            }
+            { "parameters": [{ "type": "flag", "value": "astronomer_quest_state" }, { "type": "op", "value": "==" }, { "type": "value", "value": 2.0 }], "type": "hasIntFlag" },
+            { "parameters": [{ "type": "item", "value": "Telescope" }], "type": "hasItem" }
           ],
-          "node": "astronomer_needs_telescope"
+          "node": "astronomer_has_telescope_only"
         },
         {
-          "node": "astronomer_first_1"
-        }
+          "conditions": [
+            { "parameters": [{ "type": "flag", "value": "astronomer_quest_state" }, { "type": "op", "value": "==" }, { "type": "value", "value": 2.0 }], "type": "hasIntFlag" },
+            { "parameters": [{ "type": "item", "value": "Star Chart" }], "type": "hasItem" }
+          ],
+          "node": "astronomer_has_chart_only"
+        },
+        {
+          "conditions": [
+            { "parameters": [{ "type": "flag", "value": "astronomer_quest_state" }, { "type": "op", "value": "==" }, { "type": "value", "value": 2.0 }], "type": "hasIntFlag" }
+          ],
+          "node": "astronomer_needs_both"
+        },
+        { "node": "astronomer_first_1" }
       ]
     },
     "node": "astronomer"
   },
   {
     "data": {
-      "speaker": "Astronomer",
-      "text": "My precious telescope! Now I can properly observe the celestial patterns that govern this house.\nThis diary contains earthly dreams, but the stars hold greater truths."
-    },
-    "node": "astronomer_complete"
-  },
-  {
-    "data": {
-      "next": "astronomer_has_telescope_2",
-      "speaker": "Astronomer",
-      "text": "Magnificent! My telescope for studying the stars and their influence on temporal anomalies!"
-    },
-    "node": "astronomer_has_telescope_1"
-  },
-  {
-    "data": {
-      "commands": [
-        {
-          "parameters": [
-            {
-              "type": "flag",
-              "value": "astronomer_quest_state"
-            },
-            {
-              "type": "value",
-              "value": 1.0
-            }
-          ],
-          "type": "setIntFlag"
-        }
-      ],
-      "speaker": "Astronomer",
-      "text": "I've been studying how the stars affect this house's temporal anomalies.\nBring me my telescope, and I'll trade you this diary I've been analyzing for cosmic patterns."
-    },
-    "node": "astronomer_first_2"
-  },
-  {
-    "data": {
-      "commands": [
-        {
-          "parameters": [
-            {
-              "type": "item",
-              "value": "Personal Diary"
-            }
-          ],
-          "type": "giveItem"
-        },
-        {
-          "parameters": [
-            {
-              "type": "item",
-              "value": "Telescope"
-            }
-          ],
-          "type": "removeItem"
-        },
-        {
-          "parameters": [
-            {
-              "type": "flag",
-              "value": "astronomer_quest_state"
-            },
-            {
-              "type": "value",
-              "value": 3.0
-            }
-          ],
-          "type": "setIntFlag"
-        }
-      ],
-      "next": "astronomer_has_telescope_3",
-      "speaker": "Astronomer",
-      "text": "I've been analyzing the Dreamer's diary for cosmic patterns, but I need my telescope more.\nA fair exchange - earthly dreams for celestial observations."
-    },
-    "node": "astronomer_has_telescope_2"
-  },
-  {
-    "data": {
       "next": "astronomer_first_2",
       "speaker": "Astronomer",
-      "text": "Greetings, earthbound traveler!\nI am Professor Orion Starweaver, astronomer and calculator of celestial influences."
+      "text": "Greetings, earthbound traveler! I am Professor Orion Starweaver — astronomer, celestial cartographer, and currently the only person in this house paying attention to the sky.\nWhich, given that the sky holds all the answers, is frankly embarrassing for everyone else."
     },
     "node": "astronomer_first_1"
   },
   {
     "data": {
+      "choices": [
+        { "target": "astronomer_ask_diary", "text": "I'm looking for a diary — from the Dreamer." },
+        { "target": "astronomer_ask_isabelle", "text": "How is Isabelle doing?" },
+        { "target": "astronomer_ask_research", "text": "What are you studying up here?" }
+      ],
       "speaker": "Astronomer",
-      "text": "Obtained Personal Diary"
+      "text": "Yes? I'm rather busy. The upper atmosphere isn't going to chart itself."
     },
-    "node": "astronomer_has_telescope_3"
+    "node": "astronomer_first_2"
+  },
+  {
+    "data": {
+      "next": "astronomer_the_deal",
+      "speaker": "Astronomer",
+      "text": "The diary — yes, I have it. Isabelle lent it to me years ago. The visions in it correspond to genuine stellar events; quite remarkable.\nI won't simply hand it over, however. Knowledge requires reciprocity."
+    },
+    "node": "astronomer_ask_diary"
+  },
+  {
+    "data": {
+      "next": "astronomer_the_deal",
+      "speaker": "Astronomer",
+      "text": "Isabelle. Untethered, which is my professional assessment.\nI have her diary — she lent it to me for research. Her visions are extraordinarily accurate by stellar standards.\nI've been meaning to return it, but I've needed my equipment first."
+    },
+    "node": "astronomer_ask_isabelle"
+  },
+  {
+    "data": {
+      "next": "astronomer_the_deal",
+      "speaker": "Astronomer",
+      "text": "The temporal distortions in this house correspond directly to planetary alignments — I've charted over three hundred correlations.\nBut my equipment has been scattered and I can't complete the work.\nWhich, incidentally, also prevents me from returning something I owe Isabelle."
+    },
+    "node": "astronomer_ask_research"
+  },
+  {
+    "data": {
+      "commands": [
+        { "parameters": [{ "type": "flag", "value": "astronomer_quest_state" }, { "type": "value", "value": 2.0 }], "type": "setIntFlag" }
+      ],
+      "speaker": "Astronomer",
+      "text": "I need two things. My telescope — it was in the study on the ground floor when I last saw it.\nAnd my star chart, which I locked in a box downstairs. The three-digit combination is engraved on a stone plaque in the garden.\nThe Gardener will know where the plaque is.\nBoth items. Then the diary is yours."
+    },
+    "node": "astronomer_the_deal"
   },
   {
     "data": {
       "speaker": "Astronomer",
-      "text": "I've been calculating the house's temporal distortions, but I need my telescope for proper astronomical observations."
+      "text": "Still need both items — telescope and star chart.\nYou have {item_count:Telescope|bool:the telescope/no telescope} and {item_count:Star Chart|bool:the star chart/no star chart}.\nTelescope: ground floor study. Star chart: locked box downstairs, combination on a stone plaque in the garden."
     },
-    "node": "astronomer_needs_telescope"
+    "node": "astronomer_needs_both"
+  },
+  {
+    "data": {
+      "speaker": "Astronomer",
+      "text": "Excellent — the telescope! {item_count:Telescope|round} of 2 items collected.\nStill need the star chart from the locked box downstairs.\nCombination is on a stone plaque in the garden. The Gardener will point you to it."
+    },
+    "node": "astronomer_has_telescope_only"
+  },
+  {
+    "data": {
+      "speaker": "Astronomer",
+      "text": "The star chart — superb. {item_count:Star Chart|round} of 2 items, after a fashion.\nStill need the telescope. Ground floor study, I believe.\nBring it up here and we have a deal."
+    },
+    "node": "astronomer_has_chart_only"
+  },
+  {
+    "data": {
+      "next": "astronomer_has_both_2",
+      "speaker": "Astronomer",
+      "text": "Both! Telescope AND star chart — you are extraordinarily capable for someone who isn't an astronomer.\nWith these I can resume my observations of the temporal distortions in the upper atmosphere.\nThe patterns have been quite clear, once you know how to read them."
+    },
+    "node": "astronomer_has_both_1"
+  },
+  {
+    "data": {
+      "commands": [
+        { "parameters": [{ "type": "item", "value": "Personal Diary" }], "type": "giveItem" },
+        { "parameters": [{ "type": "item", "value": "Telescope" }], "type": "removeItem" },
+        { "parameters": [{ "type": "item", "value": "Star Chart" }], "type": "removeItem" },
+        { "parameters": [{ "type": "flag", "value": "astronomer_quest_state" }, { "type": "value", "value": 5.0 }], "type": "setIntFlag" }
+      ],
+      "next": "astronomer_has_both_3",
+      "speaker": "Astronomer",
+      "text": "The diary — there. A fair exchange between professionals.\nReturn it to Isabelle. She is in the west wing and she has been untethered without it.\nThe visions in those pages are genuine, incidentally. The stars confirmed several of them."
+    },
+    "node": "astronomer_has_both_2"
+  },
+  {
+    "data": {
+      "speaker": "Astronomer",
+      "text": "Obtained Personal Diary\nTake it to Isabelle — west wing."
+    },
+    "node": "astronomer_has_both_3"
+  },
+  {
+    "data": {
+      "speaker": "Astronomer",
+      "text": "The diary is with Isabelle now, which is correct.\nI can see {keys_collected|round} of the 4 celestial alignments forming already — the curse is weakening.\nFind whoever holds the remaining {flag:keys_remaining|round} {flag:keys_remaining|plural:key/keys}."
+    },
+    "node": "astronomer_complete"
   }
 ]

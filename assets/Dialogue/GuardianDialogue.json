@@ -1,187 +1,155 @@
 [
   {
     "data": {
-      "commands": [
-        {
-          "parameters": [
-            {
-              "type": "flag",
-              "value": "guardian_quest_state"
-            },
-            {
-              "type": "value",
-              "value": 1.0
-            }
-          ],
-          "type": "setIntFlag"
-        }
-      ],
-      "speaker": "Guardian",
-      "text": "Some artifacts are too dangerous to leave unguarded. Bring me the Ancient Seal, and I'll give you gold that holds no mystical corruption."
-    },
-    "node": "guardian_first_2"
-  },
-  {
-    "data": {
-      "commands": [
-        {
-          "parameters": [
-            {
-              "type": "item",
-              "value": "Gold Coins"
-            }
-          ],
-          "type": "giveItem"
-        },
-        {
-          "parameters": [
-            {
-              "type": "item",
-              "value": "Ancient Seal"
-            }
-          ],
-          "type": "removeItem"
-        },
-        {
-          "parameters": [
-            {
-              "type": "flag",
-              "value": "guardian_quest_state"
-            },
-            {
-              "type": "value",
-              "value": 3.0
-            }
-          ],
-          "type": "setIntFlag"
-        }
-      ],
-      "next": "guardian_has_seal_3",
-      "speaker": "Guardian",
-      "text": "I'll gladly trade mere gold for this relic that could unleash untold dangers if misused.\nIt belongs here, warded and watched."
-    },
-    "node": "guardian_has_seal_2"
-  },
-  {
-    "data": {
       "targets": [
         {
           "conditions": [
-            {
-              "parameters": [
-                {
-                  "type": "flag",
-                  "value": "guardian_quest_state"
-                },
-                {
-                  "type": "op",
-                  "value": "=="
-                },
-                {
-                  "type": "value",
-                  "value": 3.0
-                }
-              ],
-              "type": "hasIntFlag"
-            }
+            { "parameters": [{ "type": "flag", "value": "guardian_quest_state" }, { "type": "op", "value": "==" }, { "type": "value", "value": 5.0 }], "type": "hasIntFlag" }
           ],
           "node": "guardian_complete"
         },
         {
           "conditions": [
-            {
-              "parameters": [
-                {
-                  "type": "flag",
-                  "value": "guardian_quest_state"
-                },
-                {
-                  "type": "op",
-                  "value": "=="
-                },
-                {
-                  "type": "value",
-                  "value": 1.0
-                }
-              ],
-              "type": "hasIntFlag"
-            },
-            {
-              "parameters": [
-                {
-                  "type": "item",
-                  "value": "Ancient Seal"
-                }
-              ],
-              "type": "hasItem"
-            }
+            { "parameters": [{ "type": "flag", "value": "guardian_quest_state" }, { "type": "op", "value": "==" }, { "type": "value", "value": 2.0 }], "type": "hasIntFlag" },
+            { "parameters": [{ "type": "item", "value": "Ancient Seal" }], "type": "hasItem" },
+            { "parameters": [{ "type": "item", "value": "Merchant Ledger" }], "type": "hasItem" }
           ],
-          "node": "guardian_has_seal_1"
+          "node": "guardian_has_both_1"
         },
         {
           "conditions": [
-            {
-              "parameters": [
-                {
-                  "type": "flag",
-                  "value": "guardian_quest_state"
-                },
-                {
-                  "type": "op",
-                  "value": "=="
-                },
-                {
-                  "type": "value",
-                  "value": 1.0
-                }
-              ],
-              "type": "hasIntFlag"
-            }
+            { "parameters": [{ "type": "flag", "value": "guardian_quest_state" }, { "type": "op", "value": "==" }, { "type": "value", "value": 2.0 }], "type": "hasIntFlag" },
+            { "parameters": [{ "type": "item", "value": "Ancient Seal" }], "type": "hasItem" }
           ],
-          "node": "guardian_needs_seal"
+          "node": "guardian_has_seal_only"
         },
         {
-          "node": "guardian_first_1"
-        }
+          "conditions": [
+            { "parameters": [{ "type": "flag", "value": "guardian_quest_state" }, { "type": "op", "value": "==" }, { "type": "value", "value": 2.0 }], "type": "hasIntFlag" },
+            { "parameters": [{ "type": "item", "value": "Merchant Ledger" }], "type": "hasItem" }
+          ],
+          "node": "guardian_has_ledger_only"
+        },
+        {
+          "conditions": [
+            { "parameters": [{ "type": "flag", "value": "guardian_quest_state" }, { "type": "op", "value": "==" }, { "type": "value", "value": 2.0 }], "type": "hasIntFlag" }
+          ],
+          "node": "guardian_needs_both"
+        },
+        { "node": "guardian_first_1" }
       ]
     },
     "node": "guardian"
   },
   {
     "data": {
-      "speaker": "Guardian",
-      "text": "The Ancient Seal! This mystical artifact belongs in my vault where its power can be properly contained.\nThese mundane coins are of no concern to me - take them for your mortal pursuits."
-    },
-    "node": "guardian_complete"
-  },
-  {
-    "data": {
       "next": "guardian_first_2",
       "speaker": "Guardian",
-      "text": "I am Master Cedric Voss, Guardian of this vault and protector of the house's most perilous secrets."
+      "text": "Stand where I can see you.\nI am Master Cedric Voss. Guardian of this vault. Protector of what should not be left unprotected.\nState your business."
     },
     "node": "guardian_first_1"
   },
   {
     "data": {
-      "next": "guardian_has_seal_2",
+      "choices": [
+        { "target": "guardian_ask_vault", "text": "What are you guarding in there?" },
+        { "target": "guardian_ask_curse", "text": "Do you know how to break the curse?" },
+        { "target": "guardian_ask_key", "text": "I need the Blue Crystal Key." }
+      ],
       "speaker": "Guardian",
-      "text": "Excellent! The Ancient Seal of Binding - a powerful artifact that should never be left unprotected."
+      "text": "Well?"
     },
-    "node": "guardian_has_seal_1"
+    "node": "guardian_first_2"
+  },
+  {
+    "data": {
+      "next": "guardian_the_conditions",
+      "speaker": "Guardian",
+      "text": "The Blue Crystal Key is inside. Also the Ancient Seal of Binding, various confiscated articles, and forty years of accumulated documentation.\nNothing leaves this vault without proper procedure."
+    },
+    "node": "guardian_ask_vault"
+  },
+  {
+    "data": {
+      "next": "guardian_the_conditions",
+      "speaker": "Guardian",
+      "text": "Four keys. Four pedestals. Main hall.\nI have known this for some time. I have been waiting for someone capable of retrieving them.\nThe Blue Crystal Key is inside this vault. I will open it under the correct conditions."
+    },
+    "node": "guardian_ask_curse"
+  },
+  {
+    "data": {
+      "next": "guardian_the_conditions",
+      "speaker": "Guardian",
+      "text": "It is inside. I will open the vault when two conditions are met.\nNo sooner."
+    },
+    "node": "guardian_ask_key"
+  },
+  {
+    "data": {
+      "commands": [
+        { "parameters": [{ "type": "flag", "value": "guardian_quest_state" }, { "type": "value", "value": 2.0 }], "type": "setIntFlag" }
+      ],
+      "speaker": "Guardian",
+      "text": "Two conditions.\nFirst: the Ancient Seal of Binding must be secured here. I sense it loose in the east wing — behind a cracked wall. The Inventor's hammer will get you through.\nSecond: the Merchant's Ledger must be returned. It is inside the iron box on the table behind me. The Ornate Key opens it — check the west rooms.\nBoth items. Then the vault opens."
+    },
+    "node": "guardian_the_conditions"
   },
   {
     "data": {
       "speaker": "Guardian",
-      "text": "Obtained Gold Coins"
+      "text": "Vault status: {item_count:Ancient Seal|bool:Seal — received/Seal — outstanding} | {item_count:Merchant Ledger|bool:Ledger — received/Ledger — outstanding}.\nBoth required before the vault opens.\nSeal: east wing, cracked wall, Inventor's hammer. Ledger: iron box on the table, Ornate Key from the west rooms."
     },
-    "node": "guardian_has_seal_3"
+    "node": "guardian_needs_both"
   },
   {
     "data": {
       "speaker": "Guardian",
-      "text": "I am the keeper of this house's most dangerous artifacts and forbidden knowledge.\nThere is an Ancient Seal of Binding that must be secured - I sense it lies unprotected."
+      "text": "Ancient Seal — received. Condition one met.\nStill outstanding: Merchant's Ledger.\nIron box on the table behind me. Ornate Key opens it — west rooms."
     },
-    "node": "guardian_needs_seal"
+    "node": "guardian_has_seal_only"
+  },
+  {
+    "data": {
+      "speaker": "Guardian",
+      "text": "Merchant's Ledger — received. Condition two met.\nStill outstanding: Ancient Seal.\nEast wing, cracked wall. The Inventor's hammer will break through."
+    },
+    "node": "guardian_has_ledger_only"
+  },
+  {
+    "data": {
+      "next": "guardian_has_both_2",
+      "speaker": "Guardian",
+      "text": "Ancient Seal. Merchant's Ledger. Both present and accounted for.\nConditions satisfied. Opening the vault."
+    },
+    "node": "guardian_has_both_1"
+  },
+  {
+    "data": {
+      "commands": [
+        { "parameters": [{ "type": "item", "value": "Blue Crystal Key" }], "type": "giveItem" },
+        { "parameters": [{ "type": "item", "value": "Ancient Seal" }], "type": "removeItem" },
+        { "parameters": [{ "type": "item", "value": "Merchant Ledger" }], "type": "removeItem" },
+        { "parameters": [{ "type": "flag", "value": "guardian_quest_state" }, { "type": "value", "value": 5.0 }], "type": "setIntFlag" }
+      ],
+      "next": "guardian_has_both_3",
+      "speaker": "Guardian",
+      "text": "The Blue Crystal Key.\nThe Seal is secured. The Ledger is returned. Order has been maintained.\nThe blue pedestal is in the main hall. That is where the key goes.\nAll four together will end the curse. That is the correct procedure."
+    },
+    "node": "guardian_has_both_2"
+  },
+  {
+    "data": {
+      "speaker": "Guardian",
+      "text": "Obtained Blue Crystal Key\nYou now have {keys_collected|round} of 4 Crystal Keys."
+    },
+    "node": "guardian_has_both_3"
+  },
+  {
+    "data": {
+      "speaker": "Guardian",
+      "text": "The vault is secure. The Seal is contained.\nFor eighty years, I have done what I was posted here to do."
+    },
+    "node": "guardian_complete"
   }
 ]
