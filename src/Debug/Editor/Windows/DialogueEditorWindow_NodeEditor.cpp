@@ -184,9 +184,9 @@ namespace Struktur::Debug
 				m_hasUnsavedChanges = true;
 			}
 
-			if (ImGui::Selectable("{item_count:ITEM}"))
+			if (ImGui::Selectable("{item_count:item=ITEM}"))
 			{
-				InsertVariableAtCursor(textBuffer, sizeof(textBuffer), "{item_count:}");
+				InsertVariableAtCursor(textBuffer, sizeof(textBuffer), "{item_count:item=}");
 				node->SetText(std::string(textBuffer));
 				m_hasUnsavedChanges = true;
 			}

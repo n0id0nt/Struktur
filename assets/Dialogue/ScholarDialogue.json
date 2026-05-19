@@ -87,7 +87,7 @@
   {
     "data": {
       "speaker": "Scholar",
-      "text": "You have {item_count:Journal Page|round} of 3 pages so far.\nNorth room, east room, west room — cramped handwriting, dense margins.\nAll three before I can read them properly."
+      "text": "You have {item_count:item=Journal Page|round} of 3 pages so far.\nNorth room, east room, west room — cramped handwriting, dense margins.\nAll three before I can read them properly."
     },
     "node": "scholar_needs_pages"
   },

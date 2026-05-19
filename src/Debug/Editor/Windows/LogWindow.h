@@ -4,6 +4,7 @@
 #include <vector>
 #include <string>
 #include <mutex>
+#include <unordered_set>
 
 namespace Struktur::Debug
 {
@@ -42,6 +43,7 @@ namespace Struktur::Debug
         void RenderToolbar();
         void RenderLogList();
         void RenderLogDetails();
+        void RenderLogRow(int i);
         
         const char* GetLogLevelName(int level) const;
         ImVec4 GetLogLevelColor(int level) const;
@@ -51,6 +53,8 @@ namespace Struktur::Debug
         // Log storage
         std::vector<LogEntry> m_logs;
         std::mutex m_logMutex;
+        std::unordered_set<int> m_expandedLogs;
+        bool m_scrollToBottom;
         
         // Filter settings
         bool m_showTrace;

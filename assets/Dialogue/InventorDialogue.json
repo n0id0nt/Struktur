@@ -83,7 +83,7 @@
   {
     "data": {
       "speaker": "Inventor",
-      "text": "Two pieces needed — Handle and Body.\nHandle: {item_count:Toolbox Handle|bool:got it/east bench in this workshop}.\nBody: {item_count:Toolbox Body|bool:got it/cellar, ground floor}.\nBring both here to the workbench."
+      "text": "Two pieces needed — Handle and Body.\nHandle: {item_count:item=Toolbox Handle|bool:got it/east bench in this workshop}.\nBody: {item_count:item=Toolbox Body|bool:got it/cellar, ground floor}.\nBring both here to the workbench."
     },
     "node": "inventor_needs_toolbox"
   },

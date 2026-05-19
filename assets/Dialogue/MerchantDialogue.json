@@ -83,7 +83,7 @@
   {
     "data": {
       "speaker": "Merchant",
-      "text": "My gold coins — somewhere in the house.\nYou have {item_count:Gold Coins|bool:them/not found them yet}.\nBring them back and I'll write you the letter for Cedric."
+      "text": "My gold coins — somewhere in the house.\nYou have {item_count:item=Gold Coins|bool:them/not found them yet}.\nBring them back and I'll write you the letter for Cedric."
     },
     "node": "merchant_needs_gold"
   },

@@ -6,8 +6,21 @@ import "debug" for Debug
 
 class Variables {
     static registerFunctions() {
-        DialogueRegistry.registerVariable("testVar") { |params|
-            return 2
+        DialogueRegistry.registerVariable("item_count") { |params|
+            var item = params["item"]
+            var result = Inventory.contains(item)
+            if (result) {
+                return 1
+            }
+            return 0
+        }
+        DialogueRegistry.registerVariable("contains_item") { |params|
+            var item = params["item"]
+            var result = Inventory.contains(item)
+            return result
+        }
+        DialogueRegistry.registerVariable("keys_collected") { |params|
+            return 0
         }
     }
 }

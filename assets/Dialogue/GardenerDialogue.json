@@ -99,7 +99,7 @@
   {
     "data": {
       "speaker": "Gardener",
-      "text": "You have {item_count:Rose|round} of 3 roses so far.\nThe display case is in the east room — three weighted panels, all pressed at the same time.\nFind something heavy for each one and they'll all release together."
+      "text": "You have {item_count:item=Rose|round} of 3 roses so far.\nThe display case is in the east room — three weighted panels, all pressed at the same time.\nFind something heavy for each one and they'll all release together."
     },
     "node": "gardener_needs_roses"
   },

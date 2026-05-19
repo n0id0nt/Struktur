@@ -4,6 +4,7 @@
 #include <ctime>
 #include <cstdarg>
 #include <cstring>
+#include <sstream>
 
 namespace Struktur::Debug
 {
@@ -18,6 +19,7 @@ namespace Struktur::Debug
         , m_showError(true)
         , m_showFatal(true)
         , m_autoScroll(true)
+        , m_scrollToBottom(false)
         , m_selectedLogIndex(-1)
     {
         m_searchBuffer[0] = '\0';
@@ -85,6 +87,11 @@ namespace Struktur::Debug
         if (m_logs.size() > 10000)
         {
             m_logs.erase(m_logs.begin(), m_logs.begin() + 1000);
+        }
+
+        if (m_autoScroll)
+        {
+             m_scrollToBottom = true;
         }
     }
 
@@ -157,8 +164,7 @@ namespace Struktur::Debug
         std::lock_guard<std::mutex> lock(m_logMutex);
 
         // Create a child window for the log list with scrolling
-        ImGui::BeginChild("LogListRegion", ImVec2(0, 0), true,
-            ImGuiWindowFlags_HorizontalScrollbar);
+        ImGui::BeginChild("LogListRegion", ImVec2(0, 0), true, ImGuiWindowFlags_HorizontalScrollbar);
 
         // Build filtered list first to avoid clipper issues
         std::vector<int> filteredIndices;
@@ -168,13 +174,17 @@ namespace Struktur::Debug
 
             // Apply filters
             if (!ShouldShowLog(entry))
+            {
                 continue;
+            }
 
             // Apply search filter
             if (m_searchBuffer[0] != '\0')
             {
                 if (entry.message.find(m_searchBuffer) == std::string::npos)
+                {
                     continue;
+                }
             }
 
             filteredIndices.push_back(i);
@@ -183,60 +193,129 @@ namespace Struktur::Debug
         // Use clipper only if we have items to display
         if (!filteredIndices.empty())
         {
-            ImGuiListClipper clipper;
-            clipper.Begin((int)filteredIndices.size());
+            // Clipper only works cleanly with uniform height rows.
+            // For expanded multi-line entries we skip the clipper and render manually.
+            // If you have thousands of logs and many expanded, this is a tradeoff worth making.
+            bool hasExpanded = !m_expandedLogs.empty();
 
-            while (clipper.Step())
+            if (!hasExpanded)
             {
-                for (int row = clipper.DisplayStart; row < clipper.DisplayEnd; row++)
+                ImGuiListClipper clipper;
+                clipper.Begin((int)filteredIndices.size());
+                while (clipper.Step())
                 {
-                    int i = filteredIndices[row];
-                    const LogEntry& entry = m_logs[i];
-
-                    // Format log line
-                    ImGui::PushID(i);
-
-                    bool isSelected = (m_selectedLogIndex == i);
-                    ImVec4 color = GetLogLevelColor(entry.logLevel);
-
-                    // Timestamp
-                    ImGui::TextColored(ImVec4(0.5f, 0.5f, 0.5f, 1.0f), "[%s]", entry.timestamp.c_str());
-                    ImGui::SameLine();
-
-                    // Log level
-                    ImGui::TextColored(color, "[%s]", GetLogLevelName(entry.logLevel));
-                    ImGui::SameLine();
-
-                    // Message (selectable)
-                    if (ImGui::Selectable(entry.message.c_str(), isSelected,
-                        ImGuiSelectableFlags_AllowDoubleClick))
+                    for (int row = clipper.DisplayStart; row < clipper.DisplayEnd; row++)
                     {
-                        m_selectedLogIndex = i;
-
-                        // Copy to clipboard on double-click
-                        if (ImGui::IsMouseDoubleClicked(0))
-                        {
-                            ImGui::SetClipboardText(entry.message.c_str());
-                        }
+                        RenderLogRow(filteredIndices[row]);
                     }
-
-                    ImGui::PopID();
                 }
             }
-
-            // Auto-scroll to bottom
-            if (m_autoScroll && ImGui::GetScrollY() >= ImGui::GetScrollMaxY())
+            else
             {
-                ImGui::SetScrollHereY(1.0f);
+                // Manual render when expanded rows exist (variable height)
+                for (int idx : filteredIndices)
+                {
+                    RenderLogRow(idx);
+                }
             }
         }
         else
         {
-            // No logs to display
             ImGui::TextColored(ImVec4(0.6f, 0.6f, 0.6f, 1.0f), "No logs to display");
         }
 
+        // Deferred scroll — happens after all content is laid out
+        if (m_scrollToBottom)
+        {
+            ImGui::SetScrollHereY(1.0f);
+            m_scrollToBottom = false;
+        }
+
         ImGui::EndChild();
+    }
+
+    void LogWindow::RenderLogRow(int i)
+    {
+        const LogEntry& entry = m_logs[i];
+        ImVec4 color = GetLogLevelColor(entry.logLevel);
+        ImVec4 grey = ImVec4(0.95f, 0.95f, 0.95f, 1.0f);
+        ImVec4 dimGrey = ImVec4(0.5f, 0.5f, 0.5f, 1.0f);
+        bool isExpanded = m_expandedLogs.count(i) > 0;
+
+        ImGui::PushID(i);
+
+        // Check if message has multiple lines
+        bool isMultiLine = entry.message.find('\n') != std::string::npos;
+
+        // Extract first line for collapsed display
+        std::string firstLine = entry.message;
+        if (isMultiLine)
+        {
+            firstLine = entry.message.substr(0, entry.message.find('\n'));
+        }
+
+        // Timestamp
+        ImGui::TextColored(dimGrey, "[%s]", entry.timestamp.c_str());
+        ImGui::SameLine();
+
+        // Log level
+        ImGui::TextColored(color, "[%s]", GetLogLevelName(entry.logLevel));
+        ImGui::SameLine();
+
+        if (isMultiLine)
+        {
+            // Expand/collapse arrow
+            ImGui::PushStyleColor(ImGuiCol_Text, grey);
+            std::string arrowLabel = (isExpanded ? "v " : "> ") + firstLine + "##sel";
+            if (ImGui::Selectable(arrowLabel.c_str(), isExpanded,
+                ImGuiSelectableFlags_AllowDoubleClick))
+            {
+                if (isExpanded)
+                    m_expandedLogs.erase(i);
+                else
+                    m_expandedLogs.insert(i);
+
+                m_selectedLogIndex = i;
+
+                if (ImGui::IsMouseDoubleClicked(0))
+                    ImGui::SetClipboardText(entry.message.c_str());
+            }
+            ImGui::PopStyleColor();
+
+            // Render remaining lines if expanded
+            if (isExpanded)
+            {
+                // Indent to align with message column
+                ImGui::Indent(16.0f);
+
+                std::istringstream stream(entry.message);
+                std::string line;
+                bool firstLine = true;
+                while (std::getline(stream, line))
+                {
+                    if (firstLine) { firstLine = false; continue; } // skip first, already shown
+                    ImGui::TextColored(grey, "%s", line.c_str());
+                }
+
+                ImGui::Unindent(16.0f);
+            }
+        }
+        else
+        {
+            // Single line — simple selectable
+            bool isSelected = (m_selectedLogIndex == i);
+            ImGui::PushStyleColor(ImGuiCol_Text, grey);
+            if (ImGui::Selectable(entry.message.c_str(), isSelected,
+                ImGuiSelectableFlags_AllowDoubleClick))
+            {
+                m_selectedLogIndex = i;
+                if (ImGui::IsMouseDoubleClicked(0))
+                    ImGui::SetClipboardText(entry.message.c_str());
+            }
+            ImGui::PopStyleColor();
+        }
+
+        ImGui::PopID();
     }
 
     const char* LogWindow::GetLogLevelName(int level) const

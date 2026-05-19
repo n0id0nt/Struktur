@@ -98,21 +98,21 @@
   {
     "data": {
       "speaker": "Astronomer",
-      "text": "Still need both items — telescope and star chart.\nYou have {item_count:Telescope|bool:the telescope/no telescope} and {item_count:Star Chart|bool:the star chart/no star chart}.\nTelescope: ground floor study. Star chart: locked box downstairs, combination on a stone plaque in the garden."
+      "text": "Still need both items — telescope and star chart.\nYou have {item_count:item=Telescope|bool:the telescope/no telescope} and {item_count:item=Star Chart|bool:the star chart/no star chart}.\nTelescope: ground floor study. Star chart: locked box downstairs, combination on a stone plaque in the garden."
     },
     "node": "astronomer_needs_both"
   },
   {
     "data": {
       "speaker": "Astronomer",
-      "text": "Excellent — the telescope! {item_count:Telescope|round} of 2 items collected.\nStill need the star chart from the locked box downstairs.\nCombination is on a stone plaque in the garden. The Gardener will point you to it."
+      "text": "Excellent — the telescope! {item_count:item=Telescope|round} of 2 items collected.\nStill need the star chart from the locked box downstairs.\nCombination is on a stone plaque in the garden. The Gardener will point you to it."
     },
     "node": "astronomer_has_telescope_only"
   },
   {
     "data": {
       "speaker": "Astronomer",
-      "text": "The star chart — superb. {item_count:Star Chart|round} of 2 items, after a fashion.\nStill need the telescope. Ground floor study, I believe.\nBring it up here and we have a deal."
+      "text": "The star chart — superb. {item_count:item=Star Chart|round} of 2 items, after a fashion.\nStill need the telescope. Ground floor study, I believe.\nBring it up here and we have a deal."
     },
     "node": "astronomer_has_chart_only"
   },

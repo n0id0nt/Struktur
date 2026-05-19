@@ -98,7 +98,7 @@
   {
     "data": {
       "speaker": "Cook",
-      "text": "Three ingredients — I need all of them before I can start.\nFlour: {item_count:Flour Sack|bool:got it/pantry, now open}.\nHoney: {item_count:Jar of Honey|bool:got it/larder, through that door}.\nHerbs: {item_count:Dried Herbs|bool:got it/hanging above the stove}."
+      "text": "Three ingredients — I need all of them before I can start.\nFlour: {item_count:item=Flour Sack|bool:got it/pantry, now open}.\nHoney: {item_count:item=Jar of Honey|bool:got it/larder, through that door}.\nHerbs: {item_count:item=Dried Herbs|bool:got it/hanging above the stove}."
     },
     "node": "cook_needs_ingredients"
   },

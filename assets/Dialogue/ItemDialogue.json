@@ -32,7 +32,7 @@
         }
       ],
       "speaker": "Narrator",
-      "text": "Obtained Journal Page ({item_count:Journal Page|round} of 3)"
+      "text": "Obtained Journal Page ({item_count:item=Journal Page|round} of 3)"
     },
     "node": "journal_page_obtain"
   },
@@ -108,7 +108,7 @@
         }
       ],
       "speaker": "Narrator",
-      "text": "Obtained Rose ({item_count:Rose|round} of 3)"
+      "text": "Obtained Rose ({item_count:item=Rose|round} of 3)"
     },
     "node": "rose_obtain"
   },

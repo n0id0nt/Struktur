@@ -97,20 +97,19 @@ class DialogueManagerHelper {
     }
 
     static processString(text, overrides) {
-        if (text == null || text == "") return text
-
+        if (text == null || text == "") {
+            return text
+        }
         var result = text
         var offset = 0
         
         while (offset < result.count) {
-            // Find next placeholder
             var startIdx = result.indexOf("{", offset)
             if (startIdx == -1) break
             
             var endIdx = result.indexOf("}", startIdx)
             if (endIdx == -1) break
             
-            // Extract expression: "variable|modifiers"
             var expression = result[startIdx + 1...endIdx]
             
             if (expression == "") {
@@ -118,17 +117,37 @@ class DialogueManagerHelper {
                 continue
             }
 
-            // Split on pipe
-            var parts = expression.split("|")
-            var varName = parts[0].trim()
-            var modifiers = parts.count > 1 ? parts[1..-1].join("|") : ""
+            // Split on pipe first to isolate modifiers
+            var pipeParts = expression.split("|")
+            var nameAndParams = pipeParts[0]
+            var modifiers = pipeParts.count > 1 ? pipeParts[1..-1].join("|") : ""
+
+            // Split name from params on colon
+            var colonIdx = nameAndParams.indexOf(":")
+            var varName
+            var params = {}
+            if (colonIdx != -1) {
+                varName = nameAndParams[0...colonIdx].trim()
+                var paramStr = nameAndParams[colonIdx + 1..-1]
+                // Parse comma-separated key=value pairs
+                var paramPairs = paramStr.split(",")
+                for (pair in paramPairs) {
+                    var eqIdx = pair.indexOf("=")
+                    if (eqIdx != -1) {
+                        var key = pair[0...eqIdx].trim()
+                        var val = pair[eqIdx + 1..-1].trim()
+                        params[key] = val
+                    }
+                }
+            } else {
+                varName = nameAndParams.trim()
+            }
             
-            // Get value from Wren registry
+            // Get value from overrides or registry
             var value
             if (overrides != null && overrides.containsKey(varName)) {
                 value = overrides[varName]
             } else {
-                var params = []
                 value = DialogueRegistry.getRegisteredVariable(varName).call(params)
             }
             if (value == null) {
@@ -138,7 +157,6 @@ class DialogueManagerHelper {
             var formatted = VariableSubstitution.applyModifiers(value, modifiers)
             
             result = result[0...startIdx] + formatted + result[endIdx + 1..-1]
-            
             offset = startIdx + formatted.count
         }
         
