@@ -11,11 +11,17 @@ import "gameObjectComponents" for Camera, Script
 import "gameObject" for GameObject
 import "debug" for Debug
 
-import "Colors" for BLANK, BLACK, DARKGRAY, WHITE
+import "Colors" for BLANK, BLACK, DARKGRAY, WHITE, LIGHTGRAY
 import "Inventory" for Inventory
 import "dialogue" for DialogueRegistry, DialogueManager, DialogueResult, VariableSubstitution
 
 var TEXT_SCROLL_SPEED = 0.02
+
+// Colour constants for choice panel theming
+var CHOICE_BG_DEFAULT    = Vec4.new(20,  16,  12,  200)
+var CHOICE_BG_FOCUSED    = Vec4.new(180, 140, 60,  230)
+var CHOICE_BORDER_DEFAULT = Vec4.new(80,  65,  45,  200)
+var CHOICE_BORDER_FOCUSED = Vec4.new(220, 180, 80,  255)
 
 class DialogueManagerHelper {
     static executeCommands(commands) {
@@ -33,7 +39,7 @@ class DialogueManagerHelper {
             }
         }
         return true
-    } 
+    }
 
     static evaluateTargets(targets) {
         for (target in targets) {
@@ -52,7 +58,7 @@ class DialogueManagerHelper {
 
         return null
     }
-    
+
     static processNode(nodeId) {
         Debug.info("Processing dialogue at node: %(nodeId)")
         var node = DialogueManager.setActiveNode(nodeId)
@@ -74,7 +80,6 @@ class DialogueManagerHelper {
             return DialogueResult.endDialogue(node)
         }
         if (node.hasChoices()) {
-            var choices = node.choices
             return DialogueResult.choices(node)
         }
         if (node.hasNext()) {
@@ -102,34 +107,31 @@ class DialogueManagerHelper {
         }
         var result = text
         var offset = 0
-        
+
         while (offset < result.count) {
             var startIdx = result.indexOf("{", offset)
             if (startIdx == -1) break
-            
+
             var endIdx = result.indexOf("}", startIdx)
             if (endIdx == -1) break
-            
+
             var expression = result[startIdx + 1...endIdx]
-            
+
             if (expression == "") {
                 offset = endIdx + 1
                 continue
             }
 
-            // Split on pipe first to isolate modifiers
             var pipeParts = expression.split("|")
             var nameAndParams = pipeParts[0]
             var modifiers = pipeParts.count > 1 ? pipeParts[1..-1].join("|") : ""
 
-            // Split name from params on colon
             var colonIdx = nameAndParams.indexOf(":")
             var varName
             var params = {}
             if (colonIdx != -1) {
                 varName = nameAndParams[0...colonIdx].trim()
                 var paramStr = nameAndParams[colonIdx + 1..-1]
-                // Parse comma-separated key=value pairs
                 var paramPairs = paramStr.split(",")
                 for (pair in paramPairs) {
                     var eqIdx = pair.indexOf("=")
@@ -142,8 +144,7 @@ class DialogueManagerHelper {
             } else {
                 varName = nameAndParams.trim()
             }
-            
-            // Get value from overrides or registry
+
             var value
             if (overrides != null && overrides.containsKey(varName)) {
                 value = overrides[varName]
@@ -155,11 +156,11 @@ class DialogueManagerHelper {
             }
 
             var formatted = VariableSubstitution.applyModifiers(value, modifiers)
-            
+
             result = result[0...startIdx] + formatted + result[endIdx + 1..-1]
             offset = startIdx + formatted.count
         }
-        
+
         return result
     }
 
@@ -181,12 +182,12 @@ class DialogueManagerHelper {
     static makeChoice(choiceIndex) {
         var currentNode = DialogueManager.currentNode
         if (!currentNode) {
-            Debug.warning("Continue called but no active dialogue node")
+            Debug.warning("makeChoice called but no active dialogue node")
             return DialogueResult.noActiveNode()
         }
         var choices = currentNode.choices
         if (!choices) {
-            Debug.error("Choice index %(choiceIndex) for node %(currentNode.id) when there is no choices associated with node")
+            Debug.error("makeChoice called but no choices on node %(currentNode.id)")
             return DialogueResult.invalidChoice()
         }
         if (choiceIndex < 0 || choiceIndex >= choices.count) {
@@ -199,153 +200,194 @@ class DialogueManagerHelper {
     }
 }
 
+// 
+
 class InteractState is BaseState {
     construct new() {
         super()
         name = "InteractState"
-        _screenPanel = null
-        _dialogueLabel = null
-        _continueDialogueLabel = null
-        _choiceLabels = []
 
-        _interactingEntity = null
-        
-        _dialogueSrolling = false
-        _currentString = ""
+        _screenPanel        = null
+        _textBackgroundPanel = null
+        _dialogueLabel      = null
+        _continueLabel      = null
+
+        // Choice UI
+        _choiceContainerPanel = null   // the outer panel sitting above the text box
+        _choicePanels         = []     // one UIPanel per choice
+        _choiceLabels         = []     // one UILabel per choice (child of its panel)
+        _focusedChoiceIndex   = 0
+
+        _interactingEntity       = null
+        _dialogueScrolling       = false
+        _currentString           = ""
         _currentDialogueStartTime = 0
-        _currentResult = null
-        _waitingForChoice = false
+        _currentResult           = null
+        _waitingForChoice        = false
 
-        _menuMusic = null
+        _font            = null
+        _menuMusic       = null
         _textScrollSound = null
     }
-    
+
+    //  enter 
+
     enter(stateManager, params) {
         super.enter(stateManager, params)
 
         _interactingEntity = params["interactingEntity"]
-        
+
         _menuMusic = Music.load("Sounds/menuMusic.wav")
         _menuMusic.setLooping(true)
         _menuMusic.play()
         _textScrollSound = Sound.load("Sounds/scroll.wav")
-        var font = Font.load("Fonts/medieval_sharp/MedievalSharp-Bold.ttf", 30)
-        var dialogueBackgroundPanelTexture = Texture.load("Tiles/DialoguePanel.png")
 
-        // Create UI panel
-        _screenPanel = UIPanel.new(Vec2.new(0, 0), Vec2.new(0, 0), Vec2.new(Application.gameWidth, Application.gameHeight), Vec2.new(0, 0))
+        _font = Font.load("Fonts/medieval_sharp/MedievalSharp-Bold.ttf", 30)
+        var dialoguePanelTexture = Texture.load("Tiles/DialoguePanel.png")
+
+        //  Full-screen transparent root 
+        _screenPanel = UIPanel.new(
+            Vec2.new(0, 0), Vec2.new(0, 0),
+            Vec2.new(Application.gameWidth, Application.gameHeight),
+            Vec2.new(0, 0)
+        )
         _screenPanel.setBackgroundColor(BLANK)
         _screenPanel.setBorderColor(BLANK)
         UIManager.addUIElement(_screenPanel)
 
-        var textBackgroundPanel = UIPanel.new(Vec2.new(0, 0), Vec2.new(0.5, 0.95), Vec2.new(800, 200), Vec2.new(0, 0))
-        textBackgroundPanel.setAnchorPoint(Vec2.new(0.5, 1))
-        textBackgroundPanel.setBorderColor(BLANK)
-        textBackgroundPanel.setBackgroundColor(DARKGRAY)
-        textBackgroundPanel.setBackgroundTexture(dialogueBackgroundPanelTexture)
-        dialogueBackgroundPanelTexture.unload()
-        _screenPanel.addChild(textBackgroundPanel)
+        //  Dialogue text box – bottom-centre 
+        // Anchored at (0.5, 1) so the bottom edge sits at 95 % of screen height.
+        _textBackgroundPanel = UIPanel.new(
+            Vec2.new(0, -30),     // 30 px gap from screen bottom
+            Vec2.new(0.5, 1),     // anchor: horizontal centre, vertical bottom
+            Vec2.new(800, 200),
+            Vec2.new(0, 0)
+        )
+        _textBackgroundPanel.setAnchorPoint(Vec2.new(0.5, 1))
+        _textBackgroundPanel.setBorderColor(BLANK)
+        _textBackgroundPanel.setBackgroundColor(DARKGRAY)
+        _textBackgroundPanel.setBackgroundTexture(dialoguePanelTexture)
+        dialoguePanelTexture.unload()
+        _screenPanel.addChild(_textBackgroundPanel)
 
-        _dialogueLabel = UILabel.new(Vec2.new(40, 30), Vec2.new(0, 0), "", 20.0)
+        //  Dialogue text label (inside text box) 
+        _dialogueLabel = UILabel.new(Vec2.new(40, 25), Vec2.new(0, 0), "", 20.0)
         _dialogueLabel.setTextColor(BLACK)
         _dialogueLabel.setAnchorPoint(Vec2.new(0, 0))
-        _dialogueLabel.setFont(font)
+        _dialogueLabel.setFont(_font)
         _dialogueLabel.setWordWrap(TextWrapping.WORD_WRAP)
-        _dialogueLabel.setSize(Vec2.new(-40, -80), Vec2.new(1, 1))
-        textBackgroundPanel.addChild(_dialogueLabel)
+        // Fill the panel minus 40 px left/right margin and 60 px from bottom
+        // so the continue prompt has room.
+        _dialogueLabel.setSize(Vec2.new(-80, -60), Vec2.new(1, 1))
+        _textBackgroundPanel.addChild(_dialogueLabel)
 
-        _continueDialogueLabel = UILabel.new(Vec2.new(-40, -30), Vec2.new(1, 1), "Continue", 20.0)
-        _continueDialogueLabel.setTextColor(BLACK)
-        _continueDialogueLabel.setAnchorPoint(Vec2.new(1, 1))
-        _continueDialogueLabel.setFont(font)
-        _continueDialogueLabel.setVisible(false)
-        textBackgroundPanel.addChild(_continueDialogueLabel)
+        //  "Continue ▶" prompt – bottom-right of text box 
+        // Position: 20 px from right edge, 18 px from bottom edge.
+        // setAnchorPoint(1,1) means the label's own bottom-right corner sits
+        // at the specified position.
+        _continueLabel = UILabel.new(Vec2.new(-20, -18), Vec2.new(1, 1), "Continue ▶", 16.0)
+        _continueLabel.setTextColor(BLACK)
+        _continueLabel.setAnchorPoint(Vec2.new(1, 1))
+        _continueLabel.setFont(_font)
+        _continueLabel.setVisible(false)
+        _textBackgroundPanel.addChild(_continueLabel)
 
-        // Get the interactable entity and determine entry point
+        //  Start dialogue 
         var interactable = Script.getInstance(_interactingEntity)
-        var entryNodeId = getEntryPoint(interactable.name)
-        
+        var entryNodeId  = getEntryPoint(interactable.name)
+
         if (entryNodeId == null) {
-            System.print("No dialogue entry point for %(interactable.name)")
+            Debug.warning("No dialogue entry point for %(interactable.name)")
             stateManager.clearCurrentState()
             return
         }
 
-        System.print("Starting dialogue for %(interactable.name) at node %(entryNodeId)")
-        
-        // Start the dialogue
+        Debug.info("Starting dialogue for %(interactable.name) at node %(entryNodeId)")
         _currentResult = DialogueManagerHelper.startDialogue(entryNodeId)
         processDialogueResult(_currentResult)
     }
-    
-    update(stateManager) {
-        var inputInteract = Input.isInputJustReleased("Interact")
 
-        // Handle text scrolling
-        if (_dialogueSrolling) {
-            var currentString = DialogueManagerHelper.processString(_currentString)
-            var numberOfCharactersToDraw = ((Time.scaledTime - _currentDialogueStartTime) / TEXT_SCROLL_SPEED).floor
-            if (numberOfCharactersToDraw >= currentString.count) {
-                numberOfCharactersToDraw = currentString.count
-                _dialogueSrolling = false
-                _continueDialogueLabel.setVisible(true)
+    // update 
+
+    update(stateManager) {
+        var inputInteract   = Input.isInputJustReleased("Interact")
+        //var inputNavUp      = Input.isInputJustReleased("NavigateUp")
+        //var inputNavDown    = Input.isInputJustReleased("NavigateDown")
+
+        // Text scroll animation 
+        if (_dialogueScrolling) {
+            var fullText = DialogueManagerHelper.processString(_currentString)
+            var charCount = ((Time.scaledTime - _currentDialogueStartTime) / TEXT_SCROLL_SPEED).floor
+            if (charCount >= fullText.count) {
+                charCount = fullText.count
+                _dialogueScrolling = false
+                if (!_waitingForChoice) {
+                    _continueLabel.setVisible(true)
+                }
             }
-            var subString = currentString[0...numberOfCharactersToDraw]
-            _dialogueLabel.setText(subString)
+            _dialogueLabel.setText(fullText[0...charCount])
         }
 
-        // Handle input
+        // Choice navigation (up / down) 
+        //if (_waitingForChoice && _choicePanels.count > 0) {
+        //    if (inputNavUp) {
+        //        _focusedChoiceIndex = (_focusedChoiceIndex - 1 + _choicePanels.count) % _choicePanels.count
+        //        applyChoiceFocus(_focusedChoiceIndex)
+        //    }
+        //    if (inputNavDown) {
+        //        _focusedChoiceIndex = (_focusedChoiceIndex + 1) % _choicePanels.count
+        //        applyChoiceFocus(_focusedChoiceIndex)
+        //    }
+        //}
+
+        // Confirm / advance 
         if (inputInteract) {
-            if (_dialogueSrolling) {
-                _dialogueSrolling = false
-                _continueDialogueLabel.setVisible(true)
+            if (_dialogueScrolling) {
+                // Skip to end of scroll
+                _dialogueScrolling = false
                 _dialogueLabel.setText(DialogueManagerHelper.processString(_currentString))
-            } else if (_waitingForChoice) {
-                // TODO: Handle choice selection via keyboard/gamepad
-                // For now, just continue if there's only one choice or no choices
-                if (!_currentResult.choices && _currentResult.choices.count == 0) {
-                    continueDialogue(stateManager)
+                if (!_waitingForChoice) {
+                    _continueLabel.setVisible(true)
                 }
+            } else if (_waitingForChoice) {
+                // Confirm the currently highlighted choice
+                confirmChoice(stateManager)
             } else {
                 continueDialogue(stateManager)
             }
         }
-
-        // Handle number key input for choices
-        if (_waitingForChoice && _currentResult.choices && _currentResult.choices.count > 0) {
-            for (i in 0..._currentResult.choices.count) {
-                // Check for number keys 1-9
-                if (Input.isKeyJustReleased((i + 1).toString)) {
-                    makeChoice(stateManager, i)
-                    return
-                }
-            }
-        }
     }
-    
+
+    //  exit 
+
     exit() {
         super.exit()
-        
-        System.print("Unloading InteractState...")
+        Debug.info("Unloading InteractState...")
 
         DialogueManagerHelper.endDialogue()
-        
+
         UIManager.removeUIElement(_screenPanel)
+        _screenPanel = null
+
         _menuMusic.stop()
         _menuMusic.unload()
         _menuMusic = null
+
         _textScrollSound.unload()
         _textScrollSound = null
 
-        System.print("InteractState unloaded")
+        _font.unload()
+        _font = null
+
+        Debug.info("InteractState unloaded")
     }
 
+    // dialogue flow 
+
     processDialogueResult(result) {
-        // Get the text and speaker
         var speaker = result.speaker
-        var text = result.text
-        
-        // Format with speaker name if present
+        var text    = result.text
+
         if (text) {
             if (speaker && speaker != "") {
                 _currentString = "%(speaker):\n%(text)"
@@ -354,124 +396,201 @@ class InteractState is BaseState {
             }
         }
 
-
-        // Start text scrolling animation
-        _dialogueSrolling = true
+        _dialogueScrolling        = true
         _currentDialogueStartTime = Time.scaledTime
-        _continueDialogueLabel.setVisible(false)
+        _continueLabel.setVisible(false)
         _waitingForChoice = false
 
-        // Clear old choice labels
-        clearChoiceLabels()
+        clearChoiceUI()
 
-        // Check if there are choices
         var choices = result.choices
         if (choices && choices.count > 0) {
             _waitingForChoice = true
-            displayChoices(choices)
+            buildChoiceUI(choices)
         }
     }
 
     continueDialogue(stateManager) {
-        // If there are choices, we shouldn't continue automatically
-        if (_waitingForChoice && _currentResult.choices && _currentResult.choices.count > 0) {
-            return
-        }
+        if (_waitingForChoice) return
 
-        // Check if dialogue ended
         if (_currentResult.hasEnded) {
             stateManager.clearCurrentState()
             return
         }
 
-        // Continue to next node
         _currentResult = DialogueManagerHelper.continueDialogue()
-        
-
         processDialogueResult(_currentResult)
     }
 
-    makeChoice(stateManager, choiceIndex) {
-        System.print("Making choice %(choiceIndex)")
-        
-        _currentResult = DialogueManagerHelper.makeChoice(choiceIndex)
+    confirmChoice(stateManager) {
+        if (!_waitingForChoice) return
+
+        Debug.info("Confirming choice %(  _focusedChoiceIndex)")
+        _currentResult = DialogueManagerHelper.makeChoice(_focusedChoiceIndex)
         processDialogueResult(_currentResult)
     }
 
-    displayChoices(choices) {
-        // Create choice labels
-        var yOffset = -80
-        var font = Font.load("Fonts/medieval_sharp/MedievalSharp-Bold.ttf", 18)
-        
-        for (i in 0...choices.count) {
-            var choice = choices[i]
-            var choiceText = "%(i + 1). %(choice)"
-            
-            var choiceLabel = UILabel.new(Vec2.new(40, yOffset), Vec2.new(0, 1), choiceText, 18.0)
-            choiceLabel.setTextColor(BLACK)
-            choiceLabel.setAnchorPoint(Vec2.new(0, 1))
-            choiceLabel.setFont(font)
-            _screenPanel.addChild(choiceLabel)
+    // choice UI 
+
+    // Build a vertical list of choice panels in the top-right corner of the
+    // screen, positioned directly above the dialogue text box.
+    //
+    // Layout (all child of _screenPanel):
+    //
+    //   ┌┐  ← _choiceContainerPanel
+    //   │  1.  First choice text     │    anchored (1, 1) = top-right relative
+    //   │  2.  Second choice text    │    to _screenPanel, sits above text box
+    //   │  3.  Third choice text     │
+    //   └┘
+    //   ┌┐
+    //   │  Speaker:  dialogue text …                          Continue ▶     │
+    //   └┘
+
+    buildChoiceUI(choices) {
+        _focusedChoiceIndex = 0
+
+        var panelW    = 380
+        var rowH      = 44
+        var padding   = 12
+        var gap       = 6
+        var totalH    = choices.count * rowH + (choices.count - 1) * gap + padding * 2
+
+        // Container sits above the text box: anchor bottom-right of screen,
+        // offset up by (textbox height + margin) and in from the right edge.
+        var textBoxH  = 200
+        var marginR   = 40
+        var marginB   = textBoxH + 20   // 20 px gap between container and text box
+
+        _choiceContainerPanel = UIPanel.new(
+            Vec2.new(-marginR, -marginB),   // offset from anchor
+            Vec2.new(1, 1),                  // anchor: bottom-right of parent
+            Vec2.new(panelW, totalH),
+            Vec2.new(0, 0)
+        )
+        _choiceContainerPanel.setAnchorPoint(Vec2.new(1, 1))
+        _choiceContainerPanel.setBackgroundColor(Vec4.new(10, 8, 6, 210))
+        _choiceContainerPanel.setBorderColor(Vec4.new(80, 65, 45, 180))
+        _screenPanel.addChild(_choiceContainerPanel)
+
+        var curY = padding
+        var i    = 0
+        for (choice in choices) {
+            var choicePanel = UIPanel.new(
+                Vec2.new(padding, curY),
+                Vec2.new(0, 0),
+                Vec2.new(panelW - padding * 2, rowH),
+                Vec2.new(0, 0)
+            )
+            choicePanel.setAnchorPoint(Vec2.new(0, 0))
+            choicePanel.setBackgroundColor(CHOICE_BG_DEFAULT)
+            choicePanel.setBorderColor(CHOICE_BORDER_DEFAULT)
+            choicePanel.setFocusable(true)
+
+            // Capture index for the closure
+            var capturedIndex = i
+            choicePanel.setOnFocus { |sender|
+                _focusedChoiceIndex = capturedIndex
+                applyChoiceFocus(capturedIndex)
+                _textScrollSound.play()
+            }
+
+            _choiceContainerPanel.addChild(choicePanel)
+            _choicePanels.add(choicePanel)
+
+            // Choice text label inside the row panel
+            var choiceLabel = UILabel.new(
+                Vec2.new(12, 0),
+                Vec2.new(0, 0.5),
+                "%(i + 1).  %(choice)",
+                16.0
+            )
+            choiceLabel.setTextColor(WHITE)
+            choiceLabel.setAnchorPoint(Vec2.new(0, 0.5))
+            choiceLabel.setFont(_font)
+            choicePanel.addChild(choiceLabel)
             _choiceLabels.add(choiceLabel)
-            
-            yOffset = yOffset - 25
+
+            curY = curY + rowH + gap
+            i    = i + 1
+        }
+
+        // Give focus to first row so controller/keyboard navigation starts there
+        if (_choicePanels.count > 0) {
+            UIManager.setFocus(_choicePanels[0])
+            applyChoiceFocus(0)
         }
     }
 
-    clearChoiceLabels() {
-        for (label in _choiceLabels) {
-            _screenPanel.removeChild(label)
+    // Update visual state of all choice rows to reflect which is focused
+    applyChoiceFocus(focusedIndex) {
+        var i = 0
+        for (panel in _choicePanels) {
+            if (i == focusedIndex) {
+                panel.setBackgroundColor(CHOICE_BG_FOCUSED)
+                panel.setBorderColor(CHOICE_BORDER_FOCUSED)
+                _choiceLabels[i].setTextColor(BLACK)
+            } else {
+                panel.setBackgroundColor(CHOICE_BG_DEFAULT)
+                panel.setBorderColor(CHOICE_BORDER_DEFAULT)
+                _choiceLabels[i].setTextColor(WHITE)
+            }
+            i = i + 1
         }
-        _choiceLabels.clear()
     }
+
+    clearChoiceUI() {
+        if (_choiceContainerPanel) {
+            _screenPanel.removeChild(_choiceContainerPanel)
+            _choiceContainerPanel = null
+        }
+        _choicePanels.clear()
+        _choiceLabels.clear()
+        _focusedChoiceIndex = 0
+    }
+
+    //  entry point lookup 
 
     getEntryPoint(interactableName) {
-        // Determine which dialogue entry point to use based on the interactable        
         // NPCs
-        if (interactableName == "Scholar") return "scholar"
-        if (interactableName == "Gardener") return "gardener"
-        if (interactableName == "Cook") return "cook"
-        if (interactableName == "Merchant") return "merchant"
-        if (interactableName == "Guard") return "guard"
-        if (interactableName == "Librarian") return "librarian"
+        if (interactableName == "Scholar")    return "scholar"
+        if (interactableName == "Gardener")   return "gardener"
+        if (interactableName == "Cook")       return "cook"
+        if (interactableName == "Merchant")   return "merchant"
+        if (interactableName == "Guard")      return "guard"
+        if (interactableName == "Librarian")  return "librarian"
         if (interactableName == "Astronomer") return "astronomer"
-        if (interactableName == "Cordelia") return "cordelia"
-        if (interactableName == "Dreamer") return "dreamer"
-        if (interactableName == "Guardian") return "guardian"
-        if (interactableName == "Inventor") return "inventor"
+        if (interactableName == "Cordelia")   return "cordelia"
+        if (interactableName == "Dreamer")    return "dreamer"
+        if (interactableName == "Guardian")   return "guardian"
+        if (interactableName == "Inventor")   return "inventor"
 
-        // Immoveable Items
-        if (interactableName == "Safe") return "safe"
-        if (interactableName == "Red Pedestal Inactive") return "red_pedestal_inactive"
-        if (interactableName == "Red Pedestal Active") return "red_pedestal_active"
-        if (interactableName == "Blue Pedestal Inactive") return "blue_pedestal_inactive"
-        if (interactableName == "Blue Pedestal Active") return "blue_pedestal_active"
+        // Immovable interactables
+        if (interactableName == "Safe")                    return "safe"
+        if (interactableName == "Red Pedestal Inactive")   return "red_pedestal_inactive"
+        if (interactableName == "Red Pedestal Active")     return "red_pedestal_active"
+        if (interactableName == "Blue Pedestal Inactive")  return "blue_pedestal_inactive"
+        if (interactableName == "Blue Pedestal Active")    return "blue_pedestal_active"
         if (interactableName == "Green Pedestal Inactive") return "green_pedestal_inactive"
-        if (interactableName == "Green Pedestal Active") return "green_pedestal_active"
+        if (interactableName == "Green Pedestal Active")   return "green_pedestal_active"
         if (interactableName == "Yellow Pedestal Inactive") return "yellow_pedestal_inactive"
-        if (interactableName == "Yellow Pedestal Active") return "yellow_pedestal_active"
-        if (interactableName == "Entrance Door") return "entrance_door"
-        
-        // Items
-        if (interactableName == "Rose") return "rose"
-        if (interactableName == "Tool Box") return "tool_box"
-        if (interactableName == "Telescope") return "telescope"
-        if (interactableName == "Ancient Seal") return "ancient_seal"
-        
-        // Returnable Items
-        var suffex = ""
-        if (Inventory.contains(interactableName)) {
-            suffex = "_return"
-        }
+        if (interactableName == "Yellow Pedestal Active")  return "yellow_pedestal_active"
+        if (interactableName == "Entrance Door")           return "entrance_door"
 
-        if (interactableName == "Ancient Tome") return "ancient_book" + suffex
-        if (interactableName == "Love Letter") return "love_letter" + suffex
-        if (interactableName == "Hammer") return "hammer" + suffex
-        if (interactableName == "Star Chart") return "star_chart" + suffex
-        if (interactableName == "Ornate Key") return "ornate_key" + suffex
-        
-        // Default - no dialogue found
-        Debug.warning("Warning: No dialogue entry point found for %(interactableName)")
+        // World items (always pickuppable — no suffix logic)
+        if (interactableName == "Rose")         return "rose"
+        if (interactableName == "Tool Box")     return "tool_box"
+        if (interactableName == "Telescope")    return "telescope"
+        if (interactableName == "Ancient Seal") return "ancient_seal"
+
+        // Returnable items — use "_return" entry if already in inventory
+        var suffix = Inventory.contains(interactableName) ? "_return" : ""
+        if (interactableName == "Ancient Tome") return "ancient_book" + suffix
+        if (interactableName == "Love Letter")  return "love_letter" + suffix
+        if (interactableName == "Hammer")       return "hammer" + suffix
+        if (interactableName == "Star Chart")   return "star_chart" + suffix
+        if (interactableName == "Ornate Key")   return "ornate_key" + suffix
+
+        Debug.warning("No dialogue entry point found for '%(interactableName)'")
         return null
     }
 }
