@@ -4,61 +4,60 @@
 
 #pragma once
 
+#include <memory>
+#include <optional>
 #include <string>
 #include <unordered_map>
-#include <memory>
 #include <vector>
-#include <optional>
 
 #include "DialogueNode.h"
-#include "DialogueResult.h"
 #include "DialogueRegistry.h"
+#include "DialogueResult.h"
 
 namespace Struktur
 {
-	class GameContext;
+class GameContext;
 }
 
 namespace Struktur::Dialogue
 {
-	// Main dialogue manager
-	// Manages dialogue flow, node processing, and condition/command execution
-	class DialogueManager
-	{
-	public:
-		DialogueManager();
-		~DialogueManager();
+// Main dialogue manager
+// Manages dialogue flow, node processing, and condition/command execution
+class DialogueManager
+{
+   public:
+	DialogueManager();
+	~DialogueManager();
 
-		// Loading
-		void AddNode(std::string nodeKey, std::unique_ptr<DialogueNode> node);
-		void Clear();
+	// Loading
+	void AddNode(std::string nodeKey, std::unique_ptr<DialogueNode> node);
+	void Clear();
 
-		// Flow control
-		DialogueResult StartDialogue(GameContext& context, const std::string& nodeId);
-		DialogueResult MakeChoice(GameContext& context, int choiceIndex);
-		DialogueResult Continue(GameContext& context);
-		void ClearDialogue(GameContext& context);
-		DialogueNode* SetActiveNode(GameContext& context, const std::string& nodeId);
+	// Flow control
+	DialogueResult StartDialogue(GameContext& context, const std::string& nodeId);
+	DialogueResult MakeChoice(GameContext& context, int choiceIndex);
+	DialogueResult Continue(GameContext& context);
+	void ClearDialogue(GameContext& context);
+	DialogueNode* SetActiveNode(GameContext& context, const std::string& nodeId);
 
-		// Queries
-		bool IsDialogueActive() const;
-		std::optional<std::string> GetCurrentNodeId() const;
-		DialogueNode* GetCurrentNode() const;
-		const DialogueNode* GetNode(const std::string& nodeId) const;
-		size_t GetNodeCount() const;
+	// Queries
+	bool IsDialogueActive() const;
+	std::optional<std::string> GetCurrentNodeId() const;
+	DialogueNode* GetCurrentNode() const;
+	const DialogueNode* GetNode(const std::string& nodeId) const;
+	size_t GetNodeCount() const;
 
-	private:
-		// Internal processing
-		DialogueResult ProcessNode(GameContext& context, const std::string& nodeId);
-		//TODO move this to the node
-		std::optional<std::string> EvaluateTargets(GameContext& context, const ConditionalTargetList& targets);
-		bool EvaluateConditions(GameContext& context, const ConditionList& conditions);
-		void ExecuteCommands(GameContext& context, const CommandList& commands);
+   private:
+	// Internal processing
+	DialogueResult ProcessNode(GameContext& context, const std::string& nodeId);
+	// TODO move this to the node
+	std::optional<std::string> EvaluateTargets(GameContext& context, const ConditionalTargetList& targets);
+	bool EvaluateConditions(GameContext& context, const ConditionList& conditions);
+	void ExecuteCommands(GameContext& context, const CommandList& commands);
 
-		// Node storage
-		std::unordered_map<std::string, std::unique_ptr<DialogueNode>> m_nodes;
-		DialogueNode* m_currentNode;
-		std::vector<std::string> m_history;
-
-	};
-}
+	// Node storage
+	std::unordered_map<std::string, std::unique_ptr<DialogueNode>> m_nodes;
+	DialogueNode* m_currentNode;
+	std::vector<std::string> m_history;
+};
+}  // namespace Struktur::Dialogue

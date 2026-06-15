@@ -3,9 +3,13 @@
 #include "Engine/GameContext.h"
 
 Struktur::UI::UIManager::UIManager()
-	: m_focusedElement(nullptr), m_hoveredElement(nullptr), m_capturingInput(false), m_focusJustChanged(false), m_hoveredJustChanged(false)
+    : m_focusedElement(nullptr),
+      m_hoveredElement(nullptr),
+      m_capturingInput(false),
+      m_focusJustChanged(false),
+      m_hoveredJustChanged(false)
 {
-	m_camera = { {0, 0}, {0, 0}, 0.0f, 1.0f };
+	m_camera         = {{0, 0}, {0, 0}, 0.0f, 1.0f};
 	m_focusNavigator = std::make_unique<FocusNavigator>();
 }
 
@@ -28,24 +32,32 @@ Struktur::UI::UIElement* Struktur::UI::UIManager::AddElement(std::unique_ptr<UIE
 
 void Struktur::UI::UIManager::RemoveElement(GameContext& context, UIElement* element)
 {
-	if (!element) return;
+	if (!element)
+	{
+		return;
+	}
 
 	// Process element and all its children recursively
-	element->ForEachRecursive([this](UIElement* elem) {
-		// Check if this element is focused
-		if (m_focusedElement == elem) m_focusedElement = nullptr;
-		if (m_hoveredElement == elem) m_hoveredElement = nullptr;
+	element->ForEachRecursive(
+	    [this](UIElement* elem)
+	    {
+		    // Check if this element is focused
+		    if (m_focusedElement == elem)
+		    {
+			    m_focusedElement = nullptr;
+		    }
+		    if (m_hoveredElement == elem)
+		    {
+			    m_hoveredElement = nullptr;
+		    }
 
-		// Remove from focus navigator
-		m_focusNavigator->UnregisterElement(elem);
-		});
+		    // Remove from focus navigator
+		    m_focusNavigator->UnregisterElement(elem);
+	    });
 
 	element->Dispose(context);
 
-	std::erase_if(m_elements,
-		[element](const std::unique_ptr<UIElement>& ptr) {
-			return ptr.get() == element;
-		});
+	std::erase_if(m_elements, [element](const std::unique_ptr<UIElement>& ptr) { return ptr.get() == element; });
 }
 
 void Struktur::UI::UIManager::Update(GameContext& context)
@@ -111,9 +123,7 @@ void Struktur::UI::UIManager::Render(GameContext& context)
 	}
 
 	std::sort(sortedElements.begin(), sortedElements.end(),
-		[](UIElement* a, UIElement* b) {
-			return a->GetZIndex() < b->GetZIndex();
-		});
+	          [](UIElement* a, UIElement* b) { return a->GetZIndex() < b->GetZIndex(); });
 
 	// Draw all elements
 	for (UIElement* element : sortedElements)
@@ -142,7 +152,7 @@ const std::vector<std::unique_ptr<Struktur::UI::UIElement>>& Struktur::UI::UIMan
 
 void Struktur::UI::UIManager::SetFocus(UIElement* element)
 {
-	m_focusedElement = element;
+	m_focusedElement   = element;
 	m_focusJustChanged = true;
 }
 
@@ -151,7 +161,7 @@ void Struktur::UI::UIManager::HandleInput(GameContext& context)
 	Input::Input& input = context.GetInput();
 
 	// Handle mouse hover
-	//if (mouse.hasMoved) {
+	// if (mouse.hasMoved) {
 	//    UIElement* elementUnderMouse = GetElementAt(mouse.position);
 	//    if (elementUnderMouse != hoveredElement) {
 	//        if (hoveredElement) {
@@ -165,14 +175,14 @@ void Struktur::UI::UIManager::HandleInput(GameContext& context)
 	//}
 
 	// Handle mouse clicks
-	//if (mouse.leftButton && m_hoveredElement) {
+	// if (mouse.leftButton && m_hoveredElement) {
 	//    SetFocus(m_hoveredElement);
 	//    m_hoveredElement->OnClick(mouse.position);
 	//}
 
 	// Handle keyboard navigation
-	//float tabAxis = input.GetInputAxis("UITab");
-	//if (tabAxis == 0.0f)
+	// float tabAxis = input.GetInputAxis("UITab");
+	// if (tabAxis == 0.0f)
 	//{
 	//    if (tabAxis > 0)
 	//    {
@@ -220,9 +230,9 @@ void Struktur::UI::UIManager::HandleInput(GameContext& context)
 		{
 			currentFocus->OnActivate(context);
 		}
-		//if (keyboard.lastKeyPressed != 0)
+		// if (keyboard.lastKeyPressed != 0)
 		//{
-		//    currentFocus->OnKeyPressed(keyboard.lastKeyPressed);
-		//}
+		//     currentFocus->OnKeyPressed(keyboard.lastKeyPressed);
+		// }
 	}
 }

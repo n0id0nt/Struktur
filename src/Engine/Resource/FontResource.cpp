@@ -3,14 +3,17 @@
 #include "Engine/Core/FileSystem.h"
 
 Struktur::Resource::FontResource::FontResource(const std::string& filePath, int size)
-	: GpuResource(filePath), m_fontLoaded(false), m_fontSize(size),
-	m_codepoints(nullptr), m_codepointCount(0)
+    : GpuResource(filePath),
+      m_fontLoaded(false),
+      m_fontSize(size),
+      m_codepoints(nullptr),
+      m_codepointCount(0)
 {
 	font.texture.id = 0;
-	font.baseSize = 0;
+	font.baseSize   = 0;
 	font.glyphCount = 0;
-	font.glyphs = nullptr;
-	font.recs = nullptr;
+	font.glyphs     = nullptr;
+	font.recs       = nullptr;
 }
 
 Struktur::Resource::FontResource::~FontResource()
@@ -21,14 +24,17 @@ Struktur::Resource::FontResource::~FontResource()
 
 bool Struktur::Resource::FontResource::LoadFromDisk()
 {
-	if (m_fontLoaded) return true;
+	if (m_fontLoaded)
+	{
+		return true;
+	}
 
 	// For default fonts, we can load directly
 	if (filePath.empty() || filePath == "default")
 	{
-		font = ::GetFontDefault();
+		font         = ::GetFontDefault();
 		m_fontLoaded = true;
-		isLoaded = true;
+		isLoaded     = true;
 		DEBUG_INFO(std::format("Loaded default font: {}", filePath).c_str());
 		return true;
 	}
@@ -38,7 +44,8 @@ bool Struktur::Resource::FontResource::LoadFromDisk()
 	ASSERT_MSG(result.success, "Failed to load config: %s", result.errorMessage.c_str());
 
 	const char* ext = ::GetFileExtension(filePath.c_str());
-	font = ::LoadFontFromMemory(ext, result.value.data(), result.value.size(), m_fontSize, m_codepoints, m_codepointCount);
+	font =
+	    ::LoadFontFromMemory(ext, result.value.data(), result.value.size(), m_fontSize, m_codepoints, m_codepointCount);
 
 	if (font.texture.id == 0)
 	{
@@ -47,7 +54,7 @@ bool Struktur::Resource::FontResource::LoadFromDisk()
 	}
 
 	m_fontLoaded = true;
-	isLoaded = true;
+	isLoaded     = true;
 	DEBUG_INFO(std::format("Loaded font from disk: {} (size: {})", filePath, m_fontSize).c_str());
 	return true;
 }
@@ -62,11 +69,11 @@ void Struktur::Resource::FontResource::UnloadFromDisk()
 			::UnloadFont(font);
 		}
 		font.texture.id = 0;
-		font.baseSize = 0;
+		font.baseSize   = 0;
 		font.glyphCount = 0;
-		font.glyphs = nullptr;
-		font.recs = nullptr;
-		m_fontLoaded = false;
+		font.glyphs     = nullptr;
+		font.recs       = nullptr;
+		m_fontLoaded    = false;
 	}
 	isLoaded = false;
 }
@@ -83,13 +90,14 @@ void Struktur::Resource::FontResource::UnloadFromGpu()
 	// For fonts, GPU and disk data are tied together
 	// We can't separate them like with textures
 	// So GPU unload is the same as full unload
-	if (m_fontLoaded && font.texture.id != 0) {
+	if (m_fontLoaded && font.texture.id != 0)
+	{
 		if (filePath != "default" && !filePath.empty())
 		{
 			::UnloadFont(font);
 		}
 		font.texture.id = 0;
-		m_fontLoaded = false;
+		m_fontLoaded    = false;
 	}
 }
 
@@ -100,11 +108,14 @@ bool Struktur::Resource::FontResource::IsGpuResourceValid() const
 
 size_t Struktur::Resource::FontResource::GetMemoryUsage() const
 {
-	if (!m_fontLoaded) return 0;
+	if (!m_fontLoaded)
+	{
+		return 0;
+	}
 
 	// Estimate: glyph data + texture data
 	size_t glyphDataSize = font.glyphCount * (sizeof(GlyphInfo) + sizeof(Rectangle));
-	size_t textureSize = font.texture.width * font.texture.height * 4; // RGBA
+	size_t textureSize   = font.texture.width * font.texture.height * 4;  // RGBA
 	return glyphDataSize + textureSize;
 }
 
@@ -115,7 +126,7 @@ size_t Struktur::Resource::FontResource::GetGpuMemoryUsage() const
 
 void Struktur::Resource::FontResource::SetCodepoints(int* customCodepoints, int count)
 {
-	m_codepoints = customCodepoints;
+	m_codepoints     = customCodepoints;
 	m_codepointCount = count;
 }
 
@@ -129,7 +140,8 @@ int Struktur::Resource::FontResource::GetFontSize()
 	return m_fontSize;
 }
 
-void Struktur::Resource::FontResource::DrawText(const std::string& text, Vector2 position, float fontSize, Color color) const
+void Struktur::Resource::FontResource::DrawText(const std::string& text, Vector2 position, float fontSize,
+                                                Color color) const
 {
 	if (IsGpuReady())
 	{
@@ -150,7 +162,7 @@ int Struktur::Resource::FontResource::GetGlyphCount() const
 Struktur::Resource::FontResource* Struktur::Resource::FontPool::LoadResource(const std::string& resourceString)
 {
 	std::string filePath;
-	int fontSize = defaultFontSize;
+	int fontSize         = defaultFontSize;
 	size_t underscorePos = resourceString.find_last_of('_');
 	if (underscorePos != std::string::npos)
 	{

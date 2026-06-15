@@ -84,7 +84,7 @@ class Item {
                 color = SHADOW_COLOR
             }
             var itemData = _spriteDataMap[interactionId]
-            Sprite.create(_entity, texture, color, Vec2.new(32, 48), 9, 2, false, itemData.getSpriteIndex(), 1)
+            Sprite.create(_entity, texture, color, Vec2.new(32, 48), 9, 2, false, itemData ? itemData.getSpriteIndex() : 13, 1)
         }
         texture.unload()
         if (_disabled) {
@@ -99,7 +99,7 @@ class Item {
     onDestroy() {
     }
     
-    onEvent(event) {
+    onEvent(type, data) {
         
     }
 

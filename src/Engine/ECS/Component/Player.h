@@ -4,12 +4,12 @@
 
 namespace Struktur
 {
-	namespace Component
-	{
-        struct Player
-        {
-            float speed;
-            glm::vec2 facing;
-        };
-    }
-}
+namespace Component
+{
+struct Player
+{
+	float speed;
+	glm::vec2 facing;
+};
+}  // namespace Component
+}  // namespace Struktur

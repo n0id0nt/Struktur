@@ -23,7 +23,7 @@ class Door {
     onDestroy() {
     }
     
-    onEvent(event) {
+    onEvent(type, data) {
 
     }
 

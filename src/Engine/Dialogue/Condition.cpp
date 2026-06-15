@@ -1,11 +1,13 @@
 #include "Condition.h"
 
-#include "Engine/GameContext.h"
 #include "DialogueHelperFunctions.h"
 #include "Engine/Callback/Callback.h"
+#include "Engine/GameContext.h"
 
-Struktur::Dialogue::Condition::Condition(const std::string& key, const std::unordered_map<std::string, DialogueValue>& params)
-	: m_key(key), m_params(params)
+Struktur::Dialogue::Condition::Condition(const std::string& key,
+                                         const std::unordered_map<std::string, DialogueValue>& params)
+    : m_key(key),
+      m_params(params)
 {
 }
 
@@ -30,7 +32,8 @@ Struktur::Callback::ICallback* Struktur::Dialogue::Condition::GetCallback(GameCo
 	return dialogueRegistry.GetCondition(m_key);
 }
 
-const std::unordered_map<std::string, Struktur::Dialogue::DialogueValue>& Struktur::Dialogue::Condition::GetParams() const
+const std::unordered_map<std::string, Struktur::Dialogue::DialogueValue>& Struktur::Dialogue::Condition::GetParams()
+    const
 {
 	return m_params;
 }
@@ -48,8 +51,9 @@ void Struktur::Dialogue::Condition::RemoveParameter(const std::string& key)
 void Struktur::Dialogue::Condition::ChangeParameterKey(const std::string& oldKey, const std::string& newKey)
 {
 	auto it = m_params.find(oldKey);
-	if (it != m_params.end()) {
-		m_params.emplace(newKey, std::move(it->second)); // move the value to avoid copying
+	if (it != m_params.end())
+	{
+		m_params.emplace(newKey, std::move(it->second));  // move the value to avoid copying
 		m_params.erase(it);
 	}
 }

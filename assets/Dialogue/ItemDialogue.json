@@ -2,6 +2,948 @@
   {
     "data": {
       "targets": [
+        {
+          "node": "love_letter_pickup"
+        }
+      ]
+    },
+    "node": "love_letter"
+  },
+  {
+    "data": {
+      "targets": [
+        {
+          "node": "telescope_pickup"
+        }
+      ]
+    },
+    "node": "telescope"
+  },
+  {
+    "data": {
+      "next": "love_letter_transform",
+      "speaker": "Narrator",
+      "text": "A romantic letter filled with promises of eternal love.\nCarrying it awakens thoughts of gardens and blooming romance."
+    },
+    "node": "love_letter_pickup"
+  },
+  {
+    "data": {
+      "commands": [
+        {
+          "parameters": [
+            {
+              "type": "item",
+              "value": "Telescope"
+            }
+          ],
+          "type": "giveItem"
+        },
+        {
+          "parameters": [
+            {
+              "type": "name",
+              "value": "Telescope"
+            }
+          ],
+          "type": "pickupEntity"
+        }
+      ],
+      "speaker": "Narrator",
+      "text": "Obtained Telescope"
+    },
+    "node": "telescope_obtain"
+  },
+  {
+    "data": {
+      "next": "love_letter_return_transform",
+      "speaker": "Narrator",
+      "text": "You place the letter back on the nightstand where dreams of love belong."
+    },
+    "node": "love_letter_return_place"
+  },
+  {
+    "data": {
+      "commands": [
+        {
+          "parameters": [],
+          "type": "cameraShake"
+        }
+      ],
+      "next": "love_letter_obtain",
+      "speaker": "Narrator",
+      "text": "The North Room stirs with romantic longing."
+    },
+    "node": "love_letter_transform"
+  },
+  {
+    "data": {
+      "commands": [
+        {
+          "parameters": [
+            {
+              "type": "item",
+              "value": "Love Letter"
+            }
+          ],
+          "type": "giveItem"
+        },
+        {
+          "parameters": [
+            {
+              "type": "name",
+              "value": "Love Letter"
+            }
+          ],
+          "type": "pickupEntity"
+        }
+      ],
+      "speaker": "Narrator",
+      "text": "Obtained Love Letter"
+    },
+    "node": "love_letter_obtain"
+  },
+  {
+    "data": {
+      "targets": [
+        {
+          "conditions": [
+            {
+              "parameters": [
+                {
+                  "type": "item",
+                  "value": "Love Letter"
+                }
+              ],
+              "type": "hasItem"
+            }
+          ],
+          "node": "love_letter_return_place"
+        }
+      ]
+    },
+    "node": "love_letter_return"
+  },
+  {
+    "data": {
+      "commands": [
+        {
+          "parameters": [],
+          "type": "cameraShake"
+        }
+      ],
+      "next": "love_letter_return_putback",
+      "speaker": "Narrator",
+      "text": "The North Room's romantic yearning settles back to scholarly calm."
+    },
+    "node": "love_letter_return_transform"
+  },
+  {
+    "data": {
+      "commands": [
+        {
+          "parameters": [
+            {
+              "type": "item",
+              "value": "Love Letter"
+            }
+          ],
+          "type": "removeItem"
+        },
+        {
+          "parameters": [
+            {
+              "type": "name",
+              "value": "Love Letter"
+            }
+          ],
+          "type": "putdownEntity"
+        }
+      ],
+      "speaker": "Narrator",
+      "text": "Put Back Love Letter"
+    },
+    "node": "love_letter_return_putback"
+  },
+  {
+    "data": {
+      "targets": [
+        {
+          "node": "hammer_pickup"
+        }
+      ]
+    },
+    "node": "hammer"
+  },
+  {
+    "data": {
+      "commands": [
+        {
+          "parameters": [
+            {
+              "type": "item",
+              "value": "Tool Box"
+            }
+          ],
+          "type": "giveItem"
+        },
+        {
+          "parameters": [
+            {
+              "type": "name",
+              "value": "Tool Box"
+            }
+          ],
+          "type": "pickupEntity"
+        }
+      ],
+      "speaker": "Narrator",
+      "text": "Obtained Tool Box"
+    },
+    "node": "tool_box_obtain"
+  },
+  {
+    "data": {
+      "next": "hammer_transform",
+      "speaker": "Narrator",
+      "text": "A well-used hammer that speaks of creation and honest work.\nCarrying it awakens the urge to build and transform."
+    },
+    "node": "hammer_pickup"
+  },
+  {
+    "data": {
+      "commands": [
+        {
+          "parameters": [],
+          "type": "cameraShake"
+        }
+      ],
+      "next": "hammer_obtain",
+      "speaker": "Narrator",
+      "text": "The East Room resonates with creative potential."
+    },
+    "node": "hammer_transform"
+  },
+  {
+    "data": {
+      "commands": [
+        {
+          "parameters": [
+            {
+              "type": "item",
+              "value": "Hammer"
+            }
+          ],
+          "type": "giveItem"
+        },
+        {
+          "parameters": [
+            {
+              "type": "name",
+              "value": "Hammer"
+            }
+          ],
+          "type": "pickupEntity"
+        }
+      ],
+      "speaker": "Narrator",
+      "text": "Obtained Hammer"
+    },
+    "node": "hammer_obtain"
+  },
+  {
+    "data": {
+      "targets": [
+        {
+          "conditions": [
+            {
+              "parameters": [
+                {
+                  "type": "item",
+                  "value": "Ornate Key"
+                }
+              ],
+              "type": "hasItem"
+            }
+          ],
+          "node": "ornate_key_return_place"
+        }
+      ]
+    },
+    "node": "ornate_key_return"
+  },
+  {
+    "data": {
+      "targets": [
+        {
+          "node": "ancient_seal_pickup"
+        }
+      ]
+    },
+    "node": "ancient_seal"
+  },
+  {
+    "data": {
+      "speaker": "Narrator",
+      "text": "A crimson pedestal carved with symbols of knowledge and wisdom.\nIt pulses faintly, waiting for the Red Crystal Key to unlock its power."
+    },
+    "node": "red_pedestal_inactive"
+  },
+  {
+    "data": {
+      "targets": [
+        {
+          "conditions": [
+            {
+              "parameters": [
+                {
+                  "type": "item",
+                  "value": "Hammer"
+                }
+              ],
+              "type": "hasItem"
+            }
+          ],
+          "node": "hammer_return_place"
+        }
+      ]
+    },
+    "node": "hammer_return"
+  },
+  {
+    "data": {
+      "next": "tool_box_obtain",
+      "speaker": "Narrator",
+      "text": "A weathered box filled with various tools and crafting implements.\nEach tool tells a story of problems solved and things built."
+    },
+    "node": "tool_box_pickup"
+  },
+  {
+    "data": {
+      "next": "hammer_return_transform",
+      "speaker": "Narrator",
+      "text": "You return the hammer to its place among the valuables."
+    },
+    "node": "hammer_return_place"
+  },
+  {
+    "data": {
+      "commands": [
+        {
+          "parameters": [],
+          "type": "cameraShake"
+        }
+      ],
+      "next": "ornate_key_return_putback",
+      "speaker": "Narrator",
+      "text": "The West Room's protective aura settles back to simple commerce."
+    },
+    "node": "ornate_key_return_transform"
+  },
+  {
+    "data": {
+      "commands": [
+        {
+          "parameters": [],
+          "type": "cameraShake"
+        }
+      ],
+      "next": "hammer_return_putback",
+      "speaker": "Narrator",
+      "text": "The East Room's creative energy settles back to domestic comfort."
+    },
+    "node": "hammer_return_transform"
+  },
+  {
+    "data": {
+      "commands": [
+        {
+          "parameters": [
+            {
+              "type": "item",
+              "value": "Hammer"
+            }
+          ],
+          "type": "removeItem"
+        },
+        {
+          "parameters": [
+            {
+              "type": "name",
+              "value": "Hammer"
+            }
+          ],
+          "type": "putdownEntity"
+        }
+      ],
+      "speaker": "Narrator",
+      "text": "Put Back Hammer"
+    },
+    "node": "hammer_return_putback"
+  },
+  {
+    "data": {
+      "next": "star_chart_transform",
+      "speaker": "Narrator",
+      "text": "Ancient astronomical maps covered in mystical calculations.\nCarrying it awakens thoughts of celestial observations and cosmic mysteries."
+    },
+    "node": "star_chart_pickup"
+  },
+  {
+    "data": {
+      "targets": [
+        {
+          "node": "star_chart_pickup"
+        }
+      ]
+    },
+    "node": "star_chart"
+  },
+  {
+    "data": {
+      "commands": [
+        {
+          "parameters": [],
+          "type": "cameraShake"
+        }
+      ],
+      "next": "star_chart_obtain",
+      "speaker": "Narrator",
+      "text": "The South Room reaches toward the stars and cosmic understanding."
+    },
+    "node": "star_chart_transform"
+  },
+  {
+    "data": {
+      "commands": [
+        {
+          "parameters": [
+            {
+              "type": "item",
+              "value": "Star Chart"
+            }
+          ],
+          "type": "giveItem"
+        },
+        {
+          "parameters": [
+            {
+              "type": "name",
+              "value": "Star Chart"
+            }
+          ],
+          "type": "pickupEntity"
+        }
+      ],
+      "speaker": "Narrator",
+      "text": "Obtained Star Chart"
+    },
+    "node": "star_chart_obtain"
+  },
+  {
+    "data": {
+      "targets": [
+        {
+          "conditions": [
+            {
+              "parameters": [
+                {
+                  "type": "item",
+                  "value": "Star Chart"
+                }
+              ],
+              "type": "hasItem"
+            }
+          ],
+          "node": "star_chart_return_place"
+        }
+      ]
+    },
+    "node": "star_chart_return"
+  },
+  {
+    "data": {
+      "next": "star_chart_return_transform",
+      "speaker": "Narrator",
+      "text": "You return the star chart to its secure place among the other valuable documents."
+    },
+    "node": "star_chart_return_place"
+  },
+  {
+    "data": {
+      "commands": [
+        {
+          "parameters": [
+            {
+              "type": "item",
+              "value": "Yellow Crystal Key"
+            }
+          ],
+          "type": "removeItem"
+        },
+        {
+          "parameters": [
+            {
+              "type": "flag",
+              "value": "yellow_pedestal_active"
+            },
+            {
+              "type": "value",
+              "value": true
+            }
+          ],
+          "type": "setFlag"
+        }
+      ],
+      "speaker": "Narrator",
+      "text": "Activated Yellow Pedestal"
+    },
+    "node": "yellow_pedestal_active_3"
+  },
+  {
+    "data": {
+      "commands": [
+        {
+          "parameters": [],
+          "type": "cameraShake"
+        }
+      ],
+      "next": "star_chart_return_putback",
+      "speaker": "Narrator",
+      "text": "The South Room's cosmic aspirations settle back to earthly rest."
+    },
+    "node": "star_chart_return_transform"
+  },
+  {
+    "data": {
+      "commands": [
+        {
+          "parameters": [
+            {
+              "type": "item",
+              "value": "Star Chart"
+            }
+          ],
+          "type": "removeItem"
+        },
+        {
+          "parameters": [
+            {
+              "type": "name",
+              "value": "Star Chart"
+            }
+          ],
+          "type": "putdownEntity"
+        }
+      ],
+      "speaker": "Narrator",
+      "text": "Put Back Star Chart"
+    },
+    "node": "star_chart_return_putback"
+  },
+  {
+    "data": {
+      "next": "telescope_obtain",
+      "speaker": "Narrator",
+      "text": "A brass telescope for observing celestial phenomena.\nThrough its lens, you can see the cosmic patterns that influence earthly events."
+    },
+    "node": "telescope_pickup"
+  },
+  {
+    "data": {
+      "targets": [
+        {
+          "node": "ornate_key_pickup"
+        }
+      ]
+    },
+    "node": "ornate_key"
+  },
+  {
+    "data": {
+      "next": "ornate_key_transform",
+      "speaker": "Narrator",
+      "text": "An ornate key that promises to unlock hidden secrets.\nCarrying it awakens thoughts of security and protected treasures."
+    },
+    "node": "ornate_key_pickup"
+  },
+  {
+    "data": {
+      "next": "yellow_pedestal_active_2",
+      "speaker": "Narrator",
+      "text": "The Yellow Pedestal shimmers with the light of prophetic dreams.\nThe Dreamer's visions flow through the crystal, revealing glimpses of freedom."
+    },
+    "node": "yellow_pedestal_active"
+  },
+  {
+    "data": {
+      "commands": [
+        {
+          "parameters": [],
+          "type": "cameraShake"
+        }
+      ],
+      "next": "ornate_key_obtain",
+      "speaker": "Narrator",
+      "text": "The West Room shifts toward impenetrable security."
+    },
+    "node": "ornate_key_transform"
+  },
+  {
+    "data": {
+      "next": "ornate_key_return_transform",
+      "speaker": "Narrator",
+      "text": "You return the key to its place among the tools and inventions."
+    },
+    "node": "ornate_key_return_place"
+  },
+  {
+    "data": {
+      "commands": [
+        {
+          "parameters": [
+            {
+              "type": "item",
+              "value": "Ornate Key"
+            }
+          ],
+          "type": "giveItem"
+        },
+        {
+          "parameters": [
+            {
+              "type": "name",
+              "value": "Ornate Key"
+            }
+          ],
+          "type": "pickupEntity"
+        }
+      ],
+      "speaker": "Narrator",
+      "text": "Obtained Key"
+    },
+    "node": "ornate_key_obtain"
+  },
+  {
+    "data": {
+      "next": "green_pedestal_active_2",
+      "speaker": "Narrator",
+      "text": "The Green Pedestal resonates with creative energy and the joy of building.\nThe Inventor's ingenuity flows through the crystal, sparking new possibilities."
+    },
+    "node": "green_pedestal_active"
+  },
+  {
+    "data": {
+      "commands": [
+        {
+          "parameters": [
+            {
+              "type": "item",
+              "value": "Ornate Key"
+            }
+          ],
+          "type": "removeItem"
+        },
+        {
+          "parameters": [
+            {
+              "type": "name",
+              "value": "Ornate Key"
+            }
+          ],
+          "type": "putdownEntity"
+        }
+      ],
+      "speaker": "Narrator",
+      "text": "Put Back Key"
+    },
+    "node": "ornate_key_return_putback"
+  },
+  {
+    "data": {
+      "targets": [
+        {
+          "node": "rose_pickup"
+        }
+      ]
+    },
+    "node": "rose"
+  },
+  {
+    "data": {
+      "next": "ancient_seal_obtain",
+      "speaker": "Narrator",
+      "text": "A mystical seal carved with protective wards and binding runes.\nIt pulses with contained power - clearly a dangerous artifact that should be properly secured."
+    },
+    "node": "ancient_seal_pickup"
+  },
+  {
+    "data": {
+      "next": "rose_obtain",
+      "speaker": "Narrator",
+      "text": "A perfect red rose that never wilts.\nIt smells of eternal spring and promises kept."
+    },
+    "node": "rose_pickup"
+  },
+  {
+    "data": {
+      "commands": [
+        {
+          "parameters": [
+            {
+              "type": "item",
+              "value": "Rose"
+            }
+          ],
+          "type": "giveItem"
+        },
+        {
+          "parameters": [
+            {
+              "type": "name",
+              "value": "Rose"
+            }
+          ],
+          "type": "pickupEntity"
+        }
+      ],
+      "speaker": "Narrator",
+      "text": "Obtained Rose"
+    },
+    "node": "rose_obtain"
+  },
+  {
+    "data": {
+      "next": "red_pedestal_active_2",
+      "speaker": "Narrator",
+      "text": "The Red Pedestal blazes with the light of accumulated knowledge.\nThe Scholar's wisdom flows through the crystal, illuminating ancient secrets."
+    },
+    "node": "red_pedestal_active"
+  },
+  {
+    "data": {
+      "next": "yellow_pedestal_active_3",
+      "speaker": "Narrator",
+      "text": "Prophetic energy swirls through the house like golden mist."
+    },
+    "node": "yellow_pedestal_active_2"
+  },
+  {
+    "data": {
+      "targets": [
+        {
+          "node": "tool_box_pickup"
+        }
+      ]
+    },
+    "node": "tool_box"
+  },
+  {
+    "data": {
+      "commands": [
+        {
+          "parameters": [
+            {
+              "type": "item",
+              "value": "Blue Crystal Key"
+            }
+          ],
+          "type": "removeItem"
+        },
+        {
+          "parameters": [
+            {
+              "type": "flag",
+              "value": "blue_pedestal_active"
+            },
+            {
+              "type": "value",
+              "value": true
+            }
+          ],
+          "type": "setFlag"
+        }
+      ],
+      "speaker": "Narrator",
+      "text": "Activated Blue Pedestal"
+    },
+    "node": "blue_pedestal_active_3"
+  },
+  {
+    "data": {
+      "next": "entrance_door_3",
+      "speaker": "Narrator",
+      "text": "Strange symbols have appeared along the door frame, glowing faintly with an otherworldly light.\nA whispered voice seems to echo from within the wood:\n\t'None may leave until the four keys sing as one.'"
+    },
+    "node": "entrance_door_2"
+  },
+  {
+    "data": {
+      "commands": [
+        {
+          "parameters": [
+            {
+              "type": "item",
+              "value": "Ancient Seal"
+            }
+          ],
+          "type": "giveItem"
+        },
+        {
+          "parameters": [
+            {
+              "type": "name",
+              "value": "Ancient Seal"
+            }
+          ],
+          "type": "pickupEntity"
+        }
+      ],
+      "speaker": "Narrator",
+      "text": "Obtained Ancient Seal"
+    },
+    "node": "ancient_seal_obtain"
+  },
+  {
+    "data": {
+      "next": "red_pedestal_active_3",
+      "speaker": "Narrator",
+      "text": "Knowledge flows through the house's foundation like rivers of light."
+    },
+    "node": "red_pedestal_active_2"
+  },
+  {
+    "data": {
+      "speaker": "Narrator",
+      "text": "An imposing vault safe covered in mystical symbols.\nIt emanates an aura of protection and hidden secrets."
+    },
+    "node": "safe"
+  },
+  {
+    "data": {
+      "commands": [
+        {
+          "parameters": [
+            {
+              "type": "item",
+              "value": "Red Crystal Key"
+            }
+          ],
+          "type": "removeItem"
+        },
+        {
+          "parameters": [
+            {
+              "type": "flag",
+              "value": "red_pedestal_active"
+            },
+            {
+              "type": "value",
+              "value": true
+            }
+          ],
+          "type": "setFlag"
+        }
+      ],
+      "speaker": "Narrator",
+      "text": "Activated Red Pedestal"
+    },
+    "node": "red_pedestal_active_3"
+  },
+  {
+    "data": {
+      "speaker": "Narrator",
+      "text": "An emerald pedestal carved with symbols of creation and craftsmanship.\nIt hums softly, waiting for the Green Crystal Key to awaken its potential."
+    },
+    "node": "green_pedestal_inactive"
+  },
+  {
+    "data": {
+      "next": "green_pedestal_active_3",
+      "speaker": "Narrator",
+      "text": "Creative energy spreads through the house like growing vines."
+    },
+    "node": "green_pedestal_active_2"
+  },
+  {
+    "data": {
+      "commands": [
+        {
+          "parameters": [
+            {
+              "type": "item",
+              "value": "Green Crystal Key"
+            }
+          ],
+          "type": "removeItem"
+        },
+        {
+          "parameters": [
+            {
+              "type": "flag",
+              "value": "green_pedestal_active"
+            },
+            {
+              "type": "value",
+              "value": true
+            }
+          ],
+          "type": "setFlag"
+        }
+      ],
+      "speaker": "Narrator",
+      "text": "Activated Green Pedestal"
+    },
+    "node": "green_pedestal_active_3"
+  },
+  {
+    "data": {
+      "next": "entrance_door_2",
+      "speaker": "Narrator",
+      "text": "The heavy oak door you entered through stands firmly shut.\nThe handle turns, but the door refuses to budge - as if the house itself holds it closed."
+    },
+    "node": "entrance_door"
+  },
+  {
+    "data": {
+      "speaker": "Narrator",
+      "text": "A golden pedestal carved with symbols of dreams and visions.\nIt glows softly, waiting for the Yellow Crystal Key to fulfill its destiny."
+    },
+    "node": "yellow_pedestal_inactive"
+  },
+  {
+    "data": {
+      "speaker": "Narrator",
+      "text": "A sapphire pedestal carved with symbols of protection and ancient secrets.\nIt emanates quiet power, waiting for the Blue Crystal Key to complete the circle."
+    },
+    "node": "blue_pedestal_inactive"
+  },
+  {
+    "data": {
+      "next": "blue_pedestal_active_2",
+      "speaker": "Narrator",
+      "text": "The Blue Pedestal radiates protective power and the weight of guarded secrets.\nThe Guardian's wisdom flows through the crystal, unlocking the final barrier."
+    },
+    "node": "blue_pedestal_active"
+  },
+  {
+    "data": {
+      "next": "blue_pedestal_active_3",
+      "speaker": "Narrator",
+      "text": "Protective energy surrounds the house like an ancient shield dissolving."
+    },
+    "node": "blue_pedestal_active_2"
+  },
+  {
+    "data": {
+      "speaker": "Narrator",
+      "text": "The door remembers your entry, but it has forgotten how to let you leave.\nYou sense this threshold will not open again until the house's curse is broken."
+    },
+    "node": "entrance_door_3"
+  },
+  {
+    "data": {
+      "targets": [
         { "node": "journal_page_pickup" }
       ]
     },

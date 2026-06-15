@@ -229,6 +229,7 @@ set(WREN_BINDING_SOURCES
     src/WrenBindings/WrenFunctionCallback.h     src/WrenBindings/WrenFunctionCallback.cpp
     src/WrenBindings/WrenFileSystem.h           src/WrenBindings/WrenFileSystem.cpp
                                                 src/WrenBindings/WrenFlags.cpp
+                                                src/WrenBindings/WrenEvents.cpp
                                                 src/WrenBindings/WrenApplication.cpp
                                                 src/WrenBindings/WrenGameObject.cpp
                                                 src/WrenBindings/WrenInput.cpp
@@ -294,7 +295,7 @@ set(SOURCES
     src/Engine/ECS/Component/Shader.h
     src/Engine/ECS/Component/WrenScript.h
 
-    src/Engine/ECS/System/HierrarchySystem.h    src/Engine/ECS/System/HierrarchySystem.cpp
+    src/Engine/ECS/System/HierarchySystem.h     src/Engine/ECS/System/HierarchySystem.cpp
     src/Engine/ECS/System/PhysicsSystem.h       src/Engine/ECS/System/PhysicsSystem.cpp
     src/Engine/ECS/System/SpriteRenderSystem.h  src/Engine/ECS/System/SpriteRenderSystem.cpp
     src/Engine/ECS/System/AnimationSystem.h     src/Engine/ECS/System/AnimationSystem.cpp
@@ -306,6 +307,7 @@ set(SOURCES
     src/Engine/ECS/System/WrenScriptSystem.h    src/Engine/ECS/System/WrenScriptSystem.cpp
     src/Engine/ECS/System/WrenStateSystem.h     src/Engine/ECS/System/WrenStateSystem.cpp
     src/Engine/ECS/System/SoundSystem.h         src/Engine/ECS/System/SoundSystem.cpp
+    src/Engine/ECS/System/EventSystem.h         src/Engine/ECS/System/EventSystem.cpp
 
     src/Engine/Physics/PhysicsWorld.h           src/Engine/Physics/PhysicsWorld.cpp
     src/Engine/Physics/ContactListener.h        src/Engine/Physics/ContactListener.cpp
@@ -332,6 +334,9 @@ set(SOURCES
     src/Engine/Scripting/WrenValueWrapper.h
 
     src/Engine/Util/Noise.h                     src/Engine/Util/Noise.cpp
+
+    src/Engine/Event/Event.h
+    src/Engine/Event/EventManager.h             src/Engine/Event/EventManager.cpp
 
     src/Debug/Assertions.h
     src/Debug/Profiling/Profiler.h              src/Debug/Profiling/Profiler.cpp

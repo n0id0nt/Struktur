@@ -1,100 +1,115 @@
 #pragma once
 
-#include <string>
 #include <format>
-#include "raylib.h"
+#include <string>
 
-#include "Engine/Resource/Resource.h"
-#include "Engine/Resource/ResourcePtr.h"
-#include "Engine/Resource/ResourcePool.h"
-#include "Engine/Resource/SoundResource.h"
-#include "Engine/Resource/MusicResource.h"
-#include "Engine/Resource/TextureResource.h"
 #include "Engine/Resource/FontResource.h"
+#include "Engine/Resource/MusicResource.h"
+#include "Engine/Resource/Resource.h"
+#include "Engine/Resource/ResourcePool.h"
+#include "Engine/Resource/ResourcePtr.h"
 #include "Engine/Resource/ShaderResource.h"
+#include "Engine/Resource/SoundResource.h"
+#include "Engine/Resource/TextureResource.h"
+#include "raylib.h"
 
 namespace Struktur
 {
-	namespace Resource
+namespace Resource
+{
+// Enhanced resource manager
+class ResourceManager
+{
+   private:
+	TexturePool m_texturePool;
+	SoundPool m_soundPool;
+	MusicPool m_musicPool;
+	FontPool m_fontPool;
+	ShaderPool m_shaderPool;
+
+   public:
+	ResourcePtr<TextureResource> GetTexture(const std::string& filePath);
+	ResourcePtr<SoundResource> GetSound(const std::string& filePath);
+	ResourcePtr<MusicResource> GetMusic(const std::string& filePath);
+	ResourcePtr<FontResource> GetFont(const std::string& filePath, int size);
+	ResourcePtr<ShaderResource> GetShader(const std::string& vsFilePath, const std::string& fsFilePath);
+
+	const TexturePool& GetTexturePool()
 	{
-		// Enhanced resource manager
-		class ResourceManager
-		{
-		private:
-			TexturePool m_texturePool;
-			SoundPool m_soundPool;
-			MusicPool m_musicPool;
-			FontPool m_fontPool;
-			ShaderPool m_shaderPool;
-			
-		public:
-			ResourcePtr<TextureResource> GetTexture(const std::string& filePath);			
-			ResourcePtr<SoundResource> GetSound(const std::string& filePath);			
-			ResourcePtr<MusicResource> GetMusic(const std::string& filePath);			
-			ResourcePtr<FontResource> GetFont(const std::string& filePath, int size);
-			ResourcePtr<ShaderResource> GetShader(const std::string& vsFilePath, const std::string& fsFilePath);
-
-            const TexturePool& GetTexturePool() { return m_texturePool; }
-            const SoundPool& GetSoundPool() { return m_soundPool; }
-            const MusicPool& GetMusicPool() { return m_musicPool; }
-            const FontPool& GetFontPool() { return m_fontPool; }
-            const ShaderPool& GetShaderPool() { return m_shaderPool; }
-
-			void Clear();
-			
-			// GPU-specific operations (only affect GPU resources)
-			void HandleGpuContextLost();			
-			void ReloadAllGpuResources();
-			
-			void PrintResourceStats() const;
-		};
+		return m_texturePool;
 	}
-}
+	const SoundPool& GetSoundPool()
+	{
+		return m_soundPool;
+	}
+	const MusicPool& GetMusicPool()
+	{
+		return m_musicPool;
+	}
+	const FontPool& GetFontPool()
+	{
+		return m_fontPool;
+	}
+	const ShaderPool& GetShaderPool()
+	{
+		return m_shaderPool;
+	}
+
+	void Clear();
+
+	// GPU-specific operations (only affect GPU resources)
+	void HandleGpuContextLost();
+	void ReloadAllGpuResources();
+
+	void PrintResourceStats() const;
+};
+}  // namespace Resource
+}  // namespace Struktur
 // Usage examples:
 /*
 // Example usage
 int main() {
     std::cout << "=== Raylib GPU/Non-GPU Resource Pool Demo ===\n\n";
-    
+
     GameResourceManager resourceManager;
-    
+
     std::cout << "1. Loading mixed resources:\n";
     auto playerTexture = resourceManager.getTexture("player");     // GPU resource
     auto enemyTexture = resourceManager.getTexture("enemy");       // GPU resource
     auto jumpSound = resourceManager.getSound("jump");             // Non-GPU resource
     auto backgroundMusic = resourceManager.getMusic("background"); // Non-GPU resource
-    
+
     std::cout << "\n2. Ensuring resources are ready:\n";
     playerTexture.ensureReady();  // Loads to GPU
     jumpSound.ensureReady();      // Loads to audio hardware
     backgroundMusic.ensureReady(); // Loads music stream
-    
+
     resourceManager.printResourceStats();
-    
+
     std::cout << "\n3. Using resources:\n";
     if (playerTexture.isReady()) {
         std::cout << "Player texture ready for rendering\n";
         // playerTexture->draw(100, 100);
     }
-    
+
     if (jumpSound.isReady()) {
         std::cout << "Jump sound ready for playback\n";
         // jumpSound->play();
     }
-    
+
     std::cout << "\n4. Simulating GPU context loss (affects only textures):\n";
     resourceManager.handleGpuContextLost();
     std::cout << "Texture ready after context loss: " << (playerTexture.isReady() ? "Yes" : "No") << "\n";
     std::cout << "Sound ready after context loss: " << (jumpSound.isReady() ? "Yes" : "No") << "\n";
-    
+
     std::cout << "\n5. Restoring GPU resources:\n";
     resourceManager.reloadAllGpuResources();
     playerTexture.ensureReady(); // Re-ensure GPU loading
-    
+
     resourceManager.printResourceStats();
-    
+
     std::cout << "\n6. Final cleanup...\n";
-    
+
     return 0;
 }
 */

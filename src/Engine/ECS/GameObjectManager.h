@@ -1,36 +1,38 @@
 #pragma once
 
 #include <string>
+
 #include "entt/entt.hpp"
 
 namespace Struktur
 {
-    class GameContext;
+class GameContext;
 
-	namespace System
-	{
-        class GameObjectManager
-        {
-        public:
-            GameObjectManager() {}
-            ~GameObjectManager() {}
+namespace System
+{
+class GameObjectManager
+{
+   public:
+	GameObjectManager() {}
+	~GameObjectManager() {}
 
-            void CreateDeleteObjectCallBack(GameContext& context);
-            void Shutdown(GameContext& context);
+	void CreateDeleteObjectCallBack(GameContext& context);
+	void Shutdown(GameContext& context);
 
-            entt::entity CreateGameObject(GameContext& context, const std::string& identifier, entt::entity parent = entt::null);
+	entt::entity CreateGameObject(GameContext& context, const std::string& identifier,
+	                              entt::entity parent = entt::null);
 
-            void SafeDeleteGameObject(GameContext& context, entt::entity entity);
-            void DeleteGameObjectsInSafeToDeleteQueue(GameContext& context);
-            void DestroyGameObject(GameContext& context, entt::entity entity);
+	void SafeDeleteGameObject(GameContext& context, entt::entity entity);
+	void DeleteGameObjectsInSafeToDeleteQueue(GameContext& context);
+	void DestroyGameObject(GameContext& context, entt::entity entity);
 
-        private:
-            void OnChildrenDestroy(entt::registry& reg, entt::entity entity);
-            void OnPhysicsBodyDestory(entt::registry& reg, entt::entity entity);
-            void OnScriptDestory(entt::registry &reg, entt::entity entity);
+   private:
+	void OnChildrenDestroy(entt::registry& reg, entt::entity entity);
+	void OnPhysicsBodyDestory(entt::registry& reg, entt::entity entity);
+	void OnScriptDestory(entt::registry& reg, entt::entity entity);
 
-            GameContext* m_context = nullptr;
-            std::vector<entt::entity> m_queueOfObjectsToSafeDelete;
-        };
-    }
-}
+	GameContext* m_context = nullptr;
+	std::vector<entt::entity> m_queueOfObjectsToSafeDelete;
+};
+}  // namespace System
+}  // namespace Struktur

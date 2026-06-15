@@ -1,12 +1,13 @@
 #include "SoundResource.h"
 
 #include <format>
+
 #include "Engine/Core/FileSystem.h"
 
 Struktur::Resource::SoundResource::SoundResource(const std::string& filePath)
-	: CpuResource(filePath)
+    : CpuResource(filePath)
 {
-	sound.frameCount = 0;
+	sound.frameCount      = 0;
 	m_waveData.frameCount = 0;
 }
 
@@ -18,14 +19,20 @@ Struktur::Resource::SoundResource::~SoundResource()
 
 bool Struktur::Resource::SoundResource::LoadFromDisk()
 {
-	if (isLoaded) return true;
+	if (isLoaded)
+	{
+		return true;
+	}
 
 	auto result = FileSystem::ReadBytes(filePath);
 	ASSERT_MSG(result.success, "Failed to load config: %s", result.errorMessage.c_str());
 	const char* ext = ::GetFileExtension(filePath.c_str());
 
 	m_waveData = ::LoadWaveFromMemory(ext, result.value.data(), result.value.size());
-	if (m_waveData.frameCount == 0) return false;
+	if (m_waveData.frameCount == 0)
+	{
+		return false;
+	}
 
 	isLoaded = true;
 	DEBUG_INFO(std::format("Loaded sound from disk: {}", filePath).c_str());
@@ -44,8 +51,14 @@ void Struktur::Resource::SoundResource::UnloadFromDisk()
 
 bool Struktur::Resource::SoundResource::LoadToHardware()
 {
-	if (!LoadFromDisk()) return false;
-	if (sound.frameCount > 0) return true; // Already loaded
+	if (!LoadFromDisk())
+	{
+		return false;
+	}
+	if (sound.frameCount > 0)
+	{
+		return true;  // Already loaded
+	}
 
 	sound = ::LoadSoundFromWave(m_waveData);
 	DEBUG_INFO(std::format("Loaded sound to audio hardware: {}", filePath).c_str());
@@ -64,7 +77,7 @@ void Struktur::Resource::SoundResource::UnloadFromHardware()
 
 bool Struktur::Resource::SoundResource::IsHardwareReady() const
 {
-	return sound.frameCount > 0/* && IsSoundReady(sound)*/;
+	return sound.frameCount > 0 /* && IsSoundReady(sound)*/;
 }
 
 size_t Struktur::Resource::SoundResource::GetMemoryUsage() const
@@ -88,7 +101,10 @@ Struktur::Resource::SoundResource* Struktur::Resource::SoundPool::LoadResource(c
 bool Struktur::Resource::SoundPool::EnsureResourceReady(const std::string& filePath)
 {
 	auto it = m_loadedResources.find(filePath);
-	if (it == m_loadedResources.end()) return false;
+	if (it == m_loadedResources.end())
+	{
+		return false;
+	}
 
 	SoundResource* sound = it->second.resource;
 

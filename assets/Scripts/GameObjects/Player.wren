@@ -68,13 +68,11 @@ class Player {
         System.print("NPCBehavior.OnDestroy() called for: %(_name)")
     }
     
-    onEvent(event) {
-        var eventType = event["type"]
-        
-        if (eventType == "CollisionBegin") {
+    onEvent(type, data) {        
+        if (type == "CollisionBegin") {
             var other = event["otherEntity"]
             System.print("NPC %(_name) collided with entity: %(other)")
-        } else if (eventType == "MessageReceived") {
+        } else if (type == "MessageReceived") {
             System.print("NPC %(_name) received message")
         }
     }

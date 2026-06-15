@@ -4,15 +4,18 @@
 
 namespace Struktur
 {
-    class GameContext;
+class GameContext;
 
-	namespace System
+namespace System
+{
+class UIRenderSystem : public ISystem
+{
+   public:
+	void Update(GameContext& context) override;
+	std::string Name() const override
 	{
-        class UIRenderSystem : public ISystem
-        {        
-        public:
-            void Update(GameContext& context) override;
-            std::string Name() const override { return "UI Render System"; }
-        };
-    }
-}
+		return "UI Render System";
+	}
+};
+}  // namespace System
+}  // namespace Struktur

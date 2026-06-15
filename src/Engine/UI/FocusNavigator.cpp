@@ -37,7 +37,10 @@ void Struktur::UI::FocusNavigator::UnregisterElement(UIElement* element)
 
 bool Struktur::UI::FocusNavigator::NavigateDirection(GameContext& context, NavigationDirection direction)
 {
-	if (m_currentCooldownTimer > 0.0f || !m_currentFocus) return false;
+	if (m_currentCooldownTimer > 0.0f || !m_currentFocus)
+	{
+		return false;
+	}
 
 	UIElement* nextElement = FindNextElement(direction);
 	if (nextElement)
@@ -51,7 +54,10 @@ bool Struktur::UI::FocusNavigator::NavigateDirection(GameContext& context, Navig
 
 bool Struktur::UI::FocusNavigator::NavigateToNext(GameContext& context)
 {
-	if (m_focusableElements.empty()) return false;
+	if (m_focusableElements.empty())
+	{
+		return false;
+	}
 
 	if (!m_currentFocus)
 	{
@@ -65,7 +71,7 @@ bool Struktur::UI::FocusNavigator::NavigateToNext(GameContext& context)
 		++it;
 		if (it == m_focusableElements.end())
 		{
-			it = m_focusableElements.begin(); // Wrap around
+			it = m_focusableElements.begin();  // Wrap around
 		}
 		SetFocus(context, *it);
 		return true;
@@ -75,7 +81,10 @@ bool Struktur::UI::FocusNavigator::NavigateToNext(GameContext& context)
 
 bool Struktur::UI::FocusNavigator::NavigateToPrevious(GameContext& context)
 {
-	if (m_focusableElements.empty()) return false;
+	if (m_focusableElements.empty())
+	{
+		return false;
+	}
 
 	if (!m_currentFocus)
 	{
@@ -88,7 +97,7 @@ bool Struktur::UI::FocusNavigator::NavigateToPrevious(GameContext& context)
 	{
 		if (it == m_focusableElements.begin())
 		{
-			it = m_focusableElements.end(); // Wrap around
+			it = m_focusableElements.end();  // Wrap around
 		}
 		--it;
 		SetFocus(context, *it);
@@ -99,7 +108,10 @@ bool Struktur::UI::FocusNavigator::NavigateToPrevious(GameContext& context)
 
 void Struktur::UI::FocusNavigator::SetFocus(GameContext& context, UIElement* element)
 {
-	if (m_currentFocus == element) return;
+	if (m_currentFocus == element)
+	{
+		return;
+	}
 
 	if (m_currentFocus)
 	{
@@ -121,7 +133,8 @@ Struktur::UI::UIElement* Struktur::UI::FocusNavigator::GetCurrentFocus() const
 
 void Struktur::UI::FocusNavigator::Clear(GameContext& context)
 {
-	if (m_currentFocus) {
+	if (m_currentFocus)
+	{
 		m_currentFocus->OnLoseFocus(context);
 	}
 	m_currentFocus = nullptr;
@@ -134,7 +147,10 @@ void Struktur::UI::FocusNavigator::Clear(GameContext& context)
 
 Struktur::UI::UIElement* Struktur::UI::FocusNavigator::FindNextElement(NavigationDirection direction)
 {
-	if (!m_currentFocus) return nullptr;
+	if (!m_currentFocus)
+	{
+		return nullptr;
+	}
 
 	// First check manual navigation neighbors
 	UIElement* neighbor = m_currentFocus->GetNavigationNeighbor(direction);
@@ -149,11 +165,14 @@ Struktur::UI::UIElement* Struktur::UI::FocusNavigator::FindNextElement(Navigatio
 
 Struktur::UI::UIElement* Struktur::UI::FocusNavigator::FindElementByDirection(NavigationDirection direction)
 {
-	if (!m_currentFocus) return nullptr;
+	if (!m_currentFocus)
+	{
+		return nullptr;
+	}
 
 	glm::vec2 currentPos = m_currentFocus->GetPosition();
 	UIElement* bestMatch = nullptr;
-	float bestDistance = FLT_MAX;
+	float bestDistance   = FLT_MAX;
 
 	for (UIElement* element : m_focusableElements)
 	{
@@ -163,33 +182,33 @@ Struktur::UI::UIElement* Struktur::UI::FocusNavigator::FindElementByDirection(Na
 		}
 
 		glm::vec2 elementPos = element->GetPosition();
-		bool isInDirection = false;
-		float distance = 0.0f;
+		bool isInDirection   = false;
+		float distance       = 0.0f;
 
 		switch (direction)
 		{
-		case NavigationDirection::UP:
-			isInDirection = elementPos.y < currentPos.y;
-			distance = currentPos.y - elementPos.y + abs(currentPos.x - elementPos.x) * 0.5f;
-			break;
-		case NavigationDirection::DOWN:
-			isInDirection = elementPos.y > currentPos.y;
-			distance = elementPos.y - currentPos.y + abs(currentPos.x - elementPos.x) * 0.5f;
-			break;
-		case NavigationDirection::LEFT:
-			isInDirection = elementPos.x < currentPos.x;
-			distance = currentPos.x - elementPos.x + abs(currentPos.y - elementPos.y) * 0.5f;
-			break;
-		case NavigationDirection::RIGHT:
-			isInDirection = elementPos.x > currentPos.x;
-			distance = elementPos.x - currentPos.x + abs(currentPos.y - elementPos.y) * 0.5f;
-			break;
+			case NavigationDirection::UP:
+				isInDirection = elementPos.y < currentPos.y;
+				distance      = currentPos.y - elementPos.y + abs(currentPos.x - elementPos.x) * 0.5f;
+				break;
+			case NavigationDirection::DOWN:
+				isInDirection = elementPos.y > currentPos.y;
+				distance      = elementPos.y - currentPos.y + abs(currentPos.x - elementPos.x) * 0.5f;
+				break;
+			case NavigationDirection::LEFT:
+				isInDirection = elementPos.x < currentPos.x;
+				distance      = currentPos.x - elementPos.x + abs(currentPos.y - elementPos.y) * 0.5f;
+				break;
+			case NavigationDirection::RIGHT:
+				isInDirection = elementPos.x > currentPos.x;
+				distance      = elementPos.x - currentPos.x + abs(currentPos.y - elementPos.y) * 0.5f;
+				break;
 		}
 
 		if (isInDirection && distance < bestDistance)
 		{
 			bestDistance = distance;
-			bestMatch = element;
+			bestMatch    = element;
 		}
 	}
 
@@ -199,15 +218,25 @@ Struktur::UI::UIElement* Struktur::UI::FocusNavigator::FindElementByDirection(Na
 void Struktur::UI::FocusNavigator::SortElementsByTabIndex()
 {
 	std::sort(m_focusableElements.begin(), m_focusableElements.end(),
-		[](UIElement* a, UIElement* b) {
-			int aTab = a->GetTabIndex();
-			int bTab = b->GetTabIndex();
+	          [](UIElement* a, UIElement* b)
+	          {
+		          int aTab = a->GetTabIndex();
+		          int bTab = b->GetTabIndex();
 
-			// Elements with no tab index go to the end
-			if (aTab == -1 && bTab == -1) return false;
-			if (aTab == -1) return false;
-			if (bTab == -1) return true;
+		          // Elements with no tab index go to the end
+		          if (aTab == -1 && bTab == -1)
+		          {
+			          return false;
+		          }
+		          if (aTab == -1)
+		          {
+			          return false;
+		          }
+		          if (bTab == -1)
+		          {
+			          return true;
+		          }
 
-			return aTab < bTab;
-		});
+		          return aTab < bTab;
+	          });
 }

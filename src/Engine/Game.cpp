@@ -1,70 +1,67 @@
 #include "Game.h"
 
-#include <string>
 #include <memory>
+#include <string>
 #include <variant>
+
 #include "raylib.h"
 #include "raymath.h"
 #ifdef PLATFORM_WEB
-#include <emscripten.h>
-#include <emscripten/html5.h>
+	#include <emscripten.h>
+	#include <emscripten/html5.h>
 #endif
 
 #include "Debug/Assertions.h"
 #include "Debug/Profiling/Profiler.h"
-
-#include "Engine/GameContext.h"
 #include "Engine/Core/FileSystem.h"
-#include "Engine/Input/Input.h"
-#include "Engine/Scripting/WrenScriptEngine.h"
-#include "Engine/ECS/SystemManager.h"
-
-#include "Engine/ECS/Component/Transform.h"
-#include "Engine/ECS/Component/Player.h"
-#include "Engine/ECS/Component/PhysicsBody.h"
-#include "Engine/ECS/Component/Sprite.h"
 #include "Engine/ECS/Component/Camera.h"
-
+#include "Engine/ECS/Component/PhysicsBody.h"
+#include "Engine/ECS/Component/Player.h"
+#include "Engine/ECS/Component/Sprite.h"
+#include "Engine/ECS/Component/Transform.h"
 #include "Engine/ECS/GameObjectManager.h"
-#include "Engine/ECS/System/HierrarchySystem.h"
-#include "Engine/ECS/System/TransformSystem.h"
-#include "Engine/ECS/System/PhysicsSystem.h"
-#include "Engine/ECS/System/SpriteRenderSystem.h"
-#include "Engine/ECS/System/DebugSystem.h"
-#include "Engine/ECS/System/CameraSystem.h"
 #include "Engine/ECS/System/AnimationSystem.h"
-#include "Engine/ECS/System/UIsystem.h"
-#include "Engine/ECS/System/UIRenderSystem.h"
+#include "Engine/ECS/System/CameraSystem.h"
+#include "Engine/ECS/System/DebugSystem.h"
+#include "Engine/ECS/System/EventSystem.h"
+#include "Engine/ECS/System/HierarchySystem.h"
+#include "Engine/ECS/System/PhysicsSystem.h"
 #include "Engine/ECS/System/ShaderSystem.h"
+#include "Engine/ECS/System/SoundSystem.h"
+#include "Engine/ECS/System/SpriteRenderSystem.h"
+#include "Engine/ECS/System/TransformSystem.h"
+#include "Engine/ECS/System/UIRenderSystem.h"
+#include "Engine/ECS/System/UIsystem.h"
 #include "Engine/ECS/System/WrenScriptSystem.h"
 #include "Engine/ECS/System/WrenStateSystem.h"
-#include "Engine/ECS/System/SoundSystem.h"
-
+#include "Engine/ECS/SystemManager.h"
 #include "Engine/FileLoading/LevelParser.h"
-
 #include "Engine/Game/Level.h"
+#include "Engine/GameContext.h"
+#include "Engine/Input/Input.h"
+#include "Engine/Scripting/WrenScriptEngine.h"
 
 #ifdef DEBUG
-#include "Engine/Scripting/WrenCodeGenerator.h"
-#include "rlImGui.h"
+	#include "Engine/Scripting/WrenCodeGenerator.h"
+	#include "rlImGui.h"
 #endif
 
 #ifdef EDITOR
-#define SPLASHSCREENFONT "Fonts/medieval_sharp/MedievalSharp-Bold.ttf"
-#define SPLASHSCREENTEXT "STRUKTUR"
+	#define SPLASHSCREENFONT "Fonts/medieval_sharp/MedievalSharp-Bold.ttf"
+	#define SPLASHSCREENTEXT "STRUKTUR"
 #else
-#define SPLASHSCREENFONT "Fonts/medieval_sharp/MedievalSharp-Bold.ttf"
-#define SPLASHSCREENTEXT "Memory Palace"
+	#define SPLASHSCREENFONT "Fonts/medieval_sharp/MedievalSharp-Bold.ttf"
+	#define SPLASHSCREENTEXT "Memory Palace"
 #endif
 
 void Struktur::InitialiseGame(GameContext& context)
 {
-	Core::GameData& gameData = context.GetGameData();
-	System::SystemManager& systemManager = context.GetSystemManager();
-	System::GameObjectManager& gameObjectManager = context.GetGameObjectManager();
-	Physics::PhysicsWorld& physicsWorld = context.GetPhysicsWorld();
-	Wren::WrenScriptEngine& wrenScriptEngine = context.GetWrenScriptEngine();
-	Wren::WrenStateManager& wrenStateManager = context.GetWrenStateManager();
+	Core::GameData& gameData                                       = context.GetGameData();
+	System::SystemManager& systemManager                           = context.GetSystemManager();
+	System::GameObjectManager& gameObjectManager                   = context.GetGameObjectManager();
+	Physics::PhysicsWorld& physicsWorld                            = context.GetPhysicsWorld();
+	Wren::WrenScriptEngine& wrenScriptEngine                       = context.GetWrenScriptEngine();
+	Wren::WrenStateManager& wrenStateManager                       = context.GetWrenStateManager();
 	Wren::WrenScriptComponentRegistry& wrenScriptComponentRegistry = context.GetWrenScriptComponentRegistry();
 
 	FileSystem::Init(::GetWorkingDirectory());
@@ -87,10 +84,10 @@ void Struktur::InitialiseGame(GameContext& context)
 	// Want to create a window before we start initialising systems
 #ifdef EDITOR
 	// In debug mode, create a larger window to fit ImGui panels
-	const int windowWidth = 1280;
+	const int windowWidth  = 1280;
 	const int windowHeight = 720;
-	gameData.gameWidth = windowWidth;
-	gameData.gameHeight = windowHeight;
+	gameData.gameWidth     = windowWidth;
+	gameData.gameHeight    = windowHeight;
 	::InitWindow(windowWidth, windowHeight, "Struktur");
 	::SetWindowState(FLAG_WINDOW_RESIZABLE);
 
@@ -116,7 +113,7 @@ void Struktur::InitialiseGame(GameContext& context)
 #endif
 
 #if defined(PLATFORM_WEB)
-	std::string saveDir = "/saves"; // Emscripten virtual path
+	std::string saveDir = "/saves";  // Emscripten virtual path
 #elif defined(EDITOR)
 	std::string saveDir = (projectPath.empty() ? "" : projectPath) + "/../saves";
 #else
@@ -128,7 +125,8 @@ void Struktur::InitialiseGame(GameContext& context)
 	::InitAudioDevice();
 
 #ifdef DEBUG
-	Wren::CodeGenerator::GenerateBindingFiles(wrenScriptEngine.GetRegistry(), std::string(::GetWorkingDirectory()) + "/../src/WrenBindings/Bindings");
+	Wren::CodeGenerator::GenerateBindingFiles(wrenScriptEngine.GetRegistry(),
+	                                          std::string(::GetWorkingDirectory()) + "/../src/WrenBindings/Bindings");
 #endif
 
 	gameObjectManager.CreateDeleteObjectCallBack(context);
@@ -136,12 +134,14 @@ void Struktur::InitialiseGame(GameContext& context)
 	glm::vec2 gravity(0.0f, 0.0f);
 	physicsWorld.Initialise(gravity, gameData.velocityIterations, gameData.positionIterations, gameData.pixelsPerMeter);
 
-	// The order here also defines the order they are updated - TODO need a better way to determine render priority and also need a way to have helper systems with out an empty update
+	// The order here also defines the order they are updated - TODO need a better way to determine render priority and
+	// also need a way to have helper systems with out an empty update
 	systemManager.AddHelperSystem<System::HierarchySystem>();
 	systemManager.AddHelperSystem<System::TransformSystem>();
 	systemManager.AddHelperSystem<System::ShaderSystem>();
 	systemManager.AddUpdateSystem<System::WrenStateSystem>();
 	systemManager.AddUpdateSystem<System::WrenScriptSystem>();
+	systemManager.AddUpdateSystem<System::EventSystem>();
 	systemManager.AddUpdateSystem<System::CameraSystem>();
 	systemManager.AddUpdateSystem<System::PhysicsSystem>();
 	systemManager.AddUpdateSystem<System::AnimationSystem>();
@@ -214,16 +214,16 @@ void Struktur::ExitGame(GameContext& context)
 
 void Struktur::SplashScreenLoop(GameContext& context)
 {
-	Core::GameData& gameData = context.GetGameData();
-	Core::TimeSystem& timeSystem = context.GetTimeSystem();
-	Resource::ResourceManager& resourceManager = context.GetResourceManager();
+	Core::GameData& gameData                           = context.GetGameData();
+	Core::TimeSystem& timeSystem                       = context.GetTimeSystem();
+	Resource::ResourceManager& resourceManager         = context.GetResourceManager();
 	Resource::ResourcePtr<Resource::FontResource> font = resourceManager.GetFont(SPLASHSCREENFONT, 120);
-	//fade in time
-	const double fadeInTime = 1.5;
-	const double holdTime = 1;
+	// fade in time
+	const double fadeInTime  = 1.5;
+	const double holdTime    = 1;
 	const double fadeOutTime = 1.5;
 	const double currentTime = timeSystem.unscaledTime;
-	const double startTime = 0;
+	const double startTime   = 0;
 	if (currentTime > startTime + fadeInTime + holdTime + fadeOutTime)
 	{
 		gameData.gameState = Core::GameState::GAME;
@@ -238,28 +238,30 @@ void Struktur::SplashScreenLoop(GameContext& context)
 		textAlpha *= Lerp(0.f, 1.f, t);
 	}
 	// Fade out
-	else if (currentTime > startTime + fadeInTime + holdTime && currentTime < startTime + fadeInTime + holdTime + fadeOutTime)
+	else if (currentTime > startTime + fadeInTime + holdTime &&
+	         currentTime < startTime + fadeInTime + holdTime + fadeOutTime)
 	{
 		float t = (currentTime - startTime - fadeInTime - holdTime) / fadeOutTime;
 		textAlpha *= Lerp(1.f, 0.f, t);
 	}
 
 	std::string splashScreenName = SPLASHSCREENTEXT;
-	int fontSize = 120;
-	int fontWidth = ::MeasureTextEx(font->font, splashScreenName.c_str(), fontSize, 1.0f).x;
-	int width = gameData.applicationWidth;
-	int height = gameData.applicationHeight;
+	int fontSize                 = 120;
+	int fontWidth                = ::MeasureTextEx(font->font, splashScreenName.c_str(), fontSize, 1.0f).x;
+	int width                    = gameData.applicationWidth;
+	int height                   = gameData.applicationHeight;
 
 	::BeginDrawing();
 	::ClearBackground(BLACK);
-	::DrawTextEx(font->font, splashScreenName.c_str(), { (width - fontWidth) / 2.f, (height - fontSize) / 2.f }, fontSize, 5.0f, Color{ 255,255,255,(unsigned char)textAlpha });
+	::DrawTextEx(font->font, splashScreenName.c_str(), {(width - fontWidth) / 2.f, (height - fontSize) / 2.f}, fontSize,
+	             5.0f, Color{255, 255, 255, (unsigned char)textAlpha});
 	::EndDrawing();
 }
 
 void Struktur::GameLoop(GameContext& context)
 {
 	PROFILE_BEGIN_SCOPE(gameLoop, "GAME LOOP");
-	System::SystemManager& systemManager = context.GetSystemManager();
+	System::SystemManager& systemManager         = context.GetSystemManager();
 	System::GameObjectManager& gameObjectManager = context.GetGameObjectManager();
 	{
 		PROFILE_SCOPE("UPDATE PROCESSING");
@@ -286,7 +288,7 @@ void Struktur::GameLoop(GameContext& context)
 		::ClearBackground(BLACK);
 		systemManager.Render(context);
 	}
-	PROFILE_END_SCOPE(gameLoop); // Must close the scope before the editor is updated
+	PROFILE_END_SCOPE(gameLoop);  // Must close the scope before the editor is updated
 #ifdef EDITOR
 	editor.EndUpdateLoop(context);
 	editor.Update(context);
@@ -299,37 +301,39 @@ void Struktur::UpdateLoop(void* userData)
 	GameContext& context = *static_cast<GameContext*>(userData);
 	PROFILE_BEGIN_FRAME();
 
-	Core::GameData& gameData = context.GetGameData();
+	Core::GameData& gameData     = context.GetGameData();
 	Core::TimeSystem& timeSystem = context.GetTimeSystem();
-	gameData.applicationWidth = ::GetScreenWidth();
-	gameData.applicationHeight = ::GetScreenHeight();
+	gameData.applicationWidth    = ::GetScreenWidth();
+	gameData.applicationHeight   = ::GetScreenHeight();
 	timeSystem.Update();
 
 #ifndef PLATFORM_WEB
 	if (::WindowShouldClose())
+	{
 		gameData.gameState = Core::GameState::QUIT;
+	}
 #endif
 
 	switch (gameData.gameState)
 	{
-	case Core::GameState::SPLASH_SCREEN:
-		SplashScreenLoop(context);
-		break;
+		case Core::GameState::SPLASH_SCREEN:
+			SplashScreenLoop(context);
+			break;
 
-	case Core::GameState::GAME:
-		GameLoop(context);
-		break;
+		case Core::GameState::GAME:
+			GameLoop(context);
+			break;
 
-	default:
+		default:
 #ifdef PLATFORM_WEB
-		// On web, clean up and stop the loop
-		ExitGame(context);
-		::CloseWindow();
-		emscripten_cancel_main_loop();
+			// On web, clean up and stop the loop
+			ExitGame(context);
+			::CloseWindow();
+			emscripten_cancel_main_loop();
 #else
-		gameData.gameState = Core::GameState::QUIT;
+			gameData.gameState = Core::GameState::QUIT;
 #endif
-		break;
+			break;
 	}
 
 	PROFILE_END_FRAME();
@@ -344,8 +348,9 @@ void Struktur::Game()
 
 	Core::GameData& gameData = context.GetGameData();
 
-	// create local scope to manage lifetime of splash screen font - TODO create a spash screen state and add it to the context.
-	Resource::ResourceManager& resourceManager = context.GetResourceManager();
+	// create local scope to manage lifetime of splash screen font - TODO create a spash screen state and add it to the
+	// context.
+	Resource::ResourceManager& resourceManager         = context.GetResourceManager();
 	Resource::ResourcePtr<Resource::FontResource> font = resourceManager.GetFont(SPLASHSCREENFONT, 120);
 
 #ifdef PLATFORM_WEB

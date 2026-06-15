@@ -18,12 +18,10 @@ import "States/InteractState" for InteractState
 import "States/GameOverState" for GameOverState
 
 import "Colors" for WHITE
-import "Inventory" for Inventory
 
 var TILE_TEXTURE = "Tiles/cavesofgallet_tiles.png"
 var PLAYER_TEXTURE = "Tiles/PlayerGrowthSprites.png"
 var WORLD_FILE_PATH = "Levels/MemoryPalace.ldtk"
-var Loops = 0
 
 class GameWorldState is BaseState {
     construct new() {
@@ -42,53 +40,21 @@ class GameWorldState is BaseState {
         _gameMusic = null
     }
 
-    getNorthRoom() {
-        if (Inventory.contains("Love Letter")) {
-            return "Garden"
-        }
-        return "Library"
-    }
+    createRoom(worldEntity, roomName, regularRoomName, transformedRoomName, transformItem) {
+        var roomEntity = GameObject.create(roomName, worldEntity)
+        
+        var regularRoomIndex = World.getLevelIndex(worldEntity, regularRoomName)
+        var transformedRoomIndex = World.getLevelIndex(worldEntity, transformedRoomName)
+        var regularRoom = World.loadLevelEntities(worldEntity, regularRoomIndex)
+        var transformedRoom = World.loadLevelEntities(worldEntity, transformedRoomIndex)
+        WorldTransform.setPosition(regularRoom, Vec3.new(0.0, 0.0, 0.0))
+        WorldTransform.setPosition(transformedRoom, Vec3.new(0.0, 0.0, 0.0))
+        GameObject.setParent(regularRoom, roomEntity)
+        GameObject.setParent(transformedRoom, roomEntity)
 
-    getEastRoom() {
-        if (Inventory.contains("Hammer")) {
-            return "Workshop"
-        }
-        return "Kitchen"
-    }
-
-    getSouthRoom() {
-        if (Inventory.contains("Star Chart")) {
-            return "Observatory"
-        }
-        return "Bedroom"
-    }
-
-    getWestRoom() {
-        if (Inventory.contains("Ornate Key")) {
-            return "Vault"
-        }
-        return "Treasury"
-    }
-
-    getCourtyard() {
-        if (Inventory.contains("Red Crystal Key") && Inventory.contains("Green Crystal Key") && Inventory.contains("Yellow Crystal Key") && Inventory.contains("Blue Crystal Key")) {
-            return "Courtyard_Complete"
-        }
-        return "Courtyard"
-    }
-
-    calculateRoomListToLoad(worldEntity) {
-        // NorthRoom (0-2)
-        var northRoom = World.getLevelIndex(worldEntity, getNorthRoom())
-        // EastRoom (3-5)
-        var eastRoom = World.getLevelIndex(worldEntity, getEastRoom())
-        // SouthRoom (6-8)
-        var southRoom = World.getLevelIndex(worldEntity, getSouthRoom())
-        // WestRoom (9-11)
-        var westRoom = World.getLevelIndex(worldEntity, getWestRoom())
-        // Courtyard (12)
-        var courtyard = World.getLevelIndex(worldEntity, getCourtyard())
-        return [northRoom, eastRoom, westRoom, southRoom, courtyard]
+        Script.createArg(roomEntity, "Room", ["Name", "TransformItem", "regularRoom", "transformedRoom"], [roomName, transformItem, regularRoom, transformedRoom])
+        
+        return roomEntity
     }
     
     enter(stateManager, params) {
@@ -96,8 +62,6 @@ class GameWorldState is BaseState {
         
         System.print("Loading game world...")
 
-        Loops = Loops + 1 // increment the game loop count
-        
         _gameMusic = Music.load("Sounds/gameMusic.wav")
         if (_gameMusic) {
             _gameMusic.setLooping(true)
@@ -109,65 +73,25 @@ class GameWorldState is BaseState {
         var worldEntity = World.createWorldEntity(WORLD_FILE_PATH)
         _worldEntity = worldEntity
 
-        var roomList = calculateRoomListToLoad(worldEntity)
+        var northRoom = createRoom(worldEntity, "NorthRoom", "Library", "Garden", "Love Letter")
+        WorldTransform.setPosition(northRoom, Vec3.new(400.0, 0.0, 0.0))
 
-        var northRoom = World.loadLevelEntities(worldEntity, roomList[0])
-        WorldTransform.setPosition(northRoom, Vec3.new(576.0, 0.0, 0.0))
-        var northRoomSpriteEntity = GameObject.create("northRoomSprite", northRoom)
-        LocalTransform.setPosition(northRoomSpriteEntity, Vec3.new(0.0, 0.0, 0.0))
-        var northRoomKey = getNorthRoom()
-        var northRoomSpriteTexture = Texture.load("Tiles/%(northRoomKey).png")
-        Sprite.create(northRoomSpriteEntity, northRoomSpriteTexture, WHITE, Vec2.new(0, 0), 1, 1, false, 0, 0)
+        var eastRoom = createRoom(worldEntity, "EastRoom", "Kitchen", "Workshop", "Hammer")
+        WorldTransform.setPosition(eastRoom, Vec3.new(800.0, 400.0, 0.0))
 
-        var eastRoom = World.loadLevelEntities(worldEntity, roomList[1])
-        WorldTransform.setPosition(eastRoom, Vec3.new(1152.0, 576.0, 0.0))
-        var eastRoomSpriteEntity = GameObject.create("eastRoomSprite", eastRoom)
-        LocalTransform.setPosition(eastRoomSpriteEntity, Vec3.new(0.0, 0.0, 0.0))
-        var eastRoomKey = getEastRoom()
-        var eastRoomSpriteTexture = Texture.load("Tiles/%(eastRoomKey).png")
-        Sprite.create(eastRoomSpriteEntity, eastRoomSpriteTexture, WHITE, Vec2.new(0, 0), 1, 1, false, 0, 0)
-        eastRoomSpriteTexture.unload()
+        var southRoom = createRoom(worldEntity, "SouthRoom", "Bedroom", "Observatory", "Star Chart")
+        WorldTransform.setPosition(southRoom, Vec3.new(400.0, 800.0, 0.0))
 
-        var westRoom = World.loadLevelEntities(worldEntity, roomList[2])
-        WorldTransform.setPosition(westRoom, Vec3.new(0.0, 576.0, 0.0))
-        var westRoomSpriteEntity = GameObject.create("westRoomSprite", westRoom)
-        LocalTransform.setPosition(westRoomSpriteEntity, Vec3.new(0.0, 0.0, 0.0))
-        var westRoomKey = getWestRoom()
-        var westRoomSpriteTexture = Texture.load("Tiles/%(westRoomKey).png")
-        Sprite.create(westRoomSpriteEntity, westRoomSpriteTexture, WHITE, Vec2.new(0, 0), 1, 1, false, 0, 0)
-        westRoomSpriteTexture.unload()
+        var westRoom = createRoom(worldEntity, "WestRoom", "Treasury", "Vault", "Love Letter")
+        WorldTransform.setPosition(westRoom, Vec3.new(0.0, 400.0, 0.0))
 
-        var southRoom = World.loadLevelEntities(worldEntity, roomList[3])
-        WorldTransform.setPosition(southRoom, Vec3.new(576.0, 1152.0, 0.0))
-        var southRoomSpriteEntity = GameObject.create("southRoomSprite", southRoom)
-        LocalTransform.setPosition(southRoomSpriteEntity, Vec3.new(0.0, 0.0, 0.0))
-        var southRoomKey = getSouthRoom()
-        var southRoomSpriteTexture = Texture.load("Tiles/%(southRoomKey).png")
-        Sprite.create(southRoomSpriteEntity, southRoomSpriteTexture, WHITE, Vec2.new(0, 0), 1, 1, false, 0, 0)
-        southRoomSpriteTexture.unload()
-
-        var courtyard = World.loadLevelEntities(worldEntity, roomList[4])
-        WorldTransform.setPosition(courtyard, Vec3.new(576.0, 576.0, 0.0))
-        var courtyardSpriteEntity = GameObject.create("courtyardSprite", courtyard)
-        LocalTransform.setPosition(courtyardSpriteEntity, Vec3.new(0.0, 0.0, 0.0))
-        var courtyardSpriteTexture = Texture.load("Tiles/Courtyard.png")
-        Sprite.create(courtyardSpriteEntity, courtyardSpriteTexture, WHITE, Vec2.new(0, 0), 1, 1, false, 0, 0)
-        courtyardSpriteTexture.unload()
-
-        var northRoomDupe = World.loadLevelEntities(worldEntity, roomList[0])
-        WorldTransform.setPosition(northRoomDupe, Vec3.new(576.0, 1728.0, 0.0))
-        var northRoomDupeSpriteEntity = GameObject.create("northRoomDupeSprite", northRoomDupe)
-        LocalTransform.setPosition(northRoomDupeSpriteEntity, Vec3.new(0.0, 0.0, 0.0))
-        Sprite.create(northRoomDupeSpriteEntity, northRoomSpriteTexture, WHITE, Vec2.new(0, 0), 1, 1, false, 0, 0)
-        northRoomSpriteTexture.unload()
+        var courtyardIndex = World.getLevelIndex(worldEntity, "Courtyard")
+        var courtyard = World.loadLevelEntities(worldEntity, courtyardIndex)
+        WorldTransform.setPosition(courtyard, Vec3.new(400.0, 400.0, 0.0))
 
         var playerEntity = GameObject.create("Player", worldEntity)
         Script.createArg(playerEntity, "Player", ["Name"], ["Player"])
-        WorldTransform.setPosition(playerEntity, Vec3.new(864.0, 32.0, 0.0))
-
-        var lockedDoorEntity = GameObject.create("Entrance Door", worldEntity)
-        Script.createArg(lockedDoorEntity, "Door", ["Name"], ["Entrance Door"])
-        WorldTransform.setPosition(lockedDoorEntity, Vec3.new(864.0, 0.0, 0.0))
+        WorldTransform.setPosition(playerEntity, Vec3.new(600.0, 50.0, 0.0))
         
         // Create the UI for the level.
         _interactLabel = UILabel.new(Vec2.new(0, 0), Vec2.new(0, 0), "Interact", 16.0)
@@ -177,14 +101,7 @@ class GameWorldState is BaseState {
         _interactLabel.setAnchorPoint(Vec2.new(0.5, 0.5))
         _interactLabel.setBoundingBoxToText()
         UIManager.addUIElement(_interactLabel)
-
-        var loops = Loops
-        _loopCountLabel = UILabel.new(Vec2.new(20, 20), Vec2.new(0, 0), "Loops: %(loops)", 30.0)
-        _loopCountLabel.setFont(font)
-        _loopCountLabel.setTextColor(WHITE) // Change this when the background is created.
-        _loopCountLabel.setVisible(true)
-        _loopCountLabel.setBoundingBoxToText()
-        UIManager.addUIElement(_loopCountLabel)
+        
         font.unload()
         //_stateManager.changeState("PlayState")
         
@@ -293,9 +210,7 @@ class GameWorldState is BaseState {
         GameObject.destroy(_worldEntity)
         
         UIManager.removeUIElement(_interactLabel)
-        UIManager.removeUIElement(_loopCountLabel)
         _interactLabel = null
-        _loopCountLabel = null
         _gameMusic.stop()
         _gameMusic.unload()
         _gameMusic = null

@@ -4,16 +4,19 @@
 
 namespace Struktur
 {
-    class GameContext;
+class GameContext;
 
-	namespace System
+namespace System
+{
+class SoundSystem : public ISystem
+{
+   public:
+	void Update(GameContext& context) override;
+
+	std::string Name() const override
 	{
-        class SoundSystem : public ISystem
-        {
-        public:         
-            void Update(GameContext& context) override;
-
-            std::string Name() const override { return "Sound System"; }
-        };
-    }
-}
+		return "Sound System";
+	}
+};
+}  // namespace System
+}  // namespace Struktur

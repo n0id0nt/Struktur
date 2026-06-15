@@ -1,23 +1,22 @@
 #include "AnimationSystem.h"
 
-#include "Engine/GameContext.h"
-
-#include "Engine/ECS/Component/SpriteAnimation.h"
 #include "Engine/ECS/Component/Sprite.h"
+#include "Engine/ECS/Component/SpriteAnimation.h"
+#include "Engine/GameContext.h"
 
 void Struktur::System::AnimationSystem::Update(GameContext& context)
 {
-    entt::registry& registry = context.GetRegistry();
-    Core::TimeSystem& timeSystem = context.GetTimeSystem();
-    double gameTime = timeSystem.scaledTime;
+	entt::registry& registry     = context.GetRegistry();
+	Core::TimeSystem& timeSystem = context.GetTimeSystem();
+	double gameTime              = timeSystem.scaledTime;
 
-    auto view = registry.view<Component::Sprite, Component::SpriteAnimation>();
+	auto view = registry.view<Component::Sprite, Component::SpriteAnimation>();
 	for (auto [entity, sprite, spriteAnimation] : view.each())
 	{
 		// get the current animation frame
-		float animationTime = gameTime - spriteAnimation.animationStartTime;
+		float animationTime                               = gameTime - spriteAnimation.animationStartTime;
 		Struktur::Animation::SpriteAnimation curAnimation = spriteAnimation.animations[spriteAnimation.curAnimation];
-		if (curAnimation.loop) 
+		if (curAnimation.loop)
 		{
 			animationTime = fmod(animationTime, curAnimation.animationTime);
 		}
@@ -26,14 +25,17 @@ void Struktur::System::AnimationSystem::Update(GameContext& context)
 			animationTime = curAnimation.animationTime;
 		}
 
-		int frame = curAnimation.startFrame + (int)std::floor((curAnimation.endFrame - curAnimation.startFrame) * animationTime / curAnimation.animationTime);
+		int frame    = curAnimation.startFrame + (int)std::floor((curAnimation.endFrame - curAnimation.startFrame) *
+		                                                         animationTime / curAnimation.animationTime);
 		sprite.index = frame;
 	}
 }
 
-void Struktur::System::AnimationSystem::AddAnimation(GameContext& context, entt::entity entity, const std::string& animationName, const Animation::SpriteAnimation& animation)
+void Struktur::System::AnimationSystem::AddAnimation(GameContext& context, entt::entity entity,
+                                                     const std::string& animationName,
+                                                     const Animation::SpriteAnimation& animation)
 {
-    entt::registry& registry = context.GetRegistry();
+	entt::registry& registry = context.GetRegistry();
 	auto& animationComponent = registry.get<Component::SpriteAnimation>(entity);
 
 	auto it = animationComponent.animations.find(animationName);
@@ -43,40 +45,42 @@ void Struktur::System::AnimationSystem::AddAnimation(GameContext& context, entt:
 	}
 	else
 	{
-		BREAK_MSG("animation already exists"); 
+		BREAK_MSG("animation already exists");
 	}
 }
 
-void Struktur::System::AnimationSystem::PlayAnimation(GameContext& context, entt::entity entity, const std::string& animationName)
+void Struktur::System::AnimationSystem::PlayAnimation(GameContext& context, entt::entity entity,
+                                                      const std::string& animationName)
 {
-    entt::registry& registry = context.GetRegistry();
+	entt::registry& registry = context.GetRegistry();
 	auto& animationComponent = registry.get<Component::SpriteAnimation>(entity);
-    
-    Core::TimeSystem& timeSystem = context.GetTimeSystem();
-    double gameTime = timeSystem.scaledTime;
 
-	animationComponent.curAnimation = animationName;
+	Core::TimeSystem& timeSystem = context.GetTimeSystem();
+	double gameTime              = timeSystem.scaledTime;
+
+	animationComponent.curAnimation       = animationName;
 	animationComponent.animationStartTime = gameTime;
 }
 
-bool Struktur::System::AnimationSystem::IsAnimationPlaying(GameContext& context, entt::entity entity, const std::string& animationName)
+bool Struktur::System::AnimationSystem::IsAnimationPlaying(GameContext& context, entt::entity entity,
+                                                           const std::string& animationName)
 {
-    entt::registry& registry = context.GetRegistry();
-    auto& animationComponent = registry.get<Component::SpriteAnimation>(entity);
-    
+	entt::registry& registry = context.GetRegistry();
+	auto& animationComponent = registry.get<Component::SpriteAnimation>(entity);
+
 	if (animationComponent.curAnimation != animationName)
 	{
 		return false;
 	}
 
 	Struktur::Animation::SpriteAnimation curAnimation = animationComponent.animations[animationComponent.curAnimation];
-    if (curAnimation.loop) 
-    {
-        return true;
-    }
+	if (curAnimation.loop)
+	{
+		return true;
+	}
 
-    Core::TimeSystem& timeSystem = context.GetTimeSystem();
-    double gameTime = timeSystem.scaledTime;
+	Core::TimeSystem& timeSystem = context.GetTimeSystem();
+	double gameTime              = timeSystem.scaledTime;
 
 	float animationTime = gameTime - animationComponent.animationStartTime;
 	return animationTime <= curAnimation.animationTime;

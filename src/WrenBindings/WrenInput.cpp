@@ -1,9 +1,7 @@
-#include "wren.hpp"
-
-#include "Engine/Scripting/WrenBindingRegistry.h"
 #include "Engine/GameContext.h"
-
+#include "Engine/Scripting/WrenBindingRegistry.h"
 #include "WrenMath.h"
+#include "wren.hpp"
 
 // ============================================================================
 // INPUT BINDINGS
@@ -13,7 +11,7 @@
 void wren_InputIsKeyDown(WrenVM* vm)
 {
 	Struktur::GameContext* context = static_cast<Struktur::GameContext*>(wrenGetUserData(vm));
-	Struktur::Input::Input& input = context->GetInput();
+	Struktur::Input::Input& input  = context->GetInput();
 
 	const char* inputKey = wrenGetSlotString(vm, 1);
 
@@ -26,7 +24,7 @@ void wren_InputIsKeyDown(WrenVM* vm)
 void wren_InputIsKeyJustPressed(WrenVM* vm)
 {
 	Struktur::GameContext* context = static_cast<Struktur::GameContext*>(wrenGetUserData(vm));
-	Struktur::Input::Input& input = context->GetInput();
+	Struktur::Input::Input& input  = context->GetInput();
 
 	const char* inputKey = wrenGetSlotString(vm, 1);
 
@@ -39,7 +37,7 @@ void wren_InputIsKeyJustPressed(WrenVM* vm)
 void wren_InputIsKeyJustReleased(WrenVM* vm)
 {
 	Struktur::GameContext* context = static_cast<Struktur::GameContext*>(wrenGetUserData(vm));
-	Struktur::Input::Input& input = context->GetInput();
+	Struktur::Input::Input& input  = context->GetInput();
 
 	const char* inputKey = wrenGetSlotString(vm, 1);
 
@@ -52,7 +50,7 @@ void wren_InputIsKeyJustReleased(WrenVM* vm)
 void wren_InputIsControllerButtonDown(WrenVM* vm)
 {
 	Struktur::GameContext* context = static_cast<Struktur::GameContext*>(wrenGetUserData(vm));
-	Struktur::Input::Input& input = context->GetInput();
+	Struktur::Input::Input& input  = context->GetInput();
 
 	const char* inputKey = wrenGetSlotString(vm, 1);
 
@@ -65,7 +63,7 @@ void wren_InputIsControllerButtonDown(WrenVM* vm)
 void wren_InputIsControllerButtonJustPressed(WrenVM* vm)
 {
 	Struktur::GameContext* context = static_cast<Struktur::GameContext*>(wrenGetUserData(vm));
-	Struktur::Input::Input& input = context->GetInput();
+	Struktur::Input::Input& input  = context->GetInput();
 
 	const char* inputKey = wrenGetSlotString(vm, 1);
 
@@ -78,7 +76,7 @@ void wren_InputIsControllerButtonJustPressed(WrenVM* vm)
 void wren_InputIsControllerButtonJustReleased(WrenVM* vm)
 {
 	Struktur::GameContext* context = static_cast<Struktur::GameContext*>(wrenGetUserData(vm));
-	Struktur::Input::Input& input = context->GetInput();
+	Struktur::Input::Input& input  = context->GetInput();
 
 	const char* inputKey = wrenGetSlotString(vm, 1);
 
@@ -91,7 +89,7 @@ void wren_InputIsControllerButtonJustReleased(WrenVM* vm)
 void wren_InputGetControllerAxisValue(WrenVM* vm)
 {
 	Struktur::GameContext* context = static_cast<Struktur::GameContext*>(wrenGetUserData(vm));
-	Struktur::Input::Input& input = context->GetInput();
+	Struktur::Input::Input& input  = context->GetInput();
 
 	const char* inputKey = wrenGetSlotString(vm, 1);
 
@@ -104,7 +102,7 @@ void wren_InputGetControllerAxisValue(WrenVM* vm)
 void wren_InputIsInputDown(WrenVM* vm)
 {
 	Struktur::GameContext* context = static_cast<Struktur::GameContext*>(wrenGetUserData(vm));
-	Struktur::Input::Input& input = context->GetInput();
+	Struktur::Input::Input& input  = context->GetInput();
 
 	const char* inputKey = wrenGetSlotString(vm, 1);
 
@@ -117,7 +115,7 @@ void wren_InputIsInputDown(WrenVM* vm)
 void wren_InputIsInputJustPressed(WrenVM* vm)
 {
 	Struktur::GameContext* context = static_cast<Struktur::GameContext*>(wrenGetUserData(vm));
-	Struktur::Input::Input& input = context->GetInput();
+	Struktur::Input::Input& input  = context->GetInput();
 
 	const char* inputKey = wrenGetSlotString(vm, 1);
 
@@ -130,7 +128,7 @@ void wren_InputIsInputJustPressed(WrenVM* vm)
 void wren_InputIsInputJustReleased(WrenVM* vm)
 {
 	Struktur::GameContext* context = static_cast<Struktur::GameContext*>(wrenGetUserData(vm));
-	Struktur::Input::Input& input = context->GetInput();
+	Struktur::Input::Input& input  = context->GetInput();
 
 	const char* inputKey = wrenGetSlotString(vm, 1);
 
@@ -143,7 +141,7 @@ void wren_InputIsInputJustReleased(WrenVM* vm)
 void wren_InputGetInputVariable(WrenVM* vm)
 {
 	Struktur::GameContext* context = static_cast<Struktur::GameContext*>(wrenGetUserData(vm));
-	Struktur::Input::Input& input = context->GetInput();
+	Struktur::Input::Input& input  = context->GetInput();
 
 	const char* inputKey = wrenGetSlotString(vm, 1);
 
@@ -156,7 +154,7 @@ void wren_InputGetInputVariable(WrenVM* vm)
 void wren_InputGetInputAxis(WrenVM* vm)
 {
 	Struktur::GameContext* context = static_cast<Struktur::GameContext*>(wrenGetUserData(vm));
-	Struktur::Input::Input& input = context->GetInput();
+	Struktur::Input::Input& input  = context->GetInput();
 
 	const char* inputKey = wrenGetSlotString(vm, 1);
 
@@ -169,7 +167,7 @@ void wren_InputGetInputAxis(WrenVM* vm)
 void wren_InputGetInputAxis2(WrenVM* vm)
 {
 	Struktur::GameContext* context = static_cast<Struktur::GameContext*>(wrenGetUserData(vm));
-	Struktur::Input::Input& input = context->GetInput();
+	Struktur::Input::Input& input  = context->GetInput();
 
 	const char* inputKey = wrenGetSlotString(vm, 1);
 
@@ -184,7 +182,7 @@ void wren_InputGetInputAxis2(WrenVM* vm)
 void wren_InputLoadInputBindings(WrenVM* vm)
 {
 	Struktur::GameContext* context = static_cast<Struktur::GameContext*>(wrenGetUserData(vm));
-	Struktur::Input::Input& input = context->GetInput();
+	Struktur::Input::Input& input  = context->GetInput();
 
 	const char* filePath = wrenGetSlotString(vm, 1);
 
@@ -197,19 +195,32 @@ void wren_InputLoadInputBindings(WrenVM* vm)
 WREN_BINDING_MODULE(Input)
 {
 	WREN_CLASS_STATIC(registry, "input", "Input", "isKeyDown(_)", wren_InputIsKeyDown, "Gets input is currently down.");
-	WREN_CLASS_STATIC(registry, "input", "Input", "isKeyJustPressed(_)", wren_InputIsKeyJustPressed, "Gets input was just pressed.");
-	WREN_CLASS_STATIC(registry, "input", "Input", "isKeyJustReleased(_)", wren_InputIsKeyJustReleased, "Gets input was just released.");
-	WREN_CLASS_STATIC(registry, "input", "Input", "isControllerButtonDown(_)", wren_InputIsControllerButtonDown, "Gets input is currently down.");
-	WREN_CLASS_STATIC(registry, "input", "Input", "isControllerButtonJustPressed(_)", wren_InputIsControllerButtonJustPressed, "Gets input was just pressed.");
-	WREN_CLASS_STATIC(registry, "input", "Input", "isControllerButtonJustReleased(_)", wren_InputIsControllerButtonJustReleased, "Gets input was just released.");
-	WREN_CLASS_STATIC(registry, "input", "Input", "getControllerAxisValue(_)", wren_InputGetControllerAxisValue, "Gets input value from -1 to 1.");
- 
-	WREN_CLASS_STATIC(registry, "input", "Input", "isInputDown(_)", wren_InputIsInputDown, "Gets input is currently down.");
-	WREN_CLASS_STATIC(registry, "input", "Input", "isInputJustPressed(_)", wren_InputIsInputJustPressed, "Gets input was just pressed.");
-	WREN_CLASS_STATIC(registry, "input", "Input", "isInputJustReleased(_)", wren_InputIsInputJustReleased, "Gets input was just released.");
-	WREN_CLASS_STATIC(registry, "input", "Input", "getInputVariable(_)", wren_InputGetInputVariable, "Gets input value from 0 to 1.");
-	WREN_CLASS_STATIC(registry, "input", "Input", "getInputAxis(_)", wren_InputGetInputAxis, "Gets input value from -1 to 1.");
-	WREN_CLASS_STATIC(registry, "input", "Input", "getInputAxis2(_)", wren_InputGetInputAxis2, "Gets an x and y input values from -1 to 1.");
+	WREN_CLASS_STATIC(registry, "input", "Input", "isKeyJustPressed(_)", wren_InputIsKeyJustPressed,
+	                  "Gets input was just pressed.");
+	WREN_CLASS_STATIC(registry, "input", "Input", "isKeyJustReleased(_)", wren_InputIsKeyJustReleased,
+	                  "Gets input was just released.");
+	WREN_CLASS_STATIC(registry, "input", "Input", "isControllerButtonDown(_)", wren_InputIsControllerButtonDown,
+	                  "Gets input is currently down.");
+	WREN_CLASS_STATIC(registry, "input", "Input", "isControllerButtonJustPressed(_)",
+	                  wren_InputIsControllerButtonJustPressed, "Gets input was just pressed.");
+	WREN_CLASS_STATIC(registry, "input", "Input", "isControllerButtonJustReleased(_)",
+	                  wren_InputIsControllerButtonJustReleased, "Gets input was just released.");
+	WREN_CLASS_STATIC(registry, "input", "Input", "getControllerAxisValue(_)", wren_InputGetControllerAxisValue,
+	                  "Gets input value from -1 to 1.");
 
-	WREN_CLASS_STATIC(registry, "input", "Input", "loadInputBindings(_)", wren_InputLoadInputBindings, "Loads the input bindings.");
+	WREN_CLASS_STATIC(registry, "input", "Input", "isInputDown(_)", wren_InputIsInputDown,
+	                  "Gets input is currently down.");
+	WREN_CLASS_STATIC(registry, "input", "Input", "isInputJustPressed(_)", wren_InputIsInputJustPressed,
+	                  "Gets input was just pressed.");
+	WREN_CLASS_STATIC(registry, "input", "Input", "isInputJustReleased(_)", wren_InputIsInputJustReleased,
+	                  "Gets input was just released.");
+	WREN_CLASS_STATIC(registry, "input", "Input", "getInputVariable(_)", wren_InputGetInputVariable,
+	                  "Gets input value from 0 to 1.");
+	WREN_CLASS_STATIC(registry, "input", "Input", "getInputAxis(_)", wren_InputGetInputAxis,
+	                  "Gets input value from -1 to 1.");
+	WREN_CLASS_STATIC(registry, "input", "Input", "getInputAxis2(_)", wren_InputGetInputAxis2,
+	                  "Gets an x and y input values from -1 to 1.");
+
+	WREN_CLASS_STATIC(registry, "input", "Input", "loadInputBindings(_)", wren_InputLoadInputBindings,
+	                  "Loads the input bindings.");
 }

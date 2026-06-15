@@ -3,12 +3,23 @@
 #include "Debug/Assertions.h"
 #include "Engine/GameContext.h"
 
-Struktur::UI::UIElement::UIElement(const glm::vec2& absolutePosition, const glm::vec2& relativePosition, const glm::vec2& absoluteSize, const glm::vec2& relativeSize)
-	: m_absolutePosition(absolutePosition), m_relativePosition(relativePosition),
-	m_absoluteSize(absoluteSize), m_relativeSize(relativeSize), m_anchorPoint(glm::vec2()),
-	m_backgroundColor(LIGHTGRAY), m_borderColor(DARKGRAY),
-	m_borderWidth(1.0f), m_visible(true), m_enabled(true), m_focusable(false),
-	m_parent(nullptr), m_zIndex(0), m_tabIndex(-1), m_disposed(false)
+Struktur::UI::UIElement::UIElement(const glm::vec2& absolutePosition, const glm::vec2& relativePosition,
+                                   const glm::vec2& absoluteSize, const glm::vec2& relativeSize)
+    : m_absolutePosition(absolutePosition),
+      m_relativePosition(relativePosition),
+      m_absoluteSize(absoluteSize),
+      m_relativeSize(relativeSize),
+      m_anchorPoint(glm::vec2()),
+      m_backgroundColor(LIGHTGRAY),
+      m_borderColor(DARKGRAY),
+      m_borderWidth(1.0f),
+      m_visible(true),
+      m_enabled(true),
+      m_focusable(false),
+      m_parent(nullptr),
+      m_zIndex(0),
+      m_tabIndex(-1),
+      m_disposed(false)
 {
 	UpdateBounds();
 }
@@ -22,7 +33,7 @@ Struktur::UI::UIElement* Struktur::UI::UIElement::AddChild(std::unique_ptr<UIEle
 {
 	if (child)
 	{
-		child->m_parent = this;
+		child->m_parent     = this;
 		UIElement* childPtr = child.get();
 		m_children.push_back(std::move(child));
 		childPtr->UpdateBounds();
@@ -46,9 +57,7 @@ Struktur::UI::UIElement* Struktur::UI::UIElement::AddChild(UIElement* child)
 bool Struktur::UI::UIElement::RemoveChild(UIElement* child)
 {
 	auto it = std::find_if(m_children.begin(), m_children.end(),
-		[child](const std::unique_ptr<UIElement>& ptr) {
-			return ptr.get() == child;
-		});
+	                       [child](const std::unique_ptr<UIElement>& ptr) { return ptr.get() == child; });
 
 	if (it != m_children.end())
 	{
@@ -82,16 +91,16 @@ void Struktur::UI::UIElement::SetAnchorPoint(const glm::vec2& anchorPoint)
 glm::vec2 Struktur::UI::UIElement::GetPosition() const
 {
 	glm::vec2 basePosition = glm::vec2();
-	glm::vec2 baseSize = glm::vec2();
+	glm::vec2 baseSize     = glm::vec2();
 	if (m_parent)
 	{
 		basePosition = m_parent->GetPosition();
-		baseSize = m_parent->GetSize();
+		baseSize     = m_parent->GetSize();
 	}
 
 	glm::vec2 absolutePosition = m_absolutePosition;
 	glm::vec2 relativePosition = baseSize * m_relativePosition;
-	glm::vec2 anchorOffset = m_anchorPoint * GetSize();
+	glm::vec2 anchorOffset     = m_anchorPoint * GetSize();
 
 	return basePosition + absolutePosition + relativePosition - anchorOffset;
 }
@@ -99,11 +108,11 @@ glm::vec2 Struktur::UI::UIElement::GetPosition() const
 glm::vec2 Struktur::UI::UIElement::GetSize() const
 {
 	glm::vec2 basePosition = glm::vec2();
-	glm::vec2 baseSize = glm::vec2();
+	glm::vec2 baseSize     = glm::vec2();
 	if (m_parent)
 	{
 		basePosition = m_parent->GetPosition();
-		baseSize = m_parent->GetSize();
+		baseSize     = m_parent->GetSize();
 	}
 
 	glm::vec2 absoluteSize = m_absoluteSize;
@@ -119,7 +128,7 @@ glm::vec2 Struktur::UI::UIElement::GetSize() const
 
 bool Struktur::UI::UIElement::IsPointInside(const glm::vec2& point) const
 {
-	return CheckCollisionPointRec(Vector2{ point.x, point.y }, m_bounds);
+	return CheckCollisionPointRec(Vector2{point.x, point.y}, m_bounds);
 }
 
 void Struktur::UI::UIElement::SetNavigationNeighbor(NavigationDirection dir, UIElement* neighbor)
@@ -316,9 +325,7 @@ void Struktur::UI::UIElement::RenderChildren(GameContext& context)
 	}
 
 	std::sort(sortedChildren.begin(), sortedChildren.end(),
-		[](UIElement* a, UIElement* b) {
-			return a->GetZIndex() < b->GetZIndex();
-		});
+	          [](UIElement* a, UIElement* b) { return a->GetZIndex() < b->GetZIndex(); });
 
 	for (UIElement* child : sortedChildren)
 	{
@@ -329,6 +336,6 @@ void Struktur::UI::UIElement::RenderChildren(GameContext& context)
 void Struktur::UI::UIElement::UpdateBounds()
 {
 	glm::vec2 position = GetPosition();
-	glm::vec2 size = GetSize();
-	m_bounds = ::Rectangle{ position.x, position.y, size.x, size.y };
+	glm::vec2 size     = GetSize();
+	m_bounds           = ::Rectangle{position.x, position.y, size.x, size.y};
 }

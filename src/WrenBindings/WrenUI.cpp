@@ -1,15 +1,15 @@
 #include "WrenUI.h"
 
 #ifdef DEBUG
-#include <Trace/wren_trace.h>
+	#include <Trace/wren_trace.h>
 #endif
-#include "Engine/Scripting/WrenBindingRegistry.h"
+#include "Engine/Callback/WrenCallback.h"
 #include "Engine/GameContext.h"
-#include "WrenMath.h"
-#include "WrenResourceManager.h"
+#include "Engine/Scripting/WrenBindingRegistry.h"
 #include "Engine/UI/UILabel.h"
 #include "Engine/UI/UIPanel.h"
-#include "Engine/Callback/WrenCallback.h"
+#include "WrenMath.h"
+#include "WrenResourceManager.h"
 
 // ============================================================================
 // UI MANAGER BINDINGS
@@ -18,7 +18,7 @@
 // UIManager.addUIElement(UIElenent)
 void wren_UIManagerAddUIElement(WrenVM* vm)
 {
-	Struktur::GameContext* context = static_cast<Struktur::GameContext*>(wrenGetUserData(vm));
+	Struktur::GameContext* context     = static_cast<Struktur::GameContext*>(wrenGetUserData(vm));
 	Struktur::UI::UIManager& uiManager = context->GetUIManager();
 
 	WrenUIElement* uiElement = static_cast<WrenUIElement*>(wrenGetSlotForeign(vm, 1));
@@ -30,7 +30,7 @@ void wren_UIManagerAddUIElement(WrenVM* vm)
 // UIManager.removeUIElement(UIElenent)
 void wren_UIManagerRemoveUIElement(WrenVM* vm)
 {
-	Struktur::GameContext* context = static_cast<Struktur::GameContext*>(wrenGetUserData(vm));
+	Struktur::GameContext* context     = static_cast<Struktur::GameContext*>(wrenGetUserData(vm));
 	Struktur::UI::UIManager& uiManager = context->GetUIManager();
 
 	WrenUIElement* uiElement = static_cast<WrenUIElement*>(wrenGetSlotForeign(vm, 1));
@@ -44,7 +44,7 @@ void wren_UIManagerRemoveUIElement(WrenVM* vm)
 // UIManager.setFocus(UIElenent)
 void wren_UIManagerSetFocus(WrenVM* vm)
 {
-	Struktur::GameContext* context = static_cast<Struktur::GameContext*>(wrenGetUserData(vm));
+	Struktur::GameContext* context     = static_cast<Struktur::GameContext*>(wrenGetUserData(vm));
 	Struktur::UI::UIManager& uiManager = context->GetUIManager();
 
 	WrenUIElement* uiElement = static_cast<WrenUIElement*>(wrenGetSlotForeign(vm, 1));
@@ -60,8 +60,8 @@ void wren_UIManagerSetFocus(WrenVM* vm)
 // UIManager.clearFocusElements()
 void wren_UIManagerClearFocusElements(WrenVM* vm)
 {
-	Struktur::GameContext* context = static_cast<Struktur::GameContext*>(wrenGetUserData(vm));
-	Struktur::UI::UIManager& uiManager = context->GetUIManager();
+	Struktur::GameContext* context               = static_cast<Struktur::GameContext*>(wrenGetUserData(vm));
+	Struktur::UI::UIManager& uiManager           = context->GetUIManager();
 	Struktur::UI::FocusNavigator* focusNavigator = uiManager.GetFocusNavigator();
 	uiManager.SetFocus(nullptr);
 	focusNavigator->Clear(*context);
@@ -138,8 +138,8 @@ void wren_UIElementGetEnabled(WrenVM* vm)
 // UIElement.setFocusable(isFocusable)
 void wren_UIElementSetFocusable(WrenVM* vm)
 {
-	Struktur::GameContext* context = static_cast<Struktur::GameContext*>(wrenGetUserData(vm));
-	Struktur::UI::UIManager& uiManager = context->GetUIManager();
+	Struktur::GameContext* context               = static_cast<Struktur::GameContext*>(wrenGetUserData(vm));
+	Struktur::UI::UIManager& uiManager           = context->GetUIManager();
 	Struktur::UI::FocusNavigator* focusNavigator = uiManager.GetFocusNavigator();
 
 	WrenUIElement* uiElement = static_cast<WrenUIElement*>(wrenGetSlotForeign(vm, 0));
@@ -174,7 +174,7 @@ void wren_UIElementSetPosition(WrenVM* vm)
 		DEBUG_ERROR("UILabel.setPosition: label is Null");
 		return;
 	}
-	WrenVec2* positionPixel = static_cast<WrenVec2*>(wrenGetSlotForeign(vm, 1));
+	WrenVec2* positionPixel      = static_cast<WrenVec2*>(wrenGetSlotForeign(vm, 1));
 	WrenVec2* positionPercentage = static_cast<WrenVec2*>(wrenGetSlotForeign(vm, 2));
 	uiElement->element->SetPosition(positionPixel->value, positionPercentage->value);
 }
@@ -215,7 +215,7 @@ void wren_UIElementSetSize(WrenVM* vm)
 		DEBUG_ERROR("UILabel.setSize: uiElement is Null");
 		return;
 	}
-	WrenVec2* positionPixel = static_cast<WrenVec2*>(wrenGetSlotForeign(vm, 1));
+	WrenVec2* positionPixel      = static_cast<WrenVec2*>(wrenGetSlotForeign(vm, 1));
 	WrenVec2* positionPercentage = static_cast<WrenVec2*>(wrenGetSlotForeign(vm, 2));
 	uiElement->element->SetSize(positionPixel->value, positionPercentage->value);
 }
@@ -283,7 +283,7 @@ void wren_UIElementSetNavigationNeighbor(WrenVM* vm)
 		return;
 	}
 	Struktur::UI::NavigationDirection dir = static_cast<Struktur::UI::NavigationDirection>(wrenGetSlotDouble(vm, 1));
-	WrenUIElement* neighborElement = static_cast<WrenUIElement*>(wrenGetSlotForeign(vm, 0));
+	WrenUIElement* neighborElement        = static_cast<WrenUIElement*>(wrenGetSlotForeign(vm, 0));
 	uiElement->element->SetNavigationNeighbor(dir, neighborElement->element);
 }
 
@@ -299,7 +299,7 @@ void wren_UIElementGetNavigationNeighbor(WrenVM* vm)
 	Struktur::UI::NavigationDirection dir = static_cast<Struktur::UI::NavigationDirection>(wrenGetSlotDouble(vm, 1));
 	wrenGetVariable(vm, "ui", "UIElement", 1);  // Get class into slot 1
 	WrenUIElement* neighborElement = (WrenUIElement*)wrenSetSlotNewForeign(vm, 0, 1, sizeof(WrenUIElement));
-	new (neighborElement) WrenUIElement{ uiElement->element->GetNavigationNeighbor(dir) };
+	new (neighborElement) WrenUIElement{uiElement->element->GetNavigationNeighbor(dir)};
 }
 
 // UIElement.setBackgroundColor(color)
@@ -312,7 +312,8 @@ void wren_UIElementSetBackgroundColor(WrenVM* vm)
 		return;
 	}
 	WrenVec4* color = static_cast<WrenVec4*>(wrenGetSlotForeign(vm, 1));
-	::Color rayColor{ (unsigned char)color->value.r, (unsigned char)color->value.g, (unsigned char)color->value.b, (unsigned char)color->value.a };
+	::Color rayColor{(unsigned char)color->value.r, (unsigned char)color->value.g, (unsigned char)color->value.b,
+	                 (unsigned char)color->value.a};
 	uiElement->element->SetBackgroundColor(rayColor);
 }
 
@@ -326,7 +327,8 @@ void wren_UIElementSetBorderColor(WrenVM* vm)
 		return;
 	}
 	WrenVec4* color = static_cast<WrenVec4*>(wrenGetSlotForeign(vm, 1));
-	::Color rayColor{ (unsigned char)color->value.r, (unsigned char)color->value.g, (unsigned char)color->value.b, (unsigned char)color->value.a };
+	::Color rayColor{(unsigned char)color->value.r, (unsigned char)color->value.g, (unsigned char)color->value.b,
+	                 (unsigned char)color->value.a};
 	uiElement->element->SetBorderColor(rayColor);
 }
 
@@ -354,7 +356,7 @@ void wren_UIElementGetParent(WrenVM* vm)
 	}
 	wrenGetVariable(vm, "ui", "UIElement", 1);  // Get class into slot 1
 	WrenUIElement* parentElement = (WrenUIElement*)wrenSetSlotNewForeign(vm, 0, 1, sizeof(WrenUIElement));
-	new (parentElement) WrenUIElement{ uiElement->element->GetParent() };
+	new (parentElement) WrenUIElement{uiElement->element->GetParent()};
 }
 
 // UIElement.getChildren()
@@ -366,10 +368,10 @@ void wren_UIElementGetChildren(WrenVM* vm)
 		DEBUG_ERROR("UIElement.getChildren: element is Null");
 		return;
 	}
-	// TODO return a list of elements 
-	//wrenGetVariable(vm, "ui", "UIElement", 1);  // Get class into slot 1
-	//WrenUIElement* parentElement = (WrenUIElement*)wrenSetSlotNewForeign(vm, 0, 1, sizeof(WrenUIElement));
-	//new (parentElement) WrenUIElement{uiElement->element->GetChildren()[0]};
+	// TODO return a list of elements
+	// wrenGetVariable(vm, "ui", "UIElement", 1);  // Get class into slot 1
+	// WrenUIElement* parentElement = (WrenUIElement*)wrenSetSlotNewForeign(vm, 0, 1, sizeof(WrenUIElement));
+	// new (parentElement) WrenUIElement{uiElement->element->GetChildren()[0]};
 }
 
 // UIElement.setZIndex(zIndex)
@@ -421,7 +423,7 @@ void wren_UIElementRemoveChild(WrenVM* vm)
 		return;
 	}
 	WrenUIElement* child = static_cast<WrenUIElement*>(wrenGetSlotForeign(vm, 0));
-	bool success = uiElement->element->RemoveChild(child->element);
+	bool success         = uiElement->element->RemoveChild(child->element);
 	wrenSetSlotBool(vm, 0, success);
 }
 
@@ -437,7 +439,8 @@ void wren_UIElementSetOnClick(WrenVM* vm)
 
 	WrenHandle* callback = wrenGetSlotHandle(vm, 1);
 
-	uiElement->element->SetOnClick(Struktur::UI::UIClickCallback(std::make_unique<Struktur::Callback::WrenCallback>(callback)));
+	uiElement->element->SetOnClick(
+	    Struktur::UI::UIClickCallback(std::make_unique<Struktur::Callback::WrenCallback>(callback)));
 }
 
 // UIElement.setOnFocus { |sender| ... }
@@ -451,8 +454,9 @@ void wren_UIElementSetOnFocus(WrenVM* vm)
 	}
 
 	WrenHandle* callback = wrenGetSlotHandle(vm, 1);
-	
-	uiElement->element->SetOnFocus(Struktur::UI::UIFocusCallback(std::make_unique<Struktur::Callback::WrenCallback>(callback)));
+
+	uiElement->element->SetOnFocus(
+	    Struktur::UI::UIFocusCallback(std::make_unique<Struktur::Callback::WrenCallback>(callback)));
 }
 
 // UIElement.setOnLoseFocus { |sender| ... }
@@ -467,7 +471,8 @@ void wren_UIElementSetOnLoseFocus(WrenVM* vm)
 
 	WrenHandle* callback = wrenGetSlotHandle(vm, 1);
 
-	uiElement->element->SetOnLoseFocus(Struktur::UI::UIFocusCallback(std::make_unique<Struktur::Callback::WrenCallback>(callback)));
+	uiElement->element->SetOnLoseFocus(
+	    Struktur::UI::UIFocusCallback(std::make_unique<Struktur::Callback::WrenCallback>(callback)));
 }
 
 // UIElement.setOnHover { |sender, mousePos| ... }
@@ -482,7 +487,8 @@ void wren_UIElementSetOnHover(WrenVM* vm)
 
 	WrenHandle* callback = wrenGetSlotHandle(vm, 1);
 
-	uiElement->element->SetOnHover(Struktur::UI::UIHoverCallback(std::make_unique<Struktur::Callback::WrenCallback>(callback)));
+	uiElement->element->SetOnHover(
+	    Struktur::UI::UIHoverCallback(std::make_unique<Struktur::Callback::WrenCallback>(callback)));
 }
 
 // UIElement.setOnKeyPressed { |sender, key| ... }
@@ -497,7 +503,8 @@ void wren_UIElementSetOnKeyPressed(WrenVM* vm)
 
 	WrenHandle* callback = wrenGetSlotHandle(vm, 1);
 
-	uiElement->element->SetOnKeyPressed(Struktur::UI::UIKeyCallback(std::make_unique<Struktur::Callback::WrenCallback>(callback)));
+	uiElement->element->SetOnKeyPressed(
+	    Struktur::UI::UIKeyCallback(std::make_unique<Struktur::Callback::WrenCallback>(callback)));
 }
 
 // UIElement.setOnActivate { |sender| ... }
@@ -512,7 +519,8 @@ void wren_UIElementSetOnActivate(WrenVM* vm)
 
 	WrenHandle* callback = wrenGetSlotHandle(vm, 1);
 
-	uiElement->element->SetOnActivate(Struktur::UI::UIActivateCallback(std::make_unique<Struktur::Callback::WrenCallback>(callback)));
+	uiElement->element->SetOnActivate(
+	    Struktur::UI::UIActivateCallback(std::make_unique<Struktur::Callback::WrenCallback>(callback)));
 }
 
 // ============================================================================
@@ -537,21 +545,22 @@ void wren_UILabelFinalize(void* data)
 void wren_UILabelNew(WrenVM* vm)
 {
 	Struktur::GameContext* context = static_cast<Struktur::GameContext*>(wrenGetUserData(vm));
-	WrenUIElement* uiElement = static_cast<WrenUIElement*>(wrenGetSlotForeign(vm, 0));
+	WrenUIElement* uiElement       = static_cast<WrenUIElement*>(wrenGetSlotForeign(vm, 0));
 	// Initialise with constructor parameters if provided
-	WrenVec2* positionPixel = static_cast<WrenVec2*>(wrenGetSlotForeign(vm, 1));
+	WrenVec2* positionPixel      = static_cast<WrenVec2*>(wrenGetSlotForeign(vm, 1));
 	WrenVec2* positionPercentage = static_cast<WrenVec2*>(wrenGetSlotForeign(vm, 2));
-	const char* labelText = wrenGetSlotString(vm, 3);
+	const char* labelText        = wrenGetSlotString(vm, 3);
 	if (wrenGetSlotCount(vm) >= 5)
 	{
 		float fontSize = static_cast<float>(wrenGetSlotDouble(vm, 4));
-		auto* label = new Struktur::UI::UILabel(*context, positionPixel->value, positionPercentage->value, labelText, fontSize);
-		new (uiElement) WrenUIElement{ label };
+		auto* label =
+		    new Struktur::UI::UILabel(*context, positionPixel->value, positionPercentage->value, labelText, fontSize);
+		new (uiElement) WrenUIElement{label};
 	}
 	else
 	{
 		auto* label = new Struktur::UI::UILabel(*context, positionPixel->value, positionPercentage->value, labelText);
-		new (uiElement) WrenUIElement{ label };
+		new (uiElement) WrenUIElement{label};
 	}
 #ifdef DEBUG
 	char stackBuffer[4096];
@@ -568,7 +577,7 @@ void wren_UILabelSetFont(WrenVM* vm)
 		DEBUG_ERROR("UILabel.setFont: label is Null");
 		return;
 	}
-	WrenFontHandle* font = static_cast<WrenFontHandle*>(wrenGetSlotForeign(vm, 1));
+	WrenFontHandle* font         = static_cast<WrenFontHandle*>(wrenGetSlotForeign(vm, 1));
 	Struktur::UI::UILabel* label = dynamic_cast<Struktur::UI::UILabel*>(uiElement->element);
 	label->SetFont(font->resource);
 }
@@ -583,7 +592,8 @@ void wren_UILabelSetTextColor(WrenVM* vm)
 		return;
 	}
 	WrenVec4* color = static_cast<WrenVec4*>(wrenGetSlotForeign(vm, 1));
-	::Color rayColor{ (unsigned char)color->value.r, (unsigned char)color->value.g, (unsigned char)color->value.b, (unsigned char)color->value.a };
+	::Color rayColor{(unsigned char)color->value.r, (unsigned char)color->value.g, (unsigned char)color->value.b,
+	                 (unsigned char)color->value.a};
 	Struktur::UI::UILabel* label = dynamic_cast<Struktur::UI::UILabel*>(uiElement->element);
 	label->SetTextColor(rayColor);
 }
@@ -598,7 +608,7 @@ void wren_UILabelSetAlignment(WrenVM* vm)
 		return;
 	}
 	Struktur::UI::TextAlignment textAlignment = static_cast<Struktur::UI::TextAlignment>(wrenGetSlotDouble(vm, 1));
-	Struktur::UI::UILabel* label = dynamic_cast<Struktur::UI::UILabel*>(uiElement->element);
+	Struktur::UI::UILabel* label              = dynamic_cast<Struktur::UI::UILabel*>(uiElement->element);
 	label->SetAlignment(textAlignment);
 }
 
@@ -611,7 +621,7 @@ void wren_UILabelSetFontSize(WrenVM* vm)
 		DEBUG_ERROR("UIElement.setTextAlignment: label is Null");
 		return;
 	}
-	float size = static_cast<float>(wrenGetSlotDouble(vm, 1));
+	float size                   = static_cast<float>(wrenGetSlotDouble(vm, 1));
 	Struktur::UI::UILabel* label = dynamic_cast<Struktur::UI::UILabel*>(uiElement->element);
 	label->SetFontSize(size);
 }
@@ -626,7 +636,7 @@ void wren_UILabelSetWordWrap(WrenVM* vm)
 		return;
 	}
 	Struktur::UI::TextWrapping textWrapping = static_cast<Struktur::UI::TextWrapping>(wrenGetSlotDouble(vm, 1));
-	Struktur::UI::UILabel* label = dynamic_cast<Struktur::UI::UILabel*>(uiElement->element);
+	Struktur::UI::UILabel* label            = dynamic_cast<Struktur::UI::UILabel*>(uiElement->element);
 	label->SetWordWrap(textWrapping);
 }
 
@@ -639,7 +649,7 @@ void wren_UILabelSetText(WrenVM* vm)
 		DEBUG_ERROR("UIElement.setTextAlignment: label is Null");
 		return;
 	}
-	const char* newText = wrenGetSlotString(vm, 1);
+	const char* newText          = wrenGetSlotString(vm, 1);
 	Struktur::UI::UILabel* label = dynamic_cast<Struktur::UI::UILabel*>(uiElement->element);
 	label->SetText(newText);
 }
@@ -692,15 +702,16 @@ void wren_UIPanelFinalize(void* data)
 void wren_UIPanelNew(WrenVM* vm)
 {
 	Struktur::GameContext* context = static_cast<Struktur::GameContext*>(wrenGetUserData(vm));
-	WrenUIElement* uiElement = static_cast<WrenUIElement*>(wrenGetSlotForeign(vm, 0));
+	WrenUIElement* uiElement       = static_cast<WrenUIElement*>(wrenGetSlotForeign(vm, 0));
 
 	// Initialise with constructor parameters if provided
-	WrenVec2* positionPixel = static_cast<WrenVec2*>(wrenGetSlotForeign(vm, 1));
+	WrenVec2* positionPixel      = static_cast<WrenVec2*>(wrenGetSlotForeign(vm, 1));
 	WrenVec2* positionPercentage = static_cast<WrenVec2*>(wrenGetSlotForeign(vm, 2));
-	WrenVec2* sizePixel = static_cast<WrenVec2*>(wrenGetSlotForeign(vm, 3));
-	WrenVec2* sizePercentage = static_cast<WrenVec2*>(wrenGetSlotForeign(vm, 4));
-	auto* panel = new Struktur::UI::UIPanel(positionPixel->value, positionPercentage->value, sizePixel->value, sizePercentage->value);
-	new (uiElement) WrenUIElement{ panel };
+	WrenVec2* sizePixel          = static_cast<WrenVec2*>(wrenGetSlotForeign(vm, 3));
+	WrenVec2* sizePercentage     = static_cast<WrenVec2*>(wrenGetSlotForeign(vm, 4));
+	auto* panel = new Struktur::UI::UIPanel(positionPixel->value, positionPercentage->value, sizePixel->value,
+	                                        sizePercentage->value);
+	new (uiElement) WrenUIElement{panel};
 #ifdef DEBUG
 	char stackBuffer[4096];
 	uiElement->callstack = wrenTraceGetCallStackString(vm, stackBuffer, sizeof(stackBuffer));
@@ -716,7 +727,7 @@ void wren_UIPanelSetBackgroundTexture(WrenVM* vm)
 		DEBUG_ERROR("UIPanel.SetBackgroundTexture: panel is Null");
 		return;
 	}
-	WrenTextureHandle* texture = (WrenTextureHandle*)wrenGetSlotForeign(vm, 1);
+	WrenTextureHandle* texture   = (WrenTextureHandle*)wrenGetSlotForeign(vm, 1);
 	Struktur::UI::UIPanel* panel = dynamic_cast<Struktur::UI::UIPanel*>(uiElement->element);
 	panel->SetBackgroundTexture(texture->resource);
 }
@@ -738,98 +749,142 @@ WREN_BINDING_MODULE(UI)
 {
 	// NAVIGATION DIRECTION BINDINGS
 	WREN_ENUM(registry, "ui", NavigationDirection, "Enum to set the navigation direction for UI Elements",
-		WREN_ENUM_PAIR("UP", Struktur::UI::NavigationDirection::UP),
-		WREN_ENUM_PAIR("DOWN", Struktur::UI::NavigationDirection::DOWN),
-		WREN_ENUM_PAIR("LEFT", Struktur::UI::NavigationDirection::LEFT),
-		WREN_ENUM_PAIR("RIGHT", Struktur::UI::NavigationDirection::RIGHT),
-		);
+	          WREN_ENUM_PAIR("UP", Struktur::UI::NavigationDirection::UP),
+	          WREN_ENUM_PAIR("DOWN", Struktur::UI::NavigationDirection::DOWN),
+	          WREN_ENUM_PAIR("LEFT", Struktur::UI::NavigationDirection::LEFT),
+	          WREN_ENUM_PAIR("RIGHT", Struktur::UI::NavigationDirection::RIGHT), );
 
 	// TEXT ALIGNMENT BINDINGS
 	WREN_ENUM(registry, "ui", TextAlignment, "Enum to set the text alignment for UI Labels",
-		WREN_ENUM_PAIR("LEFT", Struktur::UI::TextAlignment::LEFT),
-		WREN_ENUM_PAIR("CENTER", Struktur::UI::TextAlignment::CENTER),
-		WREN_ENUM_PAIR("RIGHT", Struktur::UI::TextAlignment::RIGHT),
-		WREN_ENUM_PAIR("JUSTIFY", Struktur::UI::TextAlignment::JUSTIFY),
-		);
+	          WREN_ENUM_PAIR("LEFT", Struktur::UI::TextAlignment::LEFT),
+	          WREN_ENUM_PAIR("CENTER", Struktur::UI::TextAlignment::CENTER),
+	          WREN_ENUM_PAIR("RIGHT", Struktur::UI::TextAlignment::RIGHT),
+	          WREN_ENUM_PAIR("JUSTIFY", Struktur::UI::TextAlignment::JUSTIFY), );
 
 	// WORD WRAPPING BINDINGS
 	WREN_ENUM(registry, "ui", TextWrapping, "Enum to set the text wrapping for UI Labels",
-		WREN_ENUM_PAIR("NONE", Struktur::UI::TextWrapping::NONE),
-		WREN_ENUM_PAIR("WORD_WRAP", Struktur::UI::TextWrapping::WORD_WRAP),
-		WREN_ENUM_PAIR("CHARACTER_WRAP", Struktur::UI::TextWrapping::CHARACTER_WRAP),
-		);
+	          WREN_ENUM_PAIR("NONE", Struktur::UI::TextWrapping::NONE),
+	          WREN_ENUM_PAIR("WORD_WRAP", Struktur::UI::TextWrapping::WORD_WRAP),
+	          WREN_ENUM_PAIR("CHARACTER_WRAP", Struktur::UI::TextWrapping::CHARACTER_WRAP), );
 
-
-	WREN_CLASS_STATIC(registry, "ui", "UIManager", "addUIElement(_)", wren_UIManagerAddUIElement, "Add a UI Element to the UI system.");
-	WREN_CLASS_STATIC(registry, "ui", "UIManager", "removeUIElement(_)", wren_UIManagerRemoveUIElement, "Remove and clean up an element in the UI system.");
-	WREN_CLASS_STATIC(registry, "ui", "UIManager", "setFocus(_)", wren_UIManagerSetFocus, "Will set the focus of the current element.");
-	WREN_CLASS_STATIC(registry, "ui", "UIManager", "clearFocusElements()", wren_UIManagerClearFocusElements, "Will set the focus of the current element.");
+	WREN_CLASS_STATIC(registry, "ui", "UIManager", "addUIElement(_)", wren_UIManagerAddUIElement,
+	                  "Add a UI Element to the UI system.");
+	WREN_CLASS_STATIC(registry, "ui", "UIManager", "removeUIElement(_)", wren_UIManagerRemoveUIElement,
+	                  "Remove and clean up an element in the UI system.");
+	WREN_CLASS_STATIC(registry, "ui", "UIManager", "setFocus(_)", wren_UIManagerSetFocus,
+	                  "Will set the focus of the current element.");
+	WREN_CLASS_STATIC(registry, "ui", "UIManager", "clearFocusElements()", wren_UIManagerClearFocusElements,
+	                  "Will set the focus of the current element.");
 
 	// Register Sound foreign class
-	WREN_FOREIGN_CLASS(registry, "ui", "UIElement", wren_UIElementAllocate, wren_UIElementFinalize, "UI Element component");
+	WREN_FOREIGN_CLASS(registry, "ui", "UIElement", wren_UIElementAllocate, wren_UIElementFinalize,
+	                   "UI Element component");
 
 	// Register instance methods
-	WREN_CLASS_METHOD(registry, "ui", "UIElement", "isVisible=(_)", wren_UIElementSetVisible, "Sets UI Element to be visible");
-	WREN_CLASS_METHOD(registry, "ui", "UIElement", "setVisible(_)", wren_UIElementSetVisible, "Sets UI Element to be visible");
-	WREN_CLASS_METHOD(registry, "ui", "UIElement", "isVisible", wren_UIElementGetVisible, "Gets UI Element to be visible");
-	WREN_CLASS_METHOD(registry, "ui", "UIElement", "IsEnabled=(_)", wren_UIElementSetEnabled, "Sets UI Element to be enabled");
-	WREN_CLASS_METHOD(registry, "ui", "UIElement", "IsEnabled", wren_UIElementGetEnabled, "Gets UI Element to be enabled");
-	WREN_CLASS_METHOD(registry, "ui", "UIElement", "IsFocusable=(_)", wren_UIElementSetFocusable, "Sets UI Element to be focusable");
-	WREN_CLASS_METHOD(registry, "ui", "UIElement", "setFocusable(_)", wren_UIElementSetFocusable, "Sets UI Element to be focusable");
-	WREN_CLASS_METHOD(registry, "ui", "UIElement", "IsFocusable", wren_UIElementGetFocusable, "Gets UI Element to be focusable");
-	WREN_CLASS_METHOD(registry, "ui", "UIElement", "setPosition(_,_)", wren_UIElementSetPosition, "Sets the UI Elements position");
-	WREN_CLASS_METHOD(registry, "ui", "UIElement", "getPosition()", wren_UIElementGetPosition, "Gets the UI Elements position");
-	WREN_CLASS_METHOD(registry, "ui", "UIElement", "setAnchorPoint(_)", wren_UIElementSetAnchorPoint, "Sets the UI Elements anchor point");
-	WREN_CLASS_METHOD(registry, "ui", "UIElement", "setSize(_,_)", wren_UIElementSetSize, "Sets the UI Elements anchor point");
+	WREN_CLASS_METHOD(registry, "ui", "UIElement", "isVisible=(_)", wren_UIElementSetVisible,
+	                  "Sets UI Element to be visible");
+	WREN_CLASS_METHOD(registry, "ui", "UIElement", "setVisible(_)", wren_UIElementSetVisible,
+	                  "Sets UI Element to be visible");
+	WREN_CLASS_METHOD(registry, "ui", "UIElement", "isVisible", wren_UIElementGetVisible,
+	                  "Gets UI Element to be visible");
+	WREN_CLASS_METHOD(registry, "ui", "UIElement", "IsEnabled=(_)", wren_UIElementSetEnabled,
+	                  "Sets UI Element to be enabled");
+	WREN_CLASS_METHOD(registry, "ui", "UIElement", "IsEnabled", wren_UIElementGetEnabled,
+	                  "Gets UI Element to be enabled");
+	WREN_CLASS_METHOD(registry, "ui", "UIElement", "IsFocusable=(_)", wren_UIElementSetFocusable,
+	                  "Sets UI Element to be focusable");
+	WREN_CLASS_METHOD(registry, "ui", "UIElement", "setFocusable(_)", wren_UIElementSetFocusable,
+	                  "Sets UI Element to be focusable");
+	WREN_CLASS_METHOD(registry, "ui", "UIElement", "IsFocusable", wren_UIElementGetFocusable,
+	                  "Gets UI Element to be focusable");
+	WREN_CLASS_METHOD(registry, "ui", "UIElement", "setPosition(_,_)", wren_UIElementSetPosition,
+	                  "Sets the UI Elements position");
+	WREN_CLASS_METHOD(registry, "ui", "UIElement", "getPosition()", wren_UIElementGetPosition,
+	                  "Gets the UI Elements position");
+	WREN_CLASS_METHOD(registry, "ui", "UIElement", "setAnchorPoint(_)", wren_UIElementSetAnchorPoint,
+	                  "Sets the UI Elements anchor point");
+	WREN_CLASS_METHOD(registry, "ui", "UIElement", "setSize(_,_)", wren_UIElementSetSize,
+	                  "Sets the UI Elements anchor point");
 	WREN_CLASS_METHOD(registry, "ui", "UIElement", "getSize()", wren_UIElementGetSize, "Gets the UI Elements size");
-	WREN_CLASS_METHOD(registry, "ui", "UIElement", "getBounds()", wren_UIElementGetBounds, "Gets the UI Elements bounds");
-	WREN_CLASS_METHOD(registry, "ui", "UIElement", "setTabIndex(_)", wren_UIElementSetTabIndex, "Sets the UI Elements tab index");
-	WREN_CLASS_METHOD(registry, "ui", "UIElement", "getTabIndex()", wren_UIElementGetTabIndex, "Gets the UI Elements tab index");
-	WREN_CLASS_METHOD(registry, "ui", "UIElement", "setNavigationNeighbor(_,_)", wren_UIElementSetNavigationNeighbor, "adds a UI Element as a navigation neighbor");
-	WREN_CLASS_METHOD(registry, "ui", "UIElement", "getNavigationNeighbor(_)", wren_UIElementGetNavigationNeighbor, "Gets a UI Element navigation neighbor from a direction");
-	WREN_CLASS_METHOD(registry, "ui", "UIElement", "setBackgroundColor(_)", wren_UIElementSetBackgroundColor, "Sets the UI Elements background color");
-	WREN_CLASS_METHOD(registry, "ui", "UIElement", "setBorderColor(_)", wren_UIElementSetBorderColor, "Sets the UI Elements border color");
-	WREN_CLASS_METHOD(registry, "ui", "UIElement", "setBorderWidth(_)", wren_UIElementSetBorderWidth, "Sets the UI Elements border width");
-	WREN_CLASS_METHOD(registry, "ui", "UIElement", "getParent()", wren_UIElementGetParent, "Gets the UI Elements parent");
-	WREN_CLASS_METHOD(registry, "ui", "UIElement", "getChildren()", wren_UIElementGetChildren, "Sets the UI Elements children");
-	WREN_CLASS_METHOD(registry, "ui", "UIElement", "setZIndex(_)", wren_UIElementSetZIndex, "Sets the UI Elements Z index");
-	WREN_CLASS_METHOD(registry, "ui", "UIElement", "getZIndex()", wren_UIElementGetZIndex, "Sets the UI Elements Z index");
-	WREN_CLASS_METHOD(registry, "ui", "UIElement", "addChild(_)", wren_UIElementAddChild, "Adds a UI Element to elements children");
-	WREN_CLASS_METHOD(registry, "ui", "UIElement", "removeChild(_)", wren_UIElementRemoveChild, "Removes a UI Element from the children");
-	WREN_CLASS_METHOD(registry, "ui", "UIElement", "setOnClick(_)", wren_UIElementSetOnClick, "Sets the UI Elements on click callback");
-	WREN_CLASS_METHOD(registry, "ui", "UIElement", "setOnFocus(_)", wren_UIElementSetOnFocus, "Sets the UI Elements on focus callback");
-	WREN_CLASS_METHOD(registry, "ui", "UIElement", "setOnLoseFocus(_)", wren_UIElementSetOnLoseFocus, "Sets the UI Elements on lose focus callback");
-	WREN_CLASS_METHOD(registry, "ui", "UIElement", "setOnHover(_)", wren_UIElementSetOnHover, "Sets the UI Elements on hover callback");
-	WREN_CLASS_METHOD(registry, "ui", "UIElement", "setOnKeyPressed(_)", wren_UIElementSetOnKeyPressed, "Sets the UI Elements on key pressed callback");
-	WREN_CLASS_METHOD(registry, "ui", "UIElement", "setOnActivate(_)", wren_UIElementSetOnActivate, "Sets the UI Elements on activate callback");
-	//WREN_CLASS_METHOD("ui", "UIElement", "setOnEvent(_)", wren_UIElementSetOnEvent, "Sets the UI Elements on event callback");
+	WREN_CLASS_METHOD(registry, "ui", "UIElement", "getBounds()", wren_UIElementGetBounds,
+	                  "Gets the UI Elements bounds");
+	WREN_CLASS_METHOD(registry, "ui", "UIElement", "setTabIndex(_)", wren_UIElementSetTabIndex,
+	                  "Sets the UI Elements tab index");
+	WREN_CLASS_METHOD(registry, "ui", "UIElement", "getTabIndex()", wren_UIElementGetTabIndex,
+	                  "Gets the UI Elements tab index");
+	WREN_CLASS_METHOD(registry, "ui", "UIElement", "setNavigationNeighbor(_,_)", wren_UIElementSetNavigationNeighbor,
+	                  "adds a UI Element as a navigation neighbor");
+	WREN_CLASS_METHOD(registry, "ui", "UIElement", "getNavigationNeighbor(_)", wren_UIElementGetNavigationNeighbor,
+	                  "Gets a UI Element navigation neighbor from a direction");
+	WREN_CLASS_METHOD(registry, "ui", "UIElement", "setBackgroundColor(_)", wren_UIElementSetBackgroundColor,
+	                  "Sets the UI Elements background color");
+	WREN_CLASS_METHOD(registry, "ui", "UIElement", "setBorderColor(_)", wren_UIElementSetBorderColor,
+	                  "Sets the UI Elements border color");
+	WREN_CLASS_METHOD(registry, "ui", "UIElement", "setBorderWidth(_)", wren_UIElementSetBorderWidth,
+	                  "Sets the UI Elements border width");
+	WREN_CLASS_METHOD(registry, "ui", "UIElement", "getParent()", wren_UIElementGetParent,
+	                  "Gets the UI Elements parent");
+	WREN_CLASS_METHOD(registry, "ui", "UIElement", "getChildren()", wren_UIElementGetChildren,
+	                  "Sets the UI Elements children");
+	WREN_CLASS_METHOD(registry, "ui", "UIElement", "setZIndex(_)", wren_UIElementSetZIndex,
+	                  "Sets the UI Elements Z index");
+	WREN_CLASS_METHOD(registry, "ui", "UIElement", "getZIndex()", wren_UIElementGetZIndex,
+	                  "Sets the UI Elements Z index");
+	WREN_CLASS_METHOD(registry, "ui", "UIElement", "addChild(_)", wren_UIElementAddChild,
+	                  "Adds a UI Element to elements children");
+	WREN_CLASS_METHOD(registry, "ui", "UIElement", "removeChild(_)", wren_UIElementRemoveChild,
+	                  "Removes a UI Element from the children");
+	WREN_CLASS_METHOD(registry, "ui", "UIElement", "setOnClick(_)", wren_UIElementSetOnClick,
+	                  "Sets the UI Elements on click callback");
+	WREN_CLASS_METHOD(registry, "ui", "UIElement", "setOnFocus(_)", wren_UIElementSetOnFocus,
+	                  "Sets the UI Elements on focus callback");
+	WREN_CLASS_METHOD(registry, "ui", "UIElement", "setOnLoseFocus(_)", wren_UIElementSetOnLoseFocus,
+	                  "Sets the UI Elements on lose focus callback");
+	WREN_CLASS_METHOD(registry, "ui", "UIElement", "setOnHover(_)", wren_UIElementSetOnHover,
+	                  "Sets the UI Elements on hover callback");
+	WREN_CLASS_METHOD(registry, "ui", "UIElement", "setOnKeyPressed(_)", wren_UIElementSetOnKeyPressed,
+	                  "Sets the UI Elements on key pressed callback");
+	WREN_CLASS_METHOD(registry, "ui", "UIElement", "setOnActivate(_)", wren_UIElementSetOnActivate,
+	                  "Sets the UI Elements on activate callback");
+	// WREN_CLASS_METHOD("ui", "UIElement", "setOnEvent(_)", wren_UIElementSetOnEvent, "Sets the UI Elements on event
+	// callback");
 
 	// Register Quat foreign class
 	WREN_FOREIGN_CLASS(registry, "ui", "UILabel", wren_UILabelAllocate, wren_UILabelFinalize, "UI Label component");
 	WREN_CLASS_INHERITANCE(registry, "ui", "UILabel", "UIElement");
 
 	// Register constructors
-	WREN_CONSTRUCTOR(registry, "ui", "UILabel", "new(_,_,_)", wren_UILabelNew, "Create UI Label with absolutePosition, relativePosition, labelText components");
-	WREN_CONSTRUCTOR(registry, "ui", "UILabel", "new(_,_,_,_)", wren_UILabelNew, "Create UI Label with absolutePosition, relativePosition, labelText, fontSize components");
+	WREN_CONSTRUCTOR(registry, "ui", "UILabel", "new(_,_,_)", wren_UILabelNew,
+	                 "Create UI Label with absolutePosition, relativePosition, labelText components");
+	WREN_CONSTRUCTOR(registry, "ui", "UILabel", "new(_,_,_,_)", wren_UILabelNew,
+	                 "Create UI Label with absolutePosition, relativePosition, labelText, fontSize components");
 
 	// Register instance methods
 	WREN_CLASS_METHOD(registry, "ui", "UILabel", "setFont(_)", wren_UILabelSetFont, "Sets the UI Labels Font");
-	WREN_CLASS_METHOD(registry, "ui", "UILabel", "setTextColor(_)", wren_UILabelSetTextColor, "Sets the UI Labels text color");
-	WREN_CLASS_METHOD(registry, "ui", "UILabel", "setAlignment(_)", wren_UILabelSetAlignment, "Sets the UI Labels alignment");
-	WREN_CLASS_METHOD(registry, "ui", "UILabel", "setFontSize(_)", wren_UILabelSetFontSize, "Sets the UI Labels font size");
-	WREN_CLASS_METHOD(registry, "ui", "UILabel", "setWordWrap(_)", wren_UILabelSetWordWrap, "Sets the UI Labels word wrap");
+	WREN_CLASS_METHOD(registry, "ui", "UILabel", "setTextColor(_)", wren_UILabelSetTextColor,
+	                  "Sets the UI Labels text color");
+	WREN_CLASS_METHOD(registry, "ui", "UILabel", "setAlignment(_)", wren_UILabelSetAlignment,
+	                  "Sets the UI Labels alignment");
+	WREN_CLASS_METHOD(registry, "ui", "UILabel", "setFontSize(_)", wren_UILabelSetFontSize,
+	                  "Sets the UI Labels font size");
+	WREN_CLASS_METHOD(registry, "ui", "UILabel", "setWordWrap(_)", wren_UILabelSetWordWrap,
+	                  "Sets the UI Labels word wrap");
 	WREN_CLASS_METHOD(registry, "ui", "UILabel", "setText(_)", wren_UILabelSetText, "set the UI Labels text");
 	WREN_CLASS_METHOD(registry, "ui", "UILabel", "getText()", wren_UILabelGetText, "get the UI Labels text");
-	WREN_CLASS_METHOD(registry, "ui", "UILabel", "setBoundingBoxToText()", wren_UILabelSetBoundingBoxToText, "Will change the width and height to match the text");
+	WREN_CLASS_METHOD(registry, "ui", "UILabel", "setBoundingBoxToText()", wren_UILabelSetBoundingBoxToText,
+	                  "Will change the width and height to match the text");
 
 	// Register Quat foreign class
 	WREN_FOREIGN_CLASS(registry, "ui", "UIPanel", wren_UIPanelAllocate, wren_UIPanelFinalize, "UI Panel component");
 	WREN_CLASS_INHERITANCE(registry, "ui", "UIPanel", "UIElement");
 
 	// Register constructors
-	WREN_CONSTRUCTOR(registry, "ui", "UIPanel", "new(_,_,_,_)", wren_UIPanelNew, "Create UI panel with absolutePosition, relativePosition, absoluteSize, relativeSize components");
+	WREN_CONSTRUCTOR(registry, "ui", "UIPanel", "new(_,_,_,_)", wren_UIPanelNew,
+	                 "Create UI panel with absolutePosition, relativePosition, absoluteSize, relativeSize components");
 
 	// Register instance methods
-	WREN_CLASS_METHOD(registry, "ui", "UIPanel", "setBackgroundTexture(_)", wren_UIPanelSetBackgroundTexture, "Sets the UI Panels background texture");
-	WREN_CLASS_METHOD(registry, "ui", "UIPanel", "ClearBackgroundTexture()", wren_UIPanelClearBackgroundTexture, "Clears the UI Panels background texture");
+	WREN_CLASS_METHOD(registry, "ui", "UIPanel", "setBackgroundTexture(_)", wren_UIPanelSetBackgroundTexture,
+	                  "Sets the UI Panels background texture");
+	WREN_CLASS_METHOD(registry, "ui", "UIPanel", "ClearBackgroundTexture()", wren_UIPanelClearBackgroundTexture,
+	                  "Clears the UI Panels background texture");
 }

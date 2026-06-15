@@ -31,10 +31,10 @@ class StateManager {
     }
     
     // Send event to active state
-    sendEvent(event) {
+    sendEvent(type, data) {
         if (_currentState) {
             Profile.begin("Send Event: " + _currentState.name)
-            _currentState.onEvent(event)
+            _currentState.onEvent(type, data)
             Profile.end()
         }
     }

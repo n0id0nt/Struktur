@@ -4,6 +4,7 @@ import "Inventory" for Inventory
 import "debug" for Debug
 import "gameObjectComponents" for Camera, Script
 import "gameObject" for GameObject
+import "events" for Event
 
 class Commands {
     static registerFunctions() {
@@ -12,12 +13,14 @@ class Commands {
             Inventory.addItem(item)
             Inventory.save("inventory.sav")
             Debug.info("[Dialogue Command] Added item to inventory %(item)")
+            Event.addEvent("giveItem", [["__type", "map"], ["item", item]])
         }
         DialogueRegistry.registerCommand("removeItem") { |params|
             var item = params["item"]
             Inventory.removeItem(item)
             Inventory.save("inventory.sav")
             Debug.info("[Dialogue Command] Removed item from inventory %(item)")
+            Event.addEvent("removeItem", [["__type", "map"], ["item", item]])
         }
         DialogueRegistry.registerCommand("setIntFlag") { |params|
             var flag = params["flag"]
@@ -25,6 +28,7 @@ class Commands {
             FlagManager.setIntFlag(flag, value)
             FlagManager.save("flags.sav")
             Debug.info("[Dialogue Command] Set Int Flag for %(flag): %(value)")
+            //Event.addEvent("setIntFlag", params)
         }
         DialogueRegistry.registerCommand("setFlag") { |params|
             var flag = params["flag"]
@@ -32,12 +36,14 @@ class Commands {
             FlagManager.setFlag(flag, value)
             FlagManager.save("flags.sav")
             Debug.info("[Dialogue Command] Set Bool Flag for %(flag): %(value)")
+            //Event.addEvent("setFlag", params)
         }
         DialogueRegistry.registerCommand("cameraShake") { |params|
             var cameras = GameObject.getAllWithComponent("Camera")
             for (cameraId in cameras) {
                 Camera.addCameraTrauma(cameraId, 0.4)
             }
+            //Event.addEvent("cameraShake", params)
         }
         DialogueRegistry.registerCommand("pickupEntity") { |params|
             var entityName = params["name"]
@@ -56,6 +62,7 @@ class Commands {
                     Debug.info("[Dialogue Command] Picked up Item %(name): %(itemEntity)")
                 }
             }
+            Event.addEvent("pickupEntity", [["__type", "map"], ["name", entityName]])
         }
         DialogueRegistry.registerCommand("putdownEntity") { |params|
             var entityName = params["name"]
@@ -68,6 +75,7 @@ class Commands {
                     Debug.info("[Dialogue Command] Put down Item %(name): %(itemEntity)")
                 }
             }
+            Event.addEvent("putdownEntity", [["__type", "map"], ["name", entityName]])
         }
     }
 }

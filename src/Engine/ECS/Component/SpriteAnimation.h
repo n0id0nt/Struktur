@@ -7,14 +7,14 @@
 
 namespace Struktur
 {
-	namespace Component
-	{
-		struct SpriteAnimation
-		{
-			std::unordered_map<std::string, Animation::SpriteAnimation> animations;
+namespace Component
+{
+struct SpriteAnimation
+{
+	std::unordered_map<std::string, Animation::SpriteAnimation> animations;
 
-			std::string curAnimation;
-			float animationStartTime;
-		};
-    }
-}
+	std::string curAnimation;
+	float animationStartTime;
+};
+}  // namespace Component
+}  // namespace Struktur

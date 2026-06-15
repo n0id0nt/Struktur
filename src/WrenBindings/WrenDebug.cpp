@@ -14,7 +14,7 @@ void wren_ProfileStaticProfileBegin(WrenVM* vm)
 {
 #ifdef DEBUG
 	Struktur::GameContext* context = static_cast<Struktur::GameContext*>(wrenGetUserData(vm));
-	const char* name = wrenGetSlotString(vm, 1);
+	const char* name               = wrenGetSlotString(vm, 1);
 	context->GetProfiler().BeginProfile(name);
 #endif
 }
@@ -33,7 +33,7 @@ void wren_DebugInfo(WrenVM* vm)
 {
 #ifdef DEBUG
 	char stackBuffer[4096];
-	const char* stack = wrenTraceGetCallStackString(vm, stackBuffer, sizeof(stackBuffer));
+	const char* stack   = wrenTraceGetCallStackString(vm, stackBuffer, sizeof(stackBuffer));
 	const char* message = wrenGetSlotString(vm, 1);
 	DEBUG_INFO("%s\n%s", message, stack);
 #endif
@@ -44,7 +44,7 @@ void wren_DebugWarning(WrenVM* vm)
 {
 #ifdef DEBUG
 	char stackBuffer[4096];
-	const char* stack = wrenTraceGetCallStackString(vm, stackBuffer, sizeof(stackBuffer));
+	const char* stack   = wrenTraceGetCallStackString(vm, stackBuffer, sizeof(stackBuffer));
 	const char* message = wrenGetSlotString(vm, 1);
 	DEBUG_WARNING("%s\n%s", message, stack);
 #endif
@@ -55,7 +55,7 @@ void wren_DebugError(WrenVM* vm)
 {
 #ifdef DEBUG
 	char stackBuffer[4096];
-	const char* stack = wrenTraceGetCallStackString(vm, stackBuffer, sizeof(stackBuffer));
+	const char* stack   = wrenTraceGetCallStackString(vm, stackBuffer, sizeof(stackBuffer));
 	const char* message = wrenGetSlotString(vm, 1);
 	DEBUG_ERROR("%s\n%s", message, stack);
 #endif
@@ -66,7 +66,7 @@ void wren_DebugFatal(WrenVM* vm)
 {
 #ifdef DEBUG
 	char stackBuffer[4096];
-	const char* stack = wrenTraceGetCallStackString(vm, stackBuffer, sizeof(stackBuffer));
+	const char* stack   = wrenTraceGetCallStackString(vm, stackBuffer, sizeof(stackBuffer));
 	const char* message = wrenGetSlotString(vm, 1);
 	DEBUG_FATAL("%s\n%s", message, stack);
 #endif
@@ -77,7 +77,7 @@ void wren_DebugAssert(WrenVM* vm)
 {
 #ifdef DEBUG
 	bool condition = wrenGetSlotBool(vm, 1);
-	if (condition)
+	if (!condition)
 	{
 		char stackBuffer[4096];
 		const char* stack = wrenTraceGetCallStackString(vm, stackBuffer, sizeof(stackBuffer));
@@ -93,7 +93,7 @@ void wren_DebugAssertMsg(WrenVM* vm)
 {
 #ifdef DEBUG
 	bool condition = wrenGetSlotBool(vm, 1);
-	if (condition)
+	if (!condition)
 	{
 		const char* message = wrenGetSlotString(vm, 2);
 		char stackBuffer[4096];
@@ -130,7 +130,8 @@ void wren_DebugBreakMsg(WrenVM* vm)
 
 WREN_BINDING_MODULE(Debug)
 {
-	WREN_CLASS_STATIC(registry, "debug", "Profile", "begin(_)", wren_ProfileStaticProfileBegin, "Begin a profile scope.");
+	WREN_CLASS_STATIC(registry, "debug", "Profile", "begin(_)", wren_ProfileStaticProfileBegin,
+	                  "Begin a profile scope.");
 	WREN_CLASS_STATIC(registry, "debug", "Profile", "end()", wren_ProfileStaticProfileEnd, "End a profile scope.");
 
 	WREN_CLASS_STATIC(registry, "debug", "Debug", "info(_)", wren_DebugInfo, "Call Debug Info.");
@@ -138,7 +139,9 @@ WREN_BINDING_MODULE(Debug)
 	WREN_CLASS_STATIC(registry, "debug", "Debug", "error(_)", wren_DebugError, "Call Debug Error.");
 	WREN_CLASS_STATIC(registry, "debug", "Debug", "fatal(_)", wren_DebugFatal, "Call Debug Fatal.");
 	WREN_CLASS_STATIC(registry, "debug", "Debug", "assert(_)", wren_DebugAssert, "Call Debug Assert.");
-	WREN_CLASS_STATIC(registry, "debug", "Debug", "assertMsg(_,_)", wren_DebugAssertMsg, "Call Debug Assert with Message.");
+	WREN_CLASS_STATIC(registry, "debug", "Debug", "assertMsg(_,_)", wren_DebugAssertMsg,
+	                  "Call Debug Assert with Message.");
 	WREN_CLASS_STATIC(registry, "debug", "Debug", "breakpoint()", wren_DebugBreak, "Call Debug Break.");
-	WREN_CLASS_STATIC(registry, "debug", "Debug", "breakpointMsg(_)", wren_DebugBreakMsg, "Call Debug Break with Message.");
+	WREN_CLASS_STATIC(registry, "debug", "Debug", "breakpointMsg(_)", wren_DebugBreakMsg,
+	                  "Call Debug Break with Message.");
 }

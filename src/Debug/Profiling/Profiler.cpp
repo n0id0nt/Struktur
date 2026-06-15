@@ -1,4 +1,5 @@
 #include "Profiler.h"
+
 #include <algorithm>
 
 Struktur::Debug::Profiler::~Profiler()
@@ -12,27 +13,32 @@ Struktur::Debug::Profiler::~Profiler()
 
 void Struktur::Debug::Profiler::BeginFrame()
 {
-	if (m_isPaused) return;
+	if (m_isPaused)
+	{
+		return;
+	}
 
-	m_frameStart = std::chrono::high_resolution_clock::now();
+	m_frameStart  = std::chrono::high_resolution_clock::now();
 	m_currentNode = &m_rootNode;
 	ResetNodePool();
 
 	// Clear root node state
 	m_rootNode.children.clear();
-	m_rootNode.duration_us = 0;
-	m_rootNode.self_duration_us = 0;
+	m_rootNode.duration_us             = 0;
+	m_rootNode.self_duration_us        = 0;
 	m_rootNode.accumulated_duration_us = 0;
-	m_rootNode.call_count = 0;
+	m_rootNode.call_count              = 0;
 }
 
 void Struktur::Debug::Profiler::EndFrame()
 {
-	if (m_isPaused) return;
+	if (m_isPaused)
+	{
+		return;
+	}
 
-	auto frameEnd = std::chrono::high_resolution_clock::now();
-	m_rootNode.duration_us = std::chrono::duration_cast<std::chrono::microseconds>(
-		frameEnd - m_frameStart).count();
+	auto frameEnd          = std::chrono::high_resolution_clock::now();
+	m_rootNode.duration_us = std::chrono::duration_cast<std::chrono::microseconds>(frameEnd - m_frameStart).count();
 	m_rootNode.accumulated_duration_us = m_rootNode.duration_us;
 
 	// Calculate self durations
@@ -63,10 +69,10 @@ void Struktur::Debug::Profiler::SetPaused(bool paused)
 			{
 				m_pausedRootNode.children.push_back(CopyTree(child, &m_pausedRootNode));
 			}
-			m_pausedRootNode.duration_us = m_rootNode.duration_us;
-			m_pausedRootNode.self_duration_us = m_rootNode.self_duration_us;
+			m_pausedRootNode.duration_us             = m_rootNode.duration_us;
+			m_pausedRootNode.self_duration_us        = m_rootNode.self_duration_us;
 			m_pausedRootNode.accumulated_duration_us = m_rootNode.accumulated_duration_us;
-			m_pausedRootNode.call_count = m_rootNode.call_count;
+			m_pausedRootNode.call_count              = m_rootNode.call_count;
 		}
 	}
 	m_isPaused = paused;
@@ -74,7 +80,10 @@ void Struktur::Debug::Profiler::SetPaused(bool paused)
 
 void Struktur::Debug::Profiler::BeginProfile(const std::string& name)
 {
-	if (m_isPaused) return;
+	if (m_isPaused)
+	{
+		return;
+	}
 
 	// Try to find existing child with this name
 	ProfileNode* childNode = nullptr;
@@ -96,16 +105,18 @@ void Struktur::Debug::Profiler::BeginProfile(const std::string& name)
 
 	childNode->call_count++;
 	childNode->start = std::chrono::high_resolution_clock::now();
-	m_currentNode = childNode;
+	m_currentNode    = childNode;
 }
 
 void Struktur::Debug::Profiler::EndProfile()
 {
-	if (m_isPaused) return;
+	if (m_isPaused)
+	{
+		return;
+	}
 
-	auto end = std::chrono::high_resolution_clock::now();
-	long long elapsed = std::chrono::duration_cast<std::chrono::microseconds>(
-		end - m_currentNode->start).count();
+	auto end          = std::chrono::high_resolution_clock::now();
+	long long elapsed = std::chrono::duration_cast<std::chrono::microseconds>(end - m_currentNode->start).count();
 
 	// Accumulate the duration for this call
 	m_currentNode->accumulated_duration_us += elapsed;
@@ -120,19 +131,20 @@ void Struktur::Debug::Profiler::EndProfile()
 	}
 }
 
-Struktur::Debug::ProfileNode* Struktur::Debug::Profiler::AllocateNode(const std::string& name, size_t depth, ProfileNode* parent)
+Struktur::Debug::ProfileNode* Struktur::Debug::Profiler::AllocateNode(const std::string& name, size_t depth,
+                                                                      ProfileNode* parent)
 {
 	ProfileNode* node;
 	if (m_nodePoolIndex < m_nodePool.size())
 	{
-		node = m_nodePool[m_nodePoolIndex++];
-		node->name = name;
-		node->depth = depth;
-		node->parent = parent;
-		node->duration_us = 0;
-		node->self_duration_us = 0;
+		node                          = m_nodePool[m_nodePoolIndex++];
+		node->name                    = name;
+		node->depth                   = depth;
+		node->parent                  = parent;
+		node->duration_us             = 0;
+		node->self_duration_us        = 0;
 		node->accumulated_duration_us = 0;
-		node->call_count = 0;
+		node->call_count              = 0;
 		node->children.clear();
 	}
 	else
@@ -151,11 +163,11 @@ void Struktur::Debug::Profiler::ResetNodePool()
 
 Struktur::Debug::ProfileNode* Struktur::Debug::Profiler::CopyTree(const ProfileNode* source, ProfileNode* parent)
 {
-	ProfileNode* copy = new ProfileNode(source->name, source->depth, parent);
-	copy->duration_us = source->duration_us;
-	copy->self_duration_us = source->self_duration_us;
+	ProfileNode* copy             = new ProfileNode(source->name, source->depth, parent);
+	copy->duration_us             = source->duration_us;
+	copy->self_duration_us        = source->self_duration_us;
 	copy->accumulated_duration_us = source->accumulated_duration_us;
-	copy->call_count = source->call_count;
+	copy->call_count              = source->call_count;
 
 	for (auto child : source->children)
 	{

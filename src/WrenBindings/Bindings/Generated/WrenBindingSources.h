@@ -308,6 +308,23 @@ inline const char* wrendialogueSource()
     "";
 }
 
+// Module: events
+inline const char* wreneventsSource()
+{
+    return "// AUTO-GENERATED FILE - DO NOT EDIT\n"
+    "// Generated from C++ bindings\n"
+    "// Module: events\n"
+    "\n"
+    "class Event {\n"
+    "    // Adds an event to the event queue.\n"
+    "    foreign static addEvent(arg0)\n"
+    "    // Adds an event to the event queue.\n"
+    "    foreign static addEvent(arg0,arg1)\n"
+    "}\n"
+    "\n"
+    "";
+}
+
 // Module: fileSystem
 inline const char* wrenfileSystemSource()
 {
@@ -448,6 +465,8 @@ inline const char* wrengameObjectSource()
     "    foreign static destroy(arg0)\n"
     "    // Create a new Game Object with the given name and parent. Returns entity ID.\n"
     "    foreign static create(arg0,arg1)\n"
+    "    // Create a new Game Object with the given name and parent. Returns entity ID.\n"
+    "    foreign static setParent(arg0,arg1)\n"
     "    // Check if an entity ID is valid.\n"
     "    foreign static isValid(arg0)\n"
     "    // Checks if entity has a specific component.\n"
@@ -470,6 +489,10 @@ inline const char* wrengameObjectSource()
     "    foreign static forEachWithComponents(arg0,arg1)\n"
     "    // Iterate entities with component, calling callback for each.\n"
     "    foreign static forEachWithAnyComponents(arg0,arg1)\n"
+    "    // Sets an entity to acitve.\n"
+    "    foreign static setActive(arg0)\n"
+    "    // Sets an entity to inacitve.\n"
+    "    foreign static setInactive(arg0)\n"
     "}\n"
     "\n"
     "";
@@ -1693,6 +1716,7 @@ inline const std::unordered_map<std::string, const char*(*)()>& GetWrenBindingSo
         { "callback", wrencallbackSource },
         { "debug", wrendebugSource },
         { "dialogue", wrendialogueSource },
+        { "events", wreneventsSource },
         { "fileSystem", wrenfileSystemSource },
         { "flags", wrenflagsSource },
         { "gameObject", wrengameObjectSource },

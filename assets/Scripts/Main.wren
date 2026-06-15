@@ -29,6 +29,7 @@ class Game {
             "Item",
             "NPC",
             "Player",
+            "Room",
         ]
 
         for (gameObjectsScript in gameObjectsScripts) {
@@ -63,6 +64,11 @@ class Game {
     // Called by C++ for rendering
     render() {
         _stateManager.render()
+    }
+
+    // called after the update loop for each event that frame
+    sendEvent(type, data) {
+        _stateManager.sendEvent(type, data)
     }
     
     quit() {

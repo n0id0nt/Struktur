@@ -1,0 +1,79 @@
+# Struktur — Custom clang-format config
+# Style: strict, tabs for indentation, Allman braces (always on new line)
+
+BasedOnStyle: Google
+
+# --- Indentation ---
+IndentWidth: 4
+TabWidth: 4
+UseTab: ForIndentation
+ContinuationIndentWidth: 4
+IndentCaseLabels: true
+IndentCaseBlocks: false
+IndentPPDirectives: BeforeHash
+NamespaceIndentation: None
+
+# --- Braces: Allman style (always on new line) ---
+BreakBeforeBraces: Allman
+InsertBraces: true
+
+# --- Line length ---
+ColumnLimit: 120
+
+# --- Pointers & References ---
+PointerAlignment: Left
+ReferenceAlignment: Left
+
+# --- Qualifiers (const always on left: const int* x) ---
+QualifierAlignment: Left
+
+# --- Spacing ---
+SpaceBeforeParens: ControlStatements
+SpaceInEmptyBlock: false
+SpaceBeforeCaseColon: false
+SpaceAfterCStyleCast: false
+SpaceBeforeSquareBrackets: false
+SpacesInParens: Never
+
+# --- Includes ---
+SortIncludes: CaseSensitive
+IncludeBlocks: Regroup
+
+# --- Alignment ---
+AlignAfterOpenBracket: Align
+AlignConsecutiveAssignments:
+  Enabled: true
+  AcrossEmptyLines: false
+  AcrossComments: false
+AlignConsecutiveDeclarations:
+  Enabled: false
+AlignConsecutiveMacros:
+  Enabled: true
+  AcrossEmptyLines: false
+  AcrossComments: false
+AlignEscapedNewlines: Left
+AlignOperands: Align
+AlignTrailingComments:
+  Kind: Always
+
+# --- Wrapping ---
+AllowShortFunctionsOnASingleLine: Empty
+AllowShortIfStatementsOnASingleLine: Never
+AllowShortLoopsOnASingleLine: false
+AllowShortBlocksOnASingleLine: Empty
+AllowShortCaseLabelsOnASingleLine: false
+AllowShortEnumsOnASingleLine: false
+BreakBeforeTernaryOperators: true
+BreakConstructorInitializers: BeforeColon
+BreakInheritanceList: BeforeColon
+PackConstructorInitializers: Never
+
+# --- Penalties (encourage wrapping over long lines) ---
+PenaltyExcessCharacter: 1000000
+PenaltyBreakBeforeFirstCallParameter: 100
+PenaltyReturnTypeOnItsOwnLine: 200
+
+# --- Trailing / cleanup ---
+RemoveSemicolon: true
+RemoveParentheses: ReturnStatement
+InsertNewlineAtEOF: true

@@ -1,6 +1,7 @@
 #include "ProfilerWindow.h"
 
 #include <imgui.h>
+
 #include <algorithm>
 
 #include "Engine/GameContext.h"
@@ -25,7 +26,7 @@ void Struktur::Debug::ProfilerWindow::Render(GameContext& context)
 
 	ImGui::BeginChild("TreeView", ImVec2(leftWidth, 0), true);
 
-	auto& profiler = context.GetProfiler();
+	auto& profiler              = context.GetProfiler();
 	const ProfileNode* rootNode = profiler.GetRootNode();
 
 	if (rootNode && !rootNode->children.empty())
@@ -60,7 +61,7 @@ void Struktur::Debug::ProfilerWindow::Render(GameContext& context)
 void Struktur::Debug::ProfilerWindow::DrawControls(GameContext& context)
 {
 	auto& profiler = context.GetProfiler();
-	bool isPaused = profiler.IsPaused();
+	bool isPaused  = profiler.IsPaused();
 
 	if (ImGui::Button(isPaused ? "Resume" : "Pause"))
 	{
@@ -72,13 +73,19 @@ void Struktur::Debug::ProfilerWindow::DrawControls(GameContext& context)
 	ImGui::SameLine();
 
 	if (ImGui::RadioButton("Duration", m_sortMode == SortMode::Duration))
+	{
 		m_sortMode = SortMode::Duration;
+	}
 	ImGui::SameLine();
 	if (ImGui::RadioButton("Self", m_sortMode == SortMode::SelfDuration))
+	{
 		m_sortMode = SortMode::SelfDuration;
+	}
 	ImGui::SameLine();
 	if (ImGui::RadioButton("Calls", m_sortMode == SortMode::CallCount))
+	{
 		m_sortMode = SortMode::CallCount;
+	}
 
 	ImGui::SameLine();
 	if (isPaused)
@@ -102,10 +109,13 @@ void Struktur::Debug::ProfilerWindow::DrawControls(GameContext& context)
 
 void Struktur::Debug::ProfilerWindow::DrawFrameTimeGraph(GameContext& context)
 {
-	auto& profiler = context.GetProfiler();
+	auto& profiler      = context.GetProfiler();
 	const auto& history = profiler.GetFrameTimeHistory();
 
-	if (history.empty()) return;
+	if (history.empty())
+	{
+		return;
+	}
 
 	// Calculate stats
 	float maxTime = 0.0f;
@@ -120,12 +130,12 @@ void Struktur::Debug::ProfilerWindow::DrawFrameTimeGraph(GameContext& context)
 	}
 	avgTime /= history.size();
 
-	float targetMs = profiler.GetTargetFrameTimeMs();
+	float targetMs    = profiler.GetTargetFrameTimeMs();
 	float graphHeight = 100.0f;
 
 	// Draw stats
-	ImGui::Text("Frame Time - Avg: %.2fms | Min: %.2fms | Max: %.2fms | FPS: %.1f",
-		avgTime, minTime, maxTime, 1000.0f / avgTime);
+	ImGui::Text("Frame Time - Avg: %.2fms | Min: %.2fms | Max: %.2fms | FPS: %.1f", avgTime, minTime, maxTime,
+	            1000.0f / avgTime);
 
 	// Draw graph
 	std::vector<float> values(history.begin(), history.end());
@@ -133,25 +143,24 @@ void Struktur::Debug::ProfilerWindow::DrawFrameTimeGraph(GameContext& context)
 	char overlay[64];
 	snprintf(overlay, sizeof(overlay), "%.2f ms", history.back());
 
-	ImGui::PlotLines("##frametime", values.data(), static_cast<int>(values.size()),
-		0, overlay, 0.0f, maxTime * 1.2f,
-		ImVec2(ImGui::GetContentRegionAvail().x, graphHeight));
+	ImGui::PlotLines("##frametime", values.data(), static_cast<int>(values.size()), 0, overlay, 0.0f, maxTime * 1.2f,
+	                 ImVec2(ImGui::GetContentRegionAvail().x, graphHeight));
 
 	// Draw target line overlay
 	ImDrawList* drawList = ImGui::GetWindowDrawList();
-	ImVec2 graphMin = ImGui::GetItemRectMin();
-	ImVec2 graphMax = ImGui::GetItemRectMax();
+	ImVec2 graphMin      = ImGui::GetItemRectMin();
+	ImVec2 graphMax      = ImGui::GetItemRectMax();
 
 	float targetY = graphMax.y - (targetMs / (maxTime * 1.2f)) * graphHeight;
-	drawList->AddLine(
-		ImVec2(graphMin.x, targetY),
-		ImVec2(graphMax.x, targetY),
-		IM_COL32(255, 255, 0, 128), 2.0f);
+	drawList->AddLine(ImVec2(graphMin.x, targetY), ImVec2(graphMax.x, targetY), IM_COL32(255, 255, 0, 128), 2.0f);
 }
 
 void Struktur::Debug::ProfilerWindow::DrawTimingBarChart(GameContext& context, const ProfileNode* rootNode)
 {
-	if (!rootNode || rootNode->duration_us == 0) return;
+	if (!rootNode || rootNode->duration_us == 0)
+	{
+		return;
+	}
 
 	ImGui::Text("Timing Bar Chart");
 	ImGui::Separator();
@@ -165,25 +174,32 @@ void Struktur::Debug::ProfilerWindow::DrawTimingBarChart(GameContext& context, c
 
 	// Sort by duration
 	std::sort(topLevelNodes.begin(), topLevelNodes.end(),
-		[](const ProfileNode* a, const ProfileNode* b) {
-			return a->duration_us > b->duration_us;
-		});
+	          [](const ProfileNode* a, const ProfileNode* b) { return a->duration_us > b->duration_us; });
 
-	float totalMs = rootNode->duration_us / 1000.0f;
+	float totalMs        = rootNode->duration_us / 1000.0f;
 	float availableWidth = ImGui::GetContentRegionAvail().x;
 
 	// Draw bars
 	for (auto node : topLevelNodes)
 	{
-		float nodeMs = node->duration_us / 1000.0f;
+		float nodeMs   = node->duration_us / 1000.0f;
 		float fraction = (float)node->duration_us / rootNode->duration_us;
 		float barWidth = availableWidth * fraction;
 
 		// Color based on timing
 		ImVec4 color;
-		if (nodeMs > 8.0f) color = ImVec4(1.0f, 0.3f, 0.3f, 1.0f);  // Red
-		else if (nodeMs > 4.0f) color = ImVec4(1.0f, 1.0f, 0.3f, 1.0f);  // Yellow
-		else color = ImVec4(0.3f, 1.0f, 0.3f, 1.0f);  // Green
+		if (nodeMs > 8.0f)
+		{
+			color = ImVec4(1.0f, 0.3f, 0.3f, 1.0f);  // Red
+		}
+		else if (nodeMs > 4.0f)
+		{
+			color = ImVec4(1.0f, 1.0f, 0.3f, 1.0f);  // Yellow
+		}
+		else
+		{
+			color = ImVec4(0.3f, 1.0f, 0.3f, 1.0f);  // Green
+		}
 
 		ImGui::PushStyleColor(ImGuiCol_PlotHistogram, color);
 
@@ -202,22 +218,31 @@ void Struktur::Debug::ProfilerWindow::DrawTimingBarChart(GameContext& context, c
 
 void Struktur::Debug::ProfilerWindow::DrawProfileTree(GameContext& context, const ProfileNode* node)
 {
-	float durationMs = node->duration_us / 1000.0f;
+	float durationMs     = node->duration_us / 1000.0f;
 	float selfDurationMs = node->self_duration_us / 1000.0f;
 
 	// Color code
-	ImVec4 color = ImVec4(1.0f, 1.0f, 1.0f, 1.0f);
+	ImVec4 color   = ImVec4(1.0f, 1.0f, 1.0f, 1.0f);
 	float targetMs = context.GetProfiler().GetTargetFrameTimeMs();
 
-	if (durationMs > targetMs) color = ImVec4(1.0f, 0.3f, 0.3f, 1.0f);
-	else if (durationMs > targetMs * 0.5f) color = ImVec4(1.0f, 1.0f, 0.3f, 1.0f);
-	else color = ImVec4(0.3f, 1.0f, 0.3f, 1.0f);
+	if (durationMs > targetMs)
+	{
+		color = ImVec4(1.0f, 0.3f, 0.3f, 1.0f);
+	}
+	else if (durationMs > targetMs * 0.5f)
+	{
+		color = ImVec4(1.0f, 1.0f, 0.3f, 1.0f);
+	}
+	else
+	{
+		color = ImVec4(0.3f, 1.0f, 0.3f, 1.0f);
+	}
 
 	ImGui::PushStyleColor(ImGuiCol_Text, color);
 
 	char label[256];
-	snprintf(label, sizeof(label), "%s (%.2fms / %.2fms self) [%zu calls]",
-		node->name.c_str(), durationMs, selfDurationMs, node->call_count);
+	snprintf(label, sizeof(label), "%s (%.2fms / %.2fms self) [%zu calls]", node->name.c_str(), durationMs,
+	         selfDurationMs, node->call_count);
 
 	ImGuiTreeNodeFlags flags = ImGuiTreeNodeFlags_OpenOnArrow | ImGuiTreeNodeFlags_OpenOnDoubleClick;
 	if (node == m_selectedNode)
@@ -245,30 +270,22 @@ void Struktur::Debug::ProfilerWindow::DrawProfileTree(GameContext& context, cons
 
 		switch (m_sortMode)
 		{
-		case SortMode::Duration:
-			std::sort(sortedChildren.begin(), sortedChildren.end(),
-				[](const ProfileNode* a, const ProfileNode* b) {
-					return a->duration_us > b->duration_us;
-				});
-			break;
-		case SortMode::SelfDuration:
-			std::sort(sortedChildren.begin(), sortedChildren.end(),
-				[](const ProfileNode* a, const ProfileNode* b) {
-					return a->self_duration_us > b->self_duration_us;
-				});
-			break;
-		case SortMode::CallCount:
-			std::sort(sortedChildren.begin(), sortedChildren.end(),
-				[](const ProfileNode* a, const ProfileNode* b) {
-					return a->call_count > b->call_count;
-				});
-			break;
-		case SortMode::Name:
-			std::sort(sortedChildren.begin(), sortedChildren.end(),
-				[](const ProfileNode* a, const ProfileNode* b) {
-					return a->name < b->name;
-				});
-			break;
+			case SortMode::Duration:
+				std::sort(sortedChildren.begin(), sortedChildren.end(),
+				          [](const ProfileNode* a, const ProfileNode* b) { return a->duration_us > b->duration_us; });
+				break;
+			case SortMode::SelfDuration:
+				std::sort(sortedChildren.begin(), sortedChildren.end(), [](const ProfileNode* a, const ProfileNode* b)
+				          { return a->self_duration_us > b->self_duration_us; });
+				break;
+			case SortMode::CallCount:
+				std::sort(sortedChildren.begin(), sortedChildren.end(),
+				          [](const ProfileNode* a, const ProfileNode* b) { return a->call_count > b->call_count; });
+				break;
+			case SortMode::Name:
+				std::sort(sortedChildren.begin(), sortedChildren.end(),
+				          [](const ProfileNode* a, const ProfileNode* b) { return a->name < b->name; });
+				break;
 		}
 
 		for (auto child : sortedChildren)
@@ -285,9 +302,9 @@ void Struktur::Debug::ProfilerWindow::DrawNodeDetails(GameContext& context, cons
 	ImGui::TextColored(ImVec4(1.0f, 1.0f, 0.0f, 1.0f), "%s", node->name.c_str());
 	ImGui::Separator();
 
-	float durationMs = node->duration_us / 1000.0f;
+	float durationMs     = node->duration_us / 1000.0f;
 	float selfDurationMs = node->self_duration_us / 1000.0f;
-	float avgDurationMs = durationMs / std::max(node->call_count, size_t(1));
+	float avgDurationMs  = durationMs / std::max(node->call_count, size_t(1));
 
 	ImGui::Text("Total Time: %.3f ms", durationMs);
 	ImGui::Text("Self Time: %.3f ms", selfDurationMs);
@@ -303,7 +320,10 @@ void Struktur::Debug::ProfilerWindow::DrawNodeDetails(GameContext& context, cons
 	}
 
 	const ProfileNode* root = node;
-	while (root->parent) root = root->parent;
+	while (root->parent)
+	{
+		root = root->parent;
+	}
 	if (root->duration_us > 0 && node->depth > 0)
 	{
 		float percentOfFrame = (float)node->duration_us / root->duration_us * 100.0f;
@@ -318,7 +338,7 @@ void Struktur::Debug::ProfilerWindow::DrawNodeDetails(GameContext& context, cons
 
 		for (auto child : node->children)
 		{
-			float childMs = child->duration_us / 1000.0f;
+			float childMs  = child->duration_us / 1000.0f;
 			float fraction = (float)child->duration_us / node->duration_us;
 
 			char label[128];

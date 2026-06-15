@@ -1,383 +1,384 @@
 #include "FileSystem.h"
+
 #include <physfs.h>
+
 #include "Debug/Assertions.h"
 
 #ifdef PLATFORM_WEB
-#include <emscripten.h>
+	#include <emscripten.h>
 #endif
 
 #ifdef EDITOR
-#include <tinyfiledialogs.h>
+	#include <tinyfiledialogs.h>
 #endif
 #include <filesystem>
 
 namespace Struktur
 {
-	//////////////////////////////////////////////////////////////////////////////////////////
-	// Internal helpers
-	//////////////////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////////////////
+// Internal helpers
+//////////////////////////////////////////////////////////////////////////////////////////
 
-	static FileSystemError TranslatePhysFSError()
+static FileSystemError TranslatePhysFSError()
+{
+	PHYSFS_ErrorCode code = PHYSFS_getLastErrorCode();
+	switch (code)
 	{
-		PHYSFS_ErrorCode code = PHYSFS_getLastErrorCode();
-		switch (code)
-		{
-		case PHYSFS_ERR_NOT_FOUND:          return FileSystemError::FileNotFound;
-		case PHYSFS_ERR_PERMISSION:         return FileSystemError::PermissionDenied;
-		case PHYSFS_ERR_BAD_FILENAME:       return FileSystemError::InvalidPath;
-		case PHYSFS_ERR_IO:                 return FileSystemError::ReadError;
-		case PHYSFS_ERR_NOT_INITIALIZED:    return FileSystemError::NotInitialised;
-		default:                            return FileSystemError::Unknown;
-		}
+		case PHYSFS_ERR_NOT_FOUND:
+			return FileSystemError::FileNotFound;
+		case PHYSFS_ERR_PERMISSION:
+			return FileSystemError::PermissionDenied;
+		case PHYSFS_ERR_BAD_FILENAME:
+			return FileSystemError::InvalidPath;
+		case PHYSFS_ERR_IO:
+			return FileSystemError::ReadError;
+		case PHYSFS_ERR_NOT_INITIALIZED:
+			return FileSystemError::NotInitialised;
+		default:
+			return FileSystemError::Unknown;
+	}
+}
+
+static std::string GetPhysFSErrorMessage()
+{
+	return std::string(PHYSFS_getErrorByCode(PHYSFS_getLastErrorCode()));
+}
+
+//////////////////////////////////////////////////////////////////////////////////////////
+// Lifecycle
+//////////////////////////////////////////////////////////////////////////////////////////
+
+void FileSystem::Init(const std::string& workingDirectory)
+{
+	PHYSFS_init(workingDirectory.c_str());
+}
+
+void FileSystem::Shutdown()
+{
+	PHYSFS_deinit();
+}
+
+//////////////////////////////////////////////////////////////////////////////////////////
+// Mounting
+//////////////////////////////////////////////////////////////////////////////////////////
+
+FileResult<void> FileSystem::Mount(const std::string& path, const std::string& mountPoint, bool append)
+{
+	if (PHYSFS_mount(path.c_str(), mountPoint.c_str(), append ? 1 : 0) == 0)
+	{
+		return FileResult<void>::Fail(TranslatePhysFSError(), GetPhysFSErrorMessage());
 	}
 
-	static std::string GetPhysFSErrorMessage()
+	return FileResult<void>::Ok();
+}
+
+//////////////////////////////////////////////////////////////////////////////////////////
+// Write directory
+//////////////////////////////////////////////////////////////////////////////////////////
+
+FileResult<void> FileSystem::SetWriteDir(const std::string& path)
+{
+	// PhysicsFS can only create directories inside an already-set write dir
+	// So we set it first to the parent, create the subdir, then set it to the full path
+	std::filesystem::path fsPath(path);
+	std::filesystem::path parent = fsPath.parent_path();
+	std::string dirName          = fsPath.filename().string();
+
+	// Set parent as write dir temporarily so we can create the child
+	if (PHYSFS_setWriteDir(parent.string().c_str()) != 0)
 	{
-		return std::string(PHYSFS_getErrorByCode(PHYSFS_getLastErrorCode()));
+		PHYSFS_mkdir(dirName.c_str());
 	}
 
-	//////////////////////////////////////////////////////////////////////////////////////////
-	// Lifecycle
-	//////////////////////////////////////////////////////////////////////////////////////////
-
-	void FileSystem::Init(const std::string& workingDirectory)
+	if (PHYSFS_setWriteDir(path.c_str()) == 0)
 	{
-		PHYSFS_init(workingDirectory.c_str());
+		return FileResult<void>::Fail(TranslatePhysFSError(), GetPhysFSErrorMessage());
 	}
 
-	void FileSystem::Shutdown()
+	return FileResult<void>::Ok();
+}
+
+std::string FileSystem::GetSaveDir(const std::string& organisation, const std::string& appName)
+{
+	const char* dir = PHYSFS_getPrefDir(organisation.c_str(), appName.c_str());
+	ASSERT(dir);
+	return std::string(dir);
+}
+
+FileResult<void> FileSystem::SeedFromDefaults(const std::string& sourcePath, const std::string& destPath)
+{
+	// Already exists in write dir - don't overwrite the user's version
+	if (Exists(destPath))
 	{
-		PHYSFS_deinit();
-	}
-
-	//////////////////////////////////////////////////////////////////////////////////////////
-	// Mounting
-	//////////////////////////////////////////////////////////////////////////////////////////
-
-	FileResult<void> FileSystem::Mount(const std::string& path, const std::string& mountPoint, bool append)
-	{
-		if (PHYSFS_mount(path.c_str(), mountPoint.c_str(), append ? 1 : 0) == 0)
-			return FileResult<void>::Fail(TranslatePhysFSError(), GetPhysFSErrorMessage());
-
 		return FileResult<void>::Ok();
 	}
 
-	//////////////////////////////////////////////////////////////////////////////////////////
-	// Write directory
-	//////////////////////////////////////////////////////////////////////////////////////////
-
-	FileResult<void> FileSystem::SetWriteDir(const std::string& path)
+	// Read from PAK
+	auto result = ReadBytes(sourcePath);
+	if (!result)
 	{
-		// PhysicsFS can only create directories inside an already-set write dir
-		// So we set it first to the parent, create the subdir, then set it to the full path
-		std::filesystem::path fsPath(path);
-		std::filesystem::path parent = fsPath.parent_path();
-		std::string dirName = fsPath.filename().string();
-
-		// Set parent as write dir temporarily so we can create the child
-		if (PHYSFS_setWriteDir(parent.string().c_str()) != 0)
-			PHYSFS_mkdir(dirName.c_str());
-
-		if (PHYSFS_setWriteDir(path.c_str()) == 0)
-			return FileResult<void>::Fail(TranslatePhysFSError(), GetPhysFSErrorMessage());
-
-		return FileResult<void>::Ok();
+		return FileResult<void>::Fail(result.error, "SeedFromDefaults: could not read source " + sourcePath + " - " +
+		                                                result.errorMessage);
 	}
 
-	std::string FileSystem::GetSaveDir(const std::string& organisation, const std::string& appName)
+	// Write to save dir (plain text - user needs to be able to edit this)
+	auto writeResult = WriteBytes(destPath, result.value);
+	if (!writeResult)
 	{
-		const char* dir = PHYSFS_getPrefDir(organisation.c_str(), appName.c_str());
-		ASSERT(dir);
-		return std::string(dir);
+		return FileResult<void>::Fail(writeResult.error, "SeedFromDefaults: could not write dest " + destPath + " - " +
+		                                                     writeResult.errorMessage);
 	}
 
-	FileResult<void> FileSystem::SeedFromDefaults(const std::string& sourcePath, const std::string& destPath)
+	DEBUG_INFO("FILESYSTEM: Seeded default file %s -> %s", sourcePath.c_str(), destPath.c_str());
+
+	return FileResult<void>::Ok();
+}
+
+//////////////////////////////////////////////////////////////////////////////////////////
+// Reading
+//////////////////////////////////////////////////////////////////////////////////////////
+
+FileResult<std::vector<uint8_t>> FileSystem::ReadBytes(const std::string& path)
+{
+	return ReadFile(path);
+}
+
+FileResult<std::string> FileSystem::ReadString(const std::string& path)
+{
+	auto result = ReadFile(path);
+	if (!result)
 	{
-		// Already exists in write dir - don't overwrite the user's version
-		if (Exists(destPath))
-			return FileResult<void>::Ok();
-
-		// Read from PAK
-		auto result = ReadBytes(sourcePath);
-		if (!result)
-			return FileResult<void>::Fail(result.error,
-				"SeedFromDefaults: could not read source " + sourcePath + " - " + result.errorMessage);
-
-		// Write to save dir (plain text - user needs to be able to edit this)
-		auto writeResult = WriteBytes(destPath, result.value);
-		if (!writeResult)
-			return FileResult<void>::Fail(writeResult.error,
-				"SeedFromDefaults: could not write dest " + destPath + " - " + writeResult.errorMessage);
-
-		DEBUG_INFO("FILESYSTEM: Seeded default file %s -> %s",
-			sourcePath.c_str(), destPath.c_str());
-
-		return FileResult<void>::Ok();
+		return FileResult<std::string>::Fail(result.error, result.errorMessage);
 	}
 
-	//////////////////////////////////////////////////////////////////////////////////////////
-	// Reading
-	//////////////////////////////////////////////////////////////////////////////////////////
+	return FileResult<std::string>::Ok(std::string(result.value.begin(), result.value.end()));
+}
 
-	FileResult<std::vector<uint8_t>> FileSystem::ReadBytes(const std::string& path)
+FileResult<std::vector<uint8_t>> FileSystem::ReadFile(const std::string& path)
+{
+	PHYSFS_File* file = PHYSFS_openRead(path.c_str());
+	if (!file)
 	{
-		return ReadFile(path);
+		return FileResult<std::vector<uint8_t>>::Fail(TranslatePhysFSError(), GetPhysFSErrorMessage());
 	}
 
-	FileResult<std::string> FileSystem::ReadString(const std::string& path)
+	PHYSFS_sint64 size = PHYSFS_fileLength(file);
+	if (size < 0)
 	{
-		auto result = ReadFile(path);
-		if (!result)
-			return FileResult<std::string>::Fail(result.error, result.errorMessage);
-
-		return FileResult<std::string>::Ok(
-			std::string(result.value.begin(), result.value.end())
-		);
-	}
-
-	FileResult<std::vector<uint8_t>> FileSystem::ReadFile(const std::string& path)
-	{
-		PHYSFS_File* file = PHYSFS_openRead(path.c_str());
-		if (!file)
-			return FileResult<std::vector<uint8_t>>::Fail(TranslatePhysFSError(), GetPhysFSErrorMessage());
-
-		PHYSFS_sint64 size = PHYSFS_fileLength(file);
-		if (size < 0)
-		{
-			PHYSFS_close(file);
-			return FileResult<std::vector<uint8_t>>::Fail(
-				FileSystemError::ReadError,
-				"Could not determine file size: " + path
-			);
-		}
-
-		std::vector<uint8_t> buffer(size);
-		PHYSFS_sint64 bytesRead = PHYSFS_readBytes(file, buffer.data(), size);
 		PHYSFS_close(file);
-
-		if (bytesRead < size)
-			return FileResult<std::vector<uint8_t>>::Fail(FileSystemError::ReadError, GetPhysFSErrorMessage());
-
-		return FileResult<std::vector<uint8_t>>::Ok(std::move(buffer));
+		return FileResult<std::vector<uint8_t>>::Fail(FileSystemError::ReadError,
+		                                              "Could not determine file size: " + path);
 	}
 
-	FileResult<std::string> FileSystem::ReadEncrypted(const std::string& path)
-	{
-		auto result = ReadBytes(path);
-		if (!result)
-			return FileResult<std::string>::Fail(result.error, result.errorMessage);
+	std::vector<uint8_t> buffer(size);
+	PHYSFS_sint64 bytesRead = PHYSFS_readBytes(file, buffer.data(), size);
+	PHYSFS_close(file);
 
-		std::vector<uint8_t> decrypted = Decrypt(result.value);
-		return FileResult<std::string>::Ok(std::string(decrypted.begin(), decrypted.end()));
+	if (bytesRead < size)
+	{
+		return FileResult<std::vector<uint8_t>>::Fail(FileSystemError::ReadError, GetPhysFSErrorMessage());
 	}
 
-	//////////////////////////////////////////////////////////////////////////////////////////
-	// Writing
-	//////////////////////////////////////////////////////////////////////////////////////////
+	return FileResult<std::vector<uint8_t>>::Ok(std::move(buffer));
+}
 
-	FileResult<void> FileSystem::WriteBytes(const std::string& path, const std::vector<uint8_t>& data)
+FileResult<std::string> FileSystem::ReadEncrypted(const std::string& path)
+{
+	auto result = ReadBytes(path);
+	if (!result)
 	{
-		PHYSFS_File* file = PHYSFS_openWrite(path.c_str());
-		if (!file)
-			return FileResult<void>::Fail(TranslatePhysFSError(), GetPhysFSErrorMessage());
-
-		PHYSFS_sint64 bytesWritten = PHYSFS_writeBytes(file, data.data(), data.size());
-		PHYSFS_close(file);
-
-		if (bytesWritten < (PHYSFS_sint64)data.size())
-			return FileResult<void>::Fail(FileSystemError::WriteError, GetPhysFSErrorMessage());
-
-		return FileResult<void>::Ok();
+		return FileResult<std::string>::Fail(result.error, result.errorMessage);
 	}
 
-	FileResult<void> FileSystem::WriteString(const std::string& path, const std::string& data)
+	std::vector<uint8_t> decrypted = Decrypt(result.value);
+	return FileResult<std::string>::Ok(std::string(decrypted.begin(), decrypted.end()));
+}
+
+//////////////////////////////////////////////////////////////////////////////////////////
+// Writing
+//////////////////////////////////////////////////////////////////////////////////////////
+
+FileResult<void> FileSystem::WriteBytes(const std::string& path, const std::vector<uint8_t>& data)
+{
+	PHYSFS_File* file = PHYSFS_openWrite(path.c_str());
+	if (!file)
 	{
-		return WriteBytes(path, std::vector<uint8_t>(data.begin(), data.end()));
+		return FileResult<void>::Fail(TranslatePhysFSError(), GetPhysFSErrorMessage());
 	}
 
-	FileResult<void> FileSystem::WriteEncrypted(const std::string& path, const std::string& data)
+	PHYSFS_sint64 bytesWritten = PHYSFS_writeBytes(file, data.data(), data.size());
+	PHYSFS_close(file);
+
+	if (bytesWritten < (PHYSFS_sint64)data.size())
 	{
-		std::vector<uint8_t> raw(data.begin(), data.end());
-		std::vector<uint8_t> encrypted = Encrypt(raw);
-		return WriteBytes(path, encrypted);
+		return FileResult<void>::Fail(FileSystemError::WriteError, GetPhysFSErrorMessage());
 	}
 
-	void FileSystem::SyncSaves()
-	{
+	return FileResult<void>::Ok();
+}
+
+FileResult<void> FileSystem::WriteString(const std::string& path, const std::string& data)
+{
+	return WriteBytes(path, std::vector<uint8_t>(data.begin(), data.end()));
+}
+
+FileResult<void> FileSystem::WriteEncrypted(const std::string& path, const std::string& data)
+{
+	std::vector<uint8_t> raw(data.begin(), data.end());
+	std::vector<uint8_t> encrypted = Encrypt(raw);
+	return WriteBytes(path, encrypted);
+}
+
+void FileSystem::SyncSaves()
+{
 #if defined(PLATFORM_WEB)
-		// Sync FROM memory TO IndexedDB (false = persist direction)
-		// Must be called after every save on WASM or data will be lost on tab close
-		EM_ASM(
-			FS.syncfs(false, function(err)
-		{
-			if (err)
-				console.error('[Struktur] Failed to sync saves to IndexedDB:', err);
-			else
-				console.log('[Struktur] Saves synced to IndexedDB');
-		});
-		);
+	// Sync FROM memory TO IndexedDB (false = persist direction)
+	// Must be called after every save on WASM or data will be lost on tab close
+	EM_ASM(FS.syncfs(
+	    false, function(err) {
+		    if (err)
+		    {
+			    console.error('[Struktur] Failed to sync saves to IndexedDB:', err);
+		    }
+		    else
+		    {
+			    console.log('[Struktur] Saves synced to IndexedDB');
+		    }
+	    }););
 #endif
-		// No-op on desktop - writes go directly to the OS filesystem
-	}
+	// No-op on desktop - writes go directly to the OS filesystem
+}
 
-	//////////////////////////////////////////////////////////////////////////////////////////
-	// Utility
-	//////////////////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////////////////
+// Utility
+//////////////////////////////////////////////////////////////////////////////////////////
 
-	bool FileSystem::Exists(const std::string& path)
+bool FileSystem::Exists(const std::string& path)
+{
+	return PHYSFS_exists(path.c_str()) != 0;
+}
+
+//////////////////////////////////////////////////////////////////////////////////////////
+// Encryption
+//////////////////////////////////////////////////////////////////////////////////////////
+
+// Keep this secret - changing it will invalidate all existing saves
+// TODO Move this to a git ignored header
+static constexpr uint8_t k_encryptionKey[] = {0x4B, 0x72, 0x69, 0x63, 0x6B, 0x65, 0x74, 0x47,
+                                              0x61, 0x6D, 0x65, 0x53, 0x61, 0x76, 0x65, 0x31};
+static constexpr size_t k_keyLength        = sizeof(k_encryptionKey);
+
+std::vector<uint8_t> FileSystem::Encrypt(const std::vector<uint8_t>& data)
+{
+	std::vector<uint8_t> result(data.size());
+	for (size_t i = 0; i < data.size(); i++)
 	{
-		return PHYSFS_exists(path.c_str()) != 0;
+		result[i] = data[i] ^ k_encryptionKey[i % k_keyLength];
 	}
+	return result;
+}
 
+std::vector<uint8_t> FileSystem::Decrypt(const std::vector<uint8_t>& data)
+{
+	// XOR is symmetric - decryption is identical to encryption
+	return Encrypt(data);
+}
 
-	//////////////////////////////////////////////////////////////////////////////////////////
-	// Encryption
-	//////////////////////////////////////////////////////////////////////////////////////////
-
-	// Keep this secret - changing it will invalidate all existing saves
-	// TODO Move this to a git ignored header
-	static constexpr uint8_t k_encryptionKey[] = {
-		0x4B, 0x72, 0x69, 0x63, 0x6B, 0x65, 0x74, 0x47,
-		0x61, 0x6D, 0x65, 0x53, 0x61, 0x76, 0x65, 0x31
-	};
-	static constexpr size_t k_keyLength = sizeof(k_encryptionKey);
-
-	std::vector<uint8_t> FileSystem::Encrypt(const std::vector<uint8_t>& data)
-	{
-		std::vector<uint8_t> result(data.size());
-		for (size_t i = 0; i < data.size(); i++)
-			result[i] = data[i] ^ k_encryptionKey[i % k_keyLength];
-		return result;
-	}
-
-	std::vector<uint8_t> FileSystem::Decrypt(const std::vector<uint8_t>& data)
-	{
-		// XOR is symmetric - decryption is identical to encryption
-		return Encrypt(data);
-	}
-
-	//////////////////////////////////////////////////////////////////////////////////////////
-	// Editor - tinyfiledialogs wrappers
-	//////////////////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////////////////
+// Editor - tinyfiledialogs wrappers
+//////////////////////////////////////////////////////////////////////////////////////////
 
 #ifdef EDITOR
 
-	std::string FileSystem::OpenFolderDialog(const std::string& title, const std::string& defaultPath)
+std::string FileSystem::OpenFolderDialog(const std::string& title, const std::string& defaultPath)
+{
+	const char* result = tinyfd_selectFolderDialog(title.c_str(), defaultPath.empty() ? nullptr : defaultPath.c_str());
+	return result ? std::string(result) : std::string();
+}
+
+std::string FileSystem::OpenFileDialog(const std::string& title, const std::string& defaultPath,
+                                       const std::vector<std::string>& filters, const std::string& filterDesc)
+{
+	auto filterList = BuildFilterList(filters);
+
+	const char* result = tinyfd_openFileDialog(title.c_str(), defaultPath.empty() ? nullptr : defaultPath.c_str(),
+	                                           (int)filterList.size(), filterList.empty() ? nullptr : filterList.data(),
+	                                           filterDesc.empty() ? nullptr : filterDesc.c_str(),
+	                                           0  // single selection
+	);
+	return result ? std::string(result) : std::string();
+}
+
+std::vector<std::string> FileSystem::OpenFileDialogMultiple(const std::string& title, const std::string& defaultPath,
+                                                            const std::vector<std::string>& filters,
+                                                            const std::string& filterDesc)
+{
+	auto filterList = BuildFilterList(filters);
+
+	const char* result = tinyfd_openFileDialog(title.c_str(), defaultPath.empty() ? nullptr : defaultPath.c_str(),
+	                                           (int)filterList.size(), filterList.empty() ? nullptr : filterList.data(),
+	                                           filterDesc.empty() ? nullptr : filterDesc.c_str(),
+	                                           1  // multi selection
+	);
+
+	// tinyfd returns multiple paths separated by '|'
+	std::vector<std::string> paths;
+	if (!result)
 	{
-		const char* result = tinyfd_selectFolderDialog(
-			title.c_str(),
-			defaultPath.empty() ? nullptr : defaultPath.c_str()
-		);
-		return result ? std::string(result) : std::string();
-	}
-
-	std::string FileSystem::OpenFileDialog(
-		const std::string& title,
-		const std::string& defaultPath,
-		const std::vector<std::string>& filters,
-		const std::string& filterDesc)
-	{
-		auto filterList = BuildFilterList(filters);
-
-		const char* result = tinyfd_openFileDialog(
-			title.c_str(),
-			defaultPath.empty() ? nullptr : defaultPath.c_str(),
-			(int)filterList.size(),
-			filterList.empty() ? nullptr : filterList.data(),
-			filterDesc.empty() ? nullptr : filterDesc.c_str(),
-			0   // single selection
-		);
-		return result ? std::string(result) : std::string();
-	}
-
-	std::vector<std::string> FileSystem::OpenFileDialogMultiple(
-		const std::string& title,
-		const std::string& defaultPath,
-		const std::vector<std::string>& filters,
-		const std::string& filterDesc)
-	{
-		auto filterList = BuildFilterList(filters);
-
-		const char* result = tinyfd_openFileDialog(
-			title.c_str(),
-			defaultPath.empty() ? nullptr : defaultPath.c_str(),
-			(int)filterList.size(),
-			filterList.empty() ? nullptr : filterList.data(),
-			filterDesc.empty() ? nullptr : filterDesc.c_str(),
-			1   // multi selection
-		);
-
-		// tinyfd returns multiple paths separated by '|'
-		std::vector<std::string> paths;
-		if (!result) return paths;
-
-		std::string resultStr(result);
-		size_t pos = 0;
-		while ((pos = resultStr.find('|')) != std::string::npos)
-		{
-			paths.push_back(resultStr.substr(0, pos));
-			resultStr.erase(0, pos + 1);
-		}
-		paths.push_back(resultStr);
 		return paths;
 	}
 
-	std::string FileSystem::SaveFileDialog(
-		const std::string& title,
-		const std::string& defaultPath,
-		const std::vector<std::string>& filters,
-		const std::string& filterDesc)
+	std::string resultStr(result);
+	size_t pos = 0;
+	while ((pos = resultStr.find('|')) != std::string::npos)
 	{
-		auto filterList = BuildFilterList(filters);
-
-		const char* result = tinyfd_saveFileDialog(
-			title.c_str(),
-			defaultPath.empty() ? nullptr : defaultPath.c_str(),
-			(int)filterList.size(),
-			filterList.empty() ? nullptr : filterList.data(),
-			filterDesc.empty() ? nullptr : filterDesc.c_str()
-		);
-		return result ? std::string(result) : std::string();
+		paths.push_back(resultStr.substr(0, pos));
+		resultStr.erase(0, pos + 1);
 	}
+	paths.push_back(resultStr);
+	return paths;
+}
 
-	bool FileSystem::MessageBox(const std::string& title, const std::string& message, bool okCancel)
+std::string FileSystem::SaveFileDialog(const std::string& title, const std::string& defaultPath,
+                                       const std::vector<std::string>& filters, const std::string& filterDesc)
+{
+	auto filterList = BuildFilterList(filters);
+
+	const char* result = tinyfd_saveFileDialog(title.c_str(), defaultPath.empty() ? nullptr : defaultPath.c_str(),
+	                                           (int)filterList.size(), filterList.empty() ? nullptr : filterList.data(),
+	                                           filterDesc.empty() ? nullptr : filterDesc.c_str());
+	return result ? std::string(result) : std::string();
+}
+
+bool FileSystem::MessageBox(const std::string& title, const std::string& message, bool okCancel)
+{
+	int result = tinyfd_messageBox(title.c_str(), message.c_str(), okCancel ? "okcancel" : "ok", "info",
+	                               1  // default button = ok
+	);
+	return result == 1;
+}
+
+std::string FileSystem::InputBox(const std::string& title, const std::string& message, const std::string& defaultValue)
+{
+	const char* result =
+	    tinyfd_inputBox(title.c_str(), message.c_str(), defaultValue.empty() ? nullptr : defaultValue.c_str());
+	return result ? std::string(result) : std::string();
+}
+
+std::vector<const char*> FileSystem::BuildFilterList(const std::vector<std::string>& filters)
+{
+	std::vector<const char*> filterList;
+	filterList.reserve(filters.size());
+	for (const auto& f : filters)
 	{
-		int result = tinyfd_messageBox(
-			title.c_str(),
-			message.c_str(),
-			okCancel ? "okcancel" : "ok",
-			"info",
-			1   // default button = ok
-		);
-		return result == 1;
+		filterList.push_back(f.c_str());
 	}
+	return filterList;
+}
 
-	std::string FileSystem::InputBox(
-		const std::string& title,
-		const std::string& message,
-		const std::string& defaultValue)
-	{
-		const char* result = tinyfd_inputBox(
-			title.c_str(),
-			message.c_str(),
-			defaultValue.empty() ? nullptr : defaultValue.c_str()
-		);
-		return result ? std::string(result) : std::string();
-	}
+#endif  // EDITOR
 
-	std::vector<const char*> FileSystem::BuildFilterList(const std::vector<std::string>& filters)
-	{
-		std::vector<const char*> filterList;
-		filterList.reserve(filters.size());
-		for (const auto& f : filters)
-			filterList.push_back(f.c_str());
-		return filterList;
-	}
-
-#endif // EDITOR
-
-} // namespace Struktur
-
+}  // namespace Struktur
 
 //////////////////////////////////////////////////////////////////////////////////////////
 // WASM extern C callback

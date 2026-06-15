@@ -1,12 +1,14 @@
 #include "ShaderResource.h"
 
-#include "Engine/Core/FileSystem.h"
 #include "Debug/Assertions.h"
+#include "Engine/Core/FileSystem.h"
 
 Struktur::Resource::ShaderResource::ShaderResource(const std::string& vsFilePath, const std::string& fsFilePath)
-	: GpuResource(vsFilePath + "," + fsFilePath), m_vsFilePath(vsFilePath), m_fsFilePath(fsFilePath)
+    : GpuResource(vsFilePath + "," + fsFilePath),
+      m_vsFilePath(vsFilePath),
+      m_fsFilePath(fsFilePath)
 {
-	shader.id = 0;
+	shader.id   = 0;
 	shader.locs = nullptr;
 }
 
@@ -18,7 +20,10 @@ Struktur::Resource::ShaderResource::~ShaderResource()
 
 bool Struktur::Resource::ShaderResource::LoadFromDisk()
 {
-	if (isLoaded) return true;
+	if (isLoaded)
+	{
+		return true;
+	}
 
 	isLoaded = true;
 	// TODO store the entire shader file into a string
@@ -34,18 +39,27 @@ void Struktur::Resource::ShaderResource::UnloadFromDisk()
 
 bool Struktur::Resource::ShaderResource::LoadToGpu()
 {
-	if (!LoadFromDisk()) return false;
-	if (IsGpuResourceValid()) return true;
+	if (!LoadFromDisk())
+	{
+		return false;
+	}
+	if (IsGpuResourceValid())
+	{
+		return true;
+	}
 
 	// Helper lambda to load shader source via PhysicsFS
 	auto loadShaderSource = [](const std::string& path) -> std::string
+	{
+		if (path.empty())
 		{
-			if (path.empty()) return {};
+			return {};
+		}
 
-			auto result = FileSystem::ReadString(path);
-			ASSERT_MSG(result.success, "Failed to load config: %s", result.errorMessage.c_str());
-			return result.value;
-		};
+		auto result = FileSystem::ReadString(path);
+		ASSERT_MSG(result.success, "Failed to load config: %s", result.errorMessage.c_str());
+		return result.value;
+	};
 
 	std::string vsSource = loadShaderSource(m_vsFilePath);
 	std::string fsSource = loadShaderSource(m_fsFilePath);
@@ -62,7 +76,7 @@ void Struktur::Resource::ShaderResource::UnloadFromGpu()
 	if (shader.id != 0)
 	{
 		::UnloadShader(shader);
-		shader.id = 0;
+		shader.id   = 0;
 		shader.locs = nullptr;
 	}
 }
@@ -74,7 +88,10 @@ bool Struktur::Resource::ShaderResource::IsGpuResourceValid() const
 
 size_t Struktur::Resource::ShaderResource::GetMemoryUsage() const
 {
-	if (!isLoaded) return 0;
+	if (!isLoaded)
+	{
+		return 0;
+	}
 
 	// Estimate: glyph data + texture data
 	size_t vsSize = m_vsFilePath.size();

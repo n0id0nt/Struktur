@@ -1,16 +1,19 @@
 #include "Noise.h"
 
-#include <stdlib.h>
 #include <raymath.h>
+#include <stdlib.h>
+
 #include <cmath>
 
 double Struktur::Util::Noise::Grad(int hash, double value)
 {
-	int h = hash & 15;
-	double grad = 1 + (h & 7); // Gradient value 1-8
+	int h       = hash & 15;
+	double grad = 1 + (h & 7);  // Gradient value 1-8
 	if (h & 8)
-		grad = -grad;   // Randomly invert half of them
-	return (grad * value);
+	{
+		grad = -grad;  // Randomly invert half of them
+	}
+	return grad * value;
 }
 
 double Struktur::Util::Noise::Smoothstep(double edge0, double edge1, double x)
@@ -25,7 +28,8 @@ double Struktur::Util::Noise::PerlinNoise1(unsigned int seed, double value)
 {
 	int p[512];
 	::srand(seed);
-	for (int i = 0; i < 256; ++i) {
+	for (int i = 0; i < 256; ++i)
+	{
 		p[i] = p[256 + i] = rand() % 256;
 	}
 

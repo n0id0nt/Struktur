@@ -1,33 +1,37 @@
 #pragma once
 
+#include "Engine/ECS/SystemManager.h"
+#include "entt/entt.hpp"
 #include "glm/glm.hpp"
 #include "glm/gtc/quaternion.hpp."
-#include "entt/entt.hpp"
-
-#include "Engine/ECS/SystemManager.h"
 
 namespace Struktur
 {
-    class GameContext;
+class GameContext;
 
-	namespace System
+namespace System
+{
+class TransformSystem : public ISystem
+{
+   public:
+	void Update(GameContext& context) override {}
+
+	glm::vec3 WorldToLocal(GameContext& context, const glm::vec3& worldPos, entt::entity parentEntity);
+	float GetWorldRotation(GameContext& context, entt::entity entity);
+	void SetLocalTransform(GameContext& context, entt::entity entity, const glm::mat4& matrix);
+	void SetLocalTransform(GameContext& context, entt::entity entity, const glm::vec3& position, const glm::vec3& scale,
+	                       const glm::quat& rotation);
+	void SetWorldTransform(GameContext& context, entt::entity entity, const glm::mat4& matrix);
+	void SetWorldTransform(GameContext& context, entt::entity entity, const glm::vec3& position, const glm::vec3& scale,
+	                       const glm::quat& rotation);
+
+	std::string Name() const override
 	{
-        class TransformSystem : public ISystem
-        {
-        public:
+		return "Transform System";
+	}
 
-            void Update(GameContext& context) override {}
-
-            glm::vec3 WorldToLocal(GameContext& context, const glm::vec3& worldPos, entt::entity parentEntity);
-            float GetWorldRotation(GameContext& context, entt::entity entity);
-            void SetLocalTransform(GameContext& context, entt::entity entity, const glm::mat4& matrix);
-            void SetLocalTransform(GameContext& context, entt::entity entity, const glm::vec3& position, const glm::vec3& scale, const glm::quat& rotation);
-            void SetWorldTransform(GameContext& context, entt::entity entity, const glm::mat4& matrix);
-            void SetWorldTransform(GameContext& context, entt::entity entity, const glm::vec3& position, const glm::vec3& scale, const glm::quat& rotation);
-
-            std::string Name() const override { return "Transform System"; }
-        private:
-            void UpdateWorldTransform(GameContext& context, entt::entity entity, const glm::mat4& parentMatrix);
-        };
-    }
-}
+   private:
+	void UpdateWorldTransform(GameContext& context, entt::entity entity, const glm::mat4& parentMatrix);
+};
+}  // namespace System
+}  // namespace Struktur

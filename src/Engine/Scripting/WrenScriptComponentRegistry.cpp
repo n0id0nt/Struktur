@@ -5,23 +5,25 @@
 #include "Debug/Assertions.h"
 #include "Engine/GameContext.h"
 #ifdef DEBUG
-#include <sys/stat.h>
-#include "Engine/ECS/Component/WrenScript.h"
+	#include <sys/stat.h>
+
+	#include "Engine/ECS/Component/WrenScript.h"
 #endif
 
 void Struktur::Wren::WrenScriptComponentRegistry::RegisterScriptComponent(std::string module, std::string className)
 {
-	auto [it, inserted] = m_scriptComponents.insert({ className, {module, className} });
+	auto [it, inserted] = m_scriptComponents.insert({className, {module, className}});
 	if (!inserted)
 	{
-		DEBUG_ERROR("[WrenScriptComponentRegistry] Script %s: has already been added to wren script registy", className.c_str());
+		DEBUG_ERROR("[WrenScriptComponentRegistry] Script %s: has already been added to wren script registy",
+		            className.c_str());
 	}
 }
 
 bool Struktur::Wren::WrenScriptComponentRegistry::LoadAllScriptComponents(GameContext& context)
 {
 	WrenScriptEngine& scriptEngine = context.GetWrenScriptEngine();
-	WrenVM* vm = scriptEngine.GetVM();
+	WrenVM* vm                     = scriptEngine.GetVM();
 
 	if (!vm)
 	{
@@ -33,8 +35,8 @@ bool Struktur::Wren::WrenScriptComponentRegistry::LoadAllScriptComponents(GameCo
 	for (auto& it : m_scriptComponents)
 	{
 		WrenScriptComponent& scriptComponent = it.second;
-		const std::string& className = it.first;
-		const std::string& module = scriptComponent.module;
+		const std::string& className         = it.first;
+		const std::string& module            = scriptComponent.module;
 
 		if (scriptComponent.isInitialised)
 		{
@@ -44,7 +46,7 @@ bool Struktur::Wren::WrenScriptComponentRegistry::LoadAllScriptComponents(GameCo
 
 		DEBUG_INFO("[WrenScriptComponentRegistry] Initializing %s.wren", module.c_str());
 
-		// Load 
+		// Load
 		if (!scriptEngine.InterpretFile(std::format("Scripts/{}.wren", module).c_str()))
 		{
 			DEBUG_ERROR("[WrenScriptComponentRegistry] Failed to load %s.wren", module.c_str());
@@ -64,11 +66,11 @@ bool Struktur::Wren::WrenScriptComponentRegistry::LoadAllScriptComponents(GameCo
 			continue;
 		}
 
-		scriptComponent.classHandle = wrenGetSlotHandle(vm, 0);
-		scriptComponent.startMethodHandle = wrenMakeCallHandle(vm, "start()");
-		scriptComponent.updateMethodHandle = wrenMakeCallHandle(vm, "update()");
+		scriptComponent.classHandle           = wrenGetSlotHandle(vm, 0);
+		scriptComponent.startMethodHandle     = wrenMakeCallHandle(vm, "start()");
+		scriptComponent.updateMethodHandle    = wrenMakeCallHandle(vm, "update()");
 		scriptComponent.onDestroyMethodHandle = wrenMakeCallHandle(vm, "onDestroy()");
-		scriptComponent.onEventMethodHandle = wrenMakeCallHandle(vm, "onEvent(_)");
+		scriptComponent.onEventMethodHandle   = wrenMakeCallHandle(vm, "onEvent(_,_)");
 #ifdef DEBUG
 		m_fileModificationTimes[module] = GetFileModificationTime(module);
 #endif
@@ -79,7 +81,8 @@ bool Struktur::Wren::WrenScriptComponentRegistry::LoadAllScriptComponents(GameCo
 	return successful;
 }
 
-Struktur::Wren::WrenScriptComponent* Struktur::Wren::WrenScriptComponentRegistry::TryGetScriptComponent(std::string className)
+Struktur::Wren::WrenScriptComponent* Struktur::Wren::WrenScriptComponentRegistry::TryGetScriptComponent(
+    std::string className)
 {
 	auto it = m_scriptComponents.find(className);
 	if (it != m_scriptComponents.end())
@@ -92,30 +95,48 @@ Struktur::Wren::WrenScriptComponent* Struktur::Wren::WrenScriptComponentRegistry
 void Struktur::Wren::WrenScriptComponentRegistry::Clear(GameContext& context)
 {
 	Wren::WrenScriptEngine& scriptEngine = context.GetWrenScriptEngine();
-	WrenVM* vm = scriptEngine.GetVM();
-	if (!vm) return;
+	WrenVM* vm                           = scriptEngine.GetVM();
+	if (!vm)
+	{
+		return;
+	}
 
 	for (auto& it : m_scriptComponents)
 	{
 		WrenScriptComponent& scriptComponent = it.second;
-		const std::string& className = it.first;
+		const std::string& className         = it.first;
 
 		if (!scriptComponent.isInitialised)
 		{
 			return;
 		}
 
-		if (scriptComponent.classHandle) wrenReleaseHandle(vm, scriptComponent.classHandle);
-		if (scriptComponent.startMethodHandle) wrenReleaseHandle(vm, scriptComponent.startMethodHandle);
-		if (scriptComponent.updateMethodHandle) wrenReleaseHandle(vm, scriptComponent.updateMethodHandle);
-		if (scriptComponent.onDestroyMethodHandle) wrenReleaseHandle(vm, scriptComponent.onDestroyMethodHandle);
-		if (scriptComponent.onEventMethodHandle) wrenReleaseHandle(vm, scriptComponent.onEventMethodHandle);
+		if (scriptComponent.classHandle)
+		{
+			wrenReleaseHandle(vm, scriptComponent.classHandle);
+		}
+		if (scriptComponent.startMethodHandle)
+		{
+			wrenReleaseHandle(vm, scriptComponent.startMethodHandle);
+		}
+		if (scriptComponent.updateMethodHandle)
+		{
+			wrenReleaseHandle(vm, scriptComponent.updateMethodHandle);
+		}
+		if (scriptComponent.onDestroyMethodHandle)
+		{
+			wrenReleaseHandle(vm, scriptComponent.onDestroyMethodHandle);
+		}
+		if (scriptComponent.onEventMethodHandle)
+		{
+			wrenReleaseHandle(vm, scriptComponent.onEventMethodHandle);
+		}
 
-		scriptComponent.classHandle = nullptr;
-		scriptComponent.startMethodHandle = nullptr;
-		scriptComponent.updateMethodHandle = nullptr;
+		scriptComponent.classHandle           = nullptr;
+		scriptComponent.startMethodHandle     = nullptr;
+		scriptComponent.updateMethodHandle    = nullptr;
 		scriptComponent.onDestroyMethodHandle = nullptr;
-		scriptComponent.onEventMethodHandle = nullptr;
+		scriptComponent.onEventMethodHandle   = nullptr;
 
 		scriptComponent.isInitialised = false;
 	}
@@ -127,13 +148,16 @@ void Struktur::Wren::WrenScriptComponentRegistry::Clear(GameContext& context)
 void Struktur::Wren::WrenScriptComponentRegistry::CheckForScriptChanges(GameContext& context)
 {
 	auto& registry = context.GetRegistry();
-	auto view = registry.view<Component::WrenScript>();
+	auto view      = registry.view<Component::WrenScript>();
 
 	for (auto entity : view)
 	{
 		auto& script = view.get<Component::WrenScript>(entity);
 
-		if (!script.isInitialised) continue;
+		if (!script.isInitialised)
+		{
+			continue;
+		}
 
 		time_t currentModTime = GetFileModificationTime(script.filePath);
 
@@ -147,25 +171,26 @@ void Struktur::Wren::WrenScriptComponentRegistry::CheckForScriptChanges(GameCont
 	}
 }
 
-void Struktur::Wren::WrenScriptComponentRegistry::ReloadScript(GameContext& context, entt::entity entity, Component::WrenScript& script)
+void Struktur::Wren::WrenScriptComponentRegistry::ReloadScript(GameContext& context, entt::entity entity,
+                                                               Component::WrenScript& script)
 {
 	//// Destroy old script
-	//DestroyScript(context, entity, script);
+	// DestroyScript(context, entity, script);
 	//
 	//// Reset error state
-	//script.hasError = false;
-	//script.errorMessage.clear();
+	// script.hasError = false;
+	// script.errorMessage.clear();
 	//
 	//// Reinitialise
-	//if (InitialiseScript(context, entity, script))
+	// if (InitialiseScript(context, entity, script))
 	//{
 	//	CallCreate(context, entity, script);
 	//	DEBUG_INFO("Successfully reloaded script: %s", script.scriptPath.c_str());
-	//}
-	//else
+	// }
+	// else
 	//{
 	//	DEBUG_ERROR("Failed to reload script: %s", script.scriptPath.c_str());
-	//}
+	// }
 }
 
 time_t Struktur::Wren::WrenScriptComponentRegistry::GetFileModificationTime(const std::string& path)

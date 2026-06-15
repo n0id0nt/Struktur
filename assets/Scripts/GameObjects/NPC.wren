@@ -3,6 +3,7 @@ import "math" for Vec2, Vec3, Vec4
 import "resourceManager" for Texture, Shader as ShaderResource
 import "physics" for BodyDefinition, PhysicsCircleShape, BodyType
 import "Colors" for WHITE
+import "debug" for Debug
 
 class NPCData {
     construct new(spriteIndex, xOffset, yOffset) {
@@ -44,9 +45,12 @@ class NPC {
     // Script configures/initializes component values
     start() {
         var npcData = _spriteDataMap[_name]
+        Debug.assertMsg(npcData != null, "No Data for NPC %(_name)")
+
         var texture = Texture.load("Tiles/NPCs.png")
         Sprite.create(_entity, texture, WHITE, npcData.getOffset(), 9, 1, false, npcData.getSpriteIndex(), WorldTransform.getPosition(_entity).y)
         texture.unload()
+        
         var bodyDef = BodyDefinition.new(BodyType.STATIC_BODY)
         var playerShape = PhysicsCircleShape.new(0.25)
         var physicsBody = PhysicsBody.create(_entity, bodyDef, playerShape)
@@ -76,7 +80,7 @@ class NPC {
     onDestroy() {
     }
     
-    onEvent(event) {
+    onEvent(type, data) {
         
     }
     

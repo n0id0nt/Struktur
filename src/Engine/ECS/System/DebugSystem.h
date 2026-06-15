@@ -1,31 +1,33 @@
 #pragma once
 
-#include "raylib.h"
-#include "box2d/box2d.h"
-
-#include "Engine/ECS/SystemManager.h"
 #include "Debug/Box2DDebugRenderer.h"
+#include "Engine/ECS/SystemManager.h"
+#include "box2d/box2d.h"
+#include "raylib.h"
 
 namespace Struktur
 {
-    class GameContext;
+class GameContext;
 
-	namespace System
+namespace System
+{
+class DebugSystem : public ISystem
+{
+   public:
+	DebugSystem();
+
+	void Update(GameContext &context) override;
+
+	void RenderEntityGizmos(GameContext &context);
+	void RenderGrid(GameContext &context);
+
+	std::string Name() const override
 	{
-        class DebugSystem : public ISystem
-        {
-        public:
-			DebugSystem();
+		return "Debug System";
+	}
 
-            void Update(GameContext& context) override;
-
-            void RenderEntityGizmos(GameContext &context);
-            void RenderGrid(GameContext &context);
-
-            std::string Name() const override { return "Debug System"; }
-
-        private:
-			Debug::Box2DDebugRenderer m_box2dRenderer;
-        };
-    }
-}
+   private:
+	Debug::Box2DDebugRenderer m_box2dRenderer;
+};
+}  // namespace System
+}  // namespace Struktur

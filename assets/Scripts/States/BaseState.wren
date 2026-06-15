@@ -29,7 +29,7 @@ class BaseState {
     }
     
     // Optional: Called when events are sent to the state
-    onEvent(event) {
+    onEvent(type, data) {
         // Override in derived states
     }
     
