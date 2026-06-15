@@ -67,7 +67,7 @@ bool WrenStateManager::Initialise(GameContext& context)
 	m_renderMethodHandle    = wrenMakeCallHandle(vm, "render()");
 	m_startMethodHandle     = wrenMakeCallHandle(vm, "start()");
 	m_quitMethodHandle      = wrenMakeCallHandle(vm, "quit()");
-	m_sendEventMethodHandle = wrenMakeCallHandle(vm, "sendEvent(_,_)");
+	m_sendEventMethodHandle = wrenMakeCallHandle(vm, "onEvent(_,_)");
 
 	if (!m_updateMethodHandle)
 	{

@@ -52,7 +52,7 @@ class GameWorldState is BaseState {
         GameObject.setParent(regularRoom, roomEntity)
         GameObject.setParent(transformedRoom, roomEntity)
 
-        Script.createArg(roomEntity, "Room", ["Name", "TransformItem", "regularRoom", "transformedRoom"], [roomName, transformItem, regularRoom, transformedRoom])
+        Script.createArg(roomEntity, "Room", ["Name", "TransformItem", "RegularRoom", "TransformedRoom"], [roomName, transformItem, regularRoom, transformedRoom])
         
         return roomEntity
     }
@@ -216,6 +216,13 @@ class GameWorldState is BaseState {
         _gameMusic = null
 
         System.print("Game world unloaded")
+    }
+    
+    onEvent(type, data) {
+        super.onEvent(type, data)
+        if (_stateManager && _stateManager.currentState) {
+            _stateManager.currentState.onEvent(type, data)
+        }
     }
     
     // Getters

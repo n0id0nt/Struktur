@@ -309,6 +309,11 @@ class Box2DDebugRenderer
 		{
 			return;
 		}
+		
+		if (!body->IsEnabled())
+		{
+			return;
+		}
 
 		::b2Transform transform = body->GetTransform();
 

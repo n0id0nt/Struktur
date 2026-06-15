@@ -10,7 +10,7 @@ void Struktur::System::AnimationSystem::Update(GameContext& context)
 	Core::TimeSystem& timeSystem = context.GetTimeSystem();
 	double gameTime              = timeSystem.scaledTime;
 
-	auto view = registry.view<Component::Sprite, Component::SpriteAnimation>();
+	auto view = registry.view<Component::Sprite, Component::SpriteAnimation>(entt::exclude<Inactive>);
 	for (auto [entity, sprite, spriteAnimation] : view.each())
 	{
 		// get the current animation frame

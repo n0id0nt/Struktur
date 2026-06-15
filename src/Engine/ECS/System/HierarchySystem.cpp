@@ -90,8 +90,12 @@ void Struktur::System::HierarchySystem::RecursiveSetEntityActiveState(GameContex
                                                                       Component::Active& activeComponent,
                                                                       Component::Active::ActiveState active)
 {
-	entt::registry& registry    = context.GetRegistry();
-	activeComponent.activeState = active;
+	entt::registry& registry = context.GetRegistry();
+
+	registry.patch<Component::Active>(entity, [active](Component::Active& patchActiveComponent)
+	                                  {
+		                                  patchActiveComponent.activeState = active;
+	                                  });
 
 	if (auto* children = registry.try_get<Component::Children>(entity))
 	{
@@ -101,7 +105,7 @@ void Struktur::System::HierarchySystem::RecursiveSetEntityActiveState(GameContex
 			auto& childActiveComponent = registry.get<Component::Active>(child);
 			if (childActiveComponent.activeState != Component::Active::ActiveState::InactiveSelf)
 			{
-				RecursiveSetEntityActiveState(context, entity, activeComponent, active);
+				RecursiveSetEntityActiveState(context, child, childActiveComponent, active);
 			}
 		}
 	}

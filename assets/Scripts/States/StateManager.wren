@@ -31,9 +31,9 @@ class StateManager {
     }
     
     // Send event to active state
-    sendEvent(type, data) {
+    onEvent(type, data) {
         if (_currentState) {
-            Profile.begin("Send Event: " + _currentState.name)
+            Profile.begin("On Event: " + _currentState.name)
             _currentState.onEvent(type, data)
             Profile.end()
         }

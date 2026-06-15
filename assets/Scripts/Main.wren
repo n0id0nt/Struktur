@@ -67,8 +67,8 @@ class Game {
     }
 
     // called after the update loop for each event that frame
-    sendEvent(type, data) {
-        _stateManager.sendEvent(type, data)
+    onEvent(type, data) {
+        _stateManager.onEvent(type, data)
     }
     
     quit() {

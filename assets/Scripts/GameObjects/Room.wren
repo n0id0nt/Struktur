@@ -1,3 +1,5 @@
+import "gameObject" for GameObject
+
 import "Inventory" for Inventory
 
 class Room {
@@ -18,11 +20,11 @@ class Room {
 
     transformRoom(isTransformed) {
         if (isTransformed) {
-            _regularRoom.setInactive()
-            _transformedRoom.setActive()
+            GameObject.setInactive(_regularRoom)
+            GameObject.setActive(_transformedRoom)
         } else {
-            _transformedRoom.setInactive()
-            _regularRoom.setActive()
+            GameObject.setInactive(_transformedRoom)
+            GameObject.setActive(_regularRoom)
         }
     }
 
@@ -40,12 +42,12 @@ class Room {
     
     onEvent(type, data) {       
         if (type == "pickupEntity") {
-            var item = params["name"]
+            var item = data["name"]
             if (item == _transformItem) {
                 transformRoom(true)
             }
         } else if (type == "putdownEntity") {
-            var item = params["name"]
+            var item = data["name"]
             if (item == _transformItem) {
                 transformRoom(false)
             }

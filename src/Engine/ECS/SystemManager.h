@@ -13,6 +13,8 @@ class GameContext;
 
 namespace System
 {
+struct Inactive {};
+
 class ISystem
 {
    public:

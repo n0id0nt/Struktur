@@ -20,7 +20,7 @@ void Struktur::System::SpriteRenderSystem::Update(GameContext& context)
 
 	::BeginMode2D(camera.GetRaylibCamera());
 	{
-		auto view = registry.view<Component::Sprite, Component::WorldTransform>();
+		auto view = registry.view<Component::Sprite, Component::WorldTransform>(entt::exclude<Inactive>);
 		m_spritesToRender.clear();
 		m_spritesToRender.reserve(view.size_hint());
 		for (auto [entity, sprite, worldTransform] : view.each())
@@ -92,7 +92,7 @@ void Struktur::System::SpriteRenderSystem::Update(GameContext& context)
 		}
 	}
 	{
-		auto view = registry.view<Component::TileMap, Component::WorldTransform>();
+		auto view = registry.view<Component::TileMap, Component::WorldTransform>(entt::exclude<Inactive>);
 		for (auto [entity, tileMap, worldTransform] : view.each())
 		{
 			Resource::TextureResource* texture = tileMap.texture.Get();

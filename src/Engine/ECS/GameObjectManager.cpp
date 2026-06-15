@@ -13,7 +13,7 @@
 #include "glm/glm.hpp"
 #include "glm/gtc/quaternion.hpp."
 
-void Struktur::System::GameObjectManager::CreateDeleteObjectCallBack(GameContext& context)
+void Struktur::System::GameObjectManager::CreateObjectCallBack(GameContext& context)
 {
 	m_context                = &context;
 	entt::registry& registry = context.GetRegistry();
@@ -22,6 +22,10 @@ void Struktur::System::GameObjectManager::CreateDeleteObjectCallBack(GameContext
 	registry.on_destroy<Component::Children>().connect<&GameObjectManager::OnChildrenDestroy>(*this);
 	registry.on_destroy<Component::PhysicsBody>().connect<&GameObjectManager::OnPhysicsBodyDestory>(*this);
 	registry.on_destroy<Component::WrenScript>().connect<&GameObjectManager::OnScriptDestory>(*this);
+
+    // In GameObjectManager::Init or wherever you set up your registry signals
+    registry.on_construct<Component::Active>().connect<&GameObjectManager::OnActiveStateChanged>(*this);
+    registry.on_update<Component::Active>().connect<&GameObjectManager::OnActiveStateChanged>(*this);
 }
 
 void Struktur::System::GameObjectManager::Shutdown(GameContext& context)
@@ -31,6 +35,8 @@ void Struktur::System::GameObjectManager::Shutdown(GameContext& context)
 	registry.on_destroy<Component::Children>().disconnect<&GameObjectManager::OnChildrenDestroy>(*this);
 	registry.on_destroy<Component::PhysicsBody>().disconnect<&GameObjectManager::OnPhysicsBodyDestory>(*this);
 	registry.on_destroy<Component::WrenScript>().disconnect<&GameObjectManager::OnScriptDestory>(*this);
+    registry.on_construct<Component::Active>().disconnect<&GameObjectManager::OnActiveStateChanged>(*this);
+    registry.on_update<Component::Active>().disconnect<&GameObjectManager::OnActiveStateChanged>(*this);
 }
 
 entt::entity Struktur::System::GameObjectManager::CreateGameObject(GameContext& context, const std::string& identifier,
@@ -65,6 +71,41 @@ void Struktur::System::GameObjectManager::DeleteGameObjectsInSafeToDeleteQueue(G
 		DestroyGameObject(context, entity);
 	}
 	m_queueOfObjectsToSafeDelete.clear();
+}
+
+void Struktur::System::GameObjectManager::UpdateGameObjectsActiveStateQueue(GameContext& context)
+{
+	entt::registry& registry = context.GetRegistry();
+	for (auto entity : m_queueOfObjectsToUpdateActiveState)
+	{
+		if (!registry.valid(entity))
+		{
+			continue;
+		}
+
+		const auto* active = registry.try_get<Component::Active>(entity);
+		if (!active)
+		{
+			continue;
+		}
+
+		const bool isActive = active->activeState == Component::Active::ActiveState::Active;
+
+		if (isActive)
+		{
+			registry.remove<Inactive>(entity);
+		}
+		else
+		{
+			registry.emplace_or_replace<Inactive>(entity);
+		}
+
+		if (auto* body = registry.try_get<Component::PhysicsBody>(entity))
+		{
+			body->body->SetEnabled(isActive);
+		}
+	}
+	m_queueOfObjectsToUpdateActiveState.clear();
 }
 
 void Struktur::System::GameObjectManager::DestroyGameObject(GameContext& context, entt::entity entity)
@@ -105,4 +146,9 @@ void Struktur::System::GameObjectManager::OnScriptDestory(entt::registry& reg, e
 	auto& scriptSystem = m_context->GetSystemManager().GetSystem<System::WrenScriptSystem>();
 	auto& wrenScript   = reg.get<Component::WrenScript>(entity);
 	scriptSystem.DestroyScript(*m_context, entity, wrenScript);
+}
+
+void Struktur::System::GameObjectManager::OnActiveStateChanged(entt::registry& reg, entt::entity entity)
+{
+	m_queueOfObjectsToUpdateActiveState.push_back(entity);
 }

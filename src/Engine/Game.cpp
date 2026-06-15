@@ -129,7 +129,7 @@ void Struktur::InitialiseGame(GameContext& context)
 	                                          std::string(::GetWorkingDirectory()) + "/../src/WrenBindings/Bindings");
 #endif
 
-	gameObjectManager.CreateDeleteObjectCallBack(context);
+	gameObjectManager.CreateObjectCallBack(context);
 
 	glm::vec2 gravity(0.0f, 0.0f);
 	physicsWorld.Initialise(gravity, gameData.velocityIterations, gameData.positionIterations, gameData.pixelsPerMeter);
@@ -183,7 +183,7 @@ void Struktur::ExitGame(GameContext& context)
 
 	DEBUG_INFO("[Clean Up] Game Object Manager");
 	System::GameObjectManager& gameObjectManager = context.GetGameObjectManager();
-	gameObjectManager.CreateDeleteObjectCallBack(context);
+	gameObjectManager.CreateObjectCallBack(context);
 
 	DEBUG_INFO("[Clean Up] Physics World");
 	Physics::PhysicsWorld& world = context.GetPhysicsWorld();
@@ -274,6 +274,8 @@ void Struktur::GameLoop(GameContext& context)
 #ifdef EDITOR
 		}
 #endif
+		// flush queues
+		gameObjectManager.UpdateGameObjectsActiveStateQueue(context);
 		gameObjectManager.DeleteGameObjectsInSafeToDeleteQueue(context);
 	}
 

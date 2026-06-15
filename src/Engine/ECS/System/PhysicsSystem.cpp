@@ -38,7 +38,7 @@ void Struktur::System::PhysicsSystem::SyncPhysicsToTransforms(GameContext& conte
 	Physics::PhysicsWorld& physicsWorld = context.GetPhysicsWorld();
 	TransformSystem& transformSystem    = context.GetSystemManager().GetSystem<TransformSystem>();
 
-	auto view = registry.view<Component::PhysicsBody, Component::LocalTransform>();
+	auto view = registry.view<Component::PhysicsBody, Component::LocalTransform>(entt::exclude<Inactive>);
 
 	for (auto [entity, physicsBody, transform] : view.each())
 	{
@@ -74,7 +74,7 @@ void Struktur::System::PhysicsSystem::SyncTransformsToPhysics(GameContext& conte
 	entt::registry& registry            = context.GetRegistry();
 	Physics::PhysicsWorld& physicsWorld = context.GetPhysicsWorld();
 
-	auto view = registry.view<Component::PhysicsBody, Component::LocalTransform, Component::WorldTransform>();
+	auto view = registry.view<Component::PhysicsBody, Component::LocalTransform, Component::WorldTransform>(entt::exclude<Inactive>);
 
 	for (auto [entity, physicsBody, transform, worldTransform] : view.each())
 	{

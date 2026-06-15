@@ -2,16 +2,16 @@
 
 namespace Struktur
 {
-	namespace Component
+namespace Component
+{
+struct Active
+{
+	enum class ActiveState
 	{
-        struct Active
-        {
-            enum class ActiveState
-            {
-                Active,
-                InactiveSelf,
-                InactiveParent,
-            } activeState = ActiveState::Active;
-        };
-    }
-}
+		Active,
+		InactiveSelf,
+		InactiveParent,
+	} activeState = ActiveState::Active;
+};
+}  // namespace Component
+}  // namespace Struktur

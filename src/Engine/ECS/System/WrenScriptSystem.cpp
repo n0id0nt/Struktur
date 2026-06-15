@@ -137,7 +137,7 @@ void WrenScriptSystem::Update(GameContext& context)
 	}
 
 	auto& registry = context.GetRegistry();
-	auto view      = registry.view<Component::WrenScript>();
+	auto view      = registry.view<Component::WrenScript>(entt::exclude<Inactive>);
 
 	for (auto entity : view)
 	{
@@ -249,7 +249,7 @@ void WrenScriptSystem::SendEvent(GameContext& context, entt::entity entity, Comp
 
 	if (result != WREN_RESULT_SUCCESS)
 	{
-		DEBUG_ERROR("Error calling OnEvent() on script: %s", script.className.c_str());
+		DEBUG_ERROR("Error calling onEvent() on script: %s", script.className.c_str());
 	}
 }
 

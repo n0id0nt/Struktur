@@ -13,7 +13,7 @@ void Struktur::System::CameraSystem::Update(GameContext& context)
 {
 	entt::registry& registry = context.GetRegistry();
 
-	auto view = registry.view<Struktur::Component::Camera, Struktur::Component::WorldTransform>();
+	auto view = registry.view<Struktur::Component::Camera, Struktur::Component::WorldTransform>(entt::exclude<Inactive>);
 
 	entt::entity focusedCameraEntity;
 	Struktur::Component::Camera* focusedCameraComponent            = nullptr;

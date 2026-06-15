@@ -284,6 +284,7 @@ set(SOURCES
     src/Engine/ECS/SystemManager.h              src/Engine/ECS/SystemManager.cpp
     src/Engine/ECS/GameObjectManager.h          src/Engine/ECS/GameObjectManager.cpp
     
+    src/Engine/ECS/Component/active.h
     src/Engine/ECS/Component/PhysicsBody.h
     src/Engine/ECS/Component/Player.h
     src/Engine/ECS/Component/Sprite.h

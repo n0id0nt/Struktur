@@ -43,7 +43,7 @@ void Struktur::System::DebugSystem::Update(GameContext& context)
 	// Render level boundaries (if enabled)
 	if (debugSettings.showLevelBounds)
 	{
-		auto view = registry.view<Component::Level, Component::WorldTransform>();
+		auto view = registry.view<Component::Level, Component::WorldTransform>(entt::exclude<Inactive>);
 		for (auto [entity, level, worldTransform] : view.each())
 		{
 			::Rectangle levelBounds{worldTransform.position.x, worldTransform.position.y, (float)level.width,
@@ -78,7 +78,7 @@ void Struktur::System::DebugSystem::RenderEntityGizmos(GameContext& context)
 	entt::registry& registry = context.GetRegistry();
 
 	// Render position indicators for all entities with transforms
-	auto view = registry.view<Component::WorldTransform>();
+	auto view = registry.view<Component::WorldTransform>(entt::exclude<Inactive>);
 	for (auto [entity, worldTransform] : view.each())
 	{
 		// Draw a small cross at entity position
