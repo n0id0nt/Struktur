@@ -97,7 +97,7 @@ struct Layer
 	int pxTotalOffsetY;
 	float opacity;
 	std::vector<Entity> entityInstaces;
-	std::optional<std::string> tilesetRelPath;
+	std::optional<std::string> tilesetPath;
 	std::vector<int> intGrid;
 	std::vector<GridTile> autoLayerTiles;
 };
@@ -117,14 +117,34 @@ struct Level
 struct World
 {
 	std::string Iid;
+	std::string filePath;
 	std::vector<Level> levels;
+};
+
+struct TileSet
+{
+	std::string identifier;
+	int cWid;
+	int cHei;
+	std::string path;
+	int pxWid;
+	int pxHei;
+	int tileGridSize;
+	int spacing;
+	int padding;
+};
+
+struct Definitions
+{
+	std::vector<TileSet> tilesets;
 };
 
 glm::vec2 LoadJsonVector2(const nlohmann::json& json);
 
 World LoadWorldMap(GameContext& context, const std::string& filePath);
+void LoadDefinitions(World& world, Definitions& definitions, const nlohmann::json& json);
 void LoadLevels(World& world, const nlohmann::json& json);
-void LoadLayers(Level& level, const nlohmann::json& json);
+void LoadLayers(World& world, Level& level, const nlohmann::json& json);
 void LoadEntities(Layer& entityLayer, const nlohmann::json& json);
 void LoadFieldInstances(Entity& entity, const nlohmann::json& json);
 void LoadIntGrid(Layer& gridLayer, const nlohmann::json& json);

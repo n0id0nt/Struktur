@@ -20,7 +20,8 @@ class CodeGenerator
 	                               const std::vector<const MethodBinding*>& methods,
 	                               const std::vector<const ClassBinding*>& classes,
 	                               const std::vector<const EnumBinding*>& enums,
-	                               const std::vector<const ConstantBinding*>& constants);
+	                               const std::vector<const ConstantBinding*>& constants,
+								   const std::vector<const WrenImplementationBinding*>& wrenImpls);
 
 	static std::string ConvertSignature(const std::string& signature);
 

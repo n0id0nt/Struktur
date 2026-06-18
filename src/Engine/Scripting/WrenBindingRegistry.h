@@ -61,6 +61,14 @@ struct ConstantBinding
 	std::string documentation;
 };
 
+struct WrenImplementationBinding
+{
+    std::string moduleName;
+    std::string className;
+    std::string wrenSource;
+    bool isStatic;
+};
+
 // ============================================================================
 // REGISTRY - owns all binding data, passed explicitly
 // ============================================================================
@@ -71,8 +79,7 @@ struct BindingRegistry
 	std::vector<ClassBinding> classes;
 	std::vector<EnumBinding> enums;
 	std::vector<ConstantBinding> constants;
-
-	// --- Registration helpers ---
+	std::vector<WrenImplementationBinding> wrenImpls;
 
 	void AddMethod(const char* module, const char* className, const char* signature, bool isStatic,
 	               WrenForeignMethodFn func, const char* doc)
@@ -132,7 +139,10 @@ struct BindingRegistry
 		}
 	}
 
-	// --- Lookup ---
+	void AddWrenImpl(const char* module, const char* className, bool isStatic, const char* wrenSource)
+    {
+        wrenImpls.push_back({module, className, wrenSource, isStatic});
+    }
 
 	WrenForeignMethodFn FindMethod(const char* module, const char* className, bool isStatic,
 	                               const char* signature) const
@@ -232,3 +242,6 @@ void RegisterAllBindings(BindingRegistry& registry);
 #define WREN_VARIABLE(registry, module, cls, name, getterFunc, setterFunc, doc) \
 	(registry).AddMethod(module, cls, #name, true, getterFunc, doc);            \
 	(registry).AddMethod(module, cls, #name "=(_)", true, setterFunc, doc " (setter)")
+	
+#define WREN_IMPL(registry, module, cls, isStatic, wrenSource) \
+    (registry).AddWrenImpl(module, cls, isStatic, wrenSource)

@@ -65,9 +65,11 @@ entt::entity Struktur::GameResource::Level::LoadLevelEntities(GameContext& conte
 		{
 			case FileLoading::LevelParser::LayerType::INT_GRID:
 			case FileLoading::LevelParser::LayerType::AUTO_LAYER:
+			case FileLoading::LevelParser::LayerType::TILES:
 			{
 				Resource::ResourcePtr<Resource::TextureResource> texture =
-				    resoruceManager.GetTexture("Tiles/MemoryPalaceCollisionTiles.png");
+				    layer.tilesetPath.has_value() ? resoruceManager.GetTexture(layer.tilesetPath.value())
+				                                  : resoruceManager.GetTexture("Tiles/MemoryPalaceCollisionTiles.png");
 				transformSystem.SetLocalTransform(context, layerEntity,
 				                                  glm::vec3(layer.pxTotalOffsetX, layer.pxTotalOffsetY, 0.0f),
 				                                  glm::vec3(1.0f), glm::quat(1.0f, 0.0f, 0.0f, 0.0f));

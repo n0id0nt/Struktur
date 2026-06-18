@@ -11,6 +11,7 @@ void CodeGenerator::GenerateBindingFiles(const BindingRegistry& registry, const 
 	std::unordered_map<std::string, std::vector<const ClassBinding*>> classesByModule;
 	std::unordered_map<std::string, std::vector<const EnumBinding*>> enumsByModule;
 	std::unordered_map<std::string, std::vector<const ConstantBinding*>> constantsByModule;
+	std::unordered_map<std::string, std::vector<const WrenImplementationBinding*>> wrenImplsByModule;
 
 	for (const auto& method : registry.methods)
 	{
@@ -32,10 +33,15 @@ void CodeGenerator::GenerateBindingFiles(const BindingRegistry& registry, const 
 		constantsByModule[constant.moduleName].push_back(&constant);
 	}
 
+	for (const auto& wrenImpl : registry.wrenImpls)
+	{
+		wrenImplsByModule[wrenImpl.moduleName].push_back(&wrenImpl);
+	}
+
 	for (const auto& [moduleName, methods] : methodsByModule)
 	{
 		GenerateModuleFile(outputDir, moduleName, methods, classesByModule[moduleName], enumsByModule[moduleName],
-		                   constantsByModule[moduleName]);
+		                   constantsByModule[moduleName], wrenImplsByModule[moduleName]);
 	}
 
 	DEBUG_INFO("Generated %zu Wren binding file(s) in: %s", methodsByModule.size(), outputDir.c_str());
@@ -49,7 +55,8 @@ void CodeGenerator::GenerateModuleFile(const std::string& outputDir, const std::
                                        const std::vector<const MethodBinding*>& methods,
                                        const std::vector<const ClassBinding*>& classes,
                                        const std::vector<const EnumBinding*>& enums,
-                                       const std::vector<const ConstantBinding*>& constants)
+                                       const std::vector<const ConstantBinding*>& constants,
+								   	   const std::vector<const WrenImplementationBinding*>& wrenImpls)
 {
 	std::string filePath = outputDir + "/" + moduleName + ".wren";
 	std::ofstream file(filePath);
@@ -235,6 +242,23 @@ void CodeGenerator::GenerateModuleFile(const std::string& outputDir, const std::
 			file << readableSignature << "\n";
 		}
 
+		// After writing foreign methods for this class, emit any Wren implementations
+		for (const auto* impl : wrenImpls)
+		{
+			if (impl->moduleName == moduleName && impl->className == className)
+			{
+				// Indent each line of the wren source to fit inside the class body
+				std::istringstream stream(impl->wrenSource);
+				std::string line;
+				while (std::getline(stream, line))
+				{
+					// Skip blank leading/trailing lines from raw string literals
+					if (line.find_first_not_of(" \t\r\n") == std::string::npos) continue;
+					file << "    " << line << "\n";
+				}
+			}
+		}
+		
 		file << "}\n\n";
 	}
 

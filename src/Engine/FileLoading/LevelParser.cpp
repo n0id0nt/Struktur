@@ -2,6 +2,7 @@
 
 #include <format>
 #include <fstream>
+#include <filesystem>
 
 #include "Debug/Assertions.h"
 #include "Engine/Core/FileSystem.h"
@@ -26,10 +27,43 @@ Struktur::FileLoading::LevelParser::World Struktur::FileLoading::LevelParser::Lo
 
 	World world;
 	world.Iid = data["iid"];
-
+	world.filePath = filePath;
+	
+	Definitions definitions;
+	LoadDefinitions(world, definitions, data["defs"]);
 	LoadLevels(world, data["levels"]);
 
 	return world;
+}
+
+void Struktur::FileLoading::LevelParser::LoadDefinitions(World& world, Definitions& definitions,
+                                                         const nlohmann::json& json)
+{
+	// layers
+	// entities
+	// enums
+	// tilesets
+	for (auto& tilesetJson : json["tilesets"])
+	{
+		std::string tilesetName = tilesetJson["identifier"];
+		DEBUG_INFO(std::format("Loading tileset {}", tilesetName).c_str());
+
+		std::filesystem::path relativePath = tilesetJson["relPath"];
+		std::filesystem::path baseFile     = world.filePath;
+		std::string path = (baseFile.parent_path() / relativePath).lexically_normal().generic_string();
+
+		TileSet tileset;
+		tileset.identifier   = tilesetName;
+		tileset.cWid         = tilesetJson["__cWid"];
+		tileset.cHei         = tilesetJson["__cHei"];
+		tileset.path         = path;
+		tileset.pxWid        = tilesetJson["pxWid"];
+		tileset.pxHei        = tilesetJson["pxHei"];
+		tileset.tileGridSize = tilesetJson["tileGridSize"];
+		tileset.spacing      = tilesetJson["spacing"];
+		tileset.padding      = tilesetJson["padding"];
+		definitions.tilesets.push_back(tileset);
+	}
 }
 
 void Struktur::FileLoading::LevelParser::LoadLevels(World& world, const nlohmann::json& json)
@@ -46,12 +80,12 @@ void Struktur::FileLoading::LevelParser::LoadLevels(World& world, const nlohmann
 		level.worldY     = levelJson["worldY"];
 		level.pxWid      = levelJson["pxWid"];
 		level.pxHei      = levelJson["pxHei"];
-		LoadLayers(level, levelJson["layerInstances"]);
+		LoadLayers(world, level, levelJson["layerInstances"]);
 		world.levels.push_back(level);
 	}
 }
 
-void Struktur::FileLoading::LevelParser::LoadLayers(Level& level, const nlohmann::json& json)
+void Struktur::FileLoading::LevelParser::LoadLayers(World& world, Level& level, const nlohmann::json& json)
 {
 	for (auto& layerJson : json)
 	{
@@ -65,17 +99,19 @@ void Struktur::FileLoading::LevelParser::LoadLayers(Level& level, const nlohmann
 			layer.type = LayerType::ENTITIES;
 			LoadEntities(layer, layerJson["entityInstances"]);
 		}
-		else if (layerType == "IntGrid" || layerType == "AutoLayer")
+		else if (layerType == "IntGrid" || layerType == "AutoLayer" || layerType == "Tiles")
 		{
 			if (layerType == "IntGrid")
 			{
 				layer.type = LayerType::INT_GRID;
 				LoadIntGrid(layer, layerJson["intGridCsv"]);
 			}
-			else if (layerType == "AutoLayer")
+			else if (layerType == "AutoLayer" || layerType == "Tiles")
 			{
-				layer.type           = LayerType::AUTO_LAYER;
-				layer.tilesetRelPath = layerJson["__tilesetRelPath"];
+				layer.type = layerType == "AutoLayer" ? LayerType::AUTO_LAYER : LayerType::TILES;
+				std::filesystem::path relativePath = layerJson["__tilesetRelPath"];
+				std::filesystem::path baseFile     = world.filePath;
+				layer.tilesetPath = (baseFile.parent_path() / relativePath).lexically_normal().generic_string();
 				LoadAutoLayerTiles(layer, layerJson["autoLayerTiles"]);
 			}
 		}

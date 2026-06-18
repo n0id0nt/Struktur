@@ -25,7 +25,7 @@ bool Struktur::Resource::TextureResource::LoadFromDisk()
 	}
 
 	auto result = FileSystem::ReadBytes(filePath);
-	ASSERT_MSG(result.success, "Failed to load config: %s", result.errorMessage.c_str());
+	ASSERT_MSG(result.success, "Failed to load config: %s, %s", filePath, result.errorMessage.c_str());
 	const char* ext = ::GetFileExtension(filePath.c_str());
 	m_sourceImage   = ::LoadImageFromMemory(ext, result.value.data(), result.value.size());
 

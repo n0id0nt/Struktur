@@ -19,8 +19,6 @@ import "States/GameOverState" for GameOverState
 
 import "Colors" for WHITE
 
-var TILE_TEXTURE = "Tiles/cavesofgallet_tiles.png"
-var PLAYER_TEXTURE = "Tiles/PlayerGrowthSprites.png"
 var WORLD_FILE_PATH = "Levels/MemoryPalace.ldtk"
 
 class GameWorldState is BaseState {
