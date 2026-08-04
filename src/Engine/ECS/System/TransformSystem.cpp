@@ -27,6 +27,7 @@ void Struktur::System::TransformSystem::UpdateWorldTransform(GameContext& contex
 	worldTransform.position = translationVec;
 	worldTransform.rotation = rotationQuat;
 	worldTransform.scale    = scaleVec;
+	worldTransform.dirty    = true;
 
 	// Recursively update children
 	if (auto* children = registry.try_get<Component::Children>(entity))
@@ -160,4 +161,47 @@ void Struktur::System::TransformSystem::SetWorldTransform(GameContext& context, 
 	    glm::translate(glm::mat4(1.0f), position) * glm::mat4_cast(rotation) * glm::scale(glm::mat4(1.0f), scale);
 
 	SetWorldTransform(context, entity, matrix);
+}
+
+void Struktur::System::TransformSystem::SetWorldTransformDirect(GameContext& context, entt::entity entity,
+                                                                const glm::vec3& position, const glm::vec3& scale,
+                                                                const glm::quat& rotation)
+{
+	entt::registry& registry = context.GetRegistry();
+
+	// An entity with a moving parent still needs the parent-inverse to produce a correct
+	// LocalTransform, so fall back to the full path there.
+	if (registry.try_get<Component::Parent>(entity))
+	{
+		SetWorldTransform(context, entity, position, scale, rotation);
+		return;
+	}
+
+	glm::mat4 matrix =
+	    glm::translate(glm::mat4(1.0f), position) * glm::mat4_cast(rotation) * glm::scale(glm::mat4(1.0f), scale);
+
+	auto& localTransform    = registry.get<Component::LocalTransform>(entity);
+	localTransform.matrix   = matrix;
+	localTransform.position = position;
+	localTransform.scale    = scale;
+	localTransform.rotation = rotation;
+
+	auto& worldTransform    = registry.get_or_emplace<Component::WorldTransform>(entity);
+	worldTransform.matrix   = matrix;
+	worldTransform.position = position;
+	worldTransform.scale    = scale;
+	worldTransform.rotation = rotation;
+	// This write came from physics, so the transform is already in sync with it - nothing to push back.
+	worldTransform.dirty    = false;
+
+	if (auto* children = registry.try_get<Component::Children>(entity))
+	{
+		for (auto child : children->entities)
+		{
+			if (registry.valid(child))
+			{
+				UpdateWorldTransform(context, child, worldTransform.matrix);
+			}
+		}
+	}
 }

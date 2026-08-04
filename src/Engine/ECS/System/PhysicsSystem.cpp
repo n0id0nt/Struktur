@@ -7,10 +7,8 @@
 #include "Engine/Game/TileMap.h"
 #include "Engine/GameContext.h"
 #include "Engine/Physics/PhysicsWorld.h"
+#include "Engine/Util/MathUtil.h"
 #include "glm/gtc/quaternion.hpp."
-#ifdef DEBUG
-	#include <format>
-#endif
 
 void Struktur::System::PhysicsSystem::Update(GameContext& context)
 {
@@ -40,11 +38,11 @@ void Struktur::System::PhysicsSystem::SyncPhysicsToTransforms(GameContext& conte
 
 	auto view = registry.view<Component::PhysicsBody, Component::LocalTransform>(entt::exclude<Inactive>);
 
+	const float ppm = physicsWorld.GetPixelsPerMeter();
+
+	PROFILE_SCOPE("Sync All From Physics");
 	for (auto [entity, physicsBody, transform] : view.each())
 	{
-#ifdef DEBUG
-		PROFILE_SCOPE(std::format("Sync Entity {} From Physics", (int)entity));
-#endif
 		if (physicsBody.body && physicsBody.syncFromPhysics)
 		{
 			// Get world position from physics
@@ -58,12 +56,11 @@ void Struktur::System::PhysicsSystem::SyncPhysicsToTransforms(GameContext& conte
 				scale = worldTransform->scale;
 			}
 
-			glm::vec3 worldPos(position.x * physicsWorld.GetPixelsPerMeter(),
-			                   position.y * physicsWorld.GetPixelsPerMeter(), 0.0f);
+			glm::vec3 worldPos(position.x * ppm, position.y * ppm, 0.0f);
 			glm::quat worldAngle = glm::angleAxis(angle, glm::vec3(0, 0, 1));
 			PROFILE_END_SCOPE(physicsPosition);
 			PROFILE_BEGIN_SCOPE(setTransform, "Set Transform");
-			transformSystem.SetWorldTransform(context, entity, worldPos, scale, worldAngle);
+			transformSystem.SetWorldTransformDirect(context, entity, worldPos, scale, worldAngle);
 			PROFILE_END_SCOPE(setTransform);
 		}
 	}
@@ -76,22 +73,24 @@ void Struktur::System::PhysicsSystem::SyncTransformsToPhysics(GameContext& conte
 
 	auto view = registry.view<Component::PhysicsBody, Component::LocalTransform, Component::WorldTransform>(entt::exclude<Inactive>);
 
+	const float ppm            = physicsWorld.GetPixelsPerMeter();
+	const float metersPerPixel = 1.0f / ppm;
+
+	PROFILE_SCOPE("Sync All To Physics");
 	for (auto [entity, physicsBody, transform, worldTransform] : view.each())
 	{
-#ifdef DEBUG
-		PROFILE_SCOPE(std::format("Sync Entity {} To Physics", (int)entity));
-#endif
-		if (physicsBody.body && physicsBody.syncToPhysics)
+		if (physicsBody.body && physicsBody.syncToPhysics && worldTransform.dirty)
 		{
 			PROFILE_BEGIN_SCOPE(convertAngle, "Convert Angle");
-			glm::vec3 euler = glm::eulerAngles(worldTransform.rotation);
+			float angleZ = Struktur::Util::Math::AngleZFromQuat(worldTransform.rotation);
 			PROFILE_END_SCOPE(convertAngle);
 			// create helper functions to convert to and from b2vec to glm::vec2 using hte physics scale
 			PROFILE_BEGIN_SCOPE(uploadToPhysics, "Upload To Physics");
-			physicsBody.body->SetTransform(b2Vec2(worldTransform.position.x / physicsWorld.GetPixelsPerMeter(),
-			                                      worldTransform.position.y / physicsWorld.GetPixelsPerMeter()),
-			                               euler.z);
+			physicsBody.body->SetTransform(b2Vec2(worldTransform.position.x * metersPerPixel,
+			                                      worldTransform.position.y * metersPerPixel),
+			                               angleZ);
 			PROFILE_END_SCOPE(uploadToPhysics);
+			worldTransform.dirty = false;
 		}
 	}
 }

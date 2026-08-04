@@ -338,6 +338,7 @@ set(SOURCES
     src/Engine/Scripting/WrenValueWrapper.h
 
     src/Engine/Util/Noise.h                     src/Engine/Util/Noise.cpp
+    src/Engine/Util/MathUtil.h
 
     src/Engine/Event/Event.h
     src/Engine/Event/EventManager.h             src/Engine/Event/EventManager.cpp

@@ -24,6 +24,12 @@ class TransformSystem : public ISystem
 	void SetWorldTransform(GameContext& context, entt::entity entity, const glm::mat4& matrix);
 	void SetWorldTransform(GameContext& context, entt::entity entity, const glm::vec3& position, const glm::vec3& scale,
 	                       const glm::quat& rotation);
+	// Writes WorldTransform (and, for unparented entities, LocalTransform) directly from an
+	// already-world-space position/scale/rotation, skipping the matrix decompose used by
+	// SetWorldTransform. Falls back to SetWorldTransform for entities with a parent, since those
+	// still need the parent-inverse to keep LocalTransform correct.
+	void SetWorldTransformDirect(GameContext& context, entt::entity entity, const glm::vec3& position,
+	                             const glm::vec3& scale, const glm::quat& rotation);
 
 	std::string Name() const override
 	{
