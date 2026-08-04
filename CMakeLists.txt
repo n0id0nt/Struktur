@@ -325,7 +325,10 @@ set(SOURCES
     src/Engine/Game/Level.h                     src/Engine/Game/Level.cpp
     src/Engine/Game/TileMap.h                   src/Engine/Game/TileMap.cpp
     src/Engine/Game/Camera.h                    src/Engine/Game/Camera.cpp
+    src/Engine/Game/RenderLayer.h
     src/Engine/Game/Curve.h
+
+    src/Engine/Renderer/RenderQueue.h           src/Engine/Renderer/RenderQueue.cpp
 
     src/Engine/Scripting/WrenScriptEngine.h     src/Engine/Scripting/WrenScriptEngine.cpp
     src/Engine/Scripting/WrenBindingRegistry.h  src/Engine/Scripting/WrenBindingRegistry.cpp

@@ -83,9 +83,9 @@ entt::entity Struktur::GameResource::Level::LoadLevelEntities(GameContext& conte
 
 				// TODO - grab the tileset path from the level somehow - possibly have a store the tilesets in the
 				// resource pool and grab is here
-				Component::TileMap& tileMap =
-				    registry.emplace<Component::TileMap>(layerEntity, std::move(texture), layer.cWid, layer.cHei,
-				                                         layer.gridSize, grid, layer.intGrid);
+				Component::TileMap& tileMap = registry.emplace<Component::TileMap>(
+				    layerEntity, std::move(texture), layer.cWid, layer.cHei, layer.gridSize, grid, layer.intGrid,
+				    layer.renderLayer, layer.orderInLayer);
 
 				if (layer.identifier == "Collision")
 				{

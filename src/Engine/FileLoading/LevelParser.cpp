@@ -85,8 +85,37 @@ void Struktur::FileLoading::LevelParser::LoadLevels(World& world, const nlohmann
 	}
 }
 
+namespace
+{
+bool LayerNameStartsWithAny(const std::string& identifier, std::initializer_list<const char*> prefixes)
+{
+	for (const char* prefix : prefixes)
+	{
+		if (identifier.starts_with(prefix))
+		{
+			return true;
+		}
+	}
+	return false;
+}
+}  // namespace
+
 void Struktur::FileLoading::LevelParser::LoadLayers(World& world, Level& level, const nlohmann::json& json)
 {
+	// LDtk orders layerInstances top-to-bottom as shown in the editor's layer panel, i.e. index 0 is
+	// the FRONTMOST layer (drawn last). Bucket every other layer's RenderLayer by its position
+	// relative to the Entities layer, so authored front/behind intent survives without renaming layers.
+	int entitiesIndex = -1;
+	for (int i = 0; i < static_cast<int>(json.size()); i++)
+	{
+		if (json[i]["__type"] == "Entities")
+		{
+			entitiesIndex = i;
+			break;
+		}
+	}
+
+	int layerIndex = 0;
 	for (auto& layerJson : json)
 	{
 		std::string layerName = layerJson["__identifier"];
@@ -106,13 +135,21 @@ void Struktur::FileLoading::LevelParser::LoadLayers(World& world, Level& level, 
 				layer.type = LayerType::INT_GRID;
 				LoadIntGrid(layer, layerJson["intGridCsv"]);
 			}
-			else if (layerType == "AutoLayer" || layerType == "Tiles")
+			else if (layerType == "AutoLayer")
 			{
-				layer.type = layerType == "AutoLayer" ? LayerType::AUTO_LAYER : LayerType::TILES;
+				layer.type = LayerType::AUTO_LAYER;
 				std::filesystem::path relativePath = layerJson["__tilesetRelPath"];
 				std::filesystem::path baseFile     = world.filePath;
 				layer.tilesetPath = (baseFile.parent_path() / relativePath).lexically_normal().generic_string();
-				LoadAutoLayerTiles(layer, layerJson["autoLayerTiles"]);
+				LoadGridTiles(layer, layerJson["autoLayerTiles"]);
+			}
+			else if (layerType == "Tiles")
+			{
+				layer.type = LayerType::TILES;
+				std::filesystem::path relativePath = layerJson["__tilesetRelPath"];
+				std::filesystem::path baseFile     = world.filePath;
+				layer.tilesetPath = (baseFile.parent_path() / relativePath).lexically_normal().generic_string();
+				LoadGridTiles(layer, layerJson["gridTiles"]);
 			}
 		}
 
@@ -125,7 +162,30 @@ void Struktur::FileLoading::LevelParser::LoadLayers(World& world, Level& level, 
 		layer.pxTotalOffsetY = layerJson["__pxTotalOffsetY"];
 		layer.opacity        = layerJson["__opacity"];
 
+		// Higher array index = further back (drawn earlier), so a negated index keeps layers ordered
+		// correctly relative to each other even when several land in the same RenderLayer bucket.
+		layer.orderInLayer = -static_cast<float>(layerIndex);
+		if (layer.type == LayerType::ENTITIES)
+		{
+			layer.renderLayer = GameResource::RenderLayer::Entities;
+		}
+		else if (entitiesIndex >= 0 && layerIndex < entitiesIndex)
+		{
+			// Listed above Entities in the layer panel -> drawn in front of entities.
+			bool isForeground   = LayerNameStartsWithAny(layerName, {"FG_", "Foreground"});
+			layer.renderLayer   = isForeground ? GameResource::RenderLayer::Foreground
+			                                    : GameResource::RenderLayer::BackgroundOverlay;
+		}
+		else
+		{
+			// Listed below Entities (or no Entities layer in this level) -> drawn behind entities.
+			bool isFar        = LayerNameStartsWithAny(layerName, {"BG_Far", "Far_"});
+			layer.renderLayer = isFar ? GameResource::RenderLayer::BackgroundFar
+			                          : GameResource::RenderLayer::BackgroundMid;
+		}
+
 		level.layers.push_back(layer);
+		layerIndex++;
 	}
 }
 
@@ -221,19 +281,19 @@ void Struktur::FileLoading::LevelParser::LoadIntGrid(Layer& gridLayer, const nlo
 	}
 }
 
-void Struktur::FileLoading::LevelParser::LoadAutoLayerTiles(Layer& gridLayer, const nlohmann::json& json)
+void Struktur::FileLoading::LevelParser::LoadGridTiles(Layer& gridLayer, const nlohmann::json& json)
 {
-	DEBUG_INFO("Loading int grid");
+	DEBUG_INFO("Loading tile layer");
 	// gridLayer.autoLayerTiles.resize(json.size());
-	for (auto& autoLayerTileJson : json)
+	for (auto& layerTileJson : json)
 	{
 		GridTile gridTile;
-		gridTile.px  = LoadJsonVector2(autoLayerTileJson["px"]);
-		gridTile.src = LoadJsonVector2(autoLayerTileJson["src"]);
-		gridTile.d   = LoadJsonVector2(autoLayerTileJson["d"]);
-		gridTile.f   = autoLayerTileJson["f"];
-		gridTile.t   = autoLayerTileJson["t"];
-		gridTile.a   = autoLayerTileJson["a"];
+		gridTile.px  = LoadJsonVector2(layerTileJson["px"]);
+		gridTile.src = LoadJsonVector2(layerTileJson["src"]);
+		//gridTile.d   = LoadJsonVector2(layerTileJson["d"]);
+		gridTile.f   = layerTileJson["f"];
+		gridTile.t   = layerTileJson["t"];
+		gridTile.a   = layerTileJson["a"];
 		gridLayer.autoLayerTiles.push_back(gridTile);
 	}
 }

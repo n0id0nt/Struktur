@@ -59,11 +59,17 @@ bool Struktur::Resource::TextureResource::LoadToGpu()
 	}
 	if (IsGpuResourceValid())
 	{
+		gpuState = GpuState::LoadedToGpu;
 		return true;
 	}
 
 	texture = ::LoadTextureFromImage(m_sourceImage);
-	return texture.id != 0;
+	if (texture.id != 0)
+	{
+		gpuState = GpuState::LoadedToGpu;
+		return true;
+	}
+	return false;
 }
 
 void Struktur::Resource::TextureResource::UnloadFromGpu()
@@ -71,6 +77,7 @@ void Struktur::Resource::TextureResource::UnloadFromGpu()
 	if (texture.id != 0)
 	{
 		::UnloadTexture(texture);
+		gpuState   = GpuState::Unloaded;
 		texture.id = 0;
 	}
 }

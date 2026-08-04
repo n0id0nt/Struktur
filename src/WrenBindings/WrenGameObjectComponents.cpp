@@ -8,6 +8,7 @@
 #include "Engine/ECS/System/TransformSystem.h"
 #include "Engine/ECS/System/WrenScriptSystem.h"
 #include "Engine/Game/Level.h"
+#include "Engine/Game/RenderLayer.h"
 #include "Engine/GameContext.h"
 #include "Engine/Scripting/WrenBindingRegistry.h"
 #include "Engine/Scripting/WrenUtil.h"
@@ -617,7 +618,7 @@ void wren_SpriteAnimationIsAnimationPlaying(WrenVM* vm)
 // SPRITE BINDINGS
 // ============================================================================
 
-// Sprite.create(spriteEntity, texture, color, offset, columns, rows, flipped, index, renderPriority) -> number
+// Sprite.create(spriteEntity, texture, color, offset, columns, rows, flipped, index, layer, orderInLayer) -> number
 void wren_SpriteCreate(WrenVM* vm)
 {
 	Struktur::GameContext* context = static_cast<Struktur::GameContext*>(wrenGetUserData(vm));
@@ -631,13 +632,14 @@ void wren_SpriteCreate(WrenVM* vm)
 	int rows                   = static_cast<int>(wrenGetSlotDouble(vm, 6));
 	bool flipped               = wrenGetSlotBool(vm, 7);
 	int index                  = static_cast<int>(wrenGetSlotDouble(vm, 8));
-	int renderPriority         = static_cast<int>(wrenGetSlotDouble(vm, 9));
+	auto layer                 = static_cast<Struktur::GameResource::RenderLayer>(static_cast<int>(wrenGetSlotDouble(vm, 9)));
+	float orderInLayer         = static_cast<float>(wrenGetSlotDouble(vm, 10));
 
 	::Color rayColor{(unsigned char)color->value.r, (unsigned char)color->value.g, (unsigned char)color->value.b,
 	                 (unsigned char)color->value.a};
 
 	registry.emplace<Struktur::Component::Sprite>(levelEntity, texture->resource, rayColor, offset->value, columns,
-	                                              rows, flipped, index, renderPriority);
+	                                              rows, flipped, index, layer, orderInLayer);
 }
 
 void wren_SpriteGetTexture(WrenVM* vm)
@@ -734,19 +736,34 @@ void wren_SpriteSetIndex(WrenVM* vm)
 	sprite->component->index = index;
 }
 
-void wren_SpriteGetRenderPriority(WrenVM* vm)
+void wren_SpriteGetLayer(WrenVM* vm)
 {
 	WrenSprite* sprite = (WrenSprite*)wrenGetSlotForeign(vm, 0);
 	wrenGetVariable(vm, "gameObjectComponents", "Sprite", 1);  // Get class into slot 1
-	double renderPriority = static_cast<double>(sprite->component->renderPriority);
-	wrenSetSlotDouble(vm, 0, renderPriority);
+	double layer = static_cast<double>(sprite->component->layer);
+	wrenSetSlotDouble(vm, 0, layer);
 }
 
-void wren_SpriteSetRenderPriority(WrenVM* vm)
+void wren_SpriteSetLayer(WrenVM* vm)
 {
-	WrenSprite* sprite                = (WrenSprite*)wrenGetSlotForeign(vm, 0);
-	int renderPriority                = static_cast<int>(wrenGetSlotDouble(vm, 1));
-	sprite->component->renderPriority = renderPriority;
+	WrenSprite* sprite      = (WrenSprite*)wrenGetSlotForeign(vm, 0);
+	int layer               = static_cast<int>(wrenGetSlotDouble(vm, 1));
+	sprite->component->layer = static_cast<Struktur::GameResource::RenderLayer>(layer);
+}
+
+void wren_SpriteGetOrderInLayer(WrenVM* vm)
+{
+	WrenSprite* sprite = (WrenSprite*)wrenGetSlotForeign(vm, 0);
+	wrenGetVariable(vm, "gameObjectComponents", "Sprite", 1);  // Get class into slot 1
+	double orderInLayer = static_cast<double>(sprite->component->orderInLayer);
+	wrenSetSlotDouble(vm, 0, orderInLayer);
+}
+
+void wren_SpriteSetOrderInLayer(WrenVM* vm)
+{
+	WrenSprite* sprite               = (WrenSprite*)wrenGetSlotForeign(vm, 0);
+	float orderInLayer               = static_cast<float>(wrenGetSlotDouble(vm, 1));
+	sprite->component->orderInLayer = orderInLayer;
 }
 
 void wren_SpriteGetFlipped(WrenVM* vm)
@@ -764,15 +781,15 @@ void wren_SpriteSetFlipped(WrenVM* vm)
 	sprite->component->flipped = flipped;
 }
 
-// Sprite.setRenderPriority(entity, renderPriority)
-void wren_SpriteStaticSetRenderPriority(WrenVM* vm)
+// Sprite.setLayer(entity, layer)
+void wren_SpriteStaticSetLayer(WrenVM* vm)
 {
 	Struktur::GameContext* context = static_cast<Struktur::GameContext*>(wrenGetUserData(vm));
 	auto& registry                 = context->GetRegistry();
 
-	double entityId       = wrenGetSlotDouble(vm, 1);
-	double renderPriority = wrenGetSlotDouble(vm, 2);
-	entt::entity entity   = static_cast<entt::entity>(entityId);
+	double entityId     = wrenGetSlotDouble(vm, 1);
+	double layer        = wrenGetSlotDouble(vm, 2);
+	entt::entity entity = static_cast<entt::entity>(entityId);
 
 	auto* sprite = registry.try_get<Struktur::Component::Sprite>(entity);
 
@@ -781,7 +798,27 @@ void wren_SpriteStaticSetRenderPriority(WrenVM* vm)
 		return;
 	}
 
-	sprite->renderPriority = static_cast<int>(renderPriority);
+	sprite->layer = static_cast<Struktur::GameResource::RenderLayer>(static_cast<int>(layer));
+}
+
+// Sprite.setOrderInLayer(entity, orderInLayer)
+void wren_SpriteStaticSetOrderInLayer(WrenVM* vm)
+{
+	Struktur::GameContext* context = static_cast<Struktur::GameContext*>(wrenGetUserData(vm));
+	auto& registry                 = context->GetRegistry();
+
+	double entityId      = wrenGetSlotDouble(vm, 1);
+	double orderInLayer  = wrenGetSlotDouble(vm, 2);
+	entt::entity entity  = static_cast<entt::entity>(entityId);
+
+	auto* sprite = registry.try_get<Struktur::Component::Sprite>(entity);
+
+	if (!sprite)
+	{
+		return;
+	}
+
+	sprite->orderInLayer = static_cast<float>(orderInLayer);
 }
 
 // Sprite.setFlipped(entity, flipped)
@@ -1631,6 +1668,15 @@ void wren_ScriptStaticGetInstance(WrenVM* vm)
 // ============================================================================
 WREN_BINDING_MODULE(GameObjectComponent)
 {
+	WREN_ENUM(registry, "gameObjectComponents", RenderLayer, "Coarse draw-order buckets for sprites and tile layers",
+		WREN_ENUM_PAIR("BACKGROUND_FAR", Struktur::GameResource::RenderLayer::BackgroundFar),
+		WREN_ENUM_PAIR("BACKGROUND_MID", Struktur::GameResource::RenderLayer::BackgroundMid),
+		WREN_ENUM_PAIR("ENTITIES", Struktur::GameResource::RenderLayer::Entities),
+		WREN_ENUM_PAIR("BACKGROUND_OVERLAY", Struktur::GameResource::RenderLayer::BackgroundOverlay),
+		WREN_ENUM_PAIR("FOREGROUND", Struktur::GameResource::RenderLayer::Foreground),
+		WREN_ENUM_PAIR("UI", Struktur::GameResource::RenderLayer::UI),
+		);
+
 	// Register Camera Component foreign class
 	WREN_FOREIGN_CLASS(registry, "gameObjectComponents", "Camera", wren_CameraAllocate, wren_CameraFinalize,
 	                   "Camera component class");
@@ -1800,17 +1846,23 @@ WREN_BINDING_MODULE(GameObjectComponent)
 	                  "Sets the sprites index");
 	WREN_CLASS_METHOD(registry, "gameObjectComponents", "Sprite", "index=(_)", wren_SpriteSetIndex,
 	                  "Sets the sprites index");
-	WREN_CLASS_METHOD(registry, "gameObjectComponents", "Sprite", "renderPriority", wren_SpriteGetRenderPriority,
-	                  "Sets the sprites render");
-	WREN_CLASS_METHOD(registry, "gameObjectComponents", "Sprite", "renderPriority=(_)", wren_SpriteSetRenderPriority,
-	                  "Sets the sprites render");
+	WREN_CLASS_METHOD(registry, "gameObjectComponents", "Sprite", "layer", wren_SpriteGetLayer,
+	                  "Gets the sprites render layer");
+	WREN_CLASS_METHOD(registry, "gameObjectComponents", "Sprite", "layer=(_)", wren_SpriteSetLayer,
+	                  "Sets the sprites render layer");
+	WREN_CLASS_METHOD(registry, "gameObjectComponents", "Sprite", "orderInLayer", wren_SpriteGetOrderInLayer,
+	                  "Gets the sprites sort order within its render layer");
+	WREN_CLASS_METHOD(registry, "gameObjectComponents", "Sprite", "orderInLayer=(_)", wren_SpriteSetOrderInLayer,
+	                  "Sets the sprites sort order within its render layer");
 
 	// Register static methods
-	WREN_CLASS_STATIC(registry, "gameObjectComponents", "Sprite", "create(_,_,_,_,_,_,_,_,_)", wren_SpriteCreate,
+	WREN_CLASS_STATIC(registry, "gameObjectComponents", "Sprite", "create(_,_,_,_,_,_,_,_,_,_)", wren_SpriteCreate,
 	                  "Creates the sprite Component.");
 	WREN_CLASS_STATIC(registry, "gameObjectComponents", "Sprite", "get(_)", wren_SpriteGet, "Gets a Sprite Component");
-	WREN_CLASS_STATIC(registry, "gameObjectComponents", "Sprite", "setRenderPriority(_,_)",
-	                  wren_SpriteStaticSetRenderPriority, "Sets the render priority of a sprite component");
+	WREN_CLASS_STATIC(registry, "gameObjectComponents", "Sprite", "setLayer(_,_)", wren_SpriteStaticSetLayer,
+	                  "Sets the render layer of a sprite component");
+	WREN_CLASS_STATIC(registry, "gameObjectComponents", "Sprite", "setOrderInLayer(_,_)",
+	                  wren_SpriteStaticSetOrderInLayer, "Sets the sort order within layer of a sprite component");
 	WREN_CLASS_STATIC(registry, "gameObjectComponents", "Sprite", "setFlipped(_,_)", wren_SpriteStaticSetFlipped,
 	                  "Flips a sprite in a horizontal direction");
 

@@ -1,5 +1,5 @@
 import "gameObject" for GameObject
-import "gameObjectComponents" for WorldTransform, Script, Sprite, Camera, PhysicsBody, SpriteAnimation
+import "gameObjectComponents" for WorldTransform, Script, Sprite, Camera, PhysicsBody, SpriteAnimation, RenderLayer
 import "math" for Vec2, Vec3, Vec4, Math
 import "resourceManager" for Texture
 import "animation" for SpriteAnimationDefinition
@@ -27,11 +27,11 @@ class Player {
     // Called after C++ has created base components
     // Script configures/initializes component values
     start() {
-        var texture = Texture.load("Tiles/PlayerSpriteSheet.png")
-        Sprite.create(_entity, texture, WHITE, Vec2.new(48, 64), 6, 3, false, 0, 3)
+        var texture = Texture.load("Tiles/PlayerSpriteV2.png")
+        Sprite.create(_entity, texture, WHITE, Vec2.new(16, 16), 7, 4, false, 0, RenderLayer.ENTITIES, 0)
         texture.unload()
         var camera = Camera.create(_entity)
-        camera.zoom = 1.5
+        camera.zoom = 5
         camera.forcePosition = true
         camera.damping = Vec2.new(4, 4)
         var bodyDef = BodyDefinition.new(BodyType.DYNAMIC_BODY)
@@ -44,11 +44,11 @@ class Player {
         var spriteAnimation = SpriteAnimation.create(_entity)
 
         var downIdleAnimation = SpriteAnimationDefinition.new(0, 2, 1, true)
-        var upIdleAnimation = SpriteAnimationDefinition.new(6, 8, 1, true)
-        var sideIdleAnimation = SpriteAnimationDefinition.new(12, 14, 1, true)
+        var upIdleAnimation = SpriteAnimationDefinition.new(7, 9, 1, true)
+        var sideIdleAnimation = SpriteAnimationDefinition.new(14, 16, 1, true)
         var downRunAnimation = SpriteAnimationDefinition.new(2, 6, 0.7, true)
-        var upRunAnimation = SpriteAnimationDefinition.new(8, 12, 0.7, true)
-        var sideRunAnimation = SpriteAnimationDefinition.new(14, 18, 0.7, true)
+        var upRunAnimation = SpriteAnimationDefinition.new(9, 13, 0.7, true)
+        var sideRunAnimation = SpriteAnimationDefinition.new(16, 20, 0.7, true)
 
         spriteAnimation.addAnimation("upIdleAnimation", upIdleAnimation)
         spriteAnimation.addAnimation("downIdleAnimation", downIdleAnimation)

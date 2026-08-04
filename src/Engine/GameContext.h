@@ -16,6 +16,7 @@
 #include "Engine/Game/Camera.h"
 #include "Engine/Input/Input.h"
 #include "Engine/Physics/PhysicsWorld.h"
+#include "Engine/Renderer/RenderQueue.h"
 #include "Engine/Resource/ResourceManager.h"
 #include "Engine/Scripting/WrenScriptComponentRegistry.h"
 #include "Engine/Scripting/WrenScriptEngine.h"
@@ -44,6 +45,7 @@ class GameContext
 		m_systemManager               = std::make_unique<System::SystemManager>();
 		m_gameObjectManager           = std::make_unique<System::GameObjectManager>();
 		m_camera                      = std::make_unique<GameResource::Camera>();
+		m_renderQueue                 = std::make_unique<Renderer::RenderQueue>();
 		m_uiManager                   = std::make_unique<UI::UIManager>();
 		m_physicsWorld                = std::make_unique<Physics::PhysicsWorld>();
 		m_wrenScriptEngine            = std::make_unique<Wren::WrenScriptEngine>();
@@ -114,6 +116,12 @@ class GameContext
 	{
 		ASSERT_MSG(m_camera.get(), "Camera not initialised");
 		return *m_camera;
+	}
+
+	Renderer::RenderQueue& GetRenderQueue() const
+	{
+		ASSERT_MSG(m_renderQueue.get(), "Render Queue not initialised");
+		return *m_renderQueue;
 	}
 
 	UI::UIManager& GetUIManager() const
@@ -196,6 +204,7 @@ class GameContext
 	std::unique_ptr<System::GameObjectManager> m_gameObjectManager;
 	std::unique_ptr<Physics::PhysicsWorld> m_physicsWorld;
 	std::unique_ptr<GameResource::Camera> m_camera;
+	std::unique_ptr<Renderer::RenderQueue> m_renderQueue;
 	std::unique_ptr<UI::UIManager> m_uiManager;
 	std::unique_ptr<Wren::WrenScriptEngine> m_wrenScriptEngine;
 	std::unique_ptr<Wren::WrenStateManager> m_wrenStateManager;

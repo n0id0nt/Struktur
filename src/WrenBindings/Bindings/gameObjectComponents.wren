@@ -2,6 +2,16 @@
 // Generated from C++ bindings
 // Module: gameObjectComponents
 
+// Coarse draw-order buckets for sprites and tile layers
+class RenderLayer {
+    static BACKGROUND_FAR { 0 }
+    static BACKGROUND_MID { 1 }
+    static ENTITIES { 2 }
+    static BACKGROUND_OVERLAY { 3 }
+    static FOREGROUND { 4 }
+    static UI { 5 }
+}
+
 // PhysicsBody class wraps PhysicsBody component
 foreign class PhysicsBody {
     // Sets the physics body fixed rotation
@@ -184,16 +194,22 @@ foreign class Sprite {
     foreign index
     // Sets the sprites index
     foreign index=(arg0)
-    // Sets the sprites render
-    foreign renderPriority
-    // Sets the sprites render
-    foreign renderPriority=(arg0)
+    // Gets the sprites render layer
+    foreign layer
+    // Sets the sprites render layer
+    foreign layer=(arg0)
+    // Gets the sprites sort order within its render layer
+    foreign orderInLayer
+    // Sets the sprites sort order within its render layer
+    foreign orderInLayer=(arg0)
     // Creates the sprite Component.
-    foreign static create(arg0,arg1,arg2,arg3,arg4,arg5,arg6,arg7,arg8)
+    foreign static create(arg0,arg1,arg2,arg3,arg4,arg5,arg6,arg7,arg8,arg9)
     // Gets a Sprite Component
     foreign static get(arg0)
-    // Sets the render priority of a sprite component
-    foreign static setRenderPriority(arg0,arg1)
+    // Sets the render layer of a sprite component
+    foreign static setLayer(arg0,arg1)
+    // Sets the sort order within layer of a sprite component
+    foreign static setOrderInLayer(arg0,arg1)
     // Flips a sprite in a horizontal direction
     foreign static setFlipped(arg0,arg1)
 }

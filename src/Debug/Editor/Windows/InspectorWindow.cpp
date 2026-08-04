@@ -14,6 +14,7 @@
 #include "Engine/ECS/Component/Sprite.h"
 #include "Engine/ECS/Component/Transform.h"
 #include "Engine/GameContext.h"
+#include "Engine/Game/RenderLayer.h"
 #include "Engine/UI/UIElement.h"
 
 namespace Struktur::Debug
@@ -562,8 +563,19 @@ void InspectorWindow::RenderSpriteComponent(GameContext& context, Component::Spr
 	// Flipped
 	ImGui::Checkbox("Flipped", &sprite.flipped);
 
-	// Render priority
-	ImGui::DragInt("Render Priority", &sprite.renderPriority, 1.0f, -100, 100);
+	// Render layer + order
+	static const char* k_renderLayerNames[] = {"Background Far",    "Background Mid", "Entities",
+	                                           "Background Overlay", "Foreground",     "UI"};
+	int layerIndex = static_cast<int>(sprite.layer);
+	if (ImGui::Combo("Render Layer", &layerIndex, k_renderLayerNames, IM_ARRAYSIZE(k_renderLayerNames)))
+	{
+		sprite.layer = static_cast<GameResource::RenderLayer>(layerIndex);
+	}
+	ImGui::DragFloat("Order In Layer", &sprite.orderInLayer, 1.0f, -1000.0f, 1000.0f);
+	if (sprite.layer == GameResource::RenderLayer::Entities)
+	{
+		ImGui::TextDisabled("(world Y is added automatically for y-sort on this layer)");
+	}
 
 	ImGui::Spacing();
 

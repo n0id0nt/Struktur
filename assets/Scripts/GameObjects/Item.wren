@@ -1,4 +1,4 @@
-import "gameObjectComponents" for Sprite
+import "gameObjectComponents" for Sprite, RenderLayer
 import "math" for Vec2, Vec3, Vec4
 import "resourceManager" for Texture
 import "Colors" for BLACK, WHITE, BLANK
@@ -84,7 +84,7 @@ class Item {
                 color = SHADOW_COLOR
             }
             var itemData = _spriteDataMap[interactionId]
-            Sprite.create(_entity, texture, color, Vec2.new(32, 48), 9, 2, false, itemData ? itemData.getSpriteIndex() : 13, 1)
+            Sprite.create(_entity, texture, color, Vec2.new(32, 48), 9, 2, false, itemData ? itemData.getSpriteIndex() : 13, RenderLayer.ENTITIES, 1)
         }
         texture.unload()
         if (_disabled) {

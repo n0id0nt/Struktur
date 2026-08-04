@@ -6,6 +6,7 @@
 #include <unordered_map>
 #include <vector>
 
+#include "Engine/Game/RenderLayer.h"
 #include "glm/glm.hpp"
 #include "nlohmann/json.hpp"
 
@@ -79,7 +80,7 @@ struct GridTile
 {
 	glm::vec2 px;
 	glm::vec2 src;
-	glm::vec2 d;
+	//glm::vec2 d;
 	FlipBit f;
 	int t;
 	int a;
@@ -100,6 +101,10 @@ struct Layer
 	std::optional<std::string> tilesetPath;
 	std::vector<int> intGrid;
 	std::vector<GridTile> autoLayerTiles;
+	GameResource::RenderLayer renderLayer;
+	// Derived from this layer's position relative to the Entities layer in the LDtk file - see
+	// LoadLayers. Also usable as a within-layer draw-order tie-break for tile layers.
+	float orderInLayer;
 };
 
 struct Level
@@ -148,7 +153,7 @@ void LoadLayers(World& world, Level& level, const nlohmann::json& json);
 void LoadEntities(Layer& entityLayer, const nlohmann::json& json);
 void LoadFieldInstances(Entity& entity, const nlohmann::json& json);
 void LoadIntGrid(Layer& gridLayer, const nlohmann::json& json);
-void LoadAutoLayerTiles(Layer& gridLayer, const nlohmann::json& json);
+void LoadGridTiles(Layer& gridLayer, const nlohmann::json& json);
 FieldInstanceType ConvertFieldTypeToEnum(const std::string& fieldInstanceType);
 }  // namespace LevelParser
 }  // namespace FileLoading
