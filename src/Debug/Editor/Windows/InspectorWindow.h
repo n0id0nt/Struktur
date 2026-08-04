@@ -14,7 +14,7 @@ namespace Struktur
 {
 namespace Component
 {
-struct LocalTransform;
+struct Transform;
 struct Sprite;
 struct Shader;
 }  // namespace Component
@@ -81,7 +81,7 @@ class InspectorWindow : public EditorWindow
 	void RenderUIElementProperties(UI::UIElement* element);
 
 	// Component-specific renderers
-	void RenderLocalTransformComponent(GameContext& context, Component::LocalTransform& transform,
+	void RenderLocalTransformComponent(GameContext& context, Component::Transform& transform,
 	                                   entt::registry& registry, entt::entity entity);
 
 	void RenderSpriteComponent(GameContext& context, Component::Sprite& sprite, entt::registry& registry,

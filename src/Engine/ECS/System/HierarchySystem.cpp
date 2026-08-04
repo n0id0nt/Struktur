@@ -28,6 +28,13 @@ void Struktur::System::HierarchySystem::SetParent(GameContext& context, entt::en
 	{
 		registry.remove<Component::Parent>(child);
 	}
+
+	// Local didn't change, but the ancestor chain did - the cached world transform no longer
+	// reflects it until the next resolve.
+	if (auto* childTransform = registry.try_get<Component::Transform>(child))
+	{
+		childTransform->dirty = true;
+	}
 }
 
 void Struktur::System::HierarchySystem::RemoveFromParent(GameContext& context, entt::entity child, entt::entity parent)

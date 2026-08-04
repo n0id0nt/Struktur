@@ -10,7 +10,7 @@ class GameContext;
 namespace Component
 {
 struct Sprite;
-struct WorldTransform;
+struct Transform;
 }  // namespace Component
 
 namespace System

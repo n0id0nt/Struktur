@@ -12,17 +12,17 @@
 #include "Engine/ECS/Component/World.h"
 #include "Engine/ECS/Component/WrenScript.h"
 
-#define COMPONENT(component_name, component_name_string)                                  \
+#define COMPONENT(component_name, component_type, component_name_string)                   \
 	struct Wren##component_name                                                           \
 	{                                                                                     \
 		entt::entity entity                            = entt::null;                      \
-		Struktur::Component::component_name* component = nullptr;                         \
+		Struktur::Component::component_type* component = nullptr;                         \
 		Wren##component_name()                                                            \
 		    : component(nullptr),                                                         \
 		      entity(entt::null)                                                          \
 		{                                                                                 \
 		}                                                                                 \
-		Wren##component_name(entt::entity entity, Struktur::Component::component_name* v) \
+		Wren##component_name(entt::entity entity, Struktur::Component::component_type* v) \
 		    : component(v),                                                               \
 		      entity(entity)                                                              \
 		{                                                                                 \

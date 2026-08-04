@@ -90,10 +90,10 @@ void wren_GameObjecthasComponent(WrenVM* vm)
 
 	std::string componentName = wrenGetSlotString(vm, 2);
 	bool hasComponent         = false;
-#define COMPONENT(component_name, component_name_string)                                      \
+#define COMPONENT(component_name, component_type, component_name_string)                                      \
 	if (componentName == component_name_string)                                               \
 	{                                                                                         \
-		auto* componentValue = registry.try_get<Struktur::Component::component_name>(entity); \
+		auto* componentValue = registry.try_get<Struktur::Component::component_type>(entity); \
 		hasComponent         = componentValue != nullptr;                                     \
 	}                                                                                         \
 	else
@@ -118,10 +118,10 @@ void wren_GameObjectGetAllWithComponent(WrenVM* vm)
 
 	int index = 0;
 
-#define COMPONENT(component_name, component_name_string)                  \
+#define COMPONENT(component_name, component_type, component_name_string)                  \
 	if (componentName == component_name_string)                           \
 	{                                                                     \
-		auto view = registry.view<Struktur::Component::component_name>(); \
+		auto view = registry.view<Struktur::Component::component_type>(); \
 		for (auto entity : view)                                          \
 		{                                                                 \
 			wrenSetSlotDouble(vm, 1, static_cast<double>(entity));        \
@@ -176,10 +176,10 @@ void wren_GameObjectGetAllWithComponents(WrenVM* vm)
 
 		    for (const auto& compName : components)
 		    {
-#define COMPONENT(component_name, component_name_string)                   \
+#define COMPONENT(component_name, component_type, component_name_string)                   \
 	if (compName == component_name_string)                                 \
 	{                                                                      \
-		if (!registry.any_of<Struktur::Component::component_name>(entity)) \
+		if (!registry.any_of<Struktur::Component::component_type>(entity)) \
 		{                                                                  \
 			hasAllComponents = false;                                      \
 			break;                                                         \
@@ -235,10 +235,10 @@ void wren_GameObjectGetAnyWithComponents(WrenVM* vm)
 
 		    for (const auto& compName : components)
 		    {
-#define COMPONENT(component_name, component_name_string)                   \
+#define COMPONENT(component_name, component_type, component_name_string)                   \
 	if (compName == component_name_string)                                 \
 	{                                                                      \
-		if (!registry.any_of<Struktur::Component::component_name>(entity)) \
+		if (!registry.any_of<Struktur::Component::component_type>(entity)) \
 		{                                                                  \
 			hasAnyComponent = false;                                       \
 			break;                                                         \
@@ -344,10 +344,10 @@ void wren_GameObjectForEachWithComponent(WrenVM* vm)
 	const char* componentName  = wrenGetSlotString(vm, 1);
 	WrenHandle* callbackHandle = wrenGetSlotHandle(vm, 2);
 
-#define COMPONENT(component_name, component_name_string)                  \
+#define COMPONENT(component_name, component_type, component_name_string)                  \
 	if (strcmp(componentName, component_name_string) == 0)                \
 	{                                                                     \
-		auto view = registry.view<Struktur::Component::component_name>(); \
+		auto view = registry.view<Struktur::Component::component_type>(); \
 		for (auto entity : view)                                          \
 		{                                                                 \
 			wrenEnsureSlots(vm, 2);                                       \
@@ -400,10 +400,10 @@ void wren_GameObjectForEachWithComponents(WrenVM* vm)
 
 		    for (const auto& compName : components)
 		    {
-#define COMPONENT(component_name, component_name_string)                   \
+#define COMPONENT(component_name, component_type, component_name_string)                   \
 	if (compName == component_name_string)                                 \
 	{                                                                      \
-		if (!registry.any_of<Struktur::Component::component_name>(entity)) \
+		if (!registry.any_of<Struktur::Component::component_type>(entity)) \
 		{                                                                  \
 			hasAllComponents = false;                                      \
 			break;                                                         \
@@ -463,10 +463,10 @@ void wren_GameObjectForEachWithAnyComponents(WrenVM* vm)
 
 		    for (const auto& compName : components)
 		    {
-#define COMPONENT(component_name, component_name_string)                  \
+#define COMPONENT(component_name, component_type, component_name_string)                  \
 	if (compName == component_name_string)                                \
 	{                                                                     \
-		if (registry.any_of<Struktur::Component::component_name>(entity)) \
+		if (registry.any_of<Struktur::Component::component_type>(entity)) \
 		{                                                                 \
 			hasAnyComponents = true;                                      \
 			break;                                                        \

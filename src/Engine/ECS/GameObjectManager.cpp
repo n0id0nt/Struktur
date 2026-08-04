@@ -47,7 +47,7 @@ entt::entity Struktur::System::GameObjectManager::CreateGameObject(GameContext& 
 	HierarchySystem& hierarchySystem = systemManager.GetSystem<HierarchySystem>();
 
 	auto entity = registry.create();
-	registry.emplace<Component::LocalTransform>(entity);
+	registry.emplace<Component::Transform>(entity);
 	registry.emplace<Component::Identifier>(entity, identifier);
 	registry.emplace<Component::Active>(entity);
 

@@ -2,6 +2,7 @@
 
 #include "Engine/ECS/Component/Level.h"
 #include "Engine/ECS/Component/Transform.h"
+#include "Engine/ECS/System/TransformSystem.h"
 #include "Engine/GameContext.h"
 
 Struktur::System::DebugSystem::DebugSystem()
@@ -43,11 +44,12 @@ void Struktur::System::DebugSystem::Update(GameContext& context)
 	// Render level boundaries (if enabled)
 	if (debugSettings.showLevelBounds)
 	{
-		auto view = registry.view<Component::Level, Component::WorldTransform>(entt::exclude<Inactive>);
-		for (auto [entity, level, worldTransform] : view.each())
+		TransformSystem& transformSystem = context.GetSystemManager().GetSystem<TransformSystem>();
+		auto view = registry.view<Component::Level, Component::Transform>(entt::exclude<Inactive>);
+		for (auto [entity, level, transform] : view.each())
 		{
-			::Rectangle levelBounds{worldTransform.position.x, worldTransform.position.y, (float)level.width,
-			                        (float)level.height};
+			glm::vec3 worldPosition = transformSystem.GetWorldPosition(context, entity);
+			::Rectangle levelBounds{worldPosition.x, worldPosition.y, (float)level.width, (float)level.height};
 			::DrawRectangleLinesEx(levelBounds, debugSettings.levelBoundsThickness, ORANGE);
 		}
 	}
@@ -75,15 +77,18 @@ void Struktur::System::DebugSystem::Update(GameContext& context)
 
 void Struktur::System::DebugSystem::RenderEntityGizmos(GameContext& context)
 {
-	entt::registry& registry = context.GetRegistry();
+	entt::registry& registry         = context.GetRegistry();
+	TransformSystem& transformSystem = context.GetSystemManager().GetSystem<TransformSystem>();
 
 	// Render position indicators for all entities with transforms
-	auto view = registry.view<Component::WorldTransform>(entt::exclude<Inactive>);
-	for (auto [entity, worldTransform] : view.each())
+	auto view = registry.view<Component::Transform>(entt::exclude<Inactive>);
+	for (auto [entity, transform] : view.each())
 	{
+		glm::vec3 worldPosition = transformSystem.GetWorldPosition(context, entity);
+
 		// Draw a small cross at entity position
 		float crossSize = 10.0f;
-		::Vector2 pos   = {worldTransform.position.x, worldTransform.position.y};
+		::Vector2 pos   = {worldPosition.x, worldPosition.y};
 
 		::DrawLineEx({pos.x - crossSize, pos.y}, {pos.x + crossSize, pos.y}, 2.0f, GREEN);
 		::DrawLineEx({pos.x, pos.y - crossSize}, {pos.x, pos.y + crossSize}, 2.0f, GREEN);

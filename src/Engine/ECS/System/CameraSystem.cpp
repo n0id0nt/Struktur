@@ -4,6 +4,7 @@
 
 #include "Engine/ECS/Component/Camera.h"
 #include "Engine/ECS/Component/Transform.h"
+#include "Engine/ECS/System/TransformSystem.h"
 #include "Engine/Game/Camera.h"
 #include "Engine/GameContext.h"
 #include "Engine/Util/Noise.h"
@@ -11,31 +12,30 @@
 
 void Struktur::System::CameraSystem::Update(GameContext& context)
 {
-	entt::registry& registry = context.GetRegistry();
+	entt::registry& registry         = context.GetRegistry();
+	TransformSystem& transformSystem = context.GetSystemManager().GetSystem<TransformSystem>();
 
-	auto view = registry.view<Struktur::Component::Camera, Struktur::Component::WorldTransform>(entt::exclude<Inactive>);
+	auto view = registry.view<Struktur::Component::Camera, Struktur::Component::Transform>(entt::exclude<Inactive>);
 
 	entt::entity focusedCameraEntity;
-	Struktur::Component::Camera* focusedCameraComponent            = nullptr;
-	Struktur::Component::WorldTransform* focusedTransformComponent = nullptr;
-	int highestPriority                                            = INT_MIN;
-	for (auto [entity, camera, worldTransform] : view.each())
+	Struktur::Component::Camera* focusedCameraComponent = nullptr;
+	int highestPriority                                 = INT_MIN;
+	for (auto [entity, camera, transform] : view.each())
 	{
 		if (camera.cameraPriority > highestPriority)
 		{
-			highestPriority           = camera.cameraPriority;
-			focusedCameraEntity       = entity;
-			focusedCameraComponent    = &camera;
-			focusedTransformComponent = &worldTransform;
+			highestPriority        = camera.cameraPriority;
+			focusedCameraEntity    = entity;
+			focusedCameraComponent = &camera;
 		}
 	}
 
-	if (focusedCameraComponent && focusedTransformComponent)
+	if (focusedCameraComponent)
 	{
 		Core::GameData& gameData     = context.GetGameData();
 		Core::TimeSystem& timeSystem = context.GetTimeSystem();
 
-		glm::vec3 euler = glm::eulerAngles(focusedTransformComponent->rotation);
+		glm::vec3 focusedWorldPosition = transformSystem.GetWorldPosition(context, focusedCameraEntity);
 
 		float gameTime                   = timeSystem.scaledTime;
 		float deltaTime                  = timeSystem.scaledDelta;
@@ -46,9 +46,9 @@ void Struktur::System::CameraSystem::Update(GameContext& context)
 		glm::vec2 newPos =
 		    focusedCameraComponent->forcePosition
 		        ? TargetPosition(gameTime, deltaTime, screenWidth, screenHeight, focusedCameraComponent,
-		                         focusedTransformComponent->position, out_camera)
+		                         focusedWorldPosition, out_camera)
 		        : CalculateSmoothedPosition(gameTime, deltaTime, screenWidth, screenHeight, focusedCameraComponent,
-		                                    focusedTransformComponent->position, out_camera);
+		                                    focusedWorldPosition, out_camera);
 		focusedCameraComponent->forcePosition = false;
 		out_camera.target                     = newPos;
 		out_camera.offset                     = glm::vec2{screenWidth / 2.f + focusedCameraComponent->offset.x,

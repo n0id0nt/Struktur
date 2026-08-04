@@ -13,6 +13,7 @@
 #include "Engine/ECS/Component/Shader.h"
 #include "Engine/ECS/Component/Sprite.h"
 #include "Engine/ECS/Component/Transform.h"
+#include "Engine/ECS/System/TransformSystem.h"
 #include "Engine/GameContext.h"
 #include "Engine/Game/RenderLayer.h"
 #include "Engine/UI/UIElement.h"
@@ -107,9 +108,9 @@ void InspectorWindow::Render(GameContext& context)
 void InspectorWindow::RegisterDefaultRenderers()
 {
 	// Register LocalTransform renderer
-	RegisterComponentRenderer<Component::LocalTransform>(
+	RegisterComponentRenderer<Component::Transform>(
 	    "LocalTransform",
-	    [this](GameContext& context, Component::LocalTransform& transform, entt::registry& registry,
+	    [this](GameContext& context, Component::Transform& transform, entt::registry& registry,
 	           entt::entity entity) { RenderLocalTransformComponent(context, transform, registry, entity); });
 
 	// Register Sprite renderer
@@ -161,7 +162,7 @@ void InspectorWindow::RenderComponents(GameContext& context, entt::entity entity
 	entt::registry& registry = context.GetRegistry();
 
 	// Render LocalTransform if exists
-	if (auto* transform = registry.try_get<Component::LocalTransform>(entity))
+	if (auto* transform = registry.try_get<Component::Transform>(entity))
 	{
 		if (ImGui::CollapsingHeader("Local Transform", ImGuiTreeNodeFlags_DefaultOpen))
 		{
@@ -437,40 +438,34 @@ void InspectorWindow::RenderUIElementProperties(UI::UIElement* element)
 // Component Renderers
 // ====================================================================
 
-void InspectorWindow::RenderLocalTransformComponent(GameContext& context, Component::LocalTransform& transform,
+void InspectorWindow::RenderLocalTransformComponent(GameContext& context, Component::Transform& transform,
                                                     entt::registry& registry, entt::entity entity)
 {
 	bool modified = false;
 
+	glm::vec3 position = transform.localPosition;
+	glm::vec3 scale     = transform.localScale;
+	glm::quat rotation  = transform.localRotation;
+
 	// Position
-	if (RenderVec3("Position", transform.position))
+	if (RenderVec3("Position", position))
 	{
 		modified = true;
 	}
 
 	// Rotation (as Euler angles for easier editing)
-	glm::vec3 eulerAngles = glm::degrees(glm::eulerAngles(transform.rotation));
+	glm::vec3 eulerAngles = glm::degrees(glm::eulerAngles(rotation));
 	if (RenderVec3("Rotation", eulerAngles))
 	{
 		// Convert back to quaternion
-		transform.rotation = glm::quat(glm::radians(eulerAngles));
-		modified           = true;
-	}
-
-	// Scale
-	if (RenderVec3("Scale", transform.scale))
-	{
+		rotation = glm::quat(glm::radians(eulerAngles));
 		modified = true;
 	}
 
-	// If anything was modified, recalculate the matrix
-	if (modified)
+	// Scale
+	if (RenderVec3("Scale", scale))
 	{
-		glm::mat4 translationMatrix = glm::translate(glm::mat4(1.0f), transform.position);
-		glm::mat4 rotationMatrix    = glm::toMat4(transform.rotation);
-		glm::mat4 scaleMatrix       = glm::scale(glm::mat4(1.0f), transform.scale);
-
-		transform.matrix = translationMatrix * rotationMatrix * scaleMatrix;
+		modified = true;
 	}
 
 	ImGui::Spacing();
@@ -478,14 +473,11 @@ void InspectorWindow::RenderLocalTransformComponent(GameContext& context, Compon
 	// Show matrix (read-only for now)
 	if (ImGui::TreeNode("Transform Matrix"))
 	{
-		ImGui::Text("[ %.2f, %.2f, %.2f, %.2f ]", transform.matrix[0][0], transform.matrix[1][0],
-		            transform.matrix[2][0], transform.matrix[3][0]);
-		ImGui::Text("[ %.2f, %.2f, %.2f, %.2f ]", transform.matrix[0][1], transform.matrix[1][1],
-		            transform.matrix[2][1], transform.matrix[3][1]);
-		ImGui::Text("[ %.2f, %.2f, %.2f, %.2f ]", transform.matrix[0][2], transform.matrix[1][2],
-		            transform.matrix[2][2], transform.matrix[3][2]);
-		ImGui::Text("[ %.2f, %.2f, %.2f, %.2f ]", transform.matrix[0][3], transform.matrix[1][3],
-		            transform.matrix[2][3], transform.matrix[3][3]);
+		const glm::mat4& matrix = transform.localMatrix;
+		ImGui::Text("[ %.2f, %.2f, %.2f, %.2f ]", matrix[0][0], matrix[1][0], matrix[2][0], matrix[3][0]);
+		ImGui::Text("[ %.2f, %.2f, %.2f, %.2f ]", matrix[0][1], matrix[1][1], matrix[2][1], matrix[3][1]);
+		ImGui::Text("[ %.2f, %.2f, %.2f, %.2f ]", matrix[0][2], matrix[1][2], matrix[2][2], matrix[3][2]);
+		ImGui::Text("[ %.2f, %.2f, %.2f, %.2f ]", matrix[0][3], matrix[1][3], matrix[2][3], matrix[3][3]);
 		ImGui::TreePop();
 	}
 
@@ -494,29 +486,26 @@ void InspectorWindow::RenderLocalTransformComponent(GameContext& context, Compon
 	// Reset buttons
 	if (ImGui::Button("Reset Position"))
 	{
-		transform.position = glm::vec3(0.0f);
-		modified           = true;
+		position = glm::vec3(0.0f);
+		modified = true;
 	}
 	ImGui::SameLine();
 	if (ImGui::Button("Reset Rotation"))
 	{
-		transform.rotation = glm::quat(1.0f, 0.0f, 0.0f, 0.0f);
-		modified           = true;
+		rotation = glm::quat(1.0f, 0.0f, 0.0f, 0.0f);
+		modified = true;
 	}
 	ImGui::SameLine();
 	if (ImGui::Button("Reset Scale"))
 	{
-		transform.scale = glm::vec3(1.0f);
-		modified        = true;
+		scale    = glm::vec3(1.0f);
+		modified = true;
 	}
 
 	if (modified)
 	{
-		glm::mat4 translationMatrix = glm::translate(glm::mat4(1.0f), transform.position);
-		glm::mat4 rotationMatrix    = glm::toMat4(transform.rotation);
-		glm::mat4 scaleMatrix       = glm::scale(glm::mat4(1.0f), transform.scale);
-
-		transform.matrix = translationMatrix * rotationMatrix * scaleMatrix;
+		context.GetSystemManager().GetSystem<System::TransformSystem>().SetLocalTransform(context, entity, position,
+		                                                                                  scale, rotation);
 	}
 }
 

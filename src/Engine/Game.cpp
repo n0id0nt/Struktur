@@ -142,8 +142,8 @@ void Struktur::InitialiseGame(GameContext& context)
 	systemManager.AddUpdateSystem<System::WrenStateSystem>();
 	systemManager.AddUpdateSystem<System::WrenScriptSystem>();
 	systemManager.AddUpdateSystem<System::EventSystem>();
-	systemManager.AddUpdateSystem<System::CameraSystem>();
 	systemManager.AddUpdateSystem<System::PhysicsSystem>();
+	systemManager.AddUpdateSystem<System::CameraSystem>();
 	systemManager.AddUpdateSystem<System::AnimationSystem>();
 	systemManager.AddUpdateSystem<System::UISystem>();
 	systemManager.AddUpdateSystem<System::SoundSystem>();

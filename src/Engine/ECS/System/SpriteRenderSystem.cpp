@@ -7,8 +7,10 @@
 #include "Engine/ECS/Component/TileMap.h"
 #include "Engine/ECS/Component/Transform.h"
 #include "Engine/ECS/System/ShaderSystem.h"
+#include "Engine/ECS/System/TransformSystem.h"
 #include "Engine/GameContext.h"
 #include "Engine/Renderer/RenderQueue.h"
+#include "Engine/Util/MathUtil.h"
 #include "glm/glm.hpp"
 #include "glm/gtc/quaternion.hpp."
 #include "raylib.h"
@@ -16,9 +18,10 @@
 
 void Struktur::System::SpriteRenderSystem::Update(GameContext& context)
 {
-	entt::registry& registry     = context.GetRegistry();
-	GameResource::Camera& camera = context.GetCamera();
-	Renderer::RenderQueue& renderQueue      = context.GetRenderQueue();
+	entt::registry& registry           = context.GetRegistry();
+	GameResource::Camera& camera       = context.GetCamera();
+	Renderer::RenderQueue& renderQueue = context.GetRenderQueue();
+	TransformSystem& transformSystem   = context.GetSystemManager().GetSystem<TransformSystem>();
 
 	::BeginMode2D(camera.GetRaylibCamera());
 	{
@@ -26,8 +29,8 @@ void Struktur::System::SpriteRenderSystem::Update(GameContext& context)
 		renderQueue.Clear();
 
 		{
-			auto view = registry.view<Component::TileMap, Component::WorldTransform>(entt::exclude<Inactive>);
-			for (const auto& [entity, tileMap, worldTransform] : view.each())
+			auto view = registry.view<Component::TileMap, Component::Transform>(entt::exclude<Inactive>);
+			for (const auto& [entity, tileMap, transform] : view.each())
 			{
 				Resource::TextureResource* texture = tileMap.texture.Get();
 				if (!texture)
@@ -39,6 +42,8 @@ void Struktur::System::SpriteRenderSystem::Update(GameContext& context)
 				{
 					texture->LoadToGpu();
 				}
+
+				glm::vec3 worldPosition = transformSystem.GetWorldPosition(context, entity);
 
 				for (auto& gridTile : tileMap.gridTiles)
 				{
@@ -63,8 +68,8 @@ void Struktur::System::SpriteRenderSystem::Update(GameContext& context)
 					sourceRec.width -= 0.0002f;
 					sourceRec.height -= 0.0002f;
 					// TODO - Move this to a helper function so this line is much more consise
-					::Rectangle destRec{gridTile.position.x + ::round(worldTransform.position.x * 2) / 2,
-					                    gridTile.position.y + ::round(worldTransform.position.y * 2) / 2,
+					::Rectangle destRec{gridTile.position.x + ::round(worldPosition.x * 2) / 2,
+					                    gridTile.position.y + ::round(worldPosition.y * 2) / 2,
 					                    (float)tileMap.tileSize, (float)tileMap.tileSize};
 
 					renderQueue.Submit(tileMap.layer, tileMap.orderInLayer, entity, texture->texture, sourceRec,
@@ -73,8 +78,8 @@ void Struktur::System::SpriteRenderSystem::Update(GameContext& context)
 			}
 		}
 		{
-			auto view = registry.view<Component::Sprite, Component::WorldTransform>(entt::exclude<Inactive>);
-			for (const auto& [entity, sprite, worldTransform] : view.each())
+			auto view = registry.view<Component::Sprite, Component::Transform>(entt::exclude<Inactive>);
+			for (const auto& [entity, sprite, transform] : view.each())
 			{
 				Resource::TextureResource* texture = sprite.texture.Get();
 				if (!texture)
@@ -87,9 +92,13 @@ void Struktur::System::SpriteRenderSystem::Update(GameContext& context)
 					texture->LoadToGpu();
 				}
 
+				glm::vec3 worldPosition = transformSystem.GetWorldPosition(context, entity);
+				glm::quat worldRotation = transformSystem.GetWorldRotation(context, entity);
+				glm::vec3 worldScale    = transformSystem.GetWorldScale(context, entity);
+
 				int imageWidth  = texture->GetWidth();
 				int imageHeight = texture->GetHeight();
-				glm::vec3 euler = glm::eulerAngles(worldTransform.rotation);
+				float angleZ    = Struktur::Util::Math::AngleZFromQuat(worldRotation);
 				int index       = sprite.index;
 
 				ASSERT_MSG(sprite.columns > 0, "Sprite needs to have at least one column");
@@ -112,20 +121,19 @@ void Struktur::System::SpriteRenderSystem::Update(GameContext& context)
 				sourceRec.width -= 0.0002f;
 				sourceRec.height -= 0.0002f;
 
-				::Rectangle destRec{::round(worldTransform.position.x * 2) / 2,
-				                    ::round(worldTransform.position.y * 2) / 2, size.x * worldTransform.scale.x,
-				                    size.y * worldTransform.scale.x};
+				::Rectangle destRec{::round(worldPosition.x * 2) / 2, ::round(worldPosition.y * 2) / 2,
+				                    size.x * worldScale.x, size.y * worldScale.x};
 				::Vector2 offset{sprite.offset.x, sprite.offset.y};
 
 				float orderInLayer = sprite.orderInLayer;
 				if (sprite.layer == GameResource::RenderLayer::Entities)
 				{
 					// y-sort: interleave with whatever background layers sit immediately above/below Entities
-					orderInLayer += worldTransform.position.y;
+					orderInLayer += worldPosition.y;
 				}
 
 				renderQueue.Submit(sprite.layer, orderInLayer, entity, texture->texture, sourceRec, destRec, offset,
-				                  glm::degrees(euler.z), sprite.color, cullBounds);
+				                  glm::degrees(angleZ), sprite.color, cullBounds);
 			}
 		}
 

@@ -70,7 +70,7 @@ void HierarchyWindow::RenderSceneGraph(GameContext& context)
 	entt::registry& registry = context.GetRegistry();
 
 	// Get all entities with Identifier and Transform (basic entity components)
-	auto view = registry.view<Component::Identifier, Component::LocalTransform>();
+	auto view = registry.view<Component::Identifier, Component::Transform>();
 
 	// Only render root entities (entities without parents)
 	for (auto entity : view)

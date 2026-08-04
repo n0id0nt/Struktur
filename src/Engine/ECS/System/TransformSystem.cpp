@@ -6,15 +6,27 @@
 #include "Engine/GameContext.h"
 #include "glm/gtx/matrix_decompose.hpp"
 
-void Struktur::System::TransformSystem::UpdateWorldTransform(GameContext& context, entt::entity entity,
-                                                             const glm::mat4& parentMatrix)
+Struktur::Component::Transform& Struktur::System::TransformSystem::EnsureWorldUpToDate(GameContext& context,
+                                                                                        entt::entity entity)
 {
 	entt::registry& registry = context.GetRegistry();
-	auto& transform          = registry.get<Component::LocalTransform>(entity);
-	auto& worldTransform     = registry.get_or_emplace<Component::WorldTransform>(entity);
+	auto& transform          = registry.get<Component::Transform>(entity);
 
-	glm::mat4 localMatrix = transform.matrix;
-	glm::mat4 worldMatrix = parentMatrix * localMatrix;
+	if (!transform.dirty)
+	{
+		return transform;
+	}
+
+	glm::mat4 parentMatrix = glm::mat4(1.0f);
+	if (auto* parent = registry.try_get<Component::Parent>(entity))
+	{
+		if (registry.valid(parent->entity) && registry.try_get<Component::Transform>(parent->entity))
+		{
+			parentMatrix = EnsureWorldUpToDate(context, parent->entity).worldMatrix;
+		}
+	}
+
+	glm::mat4 worldMatrix = parentMatrix * transform.localMatrix;
 
 	glm::vec3 scaleVec;
 	glm::quat rotationQuat{};
@@ -23,20 +35,25 @@ void Struktur::System::TransformSystem::UpdateWorldTransform(GameContext& contex
 	glm::vec4 perspectiveVec;
 	glm::decompose(worldMatrix, scaleVec, rotationQuat, translationVec, skewVec, perspectiveVec);
 
-	worldTransform.matrix   = worldMatrix;
-	worldTransform.position = translationVec;
-	worldTransform.rotation = rotationQuat;
-	worldTransform.scale    = scaleVec;
-	worldTransform.dirty    = true;
+	transform.worldMatrix   = worldMatrix;
+	transform.worldPosition = translationVec;
+	transform.worldRotation = rotationQuat;
+	transform.worldScale    = scaleVec;
+	transform.dirty         = false;
 
-	// Recursively update children
+	return transform;
+}
+
+void Struktur::System::TransformSystem::CascadeDirty(entt::registry& registry, entt::entity entity)
+{
 	if (auto* children = registry.try_get<Component::Children>(entity))
 	{
 		for (auto child : children->entities)
 		{
 			if (registry.valid(child))
 			{
-				UpdateWorldTransform(context, child, worldTransform.matrix);
+				registry.get<Component::Transform>(child).dirty = true;
+				CascadeDirty(registry, child);
 			}
 		}
 	}
@@ -46,9 +63,9 @@ glm::vec3 Struktur::System::TransformSystem::WorldToLocal(GameContext& context, 
                                                           entt::entity parentEntity)
 {
 	entt::registry& registry = context.GetRegistry();
-	if (auto* parentWorldTransform = registry.try_get<Component::WorldTransform>(parentEntity))
+	if (registry.try_get<Component::Transform>(parentEntity))
 	{
-		glm::mat4 parentInverse = glm::inverse(parentWorldTransform->matrix);
+		glm::mat4 parentInverse = glm::inverse(EnsureWorldUpToDate(context, parentEntity).worldMatrix);
 		glm::vec4 localPos      = parentInverse * glm::vec4(worldPos, 1.0f);
 		return glm::vec3(localPos);
 	}
@@ -56,22 +73,11 @@ glm::vec3 Struktur::System::TransformSystem::WorldToLocal(GameContext& context, 
 	return worldPos;
 }
 
-float Struktur::System::TransformSystem::GetWorldRotation(GameContext& context, entt::entity entity)
-{
-	entt::registry& registry = context.GetRegistry();
-	if (auto* worldTransform = registry.try_get<Component::WorldTransform>(entity))
-	{
-		return atan2(worldTransform->matrix[1][0], worldTransform->matrix[0][0]);
-	}
-	BREAK_MSG("Entity does not have a world transform");
-	return 0.0f;
-}
-
 void Struktur::System::TransformSystem::SetLocalTransform(GameContext& context, entt::entity entity,
                                                           const glm::mat4& matrix)
 {
 	entt::registry& registry = context.GetRegistry();
-	auto& transform          = registry.get<Component::LocalTransform>(entity);
+	auto& transform          = registry.get<Component::Transform>(entity);
 
 	glm::vec3 scaleVec;
 	glm::quat rotationQuat{};
@@ -80,77 +86,48 @@ void Struktur::System::TransformSystem::SetLocalTransform(GameContext& context, 
 	glm::vec4 perspectiveVec;
 	glm::decompose(matrix, scaleVec, rotationQuat, translationVec, skewVec, perspectiveVec);
 
-	transform.matrix   = matrix;
-	transform.position = translationVec;
-	transform.rotation = rotationQuat;
-	transform.scale    = scaleVec;
+	transform.localMatrix   = matrix;
+	transform.localPosition = translationVec;
+	transform.localRotation = rotationQuat;
+	transform.localScale    = scaleVec;
+	transform.dirty         = true;
 
-	glm::mat4 parentMatrix = glm::mat4(1.0f);
-
-	if (auto* parent = registry.try_get<Component::Parent>(entity))
-	{
-		if (auto* parentWorldTransform = registry.try_get<Component::WorldTransform>(parent->entity))
-		{
-			parentMatrix = parentWorldTransform->matrix;
-		}
-		else
-		{
-			auto* parentLocalTransform = registry.try_get<Component::LocalTransform>(parent->entity);
-			ASSERT_MSG(parentLocalTransform,
-			           "Parent Entt does not contain a local transform this suggests that this object was not created "
-			           "with the game object manager");
-			SetLocalTransform(context, parent->entity, parentLocalTransform->matrix);
-			auto* justCreatedParentWorldTransform = registry.try_get<Component::WorldTransform>(parent->entity);
-			ASSERT_MSG(justCreatedParentWorldTransform,
-			           "Parent Entt does not contain a world transform. Something here is fucked");
-			parentMatrix = justCreatedParentWorldTransform->matrix;
-		}
-	}
-
-	UpdateWorldTransform(context, entity, parentMatrix);
+	CascadeDirty(registry, entity);
 }
 
 void Struktur::System::TransformSystem::SetLocalTransform(GameContext& context, entt::entity entity,
                                                           const glm::vec3& position, const glm::vec3& scale,
                                                           const glm::quat& rotation)
 {
-	glm::mat4 matrix =
-	    glm::translate(glm::mat4(1.0f), position) * glm::mat4_cast(rotation) * glm::scale(glm::mat4(1.0f), scale);
+	entt::registry& registry = context.GetRegistry();
+	auto& transform          = registry.get<Component::Transform>(entity);
 
-	SetLocalTransform(context, entity, matrix);
+	transform.localMatrix =
+	    glm::translate(glm::mat4(1.0f), position) * glm::mat4_cast(rotation) * glm::scale(glm::mat4(1.0f), scale);
+	transform.localPosition = position;
+	transform.localRotation = rotation;
+	transform.localScale    = scale;
+	transform.dirty         = true;
+
+	CascadeDirty(registry, entity);
 }
 
 void Struktur::System::TransformSystem::SetWorldTransform(GameContext& context, entt::entity entity,
                                                           const glm::mat4& matrix)
 {
 	entt::registry& registry = context.GetRegistry();
-	auto& transform          = registry.get<Component::LocalTransform>(entity);
 
-	glm::mat4 parentMatrix = glm::mat4(1.0f);
-	glm::mat4 localMatrix  = matrix;
+	glm::mat4 localMatrix = matrix;
 	if (auto* parent = registry.try_get<Component::Parent>(entity))
 	{
-		if (auto* parentWorldTransform = registry.try_get<Component::WorldTransform>(parent->entity))
+		if (registry.valid(parent->entity) && registry.try_get<Component::Transform>(parent->entity))
 		{
-			glm::mat4 parentInverse = glm::inverse(parentWorldTransform->matrix);
+			glm::mat4 parentInverse = glm::inverse(EnsureWorldUpToDate(context, parent->entity).worldMatrix);
 			localMatrix *= parentInverse;
-			parentMatrix = parentWorldTransform->matrix;
 		}
 	}
 
-	glm::vec3 scaleVec;
-	glm::quat rotationQuat{};
-	glm::vec3 translationVec;
-	glm::vec3 skewVec;
-	glm::vec4 perspectiveVec;
-	glm::decompose(localMatrix, scaleVec, rotationQuat, translationVec, skewVec, perspectiveVec);
-
-	transform.matrix   = localMatrix;
-	transform.position = translationVec;
-	transform.rotation = rotationQuat;
-	transform.scale    = scaleVec;
-
-	UpdateWorldTransform(context, entity, parentMatrix);
+	SetLocalTransform(context, entity, localMatrix);
 }
 
 void Struktur::System::TransformSystem::SetWorldTransform(GameContext& context, entt::entity entity,
@@ -169,39 +146,54 @@ void Struktur::System::TransformSystem::SetWorldTransformDirect(GameContext& con
 {
 	entt::registry& registry = context.GetRegistry();
 
-	// An entity with a moving parent still needs the parent-inverse to produce a correct
-	// LocalTransform, so fall back to the full path there.
-	if (registry.try_get<Component::Parent>(entity))
+	// An entity with a moving parent still needs the parent-inverse to produce a correct local
+	// transform, so fall back to the full path there.
+	if (auto* parent = registry.try_get<Component::Parent>(entity))
 	{
-		SetWorldTransform(context, entity, position, scale, rotation);
-		return;
+		if (registry.valid(parent->entity) && registry.try_get<Component::Transform>(parent->entity))
+		{
+			SetWorldTransform(context, entity, position, scale, rotation);
+			return;
+		}
 	}
+
+	auto& transform = registry.get<Component::Transform>(entity);
 
 	glm::mat4 matrix =
 	    glm::translate(glm::mat4(1.0f), position) * glm::mat4_cast(rotation) * glm::scale(glm::mat4(1.0f), scale);
 
-	auto& localTransform    = registry.get<Component::LocalTransform>(entity);
-	localTransform.matrix   = matrix;
-	localTransform.position = position;
-	localTransform.scale    = scale;
-	localTransform.rotation = rotation;
+	transform.localMatrix   = matrix;
+	transform.localPosition = position;
+	transform.localScale    = scale;
+	transform.localRotation = rotation;
 
-	auto& worldTransform    = registry.get_or_emplace<Component::WorldTransform>(entity);
-	worldTransform.matrix   = matrix;
-	worldTransform.position = position;
-	worldTransform.scale    = scale;
-	worldTransform.rotation = rotation;
-	// This write came from physics, so the transform is already in sync with it - nothing to push back.
-	worldTransform.dirty    = false;
+	// World == local here (no parent), so we already know the resolved world state - write it
+	// straight into the cache instead of leaving it dirty for a redundant decompose on next read.
+	transform.worldMatrix   = matrix;
+	transform.worldPosition = position;
+	transform.worldScale    = scale;
+	transform.worldRotation = rotation;
+	transform.dirty         = false;
 
-	if (auto* children = registry.try_get<Component::Children>(entity))
-	{
-		for (auto child : children->entities)
-		{
-			if (registry.valid(child))
-			{
-				UpdateWorldTransform(context, child, worldTransform.matrix);
-			}
-		}
-	}
+	CascadeDirty(registry, entity);
+}
+
+glm::vec3 Struktur::System::TransformSystem::GetWorldPosition(GameContext& context, entt::entity entity)
+{
+	return EnsureWorldUpToDate(context, entity).worldPosition;
+}
+
+glm::quat Struktur::System::TransformSystem::GetWorldRotation(GameContext& context, entt::entity entity)
+{
+	return EnsureWorldUpToDate(context, entity).worldRotation;
+}
+
+glm::vec3 Struktur::System::TransformSystem::GetWorldScale(GameContext& context, entt::entity entity)
+{
+	return EnsureWorldUpToDate(context, entity).worldScale;
+}
+
+glm::mat4 Struktur::System::TransformSystem::GetWorldMatrix(GameContext& context, entt::entity entity)
+{
+	return EnsureWorldUpToDate(context, entity).worldMatrix;
 }
