@@ -21,6 +21,7 @@ void Struktur::System::GameObjectManager::CreateObjectCallBack(GameContext& cont
 	// Listen for entity destruction to clean up references
 	registry.on_destroy<Component::Children>().connect<&GameObjectManager::OnChildrenDestroy>(*this);
 	registry.on_destroy<Component::PhysicsBody>().connect<&GameObjectManager::OnPhysicsBodyDestory>(*this);
+	registry.on_construct<Component::WrenScript>().connect<&GameObjectManager::OnScriptConstruct>(*this);
 	registry.on_destroy<Component::WrenScript>().connect<&GameObjectManager::OnScriptDestory>(*this);
 
     // In GameObjectManager::Init or wherever you set up your registry signals
@@ -34,6 +35,7 @@ void Struktur::System::GameObjectManager::Shutdown(GameContext& context)
 
 	registry.on_destroy<Component::Children>().disconnect<&GameObjectManager::OnChildrenDestroy>(*this);
 	registry.on_destroy<Component::PhysicsBody>().disconnect<&GameObjectManager::OnPhysicsBodyDestory>(*this);
+	registry.on_construct<Component::WrenScript>().disconnect<&GameObjectManager::OnScriptConstruct>(*this);
 	registry.on_destroy<Component::WrenScript>().disconnect<&GameObjectManager::OnScriptDestory>(*this);
     registry.on_construct<Component::Active>().disconnect<&GameObjectManager::OnActiveStateChanged>(*this);
     registry.on_update<Component::Active>().disconnect<&GameObjectManager::OnActiveStateChanged>(*this);
@@ -139,6 +141,13 @@ void Struktur::System::GameObjectManager::OnPhysicsBodyDestory(entt::registry& r
 		m_context->GetPhysicsWorld().DestroyBody(physicsBody.body);
 		physicsBody.body = nullptr;
 	}
+}
+
+void Struktur::System::GameObjectManager::OnScriptConstruct(entt::registry& reg, entt::entity entity)
+{
+	// Must not call InitialiseScript() here - on_construct can fire mid-Wren-call, which wrenCall() doesn't support.
+	auto& scriptSystem = m_context->GetSystemManager().GetSystem<System::WrenScriptSystem>();
+	scriptSystem.QueuePendingInitialise(entity);
 }
 
 void Struktur::System::GameObjectManager::OnScriptDestory(entt::registry& reg, entt::entity entity)

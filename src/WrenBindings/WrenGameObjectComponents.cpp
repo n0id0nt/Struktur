@@ -1513,25 +1513,13 @@ void wren_WorldTransformStaticSetMatrix(WrenVM* vm)
 // Script.create(entity, className) -> ScriptInstance
 void wren_ScriptCreate(WrenVM* vm)
 {
-	Struktur::GameContext* context                   = static_cast<Struktur::GameContext*>(wrenGetUserData(vm));
-	entt::registry& registry                         = context->GetRegistry();
-	Struktur::System::SystemManager& systemManager   = context->GetSystemManager();
-	Struktur::System::WrenScriptSystem& scriptSystem = systemManager.GetSystem<Struktur::System::WrenScriptSystem>();
+	entt::registry& registry = static_cast<Struktur::GameContext*>(wrenGetUserData(vm))->GetRegistry();
 
 	entt::entity entity   = static_cast<entt::entity>(wrenGetSlotDouble(vm, 1));
 	const char* className = wrenGetSlotString(vm, 2);
 
-	auto& script = registry.emplace<Struktur::Component::WrenScript>(entity, className);
-
-	// Initialise the script
-	// if (!scriptSystem.InitialiseScript(*context, entity, script))
-	//{
-	//    DEBUG_ERROR("Failed to create script: %s", className);
-	//	wrenSetSlotNull(vm, 0);
-	//    return;
-	//}
-	//
-	// wrenSetSlotHandle(vm, 0, script.instanceHandle);
+	// GameObjectManager::OnScriptConstruct initialises the script and queues its Start() call.
+	registry.emplace<Struktur::Component::WrenScript>(entity, className);
 }
 
 // Script.createArgPairs(entity, className, pairs) -> ScriptInstance
@@ -1540,26 +1528,15 @@ void wren_ScriptCreate(WrenVM* vm)
 // className, map) Wren-side wrapper below, which calls through to this.
 void wren_ScriptCreateArgPairs(WrenVM* vm)
 {
-	Struktur::GameContext* context                   = static_cast<Struktur::GameContext*>(wrenGetUserData(vm));
-	entt::registry& registry                         = context->GetRegistry();
-	Struktur::System::SystemManager& systemManager   = context->GetSystemManager();
-	Struktur::System::WrenScriptSystem& scriptSystem = systemManager.GetSystem<Struktur::System::WrenScriptSystem>();
+	entt::registry& registry = static_cast<Struktur::GameContext*>(wrenGetUserData(vm))->GetRegistry();
 
 	entt::entity entity   = static_cast<entt::entity>(wrenGetSlotDouble(vm, 1));
 	const char* className = wrenGetSlotString(vm, 2);
 	wrenEnsureSlots(vm, 6);
 	std::vector<Struktur::Wren::WrenItem> wrenArgs = Struktur::Wren::Util::GetWrenMapFromPairs(vm, 3, 4);
-	auto& script = registry.emplace<Struktur::Component::WrenScript>(entity, className, wrenArgs);
 
-	// Initialise the script
-	// if (!scriptSystem.InitialiseScript(*context, levelEntity, script))
-	//{
-	//    DEBUG_ERROR("Failed to create script: %s", className);
-	//	wrenSetSlotNull(vm, 0);
-	//    return;
-	//}
-	//
-	// wrenSetSlotHandle(vm, 0, script.instanceHandle);
+	// GameObjectManager::OnScriptConstruct initialises the script and queues its Start() call.
+	registry.emplace<Struktur::Component::WrenScript>(entity, className, wrenArgs);
 }
 
 // Script.isInitialised -> bool

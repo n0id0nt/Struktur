@@ -1,6 +1,7 @@
 #pragma once
 
 #include <unordered_map>
+#include <vector>
 
 #include "Engine/ECS/Component/WrenScript.h"
 #include "Engine/ECS/SystemManager.h"
@@ -26,6 +27,9 @@ class WrenScriptSystem : public ISystem
 	// Call Start() on the script
 	bool CallStart(GameContext& context, Component::WrenScript& script);
 
+	// Queue a just-created script to be initialised and started at the top of the next Update() - see GameObjectManager::OnScriptConstruct.
+	void QueuePendingInitialise(entt::entity entity);
+
 	// Update all scripted entities
 	void Update(GameContext& context) override;
 
@@ -40,6 +44,9 @@ class WrenScriptSystem : public ISystem
 	{
 		return "Wren Script System";
 	}
+
+   private:
+	std::vector<entt::entity> m_pendingInitialise;
 };
 }  // namespace System
 }  // namespace Struktur

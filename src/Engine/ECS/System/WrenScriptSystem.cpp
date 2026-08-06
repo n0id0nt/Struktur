@@ -127,6 +127,11 @@ bool WrenScriptSystem::CallStart(GameContext& context, Component::WrenScript& sc
 	return true;
 }
 
+void WrenScriptSystem::QueuePendingInitialise(entt::entity entity)
+{
+	m_pendingInitialise.push_back(entity);
+}
+
 void WrenScriptSystem::Update(GameContext& context)
 {
 	Wren::WrenScriptEngine& scriptEngine = context.GetWrenScriptEngine();
@@ -137,7 +142,47 @@ void WrenScriptSystem::Update(GameContext& context)
 	}
 
 	auto& registry = context.GetRegistry();
-	auto view      = registry.view<Component::WrenScript>(entt::exclude<Inactive>);
+
+	// Construct + Start every script queued since the last Update() - the only safe place to do so, see QueuePendingInitialise().
+	if (!m_pendingInitialise.empty())
+	{
+		std::vector<entt::entity> toStart;
+		toStart.reserve(m_pendingInitialise.size());
+
+		// Index-based since InitialiseScript() may queue more entries (nested Script.createArg) that should run this same pass.
+		for (int i = 0; i < m_pendingInitialise.size(); ++i)
+		{
+			entt::entity entity = m_pendingInitialise[i];
+			if (!registry.valid(entity) || !registry.all_of<Component::WrenScript>(entity))
+			{
+				continue;
+			}
+
+			auto& script = registry.get<Component::WrenScript>(entity);
+			if (InitialiseScript(context, entity, script))
+			{
+				toStart.push_back(entity);
+			}
+		}
+		m_pendingInitialise.clear();
+
+		// Every script queued this pass is now constructed, so Start() can safely reach across to any of them.
+		for (entt::entity entity : toStart)
+		{
+			if (!registry.valid(entity) || !registry.all_of<Component::WrenScript>(entity))
+			{
+				continue;
+			}
+
+			auto& script = registry.get<Component::WrenScript>(entity);
+			if (script.isInitialised && !script.hasError)
+			{
+				CallStart(context, script);
+			}
+		}
+	}
+
+	auto view = registry.view<Component::WrenScript>(entt::exclude<Inactive>);
 
 	for (auto entity : view)
 	{
@@ -149,19 +194,10 @@ void WrenScriptSystem::Update(GameContext& context)
 			continue;
 		}
 
-		// Initialise if needed
-		// This should not be called here and be called as needed.
-		if (!script.isInitialised && !script.instanceHandle)
+		if (!script.isInitialised)
 		{
-			DEBUG_WARNING(
-			    "Script %s is not initialised - THIS IS HERE AS A TODO TO FIX PREVIOUS IMPLEMENTAITON OF INHERATENCE "
-			    "ONVE DONE MAKE THIS AN ERROR",
-			    script.className.c_str());
-			if (!InitialiseScript(context, entity, script))
-			{
-				continue;
-			}
-			CallStart(context, script);
+			DEBUG_ERROR("Script %s is being updated before it was initialised", script.className.c_str());
+			continue;
 		}
 
 		// Skip if no update method
