@@ -80,19 +80,8 @@ class EditorSettings
 	} theme;
 
 	// Callbacks for when settings change
-	void RegisterOnChangeCallback(const std::string& settingCategory, std::function<void()> callback)
-	{
-		m_changeCallbacks[settingCategory] = callback;
-	}
-
-	void NotifySettingChanged(const std::string& settingCategory)
-	{
-		auto it = m_changeCallbacks.find(settingCategory);
-		if (it != m_changeCallbacks.end())
-		{
-			it->second();
-		}
-	}
+	void RegisterOnChangeCallback(const std::string& settingCategory, std::function<void()> callback);
+	void NotifySettingChanged(const std::string& settingCategory);
 
 	// Save/Load settings (future implementation)
 	void SaveToFile(const std::string& filename);

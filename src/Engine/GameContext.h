@@ -35,163 +35,34 @@ namespace Struktur
 class GameContext
 {
    public:
-	GameContext()
-	{
-		m_input                       = std::make_unique<Input::Input>(0);
-		m_gameData                    = std::make_unique<Core::GameData>();
-		m_timeSystem                  = std::make_unique<Core::TimeSystem>();
-		m_registry                    = std::make_unique<entt::registry>();
-		m_resourceManager             = std::make_unique<Resource::ResourceManager>();
-		m_systemManager               = std::make_unique<System::SystemManager>();
-		m_gameObjectManager           = std::make_unique<System::GameObjectManager>();
-		m_camera                      = std::make_unique<GameResource::Camera>();
-		m_renderQueue                 = std::make_unique<Renderer::RenderQueue>();
-		m_uiManager                   = std::make_unique<UI::UIManager>();
-		m_physicsWorld                = std::make_unique<Physics::PhysicsWorld>();
-		m_wrenScriptEngine            = std::make_unique<Wren::WrenScriptEngine>();
-		m_wrenStateManager            = std::make_unique<Wren::WrenStateManager>();
-		m_wrenScriptComponentRegistry = std::make_unique<Wren::WrenScriptComponentRegistry>();
-		m_flagManager                 = std::make_unique<Flag::FlagManager>();
-		m_dialogueManager             = std::make_unique<Dialogue::DialogueManager>();
-		m_dialogueRegistry            = std::make_unique<Dialogue::DialogueRegistry>();
-		m_variableSubstitutionSystem  = std::make_unique<Dialogue::VariableSubstitutionSystem>();
-		m_eventManager                = std::make_unique<Event::EventManager>();
-#ifdef EDITOR
-		m_editor = std::make_unique<Debug::Editor>();
-#endif
-#ifdef DEBUG
-		m_profiler = std::make_unique<Debug::Profiler>();
-#endif
-	}
+	GameContext();
 
-	Input::Input& GetInput() const
-	{
-		ASSERT_MSG(m_input.get(), "Input not initialised");
-		return *m_input;
-	}
-
-	Core::GameData& GetGameData() const
-	{
-		ASSERT_MSG(m_gameData.get(), "GameData not initialised");
-		return *m_gameData;
-	}
-
-	Core::TimeSystem& GetTimeSystem() const
-	{
-		ASSERT_MSG(m_timeSystem.get(), "TimeSystem not initialised");
-		return *m_timeSystem;
-	}
-
-	entt::registry& GetRegistry() const
-	{
-		ASSERT_MSG(m_registry.get(), "Registry not initialised");
-		return *m_registry;
-	}
-
-	Resource::ResourceManager& GetResourceManager() const
-	{
-		ASSERT_MSG(m_resourceManager.get(), "Resource Manager not initialised");
-		return *m_resourceManager;
-	}
-
-	System::SystemManager& GetSystemManager() const
-	{
-		ASSERT_MSG(m_systemManager.get(), "System Manager not initialised");
-		return *m_systemManager;
-	}
-
-	System::GameObjectManager& GetGameObjectManager() const
-	{
-		ASSERT_MSG(m_gameObjectManager.get(), "Game Object Manager not initialised");
-		return *m_gameObjectManager;
-	}
-
-	Physics::PhysicsWorld& GetPhysicsWorld() const
-	{
-		ASSERT_MSG(m_physicsWorld.get(), "Physics World not initialised");
-		return *m_physicsWorld;
-	}
-
-	GameResource::Camera& GetCamera() const
-	{
-		ASSERT_MSG(m_camera.get(), "Camera not initialised");
-		return *m_camera;
-	}
-
-	Renderer::RenderQueue& GetRenderQueue() const
-	{
-		ASSERT_MSG(m_renderQueue.get(), "Render Queue not initialised");
-		return *m_renderQueue;
-	}
-
-	UI::UIManager& GetUIManager() const
-	{
-		ASSERT_MSG(m_uiManager.get(), "UI Manager not initialised");
-		return *m_uiManager;
-	}
-
-	Wren::WrenScriptEngine& GetWrenScriptEngine() const
-	{
-		ASSERT_MSG(m_wrenScriptEngine.get(), "Wren Script Engine not initialised");
-		return *m_wrenScriptEngine;
-	}
-
-	Wren::WrenStateManager& GetWrenStateManager() const
-	{
-		ASSERT_MSG(m_wrenStateManager.get(), "Wren State Manager not initialised");
-		return *m_wrenStateManager;
-	}
-
-	Wren::WrenScriptComponentRegistry& GetWrenScriptComponentRegistry() const
-	{
-		ASSERT_MSG(m_wrenScriptComponentRegistry.get(), "Wren State Manager not initialised");
-		return *m_wrenScriptComponentRegistry;
-	}
-
-	Flag::FlagManager& GetFlagManager() const
-	{
-		ASSERT_MSG(m_flagManager.get(), "Flag Manager not initialised");
-		return *m_flagManager;
-	}
-
-	Dialogue::DialogueManager& GetDialogueManager() const
-	{
-		ASSERT_MSG(m_dialogueManager.get(), "Dialogue Manager not initialised");
-		return *m_dialogueManager;
-	}
-
-	Dialogue::DialogueRegistry& GetDialogueRegistry() const
-	{
-		ASSERT_MSG(m_dialogueRegistry.get(), "Dialogue Registry not initialised");
-		return *m_dialogueRegistry;
-	}
-
-	Dialogue::VariableSubstitutionSystem& GetVariableSubstitutionSystem() const
-	{
-		ASSERT_MSG(m_variableSubstitutionSystem.get(), "Variable Substitution System not initialised");
-		return *m_variableSubstitutionSystem;
-	}
-
-	Event::EventManager& GetEventManager() const
-	{
-		ASSERT_MSG(m_eventManager.get(), "Event Manager not initialised");
-		return *m_eventManager;
-	}
+	Input::Input& GetInput() const;
+	Core::GameData& GetGameData() const;
+	Core::TimeSystem& GetTimeSystem() const;
+	entt::registry& GetRegistry() const;
+	Resource::ResourceManager& GetResourceManager() const;
+	System::SystemManager& GetSystemManager() const;
+	System::GameObjectManager& GetGameObjectManager() const;
+	Physics::PhysicsWorld& GetPhysicsWorld() const;
+	GameResource::Camera& GetCamera() const;
+	Renderer::RenderQueue& GetRenderQueue() const;
+	UI::UIManager& GetUIManager() const;
+	Wren::WrenScriptEngine& GetWrenScriptEngine() const;
+	Wren::WrenStateManager& GetWrenStateManager() const;
+	Wren::WrenScriptComponentRegistry& GetWrenScriptComponentRegistry() const;
+	Flag::FlagManager& GetFlagManager() const;
+	Dialogue::DialogueManager& GetDialogueManager() const;
+	Dialogue::DialogueRegistry& GetDialogueRegistry() const;
+	Dialogue::VariableSubstitutionSystem& GetVariableSubstitutionSystem() const;
+	Event::EventManager& GetEventManager() const;
 
 #ifdef EDITOR
-	Debug::Editor& GetEditor() const
-	{
-		ASSERT_MSG(m_editor.get(), "Editor not initialised");
-		return *m_editor;
-	}
+	Debug::Editor& GetEditor() const;
 #endif
 
 #ifdef DEBUG
-	Debug::Profiler& GetProfiler() const
-	{
-		ASSERT_MSG(m_profiler.get(), "Profiler not initialised");
-		return *m_profiler;
-	}
+	Debug::Profiler& GetProfiler() const;
 #endif
 
    private:

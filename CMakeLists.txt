@@ -185,6 +185,7 @@ if(EDITOR)
         src/Debug/Editor/Editor.h                   src/Debug/Editor/Editor.cpp
         src/Debug/Editor/EditorLayoutManager.h      src/Debug/Editor/EditorLayoutManager.cpp
         src/Debug/Editor/EditorSettings.h           src/Debug/Editor/EditorSettings.cpp
+        src/Debug/Editor/EditorTheme.h              src/Debug/Editor/EditorTheme.cpp
         src/Debug/Editor/Exporters/DialogueExporter.h src/Debug/Editor/Exporters/DialogueExporter.cpp
 
         src/Debug/Editor/EditorSettings.h           src/Debug/Editor/EditorSettings.cpp
@@ -210,8 +211,8 @@ if(EDITOR)
         src/Debug/Editor/PreviewRenderers/TexturePreviewRenderer.h src/Debug/Editor/PreviewRenderers/TexturePreviewRenderer.cpp
         src/Debug/Editor/PreviewRenderers/ShaderPreviewRenderer.h  src/Debug/Editor/PreviewRenderers/ShaderPreviewRenderer.cpp
         src/Debug/Editor/PreviewRenderers/SpritePreviewRenderer.h  src/Debug/Editor/PreviewRenderers/SpritePreviewRenderer.cpp
-        src/Debug/Editor/PreviewRenderers/TextFilePreviewRenderer.h
-        src/Debug/Editor/PreviewRenderers/UnknownFilePreviewRenderer.h
+        src/Debug/Editor/PreviewRenderers/TextFilePreviewRenderer.h src/Debug/Editor/PreviewRenderers/TextFilePreviewRenderer.cpp
+        src/Debug/Editor/PreviewRenderers/UnknownFilePreviewRenderer.h src/Debug/Editor/PreviewRenderers/UnknownFilePreviewRenderer.cpp
         src/Debug/Editor/PreviewRenderers/PreviewHelpers.h
     )
 endif()
