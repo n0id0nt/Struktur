@@ -9,47 +9,6 @@ import "fileSystem" for FileSystem
 import "serialisation" for Json
 import "debug" for Debug
 
-class DebugPrintMap {
-    static toString(value) {
-        return DebugPrintMap.toStringIndented(value, 0)
-    }
-
-    static toStringIndented(value, depth) {
-        var indent = "  " * depth
-        var innerIndent = "  " * (depth + 1)
-        var result = ""
-
-        if (value == null) {
-            result = "%(indent)null"
-        } else if (value is Map) {
-            result = "%(indent){\n"
-            for (entry in value) {
-                if (entry.value is Map || entry.value is List) {
-                    result = result + "%(innerIndent)%(entry.key):\n"
-                    result = result + DebugPrintMap.toStringIndented(entry.value, depth + 1) + "\n"
-                } else {
-                    result = result + "%(innerIndent)%(entry.key): %(entry.value)\n"
-                }
-            }
-            result = result + "%(indent)}"
-        } else if (value is List) {
-            result = "%(indent)[\n"
-            for (item in value) {
-                if (item is Map || item is List) {
-                    result = result + DebugPrintMap.toStringIndented(item, depth + 1) + "\n"
-                } else {
-                    result = result + "%(innerIndent)%(item)\n"
-                }
-            }
-            result = result + "%(indent)]"
-        } else {
-            result = "%(indent)%(value)"
-        }
-
-        return result
-    }
-}
-
 class DialogueLoader {
     static loadAllDialogue() {
         System.print("Loading all dialogue...")

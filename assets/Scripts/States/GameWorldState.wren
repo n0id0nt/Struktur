@@ -50,7 +50,7 @@ class GameWorldState is BaseState {
         GameObject.setParent(regularRoom, roomEntity)
         GameObject.setParent(transformedRoom, roomEntity)
 
-        Script.createArg(roomEntity, "Room", ["Name", "TransformItem", "RegularRoom", "TransformedRoom"], [roomName, transformItem, regularRoom, transformedRoom])
+        Script.createArg(roomEntity, "Room", {"Name": roomName, "TransformItem": transformItem, "RegularRoom": regularRoom, "TransformedRoom": transformedRoom})
         
         return roomEntity
     }
@@ -88,7 +88,7 @@ class GameWorldState is BaseState {
         WorldTransform.setPosition(courtyard, Vec3.new(400.0, 400.0, 0.0))
 
         var playerEntity = GameObject.create("Player", worldEntity)
-        Script.createArg(playerEntity, "Player", ["Name"], ["Player"])
+        Script.createArg(playerEntity, "Player", {"Name": "Player"})
         WorldTransform.setPosition(playerEntity, Vec3.new(600.0, 50.0, 0.0))
         
         // Create the UI for the level.
@@ -184,7 +184,7 @@ class GameWorldState is BaseState {
                 return
             }
 
-            Sprite.setRenderPriority(entity, playerPosition.y)
+            //Sprite.setRenderPriority(entity, playerPosition.y)
         }
     }
     

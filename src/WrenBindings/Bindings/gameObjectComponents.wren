@@ -2,6 +2,8 @@
 // Generated from C++ bindings
 // Module: gameObjectComponents
 
+import "serialisation" for MapUtil
+
 // Coarse draw-order buckets for sprites and tile layers
 class RenderLayer {
     static BACKGROUND_FAR { 0 }
@@ -264,11 +266,14 @@ foreign class Script {
     foreign errorMessage
     // Creates the script Component.
     foreign static create(arg0,arg1)
-    // Creates the script Component with an arg.
-    foreign static createArg(arg0,arg1,arg2,arg3)
+    // Internal: creates the script Component from a MapUtil-encoded arg map. Prefer createArg(_,_,_).
+    foreign static createArgPairs(arg0,arg1,arg2)
     // Gets the script component
     foreign static get(arg0)
     // Gets a script instance
     foreign static getInstance(arg0)
+    static createArg(entity, className, args) {
+        return createArgPairs(entity, className, MapUtil.mapToPairs(args))
+    }
 }
 

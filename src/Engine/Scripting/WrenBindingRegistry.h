@@ -69,6 +69,15 @@ struct WrenImplementationBinding
     bool isStatic;
 };
 
+// A `import "fromModule" for Name1, Name2` line needed at the top of a generated module file,
+// e.g. so a WrenImplementationBinding in that module can reference classes from another module.
+struct ModuleImportBinding
+{
+    std::string moduleName;
+    std::string fromModule;
+    std::vector<std::string> names;
+};
+
 // ============================================================================
 // REGISTRY - owns all binding data, passed explicitly
 // ============================================================================
@@ -80,6 +89,7 @@ struct BindingRegistry
 	std::vector<EnumBinding> enums;
 	std::vector<ConstantBinding> constants;
 	std::vector<WrenImplementationBinding> wrenImpls;
+	std::vector<ModuleImportBinding> imports;
 
 	void AddMethod(const char* module, const char* className, const char* signature, bool isStatic,
 	               WrenForeignMethodFn func, const char* doc)
@@ -142,6 +152,11 @@ struct BindingRegistry
 	void AddWrenImpl(const char* module, const char* className, bool isStatic, const char* wrenSource)
     {
         wrenImpls.push_back({module, className, wrenSource, isStatic});
+    }
+
+	void AddImport(const char* module, const char* fromModule, std::initializer_list<const char*> names)
+    {
+        imports.push_back({module, fromModule, std::vector<std::string>(names.begin(), names.end())});
     }
 
 	WrenForeignMethodFn FindMethod(const char* module, const char* className, bool isStatic,
@@ -245,3 +260,6 @@ void RegisterAllBindings(BindingRegistry& registry);
 	
 #define WREN_IMPL(registry, module, cls, isStatic, wrenSource) \
     (registry).AddWrenImpl(module, cls, isStatic, wrenSource)
+
+#define WREN_IMPORT(registry, module, fromModule, ...) \
+    (registry).AddImport(module, fromModule, {__VA_ARGS__})

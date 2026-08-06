@@ -1534,8 +1534,11 @@ void wren_ScriptCreate(WrenVM* vm)
 	// wrenSetSlotHandle(vm, 0, script.instanceHandle);
 }
 
-// Script.createArg(entity, className, keyList, valueList) -> ScriptInstance
-void wren_ScriptCreateArg(WrenVM* vm)
+// Script.createArgPairs(entity, className, pairs) -> ScriptInstance
+// Internal: `pairs` is the MapUtil.mapToPairs encoding of the arg map. Wren has no notion of a
+// private method, so this is just a plain method - prefer the public Script.createArg(entity,
+// className, map) Wren-side wrapper below, which calls through to this.
+void wren_ScriptCreateArgPairs(WrenVM* vm)
 {
 	Struktur::GameContext* context                   = static_cast<Struktur::GameContext*>(wrenGetUserData(vm));
 	entt::registry& registry                         = context->GetRegistry();
@@ -1544,8 +1547,8 @@ void wren_ScriptCreateArg(WrenVM* vm)
 
 	entt::entity entity   = static_cast<entt::entity>(wrenGetSlotDouble(vm, 1));
 	const char* className = wrenGetSlotString(vm, 2);
-	wrenEnsureSlots(vm, 7);
-	std::vector<Struktur::Wren::WrenItem> wrenArgs = Struktur::Wren::Util::GetWrenMapDoubleList(vm, 3, 4, 5);
+	wrenEnsureSlots(vm, 6);
+	std::vector<Struktur::Wren::WrenItem> wrenArgs = Struktur::Wren::Util::GetWrenMapFromPairs(vm, 3, 4);
 	auto& script = registry.emplace<Struktur::Component::WrenScript>(entity, className, wrenArgs);
 
 	// Initialise the script
@@ -1983,10 +1986,16 @@ WREN_BINDING_MODULE(GameObjectComponent)
 
 	WREN_CLASS_STATIC(registry, "gameObjectComponents", "Script", "create(_,_)", wren_ScriptCreate,
 	                  "Creates the script Component.");
-	WREN_CLASS_STATIC(registry, "gameObjectComponents", "Script", "createArg(_,_,_,_)", wren_ScriptCreateArg,
-	                  "Creates the script Component with an arg.");
+	WREN_CLASS_STATIC(registry, "gameObjectComponents", "Script", "createArgPairs(_,_,_)", wren_ScriptCreateArgPairs,
+	                  "Internal: creates the script Component from a MapUtil-encoded arg map. Prefer createArg(_,_,_).");
 	WREN_CLASS_STATIC(registry, "gameObjectComponents", "Script", "get(_)", wren_WrenScriptGet,
 	                  "Gets the script component");
 	WREN_CLASS_STATIC(registry, "gameObjectComponents", "Script", "getInstance(_)", wren_ScriptStaticGetInstance,
 	                  "Gets a script instance");
+
+	WREN_IMPORT(registry, "gameObjectComponents", "serialisation", "MapUtil");
+	WREN_IMPL(registry, "gameObjectComponents", "Script", true,
+	         "static createArg(entity, className, args) {\n"
+	         "    return createArgPairs(entity, className, MapUtil.mapToPairs(args))\n"
+	         "}");
 }

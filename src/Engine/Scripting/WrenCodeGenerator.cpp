@@ -12,6 +12,7 @@ void CodeGenerator::GenerateBindingFiles(const BindingRegistry& registry, const 
 	std::unordered_map<std::string, std::vector<const EnumBinding*>> enumsByModule;
 	std::unordered_map<std::string, std::vector<const ConstantBinding*>> constantsByModule;
 	std::unordered_map<std::string, std::vector<const WrenImplementationBinding*>> wrenImplsByModule;
+	std::unordered_map<std::string, std::vector<const ModuleImportBinding*>> importsByModule;
 
 	for (const auto& method : registry.methods)
 	{
@@ -38,10 +39,15 @@ void CodeGenerator::GenerateBindingFiles(const BindingRegistry& registry, const 
 		wrenImplsByModule[wrenImpl.moduleName].push_back(&wrenImpl);
 	}
 
+	for (const auto& import : registry.imports)
+	{
+		importsByModule[import.moduleName].push_back(&import);
+	}
+
 	for (const auto& [moduleName, methods] : methodsByModule)
 	{
 		GenerateModuleFile(outputDir, moduleName, methods, classesByModule[moduleName], enumsByModule[moduleName],
-		                   constantsByModule[moduleName], wrenImplsByModule[moduleName]);
+		                   constantsByModule[moduleName], wrenImplsByModule[moduleName], importsByModule[moduleName]);
 	}
 
 	DEBUG_INFO("Generated %zu Wren binding file(s) in: %s", methodsByModule.size(), outputDir.c_str());
@@ -56,7 +62,8 @@ void CodeGenerator::GenerateModuleFile(const std::string& outputDir, const std::
                                        const std::vector<const ClassBinding*>& classes,
                                        const std::vector<const EnumBinding*>& enums,
                                        const std::vector<const ConstantBinding*>& constants,
-								   	   const std::vector<const WrenImplementationBinding*>& wrenImpls)
+								   	   const std::vector<const WrenImplementationBinding*>& wrenImpls,
+								   	   const std::vector<const ModuleImportBinding*>& imports)
 {
 	std::string filePath = outputDir + "/" + moduleName + ".wren";
 	std::ofstream file(filePath);
@@ -70,6 +77,22 @@ void CodeGenerator::GenerateModuleFile(const std::string& outputDir, const std::
 	file << "// AUTO-GENERATED FILE - DO NOT EDIT\n";
 	file << "// Generated from C++ bindings\n";
 	file << "// Module: " << moduleName << "\n\n";
+
+	// Generate cross-module imports needed by this module's WREN_IMPL sources
+	for (const auto* import : imports)
+	{
+		file << "import \"" << import->fromModule << "\" for ";
+		for (size_t i = 0; i < import->names.size(); ++i)
+		{
+			if (i > 0) file << ", ";
+			file << import->names[i];
+		}
+		file << "\n";
+	}
+	if (!imports.empty())
+	{
+		file << "\n";
+	}
 
 	// Generate module-level constants first
 	bool hasModuleConstants = false;
@@ -140,6 +163,15 @@ void CodeGenerator::GenerateModuleFile(const std::string& outputDir, const std::
 		if (!method->className.empty())
 		{
 			methodsByClass[method->className].push_back(method);
+		}
+	}
+
+	// Classes made up purely of WREN_IMPL source (no native methods) still need to be generated
+	for (const auto* impl : wrenImpls)
+	{
+		if (!impl->className.empty() && !methodsByClass.contains(impl->className))
+		{
+			methodsByClass[impl->className];
 		}
 	}
 
