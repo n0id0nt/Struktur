@@ -4,8 +4,10 @@
 #include <vector>
 
 #include "Engine/Game/RenderLayer.h"
+#include "Engine/Renderer/RenderTypes.h"
+#include "Engine/Util/MathUtil.h"
 #include "entt/entt.hpp"
-#include "raylib.h"
+#include "glm/glm.hpp"
 
 namespace Struktur
 {
@@ -17,12 +19,12 @@ struct DrawItem
 {
 	uint64_t sortKey;
 	entt::entity entity;
-	::Texture2D texture;
-	::Rectangle sourceRec;
-	::Rectangle destRec;
-	::Vector2 origin;
+	TextureHandle texture;
+	Util::Math::Rect sourceRec;
+	Util::Math::Rect destRec;
+	glm::vec2 origin;
 	float rotation;
-	::Color tint;
+	Util::Math::Color tint;
 };
 
 struct CullBounds
@@ -42,9 +44,9 @@ class RenderQueue
 	static uint64_t PackSortKey(GameResource::RenderLayer layer, float orderInLayer, unsigned int textureId);
 
 	void Clear();
-	void Submit(GameResource::RenderLayer layer, float orderInLayer, entt::entity entity, const ::Texture2D& texture,
-	           const ::Rectangle& sourceRec, const ::Rectangle& destRec, const ::Vector2& origin, float rotation,
-	           const ::Color& tint, const CullBounds& cullBounds);
+	void Submit(GameResource::RenderLayer layer, float orderInLayer, entt::entity entity,
+	           const TextureHandle& texture, const Util::Math::Rect& sourceRec, const Util::Math::Rect& destRec,
+	           const glm::vec2& origin, float rotation, const Util::Math::Color& tint, const CullBounds& cullBounds);
 	void Flush(GameContext& context);
 
    private:

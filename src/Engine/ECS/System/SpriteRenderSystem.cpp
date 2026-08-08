@@ -47,7 +47,7 @@ void Struktur::System::SpriteRenderSystem::Update(GameContext& context)
 
 				for (auto& gridTile : tileMap.gridTiles)
 				{
-					::Rectangle sourceRec{gridTile.sourcePosition.x, gridTile.sourcePosition.y,
+					Util::Math::Rect sourceRec{gridTile.sourcePosition.x, gridTile.sourcePosition.y,
 					                      (float)tileMap.tileSize, (float)tileMap.tileSize};
 					switch (gridTile.flipBit)
 					{
@@ -68,12 +68,12 @@ void Struktur::System::SpriteRenderSystem::Update(GameContext& context)
 					sourceRec.width -= 0.0002f;
 					sourceRec.height -= 0.0002f;
 					// TODO - Move this to a helper function so this line is much more consise
-					::Rectangle destRec{gridTile.position.x + ::round(worldPosition.x * 2) / 2,
-					                    gridTile.position.y + ::round(worldPosition.y * 2) / 2,
-					                    (float)tileMap.tileSize, (float)tileMap.tileSize};
+					Util::Math::Rect destRec{gridTile.position.x + ::round(worldPosition.x * 2) / 2,
+					                       gridTile.position.y + ::round(worldPosition.y * 2) / 2,
+					                       (float)tileMap.tileSize, (float)tileMap.tileSize};
 
-					renderQueue.Submit(tileMap.layer, tileMap.orderInLayer, entity, texture->texture, sourceRec,
-					                  destRec, ::Vector2{0, 0}, 0.0f, WHITE, cullBounds);
+					renderQueue.Submit(tileMap.layer, tileMap.orderInLayer, entity, texture->GetHandle(), sourceRec,
+					                  destRec, glm::vec2{0, 0}, 0.0f, Util::Math::ColorWhite, cullBounds);
 				}
 			}
 		}
@@ -108,7 +108,7 @@ void Struktur::System::SpriteRenderSystem::Update(GameContext& context)
 				int x          = (index % sprite.columns) * size.x;
 				int y          = std::floor(index / sprite.columns) * size.y;
 
-				::Rectangle sourceRec{(float)x, (float)y, size.x, size.y};
+				Util::Math::Rect sourceRec{(float)x, (float)y, size.x, size.y};
 				if (sprite.flipped)
 				{
 					sourceRec.width *= -1;
@@ -121,9 +121,9 @@ void Struktur::System::SpriteRenderSystem::Update(GameContext& context)
 				sourceRec.width -= 0.0002f;
 				sourceRec.height -= 0.0002f;
 
-				::Rectangle destRec{::round(worldPosition.x * 2) / 2, ::round(worldPosition.y * 2) / 2,
-				                    size.x * worldScale.x, size.y * worldScale.x};
-				::Vector2 offset{sprite.offset.x, sprite.offset.y};
+				Util::Math::Rect destRec{::round(worldPosition.x * 2) / 2, ::round(worldPosition.y * 2) / 2,
+				                       size.x * worldScale.x, size.y * worldScale.x};
+				glm::vec2 offset{sprite.offset.x, sprite.offset.y};
 
 				float orderInLayer = sprite.orderInLayer;
 				if (sprite.layer == GameResource::RenderLayer::Entities)
@@ -132,8 +132,8 @@ void Struktur::System::SpriteRenderSystem::Update(GameContext& context)
 					orderInLayer += worldPosition.y;
 				}
 
-				renderQueue.Submit(sprite.layer, orderInLayer, entity, texture->texture, sourceRec, destRec, offset,
-				                  glm::degrees(angleZ), sprite.color, cullBounds);
+				renderQueue.Submit(sprite.layer, orderInLayer, entity, texture->GetHandle(), sourceRec, destRec,
+				                  offset, glm::degrees(angleZ), sprite.color, cullBounds);
 			}
 		}
 

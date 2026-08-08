@@ -801,6 +801,23 @@ bool InspectorWindow::RenderColor(const char* label, ::Color& color)
 	return modified;
 }
 
+bool InspectorWindow::RenderColor(const char* label, Util::Math::Color& color)
+{
+	float col[4] = {color.r / 255.0f, color.g / 255.0f, color.b / 255.0f, color.a / 255.0f};
+
+	bool modified = ImGui::ColorEdit4(label, col);
+
+	if (modified)
+	{
+		color.r = (unsigned char)(col[0] * 255.0f);
+		color.g = (unsigned char)(col[1] * 255.0f);
+		color.b = (unsigned char)(col[2] * 255.0f);
+		color.a = (unsigned char)(col[3] * 255.0f);
+	}
+
+	return modified;
+}
+
 bool InspectorWindow::RenderRaylibVec2(const char* label, ::Vector2& vec)
 {
 	float values[2] = {vec.x, vec.y};

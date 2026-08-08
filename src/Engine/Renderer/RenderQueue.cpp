@@ -7,6 +7,7 @@
 #include "Engine/Core/GameData.h"
 #include "Engine/ECS/System/ShaderSystem.h"
 #include "Engine/GameContext.h"
+#include "raylib.h"
 
 namespace
 {
@@ -21,7 +22,7 @@ uint32_t FloatToSortableBits(float value)
 	return bits ^ mask;
 }
 
-bool RectOverlaps(const ::Rectangle& rect, const Struktur::Renderer::CullBounds& bounds)
+bool RectOverlaps(const Struktur::Util::Math::Rect& rect, const Struktur::Renderer::CullBounds& bounds)
 {
 	return rect.x < bounds.maxX && rect.x + rect.width > bounds.minX && rect.y < bounds.maxY &&
 	      rect.y + rect.height > bounds.minY;
@@ -75,9 +76,9 @@ void Struktur::Renderer::RenderQueue::Clear()
 }
 
 void Struktur::Renderer::RenderQueue::Submit(GameResource::RenderLayer layer, float orderInLayer, entt::entity entity,
-                                           const ::Texture2D& texture, const ::Rectangle& sourceRec,
-                                           const ::Rectangle& destRec, const ::Vector2& origin, float rotation,
-                                           const ::Color& tint, const CullBounds& cullBounds)
+                                           const TextureHandle& texture, const Util::Math::Rect& sourceRec,
+                                           const Util::Math::Rect& destRec, const glm::vec2& origin, float rotation,
+                                           const Util::Math::Color& tint, const CullBounds& cullBounds)
 {
 	if (!RectOverlaps(destRec, cullBounds))
 	{
@@ -100,8 +101,15 @@ void Struktur::Renderer::RenderQueue::Flush(GameContext& context)
 	// renderer coalesces them into a single GPU draw call automatically.
 	for (const auto& item : m_drawItems)
 	{
+		::Texture2D rlTexture{item.texture.id, item.texture.width, item.texture.height, 1,
+		                      PIXELFORMAT_UNCOMPRESSED_R8G8B8A8};
+		::Rectangle rlSourceRec{item.sourceRec.x, item.sourceRec.y, item.sourceRec.width, item.sourceRec.height};
+		::Rectangle rlDestRec{item.destRec.x, item.destRec.y, item.destRec.width, item.destRec.height};
+		::Vector2 rlOrigin{item.origin.x, item.origin.y};
+		::Color rlTint{item.tint.r, item.tint.g, item.tint.b, item.tint.a};
+
 		shaderSystem.BeginShader(context, item.entity);
-		::DrawTexturePro(item.texture, item.sourceRec, item.destRec, item.origin, item.rotation, item.tint);
+		::DrawTexturePro(rlTexture, rlSourceRec, rlDestRec, rlOrigin, item.rotation, rlTint);
 		shaderSystem.EndShader(context, item.entity);
 	}
 }

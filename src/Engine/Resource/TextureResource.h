@@ -2,6 +2,7 @@
 
 #include <string>
 
+#include "Engine/Renderer/RenderTypes.h"
 #include "Engine/Resource/Resource.h"
 #include "Engine/Resource/ResourcePool.h"
 #include "Engine/Resource/ResourcePtr.h"
@@ -38,6 +39,10 @@ class TextureResource : public GpuResource
 	int GetHeight() const
 	{
 		return m_sourceImage.height;
+	}
+	Renderer::TextureHandle GetHandle() const
+	{
+		return Renderer::TextureHandle{texture.id, texture.width, texture.height};
 	}
 };
 
