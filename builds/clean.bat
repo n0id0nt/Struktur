@@ -1,9 +1,15 @@
 @echo off
+cd /d "%~dp0.."
 echo Cleaning build directories...
 
 if exist "build-windows" (
     rmdir /s /q "build-windows"
     echo Removed build-windows directory
+)
+
+if exist "build-windows-debug" (
+    rmdir /s /q "build-windows-debug"
+    echo Removed build-windows-debug directory
 )
 
 if exist "build-web" (

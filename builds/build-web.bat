@@ -1,4 +1,5 @@
 @echo off
+cd /d "%~dp0.."
 echo Building for Web (WASM)...
 
 call %EMSDK%\emsdk_env

@@ -1,4 +1,5 @@
 @echo off
+cd /d "%~dp0.."
 echo Building for Web (WASM)...
 
 call %EMSDK%\emsdk_env
@@ -31,7 +32,7 @@ if %errorlevel% neq 0 (
 
 echo.
 echo Build completed successfully!
-echo Web files: build-web\RayLibGame.html
+echo Web files: build-web\Struktur.html
 echo Running a local web server in build-web directory
 echo Example: python -m http.server 8000
 echo.

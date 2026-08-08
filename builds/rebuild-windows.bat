@@ -1,4 +1,5 @@
 @echo off
+cd /d "%~dp0.."
 echo Rebuilding for Windows Desktop...
 
 if not exist "build-windows" mkdir build-windows

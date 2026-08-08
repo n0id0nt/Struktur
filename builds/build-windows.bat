@@ -1,4 +1,5 @@
 @echo off
+cd /d "%~dp0.."
 echo Building for Windows Desktop...
 
 :: ============================================================
@@ -9,7 +10,7 @@ for /f "delims=" %%i in ('powershell -Command "Add-Type -AssemblyName System.Win
 
 if "%ASSETS_FOLDER%"=="" (
     echo No folder selected, using default assets folder...
-    set ASSETS_FOLDER=assets
+    set ASSETS_FOLDER=%CD%\assets
 )
 
 echo Assets folder: %ASSETS_FOLDER%

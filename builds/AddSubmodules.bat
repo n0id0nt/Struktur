@@ -1,3 +1,5 @@
+cd /d "%~dp0.."
+
 # Core libs
 git submodule add https://github.com/raysan5/raylib.git          third_party/raylib
 git submodule add https://github.com/skypjack/entt.git           third_party/entt
