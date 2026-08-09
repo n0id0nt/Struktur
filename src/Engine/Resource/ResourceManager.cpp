@@ -1,33 +1,33 @@
 #include "ResourceManager.h"
 
 Struktur::Resource::ResourcePtr<Struktur::Resource::TextureResource> Struktur::Resource::ResourceManager::GetTexture(
-    const std::string& filePath)
+    GameContext& context, const std::string& filePath)
 {
-	return m_texturePool.GetResource(filePath);
+	return m_texturePool.GetResource(context, filePath);
 }
 
 Struktur::Resource::ResourcePtr<Struktur::Resource::SoundResource> Struktur::Resource::ResourceManager::GetSound(
-    const std::string& filePath)
+    GameContext& context, const std::string& filePath)
 {
-	return m_soundPool.GetResource(filePath);
+	return m_soundPool.GetResource(context, filePath);
 }
 
 Struktur::Resource::ResourcePtr<Struktur::Resource::MusicResource> Struktur::Resource::ResourceManager::GetMusic(
-    const std::string& filePath)
+    GameContext& context, const std::string& filePath)
 {
-	return m_musicPool.GetResource(filePath);
+	return m_musicPool.GetResource(context, filePath);
 }
 
 Struktur::Resource::ResourcePtr<Struktur::Resource::FontResource> Struktur::Resource::ResourceManager::GetFont(
-    const std::string& filePath, int size)
+    GameContext& context, const std::string& filePath, int size)
 {
-	return m_fontPool.GetResource(std::format("{}_{}", filePath, size));
+	return m_fontPool.GetResource(context, std::format("{}_{}", filePath, size));
 }
 
 Struktur::Resource::ResourcePtr<Struktur::Resource::ShaderResource> Struktur::Resource::ResourceManager::GetShader(
-    const std::string& vsFilePath, const std::string& fsFilePath)
+    GameContext& context, const std::string& vsFilePath, const std::string& fsFilePath)
 {
-	return m_shaderPool.GetResource(std::format("{},{}", vsFilePath, fsFilePath));
+	return m_shaderPool.GetResource(context, std::format("{},{}", vsFilePath, fsFilePath));
 }
 
 void Struktur::Resource::ResourceManager::Clear()

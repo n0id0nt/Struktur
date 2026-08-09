@@ -23,12 +23,20 @@ GameContext::GameContext()
 	m_dialogueRegistry            = std::make_unique<Dialogue::DialogueRegistry>();
 	m_variableSubstitutionSystem  = std::make_unique<Dialogue::VariableSubstitutionSystem>();
 	m_eventManager                = std::make_unique<Event::EventManager>();
+	m_mixer                       = std::make_unique<Audio::Mixer>();
+
 #ifdef EDITOR
 	m_editor = std::make_unique<Debug::Editor>();
 #endif
 #ifdef DEBUG
 	m_profiler = std::make_unique<Debug::Profiler>();
 #endif
+}
+
+Audio::Mixer& GameContext::GetMixer() const
+{
+	ASSERT_MSG(m_mixer.get(), "Mixer not initialised");
+	return *m_mixer;
 }
 
 Input::Input& GameContext::GetInput() const

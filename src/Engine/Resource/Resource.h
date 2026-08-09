@@ -7,6 +7,11 @@
 
 namespace Struktur
 {
+class GameContext;
+}
+
+namespace Struktur
+{
 namespace Resource
 {
 // Base resource class
@@ -24,7 +29,7 @@ class GameResource
 	virtual ~GameResource() = default;
 
 	// Common resource management
-	virtual bool LoadFromDisk()           = 0;
+	virtual bool LoadFromDisk(GameContext& context) = 0;
 	virtual void UnloadFromDisk()         = 0;
 	virtual size_t GetMemoryUsage() const = 0;
 };
@@ -75,7 +80,7 @@ class CpuResource : public GameResource
 	}
 
 	// CPU resources might have hardware-specific loading (audio devices, etc.)
-	virtual bool LoadToHardware()
+	virtual bool LoadToHardware(GameContext& context)
 	{
 		return true;
 	}                                     // Default: no special hardware loading

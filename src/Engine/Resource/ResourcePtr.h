@@ -7,6 +7,11 @@
 
 namespace Struktur
 {
+class GameContext;
+}
+
+namespace Struktur
+{
 namespace Resource
 {
 template <typename T>
@@ -176,11 +181,11 @@ class ResourcePtr
 		}
 	}
 
-	bool EnsureReady() const
+	bool EnsureReady(GameContext& context) const
 	{
 		if (m_ptr && m_pool)
 		{
-			return m_pool->EnsureResourceReady(m_filePath);
+			return m_pool->EnsureResourceReady(context, m_filePath);
 		}
 		return false;
 	}

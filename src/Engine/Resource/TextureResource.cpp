@@ -17,7 +17,7 @@ Struktur::Resource::TextureResource::~TextureResource()
 	UnloadFromDisk();
 }
 
-bool Struktur::Resource::TextureResource::LoadFromDisk()
+bool Struktur::Resource::TextureResource::LoadFromDisk(GameContext& context)
 {
 	if (isLoaded)
 	{
@@ -53,7 +53,7 @@ void Struktur::Resource::TextureResource::UnloadFromDisk()
 
 bool Struktur::Resource::TextureResource::LoadToGpu()
 {
-	if (!LoadFromDisk())
+	if (!isLoaded)
 	{
 		return false;
 	}
@@ -97,11 +97,12 @@ size_t Struktur::Resource::TextureResource::GetGpuMemoryUsage() const
 	return GetMemoryUsage();  // Same as disk for simple case
 }
 
-Struktur::Resource::TextureResource* Struktur::Resource::TexturePool::LoadResource(const std::string& filePath)
+Struktur::Resource::TextureResource* Struktur::Resource::TexturePool::LoadResource(GameContext& context,
+                                                                                   const std::string& filePath)
 {
 	auto* texture = new TextureResource(filePath);
 
-	if (!texture->LoadFromDisk())
+	if (!texture->LoadFromDisk(context))
 	{
 		delete texture;
 		return nullptr;

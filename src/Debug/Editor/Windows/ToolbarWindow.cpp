@@ -133,16 +133,16 @@ void ToolbarWindow::Render(GameContext& context)
 
 	ImGui::SameLine();
 
-	ImGui::PushStyleColor(ImGuiCol_Button,
-	                      debugSettings.audio ? ImVec4(0.4f, 0.7f, 0.4f, 1.0f) : ImVec4(0.2f, 0.2f, 0.2f, 1.0f));
-	if (ImGui::Button("Audio"))
+	ImGui::Text("Audio");
+	ImGui::SameLine();
+	ImGui::SetNextItemWidth(100.0f);
+	if (ImGui::SliderFloat("##AudioVolume", &debugSettings.audioVolume, 0.0f, 1.0f, "%.2f"))
 	{
-		debugSettings.audio = !debugSettings.audio;
+		context.GetMixer().SetMasterVolume(debugSettings.audioVolume);
 	}
-	ImGui::PopStyleColor();
 	if (ImGui::IsItemHovered())
 	{
-		ImGui::SetTooltip("Toggle Game Audio");
+		ImGui::SetTooltip("Master game audio volume (applies to all currently playing and future sounds/music)");
 	}
 
 	ImGui::End();

@@ -22,7 +22,7 @@ Struktur::Resource::FontResource::~FontResource()
 	UnloadFromDisk();
 }
 
-bool Struktur::Resource::FontResource::LoadFromDisk()
+bool Struktur::Resource::FontResource::LoadFromDisk(GameContext& context)
 {
 	if (m_fontLoaded)
 	{
@@ -80,9 +80,8 @@ void Struktur::Resource::FontResource::UnloadFromDisk()
 
 bool Struktur::Resource::FontResource::LoadToGpu()
 {
-	// For fonts, loading from disk already creates the GPU texture
-	// So we just need to ensure disk loading happened
-	return LoadFromDisk();
+	// Loading from disk already creates the GPU texture for fonts, so just confirm that happened.
+	return isLoaded;
 }
 
 void Struktur::Resource::FontResource::UnloadFromGpu()
@@ -159,7 +158,8 @@ int Struktur::Resource::FontResource::GetGlyphCount() const
 	return font.glyphCount;
 }
 
-Struktur::Resource::FontResource* Struktur::Resource::FontPool::LoadResource(const std::string& resourceString)
+Struktur::Resource::FontResource* Struktur::Resource::FontPool::LoadResource(GameContext& context,
+                                                                             const std::string& resourceString)
 {
 	std::string filePath;
 	int fontSize         = defaultFontSize;
@@ -179,7 +179,7 @@ Struktur::Resource::FontResource* Struktur::Resource::FontPool::LoadResource(con
 
 	auto* font = new FontResource(filePath, fontSize);
 
-	if (!font->LoadFromDisk())
+	if (!font->LoadFromDisk(context))
 	{
 		delete font;
 		return nullptr;

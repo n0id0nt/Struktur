@@ -17,7 +17,7 @@ class EditorSettings
 	struct DebugRenderSettings
 	{
 		bool showFPS                  = true;
-		bool audio                    = true;
+		float audioVolume             = 1.0f;  // 0 = silent, 1 = unattenuated (see Audio::Mixer::SetMasterVolume)
 		bool showPhysicsShapes        = true;
 		bool showPhysicsBodies        = true;
 		bool showPhysicsJoints        = true;

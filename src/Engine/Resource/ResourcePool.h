@@ -10,6 +10,11 @@
 
 namespace Struktur
 {
+class GameContext;
+}
+
+namespace Struktur
+{
 namespace Resource
 {
 // Base resource pool
@@ -33,7 +38,7 @@ class ResourcePool
 
 	std::unordered_map<std::string, ResourceEntry> m_loadedResources;
 
-	virtual T* LoadResource(const std::string& filePath) = 0;
+	virtual T* LoadResource(GameContext& context, const std::string& filePath) = 0;
 	virtual void UnloadResource(const std::string& filePath, T* resource)
 	{
 		delete resource;
@@ -55,7 +60,7 @@ class ResourcePool
 		m_loadedResources.clear();
 	}
 
-	ResourcePtr<T> GetResource(const std::string& name)
+	ResourcePtr<T> GetResource(GameContext& context, const std::string& name)
 	{
 		auto it = m_loadedResources.find(name);
 
@@ -68,7 +73,7 @@ class ResourcePool
 		else
 		{
 			DEBUG_INFO(std::format("Loading resource '{}'", name).c_str());
-			T* newResource = LoadResource(name);
+			T* newResource = LoadResource(context, name);
 			if (newResource)
 			{
 				ResourceEntry entry(newResource);
@@ -83,7 +88,7 @@ class ResourcePool
 		}
 	}
 
-	virtual bool EnsureResourceReady(const std::string& name)
+	virtual bool EnsureResourceReady(GameContext& context, const std::string& name)
 	{
 		auto it = m_loadedResources.find(name);
 		if (it == m_loadedResources.end())
@@ -94,7 +99,7 @@ class ResourcePool
 		T* resource = it->second.resource;
 		if (!resource->isLoaded)
 		{
-			return resource->LoadFromDisk();
+			return resource->LoadFromDisk(context);
 		}
 		return true;
 	}
@@ -269,7 +274,7 @@ class GpuResourcePool : public ResourcePool<T>
 		m_gpuResources.clear();  // Base class handles resource cleanup
 	}
 
-	bool EnsureResourceReady(const std::string& name) override
+	bool EnsureResourceReady(GameContext& context, const std::string& name) override
 	{
 		auto it = this->m_loadedResources.find(name);
 		if (it == this->m_loadedResources.end())
@@ -280,7 +285,7 @@ class GpuResourcePool : public ResourcePool<T>
 		T* resource = it->second.resource;
 
 		// First ensure disk loading
-		if (!resource->isLoaded && !resource->LoadFromDisk())
+		if (!resource->isLoaded && !resource->LoadFromDisk(context))
 		{
 			return false;
 		}

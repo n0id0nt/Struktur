@@ -18,7 +18,7 @@ Struktur::Resource::ShaderResource::~ShaderResource()
 	UnloadFromDisk();
 }
 
-bool Struktur::Resource::ShaderResource::LoadFromDisk()
+bool Struktur::Resource::ShaderResource::LoadFromDisk(GameContext& context)
 {
 	if (isLoaded)
 	{
@@ -39,7 +39,7 @@ void Struktur::Resource::ShaderResource::UnloadFromDisk()
 
 bool Struktur::Resource::ShaderResource::LoadToGpu()
 {
-	if (!LoadFromDisk())
+	if (!isLoaded)
 	{
 		return false;
 	}
@@ -114,7 +114,8 @@ const std::string& Struktur::Resource::ShaderResource::GetFSFilePath() const
 	return m_fsFilePath;
 }
 
-Struktur::Resource::ShaderResource* Struktur::Resource::ShaderPool::LoadResource(const std::string& resourceString)
+Struktur::Resource::ShaderResource* Struktur::Resource::ShaderPool::LoadResource(GameContext& context,
+                                                                                 const std::string& resourceString)
 {
 	std::string vsFilePath;
 	std::string fsFilePath;
@@ -127,7 +128,7 @@ Struktur::Resource::ShaderResource* Struktur::Resource::ShaderPool::LoadResource
 
 	auto* shader = new ShaderResource(vsFilePath, fsFilePath);
 
-	if (!shader->LoadFromDisk())
+	if (!shader->LoadFromDisk(context))
 	{
 		delete shader;
 		return nullptr;

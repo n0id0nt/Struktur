@@ -1,5 +1,7 @@
 #include "WrenResourceManager.h"
 
+#include <SDL3_mixer/SDL_mixer.h>
+
 #include "Engine/GameContext.h"
 #include "Engine/Scripting/WrenBindingRegistry.h"
 #include "wren.hpp"
@@ -28,7 +30,8 @@ void wren_ResourceTextureLoad(WrenVM* vm)
 	const char* path = wrenGetSlotString(vm, 1);
 
 	// Load texture through resource manager
-	Struktur::Resource::ResourcePtr<Struktur::Resource::TextureResource> texture = resourceManager.GetTexture(path);
+	Struktur::Resource::ResourcePtr<Struktur::Resource::TextureResource> texture =
+	    resourceManager.GetTexture(*context, path);
 
 	if (!texture)
 	{
@@ -143,7 +146,7 @@ void wren_ResourceShaderLoad(WrenVM* vm)
 
 	// Load Shader through resource manager
 	Struktur::Resource::ResourcePtr<Struktur::Resource::ShaderResource> shader =
-	    resourceManager.GetShader(vsFilePath, fsFilePath);
+	    resourceManager.GetShader(*context, vsFilePath, fsFilePath);
 
 	if (!shader)
 	{
@@ -257,7 +260,8 @@ void wren_ResourceFontLoad(WrenVM* vm)
 	int size         = static_cast<int>(wrenGetSlotDouble(vm, 2));
 
 	// Load font through resource manager
-	Struktur::Resource::ResourcePtr<Struktur::Resource::FontResource> font = resourceManager.GetFont(path, size);
+	Struktur::Resource::ResourcePtr<Struktur::Resource::FontResource> font =
+	    resourceManager.GetFont(*context, path, size);
 
 	if (!font)
 	{
@@ -356,9 +360,18 @@ void wren_ResourceMusicLoad(WrenVM* vm)
 	const char* path = wrenGetSlotString(vm, 1);
 
 	// Load music through resource manager
-	Struktur::Resource::ResourcePtr<Struktur::Resource::MusicResource> music = resourceManager.GetMusic(path);
+	Struktur::Resource::ResourcePtr<Struktur::Resource::MusicResource> music =
+	    resourceManager.GetMusic(*context, path);
 
 	if (!music)
+	{
+		DEBUG_ERROR("Failed to load music: %s", path);
+		wrenSetSlotNull(vm, 0);
+		return;
+	}
+
+	// Unlike raylib, SDL3_mixer needs an explicit track created before playback - do that now, up front.
+	if (!music->LoadToHardware(*context))
 	{
 		DEBUG_ERROR("Failed to load music: %s", path);
 		wrenSetSlotNull(vm, 0);
@@ -420,35 +433,35 @@ void wren_ResourceMusicToString(WrenVM* vm)
 void wren_ResourceMusicPlay(WrenVM* vm)
 {
 	WrenMusicHandle* handle = (WrenMusicHandle*)wrenGetSlotForeign(vm, 0);
-	::PlayMusicStream(handle->resource->music);
+	::MIX_PlayTrack(handle->resource->track, 0);
 }
 
 // Music.stop()
 void wren_ResourceMusicStop(WrenVM* vm)
 {
 	WrenMusicHandle* handle = (WrenMusicHandle*)wrenGetSlotForeign(vm, 0);
-	::StopMusicStream(handle->resource->music);
+	::MIX_StopTrack(handle->resource->track, 0);
 }
 
 // Music.pause()
 void wren_ResourceMusicPause(WrenVM* vm)
 {
 	WrenMusicHandle* handle = (WrenMusicHandle*)wrenGetSlotForeign(vm, 0);
-	::PauseMusicStream(handle->resource->music);
+	::MIX_PauseTrack(handle->resource->track);
 }
 
 // Music.resume()
 void wren_ResourceMusicResume(WrenVM* vm)
 {
 	WrenMusicHandle* handle = (WrenMusicHandle*)wrenGetSlotForeign(vm, 0);
-	::ResumeMusicStream(handle->resource->music);
+	::MIX_ResumeTrack(handle->resource->track);
 }
 
 // Music.isPlaying() -> bool
 void wren_ResourceMusicIsPlaying(WrenVM* vm)
 {
 	WrenMusicHandle* handle = (WrenMusicHandle*)wrenGetSlotForeign(vm, 0);
-	bool isPlaying          = ::IsMusicStreamPlaying(handle->resource->music);
+	bool isPlaying          = ::MIX_TrackPlaying(handle->resource->track);
 	wrenSetSlotBool(vm, 0, isPlaying);
 }
 
@@ -457,7 +470,10 @@ void wren_ResourceMusicSeek(WrenVM* vm)
 {
 	WrenMusicHandle* handle = (WrenMusicHandle*)wrenGetSlotForeign(vm, 0);
 	float position          = (float)wrenGetSlotDouble(vm, 1);
-	::SeekMusicStream(handle->resource->music, position);
+	// MIX_SetTrackPlaybackPosition() wants sample frames, not seconds, so convert via the track's sample rate.
+	Sint64 ms     = (Sint64)(position * 1000.0f);
+	Sint64 frames = ::MIX_TrackMSToFrames(handle->resource->track, ms);
+	::MIX_SetTrackPlaybackPosition(handle->resource->track, frames);
 }
 
 // Music.setVolume(volume) -> bool
@@ -465,7 +481,7 @@ void wren_ResourceMusicSetVolume(WrenVM* vm)
 {
 	WrenMusicHandle* handle = (WrenMusicHandle*)wrenGetSlotForeign(vm, 0);
 	float volume            = (float)wrenGetSlotDouble(vm, 1);
-	::SetMusicVolume(handle->resource->music, volume);
+	::MIX_SetTrackGain(handle->resource->track, volume);
 }
 
 // Music.setPitch(pitch) -> bool
@@ -473,7 +489,7 @@ void wren_ResourceMusicSetPitch(WrenVM* vm)
 {
 	WrenMusicHandle* handle = (WrenMusicHandle*)wrenGetSlotForeign(vm, 0);
 	float pitch             = (float)wrenGetSlotDouble(vm, 1);
-	::SetMusicPitch(handle->resource->music, pitch);
+	::MIX_SetTrackFrequencyRatio(handle->resource->track, pitch);
 }
 
 // Music.setPan(pan) -> bool
@@ -481,14 +497,21 @@ void wren_ResourceMusicSetPan(WrenVM* vm)
 {
 	WrenMusicHandle* handle = (WrenMusicHandle*)wrenGetSlotForeign(vm, 0);
 	float pan               = (float)wrenGetSlotDouble(vm, 1);
-	::SetMusicPan(handle->resource->music, pan);
+	// MIX_StereoGains wants independent left/right gains, so convert from a single 0(left)-1(right) pan value.
+	MIX_StereoGains gains = {1.0f - pan, pan};
+	::MIX_SetTrackStereo(handle->resource->track, &gains);
 }
 
 // Music.getTimeLength() -> num
 void wren_ResourceMusicGetTimeLength(WrenVM* vm)
 {
 	WrenMusicHandle* handle = (WrenMusicHandle*)wrenGetSlotForeign(vm, 0);
-	double timeLength       = (double)::GetMusicTimeLength(handle->resource->music);
+	double timeLength       = 0.0;
+	Sint64 frames           = ::MIX_GetAudioDuration(handle->resource->audio);
+	if (frames >= 0)
+	{
+		timeLength = (double)::MIX_TrackFramesToMS(handle->resource->track, frames) / 1000.0;
+	}
 	wrenSetSlotDouble(vm, 0, timeLength);
 }
 
@@ -496,7 +519,8 @@ void wren_ResourceMusicGetTimeLength(WrenVM* vm)
 void wren_ResourceMusicGetTimePlayed(WrenVM* vm)
 {
 	WrenMusicHandle* handle = (WrenMusicHandle*)wrenGetSlotForeign(vm, 0);
-	double timePlayed       = (double)::GetMusicTimePlayed(handle->resource->music);
+	Sint64 frames           = ::MIX_GetTrackPlaybackPosition(handle->resource->track);
+	double timePlayed       = (double)::MIX_TrackFramesToMS(handle->resource->track, frames) / 1000.0;
 	wrenSetSlotDouble(vm, 0, timePlayed);
 }
 
@@ -504,15 +528,17 @@ void wren_ResourceMusicGetTimePlayed(WrenVM* vm)
 void wren_ResourceMusicGetLooping(WrenVM* vm)
 {
 	WrenMusicHandle* handle = (WrenMusicHandle*)wrenGetSlotForeign(vm, 0);
-	wrenSetSlotBool(vm, 0, handle->resource->music.looping);
+	bool isLooping          = ::MIX_GetTrackLoops(handle->resource->track) != 0;
+	wrenSetSlotBool(vm, 0, isLooping);
 }
 
 // Music.setLooping(isLooping) -> bool
 void wren_ResourceMusicSetLooping(WrenVM* vm)
 {
-	WrenMusicHandle* handle         = (WrenMusicHandle*)wrenGetSlotForeign(vm, 0);
-	bool isLooping                  = wrenGetSlotBool(vm, 1);
-	handle->resource->music.looping = isLooping;
+	WrenMusicHandle* handle = (WrenMusicHandle*)wrenGetSlotForeign(vm, 0);
+	bool isLooping          = wrenGetSlotBool(vm, 1);
+	// -1 = loop infinitely, 0 = don't loop (see MIX_SetTrackLoops()'s doc comment).
+	::MIX_SetTrackLoops(handle->resource->track, isLooping ? -1 : 0);
 }
 
 // ============================================================================
@@ -539,7 +565,8 @@ void wren_ResourceSoundLoad(WrenVM* vm)
 	const char* path = wrenGetSlotString(vm, 1);
 
 	// Load sound through resource manager
-	Struktur::Resource::ResourcePtr<Struktur::Resource::SoundResource> sound = resourceManager.GetSound(path);
+	Struktur::Resource::ResourcePtr<Struktur::Resource::SoundResource> sound =
+	    resourceManager.GetSound(*context, path);
 
 	if (!sound)
 	{
@@ -548,13 +575,13 @@ void wren_ResourceSoundLoad(WrenVM* vm)
 		return;
 	}
 
-	if (!sound->LoadToHardware())
+	if (!sound->LoadToHardware(*context))
 	{
 		DEBUG_ERROR("Failed to load sound: %s", path);
 		wrenSetSlotNull(vm, 0);
 		return;
 	}
-	sound->UnloadFromDisk();
+	// Deliberately not calling sound->UnloadFromDisk(): MIX_Audio is the track's actual audio data, not a copy.
 
 	// Create foreign object with resource pointer
 	WrenSoundHandle* handle = (WrenSoundHandle*)wrenSetSlotNewForeign(vm, 0, 0, sizeof(WrenSoundHandle));
@@ -609,46 +636,37 @@ void wren_ResourceSoundToString(WrenVM* vm)
 // Sound.play()
 void wren_ResourceSoundPlay(WrenVM* vm)
 {
+	// Muting for testing is handled by the editor's master volume slider (Audio::Mixer::SetMasterVolume), not here.
 	WrenSoundHandle* handle = (WrenSoundHandle*)wrenGetSlotForeign(vm, 0);
-#ifdef EDITOR
-	Struktur::GameContext* context = static_cast<Struktur::GameContext*>(wrenGetUserData(vm));
-	// Get editor settings from context
-	auto& debugSettings = context->GetEditor().GetSettings().debugRender;
-	if (debugSettings.audio)
-	{
-#endif
-		::PlaySound(handle->resource->sound);
-#ifdef EDITOR
-	}
-#endif
+	::MIX_PlayTrack(handle->resource->track, 0);
 }
 
 // Sound.stop()
 void wren_ResourceSoundStop(WrenVM* vm)
 {
 	WrenSoundHandle* handle = (WrenSoundHandle*)wrenGetSlotForeign(vm, 0);
-	::StopSound(handle->resource->sound);
+	::MIX_StopTrack(handle->resource->track, 0);
 }
 
 // Sound.pause()
 void wren_ResourceSoundPause(WrenVM* vm)
 {
 	WrenSoundHandle* handle = (WrenSoundHandle*)wrenGetSlotForeign(vm, 0);
-	::PauseSound(handle->resource->sound);
+	::MIX_PauseTrack(handle->resource->track);
 }
 
 // Sound.resume()
 void wren_ResourceSoundResume(WrenVM* vm)
 {
 	WrenSoundHandle* handle = (WrenSoundHandle*)wrenGetSlotForeign(vm, 0);
-	::ResumeSound(handle->resource->sound);
+	::MIX_ResumeTrack(handle->resource->track);
 }
 
 // Sound.isPlaying() -> bool
 void wren_ResourceSoundIsPlaying(WrenVM* vm)
 {
 	WrenSoundHandle* handle = (WrenSoundHandle*)wrenGetSlotForeign(vm, 0);
-	bool isPlaying          = ::IsSoundPlaying(handle->resource->sound);
+	bool isPlaying          = ::MIX_TrackPlaying(handle->resource->track);
 	wrenSetSlotBool(vm, 0, isPlaying);
 }
 
@@ -657,7 +675,7 @@ void wren_ResourceSoundSetVolume(WrenVM* vm)
 {
 	WrenSoundHandle* handle = (WrenSoundHandle*)wrenGetSlotForeign(vm, 0);
 	float volume            = (float)wrenGetSlotDouble(vm, 1);
-	::SetSoundVolume(handle->resource->sound, volume);
+	::MIX_SetTrackGain(handle->resource->track, volume);
 }
 
 // Sound.setPitch(pitch) -> bool
@@ -665,7 +683,7 @@ void wren_ResourceSoundSetPitch(WrenVM* vm)
 {
 	WrenSoundHandle* handle = (WrenSoundHandle*)wrenGetSlotForeign(vm, 0);
 	float pitch             = (float)wrenGetSlotDouble(vm, 1);
-	::SetSoundPitch(handle->resource->sound, pitch);
+	::MIX_SetTrackFrequencyRatio(handle->resource->track, pitch);
 }
 
 // Sound.setPan(pan) -> bool
@@ -673,7 +691,9 @@ void wren_ResourceSoundSetPan(WrenVM* vm)
 {
 	WrenSoundHandle* handle = (WrenSoundHandle*)wrenGetSlotForeign(vm, 0);
 	float pan               = (float)wrenGetSlotDouble(vm, 1);
-	::SetSoundPan(handle->resource->sound, pan);
+	// MIX_StereoGains wants independent left/right gains, so convert from a single 0(left)-1(right) pan value.
+	MIX_StereoGains gains = {1.0f - pan, pan};
+	::MIX_SetTrackStereo(handle->resource->track, &gains);
 }
 
 // ============================================================================

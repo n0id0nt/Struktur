@@ -94,10 +94,53 @@ if(GIT_FOUND AND EXISTS "${PROJECT_SOURCE_DIR}/.git")
     )
 endif()
 
+# SDL3 - audio (SDL3_mixer) on desktop and web; also raylib's windowing backend on desktop only (see rcore_custom_sdl3.c below).
+if(PLATFORM_DESKTOP OR PLATFORM_WEB)
+    set(SDL_SHARED OFF CACHE BOOL "" FORCE)
+    set(SDL_STATIC ON CACHE BOOL "" FORCE)
+    set(SDL_TEST_LIBRARY OFF CACHE BOOL "" FORCE)
+    add_subdirectory(third_party/SDL)
+
+    # Works around SDL3's target_precompile_headers() conflicting with MSVC's /Zi (C2855); harmless under Emscripten.
+    set_target_properties(SDL3-static PROPERTIES DISABLE_PRECOMPILE_HEADERS ON)
+
+    # SDL3_mixer replaces raylib's raudio; only WAVE/AIFF/VOC/AU are needed (all assets are WAV), so disable the rest.
+    set(SDLMIXER_FLAC OFF CACHE BOOL "" FORCE)
+    set(SDLMIXER_GME OFF CACHE BOOL "" FORCE)
+    set(SDLMIXER_MOD OFF CACHE BOOL "" FORCE)
+    set(SDLMIXER_MP3 OFF CACHE BOOL "" FORCE)
+    set(SDLMIXER_MIDI OFF CACHE BOOL "" FORCE)
+    set(SDLMIXER_OPUS OFF CACHE BOOL "" FORCE)
+    set(SDLMIXER_VORBIS_STB OFF CACHE BOOL "" FORCE)
+    set(SDLMIXER_VORBIS_VORBISFILE OFF CACHE BOOL "" FORCE)
+    set(SDLMIXER_WAVPACK OFF CACHE BOOL "" FORCE)
+
+    # SDL3_mixer reads BUILD_SHARED_LIBS directly (unlike SDL3's own SDL_SHARED/SDL_STATIC); force static.
+    set(BUILD_SHARED_LIBS OFF CACHE BOOL "" FORCE)
+    add_subdirectory(third_party/SDL_mixer)
+endif()
+
 # RayLib
 set(BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
 set(BUILD_GAMES    OFF CACHE BOOL "" FORCE)
 add_subdirectory(third_party/raylib)
+
+if(PLATFORM_DESKTOP)
+    # Strip PLATFORM_DESKTOP so raylib's rcore.c doesn't default to GLFW instead of our PLATFORM_CUSTOM_SDL3.
+    get_target_property(RAYLIB_COMPILE_DEFS raylib COMPILE_DEFINITIONS)
+    list(REMOVE_ITEM RAYLIB_COMPILE_DEFS PLATFORM_DESKTOP)
+    set_target_properties(raylib PROPERTIES COMPILE_DEFINITIONS "${RAYLIB_COMPILE_DEFS}")
+
+    get_target_property(RAYLIB_INTERFACE_COMPILE_DEFS raylib INTERFACE_COMPILE_DEFINITIONS)
+    if (RAYLIB_INTERFACE_COMPILE_DEFS)
+        list(REMOVE_ITEM RAYLIB_INTERFACE_COMPILE_DEFS PLATFORM_DESKTOP)
+        set_target_properties(raylib PROPERTIES INTERFACE_COMPILE_DEFINITIONS "${RAYLIB_INTERFACE_COMPILE_DEFS}")
+    endif()
+
+    target_compile_definitions(raylib PUBLIC PLATFORM_CUSTOM_SDL3)
+    # Plain (non-keyword) signature required to match raylib's own target_link_libraries call for this target.
+    target_link_libraries(raylib SDL3::SDL3)
+endif()
 
 # EnTT
 add_subdirectory(third_party/entt)
@@ -254,6 +297,8 @@ set(SOURCES
     src/Engine/Input/InputConfigLoader.h        src/Engine/Input/InputConfigLoader.cpp
     src/Engine/Input/InputMaps.h                src/Engine/Input/InputMaps.cpp
 
+    src/Engine/Audio/Mixer.h                    src/Engine/Audio/Mixer.cpp
+
     src/Engine/Flag/FlagManager.h               src/Engine/Flag/FlagManager.cpp
 
     src/Engine/Callback/Callback.h 
@@ -358,7 +403,7 @@ add_executable(${PROJECT_NAME} ${SOURCES})
 target_include_directories(${PROJECT_NAME} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src)
 
 # Link Libraries
-target_link_libraries(${PROJECT_NAME} 
+target_link_libraries(${PROJECT_NAME}
     raylib
     EnTT::EnTT
     glm::glm
@@ -366,6 +411,8 @@ target_link_libraries(${PROJECT_NAME}
     nlohmann_json::nlohmann_json
     box2d
     PhysFS::PhysFS-static
+    $<$<OR:$<BOOL:${PLATFORM_DESKTOP}>,$<BOOL:${PLATFORM_WEB}>>:SDL3_mixer::SDL3_mixer>
+    $<$<OR:$<BOOL:${PLATFORM_DESKTOP}>,$<BOOL:${PLATFORM_WEB}>>:SDL3::SDL3>
     $<$<BOOL:${EDITOR}>:imgui>
     $<$<BOOL:${EDITOR}>:rlimgui>
     $<$<BOOL:${EDITOR}>:tinyfiledialogs>
@@ -445,7 +492,7 @@ elseif(PLATFORM_DESKTOP)
 			)
 		endif()
     endif()
-    
+
 endif()
 
 install(TARGETS ${PROJECT_NAME} DESTINATION .)

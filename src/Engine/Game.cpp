@@ -122,7 +122,7 @@ void Struktur::InitialiseGame(GameContext& context)
 	FileSystem::SetWriteDir(saveDir);
 	FileSystem::Mount(saveDir, "/", false);
 	::SetExitKey(KEY_NULL);
-	::InitAudioDevice();
+	// Audio setup now happens in GameContext's constructor via SDL3_mixer, so it's already available here.
 
 #ifdef DEBUG
 	Wren::CodeGenerator::GenerateBindingFiles(wrenScriptEngine.GetRegistry(),
@@ -217,7 +217,7 @@ void Struktur::SplashScreenLoop(GameContext& context)
 	Core::GameData& gameData                           = context.GetGameData();
 	Core::TimeSystem& timeSystem                       = context.GetTimeSystem();
 	Resource::ResourceManager& resourceManager         = context.GetResourceManager();
-	Resource::ResourcePtr<Resource::FontResource> font = resourceManager.GetFont(SPLASHSCREENFONT, 120);
+	Resource::ResourcePtr<Resource::FontResource> font = resourceManager.GetFont(context, SPLASHSCREENFONT, 120);
 	// fade in time
 	const double fadeInTime  = 1.5;
 	const double holdTime    = 1;
@@ -353,7 +353,7 @@ void Struktur::Game()
 	// create local scope to manage lifetime of splash screen font - TODO create a spash screen state and add it to the
 	// context.
 	Resource::ResourceManager& resourceManager         = context.GetResourceManager();
-	Resource::ResourcePtr<Resource::FontResource> font = resourceManager.GetFont(SPLASHSCREENFONT, 120);
+	Resource::ResourcePtr<Resource::FontResource> font = resourceManager.GetFont(context, SPLASHSCREENFONT, 120);
 
 #ifdef PLATFORM_WEB
 	// Web platform - use emscripten main loop

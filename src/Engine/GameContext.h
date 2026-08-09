@@ -4,6 +4,7 @@
 #include <stdexcept>
 
 #include "Debug/Assertions.h"
+#include "Engine/Audio/Mixer.h"
 #include "Engine/Core/GameData.h"
 #include "Engine/Core/TimeSystem.h"
 #include "Engine/Dialogue/DialogueManager.h"
@@ -56,6 +57,7 @@ class GameContext
 	Dialogue::DialogueRegistry& GetDialogueRegistry() const;
 	Dialogue::VariableSubstitutionSystem& GetVariableSubstitutionSystem() const;
 	Event::EventManager& GetEventManager() const;
+	Audio::Mixer& GetMixer() const;
 
 #ifdef EDITOR
 	Debug::Editor& GetEditor() const;
@@ -85,6 +87,8 @@ class GameContext
 	std::unique_ptr<Dialogue::DialogueRegistry> m_dialogueRegistry;
 	std::unique_ptr<Dialogue::VariableSubstitutionSystem> m_variableSubstitutionSystem;
 	std::unique_ptr<Event::EventManager> m_eventManager;
+	std::unique_ptr<Audio::Mixer> m_mixer;
+
 #ifdef EDITOR
 	std::unique_ptr<Debug::Editor> m_editor;
 #endif

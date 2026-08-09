@@ -10,6 +10,11 @@
 
 namespace Struktur
 {
+class GameContext;
+}
+
+namespace Struktur
+{
 namespace Resource
 {
 // Raylib font - GPU resource (contains texture atlas)
@@ -27,7 +32,7 @@ class FontResource : public GpuResource
 	FontResource(const std::string& filePath, int size);
 	~FontResource();
 
-	bool LoadFromDisk() override;
+	bool LoadFromDisk(GameContext& context) override;
 	void UnloadFromDisk() override;
 	bool LoadToGpu() override;
 	void UnloadFromGpu() override;
@@ -62,7 +67,7 @@ class FontPool : public GpuResourcePool<FontResource>
 	}  // 32MB for textures
 
    protected:
-	FontResource* LoadResource(const std::string& resourceString) override;
+	FontResource* LoadResource(GameContext& context, const std::string& resourceString) override;
 };
 }  // namespace Resource
 }  // namespace Struktur

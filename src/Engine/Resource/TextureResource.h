@@ -10,6 +10,11 @@
 
 namespace Struktur
 {
+class GameContext;
+}
+
+namespace Struktur
+{
 namespace Resource
 {
 // Raylib texture - GPU resource
@@ -25,7 +30,7 @@ class TextureResource : public GpuResource
 
 	~TextureResource();
 
-	bool LoadFromDisk() override;
+	bool LoadFromDisk(GameContext& context) override;
 	void UnloadFromDisk() override;
 	bool LoadToGpu() override;
 	void UnloadFromGpu() override;
@@ -56,7 +61,7 @@ class TexturePool : public GpuResourcePool<TextureResource>
 	}  // 256MB for textures
 
    protected:
-	TextureResource* LoadResource(const std::string& filePath) override;
+	TextureResource* LoadResource(GameContext& context, const std::string& filePath) override;
 };
 }  // namespace Resource
 }  // namespace Struktur

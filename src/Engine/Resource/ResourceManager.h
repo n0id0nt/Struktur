@@ -15,6 +15,11 @@
 
 namespace Struktur
 {
+class GameContext;
+}
+
+namespace Struktur
+{
 namespace Resource
 {
 // Enhanced resource manager
@@ -28,11 +33,12 @@ class ResourceManager
 	ShaderPool m_shaderPool;
 
    public:
-	ResourcePtr<TextureResource> GetTexture(const std::string& filePath);
-	ResourcePtr<SoundResource> GetSound(const std::string& filePath);
-	ResourcePtr<MusicResource> GetMusic(const std::string& filePath);
-	ResourcePtr<FontResource> GetFont(const std::string& filePath, int size);
-	ResourcePtr<ShaderResource> GetShader(const std::string& vsFilePath, const std::string& fsFilePath);
+	ResourcePtr<TextureResource> GetTexture(GameContext& context, const std::string& filePath);
+	ResourcePtr<SoundResource> GetSound(GameContext& context, const std::string& filePath);
+	ResourcePtr<MusicResource> GetMusic(GameContext& context, const std::string& filePath);
+	ResourcePtr<FontResource> GetFont(GameContext& context, const std::string& filePath, int size);
+	ResourcePtr<ShaderResource> GetShader(GameContext& context, const std::string& vsFilePath,
+	                                      const std::string& fsFilePath);
 
 	const TexturePool& GetTexturePool()
 	{

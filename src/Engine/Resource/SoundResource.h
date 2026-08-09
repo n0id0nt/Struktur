@@ -5,27 +5,35 @@
 #include "Engine/Resource/Resource.h"
 #include "Engine/Resource/ResourcePool.h"
 #include "Engine/Resource/ResourcePtr.h"
-#include "raylib.h"
+
+struct MIX_Audio;
+struct MIX_Track;
+
+namespace Struktur
+{
+class GameContext;
+}
 
 namespace Struktur
 {
 namespace Resource
 {
-// Raylib sound - CPU resource (uses audio hardware)
+// SDL3_mixer sound - CPU resource (uses audio hardware)
 class SoundResource : public CpuResource
 {
    private:
-	Wave m_waveData;
+	MIX_Audio* m_audio = nullptr;
 
    public:
-	Sound sound;
+	// Persistent playback instance, created once in LoadToHardware() and reused thereafter.
+	MIX_Track* track = nullptr;
 
 	SoundResource(const std::string& filePath);
 	~SoundResource();
 
-	bool LoadFromDisk() override;
+	bool LoadFromDisk(GameContext& context) override;
 	void UnloadFromDisk() override;
-	bool LoadToHardware() override;
+	bool LoadToHardware(GameContext& context) override;
 	void UnloadFromHardware() override;
 
 	bool IsHardwareReady() const override;
@@ -35,10 +43,10 @@ class SoundResource : public CpuResource
 class SoundPool : public ResourcePool<SoundResource>
 {
    protected:
-	SoundResource* LoadResource(const std::string& filePath) override;
+	SoundResource* LoadResource(GameContext& context, const std::string& filePath) override;
 
    public:
-	bool EnsureResourceReady(const std::string& filePath) override;
+	bool EnsureResourceReady(GameContext& context, const std::string& filePath) override;
 };
 }  // namespace Resource
 }  // namespace Struktur

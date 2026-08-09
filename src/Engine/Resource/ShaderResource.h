@@ -9,6 +9,11 @@
 
 namespace Struktur
 {
+class GameContext;
+}
+
+namespace Struktur
+{
 namespace Resource
 {
 // Raylib shader - GPU resource (contains texture atlas)
@@ -24,7 +29,7 @@ class ShaderResource : public GpuResource
 	ShaderResource(const std::string& vsFilePath, const std::string& fsFilePath);
 	~ShaderResource();
 
-	bool LoadFromDisk() override;
+	bool LoadFromDisk(GameContext& context) override;
 	void UnloadFromDisk() override;
 	bool LoadToGpu() override;
 	void UnloadFromGpu() override;
@@ -48,7 +53,7 @@ class ShaderPool : public GpuResourcePool<ShaderResource>
 	}  // 1MB for textures
 
    protected:
-	ShaderResource* LoadResource(const std::string& resourceString) override;
+	ShaderResource* LoadResource(GameContext& context, const std::string& resourceString) override;
 };
 }  // namespace Resource
 }  // namespace Struktur

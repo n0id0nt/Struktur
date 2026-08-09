@@ -3,12 +3,14 @@
 #include <format>
 
 #include "Engine/Core/FileSystem.h"
+#include "Engine/GameContext.h"
+
+#include <SDL3/SDL.h>
+#include <SDL3_mixer/SDL_mixer.h>
 
 Struktur::Resource::SoundResource::SoundResource(const std::string& filePath)
     : CpuResource(filePath)
 {
-	sound.frameCount      = 0;
-	m_waveData.frameCount = 0;
 }
 
 Struktur::Resource::SoundResource::~SoundResource()
@@ -17,7 +19,7 @@ Struktur::Resource::SoundResource::~SoundResource()
 	UnloadFromDisk();
 }
 
-bool Struktur::Resource::SoundResource::LoadFromDisk()
+bool Struktur::Resource::SoundResource::LoadFromDisk(GameContext& context)
 {
 	if (isLoaded)
 	{
@@ -26,11 +28,15 @@ bool Struktur::Resource::SoundResource::LoadFromDisk()
 
 	auto result = FileSystem::ReadBytes(filePath);
 	ASSERT_MSG(result.success, "Failed to load config: %s", result.errorMessage.c_str());
-	const char* ext = ::GetFileExtension(filePath.c_str());
 
-	m_waveData = ::LoadWaveFromMemory(ext, result.value.data(), result.value.size());
-	if (m_waveData.frameCount == 0)
+	// MIX_LoadAudio_IO() makes its own copy, so `result.value` only needs to live for this call.
+	MIX_Mixer* mixer = context.GetMixer().GetHandle();
+
+	SDL_IOStream* io = ::SDL_IOFromConstMem(result.value.data(), result.value.size());
+	m_audio          = ::MIX_LoadAudio_IO(mixer, io, /*predecode=*/false, /*closeio=*/true);
+	if (!m_audio)
 	{
+		DEBUG_ERROR("Failed to decode sound '%s': %s", filePath.c_str(), SDL_GetError());
 		return false;
 	}
 
@@ -41,55 +47,82 @@ bool Struktur::Resource::SoundResource::LoadFromDisk()
 
 void Struktur::Resource::SoundResource::UnloadFromDisk()
 {
-	if (m_waveData.frameCount > 0)
+	// UnloadFromHardware() must run first - destroying m_audio while a track still uses it is unsafe.
+	if (m_audio)
 	{
-		::UnloadWave(m_waveData);
-		m_waveData.frameCount = 0;
+		::MIX_DestroyAudio(m_audio);
+		m_audio = nullptr;
 	}
 	isLoaded = false;
 }
 
-bool Struktur::Resource::SoundResource::LoadToHardware()
+bool Struktur::Resource::SoundResource::LoadToHardware(GameContext& context)
 {
-	if (!LoadFromDisk())
+	if (!LoadFromDisk(context))
 	{
 		return false;
 	}
-	if (sound.frameCount > 0)
+	if (track)
 	{
 		return true;  // Already loaded
 	}
 
-	sound = ::LoadSoundFromWave(m_waveData);
+	MIX_Mixer* mixer = context.GetMixer().GetHandle();
+
+	track = ::MIX_CreateTrack(mixer);
+	if (!track || !::MIX_SetTrackAudio(track, m_audio))
+	{
+		DEBUG_ERROR("Failed to load sound to audio hardware: %s: %s", filePath.c_str(), SDL_GetError());
+		return false;
+	}
+
 	DEBUG_INFO(std::format("Loaded sound to audio hardware: {}", filePath).c_str());
-	return sound.frameCount > 0;
+	return true;
 }
 
 void Struktur::Resource::SoundResource::UnloadFromHardware()
 {
-	if (sound.frameCount > 0)
+	if (track)
 	{
-		::UnloadSound(sound);
-		sound.frameCount = 0;
+		::MIX_DestroyTrack(track);
+		track = nullptr;
 		DEBUG_INFO(std::format("Unloaded sound from audio hardware: {}", filePath).c_str());
 	}
 }
 
-bool Struktur::Resource::SoundResource::IsHardwareReady() const
-{
-	return sound.frameCount > 0 /* && IsSoundReady(sound)*/;
-}
-
 size_t Struktur::Resource::SoundResource::GetMemoryUsage() const
 {
-	return isLoaded ? (m_waveData.frameCount * m_waveData.channels * (m_waveData.sampleSize / 8)) : 0;
+	if (!isLoaded || !m_audio)
+	{
+		return 0;
+	}
+
+	SDL_AudioSpec spec;
+	if (!::MIX_GetAudioFormat(m_audio, &spec))
+	{
+		return 0;
+	}
+
+	Sint64 frames = ::MIX_GetAudioDuration(m_audio);
+	if (frames < 0)
+	{
+		return 0;  // MIX_DURATION_UNKNOWN / MIX_DURATION_INFINITE
+	}
+
+	return static_cast<size_t>(frames) * SDL_AUDIO_FRAMESIZE(spec);
 }
 
-Struktur::Resource::SoundResource* Struktur::Resource::SoundPool::LoadResource(const std::string& filePath)
+bool Struktur::Resource::SoundResource::IsHardwareReady() const
+{
+	return track != nullptr;
+}
+
+Struktur::Resource::SoundResource* Struktur::Resource::SoundPool::LoadResource(GameContext& context,
+                                                                               const std::string& filePath)
 {
 	auto* sound = new SoundResource(filePath);
 
-	if (!sound->LoadFromDisk())
+	if (!sound->LoadFromDisk(context))
 	{
 		delete sound;
 		return nullptr;
@@ -98,7 +131,7 @@ Struktur::Resource::SoundResource* Struktur::Resource::SoundPool::LoadResource(c
 	return sound;
 }
 
-bool Struktur::Resource::SoundPool::EnsureResourceReady(const std::string& filePath)
+bool Struktur::Resource::SoundPool::EnsureResourceReady(GameContext& context, const std::string& filePath)
 {
 	auto it = m_loadedResources.find(filePath);
 	if (it == m_loadedResources.end())
@@ -109,11 +142,11 @@ bool Struktur::Resource::SoundPool::EnsureResourceReady(const std::string& fileP
 	SoundResource* sound = it->second.resource;
 
 	// Load from disk first
-	if (!sound->isLoaded && !sound->LoadFromDisk())
+	if (!sound->isLoaded && !sound->LoadFromDisk(context))
 	{
 		return false;
 	}
 
 	// Then load to audio hardware
-	return sound->LoadToHardware();
+	return sound->LoadToHardware(context);
 }
