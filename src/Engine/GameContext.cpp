@@ -12,7 +12,7 @@ GameContext::GameContext()
 	m_systemManager               = std::make_unique<System::SystemManager>();
 	m_gameObjectManager           = std::make_unique<System::GameObjectManager>();
 	m_camera                      = std::make_unique<GameResource::Camera>();
-	m_renderQueue                 = std::make_unique<Renderer::RenderQueue>();
+	m_worldRenderer                = std::make_unique<Renderer::WorldRenderer>();
 	m_uiManager                   = std::make_unique<UI::UIManager>();
 	m_physicsWorld                = std::make_unique<Physics::PhysicsWorld>();
 	m_wrenScriptEngine            = std::make_unique<Wren::WrenScriptEngine>();
@@ -38,6 +38,39 @@ Audio::Mixer& GameContext::GetMixer() const
 	ASSERT_MSG(m_mixer.get(), "Mixer not initialised");
 	return *m_mixer;
 }
+
+#if !defined(PLATFORM_WEB)
+void GameContext::InitialiseGraphics(int width, int height, const std::string& title, bool resizable)
+{
+	m_window         = std::make_unique<Platform::Window>(width, height, title, resizable);
+	m_graphicsDevice  = std::make_unique<Renderer::GraphicsDevice>(m_window->GetNativeHandle(), width, height);
+}
+
+Platform::Window& GameContext::GetWindow() const
+{
+	ASSERT_MSG(m_window.get(), "Window not initialised");
+	return *m_window;
+}
+
+Renderer::GraphicsDevice& GameContext::GetGraphicsDevice() const
+{
+	ASSERT_MSG(m_graphicsDevice.get(), "GraphicsDevice not initialised");
+	return *m_graphicsDevice;
+}
+
+#if defined(EDITOR)
+void GameContext::InitialiseImGuiRenderer()
+{
+	m_imGuiRenderer = std::make_unique<Renderer::ImGuiRenderer>();
+}
+
+Renderer::ImGuiRenderer& GameContext::GetImGuiRenderer() const
+{
+	ASSERT_MSG(m_imGuiRenderer.get(), "ImGuiRenderer not initialised");
+	return *m_imGuiRenderer;
+}
+#endif
+#endif
 
 Input::Input& GameContext::GetInput() const
 {
@@ -93,10 +126,10 @@ GameResource::Camera& GameContext::GetCamera() const
 	return *m_camera;
 }
 
-Renderer::RenderQueue& GameContext::GetRenderQueue() const
+Renderer::WorldRenderer& GameContext::GetWorldRenderer() const
 {
-	ASSERT_MSG(m_renderQueue.get(), "Render Queue not initialised");
-	return *m_renderQueue;
+	ASSERT_MSG(m_worldRenderer.get(), "World Renderer not initialised");
+	return *m_worldRenderer;
 }
 
 UI::UIManager& GameContext::GetUIManager() const

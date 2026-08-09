@@ -44,6 +44,7 @@ void Struktur::UI::UILabel::Update(GameContext& context)
 
 void Struktur::UI::UILabel::Render(GameContext& context)
 {
+#if defined(PLATFORM_WEB)
 	// Draw background if not transparent
 	if (m_backgroundColor.a > 0)
 	{
@@ -64,8 +65,22 @@ void Struktur::UI::UILabel::Render(GameContext& context)
 
 	// Render text with wrapping support
 	RenderText(m_text, startPos, lineHeight);
+#endif
+	// UIRenderSystem (the only caller of UIElement::Render) is web-only - text drawing isn't ported to bgfx yet.
 
 	RenderChildren(context);
+}
+
+::Vector2 Struktur::UI::UILabel::MeasureText(const ::Font& font, const std::string& text, float fontSize)
+{
+#if defined(PLATFORM_WEB)
+	return ::MeasureTextEx(font, text.c_str(), fontSize, 1.0f);
+#else
+	(void)font;
+	(void)text;
+	(void)fontSize;
+	return {0, 0};
+#endif
 }
 
 std::vector<std::string> Struktur::UI::UILabel::GetTextLines(const std::string& text) const
@@ -126,7 +141,7 @@ std::vector<std::string> Struktur::UI::UILabel::WrapText(const std::string& text
 			if (c == ' ' || c == '\t')
 			{
 				std::string testLine = currentLine + word + c;
-				::Vector2 size       = ::MeasureTextEx(m_font->font, testLine.c_str(), m_fontSize, 1.0f);
+				::Vector2 size       = MeasureText(m_font->font, testLine, m_fontSize);
 
 				if (size.x > maxWidth && !currentLine.empty())
 				{
@@ -148,7 +163,7 @@ std::vector<std::string> Struktur::UI::UILabel::WrapText(const std::string& text
 		{
 			// Character wrap mode
 			std::string testLine = currentLine + c;
-			::Vector2 size       = ::MeasureTextEx(m_font->font, testLine.c_str(), m_fontSize, 1.0f);
+			::Vector2 size       = MeasureText(m_font->font, testLine, m_fontSize);
 
 			if (size.x > maxWidth && !currentLine.empty())
 			{
@@ -305,7 +320,7 @@ void Struktur::UI::UILabel::RenderText(const std::string& text, ::Vector2 startP
 
 	for (const auto& line : lines)
 	{
-		::Vector2 lineSize = ::MeasureTextEx(m_font->font, line.c_str(), m_fontSize, 1.0f);
+		::Vector2 lineSize = MeasureText(m_font->font, line, m_fontSize);
 
 		// For justified text, use the full available width (except last line)
 		if (m_alignment == TextAlignment::JUSTIFY && &line != &lines.back())

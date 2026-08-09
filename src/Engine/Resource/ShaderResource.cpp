@@ -3,13 +3,26 @@
 #include "Debug/Assertions.h"
 #include "Engine/Core/FileSystem.h"
 
+#if !defined(PLATFORM_WEB)
+	#include <algorithm>
+
+	#include "Engine/Renderer/EmbeddedShaders.h"
+#endif
+
 Struktur::Resource::ShaderResource::ShaderResource(const std::string& vsFilePath, const std::string& fsFilePath)
     : GpuResource(vsFilePath + "," + fsFilePath),
       m_vsFilePath(vsFilePath),
       m_fsFilePath(fsFilePath)
 {
+#if defined(PLATFORM_WEB)
 	shader.id   = 0;
 	shader.locs = nullptr;
+#else
+	// Only one custom shader exists today (SoulEffect); anything else falls back to the default sprite shader.
+	std::string lowerFsPath = m_fsFilePath;
+	std::transform(lowerFsPath.begin(), lowerFsPath.end(), lowerFsPath.begin(), ::tolower);
+	m_embeddedName = (lowerFsPath.find("souleffect") != std::string::npos) ? "soulEffect" : "sprite";
+#endif
 }
 
 Struktur::Resource::ShaderResource::~ShaderResource()
@@ -26,18 +39,17 @@ bool Struktur::Resource::ShaderResource::LoadFromDisk(GameContext& context)
 	}
 
 	isLoaded = true;
-	// TODO store the entire shader file into a string
 	DEBUG_INFO("Loaded shader from disk: vs = %s, fs = %s", m_vsFilePath.c_str(), m_fsFilePath.c_str());
 	return true;
 }
 
 void Struktur::Resource::ShaderResource::UnloadFromDisk()
 {
-	// TODO once the shader loads to CPU clear it here
 	isLoaded = false;
 }
 
-bool Struktur::Resource::ShaderResource::LoadToGpu()
+#if defined(PLATFORM_WEB)
+bool Struktur::Resource::ShaderResource::LoadToGpu(GameContext& context)
 {
 	if (!isLoaded)
 	{
@@ -48,7 +60,6 @@ bool Struktur::Resource::ShaderResource::LoadToGpu()
 		return true;
 	}
 
-	// Helper lambda to load shader source via PhysicsFS
 	auto loadShaderSource = [](const std::string& path) -> std::string
 	{
 		if (path.empty())
@@ -85,6 +96,34 @@ bool Struktur::Resource::ShaderResource::IsGpuResourceValid() const
 {
 	return shader.id != 0;
 }
+#else
+bool Struktur::Resource::ShaderResource::LoadToGpu(GameContext& context)
+{
+	if (!isLoaded)
+	{
+		return false;
+	}
+	if (IsGpuResourceValid())
+	{
+		return true;
+	}
+
+	shader = Renderer::GetEmbeddedProgram(m_embeddedName.c_str());
+	return bgfx::isValid(shader);
+}
+
+void Struktur::Resource::ShaderResource::UnloadFromGpu()
+{
+	// Embedded programs are process-lifetime singletons shared by every ShaderResource with the same name
+	// (see Renderer::GetEmbeddedProgram's cache) - only clear this instance's reference, don't destroy it.
+	shader = BGFX_INVALID_HANDLE;
+}
+
+bool Struktur::Resource::ShaderResource::IsGpuResourceValid() const
+{
+	return bgfx::isValid(shader);
+}
+#endif
 
 size_t Struktur::Resource::ShaderResource::GetMemoryUsage() const
 {
@@ -93,7 +132,6 @@ size_t Struktur::Resource::ShaderResource::GetMemoryUsage() const
 		return 0;
 	}
 
-	// Estimate: glyph data + texture data
 	size_t vsSize = m_vsFilePath.size();
 	size_t fsSize = m_fsFilePath.size();
 	return vsSize + fsSize;

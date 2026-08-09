@@ -270,6 +270,7 @@ void SettingsWindow::RenderPerformanceSettings(GameContext& context)
 
 	ImGui::SeparatorText("Rendering");
 
+#if defined(PLATFORM_WEB)
 	if (ImGui::Checkbox("Enable VSync", &settings.enableVSync))
 	{
 		// Apply VSync setting immediately
@@ -290,6 +291,12 @@ void SettingsWindow::RenderPerformanceSettings(GameContext& context)
 			SetTargetFPS(settings.targetFPS);
 		}
 	}
+#else
+	// Desktop's frame pacing comes from GraphicsDevice's BGFX_RESET_VSYNC, not raylib's SetTargetFPS - which
+	// would hang here anyway, since raylib's core state (that function's target) is never initialised on this
+	// path. Leaving the controls out entirely rather than showing settings that silently do nothing.
+	ImGui::TextDisabled("VSync/target FPS controls aren't wired up on this platform yet.");
+#endif
 
 	ImGui::Spacing();
 	ImGui::SeparatorText("Monitoring");

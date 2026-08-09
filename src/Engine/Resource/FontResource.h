@@ -34,7 +34,7 @@ class FontResource : public GpuResource
 
 	bool LoadFromDisk(GameContext& context) override;
 	void UnloadFromDisk() override;
-	bool LoadToGpu() override;
+	bool LoadToGpu(GameContext& context) override;
 	void UnloadFromGpu() override;
 
 	bool IsGpuResourceValid() const override;

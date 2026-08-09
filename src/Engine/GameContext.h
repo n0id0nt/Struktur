@@ -2,6 +2,7 @@
 
 #include <memory>
 #include <stdexcept>
+#include <string>
 
 #include "Debug/Assertions.h"
 #include "Engine/Audio/Mixer.h"
@@ -17,8 +18,15 @@
 #include "Engine/Game/Camera.h"
 #include "Engine/Input/Input.h"
 #include "Engine/Physics/PhysicsWorld.h"
-#include "Engine/Renderer/RenderQueue.h"
+#include "Engine/Renderer/WorldRenderer.h"
 #include "Engine/Resource/ResourceManager.h"
+#if !defined(PLATFORM_WEB)
+	#include "Engine/Platform/Window.h"
+	#include "Engine/Renderer/GraphicsDevice.h"
+	#if defined(EDITOR)
+		#include "Engine/Renderer/ImGuiRenderer.h"
+	#endif
+#endif
 #include "Engine/Scripting/WrenScriptComponentRegistry.h"
 #include "Engine/Scripting/WrenScriptEngine.h"
 #include "Engine/Scripting/WrenStateManager.h"
@@ -47,7 +55,7 @@ class GameContext
 	System::GameObjectManager& GetGameObjectManager() const;
 	Physics::PhysicsWorld& GetPhysicsWorld() const;
 	GameResource::Camera& GetCamera() const;
-	Renderer::RenderQueue& GetRenderQueue() const;
+	Renderer::WorldRenderer& GetWorldRenderer() const;
 	UI::UIManager& GetUIManager() const;
 	Wren::WrenScriptEngine& GetWrenScriptEngine() const;
 	Wren::WrenStateManager& GetWrenStateManager() const;
@@ -58,6 +66,21 @@ class GameContext
 	Dialogue::VariableSubstitutionSystem& GetVariableSubstitutionSystem() const;
 	Event::EventManager& GetEventManager() const;
 	Audio::Mixer& GetMixer() const;
+
+#if !defined(PLATFORM_WEB)
+	// Deferred until the desired window size is known (see Game.cpp's InitialiseGame) - unlike every other
+	// subsystem above, these aren't ready immediately after construction.
+	void InitialiseGraphics(int width, int height, const std::string& title, bool resizable);
+	Platform::Window& GetWindow() const;
+	Renderer::GraphicsDevice& GetGraphicsDevice() const;
+
+	#if defined(EDITOR)
+	// Deferred further still - needs an ImGui context (and its font atlas configured) to already exist,
+	// which only happens once Game.cpp has called ImGui::CreateContext()/ImGui_ImplSDL3_InitForOther().
+	void InitialiseImGuiRenderer();
+	Renderer::ImGuiRenderer& GetImGuiRenderer() const;
+	#endif
+#endif
 
 #ifdef EDITOR
 	Debug::Editor& GetEditor() const;
@@ -77,7 +100,7 @@ class GameContext
 	std::unique_ptr<System::GameObjectManager> m_gameObjectManager;
 	std::unique_ptr<Physics::PhysicsWorld> m_physicsWorld;
 	std::unique_ptr<GameResource::Camera> m_camera;
-	std::unique_ptr<Renderer::RenderQueue> m_renderQueue;
+	std::unique_ptr<Renderer::WorldRenderer> m_worldRenderer;
 	std::unique_ptr<UI::UIManager> m_uiManager;
 	std::unique_ptr<Wren::WrenScriptEngine> m_wrenScriptEngine;
 	std::unique_ptr<Wren::WrenStateManager> m_wrenStateManager;
@@ -88,6 +111,14 @@ class GameContext
 	std::unique_ptr<Dialogue::VariableSubstitutionSystem> m_variableSubstitutionSystem;
 	std::unique_ptr<Event::EventManager> m_eventManager;
 	std::unique_ptr<Audio::Mixer> m_mixer;
+
+#if !defined(PLATFORM_WEB)
+	std::unique_ptr<Platform::Window> m_window;
+	std::unique_ptr<Renderer::GraphicsDevice> m_graphicsDevice;
+	#if defined(EDITOR)
+	std::unique_ptr<Renderer::ImGuiRenderer> m_imGuiRenderer;
+	#endif
+#endif
 
 #ifdef EDITOR
 	std::unique_ptr<Debug::Editor> m_editor;

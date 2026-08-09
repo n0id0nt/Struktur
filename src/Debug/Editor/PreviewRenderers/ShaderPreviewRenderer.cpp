@@ -3,10 +3,19 @@
 
 #include "Engine/ECS/Component/Shader.h"
 #include "Engine/GameContext.h"
-#include "rlImGui.h"
+#if defined(PLATFORM_WEB)
+	#include "rlImGui.h"
+#endif
 
 namespace Struktur::Debug
 {
+#if !defined(PLATFORM_WEB)
+// This preview renders through raylib directly (BeginTextureMode/DrawTexturePro/BeginShaderMode), which has no
+// initialised window/rlgl context to run against now that bgfx renders the game - stubbed until the
+// ImGui-bgfx backend (and a bgfx-based version of this preview) lands.
+void ShaderPreviewRenderer::InitialisePreview() {}
+void ShaderPreviewRenderer::CleanupPreview() {}
+#else
 void ShaderPreviewRenderer::InitialisePreview()
 {
 	// Create a default checkerboard texture
@@ -33,6 +42,7 @@ void ShaderPreviewRenderer::CleanupPreview()
 		m_renderTexture.id = 0;
 	}
 }
+#endif
 
 void ShaderPreviewRenderer::RenderControls(GameContext& context)
 {
@@ -58,6 +68,12 @@ void ShaderPreviewRenderer::RenderControls(GameContext& context)
 	ImGui::Separator();
 }
 
+#if !defined(PLATFORM_WEB)
+void ShaderPreviewRenderer::Render(GameContext& context, const ImVec2& availableSize)
+{
+	ImGui::Text("Shader preview unavailable (bgfx editor backend pending)");
+}
+#else
 void ShaderPreviewRenderer::Render(GameContext& context, const ImVec2& availableSize)
 {
 	if (!m_shader)
@@ -79,7 +95,9 @@ void ShaderPreviewRenderer::Render(GameContext& context, const ImVec2& available
 	rlImGuiImageRect(&m_renderTexture.texture, (int)displaySize.x, (int)displaySize.y,
 	                 Rectangle{0, 0, (float)m_renderTexture.texture.width, -(float)m_renderTexture.texture.height});
 }
+#endif
 
+#if defined(PLATFORM_WEB)
 void ShaderPreviewRenderer::RenderShaderPreview(const ImVec2& size)
 {
 	BeginTextureMode(m_renderTexture);
@@ -201,4 +219,8 @@ void ShaderPreviewRenderer::ApplyShaderUniforms()
 		}
 	}
 }
+#else
+void ShaderPreviewRenderer::RenderShaderPreview(const ImVec2& size) {}
+void ShaderPreviewRenderer::ApplyShaderUniforms() {}
+#endif
 }  // namespace Struktur::Debug

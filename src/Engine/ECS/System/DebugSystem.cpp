@@ -10,6 +10,7 @@ Struktur::System::DebugSystem::DebugSystem()
 {
 }
 
+#if defined(PLATFORM_WEB)
 void Struktur::System::DebugSystem::Update(GameContext& context)
 {
 	// Get editor settings from context
@@ -139,3 +140,9 @@ void Struktur::System::DebugSystem::RenderGrid(GameContext& context)
 		::DrawLineEx({(float)startX, 0}, {(float)endX, 0}, 2.0f, GREEN);
 	}
 }
+#else
+// Debug draw has no bgfx path yet (guarded out of registration in Game.cpp too) - stubbed until a later step.
+void Struktur::System::DebugSystem::Update(GameContext& context) {}
+void Struktur::System::DebugSystem::RenderEntityGizmos(GameContext& context) {}
+void Struktur::System::DebugSystem::RenderGrid(GameContext& context) {}
+#endif

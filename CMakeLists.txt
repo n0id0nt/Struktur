@@ -120,10 +120,59 @@ if(PLATFORM_DESKTOP OR PLATFORM_WEB)
     add_subdirectory(third_party/SDL_mixer)
 endif()
 
-# RayLib
+# RayLib - windowing/rendering runtime is retired on desktop (see bgfx + Engine/Platform below); the library is
+# still linked because FontResource/UIPanel/UILabel/DebugSystem/the editor still reference raylib types until
+# later steps port them too.
 set(BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
 set(BUILD_GAMES    OFF CACHE BOOL "" FORCE)
 add_subdirectory(third_party/raylib)
+
+# bgfx - rendering backend for desktop, replacing raylib's rlgl (see Engine/Renderer/GraphicsDevice). Desktop
+# only for now: shaderc can't run as a build-time host tool when this project cross-compiles to Emscripten, and
+# web keeps raylib's existing GLFW-emscripten rendering path until a later step sorts that out.
+if(PLATFORM_DESKTOP)
+    set(BGFX_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
+    set(BGFX_BUILD_TESTS OFF CACHE BOOL "" FORCE)
+    set(BGFX_INSTALL OFF CACHE BOOL "" FORCE)
+    set(BGFX_BUILD_TOOLS_GEOMETRY OFF CACHE BOOL "" FORCE)
+    set(BGFX_BUILD_TOOLS_TEXTURE OFF CACHE BOOL "" FORCE)
+    add_subdirectory(third_party/bgfx.cmake)
+
+    # add_subdirectory() (rather than find_package()) skips bgfx.cmake's installed Config.cmake, so the
+    # variable/function it would have set up (BGFX_SHADER_INCLUDE_PATH, bgfx_compile_shaders()) are set up by hand.
+    set(BGFX_SHADER_INCLUDE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/third_party/bgfx.cmake/bgfx/src)
+    include(${CMAKE_CURRENT_SOURCE_DIR}/third_party/bgfx.cmake/cmake/bgfxToolUtils.cmake)
+
+    # TextureResource decodes images via bimg's already-vendored stb_image rather than re-vendoring our own copy;
+    # this header path isn't exposed by bimg's own CMake target, so it's added directly.
+    set(STB_IMAGE_INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/third_party/bgfx.cmake/bimg/3rdparty/stb)
+
+    set(STRUKTUR_SHADER_DIR ${CMAKE_CURRENT_SOURCE_DIR}/assets/Shaders)
+    set(STRUKTUR_SHADER_OUTPUT_DIR ${CMAKE_CURRENT_SOURCE_DIR}/assets/Shaders/compiled)
+    set(STRUKTUR_SHADER_OUTPUTS "")
+    # NAME must have no dots - shaderc's bin2c step derives a C array name from the shader filename.
+    function(struktur_compile_shader NAME)
+        bgfx_compile_shaders(
+            TYPE VERTEX
+            SHADERS ${STRUKTUR_SHADER_DIR}/vs_${NAME}.sc
+            VARYING_DEF ${STRUKTUR_SHADER_DIR}/varying.def.sc
+            OUTPUT_DIR ${STRUKTUR_SHADER_OUTPUT_DIR}
+            OUT_FILES_VAR ${NAME}_VS_OUT
+            AS_HEADERS
+        )
+        bgfx_compile_shaders(
+            TYPE FRAGMENT
+            SHADERS ${STRUKTUR_SHADER_DIR}/fs_${NAME}.sc
+            VARYING_DEF ${STRUKTUR_SHADER_DIR}/varying.def.sc
+            OUTPUT_DIR ${STRUKTUR_SHADER_OUTPUT_DIR}
+            OUT_FILES_VAR ${NAME}_FS_OUT
+            AS_HEADERS
+        )
+        set(STRUKTUR_SHADER_OUTPUTS ${STRUKTUR_SHADER_OUTPUTS} ${${NAME}_VS_OUT} ${${NAME}_FS_OUT} PARENT_SCOPE)
+    endfunction()
+    struktur_compile_shader(sprite)
+    struktur_compile_shader(soulEffect)
+endif()
 
 if(PLATFORM_DESKTOP)
     # Strip PLATFORM_DESKTOP so raylib's rcore.c doesn't default to GLFW instead of our PLATFORM_CUSTOM_SDL3.
@@ -137,6 +186,8 @@ if(PLATFORM_DESKTOP)
         set_target_properties(raylib PROPERTIES INTERFACE_COMPILE_DEFINITIONS "${RAYLIB_INTERFACE_COMPILE_DEFS}")
     endif()
 
+    # raylib's rcore.c still needs exactly one PLATFORM_ macro to compile even though ::InitWindow() is never
+    # called anymore (Engine/Platform/Window + bgfx own windowing/rendering now) - this just keeps it building.
     target_compile_definitions(raylib PUBLIC PLATFORM_CUSTOM_SDL3)
     # Plain (non-keyword) signature required to match raylib's own target_link_libraries call for this target.
     target_link_libraries(raylib SDL3::SDL3)
@@ -202,18 +253,42 @@ if(EDITOR)
     target_include_directories(imgui PUBLIC third_party/imgui)
     target_compile_definitions(imgui PUBLIC IMGUI_DISABLE_OBSOLETE_FUNCTIONS)
 
-    # rlImGui
-    add_library(rlimgui STATIC third_party/rlimgui/rlImGui.cpp)
-    target_include_directories(rlimgui PUBLIC third_party/rlimgui third_party/imgui)
-    target_link_libraries(rlimgui PUBLIC raylib imgui)
+    if(PLATFORM_DESKTOP)
+        # Desktop has no raylib window/rlgl context to hand rlImGui, so input/platform plumbing comes from
+        # ImGui's own official SDL3 backend instead (rendering is our own hand-rolled bgfx backend, see
+        # Engine/Renderer/ImGuiRenderer - the "ForOther" variant here doesn't need a paired renderer backend).
+        target_sources(imgui PRIVATE third_party/imgui/backends/imgui_impl_sdl3.cpp)
+        target_include_directories(imgui PUBLIC third_party/imgui/backends)
+        target_link_libraries(imgui PUBLIC SDL3::SDL3)
+    endif()
+
+    # rlImGui - web only now (desktop uses imgui_impl_sdl3 + Engine/Renderer/ImGuiRenderer instead).
+    if(PLATFORM_WEB)
+        add_library(rlimgui STATIC third_party/rlimgui/rlImGui.cpp)
+        target_include_directories(rlimgui PUBLIC third_party/rlimgui third_party/imgui)
+        target_link_libraries(rlimgui PUBLIC raylib imgui)
+    endif()
 
     # tinyfiledialogs
     add_library(tinyfiledialogs STATIC third_party/tinyfiledialogs/tinyfiledialogs.c)
     target_include_directories(tinyfiledialogs PUBLIC third_party/tinyfiledialogs)
 endif()
 
+if(PLATFORM_DESKTOP)
+    set(DESKTOP_RENDERER_SOURCES
+        src/Engine/Platform/Window.h                src/Engine/Platform/Window.cpp
+        src/Engine/Renderer/GraphicsDevice.h        src/Engine/Renderer/GraphicsDevice.cpp
+        src/Engine/Renderer/EmbeddedShaders.h        src/Engine/Renderer/EmbeddedShaders.cpp
+        src/Engine/Renderer/SpriteVertex.h
+        src/Engine/Renderer/TileChunk.h
+        src/Engine/Renderer/TileChunkBuilder.h      src/Engine/Renderer/TileChunkBuilder.cpp
+        ${STRUKTUR_SHADER_OUTPUTS}
+    )
+    source_group("Shaders/Compiled" FILES ${STRUKTUR_SHADER_OUTPUTS})
+endif()
+
 if(DEBUG)
-    set(DEBUG_SOURCES 
+    set(DEBUG_SOURCES
         src/Debug/Box2DDebugRenderer.h
 
         src/Engine/ECS/System/DebugSystem.h         src/Engine/ECS/System/DebugSystem.cpp
@@ -233,6 +308,8 @@ if(EDITOR)
 
         src/Debug/Editor/EditorSettings.h           src/Debug/Editor/EditorSettings.cpp
         
+        src/Engine/Renderer/ImGuiRenderer.h         src/Engine/Renderer/ImGuiRenderer.cpp
+
         src/Debug/Editor/Windows/EditorWindow.h     src/Debug/Editor/Windows/EditorWindow.cpp
         src/Debug/Editor/Windows/DebugInfoWindow.h  src/Debug/Editor/Windows/DebugInfoWindow.cpp
         src/Debug/Editor/Windows/GameViewPortWindow.h src/Debug/Editor/Windows/GameViewPortWindow.cpp
@@ -374,7 +451,7 @@ set(SOURCES
     src/Engine/Game/RenderLayer.h
     src/Engine/Game/Curve.h
 
-    src/Engine/Renderer/RenderQueue.h           src/Engine/Renderer/RenderQueue.cpp
+    src/Engine/Renderer/WorldRenderer.h         src/Engine/Renderer/WorldRenderer.cpp
 
     src/Engine/Scripting/WrenScriptEngine.h     src/Engine/Scripting/WrenScriptEngine.cpp
     src/Engine/Scripting/WrenBindingRegistry.h  src/Engine/Scripting/WrenBindingRegistry.cpp
@@ -395,12 +472,16 @@ set(SOURCES
     ${WREN_BINDING_SOURCES}
     ${DEBUG_SOURCES}
     ${EDITOR_SOURCES}
+    ${DESKTOP_RENDERER_SOURCES}
 )
 
 # Create executable
 add_executable(${PROJECT_NAME} ${SOURCES})
 
 target_include_directories(${PROJECT_NAME} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src)
+if(PLATFORM_DESKTOP)
+    target_include_directories(${PROJECT_NAME} PRIVATE ${STB_IMAGE_INCLUDE_DIR} ${STRUKTUR_SHADER_OUTPUT_DIR})
+endif()
 
 # Link Libraries
 target_link_libraries(${PROJECT_NAME}
@@ -413,8 +494,11 @@ target_link_libraries(${PROJECT_NAME}
     PhysFS::PhysFS-static
     $<$<OR:$<BOOL:${PLATFORM_DESKTOP}>,$<BOOL:${PLATFORM_WEB}>>:SDL3_mixer::SDL3_mixer>
     $<$<OR:$<BOOL:${PLATFORM_DESKTOP}>,$<BOOL:${PLATFORM_WEB}>>:SDL3::SDL3>
+    $<$<BOOL:${PLATFORM_DESKTOP}>:bgfx>
+    $<$<BOOL:${PLATFORM_DESKTOP}>:bimg>
+    $<$<BOOL:${PLATFORM_DESKTOP}>:bx>
     $<$<BOOL:${EDITOR}>:imgui>
-    $<$<BOOL:${EDITOR}>:rlimgui>
+    $<$<AND:$<BOOL:${EDITOR}>,$<BOOL:${PLATFORM_WEB}>>:rlimgui>
     $<$<BOOL:${EDITOR}>:tinyfiledialogs>
 )
 

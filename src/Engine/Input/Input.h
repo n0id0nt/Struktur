@@ -10,6 +10,11 @@
 #include "glm/glm.hpp"
 #include "raylib.h"
 
+#if !defined(PLATFORM_WEB)
+	#include <array>
+struct SDL_Gamepad;
+#endif
+
 namespace Struktur::Input
 {
 class InputMaps;
@@ -192,6 +197,17 @@ class Input
 	float m_deadzone;
 	std::string m_gamepadId;
 	int m_gamepadIndex;
+#if !defined(PLATFORM_WEB)
+	SDL_Gamepad* m_sdlGamepad = nullptr;
+	// SDL_SCANCODE_COUNT (avoids pulling SDL_scancode.h into this header just for the array size). Two
+	// snapshots (this frame vs last frame) so IsKeyJustPressed/Released can edge-detect - SDL's own
+	// SDL_GetKeyboardState() is a live array with no history, unlike raylib's IsKeyPressed()/IsKeyReleased().
+	std::array<bool, 512> m_currKeyboardState{};
+	std::array<bool, 512> m_prevKeyboardState{};
+	std::unordered_map<::GamepadButton, bool> m_currControllerButtons;
+	std::unordered_map<::GamepadButton, bool> m_prevControllerButtons;
+	bool WasControllerButtonDownLastFrame(::GamepadButton button);
+#endif
 
 	// Helper functions to reduce code duplication
 	// NOTE: Template must be defined in header

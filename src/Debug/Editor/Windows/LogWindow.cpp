@@ -28,14 +28,21 @@ LogWindow::LogWindow()
 	m_searchBuffer[0] = '\0';
 	s_instance        = this;
 
-	// Set Raylib's trace log callback to our function
+#if defined(PLATFORM_WEB)
+	// Set Raylib's trace log callback to our function. Desktop doesn't do this: raylib's window/core state is
+	// never initialised there (bgfx replaces it), and registering a custom trace callback against that
+	// never-initialised state hangs the process - DEBUG_INFO/etc (which route through raylib's ::TraceLog,
+	// see Debug/Assertions.h) keep working either way, this window just can't capture them into its own view.
 	SetTraceLogCallback(TraceLogCallback);
+#endif
 }
 
 LogWindow::~LogWindow()
 {
+#if defined(PLATFORM_WEB)
 	// Restore default Raylib logging
 	SetTraceLogCallback(nullptr);
+#endif
 	s_instance = nullptr;
 }
 
@@ -226,7 +233,7 @@ void LogWindow::RenderLogList()
 		ImGui::TextColored(ImVec4(0.6f, 0.6f, 0.6f, 1.0f), "No logs to display");
 	}
 
-	// Deferred scroll — happens after all content is laid out
+	// Deferred scroll ï¿½ happens after all content is laid out
 	if (m_scrollToBottom)
 	{
 		ImGui::SetScrollHereY(1.0f);
@@ -313,7 +320,7 @@ void LogWindow::RenderLogRow(int i)
 	}
 	else
 	{
-		// Single line — simple selectable
+		// Single line ï¿½ simple selectable
 		bool isSelected = (m_selectedLogIndex == i);
 		ImGui::PushStyleColor(ImGuiCol_Text, grey);
 		if (ImGui::Selectable(entry.message.c_str(), isSelected, ImGuiSelectableFlags_AllowDoubleClick))

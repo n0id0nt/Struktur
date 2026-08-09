@@ -9,24 +9,30 @@
 #include "Engine/ECS/System/ShaderSystem.h"
 #include "Engine/ECS/System/TransformSystem.h"
 #include "Engine/GameContext.h"
-#include "Engine/Renderer/RenderQueue.h"
+#include "Engine/Renderer/WorldRenderer.h"
 #include "Engine/Util/MathUtil.h"
 #include "glm/glm.hpp"
 #include "glm/gtc/quaternion.hpp."
 #include "raylib.h"
 #include "raymath.h"
 
+#if !defined(PLATFORM_WEB)
+	#include "Engine/Renderer/TileChunkBuilder.h"
+#endif
+
 void Struktur::System::SpriteRenderSystem::Update(GameContext& context)
 {
-	entt::registry& registry           = context.GetRegistry();
-	GameResource::Camera& camera       = context.GetCamera();
-	Renderer::RenderQueue& renderQueue = context.GetRenderQueue();
-	TransformSystem& transformSystem   = context.GetSystemManager().GetSystem<TransformSystem>();
+	entt::registry& registry               = context.GetRegistry();
+	GameResource::Camera& camera           = context.GetCamera();
+	Renderer::WorldRenderer& worldRenderer = context.GetWorldRenderer();
+	TransformSystem& transformSystem       = context.GetSystemManager().GetSystem<TransformSystem>();
 
+#if defined(PLATFORM_WEB)
 	::BeginMode2D(camera.GetRaylibCamera());
+#endif
 	{
-		Renderer::CullBounds cullBounds = Renderer::RenderQueue::ComputeCullBounds(context);
-		renderQueue.Clear();
+		Renderer::CullBounds cullBounds = Renderer::WorldRenderer::ComputeCullBounds(context);
+		worldRenderer.Clear();
 
 		{
 			auto view = registry.view<Component::TileMap, Component::Transform>(entt::exclude<Inactive>);
@@ -40,11 +46,29 @@ void Struktur::System::SpriteRenderSystem::Update(GameContext& context)
 
 				if (!texture->IsGpuReady())
 				{
-					texture->LoadToGpu();
+					texture->LoadToGpu(context);
 				}
 
 				glm::vec3 worldPosition = transformSystem.GetWorldPosition(context, entity);
 
+#if !defined(PLATFORM_WEB)
+				// Tilemaps are treated as static once placed: chunks are built once (from world-space tile
+				// positions baked in up front) and cached on the component, rather than every tile being
+				// walked and resubmitted every frame - see the chunking design discussion for why.
+				if (!tileMap.chunksBuilt)
+				{
+					tileMap.chunks     = Renderer::BuildTileChunks(tileMap.gridTiles, tileMap.tileSize,
+					                                               glm::vec2(worldPosition.x, worldPosition.y),
+					                                               texture->GetWidth(), texture->GetHeight());
+					tileMap.chunksBuilt = true;
+				}
+
+				for (const Renderer::TileChunk& chunk : tileMap.chunks)
+				{
+					worldRenderer.SubmitChunk(tileMap.layer, tileMap.orderInLayer, chunk, texture->GetHandle(),
+					                          cullBounds);
+				}
+#else
 				for (auto& gridTile : tileMap.gridTiles)
 				{
 					Util::Math::Rect sourceRec{gridTile.sourcePosition.x, gridTile.sourcePosition.y,
@@ -72,9 +96,10 @@ void Struktur::System::SpriteRenderSystem::Update(GameContext& context)
 					                       gridTile.position.y + ::round(worldPosition.y * 2) / 2,
 					                       (float)tileMap.tileSize, (float)tileMap.tileSize};
 
-					renderQueue.Submit(tileMap.layer, tileMap.orderInLayer, entity, texture->GetHandle(), sourceRec,
-					                  destRec, glm::vec2{0, 0}, 0.0f, Util::Math::ColorWhite, cullBounds);
+					worldRenderer.Submit(tileMap.layer, tileMap.orderInLayer, entity, texture->GetHandle(), sourceRec,
+					                     destRec, glm::vec2{0, 0}, 0.0f, Util::Math::ColorWhite, cullBounds);
 				}
+#endif
 			}
 		}
 		{
@@ -89,7 +114,7 @@ void Struktur::System::SpriteRenderSystem::Update(GameContext& context)
 
 				if (!texture->IsGpuReady())
 				{
-					texture->LoadToGpu();
+					texture->LoadToGpu(context);
 				}
 
 				glm::vec3 worldPosition = transformSystem.GetWorldPosition(context, entity);
@@ -132,12 +157,14 @@ void Struktur::System::SpriteRenderSystem::Update(GameContext& context)
 					orderInLayer += worldPosition.y;
 				}
 
-				renderQueue.Submit(sprite.layer, orderInLayer, entity, texture->GetHandle(), sourceRec, destRec,
-				                  offset, glm::degrees(angleZ), sprite.color, cullBounds);
+				worldRenderer.Submit(sprite.layer, orderInLayer, entity, texture->GetHandle(), sourceRec, destRec,
+				                     offset, glm::degrees(angleZ), sprite.color, cullBounds);
 			}
 		}
 
-		renderQueue.Flush(context);
+		worldRenderer.Flush(context);
 	}
+#if defined(PLATFORM_WEB)
 	::EndMode2D();
+#endif
 }

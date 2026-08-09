@@ -42,8 +42,11 @@ void DebugInfoWindow::Render(GameContext& context)
 	}
 
 	ImGui::Separator();
-	ImGui::Text("FPS: %d", GetFPS());
-	ImGui::Text("Frame Time: %.3f ms", GetFrameTime() * 1000.0f);
+	// Own TimeSystem instead of raylib's GetFPS()/GetFrameTime() - raylib's core state (that those read) is
+	// never initialised on desktop, and every other frame-timing consumer in the engine already uses this.
+	Core::TimeSystem& timeSystem = context.GetTimeSystem();
+	ImGui::Text("FPS: %.0f", timeSystem.unscaledDelta > 0.0f ? 1.0f / timeSystem.unscaledDelta : 0.0f);
+	ImGui::Text("Frame Time: %.3f ms", timeSystem.unscaledDelta * 1000.0f);
 	ImGui::Separator();
 
 	if (ImGui::Button("Reset"))

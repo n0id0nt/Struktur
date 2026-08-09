@@ -65,7 +65,7 @@ class ResourceManager
 
 	// GPU-specific operations (only affect GPU resources)
 	void HandleGpuContextLost();
-	void ReloadAllGpuResources();
+	void ReloadAllGpuResources(GameContext& context);
 
 	void PrintResourceStats() const;
 };

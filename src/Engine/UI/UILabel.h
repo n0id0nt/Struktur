@@ -82,6 +82,13 @@ class UILabel : public UIElement
 	::Rectangle GetFormattedTextBounds() const;
 	::Vector2 GetFormattedTextSize() const;
 	float GetLineHeight() const;
+
+   private:
+	// raylib's MeasureTextEx needs real glyph metrics (baseSize/glyphs/recs), which FontResource never populates
+	// on desktop - text rendering isn't ported yet there (see FontResource). Centralising the raylib call here
+	// means every layout call site (wrapping, justification, bounding box) gets the same safe {0,0} on desktop
+	// instead of dereferencing the stub font's null glyph data.
+	static ::Vector2 MeasureText(const ::Font& font, const std::string& text, float fontSize);
 };
 }  // namespace UI
 }  // namespace Struktur

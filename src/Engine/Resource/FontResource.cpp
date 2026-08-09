@@ -22,6 +22,7 @@ Struktur::Resource::FontResource::~FontResource()
 	UnloadFromDisk();
 }
 
+#if defined(PLATFORM_WEB)
 bool Struktur::Resource::FontResource::LoadFromDisk(GameContext& context)
 {
 	if (m_fontLoaded)
@@ -77,13 +78,32 @@ void Struktur::Resource::FontResource::UnloadFromDisk()
 	}
 	isLoaded = false;
 }
+#else
+bool Struktur::Resource::FontResource::LoadFromDisk(GameContext& context)
+{
+	// Text rendering isn't ported yet - raylib's font loading (LoadFontFromMemory/GetFontDefault) needs an
+	// initialised rlgl context to build the glyph atlas GPU texture, which doesn't exist on this path anymore.
+	// Reporting success (with an empty/invalid font) rather than failure keeps every caller - UILabel's
+	// constructor, level data, Wren scripts - from treating a stubbed font as a hard load error.
+	m_fontLoaded = true;
+	isLoaded     = true;
+	return true;
+}
 
-bool Struktur::Resource::FontResource::LoadToGpu()
+void Struktur::Resource::FontResource::UnloadFromDisk()
+{
+	m_fontLoaded = false;
+	isLoaded     = false;
+}
+#endif
+
+bool Struktur::Resource::FontResource::LoadToGpu(GameContext& context)
 {
 	// Loading from disk already creates the GPU texture for fonts, so just confirm that happened.
 	return isLoaded;
 }
 
+#if defined(PLATFORM_WEB)
 void Struktur::Resource::FontResource::UnloadFromGpu()
 {
 	// For fonts, GPU and disk data are tied together
@@ -99,6 +119,12 @@ void Struktur::Resource::FontResource::UnloadFromGpu()
 		m_fontLoaded    = false;
 	}
 }
+#else
+void Struktur::Resource::FontResource::UnloadFromGpu()
+{
+	m_fontLoaded = false;
+}
+#endif
 
 bool Struktur::Resource::FontResource::IsGpuResourceValid() const
 {
@@ -142,10 +168,12 @@ int Struktur::Resource::FontResource::GetFontSize()
 void Struktur::Resource::FontResource::DrawText(const std::string& text, Vector2 position, float fontSize,
                                                 Color color) const
 {
+#if defined(PLATFORM_WEB)
 	if (IsGpuReady())
 	{
 		::DrawTextEx(font, text.c_str(), position, fontSize, 1.0f, color);
 	}
+#endif
 }
 
 int Struktur::Resource::FontResource::GetBaseSize() const

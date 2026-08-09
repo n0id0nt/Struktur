@@ -3,6 +3,10 @@
 #include "Engine/ECS/Component/Shader.h"
 #include "Engine/GameContext.h"
 
+#if !defined(PLATFORM_WEB)
+	#include "Engine/Renderer/EmbeddedShaders.h"
+#endif
+
 void Struktur::System::ShaderSystem::SetUniform(GameContext& context, entt::entity entity, const std::string& name,
                                                 float value)
 {
@@ -70,6 +74,7 @@ void Struktur::System::ShaderSystem::SetUniform(GameContext& context, entt::enti
 	shader.matrixUniforms[name] = matrixUniform;
 }
 
+#if !defined(PLATFORM_WEB)
 void Struktur::System::ShaderSystem::ApplyUniforms(GameContext& context, entt::entity entity)
 {
 	Core::GameData& gameDate     = context.GetGameData();
@@ -79,7 +84,75 @@ void Struktur::System::ShaderSystem::ApplyUniforms(GameContext& context, entt::e
 	SetUniform(context, entity, "resolution", glm::vec2{(float)gameDate.gameWidth, (float)gameDate.gameHeight});
 
 	entt::registry& registry = context.GetRegistry();
-	auto& shader             = registry.get<Component::Shader>(entity);
+	auto& shader              = registry.get<Component::Shader>(entity);
+
+	// Every bgfx uniform is a vec4 register - scalars/vec2/vec3 pad the unused components with 0 (see the
+	// vs_soulEffect.sc/fs_soulEffect.sc uniform declarations, which read back only the components they need).
+	for (const auto& [name, value] : shader.floatUniforms)
+	{
+		float packed[4] = {value, 0.0f, 0.0f, 0.0f};
+		bgfx::setUniform(Renderer::GetOrCreateUniform(name), packed);
+	}
+	for (const auto& [name, value] : shader.intUniforms)
+	{
+		float packed[4] = {(float)value, 0.0f, 0.0f, 0.0f};
+		bgfx::setUniform(Renderer::GetOrCreateUniform(name), packed);
+	}
+	for (const auto& [name, value] : shader.vec2Uniforms)
+	{
+		float packed[4] = {value.x, value.y, 0.0f, 0.0f};
+		bgfx::setUniform(Renderer::GetOrCreateUniform(name), packed);
+	}
+	for (const auto& [name, value] : shader.vec3Uniforms)
+	{
+		float packed[4] = {value.x, value.y, value.z, 0.0f};
+		bgfx::setUniform(Renderer::GetOrCreateUniform(name), packed);
+	}
+	for (const auto& [name, value] : shader.vec4Uniforms)
+	{
+		float packed[4] = {value.x, value.y, value.z, value.w};
+		bgfx::setUniform(Renderer::GetOrCreateUniform(name), packed);
+	}
+	for (const auto& [name, value] : shader.matrixUniforms)
+	{
+		float packed[16] = {value.m0, value.m1, value.m2,  value.m3,  value.m4,  value.m5,  value.m6,  value.m7,
+		                    value.m8, value.m9, value.m10, value.m11, value.m12, value.m13, value.m14, value.m15};
+		bgfx::setUniform(Renderer::GetOrCreateUniform(name), packed, 1);
+	}
+}
+
+bgfx::ProgramHandle Struktur::System::ShaderSystem::ResolveProgram(GameContext& context, entt::entity entity,
+                                                                    bgfx::ProgramHandle defaultProgram)
+{
+	entt::registry& registry = context.GetRegistry();
+	auto* shader              = registry.try_get<Component::Shader>(entity);
+	if (!shader)
+	{
+		return defaultProgram;
+	}
+	if (!shader->shader->IsGpuReady())
+	{
+		if (!shader->shader->LoadToGpu(context))
+		{
+			BREAK_MSG("[SHADER] Error loading shader %s, %s", shader->shader->GetVSFilePath(),
+			          shader->shader->GetFSFilePath());
+			return defaultProgram;
+		}
+	}
+	ApplyUniforms(context, entity);
+	return shader->shader->shader;
+}
+#else
+void Struktur::System::ShaderSystem::ApplyUniforms(GameContext& context, entt::entity entity)
+{
+	Core::GameData& gameDate     = context.GetGameData();
+	Core::TimeSystem& timeSystem = context.GetTimeSystem();
+	SetUniform(context, entity, "time", (float)timeSystem.scaledTime);
+	SetUniform(context, entity, "rawTime", (float)timeSystem.unscaledTime);
+	SetUniform(context, entity, "resolution", glm::vec2{(float)gameDate.gameWidth, (float)gameDate.gameHeight});
+
+	entt::registry& registry = context.GetRegistry();
+	auto& shader              = registry.get<Component::Shader>(entity);
 	// Apply float uniforms
 	for (const auto& [name, value] : shader.floatUniforms)
 	{
@@ -133,7 +206,7 @@ void Struktur::System::ShaderSystem::BeginShader(GameContext& context, entt::ent
 	}
 	if (!shader->shader->IsGpuReady())
 	{
-		if (!shader->shader->LoadToGpu())
+		if (!shader->shader->LoadToGpu(context))
 		{
 			BREAK_MSG("[SHADER] Error loading shader %s, %s", shader->shader->GetVSFilePath(),
 			          shader->shader->GetFSFilePath());
@@ -167,3 +240,4 @@ int Struktur::System::ShaderSystem::GetCachedLocation(Component::Shader& shader,
 	}
 	return shader.locationCache[name];
 }
+#endif

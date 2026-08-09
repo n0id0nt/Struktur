@@ -599,7 +599,11 @@ void InspectorWindow::RenderShaderComponent(GameContext& context, Component::Sha
 
 	ImGui::Separator();
 
+#if defined(PLATFORM_WEB)
 	ImGui::Text("Shader ID: %d", shader.shader->shader.id);
+#else
+	ImGui::Text("Shader ID: %d", shader.shader->shader.idx);
+#endif
 	ImGui::Separator();
 
 	// Float uniforms

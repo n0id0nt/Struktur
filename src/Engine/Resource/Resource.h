@@ -54,8 +54,8 @@ class GpuResource : public GameResource
 	}
 
 	// GPU-specific methods
-	virtual bool LoadToGpu()                 = 0;
-	virtual void UnloadFromGpu()             = 0;
+	virtual bool LoadToGpu(GameContext& context) = 0;
+	virtual void UnloadFromGpu()                 = 0;
 	virtual bool IsGpuResourceValid() const  = 0;
 	virtual size_t GetGpuMemoryUsage() const = 0;
 

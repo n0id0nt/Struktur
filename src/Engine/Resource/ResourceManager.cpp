@@ -48,12 +48,12 @@ void Struktur::Resource::ResourceManager::HandleGpuContextLost()
 	// Note: Sound and music pools are unaffected
 }
 
-void Struktur::Resource::ResourceManager::ReloadAllGpuResources()
+void Struktur::Resource::ResourceManager::ReloadAllGpuResources(GameContext& context)
 {
 	DEBUG_INFO("=== RELOADING GPU RESOURCES ===");
-	m_texturePool.ReloadAllGpuResources();
-	m_fontPool.ReloadAllGpuResources();
-	m_shaderPool.ReloadAllGpuResources();
+	m_texturePool.ReloadAllGpuResources(context);
+	m_fontPool.ReloadAllGpuResources(context);
+	m_shaderPool.ReloadAllGpuResources(context);
 	// Note: Sound and music pools are unaffected
 }
 

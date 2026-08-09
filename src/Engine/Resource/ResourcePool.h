@@ -308,7 +308,7 @@ class GpuResourcePool : public ResourcePool<T>
 			}
 
 			// Load to GPU
-			if (resource->LoadToGpu())
+			if (resource->LoadToGpu(context))
 			{
 				m_currentGpuMemory += requiredMemory;
 				resource->gpuState = GpuResource::GpuState::LoadedToGpu;
@@ -391,7 +391,7 @@ class GpuResourcePool : public ResourcePool<T>
 		m_currentGpuMemory = 0;
 	}
 
-	void ReloadAllGpuResources()
+	void ReloadAllGpuResources(GameContext& context)
 	{
 		DEBUG_INFO("Reloading all GPU resources after context restore...");
 
@@ -399,7 +399,7 @@ class GpuResourcePool : public ResourcePool<T>
 		{
 			if (resource->gpuState == GpuResource::GpuState::GpuLost)
 			{
-				if (resource->LoadToGpu())
+				if (resource->LoadToGpu(context))
 				{
 					resource->gpuState = GpuResource::GpuState::LoadedToGpu;
 					m_currentGpuMemory += resource->GetGpuMemoryUsage();

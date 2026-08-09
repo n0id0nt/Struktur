@@ -30,6 +30,10 @@ void Struktur::UI::UIPanel::Update(GameContext& context)
 
 void Struktur::UI::UIPanel::Render(GameContext& context)
 {
+	// UIRenderSystem isn't registered on desktop (see Game.cpp) so this never runs there, but it still needs
+	// to compile - TextureResource::texture is a bgfx::TextureHandle there, not the ::Texture2D raylib's
+	// DrawTexturePro wants (see the UI batch renderer design for the eventual bgfx-native replacement).
+#if defined(PLATFORM_WEB)
 	// Draw background
 	if (m_hasBackgroundTexture)
 	{
@@ -37,7 +41,7 @@ void Struktur::UI::UIPanel::Render(GameContext& context)
 		Resource::TextureResource* texture = m_backgroundTexture.Get();
 		if (!texture->IsGpuReady())
 		{
-			texture->LoadToGpu();
+			texture->LoadToGpu(context);
 		}
 		::Rectangle srcRect = {0, 0, (float)texture->GetWidth(), (float)texture->GetHeight()};
 		::DrawTexturePro(texture->texture, srcRect, m_bounds, {0, 0}, 0.0f, WHITE);
@@ -52,6 +56,7 @@ void Struktur::UI::UIPanel::Render(GameContext& context)
 	{
 		::DrawRectangleLinesEx(m_bounds, m_borderWidth, m_borderColor);
 	}
+#endif
 
 	RenderChildren(context);
 }
