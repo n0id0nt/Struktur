@@ -11,7 +11,7 @@
 #include <glm/gtc/type_ptr.hpp>
 #include <imgui.h>
 
-Struktur::Renderer::ImGuiRenderer::ImGuiRenderer()
+void Struktur::Renderer::ImGuiRenderer::Initialise()
 {
 	m_texColorSampler = bgfx::createUniform("s_texColor", bgfx::UniformType::Sampler);
 

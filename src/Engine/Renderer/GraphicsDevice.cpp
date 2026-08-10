@@ -8,10 +8,11 @@
 // bgfx::PlatformData is declared directly in bgfx.h in this version - no separate platform.h needed.
 #include <bgfx/bgfx.h>
 
-Struktur::Renderer::GraphicsDevice::GraphicsDevice(void* nativeWindowHandle, int width, int height)
-    : m_width(width),
-      m_height(height)
+void Struktur::Renderer::GraphicsDevice::Initialise(void* nativeWindowHandle, int width, int height)
 {
+	m_width  = width;
+	m_height = height;
+
 	bgfx::PlatformData platformData;
 	platformData.nwh = nativeWindowHandle;
 
@@ -48,11 +49,15 @@ Struktur::Renderer::GraphicsDevice::GraphicsDevice(void* nativeWindowHandle, int
 	bgfx::setViewMode(EditorViewId, bgfx::ViewMode::Sequential);
 
 	DEBUG_INFO(std::format("bgfx initialised, renderer: {}", bgfx::getRendererName(bgfx::getRendererType())).c_str());
+	m_initialised = true;
 }
 
 Struktur::Renderer::GraphicsDevice::~GraphicsDevice()
 {
-	bgfx::shutdown();
+	if (m_initialised)
+	{
+		bgfx::shutdown();
+	}
 }
 
 void Struktur::Renderer::GraphicsDevice::Resize(int width, int height)

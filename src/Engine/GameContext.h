@@ -66,21 +66,15 @@ class GameContext
 	Event::EventManager& GetEventManager() const;
 	Audio::Mixer& GetMixer() const;
 
-	// Deferred until the desired window size is known (see Game.cpp's InitialiseGame) - unlike every other
-	// subsystem above, these aren't ready immediately after construction.
-	void InitialiseGraphics(int width, int height, const std::string& title, bool resizable);
+	// Constructed (but not yet Initialise()'d - see each class) unconditionally like every other subsystem
+	// above; the caller fetches the reference and calls its Initialise(...) once the real window size/native
+	// handle/ImGui context are known (see Game.cpp's InitialiseGame), the same way GetEditor()'s caller
+	// immediately calls editor.Initialise(context).
 	Platform::Window& GetWindow() const;
 	Renderer::GraphicsDevice& GetGraphicsDevice() const;
-
-	// Deferred until GraphicsDevice (and therefore bgfx) exists - call right after InitialiseGraphics(). Needed
-	// on both platforms (in-game UI isn't editor-only), unlike ImGuiRenderer below.
-	void InitialiseUIRenderer();
 	Renderer::UIRenderer& GetUIRenderer() const;
 
 #if defined(EDITOR)
-	// Deferred further still - needs an ImGui context (and its font atlas configured) to already exist,
-	// which only happens once Game.cpp has called ImGui::CreateContext()/ImGui_ImplSDL3_InitForOther().
-	void InitialiseImGuiRenderer();
 	Renderer::ImGuiRenderer& GetImGuiRenderer() const;
 #endif
 
@@ -93,6 +87,19 @@ class GameContext
 #endif
 
    private:
+	// Declared first (and therefore, per C++'s reverse-declaration-order member destruction, destroyed LAST)
+	// deliberately - GraphicsDevice::~GraphicsDevice() calls bgfx::shutdown(), and every GPU resource below
+	// (ResourceManager's pooled textures/fonts/shaders, UIRenderer's/ImGuiRenderer's own handles) calls
+	// bgfx::destroy(...) in its own destructor. If GraphicsDevice were destroyed first (as it was when these
+	// were declared further down, after ResourceManager), every one of those later teardown calls would run
+	// against an already-shut-down bgfx - this is what caused the crash on app close.
+	std::unique_ptr<Platform::Window> m_window;
+	std::unique_ptr<Renderer::GraphicsDevice> m_graphicsDevice;
+	std::unique_ptr<Renderer::UIRenderer> m_uiRenderer;
+#if defined(EDITOR)
+	std::unique_ptr<Renderer::ImGuiRenderer> m_imGuiRenderer;
+#endif
+
 	std::unique_ptr<Core::GameData> m_gameData;
 	std::unique_ptr<Core::TimeSystem> m_timeSystem;
 	std::unique_ptr<Input::Input> m_input;
@@ -113,13 +120,6 @@ class GameContext
 	std::unique_ptr<Dialogue::VariableSubstitutionSystem> m_variableSubstitutionSystem;
 	std::unique_ptr<Event::EventManager> m_eventManager;
 	std::unique_ptr<Audio::Mixer> m_mixer;
-
-	std::unique_ptr<Platform::Window> m_window;
-	std::unique_ptr<Renderer::GraphicsDevice> m_graphicsDevice;
-	std::unique_ptr<Renderer::UIRenderer> m_uiRenderer;
-#if defined(EDITOR)
-	std::unique_ptr<Renderer::ImGuiRenderer> m_imGuiRenderer;
-#endif
 
 #ifdef EDITOR
 	std::unique_ptr<Debug::Editor> m_editor;

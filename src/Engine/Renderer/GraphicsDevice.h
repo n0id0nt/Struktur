@@ -31,11 +31,15 @@ class GraphicsDevice
 	// (see ImGuiRenderer), including the Game Viewport's display of the shared framebuffer (see UIViewId above).
 	static constexpr bgfx::ViewId EditorViewId = 3;
 
-	GraphicsDevice(void* nativeWindowHandle, int width, int height);
+	GraphicsDevice() = default;
 	~GraphicsDevice();
 
 	GraphicsDevice(const GraphicsDevice&)            = delete;
 	GraphicsDevice& operator=(const GraphicsDevice&) = delete;
+
+	// Actually initialises bgfx - deferred from construction so GameContext can own this unconditionally (see
+	// GameContext's constructor) while the caller still picks when the native window handle/size are known.
+	void Initialise(void* nativeWindowHandle, int width, int height);
 
 	void Resize(int width, int height);
 
@@ -64,6 +68,9 @@ class GraphicsDevice
 	int m_height = 0;
 	// Cached for RestoreWorldRenderTarget - ResetWorldRenderTarget intentionally leaves this untouched.
 	bgfx::FrameBufferHandle m_worldFrameBuffer = BGFX_INVALID_HANDLE;
+	// Guards ~GraphicsDevice's bgfx::shutdown() - default-constructed instances never call bgfx::init, so
+	// shutting down unconditionally would tear down a bgfx context that was never brought up.
+	bool m_initialised = false;
 };
 }  // namespace Renderer
 }  // namespace Struktur

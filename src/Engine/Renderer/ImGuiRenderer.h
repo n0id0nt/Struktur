@@ -17,11 +17,16 @@ namespace Renderer
 class ImGuiRenderer
 {
    public:
-	ImGuiRenderer();
+	ImGuiRenderer() = default;
 	~ImGuiRenderer();
 
 	ImGuiRenderer(const ImGuiRenderer&)            = delete;
 	ImGuiRenderer& operator=(const ImGuiRenderer&) = delete;
+
+	// Actually creates the font atlas texture - deferred from construction so GameContext can own this
+	// unconditionally (see GameContext's constructor) while still requiring an ImGui context (with its font
+	// atlas configured) to already exist by the time this runs.
+	void Initialise();
 
 	void Render(ImDrawData* drawData);
 

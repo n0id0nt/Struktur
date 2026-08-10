@@ -69,8 +69,10 @@ bool Struktur::Resource::TextureResource::LoadToGpu(GameContext& context)
 	}
 
 	const bgfx::Memory* memory = bgfx::copy(m_pixels.data(), (uint32_t)m_pixels.size());
+	// Point (nearest-neighbor) sampling instead of bgfx's default bilinear - keeps pixel art crisp instead of
+	// blurring it when sprites/tiles are scaled or land on non-integer pixel boundaries.
 	texture = bgfx::createTexture2D((uint16_t)m_width, (uint16_t)m_height, false, 1, bgfx::TextureFormat::RGBA8,
-	                                 0, memory);
+	                                 BGFX_SAMPLER_POINT, memory);
 	if (bgfx::isValid(texture))
 	{
 		gpuState = GpuState::LoadedToGpu;

@@ -10,6 +10,10 @@ Struktur::Util::Math::Color ToColor(const b2Color& c)
 	return Struktur::Util::Math::Color{(unsigned char)(c.r * 255.0f), (unsigned char)(c.g * 255.0f),
 	                                    (unsigned char)(c.b * 255.0f), (unsigned char)(c.a * 255.0f)};
 }
+
+// Box2D hands every shape full alpha with no separate fill/outline distinction - scale it down for fills only
+// (see DrawSolidPolygon/DrawSolidCircle) so overlapping shapes stay readable instead of solid blocks of color.
+constexpr float kFillAlphaScale = 0.35f;
 }  // namespace
 
 Struktur::Debug::Box2DBgfxDebugDraw::Box2DBgfxDebugDraw(Renderer::DebugRenderer& renderer)
@@ -36,8 +40,13 @@ void Struktur::Debug::Box2DBgfxDebugDraw::DrawSolidPolygon(const b2Vec2* vertice
 	{
 		points[i] = glm::vec2(vertices[i].x, vertices[i].y) * m_pixelsPerMeter;
 	}
-	m_renderer.DrawSolidPolygon(points, vertexCount, ToColor(color));
-	m_renderer.DrawPolygonOutline(points, vertexCount, 1.0f, ToColor(color));
+	Util::Math::Color outlineColor = ToColor(color);
+	// Box2D hands every shape full alpha - fill translucently so overlapping/stacked shapes stay readable, but
+	// keep the outline at the shape's real alpha so the boundary itself still reads as solid.
+	Util::Math::Color fillColor = outlineColor;
+	fillColor.a                 = (unsigned char)(outlineColor.a * kFillAlphaScale);
+	m_renderer.DrawSolidPolygon(points, vertexCount, fillColor);
+	m_renderer.DrawPolygonOutline(points, vertexCount, 1.0f, outlineColor);
 }
 
 void Struktur::Debug::Box2DBgfxDebugDraw::DrawCircle(const b2Vec2& center, float radius, const b2Color& color)
@@ -51,10 +60,16 @@ void Struktur::Debug::Box2DBgfxDebugDraw::DrawSolidCircle(const b2Vec2& center, 
 {
 	glm::vec2 pixelCenter = glm::vec2(center.x, center.y) * m_pixelsPerMeter;
 	float pixelRadius     = radius * m_pixelsPerMeter;
-	m_renderer.DrawSolidCircle(pixelCenter, pixelRadius, ToColor(color));
+
+	Util::Math::Color outlineColor = ToColor(color);
+	Util::Math::Color fillColor    = outlineColor;
+	fillColor.a                    = (unsigned char)(outlineColor.a * kFillAlphaScale);
+	m_renderer.DrawSolidCircle(pixelCenter, pixelRadius, fillColor);
+	m_renderer.DrawCircleOutline(pixelCenter, pixelRadius, 1.0f, outlineColor);
+
 	// Radius line to show orientation, matching Box2DDebugRenderer's equivalent circle-shape drawing.
 	glm::vec2 radiusEnd = pixelCenter + glm::vec2(axis.x, axis.y) * pixelRadius;
-	m_renderer.DrawLine(pixelCenter, radiusEnd, 1.0f, ToColor(color));
+	m_renderer.DrawLine(pixelCenter, radiusEnd, 1.0f, outlineColor);
 }
 
 void Struktur::Debug::Box2DBgfxDebugDraw::DrawSegment(const b2Vec2& p1, const b2Vec2& p2, const b2Color& color)

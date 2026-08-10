@@ -10,7 +10,7 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 
-Struktur::Renderer::UIRenderer::UIRenderer()
+void Struktur::Renderer::UIRenderer::Initialise()
 {
 	m_texColorSampler = bgfx::createUniform("s_texColor", bgfx::UniformType::Sampler);
 

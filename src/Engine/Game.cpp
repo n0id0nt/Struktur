@@ -94,8 +94,11 @@ void Struktur::InitialiseGame(GameContext& context)
 	const int windowHeight = 720;
 	gameData.gameWidth     = windowWidth;
 	gameData.gameHeight    = windowHeight;
-	context.InitialiseGraphics(windowWidth, windowHeight, "Struktur", true);
-	context.InitialiseUIRenderer();
+
+	Platform::Window& window = context.GetWindow();
+	window.Initialise(windowWidth, windowHeight, "Struktur", true);
+	context.GetGraphicsDevice().Initialise(window.GetNativeHandle(), windowWidth, windowHeight);
+	context.GetUIRenderer().Initialise();
 
 	ImGui::CreateContext();
 	ImGuiIO& io = ImGui::GetIO();
@@ -103,11 +106,11 @@ void Struktur::InitialiseGame(GameContext& context)
 	// "ForOther" variant: handles input/platform (mouse, keyboard, clipboard, cursors) but expects a separate
 	// renderer backend, which is our own hand-rolled bgfx one (Engine/Renderer/ImGuiRenderer) rather than an
 	// official imgui_impl_* target.
-	ImGui_ImplSDL3_InitForOther(context.GetWindow().GetSDLWindow());
+	ImGui_ImplSDL3_InitForOther(window.GetSDLWindow());
 	// Window::PollEvents() drains the SDL event queue itself and only exposes close/resize - this callback is
 	// how ImGui sees the raw events it needs (text input, wheel, focus) that polled state can't provide.
-	context.GetWindow().SetEventCallback([](const SDL_Event& event) { ImGui_ImplSDL3_ProcessEvent(&event); });
-	context.InitialiseImGuiRenderer();
+	window.SetEventCallback([](const SDL_Event& event) { ImGui_ImplSDL3_ProcessEvent(&event); });
+	context.GetImGuiRenderer().Initialise();
 
 	Debug::Editor& editor = context.GetEditor();
 	editor.Initialise(context);
@@ -119,11 +122,13 @@ void Struktur::InitialiseGame(GameContext& context)
 
 #ifndef EDITOR
 	// In release mode, window matches game size
-	context.InitialiseGraphics(gameData.gameWidth, gameData.gameHeight, gameData.projectName, false);
-	context.InitialiseUIRenderer();
+	Platform::Window& window = context.GetWindow();
+	window.Initialise(gameData.gameWidth, gameData.gameHeight, gameData.projectName, false);
+	context.GetGraphicsDevice().Initialise(window.GetNativeHandle(), gameData.gameWidth, gameData.gameHeight);
+	context.GetUIRenderer().Initialise();
 	if (gameData.isFullScreen)
 	{
-		context.GetWindow().SetFullscreen(true);
+		window.SetFullscreen(true);
 	}
 #endif
 
@@ -487,6 +492,12 @@ void Struktur::ClearGameSystems(GameContext& context)
 	DEBUG_INFO("[Clean Up] Dialogue Manager");
 	Dialogue::DialogueManager& dialogueManager = context.GetDialogueManager();
 	dialogueManager.Clear();
+
+#ifdef DEBUG
+	DEBUG_INFO("[Clean Up] Debug System");
+	System::DebugSystem& debugSystem = context.GetSystemManager().GetSystem<System::DebugSystem>();
+	debugSystem.ClearCachedResources();
+#endif
 
 	DEBUG_INFO("[Clean Up] Resource Manager");
 	Resource::ResourceManager& resourceManager = context.GetResourceManager();

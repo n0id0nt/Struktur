@@ -15,11 +15,15 @@ namespace Platform
 class Window
 {
    public:
-	Window(int width, int height, const std::string& title, bool resizable);
+	Window() = default;
 	~Window();
 
 	Window(const Window&)            = delete;
 	Window& operator=(const Window&) = delete;
+
+	// Actually creates the SDL window - deferred from construction so GameContext can own this unconditionally
+	// (see GameContext's constructor) while the caller still picks when the real window size/title are known.
+	void Initialise(int width, int height, const std::string& title, bool resizable);
 
 	// Pumps SDL events, updates the keyboard/mouse snapshot Input reads, and tracks close/resize requests.
 	void PollEvents();

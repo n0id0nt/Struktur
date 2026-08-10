@@ -4,10 +4,11 @@
 
 #include <SDL3/SDL.h>
 
-Struktur::Platform::Window::Window(int width, int height, const std::string& title, bool resizable)
-    : m_width(width),
-      m_height(height)
+void Struktur::Platform::Window::Initialise(int width, int height, const std::string& title, bool resizable)
 {
+	m_width  = width;
+	m_height = height;
+
 	Uint32 flags = SDL_WINDOW_HIGH_PIXEL_DENSITY;
 	if (resizable)
 	{

@@ -4,6 +4,15 @@ namespace Struktur
 {
 GameContext::GameContext()
 {
+	// Constructed first to match GameContext.h's declaration order (destroyed LAST, reverse of declaration -
+	// see the comment there for why bgfx/the window must outlive every GPU resource below).
+	m_window         = std::make_unique<Platform::Window>();
+	m_graphicsDevice = std::make_unique<Renderer::GraphicsDevice>();
+	m_uiRenderer     = std::make_unique<Renderer::UIRenderer>();
+#ifdef EDITOR
+	m_imGuiRenderer = std::make_unique<Renderer::ImGuiRenderer>();
+#endif
+
 	m_input                       = std::make_unique<Input::Input>(0);
 	m_gameData                    = std::make_unique<Core::GameData>();
 	m_timeSystem                  = std::make_unique<Core::TimeSystem>();
@@ -12,7 +21,7 @@ GameContext::GameContext()
 	m_systemManager               = std::make_unique<System::SystemManager>();
 	m_gameObjectManager           = std::make_unique<System::GameObjectManager>();
 	m_camera                      = std::make_unique<GameResource::Camera>();
-	m_worldRenderer                = std::make_unique<Renderer::WorldRenderer>();
+	m_worldRenderer               = std::make_unique<Renderer::WorldRenderer>();
 	m_uiManager                   = std::make_unique<UI::UIManager>();
 	m_physicsWorld                = std::make_unique<Physics::PhysicsWorld>();
 	m_wrenScriptEngine            = std::make_unique<Wren::WrenScriptEngine>();
@@ -39,12 +48,6 @@ Audio::Mixer& GameContext::GetMixer() const
 	return *m_mixer;
 }
 
-void GameContext::InitialiseGraphics(int width, int height, const std::string& title, bool resizable)
-{
-	m_window         = std::make_unique<Platform::Window>(width, height, title, resizable);
-	m_graphicsDevice  = std::make_unique<Renderer::GraphicsDevice>(m_window->GetNativeHandle(), width, height);
-}
-
 Platform::Window& GameContext::GetWindow() const
 {
 	ASSERT_MSG(m_window.get(), "Window not initialised");
@@ -57,11 +60,6 @@ Renderer::GraphicsDevice& GameContext::GetGraphicsDevice() const
 	return *m_graphicsDevice;
 }
 
-void GameContext::InitialiseUIRenderer()
-{
-	m_uiRenderer = std::make_unique<Renderer::UIRenderer>();
-}
-
 Renderer::UIRenderer& GameContext::GetUIRenderer() const
 {
 	ASSERT_MSG(m_uiRenderer.get(), "UIRenderer not initialised");
@@ -69,11 +67,6 @@ Renderer::UIRenderer& GameContext::GetUIRenderer() const
 }
 
 #if defined(EDITOR)
-void GameContext::InitialiseImGuiRenderer()
-{
-	m_imGuiRenderer = std::make_unique<Renderer::ImGuiRenderer>();
-}
-
 Renderer::ImGuiRenderer& GameContext::GetImGuiRenderer() const
 {
 	ASSERT_MSG(m_imGuiRenderer.get(), "ImGuiRenderer not initialised");

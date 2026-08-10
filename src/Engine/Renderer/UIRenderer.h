@@ -26,11 +26,16 @@ namespace Renderer
 class UIRenderer
 {
    public:
-	UIRenderer();
+	UIRenderer() = default;
 	~UIRenderer();
 
 	UIRenderer(const UIRenderer&)            = delete;
 	UIRenderer& operator=(const UIRenderer&) = delete;
+
+	// Actually creates the white texture/sampler uniform - deferred from construction so GameContext can own
+	// this unconditionally (see GameContext's constructor) while still requiring bgfx to already exist by the
+	// time this runs (call right after GraphicsDevice::Initialise).
+	void Initialise();
 
 	// Sets GraphicsDevice::UIViewId's per-frame orthographic transform, sized to the game viewport (not the
 	// real window) - call once per frame before any Draw* call (see UIRenderSystem::Update).
