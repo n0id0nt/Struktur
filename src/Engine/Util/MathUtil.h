@@ -32,12 +32,6 @@ struct Rect
 };
 
 constexpr Color ColorWhite{255, 255, 255, 255};
-
-// Replaces raylib's named Color constants (raylib.h). NOTE: these are deliberately NOT named to match
-// raylib's macro names (LIGHTGRAY, RED, BLUE, ...) - raylib.h #defines those as literal text substitutions
-// (e.g. `#define RED CLITERAL(Color){ 230, 41, 55, 255 }`), which are not namespaced and would mangle any
-// declaration using the same token in any translation unit that also includes raylib.h (still true for many
-// files until the raylib-removal Track B/C finish). Same values, "Color"-prefixed names instead.
 constexpr Color ColorLightGray{200, 200, 200, 255};
 constexpr Color ColorGray{130, 130, 130, 255};
 constexpr Color ColorDarkGray{80, 80, 80, 255};

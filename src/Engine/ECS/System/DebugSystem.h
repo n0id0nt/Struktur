@@ -22,6 +22,7 @@ class DebugSystem : public ISystem
 	void RenderEntityGizmos(GameContext &context);
 	void RenderGrid(GameContext &context);
 	void RenderLevelBounds(GameContext &context);
+	void RenderPhysicsShapes(GameContext &context);
 
 	// Releases the cached FPS font's ResourcePtr - must be called (see Game.cpp's ClearGameSystems) before
 	// ResourceManager::Clear() runs, since that unconditionally frees every pooled resource regardless of

@@ -12,8 +12,6 @@
 #include "Debug/Assertions.h"
 #include "Debug/Profiling/Profiler.h"
 #include "Engine/Core/FileSystem.h"
-#include "Engine/Text/Font.h"
-#include "Engine/Util/MathUtil.h"
 #include "Engine/ECS/Component/Camera.h"
 #include "Engine/ECS/Component/PhysicsBody.h"
 #include "Engine/ECS/Component/Player.h"
@@ -40,6 +38,8 @@
 #include "Engine/GameContext.h"
 #include "Engine/Input/Input.h"
 #include "Engine/Scripting/WrenScriptEngine.h"
+#include "Engine/Text/Font.h"
+#include "Engine/Util/MathUtil.h"
 
 #ifdef DEBUG
 	#include "Engine/Scripting/WrenCodeGenerator.h"
@@ -77,7 +77,8 @@ void Struktur::InitialiseGame(GameContext& context)
 	FileSystem::Mount("/assets");
 #elif defined(EDITOR)
 	// Project folder selection at startup
-	std::string projectPath = FileSystem::OpenFolderDialog("Select Project Directory", FileSystem::GetWorkingDirectory());
+	std::string projectPath =
+	    FileSystem::OpenFolderDialog("Select Project Directory", FileSystem::GetWorkingDirectory());
 
 	// Fall back to default assets/ if user cancels
 	FileSystem::Mount(projectPath.empty() ? "assets/" : projectPath);
@@ -167,9 +168,9 @@ void Struktur::InitialiseGame(GameContext& context)
 	systemManager.AddUpdateSystem<System::SoundSystem>();
 	systemManager.AddRenderSystem<System::SpriteRenderSystem>();
 	// Wren rendering not used for anything at the moment so commenting it out
-//#if defined(PLATFORM_WEB)
+// #if defined(PLATFORM_WEB)
 //	systemManager.AddRenderSystem<System::WrenStateRenderSystem>();
-//#endif
+// #endif
 #ifdef DEBUG
 	systemManager.AddRenderSystem<System::DebugSystem>();
 #endif
@@ -316,9 +317,6 @@ void Struktur::GameLoop(GameContext& context)
 	{
 		PROFILE_SCOPE("UPDATE PROCESSING");
 #ifdef EDITOR
-		// The Toolbar's Play/Pause/Stop buttons are reachable on both platforms now (desktop got a real ImGui-bgfx
-		// backend) - Stop clears input bindings/Wren state via ClearGameSystems, so systems that assume bindings
-		// exist (UISystem's GetInputAxis2, etc.) must not run again until Play/Refresh reloads them.
 		auto& debugSettings = context.GetEditor().GetSettings().debugRender;
 		if (debugSettings.playingGame && !debugSettings.pausedGame)
 		{
@@ -489,11 +487,11 @@ void Struktur::ClearGameSystems(GameContext& context)
 	Dialogue::DialogueManager& dialogueManager = context.GetDialogueManager();
 	dialogueManager.Clear();
 
-#ifdef DEBUG
+	#ifdef DEBUG
 	DEBUG_INFO("[Clean Up] Debug System");
 	System::DebugSystem& debugSystem = context.GetSystemManager().GetSystem<System::DebugSystem>();
 	debugSystem.ClearCachedResources();
-#endif
+	#endif
 
 	DEBUG_INFO("[Clean Up] Resource Manager");
 	Resource::ResourceManager& resourceManager = context.GetResourceManager();
