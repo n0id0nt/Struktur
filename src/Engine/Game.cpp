@@ -166,12 +166,10 @@ void Struktur::InitialiseGame(GameContext& context)
 	systemManager.AddUpdateSystem<System::UISystem>();
 	systemManager.AddUpdateSystem<System::SoundSystem>();
 	systemManager.AddRenderSystem<System::SpriteRenderSystem>();
-	// WrenStateRenderSystem still renders via direct raylib calls (Wren-script-driven draws) with no bgfx path
-	// yet - web only. DebugSystem/UIRenderSystem now have a bgfx path on both platforms (see
-	// Engine/Renderer/DebugRenderer and Engine/Renderer/UIRenderer).
-#if defined(PLATFORM_WEB)
-	systemManager.AddRenderSystem<System::WrenStateRenderSystem>();
-#endif
+	// Wren rendering not used for anything at the moment so commenting it out
+//#if defined(PLATFORM_WEB)
+//	systemManager.AddRenderSystem<System::WrenStateRenderSystem>();
+//#endif
 #ifdef DEBUG
 	systemManager.AddRenderSystem<System::DebugSystem>();
 #endif
@@ -409,10 +407,8 @@ void Struktur::Game()
 
 	Core::GameData& gameData = context.GetGameData();
 
-	// Splash screen's font would otherwise reload from disk every single frame - SplashScreenLoop's own
-	// GetFont() call is a function-local ResourcePtr, so its refcount would hit zero and unload at the end of
-	// every frame without this longer-lived reference held for the whole splash phase. TODO: a real splash-
-	// screen state in GameContext would be a cleaner home for this than Game()'s own stack frame.
+	// Should have a struct just to contain default fonts to better manage this??
+	// Or set up a state system to manage this as well
 	Resource::ResourceManager& resourceManager         = context.GetResourceManager();
 	Resource::ResourcePtr<Resource::FontResource> font = resourceManager.GetFont(context, SPLASHSCREENFONT, 120);
 
