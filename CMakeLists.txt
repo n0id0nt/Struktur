@@ -509,7 +509,6 @@ set(SOURCES
     src/Engine/Util/MathUtil.h
 
     src/Engine/Text/Font.h                      src/Engine/Text/Font.cpp
-    src/Engine/Input/KeyCodes.h
 
     src/Engine/Event/Event.h
     src/Engine/Event/EventManager.h             src/Engine/Event/EventManager.cpp

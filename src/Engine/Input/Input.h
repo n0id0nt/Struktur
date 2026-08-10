@@ -7,15 +7,14 @@
 #include <unordered_map>
 
 #include "Debug/Assertions.h"
-#include "Engine/Input/KeyCodes.h"
 #include "glm/glm.hpp"
 
+#include <SDL3/SDL_gamepad.h>
+#include <SDL3/SDL_scancode.h>
 #include <array>
-struct SDL_Gamepad;
 
 namespace Struktur::Input
 {
-class InputMaps;
 class InputConfigLoader;
 
 class Input
@@ -61,21 +60,21 @@ class Input
    private:
 	struct Binding
 	{
-		std::set<KeyboardKey> keycodes;
-		std::set<GamepadButton> controllerButtons;
+		std::set<SDL_Scancode> keycodes;
+		std::set<SDL_GamepadButton> controllerButtons;
 	};
 
 	struct AxisBinding
 	{
 		Binding positive;
 		Binding negative;
-		std::set<GamepadAxis> controllerAxis;
+		std::set<SDL_GamepadAxis> controllerAxis;
 	};
 
 	struct GamepadVariable
 	{
 		VariableBindingAxis variableBindingAxis;
-		GamepadAxis controllerAxis;
+		SDL_GamepadAxis controllerAxis;
 
 		// Comparison operator for std::set
 		bool operator<(const GamepadVariable& other) const
@@ -110,16 +109,16 @@ class Input
 	void Clear();
 
 	// Raw input queries
-	bool IsKeyDown(KeyboardKey key);
-	bool IsKeyJustPressed(KeyboardKey key);
-	bool IsKeyJustReleased(KeyboardKey key);
+	bool IsKeyDown(SDL_Scancode key);
+	bool IsKeyJustPressed(SDL_Scancode key);
+	bool IsKeyJustReleased(SDL_Scancode key);
 
-	bool IsControllerButtonDown(GamepadButton button);
-	bool IsControllerButtonJustPressed(GamepadButton button);
-	bool IsControllerButtonJustReleased(GamepadButton button);
+	bool IsControllerButtonDown(SDL_GamepadButton button);
+	bool IsControllerButtonJustPressed(SDL_GamepadButton button);
+	bool IsControllerButtonJustReleased(SDL_GamepadButton button);
 
-	float GetControllerAxisValue(GamepadAxis code);
-	float GetControllerVariableValue(GamepadAxis code, VariableBindingAxis variableBindingAxis);
+	float GetControllerAxisValue(SDL_GamepadAxis code);
+	float GetControllerVariableValue(SDL_GamepadAxis code, VariableBindingAxis variableBindingAxis);
 
 	// String-based raw input (for editor/debug)
 	bool IsStringKeyDown(const std::string& input);
@@ -133,20 +132,20 @@ class Input
 	float GetStringControllerAxisValue(const std::string& input);
 
 	// Binding creation
-	void CreateButtonBinding(const std::string& input, KeyboardKey code);
-	void CreateButtonBinding(const std::string& input, GamepadButton code);
+	void CreateButtonBinding(const std::string& input, SDL_Scancode code);
+	void CreateButtonBinding(const std::string& input, SDL_GamepadButton code);
 
-	void CreateVariableBinding(const std::string& input, KeyboardKey code);
-	void CreateVariableBinding(const std::string& input, GamepadButton code);
-	void CreateVariableBinding(const std::string& input, GamepadAxis code, VariableBindingAxis variableBindingAxis);
+	void CreateVariableBinding(const std::string& input, SDL_Scancode code);
+	void CreateVariableBinding(const std::string& input, SDL_GamepadButton code);
+	void CreateVariableBinding(const std::string& input, SDL_GamepadAxis code, VariableBindingAxis variableBindingAxis);
 
-	void CreateAxisBinding(const std::string& input, KeyboardKey code, AxisComponent axis);
-	void CreateAxisBinding(const std::string& input, GamepadButton code, AxisComponent axis);
-	void CreateAxisBinding(const std::string& input, GamepadAxis code);
+	void CreateAxisBinding(const std::string& input, SDL_Scancode code, AxisComponent axis);
+	void CreateAxisBinding(const std::string& input, SDL_GamepadButton code, AxisComponent axis);
+	void CreateAxisBinding(const std::string& input, SDL_GamepadAxis code);
 
-	void CreateAxis2Binding(const std::string& input, KeyboardKey code, Axis2Component axis);
-	void CreateAxis2Binding(const std::string& input, GamepadButton code, Axis2Component axis);
-	void CreateAxis2Binding(const std::string& input, GamepadAxis code, Axis2Direction axis);
+	void CreateAxis2Binding(const std::string& input, SDL_Scancode code, Axis2Component axis);
+	void CreateAxis2Binding(const std::string& input, SDL_GamepadButton code, Axis2Component axis);
+	void CreateAxis2Binding(const std::string& input, SDL_GamepadAxis code, Axis2Direction axis);
 
 	// High-level input queries (use these in game code)
 	bool IsInputDown(const std::string& input);
@@ -196,14 +195,13 @@ class Input
 	std::string m_gamepadId;
 	int m_gamepadIndex;
 	SDL_Gamepad* m_sdlGamepad = nullptr;
-	// SDL_SCANCODE_COUNT (avoids pulling SDL_scancode.h into this header just for the array size). Two
-	// snapshots (this frame vs last frame) so IsKeyJustPressed/Released can edge-detect - SDL's own
+	// Two snapshots (this frame vs last frame) so IsKeyJustPressed/Released can edge-detect - SDL's own
 	// SDL_GetKeyboardState() is a live array with no history.
-	std::array<bool, 512> m_currKeyboardState{};
-	std::array<bool, 512> m_prevKeyboardState{};
-	std::unordered_map<GamepadButton, bool> m_currControllerButtons;
-	std::unordered_map<GamepadButton, bool> m_prevControllerButtons;
-	bool WasControllerButtonDownLastFrame(GamepadButton button);
+	std::array<bool, SDL_SCANCODE_COUNT> m_currKeyboardState{};
+	std::array<bool, SDL_SCANCODE_COUNT> m_prevKeyboardState{};
+	std::unordered_map<SDL_GamepadButton, bool> m_currControllerButtons;
+	std::unordered_map<SDL_GamepadButton, bool> m_prevControllerButtons;
+	bool WasControllerButtonDownLastFrame(SDL_GamepadButton button);
 
 	// Helper functions to reduce code duplication
 	// NOTE: Template must be defined in header

@@ -1,248 +1,230 @@
 #include "InputMaps.h"
 
 #include <format>
+#include <unordered_map>
 
 #include "Debug/Assertions.h"
 
-namespace Struktur::Input
+namespace
 {
+// Fixed, read-only lookup tables - safe as plain namespace-scope statics (no static-initialization-order
+// fiasco risk here, since they only depend on SDL's own compile-time enum constants, never on another
+// translation unit's global state).
+const std::unordered_map<std::string, SDL_Scancode> kKeycodeMap = {
+    {"null", SDL_SCANCODE_UNKNOWN},
+    // Alphanumeric keys
+    {"apostrophe", SDL_SCANCODE_APOSTROPHE},
+    {"comma", SDL_SCANCODE_COMMA},
+    {"minus", SDL_SCANCODE_MINUS},
+    {"period", SDL_SCANCODE_PERIOD},
+    {"slash", SDL_SCANCODE_SLASH},
+    {"0", SDL_SCANCODE_0},
+    {"1", SDL_SCANCODE_1},
+    {"2", SDL_SCANCODE_2},
+    {"3", SDL_SCANCODE_3},
+    {"4", SDL_SCANCODE_4},
+    {"5", SDL_SCANCODE_5},
+    {"6", SDL_SCANCODE_6},
+    {"7", SDL_SCANCODE_7},
+    {"8", SDL_SCANCODE_8},
+    {"9", SDL_SCANCODE_9},
+    {"semicolon", SDL_SCANCODE_SEMICOLON},
+    {"equal", SDL_SCANCODE_EQUALS},
+    {"a", SDL_SCANCODE_A},
+    {"b", SDL_SCANCODE_B},
+    {"c", SDL_SCANCODE_C},
+    {"d", SDL_SCANCODE_D},
+    {"e", SDL_SCANCODE_E},
+    {"f", SDL_SCANCODE_F},
+    {"g", SDL_SCANCODE_G},
+    {"h", SDL_SCANCODE_H},
+    {"i", SDL_SCANCODE_I},
+    {"j", SDL_SCANCODE_J},
+    {"k", SDL_SCANCODE_K},
+    {"l", SDL_SCANCODE_L},
+    {"m", SDL_SCANCODE_M},
+    {"n", SDL_SCANCODE_N},
+    {"o", SDL_SCANCODE_O},
+    {"p", SDL_SCANCODE_P},
+    {"q", SDL_SCANCODE_Q},
+    {"r", SDL_SCANCODE_R},
+    {"s", SDL_SCANCODE_S},
+    {"t", SDL_SCANCODE_T},
+    {"u", SDL_SCANCODE_U},
+    {"v", SDL_SCANCODE_V},
+    {"w", SDL_SCANCODE_W},
+    {"x", SDL_SCANCODE_X},
+    {"y", SDL_SCANCODE_Y},
+    {"z", SDL_SCANCODE_Z},
+    {"leftbracket", SDL_SCANCODE_LEFTBRACKET},
+    {"backslash", SDL_SCANCODE_BACKSLASH},
+    {"rightbracket", SDL_SCANCODE_RIGHTBRACKET},
+    {"grave", SDL_SCANCODE_GRAVE},
+    // Function keys
+    {"space", SDL_SCANCODE_SPACE},
+    {"escape", SDL_SCANCODE_ESCAPE},
+    {"enter", SDL_SCANCODE_RETURN},
+    {"tab", SDL_SCANCODE_TAB},
+    {"backspace", SDL_SCANCODE_BACKSPACE},
+    {"insert", SDL_SCANCODE_INSERT},
+    {"delete", SDL_SCANCODE_DELETE},
+    {"right", SDL_SCANCODE_RIGHT},
+    {"left", SDL_SCANCODE_LEFT},
+    {"down", SDL_SCANCODE_DOWN},
+    {"up", SDL_SCANCODE_UP},
+    {"pageup", SDL_SCANCODE_PAGEUP},
+    {"pagedown", SDL_SCANCODE_PAGEDOWN},
+    {"home", SDL_SCANCODE_HOME},
+    {"end", SDL_SCANCODE_END},
+    {"capslock", SDL_SCANCODE_CAPSLOCK},
+    {"scrolllock", SDL_SCANCODE_SCROLLLOCK},
+    {"numlock", SDL_SCANCODE_NUMLOCKCLEAR},
+    {"printscreen", SDL_SCANCODE_PRINTSCREEN},
+    {"pause", SDL_SCANCODE_PAUSE},
+    {"f1", SDL_SCANCODE_F1},
+    {"f2", SDL_SCANCODE_F2},
+    {"f3", SDL_SCANCODE_F3},
+    {"f4", SDL_SCANCODE_F4},
+    {"f5", SDL_SCANCODE_F5},
+    {"f6", SDL_SCANCODE_F6},
+    {"f7", SDL_SCANCODE_F7},
+    {"f8", SDL_SCANCODE_F8},
+    {"f9", SDL_SCANCODE_F9},
+    {"f10", SDL_SCANCODE_F10},
+    {"f11", SDL_SCANCODE_F11},
+    {"f12", SDL_SCANCODE_F12},
+    {"leftshift", SDL_SCANCODE_LSHIFT},
+    {"leftcontrol", SDL_SCANCODE_LCTRL},
+    {"leftalt", SDL_SCANCODE_LALT},
+    {"leftsuper", SDL_SCANCODE_LGUI},
+    {"rightshift", SDL_SCANCODE_RSHIFT},
+    {"rightcontrol", SDL_SCANCODE_RCTRL},
+    {"rightalt", SDL_SCANCODE_RALT},
+    {"rightsuper", SDL_SCANCODE_RGUI},
+    {"kbmenu", SDL_SCANCODE_MENU},
+    // Keypad keys
+    {"kp0", SDL_SCANCODE_KP_0},
+    {"kp1", SDL_SCANCODE_KP_1},
+    {"kp2", SDL_SCANCODE_KP_2},
+    {"kp3", SDL_SCANCODE_KP_3},
+    {"kp4", SDL_SCANCODE_KP_4},
+    {"kp5", SDL_SCANCODE_KP_5},
+    {"kp6", SDL_SCANCODE_KP_6},
+    {"kp7", SDL_SCANCODE_KP_7},
+    {"kp8", SDL_SCANCODE_KP_8},
+    {"kp9", SDL_SCANCODE_KP_9},
+    {"kpdecimal", SDL_SCANCODE_KP_DECIMAL},
+    {"kpdivide", SDL_SCANCODE_KP_DIVIDE},
+    {"kpmultiply", SDL_SCANCODE_KP_MULTIPLY},
+    {"kpsubtract", SDL_SCANCODE_KP_MINUS},
+    {"kpadd", SDL_SCANCODE_KP_PLUS},
+    {"kpenter", SDL_SCANCODE_KP_ENTER},
+    {"kpequal", SDL_SCANCODE_KP_EQUALS},
+    // "anback"/"anmenu"/"anvolumeup"/"anvolumedown" (Android hardware buttons) are deliberately not mapped -
+    // there's no desktop/web SDL scancode equivalent, and neither platform this project targets has them.
+};
 
-InputMaps& InputMaps::Instance()
+const std::unordered_map<std::string, SDL_GamepadButton> kControllerButtonMap = {
+    {"unknown", SDL_GAMEPAD_BUTTON_INVALID},
+    {"a", SDL_GAMEPAD_BUTTON_SOUTH},
+    {"b", SDL_GAMEPAD_BUTTON_EAST},
+    {"x", SDL_GAMEPAD_BUTTON_WEST},
+    {"y", SDL_GAMEPAD_BUTTON_NORTH},
+    {"select", SDL_GAMEPAD_BUTTON_BACK},
+    {"guide", SDL_GAMEPAD_BUTTON_GUIDE},
+    {"start", SDL_GAMEPAD_BUTTON_START},
+    {"ljoystick", SDL_GAMEPAD_BUTTON_LEFT_STICK},
+    {"rjoystick", SDL_GAMEPAD_BUTTON_RIGHT_STICK},
+    {"ltrigger", SDL_GAMEPAD_BUTTON_LEFT_SHOULDER},
+    {"rtrigger", SDL_GAMEPAD_BUTTON_RIGHT_SHOULDER},
+    // "lbumper"/"rbumper" have no SDL_GamepadButton equivalent - SDL3 models the analog triggers as axes only
+    // (SDL_GAMEPAD_AXIS_LEFT/RIGHT_TRIGGER, see kControllerAxisMap's "lefttrigger"/"righttrigger"), so these
+    // were already silently non-functional before this file stopped going through raylib-style button codes -
+    // kept mapped to INVALID rather than removed, so an existing config binding these doesn't hard-fail.
+    {"lbumper", SDL_GAMEPAD_BUTTON_INVALID},
+    {"rbumper", SDL_GAMEPAD_BUTTON_INVALID},
+    {"up", SDL_GAMEPAD_BUTTON_DPAD_UP},
+    {"down", SDL_GAMEPAD_BUTTON_DPAD_DOWN},
+    {"left", SDL_GAMEPAD_BUTTON_DPAD_LEFT},
+    {"right", SDL_GAMEPAD_BUTTON_DPAD_RIGHT},
+};
+
+const std::unordered_map<std::string, SDL_GamepadAxis> kControllerAxisMap = {
+    {"leftx", SDL_GAMEPAD_AXIS_LEFTX},
+    {"lefty", SDL_GAMEPAD_AXIS_LEFTY},
+    {"rightx", SDL_GAMEPAD_AXIS_RIGHTX},
+    {"righty", SDL_GAMEPAD_AXIS_RIGHTY},
+    {"lefttrigger", SDL_GAMEPAD_AXIS_LEFT_TRIGGER},
+    {"righttrigger", SDL_GAMEPAD_AXIS_RIGHT_TRIGGER},
+};
+
+template <typename T>
+std::unordered_map<T, std::string> BuildReverseMap(const std::unordered_map<std::string, T>& forward)
 {
-	static InputMaps instance;
-	return instance;
-}
-
-InputMaps::InputMaps()
-{
-	InitializeKeycodeMap();
-	InitializeControllerButtonMap();
-	InitializeControllerAxisMap();
-}
-
-void InputMaps::InitializeKeycodeMap()
-{
-	m_keycodeMap = {
-	    {"null", KEY_NULL},
-	    // Alphanumeric keys
-	    {"apostrophe", KEY_APOSTROPHE},
-	    {"comma", KEY_COMMA},
-	    {"minus", KEY_MINUS},
-	    {"period", KEY_PERIOD},
-	    {"slash", KEY_SLASH},
-	    {"0", KEY_ZERO},
-	    {"1", KEY_ONE},
-	    {"2", KEY_TWO},
-	    {"3", KEY_THREE},
-	    {"4", KEY_FOUR},
-	    {"5", KEY_FIVE},
-	    {"6", KEY_SIX},
-	    {"7", KEY_SEVEN},
-	    {"8", KEY_EIGHT},
-	    {"9", KEY_NINE},
-	    {"semicolon", KEY_SEMICOLON},
-	    {"equal", KEY_EQUAL},
-	    {"a", KEY_A},
-	    {"b", KEY_B},
-	    {"c", KEY_C},
-	    {"d", KEY_D},
-	    {"e", KEY_E},
-	    {"f", KEY_F},
-	    {"g", KEY_G},
-	    {"h", KEY_H},
-	    {"i", KEY_I},
-	    {"j", KEY_J},
-	    {"k", KEY_K},
-	    {"l", KEY_L},
-	    {"m", KEY_M},
-	    {"n", KEY_N},
-	    {"o", KEY_O},
-	    {"p", KEY_P},
-	    {"q", KEY_Q},
-	    {"r", KEY_R},
-	    {"s", KEY_S},
-	    {"t", KEY_T},
-	    {"u", KEY_U},
-	    {"v", KEY_V},
-	    {"w", KEY_W},
-	    {"x", KEY_X},
-	    {"y", KEY_Y},
-	    {"z", KEY_Z},
-	    {"leftbracket", KEY_LEFT_BRACKET},
-	    {"backslash", KEY_BACKSLASH},
-	    {"rightbracket", KEY_RIGHT_BRACKET},
-	    {"grave", KEY_GRAVE},
-	    // Function keys
-	    {"space", KEY_SPACE},
-	    {"escape", KEY_ESCAPE},
-	    {"enter", KEY_ENTER},
-	    {"tab", KEY_TAB},
-	    {"backspace", KEY_BACKSPACE},
-	    {"insert", KEY_INSERT},
-	    {"delete", KEY_DELETE},
-	    {"right", KEY_RIGHT},
-	    {"left", KEY_LEFT},
-	    {"down", KEY_DOWN},
-	    {"up", KEY_UP},
-	    {"pageup", KEY_PAGE_UP},
-	    {"pagedown", KEY_PAGE_DOWN},
-	    {"home", KEY_HOME},
-	    {"end", KEY_END},
-	    {"capslock", KEY_CAPS_LOCK},
-	    {"scrolllock", KEY_SCROLL_LOCK},
-	    {"numlock", KEY_NUM_LOCK},
-	    {"printscreen", KEY_PRINT_SCREEN},
-	    {"pause", KEY_PAUSE},
-	    {"f1", KEY_F1},
-	    {"f2", KEY_F2},
-	    {"f3", KEY_F3},
-	    {"f4", KEY_F4},
-	    {"f5", KEY_F5},
-	    {"f6", KEY_F6},
-	    {"f7", KEY_F7},
-	    {"f8", KEY_F8},
-	    {"f9", KEY_F9},
-	    {"f10", KEY_F10},
-	    {"f11", KEY_F11},
-	    {"f12", KEY_F12},
-	    {"leftshift", KEY_LEFT_SHIFT},
-	    {"leftcontrol", KEY_LEFT_CONTROL},
-	    {"leftalt", KEY_LEFT_ALT},
-	    {"leftsuper", KEY_LEFT_SUPER},
-	    {"rightshift", KEY_RIGHT_SHIFT},
-	    {"rightcontrol", KEY_RIGHT_CONTROL},
-	    {"rightalt", KEY_RIGHT_ALT},
-	    {"rightsuper", KEY_RIGHT_SUPER},
-	    {"kbmenu", KEY_KB_MENU},
-	    // Keypad keys
-	    {"kp0", KEY_KP_0},
-	    {"kp1", KEY_KP_1},
-	    {"kp2", KEY_KP_2},
-	    {"kp3", KEY_KP_3},
-	    {"kp4", KEY_KP_4},
-	    {"kp5", KEY_KP_5},
-	    {"kp6", KEY_KP_6},
-	    {"kp7", KEY_KP_7},
-	    {"kp8", KEY_KP_8},
-	    {"kp9", KEY_KP_9},
-	    {"kpdecimal", KEY_KP_DECIMAL},
-	    {"kpdivide", KEY_KP_DIVIDE},
-	    {"kpmultiply", KEY_KP_MULTIPLY},
-	    {"kpsubtract", KEY_KP_SUBTRACT},
-	    {"kpadd", KEY_KP_ADD},
-	    {"kpenter", KEY_KP_ENTER},
-	    {"kpequal", KEY_KP_EQUAL},
-	    // Android key buttons
-	    {"anback", KEY_BACK},
-	    {"anmenu", KEY_MENU},
-	    {"anvolumeup", KEY_VOLUME_UP},
-	    {"anvolumedown", KEY_VOLUME_DOWN},
-	};
-
-	// Build reverse map
-	for (const auto& [str, key] : m_keycodeMap)
+	std::unordered_map<T, std::string> reverse;
+	for (const auto& [str, code] : forward)
 	{
-		m_keycodeReverseMap[key] = str;
+		reverse[code] = str;
 	}
+	return reverse;
 }
 
-void InputMaps::InitializeControllerButtonMap()
+const std::unordered_map<SDL_Scancode, std::string> kKeycodeReverseMap = BuildReverseMap(kKeycodeMap);
+const std::unordered_map<SDL_GamepadButton, std::string> kControllerButtonReverseMap =
+    BuildReverseMap(kControllerButtonMap);
+const std::unordered_map<SDL_GamepadAxis, std::string> kControllerAxisReverseMap = BuildReverseMap(kControllerAxisMap);
+}  // namespace
+
+namespace Struktur::Input::InputMaps
 {
-	m_controllerButtonMap = {
-	    {"unknown", GAMEPAD_BUTTON_UNKNOWN},
-	    {"a", GAMEPAD_BUTTON_RIGHT_FACE_DOWN},
-	    {"b", GAMEPAD_BUTTON_RIGHT_FACE_RIGHT},
-	    {"x", GAMEPAD_BUTTON_RIGHT_FACE_LEFT},
-	    {"y", GAMEPAD_BUTTON_RIGHT_FACE_UP},
-	    {"select", GAMEPAD_BUTTON_MIDDLE_LEFT},
-	    {"guide", GAMEPAD_BUTTON_MIDDLE},
-	    {"start", GAMEPAD_BUTTON_MIDDLE_RIGHT},
-	    {"ljoystick", GAMEPAD_BUTTON_LEFT_THUMB},
-	    {"rjoystick", GAMEPAD_BUTTON_RIGHT_THUMB},
-	    {"ltrigger", GAMEPAD_BUTTON_LEFT_TRIGGER_1},
-	    {"lbumper", GAMEPAD_BUTTON_LEFT_TRIGGER_2},
-	    {"rtrigger", GAMEPAD_BUTTON_RIGHT_TRIGGER_1},
-	    {"rbumper", GAMEPAD_BUTTON_RIGHT_TRIGGER_2},
-	    {"up", GAMEPAD_BUTTON_LEFT_FACE_UP},
-	    {"down", GAMEPAD_BUTTON_LEFT_FACE_DOWN},
-	    {"left", GAMEPAD_BUTTON_LEFT_FACE_LEFT},
-	    {"right", GAMEPAD_BUTTON_LEFT_FACE_RIGHT},
-	};
-
-	// Build reverse map
-	for (const auto& [str, button] : m_controllerButtonMap)
-	{
-		m_controllerButtonReverseMap[button] = str;
-	}
-}
-
-void InputMaps::InitializeControllerAxisMap()
+SDL_Scancode GetKeycodeFromString(const std::string& input)
 {
-	m_controllerAxisMap = {
-	    {"leftx", GAMEPAD_AXIS_LEFT_X},
-	    {"lefty", GAMEPAD_AXIS_LEFT_Y},
-	    {"rightx", GAMEPAD_AXIS_RIGHT_X},
-	    {"righty", GAMEPAD_AXIS_RIGHT_Y},
-	    {"lefttrigger", GAMEPAD_AXIS_LEFT_TRIGGER},
-	    {"righttrigger", GAMEPAD_AXIS_RIGHT_TRIGGER},
-	};
-
-	// Build reverse map
-	for (const auto& [str, axis] : m_controllerAxisMap)
-	{
-		m_controllerAxisReverseMap[axis] = str;
-	}
-}
-
-KeyboardKey InputMaps::GetKeycodeFromString(const std::string& input) const
-{
-	auto it = m_keycodeMap.find(input);
-	ASSERT_MSG(it != m_keycodeMap.end(), std::format("Unknown keycode string: '{}'", input).c_str());
+	auto it = kKeycodeMap.find(input);
+	ASSERT_MSG(it != kKeycodeMap.end(), std::format("Unknown keycode string: '{}'", input).c_str());
 	return it->second;
 }
 
-GamepadButton InputMaps::GetControllerButtonFromString(const std::string& input) const
+SDL_GamepadButton GetControllerButtonFromString(const std::string& input)
 {
-	auto it = m_controllerButtonMap.find(input);
-	ASSERT_MSG(it != m_controllerButtonMap.end(), std::format("Unknown controller button string: '{}'", input).c_str());
+	auto it = kControllerButtonMap.find(input);
+	ASSERT_MSG(it != kControllerButtonMap.end(), std::format("Unknown controller button string: '{}'", input).c_str());
 	return it->second;
 }
 
-GamepadAxis InputMaps::GetControllerAxisFromString(const std::string& input) const
+SDL_GamepadAxis GetControllerAxisFromString(const std::string& input)
 {
-	auto it = m_controllerAxisMap.find(input);
-	ASSERT_MSG(it != m_controllerAxisMap.end(), std::format("Unknown controller axis string: '{}'", input).c_str());
+	auto it = kControllerAxisMap.find(input);
+	ASSERT_MSG(it != kControllerAxisMap.end(), std::format("Unknown controller axis string: '{}'", input).c_str());
 	return it->second;
 }
 
-std::string InputMaps::GetStringFromKeycode(KeyboardKey key) const
+std::string GetStringFromKeycode(SDL_Scancode key)
 {
-	auto it = m_keycodeReverseMap.find(key);
-	if (it != m_keycodeReverseMap.end())
+	auto it = kKeycodeReverseMap.find(key);
+	if (it != kKeycodeReverseMap.end())
 	{
 		return it->second;
 	}
 	return "unknown";
 }
 
-std::string InputMaps::GetStringFromControllerButton(GamepadButton button) const
+std::string GetStringFromControllerButton(SDL_GamepadButton button)
 {
-	auto it = m_controllerButtonReverseMap.find(button);
-	if (it != m_controllerButtonReverseMap.end())
+	auto it = kControllerButtonReverseMap.find(button);
+	if (it != kControllerButtonReverseMap.end())
 	{
 		return it->second;
 	}
 	return "unknown";
 }
 
-std::string InputMaps::GetStringFromControllerAxis(GamepadAxis axis) const
+std::string GetStringFromControllerAxis(SDL_GamepadAxis axis)
 {
-	auto it = m_controllerAxisReverseMap.find(axis);
-	if (it != m_controllerAxisReverseMap.end())
+	auto it = kControllerAxisReverseMap.find(axis);
+	if (it != kControllerAxisReverseMap.end())
 	{
 		return it->second;
 	}
 	return "unknown";
 }
-
-}  // namespace Struktur::Input
+}  // namespace Struktur::Input::InputMaps

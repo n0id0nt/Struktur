@@ -13,11 +13,10 @@ namespace Struktur::Input
 {
 
 // Forward declarations of helper functions
-static void LoadButtonBindings(Input& input, const std::string& name, const nlohmann::json& bindings, InputMaps& maps);
-static void LoadVariableBindings(Input& input, const std::string& name, const nlohmann::json& bindings,
-                                 InputMaps& maps);
-static void LoadAxisBindings(Input& input, const std::string& name, const nlohmann::json& bindings, InputMaps& maps);
-static void LoadAxis2Bindings(Input& input, const std::string& name, const nlohmann::json& bindings, InputMaps& maps);
+static void LoadButtonBindings(Input& input, const std::string& name, const nlohmann::json& bindings);
+static void LoadVariableBindings(Input& input, const std::string& name, const nlohmann::json& bindings);
+static void LoadAxisBindings(Input& input, const std::string& name, const nlohmann::json& bindings);
+static void LoadAxis2Bindings(Input& input, const std::string& name, const nlohmann::json& bindings);
 
 bool InputConfigLoader::LoadFromFile(Input& input, const std::string& filePath)
 {
@@ -55,8 +54,6 @@ bool InputConfigLoader::LoadFromFile(Input& input, const std::string& filePath)
 		return false;
 	}
 
-	InputMaps& maps = InputMaps::Instance();
-
 	// Process each input binding
 	for (const auto& inputEntry : inputs)
 	{
@@ -79,19 +76,19 @@ bool InputConfigLoader::LoadFromFile(Input& input, const std::string& filePath)
 		// Process based on input type
 		if (type == "button")
 		{
-			LoadButtonBindings(input, name, bindings, maps);
+			LoadButtonBindings(input, name, bindings);
 		}
 		else if (type == "variable")
 		{
-			LoadVariableBindings(input, name, bindings, maps);
+			LoadVariableBindings(input, name, bindings);
 		}
 		else if (type == "axis")
 		{
-			LoadAxisBindings(input, name, bindings, maps);
+			LoadAxisBindings(input, name, bindings);
 		}
 		else if (type == "axis2")
 		{
-			LoadAxis2Bindings(input, name, bindings, maps);
+			LoadAxis2Bindings(input, name, bindings);
 		}
 		else
 		{
@@ -107,7 +104,7 @@ bool InputConfigLoader::LoadFromFile(Input& input, const std::string& filePath)
 // HELPER FUNCTIONS (Static)
 // ============================================================================
 
-static void LoadButtonBindings(Input& input, const std::string& name, const nlohmann::json& bindings, InputMaps& maps)
+static void LoadButtonBindings(Input& input, const std::string& name, const nlohmann::json& bindings)
 {
 	for (const auto& binding : bindings)
 	{
@@ -122,11 +119,11 @@ static void LoadButtonBindings(Input& input, const std::string& name, const nloh
 
 		if (bindingType == "keycode")
 		{
-			input.CreateButtonBinding(name, maps.GetKeycodeFromString(value));
+			input.CreateButtonBinding(name, InputMaps::GetKeycodeFromString(value));
 		}
 		else if (bindingType == "controllerButton")
 		{
-			input.CreateButtonBinding(name, maps.GetControllerButtonFromString(value));
+			input.CreateButtonBinding(name, InputMaps::GetControllerButtonFromString(value));
 		}
 		else
 		{
@@ -135,7 +132,7 @@ static void LoadButtonBindings(Input& input, const std::string& name, const nloh
 	}
 }
 
-static void LoadVariableBindings(Input& input, const std::string& name, const nlohmann::json& bindings, InputMaps& maps)
+static void LoadVariableBindings(Input& input, const std::string& name, const nlohmann::json& bindings)
 {
 	for (const auto& binding : bindings)
 	{
@@ -150,11 +147,11 @@ static void LoadVariableBindings(Input& input, const std::string& name, const nl
 
 		if (bindingType == "keycode")
 		{
-			input.CreateVariableBinding(name, maps.GetKeycodeFromString(value));
+			input.CreateVariableBinding(name, InputMaps::GetKeycodeFromString(value));
 		}
 		else if (bindingType == "controllerButton")
 		{
-			input.CreateVariableBinding(name, maps.GetControllerButtonFromString(value));
+			input.CreateVariableBinding(name, InputMaps::GetControllerButtonFromString(value));
 		}
 		else if (bindingType == "controllerAxis")
 		{
@@ -166,7 +163,7 @@ static void LoadVariableBindings(Input& input, const std::string& name, const nl
 
 			std::string axisType                    = binding["axis"].get<std::string>();
 			Input::VariableBindingAxis variableAxis = Input::ParseVariableBindingAxis(axisType);
-			input.CreateVariableBinding(name, maps.GetControllerAxisFromString(value), variableAxis);
+			input.CreateVariableBinding(name, InputMaps::GetControllerAxisFromString(value), variableAxis);
 		}
 		else
 		{
@@ -175,7 +172,7 @@ static void LoadVariableBindings(Input& input, const std::string& name, const nl
 	}
 }
 
-static void LoadAxisBindings(Input& input, const std::string& name, const nlohmann::json& bindings, InputMaps& maps)
+static void LoadAxisBindings(Input& input, const std::string& name, const nlohmann::json& bindings)
 {
 	for (const auto& binding : bindings)
 	{
@@ -198,7 +195,7 @@ static void LoadAxisBindings(Input& input, const std::string& name, const nlohma
 
 			std::string component     = binding["component"].get<std::string>();
 			Input::AxisComponent axis = Input::ParseAxisComponent(component);
-			input.CreateAxisBinding(name, maps.GetKeycodeFromString(value), axis);
+			input.CreateAxisBinding(name, InputMaps::GetKeycodeFromString(value), axis);
 		}
 		else if (bindingType == "controllerButton")
 		{
@@ -210,11 +207,11 @@ static void LoadAxisBindings(Input& input, const std::string& name, const nlohma
 
 			std::string component     = binding["component"].get<std::string>();
 			Input::AxisComponent axis = Input::ParseAxisComponent(component);
-			input.CreateAxisBinding(name, maps.GetControllerButtonFromString(value), axis);
+			input.CreateAxisBinding(name, InputMaps::GetControllerButtonFromString(value), axis);
 		}
 		else if (bindingType == "controllerAxis")
 		{
-			input.CreateAxisBinding(name, maps.GetControllerAxisFromString(value));
+			input.CreateAxisBinding(name, InputMaps::GetControllerAxisFromString(value));
 		}
 		else
 		{
@@ -223,7 +220,7 @@ static void LoadAxisBindings(Input& input, const std::string& name, const nlohma
 	}
 }
 
-static void LoadAxis2Bindings(Input& input, const std::string& name, const nlohmann::json& bindings, InputMaps& maps)
+static void LoadAxis2Bindings(Input& input, const std::string& name, const nlohmann::json& bindings)
 {
 	for (const auto& binding : bindings)
 	{
@@ -240,17 +237,17 @@ static void LoadAxis2Bindings(Input& input, const std::string& name, const nlohm
 		if (bindingType == "keycode")
 		{
 			Input::Axis2Component axis2Comp = Input::ParseAxis2Component(component);
-			input.CreateAxis2Binding(name, maps.GetKeycodeFromString(value), axis2Comp);
+			input.CreateAxis2Binding(name, InputMaps::GetKeycodeFromString(value), axis2Comp);
 		}
 		else if (bindingType == "controllerButton")
 		{
 			Input::Axis2Component axis2Comp = Input::ParseAxis2Component(component);
-			input.CreateAxis2Binding(name, maps.GetControllerButtonFromString(value), axis2Comp);
+			input.CreateAxis2Binding(name, InputMaps::GetControllerButtonFromString(value), axis2Comp);
 		}
 		else if (bindingType == "controllerAxis")
 		{
 			Input::Axis2Direction direction = Input::ParseAxis2Direction(component);
-			input.CreateAxis2Binding(name, maps.GetControllerAxisFromString(value), direction);
+			input.CreateAxis2Binding(name, InputMaps::GetControllerAxisFromString(value), direction);
 		}
 		else
 		{
