@@ -9,9 +9,7 @@
 #include "entt/entt.hpp"
 #include "glm/glm.hpp"
 
-#if !defined(PLATFORM_WEB)
-	#include "Engine/Renderer/TileChunk.h"
-#endif
+#include "Engine/Renderer/TileChunk.h"
 
 namespace Struktur
 {
@@ -29,11 +27,9 @@ struct DrawItem
 	glm::vec2 origin;
 	float rotation;
 	Util::Math::Color tint;
-#if !defined(PLATFORM_WEB)
 	// Set only for chunk items (see SubmitChunk) - Flush() submits these directly from their own cached
 	// static buffers instead of folding them into a transient sprite batch.
 	const TileChunk* chunk = nullptr;
-#endif
 };
 
 struct CullBounds
@@ -56,10 +52,8 @@ class WorldRenderer
 	void Submit(GameResource::RenderLayer layer, float orderInLayer, entt::entity entity,
 	           const TextureHandle& texture, const Util::Math::Rect& sourceRec, const Util::Math::Rect& destRec,
 	           const glm::vec2& origin, float rotation, const Util::Math::Color& tint, const CullBounds& cullBounds);
-#if !defined(PLATFORM_WEB)
 	void SubmitChunk(GameResource::RenderLayer layer, float orderInLayer, const TileChunk& chunk,
 	                 const TextureHandle& texture, const CullBounds& cullBounds);
-#endif
 	void Flush(GameContext& context);
 
    private:

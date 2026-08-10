@@ -2,6 +2,7 @@
 
 #include "Debug/Assertions.h"
 #include "Engine/GameContext.h"
+#include "Engine/Renderer/UIRenderer.h"
 
 Struktur::UI::UIElement::UIElement(const glm::vec2& absolutePosition, const glm::vec2& relativePosition,
                                    const glm::vec2& absoluteSize, const glm::vec2& relativeSize)
@@ -10,8 +11,8 @@ Struktur::UI::UIElement::UIElement(const glm::vec2& absolutePosition, const glm:
       m_absoluteSize(absoluteSize),
       m_relativeSize(relativeSize),
       m_anchorPoint(glm::vec2()),
-      m_backgroundColor(LIGHTGRAY),
-      m_borderColor(DARKGRAY),
+      m_backgroundColor(Util::Math::ColorLightGray),
+      m_borderColor(Util::Math::ColorDarkGray),
       m_borderWidth(1.0f),
       m_visible(true),
       m_enabled(true),
@@ -121,14 +122,15 @@ glm::vec2 Struktur::UI::UIElement::GetSize() const
 	return absoluteSize + relativeSize;
 }
 
-::Rectangle Struktur::UI::UIElement::GetBounds() const
+Struktur::Util::Math::Rect Struktur::UI::UIElement::GetBounds() const
 {
 	return m_bounds;
 }
 
 bool Struktur::UI::UIElement::IsPointInside(const glm::vec2& point) const
 {
-	return CheckCollisionPointRec(Vector2{point.x, point.y}, m_bounds);
+	return point.x >= m_bounds.x && point.x <= m_bounds.x + m_bounds.width && point.y >= m_bounds.y &&
+	       point.y <= m_bounds.y + m_bounds.height;
 }
 
 void Struktur::UI::UIElement::SetNavigationNeighbor(NavigationDirection dir, UIElement* neighbor)
@@ -298,11 +300,7 @@ void Struktur::UI::UIElement::OnActivate(GameContext& context)
 void Struktur::UI::UIElement::RenderFocusIndicator(GameContext& context)
 {
 	// Simple focus indicator - can be customized
-#if defined(PLATFORM_WEB)
-	::DrawRectangleLinesEx(m_bounds, 2.0f, BLUE);
-#else
-	context.GetUIRenderer().DrawRectOutline(m_bounds, 2.0f, BLUE);
-#endif
+	context.GetUIRenderer().DrawRectOutline(m_bounds, 2.0f, Util::Math::ColorBlue);
 }
 
 void Struktur::UI::UIElement::UpdateChildren(GameContext& context)
@@ -341,5 +339,5 @@ void Struktur::UI::UIElement::UpdateBounds()
 {
 	glm::vec2 position = GetPosition();
 	glm::vec2 size     = GetSize();
-	m_bounds           = ::Rectangle{position.x, position.y, size.x, size.y};
+	m_bounds           = Util::Math::Rect{position.x, position.y, size.x, size.y};
 }

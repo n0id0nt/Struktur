@@ -312,7 +312,7 @@ void wren_UIElementSetBackgroundColor(WrenVM* vm)
 		return;
 	}
 	WrenVec4* color = static_cast<WrenVec4*>(wrenGetSlotForeign(vm, 1));
-	::Color rayColor{(unsigned char)color->value.r, (unsigned char)color->value.g, (unsigned char)color->value.b,
+	Struktur::Util::Math::Color rayColor{(unsigned char)color->value.r, (unsigned char)color->value.g, (unsigned char)color->value.b,
 	                 (unsigned char)color->value.a};
 	uiElement->element->SetBackgroundColor(rayColor);
 }
@@ -327,7 +327,7 @@ void wren_UIElementSetBorderColor(WrenVM* vm)
 		return;
 	}
 	WrenVec4* color = static_cast<WrenVec4*>(wrenGetSlotForeign(vm, 1));
-	::Color rayColor{(unsigned char)color->value.r, (unsigned char)color->value.g, (unsigned char)color->value.b,
+	Struktur::Util::Math::Color rayColor{(unsigned char)color->value.r, (unsigned char)color->value.g, (unsigned char)color->value.b,
 	                 (unsigned char)color->value.a};
 	uiElement->element->SetBorderColor(rayColor);
 }
@@ -592,7 +592,7 @@ void wren_UILabelSetTextColor(WrenVM* vm)
 		return;
 	}
 	WrenVec4* color = static_cast<WrenVec4*>(wrenGetSlotForeign(vm, 1));
-	::Color rayColor{(unsigned char)color->value.r, (unsigned char)color->value.g, (unsigned char)color->value.b,
+	Struktur::Util::Math::Color rayColor{(unsigned char)color->value.r, (unsigned char)color->value.g, (unsigned char)color->value.b,
 	                 (unsigned char)color->value.a};
 	Struktur::UI::UILabel* label = dynamic_cast<Struktur::UI::UILabel*>(uiElement->element);
 	label->SetTextColor(rayColor);

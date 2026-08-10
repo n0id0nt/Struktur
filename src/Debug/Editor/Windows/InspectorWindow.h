@@ -9,7 +9,6 @@
 #include "Engine/Util/MathUtil.h"
 #include "glm/glm.hpp"
 #include "glm/gtc/quaternion.hpp."
-#include "raylib.h"
 
 namespace Struktur
 {
@@ -96,10 +95,7 @@ class InspectorWindow : public EditorWindow
 	bool RenderVec3(const char* label, glm::vec3& vec);
 	bool RenderVec4(const char* label, glm::vec4& vec);
 	bool RenderQuat(const char* label, glm::quat& quat);
-	bool RenderColor(const char* label, ::Color& color);
 	bool RenderColor(const char* label, Util::Math::Color& color);
-	bool RenderRaylibVec2(const char* label, ::Vector2& vec);
-	bool RenderRectangle(const char* label, ::Rectangle& rect);
 
 	HierarchyWindow* m_hierarchyWindow;
 	UIHierarchyWindow* m_uiHierarchyWindow;

@@ -1,11 +1,8 @@
 #pragma once
 
-#if !defined(PLATFORM_WEB)
-
 #include <cstdint>
 
 #include "Engine/Util/MathUtil.h"
-#include "raylib.h"
 
 #include <bgfx/bgfx.h>
 
@@ -37,14 +34,5 @@ inline uint32_t PackColor(const Util::Math::Color& c)
 {
 	return ((uint32_t)c.a << 24) | ((uint32_t)c.b << 16) | ((uint32_t)c.g << 8) | (uint32_t)c.r;
 }
-
-// Same packing, taking raylib's own ::Color directly - UIRenderer's callers (UIElement/UIPanel/UILabel) already
-// hold raylib colors (m_backgroundColor, m_textColor, etc.), so this avoids a conversion at every call site.
-inline uint32_t PackColorRGBA(const ::Color& c)
-{
-	return ((uint32_t)c.a << 24) | ((uint32_t)c.b << 16) | ((uint32_t)c.g << 8) | (uint32_t)c.r;
-}
 }  // namespace Renderer
 }  // namespace Struktur
-
-#endif

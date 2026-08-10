@@ -1,7 +1,6 @@
 #pragma once
 
 #include <imgui.h>
-#include <raylib.h>
 
 #include <memory>
 #include <unordered_map>

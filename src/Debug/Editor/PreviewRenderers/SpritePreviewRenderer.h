@@ -1,7 +1,5 @@
 #pragma once
 
-#include <raylib.h>
-
 #include "PreviewRenderer.h"
 
 namespace Struktur

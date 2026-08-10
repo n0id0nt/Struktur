@@ -2,10 +2,6 @@
 
 #include "glm/glm.hpp"
 
-#if defined(PLATFORM_WEB)
-	#include "raylib.h"
-#endif
-
 namespace Struktur
 {
 namespace GameResource
@@ -26,11 +22,6 @@ struct Camera
 	glm::mat4 GetViewMatrix() const;
 	// Screen-space orthographic projection (origin top-left, Y down), matching raylib's prior screen convention.
 	glm::mat4 GetProjectionMatrix(int viewportWidth, int viewportHeight) const;
-
-#if defined(PLATFORM_WEB)
-	// Web still renders through raylib (see the plan) - only that path needs raylib's own camera type.
-	::Camera2D GetRaylibCamera() const;
-#endif
 };
 }  // namespace GameResource
 }  // namespace Struktur

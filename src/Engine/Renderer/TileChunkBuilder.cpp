@@ -1,12 +1,10 @@
 #include "TileChunkBuilder.h"
 
-#if !defined(PLATFORM_WEB)
+#include <cfloat>
+#include <cmath>
+#include <unordered_map>
 
-	#include <cfloat>
-	#include <cmath>
-	#include <unordered_map>
-
-	#include "Engine/Renderer/SpriteVertex.h"
+#include "Engine/Renderer/SpriteVertex.h"
 
 namespace
 {
@@ -138,5 +136,3 @@ void Struktur::Renderer::DestroyTileChunks(std::vector<TileChunk>& chunks)
 	}
 	chunks.clear();
 }
-
-#endif

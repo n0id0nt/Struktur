@@ -1,8 +1,6 @@
 
 #include "DebugInfoWindow.h"
 
-#include <raylib.h>
-
 #include "Engine/Core/GameData.h"
 #include "Engine/GameContext.h"
 #include "GameViewportWindow.h"
@@ -30,7 +28,7 @@ void DebugInfoWindow::Render(GameContext& context)
 		ImGui::Text("Viewport Hovered: %s", m_viewportWindow->IsViewportHovered() ? "Yes" : "No");
 		ImGui::Separator();
 
-		Vector2 gameMousePos = m_viewportWindow->GetGameMousePosition(context);
+		glm::vec2 gameMousePos = m_viewportWindow->GetGameMousePosition(context);
 		if (gameMousePos.x >= 0 && gameMousePos.y >= 0)
 		{
 			ImGui::Text("Mouse in Game: (%.1f, %.1f)", gameMousePos.x, gameMousePos.y);

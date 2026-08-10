@@ -1,9 +1,11 @@
 #include "Noise.h"
 
-#include <raymath.h>
 #include <stdlib.h>
 
+#include <algorithm>
 #include <cmath>
+
+#include "Engine/Util/MathUtil.h"
 
 double Struktur::Util::Noise::Grad(int hash, double value)
 {
@@ -19,7 +21,7 @@ double Struktur::Util::Noise::Grad(int hash, double value)
 double Struktur::Util::Noise::Smoothstep(double edge0, double edge1, double x)
 {
 	// Scale, bias and saturate x to 0..1 range
-	x = ::Clamp((x - edge0) / (edge1 - edge0), 0.0f, 1.0f);
+	x = std::clamp((x - edge0) / (edge1 - edge0), 0.0, 1.0);
 	// Evaluate polynomial
 	return x * x * (3 - 2 * x);
 }
@@ -41,5 +43,5 @@ double Struktur::Util::Noise::PerlinNoise1(unsigned int seed, double value)
 	int a = p[X];
 	int b = p[X + 1];
 
-	return ::Lerp(u, Grad(a, value), Grad(b, value - 1));
+	return Util::Math::Lerp(u, Grad(a, value), Grad(b, value - 1));
 }

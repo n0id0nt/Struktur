@@ -15,12 +15,10 @@ struct TimeSystem
    private:
 	double m_scaleChangeUnscaledTime = 0.0;
 	double m_scaleChangeScaledTime   = 0.0;
-#if !defined(PLATFORM_WEB)
-	// Desktop measures its own frame delta via SDL3's performance counter instead of raylib's GetFrameTime() -
-	// raylib's core/window state (that function's source) is never initialised here, bgfx/SDL3 own that now.
-	uint64_t m_lastTicks  = 0;
-	bool m_hasLastTicks   = false;
-#endif
+	// Frame delta measured via SDL3's performance counter (works on both platforms via SDL3's Emscripten
+	// support) instead of raylib's GetFrameTime(), whose core/window state is never initialised here.
+	uint64_t m_lastTicks = 0;
+	bool m_hasLastTicks  = false;
 
    public:
 	void SetTimeScale(float newScale);

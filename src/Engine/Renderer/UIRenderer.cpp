@@ -1,16 +1,14 @@
 #include "UIRenderer.h"
 
-#if !defined(PLATFORM_WEB)
+#include "Debug/Assertions.h"
+#include "Engine/Core/GameData.h"
+#include "Engine/GameContext.h"
+#include "Engine/Renderer/EmbeddedShaders.h"
+#include "Engine/Renderer/GraphicsDevice.h"
+#include "Engine/Renderer/SpriteVertex.h"
 
-	#include "Debug/Assertions.h"
-	#include "Engine/Core/GameData.h"
-	#include "Engine/GameContext.h"
-	#include "Engine/Renderer/EmbeddedShaders.h"
-	#include "Engine/Renderer/GraphicsDevice.h"
-	#include "Engine/Renderer/SpriteVertex.h"
-
-	#include <glm/gtc/matrix_transform.hpp>
-	#include <glm/gtc/type_ptr.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtc/type_ptr.hpp>
 
 Struktur::Renderer::UIRenderer::UIRenderer()
 {
@@ -77,32 +75,34 @@ void Struktur::Renderer::UIRenderer::SubmitTexturedQuad(float x, float y, float 
 	bgfx::submit(GraphicsDevice::UIViewId, GetEmbeddedProgram("sprite"));
 }
 
-void Struktur::Renderer::UIRenderer::DrawRect(const ::Rectangle& rect, const ::Color& color)
+void Struktur::Renderer::UIRenderer::DrawRect(const Util::Math::Rect& rect, const Util::Math::Color& color)
 {
-	SubmitTexturedQuad(rect.x, rect.y, rect.width, rect.height, 0.0f, 0.0f, 1.0f, 1.0f, PackColorRGBA(color),
+	SubmitTexturedQuad(rect.x, rect.y, rect.width, rect.height, 0.0f, 0.0f, 1.0f, 1.0f, PackColor(color),
 	                    m_whiteTexture);
 }
 
-void Struktur::Renderer::UIRenderer::DrawRectOutline(const ::Rectangle& rect, float thickness, const ::Color& color)
+void Struktur::Renderer::UIRenderer::DrawRectOutline(const Util::Math::Rect& rect, float thickness,
+                                                      const Util::Math::Color& color)
 {
-	DrawRect(::Rectangle{rect.x, rect.y, rect.width, thickness}, color);                                    // top
-	DrawRect(::Rectangle{rect.x, rect.y + rect.height - thickness, rect.width, thickness}, color);          // bottom
-	DrawRect(::Rectangle{rect.x, rect.y, thickness, rect.height}, color);                                   // left
-	DrawRect(::Rectangle{rect.x + rect.width - thickness, rect.y, thickness, rect.height}, color);          // right
+	DrawRect(Util::Math::Rect{rect.x, rect.y, rect.width, thickness}, color);                                 // top
+	DrawRect(Util::Math::Rect{rect.x, rect.y + rect.height - thickness, rect.width, thickness}, color);       // bottom
+	DrawRect(Util::Math::Rect{rect.x, rect.y, thickness, rect.height}, color);                                // left
+	DrawRect(Util::Math::Rect{rect.x + rect.width - thickness, rect.y, thickness, rect.height}, color);       // right
 }
 
-void Struktur::Renderer::UIRenderer::DrawTexturedRect(const ::Rectangle& rect, const TextureHandle& texture,
-                                                       const ::Color& tint)
+void Struktur::Renderer::UIRenderer::DrawTexturedRect(const Util::Math::Rect& rect, const TextureHandle& texture,
+                                                       const Util::Math::Color& tint)
 {
-	SubmitTexturedQuad(rect.x, rect.y, rect.width, rect.height, 0.0f, 0.0f, 1.0f, 1.0f, PackColorRGBA(tint),
+	SubmitTexturedQuad(rect.x, rect.y, rect.width, rect.height, 0.0f, 0.0f, 1.0f, 1.0f, PackColor(tint),
 	                    bgfx::TextureHandle{(uint16_t)texture.id});
 }
 
-void Struktur::Renderer::UIRenderer::DrawText(const ::Font& font, const std::string& text, const ::Vector2& position,
-                                               float fontSize, const ::Color& color)
+void Struktur::Renderer::UIRenderer::DrawText(const Text::Font& font, const std::string& text,
+                                               const glm::vec2& position, float fontSize,
+                                               const Util::Math::Color& color)
 {
 	// Stub/unloaded font (see FontResource) - draw nothing rather than divide by zero below.
-	if (font.baseSize <= 0 || font.glyphCount <= 0)
+	if (font.baseSize <= 0 || font.glyphs.empty())
 	{
 		return;
 	}
@@ -110,7 +110,7 @@ void Struktur::Renderer::UIRenderer::DrawText(const ::Font& font, const std::str
 	float scale               = fontSize / (float)font.baseSize;
 	float atlasWidth          = (float)font.texture.width;
 	float atlasHeight         = (float)font.texture.height;
-	uint32_t abgr             = PackColorRGBA(color);
+	uint32_t abgr             = PackColor(color);
 	bgfx::TextureHandle atlas = {(uint16_t)font.texture.id};
 
 	float penX = position.x;
@@ -119,12 +119,12 @@ void Struktur::Renderer::UIRenderer::DrawText(const ::Font& font, const std::str
 	while (index < size)
 	{
 		int codepointByteCount = 0;
-		int codepoint          = ::GetCodepointNext(&text[index], &codepointByteCount);
-		int glyphIndex         = ::GetGlyphIndex(font, codepoint);
+		int codepoint          = Text::GetCodepointNext(&text[index], &codepointByteCount);
+		int glyphIndex         = Text::GetGlyphIndex(font, codepoint);
 		index += codepointByteCount;
 
-		const ::GlyphInfo& glyph = font.glyphs[glyphIndex];
-		const ::Rectangle& rec   = font.recs[glyphIndex];
+		const Text::Glyph& glyph        = font.glyphs[glyphIndex];
+		const Util::Math::Rect& rec     = glyph.rec;
 
 		if (codepoint != ' ' && codepoint != '\t')
 		{
@@ -138,5 +138,3 @@ void Struktur::Renderer::UIRenderer::DrawText(const ::Font& font, const std::str
 		penX += (float)(glyph.advanceX > 0 ? glyph.advanceX : (int)rec.width) * scale;
 	}
 }
-
-#endif

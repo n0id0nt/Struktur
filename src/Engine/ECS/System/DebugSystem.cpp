@@ -1,78 +1,83 @@
 #include "DebugSystem.h"
 
+#include <format>
+
 #include "Engine/ECS/Component/Level.h"
 #include "Engine/ECS/Component/Transform.h"
 #include "Engine/ECS/System/TransformSystem.h"
 #include "Engine/GameContext.h"
+#include "Engine/Renderer/UIRenderer.h"
+#include "Engine/Resource/FontResource.h"
+#include "Engine/Resource/ResourcePtr.h"
 
 Struktur::System::DebugSystem::DebugSystem()
-    : m_box2dRenderer()
 {
 }
 
-#if defined(PLATFORM_WEB)
 void Struktur::System::DebugSystem::Update(GameContext& context)
 {
-	// Get editor settings from context
-	auto& debugSettings = context.GetEditor().GetSettings().debugRender;
-
-	entt::registry& registry            = context.GetRegistry();
+	auto& debugSettings                 = context.GetEditor().GetSettings().debugRender;
 	Physics::PhysicsWorld& physicsWorld = context.GetPhysicsWorld();
-	GameResource::Camera& camera        = context.GetCamera();
 
-	// Begin 2D mode for world-space rendering
-	::BeginMode2D(camera.GetRaylibCamera());
+	m_debugRenderer.SetupView(context);
 
-	// Render physics debug visualization (if enabled)
+	// box2d's own b2Draw walk (see b2World::DebugDraw) replaces Box2DDebugRenderer's manual raylib-coupled walk
+	// on this path - its flags map onto real box2d concepts rather than Box2DDebugRenderer::RenderWorld's
+	// positional-argument reuse (e.g. web's "showPhysicsBodies" setting happens to control that function's
+	// drawCenterOfMass argument only because of argument order, not because the names actually correspond).
 	if (debugSettings.showPhysicsShapes || debugSettings.showPhysicsBodies || debugSettings.showPhysicsJoints ||
 	    debugSettings.showPhysicsAABBs)
 	{
-		m_box2dRenderer.RenderWorld(physicsWorld.GetRawWorld(), physicsWorld.GetPixelsPerMeter(),
-		                            debugSettings.showPhysicsShapes,  // shapes
-		                            debugSettings.showPhysicsBodies,  // bodies
-		                            debugSettings.showPhysicsJoints,  // joints
-		                            debugSettings.showPhysicsAABBs    // AABBs
-		);
-	}
+		uint32 flags = 0;
+		if (debugSettings.showPhysicsShapes)
+		{
+			flags |= b2Draw::e_shapeBit;
+		}
+		if (debugSettings.showPhysicsBodies)
+		{
+			flags |= b2Draw::e_centerOfMassBit;
+		}
+		if (debugSettings.showPhysicsJoints)
+		{
+			flags |= b2Draw::e_jointBit;
+		}
+		if (debugSettings.showPhysicsAABBs)
+		{
+			flags |= b2Draw::e_aabbBit;
+		}
 
-	// Render physics contact points (if enabled)
-	if (debugSettings.showPhysicsContactPoints)
-	{
-		// TODO: Implement contact point rendering
-		// m_box2dRenderer.RenderContactPoints(...);
+		m_box2dBgfxDebugDraw.SetPixelsPerMeter(physicsWorld.GetPixelsPerMeter());
+		m_box2dBgfxDebugDraw.SetFlags(flags);
+		physicsWorld.GetRawWorld()->SetDebugDraw(&m_box2dBgfxDebugDraw);
+		physicsWorld.GetRawWorld()->DebugDraw();
 	}
+	// showPhysicsContactPoints: dead on web too (// TODO: Implement contact point rendering, never called) - not ported.
 
-	// Render level boundaries (if enabled)
 	if (debugSettings.showLevelBounds)
 	{
-		TransformSystem& transformSystem = context.GetSystemManager().GetSystem<TransformSystem>();
-		auto view = registry.view<Component::Level, Component::Transform>(entt::exclude<Inactive>);
-		for (auto [entity, level, transform] : view.each())
-		{
-			glm::vec3 worldPosition = transformSystem.GetWorldPosition(context, entity);
-			::Rectangle levelBounds{worldPosition.x, worldPosition.y, (float)level.width, (float)level.height};
-			::DrawRectangleLinesEx(levelBounds, debugSettings.levelBoundsThickness, ORANGE);
-		}
+		RenderLevelBounds(context);
 	}
-
-	// Render entity gizmos (if enabled)
 	if (debugSettings.showEntityGizmos)
 	{
 		RenderEntityGizmos(context);
 	}
-
-	// Render grid (if enabled)
 	if (debugSettings.showGrid)
 	{
 		RenderGrid(context);
 	}
 
-	::EndMode2D();
-
-	// Render FPS counter (if enabled) - screen space
 	if (debugSettings.showFPS)
 	{
-		::DrawFPS(10, 10);
+		// Screen-space text is UIRenderer's domain (UIViewId), not the world-space DebugRenderer's - reuses the
+		// same already-pooled "default" font UILabel uses (cache hit, not a fresh disk load).
+		Resource::ResourcePtr<Resource::FontResource> font =
+		    context.GetResourceManager().GetFont(context, "default", 32);
+		if (!font->IsGpuReady())
+		{
+			font->LoadToGpu(context);
+		}
+		float fps = context.GetTimeSystem().unscaledDelta > 0.0f ? 1.0f / context.GetTimeSystem().unscaledDelta : 0.0f;
+		context.GetUIRenderer().DrawText(font->font, std::format("FPS: {:.0f}", fps), {10, 10}, 16.0f, Util::Math::ColorGreen);
 	}
 }
 
@@ -81,68 +86,69 @@ void Struktur::System::DebugSystem::RenderEntityGizmos(GameContext& context)
 	entt::registry& registry         = context.GetRegistry();
 	TransformSystem& transformSystem = context.GetSystemManager().GetSystem<TransformSystem>();
 
-	// Render position indicators for all entities with transforms
 	auto view = registry.view<Component::Transform>(entt::exclude<Inactive>);
 	for (auto [entity, transform] : view.each())
 	{
 		glm::vec3 worldPosition = transformSystem.GetWorldPosition(context, entity);
 
-		// Draw a small cross at entity position
 		float crossSize = 10.0f;
-		::Vector2 pos   = {worldPosition.x, worldPosition.y};
+		glm::vec2 pos    = {worldPosition.x, worldPosition.y};
 
-		::DrawLineEx({pos.x - crossSize, pos.y}, {pos.x + crossSize, pos.y}, 2.0f, GREEN);
-		::DrawLineEx({pos.x, pos.y - crossSize}, {pos.x, pos.y + crossSize}, 2.0f, GREEN);
+		m_debugRenderer.DrawLine({pos.x - crossSize, pos.y}, {pos.x + crossSize, pos.y}, 2.0f, Util::Math::ColorGreen);
+		m_debugRenderer.DrawLine({pos.x, pos.y - crossSize}, {pos.x, pos.y + crossSize}, 2.0f, Util::Math::ColorGreen);
 	}
 }
 
 void Struktur::System::DebugSystem::RenderGrid(GameContext& context)
 {
-	auto& gridSettings           = context.GetEditor().GetSettings().grid;
+	auto& gridSettings            = context.GetEditor().GetSettings().grid;
 	GameResource::Camera& camera = context.GetCamera();
 	Core::GameData& gameData     = context.GetGameData();
 
-	// Calculate visible world bounds from camera
-	// Get screen corners and convert to world space
 	glm::vec2 topLeft     = camera.ScreenPosToWorldPos(glm::vec2(0, 0));
 	glm::vec2 bottomRight = camera.ScreenPosToWorldPos(glm::vec2(gameData.gameWidth, gameData.gameHeight));
 
 	float gridSize      = gridSettings.gridSize;
 	unsigned char alpha = (unsigned char)(gridSettings.gridOpacity * 255.0f);
-	::Color gridColor   = {200, 200, 200, alpha};
+	Util::Math::Color gridColor = {200, 200, 200, alpha};
 
-	// Calculate grid start/end positions (expand slightly for rotation)
 	float margin = gridSize * 2;
-	int startX   = (int)((topLeft.x - margin) / gridSize) * gridSize;
-	int endX     = (int)((bottomRight.x + margin) / gridSize + 1) * gridSize;
-	int startY   = (int)((topLeft.y - margin) / gridSize) * gridSize;
-	int endY     = (int)((bottomRight.y + margin) / gridSize + 1) * gridSize;
+	int startX    = (int)((topLeft.x - margin) / gridSize) * gridSize;
+	int endX      = (int)((bottomRight.x + margin) / gridSize + 1) * gridSize;
+	int startY    = (int)((topLeft.y - margin) / gridSize) * gridSize;
+	int endY      = (int)((bottomRight.y + margin) / gridSize + 1) * gridSize;
 
-	// Draw vertical lines
 	for (int x = startX; x <= endX; x += gridSize)
 	{
-		::DrawLine(x, startY, x, endY, gridColor);
+		m_debugRenderer.DrawLine({(float)x, (float)startY}, {(float)x, (float)endY}, 1.0f, gridColor);
 	}
-
-	// Draw horizontal lines
 	for (int y = startY; y <= endY; y += gridSize)
 	{
-		::DrawLine(startX, y, endX, y, gridColor);
+		m_debugRenderer.DrawLine({(float)startX, (float)y}, {(float)endX, (float)y}, 1.0f, gridColor);
 	}
 
-	// Draw origin lines (thicker and colored)
 	if (startX <= 0 && endX >= 0)
 	{
-		::DrawLineEx({0, (float)startY}, {0, (float)endY}, 2.0f, RED);
+		m_debugRenderer.DrawLine({0.0f, (float)startY}, {0.0f, (float)endY}, 2.0f, Util::Math::ColorRed);
 	}
 	if (startY <= 0 && endY >= 0)
 	{
-		::DrawLineEx({(float)startX, 0}, {(float)endX, 0}, 2.0f, GREEN);
+		m_debugRenderer.DrawLine({(float)startX, 0.0f}, {(float)endX, 0.0f}, 2.0f, Util::Math::ColorGreen);
 	}
 }
-#else
-// Debug draw has no bgfx path yet (guarded out of registration in Game.cpp too) - stubbed until a later step.
-void Struktur::System::DebugSystem::Update(GameContext& context) {}
-void Struktur::System::DebugSystem::RenderEntityGizmos(GameContext& context) {}
-void Struktur::System::DebugSystem::RenderGrid(GameContext& context) {}
-#endif
+
+void Struktur::System::DebugSystem::RenderLevelBounds(GameContext& context)
+{
+	auto& debugSettings               = context.GetEditor().GetSettings().debugRender;
+	entt::registry& registry          = context.GetRegistry();
+	TransformSystem& transformSystem  = context.GetSystemManager().GetSystem<TransformSystem>();
+
+	auto view = registry.view<Component::Level, Component::Transform>(entt::exclude<Inactive>);
+	for (auto [entity, level, transform] : view.each())
+	{
+		glm::vec3 worldPosition = transformSystem.GetWorldPosition(context, entity);
+		glm::vec2 min            = {worldPosition.x, worldPosition.y};
+		glm::vec2 max            = {worldPosition.x + level.width, worldPosition.y + level.height};
+		m_debugRenderer.DrawRectOutline(min, max, debugSettings.levelBoundsThickness, Util::Math::ColorOrange);
+	}
+}

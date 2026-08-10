@@ -2,7 +2,6 @@
 
 #include "Engine/UI/FocusNavigator.h"
 #include "Engine/UI/UIElement.h"
-#include "raylib.h"
 
 namespace Struktur
 {
@@ -53,7 +52,6 @@ class UIManager
 	bool m_focusJustChanged;
 	UIElement* m_hoveredElement;
 	bool m_hoveredJustChanged;
-	::Camera2D m_camera;
 	bool m_capturingInput;
 	std::unique_ptr<FocusNavigator> m_focusNavigator;
 };

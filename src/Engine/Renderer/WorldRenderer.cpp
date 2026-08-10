@@ -7,17 +7,12 @@
 #include "Engine/Core/GameData.h"
 #include "Engine/ECS/System/ShaderSystem.h"
 #include "Engine/GameContext.h"
+#include "Engine/Renderer/EmbeddedShaders.h"
+#include "Engine/Renderer/GraphicsDevice.h"
+#include "Engine/Renderer/SpriteVertex.h"
 
-#if defined(PLATFORM_WEB)
-	#include "raylib.h"
-#else
-	#include "Engine/Renderer/EmbeddedShaders.h"
-	#include "Engine/Renderer/GraphicsDevice.h"
-	#include "Engine/Renderer/SpriteVertex.h"
-
-	#include <bgfx/bgfx.h>
-	#include <glm/gtc/type_ptr.hpp>
-#endif
+#include <bgfx/bgfx.h>
+#include <glm/gtc/type_ptr.hpp>
 
 namespace
 {
@@ -44,33 +39,6 @@ Struktur::Renderer::WorldRenderer::WorldRenderer()
 	m_drawItems.reserve(2048);
 }
 
-#if defined(PLATFORM_WEB)
-Struktur::Renderer::CullBounds Struktur::Renderer::WorldRenderer::ComputeCullBounds(GameContext& context)
-{
-	GameResource::Camera& camera = context.GetCamera();
-	Core::GameData& gameData     = context.GetGameData();
-	::Camera2D raylibCamera      = camera.GetRaylibCamera();
-
-	// Transform all 4 screen corners to world space (rather than 2) so a rotated camera still
-	// produces a correct, if slightly conservative, axis-aligned world-space bound to cull against.
-	::Vector2 corners[4] = {
-	    ::GetScreenToWorld2D(::Vector2{0.0f, 0.0f}, raylibCamera),
-	    ::GetScreenToWorld2D(::Vector2{(float)gameData.gameWidth, 0.0f}, raylibCamera),
-	    ::GetScreenToWorld2D(::Vector2{0.0f, (float)gameData.gameHeight}, raylibCamera),
-	    ::GetScreenToWorld2D(::Vector2{(float)gameData.gameWidth, (float)gameData.gameHeight}, raylibCamera),
-	};
-
-	CullBounds bounds{FLT_MAX, FLT_MAX, -FLT_MAX, -FLT_MAX};
-	for (const auto& corner : corners)
-	{
-		bounds.minX = std::min(bounds.minX, corner.x);
-		bounds.minY = std::min(bounds.minY, corner.y);
-		bounds.maxX = std::max(bounds.maxX, corner.x);
-		bounds.maxY = std::max(bounds.maxY, corner.y);
-	}
-	return bounds;
-}
-#else
 Struktur::Renderer::CullBounds Struktur::Renderer::WorldRenderer::ComputeCullBounds(GameContext& context)
 {
 	GameResource::Camera& camera = context.GetCamera();
@@ -99,7 +67,6 @@ Struktur::Renderer::CullBounds Struktur::Renderer::WorldRenderer::ComputeCullBou
 	}
 	return bounds;
 }
-#endif
 
 uint64_t Struktur::Renderer::WorldRenderer::PackSortKey(GameResource::RenderLayer layer, float orderInLayer,
                                                         unsigned int textureId)
@@ -132,7 +99,6 @@ void Struktur::Renderer::WorldRenderer::Submit(GameResource::RenderLayer layer, 
 	m_drawItems.push_back(item);
 }
 
-#if !defined(PLATFORM_WEB)
 void Struktur::Renderer::WorldRenderer::SubmitChunk(GameResource::RenderLayer layer, float orderInLayer,
                                                     const TileChunk& chunk, const TextureHandle& texture,
                                                     const CullBounds& cullBounds)
@@ -145,34 +111,7 @@ void Struktur::Renderer::WorldRenderer::SubmitChunk(GameResource::RenderLayer la
 	DrawItem item{PackSortKey(layer, orderInLayer, texture.id), entt::null, texture, {}, {}, {}, 0.0f, {}, &chunk};
 	m_drawItems.push_back(item);
 }
-#endif
 
-#if defined(PLATFORM_WEB)
-void Struktur::Renderer::WorldRenderer::Flush(GameContext& context)
-{
-	std::sort(m_drawItems.begin(), m_drawItems.end(),
-	          [](const DrawItem& a, const DrawItem& b) { return a.sortKey < b.sortKey; });
-
-	System::ShaderSystem& shaderSystem = context.GetSystemManager().GetSystem<System::ShaderSystem>();
-	// BeginShader/EndShader are no-ops for entities without a Component::Shader, so plain sprites and
-	// tiles draw back-to-back here - since the list is sorted with texture as the lowest-priority key,
-	// consecutive same-texture DrawTexturePro calls end up adjacent and raylib/rlgl's internal batch
-	// renderer coalesces them into a single GPU draw call automatically.
-	for (const auto& item : m_drawItems)
-	{
-		::Texture2D rlTexture{item.texture.id, item.texture.width, item.texture.height, 1,
-		                      PIXELFORMAT_UNCOMPRESSED_R8G8B8A8};
-		::Rectangle rlSourceRec{item.sourceRec.x, item.sourceRec.y, item.sourceRec.width, item.sourceRec.height};
-		::Rectangle rlDestRec{item.destRec.x, item.destRec.y, item.destRec.width, item.destRec.height};
-		::Vector2 rlOrigin{item.origin.x, item.origin.y};
-		::Color rlTint{item.tint.r, item.tint.g, item.tint.b, item.tint.a};
-
-		shaderSystem.BeginShader(context, item.entity);
-		::DrawTexturePro(rlTexture, rlSourceRec, rlDestRec, rlOrigin, item.rotation, rlTint);
-		shaderSystem.EndShader(context, item.entity);
-	}
-}
-#else
 namespace
 {
 // Fills the 4 corners of a rotated quad exactly like raylib's DrawTexturePro: destRec.x/y is the rotation
@@ -309,4 +248,3 @@ void Struktur::Renderer::WorldRenderer::Flush(GameContext& context)
 	}
 	flushRun(m_drawItems.size());
 }
-#endif

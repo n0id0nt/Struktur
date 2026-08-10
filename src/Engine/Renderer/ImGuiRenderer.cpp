@@ -1,17 +1,15 @@
 #include "ImGuiRenderer.h"
 
-#if !defined(PLATFORM_WEB)
+#include <cstring>
 
-	#include <cstring>
+#include "Debug/Assertions.h"
+#include "Engine/Renderer/EmbeddedShaders.h"
+#include "Engine/Renderer/GraphicsDevice.h"
+#include "Engine/Renderer/SpriteVertex.h"
 
-	#include "Debug/Assertions.h"
-	#include "Engine/Renderer/EmbeddedShaders.h"
-	#include "Engine/Renderer/GraphicsDevice.h"
-	#include "Engine/Renderer/SpriteVertex.h"
-
-	#include <glm/gtc/matrix_transform.hpp>
-	#include <glm/gtc/type_ptr.hpp>
-	#include <imgui.h>
+#include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtc/type_ptr.hpp>
+#include <imgui.h>
 
 Struktur::Renderer::ImGuiRenderer::ImGuiRenderer()
 {
@@ -123,5 +121,3 @@ void Struktur::Renderer::ImGuiRenderer::Render(ImDrawData* drawData)
 		}
 	}
 }
-
-#endif

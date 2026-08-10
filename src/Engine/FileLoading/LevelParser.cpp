@@ -7,7 +7,6 @@
 #include "Debug/Assertions.h"
 #include "Engine/Core/FileSystem.h"
 #include "Engine/GameContext.h"
-#include "raylib.h"
 
 glm::vec2 Struktur::FileLoading::LevelParser::LoadJsonVector2(const nlohmann::json& json)
 {

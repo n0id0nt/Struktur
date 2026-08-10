@@ -270,33 +270,10 @@ void SettingsWindow::RenderPerformanceSettings(GameContext& context)
 
 	ImGui::SeparatorText("Rendering");
 
-#if defined(PLATFORM_WEB)
-	if (ImGui::Checkbox("Enable VSync", &settings.enableVSync))
-	{
-		// Apply VSync setting immediately
-		if (settings.enableVSync)
-		{
-			SetTargetFPS(settings.targetFPS);
-		}
-		else
-		{
-			SetTargetFPS(0);  // Unlimited
-		}
-	}
-
-	if (ImGui::SliderInt("Target FPS", &settings.targetFPS, 30, 240))
-	{
-		if (settings.enableVSync)
-		{
-			SetTargetFPS(settings.targetFPS);
-		}
-	}
-#else
-	// Desktop's frame pacing comes from GraphicsDevice's BGFX_RESET_VSYNC, not raylib's SetTargetFPS - which
-	// would hang here anyway, since raylib's core state (that function's target) is never initialised on this
-	// path. Leaving the controls out entirely rather than showing settings that silently do nothing.
+	// Frame pacing comes from GraphicsDevice's BGFX_RESET_VSYNC, not a raylib-style SetTargetFPS - there's no
+	// equivalent knob wired up yet without vsync being the only control. Leaving the controls out entirely
+	// rather than showing settings that silently do nothing.
 	ImGui::TextDisabled("VSync/target FPS controls aren't wired up on this platform yet.");
-#endif
 
 	ImGui::Spacing();
 	ImGui::SeparatorText("Monitoring");
@@ -306,8 +283,11 @@ void SettingsWindow::RenderPerformanceSettings(GameContext& context)
 	if (settings.showPerformanceMetrics)
 	{
 		ImGui::Spacing();
-		ImGui::Text("Current FPS: %d", GetFPS());
-		ImGui::Text("Frame Time: %.3f ms", GetFrameTime() * 1000.0f);
+		// Own TimeSystem instead of a raylib-style GetFPS()/GetFrameTime(), same as DebugInfoWindow's
+		// equivalent readout.
+		Core::TimeSystem& timeSystem = context.GetTimeSystem();
+		ImGui::Text("Current FPS: %.0f", timeSystem.unscaledDelta > 0.0f ? 1.0f / timeSystem.unscaledDelta : 0.0f);
+		ImGui::Text("Frame Time: %.3f ms", timeSystem.unscaledDelta * 1000.0f);
 	}
 }
 

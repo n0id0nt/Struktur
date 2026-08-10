@@ -40,15 +40,3 @@ glm::mat4 Struktur::GameResource::Camera::GetProjectionMatrix(int viewportWidth,
 	// so the exact near/far range and OpenGL-style NDC convention glm::ortho assumes don't matter here.
 	return glm::ortho(0.0f, (float)viewportWidth, (float)viewportHeight, 0.0f, -1.0f, 1.0f);
 }
-
-#if defined(PLATFORM_WEB)
-::Camera2D Struktur::GameResource::Camera::GetRaylibCamera() const
-{
-	return ::Camera2D{
-	    ::Vector2{offset.x, offset.y},
-	    ::Vector2{target.x, target.y},
-	    rotation,
-	    zoom,
-	};
-}
-#endif

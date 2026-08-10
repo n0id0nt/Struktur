@@ -1,12 +1,10 @@
 #include "LogWindow.h"
 
-#include <raylib.h>
-
-#include <cstdarg>
 #include <cstring>
 #include <ctime>
 #include <sstream>
 
+#include "Debug/Logger.h"
 #include "Engine/GameContext.h"
 
 namespace Struktur::Debug
@@ -28,21 +26,14 @@ LogWindow::LogWindow()
 	m_searchBuffer[0] = '\0';
 	s_instance        = this;
 
-#if defined(PLATFORM_WEB)
-	// Set Raylib's trace log callback to our function. Desktop doesn't do this: raylib's window/core state is
-	// never initialised there (bgfx replaces it), and registering a custom trace callback against that
-	// never-initialised state hangs the process - DEBUG_INFO/etc (which route through raylib's ::TraceLog,
-	// see Debug/Assertions.h) keep working either way, this window just can't capture them into its own view.
-	SetTraceLogCallback(TraceLogCallback);
-#endif
+	// DEBUG_INFO/etc route through Debug::Log (see Assertions.h) on both platforms now - capture every call
+	// into this window's own view.
+	SetLogCallback([this](int level, const char* message) { AddLog(level, message); });
 }
 
 LogWindow::~LogWindow()
 {
-#if defined(PLATFORM_WEB)
-	// Restore default Raylib logging
-	SetTraceLogCallback(nullptr);
-#endif
+	SetLogCallback(nullptr);
 	s_instance = nullptr;
 }
 
@@ -64,26 +55,6 @@ void LogWindow::Render(GameContext& context)
 	RenderLogList();
 
 	ImGui::End();
-}
-
-void LogWindow::TraceLogCallback(int logLevel, const char* text, va_list args)
-{
-	if (!s_instance)
-	{
-		return;
-	}
-
-	// Format the message
-	char buffer[1024];
-	vsnprintf(buffer, sizeof(buffer), text, args);
-
-	// Get timestamp
-	time_t now = time(nullptr);
-	char timeBuffer[64];
-	strftime(timeBuffer, sizeof(timeBuffer), "%H:%M:%S", localtime(&now));
-
-	// Add to log
-	s_instance->AddLog(logLevel, buffer);
 }
 
 void LogWindow::AddLog(int logLevel, const std::string& message)

@@ -5,11 +5,11 @@
 #include "InputConfigLoader.h"
 #include "InputMaps.h"
 
-#if !defined(PLATFORM_WEB)
-	#include <SDL3/SDL.h>
+#include <SDL3/SDL.h>
 
 namespace
 {
+using namespace Struktur::Input;
 // raylib exposes gamepads as a flat 0-based index; SDL3 identifies them by a (non-sequential) joystick instance
 // ID, so this re-derives the "Nth currently connected gamepad" raylib's model assumes.
 SDL_JoystickID GetGamepadInstanceIdAtIndex(int index)
@@ -30,7 +30,7 @@ SDL_JoystickID GetGamepadInstanceIdAtIndex(int index)
 
 // raylib's KeyboardKey values are ASCII/GLFW-derived; SDL3 scancodes use their own USB-HID-based numbering, so
 // callers still passing raylib key constants (Wren bindings, InputConfigLoader) need an explicit translation.
-SDL_Scancode ToSDLScancode(::KeyboardKey key)
+SDL_Scancode ToSDLScancode(KeyboardKey key)
 {
 	switch (key)
 	{
@@ -143,7 +143,7 @@ SDL_Scancode ToSDLScancode(::KeyboardKey key)
 	}
 }
 
-SDL_GamepadButton ToSDLGamepadButton(::GamepadButton button)
+SDL_GamepadButton ToSDLGamepadButton(GamepadButton button)
 {
 	switch (button)
 	{
@@ -168,7 +168,7 @@ SDL_GamepadButton ToSDLGamepadButton(::GamepadButton button)
 	}
 }
 
-SDL_GamepadAxis ToSDLGamepadAxis(::GamepadAxis axis)
+SDL_GamepadAxis ToSDLGamepadAxis(GamepadAxis axis)
 {
 	switch (axis)
 	{
@@ -182,7 +182,6 @@ SDL_GamepadAxis ToSDLGamepadAxis(::GamepadAxis axis)
 	}
 }
 }  // namespace
-#endif
 
 namespace Struktur::Input
 {
@@ -191,7 +190,6 @@ namespace Struktur::Input
 // CONSTRUCTOR & LIFECYCLE
 // ============================================================================
 
-#if !defined(PLATFORM_WEB)
 Input::Input(int gamepadIndex)
     : m_deadzone(0.0f),
       m_gamepadIndex(gamepadIndex)
@@ -208,36 +206,17 @@ Input::Input(int gamepadIndex)
 		DEBUG_WARNING(std::format("Gamepad {} is not connected.", m_gamepadIndex).c_str());
 	}
 }
-#else
-Input::Input(int gamepadIndex)
-    : m_deadzone(0.0f),
-      m_gamepadIndex(gamepadIndex)
-{
-	if (IsGamepadAvailable(m_gamepadIndex))
-	{
-		m_gamepadId = GetGamepadName(m_gamepadIndex);
-		DEBUG_INFO(std::format("Gamepad {} '{}' successfully connected.", m_gamepadIndex, m_gamepadId).c_str());
-	}
-	else
-	{
-		DEBUG_WARNING(std::format("Gamepad {} is not connected.", m_gamepadIndex).c_str());
-	}
-}
-#endif
 
 Input::~Input()
 {
 	Clear();
-#if !defined(PLATFORM_WEB)
 	if (m_sdlGamepad)
 	{
 		::SDL_CloseGamepad(m_sdlGamepad);
 		m_sdlGamepad = nullptr;
 	}
-#endif
 }
 
-#if !defined(PLATFORM_WEB)
 void Input::Update()
 {
 	SDL_JoystickID instanceId = GetGamepadInstanceIdAtIndex(m_gamepadIndex);
@@ -280,40 +259,19 @@ void Input::Update()
 	}
 
 	// Same rotation for gamepad buttons, so IsControllerButtonJustPressed/Released can edge-detect too.
-	static const ::GamepadButton kAllButtons[] = {
+	static const GamepadButton kAllButtons[] = {
 	    GAMEPAD_BUTTON_LEFT_FACE_UP,     GAMEPAD_BUTTON_LEFT_FACE_RIGHT,  GAMEPAD_BUTTON_LEFT_FACE_DOWN,
 	    GAMEPAD_BUTTON_LEFT_FACE_LEFT,   GAMEPAD_BUTTON_RIGHT_FACE_UP,    GAMEPAD_BUTTON_RIGHT_FACE_RIGHT,
 	    GAMEPAD_BUTTON_RIGHT_FACE_DOWN,  GAMEPAD_BUTTON_RIGHT_FACE_LEFT,  GAMEPAD_BUTTON_LEFT_TRIGGER_1,
 	    GAMEPAD_BUTTON_RIGHT_TRIGGER_1,  GAMEPAD_BUTTON_MIDDLE_LEFT,      GAMEPAD_BUTTON_MIDDLE,
 	    GAMEPAD_BUTTON_MIDDLE_RIGHT,     GAMEPAD_BUTTON_LEFT_THUMB,       GAMEPAD_BUTTON_RIGHT_THUMB,
 	};
-	for (::GamepadButton button : kAllButtons)
+	for (GamepadButton button : kAllButtons)
 	{
 		m_prevControllerButtons[button] = m_currControllerButtons[button];
 		m_currControllerButtons[button] = IsControllerButtonDown(button);
 	}
 }
-#else
-void Input::Update()
-{
-	// Update gamepad connection state
-	if (IsGamepadAvailable(m_gamepadIndex))
-	{
-		std::string currentId = GetGamepadName(m_gamepadIndex);
-		if (currentId != m_gamepadId)
-		{
-			m_gamepadId = currentId;
-			DEBUG_INFO(std::format("Gamepad {} changed to '{}'", m_gamepadIndex, m_gamepadId).c_str());
-		}
-	}
-	else if (!m_gamepadId.empty())
-	{
-		// Gamepad was connected but is now disconnected
-		DEBUG_WARNING(std::format("Gamepad {} '{}' disconnected", m_gamepadIndex, m_gamepadId).c_str());
-		m_gamepadId.clear();
-	}
-}
-#endif
 
 void Input::Clear()
 {
@@ -341,7 +299,6 @@ void Input::LoadInputBindings(const std::string& file)
 // GAMEPAD MANAGEMENT
 // ============================================================================
 
-#if !defined(PLATFORM_WEB)
 void Input::SetGamepadIndex(int index)
 {
 	m_gamepadIndex = index;
@@ -367,26 +324,6 @@ bool Input::IsGamepadConnected() const
 {
 	return m_sdlGamepad != nullptr;
 }
-#else
-void Input::SetGamepadIndex(int index)
-{
-	m_gamepadIndex = index;
-	if (IsGamepadAvailable(m_gamepadIndex))
-	{
-		m_gamepadId = GetGamepadName(m_gamepadIndex);
-		DEBUG_INFO(std::format("Switched to gamepad {} '{}'", m_gamepadIndex, m_gamepadId).c_str());
-	}
-	else
-	{
-		m_gamepadId.clear();
-	}
-}
-
-bool Input::IsGamepadConnected() const
-{
-	return IsGamepadAvailable(m_gamepadIndex);
-}
-#endif
 
 // ============================================================================
 // PARSING HELPERS
@@ -508,49 +445,48 @@ glm::vec2 Input::ApplyRadialDeadzone(glm::vec2 value) const
 // RAW INPUT
 // ============================================================================
 
-#if !defined(PLATFORM_WEB)
-bool Input::IsKeyDown(::KeyboardKey key)
+bool Input::IsKeyDown(KeyboardKey key)
 {
 	SDL_Scancode sc = ToSDLScancode(key);
 	return sc < (int)m_currKeyboardState.size() && m_currKeyboardState[sc];
 }
 
-bool Input::IsKeyJustPressed(::KeyboardKey key)
+bool Input::IsKeyJustPressed(KeyboardKey key)
 {
 	SDL_Scancode sc = ToSDLScancode(key);
 	return sc < (int)m_currKeyboardState.size() && m_currKeyboardState[sc] && !m_prevKeyboardState[sc];
 }
 
-bool Input::IsKeyJustReleased(::KeyboardKey key)
+bool Input::IsKeyJustReleased(KeyboardKey key)
 {
 	SDL_Scancode sc = ToSDLScancode(key);
 	return sc < (int)m_currKeyboardState.size() && !m_currKeyboardState[sc] && m_prevKeyboardState[sc];
 }
 
-bool Input::IsControllerButtonDown(::GamepadButton button)
+bool Input::IsControllerButtonDown(GamepadButton button)
 {
 	return m_sdlGamepad && ::SDL_GetGamepadButton(m_sdlGamepad, ToSDLGamepadButton(button));
 }
 
-bool Input::IsControllerButtonJustPressed(::GamepadButton button)
+bool Input::IsControllerButtonJustPressed(GamepadButton button)
 {
 	// SDL3 has no polling-based "just pressed" query (that's event-driven, via SDL_EVENT_GAMEPAD_BUTTON_DOWN);
 	// approximate it the same way keyboard edge detection works, off the same per-frame Update() snapshot.
 	return IsControllerButtonDown(button) && !WasControllerButtonDownLastFrame(button);
 }
 
-bool Input::IsControllerButtonJustReleased(::GamepadButton button)
+bool Input::IsControllerButtonJustReleased(GamepadButton button)
 {
 	return !IsControllerButtonDown(button) && WasControllerButtonDownLastFrame(button);
 }
 
-bool Input::WasControllerButtonDownLastFrame(::GamepadButton button)
+bool Input::WasControllerButtonDownLastFrame(GamepadButton button)
 {
 	auto it = m_prevControllerButtons.find(button);
 	return it != m_prevControllerButtons.end() && it->second;
 }
 
-float Input::GetControllerAxisValue(::GamepadAxis code)
+float Input::GetControllerAxisValue(GamepadAxis code)
 {
 	if (!m_sdlGamepad)
 	{
@@ -559,48 +495,11 @@ float Input::GetControllerAxisValue(::GamepadAxis code)
 	float rawValue = ::SDL_GetGamepadAxis(m_sdlGamepad, ToSDLGamepadAxis(code)) / 32767.0f;
 	return ApplyDeadzone(rawValue);
 }
-#else
-bool Input::IsKeyDown(::KeyboardKey key)
-{
-	return ::IsKeyDown(key);
-}
-
-bool Input::IsKeyJustPressed(::KeyboardKey key)
-{
-	return ::IsKeyPressed(key);
-}
-
-bool Input::IsKeyJustReleased(::KeyboardKey key)
-{
-	return ::IsKeyReleased(key);
-}
-
-bool Input::IsControllerButtonDown(::GamepadButton button)
-{
-	return ::IsGamepadButtonDown(m_gamepadIndex, button);
-}
-
-bool Input::IsControllerButtonJustPressed(::GamepadButton button)
-{
-	return ::IsGamepadButtonPressed(m_gamepadIndex, button);
-}
-
-bool Input::IsControllerButtonJustReleased(::GamepadButton button)
-{
-	return ::IsGamepadButtonReleased(m_gamepadIndex, button);
-}
-
-float Input::GetControllerAxisValue(::GamepadAxis code)
-{
-	float rawValue = ::GetGamepadAxisMovement(m_gamepadIndex, code);
-	return ApplyDeadzone(rawValue);
-}
-#endif
 
 // FIXED: Added break statements
-float Input::GetControllerVariableValue(::GamepadAxis code, VariableBindingAxis variableBindingAxis)
+float Input::GetControllerVariableValue(GamepadAxis code, VariableBindingAxis variableBindingAxis)
 {
-	float rawValue = ApplyDeadzone(::GetGamepadAxisMovement(m_gamepadIndex, code));
+	float rawValue = GetControllerAxisValue(code);
 
 	switch (variableBindingAxis)
 	{
@@ -634,43 +533,43 @@ float Input::GetControllerVariableValue(::GamepadAxis code, VariableBindingAxis 
 
 bool Input::IsStringKeyDown(const std::string& input)
 {
-	::KeyboardKey key = InputMaps::Instance().GetKeycodeFromString(input);
+	KeyboardKey key = InputMaps::Instance().GetKeycodeFromString(input);
 	return IsKeyDown(key);
 }
 
 bool Input::IsStringKeyJustPressed(const std::string& input)
 {
-	::KeyboardKey key = InputMaps::Instance().GetKeycodeFromString(input);
+	KeyboardKey key = InputMaps::Instance().GetKeycodeFromString(input);
 	return IsKeyJustPressed(key);
 }
 
 bool Input::IsStringKeyJustReleased(const std::string& input)
 {
-	::KeyboardKey key = InputMaps::Instance().GetKeycodeFromString(input);
+	KeyboardKey key = InputMaps::Instance().GetKeycodeFromString(input);
 	return IsKeyJustReleased(key);
 }
 
 bool Input::IsStringControllerButtonDown(const std::string& input)
 {
-	::GamepadButton button = InputMaps::Instance().GetControllerButtonFromString(input);
+	GamepadButton button = InputMaps::Instance().GetControllerButtonFromString(input);
 	return IsControllerButtonDown(button);
 }
 
 bool Input::IsStringControllerButtonJustPressed(const std::string& input)
 {
-	::GamepadButton button = InputMaps::Instance().GetControllerButtonFromString(input);
+	GamepadButton button = InputMaps::Instance().GetControllerButtonFromString(input);
 	return IsControllerButtonJustPressed(button);
 }
 
 bool Input::IsStringControllerButtonJustReleased(const std::string& input)
 {
-	::GamepadButton button = InputMaps::Instance().GetControllerButtonFromString(input);
+	GamepadButton button = InputMaps::Instance().GetControllerButtonFromString(input);
 	return IsControllerButtonJustReleased(button);
 }
 
 float Input::GetStringControllerAxisValue(const std::string& input)
 {
-	::GamepadAxis axis = InputMaps::Instance().GetControllerAxisFromString(input);
+	GamepadAxis axis = InputMaps::Instance().GetControllerAxisFromString(input);
 	return GetControllerAxisValue(axis);
 }
 
@@ -678,32 +577,32 @@ float Input::GetStringControllerAxisValue(const std::string& input)
 // BINDING CREATION
 // ============================================================================
 
-void Input::CreateButtonBinding(const std::string& input, ::KeyboardKey code)
+void Input::CreateButtonBinding(const std::string& input, KeyboardKey code)
 {
 	m_buttonBindings[input].keycodes.insert(code);
 }
 
-void Input::CreateButtonBinding(const std::string& input, ::GamepadButton code)
+void Input::CreateButtonBinding(const std::string& input, GamepadButton code)
 {
 	m_buttonBindings[input].controllerButtons.insert(code);
 }
 
-void Input::CreateVariableBinding(const std::string& input, ::KeyboardKey code)
+void Input::CreateVariableBinding(const std::string& input, KeyboardKey code)
 {
 	m_variableBindings[input].buttonBindings.keycodes.insert(code);
 }
 
-void Input::CreateVariableBinding(const std::string& input, ::GamepadButton code)
+void Input::CreateVariableBinding(const std::string& input, GamepadButton code)
 {
 	m_variableBindings[input].buttonBindings.controllerButtons.insert(code);
 }
 
-void Input::CreateVariableBinding(const std::string& input, ::GamepadAxis code, VariableBindingAxis variableBindingAxis)
+void Input::CreateVariableBinding(const std::string& input, GamepadAxis code, VariableBindingAxis variableBindingAxis)
 {
 	m_variableBindings[input].controllerVariables.insert({variableBindingAxis, code});
 }
 
-void Input::CreateAxisBinding(const std::string& input, ::KeyboardKey code, AxisComponent axis)
+void Input::CreateAxisBinding(const std::string& input, KeyboardKey code, AxisComponent axis)
 {
 	switch (axis)
 	{
@@ -718,7 +617,7 @@ void Input::CreateAxisBinding(const std::string& input, ::KeyboardKey code, Axis
 	}
 }
 
-void Input::CreateAxisBinding(const std::string& input, ::GamepadButton code, AxisComponent axis)
+void Input::CreateAxisBinding(const std::string& input, GamepadButton code, AxisComponent axis)
 {
 	switch (axis)
 	{
@@ -733,12 +632,12 @@ void Input::CreateAxisBinding(const std::string& input, ::GamepadButton code, Ax
 	}
 }
 
-void Input::CreateAxisBinding(const std::string& input, ::GamepadAxis code)
+void Input::CreateAxisBinding(const std::string& input, GamepadAxis code)
 {
 	m_axisBindings[input].controllerAxis.insert(code);
 }
 
-void Input::CreateAxis2Binding(const std::string& input, ::KeyboardKey code, Axis2Component axis)
+void Input::CreateAxis2Binding(const std::string& input, KeyboardKey code, Axis2Component axis)
 {
 	switch (axis)
 	{
@@ -759,7 +658,7 @@ void Input::CreateAxis2Binding(const std::string& input, ::KeyboardKey code, Axi
 	}
 }
 
-void Input::CreateAxis2Binding(const std::string& input, ::GamepadButton code, Axis2Component axis)
+void Input::CreateAxis2Binding(const std::string& input, GamepadButton code, Axis2Component axis)
 {
 	switch (axis)
 	{
@@ -780,7 +679,7 @@ void Input::CreateAxis2Binding(const std::string& input, ::GamepadButton code, A
 	}
 }
 
-void Input::CreateAxis2Binding(const std::string& input, ::GamepadAxis code, Axis2Direction axis)
+void Input::CreateAxis2Binding(const std::string& input, GamepadAxis code, Axis2Direction axis)
 {
 	switch (axis)
 	{
@@ -802,22 +701,22 @@ void Input::CreateAxis2Binding(const std::string& input, ::GamepadAxis code, Axi
 bool Input::IsInputDown(const std::string& input)
 {
 	return CheckBinding(
-	    input, [this](::KeyboardKey k) { return IsKeyDown(k); },
-	    [this](::GamepadButton b) { return IsControllerButtonDown(b); });
+	    input, [this](KeyboardKey k) { return IsKeyDown(k); },
+	    [this](GamepadButton b) { return IsControllerButtonDown(b); });
 }
 
 bool Input::IsInputJustPressed(const std::string& input)
 {
 	return CheckBinding(
-	    input, [this](::KeyboardKey k) { return IsKeyJustPressed(k); },
-	    [this](::GamepadButton b) { return IsControllerButtonJustPressed(b); });
+	    input, [this](KeyboardKey k) { return IsKeyJustPressed(k); },
+	    [this](GamepadButton b) { return IsControllerButtonJustPressed(b); });
 }
 
 bool Input::IsInputJustReleased(const std::string& input)
 {
 	return CheckBinding(
-	    input, [this](::KeyboardKey k) { return IsKeyJustReleased(k); },
-	    [this](::GamepadButton b) { return IsControllerButtonJustReleased(b); });
+	    input, [this](KeyboardKey k) { return IsKeyJustReleased(k); },
+	    [this](GamepadButton b) { return IsControllerButtonJustReleased(b); });
 }
 
 // ============================================================================

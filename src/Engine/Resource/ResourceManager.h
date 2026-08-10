@@ -11,7 +11,6 @@
 #include "Engine/Resource/ShaderResource.h"
 #include "Engine/Resource/SoundResource.h"
 #include "Engine/Resource/TextureResource.h"
-#include "raylib.h"
 
 namespace Struktur
 {

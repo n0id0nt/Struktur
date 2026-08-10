@@ -15,6 +15,7 @@
 #include "Engine/ECS/System/AnimationSystem.h"
 #include "Engine/ECS/System/PhysicsSystem.h"
 #include "Engine/ECS/System/TransformSystem.h"
+#include "Engine/Util/MathUtil.h"
 #include "Engine/ECS/System/WrenScriptSystem.h"
 #include "Engine/FileLoading/LevelParser.h"
 #include "Engine/GameContext.h"
@@ -143,7 +144,7 @@ entt::entity Struktur::GameResource::Level::LoadLevelEntities(GameContext& conte
 							case Struktur::FileLoading::LevelParser::FieldInstanceType::COLOUR:
 							{
 								item.type  = WrenType::WREN_TYPE_LIST;
-								auto color = std::any_cast<Color>(field.value);
+								auto color = std::any_cast<Util::Math::Color>(field.value);
 								// Create nested list [r, g, b, a]
 								std::vector<Wren::WrenItem> colorList;
 								Wren::WrenItem r{"r", static_cast<double>(color.r), WrenType::WREN_TYPE_NUM};

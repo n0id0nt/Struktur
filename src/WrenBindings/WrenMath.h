@@ -1,8 +1,8 @@
 #pragma once
 
+#include "Engine/Util/MathUtil.h"
 #include "glm/glm.hpp"
 #define GLM_ENABLE_EXPERIMENTAL
-#include <raylib.h>
 
 #include <glm/gtx/quaternion.hpp>
 
@@ -94,9 +94,9 @@ struct WrenMat4
 
 struct WrenRect
 {
-	::Rectangle value;
+	Struktur::Util::Math::Rect value;
 
-	WrenRect(const ::Rectangle& m)
+	WrenRect(const Struktur::Util::Math::Rect& m)
 	    : value(m)
 	{
 	}

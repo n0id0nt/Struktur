@@ -4,7 +4,7 @@
 #include <sstream>
 #include <string>
 
-#include "raylib.h"
+#include "Debug/Logger.h"
 
 // Platform detection
 #ifdef PLATFORM_WEB
@@ -27,7 +27,7 @@ enum class Level
 	LEVEL_FATAL
 };
 
-inline int ToRaylibLogLevel(Level level)
+inline int ToLogLevel(Level level)
 {
 	switch (level)
 	{
@@ -98,14 +98,14 @@ inline std::string FormatMessage(const char* file, int line, const char* func, c
 inline void Log(Level level, const char* file, int line, const char* func, const std::string& message)
 {
 	std::string formatted = FormatMessage(file, line, func, message);
-	TraceLog(ToRaylibLogLevel(level), formatted.c_str());
+	Struktur::Debug::Log(ToLogLevel(level), formatted.c_str());
 }
 
 // Overload for const char* message (backward compatibility)
 inline void Log(Level level, const char* file, int line, const char* func, const char* message)
 {
 	std::string formatted = FormatMessage(file, line, func, std::string(message));
-	TraceLog(ToRaylibLogLevel(level), formatted.c_str());
+	Struktur::Debug::Log(ToLogLevel(level), formatted.c_str());
 }
 
 // Template version of Log that accepts format arguments
@@ -114,7 +114,7 @@ inline void Log(Level level, const char* file, int line, const char* func, const
 {
 	std::string message   = FormatString(format, std::forward<Args>(args)...);
 	std::string formatted = FormatMessage(file, line, func, message);
-	TraceLog(ToRaylibLogLevel(level), formatted.c_str());
+	Struktur::Debug::Log(ToLogLevel(level), formatted.c_str());
 }
 
 // Break/halt execution based on platform

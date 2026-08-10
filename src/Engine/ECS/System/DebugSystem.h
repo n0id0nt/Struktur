@@ -1,9 +1,9 @@
 #pragma once
 
-#include "Debug/Box2DDebugRenderer.h"
+#include "Debug/Box2DBgfxDebugDraw.h"
 #include "Engine/ECS/SystemManager.h"
+#include "Engine/Renderer/DebugRenderer.h"
 #include "box2d/box2d.h"
-#include "raylib.h"
 
 namespace Struktur
 {
@@ -20,6 +20,7 @@ class DebugSystem : public ISystem
 
 	void RenderEntityGizmos(GameContext &context);
 	void RenderGrid(GameContext &context);
+	void RenderLevelBounds(GameContext &context);
 
 	std::string Name() const override
 	{
@@ -27,7 +28,8 @@ class DebugSystem : public ISystem
 	}
 
    private:
-	Debug::Box2DDebugRenderer m_box2dRenderer;
+	Renderer::DebugRenderer m_debugRenderer;
+	Debug::Box2DBgfxDebugDraw m_box2dBgfxDebugDraw{m_debugRenderer};
 };
 }  // namespace System
 }  // namespace Struktur

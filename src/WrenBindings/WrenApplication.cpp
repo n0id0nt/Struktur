@@ -1,6 +1,6 @@
 #include "Engine/GameContext.h"
+#include "Engine/Platform/Window.h"
 #include "Engine/Scripting/WrenBindingRegistry.h"
-#include "raylib.h"
 #include "wren.hpp"
 
 // ============================================================================
@@ -120,12 +120,7 @@ void wren_ApplicationSetIsFullScreen(WrenVM* vm)
 	auto& gameData                 = context->GetGameData();
 	bool isFullScreen              = wrenGetSlotBool(vm, 1);
 	gameData.isFullScreen          = isFullScreen;
-#ifndef EDITOR
-	if (::IsWindowReady() && gameData.isFullScreen != ::IsWindowFullscreen())
-	{
-		::ToggleFullscreen();
-	}
-#endif
+	context->GetWindow().SetFullscreen(isFullScreen);
 }
 
 // ============================================================================

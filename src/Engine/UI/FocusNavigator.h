@@ -1,7 +1,6 @@
 #pragma once
 
 #include "Engine/UI/UIElement.h"
-#include "raylib.h"
 
 namespace Struktur
 {

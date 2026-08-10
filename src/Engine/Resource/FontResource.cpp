@@ -2,6 +2,7 @@
 
 #include <cmath>
 
+#include "Debug/Assertions.h"
 #include "Engine/Core/FileSystem.h"
 
 Struktur::Resource::FontResource::FontResource(const std::string& filePath, int size)
@@ -11,11 +12,9 @@ Struktur::Resource::FontResource::FontResource(const std::string& filePath, int 
       m_codepoints(nullptr),
       m_codepointCount(0)
 {
-	font.texture.id = 0;
-	font.baseSize   = 0;
-	font.glyphCount = 0;
-	font.glyphs     = nullptr;
-	font.recs       = nullptr;
+	font.baseSize = 0;
+	font.glyphs.clear();
+	font.texture = Text::TextureRef{};
 }
 
 Struktur::Resource::FontResource::~FontResource()
@@ -24,70 +23,13 @@ Struktur::Resource::FontResource::~FontResource()
 	UnloadFromDisk();
 }
 
-#if defined(PLATFORM_WEB)
-bool Struktur::Resource::FontResource::LoadFromDisk(GameContext& context)
-{
-	if (m_fontLoaded)
-	{
-		return true;
-	}
-
-	// For default fonts, we can load directly
-	if (filePath.empty() || filePath == "default")
-	{
-		font         = ::GetFontDefault();
-		m_fontLoaded = true;
-		isLoaded     = true;
-		DEBUG_INFO(std::format("Loaded default font: {}", filePath).c_str());
-		return true;
-	}
-
-	// Load custom font - this loads both disk data and creates GPU texture
-	auto result = FileSystem::ReadBytes(filePath);
-	ASSERT_MSG(result.success, "Failed to load config: %s", result.errorMessage.c_str());
-
-	const char* ext = ::GetFileExtension(filePath.c_str());
-	font =
-	    ::LoadFontFromMemory(ext, result.value.data(), result.value.size(), m_fontSize, m_codepoints, m_codepointCount);
-
-	if (font.texture.id == 0)
-	{
-		BREAK_MSG(std::format("Failed to load font: {}", filePath).c_str());
-		return false;
-	}
-
-	m_fontLoaded = true;
-	isLoaded     = true;
-	DEBUG_INFO(std::format("Loaded font from disk: {} (size: {})", filePath, m_fontSize).c_str());
-	return true;
-}
-
-void Struktur::Resource::FontResource::UnloadFromDisk()
-{
-	if (m_fontLoaded && font.texture.id != 0)
-	{
-		// Only unload if it's not the default font
-		if (filePath != "default" && !filePath.empty())
-		{
-			::UnloadFont(font);
-		}
-		font.texture.id = 0;
-		font.baseSize   = 0;
-		font.glyphCount = 0;
-		font.glyphs     = nullptr;
-		font.recs       = nullptr;
-		m_fontLoaded    = false;
-	}
-	isLoaded = false;
-}
-#else
-	#define STB_TRUETYPE_IMPLEMENTATION
-	#include <stb_truetype.h>
+#define STB_TRUETYPE_IMPLEMENTATION
+#include <stb_truetype.h>
 
 namespace
 {
-// raylib's built-in bitmap font (web's "default" shortcut) has no desktop equivalent without a real file -
-// point the same shortcut at an already-shipped ttf instead. Invisible to callers either way.
+// raylib's built-in bitmap font (the old "default" shortcut) has no equivalent without a real file - point the
+// same shortcut at an already-shipped ttf instead. Invisible to callers either way.
 constexpr const char* kDefaultFontPath = "Fonts/machine-std/machine-std-regular.ttf";
 constexpr int kAtlasWidth              = 512;
 constexpr int kAtlasHeight             = 512;
@@ -147,29 +89,24 @@ bool Struktur::Resource::FontResource::LoadFromDisk(GameContext& context)
 		DEBUG_WARNING(std::format("Font atlas overflowed for {} - some glyphs may be missing", path).c_str());
 	}
 
-	font.glyphCount   = codepointCount;
-	font.baseSize     = m_fontSize;
-	font.glyphPadding = 0;
-	font.recs         = new ::Rectangle[codepointCount];
-	font.glyphs       = new ::GlyphInfo[codepointCount];
+	font.baseSize = m_fontSize;
+	font.glyphs.assign(codepointCount, Text::Glyph{});
 
 	for (int i = 0; i < codepointCount; ++i)
 	{
 		const stbtt_packedchar& packedChar = packedChars[i];
 		int codepoint = (m_codepoints != nullptr && m_codepointCount > 0) ? m_codepoints[i] : (32 + i);
 
-		font.recs[i] = ::Rectangle{(float)packedChar.x0, (float)packedChar.y0,
-		                           (float)(packedChar.x1 - packedChar.x0), (float)(packedChar.y1 - packedChar.y0)};
-
-		::GlyphInfo& glyph = font.glyphs[i];
-		glyph.value        = codepoint;
+		Text::Glyph& glyph = font.glyphs[i];
+		glyph.value         = codepoint;
 		glyph.offsetX       = (int)std::round(packedChar.xoff);
 		// stb's yoff is baseline-relative; raylib's convention is relative to the line's top (see raylib's
 		// rtext.c LoadFontData: offsetY = stbGlyphBoxTop + ascent*scale) - replicate the same shift here so
 		// glyphs from this atlas line up the same way raylib's own would.
 		glyph.offsetY  = (int)std::round(packedChar.yoff + ascentPixels);
 		glyph.advanceX = (int)std::round(packedChar.xadvance);
-		glyph.image    = ::Image{};  // only used by raylib's own ImageDrawText - never needed on this path
+		glyph.rec      = Util::Math::Rect{(float)packedChar.x0, (float)packedChar.y0,
+		                                   (float)(packedChar.x1 - packedChar.x0), (float)(packedChar.y1 - packedChar.y0)};
 	}
 
 	m_fontLoaded = true;
@@ -181,26 +118,14 @@ bool Struktur::Resource::FontResource::LoadFromDisk(GameContext& context)
 
 void Struktur::Resource::FontResource::UnloadFromDisk()
 {
-	delete[] font.recs;
-	delete[] font.glyphs;
-	font.recs       = nullptr;
-	font.glyphs     = nullptr;
-	font.glyphCount = 0;
-	font.baseSize   = 0;
+	font.glyphs.clear();
+	font.baseSize = 0;
 	m_atlasAlpha.clear();
 	m_atlasAlpha.shrink_to_fit();
 	m_fontLoaded = false;
 	isLoaded     = false;
 }
-#endif
 
-#if defined(PLATFORM_WEB)
-bool Struktur::Resource::FontResource::LoadToGpu(GameContext& context)
-{
-	// Loading from disk already creates the GPU texture for fonts, so just confirm that happened.
-	return isLoaded;
-}
-#else
 bool Struktur::Resource::FontResource::LoadToGpu(GameContext& context)
 {
 	if (!isLoaded)
@@ -237,29 +162,10 @@ bool Struktur::Resource::FontResource::LoadToGpu(GameContext& context)
 	font.texture.id      = (unsigned int)m_atlasTexture.idx;
 	font.texture.width   = m_atlasWidth;
 	font.texture.height  = m_atlasHeight;
-	font.texture.mipmaps = 1;
 	gpuState             = GpuState::LoadedToGpu;
 	return true;
 }
-#endif
 
-#if defined(PLATFORM_WEB)
-void Struktur::Resource::FontResource::UnloadFromGpu()
-{
-	// For fonts, GPU and disk data are tied together
-	// We can't separate them like with textures
-	// So GPU unload is the same as full unload
-	if (m_fontLoaded && font.texture.id != 0)
-	{
-		if (filePath != "default" && !filePath.empty())
-		{
-			::UnloadFont(font);
-		}
-		font.texture.id = 0;
-		m_fontLoaded    = false;
-	}
-}
-#else
 void Struktur::Resource::FontResource::UnloadFromGpu()
 {
 	if (bgfx::isValid(m_atlasTexture))
@@ -270,16 +176,11 @@ void Struktur::Resource::FontResource::UnloadFromGpu()
 	}
 	m_fontLoaded = false;
 }
-#endif
 
 bool Struktur::Resource::FontResource::IsGpuResourceValid() const
 {
-#if defined(PLATFORM_WEB)
-	return font.texture.id != 0 && font.baseSize > 0;
-#else
 	// bgfx handle index 0 is a *valid* handle, not a sentinel - font.texture.id alone can't be trusted here.
 	return bgfx::isValid(m_atlasTexture) && font.baseSize > 0;
-#endif
 }
 
 size_t Struktur::Resource::FontResource::GetMemoryUsage() const
@@ -290,14 +191,14 @@ size_t Struktur::Resource::FontResource::GetMemoryUsage() const
 	}
 
 	// Estimate: glyph data + texture data
-	size_t glyphDataSize = font.glyphCount * (sizeof(GlyphInfo) + sizeof(Rectangle));
-	size_t textureSize   = font.texture.width * font.texture.height * 4;  // RGBA
+	size_t glyphDataSize = font.glyphs.size() * sizeof(Text::Glyph);
+	size_t textureSize   = (size_t)font.texture.width * (size_t)font.texture.height * 4;  // RGBA
 	return glyphDataSize + textureSize;
 }
 
 size_t Struktur::Resource::FontResource::GetGpuMemoryUsage() const
 {
-	return m_fontLoaded ? (font.texture.width * font.texture.height * 4) : 0;
+	return m_fontLoaded ? ((size_t)font.texture.width * (size_t)font.texture.height * 4) : 0;
 }
 
 void Struktur::Resource::FontResource::SetCodepoints(int* customCodepoints, int count)
@@ -316,17 +217,6 @@ int Struktur::Resource::FontResource::GetFontSize()
 	return m_fontSize;
 }
 
-void Struktur::Resource::FontResource::DrawText(const std::string& text, Vector2 position, float fontSize,
-                                                Color color) const
-{
-#if defined(PLATFORM_WEB)
-	if (IsGpuReady())
-	{
-		::DrawTextEx(font, text.c_str(), position, fontSize, 1.0f, color);
-	}
-#endif
-}
-
 int Struktur::Resource::FontResource::GetBaseSize() const
 {
 	return font.baseSize;
@@ -334,7 +224,7 @@ int Struktur::Resource::FontResource::GetBaseSize() const
 
 int Struktur::Resource::FontResource::GetGlyphCount() const
 {
-	return font.glyphCount;
+	return (int)font.glyphs.size();
 }
 
 Struktur::Resource::FontResource* Struktur::Resource::FontPool::LoadResource(GameContext& context,

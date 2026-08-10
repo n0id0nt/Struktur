@@ -1,7 +1,5 @@
 #pragma once
 
-#include <raylib.h>
-
 #include "PreviewRenderer.h"
 
 namespace Struktur
@@ -28,8 +26,6 @@ class ShaderPreviewRenderer : public IPreviewRenderer
 	    : m_shader(shader),
 	      m_name(name),
 	      m_previewShape(ShaderPreviewShape::Quad2D),
-	      m_previewTexture({0}),
-	      m_renderTexture({0}),
 	      m_useCustomTexture(false),
 	      m_rotation(0.0f)
 	{
@@ -62,8 +58,6 @@ class ShaderPreviewRenderer : public IPreviewRenderer
 	const Component::Shader* m_shader;
 	std::string m_name;
 	ShaderPreviewShape m_previewShape;
-	::Texture2D m_previewTexture;  // Default texture
-	::RenderTexture2D m_renderTexture;
 	bool m_useCustomTexture;
 	float m_rotation;
 };

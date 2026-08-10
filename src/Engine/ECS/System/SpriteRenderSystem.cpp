@@ -13,23 +13,15 @@
 #include "Engine/Util/MathUtil.h"
 #include "glm/glm.hpp"
 #include "glm/gtc/quaternion.hpp."
-#include "raylib.h"
-#include "raymath.h"
 
-#if !defined(PLATFORM_WEB)
-	#include "Engine/Renderer/TileChunkBuilder.h"
-#endif
+#include "Engine/Renderer/TileChunkBuilder.h"
 
 void Struktur::System::SpriteRenderSystem::Update(GameContext& context)
 {
 	entt::registry& registry               = context.GetRegistry();
-	GameResource::Camera& camera           = context.GetCamera();
 	Renderer::WorldRenderer& worldRenderer = context.GetWorldRenderer();
 	TransformSystem& transformSystem       = context.GetSystemManager().GetSystem<TransformSystem>();
 
-#if defined(PLATFORM_WEB)
-	::BeginMode2D(camera.GetRaylibCamera());
-#endif
 	{
 		Renderer::CullBounds cullBounds = Renderer::WorldRenderer::ComputeCullBounds(context);
 		worldRenderer.Clear();
@@ -51,7 +43,6 @@ void Struktur::System::SpriteRenderSystem::Update(GameContext& context)
 
 				glm::vec3 worldPosition = transformSystem.GetWorldPosition(context, entity);
 
-#if !defined(PLATFORM_WEB)
 				// Tilemaps are treated as static once placed: chunks are built once (from world-space tile
 				// positions baked in up front) and cached on the component, rather than every tile being
 				// walked and resubmitted every frame - see the chunking design discussion for why.
@@ -68,38 +59,6 @@ void Struktur::System::SpriteRenderSystem::Update(GameContext& context)
 					worldRenderer.SubmitChunk(tileMap.layer, tileMap.orderInLayer, chunk, texture->GetHandle(),
 					                          cullBounds);
 				}
-#else
-				for (auto& gridTile : tileMap.gridTiles)
-				{
-					Util::Math::Rect sourceRec{gridTile.sourcePosition.x, gridTile.sourcePosition.y,
-					                      (float)tileMap.tileSize, (float)tileMap.tileSize};
-					switch (gridTile.flipBit)
-					{
-						case GameResource::TileMap::FlipBit::BOTH:
-							sourceRec.width *= -1;
-							sourceRec.height *= -1;
-							break;
-						case GameResource::TileMap::FlipBit::HORIZONTAL:
-							sourceRec.width *= -1;
-							break;
-						case GameResource::TileMap::FlipBit::VERTIAL:
-							sourceRec.height *= -1;
-							break;
-					}
-					// this stops you from seeing a little bit of the neighbouring sprite
-					sourceRec.x += 0.0001f;
-					sourceRec.y += 0.0001f;
-					sourceRec.width -= 0.0002f;
-					sourceRec.height -= 0.0002f;
-					// TODO - Move this to a helper function so this line is much more consise
-					Util::Math::Rect destRec{gridTile.position.x + ::round(worldPosition.x * 2) / 2,
-					                       gridTile.position.y + ::round(worldPosition.y * 2) / 2,
-					                       (float)tileMap.tileSize, (float)tileMap.tileSize};
-
-					worldRenderer.Submit(tileMap.layer, tileMap.orderInLayer, entity, texture->GetHandle(), sourceRec,
-					                     destRec, glm::vec2{0, 0}, 0.0f, Util::Math::ColorWhite, cullBounds);
-				}
-#endif
 			}
 		}
 		{
@@ -164,7 +123,4 @@ void Struktur::System::SpriteRenderSystem::Update(GameContext& context)
 
 		worldRenderer.Flush(context);
 	}
-#if defined(PLATFORM_WEB)
-	::EndMode2D();
-#endif
 }

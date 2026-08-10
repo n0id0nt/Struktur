@@ -11,7 +11,7 @@ namespace Struktur::Debug
 // Log entry structure
 struct LogEntry
 {
-	int logLevel;  // TraceLogLevel from raylib
+	int logLevel;  // Debug::LogLevel (see Debug/Logger.h)
 	std::string message;
 	std::string timestamp;
 
@@ -30,9 +30,6 @@ class LogWindow : public EditorWindow
 	~LogWindow();
 
 	void Render(GameContext& context) override;
-
-	// Static callback for Raylib's SetTraceLogCallback
-	static void TraceLogCallback(int logLevel, const char* text, va_list args);
 
 	// Get singleton instance for the callback
 	static LogWindow* GetInstance()

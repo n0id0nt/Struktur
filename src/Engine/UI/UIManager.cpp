@@ -9,7 +9,6 @@ Struktur::UI::UIManager::UIManager()
       m_focusJustChanged(false),
       m_hoveredJustChanged(false)
 {
-	m_camera         = {{0, 0}, {0, 0}, 0.0f, 1.0f};
 	m_focusNavigator = std::make_unique<FocusNavigator>();
 }
 
@@ -110,11 +109,8 @@ void Struktur::UI::UIManager::Clear(GameContext& context)
 
 void Struktur::UI::UIManager::Render(GameContext& context)
 {
-#if defined(PLATFORM_WEB)
-	::BeginMode2D(m_camera);
-#endif
-	// On desktop, UIRenderSystem already set UIViewId's own screen-space ortho projection for this frame (see
-	// UIRenderer::SetupView) - m_camera only exists to satisfy raylib's 2D-mode API on web.
+	// UIRenderSystem already set UIViewId's own screen-space ortho projection for this frame (see
+	// UIRenderer::SetupView).
 
 	// Sort elements by z-index
 	std::vector<UIElement*> sortedElements;
@@ -140,10 +136,6 @@ void Struktur::UI::UIManager::Render(GameContext& context)
 	{
 		m_focusedElement->RenderFocusIndicator(context);
 	}
-
-#if defined(PLATFORM_WEB)
-	::EndMode2D();
-#endif
 }
 
 Struktur::UI::FocusNavigator* Struktur::UI::UIManager::GetFocusNavigator() const

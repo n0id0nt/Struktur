@@ -100,6 +100,10 @@ class FileSystem
 	static void Init(const std::string& workingDirectory);
 	static void Shutdown();
 
+	// Replaces raylib's ::GetWorkingDirectory - the process's current working directory (not this class's own
+	// mounted virtual filesystem).
+	static std::string GetWorkingDirectory();
+
 	//-----------------------------------------------------------------------------------
 	// Mounting
 	//-----------------------------------------------------------------------------------

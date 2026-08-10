@@ -1,7 +1,5 @@
 #pragma once
 
-#if !defined(PLATFORM_WEB)
-
 #include <bgfx/bgfx.h>
 
 struct ImDrawData;
@@ -33,5 +31,3 @@ class ImGuiRenderer
 };
 }  // namespace Renderer
 }  // namespace Struktur
-
-#endif

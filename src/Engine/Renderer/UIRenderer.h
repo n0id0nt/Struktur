@@ -1,13 +1,13 @@
 #pragma once
 
-#if !defined(PLATFORM_WEB)
-
 #include <string>
 
 #include "Engine/Renderer/RenderTypes.h"
-#include "raylib.h"
+#include "Engine/Text/Font.h"
+#include "Engine/Util/MathUtil.h"
 
 #include <bgfx/bgfx.h>
+#include <glm/glm.hpp>
 
 namespace Struktur
 {
@@ -36,13 +36,13 @@ class UIRenderer
 	// real window) - call once per frame before any Draw* call (see UIRenderSystem::Update).
 	void SetupView(GameContext& context);
 
-	void DrawRect(const ::Rectangle& rect, const ::Color& color);
-	void DrawRectOutline(const ::Rectangle& rect, float thickness, const ::Color& color);
-	void DrawTexturedRect(const ::Rectangle& rect, const TextureHandle& texture, const ::Color& tint);
-	// Walks `text` as UTF-8 via ::GetCodepointNext/::GetGlyphIndex and emits one quad per glyph from
-	// font.recs/font.glyphs - single line only (callers already split multi-line text, see UILabel::GetTextLines).
-	void DrawText(const ::Font& font, const std::string& text, const ::Vector2& position, float fontSize,
-	              const ::Color& color);
+	void DrawRect(const Util::Math::Rect& rect, const Util::Math::Color& color);
+	void DrawRectOutline(const Util::Math::Rect& rect, float thickness, const Util::Math::Color& color);
+	void DrawTexturedRect(const Util::Math::Rect& rect, const TextureHandle& texture, const Util::Math::Color& tint);
+	// Walks `text` as UTF-8 via Text::GetCodepointNext/Text::GetGlyphIndex and emits one quad per glyph from
+	// font.glyphs - single line only (callers already split multi-line text, see UILabel::GetTextLines).
+	void DrawText(const Text::Font& font, const std::string& text, const glm::vec2& position, float fontSize,
+	              const Util::Math::Color& color);
 
    private:
 	void SubmitTexturedQuad(float x, float y, float w, float h, float u0, float v0, float u1, float v1,
@@ -53,5 +53,3 @@ class UIRenderer
 };
 }  // namespace Renderer
 }  // namespace Struktur
-
-#endif

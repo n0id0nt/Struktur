@@ -19,9 +19,8 @@ namespace Struktur
 // Internal helpers
 //////////////////////////////////////////////////////////////////////////////////////////
 
-static FileSystemError TranslatePhysFSError()
+static FileSystemError TranslatePhysFSError(PHYSFS_ErrorCode code)
 {
-	PHYSFS_ErrorCode code = PHYSFS_getLastErrorCode();
 	switch (code)
 	{
 		case PHYSFS_ERR_NOT_FOUND:
@@ -39,9 +38,25 @@ static FileSystemError TranslatePhysFSError()
 	}
 }
 
-static std::string GetPhysFSErrorMessage()
+static std::string GetPhysFSErrorMessage(PHYSFS_ErrorCode code)
 {
-	return std::string(PHYSFS_getErrorByCode(PHYSFS_getLastErrorCode()));
+	return std::string(PHYSFS_getErrorByCode(code));
+}
+
+// PHYSFS_getLastErrorCode() clears the stored error once read, so callers that need both the translated
+// FileSystemError AND the human-readable message must capture the code exactly once - calling
+// TranslatePhysFSError()/GetPhysFSErrorMessage() as two separate PHYSFS_getLastErrorCode() reads (as this used
+// to) meant the second read always saw PHYSFS_ERR_OK ("no error"), masking the real failure reason.
+struct PhysFSError
+{
+	FileSystemError error;
+	std::string message;
+};
+
+static PhysFSError GetLastPhysFSError()
+{
+	PHYSFS_ErrorCode code = PHYSFS_getLastErrorCode();
+	return {TranslatePhysFSError(code), GetPhysFSErrorMessage(code)};
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////
@@ -58,6 +73,11 @@ void FileSystem::Shutdown()
 	PHYSFS_deinit();
 }
 
+std::string FileSystem::GetWorkingDirectory()
+{
+	return std::filesystem::current_path().string();
+}
+
 //////////////////////////////////////////////////////////////////////////////////////////
 // Mounting
 //////////////////////////////////////////////////////////////////////////////////////////
@@ -66,7 +86,8 @@ FileResult<void> FileSystem::Mount(const std::string& path, const std::string& m
 {
 	if (PHYSFS_mount(path.c_str(), mountPoint.c_str(), append ? 1 : 0) == 0)
 	{
-		return FileResult<void>::Fail(TranslatePhysFSError(), GetPhysFSErrorMessage());
+		auto physfsError = GetLastPhysFSError();
+		return FileResult<void>::Fail(physfsError.error, physfsError.message);
 	}
 
 	return FileResult<void>::Ok();
@@ -92,7 +113,8 @@ FileResult<void> FileSystem::SetWriteDir(const std::string& path)
 
 	if (PHYSFS_setWriteDir(path.c_str()) == 0)
 	{
-		return FileResult<void>::Fail(TranslatePhysFSError(), GetPhysFSErrorMessage());
+		auto physfsError = GetLastPhysFSError();
+		return FileResult<void>::Fail(physfsError.error, physfsError.message);
 	}
 
 	return FileResult<void>::Ok();
@@ -159,7 +181,8 @@ FileResult<std::vector<uint8_t>> FileSystem::ReadFile(const std::string& path)
 	PHYSFS_File* file = PHYSFS_openRead(path.c_str());
 	if (!file)
 	{
-		return FileResult<std::vector<uint8_t>>::Fail(TranslatePhysFSError(), GetPhysFSErrorMessage());
+		auto physfsError = GetLastPhysFSError();
+		return FileResult<std::vector<uint8_t>>::Fail(physfsError.error, physfsError.message);
 	}
 
 	PHYSFS_sint64 size = PHYSFS_fileLength(file);
@@ -176,7 +199,8 @@ FileResult<std::vector<uint8_t>> FileSystem::ReadFile(const std::string& path)
 
 	if (bytesRead < size)
 	{
-		return FileResult<std::vector<uint8_t>>::Fail(FileSystemError::ReadError, GetPhysFSErrorMessage());
+		return FileResult<std::vector<uint8_t>>::Fail(FileSystemError::ReadError,
+		                                              GetPhysFSErrorMessage(PHYSFS_getLastErrorCode()));
 	}
 
 	return FileResult<std::vector<uint8_t>>::Ok(std::move(buffer));
@@ -203,7 +227,8 @@ FileResult<void> FileSystem::WriteBytes(const std::string& path, const std::vect
 	PHYSFS_File* file = PHYSFS_openWrite(path.c_str());
 	if (!file)
 	{
-		return FileResult<void>::Fail(TranslatePhysFSError(), GetPhysFSErrorMessage());
+		auto physfsError = GetLastPhysFSError();
+		return FileResult<void>::Fail(physfsError.error, physfsError.message);
 	}
 
 	PHYSFS_sint64 bytesWritten = PHYSFS_writeBytes(file, data.data(), data.size());
@@ -211,7 +236,7 @@ FileResult<void> FileSystem::WriteBytes(const std::string& path, const std::vect
 
 	if (bytesWritten < (PHYSFS_sint64)data.size())
 	{
-		return FileResult<void>::Fail(FileSystemError::WriteError, GetPhysFSErrorMessage());
+		return FileResult<void>::Fail(FileSystemError::WriteError, GetPhysFSErrorMessage(PHYSFS_getLastErrorCode()));
 	}
 
 	return FileResult<void>::Ok();

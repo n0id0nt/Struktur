@@ -4,8 +4,6 @@
 #include <string>
 #include <variant>
 
-#include "raylib.h"
-#include "raymath.h"
 #ifdef PLATFORM_WEB
 	#include <emscripten.h>
 	#include <emscripten/html5.h>
@@ -14,6 +12,8 @@
 #include "Debug/Assertions.h"
 #include "Debug/Profiling/Profiler.h"
 #include "Engine/Core/FileSystem.h"
+#include "Engine/Text/Font.h"
+#include "Engine/Util/MathUtil.h"
 #include "Engine/ECS/Component/Camera.h"
 #include "Engine/ECS/Component/PhysicsBody.h"
 #include "Engine/ECS/Component/Player.h"
@@ -43,18 +43,13 @@
 
 #ifdef DEBUG
 	#include "Engine/Scripting/WrenCodeGenerator.h"
-	#if defined(PLATFORM_WEB)
-		#include "rlImGui.h"
-	#endif
 #endif
 
-#if !defined(PLATFORM_WEB)
-	#include "Engine/Platform/Window.h"
-	#include "Engine/Renderer/GraphicsDevice.h"
-	#ifdef EDITOR
-		#include <imgui.h>
-		#include <imgui_impl_sdl3.h>
-	#endif
+#include "Engine/Platform/Window.h"
+#include "Engine/Renderer/GraphicsDevice.h"
+#ifdef EDITOR
+	#include <imgui.h>
+	#include <imgui_impl_sdl3.h>
 #endif
 
 #ifdef EDITOR
@@ -75,14 +70,14 @@ void Struktur::InitialiseGame(GameContext& context)
 	Wren::WrenStateManager& wrenStateManager                       = context.GetWrenStateManager();
 	Wren::WrenScriptComponentRegistry& wrenScriptComponentRegistry = context.GetWrenScriptComponentRegistry();
 
-	FileSystem::Init(::GetWorkingDirectory());
+	FileSystem::Init(FileSystem::GetWorkingDirectory());
 #if defined(PLATFORM_WEB)
 	// Emscripten preloads assets into its virtual FS
 	// Mount the preloaded assets directory directly
 	FileSystem::Mount("/assets");
 #elif defined(EDITOR)
 	// Project folder selection at startup
-	std::string projectPath = FileSystem::OpenFolderDialog("Select Project Directory", ::GetWorkingDirectory());
+	std::string projectPath = FileSystem::OpenFolderDialog("Select Project Directory", FileSystem::GetWorkingDirectory());
 
 	// Fall back to default assets/ if user cancels
 	FileSystem::Mount(projectPath.empty() ? "assets/" : projectPath);
@@ -99,17 +94,6 @@ void Struktur::InitialiseGame(GameContext& context)
 	const int windowHeight = 720;
 	gameData.gameWidth     = windowWidth;
 	gameData.gameHeight    = windowHeight;
-	#if defined(PLATFORM_WEB)
-	::InitWindow(windowWidth, windowHeight, "Struktur");
-	::SetWindowState(FLAG_WINDOW_RESIZABLE);
-
-	::rlImGuiSetup(true);
-	ImGuiIO& io = ImGui::GetIO();
-	io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
-
-	Debug::Editor& editor = context.GetEditor();
-	editor.Initialise(context);
-	#else
 	context.InitialiseGraphics(windowWidth, windowHeight, "Struktur", true);
 	context.InitialiseUIRenderer();
 
@@ -127,7 +111,6 @@ void Struktur::InitialiseGame(GameContext& context)
 
 	Debug::Editor& editor = context.GetEditor();
 	editor.Initialise(context);
-	#endif
 #endif
 
 	wrenScriptEngine.Initialise(context);
@@ -136,20 +119,12 @@ void Struktur::InitialiseGame(GameContext& context)
 
 #ifndef EDITOR
 	// In release mode, window matches game size
-	#if defined(PLATFORM_WEB)
-	::InitWindow(gameData.gameWidth, gameData.gameHeight, gameData.projectName);
-	if (gameData.isFullScreen != ::IsWindowFullscreen())
-	{
-		::ToggleFullscreen();
-	}
-	#else
 	context.InitialiseGraphics(gameData.gameWidth, gameData.gameHeight, gameData.projectName, false);
 	context.InitialiseUIRenderer();
 	if (gameData.isFullScreen)
 	{
 		context.GetWindow().SetFullscreen(true);
 	}
-	#endif
 #endif
 
 #if defined(PLATFORM_WEB)
@@ -161,14 +136,11 @@ void Struktur::InitialiseGame(GameContext& context)
 #endif
 	FileSystem::SetWriteDir(saveDir);
 	FileSystem::Mount(saveDir, "/", false);
-#if defined(PLATFORM_WEB)
-	::SetExitKey(KEY_NULL);
-#endif
 	// Audio setup now happens in GameContext's constructor via SDL3_mixer, so it's already available here.
 
 #ifdef DEBUG
 	Wren::CodeGenerator::GenerateBindingFiles(wrenScriptEngine.GetRegistry(),
-	                                          std::string(::GetWorkingDirectory()) + "/../src/WrenBindings/Bindings");
+	                                          FileSystem::GetWorkingDirectory() + "/../src/WrenBindings/Bindings");
 #endif
 
 	gameObjectManager.CreateObjectCallBack(context);
@@ -176,8 +148,7 @@ void Struktur::InitialiseGame(GameContext& context)
 	glm::vec2 gravity(0.0f, 0.0f);
 	physicsWorld.Initialise(gravity, gameData.velocityIterations, gameData.positionIterations, gameData.pixelsPerMeter);
 
-	// The order here also defines the order they are updated - TODO need a better way to determine render priority and
-	// also need a way to have helper systems with out an empty update
+	// need a way to have helper systems with out an empty update
 	systemManager.AddHelperSystem<System::HierarchySystem>();
 	systemManager.AddHelperSystem<System::TransformSystem>();
 	systemManager.AddHelperSystem<System::ShaderSystem>();
@@ -190,14 +161,14 @@ void Struktur::InitialiseGame(GameContext& context)
 	systemManager.AddUpdateSystem<System::UISystem>();
 	systemManager.AddUpdateSystem<System::SoundSystem>();
 	systemManager.AddRenderSystem<System::SpriteRenderSystem>();
-	// WrenStateRenderSystem/DebugSystem still render via direct raylib calls (Wren-script-driven draws and
-	// debug shapes) with no bgfx path yet - guarded out on desktop until later steps land; unaffected on web.
-	// UIRenderSystem now has a bgfx path on both platforms (see Engine/Renderer/UIRenderer).
+	// WrenStateRenderSystem still renders via direct raylib calls (Wren-script-driven draws) with no bgfx path
+	// yet - web only. DebugSystem/UIRenderSystem now have a bgfx path on both platforms (see
+	// Engine/Renderer/DebugRenderer and Engine/Renderer/UIRenderer).
 #if defined(PLATFORM_WEB)
 	systemManager.AddRenderSystem<System::WrenStateRenderSystem>();
-	#ifdef DEBUG
+#endif
+#ifdef DEBUG
 	systemManager.AddRenderSystem<System::DebugSystem>();
-	#endif
 #endif
 	systemManager.AddRenderSystem<System::UIRenderSystem>();
 
@@ -208,7 +179,7 @@ void Struktur::InitialiseGame(GameContext& context)
 	// Desktop-editor builds start Wren once here too, purely so the initial scene is loaded and visible in the
 	// Game Viewport before Play is first pressed - GameLoop's Update() stays gated on debugSettings.playingGame
 	// on both platforms either way, so nothing actually simulates until Play/Refresh is clicked.
-#if !defined(EDITOR) || !defined(PLATFORM_WEB)
+#if !defined(EDITOR)
 	wrenStateManager.Start(context);
 #endif
 }
@@ -286,37 +257,52 @@ void Struktur::SplashScreenLoop(GameContext& context)
 	if (currentTime < startTime + fadeInTime)
 	{
 		float t = (currentTime - startTime) / fadeInTime;
-		textAlpha *= Lerp(0.f, 1.f, t);
+		textAlpha *= Util::Math::Lerp(0.f, 1.f, t);
 	}
 	// Fade out
 	else if (currentTime > startTime + fadeInTime + holdTime &&
 	         currentTime < startTime + fadeInTime + holdTime + fadeOutTime)
 	{
 		float t = (currentTime - startTime - fadeInTime - holdTime) / fadeOutTime;
-		textAlpha *= Lerp(1.f, 0.f, t);
+		textAlpha *= Util::Math::Lerp(1.f, 0.f, t);
 	}
 
 	std::string splashScreenName = SPLASHSCREENTEXT;
 	int fontSize                 = 120;
 
-#if defined(PLATFORM_WEB)
 	Resource::ResourcePtr<Resource::FontResource> font = resourceManager.GetFont(context, SPLASHSCREENFONT, 120);
-	int fontWidth = ::MeasureTextEx(font->font, splashScreenName.c_str(), fontSize, 1.0f).x;
-	int width     = gameData.applicationWidth;
-	int height    = gameData.applicationHeight;
+	if (!font->IsGpuReady())
+	{
+		font->LoadToGpu(context);
+	}
+	int fontWidth = (int)Text::MeasureTextEx(font->font, splashScreenName, (float)fontSize, 1.0f).x;
+	// Centered in "game" pixel space (gameWidth/gameHeight), not the real window's applicationWidth/Height -
+	// UIRenderer::SetupView's orthographic projection is fixed to the former (see UILabel/DebugSystem for the
+	// same convention), so that's the space any screen-space text needs to be positioned in here too.
+	int width  = gameData.gameWidth;
+	int height = gameData.gameHeight;
 
-	::BeginDrawing();
-	::ClearBackground(BLACK);
-	::DrawTextEx(font->font, splashScreenName.c_str(), {(width - fontWidth) / 2.f, (height - fontSize) / 2.f}, fontSize,
-	             5.0f, Color{255, 255, 255, (unsigned char)textAlpha});
-	::EndDrawing();
-#else
-	// Text rendering isn't ported yet (FontResource stays stubbed this step, see the plan) - not calling
-	// resourceManager.GetFont() here either, since raylib's font loading needs an initialised rlgl context to
-	// create the glyph atlas GPU texture, which no longer exists on this path. Timing/fade/state-transition
-	// logic above still runs, just nothing loads or draws.
-	(void)resourceManager;
-#endif
+	context.GetGraphicsDevice().BeginFrame();
+	// In EDITOR builds, GameViewportWindow::Initialise already redirected World/Debug/UI views into the
+	// editor's offscreen game-viewport framebuffer before this loop ever runs - drawing there would be
+	// invisible since nothing composites that texture onto the real window until editor.Update() runs, which
+	// this splash-only loop never calls. Bypass the redirect so this frame's UI draws land on the real
+	// backbuffer instead - both calls are safe no-ops on builds that never redirected in the first place (no
+	// editor, or web).
+	context.GetGraphicsDevice().ResetWorldRenderTarget();
+	context.GetUIRenderer().SetupView(context);
+	context.GetUIRenderer().DrawText(font->font, splashScreenName,
+	                                 {(float)((width - fontWidth) / 2), (float)((height - fontSize) / 2)},
+	                                 (float)fontSize, Util::Math::Color{255, 255, 255, (unsigned char)textAlpha});
+	context.GetGraphicsDevice().EndFrame();
+	// bgfx view state (framebuffer/clear/rect) isn't snapshotted at submit time - it's whatever was last set
+	// before bgfx::frame() runs. Restoring the redirect must happen AFTER EndFrame() (this frame's draws are
+	// already handed off by then) so it takes effect starting with GameLoop's first frame, not this one -
+	// restoring it before EndFrame() would silently redirect this frame's own draws right back offscreen.
+	if (gameData.gameState == Core::GameState::GAME)
+	{
+		context.GetGraphicsDevice().RestoreWorldRenderTarget();
+	}
 }
 
 void Struktur::GameLoop(GameContext& context)
@@ -343,43 +329,23 @@ void Struktur::GameLoop(GameContext& context)
 		gameObjectManager.DeleteGameObjectsInSafeToDeleteQueue(context);
 	}
 
-#if defined(PLATFORM_WEB)
-	::BeginDrawing();
-	#ifdef EDITOR
-	::ClearBackground(DARKGRAY);
-	Debug::Editor& editor = context.GetEditor();
-	editor.BeginUpdateLoop(context);
-	#endif
-	{
-		PROFILE_SCOPE("RENDER PROCESSING");
-		::ClearBackground(BLACK);
-		systemManager.Render(context);
-	}
-	PROFILE_END_SCOPE(gameLoop);  // Must close the scope before the editor is updated
-	#ifdef EDITOR
-	editor.EndUpdateLoop(context);
-	editor.Update(context);
-	#endif
-	::EndDrawing();
-#else
 	context.GetGraphicsDevice().BeginFrame();
-	#ifdef EDITOR
+#ifdef EDITOR
 	ImGui_ImplSDL3_NewFrame();
 	ImGui::NewFrame();
 	Debug::Editor& editor = context.GetEditor();
 	editor.BeginUpdateLoop(context);
-	#endif
+#endif
 	{
 		PROFILE_SCOPE("RENDER PROCESSING");
 		systemManager.Render(context);
 	}
 	PROFILE_END_SCOPE(gameLoop);
-	#ifdef EDITOR
+#ifdef EDITOR
 	editor.EndUpdateLoop(context);
 	editor.Update(context);
-	#endif
-	context.GetGraphicsDevice().EndFrame();
 #endif
+	context.GetGraphicsDevice().EndFrame();
 }
 
 void Struktur::UpdateLoop(void* userData)
@@ -389,10 +355,6 @@ void Struktur::UpdateLoop(void* userData)
 
 	Core::GameData& gameData     = context.GetGameData();
 	Core::TimeSystem& timeSystem = context.GetTimeSystem();
-#if defined(PLATFORM_WEB)
-	gameData.applicationWidth  = ::GetScreenWidth();
-	gameData.applicationHeight = ::GetScreenHeight();
-#else
 	context.GetWindow().PollEvents();
 	context.GetInput().Update();
 	gameData.applicationWidth  = context.GetWindow().GetWidth();
@@ -401,15 +363,12 @@ void Struktur::UpdateLoop(void* userData)
 	{
 		context.GetGraphicsDevice().Resize(gameData.applicationWidth, gameData.applicationHeight);
 	}
-#endif
 	timeSystem.Update();
 
-#if !defined(PLATFORM_WEB)
 	if (context.GetWindow().ShouldClose())
 	{
 		gameData.gameState = Core::GameState::QUIT;
 	}
-#endif
 
 	switch (gameData.gameState)
 	{
@@ -423,9 +382,9 @@ void Struktur::UpdateLoop(void* userData)
 
 		default:
 #ifdef PLATFORM_WEB
-			// On web, clean up and stop the loop
-			ExitGame(context);
-			::CloseWindow();
+			// Unwinds emscripten_set_main_loop_arg's simulated infinite loop, letting control fall through to
+			// Game()'s single shared cleanup block (previously this branch also called ExitGame() itself,
+			// double-running cleanup once Game() no longer has a platform-specific tail - fixed while unifying).
 			emscripten_cancel_main_loop();
 #else
 			gameData.gameState = Core::GameState::QUIT;
@@ -445,19 +404,18 @@ void Struktur::Game()
 
 	Core::GameData& gameData = context.GetGameData();
 
-	// create local scope to manage lifetime of splash screen font - TODO create a spash screen state and add it to the
-	// context.
-#if defined(PLATFORM_WEB)
+	// Splash screen's font would otherwise reload from disk every single frame - SplashScreenLoop's own
+	// GetFont() call is a function-local ResourcePtr, so its refcount would hit zero and unload at the end of
+	// every frame without this longer-lived reference held for the whole splash phase. TODO: a real splash-
+	// screen state in GameContext would be a cleaner home for this than Game()'s own stack frame.
 	Resource::ResourceManager& resourceManager         = context.GetResourceManager();
 	Resource::ResourcePtr<Resource::FontResource> font = resourceManager.GetFont(context, SPLASHSCREENFONT, 120);
-#endif
 
 #ifdef PLATFORM_WEB
 	// Web platform - use emscripten main loop
 	emscripten_set_main_loop_arg(UpdateLoop, &context, 0, 1);
 #else
-	// Desktop platform - standard game loop (frame pacing comes from GraphicsDevice's BGFX_RESET_VSYNC, not a
-	// raylib-style SetTargetFPS - there's no equivalent knob wired up yet without vsync being the only control).
+	// Desktop platform - standard game loop (frame pacing comes from GraphicsDevice's BGFX_RESET_VSYNC)
 	while (gameData.gameState != Core::GameState::QUIT)
 	{
 		UpdateLoop(&context);
@@ -466,17 +424,9 @@ void Struktur::Game()
 
 	// Cleanup
 	ExitGame(context);
-#if defined(PLATFORM_WEB)
-	#ifdef EDITOR
-	::rlImGuiEnd();
-	#endif
-	::CloseWindow();
-#else
-	#ifdef EDITOR
+#ifdef EDITOR
 	ImGui_ImplSDL3_Shutdown();
 	ImGui::DestroyContext();
-	#endif
-	// GameContext's Window/GraphicsDevice/ImGuiRenderer unique_ptrs tear themselves down when context is destroyed.
 #endif
 }
 

@@ -1,7 +1,5 @@
 #pragma once
 
-#if !defined(PLATFORM_WEB)
-
 #include <cstdint>
 
 #include "Engine/Util/MathUtil.h"
@@ -25,5 +23,3 @@ struct TileChunk
 };
 }  // namespace Renderer
 }  // namespace Struktur
-
-#endif

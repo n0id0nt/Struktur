@@ -68,14 +68,20 @@ void Struktur::Platform::Window::SetFullscreen(bool fullscreen)
 
 void* Struktur::Platform::Window::GetNativeHandle() const
 {
-	SDL_PropertiesID props = ::SDL_GetWindowProperties(m_window);
-
-#if defined(_WIN32)
-	return ::SDL_GetPointerProperty(props, SDL_PROP_WINDOW_WIN32_HWND_POINTER, nullptr);
-#elif defined(__APPLE__)
-	return ::SDL_GetPointerProperty(props, SDL_PROP_WINDOW_COCOA_WINDOW_POINTER, nullptr);
+#if defined(__EMSCRIPTEN__)
+	// bgfx's Emscripten backend expects PlatformData::nwh to be a pointer to a CSS selector string identifying
+	// the target canvas (see web/shell.html's <canvas id="canvas">), not a real platform window handle - there
+	// is no X11/Win32/Cocoa window object to hand it under Emscripten.
+	return (void*)"#canvas";
 #else
+	SDL_PropertiesID props = ::SDL_GetWindowProperties(m_window);
+	#if defined(_WIN32)
+	return ::SDL_GetPointerProperty(props, SDL_PROP_WINDOW_WIN32_HWND_POINTER, nullptr);
+	#elif defined(__APPLE__)
+	return ::SDL_GetPointerProperty(props, SDL_PROP_WINDOW_COCOA_WINDOW_POINTER, nullptr);
+	#else
 	// X11 - Wayland-only sessions have no numbered window id here; cross that bridge if/when Linux is targeted.
 	return reinterpret_cast<void*>(::SDL_GetNumberProperty(props, SDL_PROP_WINDOW_X11_WINDOW_NUMBER, 0));
+	#endif
 #endif
 }

@@ -7,8 +7,8 @@
 #include <vector>
 
 #include "Engine/Callback/Callback.h"
+#include "Engine/Util/MathUtil.h"
 #include "glm/glm.hpp"
-#include "raylib.h"
 
 namespace Struktur
 {
@@ -80,7 +80,7 @@ class UIElement
 
 	glm::vec2 GetPosition() const;
 	glm::vec2 GetSize() const;
-	::Rectangle GetBounds() const;
+	Util::Math::Rect GetBounds() const;
 
 	// Utility methods
 	bool IsPointInside(const glm::vec2& point) const;
@@ -125,11 +125,11 @@ class UIElement
 	UIElement* GetNavigationNeighbor(NavigationDirection dir) const;
 
 	// Styling
-	void SetBackgroundColor(::Color color)
+	void SetBackgroundColor(Util::Math::Color color)
 	{
 		m_backgroundColor = color;
 	}
-	void SetBorderColor(::Color color)
+	void SetBorderColor(Util::Math::Color color)
 	{
 		m_borderColor = color;
 	}
@@ -138,11 +138,11 @@ class UIElement
 		m_borderWidth = width;
 	}
 
-	Color GetBackgroundColor() const
+	Util::Math::Color GetBackgroundColor() const
 	{
 		return m_backgroundColor;
 	}
-	Color GetBorderColor() const
+	Util::Math::Color GetBorderColor() const
 	{
 		return m_borderColor;
 	}
@@ -200,14 +200,14 @@ class UIElement
 
 	bool m_disposed;
 
-	::Rectangle m_bounds;
+	Util::Math::Rect m_bounds;
 	glm::vec2 m_absolutePosition;
 	glm::vec2 m_relativePosition;
 	glm::vec2 m_absoluteSize;
 	glm::vec2 m_relativeSize;
 	glm::vec2 m_anchorPoint;
-	::Color m_backgroundColor;
-	::Color m_borderColor;
+	Util::Math::Color m_backgroundColor;
+	Util::Math::Color m_borderColor;
 	float m_borderWidth;
 	bool m_visible;
 	bool m_enabled;

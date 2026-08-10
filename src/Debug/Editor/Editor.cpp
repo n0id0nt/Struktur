@@ -4,12 +4,7 @@
 
 #include "Engine/Core/GameData.h"
 #include "Engine/GameContext.h"
-
-#if defined(PLATFORM_WEB)
-	#include "rlImGui.h"
-#else
-	#include "Engine/Renderer/ImGuiRenderer.h"
-#endif
+#include "Engine/Renderer/ImGuiRenderer.h"
 
 // Include all window types
 #include "Debug/Editor/EditorTheme.h"
@@ -102,32 +97,16 @@ void Editor::Shutdown(GameContext& context)
 
 void Editor::BeginUpdateLoop(GameContext& context)
 {
-#if defined(PLATFORM_WEB)
-	// Begin rendering to game viewport texture
-	if (m_gameViewport)
-	{
-		::BeginTextureMode(m_gameViewport->GetRenderTexture());
-	}
-#endif
-	// On desktop, the game viewport's bgfx framebuffer redirect (GraphicsDevice::SetWorldRenderTarget) is set
-	// up once at GameViewportWindow::Initialise, not pushed/popped every frame - nothing to do here.
+	// The game viewport's bgfx framebuffer redirect (GraphicsDevice::SetWorldRenderTarget) is set up once at
+	// GameViewportWindow::Initialise, not pushed/popped every frame - nothing to do here.
 }
 
 void Editor::EndUpdateLoop(GameContext& context)
 {
-#if defined(PLATFORM_WEB)
-	// End rendering to game viewport texture
-	::EndTextureMode();
-#endif
 }
 
 void Editor::Update(GameContext& context)
 {
-#if defined(PLATFORM_WEB)
-	// Begin ImGui frame
-	::rlImGuiBegin();
-#endif
-
 	// Setup dockspace and render all editor windows
 	RenderEditorLayout(context);
 
@@ -137,13 +116,8 @@ void Editor::Update(GameContext& context)
 		ImGui::ShowDemoWindow(&m_showDemoWindow);
 	}
 
-#if defined(PLATFORM_WEB)
-	// End ImGui frame
-	::rlImGuiEnd();
-#else
 	ImGui::Render();
 	context.GetImGuiRenderer().Render(ImGui::GetDrawData());
-#endif
 }
 
 EditorWindow* Editor::GetWindow(const std::string& name)

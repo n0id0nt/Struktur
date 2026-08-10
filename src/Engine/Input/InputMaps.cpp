@@ -194,28 +194,28 @@ void InputMaps::InitializeControllerAxisMap()
 	}
 }
 
-::KeyboardKey InputMaps::GetKeycodeFromString(const std::string& input) const
+KeyboardKey InputMaps::GetKeycodeFromString(const std::string& input) const
 {
 	auto it = m_keycodeMap.find(input);
 	ASSERT_MSG(it != m_keycodeMap.end(), std::format("Unknown keycode string: '{}'", input).c_str());
 	return it->second;
 }
 
-::GamepadButton InputMaps::GetControllerButtonFromString(const std::string& input) const
+GamepadButton InputMaps::GetControllerButtonFromString(const std::string& input) const
 {
 	auto it = m_controllerButtonMap.find(input);
 	ASSERT_MSG(it != m_controllerButtonMap.end(), std::format("Unknown controller button string: '{}'", input).c_str());
 	return it->second;
 }
 
-::GamepadAxis InputMaps::GetControllerAxisFromString(const std::string& input) const
+GamepadAxis InputMaps::GetControllerAxisFromString(const std::string& input) const
 {
 	auto it = m_controllerAxisMap.find(input);
 	ASSERT_MSG(it != m_controllerAxisMap.end(), std::format("Unknown controller axis string: '{}'", input).c_str());
 	return it->second;
 }
 
-std::string InputMaps::GetStringFromKeycode(::KeyboardKey key) const
+std::string InputMaps::GetStringFromKeycode(KeyboardKey key) const
 {
 	auto it = m_keycodeReverseMap.find(key);
 	if (it != m_keycodeReverseMap.end())
@@ -225,7 +225,7 @@ std::string InputMaps::GetStringFromKeycode(::KeyboardKey key) const
 	return "unknown";
 }
 
-std::string InputMaps::GetStringFromControllerButton(::GamepadButton button) const
+std::string InputMaps::GetStringFromControllerButton(GamepadButton button) const
 {
 	auto it = m_controllerButtonReverseMap.find(button);
 	if (it != m_controllerButtonReverseMap.end())
@@ -235,7 +235,7 @@ std::string InputMaps::GetStringFromControllerButton(::GamepadButton button) con
 	return "unknown";
 }
 
-std::string InputMaps::GetStringFromControllerAxis(::GamepadAxis axis) const
+std::string InputMaps::GetStringFromControllerAxis(GamepadAxis axis) const
 {
 	auto it = m_controllerAxisReverseMap.find(axis);
 	if (it != m_controllerAxisReverseMap.end())

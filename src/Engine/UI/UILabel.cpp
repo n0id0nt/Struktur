@@ -1,15 +1,13 @@
 #include "UILabel.h"
 
 #include "Engine/GameContext.h"
-#if !defined(PLATFORM_WEB)
-	#include "Engine/Renderer/UIRenderer.h"
-#endif
+#include "Engine/Renderer/UIRenderer.h"
 
 Struktur::UI::UILabel::UILabel(GameContext& context, const glm::vec2& absolutePosition,
                                const glm::vec2& relativePosition, const std::string& labelText, float fontSz)
     : UIElement(absolutePosition, relativePosition, {0, 0}, {0, 0}),
       m_text(labelText),
-      m_textColor(BLACK),
+      m_textColor(Util::Math::ColorBlack),
       m_alignment(TextAlignment::LEFT),
       m_wrapping(TextWrapping::NONE),
       m_fontSize(fontSz)
@@ -17,12 +15,12 @@ Struktur::UI::UILabel::UILabel(GameContext& context, const glm::vec2& absolutePo
 	m_font = context.GetResourceManager().GetFont(context, "default", 32);
 
 	// Auto-size based on text
-	//::Vector2 textSize = ::MeasureTextEx(m_font->font, m_text.c_str(), m_fontSize, 1.0f);
+	// glm::vec2 textSize = Text::MeasureTextEx(m_font->font, m_text, m_fontSize, 1.0f);
 	// SetSize({textSize.x + 10, textSize.y + 5}, {0, 0}); // Add some padding
 
 	// Labels are typically not focusable
 	m_focusable       = false;
-	m_backgroundColor = BLANK;  // Transparent by default
+	m_backgroundColor = Util::Math::ColorBlank;  // Transparent by default
 	m_borderWidth     = 0.0f;
 }
 
@@ -35,7 +33,7 @@ void Struktur::UI::UILabel::SetText(const std::string& newText)
 
 void Struktur::UI::UILabel::SetBoundingBoxToText()
 {
-	::Vector2 size = GetFormattedTextSize();
+	glm::vec2 size = GetFormattedTextSize();
 
 	SetSize({size.x, size.y}, {0, 0});
 }
@@ -47,19 +45,6 @@ void Struktur::UI::UILabel::Update(GameContext& context)
 
 void Struktur::UI::UILabel::Render(GameContext& context)
 {
-#if defined(PLATFORM_WEB)
-	// Draw background if not transparent
-	if (m_backgroundColor.a > 0)
-	{
-		::DrawRectangleRec(m_bounds, m_backgroundColor);
-	}
-
-	// Draw border if needed
-	if (m_borderWidth > 0)
-	{
-		::DrawRectangleLinesEx(m_bounds, m_borderWidth, m_borderColor);
-	}
-#else
 	if (m_backgroundColor.a > 0)
 	{
 		context.GetUIRenderer().DrawRect(m_bounds, m_backgroundColor);
@@ -68,13 +53,12 @@ void Struktur::UI::UILabel::Render(GameContext& context)
 	{
 		context.GetUIRenderer().DrawRectOutline(m_bounds, m_borderWidth, m_borderColor);
 	}
-#endif
 
 	// Calculate line height
 	float lineHeight = GetLineHeight();
 
 	// Calculate starting position
-	::Vector2 startPos = {m_bounds.x + 5, m_bounds.y + 2.5f};
+	glm::vec2 startPos = {m_bounds.x + 5, m_bounds.y + 2.5f};
 
 	// Render text with wrapping support - DrawGlyphs (called inside) handles the platform split now.
 	RenderText(context, m_text, startPos, lineHeight);
@@ -82,17 +66,14 @@ void Struktur::UI::UILabel::Render(GameContext& context)
 	RenderChildren(context);
 }
 
-::Vector2 Struktur::UI::UILabel::MeasureText(const ::Font& font, const std::string& text, float fontSize)
+glm::vec2 Struktur::UI::UILabel::MeasureText(const Text::Font& font, const std::string& text, float fontSize)
 {
 	// GPU-independent on both platforms - see FontResource for why this is safe on desktop too.
-	return ::MeasureTextEx(font, text.c_str(), fontSize, 1.0f);
+	return Text::MeasureTextEx(font, text, fontSize, 1.0f);
 }
 
-void Struktur::UI::UILabel::DrawGlyphs(GameContext& context, const std::string& text, ::Vector2 pos) const
+void Struktur::UI::UILabel::DrawGlyphs(GameContext& context, const std::string& text, glm::vec2 pos) const
 {
-#if defined(PLATFORM_WEB)
-	::DrawTextEx(m_font->font, text.c_str(), pos, m_fontSize, 1.0f, m_textColor);
-#else
 	// LoadFromDisk only builds the CPU-side atlas/metrics (see FontResource) - the bgfx texture upload is
 	// deferred until first actually needed here, same lazy-GPU-upload pattern SpriteRenderSystem/UIPanel use
 	// for TextureResource.
@@ -101,7 +82,6 @@ void Struktur::UI::UILabel::DrawGlyphs(GameContext& context, const std::string& 
 		m_font->LoadToGpu(context);
 	}
 	context.GetUIRenderer().DrawText(m_font->font, text, pos, m_fontSize, m_textColor);
-#endif
 }
 
 std::vector<std::string> Struktur::UI::UILabel::GetTextLines(const std::string& text) const
@@ -162,7 +142,7 @@ std::vector<std::string> Struktur::UI::UILabel::WrapText(const std::string& text
 			if (c == ' ' || c == '\t')
 			{
 				std::string testLine = currentLine + word + c;
-				::Vector2 size       = MeasureText(m_font->font, testLine, m_fontSize);
+				glm::vec2 size        = MeasureText(m_font->font, testLine, m_fontSize);
 
 				if (size.x > maxWidth && !currentLine.empty())
 				{
@@ -184,7 +164,7 @@ std::vector<std::string> Struktur::UI::UILabel::WrapText(const std::string& text
 		{
 			// Character wrap mode
 			std::string testLine = currentLine + c;
-			::Vector2 size       = MeasureText(m_font->font, testLine, m_fontSize);
+			glm::vec2 size        = MeasureText(m_font->font, testLine, m_fontSize);
 
 			if (size.x > maxWidth && !currentLine.empty())
 			{
@@ -211,7 +191,7 @@ std::vector<std::string> Struktur::UI::UILabel::WrapText(const std::string& text
 	return lines;
 }
 
-void Struktur::UI::UILabel::RenderJustifiedLine(GameContext& context, const std::string& line, ::Vector2 pos,
+void Struktur::UI::UILabel::RenderJustifiedLine(GameContext& context, const std::string& line, glm::vec2 pos,
                                                 float targetWidth, bool isLastLine)
 {
 	// Don't justify last line or lines with only one word
@@ -255,7 +235,7 @@ void Struktur::UI::UILabel::RenderJustifiedLine(GameContext& context, const std:
 	float totalWordWidth = 0;
 	for (const auto& word : words)
 	{
-		::Vector2 wordSize = MeasureText(m_font->font, word, m_fontSize);
+		glm::vec2 wordSize = MeasureText(m_font->font, word, m_fontSize);
 		totalWordWidth += wordSize.x;
 	}
 
@@ -267,15 +247,15 @@ void Struktur::UI::UILabel::RenderJustifiedLine(GameContext& context, const std:
 	float currentX = pos.x;
 	for (const auto& word : words)
 	{
-		::Vector2 wordPos = {currentX, pos.y};
+		glm::vec2 wordPos = {currentX, pos.y};
 		DrawGlyphs(context, word, wordPos);
 
-		::Vector2 wordSize = MeasureText(m_font->font, word, m_fontSize);
+		glm::vec2 wordSize = MeasureText(m_font->font, word, m_fontSize);
 		currentX += wordSize.x + spaceWidth;
 	}
 }
 
-void Struktur::UI::UILabel::RenderText(GameContext& context, const std::string& text, ::Vector2 startPos,
+void Struktur::UI::UILabel::RenderText(GameContext& context, const std::string& text, glm::vec2 startPos,
                                        float lineHeight)
 {
 	std::vector<std::string> lines = GetTextLines(text);
@@ -285,8 +265,8 @@ void Struktur::UI::UILabel::RenderText(GameContext& context, const std::string& 
 	for (size_t i = 0; i < lines.size(); ++i)
 	{
 		const std::string& line = lines[i];
-		::Vector2 textSize      = MeasureText(m_font->font, line, m_fontSize);
-		::Vector2 textPos       = {startPos.x, currentY};
+		glm::vec2 textSize       = MeasureText(m_font->font, line, m_fontSize);
+		glm::vec2 textPos        = {startPos.x, currentY};
 
 		switch (m_alignment)
 		{
@@ -319,15 +299,15 @@ void Struktur::UI::UILabel::RenderText(GameContext& context, const std::string& 
 	}
 }
 
-::Rectangle Struktur::UI::UILabel::GetFormattedTextBounds() const
+Struktur::Util::Math::Rect Struktur::UI::UILabel::GetFormattedTextBounds() const
 {
-	::Vector2 size = GetFormattedTextSize();
+	glm::vec2 size = GetFormattedTextSize();
 
 	// The bounds start at the label's position
 	return {m_bounds.x, m_bounds.y, size.x, size.y};
 }
 
-::Vector2 Struktur::UI::UILabel::GetFormattedTextSize() const
+glm::vec2 Struktur::UI::UILabel::GetFormattedTextSize() const
 {
 	if (m_text.empty())
 	{
@@ -342,7 +322,7 @@ void Struktur::UI::UILabel::RenderText(GameContext& context, const std::string& 
 
 	for (const auto& line : lines)
 	{
-		::Vector2 lineSize = MeasureText(m_font->font, line, m_fontSize);
+		glm::vec2 lineSize = MeasureText(m_font->font, line, m_fontSize);
 
 		// For justified text, use the full available width (except last line)
 		if (m_alignment == TextAlignment::JUSTIFY && &line != &lines.back())

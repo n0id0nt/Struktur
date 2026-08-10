@@ -1,28 +1,20 @@
 #include "ShaderResource.h"
 
+#include <algorithm>
+
 #include "Debug/Assertions.h"
 #include "Engine/Core/FileSystem.h"
-
-#if !defined(PLATFORM_WEB)
-	#include <algorithm>
-
-	#include "Engine/Renderer/EmbeddedShaders.h"
-#endif
+#include "Engine/Renderer/EmbeddedShaders.h"
 
 Struktur::Resource::ShaderResource::ShaderResource(const std::string& vsFilePath, const std::string& fsFilePath)
     : GpuResource(vsFilePath + "," + fsFilePath),
       m_vsFilePath(vsFilePath),
       m_fsFilePath(fsFilePath)
 {
-#if defined(PLATFORM_WEB)
-	shader.id   = 0;
-	shader.locs = nullptr;
-#else
 	// Only one custom shader exists today (SoulEffect); anything else falls back to the default sprite shader.
 	std::string lowerFsPath = m_fsFilePath;
 	std::transform(lowerFsPath.begin(), lowerFsPath.end(), lowerFsPath.begin(), ::tolower);
 	m_embeddedName = (lowerFsPath.find("souleffect") != std::string::npos) ? "soulEffect" : "sprite";
-#endif
 }
 
 Struktur::Resource::ShaderResource::~ShaderResource()
@@ -48,55 +40,6 @@ void Struktur::Resource::ShaderResource::UnloadFromDisk()
 	isLoaded = false;
 }
 
-#if defined(PLATFORM_WEB)
-bool Struktur::Resource::ShaderResource::LoadToGpu(GameContext& context)
-{
-	if (!isLoaded)
-	{
-		return false;
-	}
-	if (IsGpuResourceValid())
-	{
-		return true;
-	}
-
-	auto loadShaderSource = [](const std::string& path) -> std::string
-	{
-		if (path.empty())
-		{
-			return {};
-		}
-
-		auto result = FileSystem::ReadString(path);
-		ASSERT_MSG(result.success, "Failed to load config: %s", result.errorMessage.c_str());
-		return result.value;
-	};
-
-	std::string vsSource = loadShaderSource(m_vsFilePath);
-	std::string fsSource = loadShaderSource(m_fsFilePath);
-
-	const char* vs = vsSource.empty() ? nullptr : vsSource.c_str();
-	const char* fs = fsSource.empty() ? nullptr : fsSource.c_str();
-
-	shader = ::LoadShaderFromMemory(vs, fs);
-	return shader.id != 0;
-}
-
-void Struktur::Resource::ShaderResource::UnloadFromGpu()
-{
-	if (shader.id != 0)
-	{
-		::UnloadShader(shader);
-		shader.id   = 0;
-		shader.locs = nullptr;
-	}
-}
-
-bool Struktur::Resource::ShaderResource::IsGpuResourceValid() const
-{
-	return shader.id != 0;
-}
-#else
 bool Struktur::Resource::ShaderResource::LoadToGpu(GameContext& context)
 {
 	if (!isLoaded)
@@ -123,7 +66,6 @@ bool Struktur::Resource::ShaderResource::IsGpuResourceValid() const
 {
 	return bgfx::isValid(shader);
 }
-#endif
 
 size_t Struktur::Resource::ShaderResource::GetMemoryUsage() const
 {

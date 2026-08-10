@@ -1,16 +1,14 @@
 #include "UIPanel.h"
 
 #include "Engine/GameContext.h"
-#if !defined(PLATFORM_WEB)
-	#include "Engine/Renderer/UIRenderer.h"
-#endif
+#include "Engine/Renderer/UIRenderer.h"
 
 Struktur::UI::UIPanel::UIPanel(const glm::vec2& absolutePosition, const glm::vec2& relativePosition,
                                const glm::vec2& absoluteSize, const glm::vec2& relativeSize)
     : UIElement(absolutePosition, relativePosition, absoluteSize, relativeSize),
       m_hasBackgroundTexture(false)
 {
-	m_backgroundColor = LIGHTGRAY;
+	m_backgroundColor = Util::Math::ColorLightGray;
 	m_focusable       = false;  // Panels typically don't receive focus
 }
 
@@ -33,30 +31,6 @@ void Struktur::UI::UIPanel::Update(GameContext& context)
 
 void Struktur::UI::UIPanel::Render(GameContext& context)
 {
-#if defined(PLATFORM_WEB)
-	// Draw background
-	if (m_hasBackgroundTexture)
-	{
-		// Scale texture to fit panel
-		Resource::TextureResource* texture = m_backgroundTexture.Get();
-		if (!texture->IsGpuReady())
-		{
-			texture->LoadToGpu(context);
-		}
-		::Rectangle srcRect = {0, 0, (float)texture->GetWidth(), (float)texture->GetHeight()};
-		::DrawTexturePro(texture->texture, srcRect, m_bounds, {0, 0}, 0.0f, WHITE);
-	}
-	else
-	{
-		::DrawRectangleRec(m_bounds, m_backgroundColor);
-	}
-
-	// Draw border
-	if (m_borderWidth > 0)
-	{
-		::DrawRectangleLinesEx(m_bounds, m_borderWidth, m_borderColor);
-	}
-#else
 	if (m_hasBackgroundTexture)
 	{
 		Resource::TextureResource* texture = m_backgroundTexture.Get();
@@ -64,7 +38,7 @@ void Struktur::UI::UIPanel::Render(GameContext& context)
 		{
 			texture->LoadToGpu(context);
 		}
-		context.GetUIRenderer().DrawTexturedRect(m_bounds, texture->GetHandle(), WHITE);
+		context.GetUIRenderer().DrawTexturedRect(m_bounds, texture->GetHandle(), Util::Math::ColorWhite);
 	}
 	else
 	{
@@ -75,7 +49,6 @@ void Struktur::UI::UIPanel::Render(GameContext& context)
 	{
 		context.GetUIRenderer().DrawRectOutline(m_bounds, m_borderWidth, m_borderColor);
 	}
-#endif
 
 	RenderChildren(context);
 }

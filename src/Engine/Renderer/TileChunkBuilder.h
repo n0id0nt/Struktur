@@ -1,7 +1,5 @@
 #pragma once
 
-#if !defined(PLATFORM_WEB)
-
 #include <vector>
 
 #include "Engine/Game/TileMap.h"
@@ -23,5 +21,3 @@ std::vector<TileChunk> BuildTileChunks(const std::vector<GameResource::TileMap::
 void DestroyTileChunks(std::vector<TileChunk>& chunks);
 }  // namespace Renderer
 }  // namespace Struktur
-
-#endif

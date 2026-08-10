@@ -19,14 +19,12 @@
 #include "Engine/Input/Input.h"
 #include "Engine/Physics/PhysicsWorld.h"
 #include "Engine/Renderer/WorldRenderer.h"
+#include "Engine/Platform/Window.h"
+#include "Engine/Renderer/GraphicsDevice.h"
+#include "Engine/Renderer/UIRenderer.h"
 #include "Engine/Resource/ResourceManager.h"
-#if !defined(PLATFORM_WEB)
-	#include "Engine/Platform/Window.h"
-	#include "Engine/Renderer/GraphicsDevice.h"
-	#include "Engine/Renderer/UIRenderer.h"
-	#if defined(EDITOR)
-		#include "Engine/Renderer/ImGuiRenderer.h"
-	#endif
+#if defined(EDITOR)
+	#include "Engine/Renderer/ImGuiRenderer.h"
 #endif
 #include "Engine/Scripting/WrenScriptComponentRegistry.h"
 #include "Engine/Scripting/WrenScriptEngine.h"
@@ -68,7 +66,6 @@ class GameContext
 	Event::EventManager& GetEventManager() const;
 	Audio::Mixer& GetMixer() const;
 
-#if !defined(PLATFORM_WEB)
 	// Deferred until the desired window size is known (see Game.cpp's InitialiseGame) - unlike every other
 	// subsystem above, these aren't ready immediately after construction.
 	void InitialiseGraphics(int width, int height, const std::string& title, bool resizable);
@@ -80,12 +77,11 @@ class GameContext
 	void InitialiseUIRenderer();
 	Renderer::UIRenderer& GetUIRenderer() const;
 
-	#if defined(EDITOR)
+#if defined(EDITOR)
 	// Deferred further still - needs an ImGui context (and its font atlas configured) to already exist,
 	// which only happens once Game.cpp has called ImGui::CreateContext()/ImGui_ImplSDL3_InitForOther().
 	void InitialiseImGuiRenderer();
 	Renderer::ImGuiRenderer& GetImGuiRenderer() const;
-	#endif
 #endif
 
 #ifdef EDITOR
@@ -118,13 +114,11 @@ class GameContext
 	std::unique_ptr<Event::EventManager> m_eventManager;
 	std::unique_ptr<Audio::Mixer> m_mixer;
 
-#if !defined(PLATFORM_WEB)
 	std::unique_ptr<Platform::Window> m_window;
 	std::unique_ptr<Renderer::GraphicsDevice> m_graphicsDevice;
 	std::unique_ptr<Renderer::UIRenderer> m_uiRenderer;
-	#if defined(EDITOR)
+#if defined(EDITOR)
 	std::unique_ptr<Renderer::ImGuiRenderer> m_imGuiRenderer;
-	#endif
 #endif
 
 #ifdef EDITOR

@@ -322,7 +322,7 @@ void InspectorWindow::RenderUIElementProperties(UI::UIElement* element)
 		}
 
 		// Bounds (read-only)
-		Rectangle bounds = element->GetBounds();
+		Util::Math::Rect bounds = element->GetBounds();
 		ImGui::Text("Bounds:");
 		ImGui::Indent();
 		ImGui::Text("X: %.1f, Y: %.1f", bounds.x, bounds.y);
@@ -338,14 +338,14 @@ void InspectorWindow::RenderUIElementProperties(UI::UIElement* element)
 		ImGui::PushID("Appearance");
 
 		// Background color
-		Color bgColor = element->GetBackgroundColor();
+		Util::Math::Color bgColor = element->GetBackgroundColor();
 		if (RenderColor("Background Color", bgColor))
 		{
 			element->SetBackgroundColor(bgColor);
 		}
 
 		// Border color
-		Color borderColor = element->GetBorderColor();
+		Util::Math::Color borderColor = element->GetBorderColor();
 		if (RenderColor("Border Color", borderColor))
 		{
 			element->SetBorderColor(borderColor);
@@ -599,11 +599,7 @@ void InspectorWindow::RenderShaderComponent(GameContext& context, Component::Sha
 
 	ImGui::Separator();
 
-#if defined(PLATFORM_WEB)
-	ImGui::Text("Shader ID: %d", shader.shader->shader.id);
-#else
 	ImGui::Text("Shader ID: %d", shader.shader->shader.idx);
-#endif
 	ImGui::Separator();
 
 	// Float uniforms
@@ -788,23 +784,6 @@ bool InspectorWindow::RenderQuat(const char* label, glm::quat& quat)
 	return modified;
 }
 
-bool InspectorWindow::RenderColor(const char* label, ::Color& color)
-{
-	float col[4] = {color.r / 255.0f, color.g / 255.0f, color.b / 255.0f, color.a / 255.0f};
-
-	bool modified = ImGui::ColorEdit4(label, col);
-
-	if (modified)
-	{
-		color.r = (unsigned char)(col[0] * 255.0f);
-		color.g = (unsigned char)(col[1] * 255.0f);
-		color.b = (unsigned char)(col[2] * 255.0f);
-		color.a = (unsigned char)(col[3] * 255.0f);
-	}
-
-	return modified;
-}
-
 bool InspectorWindow::RenderColor(const char* label, Util::Math::Color& color)
 {
 	float col[4] = {color.r / 255.0f, color.g / 255.0f, color.b / 255.0f, color.a / 255.0f};
@@ -822,39 +801,4 @@ bool InspectorWindow::RenderColor(const char* label, Util::Math::Color& color)
 	return modified;
 }
 
-bool InspectorWindow::RenderRaylibVec2(const char* label, ::Vector2& vec)
-{
-	float values[2] = {vec.x, vec.y};
-	bool modified   = ImGui::DragFloat2(label, values, 0.1f);
-	if (modified)
-	{
-		vec.x = values[0];
-		vec.y = values[1];
-	}
-	return modified;
-}
-
-bool InspectorWindow::RenderRectangle(const char* label, ::Rectangle& rect)
-{
-	bool modified = false;
-	ImGui::Text("%s:", label);
-	ImGui::Indent();
-
-	float values[4] = {rect.x, rect.y, rect.width, rect.height};
-	if (ImGui::DragFloat2("Position", values, 0.1f))
-	{
-		rect.x   = values[0];
-		rect.y   = values[1];
-		modified = true;
-	}
-	if (ImGui::DragFloat2("Size", &values[2], 0.1f))
-	{
-		rect.width  = values[2];
-		rect.height = values[3];
-		modified    = true;
-	}
-
-	ImGui::Unindent();
-	return modified;
-}
 }  // namespace Struktur::Debug

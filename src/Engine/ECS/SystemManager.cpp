@@ -2,7 +2,6 @@
 
 #include "Debug/Profiling/Profiler.h"
 #include "Engine/GameContext.h"
-#include "raylib.h"
 
 void Struktur::System::SystemManager::Update(GameContext& context)
 {

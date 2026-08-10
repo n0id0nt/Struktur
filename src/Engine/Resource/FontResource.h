@@ -3,16 +3,14 @@
 #include <format>
 #include <string>
 
+#include <bgfx/bgfx.h>
+
 #include "Engine/Resource/Resource.h"
 #include "Engine/Resource/ResourcePool.h"
 #include "Engine/Resource/ResourcePtr.h"
-#include "raylib.h"
+#include "Engine/Text/Font.h"
 
-#if !defined(PLATFORM_WEB)
-	#include <vector>
-
-	#include <bgfx/bgfx.h>
-#endif
+#include <vector>
 
 namespace Struktur
 {
@@ -23,7 +21,7 @@ namespace Struktur
 {
 namespace Resource
 {
-// Raylib font - GPU resource (contains texture atlas)
+// Font - GPU resource (contains texture atlas), atlas baked via stb_truetype on both platforms.
 class FontResource : public GpuResource
 {
    private:
@@ -31,18 +29,15 @@ class FontResource : public GpuResource
 	int m_fontSize;
 	int* m_codepoints;  // Custom codepoints for font loading
 	int m_codepointCount;
-#if !defined(PLATFORM_WEB)
-	// Desktop bakes its own atlas via stb_truetype (see FontResource.cpp) rather than raylib's font loader -
-	// the coverage bitmap is kept around until UnloadFromDisk so LoadToGpu can rebuild the bgfx texture after a
+	// The coverage bitmap is kept around until UnloadFromDisk so LoadToGpu can rebuild the bgfx texture after a
 	// GPU-context-lost reload without re-parsing the font file (mirrors TextureResource::m_pixels' lifetime).
 	bgfx::TextureHandle m_atlasTexture = BGFX_INVALID_HANDLE;
 	std::vector<uint8_t> m_atlasAlpha;
 	int m_atlasWidth  = 0;
 	int m_atlasHeight = 0;
-#endif
 
    public:
-	Font font;
+	Text::Font font;
 
 	FontResource(const std::string& filePath, int size);
 	~FontResource();
@@ -61,9 +56,6 @@ class FontResource : public GpuResource
 	void SetCodepoints(int* customCodepoints, int count);
 	void SetFontSize(int size);
 	int GetFontSize();
-
-	// Convenience methods for text rendering
-	void DrawText(const std::string& text, Vector2 position, float fontSize, Color color) const;
 
 	int GetBaseSize() const;
 	int GetGlyphCount() const;

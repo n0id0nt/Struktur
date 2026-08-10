@@ -39,7 +39,6 @@ Audio::Mixer& GameContext::GetMixer() const
 	return *m_mixer;
 }
 
-#if !defined(PLATFORM_WEB)
 void GameContext::InitialiseGraphics(int width, int height, const std::string& title, bool resizable)
 {
 	m_window         = std::make_unique<Platform::Window>(width, height, title, resizable);
@@ -80,7 +79,6 @@ Renderer::ImGuiRenderer& GameContext::GetImGuiRenderer() const
 	ASSERT_MSG(m_imGuiRenderer.get(), "ImGuiRenderer not initialised");
 	return *m_imGuiRenderer;
 }
-#endif
 #endif
 
 Input::Input& GameContext::GetInput() const

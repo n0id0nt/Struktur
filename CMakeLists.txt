@@ -18,7 +18,6 @@ set(BOX2D_BUILD_DOCS OFF CACHE BOOL "" FORCE)
 set(BOX2D_INSTALL OFF CACHE BOOL "" FORCE)
 set(PHYSFS_INSTALL OFF CACHE BOOL "" FORCE)
 set(BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
-set(RAYLIB_INSTALL OFF CACHE BOOL "" FORCE)
 
 ##########################################################################################
 # Configurable options
@@ -31,6 +30,11 @@ option(USE_ASYNCIFY "Enable ASYNCIFY for traditional game loops" OFF)
 # Platform detection
 if(EMSCRIPTEN)
     set(PLATFORM_WEB TRUE)
+    # PLATFORM_WEB/PLATFORM_DESKTOP below are real preprocessor macros our own code checks via
+    # #if defined(PLATFORM_WEB) throughout - previously these were only ever defined as a side effect of
+    # raylib's own CMake (target_compile_definitions(raylib PUBLIC PLATFORM_WEB)) propagating transitively
+    # through target_link_libraries(Struktur ... raylib). Now that raylib is gone, define them directly.
+    add_compile_definitions(PLATFORM_WEB)
     set(CMAKE_EXECUTABLE_SUFFIX ".html")
 
     # Fix missing Emscripten CMake variables
@@ -55,9 +59,32 @@ if(EMSCRIPTEN)
         set(CMAKE_CXX_ARCHIVE_FINISH "<CMAKE_RANLIB> <TARGET>")
     endif()
 
+    # bx (third_party/bgfx.cmake/bx, vendored - see BX_PLATFORM_POSIX in bx/include/bx/platform.h) treats
+    # Emscripten as a full POSIX platform and unconditionally uses pthread_mutex_t/nanosleep/sched_yield/dlopen
+    # in os.cpp/mutex.cpp/thread.cpp - those symbols only exist when compiling with pthreads enabled. Applied
+    # project-wide (before any add_subdirectory) so every object file agrees on the threading model - a mix of
+    # pthread/non-pthread object files fails to link under Emscripten.
+    add_compile_options(-pthread)
+    add_link_options(-pthread)
+
+    # bx/include/bx/platform.h detects Emscripten via `#elif defined(__wasm__)` (correctly matches) but then
+    # computes BX_PLATFORM_EMSCRIPTEN from __EMSCRIPTEN_MAJOR__/_MINOR__/_TINY__ (uppercase) - macros that
+    # existed in older Emscripten SDKs. This SDK (emscripten/version.h) only defines the lowercase
+    # __EMSCRIPTEN_major__/_minor__/_tiny__ now, so the uppercase names silently evaluate to 0 in arithmetic
+    # #if context, making BX_PLATFORM_EMSCRIPTEN (and therefore BX_PLATFORM_POSIX) evaluate false everywhere in
+    # bx - it then skips <time.h>/<sched.h>/<dlfcn.h> includes while still trying to use their symbols. Alias
+    # the old names to the new ones (re-expanded by the preprocessor once emscripten/version.h's real macros
+    # are in scope) rather than patching the vendored submodule.
+    add_compile_definitions(
+        __EMSCRIPTEN_MAJOR__=__EMSCRIPTEN_major__
+        __EMSCRIPTEN_MINOR__=__EMSCRIPTEN_minor__
+        __EMSCRIPTEN_TINY__=__EMSCRIPTEN_tiny__
+    )
+
     message(STATUS "Building for Web (Emscripten)")
 else()
     set(PLATFORM_DESKTOP TRUE)
+    add_compile_definitions(PLATFORM_DESKTOP)
     message(STATUS "Building for Desktop")
 endif()
 
@@ -94,7 +121,7 @@ if(GIT_FOUND AND EXISTS "${PROJECT_SOURCE_DIR}/.git")
     )
 endif()
 
-# SDL3 - audio (SDL3_mixer) on desktop and web; also raylib's windowing backend on desktop only (see rcore_custom_sdl3.c below).
+# SDL3 - windowing (Engine/Platform/Window) and audio (SDL3_mixer) on desktop and web.
 if(PLATFORM_DESKTOP OR PLATFORM_WEB)
     set(SDL_SHARED OFF CACHE BOOL "" FORCE)
     set(SDL_STATIC ON CACHE BOOL "" FORCE)
@@ -120,23 +147,46 @@ if(PLATFORM_DESKTOP OR PLATFORM_WEB)
     add_subdirectory(third_party/SDL_mixer)
 endif()
 
-# RayLib - windowing/rendering runtime is retired on desktop (see bgfx + Engine/Platform below); the library is
-# still linked because FontResource/UIPanel/UILabel/DebugSystem/the editor still reference raylib types until
-# later steps port them too.
-set(BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
-set(BUILD_GAMES    OFF CACHE BOOL "" FORCE)
-add_subdirectory(third_party/raylib)
-
-# bgfx - rendering backend for desktop, replacing raylib's rlgl (see Engine/Renderer/GraphicsDevice). Desktop
-# only for now: shaderc can't run as a build-time host tool when this project cross-compiles to Emscripten, and
-# web keeps raylib's existing GLFW-emscripten rendering path until a later step sorts that out.
-if(PLATFORM_DESKTOP)
+# bgfx - rendering backend for both platforms now, replacing raylib's rlgl on desktop and raylib's GLFW-
+# emscripten path on web. shaderc (the actual shader *compiler*) only ever runs on desktop though - it's a
+# native host tool, and cross-compiling it to Emscripten would produce a non-runnable "tool". Web instead
+# consumes the already-compiled headers a desktop build already produced on disk (see STRUKTUR_SHADER_OUTPUTS
+# below) - build desktop at least once before building web from a clean checkout.
+if(PLATFORM_DESKTOP OR PLATFORM_WEB)
     set(BGFX_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
     set(BGFX_BUILD_TESTS OFF CACHE BOOL "" FORCE)
     set(BGFX_INSTALL OFF CACHE BOOL "" FORCE)
-    set(BGFX_BUILD_TOOLS_GEOMETRY OFF CACHE BOOL "" FORCE)
-    set(BGFX_BUILD_TOOLS_TEXTURE OFF CACHE BOOL "" FORCE)
+    if(PLATFORM_DESKTOP)
+        set(BGFX_BUILD_TOOLS_GEOMETRY OFF CACHE BOOL "" FORCE)
+        set(BGFX_BUILD_TOOLS_TEXTURE OFF CACHE BOOL "" FORCE)
+    else()
+        # Nothing on web ever invokes shaderc/geometryc/texturec/bin2c as build-time tools, so don't even try to
+        # build them as Emscripten "host" executables (they wouldn't be runnable during this same build anyway).
+        set(BGFX_BUILD_TOOLS OFF CACHE BOOL "" FORCE)
+    endif()
     add_subdirectory(third_party/bgfx.cmake)
+
+    if(PLATFORM_WEB)
+        # bx.cmake (third_party/bgfx.cmake/cmake/bx/bx.cmake) unconditionally adds -msse4.2 whenever
+        # CMAKE_SYSTEM_PROCESSOR looks like x86 - bgfx.cmake's own CMakeLists re-triggers CMake's compiler/
+        # system detection internally (via enable_language()), which re-populates CMAKE_SYSTEM_PROCESSOR from
+        # the actual HOST machine (x86_64) even under the Emscripten toolchain, so overriding the variable
+        # ourselves beforehand doesn't stick - confirmed by direct inspection, bx.cmake sees "x86" regardless.
+        # That flag would need pairing with -msimd128 to satisfy em++, but worse: it also makes bimg's vendored
+        # third-party encoder (etcpak) think real x86 SSE/AVX intrinsics are available and try to
+        # `#include <x86intrin.h>`, which doesn't exist for wasm32. Stripping it back off post-hoc (rather than
+        # patching the vendored bx.cmake) lets bx fall back to its portable/reference SIMD implementation.
+        get_target_property(BX_COMPILE_OPTIONS bx COMPILE_OPTIONS)
+        if(BX_COMPILE_OPTIONS)
+            list(FILTER BX_COMPILE_OPTIONS EXCLUDE REGEX "msse4\\.2")
+            set_target_properties(bx PROPERTIES COMPILE_OPTIONS "${BX_COMPILE_OPTIONS}")
+        endif()
+        get_target_property(BX_INTERFACE_COMPILE_OPTIONS bx INTERFACE_COMPILE_OPTIONS)
+        if(BX_INTERFACE_COMPILE_OPTIONS)
+            list(FILTER BX_INTERFACE_COMPILE_OPTIONS EXCLUDE REGEX "msse4\\.2")
+            set_target_properties(bx PROPERTIES INTERFACE_COMPILE_OPTIONS "${BX_INTERFACE_COMPILE_OPTIONS}")
+        endif()
+    endif()
 
     # add_subdirectory() (rather than find_package()) skips bgfx.cmake's installed Config.cmake, so the
     # variable/function it would have set up (BGFX_SHADER_INCLUDE_PATH, bgfx_compile_shaders()) are set up by hand.
@@ -155,47 +205,41 @@ if(PLATFORM_DESKTOP)
     set(STRUKTUR_SHADER_DIR ${CMAKE_CURRENT_SOURCE_DIR}/assets/Shaders)
     set(STRUKTUR_SHADER_OUTPUT_DIR ${CMAKE_CURRENT_SOURCE_DIR}/assets/Shaders/compiled)
     set(STRUKTUR_SHADER_OUTPUTS "")
-    # NAME must have no dots - shaderc's bin2c step derives a C array name from the shader filename.
-    function(struktur_compile_shader NAME)
-        bgfx_compile_shaders(
-            TYPE VERTEX
-            SHADERS ${STRUKTUR_SHADER_DIR}/vs_${NAME}.sc
-            VARYING_DEF ${STRUKTUR_SHADER_DIR}/varying.def.sc
-            OUTPUT_DIR ${STRUKTUR_SHADER_OUTPUT_DIR}
-            OUT_FILES_VAR ${NAME}_VS_OUT
-            AS_HEADERS
-        )
-        bgfx_compile_shaders(
-            TYPE FRAGMENT
-            SHADERS ${STRUKTUR_SHADER_DIR}/fs_${NAME}.sc
-            VARYING_DEF ${STRUKTUR_SHADER_DIR}/varying.def.sc
-            OUTPUT_DIR ${STRUKTUR_SHADER_OUTPUT_DIR}
-            OUT_FILES_VAR ${NAME}_FS_OUT
-            AS_HEADERS
-        )
-        set(STRUKTUR_SHADER_OUTPUTS ${STRUKTUR_SHADER_OUTPUTS} ${${NAME}_VS_OUT} ${${NAME}_FS_OUT} PARENT_SCOPE)
-    endfunction()
-    struktur_compile_shader(sprite)
-    struktur_compile_shader(soulEffect)
-endif()
 
-if(PLATFORM_DESKTOP)
-    # Strip PLATFORM_DESKTOP so raylib's rcore.c doesn't default to GLFW instead of our PLATFORM_CUSTOM_SDL3.
-    get_target_property(RAYLIB_COMPILE_DEFS raylib COMPILE_DEFINITIONS)
-    list(REMOVE_ITEM RAYLIB_COMPILE_DEFS PLATFORM_DESKTOP)
-    set_target_properties(raylib PROPERTIES COMPILE_DEFINITIONS "${RAYLIB_COMPILE_DEFS}")
-
-    get_target_property(RAYLIB_INTERFACE_COMPILE_DEFS raylib INTERFACE_COMPILE_DEFINITIONS)
-    if (RAYLIB_INTERFACE_COMPILE_DEFS)
-        list(REMOVE_ITEM RAYLIB_INTERFACE_COMPILE_DEFS PLATFORM_DESKTOP)
-        set_target_properties(raylib PROPERTIES INTERFACE_COMPILE_DEFINITIONS "${RAYLIB_INTERFACE_COMPILE_DEFS}")
+    if(PLATFORM_DESKTOP)
+        # NAME must have no dots - shaderc's bin2c step derives a C array name from the shader filename. Default
+        # PROFILES (see bgfxToolUtils.cmake) includes 100_es (GLES2/WebGL-compatible) alongside the desktop
+        # profiles, for free, on every desktop build - that's what web's bgfx picks up at runtime below.
+        function(struktur_compile_shader NAME)
+            bgfx_compile_shaders(
+                TYPE VERTEX
+                SHADERS ${STRUKTUR_SHADER_DIR}/vs_${NAME}.sc
+                VARYING_DEF ${STRUKTUR_SHADER_DIR}/varying.def.sc
+                OUTPUT_DIR ${STRUKTUR_SHADER_OUTPUT_DIR}
+                OUT_FILES_VAR ${NAME}_VS_OUT
+                AS_HEADERS
+            )
+            bgfx_compile_shaders(
+                TYPE FRAGMENT
+                SHADERS ${STRUKTUR_SHADER_DIR}/fs_${NAME}.sc
+                VARYING_DEF ${STRUKTUR_SHADER_DIR}/varying.def.sc
+                OUTPUT_DIR ${STRUKTUR_SHADER_OUTPUT_DIR}
+                OUT_FILES_VAR ${NAME}_FS_OUT
+                AS_HEADERS
+            )
+            set(STRUKTUR_SHADER_OUTPUTS ${STRUKTUR_SHADER_OUTPUTS} ${${NAME}_VS_OUT} ${${NAME}_FS_OUT} PARENT_SCOPE)
+        endfunction()
+        struktur_compile_shader(sprite)
+        struktur_compile_shader(soulEffect)
+    else()
+        # Web doesn't (can't) invoke shaderc itself - just reference whatever a prior desktop build already
+        # generated on disk as plain existing sources (see the PLATFORM_DESKTOP branch above).
+        file(GLOB_RECURSE STRUKTUR_SHADER_OUTPUTS ${STRUKTUR_SHADER_OUTPUT_DIR}/*.bin.h)
+        if(NOT STRUKTUR_SHADER_OUTPUTS)
+            message(WARNING "assets/Shaders/compiled is empty - build build-windows (Desktop) at least once "
+                             "before building web, so bgfx has compiled shaders to embed.")
+        endif()
     endif()
-
-    # raylib's rcore.c still needs exactly one PLATFORM_ macro to compile even though ::InitWindow() is never
-    # called anymore (Engine/Platform/Window + bgfx own windowing/rendering now) - this just keeps it building.
-    target_compile_definitions(raylib PUBLIC PLATFORM_CUSTOM_SDL3)
-    # Plain (non-keyword) signature required to match raylib's own target_link_libraries call for this target.
-    target_link_libraries(raylib SDL3::SDL3)
 endif()
 
 # EnTT
@@ -258,20 +302,13 @@ if(EDITOR)
     target_include_directories(imgui PUBLIC third_party/imgui)
     target_compile_definitions(imgui PUBLIC IMGUI_DISABLE_OBSOLETE_FUNCTIONS)
 
-    if(PLATFORM_DESKTOP)
-        # Desktop has no raylib window/rlgl context to hand rlImGui, so input/platform plumbing comes from
-        # ImGui's own official SDL3 backend instead (rendering is our own hand-rolled bgfx backend, see
-        # Engine/Renderer/ImGuiRenderer - the "ForOther" variant here doesn't need a paired renderer backend).
+    if(PLATFORM_DESKTOP OR PLATFORM_WEB)
+        # Input/platform plumbing comes from ImGui's own official SDL3 backend (rendering is our own
+        # hand-rolled bgfx backend, see Engine/Renderer/ImGuiRenderer - the "ForOther" variant here doesn't
+        # need a paired renderer backend).
         target_sources(imgui PRIVATE third_party/imgui/backends/imgui_impl_sdl3.cpp)
         target_include_directories(imgui PUBLIC third_party/imgui/backends)
         target_link_libraries(imgui PUBLIC SDL3::SDL3)
-    endif()
-
-    # rlImGui - web only now (desktop uses imgui_impl_sdl3 + Engine/Renderer/ImGuiRenderer instead).
-    if(PLATFORM_WEB)
-        add_library(rlimgui STATIC third_party/rlimgui/rlImGui.cpp)
-        target_include_directories(rlimgui PUBLIC third_party/rlimgui third_party/imgui)
-        target_link_libraries(rlimgui PUBLIC raylib imgui)
     endif()
 
     # tinyfiledialogs
@@ -279,8 +316,9 @@ if(EDITOR)
     target_include_directories(tinyfiledialogs PUBLIC third_party/tinyfiledialogs)
 endif()
 
-if(PLATFORM_DESKTOP)
-    set(DESKTOP_RENDERER_SOURCES
+if(PLATFORM_DESKTOP OR PLATFORM_WEB)
+    # bgfx/SDL3-backed renderer, shared by both platforms now (see the bgfx block above).
+    set(RENDERER_SOURCES
         src/Engine/Platform/Window.h                src/Engine/Platform/Window.cpp
         src/Engine/Renderer/GraphicsDevice.h        src/Engine/Renderer/GraphicsDevice.cpp
         src/Engine/Renderer/EmbeddedShaders.h        src/Engine/Renderer/EmbeddedShaders.cpp
@@ -295,9 +333,10 @@ endif()
 
 if(DEBUG)
     set(DEBUG_SOURCES
-        src/Debug/Box2DDebugRenderer.h
+        src/Debug/Box2DBgfxDebugDraw.h              src/Debug/Box2DBgfxDebugDraw.cpp
 
         src/Engine/ECS/System/DebugSystem.h         src/Engine/ECS/System/DebugSystem.cpp
+        src/Engine/Renderer/DebugRenderer.h         src/Engine/Renderer/DebugRenderer.cpp
 
         src/Engine/Scripting/WrenCodeGenerator.h    src/Engine/Scripting/WrenCodeGenerator.cpp
     )
@@ -469,29 +508,32 @@ set(SOURCES
     src/Engine/Util/Noise.h                     src/Engine/Util/Noise.cpp
     src/Engine/Util/MathUtil.h
 
+    src/Engine/Text/Font.h                      src/Engine/Text/Font.cpp
+    src/Engine/Input/KeyCodes.h
+
     src/Engine/Event/Event.h
     src/Engine/Event/EventManager.h             src/Engine/Event/EventManager.cpp
 
     src/Debug/Assertions.h
+    src/Debug/Logger.h                          src/Debug/Logger.cpp
     src/Debug/Profiling/Profiler.h              src/Debug/Profiling/Profiler.cpp
 
     ${WREN_BINDING_SOURCES}
     ${DEBUG_SOURCES}
     ${EDITOR_SOURCES}
-    ${DESKTOP_RENDERER_SOURCES}
+    ${RENDERER_SOURCES}
 )
 
 # Create executable
 add_executable(${PROJECT_NAME} ${SOURCES})
 
 target_include_directories(${PROJECT_NAME} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src)
-if(PLATFORM_DESKTOP)
+if(PLATFORM_DESKTOP OR PLATFORM_WEB)
     target_include_directories(${PROJECT_NAME} PRIVATE ${STB_IMAGE_INCLUDE_DIR} ${STB_TRUETYPE_INCLUDE_DIR} ${STRUKTUR_SHADER_OUTPUT_DIR})
 endif()
 
 # Link Libraries
 target_link_libraries(${PROJECT_NAME}
-    raylib
     EnTT::EnTT
     glm::glm
     wren
@@ -500,31 +542,30 @@ target_link_libraries(${PROJECT_NAME}
     PhysFS::PhysFS-static
     $<$<OR:$<BOOL:${PLATFORM_DESKTOP}>,$<BOOL:${PLATFORM_WEB}>>:SDL3_mixer::SDL3_mixer>
     $<$<OR:$<BOOL:${PLATFORM_DESKTOP}>,$<BOOL:${PLATFORM_WEB}>>:SDL3::SDL3>
-    $<$<BOOL:${PLATFORM_DESKTOP}>:bgfx>
-    $<$<BOOL:${PLATFORM_DESKTOP}>:bimg>
-    $<$<BOOL:${PLATFORM_DESKTOP}>:bx>
+    $<$<OR:$<BOOL:${PLATFORM_DESKTOP}>,$<BOOL:${PLATFORM_WEB}>>:bgfx>
+    $<$<OR:$<BOOL:${PLATFORM_DESKTOP}>,$<BOOL:${PLATFORM_WEB}>>:bimg>
+    $<$<OR:$<BOOL:${PLATFORM_DESKTOP}>,$<BOOL:${PLATFORM_WEB}>>:bx>
     $<$<BOOL:${EDITOR}>:imgui>
-    $<$<AND:$<BOOL:${EDITOR}>,$<BOOL:${PLATFORM_WEB}>>:rlimgui>
     $<$<BOOL:${EDITOR}>:tinyfiledialogs>
 )
 
 # Platform-specific settings
 if(PLATFORM_WEB)
     if(USE_ASYNCIFY)
-        set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -s USE_GLFW=3 -s ASSERTIONS=1 -s WASM=1 -s ASYNCIFY -s GL_ENABLE_GET_PROC_ADDRESS=1 -s FORCE_FILESYSTEM=1 -s ALLOW_MEMORY_GROWTH=1")
+        set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -s ASSERTIONS=1 -s WASM=1 -s ASYNCIFY -s GL_ENABLE_GET_PROC_ADDRESS=1 -s FORCE_FILESYSTEM=1 -s ALLOW_MEMORY_GROWTH=1")
         message(STATUS "Building web version WITH ASYNCIFY")
     else()
-        set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -s USE_GLFW=3 -s ASSERTIONS=1 -s WASM=1 -s GL_ENABLE_GET_PROC_ADDRESS=1 -s FORCE_FILESYSTEM=1 -s ALLOW_MEMORY_GROWTH=1")
+        set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -s ASSERTIONS=1 -s WASM=1 -s GL_ENABLE_GET_PROC_ADDRESS=1 -s FORCE_FILESYSTEM=1 -s ALLOW_MEMORY_GROWTH=1")
         message(STATUS "Building web version WITHOUT ASYNCIFY")
     endif()
     
-    set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -s EXPORTED_RUNTIME_METHODS=['HEAPF32','HEAPU8','HEAPU16','HEAPU32','HEAP32','HEAP8']")
+    set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -s EXPORTED_RUNTIME_METHODS=['HEAPF32','HEAPU8','HEAPU16','HEAPU32','HEAP32','HEAP8','FS']")
     # Export C++ functions for JavaScript
     #set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -s EXPORTED_FUNCTIONS='[\"_main\",\"_RequestFullscreenFromC\",\"_ExitFullscreenFromC\",\"_IsFullscreenSupported\"]'")
     #set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -s EXPORTED_RUNTIME_METHODS='[\"ccall\",\"cwrap\"]'")
     
     # Assets folder
-    if(DEFINED PROJECT_ASSETS_FOLDER)
+    if(PROJECT_ASSETS_FOLDER)
         set(ASSETS_DIR "${PROJECT_ASSETS_FOLDER}")
     else()
         set(ASSETS_DIR "${CMAKE_SOURCE_DIR}/assets")
