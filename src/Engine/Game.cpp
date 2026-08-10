@@ -111,6 +111,7 @@ void Struktur::InitialiseGame(GameContext& context)
 	editor.Initialise(context);
 	#else
 	context.InitialiseGraphics(windowWidth, windowHeight, "Struktur", true);
+	context.InitialiseUIRenderer();
 
 	ImGui::CreateContext();
 	ImGuiIO& io = ImGui::GetIO();
@@ -143,6 +144,7 @@ void Struktur::InitialiseGame(GameContext& context)
 	}
 	#else
 	context.InitialiseGraphics(gameData.gameWidth, gameData.gameHeight, gameData.projectName, false);
+	context.InitialiseUIRenderer();
 	if (gameData.isFullScreen)
 	{
 		context.GetWindow().SetFullscreen(true);
@@ -188,16 +190,16 @@ void Struktur::InitialiseGame(GameContext& context)
 	systemManager.AddUpdateSystem<System::UISystem>();
 	systemManager.AddUpdateSystem<System::SoundSystem>();
 	systemManager.AddRenderSystem<System::SpriteRenderSystem>();
-	// WrenStateRenderSystem/DebugSystem/UIRenderSystem all render via direct raylib calls (Wren-script-driven
-	// draws, debug shapes, and UI respectively) with no bgfx path yet - guarded out on desktop until later
-	// steps (UI batch renderer, debug draw, editor backend) land; unaffected on web.
+	// WrenStateRenderSystem/DebugSystem still render via direct raylib calls (Wren-script-driven draws and
+	// debug shapes) with no bgfx path yet - guarded out on desktop until later steps land; unaffected on web.
+	// UIRenderSystem now has a bgfx path on both platforms (see Engine/Renderer/UIRenderer).
 #if defined(PLATFORM_WEB)
 	systemManager.AddRenderSystem<System::WrenStateRenderSystem>();
 	#ifdef DEBUG
 	systemManager.AddRenderSystem<System::DebugSystem>();
 	#endif
-	systemManager.AddRenderSystem<System::UIRenderSystem>();
 #endif
+	systemManager.AddRenderSystem<System::UIRenderSystem>();
 
 	DEBUG_INFO("Game Data Loaded");
 

@@ -23,6 +23,7 @@
 #if !defined(PLATFORM_WEB)
 	#include "Engine/Platform/Window.h"
 	#include "Engine/Renderer/GraphicsDevice.h"
+	#include "Engine/Renderer/UIRenderer.h"
 	#if defined(EDITOR)
 		#include "Engine/Renderer/ImGuiRenderer.h"
 	#endif
@@ -74,6 +75,11 @@ class GameContext
 	Platform::Window& GetWindow() const;
 	Renderer::GraphicsDevice& GetGraphicsDevice() const;
 
+	// Deferred until GraphicsDevice (and therefore bgfx) exists - call right after InitialiseGraphics(). Needed
+	// on both platforms (in-game UI isn't editor-only), unlike ImGuiRenderer below.
+	void InitialiseUIRenderer();
+	Renderer::UIRenderer& GetUIRenderer() const;
+
 	#if defined(EDITOR)
 	// Deferred further still - needs an ImGui context (and its font atlas configured) to already exist,
 	// which only happens once Game.cpp has called ImGui::CreateContext()/ImGui_ImplSDL3_InitForOther().
@@ -115,6 +121,7 @@ class GameContext
 #if !defined(PLATFORM_WEB)
 	std::unique_ptr<Platform::Window> m_window;
 	std::unique_ptr<Renderer::GraphicsDevice> m_graphicsDevice;
+	std::unique_ptr<Renderer::UIRenderer> m_uiRenderer;
 	#if defined(EDITOR)
 	std::unique_ptr<Renderer::ImGuiRenderer> m_imGuiRenderer;
 	#endif

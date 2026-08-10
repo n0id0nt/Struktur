@@ -66,7 +66,7 @@ class UIElement
 	void OnButtonPressed(GameContext& context, int key);
 	void OnActivate(GameContext& context);
 
-	virtual void RenderFocusIndicator();
+	virtual void RenderFocusIndicator(GameContext& context);
 
 	// Child management
 	UIElement* AddChild(std::unique_ptr<UIElement> child);

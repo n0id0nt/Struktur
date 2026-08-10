@@ -295,10 +295,14 @@ void Struktur::UI::UIElement::OnActivate(GameContext& context)
 	}
 }
 
-void Struktur::UI::UIElement::RenderFocusIndicator()
+void Struktur::UI::UIElement::RenderFocusIndicator(GameContext& context)
 {
 	// Simple focus indicator - can be customized
+#if defined(PLATFORM_WEB)
 	::DrawRectangleLinesEx(m_bounds, 2.0f, BLUE);
+#else
+	context.GetUIRenderer().DrawRectOutline(m_bounds, 2.0f, BLUE);
+#endif
 }
 
 void Struktur::UI::UIElement::UpdateChildren(GameContext& context)

@@ -15,8 +15,16 @@ class GraphicsDevice
    public:
 	// The world view all sprites/tiles render into; UI/debug views may be added in later steps.
 	static constexpr bgfx::ViewId WorldViewId = 0;
-	// Composited after WorldViewId, straight to the backbuffer - the editor's ImGui overlay (see ImGuiRenderer).
-	static constexpr bgfx::ViewId EditorViewId = 1;
+	// In-game UI (UIRenderSystem) - composited on top of WorldViewId's contents in the same target. Shares
+	// WorldViewId's render target redirect (see SetWorldRenderTarget) so UI stays inside the game viewport panel
+	// rather than smearing across the real editor window. Must execute (and therefore have a lower ViewId, bgfx
+	// runs views in ascending order by default) BEFORE EditorViewId - the editor's Game Viewport panel displays
+	// this shared framebuffer via ImGui::Image from within EditorViewId, so if EditorViewId ran first it would
+	// sample the texture one step before UIViewId's draws land in it, and in-game UI would never actually appear.
+	static constexpr bgfx::ViewId UIViewId = 1;
+	// Composited after WorldViewId/UIViewId, straight to the backbuffer - the editor's ImGui overlay (see
+	// ImGuiRenderer), including the Game Viewport's display of the shared framebuffer (see UIViewId above).
+	static constexpr bgfx::ViewId EditorViewId = 2;
 
 	GraphicsDevice(void* nativeWindowHandle, int width, int height);
 	~GraphicsDevice();

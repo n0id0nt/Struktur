@@ -76,19 +76,23 @@ class UILabel : public UIElement
 
 	std::vector<std::string> GetTextLines(const std::string& text) const;
 	std::vector<std::string> WrapText(const std::string& text, float maxWidth) const;
-	void RenderJustifiedLine(const std::string& line, ::Vector2 pos, float targetWidth, bool isLastLine);
-	void RenderText(const std::string& text, ::Vector2 startPos, float lineHeight);
+	void RenderJustifiedLine(GameContext& context, const std::string& line, ::Vector2 pos, float targetWidth,
+	                         bool isLastLine);
+	void RenderText(GameContext& context, const std::string& text, ::Vector2 startPos, float lineHeight);
 
 	::Rectangle GetFormattedTextBounds() const;
 	::Vector2 GetFormattedTextSize() const;
 	float GetLineHeight() const;
 
    private:
-	// raylib's MeasureTextEx needs real glyph metrics (baseSize/glyphs/recs), which FontResource never populates
-	// on desktop - text rendering isn't ported yet there (see FontResource). Centralising the raylib call here
-	// means every layout call site (wrapping, justification, bounding box) gets the same safe {0,0} on desktop
-	// instead of dereferencing the stub font's null glyph data.
+	// FontResource populates real glyph metrics (baseSize/glyphs/recs) on both platforms now, so raylib's own
+	// MeasureTextEx (GPU-independent - see FontResource) works everywhere; centralising it here just keeps
+	// every layout call site (wrapping, justification, bounding box) going through one place.
 	static ::Vector2 MeasureText(const ::Font& font, const std::string& text, float fontSize);
+
+	// Web draws via raylib's DrawTextEx; desktop submits glyph quads through UIRenderer (see FontResource for
+	// why this needs no platform split for measurement, only for the actual draw).
+	void DrawGlyphs(GameContext& context, const std::string& text, ::Vector2 pos) const;
 };
 }  // namespace UI
 }  // namespace Struktur

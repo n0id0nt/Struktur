@@ -58,6 +58,17 @@ Renderer::GraphicsDevice& GameContext::GetGraphicsDevice() const
 	return *m_graphicsDevice;
 }
 
+void GameContext::InitialiseUIRenderer()
+{
+	m_uiRenderer = std::make_unique<Renderer::UIRenderer>();
+}
+
+Renderer::UIRenderer& GameContext::GetUIRenderer() const
+{
+	ASSERT_MSG(m_uiRenderer.get(), "UIRenderer not initialised");
+	return *m_uiRenderer;
+}
+
 #if defined(EDITOR)
 void GameContext::InitialiseImGuiRenderer()
 {

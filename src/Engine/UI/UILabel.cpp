@@ -1,6 +1,9 @@
 #include "UILabel.h"
 
 #include "Engine/GameContext.h"
+#if !defined(PLATFORM_WEB)
+	#include "Engine/Renderer/UIRenderer.h"
+#endif
 
 Struktur::UI::UILabel::UILabel(GameContext& context, const glm::vec2& absolutePosition,
                                const glm::vec2& relativePosition, const std::string& labelText, float fontSz)
@@ -56,6 +59,16 @@ void Struktur::UI::UILabel::Render(GameContext& context)
 	{
 		::DrawRectangleLinesEx(m_bounds, m_borderWidth, m_borderColor);
 	}
+#else
+	if (m_backgroundColor.a > 0)
+	{
+		context.GetUIRenderer().DrawRect(m_bounds, m_backgroundColor);
+	}
+	if (m_borderWidth > 0)
+	{
+		context.GetUIRenderer().DrawRectOutline(m_bounds, m_borderWidth, m_borderColor);
+	}
+#endif
 
 	// Calculate line height
 	float lineHeight = GetLineHeight();
@@ -63,23 +76,31 @@ void Struktur::UI::UILabel::Render(GameContext& context)
 	// Calculate starting position
 	::Vector2 startPos = {m_bounds.x + 5, m_bounds.y + 2.5f};
 
-	// Render text with wrapping support
-	RenderText(m_text, startPos, lineHeight);
-#endif
-	// UIRenderSystem (the only caller of UIElement::Render) is web-only - text drawing isn't ported to bgfx yet.
+	// Render text with wrapping support - DrawGlyphs (called inside) handles the platform split now.
+	RenderText(context, m_text, startPos, lineHeight);
 
 	RenderChildren(context);
 }
 
 ::Vector2 Struktur::UI::UILabel::MeasureText(const ::Font& font, const std::string& text, float fontSize)
 {
-#if defined(PLATFORM_WEB)
+	// GPU-independent on both platforms - see FontResource for why this is safe on desktop too.
 	return ::MeasureTextEx(font, text.c_str(), fontSize, 1.0f);
+}
+
+void Struktur::UI::UILabel::DrawGlyphs(GameContext& context, const std::string& text, ::Vector2 pos) const
+{
+#if defined(PLATFORM_WEB)
+	::DrawTextEx(m_font->font, text.c_str(), pos, m_fontSize, 1.0f, m_textColor);
 #else
-	(void)font;
-	(void)text;
-	(void)fontSize;
-	return {0, 0};
+	// LoadFromDisk only builds the CPU-side atlas/metrics (see FontResource) - the bgfx texture upload is
+	// deferred until first actually needed here, same lazy-GPU-upload pattern SpriteRenderSystem/UIPanel use
+	// for TextureResource.
+	if (!m_font->IsGpuReady())
+	{
+		m_font->LoadToGpu(context);
+	}
+	context.GetUIRenderer().DrawText(m_font->font, text, pos, m_fontSize, m_textColor);
 #endif
 }
 
@@ -190,13 +211,13 @@ std::vector<std::string> Struktur::UI::UILabel::WrapText(const std::string& text
 	return lines;
 }
 
-void Struktur::UI::UILabel::RenderJustifiedLine(const std::string& line, ::Vector2 pos, float targetWidth,
-                                                bool isLastLine)
+void Struktur::UI::UILabel::RenderJustifiedLine(GameContext& context, const std::string& line, ::Vector2 pos,
+                                                float targetWidth, bool isLastLine)
 {
 	// Don't justify last line or lines with only one word
 	if (isLastLine || line.find(' ') == std::string::npos)
 	{
-		::DrawTextEx(m_font->font, line.c_str(), pos, m_fontSize, 1.0f, m_textColor);
+		DrawGlyphs(context, line, pos);
 		return;
 	}
 
@@ -226,7 +247,7 @@ void Struktur::UI::UILabel::RenderJustifiedLine(const std::string& line, ::Vecto
 
 	if (words.size() <= 1)
 	{
-		::DrawTextEx(m_font->font, line.c_str(), pos, m_fontSize, 1.0f, m_textColor);
+		DrawGlyphs(context, line, pos);
 		return;
 	}
 
@@ -234,7 +255,7 @@ void Struktur::UI::UILabel::RenderJustifiedLine(const std::string& line, ::Vecto
 	float totalWordWidth = 0;
 	for (const auto& word : words)
 	{
-		::Vector2 wordSize = ::MeasureTextEx(m_font->font, word.c_str(), m_fontSize, 1.0f);
+		::Vector2 wordSize = MeasureText(m_font->font, word, m_fontSize);
 		totalWordWidth += wordSize.x;
 	}
 
@@ -247,14 +268,15 @@ void Struktur::UI::UILabel::RenderJustifiedLine(const std::string& line, ::Vecto
 	for (const auto& word : words)
 	{
 		::Vector2 wordPos = {currentX, pos.y};
-		::DrawTextEx(m_font->font, word.c_str(), wordPos, m_fontSize, 1.0f, m_textColor);
+		DrawGlyphs(context, word, wordPos);
 
-		::Vector2 wordSize = ::MeasureTextEx(m_font->font, word.c_str(), m_fontSize, 1.0f);
+		::Vector2 wordSize = MeasureText(m_font->font, word, m_fontSize);
 		currentX += wordSize.x + spaceWidth;
 	}
 }
 
-void Struktur::UI::UILabel::RenderText(const std::string& text, ::Vector2 startPos, float lineHeight)
+void Struktur::UI::UILabel::RenderText(GameContext& context, const std::string& text, ::Vector2 startPos,
+                                       float lineHeight)
 {
 	std::vector<std::string> lines = GetTextLines(text);
 
@@ -263,33 +285,33 @@ void Struktur::UI::UILabel::RenderText(const std::string& text, ::Vector2 startP
 	for (size_t i = 0; i < lines.size(); ++i)
 	{
 		const std::string& line = lines[i];
-		::Vector2 textSize      = ::MeasureTextEx(m_font->font, line.c_str(), m_fontSize, 1.0f);
+		::Vector2 textSize      = MeasureText(m_font->font, line, m_fontSize);
 		::Vector2 textPos       = {startPos.x, currentY};
 
 		switch (m_alignment)
 		{
 			case TextAlignment::CENTER:
 				textPos.x = m_bounds.x + (m_bounds.width - textSize.x) / 2.0f;
-				::DrawTextEx(m_font->font, line.c_str(), textPos, m_fontSize, 1.0f, m_textColor);
+				DrawGlyphs(context, line, textPos);
 				break;
 
 			case TextAlignment::RIGHT:
 				textPos.x = m_bounds.x + m_bounds.width - textSize.x - 5;
-				::DrawTextEx(m_font->font, line.c_str(), textPos, m_fontSize, 1.0f, m_textColor);
+				DrawGlyphs(context, line, textPos);
 				break;
 
 			case TextAlignment::JUSTIFY:
 			{
 				textPos.x       = m_bounds.x + 5;
 				bool isLastLine = (i == lines.size() - 1);
-				RenderJustifiedLine(line, textPos, m_bounds.x - 10.0f, isLastLine);
+				RenderJustifiedLine(context, line, textPos, m_bounds.x - 10.0f, isLastLine);
 				break;
 			}
 
 			case TextAlignment::LEFT:
 			default:
 				textPos.x = m_bounds.x + 5;
-				::DrawTextEx(m_font->font, line.c_str(), textPos, m_fontSize, 1.0f, m_textColor);
+				DrawGlyphs(context, line, textPos);
 				break;
 		}
 

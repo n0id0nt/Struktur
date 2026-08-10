@@ -1,6 +1,9 @@
 #include "UIPanel.h"
 
 #include "Engine/GameContext.h"
+#if !defined(PLATFORM_WEB)
+	#include "Engine/Renderer/UIRenderer.h"
+#endif
 
 Struktur::UI::UIPanel::UIPanel(const glm::vec2& absolutePosition, const glm::vec2& relativePosition,
                                const glm::vec2& absoluteSize, const glm::vec2& relativeSize)
@@ -30,9 +33,6 @@ void Struktur::UI::UIPanel::Update(GameContext& context)
 
 void Struktur::UI::UIPanel::Render(GameContext& context)
 {
-	// UIRenderSystem isn't registered on desktop (see Game.cpp) so this never runs there, but it still needs
-	// to compile - TextureResource::texture is a bgfx::TextureHandle there, not the ::Texture2D raylib's
-	// DrawTexturePro wants (see the UI batch renderer design for the eventual bgfx-native replacement).
 #if defined(PLATFORM_WEB)
 	// Draw background
 	if (m_hasBackgroundTexture)
@@ -55,6 +55,25 @@ void Struktur::UI::UIPanel::Render(GameContext& context)
 	if (m_borderWidth > 0)
 	{
 		::DrawRectangleLinesEx(m_bounds, m_borderWidth, m_borderColor);
+	}
+#else
+	if (m_hasBackgroundTexture)
+	{
+		Resource::TextureResource* texture = m_backgroundTexture.Get();
+		if (!texture->IsGpuReady())
+		{
+			texture->LoadToGpu(context);
+		}
+		context.GetUIRenderer().DrawTexturedRect(m_bounds, texture->GetHandle(), WHITE);
+	}
+	else
+	{
+		context.GetUIRenderer().DrawRect(m_bounds, m_backgroundColor);
+	}
+
+	if (m_borderWidth > 0)
+	{
+		context.GetUIRenderer().DrawRectOutline(m_bounds, m_borderWidth, m_borderColor);
 	}
 #endif
 

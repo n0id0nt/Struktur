@@ -110,7 +110,11 @@ void Struktur::UI::UIManager::Clear(GameContext& context)
 
 void Struktur::UI::UIManager::Render(GameContext& context)
 {
+#if defined(PLATFORM_WEB)
 	::BeginMode2D(m_camera);
+#endif
+	// On desktop, UIRenderSystem already set UIViewId's own screen-space ortho projection for this frame (see
+	// UIRenderer::SetupView) - m_camera only exists to satisfy raylib's 2D-mode API on web.
 
 	// Sort elements by z-index
 	std::vector<UIElement*> sortedElements;
@@ -134,10 +138,12 @@ void Struktur::UI::UIManager::Render(GameContext& context)
 	// Draw focus indicator on top
 	if (m_focusedElement)
 	{
-		m_focusedElement->RenderFocusIndicator();
+		m_focusedElement->RenderFocusIndicator(context);
 	}
 
+#if defined(PLATFORM_WEB)
 	::EndMode2D();
+#endif
 }
 
 Struktur::UI::FocusNavigator* Struktur::UI::UIManager::GetFocusNavigator() const

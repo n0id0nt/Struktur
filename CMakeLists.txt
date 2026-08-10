@@ -147,6 +147,11 @@ if(PLATFORM_DESKTOP)
     # this header path isn't exposed by bimg's own CMake target, so it's added directly.
     set(STB_IMAGE_INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/third_party/bgfx.cmake/bimg/3rdparty/stb)
 
+    # FontResource bakes glyph atlases via bgfx's vendored stb_truetype (pack API) rather than raylib's font
+    # loader - this header path isn't exposed by bgfx's own CMake target either, mirroring STB_IMAGE_INCLUDE_DIR
+    # above. Note this is a DIFFERENT stb/ dir than bimg's (bgfx.cmake vendors its own copy under bgfx/3rdparty).
+    set(STB_TRUETYPE_INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/third_party/bgfx.cmake/bgfx/3rdparty/stb)
+
     set(STRUKTUR_SHADER_DIR ${CMAKE_CURRENT_SOURCE_DIR}/assets/Shaders)
     set(STRUKTUR_SHADER_OUTPUT_DIR ${CMAKE_CURRENT_SOURCE_DIR}/assets/Shaders/compiled)
     set(STRUKTUR_SHADER_OUTPUTS "")
@@ -282,6 +287,7 @@ if(PLATFORM_DESKTOP)
         src/Engine/Renderer/SpriteVertex.h
         src/Engine/Renderer/TileChunk.h
         src/Engine/Renderer/TileChunkBuilder.h      src/Engine/Renderer/TileChunkBuilder.cpp
+        src/Engine/Renderer/UIRenderer.h            src/Engine/Renderer/UIRenderer.cpp
         ${STRUKTUR_SHADER_OUTPUTS}
     )
     source_group("Shaders/Compiled" FILES ${STRUKTUR_SHADER_OUTPUTS})
@@ -480,7 +486,7 @@ add_executable(${PROJECT_NAME} ${SOURCES})
 
 target_include_directories(${PROJECT_NAME} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src)
 if(PLATFORM_DESKTOP)
-    target_include_directories(${PROJECT_NAME} PRIVATE ${STB_IMAGE_INCLUDE_DIR} ${STRUKTUR_SHADER_OUTPUT_DIR})
+    target_include_directories(${PROJECT_NAME} PRIVATE ${STB_IMAGE_INCLUDE_DIR} ${STB_TRUETYPE_INCLUDE_DIR} ${STRUKTUR_SHADER_OUTPUT_DIR})
 endif()
 
 # Link Libraries
