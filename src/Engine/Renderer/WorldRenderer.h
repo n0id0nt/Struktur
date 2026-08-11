@@ -3,7 +3,7 @@
 #include <cstdint>
 #include <vector>
 
-#include "Engine/Game/RenderLayer.h"
+#include "Engine/World/RenderLayer.h"
 #include "Engine/Renderer/RenderTypes.h"
 #include "Engine/Util/Color.h"
 #include "Engine/Util/MathUtil.h"
@@ -47,13 +47,13 @@ class WorldRenderer
 	WorldRenderer();
 
 	static CullBounds ComputeCullBounds(GameContext& context);
-	static uint64_t PackSortKey(GameResource::RenderLayer layer, float orderInLayer, unsigned int textureId);
+	static uint64_t PackSortKey(World::RenderLayer layer, float orderInLayer, unsigned int textureId);
 
 	void Clear();
-	void SubmitSprite(GameResource::RenderLayer layer, float orderInLayer, entt::entity entity,
+	void SubmitSprite(World::RenderLayer layer, float orderInLayer, entt::entity entity,
 	                  const TextureHandle& texture, const Util::Math::Rect& sourceRec, const Util::Math::Rect& destRec,
 	                  const glm::vec2& origin, float rotation, const Util::Color& tint, const CullBounds& cullBounds);
-	void SubmitChunk(GameResource::RenderLayer layer, float orderInLayer, const TileChunk& chunk,
+	void SubmitChunk(World::RenderLayer layer, float orderInLayer, const TileChunk& chunk,
 	                 const TextureHandle& texture, const CullBounds& cullBounds);
 	void Flush(GameContext& context);
 

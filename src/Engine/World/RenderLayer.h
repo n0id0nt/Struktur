@@ -2,7 +2,7 @@
 
 namespace Struktur
 {
-namespace GameResource
+namespace World
 {
 // Coarse draw-order buckets. Ascending value = drawn first (further back).
 // Entities sits between the two background buckets and the overlay/foreground buckets so it can
@@ -18,5 +18,5 @@ enum class RenderLayer
 
 	COUNT
 };
-}  // namespace GameResource
+}  // namespace World
 }  // namespace Struktur

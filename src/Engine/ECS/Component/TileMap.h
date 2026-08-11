@@ -3,8 +3,8 @@
 #include <string>
 #include <vector>
 
-#include "Engine/Game/RenderLayer.h"
-#include "Engine/Game/TileMap.h"
+#include "Engine/World/RenderLayer.h"
+#include "Engine/World/TileMap.h"
 #include "Engine/Resource/TextureResource.h"
 #include "Engine/Renderer/TileChunk.h"
 
@@ -18,9 +18,9 @@ struct TileMap
 	int width;
 	int height;
 	int tileSize;
-	std::vector<GameResource::TileMap::GridTile> gridTiles;
+	std::vector<Struktur::World::TileMap::GridTile> gridTiles;
 	std::vector<int> grid;
-	GameResource::RenderLayer layer;
+	Struktur::World::RenderLayer layer;
 	// Preserves the LDtk layer's authored back-to-front order within whatever RenderLayer bucket it lands in.
 	float orderInLayer;
 

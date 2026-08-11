@@ -7,8 +7,8 @@
 #include "Engine/ECS/System/ShaderSystem.h"
 #include "Engine/ECS/System/TransformSystem.h"
 #include "Engine/ECS/System/WrenScriptSystem.h"
-#include "Engine/Game/Level.h"
-#include "Engine/Game/RenderLayer.h"
+#include "Engine/World/Level.h"
+#include "Engine/World/RenderLayer.h"
 #include "Engine/GameContext.h"
 #include "Engine/Scripting/WrenBindingRegistry.h"
 #include "Engine/Scripting/WrenUtil.h"
@@ -138,7 +138,7 @@ void wren_CameraSetDamping(WrenVM* vm)
 void wren_CameraWorldPosToScreenPos(WrenVM* vm)
 {
 	Struktur::GameContext* context         = static_cast<Struktur::GameContext*>(wrenGetUserData(vm));
-	Struktur::GameResource::Camera& camera = context->GetCamera();
+	Struktur::World::Camera& camera = context->GetCamera();
 
 	WrenVec2* worldPos  = static_cast<WrenVec2*>(wrenGetSlotForeign(vm, 1));
 	glm::vec2 screenPos = camera.WorldPosToScreenPos(worldPos->value);
@@ -152,7 +152,7 @@ void wren_CameraWorldPosToScreenPos(WrenVM* vm)
 void wren_CameraScreenPosToWorldPos(WrenVM* vm)
 {
 	Struktur::GameContext* context         = static_cast<Struktur::GameContext*>(wrenGetUserData(vm));
-	Struktur::GameResource::Camera& camera = context->GetCamera();
+	Struktur::World::Camera& camera = context->GetCamera();
 
 	WrenVec2* screenPos = static_cast<WrenVec2*>(wrenGetSlotForeign(vm, 1));
 	glm::vec2 worldPos  = camera.ScreenPosToWorldPos(screenPos->value);
@@ -222,7 +222,7 @@ void wren_WorldLoadLevelEntities(WrenVM* vm)
 	double levelDouble = wrenGetSlotDouble(vm, 1);
 	int levelIndex     = static_cast<int>(levelDouble);
 
-	entt::entity levelEntity = Struktur::GameResource::Level::LoadLevelEntities(*context, world->entity, levelIndex);
+	entt::entity levelEntity = Struktur::World::Level::LoadLevelEntities(*context, world->entity, levelIndex);
 
 	if (levelEntity == entt::null)
 	{
@@ -246,7 +246,7 @@ void wren_WorldStaticLoadLevelEntities(WrenVM* vm)
 	double levelDouble = wrenGetSlotDouble(vm, 2);
 	int levelIndex     = static_cast<int>(levelDouble);
 
-	entt::entity levelEntity = Struktur::GameResource::Level::LoadLevelEntities(*context, worldEntity, levelIndex);
+	entt::entity levelEntity = Struktur::World::Level::LoadLevelEntities(*context, worldEntity, levelIndex);
 
 	if (levelEntity == entt::null)
 	{
@@ -264,7 +264,7 @@ void wren_WorldCreateWorldEntity(WrenVM* vm)
 {
 	Struktur::GameContext* context = static_cast<Struktur::GameContext*>(wrenGetUserData(vm));
 	const char* worldFilePath      = wrenGetSlotString(vm, 1);
-	entt::entity worldEntity       = Struktur::GameResource::Level::CreateWorldEntity(*context, worldFilePath);
+	entt::entity worldEntity       = Struktur::World::Level::CreateWorldEntity(*context, worldFilePath);
 	double entityId                = static_cast<double>(worldEntity);
 	wrenSetSlotDouble(vm, 0, entityId);
 }
@@ -644,7 +644,7 @@ void wren_SpriteCreate(WrenVM* vm)
 	int rows                   = static_cast<int>(wrenGetSlotDouble(vm, 6));
 	bool flipped               = wrenGetSlotBool(vm, 7);
 	int index                  = static_cast<int>(wrenGetSlotDouble(vm, 8));
-	auto layer                 = static_cast<Struktur::GameResource::RenderLayer>(static_cast<int>(wrenGetSlotDouble(vm, 9)));
+	auto layer                 = static_cast<Struktur::World::RenderLayer>(static_cast<int>(wrenGetSlotDouble(vm, 9)));
 	float orderInLayer         = static_cast<float>(wrenGetSlotDouble(vm, 10));
 
 	Struktur::Util::Color rayColor{(unsigned char)color->value.r, (unsigned char)color->value.g,
@@ -760,7 +760,7 @@ void wren_SpriteSetLayer(WrenVM* vm)
 {
 	WrenSprite* sprite      = (WrenSprite*)wrenGetSlotForeign(vm, 0);
 	int layer               = static_cast<int>(wrenGetSlotDouble(vm, 1));
-	sprite->component->layer = static_cast<Struktur::GameResource::RenderLayer>(layer);
+	sprite->component->layer = static_cast<Struktur::World::RenderLayer>(layer);
 }
 
 void wren_SpriteGetOrderInLayer(WrenVM* vm)
@@ -810,7 +810,7 @@ void wren_SpriteStaticSetLayer(WrenVM* vm)
 		return;
 	}
 
-	sprite->layer = static_cast<Struktur::GameResource::RenderLayer>(static_cast<int>(layer));
+	sprite->layer = static_cast<Struktur::World::RenderLayer>(static_cast<int>(layer));
 }
 
 // Sprite.setOrderInLayer(entity, orderInLayer)
@@ -1672,12 +1672,12 @@ void wren_ScriptStaticGetInstance(WrenVM* vm)
 WREN_BINDING_MODULE(GameObjectComponent)
 {
 	WREN_ENUM(registry, "gameObjectComponents", RenderLayer, "Coarse draw-order buckets for sprites and tile layers",
-		WREN_ENUM_PAIR("BACKGROUND_FAR", Struktur::GameResource::RenderLayer::BackgroundFar),
-		WREN_ENUM_PAIR("BACKGROUND_MID", Struktur::GameResource::RenderLayer::BackgroundMid),
-		WREN_ENUM_PAIR("ENTITIES", Struktur::GameResource::RenderLayer::Entities),
-		WREN_ENUM_PAIR("BACKGROUND_OVERLAY", Struktur::GameResource::RenderLayer::BackgroundOverlay),
-		WREN_ENUM_PAIR("FOREGROUND", Struktur::GameResource::RenderLayer::Foreground),
-		WREN_ENUM_PAIR("UI", Struktur::GameResource::RenderLayer::UI),
+		WREN_ENUM_PAIR("BACKGROUND_FAR", Struktur::World::RenderLayer::BackgroundFar),
+		WREN_ENUM_PAIR("BACKGROUND_MID", Struktur::World::RenderLayer::BackgroundMid),
+		WREN_ENUM_PAIR("ENTITIES", Struktur::World::RenderLayer::Entities),
+		WREN_ENUM_PAIR("BACKGROUND_OVERLAY", Struktur::World::RenderLayer::BackgroundOverlay),
+		WREN_ENUM_PAIR("FOREGROUND", Struktur::World::RenderLayer::Foreground),
+		WREN_ENUM_PAIR("UI", Struktur::World::RenderLayer::UI),
 		);
 
 	// Register Camera Component foreign class

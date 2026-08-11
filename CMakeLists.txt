@@ -490,11 +490,10 @@ set(SOURCES
     src/Engine/UI/UILabel.h                     src/Engine/UI/UILabel.cpp
     src/Engine/UI/UIPanel.h                     src/Engine/UI/UIPanel.cpp
 
-    src/Engine/Game/Level.h                     src/Engine/Game/Level.cpp
-    src/Engine/Game/TileMap.h                   src/Engine/Game/TileMap.cpp
-    src/Engine/Game/Camera.h                    src/Engine/Game/Camera.cpp
-    src/Engine/Game/RenderLayer.h
-    src/Engine/Game/Curve.h
+    src/Engine/World/Level.h                    src/Engine/World/Level.cpp
+    src/Engine/World/TileMap.h                  src/Engine/World/TileMap.cpp
+    src/Engine/World/Camera.h                   src/Engine/World/Camera.cpp
+    src/Engine/World/RenderLayer.h
 
     src/Engine/Renderer/WorldRenderer.h         src/Engine/Renderer/WorldRenderer.cpp
 
@@ -507,6 +506,8 @@ set(SOURCES
 
     src/Engine/Util/Noise.h                     src/Engine/Util/Noise.cpp
     src/Engine/Util/MathUtil.h
+    src/Engine/Util/Color.h
+    src/Engine/Util/Curve.h
 
     src/Engine/Text/Font.h                      src/Engine/Text/Font.cpp
 

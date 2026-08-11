@@ -4,7 +4,7 @@
 #include <glm/glm.hpp>
 #include <vector>
 
-namespace Struktur::GameResource
+namespace Struktur::Util
 {
 // Interpolation modes for curve segments
 enum class CurveInterpolation
@@ -345,4 +345,4 @@ class Curve
 		}
 	}
 };
-}  // namespace Struktur::GameResource
+}  // namespace Struktur::Util

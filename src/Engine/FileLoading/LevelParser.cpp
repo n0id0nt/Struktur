@@ -166,21 +166,21 @@ void Struktur::FileLoading::LevelParser::LoadLayers(World& world, Level& level, 
 		layer.orderInLayer = -static_cast<float>(layerIndex);
 		if (layer.type == LayerType::ENTITIES)
 		{
-			layer.renderLayer = GameResource::RenderLayer::Entities;
+			layer.renderLayer = Struktur::World::RenderLayer::Entities;
 		}
 		else if (entitiesIndex >= 0 && layerIndex < entitiesIndex)
 		{
 			// Listed above Entities in the layer panel -> drawn in front of entities.
 			bool isForeground   = LayerNameStartsWithAny(layerName, {"FG_", "Foreground"});
-			layer.renderLayer   = isForeground ? GameResource::RenderLayer::Foreground
-			                                    : GameResource::RenderLayer::BackgroundOverlay;
+			layer.renderLayer   = isForeground ? Struktur::World::RenderLayer::Foreground
+			                                    : Struktur::World::RenderLayer::BackgroundOverlay;
 		}
 		else
 		{
 			// Listed below Entities (or no Entities layer in this level) -> drawn behind entities.
 			bool isFar        = LayerNameStartsWithAny(layerName, {"BG_Far", "Far_"});
-			layer.renderLayer = isFar ? GameResource::RenderLayer::BackgroundFar
-			                          : GameResource::RenderLayer::BackgroundMid;
+			layer.renderLayer = isFar ? Struktur::World::RenderLayer::BackgroundFar
+			                          : Struktur::World::RenderLayer::BackgroundMid;
 		}
 
 		level.layers.push_back(layer);

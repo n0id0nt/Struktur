@@ -15,7 +15,7 @@
 #include "Engine/ECS/Component/Transform.h"
 #include "Engine/ECS/System/TransformSystem.h"
 #include "Engine/GameContext.h"
-#include "Engine/Game/RenderLayer.h"
+#include "Engine/World/RenderLayer.h"
 #include "Engine/UI/UIElement.h"
 
 namespace Struktur::Debug
@@ -558,10 +558,10 @@ void InspectorWindow::RenderSpriteComponent(GameContext& context, Component::Spr
 	int layerIndex = static_cast<int>(sprite.layer);
 	if (ImGui::Combo("Render Layer", &layerIndex, k_renderLayerNames, IM_ARRAYSIZE(k_renderLayerNames)))
 	{
-		sprite.layer = static_cast<GameResource::RenderLayer>(layerIndex);
+		sprite.layer = static_cast<World::RenderLayer>(layerIndex);
 	}
 	ImGui::DragFloat("Order In Layer", &sprite.orderInLayer, 1.0f, -1000.0f, 1000.0f);
-	if (sprite.layer == GameResource::RenderLayer::Entities)
+	if (sprite.layer == World::RenderLayer::Entities)
 	{
 		ImGui::TextDisabled("(world Y is added automatically for y-sort on this layer)");
 	}

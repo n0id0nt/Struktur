@@ -225,7 +225,7 @@ void Struktur::System::DebugSystem::RenderPhysicsShapes(GameContext& context)
 void Struktur::System::DebugSystem::RenderGrid(GameContext& context)
 {
 	auto& gridSettings            = context.GetEditor().GetSettings().grid;
-	GameResource::Camera& camera = context.GetCamera();
+	World::Camera& camera = context.GetCamera();
 	Core::GameData& gameData     = context.GetGameData();
 
 	glm::vec2 topLeft     = camera.ScreenPosToWorldPos(glm::vec2(0, 0));

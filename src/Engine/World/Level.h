@@ -8,12 +8,12 @@ namespace Struktur
 {
 class GameContext;
 
-namespace GameResource
+namespace World
 {
 namespace Level
 {
 entt::entity CreateWorldEntity(GameContext& context, const std::string& filePath);
 entt::entity LoadLevelEntities(GameContext& context, const entt::entity worldEntity, int levelIndex);
 }  // namespace Level
-}  // namespace GameResource
+}  // namespace World
 }  // namespace Struktur

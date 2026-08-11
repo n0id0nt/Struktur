@@ -6,7 +6,7 @@
 #include <unordered_map>
 #include <vector>
 
-#include "Engine/Game/RenderLayer.h"
+#include "Engine/World/RenderLayer.h"
 #include "glm/glm.hpp"
 #include "nlohmann/json.hpp"
 
@@ -101,7 +101,7 @@ struct Layer
 	std::optional<std::string> tilesetPath;
 	std::vector<int> intGrid;
 	std::vector<GridTile> autoLayerTiles;
-	GameResource::RenderLayer renderLayer;
+	Struktur::World::RenderLayer renderLayer;
 	// Derived from this layer's position relative to the Entities layer in the LDtk file - see
 	// LoadLayers. Also usable as a within-layer draw-order tie-break for tile layers.
 	float orderInLayer;

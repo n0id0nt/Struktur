@@ -20,7 +20,7 @@ Struktur::Renderer::WorldRenderer::WorldRenderer()
 
 Struktur::Renderer::CullBounds Struktur::Renderer::WorldRenderer::ComputeCullBounds(GameContext& context)
 {
-	GameResource::Camera& camera = context.GetCamera();
+	World::Camera& camera = context.GetCamera();
 	Core::GameData& gameData     = context.GetGameData();
 
 	glm::mat4 view = camera.GetViewMatrix();
@@ -47,7 +47,7 @@ Struktur::Renderer::CullBounds Struktur::Renderer::WorldRenderer::ComputeCullBou
 	return bounds;
 }
 
-uint64_t Struktur::Renderer::WorldRenderer::PackSortKey(GameResource::RenderLayer layer, float orderInLayer,
+uint64_t Struktur::Renderer::WorldRenderer::PackSortKey(World::RenderLayer layer, float orderInLayer,
                                                         unsigned int textureId)
 {
 	// [63:60] layer (4 bits) | [59:28] orderInLayer, sortable-float-bits (32 bits) | [27:0] textureId (28 bits)
@@ -62,7 +62,7 @@ void Struktur::Renderer::WorldRenderer::Clear()
 	m_drawItems.clear();
 }
 
-void Struktur::Renderer::WorldRenderer::SubmitSprite(GameResource::RenderLayer layer, float orderInLayer,
+void Struktur::Renderer::WorldRenderer::SubmitSprite(World::RenderLayer layer, float orderInLayer,
                                                       entt::entity entity, const TextureHandle& texture,
                                                       const Util::Math::Rect& sourceRec, const Util::Math::Rect& destRec,
                                                       const glm::vec2& origin, float rotation,
@@ -78,7 +78,7 @@ void Struktur::Renderer::WorldRenderer::SubmitSprite(GameResource::RenderLayer l
 	m_drawItems.push_back(item);
 }
 
-void Struktur::Renderer::WorldRenderer::SubmitChunk(GameResource::RenderLayer layer, float orderInLayer,
+void Struktur::Renderer::WorldRenderer::SubmitChunk(World::RenderLayer layer, float orderInLayer,
                                                     const TileChunk& chunk, const TextureHandle& texture,
                                                     const CullBounds& cullBounds)
 {
@@ -121,7 +121,7 @@ void Struktur::Renderer::WorldRenderer::Flush(GameContext& context)
 
 	Renderer::GraphicsDevice& graphicsDevice = context.GetGraphicsDevice();
 	System::ShaderSystem& shaderSystem       = context.GetSystemManager().GetSystem<System::ShaderSystem>();
-	GameResource::Camera& camera             = context.GetCamera();
+	World::Camera& camera             = context.GetCamera();
 	Core::GameData& gameData                 = context.GetGameData();
 
 	glm::mat4 view = camera.GetViewMatrix();

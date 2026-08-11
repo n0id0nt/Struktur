@@ -46,7 +46,7 @@ inline void PreviewSprite(PreviewWindow* window, const Component::Sprite* sprite
 }
 
 // inline void PreviewCurve(PreviewWindow* window,
-//                          GameResource::Curve* curve,
+//                          Util::Curve* curve,
 //                          const std::string& name)
 //{
 //     if (!window) return;

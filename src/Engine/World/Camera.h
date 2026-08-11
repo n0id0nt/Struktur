@@ -4,7 +4,7 @@
 
 namespace Struktur
 {
-namespace GameResource
+namespace World
 {
 struct Camera
 {
@@ -23,5 +23,5 @@ struct Camera
 	// Screen-space orthographic projection (origin top-left, Y down), matching raylib's prior screen convention.
 	glm::mat4 GetProjectionMatrix(int viewportWidth, int viewportHeight) const;
 };
-}  // namespace GameResource
+}  // namespace World
 }  // namespace Struktur

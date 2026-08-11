@@ -1,7 +1,7 @@
 #pragma once
 
 #include "PreviewRenderer.h"
-#include "Engine/GameResource/Curve.h"
+#include "Engine/Util/Curve.h"
 #include <glm/glm.hpp>
 
 namespace Struktur::Debug
@@ -9,7 +9,7 @@ namespace Struktur::Debug
     class CurvePreviewRenderer : public IPreviewRenderer
     {
     public:
-        CurvePreviewRenderer(GameResource::Curve* curve, const std::string& name)
+        CurvePreviewRenderer(Util::Curve* curve, const std::string& name)
             : m_curve(curve)
             , m_name(name)
             , m_selectedKeyframe(-1)
@@ -38,7 +38,7 @@ namespace Struktur::Debug
         void ScreenToCurve(const ImVec2& screenPos, const ImVec2& canvasPos, const ImVec2& canvasSize, float& time, float& value);
         
     private:
-        GameResource::Curve* m_curve;
+        Util::Curve* m_curve;
         std::string m_name;
         int m_selectedKeyframe;
         bool m_isDragging;

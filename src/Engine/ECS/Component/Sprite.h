@@ -2,7 +2,7 @@
 
 #include <string>
 
-#include "Engine/Game/RenderLayer.h"
+#include "Engine/World/RenderLayer.h"
 #include "Engine/Resource/TextureResource.h"
 #include "Engine/Util/Color.h"
 #include "glm/glm.hpp"
@@ -21,7 +21,7 @@ struct Sprite
 	int columns, rows;
 	bool flipped;  // TODO change this to an enum
 	int index;
-	GameResource::RenderLayer layer;
+	Struktur::World::RenderLayer layer;
 	// Manual sort bias within layer. For RenderLayer::Entities the render system adds world Y to this,
 	// so dynamic entities y-sort against whichever tile layers sit immediately behind/in front of them.
 	float orderInLayer;

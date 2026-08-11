@@ -110,7 +110,7 @@ void Struktur::System::SpriteRenderSystem::Update(GameContext& context)
 				glm::vec2 offset{sprite.offset.x, sprite.offset.y};
 
 				float orderInLayer = sprite.orderInLayer;
-				if (sprite.layer == GameResource::RenderLayer::Entities)
+				if (sprite.layer == World::RenderLayer::Entities)
 				{
 					// y-sort: interleave with whatever background layers sit immediately above/below Entities
 					orderInLayer += worldPosition.y;

@@ -3,7 +3,7 @@
 #include "Engine/ECS/Component/Camera.h"
 #include "Engine/ECS/Component/Transform.h"
 #include "Engine/ECS/System/TransformSystem.h"
-#include "Engine/Game/Camera.h"
+#include "Engine/World/Camera.h"
 #include "Engine/GameContext.h"
 #include "Engine/Util/MathUtil.h"
 #include "Engine/Util/Noise.h"
@@ -40,7 +40,7 @@ void Struktur::System::CameraSystem::Update(GameContext& context)
 		float deltaTime                  = timeSystem.scaledDelta;
 		int screenWidth                  = gameData.gameWidth;
 		int screenHeight                 = gameData.gameHeight;
-		GameResource::Camera& out_camera = context.GetCamera();
+		World::Camera& out_camera = context.GetCamera();
 		// out_camera.target = out_camera.previousCameraPosition;
 		glm::vec2 newPos =
 		    focusedCameraComponent->forcePosition
@@ -66,7 +66,7 @@ glm::vec2 Struktur::System::CameraSystem::CalculateSmoothedPosition(float gameTi
                                                                     int screenHeight,
                                                                     Struktur::Component::Camera* cameraComponent,
                                                                     const glm::vec2& cameraComponentPos,
-                                                                    GameResource::Camera& camera)
+                                                                    World::Camera& camera)
 {
 	glm::vec2 cameraComponentScreenPos = camera.WorldPosToScreenPos(cameraComponentPos);
 	glm::vec2 newPos{};
@@ -107,7 +107,7 @@ glm::vec2 Struktur::System::CameraSystem::CalculateSmoothedPosition(float gameTi
 glm::vec2 Struktur::System::CameraSystem::TargetPosition(float gameTime, float deltaTime, int screenWidth,
                                                          int screenHeight, Struktur::Component::Camera* cameraComponent,
                                                          const glm::vec2& cameraComponentPos,
-                                                         GameResource::Camera& camera)
+                                                         World::Camera& camera)
 {
 	return cameraComponentPos;
 }
@@ -115,7 +115,7 @@ glm::vec2 Struktur::System::CameraSystem::TargetPosition(float gameTime, float d
 void Struktur::System::CameraSystem::CalculateCameraShake(float gameTime, float deltaTime, int screenWidth,
                                                           int screenHeight,
                                                           Struktur::Component::Camera* cameraComponent,
-                                                          GameResource::Camera& camera)
+                                                          World::Camera& camera)
 {
 	float trauma = cameraComponent->trauma;
 	if (trauma > 0.f)

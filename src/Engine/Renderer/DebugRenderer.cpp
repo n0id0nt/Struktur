@@ -28,7 +28,7 @@ Struktur::Renderer::DebugRenderer::~DebugRenderer()
 
 void Struktur::Renderer::DebugRenderer::SetupView(GameContext& context)
 {
-	GameResource::Camera& camera = context.GetCamera();
+	World::Camera& camera = context.GetCamera();
 	Core::GameData& gameData     = context.GetGameData();
 	glm::mat4 view                = camera.GetViewMatrix();
 	glm::mat4 proj                = camera.GetProjectionMatrix(gameData.gameWidth, gameData.gameHeight);

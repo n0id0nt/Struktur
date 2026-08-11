@@ -8,8 +8,8 @@
 
 namespace
 {
-using Struktur::GameResource::TileMap::FlipBit;
-using Struktur::GameResource::TileMap::GridTile;
+using Struktur::World::TileMap::FlipBit;
+using Struktur::World::TileMap::GridTile;
 
 constexpr int kChunkTiles = 16;
 
@@ -20,7 +20,7 @@ int64_t BucketKey(int bucketX, int bucketY)
 }  // namespace
 
 std::vector<Struktur::Renderer::TileChunk> Struktur::Renderer::BuildTileChunks(
-    const std::vector<GameResource::TileMap::GridTile>& gridTiles, int tileSize, const glm::vec2& worldOffset,
+    const std::vector<World::TileMap::GridTile>& gridTiles, int tileSize, const glm::vec2& worldOffset,
     int textureWidth, int textureHeight)
 {
 	int chunkPixelSize = tileSize * kChunkTiles;

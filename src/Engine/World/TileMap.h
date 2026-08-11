@@ -4,7 +4,7 @@
 
 namespace Struktur
 {
-namespace GameResource
+namespace World
 {
 namespace TileMap
 {
@@ -24,5 +24,5 @@ struct GridTile
 	FlipBit flipBit;
 };
 };  // namespace TileMap
-}  // namespace GameResource
+}  // namespace World
 }  // namespace Struktur

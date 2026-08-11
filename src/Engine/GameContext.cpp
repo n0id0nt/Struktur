@@ -20,7 +20,7 @@ GameContext::GameContext()
 	m_resourceManager             = std::make_unique<Resource::ResourceManager>();
 	m_systemManager               = std::make_unique<System::SystemManager>();
 	m_gameObjectManager           = std::make_unique<System::GameObjectManager>();
-	m_camera                      = std::make_unique<GameResource::Camera>();
+	m_camera                      = std::make_unique<World::Camera>();
 	m_worldRenderer               = std::make_unique<Renderer::WorldRenderer>();
 	m_uiManager                   = std::make_unique<UI::UIManager>();
 	m_physicsWorld                = std::make_unique<Physics::PhysicsWorld>();
@@ -122,7 +122,7 @@ Physics::PhysicsWorld& GameContext::GetPhysicsWorld() const
 	return *m_physicsWorld;
 }
 
-GameResource::Camera& GameContext::GetCamera() const
+World::Camera& GameContext::GetCamera() const
 {
 	ASSERT_MSG(m_camera.get(), "Camera not initialised");
 	return *m_camera;

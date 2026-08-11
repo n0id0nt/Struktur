@@ -21,7 +21,7 @@
 #include "Engine/GameContext.h"
 #include "Engine/Physics/CollisionShapeGenerators/TileMapCollisionBodyGenerator.h"
 
-entt::entity Struktur::GameResource::Level::CreateWorldEntity(GameContext& context, const std::string& filePath)
+entt::entity Struktur::World::Level::CreateWorldEntity(GameContext& context, const std::string& filePath)
 {
 	entt::registry& registry                     = context.GetRegistry();
 	System::GameObjectManager& gameObjectManager = context.GetGameObjectManager();
@@ -34,7 +34,7 @@ entt::entity Struktur::GameResource::Level::CreateWorldEntity(GameContext& conte
 	return worldEntity;
 }
 
-entt::entity Struktur::GameResource::Level::LoadLevelEntities(GameContext& context, const entt::entity worldEntity,
+entt::entity Struktur::World::Level::LoadLevelEntities(GameContext& context, const entt::entity worldEntity,
                                                               int levelIndex)
 {
 	entt::registry& registry                     = context.GetRegistry();

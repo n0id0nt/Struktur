@@ -15,7 +15,7 @@
 #include "Engine/ECS/SystemManager.h"
 #include "Engine/Event/EventManager.h"
 #include "Engine/Flag/FlagManager.h"
-#include "Engine/Game/Camera.h"
+#include "Engine/World/Camera.h"
 #include "Engine/Input/Input.h"
 #include "Engine/Physics/PhysicsWorld.h"
 #include "Engine/Renderer/WorldRenderer.h"
@@ -53,7 +53,7 @@ class GameContext
 	System::SystemManager& GetSystemManager() const;
 	System::GameObjectManager& GetGameObjectManager() const;
 	Physics::PhysicsWorld& GetPhysicsWorld() const;
-	GameResource::Camera& GetCamera() const;
+	World::Camera& GetCamera() const;
 	Renderer::WorldRenderer& GetWorldRenderer() const;
 	UI::UIManager& GetUIManager() const;
 	Wren::WrenScriptEngine& GetWrenScriptEngine() const;
@@ -108,7 +108,7 @@ class GameContext
 	std::unique_ptr<System::SystemManager> m_systemManager;
 	std::unique_ptr<System::GameObjectManager> m_gameObjectManager;
 	std::unique_ptr<Physics::PhysicsWorld> m_physicsWorld;
-	std::unique_ptr<GameResource::Camera> m_camera;
+	std::unique_ptr<World::Camera> m_camera;
 	std::unique_ptr<Renderer::WorldRenderer> m_worldRenderer;
 	std::unique_ptr<UI::UIManager> m_uiManager;
 	std::unique_ptr<Wren::WrenScriptEngine> m_wrenScriptEngine;
