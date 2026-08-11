@@ -84,9 +84,9 @@ void Struktur::InitialiseGame(GameContext& context)
 	// Fall back to default assets/ if user cancels
 	FileSystem::Mount(projectPath.empty() ? "assets/" : projectPath);
 #elif defined(DEBUG)
-	FileSystem::Mount("data.pak");
-#else
 	FileSystem::Mount("assets/");
+#else
+	FileSystem::Mount("data.pak");
 #endif
 
 	// Want to create a window before we start initialising systems

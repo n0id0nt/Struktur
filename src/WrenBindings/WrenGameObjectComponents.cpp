@@ -625,7 +625,18 @@ void wren_SpriteCreate(WrenVM* vm)
 	Struktur::GameContext* context = static_cast<Struktur::GameContext*>(wrenGetUserData(vm));
 	entt::registry& registry       = context->GetRegistry();
 
-	entt::entity levelEntity   = static_cast<entt::entity>(wrenGetSlotDouble(vm, 1));
+	entt::entity levelEntity = static_cast<entt::entity>(wrenGetSlotDouble(vm, 1));
+
+	// texture is null when Texture.load() failed (e.g. missing/renamed asset) - wrenGetSlotForeign on a null
+	// slot returns a garbage pointer, not nullptr, so this must be checked before it's ever dereferenced below
+	// (previously this crashed the whole process instead of the load failure staying a recoverable Wren error).
+	if (wrenGetSlotType(vm, 2) != WREN_TYPE_FOREIGN)
+	{
+		wrenSetSlotString(vm, 0, "Sprite.create: texture is not a valid Texture (did Texture.load() fail?)");
+		wrenAbortFiber(vm, 0);
+		return;
+	}
+
 	WrenTextureHandle* texture = static_cast<WrenTextureHandle*>(wrenGetSlotForeign(vm, 2));
 	WrenVec4* color            = static_cast<WrenVec4*>(wrenGetSlotForeign(vm, 3));
 	WrenVec2* offset           = static_cast<WrenVec2*>(wrenGetSlotForeign(vm, 4));

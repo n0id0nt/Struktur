@@ -27,7 +27,7 @@ class Player {
     // Called after C++ has created base components
     // Script configures/initializes component values
     start() {
-        var texture = Texture.load("Tiles/PlayerSpriteV2.png")
+        var texture = Texture.load("Tiles/playerSpriteV2.png")
         Sprite.create(_entity, texture, WHITE, Vec2.new(16, 16), 7, 4, false, 0, RenderLayer.ENTITIES, 0)
         texture.unload()
         var camera = Camera.create(_entity)
