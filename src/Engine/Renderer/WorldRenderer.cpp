@@ -145,65 +145,13 @@ void Struktur::Renderer::WorldRenderer::Flush(GameContext& context)
 	bgfx::ProgramHandle runProgram = BGFX_INVALID_HANDLE;
 	Renderer::TextureHandle runTexture{0, 0, 0};
 
-	auto flushRun = [&](size_t runEnd)
-	{
-		size_t count = runEnd - runStart;
-		if (count == 0)
-		{
-			return;
-		}
-
-		bgfx::TransientVertexBuffer tvb;
-		bgfx::TransientIndexBuffer tib;
-		bgfx::allocTransientVertexBuffer(&tvb, (uint32_t)(count * 4), spriteLayout);
-		bgfx::allocTransientIndexBuffer(&tib, (uint32_t)(count * 6));
-
-		SpriteVertex* verts  = (SpriteVertex*)tvb.data;
-		uint16_t* indices    = (uint16_t*)tib.data;
-		float texWidth       = (float)runTexture.width;
-		float texHeight      = (float)runTexture.height;
-
-		for (size_t i = runStart; i < runEnd; ++i)
-		{
-			const DrawItem& item = m_drawItems[i];
-			glm::vec2 corners[4];
-			ComputeQuadCorners(item.destRec, item.origin, item.rotation, corners);
-
-			float u0 = item.sourceRec.x / texWidth;
-			float v0 = item.sourceRec.y / texHeight;
-			float u1 = (item.sourceRec.x + item.sourceRec.width) / texWidth;
-			float v1 = (item.sourceRec.y + item.sourceRec.height) / texHeight;
-			uint32_t abgr = PackColor(item.tint);
-
-			uint32_t base                = (uint32_t)((i - runStart) * 4);
-			verts[base + 0]              = {corners[0].x, corners[0].y, u0, v0, abgr};
-			verts[base + 1]              = {corners[1].x, corners[1].y, u1, v0, abgr};
-			verts[base + 2]              = {corners[2].x, corners[2].y, u0, v1, abgr};
-			verts[base + 3]              = {corners[3].x, corners[3].y, u1, v1, abgr};
-
-			uint16_t ibase      = (uint16_t)base;
-			indices[(i - runStart) * 6 + 0] = ibase + 0;
-			indices[(i - runStart) * 6 + 1] = ibase + 1;
-			indices[(i - runStart) * 6 + 2] = ibase + 2;
-			indices[(i - runStart) * 6 + 3] = ibase + 2;
-			indices[(i - runStart) * 6 + 4] = ibase + 1;
-			indices[(i - runStart) * 6 + 5] = ibase + 3;
-		}
-
-		bgfx::setVertexBuffer(0, &tvb);
-		bgfx::setIndexBuffer(&tib);
-		bgfx::setTexture(0, texColorSampler, {(uint16_t)runTexture.id});
-		bgfx::setState(drawState);
-		bgfx::submit(GraphicsDevice::WorldViewId, runProgram);
-	};
-
 	for (size_t i = 0; i < m_drawItems.size(); ++i)
 	{
 		const DrawItem& item = m_drawItems[i];
 
 		if (item.chunk)
 		{
-			flushRun(i);
+			FlushRun(runStart, i, spriteLayout, texColorSampler, drawState, runTexture, runProgram);
 			bgfx::setVertexBuffer(0, item.chunk->vb);
 			bgfx::setIndexBuffer(item.chunk->ib);
 			bgfx::setTexture(0, texColorSampler, {(uint16_t)item.texture.id});
@@ -220,11 +168,66 @@ void Struktur::Renderer::WorldRenderer::Flush(GameContext& context)
 		                    : (item.texture.id != runTexture.id || program.idx != runProgram.idx);
 		if (boundary)
 		{
-			flushRun(i);
+			FlushRun(runStart, i, spriteLayout, texColorSampler, drawState, runTexture, runProgram);
 			runStart = i;
 		}
 		runTexture = item.texture;
 		runProgram = program;
 	}
-	flushRun(m_drawItems.size());
+	FlushRun(runStart, m_drawItems.size(), spriteLayout, texColorSampler, drawState, runTexture, runProgram);
+}
+
+void Struktur::Renderer::WorldRenderer::FlushRun(size_t runStart, size_t runEnd,
+                                                 const bgfx::VertexLayout& spriteLayout,
+                                                 bgfx::UniformHandle texColorSampler, uint64_t drawState,
+                                                 const TextureHandle& runTexture, bgfx::ProgramHandle runProgram)
+{
+	size_t count = runEnd - runStart;
+	if (count == 0)
+	{
+		return;
+	}
+
+	bgfx::TransientVertexBuffer tvb;
+	bgfx::TransientIndexBuffer tib;
+	bgfx::allocTransientVertexBuffer(&tvb, (uint32_t)(count * 4), spriteLayout);
+	bgfx::allocTransientIndexBuffer(&tib, (uint32_t)(count * 6));
+
+	SpriteVertex* verts  = (SpriteVertex*)tvb.data;
+	uint16_t* indices    = (uint16_t*)tib.data;
+	float texWidth       = (float)runTexture.width;
+	float texHeight      = (float)runTexture.height;
+
+	for (size_t i = runStart; i < runEnd; ++i)
+	{
+		const DrawItem& item = m_drawItems[i];
+		glm::vec2 corners[4];
+		ComputeQuadCorners(item.destRec, item.origin, item.rotation, corners);
+
+		float u0 = item.sourceRec.x / texWidth;
+		float v0 = item.sourceRec.y / texHeight;
+		float u1 = (item.sourceRec.x + item.sourceRec.width) / texWidth;
+		float v1 = (item.sourceRec.y + item.sourceRec.height) / texHeight;
+		uint32_t abgr = PackColor(item.tint);
+
+		uint32_t base                = (uint32_t)((i - runStart) * 4);
+		verts[base + 0]              = {corners[0].x, corners[0].y, u0, v0, abgr};
+		verts[base + 1]              = {corners[1].x, corners[1].y, u1, v0, abgr};
+		verts[base + 2]              = {corners[2].x, corners[2].y, u0, v1, abgr};
+		verts[base + 3]              = {corners[3].x, corners[3].y, u1, v1, abgr};
+
+		uint16_t ibase      = (uint16_t)base;
+		indices[(i - runStart) * 6 + 0] = ibase + 0;
+		indices[(i - runStart) * 6 + 1] = ibase + 1;
+		indices[(i - runStart) * 6 + 2] = ibase + 2;
+		indices[(i - runStart) * 6 + 3] = ibase + 2;
+		indices[(i - runStart) * 6 + 4] = ibase + 1;
+		indices[(i - runStart) * 6 + 5] = ibase + 3;
+	}
+
+	bgfx::setVertexBuffer(0, &tvb);
+	bgfx::setIndexBuffer(&tib);
+	bgfx::setTexture(0, texColorSampler, {(uint16_t)runTexture.id});
+	bgfx::setState(drawState);
+	bgfx::submit(GraphicsDevice::WorldViewId, runProgram);
 }

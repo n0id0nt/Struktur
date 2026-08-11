@@ -58,6 +58,12 @@ class WorldRenderer
 	void Flush(GameContext& context);
 
    private:
+	// Builds a transient vertex/index buffer for m_drawItems[runStart, runEnd) - all sharing runTexture/runProgram
+	// - and submits it in a single draw call. See Flush() for how runs are formed.
+	void FlushRun(size_t runStart, size_t runEnd, const bgfx::VertexLayout& spriteLayout,
+	             bgfx::UniformHandle texColorSampler, uint64_t drawState, const TextureHandle& runTexture,
+	             bgfx::ProgramHandle runProgram);
+
 	std::vector<DrawItem> m_drawItems;
 };
 }  // namespace Renderer
