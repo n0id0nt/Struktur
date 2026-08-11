@@ -2,7 +2,7 @@
 
 #include <cstdint>
 
-#include "Engine/Util/MathUtil.h"
+#include "Engine/Util/Color.h"
 
 #include <bgfx/bgfx.h>
 
@@ -30,7 +30,7 @@ inline bgfx::VertexLayout BuildSpriteVertexLayout()
 	return layout;
 }
 
-inline uint32_t PackColor(const Util::Math::Color& c)
+inline uint32_t PackColor(const Util::Color& c)
 {
 	return ((uint32_t)c.a << 24) | ((uint32_t)c.b << 16) | ((uint32_t)c.g << 8) | (uint32_t)c.r;
 }

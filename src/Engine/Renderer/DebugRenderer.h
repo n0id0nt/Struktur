@@ -2,7 +2,7 @@
 
 #include <glm/glm.hpp>
 
-#include "Engine/Util/MathUtil.h"
+#include "Engine/Util/Color.h"
 
 #include <bgfx/bgfx.h>
 
@@ -35,14 +35,14 @@ class DebugRenderer
 	// (not UIRenderer::SetupView's screen-space identity/ortho) so debug shapes track sprites under pan/zoom.
 	void SetupView(GameContext& context);
 
-	void DrawLine(const glm::vec2& p1, const glm::vec2& p2, float thickness, const Util::Math::Color& color);
+	void DrawLine(const glm::vec2& p1, const glm::vec2& p2, float thickness, const Util::Color& color);
 	// Loops the last point back to the first.
-	void DrawPolygonOutline(const glm::vec2* points, int count, float thickness, const Util::Math::Color& color);
+	void DrawPolygonOutline(const glm::vec2* points, int count, float thickness, const Util::Color& color);
 	// Triangle-fans from points[0] - valid for any convex, CCW-ordered point set (box2d polygons always are).
-	void DrawSolidPolygon(const glm::vec2* points, int count, const Util::Math::Color& color);
-	void DrawCircleOutline(const glm::vec2& center, float radius, float thickness, const Util::Math::Color& color);
-	void DrawSolidCircle(const glm::vec2& center, float radius, const Util::Math::Color& color);
-	void DrawRectOutline(const glm::vec2& min, const glm::vec2& max, float thickness, const Util::Math::Color& color);
+	void DrawSolidPolygon(const glm::vec2* points, int count, const Util::Color& color);
+	void DrawCircleOutline(const glm::vec2& center, float radius, float thickness, const Util::Color& color);
+	void DrawSolidCircle(const glm::vec2& center, float radius, const Util::Color& color);
+	void DrawRectOutline(const glm::vec2& min, const glm::vec2& max, float thickness, const Util::Color& color);
 
    private:
 	void SubmitTriangleFan(const glm::vec2* points, int count, uint32_t abgr);

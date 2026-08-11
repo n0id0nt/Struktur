@@ -79,7 +79,7 @@ void Struktur::Renderer::DebugRenderer::SubmitTriangleFan(const glm::vec2* point
 }
 
 void Struktur::Renderer::DebugRenderer::DrawLine(const glm::vec2& p1, const glm::vec2& p2, float thickness,
-                                                 const Util::Math::Color& color)
+                                                 const Util::Color& color)
 {
 	glm::vec2 dir = p2 - p1;
 	float len     = glm::length(dir);
@@ -96,7 +96,7 @@ void Struktur::Renderer::DebugRenderer::DrawLine(const glm::vec2& p1, const glm:
 }
 
 void Struktur::Renderer::DebugRenderer::DrawPolygonOutline(const glm::vec2* points, int count, float thickness,
-                                                           const Util::Math::Color& color)
+                                                           const Util::Color& color)
 {
 	for (int i = 0; i < count; ++i)
 	{
@@ -104,13 +104,13 @@ void Struktur::Renderer::DebugRenderer::DrawPolygonOutline(const glm::vec2* poin
 	}
 }
 
-void Struktur::Renderer::DebugRenderer::DrawSolidPolygon(const glm::vec2* points, int count, const Util::Math::Color& color)
+void Struktur::Renderer::DebugRenderer::DrawSolidPolygon(const glm::vec2* points, int count, const Util::Color& color)
 {
 	SubmitTriangleFan(points, count, PackColor(color));
 }
 
 void Struktur::Renderer::DebugRenderer::DrawCircleOutline(const glm::vec2& center, float radius, float thickness,
-                                                          const Util::Math::Color& color)
+                                                          const Util::Color& color)
 {
 	constexpr int kSegments = 24;
 	glm::vec2 points[kSegments];
@@ -122,7 +122,7 @@ void Struktur::Renderer::DebugRenderer::DrawCircleOutline(const glm::vec2& cente
 	DrawPolygonOutline(points, kSegments, thickness, color);
 }
 
-void Struktur::Renderer::DebugRenderer::DrawSolidCircle(const glm::vec2& center, float radius, const Util::Math::Color& color)
+void Struktur::Renderer::DebugRenderer::DrawSolidCircle(const glm::vec2& center, float radius, const Util::Color& color)
 {
 	constexpr int kSegments = 24;
 	glm::vec2 points[kSegments];
@@ -135,7 +135,7 @@ void Struktur::Renderer::DebugRenderer::DrawSolidCircle(const glm::vec2& center,
 }
 
 void Struktur::Renderer::DebugRenderer::DrawRectOutline(const glm::vec2& min, const glm::vec2& max, float thickness,
-                                                        const Util::Math::Color& color)
+                                                        const Util::Color& color)
 {
 	glm::vec2 points[4] = {min, {max.x, min.y}, max, {min.x, max.y}};
 	DrawPolygonOutline(points, 4, thickness, color);

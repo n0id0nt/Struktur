@@ -12,7 +12,7 @@
 #include "Engine/GameContext.h"
 #include "Engine/Scripting/WrenBindingRegistry.h"
 #include "Engine/Scripting/WrenUtil.h"
-#include "Engine/Util/MathUtil.h"
+#include "Engine/Util/Color.h"
 #include "WrenAnimation.h"
 #include "WrenMath.h"
 #include "WrenPhysics.h"
@@ -636,7 +636,7 @@ void wren_SpriteCreate(WrenVM* vm)
 	auto layer                 = static_cast<Struktur::GameResource::RenderLayer>(static_cast<int>(wrenGetSlotDouble(vm, 9)));
 	float orderInLayer         = static_cast<float>(wrenGetSlotDouble(vm, 10));
 
-	Struktur::Util::Math::Color rayColor{(unsigned char)color->value.r, (unsigned char)color->value.g,
+	Struktur::Util::Color rayColor{(unsigned char)color->value.r, (unsigned char)color->value.g,
 	                                  (unsigned char)color->value.b, (unsigned char)color->value.a};
 
 	registry.emplace<Struktur::Component::Sprite>(levelEntity, texture->resource, rayColor, offset->value, columns,
@@ -672,7 +672,7 @@ void wren_SpriteSetColor(WrenVM* vm)
 {
 	WrenSprite* sprite = (WrenSprite*)wrenGetSlotForeign(vm, 0);
 	WrenVec4* color    = (WrenVec4*)wrenGetSlotForeign(vm, 1);
-	Struktur::Util::Math::Color rayColor{(unsigned char)color->value.r, (unsigned char)color->value.g,
+	Struktur::Util::Color rayColor{(unsigned char)color->value.r, (unsigned char)color->value.g,
 	                                  (unsigned char)color->value.b, (unsigned char)color->value.a};
 	sprite->component->color = rayColor;
 }

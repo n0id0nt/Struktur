@@ -39,6 +39,7 @@
 #include "Engine/Input/Input.h"
 #include "Engine/Scripting/WrenScriptEngine.h"
 #include "Engine/Text/Font.h"
+#include "Engine/Util/Color.h"
 #include "Engine/Util/MathUtil.h"
 
 #ifdef DEBUG
@@ -83,9 +84,9 @@ void Struktur::InitialiseGame(GameContext& context)
 	// Fall back to default assets/ if user cancels
 	FileSystem::Mount(projectPath.empty() ? "assets/" : projectPath);
 #elif defined(DEBUG)
-	FileSystem::Mount("assets/");
-#else
 	FileSystem::Mount("data.pak");
+#else
+	FileSystem::Mount("assets/");
 #endif
 
 	// Want to create a window before we start initialising systems
@@ -297,7 +298,7 @@ void Struktur::SplashScreenLoop(GameContext& context)
 	context.GetUIRenderer().SetupView(context);
 	context.GetUIRenderer().DrawText(font->font, splashScreenName,
 	                                 {(float)((width - fontWidth) / 2), (float)((height - fontSize) / 2)},
-	                                 (float)fontSize, Util::Math::Color{255, 255, 255, (unsigned char)textAlpha});
+	                                 (float)fontSize, Util::Color{255, 255, 255, (unsigned char)textAlpha});
 	context.GetGraphicsDevice().EndFrame();
 	// bgfx view state (framebuffer/clear/rect) isn't snapshotted at submit time - it's whatever was last set
 	// before bgfx::frame() runs. Restoring the redirect must happen AFTER EndFrame() (this frame's draws are

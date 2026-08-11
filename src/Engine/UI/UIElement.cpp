@@ -11,8 +11,8 @@ Struktur::UI::UIElement::UIElement(const glm::vec2& absolutePosition, const glm:
       m_absoluteSize(absoluteSize),
       m_relativeSize(relativeSize),
       m_anchorPoint(glm::vec2()),
-      m_backgroundColor(Util::Math::ColorLightGray),
-      m_borderColor(Util::Math::ColorDarkGray),
+      m_backgroundColor(Util::ColorLightGray),
+      m_borderColor(Util::ColorDarkGray),
       m_borderWidth(1.0f),
       m_visible(true),
       m_enabled(true),
@@ -300,7 +300,7 @@ void Struktur::UI::UIElement::OnActivate(GameContext& context)
 void Struktur::UI::UIElement::RenderFocusIndicator(GameContext& context)
 {
 	// Simple focus indicator - can be customized
-	context.GetUIRenderer().DrawRectOutline(m_bounds, 2.0f, Util::Math::ColorBlue);
+	context.GetUIRenderer().DrawRectOutline(m_bounds, 2.0f, Util::ColorBlue);
 }
 
 void Struktur::UI::UIElement::UpdateChildren(GameContext& context)

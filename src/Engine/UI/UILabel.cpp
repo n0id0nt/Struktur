@@ -7,7 +7,7 @@ Struktur::UI::UILabel::UILabel(GameContext& context, const glm::vec2& absolutePo
                                const glm::vec2& relativePosition, const std::string& labelText, float fontSz)
     : UIElement(absolutePosition, relativePosition, {0, 0}, {0, 0}),
       m_text(labelText),
-      m_textColor(Util::Math::ColorBlack),
+      m_textColor(Util::ColorBlack),
       m_alignment(TextAlignment::LEFT),
       m_wrapping(TextWrapping::NONE),
       m_fontSize(fontSz)
@@ -20,7 +20,7 @@ Struktur::UI::UILabel::UILabel(GameContext& context, const glm::vec2& absolutePo
 
 	// Labels are typically not focusable
 	m_focusable       = false;
-	m_backgroundColor = Util::Math::ColorBlank;  // Transparent by default
+	m_backgroundColor = Util::ColorBlank;  // Transparent by default
 	m_borderWidth     = 0.0f;
 }
 

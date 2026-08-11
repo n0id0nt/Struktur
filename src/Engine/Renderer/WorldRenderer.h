@@ -5,6 +5,7 @@
 
 #include "Engine/Game/RenderLayer.h"
 #include "Engine/Renderer/RenderTypes.h"
+#include "Engine/Util/Color.h"
 #include "Engine/Util/MathUtil.h"
 #include "entt/entt.hpp"
 #include "glm/glm.hpp"
@@ -26,7 +27,7 @@ struct DrawItem
 	Util::Math::Rect destRec;
 	glm::vec2 origin;
 	float rotation;
-	Util::Math::Color tint;
+	Util::Color tint;
 	// Set only for chunk items (see SubmitChunk) - Flush() submits these directly from their own cached
 	// static buffers instead of folding them into a transient sprite batch.
 	const TileChunk* chunk = nullptr;
@@ -51,7 +52,7 @@ class WorldRenderer
 	void Clear();
 	void Submit(GameResource::RenderLayer layer, float orderInLayer, entt::entity entity,
 	           const TextureHandle& texture, const Util::Math::Rect& sourceRec, const Util::Math::Rect& destRec,
-	           const glm::vec2& origin, float rotation, const Util::Math::Color& tint, const CullBounds& cullBounds);
+	           const glm::vec2& origin, float rotation, const Util::Color& tint, const CullBounds& cullBounds);
 	void SubmitChunk(GameResource::RenderLayer layer, float orderInLayer, const TileChunk& chunk,
 	                 const TextureHandle& texture, const CullBounds& cullBounds);
 	void Flush(GameContext& context);

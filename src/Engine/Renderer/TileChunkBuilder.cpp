@@ -81,7 +81,7 @@ std::vector<Struktur::Renderer::TileChunk> Struktur::Renderer::BuildTileChunks(
 			float v0 = sourceRec.y / (float)textureHeight;
 			float u1 = (sourceRec.x + sourceRec.width) / (float)textureWidth;
 			float v1 = (sourceRec.y + sourceRec.height) / (float)textureHeight;
-			uint32_t abgr = PackColor(Util::Math::ColorWhite);
+			uint32_t abgr = PackColor(Util::ColorWhite);
 
 			uint16_t base = (uint16_t)vertices.size();
 			vertices.push_back({destX, destY, u0, v0, abgr});

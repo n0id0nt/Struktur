@@ -87,7 +87,7 @@ void Struktur::Renderer::WorldRenderer::Submit(GameResource::RenderLayer layer, 
                                                entt::entity entity, const TextureHandle& texture,
                                                const Util::Math::Rect& sourceRec, const Util::Math::Rect& destRec,
                                                const glm::vec2& origin, float rotation,
-                                               const Util::Math::Color& tint, const CullBounds& cullBounds)
+                                               const Util::Color& tint, const CullBounds& cullBounds)
 {
 	if (!RectOverlaps(destRec, cullBounds))
 	{

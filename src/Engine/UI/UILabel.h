@@ -34,7 +34,7 @@ class UILabel : public UIElement
    private:
 	std::string m_text;
 	Resource::ResourcePtr<Resource::FontResource> m_font;
-	Util::Math::Color m_textColor;
+	Util::Color m_textColor;
 	TextAlignment m_alignment;
 	TextWrapping m_wrapping;
 	float m_fontSize;
@@ -49,7 +49,7 @@ class UILabel : public UIElement
 	{
 		m_font = std::move(newFont);
 	}
-	void SetTextColor(Util::Math::Color color)
+	void SetTextColor(Util::Color color)
 	{
 		m_textColor = color;
 	}

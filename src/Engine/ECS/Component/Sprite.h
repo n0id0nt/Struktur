@@ -4,7 +4,7 @@
 
 #include "Engine/Game/RenderLayer.h"
 #include "Engine/Resource/TextureResource.h"
-#include "Engine/Util/MathUtil.h"
+#include "Engine/Util/Color.h"
 #include "glm/glm.hpp"
 
 namespace Struktur
@@ -14,7 +14,7 @@ namespace Component
 struct Sprite
 {
 	Resource::ResourcePtr<Resource::TextureResource> texture;
-	Util::Math::Color color;
+	Util::Color color;
 	glm::vec2 offset;
 
 	// TODO also store a cached version of the source rec here so it doesn't need to be recalculated

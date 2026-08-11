@@ -75,14 +75,14 @@ void Struktur::Renderer::UIRenderer::SubmitTexturedQuad(float x, float y, float 
 	bgfx::submit(GraphicsDevice::UIViewId, GetEmbeddedProgram("sprite"));
 }
 
-void Struktur::Renderer::UIRenderer::DrawRect(const Util::Math::Rect& rect, const Util::Math::Color& color)
+void Struktur::Renderer::UIRenderer::DrawRect(const Util::Math::Rect& rect, const Util::Color& color)
 {
 	SubmitTexturedQuad(rect.x, rect.y, rect.width, rect.height, 0.0f, 0.0f, 1.0f, 1.0f, PackColor(color),
 	                    m_whiteTexture);
 }
 
 void Struktur::Renderer::UIRenderer::DrawRectOutline(const Util::Math::Rect& rect, float thickness,
-                                                      const Util::Math::Color& color)
+                                                      const Util::Color& color)
 {
 	DrawRect(Util::Math::Rect{rect.x, rect.y, rect.width, thickness}, color);                                 // top
 	DrawRect(Util::Math::Rect{rect.x, rect.y + rect.height - thickness, rect.width, thickness}, color);       // bottom
@@ -91,7 +91,7 @@ void Struktur::Renderer::UIRenderer::DrawRectOutline(const Util::Math::Rect& rec
 }
 
 void Struktur::Renderer::UIRenderer::DrawTexturedRect(const Util::Math::Rect& rect, const TextureHandle& texture,
-                                                       const Util::Math::Color& tint)
+                                                       const Util::Color& tint)
 {
 	SubmitTexturedQuad(rect.x, rect.y, rect.width, rect.height, 0.0f, 0.0f, 1.0f, 1.0f, PackColor(tint),
 	                    bgfx::TextureHandle{(uint16_t)texture.id});
@@ -99,7 +99,7 @@ void Struktur::Renderer::UIRenderer::DrawTexturedRect(const Util::Math::Rect& re
 
 void Struktur::Renderer::UIRenderer::DrawText(const Text::Font& font, const std::string& text,
                                                const glm::vec2& position, float fontSize,
-                                               const Util::Math::Color& color)
+                                               const Util::Color& color)
 {
 	// Stub/unloaded font (see FontResource) - draw nothing rather than divide by zero below.
 	if (font.baseSize <= 0 || font.glyphs.empty())

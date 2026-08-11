@@ -1,13 +1,13 @@
 #include "Box2DBgfxDebugDraw.h"
 
 #include "Engine/Renderer/DebugRenderer.h"
-#include "Engine/Util/MathUtil.h"
+#include "Engine/Util/Color.h"
 
 namespace
 {
-Struktur::Util::Math::Color ToColor(const b2Color& c)
+Struktur::Util::Color ToColor(const b2Color& c)
 {
-	return Struktur::Util::Math::Color{(unsigned char)(c.r * 255.0f), (unsigned char)(c.g * 255.0f),
+	return Struktur::Util::Color{(unsigned char)(c.r * 255.0f), (unsigned char)(c.g * 255.0f),
 	                                    (unsigned char)(c.b * 255.0f), (unsigned char)(c.a * 255.0f)};
 }
 
@@ -40,10 +40,10 @@ void Struktur::Debug::Box2DBgfxDebugDraw::DrawSolidPolygon(const b2Vec2* vertice
 	{
 		points[i] = glm::vec2(vertices[i].x, vertices[i].y) * m_pixelsPerMeter;
 	}
-	Util::Math::Color outlineColor = ToColor(color);
+	Util::Color outlineColor = ToColor(color);
 	// Box2D hands every shape full alpha - fill translucently so overlapping/stacked shapes stay readable, but
 	// keep the outline at the shape's real alpha so the boundary itself still reads as solid.
-	Util::Math::Color fillColor = outlineColor;
+	Util::Color fillColor = outlineColor;
 	fillColor.a                 = (unsigned char)(outlineColor.a * kFillAlphaScale);
 	m_renderer.DrawSolidPolygon(points, vertexCount, fillColor);
 	m_renderer.DrawPolygonOutline(points, vertexCount, 1.0f, outlineColor);
@@ -61,8 +61,8 @@ void Struktur::Debug::Box2DBgfxDebugDraw::DrawSolidCircle(const b2Vec2& center, 
 	glm::vec2 pixelCenter = glm::vec2(center.x, center.y) * m_pixelsPerMeter;
 	float pixelRadius     = radius * m_pixelsPerMeter;
 
-	Util::Math::Color outlineColor = ToColor(color);
-	Util::Math::Color fillColor    = outlineColor;
+	Util::Color outlineColor = ToColor(color);
+	Util::Color fillColor    = outlineColor;
 	fillColor.a                    = (unsigned char)(outlineColor.a * kFillAlphaScale);
 	m_renderer.DrawSolidCircle(pixelCenter, pixelRadius, fillColor);
 	m_renderer.DrawCircleOutline(pixelCenter, pixelRadius, 1.0f, outlineColor);
@@ -88,9 +88,9 @@ void Struktur::Debug::Box2DBgfxDebugDraw::DrawTransform(const b2Transform& xf)
 	b2Vec2 yAxis                 = xf.q.GetYAxis();
 
 	m_renderer.DrawLine(origin, origin + glm::vec2(xAxis.x, xAxis.y) * kAxisLength * m_pixelsPerMeter, 1.0f,
-	                    Util::Math::ColorRed);
+	                    Util::ColorRed);
 	m_renderer.DrawLine(origin, origin + glm::vec2(yAxis.x, yAxis.y) * kAxisLength * m_pixelsPerMeter, 1.0f,
-	                    Util::Math::ColorGreen);
+	                    Util::ColorGreen);
 }
 
 void Struktur::Debug::Box2DBgfxDebugDraw::DrawPoint(const b2Vec2& p, float size, const b2Color& color)

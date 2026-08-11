@@ -6,7 +6,7 @@
 #include <unordered_map>
 
 #include "Debug/Editor/Windows/EditorWindow.h"
-#include "Engine/Util/MathUtil.h"
+#include "Engine/Util/Color.h"
 #include "glm/glm.hpp"
 #include "glm/gtc/quaternion.hpp."
 
@@ -95,7 +95,7 @@ class InspectorWindow : public EditorWindow
 	bool RenderVec3(const char* label, glm::vec3& vec);
 	bool RenderVec4(const char* label, glm::vec4& vec);
 	bool RenderQuat(const char* label, glm::quat& quat);
-	bool RenderColor(const char* label, Util::Math::Color& color);
+	bool RenderColor(const char* label, Util::Color& color);
 
 	HierarchyWindow* m_hierarchyWindow;
 	UIHierarchyWindow* m_uiHierarchyWindow;

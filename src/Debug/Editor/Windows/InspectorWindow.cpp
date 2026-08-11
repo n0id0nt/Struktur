@@ -338,14 +338,14 @@ void InspectorWindow::RenderUIElementProperties(UI::UIElement* element)
 		ImGui::PushID("Appearance");
 
 		// Background color
-		Util::Math::Color bgColor = element->GetBackgroundColor();
+		Util::Color bgColor = element->GetBackgroundColor();
 		if (RenderColor("Background Color", bgColor))
 		{
 			element->SetBackgroundColor(bgColor);
 		}
 
 		// Border color
-		Util::Math::Color borderColor = element->GetBorderColor();
+		Util::Color borderColor = element->GetBorderColor();
 		if (RenderColor("Border Color", borderColor))
 		{
 			element->SetBorderColor(borderColor);
@@ -784,7 +784,7 @@ bool InspectorWindow::RenderQuat(const char* label, glm::quat& quat)
 	return modified;
 }
 
-bool InspectorWindow::RenderColor(const char* label, Util::Math::Color& color)
+bool InspectorWindow::RenderColor(const char* label, Util::Color& color)
 {
 	float col[4] = {color.r / 255.0f, color.g / 255.0f, color.b / 255.0f, color.a / 255.0f};
 

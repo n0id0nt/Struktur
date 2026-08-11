@@ -8,7 +8,7 @@ Struktur::UI::UIPanel::UIPanel(const glm::vec2& absolutePosition, const glm::vec
     : UIElement(absolutePosition, relativePosition, absoluteSize, relativeSize),
       m_hasBackgroundTexture(false)
 {
-	m_backgroundColor = Util::Math::ColorLightGray;
+	m_backgroundColor = Util::ColorLightGray;
 	m_focusable       = false;  // Panels typically don't receive focus
 }
 
@@ -38,7 +38,7 @@ void Struktur::UI::UIPanel::Render(GameContext& context)
 		{
 			texture->LoadToGpu(context);
 		}
-		context.GetUIRenderer().DrawTexturedRect(m_bounds, texture->GetHandle(), Util::Math::ColorWhite);
+		context.GetUIRenderer().DrawTexturedRect(m_bounds, texture->GetHandle(), Util::ColorWhite);
 	}
 	else
 	{

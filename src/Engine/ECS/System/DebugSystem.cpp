@@ -81,7 +81,7 @@ void Struktur::System::DebugSystem::Update(GameContext& context)
 		}
 		float fps = context.GetTimeSystem().unscaledDelta > 0.0f ? 1.0f / context.GetTimeSystem().unscaledDelta : 0.0f;
 		context.GetUIRenderer().DrawText(m_fpsFont->font, std::format("FPS: {:.0f}", fps), {10, 10}, 16.0f,
-		                                 Util::Math::ColorGreen);
+		                                 Util::ColorGreen);
 	}
 }
 
@@ -98,8 +98,8 @@ void Struktur::System::DebugSystem::RenderEntityGizmos(GameContext& context)
 		float crossSize = 10.0f;
 		glm::vec2 pos    = {worldPosition.x, worldPosition.y};
 
-		m_debugRenderer.DrawLine({pos.x - crossSize, pos.y}, {pos.x + crossSize, pos.y}, 2.0f, Util::Math::ColorGreen);
-		m_debugRenderer.DrawLine({pos.x, pos.y - crossSize}, {pos.x, pos.y + crossSize}, 2.0f, Util::Math::ColorGreen);
+		m_debugRenderer.DrawLine({pos.x - crossSize, pos.y}, {pos.x + crossSize, pos.y}, 2.0f, Util::ColorGreen);
+		m_debugRenderer.DrawLine({pos.x, pos.y - crossSize}, {pos.x, pos.y + crossSize}, 2.0f, Util::ColorGreen);
 	}
 }
 
@@ -233,7 +233,7 @@ void Struktur::System::DebugSystem::RenderGrid(GameContext& context)
 
 	float gridSize      = gridSettings.gridSize;
 	unsigned char alpha = (unsigned char)(gridSettings.gridOpacity * 255.0f);
-	Util::Math::Color gridColor = {200, 200, 200, alpha};
+	Util::Color gridColor = {200, 200, 200, alpha};
 
 	float margin = gridSize * 2;
 	int startX    = (int)((topLeft.x - margin) / gridSize) * gridSize;
@@ -252,11 +252,11 @@ void Struktur::System::DebugSystem::RenderGrid(GameContext& context)
 
 	if (startX <= 0 && endX >= 0)
 	{
-		m_debugRenderer.DrawLine({0.0f, (float)startY}, {0.0f, (float)endY}, 2.0f, Util::Math::ColorRed);
+		m_debugRenderer.DrawLine({0.0f, (float)startY}, {0.0f, (float)endY}, 2.0f, Util::ColorRed);
 	}
 	if (startY <= 0 && endY >= 0)
 	{
-		m_debugRenderer.DrawLine({(float)startX, 0.0f}, {(float)endX, 0.0f}, 2.0f, Util::Math::ColorGreen);
+		m_debugRenderer.DrawLine({(float)startX, 0.0f}, {(float)endX, 0.0f}, 2.0f, Util::ColorGreen);
 	}
 }
 
@@ -272,6 +272,6 @@ void Struktur::System::DebugSystem::RenderLevelBounds(GameContext& context)
 		glm::vec3 worldPosition = transformSystem.GetWorldPosition(context, entity);
 		glm::vec2 min            = {worldPosition.x, worldPosition.y};
 		glm::vec2 max            = {worldPosition.x + level.width, worldPosition.y + level.height};
-		m_debugRenderer.DrawRectOutline(min, max, debugSettings.levelBoundsThickness, Util::Math::ColorOrange);
+		m_debugRenderer.DrawRectOutline(min, max, debugSettings.levelBoundsThickness, Util::ColorOrange);
 	}
 }

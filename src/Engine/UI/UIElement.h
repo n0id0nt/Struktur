@@ -7,6 +7,7 @@
 #include <vector>
 
 #include "Engine/Callback/Callback.h"
+#include "Engine/Util/Color.h"
 #include "Engine/Util/MathUtil.h"
 #include "glm/glm.hpp"
 
@@ -125,11 +126,11 @@ class UIElement
 	UIElement* GetNavigationNeighbor(NavigationDirection dir) const;
 
 	// Styling
-	void SetBackgroundColor(Util::Math::Color color)
+	void SetBackgroundColor(Util::Color color)
 	{
 		m_backgroundColor = color;
 	}
-	void SetBorderColor(Util::Math::Color color)
+	void SetBorderColor(Util::Color color)
 	{
 		m_borderColor = color;
 	}
@@ -138,11 +139,11 @@ class UIElement
 		m_borderWidth = width;
 	}
 
-	Util::Math::Color GetBackgroundColor() const
+	Util::Color GetBackgroundColor() const
 	{
 		return m_backgroundColor;
 	}
-	Util::Math::Color GetBorderColor() const
+	Util::Color GetBorderColor() const
 	{
 		return m_borderColor;
 	}
@@ -206,8 +207,8 @@ class UIElement
 	glm::vec2 m_absoluteSize;
 	glm::vec2 m_relativeSize;
 	glm::vec2 m_anchorPoint;
-	Util::Math::Color m_backgroundColor;
-	Util::Math::Color m_borderColor;
+	Util::Color m_backgroundColor;
+	Util::Color m_borderColor;
 	float m_borderWidth;
 	bool m_visible;
 	bool m_enabled;
