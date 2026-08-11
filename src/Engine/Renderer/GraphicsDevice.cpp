@@ -41,12 +41,14 @@ void Struktur::Renderer::GraphicsDevice::Initialise(void* nativeWindowHandle, in
 	bgfx::setViewRect(UIViewId, 0, 0, (uint16_t)width, (uint16_t)height);
 	bgfx::setViewMode(UIViewId, bgfx::ViewMode::Sequential);
 
+#ifdef EDITOR
 	// No clear - it composites on top of whatever WorldViewId/DebugViewId/UIViewId already drew. Sequential mode
 	// preserves ImGui's own draw-command order instead of letting bgfx reorder by state (the default for opaque
 	// geometry).
 	bgfx::setViewClear(EditorViewId, BGFX_CLEAR_NONE);
 	bgfx::setViewRect(EditorViewId, 0, 0, (uint16_t)width, (uint16_t)height);
 	bgfx::setViewMode(EditorViewId, bgfx::ViewMode::Sequential);
+#endif
 
 	DEBUG_INFO(std::format("bgfx initialised, renderer: {}", bgfx::getRendererName(bgfx::getRendererType())).c_str());
 	m_initialised = true;
@@ -68,7 +70,9 @@ void Struktur::Renderer::GraphicsDevice::Resize(int width, int height)
 	bgfx::setViewRect(WorldViewId, 0, 0, (uint16_t)width, (uint16_t)height);
 	bgfx::setViewRect(DebugViewId, 0, 0, (uint16_t)width, (uint16_t)height);
 	bgfx::setViewRect(UIViewId, 0, 0, (uint16_t)width, (uint16_t)height);
+#ifdef EDITOR
 	bgfx::setViewRect(EditorViewId, 0, 0, (uint16_t)width, (uint16_t)height);
+#endif
 }
 
 void Struktur::Renderer::GraphicsDevice::SetWorldRenderTarget(bgfx::FrameBufferHandle frameBuffer)

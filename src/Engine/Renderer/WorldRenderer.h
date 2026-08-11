@@ -38,7 +38,7 @@ struct CullBounds
 	float minX, minY, maxX, maxY;
 };
 
-// Owns the per-frame draw list for everything in the game world - individual sprites/tiles (Submit) and
+// Owns the per-frame draw list for everything in the game world - individual sprites/tiles (SubmitSprite) and
 // cached tilemap chunk meshes (SubmitChunk) alike - so both funnel through the same cull, sort, and flush,
 // even though tiles-as-a-chunk and a moving sprite end up drawn very differently once Flush() gets to them.
 class WorldRenderer
@@ -50,9 +50,9 @@ class WorldRenderer
 	static uint64_t PackSortKey(GameResource::RenderLayer layer, float orderInLayer, unsigned int textureId);
 
 	void Clear();
-	void Submit(GameResource::RenderLayer layer, float orderInLayer, entt::entity entity,
-	           const TextureHandle& texture, const Util::Math::Rect& sourceRec, const Util::Math::Rect& destRec,
-	           const glm::vec2& origin, float rotation, const Util::Color& tint, const CullBounds& cullBounds);
+	void SubmitSprite(GameResource::RenderLayer layer, float orderInLayer, entt::entity entity,
+	                  const TextureHandle& texture, const Util::Math::Rect& sourceRec, const Util::Math::Rect& destRec,
+	                  const glm::vec2& origin, float rotation, const Util::Color& tint, const CullBounds& cullBounds);
 	void SubmitChunk(GameResource::RenderLayer layer, float orderInLayer, const TileChunk& chunk,
 	                 const TextureHandle& texture, const CullBounds& cullBounds);
 	void Flush(GameContext& context);

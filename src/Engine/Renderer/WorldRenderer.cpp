@@ -2,7 +2,6 @@
 
 #include <algorithm>
 #include <cfloat>
-#include <cstring>
 
 #include "Engine/Core/GameData.h"
 #include "Engine/ECS/System/ShaderSystem.h"
@@ -13,26 +12,6 @@
 
 #include <bgfx/bgfx.h>
 #include <glm/gtc/type_ptr.hpp>
-
-namespace
-{
-// Maps a float to a uint32 that sorts (as an unsigned integer) in the same order as the float,
-// including negatives - lets orderInLayer (which can be a negative world Y) participate in the
-// packed integer sort key correctly.
-uint32_t FloatToSortableBits(float value)
-{
-	uint32_t bits;
-	std::memcpy(&bits, &value, sizeof(bits));
-	uint32_t mask = (bits & 0x80000000u) ? 0xFFFFFFFFu : 0x80000000u;
-	return bits ^ mask;
-}
-
-bool RectOverlaps(const Struktur::Util::Math::Rect& rect, const Struktur::Renderer::CullBounds& bounds)
-{
-	return rect.x < bounds.maxX && rect.x + rect.width > bounds.minX && rect.y < bounds.maxY &&
-	      rect.y + rect.height > bounds.minY;
-}
-}  // namespace
 
 Struktur::Renderer::WorldRenderer::WorldRenderer()
 {
@@ -73,7 +52,7 @@ uint64_t Struktur::Renderer::WorldRenderer::PackSortKey(GameResource::RenderLaye
 {
 	// [63:60] layer (4 bits) | [59:28] orderInLayer, sortable-float-bits (32 bits) | [27:0] textureId (28 bits)
 	uint64_t layerBits   = static_cast<uint64_t>(layer) & 0xFull;
-	uint64_t orderBits   = static_cast<uint64_t>(FloatToSortableBits(orderInLayer));
+	uint64_t orderBits   = static_cast<uint64_t>(Util::Math::FloatToSortableBits(orderInLayer));
 	uint64_t textureBits = static_cast<uint64_t>(textureId) & 0xFFFFFFFull;
 	return (layerBits << 60) | (orderBits << 28) | textureBits;
 }
@@ -83,13 +62,13 @@ void Struktur::Renderer::WorldRenderer::Clear()
 	m_drawItems.clear();
 }
 
-void Struktur::Renderer::WorldRenderer::Submit(GameResource::RenderLayer layer, float orderInLayer,
-                                               entt::entity entity, const TextureHandle& texture,
-                                               const Util::Math::Rect& sourceRec, const Util::Math::Rect& destRec,
-                                               const glm::vec2& origin, float rotation,
-                                               const Util::Color& tint, const CullBounds& cullBounds)
+void Struktur::Renderer::WorldRenderer::SubmitSprite(GameResource::RenderLayer layer, float orderInLayer,
+                                                      entt::entity entity, const TextureHandle& texture,
+                                                      const Util::Math::Rect& sourceRec, const Util::Math::Rect& destRec,
+                                                      const glm::vec2& origin, float rotation,
+                                                      const Util::Color& tint, const CullBounds& cullBounds)
 {
-	if (!RectOverlaps(destRec, cullBounds))
+	if (!Util::Math::RectOverlaps(destRec, cullBounds.minX, cullBounds.minY, cullBounds.maxX, cullBounds.maxY))
 	{
 		return;
 	}
@@ -103,7 +82,8 @@ void Struktur::Renderer::WorldRenderer::SubmitChunk(GameResource::RenderLayer la
                                                     const TileChunk& chunk, const TextureHandle& texture,
                                                     const CullBounds& cullBounds)
 {
-	if (!RectOverlaps(chunk.worldBounds, cullBounds))
+	if (!Util::Math::RectOverlaps(chunk.worldBounds, cullBounds.minX, cullBounds.minY, cullBounds.maxX,
+	                              cullBounds.maxY))
 	{
 		return;
 	}

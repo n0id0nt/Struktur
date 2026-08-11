@@ -116,8 +116,8 @@ void Struktur::System::SpriteRenderSystem::Update(GameContext& context)
 					orderInLayer += worldPosition.y;
 				}
 
-				worldRenderer.Submit(sprite.layer, orderInLayer, entity, texture->GetHandle(), sourceRec, destRec,
-				                     offset, glm::degrees(angleZ), sprite.color, cullBounds);
+				worldRenderer.SubmitSprite(sprite.layer, orderInLayer, entity, texture->GetHandle(), sourceRec, destRec,
+				                           offset, glm::degrees(angleZ), sprite.color, cullBounds);
 			}
 		}
 
