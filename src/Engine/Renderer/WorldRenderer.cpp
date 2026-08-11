@@ -148,6 +148,7 @@ void Struktur::Renderer::WorldRenderer::Flush(GameContext& context)
 	for (size_t i = 0; i < m_drawItems.size(); ++i)
 	{
 		const DrawItem& item = m_drawItems[i];
+		bgfx::ProgramHandle program = shaderSystem.ResolveProgram(context, item.entity, defaultProgram);
 
 		if (item.chunk)
 		{
@@ -156,12 +157,10 @@ void Struktur::Renderer::WorldRenderer::Flush(GameContext& context)
 			bgfx::setIndexBuffer(item.chunk->ib);
 			bgfx::setTexture(0, texColorSampler, {(uint16_t)item.texture.id});
 			bgfx::setState(drawState);
-			bgfx::submit(GraphicsDevice::WorldViewId, defaultProgram);
+			bgfx::submit(GraphicsDevice::WorldViewId, program);
 			runStart = i + 1;
 			continue;
 		}
-
-		bgfx::ProgramHandle program = shaderSystem.ResolveProgram(context, item.entity, defaultProgram);
 
 		bool boundary = (i == runStart)
 		                    ? false
