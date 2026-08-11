@@ -11,11 +11,12 @@ namespace Struktur::Debug
 void GameViewportWindow::Initialise(GameContext& context)
 {
 	Core::GameData& gameData = context.GetGameData();
-	m_frameBuffer =
-	    bgfx::createFrameBuffer((uint16_t)gameData.gameWidth, (uint16_t)gameData.gameHeight, bgfx::TextureFormat::BGRA8);
+	uint16_t width           = (uint16_t)gameData.gameWidth;
+	uint16_t height          = (uint16_t)gameData.gameHeight;
+	m_frameBuffer            = bgfx::createFrameBuffer(width, height, bgfx::TextureFormat::BGRA8);
 	// Sticky redirect: from here on WorldViewId renders into this instead of the backbuffer, for as long as
 	// the editor is running - no per-frame Begin/EndTextureMode push/pop needed (see Editor::BeginUpdateLoop).
-	context.GetGraphicsDevice().SetWorldRenderTarget(m_frameBuffer);
+	context.GetGraphicsDevice().SetWorldRenderTarget(m_frameBuffer, width, height);
 }
 
 void GameViewportWindow::Render(GameContext& context)

@@ -47,7 +47,9 @@ class GraphicsDevice
 
 	// Redirects WorldViewId into an offscreen framebuffer (the editor's game-viewport panel) instead of the
 	// real backbuffer - a one-time sticky redirect, not a per-frame push/pop like raylib's BeginTextureMode.
-	void SetWorldRenderTarget(bgfx::FrameBufferHandle frameBuffer);
+	// width/height are the framebuffer's own (fixed, game-resolution) size, cached so Resize() can keep the
+	// view rect matching it instead of stretching it to the real window's size.
+	void SetWorldRenderTarget(bgfx::FrameBufferHandle frameBuffer, uint16_t width, uint16_t height);
 	// Points World/Debug/UI views at the real backbuffer. Does not forget the framebuffer passed to
 	// SetWorldRenderTarget - see RestoreWorldRenderTarget, used by SplashScreenLoop to draw straight to the
 	// window (matching web's raw BeginDrawing/EndDrawing) before the editor's game-viewport panel exists to
@@ -68,8 +70,15 @@ class GraphicsDevice
    private:
 	int m_width  = 0;
 	int m_height = 0;
-	// Cached for RestoreWorldRenderTarget - ResetWorldRenderTarget intentionally leaves this untouched.
+	// Cached for RestoreWorldRenderTarget - ResetWorldRenderTarget intentionally leaves these untouched.
 	bgfx::FrameBufferHandle m_worldFrameBuffer = BGFX_INVALID_HANDLE;
+	uint16_t m_worldFrameBufferWidth           = 0;
+	uint16_t m_worldFrameBufferHeight          = 0;
+	// Tracks whether World/Debug/UI are currently pointed at m_worldFrameBuffer (true) or the backbuffer
+	// (false - either no redirect was ever set, or ResetWorldRenderTarget bypassed it). Resize() needs this to
+	// know which one to reapply after bgfx::reset(), which unconditionally clears every view's frame buffer
+	// binding back to the backbuffer as a side effect (see bgfx's Context::reset).
+	bool m_worldRenderTargetActive = false;
 	// Guards ~GraphicsDevice's bgfx::shutdown() - default-constructed instances never call bgfx::init, so
 	// shutting down unconditionally would tear down a bgfx context that was never brought up.
 	bool m_initialised = false;
