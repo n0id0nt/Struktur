@@ -9,6 +9,7 @@
 #include "Engine/ECS/System/ShaderSystem.h"
 #include "Engine/ECS/System/TransformSystem.h"
 #include "Engine/GameContext.h"
+#include "Engine/Renderer/GraphicsDevice.h"
 #include "Engine/Renderer/WorldRenderer.h"
 #include "Engine/Util/MathUtil.h"
 #include "glm/glm.hpp"
@@ -21,6 +22,10 @@ void Struktur::System::SpriteRenderSystem::Update(GameContext& context)
 	entt::registry& registry               = context.GetRegistry();
 	Renderer::WorldRenderer& worldRenderer = context.GetWorldRenderer();
 	TransformSystem& transformSystem       = context.GetSystemManager().GetSystem<TransformSystem>();
+	ShaderSystem& shaderSystem             = context.GetSystemManager().GetSystem<ShaderSystem>();
+	// Resolved here rather than inside WorldRenderer - it only needs the resulting bgfx handle to sort/batch
+	// by, not the entt::entity or Component::Shader that produced it (see WorldRenderer::SubmitSprite).
+	bgfx::ProgramHandle defaultProgram = context.GetGraphicsDevice().GetDefaultSpriteProgram();
 
 	{
 		Renderer::CullBounds cullBounds = Renderer::WorldRenderer::ComputeCullBounds(context);
@@ -54,10 +59,15 @@ void Struktur::System::SpriteRenderSystem::Update(GameContext& context)
 					tileMap.chunksBuilt = true;
 				}
 
+				// Resolved from the tilemap's own entity (not entt::null) so a Component::Shader on the tilemap
+				// actually takes effect - all of a tilemap's chunks share this one resolve since they're all the
+				// same entity's shader, just different cached mesh ranges.
+				bgfx::ProgramHandle program       = shaderSystem.ResolveProgram(context, entity, defaultProgram);
+				const Component::Shader* shader = registry.try_get<Component::Shader>(entity);
 				for (const Renderer::TileChunk& chunk : tileMap.chunks)
 				{
-					worldRenderer.SubmitChunk(tileMap.layer, tileMap.orderInLayer, chunk, texture->GetHandle(),
-					                          cullBounds);
+					worldRenderer.SubmitChunk(tileMap.layer, tileMap.orderInLayer, program, shader, chunk,
+					                          texture->GetHandle(), cullBounds);
 				}
 			}
 		}
@@ -116,8 +126,10 @@ void Struktur::System::SpriteRenderSystem::Update(GameContext& context)
 					orderInLayer += worldPosition.y;
 				}
 
-				worldRenderer.SubmitSprite(sprite.layer, orderInLayer, entity, texture->GetHandle(), sourceRec, destRec,
-				                           offset, glm::degrees(angleZ), sprite.color, cullBounds);
+				bgfx::ProgramHandle program       = shaderSystem.ResolveProgram(context, entity, defaultProgram);
+				const Component::Shader* shader = registry.try_get<Component::Shader>(entity);
+				worldRenderer.SubmitSprite(sprite.layer, orderInLayer, program, shader, texture->GetHandle(),
+				                           sourceRec, destRec, offset, glm::degrees(angleZ), sprite.color, cullBounds);
 			}
 		}
 

@@ -55,16 +55,16 @@ void Struktur::System::ShaderSystem::SetUniform(GameContext& context, entt::enti
 	shader.matrixUniforms[name] = value;
 }
 
-void Struktur::System::ShaderSystem::ApplyUniforms(GameContext& context, entt::entity entity)
+void Struktur::System::ShaderSystem::ApplyUniforms(GameContext& context, const Component::Shader& shader)
 {
 	Core::GameData& gameDate     = context.GetGameData();
 	Core::TimeSystem& timeSystem = context.GetTimeSystem();
-	SetUniform(context, entity, "time", (float)timeSystem.scaledTime);
-	SetUniform(context, entity, "rawTime", (float)timeSystem.unscaledTime);
-	SetUniform(context, entity, "resolution", glm::vec2{(float)gameDate.gameWidth, (float)gameDate.gameHeight});
-
-	entt::registry& registry = context.GetRegistry();
-	auto& shader              = registry.get<Component::Shader>(entity);
+	float packedTime[4]          = {(float)timeSystem.scaledTime, 0.0f, 0.0f, 0.0f};
+	float packedRawTime[4]       = {(float)timeSystem.unscaledTime, 0.0f, 0.0f, 0.0f};
+	float packedResolution[4]    = {(float)gameDate.gameWidth, (float)gameDate.gameHeight, 0.0f, 0.0f};
+	bgfx::setUniform(Renderer::GetOrCreateUniform("time"), packedTime);
+	bgfx::setUniform(Renderer::GetOrCreateUniform("rawTime"), packedRawTime);
+	bgfx::setUniform(Renderer::GetOrCreateUniform("resolution"), packedResolution);
 
 	// Every bgfx uniform is a vec4 register - scalars/vec2/vec3 pad the unused components with 0 (see the
 	// vs_soulEffect.sc/fs_soulEffect.sc uniform declarations, which read back only the components they need).
@@ -118,6 +118,8 @@ bgfx::ProgramHandle Struktur::System::ShaderSystem::ResolveProgram(GameContext& 
 			return defaultProgram;
 		}
 	}
-	ApplyUniforms(context, entity);
+	// Uniforms are NOT applied here - see ApplyUniforms's own comment. This only resolves/loads the program, so
+	// it's safe for callers (SpriteRenderSystem) to call it well ahead of the actual submit for batching/sort-key
+	// purposes.
 	return shader->shader->shader;
 }
