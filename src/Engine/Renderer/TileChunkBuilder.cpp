@@ -4,7 +4,7 @@
 #include <cmath>
 #include <unordered_map>
 
-#include "Engine/Renderer/SpriteVertex.h"
+#include "Engine/Renderer/QuadVertex.h"
 
 namespace
 {
@@ -38,7 +38,7 @@ std::vector<Struktur::Renderer::TileChunk> Struktur::Renderer::BuildTileChunks(
 
 	for (auto& [key, tiles] : buckets)
 	{
-		std::vector<SpriteVertex> vertices;
+		std::vector<QuadVertex> vertices;
 		std::vector<uint16_t> indices;
 		vertices.reserve(tiles.size() * 4);
 		indices.reserve(tiles.size() * 6);
@@ -107,11 +107,11 @@ std::vector<Struktur::Renderer::TileChunk> Struktur::Renderer::BuildTileChunks(
 			continue;
 		}
 
-		static const bgfx::VertexLayout layout = BuildSpriteVertexLayout();
+		static const bgfx::VertexLayout layout = BuildQuadVertexLayout();
 
 		TileChunk chunk;
 		chunk.vb = bgfx::createVertexBuffer(
-		    bgfx::copy(vertices.data(), (uint32_t)(vertices.size() * sizeof(SpriteVertex))), layout);
+		    bgfx::copy(vertices.data(), (uint32_t)(vertices.size() * sizeof(QuadVertex))), layout);
 		chunk.ib = bgfx::createIndexBuffer(bgfx::copy(indices.data(), (uint32_t)(indices.size() * sizeof(uint16_t))));
 		chunk.indexCount  = (uint32_t)indices.size();
 		chunk.worldBounds = Util::Math::Rect{minX, minY, maxX - minX, maxY - minY};

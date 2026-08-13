@@ -5,7 +5,7 @@
 #include "Debug/Assertions.h"
 #include "Engine/Renderer/EmbeddedShaders.h"
 #include "Engine/Renderer/GraphicsDevice.h"
-#include "Engine/Renderer/SpriteVertex.h"
+#include "Engine/Renderer/QuadVertex.h"
 
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
@@ -29,11 +29,12 @@ void Struktur::Renderer::ImGuiRenderer::Initialise()
 	io.Fonts->TexID = (ImTextureID)(intptr_t)m_fontTexture.idx;
 }
 
-Struktur::Renderer::ImGuiRenderer::~ImGuiRenderer()
+void Struktur::Renderer::ImGuiRenderer::Shutdown()
 {
 	if (bgfx::isValid(m_fontTexture))
 	{
 		bgfx::destroy(m_fontTexture);
+		m_fontTexture = BGFX_INVALID_HANDLE;
 	}
 }
 
@@ -57,7 +58,7 @@ void Struktur::Renderer::ImGuiRenderer::Render(ImDrawData* drawData)
 	                            drawData->DisplayPos.y + drawData->DisplaySize.y, drawData->DisplayPos.y, -1.0f, 1.0f);
 	bgfx::setViewTransform(GraphicsDevice::EditorViewId, glm::value_ptr(identity), glm::value_ptr(proj));
 
-	static const bgfx::VertexLayout layout = BuildSpriteVertexLayout();
+	static const bgfx::VertexLayout layout = BuildQuadVertexLayout();
 	bgfx::ProgramHandle program              = GetEmbeddedProgram("sprite");
 	ImVec2 clipOff                           = drawData->DisplayPos;
 	ImVec2 clipScale                         = drawData->FramebufferScale;
@@ -83,7 +84,7 @@ void Struktur::Renderer::ImGuiRenderer::Render(ImDrawData* drawData)
 		bgfx::allocTransientVertexBuffer(&tvb, numVertices, layout);
 		bgfx::allocTransientIndexBuffer(&tib, numIndices);
 
-		// ImDrawVert (pos:2f, uv:2f, col:u32) matches SpriteVertex byte-for-byte - a straight bulk copy, no
+		// ImDrawVert (pos:2f, uv:2f, col:u32) matches QuadVertex byte-for-byte - a straight bulk copy, no
 		// per-vertex conversion needed (see the class-level comment).
 		std::memcpy(tvb.data, drawList->VtxBuffer.Data, numVertices * sizeof(ImDrawVert));
 		std::memcpy(tib.data, drawList->IdxBuffer.Data, numIndices * sizeof(ImDrawIdx));

@@ -86,7 +86,7 @@ class WorldRenderer
 	// - and submits it in a single draw call. See Flush() for how runs are formed. Takes GameContext& (unlike
 	// SubmitSprite/SubmitChunk) purely to reach ShaderSystem::ApplyUniforms right before this run's own submit -
 	// see DrawItem::shader.
-	void FlushRun(GameContext& context, size_t runStart, size_t runEnd, const bgfx::VertexLayout& spriteLayout,
+	void FlushRun(GameContext& context, size_t runStart, size_t runEnd, const bgfx::VertexLayout& quadLayout,
 	             bgfx::UniformHandle texColorSampler, uint64_t drawState, const TextureHandle& runTexture,
 	             bgfx::ProgramHandle runProgram);
 

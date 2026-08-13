@@ -5,7 +5,7 @@
 #include "Engine/GameContext.h"
 #include "Engine/Renderer/EmbeddedShaders.h"
 #include "Engine/Renderer/GraphicsDevice.h"
-#include "Engine/Renderer/SpriteVertex.h"
+#include "Engine/Renderer/QuadVertex.h"
 
 #include <glm/gtc/type_ptr.hpp>
 
@@ -42,7 +42,7 @@ void Struktur::Renderer::DebugRenderer::SubmitTriangleFan(const glm::vec2* point
 		return;
 	}
 
-	static const bgfx::VertexLayout layout = BuildSpriteVertexLayout();
+	static const bgfx::VertexLayout layout = BuildQuadVertexLayout();
 	uint32_t vertexCount                    = (uint32_t)count;
 	uint32_t indexCount                     = (uint32_t)((count - 2) * 3);
 	if (vertexCount > bgfx::getAvailTransientVertexBuffer(vertexCount, layout) ||
@@ -56,7 +56,7 @@ void Struktur::Renderer::DebugRenderer::SubmitTriangleFan(const glm::vec2* point
 	bgfx::allocTransientVertexBuffer(&tvb, vertexCount, layout);
 	bgfx::allocTransientIndexBuffer(&tib, indexCount);
 
-	SpriteVertex* vertices = (SpriteVertex*)tvb.data;
+	QuadVertex* vertices = (QuadVertex*)tvb.data;
 	for (int i = 0; i < count; ++i)
 	{
 		vertices[i] = {points[i].x, points[i].y, 0.0f, 0.0f, abgr};

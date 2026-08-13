@@ -8,7 +8,7 @@
 #include "Engine/GameContext.h"
 #include "Engine/Renderer/EmbeddedShaders.h"
 #include "Engine/Renderer/GraphicsDevice.h"
-#include "Engine/Renderer/SpriteVertex.h"
+#include "Engine/Renderer/QuadVertex.h"
 
 #include <bgfx/bgfx.h>
 #include <glm/gtc/type_ptr.hpp>
@@ -174,7 +174,7 @@ void Struktur::Renderer::WorldRenderer::Flush(GameContext& context)
 	glm::mat4 proj = camera.GetProjectionMatrix(gameData.gameWidth, gameData.gameHeight);
 	bgfx::setViewTransform(GraphicsDevice::WorldViewId, glm::value_ptr(view), glm::value_ptr(proj));
 
-	static const bgfx::VertexLayout spriteLayout = BuildSpriteVertexLayout();
+	static const bgfx::VertexLayout quadLayout = BuildQuadVertexLayout();
 	static const bgfx::UniformHandle texColorSampler =
 	    bgfx::createUniform("s_texColor", bgfx::UniformType::Sampler);
 
@@ -198,7 +198,7 @@ void Struktur::Renderer::WorldRenderer::Flush(GameContext& context)
 
 		if (item.chunk)
 		{
-			FlushRun(context, runStart, i, spriteLayout, texColorSampler, drawState, runTexture, runProgram);
+			FlushRun(context, runStart, i, quadLayout, texColorSampler, drawState, runTexture, runProgram);
 			// Applied immediately before this chunk's own submit, not any earlier - see DrawItem::shader.
 			if (item.shader)
 			{
@@ -218,17 +218,17 @@ void Struktur::Renderer::WorldRenderer::Flush(GameContext& context)
 		                                   (i - runStart) >= kMaxQuadsPerRun);
 		if (boundary)
 		{
-			FlushRun(context, runStart, i, spriteLayout, texColorSampler, drawState, runTexture, runProgram);
+			FlushRun(context, runStart, i, quadLayout, texColorSampler, drawState, runTexture, runProgram);
 			runStart = i;
 		}
 		runTexture = item.texture;
 		runProgram = item.program;
 	}
-	FlushRun(context, runStart, m_drawItems.size(), spriteLayout, texColorSampler, drawState, runTexture, runProgram);
+	FlushRun(context, runStart, m_drawItems.size(), quadLayout, texColorSampler, drawState, runTexture, runProgram);
 }
 
 void Struktur::Renderer::WorldRenderer::FlushRun(GameContext& context, size_t runStart, size_t runEnd,
-                                                 const bgfx::VertexLayout& spriteLayout,
+                                                 const bgfx::VertexLayout& quadLayout,
                                                  bgfx::UniformHandle texColorSampler, uint64_t drawState,
                                                  const TextureHandle& runTexture, bgfx::ProgramHandle runProgram)
 {
@@ -254,10 +254,10 @@ void Struktur::Renderer::WorldRenderer::FlushRun(GameContext& context, size_t ru
 
 	bgfx::TransientVertexBuffer tvb;
 	bgfx::TransientIndexBuffer tib;
-	bgfx::allocTransientVertexBuffer(&tvb, (uint32_t)(count * 4), spriteLayout);
+	bgfx::allocTransientVertexBuffer(&tvb, (uint32_t)(count * 4), quadLayout);
 	bgfx::allocTransientIndexBuffer(&tib, (uint32_t)(count * 6));
 
-	SpriteVertex* verts  = (SpriteVertex*)tvb.data;
+	QuadVertex* verts  = (QuadVertex*)tvb.data;
 	uint16_t* indices    = (uint16_t*)tib.data;
 	float texWidth       = (float)runTexture.width;
 	float texHeight      = (float)runTexture.height;

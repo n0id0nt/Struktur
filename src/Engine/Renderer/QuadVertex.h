@@ -12,14 +12,14 @@ namespace Renderer
 {
 // Shared vertex format for every textured quad drawn into the world view - individual sprites (WorldRenderer's
 // transient per-frame batches) and cached tile chunks (TileChunkBuilder's static meshes) alike.
-struct SpriteVertex
+struct QuadVertex
 {
 	float x, y;
 	float u, v;
 	uint32_t abgr;
 };
 
-inline bgfx::VertexLayout BuildSpriteVertexLayout()
+inline bgfx::VertexLayout BuildQuadVertexLayout()
 {
 	bgfx::VertexLayout layout;
 	layout.begin()

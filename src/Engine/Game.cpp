@@ -428,6 +428,7 @@ void Struktur::Game()
 	ImGui_ImplSDL3_Shutdown();
 	ImGui::DestroyContext();
 #endif
+	context.Shutdown();
 }
 
 #ifdef EDITOR

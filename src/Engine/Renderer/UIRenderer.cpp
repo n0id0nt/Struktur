@@ -5,7 +5,7 @@
 #include "Engine/GameContext.h"
 #include "Engine/Renderer/EmbeddedShaders.h"
 #include "Engine/Renderer/GraphicsDevice.h"
-#include "Engine/Renderer/SpriteVertex.h"
+#include "Engine/Renderer/QuadVertex.h"
 
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
@@ -19,11 +19,12 @@ void Struktur::Renderer::UIRenderer::Initialise()
 	ASSERT_MSG(bgfx::isValid(m_whiteTexture), "Failed to create UI white texture");
 }
 
-Struktur::Renderer::UIRenderer::~UIRenderer()
+void Struktur::Renderer::UIRenderer::Shutdown()
 {
 	if (bgfx::isValid(m_whiteTexture))
 	{
 		bgfx::destroy(m_whiteTexture);
+		m_whiteTexture = BGFX_INVALID_HANDLE;
 	}
 }
 
@@ -42,7 +43,7 @@ void Struktur::Renderer::UIRenderer::SubmitTexturedQuad(float x, float y, float 
                                                          float u1, float v1, uint32_t abgr,
                                                          bgfx::TextureHandle texture)
 {
-	static const bgfx::VertexLayout layout = BuildSpriteVertexLayout();
+	static const bgfx::VertexLayout layout = BuildQuadVertexLayout();
 	if (4 > bgfx::getAvailTransientVertexBuffer(4, layout) || 6 > bgfx::getAvailTransientIndexBuffer(6))
 	{
 		return;
@@ -53,7 +54,7 @@ void Struktur::Renderer::UIRenderer::SubmitTexturedQuad(float x, float y, float 
 	bgfx::allocTransientVertexBuffer(&tvb, 4, layout);
 	bgfx::allocTransientIndexBuffer(&tib, 6);
 
-	SpriteVertex* vertices = (SpriteVertex*)tvb.data;
+	QuadVertex* vertices = (QuadVertex*)tvb.data;
 	vertices[0]            = {x, y, u0, v0, abgr};
 	vertices[1]            = {x + w, y, u1, v0, abgr};
 	vertices[2]            = {x + w, y + h, u1, v1, abgr};

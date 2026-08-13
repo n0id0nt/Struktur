@@ -27,8 +27,8 @@ namespace Renderer
 class UIRenderer
 {
    public:
-	UIRenderer() = default;
-	~UIRenderer();
+	UIRenderer()  = default;
+	~UIRenderer() = default;
 
 	UIRenderer(const UIRenderer&)            = delete;
 	UIRenderer& operator=(const UIRenderer&) = delete;
@@ -37,6 +37,9 @@ class UIRenderer
 	// this unconditionally (see GameContext's constructor) while still requiring bgfx to already exist by the
 	// time this runs (call right after GraphicsDevice::Initialise).
 	void Initialise();
+	// Explicit rather than in the destructor - must run before GraphicsDevice::Shutdown() (see
+	// GameContext::Shutdown()), since bgfx::destroy() is invalid once bgfx itself has shut down.
+	void Shutdown();
 
 	// Sets GraphicsDevice::UIViewId's per-frame orthographic transform, sized to the game viewport (not the
 	// real window) - call once per frame before any Draw* call (see UIRenderSystem::Update).

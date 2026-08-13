@@ -12,13 +12,13 @@ namespace Renderer
 // imgui_impl_bgfx exists upstream; input/platform plumbing comes from ImGui's own imgui_impl_sdl3 instead
 // (see Window::SetEventCallback), this class only turns ImDrawData into bgfx submissions.
 //
-// ImDrawVert (pos:2f, uv:2f, col:u32) is byte-for-byte the same layout as SpriteVertex, so this reuses
-// BuildSpriteVertexLayout() and GraphicsDevice::GetDefaultSpriteProgram() rather than defining new ones.
+// ImDrawVert (pos:2f, uv:2f, col:u32) is byte-for-byte the same layout as QuadVertex, so this reuses
+// BuildQuadVertexLayout() and GraphicsDevice::GetDefaultSpriteProgram() rather than defining new ones.
 class ImGuiRenderer
 {
    public:
-	ImGuiRenderer() = default;
-	~ImGuiRenderer();
+	ImGuiRenderer()  = default;
+	~ImGuiRenderer() = default;
 
 	ImGuiRenderer(const ImGuiRenderer&)            = delete;
 	ImGuiRenderer& operator=(const ImGuiRenderer&) = delete;
@@ -27,6 +27,9 @@ class ImGuiRenderer
 	// unconditionally (see GameContext's constructor) while still requiring an ImGui context (with its font
 	// atlas configured) to already exist by the time this runs.
 	void Initialise();
+	// Explicit rather than in the destructor - must run before GraphicsDevice::Shutdown() (see
+	// GameContext::Shutdown()), since bgfx::destroy() is invalid once bgfx itself has shut down.
+	void Shutdown();
 
 	void Render(ImDrawData* drawData);
 

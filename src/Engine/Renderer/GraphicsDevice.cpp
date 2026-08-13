@@ -54,11 +54,12 @@ void Struktur::Renderer::GraphicsDevice::Initialise(void* nativeWindowHandle, in
 	m_initialised = true;
 }
 
-Struktur::Renderer::GraphicsDevice::~GraphicsDevice()
+void Struktur::Renderer::GraphicsDevice::Shutdown()
 {
 	if (m_initialised)
 	{
 		bgfx::shutdown();
+		m_initialised = false;
 	}
 }
 

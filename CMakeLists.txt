@@ -322,7 +322,7 @@ if(PLATFORM_DESKTOP OR PLATFORM_WEB)
         src/Engine/Platform/Window.h                src/Engine/Platform/Window.cpp
         src/Engine/Renderer/GraphicsDevice.h        src/Engine/Renderer/GraphicsDevice.cpp
         src/Engine/Renderer/EmbeddedShaders.h        src/Engine/Renderer/EmbeddedShaders.cpp
-        src/Engine/Renderer/SpriteVertex.h
+        src/Engine/Renderer/QuadVertex.h
         src/Engine/Renderer/TileChunk.h
         src/Engine/Renderer/TileChunkBuilder.h      src/Engine/Renderer/TileChunkBuilder.cpp
         src/Engine/Renderer/UIRenderer.h            src/Engine/Renderer/UIRenderer.cpp

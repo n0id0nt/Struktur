@@ -33,8 +33,8 @@ class GraphicsDevice
 	static constexpr bgfx::ViewId EditorViewId = 3;
 #endif
 
-	GraphicsDevice() = default;
-	~GraphicsDevice();
+	GraphicsDevice()  = default;
+	~GraphicsDevice() = default;
 
 	GraphicsDevice(const GraphicsDevice&)            = delete;
 	GraphicsDevice& operator=(const GraphicsDevice&) = delete;
@@ -42,6 +42,10 @@ class GraphicsDevice
 	// Actually initialises bgfx - deferred from construction so GameContext can own this unconditionally (see
 	// GameContext's constructor) while the caller still picks when the native window handle/size are known.
 	void Initialise(void* nativeWindowHandle, int width, int height);
+	// bgfx::shutdown() - explicit rather than in the destructor, since every other subsystem's own GPU resources
+	// must be torn down first (their own bgfx::destroy calls fail once bgfx itself has shut down). Callers are
+	// responsible for shutting down everything else before calling this (see GameContext::Shutdown()).
+	void Shutdown();
 
 	void Resize(int width, int height);
 
