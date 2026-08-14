@@ -441,6 +441,7 @@ set(SOURCES
 
     src/Engine/Resource/Resource.h
     src/Engine/Resource/Pointers/ResourcePtr.h
+    src/Engine/Resource/Pools/SparseSet.h
     src/Engine/Resource/Pools/ResourcePool.h
     src/Engine/Resource/Pools/GpuResourcePool.h
     src/Engine/Resource/Pools/TexturePool.h     src/Engine/Resource/Pools/TexturePool.cpp
