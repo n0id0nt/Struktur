@@ -1,109 +1,77 @@
 #include "ContactListener.h"
 
+#include <format>
 #include <limits>
+
+#include "Debug/Assertions.h"
+#include "Engine/Callback/Variant.h"
+#include "Engine/Event/EventManager.h"
+#include "Engine/GameContext.h"
 
 void Struktur::Physics::ContactListener::BeginContact(b2Contact* contact)
 {
-	// if (!contact->IsTouching()) return;
-	//
-	// Entity* entityA = nullptr, * entityB = nullptr;
-	// b2Fixture* fixtureA = contact->GetFixtureA(), * fixtureB = contact->GetFixtureB();
-	// GetContactEntities(contact, entityA, entityB);
-	//// call the collision events
-	// bool collisionEnabled = true;
-	// auto scriptComponentA = entityA->GetComponent<ScriptComponent>();
-	// if (scriptComponentA)
-	//{
-	//	sol::state& lua = Engine::GetInstance()->GetSolState();
-	//	Contact contactStruct(fixtureA, fixtureB, entityB, contact, &lua);
-	//	scriptComponentA->Bind(lua); // TODO Might be a little slow to be rebinbinging and unbinding scripts on each
-	//collision event think up more efficent way 	scriptComponentA->OnCollisionEnter(contactStruct);
-	//	scriptComponentA->Unbind(lua);
-	//	collisionEnabled &= contactStruct.enabled;
-	// }
-	// auto scriptComponentB = entityB->GetComponent<ScriptComponent>();
-	// if (scriptComponentB)
-	//{
-	//	sol::state& lua = Engine::GetInstance()->GetSolState();
-	//	Contact contactStruct(fixtureB, fixtureA, entityA, contact, &lua);
-	//	scriptComponentB->Bind(lua);
-	//	scriptComponentB->OnCollisionEnter(contactStruct);
-	//	scriptComponentB->Unbind(lua);
-	//	collisionEnabled &= contactStruct.enabled;
-	// }
-	// contact->SetEnabled(collisionEnabled);
+	if (!contact->IsTouching())
+	{
+		return;
+	}
+
+	entt::entity entityA = entt::null;
+	entt::entity entityB = entt::null;
+	GetContactEntities(contact, entityA, entityB);
+
+	PublishContactEvent("collisionEnter", contact, entityA, entityB);
 }
 
 void Struktur::Physics::ContactListener::EndContact(b2Contact* contact)
 {
-	// Entity* entityA = nullptr, * entityB = nullptr;
-	// b2Fixture* fixtureA = contact->GetFixtureA(), * fixtureB = contact->GetFixtureB();
-	// GetContactEntities(contact, entityA, entityB);
-	//// call the collision events
-	// bool collisionEnabled = true;
-	// auto scriptComponentA = entityA->GetComponent<ScriptComponent>();
-	// if (scriptComponentA)
-	//{
-	//	sol::state& lua = Engine::GetInstance()->GetSolState();
-	//	Contact contactStruct(fixtureA, fixtureB, entityB, contact, &lua);
-	//	scriptComponentA->Bind(lua); // TODO Might be a little slow to be rebinbinging and unbinding scripts on each
-	//collision event think up more efficent way 	scriptComponentA->OnCollisionExit(contactStruct);
-	//	scriptComponentA->Unbind(lua);
-	//	collisionEnabled &= contactStruct.enabled;
-	// }
-	// auto scriptComponentB = entityB->GetComponent<ScriptComponent>();
-	// if (scriptComponentB)
-	//{
-	//	sol::state& lua = Engine::GetInstance()->GetSolState();
-	//	Contact contactStruct(fixtureB, fixtureA, entityA, contact, &lua);
-	//	scriptComponentB->Bind(lua);
-	//	scriptComponentB->OnCollisionExit(contactStruct);
-	//	scriptComponentB->Unbind(lua);
-	//	collisionEnabled &= contactStruct.enabled;
-	// }
-	// contact->SetEnabled(collisionEnabled);
+	entt::entity entityA = entt::null;
+	entt::entity entityB = entt::null;
+	GetContactEntities(contact, entityA, entityB);
+
+	PublishContactEvent("collisionExit", contact, entityA, entityB);
 }
 
 void Struktur::Physics::ContactListener::PreSolve(b2Contact* contact, const b2Manifold* oldManifold)
 {
-	// Entity* entityA = nullptr, * entityB = nullptr;
-	// b2Fixture* fixtureA = contact->GetFixtureA(), * fixtureB = contact->GetFixtureB();
-	// GetContactEntities(contact, entityA, entityB);
-	//// call the collision events
-	// bool collisionEnabled = true;
-	// auto scriptComponentA = entityA->GetComponent<ScriptComponent>();
-	// if (scriptComponentA)
-	//{
-	//	sol::state& lua = Engine::GetInstance()->GetSolState();
-	//	Contact contactStruct(fixtureA, fixtureB, entityB, contact, &lua);
-	//	scriptComponentA->Bind(lua); // TODO Might be a little slow to be rebinbinging and unbinding scripts on each
-	//collision event think up more efficent way 	scriptComponentA->OnCollisionPreSolve(contactStruct);
-	//	scriptComponentA->Unbind(lua);
-	//	collisionEnabled &= contactStruct.enabled;
-	// }
-	// auto scriptComponentB = entityB->GetComponent<ScriptComponent>();
-	// if (scriptComponentB)
-	//{
-	//	sol::state& lua = Engine::GetInstance()->GetSolState();
-	//	Contact contactStruct(fixtureB, fixtureA, entityA, contact, &lua);
-	//	scriptComponentB->Bind(lua);
-	//	scriptComponentB->OnCollisionPreSolve(contactStruct);
-	//	scriptComponentB->Unbind(lua);
-	//	collisionEnabled &= contactStruct.enabled;
-	// }
-	// contact->SetEnabled(collisionEnabled);
+	// Intentionally not pushed onto the messaging system, unlike BeginContact/EndContact - PreSolve fires on
+	// every step a contact is still touching, not just on the enter/exit transition, so two overlapping bodies
+	// sitting still would flood the once-per-frame-drained event queue every single frame. Add a dedicated,
+	// non-queued hook here instead if per-step reactive logic (e.g. conditionally disabling a contact via
+	// contact->SetEnabled) is ever actually needed.
 }
 
-void Struktur::Physics::ContactListener::GetContactEntities(b2Contact* contact, entt::entity entityA,
-                                                            entt::entity entityB)
+void Struktur::Physics::ContactListener::GetContactEntities(b2Contact* contact, entt::entity& entityA,
+                                                            entt::entity& entityB)
 {
-	//// Identify fixtures involved in the collision
-	// b2Fixture* fixtureA = contact->GetFixtureA();
-	// b2Fixture* fixtureB = contact->GetFixtureB();
-	//
-	//// Use user data to get associated entities
-	// entityA = reinterpret_cast<Entity*>(fixtureA->GetBody()->GetUserData().pointer);
-	// entityB = reinterpret_cast<Entity*>(fixtureB->GetBody()->GetUserData().pointer);
+	b2Fixture* fixtureA = contact->GetFixtureA();
+	b2Fixture* fixtureB = contact->GetFixtureB();
+
+	entityA = static_cast<entt::entity>(fixtureA->GetBody()->GetUserData().pointer);
+	entityB = static_cast<entt::entity>(fixtureB->GetBody()->GetUserData().pointer);
+}
+
+void Struktur::Physics::ContactListener::PublishContactEvent(const char* type, b2Contact* contact,
+                                                              entt::entity entityA, entt::entity entityB)
+{
+	if (!m_context)
+	{
+		return;
+	}
+
+	// Reuses Contact's own manifold/velocity extraction below - the fixture/otherFixture perspective passed in
+	// here is arbitrary since this event is symmetric (both entityA and entityB go in the payload, not just "the
+	// other one"), it's only used to compute normal/velocity once for both sides.
+	Contact contactInfo(contact->GetFixtureA(), contact->GetFixtureB(), entityB, contact);
+
+	Callback::VariantMap data;
+	data.items["entityA"]  = static_cast<int>(entityA);
+	data.items["entityB"]  = static_cast<int>(entityB);
+	data.items["normal"]   = contactInfo.normal;
+	data.items["velocity"] = contactInfo.velocity;
+
+	DEBUG_INFO(
+	    std::format("Physics contact '{}' between entity {} and entity {}", type, (int)entityA, (int)entityB).c_str());
+	m_context->GetEventManager().AddEvent(type, data);
 }
 
 Struktur::Physics::ContactListener::Contact::Contact(b2Fixture* fixture, b2Fixture* otherFixture, entt::entity other,

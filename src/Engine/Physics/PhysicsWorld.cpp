@@ -18,9 +18,11 @@ void Struktur::Physics::PhysicsWorld::Initialise(glm::vec2 gravity, int velocity
 	m_pixelsPerMeter     = pixelsPerMeter;
 }
 
-void Struktur::Physics::PhysicsWorld::Step(float deltaTime)
+void Struktur::Physics::PhysicsWorld::Step(GameContext& context, float deltaTime)
 {
+	m_contactListener.SetContext(&context);
 	m_world.Step(deltaTime, m_velocityIteration, m_positionIterations);
+	m_contactListener.SetContext(nullptr);
 }
 
 void Struktur::Physics::PhysicsWorld::ClearForces()

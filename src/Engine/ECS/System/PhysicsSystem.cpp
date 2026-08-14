@@ -23,7 +23,7 @@ void Struktur::System::PhysicsSystem::StepPhysics(GameContext& context, float de
 	SyncTransformsToPhysics(context);
 	PROFILE_END_SCOPE(syncToPhysics);
 	PROFILE_BEGIN_SCOPE(stepPhysics, "Step Physics");
-	physicsWorld.Step(deltaTime);
+	physicsWorld.Step(context, deltaTime);
 	PROFILE_END_SCOPE(stepPhysics);
 	PROFILE_BEGIN_SCOPE(syncFromPhysics, "Sync from Physics");
 	SyncPhysicsToTransforms(context);

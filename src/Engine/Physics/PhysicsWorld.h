@@ -6,6 +6,11 @@
 
 namespace Struktur
 {
+class GameContext;
+}
+
+namespace Struktur
+{
 namespace Physics
 {
 class PhysicsWorld
@@ -14,7 +19,9 @@ class PhysicsWorld
 	PhysicsWorld();
 	void Initialise(glm::vec2 gravity, int velocityIterations, int positionIterations, float pixelsPerMeter);
 
-	void Step(float deltaTime);
+	// context is only handed to the contact listener for the duration of this call (see ContactListener::
+	// SetContext) - BeginContact/EndContact/PreSolve only ever fire synchronously from within b2World::Step().
+	void Step(GameContext& context, float deltaTime);
 
 	void ClearForces();
 

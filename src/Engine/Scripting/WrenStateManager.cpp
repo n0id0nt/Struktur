@@ -159,7 +159,7 @@ void WrenStateManager::SendEvent(GameContext& context, const Event::Event& event
 
 	// Add event data
 	wrenEnsureSlots(vm, 3);
-	wrenSetSlotHandle(vm, 0, m_sendEventMethodHandle);
+	wrenSetSlotHandle(vm, 0, m_rootStateInstanceHandle);
 	wrenSetSlotString(vm, 1, event.type.c_str());
 	Callback::HelperFunctions::VariantToWrenSlot(vm, 2, event.data);
 
