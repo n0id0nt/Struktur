@@ -30,6 +30,8 @@ class MusicResource : public CpuResource
 	                              // accessed and retrieved
 
 	MusicResource(const std::string& filePath);
+	MusicResource(MusicResource&& other) noexcept;
+	MusicResource& operator=(MusicResource&& other) noexcept;
 	~MusicResource();
 
 	bool LoadFromDisk(GameContext& context) override;

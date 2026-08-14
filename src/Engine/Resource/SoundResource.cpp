@@ -13,6 +13,30 @@ Struktur::Resource::SoundResource::SoundResource(const std::string& filePath)
 {
 }
 
+Struktur::Resource::SoundResource::SoundResource(SoundResource&& other) noexcept
+    : CpuResource(std::move(other)),
+      m_audio(other.m_audio),
+      track(other.track)
+{
+	other.m_audio = nullptr;
+	other.track   = nullptr;
+}
+
+Struktur::Resource::SoundResource& Struktur::Resource::SoundResource::operator=(SoundResource&& other) noexcept
+{
+	if (this != &other)
+	{
+		UnloadFromHardware();
+		UnloadFromDisk();
+		CpuResource::operator=(std::move(other));
+		m_audio = other.m_audio;
+		track   = other.track;
+		other.m_audio = nullptr;
+		other.track   = nullptr;
+	}
+	return *this;
+}
+
 Struktur::Resource::SoundResource::~SoundResource()
 {
 	UnloadFromHardware();

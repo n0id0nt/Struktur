@@ -11,6 +11,5 @@ Struktur::Resource::TextureResource* Struktur::Resource::TexturePool::LoadResour
 		return nullptr;
 	}
 
-	AddGpuResource(texture);
 	return texture;
 }

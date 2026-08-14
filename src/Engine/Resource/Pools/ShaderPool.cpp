@@ -20,6 +20,5 @@ Struktur::Resource::ShaderResource* Struktur::Resource::ShaderPool::LoadResource
 		return nullptr;
 	}
 
-	AddGpuResource(shader);
 	return shader;
 }

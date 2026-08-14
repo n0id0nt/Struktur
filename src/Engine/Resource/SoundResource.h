@@ -29,6 +29,8 @@ class SoundResource : public CpuResource
 	MIX_Track* track = nullptr;
 
 	SoundResource(const std::string& filePath);
+	SoundResource(SoundResource&& other) noexcept;
+	SoundResource& operator=(SoundResource&& other) noexcept;
 	~SoundResource();
 
 	bool LoadFromDisk(GameContext& context) override;

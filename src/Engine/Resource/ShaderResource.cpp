@@ -17,6 +17,32 @@ Struktur::Resource::ShaderResource::ShaderResource(const std::string& vsFilePath
 	m_embeddedName = (lowerFsPath.find("souleffect") != std::string::npos) ? "soulEffect" : "sprite";
 }
 
+Struktur::Resource::ShaderResource::ShaderResource(ShaderResource&& other) noexcept
+    : GpuResource(std::move(other)),
+      m_vsFilePath(std::move(other.m_vsFilePath)),
+      m_fsFilePath(std::move(other.m_fsFilePath)),
+      m_embeddedName(std::move(other.m_embeddedName)),
+      shader(other.shader)
+{
+	other.shader = BGFX_INVALID_HANDLE;
+}
+
+Struktur::Resource::ShaderResource& Struktur::Resource::ShaderResource::operator=(ShaderResource&& other) noexcept
+{
+	if (this != &other)
+	{
+		UnloadFromGpu();
+		UnloadFromDisk();
+		GpuResource::operator=(std::move(other));
+		m_vsFilePath   = std::move(other.m_vsFilePath);
+		m_fsFilePath   = std::move(other.m_fsFilePath);
+		m_embeddedName = std::move(other.m_embeddedName);
+		shader         = other.shader;
+		other.shader   = BGFX_INVALID_HANDLE;
+	}
+	return *this;
+}
+
 Struktur::Resource::ShaderResource::~ShaderResource()
 {
 	UnloadFromGpu();

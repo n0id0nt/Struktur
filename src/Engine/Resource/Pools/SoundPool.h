@@ -20,7 +20,7 @@ class SoundPool : public ResourcePool<SoundResource>
 	SoundResource* LoadResource(GameContext& context, const std::string& filePath) override;
 
    public:
-	bool EnsureResourceReady(GameContext& context, const std::string& filePath) override;
+	bool EnsureResourceReady(GameContext& context, ResourceHandle handle) override;
 };
 }  // namespace Resource
 }  // namespace Struktur

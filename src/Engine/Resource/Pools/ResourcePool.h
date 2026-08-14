@@ -3,9 +3,11 @@
 #include <format>
 #include <string>
 #include <unordered_map>
+#include <utility>
 
 #include "Debug/Assertions.h"
 #include "Engine/Resource/Pointers/ResourcePtr.h"
+#include "Engine/Resource/Pools/SparseSet.h"
 #include "Engine/Resource/Resource.h"
 
 namespace Struktur
@@ -17,31 +19,49 @@ namespace Struktur
 {
 namespace Resource
 {
-// Base resource pool
+// Base resource pool - loaded resources live packed/contiguous in a SparseSet<ResourceEntry> (see
+// Pools/SparseSet.h), cache-friendly to iterate, instead of individually heap-allocated and referenced by
+// pointer. GetResource() looks up by path via m_nameToHandle on a cache hit/miss check; every access after that
+// (refcounting, dereferencing through ResourcePtr<T>) goes through the resource's own ResourceHandle (see
+// GameResource::selfHandle, set once right after it's loaded) rather than hashing its path again.
 template <typename T>
 class ResourcePool
 {
    protected:
-	// TODO might be a good idea to make these not pointers so the memory is stores in series and pass around the
-	// pointers to these items
 	struct ResourceEntry
 	{
-		T* resource      = nullptr;
-		size_t* refCount = nullptr;
+		T resource;
+		size_t refCount = 1;
+		std::string name;
 
-		ResourceEntry(T* res)
-		    : resource(res),
-		      refCount(new size_t(1))
+		ResourceEntry(T&& res)
+		    : resource(std::move(res))
 		{
 		}
 	};
 
-	std::unordered_map<std::string, ResourceEntry> m_loadedResources;
+	SparseSet<ResourceEntry> m_resources;
+	std::unordered_map<std::string, typename SparseSet<ResourceEntry>::Handle> m_nameToHandle;
 
 	virtual T* LoadResource(GameContext& context, const std::string& filePath) = 0;
-	virtual void UnloadResource(const std::string& filePath, T* resource)
+	// Called for every entry right before it's erased (Release() dropping the last ref, or Clear()) - a hook for
+	// subclasses (GpuResourcePool) needing to react before the resource itself is destroyed. The resource's own
+	// destructor (run by SparseSet::Erase) already handles its own GPU/hardware teardown (UnloadFromGpu,
+	// UnloadFromHardware, etc. - see ~TextureResource() and friends); this is for pool-level bookkeeping only.
+	virtual void UnloadResource(const std::string& filePath, T& resource)
 	{
-		delete resource;
+	}
+
+	// ResourcePtr<T> holds the plain, non-template ResourceHandle (see Resource.h - avoids needing ResourcePool<T>
+	// complete just to declare a member of this type, which would create a circular include with ResourcePtr.h).
+	// Internally, storage is keyed by the SparseSet's own Handle - same {index, generation} layout, distinct type.
+	static typename SparseSet<ResourceEntry>::Handle ToInternal(ResourceHandle handle)
+	{
+		return typename SparseSet<ResourceEntry>::Handle{handle.index, handle.generation};
+	}
+	static ResourceHandle ToExternal(typename SparseSet<ResourceEntry>::Handle handle)
+	{
+		return ResourceHandle{handle.index, handle.generation};
 	}
 
    public:
@@ -52,195 +72,116 @@ class ResourcePool
 
 	void Clear()
 	{
-		for (auto& pair : m_loadedResources)
+		for (auto& entry : m_resources)
 		{
-			UnloadResource(pair.first, pair.second.resource);
-			delete pair.second.refCount;
+			UnloadResource(entry.name, entry.resource);
 		}
-		m_loadedResources.clear();
+		m_resources.Clear();
+		m_nameToHandle.clear();
 	}
 
 	ResourcePtr<T> GetResource(GameContext& context, const std::string& name)
 	{
-		auto it = m_loadedResources.find(name);
-
-		if (it != m_loadedResources.end())
+		auto it = m_nameToHandle.find(name);
+		if (it != m_nameToHandle.end())
 		{
 			DEBUG_INFO(std::format("Resource '{}' found in cache", name).c_str());
-			(*(it->second.refCount))++;
-			return ResourcePtr<T>(it->second.resource, it->second.refCount, this, name);
+			m_resources[it->second].refCount++;
+			return ResourcePtr<T>(this, ToExternal(it->second));
 		}
-		else
+
+		DEBUG_INFO(std::format("Loading resource '{}'", name).c_str());
+		T* loaded = LoadResource(context, name);
+		if (!loaded)
 		{
-			DEBUG_INFO(std::format("Loading resource '{}'", name).c_str());
-			T* newResource = LoadResource(context, name);
-			if (newResource)
-			{
-				ResourceEntry entry(newResource);
-				m_loadedResources.emplace(name, entry);
-				return ResourcePtr<T>(entry.resource, entry.refCount, this, name);
-			}
-			else
-			{
-				DEBUG_INFO(std::format("Failed to load resource '{}'", name).c_str());
-				return ResourcePtr<T>();
-			}
+			DEBUG_INFO(std::format("Failed to load resource '{}'", name).c_str());
+			return ResourcePtr<T>();
 		}
+
+		// LoadResource still hands back a heap-allocated T* (unchanged per-type LoadResource overrides) - moved
+		// into the SparseSet's packed storage and the now-moved-from shell discarded. Only happens on a cache
+		// miss (first load, or reload after full eviction), not on every GetResource call.
+		typename SparseSet<ResourceEntry>::Handle internalHandle = m_resources.Emplace(std::move(*loaded));
+		delete loaded;
+
+		ResourceHandle handle      = ToExternal(internalHandle);
+		ResourceEntry& entry       = m_resources[internalHandle];
+		entry.name                 = name;
+		entry.resource.selfHandle  = handle;
+		m_nameToHandle.emplace(name, internalHandle);
+
+		return ResourcePtr<T>(this, handle);
 	}
 
-	virtual bool EnsureResourceReady(GameContext& context, const std::string& name)
+	virtual bool EnsureResourceReady(GameContext& context, ResourceHandle handle)
 	{
-		auto it = m_loadedResources.find(name);
-		if (it == m_loadedResources.end())
+		auto internalHandle = ToInternal(handle);
+		if (!m_resources.IsValid(internalHandle))
 		{
 			return false;
 		}
 
-		T* resource = it->second.resource;
-		if (!resource->isLoaded)
+		T& resource = m_resources[internalHandle].resource;
+		if (!resource.isLoaded)
 		{
-			return resource->LoadFromDisk(context);
+			return resource.LoadFromDisk(context);
 		}
 		return true;
 	}
 
-	void OnResourceUnreferenced(const std::string& name)
+	T* Resolve(ResourceHandle handle)
 	{
-		auto it = m_loadedResources.find(name);
-		if (it != m_loadedResources.end())
+		ResourceEntry* entry = m_resources.Resolve(ToInternal(handle));
+		return entry ? &entry->resource : nullptr;
+	}
+
+	void AddRef(ResourceHandle handle)
+	{
+		auto internalHandle = ToInternal(handle);
+		if (m_resources.IsValid(internalHandle))
 		{
-			DEBUG_INFO(std::format("Unloading unreferenced resource '{}'", name).c_str());
-			UnloadResource(name, it->second.resource);
-			delete it->second.refCount;
-			m_loadedResources.erase(it);
+			m_resources[internalHandle].refCount++;
 		}
+	}
+
+	void Release(ResourceHandle handle)
+	{
+		auto internalHandle  = ToInternal(handle);
+		ResourceEntry* entry = m_resources.Resolve(internalHandle);
+		if (!entry)
+		{
+			return;
+		}
+
+		entry->refCount--;
+		if (entry->refCount == 0)
+		{
+			DEBUG_INFO(std::format("Unloading unreferenced resource '{}'", entry->name).c_str());
+			UnloadResource(entry->name, entry->resource);
+			m_nameToHandle.erase(entry->name);
+			m_resources.Erase(internalHandle);
+		}
+	}
+
+	size_t GetRefCount(ResourceHandle handle) const
+	{
+		const ResourceEntry* entry = m_resources.Resolve(ToInternal(handle));
+		return entry ? entry->refCount : 0;
 	}
 
 	size_t GetLoadedCount() const
 	{
-		return m_loadedResources.size();
+		return m_resources.Size();
 	}
 
 	size_t GetTotalMemoryUsage() const
 	{
 		size_t total = 0;
-		for (const auto& pair : m_loadedResources)
+		for (const auto& entry : m_resources)
 		{
-			total += pair.second.resource->GetMemoryUsage();
+			total += entry.resource.GetMemoryUsage();
 		}
 		return total;
-	}
-
-	class Iterator
-	{
-	   private:
-		typename std::unordered_map<std::string, ResourceEntry>::iterator m_it;
-
-	   public:
-		using iterator_category = std::forward_iterator_tag;
-		using value_type        = std::pair<const std::string&, T*>;
-		using difference_type   = std::ptrdiff_t;
-		using pointer           = value_type*;
-		using reference         = value_type;
-
-		Iterator(typename std::unordered_map<std::string, ResourceEntry>::iterator it)
-		    : m_it(it)
-		{
-		}
-
-		std::pair<const std::string&, T*> operator*() const
-		{
-			return {m_it->first, m_it->second.resource};
-		}
-
-		Iterator& operator++()
-		{
-			++m_it;
-			return *this;
-		}
-		Iterator operator++(int)
-		{
-			Iterator tmp = *this;
-			++(*this);
-			return tmp;
-		}
-		bool operator==(const Iterator& other) const
-		{
-			return m_it == other.m_it;
-		}
-		bool operator!=(const Iterator& other) const
-		{
-			return m_it != other.m_it;
-		}
-	};
-
-	// Const iterator
-	class ConstIterator
-	{
-	   private:
-		typename std::unordered_map<std::string, ResourceEntry>::const_iterator m_it;
-
-	   public:
-		using iterator_category = std::forward_iterator_tag;
-		using value_type        = std::pair<const std::string&, const T*>;
-		using difference_type   = std::ptrdiff_t;
-		using pointer           = value_type*;
-		using reference         = value_type;
-
-		ConstIterator(typename std::unordered_map<std::string, ResourceEntry>::const_iterator it)
-		    : m_it(it)
-		{
-		}
-
-		std::pair<const std::string&, const T*> operator*() const
-		{
-			return {m_it->first, m_it->second.resource};
-		}
-
-		ConstIterator& operator++()
-		{
-			++m_it;
-			return *this;
-		}
-		ConstIterator operator++(int)
-		{
-			ConstIterator tmp = *this;
-			++(*this);
-			return tmp;
-		}
-		bool operator==(const ConstIterator& other) const
-		{
-			return m_it == other.m_it;
-		}
-		bool operator!=(const ConstIterator& other) const
-		{
-			return m_it != other.m_it;
-		}
-	};
-
-	Iterator begin()
-	{
-		return Iterator(m_loadedResources.begin());
-	}
-	Iterator end()
-	{
-		return Iterator(m_loadedResources.end());
-	}
-	ConstIterator begin() const
-	{
-		return ConstIterator(m_loadedResources.begin());
-	}
-	ConstIterator end() const
-	{
-		return ConstIterator(m_loadedResources.end());
-	}
-	ConstIterator cbegin() const
-	{
-		return ConstIterator(m_loadedResources.cbegin());
-	}
-	ConstIterator cend() const
-	{
-		return ConstIterator(m_loadedResources.cend());
 	}
 };
 }  // namespace Resource

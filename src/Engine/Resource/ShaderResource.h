@@ -31,6 +31,8 @@ class ShaderResource : public GpuResource
 	bgfx::ProgramHandle shader = BGFX_INVALID_HANDLE;
 
 	ShaderResource(const std::string& vsFilePath, const std::string& fsFilePath);
+	ShaderResource(ShaderResource&& other) noexcept;
+	ShaderResource& operator=(ShaderResource&& other) noexcept;
 	~ShaderResource();
 
 	bool LoadFromDisk(GameContext& context) override;

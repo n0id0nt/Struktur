@@ -31,6 +31,8 @@ class TextureResource : public GpuResource
 	bgfx::TextureHandle texture = BGFX_INVALID_HANDLE;
 
 	TextureResource(const std::string& filePath);
+	TextureResource(TextureResource&& other) noexcept;
+	TextureResource& operator=(TextureResource&& other) noexcept;
 
 	~TextureResource();
 

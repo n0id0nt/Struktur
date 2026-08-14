@@ -16,74 +16,53 @@ namespace Resource
 {
 template <typename T>
 class ResourcePool;
-// Resource pointer - works with both GPU and non-GPU resources
+
+// Resource pointer - works with both GPU and non-GPU resources. Holds a ResourceHandle (see Resource.h) rather
+// than a cached T* - the pool's underlying storage is a SparseSet<T> (see Pools/SparseSet.h), which can relocate
+// a live resource's address whenever some OTHER resource of the same type is erased (swap-and-pop), so every
+// access below resolves through the pool fresh rather than trusting a pointer captured at construction time.
 template <typename T>
 class ResourcePtr
 {
    private:
-	T* m_ptr;
-	size_t* m_refCount;
-	ResourcePool<T>* m_pool;
-	std::string m_filePath;
+	ResourcePool<T>* m_pool = nullptr;
+	ResourceHandle m_handle;
 
 	void Release()
 	{
-		if (m_refCount)
+		if (m_pool && m_handle.IsValid())
 		{
-			(*m_refCount)--;
-			if (*m_refCount == 0)
-			{
-				if (!m_pool)
-				{
-					BREAK_MSG(
-					    "There is no resource pool reference here, so we don't know how to safley delete this "
-					    "resource");
-					delete m_ptr;
-					delete m_refCount;
-					return;
-				}
-				m_pool->OnResourceUnreferenced(m_filePath);
-			}
+			m_pool->Release(m_handle);
 		}
+		m_pool   = nullptr;
+		m_handle = ResourceHandle{};
 	}
 
    public:
-	ResourcePtr()
-	    : m_ptr(nullptr),
-	      m_refCount(nullptr),
-	      m_pool(nullptr)
-	{
-	}
+	ResourcePtr() = default;
 
-	ResourcePtr(T* p, size_t* existingRefCount, ResourcePool<T>* resourcePool, const std::string& filePath)
-	    : m_ptr(p),
-	      m_refCount(existingRefCount),
-	      m_pool(resourcePool),
-	      m_filePath(filePath)
+	ResourcePtr(ResourcePool<T>* pool, ResourceHandle handle)
+	    : m_pool(pool),
+	      m_handle(handle)
 	{
 	}
 
 	ResourcePtr(const ResourcePtr& other)
-	    : m_ptr(other.m_ptr),
-	      m_refCount(other.m_refCount),
-	      m_pool(other.m_pool),
-	      m_filePath(other.m_filePath)
+	    : m_pool(other.m_pool),
+	      m_handle(other.m_handle)
 	{
-		if (m_refCount)
+		if (m_pool && m_handle.IsValid())
 		{
-			(*m_refCount)++;
+			m_pool->AddRef(m_handle);
 		}
 	}
 
 	ResourcePtr(ResourcePtr&& other) noexcept
-	    : m_ptr(other.m_ptr),
-	      m_refCount(other.m_refCount),
-	      m_pool(other.m_pool),
-	      m_filePath(std::move(other.m_filePath))
+	    : m_pool(other.m_pool),
+	      m_handle(other.m_handle)
 	{
-		other.m_ptr      = nullptr;
-		other.m_refCount = nullptr;
-		other.m_pool     = nullptr;
+		other.m_pool   = nullptr;
+		other.m_handle = ResourceHandle{};
 	}
 
 	~ResourcePtr()
@@ -96,13 +75,11 @@ class ResourcePtr
 		if (this != &other)
 		{
 			Release();
-			m_ptr      = other.m_ptr;
-			m_refCount = other.m_refCount;
-			m_pool     = other.m_pool;
-			m_filePath = other.m_filePath;
-			if (m_refCount)
+			m_pool   = other.m_pool;
+			m_handle = other.m_handle;
+			if (m_pool && m_handle.IsValid())
 			{
-				(*m_refCount)++;
+				m_pool->AddRef(m_handle);
 			}
 		}
 		return *this;
@@ -113,41 +90,40 @@ class ResourcePtr
 		if (this != &other)
 		{
 			Release();
-			m_ptr            = other.m_ptr;
-			m_refCount       = other.m_refCount;
-			m_pool           = other.m_pool;
-			m_filePath       = std::move(other.m_filePath);
-			other.m_ptr      = nullptr;
-			other.m_refCount = nullptr;
-			other.m_pool     = nullptr;
+			m_pool         = other.m_pool;
+			m_handle       = other.m_handle;
+			other.m_pool   = nullptr;
+			other.m_handle = ResourceHandle{};
 		}
 		return *this;
 	}
 
 	T& operator*() const
 	{
-		return *m_ptr;
+		return *Get();
 	}
 	T* operator->() const
 	{
-		return m_ptr;
+		return Get();
 	}
 	T* Get() const
 	{
-		return m_ptr;
+		return (m_pool && m_handle.IsValid()) ? m_pool->Resolve(m_handle) : nullptr;
 	}
 
 	size_t GetUseCount() const
 	{
-		return m_refCount ? *m_refCount : 0;
+		return (m_pool && m_handle.IsValid()) ? m_pool->GetRefCount(m_handle) : 0;
 	}
 	const std::string& GetFilePath() const
 	{
-		return m_filePath;
+		static const std::string kEmpty;
+		T* resource = Get();
+		return resource ? resource->filePath : kEmpty;
 	}
 	bool IsValid() const
 	{
-		return m_ptr != nullptr;
+		return Get() != nullptr;
 	}
 	explicit operator bool() const
 	{
@@ -161,7 +137,8 @@ class ResourcePtr
 	// Template methods that work for both GPU and non-GPU resources
 	bool IsReady() const
 	{
-		if (!m_ptr)
+		T* resource = Get();
+		if (!resource)
 		{
 			return false;
 		}
@@ -169,23 +146,23 @@ class ResourcePtr
 		// Check if it's a GPU resource
 		if constexpr (std::is_base_of_v<GpuResource, T>)
 		{
-			return m_ptr->IsGpuReady();
+			return resource->IsGpuReady();
 		}
 		else if constexpr (std::is_base_of_v<CpuResource, T>)
 		{
-			return m_ptr->IsHardwareReady();
+			return resource->IsHardwareReady();
 		}
 		else
 		{
-			return m_ptr->isLoaded;
+			return resource->isLoaded;
 		}
 	}
 
 	bool EnsureReady(GameContext& context) const
 	{
-		if (m_ptr && m_pool)
+		if (m_pool && m_handle.IsValid())
 		{
-			return m_pool->EnsureResourceReady(context, m_filePath);
+			return m_pool->EnsureResourceReady(context, m_handle);
 		}
 		return false;
 	}

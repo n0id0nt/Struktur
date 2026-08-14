@@ -16,6 +16,36 @@ Struktur::Resource::TextureResource::TextureResource(const std::string& filePath
 {
 }
 
+Struktur::Resource::TextureResource::TextureResource(TextureResource&& other) noexcept
+    : GpuResource(std::move(other)),
+      m_pixels(std::move(other.m_pixels)),
+      m_width(other.m_width),
+      m_height(other.m_height),
+      texture(other.texture)
+{
+	other.texture = BGFX_INVALID_HANDLE;
+	other.m_width  = 0;
+	other.m_height = 0;
+}
+
+Struktur::Resource::TextureResource& Struktur::Resource::TextureResource::operator=(TextureResource&& other) noexcept
+{
+	if (this != &other)
+	{
+		UnloadFromGpu();
+		UnloadFromDisk();
+		GpuResource::operator=(std::move(other));
+		m_pixels = std::move(other.m_pixels);
+		m_width  = other.m_width;
+		m_height = other.m_height;
+		texture  = other.texture;
+		other.texture  = BGFX_INVALID_HANDLE;
+		other.m_width  = 0;
+		other.m_height = 0;
+	}
+	return *this;
+}
+
 Struktur::Resource::TextureResource::~TextureResource()
 {
 	UnloadFromGpu();

@@ -14,15 +14,13 @@ Struktur::Resource::SoundResource* Struktur::Resource::SoundPool::LoadResource(G
 	return sound;
 }
 
-bool Struktur::Resource::SoundPool::EnsureResourceReady(GameContext& context, const std::string& filePath)
+bool Struktur::Resource::SoundPool::EnsureResourceReady(GameContext& context, ResourceHandle handle)
 {
-	auto it = m_loadedResources.find(filePath);
-	if (it == m_loadedResources.end())
+	SoundResource* sound = Resolve(handle);
+	if (!sound)
 	{
 		return false;
 	}
-
-	SoundResource* sound = it->second.resource;
 
 	// Load from disk first
 	if (!sound->isLoaded && !sound->LoadFromDisk(context))

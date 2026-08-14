@@ -40,6 +40,8 @@ class FontResource : public GpuResource
 	Text::Font font;
 
 	FontResource(const std::string& filePath, int size);
+	FontResource(FontResource&& other) noexcept;
+	FontResource& operator=(FontResource&& other) noexcept;
 	~FontResource();
 
 	bool LoadFromDisk(GameContext& context) override;

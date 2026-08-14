@@ -27,6 +27,5 @@ Struktur::Resource::FontResource* Struktur::Resource::FontPool::LoadResource(Gam
 		return nullptr;
 	}
 
-	AddGpuResource(font);
 	return font;
 }

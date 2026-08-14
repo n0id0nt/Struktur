@@ -17,6 +17,44 @@ Struktur::Resource::FontResource::FontResource(const std::string& filePath, int 
 	font.texture = Text::TextureRef{};
 }
 
+Struktur::Resource::FontResource::FontResource(FontResource&& other) noexcept
+    : GpuResource(std::move(other)),
+      m_fontLoaded(other.m_fontLoaded),
+      m_fontSize(other.m_fontSize),
+      m_codepoints(other.m_codepoints),
+      m_codepointCount(other.m_codepointCount),
+      m_atlasTexture(other.m_atlasTexture),
+      m_atlasAlpha(std::move(other.m_atlasAlpha)),
+      m_atlasWidth(other.m_atlasWidth),
+      m_atlasHeight(other.m_atlasHeight),
+      font(std::move(other.font))
+{
+	other.m_fontLoaded   = false;
+	other.m_atlasTexture = BGFX_INVALID_HANDLE;
+}
+
+Struktur::Resource::FontResource& Struktur::Resource::FontResource::operator=(FontResource&& other) noexcept
+{
+	if (this != &other)
+	{
+		UnloadFromGpu();
+		UnloadFromDisk();
+		GpuResource::operator=(std::move(other));
+		m_fontLoaded     = other.m_fontLoaded;
+		m_fontSize       = other.m_fontSize;
+		m_codepoints     = other.m_codepoints;
+		m_codepointCount = other.m_codepointCount;
+		m_atlasTexture   = other.m_atlasTexture;
+		m_atlasAlpha     = std::move(other.m_atlasAlpha);
+		m_atlasWidth     = other.m_atlasWidth;
+		m_atlasHeight    = other.m_atlasHeight;
+		font             = std::move(other.font);
+		other.m_fontLoaded   = false;
+		other.m_atlasTexture = BGFX_INVALID_HANDLE;
+	}
+	return *this;
+}
+
 Struktur::Resource::FontResource::~FontResource()
 {
 	UnloadFromGpu();

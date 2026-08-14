@@ -1,9 +1,7 @@
 #pragma once
 
-#include <algorithm>
 #include <format>
 #include <string>
-#include <vector>
 
 #include "Debug/Assertions.h"
 #include "Engine/Resource/Pools/ResourcePool.h"
@@ -25,15 +23,18 @@ class GpuResourcePool : public ResourcePool<T>
 	static_assert(std::is_base_of_v<GpuResource, T>, "GpuResourcePool requires GpuResource-derived types");
 
    private:
-	std::vector<T*> m_gpuResources;
 	size_t m_maxGpuMemory;
 	size_t m_currentGpuMemory;
 
    protected:
-	virtual void UnloadResource(const std::string& filePath, T* resource) override
+	// Only pool-level bookkeeping - the resource's own ~T() (via SparseSet::Erase, right after this runs) calls
+	// UnloadFromGpu() itself, so this just keeps m_currentGpuMemory in sync before that happens.
+	void UnloadResource(const std::string& filePath, T& resource) override
 	{
-		RemoveGpuResource(resource);
-		delete resource;
+		if (resource.gpuState == GpuResource::GpuState::LoadedToGpu)
+		{
+			m_currentGpuMemory -= resource.GetGpuMemoryUsage();
+		}
 	}
 
    public:
@@ -43,20 +44,15 @@ class GpuResourcePool : public ResourcePool<T>
 	{
 	}
 
-	~GpuResourcePool() override
-	{
-		m_gpuResources.clear();  // Base class handles resource cleanup
-	}
+	~GpuResourcePool() override = default;
 
-	bool EnsureResourceReady(GameContext& context, const std::string& name) override
+	bool EnsureResourceReady(GameContext& context, ResourceHandle handle) override
 	{
-		auto it = this->m_loadedResources.find(name);
-		if (it == this->m_loadedResources.end())
+		T* resource = this->Resolve(handle);
+		if (!resource)
 		{
 			return false;
 		}
-
-		T* resource = it->second.resource;
 
 		// First ensure disk loading
 		if (!resource->isLoaded && !resource->LoadFromDisk(context))
@@ -86,12 +82,12 @@ class GpuResourcePool : public ResourcePool<T>
 			{
 				m_currentGpuMemory += requiredMemory;
 				resource->gpuState = GpuResource::GpuState::LoadedToGpu;
-				DEBUG_INFO(std::format("Loaded '{}' to GPU ({} bytes)", name, requiredMemory).c_str());
+				DEBUG_INFO(std::format("Loaded '{}' to GPU ({} bytes)", resource->filePath, requiredMemory).c_str());
 				return true;
 			}
 			else
 			{
-				BREAK_MSG(std::format("Failed to load '{}' to GPU", name).c_str());
+				BREAK_MSG(std::format("Failed to load '{}' to GPU", resource->filePath).c_str());
 				return false;
 			}
 		}
@@ -99,52 +95,31 @@ class GpuResourcePool : public ResourcePool<T>
 		return false;
 	}
 
-	void AddGpuResource(T* resource)
-	{
-		m_gpuResources.push_back(resource);
-	}
-
-	void RemoveGpuResource(T* resource)
-	{
-		auto it = std::find(m_gpuResources.begin(), m_gpuResources.end(), resource);
-		if (it != m_gpuResources.end())
-		{
-			m_gpuResources.erase(it);
-		}
-
-		if (resource->gpuState == GpuResource::GpuState::LoadedToGpu)
-		{
-			m_currentGpuMemory -= resource->GetGpuMemoryUsage();
-		}
-	}
-
+	// Walks every loaded resource directly (packed, cache-friendly - see SparseSet) rather than a separately
+	// maintained list of GPU-loaded pointers, which would go stale the moment any other resource in this pool
+	// got erased and swap-and-pop relocated a live element.
 	void FreeUnusedGpuResources(size_t neededMemory)
 	{
 		DEBUG_INFO(std::format("Freeing GPU memory (need {} bytes)...", neededMemory).c_str());
 
 		size_t freedMemory = 0;
 
-		for (T* resource : m_gpuResources)
+		for (auto& entry : this->m_resources)
 		{
 			if (freedMemory >= neededMemory)
 			{
 				break;
 			}
 
-			auto resourceIt = std::find_if(this->m_loadedResources.begin(), this->m_loadedResources.end(),
-			                               [resource](const auto& pair) { return pair.second.resource == resource; });
-
-			if (resourceIt != this->m_loadedResources.end() && *(resourceIt->second.refCount) == 1)
+			T& resource = entry.resource;
+			if (entry.refCount == 1 && resource.gpuState == GpuResource::GpuState::LoadedToGpu)
 			{
-				if (resource->gpuState == GpuResource::GpuState::LoadedToGpu)
-				{
-					size_t memoryFreed = resource->GetGpuMemoryUsage();
-					resource->UnloadFromGpu();
-					resource->gpuState = GpuResource::GpuState::Unloaded;
-					m_currentGpuMemory -= memoryFreed;
-					freedMemory += memoryFreed;
-					DEBUG_INFO(std::format("Freed '{}' from GPU ({} bytes)", resource->filePath, memoryFreed).c_str());
-				}
+				size_t memoryFreed = resource.GetGpuMemoryUsage();
+				resource.UnloadFromGpu();
+				resource.gpuState = GpuResource::GpuState::Unloaded;
+				m_currentGpuMemory -= memoryFreed;
+				freedMemory += memoryFreed;
+				DEBUG_INFO(std::format("Freed '{}' from GPU ({} bytes)", resource.filePath, memoryFreed).c_str());
 			}
 		}
 
@@ -155,11 +130,11 @@ class GpuResourcePool : public ResourcePool<T>
 	{
 		DEBUG_INFO("GPU context lost! Marking all GPU resources for reload...");
 
-		for (T* resource : m_gpuResources)
+		for (auto& entry : this->m_resources)
 		{
-			if (resource->gpuState == GpuResource::GpuState::LoadedToGpu)
+			if (entry.resource.gpuState == GpuResource::GpuState::LoadedToGpu)
 			{
-				resource->gpuState = GpuResource::GpuState::GpuLost;
+				entry.resource.gpuState = GpuResource::GpuState::GpuLost;
 			}
 		}
 		m_currentGpuMemory = 0;
@@ -169,15 +144,16 @@ class GpuResourcePool : public ResourcePool<T>
 	{
 		DEBUG_INFO("Reloading all GPU resources after context restore...");
 
-		for (T* resource : m_gpuResources)
+		for (auto& entry : this->m_resources)
 		{
-			if (resource->gpuState == GpuResource::GpuState::GpuLost)
+			T& resource = entry.resource;
+			if (resource.gpuState == GpuResource::GpuState::GpuLost)
 			{
-				if (resource->LoadToGpu(context))
+				if (resource.LoadToGpu(context))
 				{
-					resource->gpuState = GpuResource::GpuState::LoadedToGpu;
-					m_currentGpuMemory += resource->GetGpuMemoryUsage();
-					DEBUG_INFO(std::format("Reloaded '{}' to GPU", resource->filePath).c_str());
+					resource.gpuState = GpuResource::GpuState::LoadedToGpu;
+					m_currentGpuMemory += resource.GetGpuMemoryUsage();
+					DEBUG_INFO(std::format("Reloaded '{}' to GPU", resource.filePath).c_str());
 				}
 			}
 		}
