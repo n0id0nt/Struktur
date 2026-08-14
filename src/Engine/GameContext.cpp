@@ -5,6 +5,7 @@ namespace Struktur
 GameContext::GameContext()
 {
 	m_camera            = std::make_unique<World::Camera>();
+	m_collisionLayers    = std::make_unique<Physics::CollisionLayers>();
 	m_dialogueManager    = std::make_unique<Dialogue::DialogueManager>();
 	m_dialogueRegistry   = std::make_unique<Dialogue::DialogueRegistry>();
 #ifdef EDITOR
@@ -44,6 +45,7 @@ void GameContext::Shutdown()
 	// m_graphicsDevice->Shutdown() runs - bgfx::destroy() is invalid once bgfx has shut down. Resetting
 	// everything else first, in any order, means declaration order above no longer has to encode this.
 	m_camera.reset();
+	m_collisionLayers.reset();
 	m_dialogueManager.reset();
 	m_dialogueRegistry.reset();
 #ifdef EDITOR
@@ -85,6 +87,12 @@ World::Camera& GameContext::GetCamera() const
 {
 	ASSERT_MSG(m_camera.get(), "Camera not initialised");
 	return *m_camera;
+}
+
+Physics::CollisionLayers& GameContext::GetCollisionLayers() const
+{
+	ASSERT_MSG(m_collisionLayers.get(), "Collision Layers not initialised");
+	return *m_collisionLayers;
 }
 
 Dialogue::DialogueManager& GameContext::GetDialogueManager() const

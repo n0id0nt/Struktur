@@ -28,6 +28,8 @@ foreign class PhysicsBody {
     foreign syncToPhysics=(arg0)
     // Sets the linear velocity of a physics body.
     foreign linearVelocity
+    // Sets which collision layer this body belongs to (categoryBits) and which layers it collides with (maskBits) - see physics.CollisionLayers for allocating layer bits by name.
+    foreign setCollisionFilter(arg0,arg1)
     // Create a physics body
     foreign static create(arg0,arg1,arg2)
     // Gets a physics body

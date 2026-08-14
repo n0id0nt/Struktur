@@ -55,6 +55,17 @@ foreign class PhysicsCircleShape {
     foreign radius=(arg0)
 }
 
+class CollisionLayers {
+    // Allocates a bit for the given layer name if it isn't already registered, and returns it (0 if all 16 bits are already in use). Calling again with the same name returns the same bit.
+    foreign static registerLayer(arg0)
+    // Returns the bit previously registered for this layer name via registerLayer, or 0 if it was never registered.
+    foreign static getLayer(arg0)
+    // Returns the layer name registered for this bit, or an empty string if nothing is registered there.
+    foreign static getLayerName(arg0)
+    // Returns true if this layer name has already been registered.
+    foreign static hasLayer(arg0)
+}
+
 // PhysicsPolygonShape class wraps b2PolygonShape
 foreign class PhysicsPolygonShape {
     // Create physics polygon shape

@@ -433,6 +433,20 @@ void wren_PhysicsBodySetLinearVelocity(WrenVM* vm)
 	physicsBody->component->body->SetLinearVelocity(b2Velecity);
 }
 
+// PhysicsBody.setCollisionFilter(categoryBits, maskBits) - see physics.CollisionLayers for allocating the bits
+void wren_PhysicsBodySetCollisionFilter(WrenVM* vm)
+{
+	Struktur::GameContext* context                 = static_cast<Struktur::GameContext*>(wrenGetUserData(vm));
+	Struktur::System::SystemManager& systemManager = context->GetSystemManager();
+	auto& physicsSystem                            = systemManager.GetSystem<Struktur::System::PhysicsSystem>();
+
+	WrenPhysicsBody* physicsBody = (WrenPhysicsBody*)wrenGetSlotForeign(vm, 0);
+	uint16_t categoryBits        = static_cast<uint16_t>(wrenGetSlotDouble(vm, 1));
+	uint16_t maskBits            = static_cast<uint16_t>(wrenGetSlotDouble(vm, 2));
+
+	physicsSystem.SetCollisionFilter(*physicsBody->component, categoryBits, maskBits);
+}
+
 // ============================================================================
 // SHADER BINDINGS
 // ============================================================================
@@ -1763,6 +1777,10 @@ WREN_BINDING_MODULE(GameObjectComponent)
 	                  "Set if physics bodys to transform sync with the physics position");
 	WREN_CLASS_METHOD(registry, "gameObjectComponents", "PhysicsBody", "linearVelocity",
 	                  wren_PhysicsBodySetLinearVelocity, "Sets the linear velocity of a physics body.");
+	WREN_CLASS_METHOD(registry, "gameObjectComponents", "PhysicsBody", "setCollisionFilter(_,_)",
+	                  wren_PhysicsBodySetCollisionFilter,
+	                  "Sets which collision layer this body belongs to (categoryBits) and which layers it "
+	                  "collides with (maskBits) - see physics.CollisionLayers for allocating layer bits by name.");
 
 	// Register static methods
 	WREN_CLASS_STATIC(registry, "gameObjectComponents", "PhysicsBody", "create(_,_,_)", wren_PhysicsBodyCreate,

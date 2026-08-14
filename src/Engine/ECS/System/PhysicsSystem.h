@@ -27,6 +27,10 @@ class PhysicsSystem : public ISystem
 	                                          const b2Shape& shape);
 	Component::PhysicsBody& CreatePhysicsBody(GameContext& context, entt::entity entity, const b2BodyDef& bodyDef);
 
+	// Applies categoryBits/maskBits (see Physics::CollisionLayers) to every fixture on this body - a body can
+	// have more than one fixture, though today's CreatePhysicsBody only ever creates one.
+	void SetCollisionFilter(Component::PhysicsBody& physicsBody, uint16_t categoryBits, uint16_t maskBits);
+
 	std::string Name() const override
 	{
 		return "Physics System";

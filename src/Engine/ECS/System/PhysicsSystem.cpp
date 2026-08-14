@@ -132,3 +132,21 @@ Struktur::Component::PhysicsBody& Struktur::System::PhysicsSystem::CreatePhysics
 
 	return physicsBody;
 }
+
+void Struktur::System::PhysicsSystem::SetCollisionFilter(Component::PhysicsBody& physicsBody, uint16_t categoryBits,
+                                                          uint16_t maskBits)
+{
+	if (!physicsBody.body)
+	{
+		return;
+	}
+
+	b2Filter filter;
+	filter.categoryBits = categoryBits;
+	filter.maskBits      = maskBits;
+
+	for (b2Fixture* fixture = physicsBody.body->GetFixtureList(); fixture; fixture = fixture->GetNext())
+	{
+		fixture->SetFilterData(filter);
+	}
+}
