@@ -56,6 +56,8 @@ foreign class PhysicsCircleShape {
 }
 
 class CollisionLayers {
+    // Mask value that collides with every possible layer, registered or not (Box2D's own default maskBits) - use this instead of a group when you want everything.
+    static ALL { 65535 }
     // Allocates a bit for the given layer name if it isn't already registered, and returns it (0 if all 16 bits are already in use). Calling again with the same name returns the same bit.
     foreign static registerLayer(arg0)
     // Returns the bit previously registered for this layer name via registerLayer, or 0 if it was never registered.
@@ -64,6 +66,12 @@ class CollisionLayers {
     foreign static getLayerName(arg0)
     // Returns true if this layer name has already been registered.
     foreign static hasLayer(arg0)
+    // Defines (or redefines) a named group as the combined mask of the given list of layer names, auto-registering any that aren't already registered layers, and returns the combined mask.
+    foreign static registerGroup(arg0,arg1)
+    // Returns the combined mask previously defined for this group name via registerGroup, or 0 if it was never registered.
+    foreign static getGroup(arg0)
+    // Returns true if this group name has already been registered.
+    foreign static hasGroup(arg0)
 }
 
 // PhysicsPolygonShape class wraps b2PolygonShape

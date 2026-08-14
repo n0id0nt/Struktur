@@ -47,3 +47,27 @@ bool Struktur::Physics::CollisionLayers::HasLayer(const std::string& name) const
 {
 	return m_layers.find(name) != m_layers.end();
 }
+
+uint16_t Struktur::Physics::CollisionLayers::RegisterGroup(const std::string& groupName,
+                                                           const std::vector<std::string>& layerNames)
+{
+	uint16_t mask = 0;
+	for (const std::string& layerName : layerNames)
+	{
+		mask |= RegisterLayer(layerName);
+	}
+
+	m_groups[groupName] = mask;
+	return mask;
+}
+
+uint16_t Struktur::Physics::CollisionLayers::GetGroup(const std::string& groupName) const
+{
+	auto it = m_groups.find(groupName);
+	return it != m_groups.end() ? it->second : 0;
+}
+
+bool Struktur::Physics::CollisionLayers::HasGroup(const std::string& groupName) const
+{
+	return m_groups.find(groupName) != m_groups.end();
+}
