@@ -4,9 +4,9 @@
 
 #include <bgfx/bgfx.h>
 
+#include "Engine/Resource/Pointers/ResourcePtr.h"
+#include "Engine/Resource/Pools/ResourcePool.h"
 #include "Engine/Resource/Resource.h"
-#include "Engine/Resource/ResourcePool.h"
-#include "Engine/Resource/ResourcePtr.h"
 
 namespace Struktur
 {
@@ -45,19 +45,6 @@ class ShaderResource : public GpuResource
 
 	const std::string& GetVSFilePath() const;
 	const std::string& GetFSFilePath() const;
-};
-
-// Specialized pools
-class ShaderPool : public GpuResourcePool<ShaderResource>
-{
-   public:
-	ShaderPool()
-	    : GpuResourcePool<ShaderResource>(1 * 1024 * 1024)
-	{
-	}  // 1MB for textures
-
-   protected:
-	ShaderResource* LoadResource(GameContext& context, const std::string& resourceString) override;
 };
 }  // namespace Resource
 }  // namespace Struktur

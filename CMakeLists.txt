@@ -439,9 +439,15 @@ set(SOURCES
     src/Engine/Dialogue/TextSystems/VariableSubstitutionSystem.h src/Engine/Dialogue/TextSystems/VariableSubstitutionSystem.cpp
     src/Engine/Dialogue/DialogueResult.h
 
-    src/Engine/Resource/ResourcePool.h
     src/Engine/Resource/Resource.h
-    src/Engine/Resource/ResourcePtr.h
+    src/Engine/Resource/Pointers/ResourcePtr.h
+    src/Engine/Resource/Pools/ResourcePool.h
+    src/Engine/Resource/Pools/GpuResourcePool.h
+    src/Engine/Resource/Pools/TexturePool.h     src/Engine/Resource/Pools/TexturePool.cpp
+    src/Engine/Resource/Pools/SoundPool.h       src/Engine/Resource/Pools/SoundPool.cpp
+    src/Engine/Resource/Pools/MusicPool.h       src/Engine/Resource/Pools/MusicPool.cpp
+    src/Engine/Resource/Pools/FontPool.h        src/Engine/Resource/Pools/FontPool.cpp
+    src/Engine/Resource/Pools/ShaderPool.h      src/Engine/Resource/Pools/ShaderPool.cpp
     src/Engine/Resource/ResourceManager.h       src/Engine/Resource/ResourceManager.cpp
     src/Engine/Resource/SoundResource.h         src/Engine/Resource/SoundResource.cpp
     src/Engine/Resource/FontResource.h          src/Engine/Resource/FontResource.cpp

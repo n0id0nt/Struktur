@@ -7,9 +7,9 @@
 #include <bgfx/bgfx.h>
 
 #include "Engine/Renderer/RenderTypes.h"
+#include "Engine/Resource/Pointers/ResourcePtr.h"
+#include "Engine/Resource/Pools/ResourcePool.h"
 #include "Engine/Resource/Resource.h"
-#include "Engine/Resource/ResourcePool.h"
-#include "Engine/Resource/ResourcePtr.h"
 
 namespace Struktur
 {
@@ -53,19 +53,6 @@ class TextureResource : public GpuResource
 	{
 		return Renderer::TextureHandle{texture.idx, m_width, m_height};
 	}
-};
-
-// Specialized pools
-class TexturePool : public GpuResourcePool<TextureResource>
-{
-   public:
-	TexturePool()
-	    : GpuResourcePool<TextureResource>(256 * 1024 * 1024)
-	{
-	}  // 256MB for textures
-
-   protected:
-	TextureResource* LoadResource(GameContext& context, const std::string& filePath) override;
 };
 }  // namespace Resource
 }  // namespace Struktur

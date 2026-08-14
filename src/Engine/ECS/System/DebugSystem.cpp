@@ -9,7 +9,7 @@
 #include "Engine/GameContext.h"
 #include "Engine/Renderer/UIRenderer.h"
 #include "Engine/Resource/FontResource.h"
-#include "Engine/Resource/ResourcePtr.h"
+#include "Engine/Resource/Pointers/ResourcePtr.h"
 
 Struktur::System::DebugSystem::DebugSystem()
 {

@@ -105,18 +105,3 @@ size_t Struktur::Resource::TextureResource::GetGpuMemoryUsage() const
 {
 	return GetMemoryUsage();  // Same as disk for simple case
 }
-
-Struktur::Resource::TextureResource* Struktur::Resource::TexturePool::LoadResource(GameContext& context,
-                                                                                   const std::string& filePath)
-{
-	auto* texture = new TextureResource(filePath);
-
-	if (!texture->LoadFromDisk(context))
-	{
-		delete texture;
-		return nullptr;
-	}
-
-	AddGpuResource(texture);
-	return texture;
-}

@@ -1,7 +1,7 @@
 #pragma once
 
 #include "Engine/Resource/FontResource.h"
-#include "Engine/Resource/ResourcePtr.h"
+#include "Engine/Resource/Pointers/ResourcePtr.h"
 #include "Engine/Text/Font.h"
 #include "Engine/UI/UIElement.h"
 

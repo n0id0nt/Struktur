@@ -3,9 +3,9 @@
 #include <string>
 #include <vector>
 
+#include "Engine/Resource/Pointers/ResourcePtr.h"
+#include "Engine/Resource/Pools/ResourcePool.h"
 #include "Engine/Resource/Resource.h"
-#include "Engine/Resource/ResourcePool.h"
-#include "Engine/Resource/ResourcePtr.h"
 
 struct MIX_Audio;
 struct MIX_Track;
@@ -40,12 +40,6 @@ class MusicResource : public CpuResource
 	bool IsHardwareReady() const override;
 
 	size_t GetMemoryUsage() const override;
-};
-
-class MusicPool : public ResourcePool<MusicResource>
-{
-   protected:
-	MusicResource* LoadResource(GameContext& context, const std::string& filePath) override;
 };
 }  // namespace Resource
 }  // namespace Struktur

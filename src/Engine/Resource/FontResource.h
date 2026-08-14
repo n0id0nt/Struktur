@@ -5,9 +5,9 @@
 
 #include <bgfx/bgfx.h>
 
+#include "Engine/Resource/Pointers/ResourcePtr.h"
+#include "Engine/Resource/Pools/ResourcePool.h"
 #include "Engine/Resource/Resource.h"
-#include "Engine/Resource/ResourcePool.h"
-#include "Engine/Resource/ResourcePtr.h"
 #include "Engine/Text/Font.h"
 
 #include <vector>
@@ -59,22 +59,6 @@ class FontResource : public GpuResource
 
 	int GetBaseSize() const;
 	int GetGlyphCount() const;
-};
-
-// Specialized pools
-class FontPool : public GpuResourcePool<FontResource>
-{
-   private:
-	int defaultFontSize = 32;
-
-   public:
-	FontPool()
-	    : GpuResourcePool<FontResource>(32 * 1024 * 1024)
-	{
-	}  // 32MB for textures
-
-   protected:
-	FontResource* LoadResource(GameContext& context, const std::string& resourceString) override;
 };
 }  // namespace Resource
 }  // namespace Struktur

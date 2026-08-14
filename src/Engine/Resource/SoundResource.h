@@ -2,9 +2,9 @@
 
 #include <string>
 
+#include "Engine/Resource/Pointers/ResourcePtr.h"
+#include "Engine/Resource/Pools/ResourcePool.h"
 #include "Engine/Resource/Resource.h"
-#include "Engine/Resource/ResourcePool.h"
-#include "Engine/Resource/ResourcePtr.h"
 
 struct MIX_Audio;
 struct MIX_Track;
@@ -38,15 +38,6 @@ class SoundResource : public CpuResource
 
 	bool IsHardwareReady() const override;
 	size_t GetMemoryUsage() const override;
-};
-
-class SoundPool : public ResourcePool<SoundResource>
-{
-   protected:
-	SoundResource* LoadResource(GameContext& context, const std::string& filePath) override;
-
-   public:
-	bool EnsureResourceReady(GameContext& context, const std::string& filePath) override;
 };
 }  // namespace Resource
 }  // namespace Struktur

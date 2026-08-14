@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Engine/Resource/ResourcePtr.h"
+#include "Engine/Resource/Pointers/ResourcePtr.h"
 #include "Engine/Resource/TextureResource.h"
 #include "Engine/UI/UIElement.h"
 
