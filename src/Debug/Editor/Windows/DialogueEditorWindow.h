@@ -72,7 +72,7 @@ class DialogueEditorWindow : public EditorWindow
 	void DeleteNode(const std::string& nodeId);
 	void DuplicateNode(const std::string& nodeId);
 
-	// Playback
+	// Playback (sandboxed - see ProcessPlaybackNode)
 	void StartPlayback(GameContext& context, const std::string& entryNodeId);
 	void StopPlayback(GameContext& context);
 	void ContinuePlayback(GameContext& context);
@@ -120,12 +120,19 @@ class DialogueEditorWindow : public EditorWindow
 	// Validation
 	void ValidateDialogue();
 
+	// Sandboxed playback evaluation - never touches real game state, see the comment block above
+	// ProcessPlaybackNode's definition for details
+	Dialogue::DialogueResult ProcessPlaybackNode(const std::string& nodeId);
+	bool EvaluatePlaybackConditions(const Dialogue::ConditionList& conditions);
+	bool EvaluatePlaybackCondition(const Dialogue::Condition& condition);
+	void ExecutePlaybackCommands(const Dialogue::CommandList& commands);
+	void ExecutePlaybackCommand(const Dialogue::Command& command);
+
 	// Helper UI functions
 	bool NodeSelector(const char* label, std::string& nodeId);
 	bool SpeakerInput(char* buffer, size_t bufferSize);
 	void InsertVariableAtCursor(char* buffer, size_t bufferSize, const char* variable);
 
-	void SwitchNodeContinuationType(Dialogue::DialogueNode* node, int newType);
 	void ParseDialogueDataFromWren(GameContext& context, WrenVM* vm, int slot);
 
 	void SaveFileWithPicker();

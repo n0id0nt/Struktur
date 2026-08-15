@@ -117,6 +117,11 @@ class DialogueNode
 	void AddChoice(std::unique_ptr<Choice> choice);
 	void AddTarget(std::unique_ptr<ConditionalTarget> target);
 
+	// Remove a single entry by index (no-op if index is out of range)
+	void RemoveCommand(size_t index);
+	void RemoveChoice(size_t index);
+	void RemoveTarget(size_t index);
+
 	// Check node type
 	bool HasChoices() const
 	{

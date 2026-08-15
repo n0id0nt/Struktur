@@ -61,6 +61,11 @@ void EditorTheme::ApplyDarkTheme()
 	colors[ImGuiCol_NavWindowingHighlight]  = ImVec4(1.00f, 0.00f, 0.00f, 0.70f);
 	colors[ImGuiCol_NavWindowingDimBg]      = ImVec4(1.00f, 0.00f, 0.00f, 0.20f);
 	colors[ImGuiCol_ModalWindowDimBg]       = ImVec4(1.00f, 0.00f, 0.00f, 0.35f);
+	// Same accent blue as CheckMark/DockingPreview/DragDropTarget above - these three were previously left at
+	// ImGui's compiled-in default (a bright blue unrelated to this palette), standing out against everything else.
+	colors[ImGuiCol_TextLink]                  = ImVec4(0.33f, 0.67f, 0.86f, 1.00f);
+	colors[ImGuiCol_TabSelectedOverline]       = ImVec4(0.33f, 0.67f, 0.86f, 1.00f);
+	colors[ImGuiCol_TabDimmedSelectedOverline] = ImVec4(0.33f, 0.67f, 0.86f, 0.50f);
 #ifndef IMGUI_DISABLE_OBSOLETE_FUNCTIONS
 	colors[ImGuiCol_TabActive]              = ImVec4(0.20f, 0.20f, 0.20f, 0.36f);
 	colors[ImGuiCol_TabUnfocused]           = ImVec4(0.00f, 0.00f, 0.00f, 0.52f);

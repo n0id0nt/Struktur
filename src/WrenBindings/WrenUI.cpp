@@ -422,7 +422,7 @@ void wren_UIElementRemoveChild(WrenVM* vm)
 		DEBUG_ERROR("UILabel.setPosition: uiElement is Null");
 		return;
 	}
-	WrenUIElement* child = static_cast<WrenUIElement*>(wrenGetSlotForeign(vm, 0));
+	WrenUIElement* child = static_cast<WrenUIElement*>(wrenGetSlotForeign(vm, 1));
 	bool success         = uiElement->element->RemoveChild(child->element);
 	wrenSetSlotBool(vm, 0, success);
 }

@@ -70,6 +70,24 @@ void Editor::Initialise(GameContext& context)
 	// Inspector window (depends on hierarchy)
 	CreateWindow<DialogueEditorWindow>(previewPtr);
 
+	// Route ImGui's own ini autosave/autoload through a single canonical file (also used by the explicit
+	// Save/Load Layout menu actions), so docking state persists automatically across launches.
+	ImGuiIO& io    = ImGui::GetIO();
+	io.IniFilename = EditorLayoutManager::kDefaultLayoutFilePath;
+
+	// Window open/closed state isn't part of ImGui's ini format (p_open is an app-owned bool) - restore it
+	// explicitly from the last session, if any.
+	std::unordered_map<std::string, bool> windowStates =
+	    m_layoutManager.LoadWindowStates(EditorLayoutManager::kDefaultWindowStatesFilePath);
+	for (auto& window : m_windows)
+	{
+		auto it = windowStates.find(window->GetName());
+		if (it != windowStates.end())
+		{
+			window->SetOpen(it->second);
+		}
+	}
+
 	// Initialise all windows
 	for (auto& window : m_windows)
 	{
@@ -85,6 +103,9 @@ void Editor::Initialise(GameContext& context)
 
 void Editor::Shutdown(GameContext& context)
 {
+	// Persist docking layout and window open/closed state before the windows are torn down
+	SaveEditorLayout();
+
 	// Shutdown all windows
 	for (auto& window : m_windows)
 	{
@@ -93,16 +114,6 @@ void Editor::Shutdown(GameContext& context)
 
 	m_windows.clear();
 	m_windowMap.clear();
-}
-
-void Editor::BeginUpdateLoop(GameContext& context)
-{
-	// The game viewport's bgfx framebuffer redirect (GraphicsDevice::SetWorldRenderTarget) is set up once at
-	// GameViewportWindow::Initialise, not pushed/popped every frame - nothing to do here.
-}
-
-void Editor::EndUpdateLoop(GameContext& context)
-{
 }
 
 void Editor::Update(GameContext& context)
@@ -128,6 +139,34 @@ EditorWindow* Editor::GetWindow(const std::string& name)
 		return it->second;
 	}
 	return nullptr;
+}
+
+void Editor::SaveEditorLayout()
+{
+	m_layoutManager.SaveLayout(EditorLayoutManager::kDefaultLayoutFilePath);
+
+	std::unordered_map<std::string, bool> windowStates;
+	for (auto& window : m_windows)
+	{
+		windowStates[window->GetName()] = window->IsOpen();
+	}
+	m_layoutManager.SaveWindowStates(windowStates, EditorLayoutManager::kDefaultWindowStatesFilePath);
+}
+
+void Editor::LoadEditorLayout()
+{
+	m_layoutManager.LoadLayout(EditorLayoutManager::kDefaultLayoutFilePath);
+
+	std::unordered_map<std::string, bool> windowStates =
+	    m_layoutManager.LoadWindowStates(EditorLayoutManager::kDefaultWindowStatesFilePath);
+	for (auto& window : m_windows)
+	{
+		auto it = windowStates.find(window->GetName());
+		if (it != windowStates.end())
+		{
+			window->SetOpen(it->second);
+		}
+	}
 }
 
 void Editor::RenderEditorLayout(GameContext& context)
@@ -197,11 +236,11 @@ void Editor::RenderMenuBar(GameContext& context)
 
 			if (ImGui::MenuItem("Save Layout"))
 			{
-				m_layoutManager.SaveLayout("editor_layout.ini");
+				SaveEditorLayout();
 			}
 			if (ImGui::MenuItem("Load Layout"))
 			{
-				m_layoutManager.LoadLayout("editor_layout.ini");
+				LoadEditorLayout();
 			}
 
 			ImGui::Separator();
@@ -307,12 +346,12 @@ void Editor::RenderLayoutMenu()
 
 	if (ImGui::MenuItem("Save Current Layout"))
 	{
-		m_layoutManager.SaveLayout("editor_layout.ini");
+		SaveEditorLayout();
 	}
 
 	if (ImGui::MenuItem("Load Saved Layout"))
 	{
-		m_layoutManager.LoadLayout("editor_layout.ini");
+		LoadEditorLayout();
 	}
 
 	ImGui::Separator();

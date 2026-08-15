@@ -15,7 +15,7 @@ void GameViewportWindow::Initialise(GameContext& context)
 	uint16_t height          = (uint16_t)gameData.gameHeight;
 	m_frameBuffer            = bgfx::createFrameBuffer(width, height, bgfx::TextureFormat::BGRA8);
 	// Sticky redirect: from here on WorldViewId renders into this instead of the backbuffer, for as long as
-	// the editor is running - no per-frame Begin/EndTextureMode push/pop needed (see Editor::BeginUpdateLoop).
+	// the editor is running - set up once here rather than pushed/popped every frame.
 	context.GetGraphicsDevice().SetWorldRenderTarget(m_frameBuffer, width, height);
 }
 

@@ -336,7 +336,6 @@ void Struktur::GameLoop(GameContext& context)
 	ImGui_ImplSDL3_NewFrame();
 	ImGui::NewFrame();
 	Debug::Editor& editor = context.GetEditor();
-	editor.BeginUpdateLoop(context);
 #endif
 	{
 		PROFILE_SCOPE("RENDER PROCESSING");
@@ -344,7 +343,6 @@ void Struktur::GameLoop(GameContext& context)
 	}
 	PROFILE_END_SCOPE(gameLoop);
 #ifdef EDITOR
-	editor.EndUpdateLoop(context);
 	editor.Update(context);
 #endif
 	context.GetGraphicsDevice().EndFrame();

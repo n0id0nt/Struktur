@@ -204,7 +204,7 @@ void LogWindow::RenderLogList()
 		ImGui::TextColored(ImVec4(0.6f, 0.6f, 0.6f, 1.0f), "No logs to display");
 	}
 
-	// Deferred scroll � happens after all content is laid out
+	// Deferred scroll - happens after all content is laid out
 	if (m_scrollToBottom)
 	{
 		ImGui::SetScrollHereY(1.0f);
@@ -291,7 +291,7 @@ void LogWindow::RenderLogRow(int i)
 	}
 	else
 	{
-		// Single line � simple selectable
+		// Single line - simple selectable
 		bool isSelected = (m_selectedLogIndex == i);
 		ImGui::PushStyleColor(ImGuiCol_Text, grey);
 		if (ImGui::Selectable(entry.message.c_str(), isSelected, ImGuiSelectableFlags_AllowDoubleClick))

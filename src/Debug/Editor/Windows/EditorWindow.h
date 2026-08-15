@@ -14,58 +14,31 @@ namespace Debug
 class EditorWindow
 {
    public:
-	EditorWindow(const std::string& name, const std::string& dockName = "")
-	    : m_name(name),
-	      m_dockName(dockName.empty() ? name : dockName),
-	      m_isOpen(true),
-	      m_isVisible(true)
-	{
-	}
+	EditorWindow(const std::string& name, const std::string& dockName = "");
 
-	virtual ~EditorWindow() = default;
+	virtual ~EditorWindow();
 
 	// Render the window (must be implemented by derived classes)
 	virtual void Render(GameContext& context) = 0;
 
 	// Optional: Called once when the editor initialises
-	virtual void Initialise(GameContext& context) {}
+	virtual void Initialise(GameContext& context);
 
 	// Optional: Called once when the editor shuts down
-	virtual void Shutdown(GameContext& context) {}
+	virtual void Shutdown(GameContext& context);
 
 	// Window properties
-	const std::string& GetName() const
-	{
-		return m_name;
-	}
-	const std::string& GetDockName() const
-	{
-		return m_dockName;
-	}
+	const std::string& GetName() const;
+	const std::string& GetDockName() const;
 
-	bool IsOpen() const
-	{
-		return m_isOpen;
-	}
-	void SetOpen(bool open)
-	{
-		m_isOpen = open;
-	}
+	bool IsOpen() const;
+	void SetOpen(bool open);
 
-	bool IsVisible() const
-	{
-		return m_isVisible;
-	}
-	void SetVisible(bool visible)
-	{
-		m_isVisible = visible;
-	}
+	bool IsVisible() const;
+	void SetVisible(bool visible);
 
 	// Toggle visibility
-	void ToggleVisible()
-	{
-		m_isVisible = !m_isVisible;
-	}
+	void ToggleVisible();
 
    protected:
 	std::string m_name;      // Display name

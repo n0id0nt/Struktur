@@ -30,13 +30,7 @@ class Editor
 	// Shutdown the editor
 	void Shutdown(GameContext& context);
 
-	// Call before game update/render
-	void BeginUpdateLoop(GameContext& context);
-
-	// Call after game update/render
-	void EndUpdateLoop(GameContext& context);
-
-	// Update editor UI (call after EndUpdateLoop)
+	// Update editor UI
 	void Update(GameContext& context);
 
 	// Create a new editor window
@@ -53,6 +47,12 @@ class Editor
 
 	// Get a window by name
 	EditorWindow* GetWindow(const std::string& name);
+
+	// Save the current docking layout and per-window open/closed state to disk
+	void SaveEditorLayout();
+
+	// Load the docking layout and per-window open/closed state from disk
+	void LoadEditorLayout();
 
 	// Get the game viewport window
 	GameViewportWindow* GetGameViewport()

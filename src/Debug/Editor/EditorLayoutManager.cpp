@@ -2,6 +2,13 @@
 
 #include <imgui_internal.h>
 
+#include <filesystem>
+#include <fstream>
+
+#include "nlohmann/json.hpp"
+
+#include "Debug/Assertions.h"
+
 void Struktur::Debug::EditorLayoutManager::SetupLayout(ImGuiID dockspace_id, const std::string &layoutName,
                                                        ImVec2 viewportSize)
 {
@@ -12,6 +19,17 @@ void Struktur::Debug::EditorLayoutManager::SetupLayout(ImGuiID dockspace_id, con
 	}
 
 	m_layoutsSetup[layoutName] = true;
+
+	bool forceRebuild = m_forceRebuild;
+	m_forceRebuild    = false;
+
+	// If a saved layout file already exists, ImGui's own ini autoload (io.IniFilename) has already restored the
+	// dock tree - including docking - for this dockspace ID. Don't blow it away with the hardcoded default unless
+	// explicitly requested (ResetToLayout/ResetAllLayouts) or this is the very first-ever launch.
+	if (!forceRebuild && std::filesystem::exists(kDefaultLayoutFilePath))
+	{
+		return;
+	}
 
 	// Clear existing layout
 	ImGui::DockBuilderRemoveNode(dockspace_id);
@@ -85,14 +103,73 @@ void Struktur::Debug::EditorLayoutManager::LoadLayout(const std::string &filenam
 	ImGui::LoadIniSettingsFromDisk(filename.c_str());
 }
 
+void Struktur::Debug::EditorLayoutManager::SaveWindowStates(const std::unordered_map<std::string, bool> &windowStates,
+                                                             const std::string &filename)
+{
+	nlohmann::json json;
+	for (const auto &[name, isOpen] : windowStates)
+	{
+		json[name] = isOpen;
+	}
+
+	std::ofstream file(filename);
+	if (!file.is_open())
+	{
+		DEBUG_ERROR("EditorLayoutManager: failed to open %s for writing window states", filename.c_str());
+		return;
+	}
+	file << json.dump(4);
+}
+
+std::unordered_map<std::string, bool> Struktur::Debug::EditorLayoutManager::LoadWindowStates(
+    const std::string &filename)
+{
+	std::unordered_map<std::string, bool> windowStates;
+
+	std::ifstream file(filename);
+	if (!file.is_open())
+	{
+		// No prior session to restore from - not an error, windows just keep their default open state.
+		return windowStates;
+	}
+
+	nlohmann::json json;
+	try
+	{
+		file >> json;
+	}
+	catch (const nlohmann::json::parse_error &e)
+	{
+		DEBUG_ERROR("EditorLayoutManager: JSON parse error in %s - %s", filename.c_str(), e.what());
+		return windowStates;
+	}
+
+	if (!json.is_object())
+	{
+		return windowStates;
+	}
+
+	for (auto it = json.begin(); it != json.end(); ++it)
+	{
+		if (it.value().is_boolean())
+		{
+			windowStates[it.key()] = it.value().get<bool>();
+		}
+	}
+
+	return windowStates;
+}
+
 void Struktur::Debug::EditorLayoutManager::ResetToLayout(const std::string &layoutName)
 {
 	m_layoutsSetup.erase(layoutName);
+	m_forceRebuild = true;
 }
 
 void Struktur::Debug::EditorLayoutManager::ResetAllLayouts()
 {
 	m_layoutsSetup.clear();
+	m_forceRebuild = true;
 }
 
 void Struktur::Debug::EditorLayoutManager::ApplyLayoutConfig(ImGuiID dockspace_id, const LayoutConfig &config)
