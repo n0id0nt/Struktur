@@ -24,6 +24,10 @@ class Player {
     
     name { _name }
 
+    #!export
+    speed { _speed }
+    speed=(value) { _speed = value }
+
     // Called after C++ has created base components
     // Script configures/initializes component values
     start() {
