@@ -1,7 +1,6 @@
 #pragma once
 
 #include <algorithm>
-#include <format>
 #include <set>
 #include <string>
 #include <unordered_map>
@@ -209,7 +208,7 @@ class Input
 	bool CheckBinding(const std::string& input, KeyFunc keyCheck, ButtonFunc buttonCheck)
 	{
 		auto it = m_buttonBindings.find(input);
-		ASSERT_MSG(it != m_buttonBindings.end(), std::format("Binding '{}' not found", input).c_str());
+		ASSERT_MSG(it != m_buttonBindings.end(), "Binding '%s' not found", input);
 
 		// Check keyboard inputs
 		for (auto keycode : it->second.keycodes)

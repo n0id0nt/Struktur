@@ -1,7 +1,5 @@
 #include "MusicResource.h"
 
-#include <format>
-
 #include "Engine/Core/FileSystem.h"
 #include "Engine/GameContext.h"
 
@@ -68,7 +66,7 @@ bool Struktur::Resource::MusicResource::LoadFromDisk(GameContext& context)
 	}
 
 	isLoaded = true;
-	DEBUG_INFO(std::format("Loaded music stream: {}", filePath).c_str());
+	DEBUG_INFO("Loaded music stream: %s", filePath);
 	return true;
 }
 
@@ -105,7 +103,7 @@ bool Struktur::Resource::MusicResource::LoadToHardware(GameContext& context)
 
 	::MIX_SetTrackLoops(track, -1);  // matches raylib's previous default-to-looping behaviour
 
-	DEBUG_INFO(std::format("Loaded music stream to audio hardware: {}", filePath).c_str());
+	DEBUG_INFO("Loaded music stream to audio hardware: %s", filePath);
 	return true;
 }
 
@@ -115,7 +113,7 @@ void Struktur::Resource::MusicResource::UnloadFromHardware()
 	{
 		::MIX_DestroyTrack(track);
 		track = nullptr;
-		DEBUG_INFO(std::format("Unloaded music stream from audio hardware: {}", filePath).c_str());
+		DEBUG_INFO("Unloaded music stream from audio hardware: %s", filePath);
 	}
 }
 

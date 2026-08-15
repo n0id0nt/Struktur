@@ -88,7 +88,7 @@ bool Struktur::Resource::FontResource::LoadFromDisk(GameContext& context)
 	stbtt_fontinfo fontInfo{};
 	if (!stbtt_InitFont(&fontInfo, result.value.data(), 0))
 	{
-		BREAK_MSG(std::format("Failed to parse font: {}", path).c_str());
+		BREAK_MSG("Failed to parse font: %s", path);
 		return false;
 	}
 
@@ -124,7 +124,7 @@ bool Struktur::Resource::FontResource::LoadFromDisk(GameContext& context)
 	stbtt_PackEnd(&packContext);
 	if (!packOk)
 	{
-		DEBUG_WARNING(std::format("Font atlas overflowed for {} - some glyphs may be missing", path).c_str());
+		DEBUG_WARNING("Font atlas overflowed for %s - some glyphs may be missing", path);
 	}
 
 	font.baseSize = m_fontSize;
@@ -149,8 +149,7 @@ bool Struktur::Resource::FontResource::LoadFromDisk(GameContext& context)
 
 	m_fontLoaded = true;
 	isLoaded     = true;
-	DEBUG_INFO(std::format("Loaded font from disk: {} (size: {}, glyphs: {})", path, m_fontSize, codepointCount)
-	               .c_str());
+	DEBUG_INFO("Loaded font from disk: %s (size: %d, glyphs: %d)", path, m_fontSize, codepointCount);
 	return true;
 }
 

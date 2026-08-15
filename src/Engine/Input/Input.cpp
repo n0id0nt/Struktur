@@ -44,11 +44,11 @@ Input::Input(int gamepadIndex)
 	{
 		m_sdlGamepad = ::SDL_OpenGamepad(instanceId);
 		m_gamepadId  = m_sdlGamepad ? ::SDL_GetGamepadName(m_sdlGamepad) : "";
-		DEBUG_INFO(std::format("Gamepad {} '{}' successfully connected.", m_gamepadIndex, m_gamepadId).c_str());
+		DEBUG_INFO("Gamepad %d '%s' successfully connected.", m_gamepadIndex, m_gamepadId);
 	}
 	else
 	{
-		DEBUG_WARNING(std::format("Gamepad {} is not connected.", m_gamepadIndex).c_str());
+		DEBUG_WARNING("Gamepad %d is not connected.", m_gamepadIndex);
 	}
 }
 
@@ -78,14 +78,14 @@ void Input::Update()
 			if (currentId != m_gamepadId)
 			{
 				m_gamepadId = currentId;
-				DEBUG_INFO(std::format("Gamepad {} changed to '{}'", m_gamepadIndex, m_gamepadId).c_str());
+				DEBUG_INFO("Gamepad %d changed to '%s'", m_gamepadIndex, m_gamepadId);
 			}
 		}
 	}
 	else if (!m_gamepadId.empty())
 	{
 		// Gamepad was connected but is now disconnected
-		DEBUG_WARNING(std::format("Gamepad {} '{}' disconnected", m_gamepadIndex, m_gamepadId).c_str());
+		DEBUG_WARNING("Gamepad %d '%s' disconnected", m_gamepadIndex, m_gamepadId);
 		m_gamepadId.clear();
 		if (m_sdlGamepad)
 		{
@@ -138,7 +138,7 @@ void Input::LoadInputBindings(const std::string& file)
 	// Delegate to InputConfigLoader
 	if (!InputConfigLoader::LoadFromFile(*this, file))
 	{
-		DEBUG_ERROR(std::format("Failed to load input bindings from: {}", file).c_str());
+		DEBUG_ERROR("Failed to load input bindings from: %s", file);
 	}
 }
 
@@ -159,7 +159,7 @@ void Input::SetGamepadIndex(int index)
 	{
 		m_sdlGamepad = ::SDL_OpenGamepad(instanceId);
 		m_gamepadId  = m_sdlGamepad ? ::SDL_GetGamepadName(m_sdlGamepad) : "";
-		DEBUG_INFO(std::format("Switched to gamepad {} '{}'", m_gamepadIndex, m_gamepadId).c_str());
+		DEBUG_INFO("Switched to gamepad %d '%s'", m_gamepadIndex, m_gamepadId);
 	}
 	else
 	{
@@ -187,7 +187,7 @@ Input::AxisComponent Input::ParseAxisComponent(const std::string& component)
 		return AxisComponent::Negative;
 	}
 
-	ASSERT_MSG(false, std::format("Invalid axis component: '{}'", component).c_str());
+	ASSERT_MSG(false, "Invalid axis component: '%s'", component);
 	return AxisComponent::Positive;
 }
 
@@ -210,7 +210,7 @@ Input::Axis2Component Input::ParseAxis2Component(const std::string& component)
 		return Axis2Component::Right;
 	}
 
-	ASSERT_MSG(false, std::format("Invalid axis2 component: '{}'", component).c_str());
+	ASSERT_MSG(false, "Invalid axis2 component: '%s'", component);
 	return Axis2Component::Up;
 }
 
@@ -225,7 +225,7 @@ Input::Axis2Direction Input::ParseAxis2Direction(const std::string& direction)
 		return Axis2Direction::Y;
 	}
 
-	ASSERT_MSG(false, std::format("Invalid axis2 direction: '{}'", direction).c_str());
+	ASSERT_MSG(false, "Invalid axis2 direction: '%s'", direction);
 	return Axis2Direction::X;
 }
 
@@ -248,7 +248,7 @@ Input::VariableBindingAxis Input::ParseVariableBindingAxis(const std::string& ax
 		return VariableBindingAxis::PositiveToNegative;
 	}
 
-	ASSERT_MSG(false, std::format("Invalid variable binding axis: '{}'", axis).c_str());
+	ASSERT_MSG(false, "Invalid variable binding axis: '%s'", axis);
 	return VariableBindingAxis::Positive;
 }
 
@@ -638,7 +638,7 @@ float Input::CalculateAxisValue(const AxisBinding& binding)
 float Input::GetInputVariable(const std::string& input)
 {
 	auto it = m_variableBindings.find(input);
-	ASSERT_MSG(it != m_variableBindings.end(), std::format("Variable binding '{}' not found", input).c_str());
+	ASSERT_MSG(it != m_variableBindings.end(), "Variable binding '%s' not found", input);
 
 	float value = 0.0f;
 
@@ -678,7 +678,7 @@ float Input::GetInputVariable(const std::string& input)
 float Input::GetInputAxis(const std::string& input)
 {
 	auto it = m_axisBindings.find(input);
-	ASSERT_MSG(it != m_axisBindings.end(), std::format("Axis binding '{}' not found", input).c_str());
+	ASSERT_MSG(it != m_axisBindings.end(), "Axis binding '%s' not found", input);
 
 	return CalculateAxisValue(it->second);
 }
@@ -686,7 +686,7 @@ float Input::GetInputAxis(const std::string& input)
 glm::vec2 Input::GetInputAxis2(const std::string& input)
 {
 	auto it = m_axis2Bindings.find(input);
-	ASSERT_MSG(it != m_axis2Bindings.end(), std::format("Axis2 binding '{}' not found", input).c_str());
+	ASSERT_MSG(it != m_axis2Bindings.end(), "Axis2 binding '%s' not found", input);
 
 	float xAxis = CalculateAxisValue(it->second.xAxis);
 	float yAxis = CalculateAxisValue(it->second.yAxis);

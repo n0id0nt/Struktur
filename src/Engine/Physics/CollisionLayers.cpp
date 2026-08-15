@@ -1,7 +1,5 @@
 #include "CollisionLayers.h"
 
-#include <format>
-
 #include "Debug/Assertions.h"
 
 uint16_t Struktur::Physics::CollisionLayers::RegisterLayer(const std::string& name)
@@ -14,9 +12,7 @@ uint16_t Struktur::Physics::CollisionLayers::RegisterLayer(const std::string& na
 
 	if (m_nextBit == 0)
 	{
-		BREAK_MSG(std::format("CollisionLayers: no free bits left to register layer '{}' (16 layers already in use)",
-		                     name)
-		              .c_str());
+		BREAK_MSG("CollisionLayers: no free bits left to register layer '%s' (16 layers already in use)", name);
 		return 0;
 	}
 

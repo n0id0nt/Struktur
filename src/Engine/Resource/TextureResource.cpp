@@ -1,7 +1,5 @@
 #include "TextureResource.h"
 
-#include <format>
-
 #include "Debug/Assertions.h"
 #include "Engine/Core/FileSystem.h"
 
@@ -67,7 +65,7 @@ bool Struktur::Resource::TextureResource::LoadFromDisk(GameContext& context)
 	    ::stbi_load_from_memory(result.value.data(), (int)result.value.size(), &m_width, &m_height, &channels, 4);
 	if (!pixels)
 	{
-		DEBUG_ERROR(std::format("Failed to load image: {}", filePath).c_str());
+		DEBUG_ERROR("Failed to load image: %s", filePath);
 		return false;
 	}
 
@@ -75,7 +73,7 @@ bool Struktur::Resource::TextureResource::LoadFromDisk(GameContext& context)
 	::stbi_image_free(pixels);
 
 	isLoaded = true;
-	DEBUG_INFO(std::format("Loaded texture from disk: {} ({}x{})", filePath, m_width, m_height).c_str());
+	DEBUG_INFO("Loaded texture from disk: %s (%dx%d)", filePath, m_width, m_height);
 	return true;
 }
 

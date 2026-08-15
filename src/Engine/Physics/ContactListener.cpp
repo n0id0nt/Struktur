@@ -1,6 +1,5 @@
 #include "ContactListener.h"
 
-#include <format>
 #include <limits>
 
 #include "Debug/Assertions.h"
@@ -69,8 +68,7 @@ void Struktur::Physics::ContactListener::PublishContactEvent(const char* type, b
 	data.items["normal"]   = contactInfo.normal;
 	data.items["velocity"] = contactInfo.velocity;
 
-	DEBUG_INFO(
-	    std::format("Physics contact '{}' between entity {} and entity {}", type, (int)entityA, (int)entityB).c_str());
+	DEBUG_INFO("Physics contact '%s' between entity %d and entity %d", type, (int)entityA, (int)entityB);
 	m_context->GetEventManager().AddEvent(type, data);
 }
 

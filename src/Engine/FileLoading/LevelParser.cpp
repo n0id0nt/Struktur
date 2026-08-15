@@ -1,6 +1,5 @@
 #include "LevelParser.h"
 
-#include <format>
 #include <fstream>
 #include <filesystem>
 
@@ -45,7 +44,7 @@ void Struktur::FileLoading::LevelParser::LoadDefinitions(World& world, Definitio
 	for (auto& tilesetJson : json["tilesets"])
 	{
 		std::string tilesetName = tilesetJson["identifier"];
-		DEBUG_INFO(std::format("Loading tileset {}", tilesetName).c_str());
+		DEBUG_INFO("Loading tileset %s", tilesetName);
 
 		std::filesystem::path relativePath = tilesetJson["relPath"];
 		std::filesystem::path baseFile     = world.filePath;
@@ -70,7 +69,7 @@ void Struktur::FileLoading::LevelParser::LoadLevels(World& world, const nlohmann
 	for (auto& levelJson : json)
 	{
 		std::string levelName = levelJson["identifier"];
-		DEBUG_INFO(std::format("Loading level {}", levelName).c_str());
+		DEBUG_INFO("Loading level %s", levelName);
 
 		Level level;
 		level.identifier = levelName;
@@ -118,7 +117,7 @@ void Struktur::FileLoading::LevelParser::LoadLayers(World& world, Level& level, 
 	for (auto& layerJson : json)
 	{
 		std::string layerName = layerJson["__identifier"];
-		DEBUG_INFO(std::format("Loading layer {}", layerName).c_str());
+		DEBUG_INFO("Loading layer %s", layerName);
 
 		std::string layerType = layerJson["__type"];
 		Layer layer;
@@ -193,7 +192,7 @@ void Struktur::FileLoading::LevelParser::LoadEntities(Layer& entityLayer, const 
 	for (auto& entityJson : json)
 	{
 		std::string entityName = entityJson["__identifier"];
-		DEBUG_INFO(std::format("Loading entity {}", entityName).c_str());
+		DEBUG_INFO("Loading entity %s", entityName);
 
 		Entity entity;
 		entity.identifier = entityName;
@@ -214,7 +213,7 @@ void Struktur::FileLoading::LevelParser::LoadFieldInstances(Entity& entity, cons
 	for (auto& fieldInstanceJson : json)
 	{
 		std::string fieldName = fieldInstanceJson["__identifier"];
-		DEBUG_INFO(std::format("Loading field instance {}", fieldName).c_str());
+		DEBUG_INFO("Loading field instance %s", fieldName);
 
 		FieldInstanceType fieldType = ConvertFieldTypeToEnum(fieldInstanceJson["__type"]);
 
@@ -316,6 +315,6 @@ Struktur::FileLoading::LevelParser::FieldInstanceType Struktur::FileLoading::Lev
 	{
 		return FieldInstanceType::BOOLEAN;
 	}
-	BREAK_MSG(std::format("Need to implement type: {}", fieldInstanceType).c_str());
+	BREAK_MSG("Need to implement type: %s", fieldInstanceType);
 	return FieldInstanceType::COUNT;
 }

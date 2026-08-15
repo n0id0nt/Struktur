@@ -1,6 +1,5 @@
 #pragma once
 
-#include <format>
 #include <string>
 #include <unordered_map>
 #include <utility>
@@ -85,16 +84,16 @@ class ResourcePool
 		auto it = m_nameToHandle.find(name);
 		if (it != m_nameToHandle.end())
 		{
-			DEBUG_INFO(std::format("Resource '{}' found in cache", name).c_str());
+			DEBUG_INFO("Resource '%s' found in cache", name);
 			m_resources[it->second].refCount++;
 			return ResourcePtr<T>(this, ToExternal(it->second));
 		}
 
-		DEBUG_INFO(std::format("Loading resource '{}'", name).c_str());
+		DEBUG_INFO("Loading resource '%s'", name);
 		T* loaded = LoadResource(context, name);
 		if (!loaded)
 		{
-			DEBUG_INFO(std::format("Failed to load resource '{}'", name).c_str());
+			DEBUG_INFO("Failed to load resource '%s'", name);
 			return ResourcePtr<T>();
 		}
 
@@ -156,7 +155,7 @@ class ResourcePool
 		entry->refCount--;
 		if (entry->refCount == 0)
 		{
-			DEBUG_INFO(std::format("Unloading unreferenced resource '{}'", entry->name).c_str());
+			DEBUG_INFO("Unloading unreferenced resource '%s'", entry->name);
 			UnloadResource(entry->name, entry->resource);
 			m_nameToHandle.erase(entry->name);
 			m_resources.Erase(internalHandle);

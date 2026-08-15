@@ -1,7 +1,5 @@
 #include "GraphicsDevice.h"
 
-#include <format>
-
 #include "Debug/Assertions.h"
 #include "Engine/Renderer/EmbeddedShaders.h"
 
@@ -50,7 +48,7 @@ void Struktur::Renderer::GraphicsDevice::Initialise(void* nativeWindowHandle, in
 	bgfx::setViewMode(EditorViewId, bgfx::ViewMode::Sequential);
 #endif
 
-	DEBUG_INFO(std::format("bgfx initialised, renderer: {}", bgfx::getRendererName(bgfx::getRendererType())).c_str());
+	DEBUG_INFO("bgfx initialised, renderer: %s", bgfx::getRendererName(bgfx::getRendererType()));
 	m_initialised = true;
 }
 

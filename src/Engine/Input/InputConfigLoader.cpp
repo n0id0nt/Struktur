@@ -1,6 +1,5 @@
 #include "InputConfigLoader.h"
 
-#include <format>
 #include <fstream>
 
 #include "Debug/Assertions.h"
@@ -36,7 +35,7 @@ bool InputConfigLoader::LoadFromFile(Input& input, const std::string& filePath)
 		{
 			float deadzone = settings["deadzone"].get<float>();
 			input.SetDeadzone(deadzone);
-			DEBUG_INFO(std::format("Set deadzone to {}", deadzone).c_str());
+			DEBUG_INFO("Set deadzone to %g", deadzone);
 		}
 	}
 
@@ -69,7 +68,7 @@ bool InputConfigLoader::LoadFromFile(Input& input, const std::string& filePath)
 
 		if (!bindings.is_array())
 		{
-			DEBUG_WARNING(std::format("Bindings for '{}' must be an array", name).c_str());
+			DEBUG_WARNING("Bindings for '%s' must be an array", name);
 			continue;
 		}
 
@@ -92,11 +91,11 @@ bool InputConfigLoader::LoadFromFile(Input& input, const std::string& filePath)
 		}
 		else
 		{
-			DEBUG_WARNING(std::format("Unknown input type '{}' for '{}'", type, name).c_str());
+			DEBUG_WARNING("Unknown input type '%s' for '%s'", type, name);
 		}
 	}
 
-	DEBUG_INFO(std::format("Successfully loaded input config from: {}", filePath).c_str());
+	DEBUG_INFO("Successfully loaded input config from: %s", filePath);
 	return true;
 }
 
@@ -110,7 +109,7 @@ static void LoadButtonBindings(Input& input, const std::string& name, const nloh
 	{
 		if (!binding.contains("type") || !binding.contains("value"))
 		{
-			DEBUG_WARNING(std::format("Button binding for '{}' missing type or value", name).c_str());
+			DEBUG_WARNING("Button binding for '%s' missing type or value", name);
 			continue;
 		}
 
@@ -127,7 +126,7 @@ static void LoadButtonBindings(Input& input, const std::string& name, const nloh
 		}
 		else
 		{
-			DEBUG_WARNING(std::format("Unknown binding type '{}' for button '{}'", bindingType, name).c_str());
+			DEBUG_WARNING("Unknown binding type '%s' for button '%s'", bindingType, name);
 		}
 	}
 }
@@ -138,7 +137,7 @@ static void LoadVariableBindings(Input& input, const std::string& name, const nl
 	{
 		if (!binding.contains("type") || !binding.contains("value"))
 		{
-			DEBUG_WARNING(std::format("Variable binding for '{}' missing type or value", name).c_str());
+			DEBUG_WARNING("Variable binding for '%s' missing type or value", name);
 			continue;
 		}
 
@@ -157,7 +156,7 @@ static void LoadVariableBindings(Input& input, const std::string& name, const nl
 		{
 			if (!binding.contains("axis"))
 			{
-				DEBUG_WARNING(std::format("Controller axis binding for '{}' missing axis type", name).c_str());
+				DEBUG_WARNING("Controller axis binding for '%s' missing axis type", name);
 				continue;
 			}
 
@@ -167,7 +166,7 @@ static void LoadVariableBindings(Input& input, const std::string& name, const nl
 		}
 		else
 		{
-			DEBUG_WARNING(std::format("Unknown binding type '{}' for variable '{}'", bindingType, name).c_str());
+			DEBUG_WARNING("Unknown binding type '%s' for variable '%s'", bindingType, name);
 		}
 	}
 }
@@ -178,7 +177,7 @@ static void LoadAxisBindings(Input& input, const std::string& name, const nlohma
 	{
 		if (!binding.contains("type") || !binding.contains("value"))
 		{
-			DEBUG_WARNING(std::format("Axis binding for '{}' missing type or value", name).c_str());
+			DEBUG_WARNING("Axis binding for '%s' missing type or value", name);
 			continue;
 		}
 
@@ -189,7 +188,7 @@ static void LoadAxisBindings(Input& input, const std::string& name, const nlohma
 		{
 			if (!binding.contains("component"))
 			{
-				DEBUG_WARNING(std::format("Keycode axis binding for '{}' missing component", name).c_str());
+				DEBUG_WARNING("Keycode axis binding for '%s' missing component", name);
 				continue;
 			}
 
@@ -201,7 +200,7 @@ static void LoadAxisBindings(Input& input, const std::string& name, const nlohma
 		{
 			if (!binding.contains("component"))
 			{
-				DEBUG_WARNING(std::format("Controller button axis binding for '{}' missing component", name).c_str());
+				DEBUG_WARNING("Controller button axis binding for '%s' missing component", name);
 				continue;
 			}
 
@@ -215,7 +214,7 @@ static void LoadAxisBindings(Input& input, const std::string& name, const nlohma
 		}
 		else
 		{
-			DEBUG_WARNING(std::format("Unknown binding type '{}' for axis '{}'", bindingType, name).c_str());
+			DEBUG_WARNING("Unknown binding type '%s' for axis '%s'", bindingType, name);
 		}
 	}
 }
@@ -226,7 +225,7 @@ static void LoadAxis2Bindings(Input& input, const std::string& name, const nlohm
 	{
 		if (!binding.contains("type") || !binding.contains("value") || !binding.contains("component"))
 		{
-			DEBUG_WARNING(std::format("Axis2 binding for '{}' missing type, value, or component", name).c_str());
+			DEBUG_WARNING("Axis2 binding for '%s' missing type, value, or component", name);
 			continue;
 		}
 
@@ -251,7 +250,7 @@ static void LoadAxis2Bindings(Input& input, const std::string& name, const nlohm
 		}
 		else
 		{
-			DEBUG_WARNING(std::format("Unknown binding type '{}' for axis2 '{}'", bindingType, name).c_str());
+			DEBUG_WARNING("Unknown binding type '%s' for axis2 '%s'", bindingType, name);
 		}
 	}
 }

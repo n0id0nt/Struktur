@@ -1,6 +1,5 @@
 #pragma once
 
-#include <format>
 #include <string>
 
 #include "Debug/Assertions.h"
@@ -82,12 +81,12 @@ class GpuResourcePool : public ResourcePool<T>
 			{
 				m_currentGpuMemory += requiredMemory;
 				resource->gpuState = GpuResource::GpuState::LoadedToGpu;
-				DEBUG_INFO(std::format("Loaded '{}' to GPU ({} bytes)", resource->filePath, requiredMemory).c_str());
+				DEBUG_INFO("Loaded '%s' to GPU (%zu bytes)", resource->filePath, requiredMemory);
 				return true;
 			}
 			else
 			{
-				BREAK_MSG(std::format("Failed to load '{}' to GPU", resource->filePath).c_str());
+				BREAK_MSG("Failed to load '%s' to GPU", resource->filePath);
 				return false;
 			}
 		}
@@ -100,7 +99,7 @@ class GpuResourcePool : public ResourcePool<T>
 	// got erased and swap-and-pop relocated a live element.
 	void FreeUnusedGpuResources(size_t neededMemory)
 	{
-		DEBUG_INFO(std::format("Freeing GPU memory (need {} bytes)...", neededMemory).c_str());
+		DEBUG_INFO("Freeing GPU memory (need %zu bytes)...", neededMemory);
 
 		size_t freedMemory = 0;
 
@@ -119,11 +118,11 @@ class GpuResourcePool : public ResourcePool<T>
 				resource.gpuState = GpuResource::GpuState::Unloaded;
 				m_currentGpuMemory -= memoryFreed;
 				freedMemory += memoryFreed;
-				DEBUG_INFO(std::format("Freed '{}' from GPU ({} bytes)", resource.filePath, memoryFreed).c_str());
+				DEBUG_INFO("Freed '%s' from GPU (%zu bytes)", resource.filePath, memoryFreed);
 			}
 		}
 
-		DEBUG_INFO(std::format("Freed '{}' bytes from GPU", freedMemory).c_str());
+		DEBUG_INFO("Freed '%zu' bytes from GPU", freedMemory);
 	}
 
 	void HandleGpuContextLost()
@@ -153,7 +152,7 @@ class GpuResourcePool : public ResourcePool<T>
 				{
 					resource.gpuState = GpuResource::GpuState::LoadedToGpu;
 					m_currentGpuMemory += resource.GetGpuMemoryUsage();
-					DEBUG_INFO(std::format("Reloaded '{}' to GPU", resource.filePath).c_str());
+					DEBUG_INFO("Reloaded '%s' to GPU", resource.filePath);
 				}
 			}
 		}

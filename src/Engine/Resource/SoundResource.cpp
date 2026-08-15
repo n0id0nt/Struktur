@@ -1,7 +1,5 @@
 #include "SoundResource.h"
 
-#include <format>
-
 #include "Engine/Core/FileSystem.h"
 #include "Engine/GameContext.h"
 
@@ -65,7 +63,7 @@ bool Struktur::Resource::SoundResource::LoadFromDisk(GameContext& context)
 	}
 
 	isLoaded = true;
-	DEBUG_INFO(std::format("Loaded sound from disk: {}", filePath).c_str());
+	DEBUG_INFO("Loaded sound from disk: %s", filePath);
 	return true;
 }
 
@@ -100,7 +98,7 @@ bool Struktur::Resource::SoundResource::LoadToHardware(GameContext& context)
 		return false;
 	}
 
-	DEBUG_INFO(std::format("Loaded sound to audio hardware: {}", filePath).c_str());
+	DEBUG_INFO("Loaded sound to audio hardware: %s", filePath);
 	return true;
 }
 
@@ -110,7 +108,7 @@ void Struktur::Resource::SoundResource::UnloadFromHardware()
 	{
 		::MIX_DestroyTrack(track);
 		track = nullptr;
-		DEBUG_INFO(std::format("Unloaded sound from audio hardware: {}", filePath).c_str());
+		DEBUG_INFO("Unloaded sound from audio hardware: %s", filePath);
 	}
 }
 

@@ -1,6 +1,5 @@
 #include "InputMaps.h"
 
-#include <format>
 #include <unordered_map>
 
 #include "Debug/Assertions.h"
@@ -180,21 +179,21 @@ namespace Struktur::Input::InputMaps
 SDL_Scancode GetKeycodeFromString(const std::string& input)
 {
 	auto it = kKeycodeMap.find(input);
-	ASSERT_MSG(it != kKeycodeMap.end(), std::format("Unknown keycode string: '{}'", input).c_str());
+	ASSERT_MSG(it != kKeycodeMap.end(), "Unknown keycode string: '%s'", input);
 	return it->second;
 }
 
 SDL_GamepadButton GetControllerButtonFromString(const std::string& input)
 {
 	auto it = kControllerButtonMap.find(input);
-	ASSERT_MSG(it != kControllerButtonMap.end(), std::format("Unknown controller button string: '{}'", input).c_str());
+	ASSERT_MSG(it != kControllerButtonMap.end(), "Unknown controller button string: '%s'", input);
 	return it->second;
 }
 
 SDL_GamepadAxis GetControllerAxisFromString(const std::string& input)
 {
 	auto it = kControllerAxisMap.find(input);
-	ASSERT_MSG(it != kControllerAxisMap.end(), std::format("Unknown controller axis string: '{}'", input).c_str());
+	ASSERT_MSG(it != kControllerAxisMap.end(), "Unknown controller axis string: '%s'", input);
 	return it->second;
 }
 
