@@ -7,6 +7,7 @@
 #include "Engine/ECS/SystemManager.h"
 #include "Engine/Event/Event.h"
 #include "Engine/Scripting/WrenScriptEngine.h"
+#include "Engine/Scripting/WrenValueWrapper.h"
 #include "entt/entt.hpp"
 
 namespace Struktur
@@ -39,6 +40,17 @@ class WrenScriptSystem : public ISystem
 	// Send event to script
 	void SendEvent(GameContext& context, entt::entity entity, Component::WrenScript& script,
 	               const Event::Event& eventData);
+
+#ifdef DEBUG
+	// Editor support: read/write a #!export-tagged field on a live script instance by name (see
+	// WrenScriptComponentRegistry::GetExportedFields for how the field list itself is discovered).
+	// Both fail (return false) if the field doesn't exist, isn't exported, or - for the setter - has
+	// no matching setter method.
+	bool GetExportedFieldValue(GameContext& context, Component::WrenScript& script, const std::string& fieldName,
+	                           Wren::WrenItem& out_value);
+	bool SetExportedFieldValue(GameContext& context, Component::WrenScript& script, const std::string& fieldName,
+	                           const Wren::WrenItem& value);
+#endif
 
 	std::string Name() const override
 	{

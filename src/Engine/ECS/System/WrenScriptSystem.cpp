@@ -5,6 +5,7 @@
 
 #include "Engine/Callback/CallbackHelperFunctions.h"
 #include "Engine/GameContext.h"
+#include "Engine/Scripting/WrenUtil.h"
 
 namespace Struktur::System
 {
@@ -288,5 +289,91 @@ void WrenScriptSystem::SendEvent(GameContext& context, entt::entity entity, Comp
 		DEBUG_ERROR("Error calling onEvent() on script: %s", script.className.c_str());
 	}
 }
+
+#ifdef DEBUG
+namespace
+{
+const Wren::WrenExportedField* FindExportedField(const Wren::WrenScriptComponent& scriptComponent,
+                                                  const std::string& fieldName)
+{
+	for (const Wren::WrenExportedField& field : scriptComponent.exportedFields)
+	{
+		if (field.name == fieldName)
+		{
+			return &field;
+		}
+	}
+	return nullptr;
+}
+}  // namespace
+
+bool WrenScriptSystem::GetExportedFieldValue(GameContext& context, Component::WrenScript& script,
+                                             const std::string& fieldName, Wren::WrenItem& out_value)
+{
+	if (!script.isInitialised || script.hasError || !script.scriptComponent || !script.instanceHandle)
+	{
+		return false;
+	}
+
+	const Wren::WrenExportedField* field = FindExportedField(*script.scriptComponent, fieldName);
+	if (!field || !field->getterHandle)
+	{
+		return false;
+	}
+
+	Wren::WrenScriptEngine& scriptEngine = context.GetWrenScriptEngine();
+	WrenVM* vm                           = scriptEngine.GetVM();
+	if (!vm)
+	{
+		return false;
+	}
+
+	wrenEnsureSlots(vm, 1);
+	wrenSetSlotHandle(vm, 0, script.instanceHandle);
+
+	if (wrenCall(vm, field->getterHandle) != WREN_RESULT_SUCCESS)
+	{
+		DEBUG_ERROR("Error reading exported field '%s' on script: %s", fieldName.c_str(), script.className.c_str());
+		return false;
+	}
+
+	out_value = Wren::Util::GetWrenItemFromSlot(vm, 0);
+	return true;
+}
+
+bool WrenScriptSystem::SetExportedFieldValue(GameContext& context, Component::WrenScript& script,
+                                             const std::string& fieldName, const Wren::WrenItem& value)
+{
+	if (!script.isInitialised || script.hasError || !script.scriptComponent || !script.instanceHandle)
+	{
+		return false;
+	}
+
+	const Wren::WrenExportedField* field = FindExportedField(*script.scriptComponent, fieldName);
+	if (!field || !field->setterHandle)
+	{
+		return false;
+	}
+
+	Wren::WrenScriptEngine& scriptEngine = context.GetWrenScriptEngine();
+	WrenVM* vm                           = scriptEngine.GetVM();
+	if (!vm)
+	{
+		return false;
+	}
+
+	wrenEnsureSlots(vm, 2);
+	wrenSetSlotHandle(vm, 0, script.instanceHandle);
+	Wren::Util::SetSlotFromWrenItem(vm, 1, value);
+
+	if (wrenCall(vm, field->setterHandle) != WREN_RESULT_SUCCESS)
+	{
+		DEBUG_ERROR("Error writing exported field '%s' on script: %s", fieldName.c_str(), script.className.c_str());
+		return false;
+	}
+
+	return true;
+}
+#endif
 
 }  // namespace Struktur::System

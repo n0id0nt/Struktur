@@ -54,3 +54,54 @@ std::vector<Struktur::Wren::WrenItem> Struktur::Wren::Util::GetWrenMapFromPairs(
 
 	return items;
 }
+
+Struktur::Wren::WrenItem Struktur::Wren::Util::GetWrenItemFromSlot(WrenVM* vm, int slot)
+{
+	WrenItem item;
+	item.type = wrenGetSlotType(vm, slot);
+
+	switch (item.type)
+	{
+		case WREN_TYPE_NUM:
+			item.value = wrenGetSlotDouble(vm, slot);
+			break;
+
+		case WREN_TYPE_BOOL:
+			item.value = wrenGetSlotBool(vm, slot);
+			break;
+
+		case WREN_TYPE_STRING:
+			item.value = std::string(wrenGetSlotString(vm, slot));
+			break;
+
+		case WREN_TYPE_NULL:
+		default:
+			item.value = nullptr;
+			break;
+	}
+
+	return item;
+}
+
+void Struktur::Wren::Util::SetSlotFromWrenItem(WrenVM* vm, int slot, const WrenItem& item)
+{
+	switch (item.type)
+	{
+		case WREN_TYPE_NUM:
+			wrenSetSlotDouble(vm, slot, std::any_cast<double>(item.value));
+			break;
+
+		case WREN_TYPE_BOOL:
+			wrenSetSlotBool(vm, slot, std::any_cast<bool>(item.value));
+			break;
+
+		case WREN_TYPE_STRING:
+			wrenSetSlotString(vm, slot, std::any_cast<std::string>(item.value).c_str());
+			break;
+
+		case WREN_TYPE_NULL:
+		default:
+			wrenSetSlotNull(vm, slot);
+			break;
+	}
+}
