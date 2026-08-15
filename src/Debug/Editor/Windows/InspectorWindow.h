@@ -12,6 +12,11 @@
 
 namespace Struktur
 {
+namespace Animation
+{
+struct SpriteAnimation;
+}  // namespace Animation
+
 namespace Component
 {
 struct Active;
@@ -20,6 +25,11 @@ struct Sprite;
 struct Shader;
 struct Camera;
 struct PhysicsBody;
+struct SpriteAnimation;
+struct Level;
+struct World;
+struct TileMap;
+struct WrenScript;
 }  // namespace Component
 
 namespace UI
@@ -102,6 +112,21 @@ class InspectorWindow : public EditorWindow
 	void RenderPhysicsBodyComponent(GameContext& context, Component::PhysicsBody& physicsBody,
 	                                entt::registry& registry, entt::entity entity);
 
+	void RenderSpriteAnimationComponent(GameContext& context, Component::SpriteAnimation& spriteAnimation,
+	                                    entt::registry& registry, entt::entity entity);
+
+	void RenderLevelComponent(GameContext& context, Component::Level& level, entt::registry& registry,
+	                          entt::entity entity);
+
+	void RenderWorldComponent(GameContext& context, Component::World& world, entt::registry& registry,
+	                          entt::entity entity);
+
+	void RenderTileMapComponent(GameContext& context, Component::TileMap& tileMap, entt::registry& registry,
+	                            entt::entity entity);
+
+	void RenderWrenScriptComponent(GameContext& context, Component::WrenScript& script, entt::registry& registry,
+	                               entt::entity entity);
+
 	// Helper functions for rendering common data types
 	bool RenderVec2(const char* label, glm::vec2& vec);
 	bool RenderVec3(const char* label, glm::vec3& vec);
@@ -116,6 +141,16 @@ class InspectorWindow : public EditorWindow
 	InspectorDisplayType m_displayType;
 	UI::UIElement* m_selectedUIElement;
 	entt::entity m_selectedEntity;
+
+	// "New Animation" form state, kept persistent across frames while the user fills it in
+	char m_newAnimationNameBuffer[128] = "";
+	int m_newAnimationStartFrame       = 0;
+	int m_newAnimationEndFrame         = 1;
+	float m_newAnimationTime           = 1.0f;
+	bool m_newAnimationLoop            = true;
+
+	// Currently selected cell in the TileMap grid editor, as row * width + col
+	int m_selectedTileMapCell = -1;
 };
 }  // namespace Debug
 }  // namespace Struktur

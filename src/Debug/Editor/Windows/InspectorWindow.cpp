@@ -1,5 +1,8 @@
 #include "InspectorWindow.h"
 
+#include <cmath>
+#include <unordered_map>
+
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 #define GLM_ENABLE_EXPERIMENTAL
@@ -10,14 +13,22 @@
 #include "Debug/Editor/Windows/PreviewWindow.h"
 #include "Debug/Editor/Windows/UIHierarchyWindow.h"
 #include "Engine/ECS/Component/Active.h"
+#include "Engine/Animation/SpriteAnimation.h"
 #include "Engine/ECS/Component/Camera.h"
 #include "Engine/ECS/Component/Identifier.h"
+#include "Engine/ECS/Component/Level.h"
 #include "Engine/ECS/Component/PhysicsBody.h"
 #include "Engine/ECS/Component/Shader.h"
 #include "Engine/ECS/Component/Sprite.h"
+#include "Engine/ECS/Component/SpriteAnimation.h"
+#include "Engine/ECS/Component/TileMap.h"
 #include "Engine/ECS/Component/Transform.h"
+#include "Engine/ECS/Component/World.h"
+#include "Engine/ECS/Component/WrenScript.h"
+#include "Engine/ECS/System/AnimationSystem.h"
 #include "Engine/ECS/System/HierarchySystem.h"
 #include "Engine/ECS/System/TransformSystem.h"
+#include "Engine/FileLoading/LevelParser.h"
 #include "Engine/GameContext.h"
 #include "Engine/Physics/PhysicsWorld.h"
 #include "Engine/World/RenderLayer.h"
@@ -228,6 +239,61 @@ void InspectorWindow::RenderComponents(GameContext& context, entt::entity entity
 		{
 			ImGui::PushID("PhysicsBody");
 			RenderPhysicsBodyComponent(context, *physicsBody, registry, entity);
+			ImGui::PopID();
+		}
+	}
+
+	// Render SpriteAnimation if exists
+	if (auto* spriteAnimation = registry.try_get<Component::SpriteAnimation>(entity))
+	{
+		if (ImGui::CollapsingHeader("Sprite Animation", ImGuiTreeNodeFlags_DefaultOpen))
+		{
+			ImGui::PushID("SpriteAnimation");
+			RenderSpriteAnimationComponent(context, *spriteAnimation, registry, entity);
+			ImGui::PopID();
+		}
+	}
+
+	// Render Level if exists
+	if (auto* level = registry.try_get<Component::Level>(entity))
+	{
+		if (ImGui::CollapsingHeader("Level"))
+		{
+			ImGui::PushID("Level");
+			RenderLevelComponent(context, *level, registry, entity);
+			ImGui::PopID();
+		}
+	}
+
+	// Render World if exists
+	if (auto* world = registry.try_get<Component::World>(entity))
+	{
+		if (ImGui::CollapsingHeader("World"))
+		{
+			ImGui::PushID("World");
+			RenderWorldComponent(context, *world, registry, entity);
+			ImGui::PopID();
+		}
+	}
+
+	// Render TileMap if exists
+	if (auto* tileMap = registry.try_get<Component::TileMap>(entity))
+	{
+		if (ImGui::CollapsingHeader("Tile Map", ImGuiTreeNodeFlags_DefaultOpen))
+		{
+			ImGui::PushID("TileMap");
+			RenderTileMapComponent(context, *tileMap, registry, entity);
+			ImGui::PopID();
+		}
+	}
+
+	// Render WrenScript if exists
+	if (auto* script = registry.try_get<Component::WrenScript>(entity))
+	{
+		if (ImGui::CollapsingHeader("Wren Script", ImGuiTreeNodeFlags_DefaultOpen))
+		{
+			ImGui::PushID("WrenScript");
+			RenderWrenScriptComponent(context, *script, registry, entity);
 			ImGui::PopID();
 		}
 	}
@@ -644,6 +710,393 @@ void InspectorWindow::RenderPhysicsBodyComponent(GameContext& context, Component
 	{
 		ImGui::Text("Mass: %.3f kg", body->GetMass());
 		ImGui::Text("Inertia: %.3f", body->GetInertia());
+		ImGui::TreePop();
+	}
+}
+
+void InspectorWindow::RenderSpriteAnimationComponent(GameContext& context, Component::SpriteAnimation& spriteAnimation,
+                                                     entt::registry& registry, entt::entity entity)
+{
+	auto& animationSystem = context.GetSystemManager().GetSystem<System::AnimationSystem>();
+
+	ImGui::Text("Current Animation: %s",
+	           spriteAnimation.curAnimation.empty() ? "[None]" : spriteAnimation.curAnimation.c_str());
+
+	ImGui::Spacing();
+	ImGui::Separator();
+	ImGui::Text("Animations (%zu)", spriteAnimation.animations.size());
+
+	// Editing the fields below writes straight into the component's animation map - the fields are
+	// plain scalars so there's no need for a copy/apply step like Transform's quaternion conversion.
+	for (auto& [name, animation] : spriteAnimation.animations)
+	{
+		ImGui::PushID(name.c_str());
+
+		bool isCurrent = spriteAnimation.curAnimation == name;
+		if (isCurrent)
+		{
+			ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.5f, 1.0f, 0.5f, 1.0f));
+		}
+		bool open = ImGui::TreeNodeEx(name.c_str(), isCurrent ? ImGuiTreeNodeFlags_DefaultOpen : 0, "%s%s",
+		                             name.c_str(), isCurrent ? " (Current)" : "");
+		if (isCurrent)
+		{
+			ImGui::PopStyleColor();
+		}
+
+		if (open)
+		{
+			int startFrame = static_cast<int>(animation.startFrame);
+			if (ImGui::DragInt("Start Frame", &startFrame, 1.0f, 0, 10000))
+			{
+				animation.startFrame = static_cast<unsigned int>(startFrame);
+			}
+
+			int endFrame = static_cast<int>(animation.endFrame);
+			if (ImGui::DragInt("End Frame", &endFrame, 1.0f, 0, 10000))
+			{
+				animation.endFrame = static_cast<unsigned int>(endFrame);
+			}
+
+			ImGui::DragFloat("Duration (s)", &animation.animationTime, 0.01f, 0.01f, 60.0f);
+			ImGui::Checkbox("Loop", &animation.loop);
+
+			if (ImGui::Button("Play"))
+			{
+				animationSystem.PlayAnimation(context, entity, name);
+			}
+
+			ImGui::TreePop();
+		}
+
+		ImGui::PopID();
+	}
+
+	ImGui::Spacing();
+	ImGui::Separator();
+
+	if (ImGui::TreeNode("New Animation"))
+	{
+		ImGui::InputText("Name", m_newAnimationNameBuffer, sizeof(m_newAnimationNameBuffer));
+		ImGui::DragInt("Start Frame##New", &m_newAnimationStartFrame, 1.0f, 0, 10000);
+		ImGui::DragInt("End Frame##New", &m_newAnimationEndFrame, 1.0f, 0, 10000);
+		ImGui::DragFloat("Duration (s)##New", &m_newAnimationTime, 0.01f, 0.01f, 60.0f);
+		ImGui::Checkbox("Loop##New", &m_newAnimationLoop);
+
+		bool nameEmpty = m_newAnimationNameBuffer[0] == '\0';
+		bool nameTaken =
+		    !nameEmpty && spriteAnimation.animations.find(m_newAnimationNameBuffer) != spriteAnimation.animations.end();
+
+		ImGui::BeginDisabled(nameEmpty || nameTaken);
+		if (ImGui::Button("Create Animation"))
+		{
+			Animation::SpriteAnimation newAnimation;
+			newAnimation.startFrame    = static_cast<unsigned int>(m_newAnimationStartFrame);
+			newAnimation.endFrame      = static_cast<unsigned int>(m_newAnimationEndFrame);
+			newAnimation.animationTime = m_newAnimationTime;
+			newAnimation.loop          = m_newAnimationLoop;
+
+			animationSystem.AddAnimation(context, entity, m_newAnimationNameBuffer, newAnimation);
+
+			m_newAnimationNameBuffer[0] = '\0';
+			m_newAnimationStartFrame    = 0;
+			m_newAnimationEndFrame      = 1;
+			m_newAnimationTime          = 1.0f;
+			m_newAnimationLoop          = true;
+		}
+		ImGui::EndDisabled();
+
+		if (nameEmpty)
+		{
+			ImGui::TextDisabled("Enter a name to create an animation");
+		}
+		else if (nameTaken)
+		{
+			ImGui::TextColored(ImVec4(1.0f, 0.5f, 0.5f, 1.0f), "An animation with this name already exists");
+		}
+
+		ImGui::TreePop();
+	}
+}
+
+void InspectorWindow::RenderLevelComponent(GameContext& context, Component::Level& level, entt::registry& registry,
+                                           entt::entity entity)
+{
+	// Sourced from the loaded level file (see World::Level::LoadLevelEntities) - not meaningful to edit here
+	ImGui::Text("Index: %d", level.index);
+	ImGui::Text("Iid: %s", level.Iid.c_str());
+	ImGui::Text("Size: %d x %d px", level.width, level.height);
+	ImGui::TextDisabled("Read-only - sourced from the loaded level file");
+}
+
+void InspectorWindow::RenderWorldComponent(GameContext& context, Component::World& world, entt::registry& registry,
+                                           entt::entity entity)
+{
+	const auto& worldMap = world.worldMap;
+
+	// Sourced from the loaded LDtk world file (see World::Level::CreateWorldEntity) - not meaningful to edit here
+	ImGui::Text("Iid: %s", worldMap.Iid.c_str());
+	ImGui::Text("File: %s", worldMap.filePath.c_str());
+	ImGui::Text("Levels: %zu", worldMap.levels.size());
+	ImGui::TextDisabled("Read-only - sourced from the loaded level file");
+
+	ImGui::Spacing();
+
+	static const char* k_layerTypeNames[] = {"Entities", "Int Grid", "Auto Layer", "Tiles"};
+
+	for (size_t i = 0; i < worldMap.levels.size(); i++)
+	{
+		const auto& level = worldMap.levels[i];
+
+		ImGui::PushID((int)i);
+		if (ImGui::TreeNode(level.identifier.c_str(), "[%zu] %s", i, level.identifier.c_str()))
+		{
+			ImGui::Text("Iid: %s", level.Iid.c_str());
+			ImGui::Text("World Position: (%d, %d)", level.worldX, level.worldY);
+			ImGui::Text("Size: %d x %d px", level.pxWid, level.pxHei);
+			ImGui::Text("Layers: %zu", level.layers.size());
+
+			if (!level.neighbours.empty() && ImGui::TreeNode("Neighbours"))
+			{
+				for (const auto& neighbour : level.neighbours)
+				{
+					ImGui::BulletText("%s", neighbour.c_str());
+				}
+				ImGui::TreePop();
+			}
+
+			if (!level.layers.empty() && ImGui::TreeNode("Layers"))
+			{
+				for (const auto& layer : level.layers)
+				{
+					int typeIndex        = static_cast<int>(layer.type);
+					const char* typeName = (typeIndex >= 0 && typeIndex < IM_ARRAYSIZE(k_layerTypeNames))
+					                           ? k_layerTypeNames[typeIndex]
+					                           : "Unknown";
+					ImGui::BulletText("%s (%s)", layer.identifier.c_str(), typeName);
+				}
+				ImGui::TreePop();
+			}
+
+			ImGui::TreePop();
+		}
+		ImGui::PopID();
+	}
+}
+
+void InspectorWindow::RenderTileMapComponent(GameContext& context, Component::TileMap& tileMap,
+                                             entt::registry& registry, entt::entity entity)
+{
+	if (tileMap.texture)
+	{
+		ImGui::Text("Texture: Loaded");
+	}
+	else
+	{
+		ImGui::TextColored(ImVec4(1.0f, 0.5f, 0.5f, 1.0f), "Texture: None");
+	}
+	ImGui::Text("Grid: %d x %d cells (%d px tiles)", tileMap.width, tileMap.height, tileMap.tileSize);
+	ImGui::Text("Visible Tiles: %zu", tileMap.gridTiles.size());
+	ImGui::TextDisabled("The dense collision grid is baked into physics at load and isn't re-generated here");
+
+	static const char* k_renderLayerNames[] = {"Background Far",    "Background Mid", "Entities",
+	                                           "Background Overlay", "Foreground",     "UI"};
+	int layerIndex = static_cast<int>(tileMap.layer);
+	if (ImGui::Combo("Render Layer", &layerIndex, k_renderLayerNames, IM_ARRAYSIZE(k_renderLayerNames)))
+	{
+		tileMap.layer = static_cast<World::RenderLayer>(layerIndex);
+	}
+	ImGui::DragFloat("Order In Layer", &tileMap.orderInLayer, 1.0f, -1000.0f, 1000.0f);
+
+	ImGui::Spacing();
+	ImGui::Separator();
+
+	const int cellCount = tileMap.width * tileMap.height;
+	if (tileMap.width <= 0 || tileMap.height <= 0 || tileMap.tileSize <= 0)
+	{
+		ImGui::TextDisabled("No grid data");
+		return;
+	}
+	if (cellCount > 4096)
+	{
+		ImGui::TextDisabled("Grid too large to edit here (%d cells)", cellCount);
+		return;
+	}
+
+	// gridTiles only holds the tiles that are actually drawn (sparse), keyed by tile-local pixel position -
+	// rebuild a cell -> gridTiles index lookup each frame rather than caching it, since edits below can
+	// add/remove entries.
+	std::unordered_map<int, int> cellToTileIndex;
+	for (int i = 0; i < (int)tileMap.gridTiles.size(); i++)
+	{
+		const World::TileMap::GridTile& tile = tileMap.gridTiles[i];
+		int col = (int)std::round(tile.position.x / tileMap.tileSize);
+		int row = (int)std::round(tile.position.y / tileMap.tileSize);
+		if (col >= 0 && col < tileMap.width && row >= 0 && row < tileMap.height)
+		{
+			cellToTileIndex[row * tileMap.width + col] = i;
+		}
+	}
+
+	ImGui::Text("Click a cell to select it (blue = tile present)");
+	ImGui::BeginChild("TileGrid", ImVec2(0, 300), true, ImGuiWindowFlags_HorizontalScrollbar);
+
+	const float cellButtonSize = 18.0f;
+	for (int row = 0; row < tileMap.height; row++)
+	{
+		ImGui::PushID(row);
+		for (int col = 0; col < tileMap.width; col++)
+		{
+			int cellIndex = row * tileMap.width + col;
+			bool hasTile  = cellToTileIndex.find(cellIndex) != cellToTileIndex.end();
+			bool selected = m_selectedTileMapCell == cellIndex;
+
+			ImVec4 color = selected ? ImVec4(1.0f, 0.8f, 0.2f, 1.0f)
+			                       : (hasTile ? ImVec4(0.3f, 0.6f, 0.9f, 1.0f) : ImVec4(0.25f, 0.25f, 0.25f, 1.0f));
+
+			ImGui::PushID(col);
+			ImGui::PushStyleColor(ImGuiCol_Button, color);
+			if (ImGui::Button("##cell", ImVec2(cellButtonSize, cellButtonSize)))
+			{
+				m_selectedTileMapCell = cellIndex;
+			}
+			ImGui::PopStyleColor();
+			ImGui::PopID();
+
+			if (col < tileMap.width - 1)
+			{
+				ImGui::SameLine(0.0f, 2.0f);
+			}
+		}
+		ImGui::PopID();
+	}
+
+	ImGui::EndChild();
+
+	ImGui::Spacing();
+	ImGui::Separator();
+
+	if (m_selectedTileMapCell < 0 || m_selectedTileMapCell >= cellCount)
+	{
+		ImGui::TextDisabled("No cell selected");
+		return;
+	}
+
+	int selectedRow = m_selectedTileMapCell / tileMap.width;
+	int selectedCol = m_selectedTileMapCell % tileMap.width;
+	ImGui::Text("Selected Cell: (%d, %d)", selectedCol, selectedRow);
+
+	auto it = cellToTileIndex.find(m_selectedTileMapCell);
+	if (it == cellToTileIndex.end())
+	{
+		ImGui::TextDisabled("Empty cell");
+		if (ImGui::Button("Add Tile"))
+		{
+			World::TileMap::GridTile newTile;
+			newTile.position       = glm::vec2(selectedCol * tileMap.tileSize, selectedRow * tileMap.tileSize);
+			newTile.sourcePosition = glm::vec2(0.0f, 0.0f);
+			newTile.flipBit        = World::TileMap::FlipBit::NONE;
+			tileMap.gridTiles.push_back(newTile);
+			tileMap.chunksBuilt = false;
+		}
+		return;
+	}
+
+	World::TileMap::GridTile& tile = tileMap.gridTiles[it->second];
+	bool changed                  = false;
+
+	int atlasCol = (int)std::round(tile.sourcePosition.x / tileMap.tileSize);
+	int atlasRow = (int)std::round(tile.sourcePosition.y / tileMap.tileSize);
+	if (ImGui::DragInt("Atlas Column", &atlasCol, 1.0f, 0, 1000))
+	{
+		changed = true;
+	}
+	if (ImGui::DragInt("Atlas Row", &atlasRow, 1.0f, 0, 1000))
+	{
+		changed = true;
+	}
+	if (changed)
+	{
+		tile.sourcePosition = glm::vec2(atlasCol * tileMap.tileSize, atlasRow * tileMap.tileSize);
+	}
+
+	static const char* k_flipNames[] = {"None", "Horizontal", "Vertical", "Both"};
+	int flipIndex = static_cast<int>(tile.flipBit);
+	if (ImGui::Combo("Flip", &flipIndex, k_flipNames, IM_ARRAYSIZE(k_flipNames)))
+	{
+		tile.flipBit = static_cast<World::TileMap::FlipBit>(flipIndex);
+		changed      = true;
+	}
+
+	if (ImGui::Button("Clear Tile"))
+	{
+		tileMap.gridTiles.erase(tileMap.gridTiles.begin() + it->second);
+		changed = true;
+	}
+
+	if (changed)
+	{
+		tileMap.chunksBuilt = false;
+	}
+}
+
+void InspectorWindow::RenderWrenScriptComponent(GameContext& context, Component::WrenScript& script,
+                                                entt::registry& registry, entt::entity entity)
+{
+	ImGui::Text("Class: %s", script.className.c_str());
+
+#ifdef DEBUG
+	if (!script.filePath.empty())
+	{
+		ImGui::TextDisabled("File: %s", script.filePath.c_str());
+	}
+#endif
+
+	if (script.hasError)
+	{
+		ImGui::TextColored(ImVec4(1.0f, 0.4f, 0.4f, 1.0f), "Error: %s", script.errorMessage.c_str());
+	}
+	else if (script.isInitialised)
+	{
+		ImGui::TextColored(ImVec4(0.5f, 1.0f, 0.5f, 1.0f), "Initialised");
+	}
+	else
+	{
+		ImGui::TextDisabled("Not yet initialised");
+	}
+
+	ImGui::Spacing();
+
+	if (script.constructorArgs.empty())
+	{
+		ImGui::TextDisabled("No constructor arguments");
+		return;
+	}
+
+	if (ImGui::TreeNode("Constructor Args"))
+	{
+		for (const Wren::WrenItem& arg : script.constructorArgs)
+		{
+			switch (arg.type)
+			{
+				case WREN_TYPE_NUM:
+					ImGui::Text("%s: %.4g", arg.identifier.c_str(), std::any_cast<double>(arg.value));
+					break;
+				case WREN_TYPE_BOOL:
+					ImGui::Text("%s: %s", arg.identifier.c_str(), std::any_cast<bool>(arg.value) ? "true" : "false");
+					break;
+				case WREN_TYPE_STRING:
+					ImGui::Text("%s: \"%s\"", arg.identifier.c_str(),
+					           std::any_cast<std::string>(arg.value).c_str());
+					break;
+				case WREN_TYPE_NULL:
+					ImGui::Text("%s: null", arg.identifier.c_str());
+					break;
+				default:
+					ImGui::Text("%s: <unsupported type>", arg.identifier.c_str());
+					break;
+			}
+		}
 		ImGui::TreePop();
 	}
 }
