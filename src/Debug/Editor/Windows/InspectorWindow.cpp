@@ -28,6 +28,8 @@
 #include "Engine/ECS/System/AnimationSystem.h"
 #include "Engine/ECS/System/HierarchySystem.h"
 #include "Engine/ECS/System/TransformSystem.h"
+#include "Engine/ECS/System/WrenScriptSystem.h"
+#include "Engine/Scripting/WrenScriptComponentRegistry.h"
 #include "Engine/FileLoading/LevelParser.h"
 #include "Engine/GameContext.h"
 #include "Engine/Physics/PhysicsWorld.h"
@@ -1070,10 +1072,8 @@ void InspectorWindow::RenderWrenScriptComponent(GameContext& context, Component:
 	if (script.constructorArgs.empty())
 	{
 		ImGui::TextDisabled("No constructor arguments");
-		return;
 	}
-
-	if (ImGui::TreeNode("Constructor Args"))
+	else if (ImGui::TreeNode("Constructor Args"))
 	{
 		for (const Wren::WrenItem& arg : script.constructorArgs)
 		{
@@ -1099,6 +1099,100 @@ void InspectorWindow::RenderWrenScriptComponent(GameContext& context, Component:
 		}
 		ImGui::TreePop();
 	}
+
+#ifdef DEBUG
+	ImGui::Spacing();
+	ImGui::Separator();
+	ImGui::Text("Exported Variables");
+
+	const std::vector<Wren::WrenExportedField>& exportedFields =
+	    context.GetWrenScriptComponentRegistry().GetExportedFields(context, script.className);
+
+	if (exportedFields.empty())
+	{
+		ImGui::TextDisabled("None (tag a getter with #!export to expose it here)");
+		return;
+	}
+
+	if (!script.isInitialised || script.hasError)
+	{
+		ImGui::TextDisabled("Available once the script initialises");
+		return;
+	}
+
+	auto& scriptSystem = context.GetSystemManager().GetSystem<System::WrenScriptSystem>();
+
+	for (const Wren::WrenExportedField& field : exportedFields)
+	{
+		ImGui::PushID(field.name.c_str());
+
+		Wren::WrenItem value;
+		if (!scriptSystem.GetExportedFieldValue(context, script, field.name, value))
+		{
+			ImGui::TextDisabled("%s: <unavailable>", field.name.c_str());
+			ImGui::PopID();
+			continue;
+		}
+
+		ImGui::BeginDisabled(!field.hasSetter);
+
+		switch (value.type)
+		{
+			case WREN_TYPE_NUM:
+			{
+				float numValue = static_cast<float>(std::any_cast<double>(value.value));
+				if (ImGui::DragFloat(field.name.c_str(), &numValue, 0.1f))
+				{
+					Wren::WrenItem newValue;
+					newValue.type  = WREN_TYPE_NUM;
+					newValue.value = static_cast<double>(numValue);
+					scriptSystem.SetExportedFieldValue(context, script, field.name, newValue);
+				}
+				break;
+			}
+			case WREN_TYPE_BOOL:
+			{
+				bool boolValue = std::any_cast<bool>(value.value);
+				if (ImGui::Checkbox(field.name.c_str(), &boolValue))
+				{
+					Wren::WrenItem newValue;
+					newValue.type  = WREN_TYPE_BOOL;
+					newValue.value = boolValue;
+					scriptSystem.SetExportedFieldValue(context, script, field.name, newValue);
+				}
+				break;
+			}
+			case WREN_TYPE_STRING:
+			{
+				std::string strValue = std::any_cast<std::string>(value.value);
+				char buffer[256];
+				strncpy(buffer, strValue.c_str(), sizeof(buffer) - 1);
+				buffer[sizeof(buffer) - 1] = '\0';
+				if (ImGui::InputText(field.name.c_str(), buffer, sizeof(buffer)))
+				{
+					Wren::WrenItem newValue;
+					newValue.type  = WREN_TYPE_STRING;
+					newValue.value = std::string(buffer);
+					scriptSystem.SetExportedFieldValue(context, script, field.name, newValue);
+				}
+				break;
+			}
+			default:
+				ImGui::Text("%s: <unsupported type>", field.name.c_str());
+				break;
+		}
+
+		ImGui::EndDisabled();
+
+		if (!field.hasSetter)
+		{
+			ImGui::SameLine();
+			ImGui::TextDisabled("(read-only)");
+		}
+
+		ImGui::PopID();
+	}
+#endif
 }
 
 void InspectorWindow::RenderLocalTransformComponent(GameContext& context, Component::Transform& transform,
