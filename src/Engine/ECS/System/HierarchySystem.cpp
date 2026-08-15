@@ -80,29 +80,23 @@ void Struktur::System::HierarchySystem::DestroyEntity(GameContext& context, entt
 void Struktur::System::HierarchySystem::ActivevateEntity(GameContext& context, entt::entity entity)
 {
 	entt::registry& registry = context.GetRegistry();
-	auto& active             = registry.get<Component::Active>(entity);
-	active.activeState       = Component::Active::ActiveState::Active;
-	RecursiveSetEntityActiveState(context, entity, active, Component::Active::ActiveState::Active);
+	registry.patch<Component::Active>(entity, [](Component::Active& active)
+	                                  { active.activeState = Component::Active::ActiveState::Active; });
+	PropagateActiveStateToChildren(context, entity, Component::Active::ActiveState::Active);
 }
 
 void Struktur::System::HierarchySystem::DeactivevateEntity(GameContext& context, entt::entity entity)
 {
 	entt::registry& registry = context.GetRegistry();
-	auto& active             = registry.get<Component::Active>(entity);
-	active.activeState       = Component::Active::ActiveState::InactiveSelf;
-	RecursiveSetEntityActiveState(context, entity, active, Component::Active::ActiveState::InactiveParent);
+	registry.patch<Component::Active>(entity, [](Component::Active& active)
+	                                  { active.activeState = Component::Active::ActiveState::InactiveSelf; });
+	PropagateActiveStateToChildren(context, entity, Component::Active::ActiveState::InactiveParent);
 }
 
-void Struktur::System::HierarchySystem::RecursiveSetEntityActiveState(GameContext& context, entt::entity entity,
-                                                                      Component::Active& activeComponent,
-                                                                      Component::Active::ActiveState active)
+void Struktur::System::HierarchySystem::PropagateActiveStateToChildren(GameContext& context, entt::entity entity,
+                                                                       Component::Active::ActiveState active)
 {
 	entt::registry& registry = context.GetRegistry();
-
-	registry.patch<Component::Active>(entity, [active](Component::Active& patchActiveComponent)
-	                                  {
-		                                  patchActiveComponent.activeState = active;
-	                                  });
 
 	if (auto* children = registry.try_get<Component::Children>(entity))
 	{
@@ -110,10 +104,16 @@ void Struktur::System::HierarchySystem::RecursiveSetEntityActiveState(GameContex
 		{
 			auto child                 = children->entities[i];
 			auto& childActiveComponent = registry.get<Component::Active>(child);
-			if (childActiveComponent.activeState != Component::Active::ActiveState::InactiveSelf)
+
+			// A child that was explicitly deactivated stays deactivated regardless of parent state
+			if (childActiveComponent.activeState == Component::Active::ActiveState::InactiveSelf)
 			{
-				RecursiveSetEntityActiveState(context, child, childActiveComponent, active);
+				continue;
 			}
+
+			registry.patch<Component::Active>(child, [active](Component::Active& patchActiveComponent)
+			                                  { patchActiveComponent.activeState = active; });
+			PropagateActiveStateToChildren(context, child, active);
 		}
 	}
 }

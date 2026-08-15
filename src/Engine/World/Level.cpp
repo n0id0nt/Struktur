@@ -92,12 +92,10 @@ entt::entity Struktur::World::Level::LoadLevelEntities(GameContext& context, con
 				if (layer.identifier == "Collision")
 				{
 					bool isSensor = false;
-					b2BodyDef kinematicBodyDef;
-					kinematicBodyDef.type = b2_dynamicBody;
+					b2BodyDef staticBodyDef;
+					staticBodyDef.type = b2_staticBody;
 					Component::PhysicsBody& physicsBody =
-					    physicsSystem.CreatePhysicsBody(context, layerEntity, kinematicBodyDef);
-					physicsBody.syncFromPhysics = true;  // Don't let physics drive transform
-					physicsBody.syncToPhysics   = true;  // Let transform drive physics
+					    physicsSystem.CreatePhysicsBody(context, layerEntity, staticBodyDef);
 					Physics::TileMapCollisionBodyGenerator::CreateTileMapShape(context, tileMap, isSensor, physicsBody);
 				}
 				break;

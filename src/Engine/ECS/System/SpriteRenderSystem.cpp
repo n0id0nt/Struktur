@@ -1,7 +1,6 @@
 #include "SpriteRenderSystem.h"
 
 #include "Debug/Assertions.h"
-#include "Engine/ECS/Component/Player.h"
 #include "Engine/ECS/Component/Shader.h"
 #include "Engine/ECS/Component/Sprite.h"
 #include "Engine/ECS/Component/TileMap.h"

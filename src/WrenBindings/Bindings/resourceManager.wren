@@ -2,7 +2,7 @@
 // Generated from C++ bindings
 // Module: resourceManager
 
-// Font resource handle
+// Sound resource handle
 foreign class Sound {
     // Load sound from path
     foreign static load(arg0)
@@ -32,7 +32,7 @@ foreign class Sound {
     foreign setPan(arg0)
 }
 
-// Font resource handle
+// Music resource handle
 foreign class Music {
     // Load music from path
     foreign static load(arg0)

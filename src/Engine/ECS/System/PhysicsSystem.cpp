@@ -43,7 +43,7 @@ void Struktur::System::PhysicsSystem::SyncPhysicsToTransforms(GameContext& conte
 	PROFILE_SCOPE("Sync All From Physics");
 	for (auto [entity, physicsBody, transform] : view.each())
 	{
-		if (physicsBody.body && physicsBody.syncFromPhysics)
+		if (physicsBody.body)
 		{
 			// Get world position from physics
 			PROFILE_BEGIN_SCOPE(physicsPosition, "Get Phyics Position");
@@ -76,7 +76,7 @@ void Struktur::System::PhysicsSystem::SyncTransformsToPhysics(GameContext& conte
 	PROFILE_SCOPE("Sync All To Physics");
 	for (auto [entity, physicsBody, transform] : view.each())
 	{
-		if (physicsBody.body && physicsBody.syncToPhysics && transform.dirty)
+		if (physicsBody.body && transform.dirty)
 		{
 			PROFILE_BEGIN_SCOPE(convertAngle, "Convert Angle");
 			glm::vec3 worldPosition = transformSystem.GetWorldPosition(context, entity);

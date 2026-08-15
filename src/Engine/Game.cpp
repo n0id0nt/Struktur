@@ -14,7 +14,6 @@
 #include "Engine/Core/FileSystem.h"
 #include "Engine/ECS/Component/Camera.h"
 #include "Engine/ECS/Component/PhysicsBody.h"
-#include "Engine/ECS/Component/Player.h"
 #include "Engine/ECS/Component/Sprite.h"
 #include "Engine/ECS/Component/Transform.h"
 #include "Engine/ECS/GameObjectManager.h"
@@ -495,6 +494,28 @@ void Struktur::ClearGameSystems(GameContext& context)
 
 	DEBUG_INFO("[Clean Up] Resource Manager");
 	Resource::ResourceManager& resourceManager = context.GetResourceManager();
+
+	// Everything above (UI Manager, Wren VM shutdown's finalizers, DebugSystem's cached font, etc.) should have
+	// already released every ResourcePtr it was holding by this point - if a pool still shows resources loaded
+	// here, something is leaking a reference instead of letting it go out of scope/be explicitly unloaded. Assert
+	// now, while it's still attributable to a specific pool, rather than letting Clear() below silently force-free
+	// it out from under whatever's still holding it.
+	ASSERT_MSG(resourceManager.GetTexturePool().GetLoadedCount() == 0,
+	          "Texture pool still has %zu resource(s) loaded before Clear() - something is leaking a ResourcePtr",
+	          resourceManager.GetTexturePool().GetLoadedCount());
+	ASSERT_MSG(resourceManager.GetSoundPool().GetLoadedCount() == 0,
+	          "Sound pool still has %zu resource(s) loaded before Clear() - something is leaking a ResourcePtr",
+	          resourceManager.GetSoundPool().GetLoadedCount());
+	ASSERT_MSG(resourceManager.GetMusicPool().GetLoadedCount() == 0,
+	          "Music pool still has %zu resource(s) loaded before Clear() - something is leaking a ResourcePtr",
+	          resourceManager.GetMusicPool().GetLoadedCount());
+	ASSERT_MSG(resourceManager.GetFontPool().GetLoadedCount() == 0,
+	          "Font pool still has %zu resource(s) loaded before Clear() - something is leaking a ResourcePtr",
+	          resourceManager.GetFontPool().GetLoadedCount());
+	ASSERT_MSG(resourceManager.GetShaderPool().GetLoadedCount() == 0,
+	          "Shader pool still has %zu resource(s) loaded before Clear() - something is leaking a ResourcePtr",
+	          resourceManager.GetShaderPool().GetLoadedCount());
+
 	resourceManager.Clear();
 }
 

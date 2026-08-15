@@ -1,7 +1,9 @@
 #include "HierarchyWindow.h"
 
+#include "Engine/ECS/Component/Active.h"
 #include "Engine/ECS/Component/Identifier.h"
 #include "Engine/ECS/Component/Transform.h"
+#include "Engine/ECS/System/HierarchySystem.h"
 #include "Engine/GameContext.h"
 
 namespace Struktur::Debug
@@ -105,8 +107,8 @@ void HierarchyWindow::RenderEntityNode(GameContext& context, entt::entity entity
 	}
 
 	// Determine node flags
-	ImGuiTreeNodeFlags flags =
-	    ImGuiTreeNodeFlags_OpenOnArrow | ImGuiTreeNodeFlags_OpenOnDoubleClick | ImGuiTreeNodeFlags_SpanAvailWidth;
+	ImGuiTreeNodeFlags flags = ImGuiTreeNodeFlags_OpenOnArrow | ImGuiTreeNodeFlags_OpenOnDoubleClick |
+	                           ImGuiTreeNodeFlags_SpanAvailWidth | ImGuiTreeNodeFlags_AllowOverlap;
 
 	// Check if this entity has children
 	bool hasChildren = HasChildren(context, entity);
@@ -126,6 +128,8 @@ void HierarchyWindow::RenderEntityNode(GameContext& context, entt::entity entity
 	// Create unique ID for the tree node using entity handle
 	void* nodeId = (void*)(intptr_t)entity;
 
+	ImGui::PushID(nodeId);
+
 	// Render the tree node
 	bool nodeOpen = ImGui::TreeNodeEx(nodeId, flags, "%s", identifier->type.c_str());
 
@@ -137,6 +141,34 @@ void HierarchyWindow::RenderEntityNode(GameContext& context, entt::entity entity
 
 	// Render context menu
 	RenderEntityContextMenu(context, entity);
+
+	// Active toggle checkbox - lets the user show/hide (activate/deactivate) the object.
+	// Right-aligned on the same row as the tree node.
+	if (auto* active = registry.try_get<Component::Active>(entity))
+	{
+		bool isActive = active->activeState == Component::Active::ActiveState::Active;
+		bool isInactiveParent = active->activeState == Component::Active::ActiveState::InactiveParent;
+
+		float checkboxWidth = ImGui::GetFrameHeight();
+		ImGui::SameLine();
+		ImGui::SetCursorPosX(ImGui::GetCursorPosX() + ImGui::GetContentRegionAvail().x - checkboxWidth);
+
+		// Disabled when inactive purely because an ancestor is inactive - can't override that from here
+		ImGui::BeginDisabled(isInactiveParent);
+		if (ImGui::Checkbox("##Active", &isActive))
+		{
+			auto& hierarchySystem = context.GetSystemManager().GetSystem<System::HierarchySystem>();
+			if (isActive)
+			{
+				hierarchySystem.ActivevateEntity(context, entity);
+			}
+			else
+			{
+				hierarchySystem.DeactivevateEntity(context, entity);
+			}
+		}
+		ImGui::EndDisabled();
+	}
 
 	// If node is open and has children, render them
 	if (nodeOpen)
@@ -156,6 +188,8 @@ void HierarchyWindow::RenderEntityNode(GameContext& context, entt::entity entity
 		// IMPORTANT: Only pop if the node was opened
 		ImGui::TreePop();
 	}
+
+	ImGui::PopID();
 }
 
 void HierarchyWindow::RenderEntityContextMenu(GameContext& context, entt::entity entity)

@@ -13,7 +13,6 @@ class Door {
         var bodyDef = BodyDefinition.new(BodyType.STATIC_BODY)
         var doorShape = PhysicsBoxShape.new(1, 0.25)
         var physicsBody = PhysicsBody.create(_entity, bodyDef, doorShape)
-        physicsBody.syncToPhysics = true
     }
     
     update() {

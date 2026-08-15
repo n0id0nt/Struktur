@@ -31,8 +31,8 @@ class HierarchySystem : public ISystem
 	}
 
    private:
-	void RecursiveSetEntityActiveState(GameContext& context, entt::entity entity, Component::Active& activeComponent,
-	                                   Component::Active::ActiveState active);
+	void PropagateActiveStateToChildren(GameContext& context, entt::entity entity,
+	                                    Component::Active::ActiveState active);
 };
 }  // namespace System
 }  // namespace Struktur

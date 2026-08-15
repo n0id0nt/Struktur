@@ -755,8 +755,8 @@ WREN_BINDING_MODULE(ResourceManager)
 	                  "Convert to string");
 
 	// Register Music foreign class
-	WREN_FOREIGN_CLASS(registry, "resourceManager", "Music", wren_ResourceMusicAllocate, wren_ResourceFontFinalize,
-	                   "Font resource handle");
+	WREN_FOREIGN_CLASS(registry, "resourceManager", "Music", wren_ResourceMusicAllocate, wren_ResourceMusicFinalize,
+	                   "Music resource handle");
 
 	WREN_CLASS_STATIC(registry, "resourceManager", "Music", "load(_)", wren_ResourceMusicLoad, "Load music from path");
 	WREN_CLASS_METHOD(registry, "resourceManager", "Music", "unload()", wren_ResourceMusicUnload,
@@ -791,8 +791,8 @@ WREN_BINDING_MODULE(ResourceManager)
 	                  "Gets if the music should be looped");
 
 	// Register Sound foreign class
-	WREN_FOREIGN_CLASS(registry, "resourceManager", "Sound", wren_ResourceSoundAllocate, wren_ResourceFontFinalize,
-	                   "Font resource handle");
+	WREN_FOREIGN_CLASS(registry, "resourceManager", "Sound", wren_ResourceSoundAllocate, wren_ResourceSoundFinalize,
+	                   "Sound resource handle");
 
 	WREN_CLASS_STATIC(registry, "resourceManager", "Sound", "load(_)", wren_ResourceSoundLoad, "Load sound from path");
 	WREN_CLASS_METHOD(registry, "resourceManager", "Sound", "unload()", wren_ResourceSoundUnload,

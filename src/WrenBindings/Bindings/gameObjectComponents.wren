@@ -18,14 +18,6 @@ class RenderLayer {
 foreign class PhysicsBody {
     // Sets the physics body fixed rotation
     foreign fixedRotation=(arg0)
-    // Get if physics bodys to transform sync with the physics position
-    foreign syncFromPhysics
-    // Set if physics bodys to transform sync with the physics position
-    foreign syncFromPhysics=(arg0)
-    // Get if physics bodys to transform sync with the physics position
-    foreign syncToPhysics
-    // Set if physics bodys to transform sync with the physics position
-    foreign syncToPhysics=(arg0)
     // Sets the linear velocity of a physics body.
     foreign linearVelocity
     // Sets which collision layer this body belongs to (categoryBits) and which layers it collides with (maskBits) - see physics.CollisionLayers for allocating layer bits by name.

@@ -55,8 +55,6 @@ class NPC {
         var bodyDef = BodyDefinition.new(BodyType.STATIC_BODY)
         var playerShape = PhysicsCircleShape.new(0.25)
         var physicsBody = PhysicsBody.create(_entity, bodyDef, playerShape)
-        physicsBody.syncFromPhysics = true
-        physicsBody.syncToPhysics = true
         var shader = ShaderResource.load(null, "Shaders/SoulEffect_100.fs")
         var shaderComponent = ShaderComponent.create(_entity, shader)
         shader.unload()

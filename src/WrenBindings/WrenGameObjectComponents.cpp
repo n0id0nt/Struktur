@@ -376,30 +376,6 @@ void wren_PhysicsBodySetFixedRotation(WrenVM* vm)
 	physicsBody->component->body->SetFixedRotation(fixedRotation);
 }
 
-void wren_PhysicsBodyGetSyncFromPhysics(WrenVM* vm)
-{
-	WrenPhysicsBody* physicsBody = (WrenPhysicsBody*)wrenGetSlotForeign(vm, 0);
-	wrenSetSlotBool(vm, 0, physicsBody->component->syncFromPhysics);
-}
-
-void wren_PhysicsBodySetSyncFromPhysics(WrenVM* vm)
-{
-	WrenPhysicsBody* physicsBody            = (WrenPhysicsBody*)wrenGetSlotForeign(vm, 0);
-	physicsBody->component->syncFromPhysics = (float)wrenGetSlotBool(vm, 1);
-}
-
-void wren_PhysicsBodyGetSyncToPhysics(WrenVM* vm)
-{
-	WrenPhysicsBody* physicsBody = (WrenPhysicsBody*)wrenGetSlotForeign(vm, 0);
-	wrenSetSlotBool(vm, 0, physicsBody->component->syncToPhysics);
-}
-
-void wren_PhysicsBodySetSyncToPhysics(WrenVM* vm)
-{
-	WrenPhysicsBody* physicsBody          = (WrenPhysicsBody*)wrenGetSlotForeign(vm, 0);
-	physicsBody->component->syncToPhysics = (float)wrenGetSlotBool(vm, 1);
-}
-
 // PhysicsBody.setLinearVelocity(entity, velocity)
 void wren_PhysicsBodyStaticSetLinearVelocity(WrenVM* vm)
 {
@@ -1763,18 +1739,6 @@ WREN_BINDING_MODULE(GameObjectComponent)
 	// Register methods
 	WREN_CLASS_METHOD(registry, "gameObjectComponents", "PhysicsBody", "fixedRotation=(_)",
 	                  wren_PhysicsBodySetFixedRotation, "Sets the physics body fixed rotation");
-	WREN_CLASS_METHOD(registry, "gameObjectComponents", "PhysicsBody", "syncFromPhysics",
-	                  wren_PhysicsBodyGetSyncFromPhysics,
-	                  "Get if physics bodys to transform sync with the physics position");
-	WREN_CLASS_METHOD(registry, "gameObjectComponents", "PhysicsBody", "syncFromPhysics=(_)",
-	                  wren_PhysicsBodySetSyncFromPhysics,
-	                  "Set if physics bodys to transform sync with the physics position");
-	WREN_CLASS_METHOD(registry, "gameObjectComponents", "PhysicsBody", "syncToPhysics",
-	                  wren_PhysicsBodyGetSyncToPhysics,
-	                  "Get if physics bodys to transform sync with the physics position");
-	WREN_CLASS_METHOD(registry, "gameObjectComponents", "PhysicsBody", "syncToPhysics=(_)",
-	                  wren_PhysicsBodySetSyncToPhysics,
-	                  "Set if physics bodys to transform sync with the physics position");
 	WREN_CLASS_METHOD(registry, "gameObjectComponents", "PhysicsBody", "linearVelocity",
 	                  wren_PhysicsBodySetLinearVelocity, "Sets the linear velocity of a physics body.");
 	WREN_CLASS_METHOD(registry, "gameObjectComponents", "PhysicsBody", "setCollisionFilter(_,_)",

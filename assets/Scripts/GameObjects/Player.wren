@@ -38,8 +38,6 @@ class Player {
         var playerShape = PhysicsCircleShape.new(0.25)
         var physicsBody = PhysicsBody.create(_entity, bodyDef, playerShape)
         physicsBody.fixedRotation = true
-        physicsBody.syncFromPhysics = true
-        physicsBody.syncToPhysics = true
 
         var spriteAnimation = SpriteAnimation.create(_entity)
 

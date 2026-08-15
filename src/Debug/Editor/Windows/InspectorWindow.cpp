@@ -9,12 +9,17 @@
 #include "Debug/Editor/Windows/HierarchyWindow.h"
 #include "Debug/Editor/Windows/PreviewWindow.h"
 #include "Debug/Editor/Windows/UIHierarchyWindow.h"
+#include "Engine/ECS/Component/Active.h"
+#include "Engine/ECS/Component/Camera.h"
 #include "Engine/ECS/Component/Identifier.h"
+#include "Engine/ECS/Component/PhysicsBody.h"
 #include "Engine/ECS/Component/Shader.h"
 #include "Engine/ECS/Component/Sprite.h"
 #include "Engine/ECS/Component/Transform.h"
+#include "Engine/ECS/System/HierarchySystem.h"
 #include "Engine/ECS/System/TransformSystem.h"
 #include "Engine/GameContext.h"
+#include "Engine/Physics/PhysicsWorld.h"
 #include "Engine/World/RenderLayer.h"
 #include "Engine/UI/UIElement.h"
 
@@ -161,6 +166,17 @@ void InspectorWindow::RenderComponents(GameContext& context, entt::entity entity
 {
 	entt::registry& registry = context.GetRegistry();
 
+	// Render Active if exists
+	if (auto* active = registry.try_get<Component::Active>(entity))
+	{
+		if (ImGui::CollapsingHeader("Active", ImGuiTreeNodeFlags_DefaultOpen))
+		{
+			ImGui::PushID("Active");
+			RenderActiveComponent(context, *active, registry, entity);
+			ImGui::PopID();
+		}
+	}
+
 	// Render LocalTransform if exists
 	if (auto* transform = registry.try_get<Component::Transform>(entity))
 	{
@@ -190,6 +206,28 @@ void InspectorWindow::RenderComponents(GameContext& context, entt::entity entity
 		{
 			ImGui::PushID("Shader");
 			RenderShaderComponent(context, *shader, registry, entity);
+			ImGui::PopID();
+		}
+	}
+
+	// Render Camera if exists
+	if (auto* camera = registry.try_get<Component::Camera>(entity))
+	{
+		if (ImGui::CollapsingHeader("Camera", ImGuiTreeNodeFlags_DefaultOpen))
+		{
+			ImGui::PushID("Camera");
+			RenderCameraComponent(context, *camera, registry, entity);
+			ImGui::PopID();
+		}
+	}
+
+	// Render PhysicsBody if exists
+	if (auto* physicsBody = registry.try_get<Component::PhysicsBody>(entity))
+	{
+		if (ImGui::CollapsingHeader("Physics Body", ImGuiTreeNodeFlags_DefaultOpen))
+		{
+			ImGui::PushID("PhysicsBody");
+			RenderPhysicsBodyComponent(context, *physicsBody, registry, entity);
 			ImGui::PopID();
 		}
 	}
@@ -437,6 +475,178 @@ void InspectorWindow::RenderUIElementProperties(UI::UIElement* element)
 // ====================================================================
 // Component Renderers
 // ====================================================================
+
+void InspectorWindow::RenderActiveComponent(GameContext& context, Component::Active& active, entt::registry& registry,
+                                            entt::entity entity)
+{
+	bool isActive = active.activeState == Component::Active::ActiveState::Active;
+	bool isInactiveParent = active.activeState == Component::Active::ActiveState::InactiveParent;
+
+	// Disabled when inactive purely because an ancestor is inactive - can't override that from here
+	ImGui::BeginDisabled(isInactiveParent);
+	if (ImGui::Checkbox("Active", &isActive))
+	{
+		auto& hierarchySystem = context.GetSystemManager().GetSystem<System::HierarchySystem>();
+		if (isActive)
+		{
+			hierarchySystem.ActivevateEntity(context, entity);
+		}
+		else
+		{
+			hierarchySystem.DeactivevateEntity(context, entity);
+		}
+	}
+	ImGui::EndDisabled();
+
+	if (isInactiveParent)
+	{
+		ImGui::TextDisabled("Inactive because a parent is inactive");
+	}
+}
+
+void InspectorWindow::RenderCameraComponent(GameContext& context, Component::Camera& camera, entt::registry& registry,
+                                            entt::entity entity)
+{
+	ImGui::DragInt("Priority", &camera.cameraPriority);
+	ImGui::DragFloat("Zoom", &camera.zoom, 0.01f, 0.01f, 100.0f);
+	ImGui::DragFloat("Angle", &camera.angle, 0.5f);
+
+	ImGui::Spacing();
+
+	RenderVec2("Offset", camera.offset);
+	RenderVec2("Dead Zone", camera.deadZone);
+	RenderVec2("Damping", camera.damping);
+	ImGui::Checkbox("Force Position", &camera.forcePosition);
+
+	ImGui::Spacing();
+
+	if (ImGui::TreeNode("Screen Shake"))
+	{
+		ImGui::DragFloat("Trauma", &camera.trauma, 0.01f, 0.0f, 1.0f);
+		ImGui::DragFloat("Trauma Time", &camera.traumaTime, 0.01f, 0.0f, 10.0f);
+		ImGui::DragFloat("Max Offset", &camera.maxOffset, 0.01f);
+		ImGui::DragFloat("Max Angle", &camera.maxAngle, 0.01f);
+		ImGui::DragFloat("Shake Amplitude", &camera.shakeAmplitude, 0.01f);
+
+		ImGui::TreePop();
+	}
+}
+
+void InspectorWindow::RenderPhysicsBodyComponent(GameContext& context, Component::PhysicsBody& physicsBody,
+                                                 entt::registry& registry, entt::entity entity)
+{
+	if (!physicsBody.body)
+	{
+		ImGui::TextColored(ImVec4(1.0f, 0.5f, 0.5f, 1.0f), "No underlying Box2D body");
+		return;
+	}
+
+	// Everything below reads/writes the live b2Body directly - this is the runtime physics state,
+	// not just the ECS component, so edits here take effect immediately in the simulation.
+	b2Body* body = physicsBody.body;
+
+	Physics::PhysicsWorld& physicsWorld = context.GetPhysicsWorld();
+	const float ppm            = physicsWorld.GetPixelsPerMeter();
+	const float metersPerPixel = 1.0f / ppm;
+
+	static const char* k_bodyTypeNames[] = {"Static", "Kinematic", "Dynamic"};
+	int bodyTypeIndex = static_cast<int>(body->GetType());
+	if (ImGui::Combo("Body Type", &bodyTypeIndex, k_bodyTypeNames, IM_ARRAYSIZE(k_bodyTypeNames)))
+	{
+		body->SetType(static_cast<b2BodyType>(bodyTypeIndex));
+	}
+
+	ImGui::Spacing();
+
+	b2Vec2 physPosition = body->GetPosition();
+	glm::vec2 position(physPosition.x * ppm, physPosition.y * ppm);
+	if (RenderVec2("Position", position))
+	{
+		body->SetTransform(b2Vec2(position.x * metersPerPixel, position.y * metersPerPixel), body->GetAngle());
+	}
+
+	float angleDegrees = glm::degrees(body->GetAngle());
+	if (ImGui::DragFloat("Angle", &angleDegrees, 0.5f))
+	{
+		body->SetTransform(body->GetPosition(), glm::radians(angleDegrees));
+	}
+
+	ImGui::Spacing();
+
+	b2Vec2 physVelocity = body->GetLinearVelocity();
+	glm::vec2 linearVelocity(physVelocity.x, physVelocity.y);
+	if (RenderVec2("Linear Velocity", linearVelocity))
+	{
+		body->SetLinearVelocity(b2Vec2(linearVelocity.x, linearVelocity.y));
+	}
+
+	float angularVelocity = body->GetAngularVelocity();
+	if (ImGui::DragFloat("Angular Velocity", &angularVelocity, 0.1f))
+	{
+		body->SetAngularVelocity(angularVelocity);
+	}
+
+	ImGui::Spacing();
+
+	float linearDamping = body->GetLinearDamping();
+	if (ImGui::DragFloat("Linear Damping", &linearDamping, 0.01f, 0.0f, 10.0f))
+	{
+		body->SetLinearDamping(linearDamping);
+	}
+
+	float angularDamping = body->GetAngularDamping();
+	if (ImGui::DragFloat("Angular Damping", &angularDamping, 0.01f, 0.0f, 10.0f))
+	{
+		body->SetAngularDamping(angularDamping);
+	}
+
+	float gravityScale = body->GetGravityScale();
+	if (ImGui::DragFloat("Gravity Scale", &gravityScale, 0.01f))
+	{
+		body->SetGravityScale(gravityScale);
+	}
+
+	ImGui::Spacing();
+
+	bool fixedRotation = body->IsFixedRotation();
+	if (ImGui::Checkbox("Fixed Rotation", &fixedRotation))
+	{
+		body->SetFixedRotation(fixedRotation);
+	}
+
+	bool bullet = body->IsBullet();
+	if (ImGui::Checkbox("Bullet", &bullet))
+	{
+		body->SetBullet(bullet);
+	}
+
+	bool sleepingAllowed = body->IsSleepingAllowed();
+	if (ImGui::Checkbox("Sleeping Allowed", &sleepingAllowed))
+	{
+		body->SetSleepingAllowed(sleepingAllowed);
+	}
+
+	bool awake = body->IsAwake();
+	if (ImGui::Checkbox("Awake", &awake))
+	{
+		body->SetAwake(awake);
+	}
+
+	bool enabled = body->IsEnabled();
+	if (ImGui::Checkbox("Enabled", &enabled))
+	{
+		body->SetEnabled(enabled);
+	}
+
+	ImGui::Spacing();
+
+	if (ImGui::TreeNode("Mass Data"))
+	{
+		ImGui::Text("Mass: %.3f kg", body->GetMass());
+		ImGui::Text("Inertia: %.3f", body->GetInertia());
+		ImGui::TreePop();
+	}
+}
 
 void InspectorWindow::RenderLocalTransformComponent(GameContext& context, Component::Transform& transform,
                                                     entt::registry& registry, entt::entity entity)

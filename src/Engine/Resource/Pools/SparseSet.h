@@ -137,10 +137,28 @@ class SparseSet
 
 	void Clear()
 	{
+		// Bump every still-occupied slot's generation (same as Erase()) before wiping the dense storage, so a
+		// Handle still held elsewhere (e.g. a ResourcePtr a Wren finalizer hasn't gotten around to releasing yet)
+		// is permanently and correctly detected as stale by IsValid()/Resolve() afterward. Previously this reset
+		// m_sparse to empty, so the very next Emplace() into a recycled slot started back at generation 0 -
+		// indistinguishable from a stale pre-Clear Handle for that same slot, which could then resolve into
+		// (or alias) a completely different resource, or index into m_dense after it had shrunk back to nothing.
+		for (size_t slot = 0; slot < m_sparse.size(); ++slot)
+		{
+			if (m_sparse[slot].denseIndex != Handle::kInvalidIndex)
+			{
+				m_sparse[slot].generation++;
+				m_sparse[slot].denseIndex = Handle::kInvalidIndex;
+			}
+		}
+
 		m_dense.clear();
 		m_denseToSlot.clear();
-		m_sparse.clear();
 		m_freeSlots.clear();
+		for (uint32_t slot = 0; slot < (uint32_t)m_sparse.size(); ++slot)
+		{
+			m_freeSlots.push_back(slot);
+		}
 	}
 
 	void Reserve(size_t capacity)
