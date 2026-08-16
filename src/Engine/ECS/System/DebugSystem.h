@@ -20,6 +20,7 @@ class DebugSystem : public ISystem
 	void Update(GameContext &context) override;
 
 	void RenderEntityGizmos(GameContext &context);
+	void RenderSelectedEntityHighlight(GameContext &context);
 	void RenderGrid(GameContext &context);
 	void RenderLevelBounds(GameContext &context);
 	void RenderPhysicsShapes(GameContext &context);

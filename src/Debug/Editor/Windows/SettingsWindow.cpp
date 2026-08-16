@@ -176,6 +176,18 @@ void SettingsWindow::RenderDebugRenderSettings(GameContext& context)
 	ImGui::SameLine();
 	HelpMarker("Show transform handles and icons");
 
+	if (ImGui::Checkbox("Show Selected Entity Highlight", &settings.showSelectedEntityHighlight))
+	{
+		context.GetEditor().GetSettings().NotifySettingChanged("debugRender");
+	}
+	ImGui::SameLine();
+	HelpMarker("Draw a ring around the entity selected in the Hierarchy/Inspector");
+
+	if (ImGui::SliderFloat("Selection Highlight Radius", &settings.selectedEntityHighlightRadius, 4.0f, 64.0f))
+	{
+		context.GetEditor().GetSettings().NotifySettingChanged("debugRender");
+	}
+
 	if (ImGui::Checkbox("Show Grid", &settings.showGrid))
 	{
 		context.GetEditor().GetSettings().NotifySettingChanged("debugRender");

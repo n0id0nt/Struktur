@@ -91,8 +91,14 @@ endif()
 if(CMAKE_BUILD_TYPE STREQUAL "Debug")
     set(DEBUG TRUE)
     add_compile_definitions(DEBUG)
-    set(EDITOR TRUE)
-    add_compile_definitions(EDITOR)
+    # Defaults on for Debug builds, but can be turned off (-DEDITOR=FALSE) to get a Debug build that mounts
+    # assets/ live (see InitialiseGame's DEBUG-without-EDITOR branch) without compiling in the ImGui editor.
+    if(NOT DEFINED EDITOR)
+        set(EDITOR TRUE)
+    endif()
+    if(EDITOR)
+        add_compile_definitions(EDITOR)
+    endif()
 endif()
 
 ##########################################################################################
@@ -335,7 +341,6 @@ if(DEBUG)
     set(DEBUG_SOURCES
         src/Debug/Box2DBgfxDebugDraw.h              src/Debug/Box2DBgfxDebugDraw.cpp
 
-        src/Engine/ECS/System/DebugSystem.h         src/Engine/ECS/System/DebugSystem.cpp
         src/Engine/Renderer/DebugRenderer.h         src/Engine/Renderer/DebugRenderer.cpp
 
         src/Engine/Scripting/WrenCodeGenerator.h    src/Engine/Scripting/WrenCodeGenerator.cpp
@@ -344,7 +349,9 @@ endif()
 
 if(EDITOR)
     # Debug: Use source assets directly
-    set(EDITOR_SOURCES 
+    set(EDITOR_SOURCES
+        src/Engine/ECS/System/DebugSystem.h         src/Engine/ECS/System/DebugSystem.cpp
+
         src/Debug/Editor/Editor.h                   src/Debug/Editor/Editor.cpp
         src/Debug/Editor/EditorLayoutManager.h      src/Debug/Editor/EditorLayoutManager.cpp
         src/Debug/Editor/EditorSettings.h           src/Debug/Editor/EditorSettings.cpp
@@ -459,7 +466,6 @@ set(SOURCES
     
     src/Engine/ECS/Component/active.h
     src/Engine/ECS/Component/PhysicsBody.h
-    src/Engine/ECS/Component/Player.h
     src/Engine/ECS/Component/Sprite.h
     src/Engine/ECS/Component/SpriteAnimation.h
     src/Engine/ECS/Component/Transform.h

@@ -25,12 +25,14 @@ class EditorSettings
 		bool showPhysicsContactPoints = false;
 		bool showLevelBounds          = true;
 		bool showEntityGizmos         = false;
+		bool showSelectedEntityHighlight = true;
 		bool showGrid                 = false;
 		bool playingGame              = false;
 		bool pausedGame               = false;
 
-		float physicsShapeAlpha    = 0.7f;
-		float levelBoundsThickness = 2.0f;
+		float physicsShapeAlpha            = 0.7f;
+		float levelBoundsThickness         = 2.0f;
+		float selectedEntityHighlightRadius = 16.0f;
 	} debugRender;
 
 	// Editor viewport settings

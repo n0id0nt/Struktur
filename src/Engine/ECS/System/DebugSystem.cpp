@@ -2,6 +2,7 @@
 
 #include <format>
 
+#include "Debug/Editor/Windows/HierarchyWindow.h"
 #include "Engine/ECS/Component/Level.h"
 #include "Engine/ECS/Component/PhysicsBody.h"
 #include "Engine/ECS/Component/Transform.h"
@@ -60,6 +61,10 @@ void Struktur::System::DebugSystem::Update(GameContext& context)
 	{
 		RenderEntityGizmos(context);
 	}
+	if (debugSettings.showSelectedEntityHighlight)
+	{
+		RenderSelectedEntityHighlight(context);
+	}
 	if (debugSettings.showGrid)
 	{
 		RenderGrid(context);
@@ -101,6 +106,31 @@ void Struktur::System::DebugSystem::RenderEntityGizmos(GameContext& context)
 		m_debugRenderer.DrawLine({pos.x - crossSize, pos.y}, {pos.x + crossSize, pos.y}, 2.0f, Util::ColorGreen);
 		m_debugRenderer.DrawLine({pos.x, pos.y - crossSize}, {pos.x, pos.y + crossSize}, 2.0f, Util::ColorGreen);
 	}
+}
+
+void Struktur::System::DebugSystem::RenderSelectedEntityHighlight(GameContext& context)
+{
+	// String-keyed lookup rather than constructor injection - DebugSystem is default-constructed via
+	// AddRenderSystem<T>(), and Editor::GetWindow is already how other systems reach into editor state.
+	auto* hierarchyWindow = static_cast<Debug::HierarchyWindow*>(context.GetEditor().GetWindow("Hierarchy"));
+	if (!hierarchyWindow)
+	{
+		return;
+	}
+
+	entt::entity selected     = hierarchyWindow->GetSelectedEntity();
+	entt::registry& registry  = context.GetRegistry();
+	if (selected == entt::null || !registry.valid(selected) || !registry.all_of<Component::Transform>(selected))
+	{
+		return;
+	}
+
+	auto& debugSettings              = context.GetEditor().GetSettings().debugRender;
+	TransformSystem& transformSystem = context.GetSystemManager().GetSystem<TransformSystem>();
+	glm::vec3 worldPosition          = transformSystem.GetWorldPosition(context, selected);
+
+	m_debugRenderer.DrawCircleOutline({worldPosition.x, worldPosition.y}, debugSettings.selectedEntityHighlightRadius,
+	                                  2.0f, Util::ColorGreen);
 }
 
 void Struktur::System::DebugSystem::RenderPhysicsShapes(GameContext& context)
