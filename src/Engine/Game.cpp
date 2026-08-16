@@ -171,7 +171,7 @@ void Struktur::InitialiseGame(GameContext& context)
 // #if defined(PLATFORM_WEB)
 //	systemManager.AddRenderSystem<System::WrenStateRenderSystem>();
 // #endif
-#ifdef DEBUG
+#ifdef EDITOR
 	systemManager.AddRenderSystem<System::DebugSystem>();
 #endif
 	systemManager.AddRenderSystem<System::UIRenderSystem>();
@@ -275,6 +275,16 @@ void Struktur::SplashScreenLoop(GameContext& context)
 	int fontSize                 = 120;
 
 	Resource::ResourcePtr<Resource::FontResource> font = resourceManager.GetFont(context, SPLASHSCREENFONT, 120);
+	// Pinned once (see ResourcePool<T>::Pin) instead of holding a persistent ResourcePtr somewhere for the whole
+	// splash duration - without this, GetResource()'s cache would evict/reload the font every single frame, since
+	// `font` above is the only reference to it and it goes out of scope at the end of this function. Pinning lets
+	// this stay a plain per-frame re-fetch with nothing to own long-term.
+	static bool fontPinned = false;
+	if (!fontPinned)
+	{
+		font.Pin();
+		fontPinned = true;
+	}
 	if (!font->IsGpuReady())
 	{
 		font->LoadToGpu(context);
@@ -306,6 +316,10 @@ void Struktur::SplashScreenLoop(GameContext& context)
 	if (gameData.gameState == Core::GameState::GAME)
 	{
 		context.GetGraphicsDevice().RestoreWorldRenderTarget();
+		// Splash is done with the font - unpin now rather than leaving it resident for the rest of the process
+		// (the old Game()-level ResourcePtr this replaced did the latter).
+		font.Unpin();
+		fontPinned = false;
 	}
 }
 
@@ -403,11 +417,6 @@ void Struktur::Game()
 
 	Core::GameData& gameData = context.GetGameData();
 
-	// Should have a struct just to contain default fonts to better manage this??
-	// Or set up a state system to manage this as well
-	Resource::ResourceManager& resourceManager         = context.GetResourceManager();
-	Resource::ResourcePtr<Resource::FontResource> font = resourceManager.GetFont(context, SPLASHSCREENFONT, 120);
-
 #ifdef PLATFORM_WEB
 	// Web platform - use emscripten main loop
 	emscripten_set_main_loop_arg(UpdateLoop, &context, 0, 1);
@@ -486,7 +495,7 @@ void Struktur::ClearGameSystems(GameContext& context)
 	Dialogue::DialogueManager& dialogueManager = context.GetDialogueManager();
 	dialogueManager.Clear();
 
-	#ifdef DEBUG
+	#ifdef EDITOR
 	DEBUG_INFO("[Clean Up] Debug System");
 	System::DebugSystem& debugSystem = context.GetSystemManager().GetSystem<System::DebugSystem>();
 	debugSystem.ClearCachedResources();

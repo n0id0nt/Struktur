@@ -115,6 +115,30 @@ class ResourcePtr
 	{
 		return (m_pool && m_handle.IsValid()) ? m_pool->GetRefCount(m_handle) : 0;
 	}
+
+	// Keeps the underlying resource loaded even after every ResourcePtr (including this one) releases it - see
+	// ResourcePool<T>::Pin. Lets a call site that re-fetches a resource fresh every frame (rather than holding a
+	// persistent ResourcePtr somewhere) avoid reload/unload thrash: pin once up front, then just GetResource()
+	// normally on every later access, and Unpin() (via any ResourcePtr to the same resource, e.g. another
+	// GetResource() call - it doesn't have to be this exact instance) once it's no longer needed.
+	void Pin() const
+	{
+		if (m_pool && m_handle.IsValid())
+		{
+			m_pool->Pin(m_handle);
+		}
+	}
+	void Unpin() const
+	{
+		if (m_pool && m_handle.IsValid())
+		{
+			m_pool->Unpin(m_handle);
+		}
+	}
+	bool IsPinned() const
+	{
+		return (m_pool && m_handle.IsValid()) ? m_pool->IsPinned(m_handle) : false;
+	}
 	const std::string& GetFilePath() const
 	{
 		static const std::string kEmpty;

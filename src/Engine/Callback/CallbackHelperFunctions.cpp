@@ -208,8 +208,12 @@ Struktur::Callback::Variant Struktur::Callback::HelperFunctions::WrenSlotToVaria
 			// You'd need to track which class a foreign is via your own metadata
 			// For simplicity, we'll just return null for foreign types
 			// In real usage, you'd check context to know which foreign type to extract
-
-			BREAK_MSG("WrenSlotToVariant: Foreign object extraction requires type context");
+			//
+			// This is routine, not exceptional - e.g. every UI focus/click callback's "sender" argument is a
+			// foreign UIElement, and callback dispatch runs every such argument through here regardless of
+			// whether the Wren-side closure actually uses it. Warn rather than DebugBreak (see BREAK_MSG) so it
+			// doesn't crash builds with no debugger attached to catch the resulting breakpoint exception.
+			DEBUG_WARNING("WrenSlotToVariant: Foreign object extraction requires type context");
 			return Variant(nullptr);
 		}
 

@@ -31,6 +31,11 @@ class ResourcePool
 	{
 		T resource;
 		size_t refCount = 1;
+		// Independent from refCount - a pinned entry survives refCount dropping to 0 instead of being evicted (see
+		// Release()/EvictIfUnused()). Lets call sites that don't want to hold a persistent ResourcePtr (e.g. a
+		// splash/loading screen re-fetching its font from cache every frame) keep a resource resident by pinning
+		// it once, rather than needing some long-lived owner elsewhere just to hold a reference open.
+		bool pinned = false;
 		std::string name;
 
 		ResourceEntry(T&& res)
@@ -38,6 +43,20 @@ class ResourcePool
 		{
 		}
 	};
+
+	// Shared by Release() and Unpin() - a resource is only actually evicted once neither is holding it open.
+	void EvictIfUnused(typename SparseSet<ResourceEntry>::Handle internalHandle, ResourceEntry& entry)
+	{
+		if (entry.refCount > 0 || entry.pinned)
+		{
+			return;
+		}
+
+		DEBUG_INFO("Unloading unreferenced resource '%s'", entry.name);
+		UnloadResource(entry.name, entry.resource);
+		m_nameToHandle.erase(entry.name);
+		m_resources.Erase(internalHandle);
+	}
 
 	SparseSet<ResourceEntry> m_resources;
 	std::unordered_map<std::string, typename SparseSet<ResourceEntry>::Handle> m_nameToHandle;
@@ -153,13 +172,39 @@ class ResourcePool
 		}
 
 		entry->refCount--;
-		if (entry->refCount == 0)
+		EvictIfUnused(internalHandle, *entry);
+	}
+
+	// Keeps the resource resident even once refCount drops to 0 - see ResourceEntry::pinned. A plain flag, not a
+	// count: pinning an already-pinned resource or unpinning an already-unpinned one is a harmless no-op, but two
+	// independent call sites pinning the same resource need to coordinate their own unpin timing themselves,
+	// since either one's Unpin() clears it for both.
+	void Pin(ResourceHandle handle)
+	{
+		auto internalHandle = ToInternal(handle);
+		if (m_resources.IsValid(internalHandle))
 		{
-			DEBUG_INFO("Unloading unreferenced resource '%s'", entry->name);
-			UnloadResource(entry->name, entry->resource);
-			m_nameToHandle.erase(entry->name);
-			m_resources.Erase(internalHandle);
+			m_resources[internalHandle].pinned = true;
 		}
+	}
+
+	void Unpin(ResourceHandle handle)
+	{
+		auto internalHandle  = ToInternal(handle);
+		ResourceEntry* entry = m_resources.Resolve(internalHandle);
+		if (!entry || !entry->pinned)
+		{
+			return;
+		}
+
+		entry->pinned = false;
+		EvictIfUnused(internalHandle, *entry);
+	}
+
+	bool IsPinned(ResourceHandle handle) const
+	{
+		const ResourceEntry* entry = m_resources.Resolve(ToInternal(handle));
+		return entry && entry->pinned;
 	}
 
 	size_t GetRefCount(ResourceHandle handle) const
