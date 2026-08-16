@@ -26,6 +26,10 @@ class UIPanel : public UIElement
 
 	void Update(GameContext& context) override;
 	void Render(GameContext& context) override;
+
+	// 1 quad for the background (DrawRect/DrawTexturedRect) plus 4 for the border outline (DrawRectOutline) when
+	// one is actually drawn - mirrors Render()'s own draw calls exactly.
+	uint32_t GetRequiredQuadCount() const override;
 };
 }  // namespace UI
 }  // namespace Struktur

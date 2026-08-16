@@ -74,6 +74,7 @@ void Struktur::UI::UIElement::SetPosition(const glm::vec2& absolutePosition, con
 	m_absolutePosition = absolutePosition;
 	m_relativePosition = relativePosition;
 	UpdateBounds();
+	m_visualDirty = true;
 }
 
 void Struktur::UI::UIElement::SetSize(const glm::vec2& absoluteSize, const glm::vec2& relativeSize)
@@ -81,12 +82,14 @@ void Struktur::UI::UIElement::SetSize(const glm::vec2& absoluteSize, const glm::
 	m_absoluteSize = absoluteSize;
 	m_relativeSize = relativeSize;
 	UpdateBounds();
+	m_visualDirty = true;
 }
 
 void Struktur::UI::UIElement::SetAnchorPoint(const glm::vec2& anchorPoint)
 {
 	m_anchorPoint = anchorPoint;
 	UpdateBounds();
+	m_visualDirty = true;
 }
 
 glm::vec2 Struktur::UI::UIElement::GetPosition() const
@@ -239,6 +242,15 @@ void Struktur::UI::UIElement::Dispose(GameContext& context)
 	for (auto& child : m_children)
 	{
 		child->Dispose(context);
+	}
+
+	// Batch-root elements own their batch's bgfx buffers (see AssignBatches) - without this, destroying the
+	// widget would leak them, and worse, leave the batch itself active in UIRenderer's m_batches, still being
+	// drawn by Flush() forever with whatever stale vertex/texture data it last held.
+	if (m_isBatchRoot && m_ownBatch.IsValid())
+	{
+		context.GetUIRenderer().DestroyBatch(m_ownBatch);
+		m_ownBatch = Renderer::UIBatchHandle{};
 	}
 
 	m_disposed = true;

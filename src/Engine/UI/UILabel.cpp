@@ -26,7 +26,8 @@ Struktur::UI::UILabel::UILabel(GameContext& context, const glm::vec2& absolutePo
 
 void Struktur::UI::UILabel::SetText(const std::string& newText)
 {
-	m_text = newText;
+	m_text        = newText;
+	m_visualDirty = true;
 	// Recalculate size
 	// SetBoundingBoxToText();
 }
@@ -45,25 +46,72 @@ void Struktur::UI::UILabel::Update(GameContext& context)
 
 void Struktur::UI::UILabel::Render(GameContext& context)
 {
-	if (m_backgroundColor.a > 0)
+	if (m_visualDirty)
 	{
-		context.GetUIRenderer().DrawRect(m_bounds, m_backgroundColor);
+		// GetRequiredQuadCount() can change at runtime (text edited, border/background toggled) - grow the slot
+		// first if it no longer fits, per WriteText's own AllocateOrResizeSlot-before-write contract.
+		uint32_t requiredQuads = GetRequiredQuadCount();
+		if (m_batchSlot.quadCapacity < requiredQuads)
+		{
+			m_batchSlot = context.GetUIRenderer().AllocateOrResizeSlot(m_batch, m_batchSlot, requiredQuads);
+		}
+
+		// Background/border occupy the slot's first quads (1 + optionally 4, matching GetRequiredQuadCount()'s
+		// own layout exactly), text fills the rest - quadOffset tracks where the next write should start so
+		// none of these stomp on each other. Each write tags its own quads with its own texture (see
+		// UIBatch::quadTextures), so the background/border's white and the text's font atlas safely coexist.
+		uint32_t quadOffset = 0;
+
+		if (m_backgroundColor.a > 0)
+		{
+			Renderer::UIBatchSlot backgroundSlot = m_batchSlot;
+			backgroundSlot.quadCapacity           = 1;
+			context.GetUIRenderer().WriteRect(m_batch, backgroundSlot, m_bounds, m_backgroundColor);
+			quadOffset += 1;
+		}
+		if (m_borderWidth > 0)
+		{
+			Renderer::UIBatchSlot borderSlot = m_batchSlot;
+			borderSlot.vertexOffset += quadOffset * 4;
+			borderSlot.quadCapacity  = 4;
+			context.GetUIRenderer().WriteRectOutline(m_batch, borderSlot, m_bounds, m_borderWidth, m_borderColor);
+			quadOffset += 4;
+		}
+
+		float lineHeight       = GetLineHeight();
+		glm::vec2 startPos     = {m_bounds.x + 5, m_bounds.y + 2.5f};
+		uint32_t textQuadsUsed = WriteTextLines(context, m_text, startPos, lineHeight, quadOffset);
+
+		// Text is variable-length, so a shorter string than last time can leave real, already-written glyph
+		// quads sitting unused past what was just written - Flush() draws a batch's whole allocated region
+		// regardless, so without this those stale glyphs would keep rendering as leftover ghost text.
+		context.GetUIRenderer().ClearSlotFrom(m_batch, m_batchSlot, quadOffset + textQuadsUsed);
+
+		m_visualDirty = false;
 	}
-	if (m_borderWidth > 0)
-	{
-		context.GetUIRenderer().DrawRectOutline(m_bounds, m_borderWidth, m_borderColor);
-	}
-
-	// Calculate line height
-	float lineHeight = GetLineHeight();
-
-	// Calculate starting position
-	glm::vec2 startPos = {m_bounds.x + 5, m_bounds.y + 2.5f};
-
-	// Render text with wrapping support - DrawGlyphs (called inside) handles the platform split now.
-	RenderText(context, m_text, startPos, lineHeight);
 
 	RenderChildren(context);
+}
+
+uint32_t Struktur::UI::UILabel::GetRequiredQuadCount() const
+{
+	uint32_t quads = (m_backgroundColor.a > 0 ? 1 : 0) + (m_borderWidth > 0 ? 4 : 0);
+
+	// One quad per non-space/tab/newline codepoint - matches UIRenderer::WriteText's own space/tab skip, plus
+	// '\n' since GetTextLines() strips newlines out before any per-character drawing ever sees them.
+	int index = 0;
+	int size  = (int)m_text.size();
+	while (index < size)
+	{
+		int codepointByteCount = 0;
+		int codepoint          = Text::GetCodepointNext(&m_text[index], &codepointByteCount);
+		index += codepointByteCount;
+		if (codepoint != ' ' && codepoint != '\t' && codepoint != '\n')
+		{
+			++quads;
+		}
+	}
+	return quads;
 }
 
 glm::vec2 Struktur::UI::UILabel::MeasureText(const Text::Font& font, const std::string& text, float fontSize)
@@ -347,4 +395,128 @@ glm::vec2 Struktur::UI::UILabel::GetFormattedTextSize() const
 float Struktur::UI::UILabel::GetLineHeight() const
 {
 	return m_fontSize * 1.5f;  // 1.5x line spacing for readability
+}
+
+uint32_t Struktur::UI::UILabel::WriteGlyphs(GameContext& context, const std::string& text, glm::vec2 pos,
+                                            uint32_t quadOffset)
+{
+	// Same lazy-GPU-upload as DrawGlyphs.
+	if (!m_font->IsGpuReady())
+	{
+		m_font->LoadToGpu(context);
+	}
+
+	Renderer::UIBatchSlot subSlot = m_batchSlot;
+	subSlot.vertexOffset += quadOffset * 4;
+	subSlot.quadCapacity -= quadOffset;
+	return context.GetUIRenderer().WriteText(m_batch, subSlot, m_font->font, text, pos, m_fontSize, m_textColor);
+}
+
+uint32_t Struktur::UI::UILabel::WriteJustifiedLine(GameContext& context, const std::string& line, glm::vec2 pos,
+                                                    float targetWidth, bool isLastLine, uint32_t quadOffset)
+{
+	// Mirrors RenderJustifiedLine exactly, just calling WriteGlyphs (batched) instead of DrawGlyphs (immediate).
+	if (isLastLine || line.find(' ') == std::string::npos)
+	{
+		return WriteGlyphs(context, line, pos, quadOffset);
+	}
+
+	std::vector<std::string> words;
+	std::string currentWord;
+	for (char c : line)
+	{
+		if (c == ' ' || c == '\t')
+		{
+			if (!currentWord.empty())
+			{
+				words.push_back(currentWord);
+				currentWord.clear();
+			}
+		}
+		else
+		{
+			currentWord += c;
+		}
+	}
+	if (!currentWord.empty())
+	{
+		words.push_back(currentWord);
+	}
+
+	if (words.size() <= 1)
+	{
+		return WriteGlyphs(context, line, pos, quadOffset);
+	}
+
+	float totalWordWidth = 0;
+	for (const auto& word : words)
+	{
+		glm::vec2 wordSize = MeasureText(m_font->font, word, m_fontSize);
+		totalWordWidth += wordSize.x;
+	}
+
+	float totalSpaceWidth = targetWidth - totalWordWidth;
+	float spaceWidth      = totalSpaceWidth / (words.size() - 1);
+
+	float currentX        = pos.x;
+	uint32_t quadsWritten = 0;
+	for (const auto& word : words)
+	{
+		glm::vec2 wordPos = {currentX, pos.y};
+		quadsWritten += WriteGlyphs(context, word, wordPos, quadOffset + quadsWritten);
+
+		glm::vec2 wordSize = MeasureText(m_font->font, word, m_fontSize);
+		currentX += wordSize.x + spaceWidth;
+	}
+	return quadsWritten;
+}
+
+uint32_t Struktur::UI::UILabel::WriteTextLines(GameContext& context, const std::string& text, glm::vec2 startPos,
+                                                float lineHeight, uint32_t quadOffset)
+{
+	// Mirrors RenderText exactly, just calling WriteGlyphs/WriteJustifiedLine (batched) instead of
+	// DrawGlyphs/RenderJustifiedLine (immediate), threading the running quad offset through.
+	std::vector<std::string> lines = GetTextLines(text);
+
+	float currentY             = startPos.y;
+	uint32_t totalQuadsWritten = 0;
+
+	for (size_t i = 0; i < lines.size(); ++i)
+	{
+		const std::string& line = lines[i];
+		glm::vec2 textSize       = MeasureText(m_font->font, line, m_fontSize);
+		glm::vec2 textPos        = {startPos.x, currentY};
+
+		switch (m_alignment)
+		{
+			case TextAlignment::CENTER:
+				textPos.x = m_bounds.x + (m_bounds.width - textSize.x) / 2.0f;
+				totalQuadsWritten += WriteGlyphs(context, line, textPos, quadOffset + totalQuadsWritten);
+				break;
+
+			case TextAlignment::RIGHT:
+				textPos.x = m_bounds.x + m_bounds.width - textSize.x - 5;
+				totalQuadsWritten += WriteGlyphs(context, line, textPos, quadOffset + totalQuadsWritten);
+				break;
+
+			case TextAlignment::JUSTIFY:
+			{
+				textPos.x       = m_bounds.x + 5;
+				bool isLastLine = (i == lines.size() - 1);
+				totalQuadsWritten += WriteJustifiedLine(context, line, textPos, m_bounds.x - 10.0f, isLastLine,
+				                                        quadOffset + totalQuadsWritten);
+				break;
+			}
+
+			case TextAlignment::LEFT:
+			default:
+				textPos.x = m_bounds.x + 5;
+				totalQuadsWritten += WriteGlyphs(context, line, textPos, quadOffset + totalQuadsWritten);
+				break;
+		}
+
+		currentY += lineHeight;
+	}
+
+	return totalQuadsWritten;
 }

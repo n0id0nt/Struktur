@@ -53,7 +53,7 @@ class Game {
         _stateManager.insertState("GameWorld", GameWorldState)
         _stateManager.insertState("MainMenu", MainMenuState)
 
-        _stateManager.changeState("GameWorld")
+        _stateManager.changeState("MainMenu")
     }
     
     // Called by C++ every frame

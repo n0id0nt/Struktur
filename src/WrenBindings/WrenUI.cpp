@@ -5,6 +5,7 @@
 #endif
 #include "Engine/Callback/WrenCallback.h"
 #include "Engine/GameContext.h"
+#include "Engine/Renderer/UIRenderer.h"
 #include "Engine/Scripting/WrenBindingRegistry.h"
 #include "Engine/UI/UILabel.h"
 #include "Engine/UI/UIPanel.h"
@@ -25,6 +26,14 @@ void wren_UIManagerAddUIElement(WrenVM* vm)
 
 	uiManager.AddElement(std::unique_ptr<Struktur::UI::UIElement>(uiElement->element));
 	uiElement->ownedByWren = false;
+
+	// First batch-assignment pass for this tree. Marking the root as a batch root (rather than just handing
+	// AssignBatches a batch created here) means AssignBatches creates and records it as m_ownBatch itself - which
+	// is what makes UIElement::Dispose() actually destroy it later. Without this, removing the tree via
+	// UIManager.removeUIElement would leak its GPU buffers and, worse, leave the batch active in UIRenderer's
+	// m_batches, still being drawn by Flush() forever with whatever it last held.
+	uiElement->element->SetBatchRoot(true);
+	context->GetUIRenderer().AssignBatches(uiElement->element, Struktur::Renderer::UIBatchHandle{});
 }
 
 // UIManager.removeUIElement(UIElenent)
@@ -411,6 +420,19 @@ void wren_UIElementAddChild(WrenVM* vm)
 	WrenUIElement* child = static_cast<WrenUIElement*>(wrenGetSlotForeign(vm, 1));
 	uiElement->element->AddChild(child->element);
 	child->ownedByWren = false;
+
+	// Re-run assignment for the whole tree (not just uiElement->element) - assignment always walks from the
+	// root (see UIRenderer::AssignBatches), and the new child can shift which batch it and its own subtree
+	// should share. Reuses the root's already-assigned ambient batch (set by UIManager.addUIElement's initial
+	// pass, or an earlier one of these calls) if it has one, rather than minting a new one every time.
+	Struktur::GameContext* context                 = static_cast<Struktur::GameContext*>(wrenGetUserData(vm));
+	Struktur::UI::UIElement* root                   = uiElement->element->GetRoot();
+	Struktur::Renderer::UIBatchHandle ambientBatch = root->GetBatch();
+	if (!ambientBatch.IsValid())
+	{
+		ambientBatch = context->GetUIRenderer().CreateBatch();
+	}
+	context->GetUIRenderer().AssignBatches(root, ambientBatch);
 }
 
 // UIElement.removeChild(child) -> bool
@@ -425,6 +447,19 @@ void wren_UIElementRemoveChild(WrenVM* vm)
 	WrenUIElement* child = static_cast<WrenUIElement*>(wrenGetSlotForeign(vm, 1));
 	bool success         = uiElement->element->RemoveChild(child->element);
 	wrenSetSlotBool(vm, 0, success);
+
+	// Same re-assignment as addChild above - only needed if a child actually came out.
+	if (success)
+	{
+		Struktur::GameContext* context                 = static_cast<Struktur::GameContext*>(wrenGetUserData(vm));
+		Struktur::UI::UIElement* root                   = uiElement->element->GetRoot();
+		Struktur::Renderer::UIBatchHandle ambientBatch = root->GetBatch();
+		if (!ambientBatch.IsValid())
+		{
+			ambientBatch = context->GetUIRenderer().CreateBatch();
+		}
+		context->GetUIRenderer().AssignBatches(root, ambientBatch);
+	}
 }
 
 // UIElement.setOnClick { |sender, mousePos| ... }

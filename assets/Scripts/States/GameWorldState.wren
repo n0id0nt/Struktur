@@ -102,7 +102,8 @@ class GameWorldState is BaseState {
         
         font.unload()
         //_stateManager.changeState("PlayState")
-        
+        _stateManager.changeState("InventoryState")
+
         System.print("Game world loaded")
     }
     
