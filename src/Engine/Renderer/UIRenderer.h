@@ -53,7 +53,7 @@ struct UIBatch
 	// solid-color background next to a label's font atlas) safely share one batch/vertex cache.
 	std::vector<bgfx::TextureHandle> quadTextures;
 	// One entry per quad, parallel to quadTextures - the z-index of whichever element wrote that quad (see
-	// WriteRect/WriteRectOutline/WriteTexturedRect/WriteText). Used only to order quads sharing this one batch
+	// DrawRect/DrawRectOutline/DrawTexturedRect/DrawText). Used only to order quads sharing this one batch
 	// against each other (see sortedQuadOrder below); ordering BETWEEN batches is drawOrder's job, not this.
 	std::vector<int32_t> quadZIndex;
 	// Index-buffer build order, cached and only recomputed when dirty (see Flush()) - quad indices sorted by
@@ -83,12 +83,12 @@ struct UIBatch
 // same "sprite" program) as panel backgrounds and glyphs, matching fs_sprite.sc's
 // texture.rgba * vertexColor.rgba blend model.
 //
-// Also owns the persistent-buffer batching path (CreateBatch/DestroyBatch/AllocateOrResizeSlot/WriteRect/
-// WriteRectOutline/WriteTexturedRect/WriteText/AssignBatches/Flush below) that UIPanel/UILabel's Render() write
-// into instead of drawing immediately, once m_batch/m_batchSlot have been assigned (see UIElement's own class
-// comment and UIRenderSystem for how AssignBatches/Flush get called). DrawRect/DrawRectOutline/DrawTexturedRect/
-// DrawText/SubmitTexturedQuad remain as the immediate-mode path for transient/rare draws that don't benefit from
-// a persistent slot - RenderFocusIndicator and debug/overlay drawing use these directly.
+// All UI rendering goes through the persistent-buffer batching path below (CreateBatch/DestroyBatch/
+// AllocateOrResizeSlot/DrawRect/DrawRectOutline/DrawTexturedRect/DrawText/AssignBatches/Flush) - there is no
+// immediate-mode fallback (that used to exist here as a separate Draw*/SubmitTexturedQuad pair alongside these,
+// each glyph or rect submitted as its own bgfx draw call; removed once every caller had a real batch/slot to
+// write into instead, see UIManager's own focus-indicator batch and Game.cpp's splash screen for the two
+// non-UIElement callers that needed one added).
 class UIRenderer
 {
 public:
@@ -107,16 +107,8 @@ public:
 	void Shutdown();
 
 	// Sets GraphicsDevice::UIViewId's per-frame orthographic transform, sized to the game viewport (not the
-	// real window) - call once per frame before any Draw* call (see UIRenderSystem::Update).
+	// real window) - call once per frame before any batch write below (see UIRenderSystem::Update).
 	void SetupView(GameContext& context);
-
-	void DrawRect(const Util::Math::Rect& rect, const Util::Color& color);
-	void DrawRectOutline(const Util::Math::Rect& rect, float thickness, const Util::Color& color);
-	void DrawTexturedRect(const Util::Math::Rect& rect, const TextureHandle& texture, const Util::Color& tint);
-	// Walks `text` as UTF-8 via Text::GetCodepointNext/Text::GetGlyphIndex and emits one quad per glyph from
-	// font.glyphs - single line only (callers already split multi-line text, see UILabel::GetTextLines).
-	void DrawText(const Text::Font& font, const std::string& text, const glm::vec2& position, float fontSize,
-	              const Util::Color& color);
 
 	// --- Batch storage (see class comment above) ---
 
@@ -145,25 +137,25 @@ public:
 	// UIRenderSystem, once per frame after all widget Render() calls.
 	void Flush(GameContext& context);
 
-	// --- Batch writes (phase 2 - fill a batch's cpuVertices at a caller-owned slot instead of submitting
-	// immediately; wired into UIPanel/UILabel's Render() as of phase 4, see UIElement's class comment). Every
-	// WriteX function below sets batch.dirty = true and tags the quads it just wrote with whatever texture it
-	// used (UIBatch::quadTextures) - a batch is not limited to one texture (see Flush()), so writes from
-	// differently-textured widgets sharing a batch don't stomp on each other.
+	// --- Batch writes - fill a batch's cpuVertices at a caller-owned slot rather than submitting immediately
+	// (wired into UIPanel/UILabel's Render(), see UIElement's class comment, plus UIManager's focus indicator and
+	// Game.cpp's splash screen for the two non-UIElement callers). Every DrawX function below sets
+	// batch.dirty = true and tags the quads it just wrote with whatever texture it used (UIBatch::quadTextures) -
+	// a batch is not limited to one texture (see Flush()), so writes from differently-textured widgets sharing a
+	// batch don't stomp on each other.
 	// zIndex tags the quad(s) written for later ordering against other quads sharing this batch (see
 	// UIBatch::quadZIndex/sortedQuadOrder and Flush()) - callers pass their own GetZIndex().
-	void WriteRect(UIBatchHandle batch, const UIBatchSlot& slot, const Util::Math::Rect& rect,
-	               const Util::Color& color, int32_t zIndex);
-	// Writes 4 quads (top/bottom/left/right bars, the same decomposition DrawRectOutline uses) - slot must have
-	// quadCapacity >= 4.
-	void WriteRectOutline(UIBatchHandle batch, const UIBatchSlot& slot, const Util::Math::Rect& rect, float thickness,
-	                      const Util::Color& color, int32_t zIndex);
-	void WriteTexturedRect(UIBatchHandle batch, const UIBatchSlot& slot, const Util::Math::Rect& rect,
-	                       const TextureHandle& texture, const Util::Color& tint, int32_t zIndex);
-	// Same UTF-8 glyph-walk as DrawText (Text::GetCodepointNext/Text::GetGlyphIndex), writing into batch's
-	// cpuVertices at slot instead of submitting immediately, and skipping a quad for space/tab exactly like
-	// DrawText does - so the number of quads written can be less than text's codepoint count. Returns the quad
-	// count actually written.
+	void DrawRect(UIBatchHandle batch, const UIBatchSlot& slot, const Util::Math::Rect& rect, const Util::Color& color,
+	              int32_t zIndex);
+	// Writes 4 quads (top/bottom/left/right bars) - slot must have quadCapacity >= 4.
+	void DrawRectOutline(UIBatchHandle batch, const UIBatchSlot& slot, const Util::Math::Rect& rect, float thickness,
+	                     const Util::Color& color, int32_t zIndex);
+	void DrawTexturedRect(UIBatchHandle batch, const UIBatchSlot& slot, const Util::Math::Rect& rect,
+	                      const TextureHandle& texture, const Util::Color& tint, int32_t zIndex);
+	// Walks `text` as UTF-8 via Text::GetCodepointNext/Text::GetGlyphIndex, writing into batch's cpuVertices at
+	// slot - one quad per glyph, skipping space/tab - so the number of quads written can be less than text's
+	// codepoint count. Single line only (callers already split multi-line text, see UILabel::GetTextLines).
+	// Returns the quad count actually written.
 	//
 	// CONTRACT: slot.quadCapacity must already be large enough for text's worst case (its codepoint count is a
 	// safe upper bound, since space/tab codepoints don't emit a quad) - this function does NOT grow the slot
@@ -171,12 +163,12 @@ public:
 	// rather than writing past the end of cpuVertices). Callers (UILabel) are responsible for calling
 	// AllocateOrResizeSlot first whenever text content changes and may have grown past the slot's current
 	// capacity - this function does not, and cannot, know whether that happened.
-	uint32_t WriteText(UIBatchHandle batch, const UIBatchSlot& slot, const Text::Font& font, const std::string& text,
-	                   const glm::vec2& position, float fontSize, const Util::Color& color, int32_t zIndex);
+	uint32_t DrawText(UIBatchHandle batch, const UIBatchSlot& slot, const Text::Font& font, const std::string& text,
+	                  const glm::vec2& position, float fontSize, const Util::Color& color, int32_t zIndex);
 
 	// Degenerates (zero-area, so Flush() draws nothing for them) every quad in slot from fromQuad up to
 	// slot.quadCapacity. Flush() draws a batch's whole allocated cpuVertices region regardless of how many quads
-	// a given widget's writes actually touched this frame - so when a variable-quad-count write (WriteText, when
+	// a given widget's writes actually touched this frame - so when a variable-quad-count write (DrawText, when
 	// text gets shorter) uses fewer quads than the slot's capacity, whatever real vertex data those trailing
 	// quads held from a previous, longer write would otherwise keep being drawn as stale leftover geometry.
 	// Callers that write a variable number of quads into a fixed-capacity slot (UILabel's text) must call this
@@ -195,12 +187,9 @@ public:
 	void AssignBatches(UI::UIElement* element, UIBatchHandle sharedBatch);
 
 private:
-	void SubmitTexturedQuad(float x, float y, float w, float h, float u0, float v0, float u1, float v1, uint32_t abgr,
-	                        bgfx::TextureHandle texture);
-
-	// Resolves handle to its UIBatch for a WriteX call, ASSERT_MSGing (see Debug/Assertions.h) on an invalid
+	// Resolves handle to its UIBatch for a DrawX call, ASSERT_MSGing (see Debug/Assertions.h) on an invalid
 	// handle - returns nullptr on failure so callers can bail out safely even in Release, where the assert
-	// itself is a no-op. callerName is folded into the assert message so it names the actual WriteX function
+	// itself is a no-op. callerName is folded into the assert message so it names the actual DrawX function
 	// that failed, not this shared helper.
 	UIBatch* ResolveBatch(UIBatchHandle handle, const char* callerName);
 	// Returns true if slot can safely hold quadsNeeded quads inside batch's cpuVertices (checks both declared

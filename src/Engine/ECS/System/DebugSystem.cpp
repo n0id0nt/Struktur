@@ -1,16 +1,11 @@
 #include "DebugSystem.h"
 
-#include <format>
-
 #include "Debug/Editor/Windows/HierarchyWindow.h"
 #include "Engine/ECS/Component/Level.h"
 #include "Engine/ECS/Component/PhysicsBody.h"
 #include "Engine/ECS/Component/Transform.h"
 #include "Engine/ECS/System/TransformSystem.h"
 #include "Engine/GameContext.h"
-#include "Engine/Renderer/UIRenderer.h"
-#include "Engine/Resource/FontResource.h"
-#include "Engine/Resource/Pointers/ResourcePtr.h"
 
 Struktur::System::DebugSystem::DebugSystem() {}
 
@@ -67,25 +62,6 @@ void Struktur::System::DebugSystem::Update(GameContext& context)
 	if (debugSettings.showGrid)
 	{
 		RenderGrid(context);
-	}
-
-	if (debugSettings.showFPS)
-	{
-		// Screen-space text is UIRenderer's domain (UIViewId), not the world-space DebugRenderer's - reuses the
-		// same already-pooled "default" font UILabel uses. Fetched once and cached on m_fpsFont instead of
-		// calling GetFont() every frame - still a cache hit (not a fresh disk load) either way, but this skips
-		// the ResourcePool map lookup and refcount churn on every single frame just to draw a counter.
-		if (!m_fpsFont)
-		{
-			m_fpsFont = context.GetResourceManager().GetFont(context, "default", 32);
-		}
-		if (!m_fpsFont->IsGpuReady())
-		{
-			m_fpsFont->LoadToGpu(context);
-		}
-		float fps = context.GetTimeSystem().unscaledDelta > 0.0f ? 1.0f / context.GetTimeSystem().unscaledDelta : 0.0f;
-		context.GetUIRenderer().DrawText(m_fpsFont->font, std::format("FPS: {:.0f}", fps), {10, 10}, 16.0f,
-		                                 Util::ColorGreen);
 	}
 }
 

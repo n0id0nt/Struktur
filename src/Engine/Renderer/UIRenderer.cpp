@@ -48,9 +48,9 @@ void Struktur::Renderer::UIRenderer::SetupView(GameContext& context)
 
 namespace
 {
-// Fills one quad's 4 vertices (position/UV/packed color), CCW starting top-left - shared by the transient
-// immediate-submit path (SubmitTexturedQuad) and the persistent batch-write path (WriteRect/WriteRectOutline/
-// WriteTexturedRect/WriteText below), so this layout/winding only exists in one place.
+// Fills one quad's 4 vertices (position/UV/packed color), CCW starting top-left - shared by every batch-write
+// function below (DrawRect/DrawRectOutline/DrawTexturedRect/DrawText), so this layout/winding only exists in
+// one place.
 void FillQuadVertices(Struktur::Renderer::QuadVertex* quad, float x, float y, float w, float h, float u0, float v0,
                       float u1, float v1, uint32_t abgr)
 {
@@ -61,102 +61,7 @@ void FillQuadVertices(Struktur::Renderer::QuadVertex* quad, float x, float y, fl
 }
 }  // namespace
 
-void Struktur::Renderer::UIRenderer::SubmitTexturedQuad(float x, float y, float w, float h, float u0, float v0,
-                                                        float u1, float v1, uint32_t abgr, bgfx::TextureHandle texture)
-{
-	static const bgfx::VertexLayout layout = BuildQuadVertexLayout();
-	if (4 > bgfx::getAvailTransientVertexBuffer(4, layout) || 6 > bgfx::getAvailTransientIndexBuffer(6))
-	{
-		return;
-	}
-
-	bgfx::TransientVertexBuffer tvb;
-	bgfx::TransientIndexBuffer tib;
-	bgfx::allocTransientVertexBuffer(&tvb, 4, layout);
-	bgfx::allocTransientIndexBuffer(&tib, 6);
-
-	FillQuadVertices((QuadVertex*)tvb.data, x, y, w, h, u0, v0, u1, v1, abgr);
-
-	uint16_t* indices = (uint16_t*)tib.data;
-	indices[0]        = 0;
-	indices[1]        = 1;
-	indices[2]        = 2;
-	indices[3]        = 0;
-	indices[4]        = 2;
-	indices[5]        = 3;
-
-	bgfx::setTexture(0, m_texColorSampler, texture);
-	bgfx::setVertexBuffer(0, &tvb, 0, 4);
-	bgfx::setIndexBuffer(&tib, 0, 6);
-	bgfx::setState(BGFX_STATE_WRITE_RGB | BGFX_STATE_WRITE_A |
-	               BGFX_STATE_BLEND_FUNC(BGFX_STATE_BLEND_SRC_ALPHA, BGFX_STATE_BLEND_INV_SRC_ALPHA));
-	bgfx::submit(GraphicsDevice::UIViewId, GetEmbeddedProgram("sprite"));
-}
-
-void Struktur::Renderer::UIRenderer::DrawRect(const Util::Math::Rect& rect, const Util::Color& color)
-{
-	SubmitTexturedQuad(rect.x, rect.y, rect.width, rect.height, 0.0f, 0.0f, 1.0f, 1.0f, PackColor(color),
-	                   m_whiteTexture);
-}
-
-void Struktur::Renderer::UIRenderer::DrawRectOutline(const Util::Math::Rect& rect, float thickness,
-                                                     const Util::Color& color)
-{
-	DrawRect(Util::Math::Rect{rect.x, rect.y, rect.width, thickness}, color);                            // top
-	DrawRect(Util::Math::Rect{rect.x, rect.y + rect.height - thickness, rect.width, thickness}, color);  // bottom
-	DrawRect(Util::Math::Rect{rect.x, rect.y, thickness, rect.height}, color);                           // left
-	DrawRect(Util::Math::Rect{rect.x + rect.width - thickness, rect.y, thickness, rect.height}, color);  // right
-}
-
-void Struktur::Renderer::UIRenderer::DrawTexturedRect(const Util::Math::Rect& rect, const TextureHandle& texture,
-                                                      const Util::Color& tint)
-{
-	SubmitTexturedQuad(rect.x, rect.y, rect.width, rect.height, 0.0f, 0.0f, 1.0f, 1.0f, PackColor(tint),
-	                   bgfx::TextureHandle{(uint16_t)texture.id});
-}
-
-void Struktur::Renderer::UIRenderer::DrawText(const Text::Font& font, const std::string& text,
-                                              const glm::vec2& position, float fontSize, const Util::Color& color)
-{
-	// Stub/unloaded font (see FontResource) - draw nothing rather than divide by zero below.
-	if (font.baseSize <= 0 || font.glyphs.empty())
-	{
-		return;
-	}
-
-	float scale               = fontSize / (float)font.baseSize;
-	float atlasWidth          = (float)font.texture.width;
-	float atlasHeight         = (float)font.texture.height;
-	uint32_t abgr             = PackColor(color);
-	bgfx::TextureHandle atlas = {(uint16_t)font.texture.id};
-
-	float penX = position.x;
-	int index  = 0;
-	int size   = (int)text.size();
-	while (index < size)
-	{
-		int codepointByteCount = 0;
-		int codepoint          = Text::GetCodepointNext(&text[index], &codepointByteCount);
-		int glyphIndex         = Text::GetGlyphIndex(font, codepoint);
-		index += codepointByteCount;
-
-		const Text::Glyph& glyph    = font.glyphs[glyphIndex];
-		const Util::Math::Rect& rec = glyph.rec;
-
-		if (codepoint != ' ' && codepoint != '\t')
-		{
-			float dstX = penX + (float)glyph.offsetX * scale;
-			float dstY = position.y + (float)glyph.offsetY * scale;
-			SubmitTexturedQuad(dstX, dstY, rec.width * scale, rec.height * scale, rec.x / atlasWidth,
-			                   rec.y / atlasHeight, (rec.x + rec.width) / atlasWidth,
-			                   (rec.y + rec.height) / atlasHeight, abgr, atlas);
-		}
-
-		penX += (float)(glyph.advanceX > 0 ? glyph.advanceX : (int)rec.width) * scale;
-	}
-}
-
-// --- Batch storage (phase 1 - see UIRenderer's class comment; nothing calls these yet) ---
+// --- Batch storage (see UIRenderer's class comment) ---
 
 Struktur::Renderer::UIBatchHandle Struktur::Renderer::UIRenderer::CreateBatch()
 {
@@ -261,8 +166,8 @@ Struktur::Renderer::UIBatchSlot Struktur::Renderer::UIRenderer::AllocateOrResize
 
 	batch.cpuVertices.resize(batch.cpuVertices.size() + (size_t)newQuadCapacity * 4);
 	// Kept in lockstep with cpuVertices (one entry per quad, i.e. per 4 vertices) - default to the white
-	// texture for the newly-appended region until a WriteX call actually tags it, which is harmless since
-	// nothing indexes an unwritten quad until some WriteX gives it real vertex data too.
+	// texture for the newly-appended region until a DrawX call actually tags it, which is harmless since
+	// nothing indexes an unwritten quad until some DrawX gives it real vertex data too.
 	batch.quadTextures.resize(batch.quadTextures.size() + newQuadCapacity, m_whiteTexture);
 	batch.quadZIndex.resize(batch.quadZIndex.size() + newQuadCapacity, 0);
 	batch.dirty = true;
@@ -326,8 +231,8 @@ void Struktur::Renderer::UIRenderer::Flush(GameContext& context)
 			          });
 
 			// Index content is otherwise a fixed, deterministic pattern derived purely from quad count (the same
-			// 0,1,2,0,2,3-per-quad layout WorldRenderer/SubmitTexturedQuad use) - not worth mirroring on
-			// UIBatch itself alongside cpuVertices, so it's rebuilt here whenever an upload is actually needed.
+			// 0,1,2,0,2,3-per-quad layout WorldRenderer's own transient sprite batches use) - not worth mirroring
+			// on UIBatch itself alongside cpuVertices, so it's rebuilt here whenever an upload is actually needed.
 			// Built by walking sortedQuadOrder rather than 0..quadCount directly - a quad's vertex data never
 			// moves from wherever AllocateOrResizeSlot placed it, only which index-buffer position references it,
 			// so base is still that quad's own real vertexOffset-derived index, just written at its sorted slot.
@@ -397,7 +302,7 @@ void Struktur::Renderer::UIRenderer::Flush(GameContext& context)
 	}
 }
 
-// --- Batch writes (phase 2 - see UIRenderer's class comment; still not wired into UIElement/UIPanel/UILabel) ---
+// --- Batch writes (see UIRenderer's class comment) ---
 
 Struktur::Renderer::UIBatch* Struktur::Renderer::UIRenderer::ResolveBatch(UIBatchHandle handle, const char* callerName)
 {
@@ -420,11 +325,11 @@ bool Struktur::Renderer::UIRenderer::ValidateSlotCapacity(const UIBatch& batch, 
 	return fits;
 }
 
-void Struktur::Renderer::UIRenderer::WriteRect(UIBatchHandle batchHandle, const UIBatchSlot& slot,
+void Struktur::Renderer::UIRenderer::DrawRect(UIBatchHandle batchHandle, const UIBatchSlot& slot,
                                                const Util::Math::Rect& rect, const Util::Color& color, int32_t zIndex)
 {
-	UIBatch* batch = ResolveBatch(batchHandle, "WriteRect");
-	if (!batch || !ValidateSlotCapacity(*batch, slot, 1, "WriteRect"))
+	UIBatch* batch = ResolveBatch(batchHandle, "DrawRect");
+	if (!batch || !ValidateSlotCapacity(*batch, slot, 1, "DrawRect"))
 	{
 		return;
 	}
@@ -436,12 +341,12 @@ void Struktur::Renderer::UIRenderer::WriteRect(UIBatchHandle batchHandle, const 
 	batch->dirty = true;
 }
 
-void Struktur::Renderer::UIRenderer::WriteRectOutline(UIBatchHandle batchHandle, const UIBatchSlot& slot,
+void Struktur::Renderer::UIRenderer::DrawRectOutline(UIBatchHandle batchHandle, const UIBatchSlot& slot,
                                                       const Util::Math::Rect& rect, float thickness,
                                                       const Util::Color& color, int32_t zIndex)
 {
-	UIBatch* batch = ResolveBatch(batchHandle, "WriteRectOutline");
-	if (!batch || !ValidateSlotCapacity(*batch, slot, 4, "WriteRectOutline"))
+	UIBatch* batch = ResolveBatch(batchHandle, "DrawRectOutline");
+	if (!batch || !ValidateSlotCapacity(*batch, slot, 4, "DrawRectOutline"))
 	{
 		return;
 	}
@@ -467,12 +372,12 @@ void Struktur::Renderer::UIRenderer::WriteRectOutline(UIBatchHandle batchHandle,
 	batch->dirty = true;
 }
 
-void Struktur::Renderer::UIRenderer::WriteTexturedRect(UIBatchHandle batchHandle, const UIBatchSlot& slot,
+void Struktur::Renderer::UIRenderer::DrawTexturedRect(UIBatchHandle batchHandle, const UIBatchSlot& slot,
                                                        const Util::Math::Rect& rect, const TextureHandle& texture,
                                                        const Util::Color& tint, int32_t zIndex)
 {
-	UIBatch* batch = ResolveBatch(batchHandle, "WriteTexturedRect");
-	if (!batch || !ValidateSlotCapacity(*batch, slot, 1, "WriteTexturedRect"))
+	UIBatch* batch = ResolveBatch(batchHandle, "DrawTexturedRect");
+	if (!batch || !ValidateSlotCapacity(*batch, slot, 1, "DrawTexturedRect"))
 	{
 		return;
 	}
@@ -484,13 +389,13 @@ void Struktur::Renderer::UIRenderer::WriteTexturedRect(UIBatchHandle batchHandle
 	batch->dirty = true;
 }
 
-uint32_t Struktur::Renderer::UIRenderer::WriteText(UIBatchHandle batchHandle, const UIBatchSlot& slot,
+uint32_t Struktur::Renderer::UIRenderer::DrawText(UIBatchHandle batchHandle, const UIBatchSlot& slot,
                                                    const Text::Font& font, const std::string& text,
                                                    const glm::vec2& position, float fontSize, const Util::Color& color,
                                                    int32_t zIndex)
 {
-	UIBatch* batch = ResolveBatch(batchHandle, "WriteText");
-	if (!batch || !ValidateSlotCapacity(*batch, slot, 0, "WriteText"))
+	UIBatch* batch = ResolveBatch(batchHandle, "DrawText");
+	if (!batch || !ValidateSlotCapacity(*batch, slot, 0, "DrawText"))
 	{
 		return 0;
 	}
@@ -524,10 +429,10 @@ uint32_t Struktur::Renderer::UIRenderer::WriteText(UIBatchHandle batchHandle, co
 
 		if (codepoint != ' ' && codepoint != '\t')
 		{
-			// See WriteText's header comment for the full contract - the caller must have already sized slot
+			// See DrawText's header comment for the full contract - the caller must have already sized slot
 			// to fit via AllocateOrResizeSlot. Stop rather than write past the end of cpuVertices if it didn't.
 			ASSERT_MSG(quadsWritten < slot.quadCapacity,
-			           "WriteText: slot capacity %u exceeded - caller must AllocateOrResizeSlot before WriteText "
+			           "DrawText: slot capacity %u exceeded - caller must AllocateOrResizeSlot before DrawText "
 			           "when text content grows",
 			           slot.quadCapacity);
 			if (quadsWritten >= slot.quadCapacity)
@@ -572,7 +477,7 @@ void Struktur::Renderer::UIRenderer::ClearSlotFrom(UIBatchHandle batchHandle, co
 	batch->dirty = true;
 }
 
-// --- Batch assignment (phase 3 - see UIRenderer.h's class/method comment; still doesn't touch any Render()) ---
+// --- Batch assignment (see UIRenderer.h's class/method comment) ---
 
 void Struktur::Renderer::UIRenderer::AssignBatches(UI::UIElement* element, UIBatchHandle sharedBatch)
 {

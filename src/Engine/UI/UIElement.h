@@ -77,8 +77,6 @@ public:
 	void OnButtonPressed(GameContext& context, int key);
 	void OnActivate(GameContext& context);
 
-	virtual void RenderFocusIndicator(GameContext& context);
-
 	// How many quads this element's own Render() draws (not counting children) - used by
 	// UIRenderer::AssignBatches to size m_batchSlot. Default of 1 covers the common single-rect case; subclasses
 	// with more (or variable, e.g. text-length-dependent) draw calls override this - see UIPanel/UILabel. Not a
@@ -227,7 +225,7 @@ public:
 		return m_id;
 	}
 
-	// Z-order - only reorders quads sharing a batch (see UIRenderer::WriteRect/quadZIndex); has no effect on
+	// Z-order - only reorders quads sharing a batch (see UIRenderer::DrawRect/quadZIndex); has no effect on
 	// cross-batch order (UIBatch::drawOrder) unless this element is a batch root, in which case the Wren binding
 	// (WrenUI.cpp's setZIndex) must also call UIRenderer::SetBatchDrawOrder - matching the "renderer-side state
 	// needs an explicit follow-up call" contract SetBatchRoot's own comment already documents.

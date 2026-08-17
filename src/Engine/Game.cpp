@@ -296,6 +296,23 @@ void Struktur::SplashScreenLoop(GameContext& context)
 	int width  = gameData.gameWidth;
 	int height = gameData.gameHeight;
 
+	// UIRenderer has no immediate-mode draw path (see its class comment) - this loop runs outside the normal
+	// GameLoop/UIRenderSystem pipeline (SPLASH_SCREEN never reaches systemManager.Update/Render), so it owns a
+	// batch and calls Flush() itself instead, the same way UIManager's focus indicator owns its own batch outside
+	// any one UIElement. Created once and reused every frame rather than every call - text content never
+	// changes, only its color (the fade), which still needs a fresh DrawText each frame regardless.
+	static Renderer::UIBatchHandle splashBatch;
+	static Renderer::UIBatchSlot splashSlot;
+	if (!splashBatch.IsValid())
+	{
+		splashBatch = context.GetUIRenderer().CreateBatch();
+		// splashScreenName.size() (raw byte length) is a safe over-estimate of its codepoint count (DrawText's
+		// own required-capacity contract) - fine here since, unlike UILabel, nothing else shares this slot that
+		// would need an exact fit.
+		splashSlot =
+		    context.GetUIRenderer().AllocateOrResizeSlot(splashBatch, splashSlot, (uint32_t)splashScreenName.size());
+	}
+
 	context.GetGraphicsDevice().BeginFrame();
 	// In EDITOR builds, GameViewportWindow::Initialise already redirected World/Debug/UI views into the
 	// editor's offscreen game-viewport framebuffer before this loop ever runs - drawing there would be
@@ -305,9 +322,10 @@ void Struktur::SplashScreenLoop(GameContext& context)
 	// editor, or web).
 	context.GetGraphicsDevice().ResetWorldRenderTarget();
 	context.GetUIRenderer().SetupView(context);
-	context.GetUIRenderer().DrawText(font->font, splashScreenName,
+	context.GetUIRenderer().DrawText(splashBatch, splashSlot, font->font, splashScreenName,
 	                                 {(float)((width - fontWidth) / 2), (float)((height - fontSize) / 2)},
-	                                 (float)fontSize, Util::Color{255, 255, 255, (unsigned char)textAlpha});
+	                                 (float)fontSize, Util::Color{255, 255, 255, (unsigned char)textAlpha}, 0);
+	context.GetUIRenderer().Flush(context);
 	context.GetGraphicsDevice().EndFrame();
 	// bgfx view state (framebuffer/clear/rect) isn't snapshotted at submit time - it's whatever was last set
 	// before bgfx::frame() runs. Restoring the redirect must happen AFTER EndFrame() (this frame's draws are
@@ -320,6 +338,10 @@ void Struktur::SplashScreenLoop(GameContext& context)
 		// (the old Game()-level ResourcePtr this replaced did the latter).
 		font.Unpin();
 		fontPinned = false;
+
+		context.GetUIRenderer().DestroyBatch(splashBatch);
+		splashBatch = Renderer::UIBatchHandle{};
+		splashSlot  = Renderer::UIBatchSlot{};
 	}
 }
 
@@ -495,17 +517,11 @@ void Struktur::ClearGameSystems(GameContext& context)
 	Dialogue::DialogueManager& dialogueManager = context.GetDialogueManager();
 	dialogueManager.Clear();
 
-	#ifdef EDITOR
-	DEBUG_INFO("[Clean Up] Debug System");
-	System::DebugSystem& debugSystem = context.GetSystemManager().GetSystem<System::DebugSystem>();
-	debugSystem.ClearCachedResources();
-	#endif
-
 	DEBUG_INFO("[Clean Up] Resource Manager");
 	Resource::ResourceManager& resourceManager = context.GetResourceManager();
 
-	// Everything above (UI Manager, Wren VM shutdown's finalizers, DebugSystem's cached font, etc.) should have
-	// already released every ResourcePtr it was holding by this point - if a pool still shows resources loaded
+	// Everything above (UI Manager, Wren VM shutdown's finalizers, etc.) should have already released every
+	// ResourcePtr it was holding by this point - if a pool still shows resources loaded
 	// here, something is leaking a reference instead of letting it go out of scope/be explicitly unloaded. Assert
 	// now, while it's still attributable to a specific pool, rather than letting Clear() below silently force-free
 	// it out from under whatever's still holding it.

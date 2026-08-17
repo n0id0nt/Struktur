@@ -36,7 +36,7 @@ void Struktur::UI::UIPanel::Render(GameContext& context)
 	if (m_visualDirty)
 	{
 		// GetRequiredQuadCount() can change at runtime (border toggled on/off, or via SetBorderWidth) - grow the
-		// slot first if it no longer fits, same AllocateOrResizeSlot-before-write contract WriteText already
+		// slot first if it no longer fits, same AllocateOrResizeSlot-before-write contract DrawText already
 		// documents for UILabel's variable text length.
 		uint32_t requiredQuads = GetRequiredQuadCount();
 		if (m_batchSlot.quadCapacity < requiredQuads)
@@ -45,7 +45,7 @@ void Struktur::UI::UIPanel::Render(GameContext& context)
 		}
 
 		// Background occupies the slot's first quad; the border outline (if drawn) occupies the next 4 - must
-		// match GetRequiredQuadCount()'s own layout (1 + optionally 4) exactly, since every WriteX call below
+		// match GetRequiredQuadCount()'s own layout (1 + optionally 4) exactly, since every DrawX call below
 		// always writes starting at whatever slot it's given, not some running offset. Each write tags its own
 		// quads with its own texture (see UIBatch::quadTextures), so the background's real texture and the
 		// border's white one can safely coexist in the same batch/slot.
@@ -59,12 +59,12 @@ void Struktur::UI::UIPanel::Render(GameContext& context)
 			{
 				texture->LoadToGpu(context);
 			}
-			context.GetUIRenderer().WriteTexturedRect(m_batch, backgroundSlot, m_bounds, texture->GetHandle(),
+			context.GetUIRenderer().DrawTexturedRect(m_batch, backgroundSlot, m_bounds, texture->GetHandle(),
 			                                          Util::ColorWhite, GetZIndex());
 		}
 		else
 		{
-			context.GetUIRenderer().WriteRect(m_batch, backgroundSlot, m_bounds, m_backgroundColor, GetZIndex());
+			context.GetUIRenderer().DrawRect(m_batch, backgroundSlot, m_bounds, m_backgroundColor, GetZIndex());
 		}
 
 		uint32_t quadsUsed = 1;
@@ -73,7 +73,7 @@ void Struktur::UI::UIPanel::Render(GameContext& context)
 			Renderer::UIBatchSlot borderSlot = m_batchSlot;
 			borderSlot.vertexOffset += 4;  // past the background's 1 quad (4 vertices)
 			borderSlot.quadCapacity = 4;
-			context.GetUIRenderer().WriteRectOutline(m_batch, borderSlot, m_bounds, m_borderWidth, m_borderColor,
+			context.GetUIRenderer().DrawRectOutline(m_batch, borderSlot, m_bounds, m_borderWidth, m_borderColor,
 			                                         GetZIndex());
 			quadsUsed += 4;
 		}

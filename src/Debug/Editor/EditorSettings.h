@@ -16,7 +16,6 @@ public:
 	// Debug rendering settings
 	struct DebugRenderSettings
 	{
-		bool showFPS                     = true;
 		float audioVolume                = 1.0f;  // 0 = silent, 1 = unattenuated (see Audio::Mixer::SetMasterVolume)
 		bool showPhysicsShapes           = true;
 		bool showPhysicsBodies           = true;

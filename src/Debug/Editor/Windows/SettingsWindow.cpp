@@ -108,11 +108,6 @@ void SettingsWindow::RenderDebugRenderSettings(GameContext& context)
 
 	ImGui::SeparatorText("In-Game Debug Visualization");
 
-	if (ImGui::Checkbox("Show FPS Counter", &settings.showFPS))
-	{
-		context.GetEditor().GetSettings().NotifySettingChanged("debugRender");
-	}
-
 	ImGui::Spacing();
 	ImGui::SeparatorText("Physics Debug Rendering");
 

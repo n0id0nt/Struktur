@@ -309,12 +309,6 @@ void Struktur::UI::UIElement::OnActivate(GameContext& context)
 	}
 }
 
-void Struktur::UI::UIElement::RenderFocusIndicator(GameContext& context)
-{
-	// Simple focus indicator - can be customized
-	context.GetUIRenderer().DrawRectOutline(m_bounds, 2.0f, Util::ColorBlue);
-}
-
 void Struktur::UI::UIElement::UpdateChildren(GameContext& context)
 {
 	for (auto& child : m_children)
@@ -330,7 +324,7 @@ void Struktur::UI::UIElement::RenderChildren(GameContext& context)
 {
 	// No z-index sort here - children write into stable, pre-allocated batch slots (see AssignBatches), so the
 	// order Render() is called in doesn't control final draw order. Quads sharing a batch draw in z-index order
-	// via UIBatch::quadZIndex/sortedQuadOrder (see UIRenderer::WriteRect/Flush) regardless of call order.
+	// via UIBatch::quadZIndex/sortedQuadOrder (see UIRenderer::DrawRect/Flush) regardless of call order.
 	for (auto& child : m_children)
 	{
 		if (child->IsVisible())

@@ -87,9 +87,6 @@ public:
 
 	std::vector<std::string> GetTextLines(const std::string& text) const;
 	std::vector<std::string> WrapText(const std::string& text, float maxWidth) const;
-	void RenderJustifiedLine(GameContext& context, const std::string& line, glm::vec2 pos, float targetWidth,
-	                         bool isLastLine);
-	void RenderText(GameContext& context, const std::string& text, glm::vec2 startPos, float lineHeight);
 
 	Util::Math::Rect GetFormattedTextBounds() const;
 	glm::vec2 GetFormattedTextSize() const;
@@ -101,20 +98,14 @@ private:
 	// site (wrapping, justification, bounding box) going through one place.
 	static glm::vec2 MeasureText(const Text::Font& font, const std::string& text, float fontSize);
 
-	// Web draws via raylib's DrawTextEx; desktop submits glyph quads through UIRenderer (see FontResource for
-	// why this needs no platform split for measurement, only for the actual draw).
-	void DrawGlyphs(GameContext& context, const std::string& text, glm::vec2 pos) const;
-
-	// Batched counterparts of DrawGlyphs/RenderJustifiedLine/RenderText above (mirroring their structure exactly,
-	// just writing into m_batch instead of submitting immediately) - used by Render() when m_visualDirty. Each
-	// writes into a sub-slot of m_batchSlot offset by quadOffset quads (background/border occupy the slot's
+	// Writes into a sub-slot of m_batchSlot offset by quadOffset quads (background/border occupy the slot's
 	// first quads - see Render() - so text always starts after those) and returns the quad count it actually
-	// wrote, which the caller adds to quadOffset before the next Write* call into the same slot.
-	uint32_t WriteGlyphs(GameContext& context, const std::string& text, glm::vec2 pos, uint32_t quadOffset);
-	uint32_t WriteJustifiedLine(GameContext& context, const std::string& line, glm::vec2 pos, float targetWidth,
-	                            bool isLastLine, uint32_t quadOffset);
-	uint32_t WriteTextLines(GameContext& context, const std::string& text, glm::vec2 startPos, float lineHeight,
-	                        uint32_t quadOffset);
+	// wrote, which the caller adds to quadOffset before the next of these called into the same slot.
+	uint32_t RenderGlyphs(GameContext& context, const std::string& text, glm::vec2 pos, uint32_t quadOffset);
+	uint32_t RenderJustifiedLine(GameContext& context, const std::string& line, glm::vec2 pos, float targetWidth,
+	                             bool isLastLine, uint32_t quadOffset);
+	uint32_t RenderTextLines(GameContext& context, const std::string& text, glm::vec2 startPos, float lineHeight,
+	                         uint32_t quadOffset);
 };
 }  // namespace UI
 }  // namespace Struktur

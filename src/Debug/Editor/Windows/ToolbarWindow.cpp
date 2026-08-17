@@ -119,20 +119,6 @@ void ToolbarWindow::Render(GameContext& context)
 
 	ImGui::SameLine();
 
-	ImGui::PushStyleColor(ImGuiCol_Button,
-	                      debugSettings.showFPS ? ImVec4(0.4f, 0.7f, 0.4f, 1.0f) : ImVec4(0.2f, 0.2f, 0.2f, 1.0f));
-	if (ImGui::Button("FPS"))
-	{
-		debugSettings.showFPS = !debugSettings.showFPS;
-	}
-	ImGui::PopStyleColor();
-	if (ImGui::IsItemHovered())
-	{
-		ImGui::SetTooltip("Toggle FPS counter");
-	}
-
-	ImGui::SameLine();
-
 	ImGui::Text("Audio");
 	ImGui::SameLine();
 	ImGui::SetNextItemWidth(100.0f);
