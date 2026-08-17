@@ -53,7 +53,7 @@
 #endif
 
 #ifdef EDITOR
-	#define SPLASHSCREENFONT "Fonts/medieval_sharp/MedievalSharp-Bold.ttf"
+	#define SPLASHSCREENFONT "Fonts/machine-std/machine-std-regular.ttf"
 	#define SPLASHSCREENTEXT "STRUKTUR"
 #else
 	#define SPLASHSCREENFONT "Fonts/medieval_sharp/MedievalSharp-Bold.ttf"
