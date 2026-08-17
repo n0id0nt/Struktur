@@ -24,6 +24,10 @@ Struktur::Renderer::DebugRenderer::~DebugRenderer()
 	{
 		bgfx::destroy(m_whiteTexture);
 	}
+	if (bgfx::isValid(m_texColorSampler))
+	{
+		bgfx::destroy(m_texColorSampler);
+	}
 }
 
 void Struktur::Renderer::DebugRenderer::SetupView(GameContext& context)

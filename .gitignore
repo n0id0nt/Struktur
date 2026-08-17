@@ -12,6 +12,7 @@ assets/Shaders/compiled/
 
 # ImGui
 imgui.ini
+editor_layout.ini
 
 # Editor save data
 saves/

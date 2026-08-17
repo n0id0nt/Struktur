@@ -61,6 +61,10 @@ class WorldRenderer
 public:
 	WorldRenderer();
 
+	// Explicit rather than in the destructor - must run before GraphicsDevice::Shutdown() (see UIRenderer::
+	// Shutdown's own comment), since bgfx::destroy() is invalid once bgfx itself has shut down.
+	void Shutdown();
+
 	static CullBounds ComputeCullBounds(GameContext& context);
 	static uint64_t PackSortKey(World::RenderLayer layer, float orderInLayer, unsigned int textureId,
 	                            uint16_t programId);
@@ -95,6 +99,10 @@ private:
 	static constexpr size_t kMaxQuadsPerRun = 16384;
 
 	std::vector<DrawItem> m_drawItems;
+	// Lazily created on first Flush() (like the rest of this class, WorldRenderer exists before bgfx does - see
+	// the constructor) rather than in an Initialise() - held as a member instead of Flush()'s old function-local
+	// static purely so Shutdown() above has something to destroy.
+	bgfx::UniformHandle m_texColorSampler = BGFX_INVALID_HANDLE;
 };
 }  // namespace Renderer
 }  // namespace Struktur

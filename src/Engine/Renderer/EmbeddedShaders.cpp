@@ -97,3 +97,33 @@ bgfx::UniformHandle Struktur::Renderer::GetOrCreateUniform(const std::string& na
 	g_uniformCache[name]       = handle;
 	return handle;
 }
+
+void Struktur::Renderer::Shutdown()
+{
+	for (auto& [name, handle] : g_programCache)
+	{
+		if (bgfx::isValid(handle))
+		{
+			bgfx::destroy(handle);
+		}
+	}
+	g_programCache.clear();
+
+	for (auto& [name, handle] : g_shaderCache)
+	{
+		if (bgfx::isValid(handle))
+		{
+			bgfx::destroy(handle);
+		}
+	}
+	g_shaderCache.clear();
+
+	for (auto& [name, handle] : g_uniformCache)
+	{
+		if (bgfx::isValid(handle))
+		{
+			bgfx::destroy(handle);
+		}
+	}
+	g_uniformCache.clear();
+}

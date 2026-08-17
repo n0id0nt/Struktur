@@ -28,6 +28,11 @@ void Struktur::Renderer::UIRenderer::Shutdown()
 		bgfx::destroy(m_whiteTexture);
 		m_whiteTexture = BGFX_INVALID_HANDLE;
 	}
+	if (bgfx::isValid(m_texColorSampler))
+	{
+		bgfx::destroy(m_texColorSampler);
+		m_texColorSampler = BGFX_INVALID_HANDLE;
+	}
 }
 
 void Struktur::Renderer::UIRenderer::SetupView(GameContext& context)

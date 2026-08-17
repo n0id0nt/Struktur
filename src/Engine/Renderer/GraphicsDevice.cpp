@@ -56,6 +56,11 @@ void Struktur::Renderer::GraphicsDevice::Shutdown()
 {
 	if (m_initialised)
 	{
+		// Process-lifetime shader/program/uniform cache (see EmbeddedShaders.h) - has no other owner to call this
+		// from, and must run before bgfx::shutdown() below like everything else here. Fully qualified: an
+		// unqualified call here would resolve to this very function (GraphicsDevice::Shutdown), not the free
+		// Renderer::Shutdown from EmbeddedShaders.h.
+		Struktur::Renderer::Shutdown();
 		bgfx::shutdown();
 		m_initialised = false;
 	}

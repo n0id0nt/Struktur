@@ -18,6 +18,15 @@ Struktur::Renderer::WorldRenderer::WorldRenderer()
 	m_drawItems.reserve(2048);
 }
 
+void Struktur::Renderer::WorldRenderer::Shutdown()
+{
+	if (bgfx::isValid(m_texColorSampler))
+	{
+		bgfx::destroy(m_texColorSampler);
+		m_texColorSampler = BGFX_INVALID_HANDLE;
+	}
+}
+
 Struktur::Renderer::CullBounds Struktur::Renderer::WorldRenderer::ComputeCullBounds(GameContext& context)
 {
 	World::Camera& camera    = context.GetCamera();
@@ -182,8 +191,12 @@ void Struktur::Renderer::WorldRenderer::Flush(GameContext& context)
 	glm::mat4 proj = camera.GetProjectionMatrix(gameData.gameWidth, gameData.gameHeight);
 	bgfx::setViewTransform(GraphicsDevice::WorldViewId, glm::value_ptr(view), glm::value_ptr(proj));
 
-	static const bgfx::VertexLayout quadLayout       = BuildQuadVertexLayout();
-	static const bgfx::UniformHandle texColorSampler = bgfx::createUniform("s_texColor", bgfx::UniformType::Sampler);
+	static const bgfx::VertexLayout quadLayout = BuildQuadVertexLayout();
+	if (!bgfx::isValid(m_texColorSampler))
+	{
+		m_texColorSampler = bgfx::createUniform("s_texColor", bgfx::UniformType::Sampler);
+	}
+	const bgfx::UniformHandle& texColorSampler = m_texColorSampler;
 
 	uint64_t drawState = BGFX_STATE_WRITE_RGB | BGFX_STATE_WRITE_A |
 	                     BGFX_STATE_BLEND_FUNC(BGFX_STATE_BLEND_SRC_ALPHA, BGFX_STATE_BLEND_INV_SRC_ALPHA);

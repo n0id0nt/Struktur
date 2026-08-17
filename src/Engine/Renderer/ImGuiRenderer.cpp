@@ -36,6 +36,11 @@ void Struktur::Renderer::ImGuiRenderer::Shutdown()
 		bgfx::destroy(m_fontTexture);
 		m_fontTexture = BGFX_INVALID_HANDLE;
 	}
+	if (bgfx::isValid(m_texColorSampler))
+	{
+		bgfx::destroy(m_texColorSampler);
+		m_texColorSampler = BGFX_INVALID_HANDLE;
+	}
 }
 
 void Struktur::Renderer::ImGuiRenderer::Render(ImDrawData* drawData)

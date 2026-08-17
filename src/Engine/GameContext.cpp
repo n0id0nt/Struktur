@@ -73,6 +73,7 @@ void GameContext::Shutdown()
 	m_uiRenderer->Shutdown();
 	m_uiRenderer.reset();
 	m_variableSubstitutionSystem.reset();
+	m_worldRenderer->Shutdown();
 	m_worldRenderer.reset();
 	m_wrenScriptComponentRegistry.reset();
 	m_wrenScriptEngine.reset();
