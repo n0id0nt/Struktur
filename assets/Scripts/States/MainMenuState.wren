@@ -38,6 +38,7 @@ class MainMenuState is BaseState {
         titleLabel.setAlignment(TextAlignment.CENTER)
         titleLabel.setBoundingBoxToText()
         titleLabel.setAnchorPoint(Vec2.new(0.5, 0))
+        titleLabel.setZIndex(10)
         _screenPanel.addChild(titleLabel)
 
         var startButton = makeButton("Start Game", 0, font)
@@ -77,6 +78,7 @@ class MainMenuState is BaseState {
         label.setAlignment(TextAlignment.CENTER)
         label.setBoundingBoxToText()
         label.setAnchorPoint(Vec2.new(0.5, 0.5))
+        label.setZIndex(10)
         button.addChild(label)
 
         // Hover/focus highlight - also a handy visual check that batched background-color writes (UIPanel.

@@ -279,7 +279,7 @@ void Struktur::SplashScreenLoop(GameContext& context)
 	// splash duration - without this, GetResource()'s cache would evict/reload the font every single frame, since
 	// `font` above is the only reference to it and it goes out of scope at the end of this function. Pinning lets
 	// this stay a plain per-frame re-fetch with nothing to own long-term.
-	static bool fontPinned = false;
+	bool fontPinned = font.IsPinned();
 	if (!fontPinned)
 	{
 		font.Pin();
@@ -327,18 +327,11 @@ void Struktur::SplashScreenLoop(GameContext& context)
 	                                 (float)fontSize, Util::Color{255, 255, 255, (unsigned char)textAlpha}, 0);
 	context.GetUIRenderer().Flush(context);
 	context.GetGraphicsDevice().EndFrame();
-	// bgfx view state (framebuffer/clear/rect) isn't snapshotted at submit time - it's whatever was last set
-	// before bgfx::frame() runs. Restoring the redirect must happen AFTER EndFrame() (this frame's draws are
-	// already handed off by then) so it takes effect starting with GameLoop's first frame, not this one -
-	// restoring it before EndFrame() would silently redirect this frame's own draws right back offscreen.
+
 	if (gameData.gameState == Core::GameState::GAME)
 	{
-		context.GetGraphicsDevice().RestoreWorldRenderTarget();
-		// Splash is done with the font - unpin now rather than leaving it resident for the rest of the process
-		// (the old Game()-level ResourcePtr this replaced did the latter).
 		font.Unpin();
-		fontPinned = false;
-
+		context.GetGraphicsDevice().RestoreWorldRenderTarget();
 		context.GetUIRenderer().DestroyBatch(splashBatch);
 		splashBatch = Renderer::UIBatchHandle{};
 		splashSlot  = Renderer::UIBatchSlot{};
