@@ -501,6 +501,9 @@ set(SOURCES
     src/Engine/UI/UIElement.h                   src/Engine/UI/UIElement.cpp
     src/Engine/UI/UILabel.h                     src/Engine/UI/UILabel.cpp
     src/Engine/UI/UIPanel.h                     src/Engine/UI/UIPanel.cpp
+    src/Engine/UI/UIColor.h                     src/Engine/UI/UIColor.cpp
+    src/Engine/UI/UITexture.h                   src/Engine/UI/UITexture.cpp
+    src/Engine/UI/UIBorder.h                    src/Engine/UI/UIBorder.cpp
 
     src/Engine/World/Level.h                    src/Engine/World/Level.cpp
     src/Engine/World/TileMap.h                  src/Engine/World/TileMap.cpp

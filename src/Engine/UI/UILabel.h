@@ -80,9 +80,9 @@ public:
 	void Update(GameContext& context) override;
 	void Render(GameContext& context) override;
 
-	// 1 quad for the background + 4 for the border (mirroring Render(), same as UIPanel) plus one quad per
-	// non-space/tab/newline codepoint in m_text - wrapping/justification only change where line breaks land,
-	// not how many glyphs actually get drawn, so counting over the raw (unwrapped) text is a correct total.
+	// One quad per non-space/tab/newline codepoint in m_text - wrapping/justification only change where line
+	// breaks land, not how many glyphs actually get drawn, so counting over the raw (unwrapped) text is a
+	// correct total. Pure text, no background/border quads (see UIPanel/UIColor/UIBorder for those).
 	uint32_t GetRequiredQuadCount() const override;
 
 	std::vector<std::string> GetTextLines(const std::string& text) const;
@@ -98,9 +98,10 @@ private:
 	// site (wrapping, justification, bounding box) going through one place.
 	static glm::vec2 MeasureText(const Text::Font& font, const std::string& text, float fontSize);
 
-	// Writes into a sub-slot of m_batchSlot offset by quadOffset quads (background/border occupy the slot's
-	// first quads - see Render() - so text always starts after those) and returns the quad count it actually
-	// wrote, which the caller adds to quadOffset before the next of these called into the same slot.
+	// Writes into a sub-slot of m_batchSlot offset by quadOffset quads (always 0 from Render() itself - kept as a
+	// parameter since these three call each other recursively while accumulating how many quads they've each
+	// used) and returns the quad count it actually wrote, which the caller adds to quadOffset before the next of
+	// these called into the same slot.
 	uint32_t RenderGlyphs(GameContext& context, const std::string& text, glm::vec2 pos, uint32_t quadOffset);
 	uint32_t RenderJustifiedLine(GameContext& context, const std::string& line, glm::vec2 pos, float targetWidth,
 	                             bool isLastLine, uint32_t quadOffset);

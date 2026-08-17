@@ -7,8 +7,11 @@
 #include "Engine/GameContext.h"
 #include "Engine/Renderer/UIRenderer.h"
 #include "Engine/Scripting/WrenBindingRegistry.h"
+#include "Engine/UI/UIBorder.h"
+#include "Engine/UI/UIColor.h"
 #include "Engine/UI/UILabel.h"
 #include "Engine/UI/UIPanel.h"
+#include "Engine/UI/UITexture.h"
 #include "WrenMath.h"
 #include "WrenResourceManager.h"
 
@@ -309,49 +312,6 @@ void wren_UIElementGetNavigationNeighbor(WrenVM* vm)
 	wrenGetVariable(vm, "ui", "UIElement", 1);  // Get class into slot 1
 	WrenUIElement* neighborElement = (WrenUIElement*)wrenSetSlotNewForeign(vm, 0, 1, sizeof(WrenUIElement));
 	new (neighborElement) WrenUIElement{uiElement->element->GetNavigationNeighbor(dir)};
-}
-
-// UIElement.setBackgroundColor(color)
-void wren_UIElementSetBackgroundColor(WrenVM* vm)
-{
-	WrenUIElement* uiElement = static_cast<WrenUIElement*>(wrenGetSlotForeign(vm, 0));
-	if (!uiElement->element)
-	{
-		DEBUG_ERROR("UIElement.setBackgroundColor: element is Null");
-		return;
-	}
-	WrenVec4* color = static_cast<WrenVec4*>(wrenGetSlotForeign(vm, 1));
-	Struktur::Util::Color rayColor{(unsigned char)color->value.r, (unsigned char)color->value.g,
-	                               (unsigned char)color->value.b, (unsigned char)color->value.a};
-	uiElement->element->SetBackgroundColor(rayColor);
-}
-
-// UIElement.setBorderColor(color)
-void wren_UIElementSetBorderColor(WrenVM* vm)
-{
-	WrenUIElement* uiElement = static_cast<WrenUIElement*>(wrenGetSlotForeign(vm, 0));
-	if (!uiElement->element)
-	{
-		DEBUG_ERROR("UIElement.setBorderColor: element is Null");
-		return;
-	}
-	WrenVec4* color = static_cast<WrenVec4*>(wrenGetSlotForeign(vm, 1));
-	Struktur::Util::Color rayColor{(unsigned char)color->value.r, (unsigned char)color->value.g,
-	                               (unsigned char)color->value.b, (unsigned char)color->value.a};
-	uiElement->element->SetBorderColor(rayColor);
-}
-
-// UIElement.setBorderWidth(width)
-void wren_UIElementSetBorderWidth(WrenVM* vm)
-{
-	WrenUIElement* uiElement = static_cast<WrenUIElement*>(wrenGetSlotForeign(vm, 0));
-	if (!uiElement->element)
-	{
-		DEBUG_ERROR("UIElement.setBorderWidth: element is Null");
-		return;
-	}
-	int width = static_cast<int>(wrenGetSlotDouble(vm, 1));
-	uiElement->element->SetBorderWidth(width);
 }
 
 // UIElement.getParent()
@@ -789,6 +749,227 @@ void wren_UIPanelClearBackgroundTexture(WrenVM* vm)
 	panel->ClearBackgroundTexture();
 }
 
+// UIPanel.setBackgroundColor(color)
+void wren_UIPanelSetBackgroundColor(WrenVM* vm)
+{
+	WrenUIElement* uiElement = static_cast<WrenUIElement*>(wrenGetSlotForeign(vm, 0));
+	if (!uiElement->element)
+	{
+		DEBUG_ERROR("UIPanel.setBackgroundColor: panel is Null");
+		return;
+	}
+	WrenVec4* color = static_cast<WrenVec4*>(wrenGetSlotForeign(vm, 1));
+	Struktur::Util::Color rayColor{(unsigned char)color->value.r, (unsigned char)color->value.g,
+	                               (unsigned char)color->value.b, (unsigned char)color->value.a};
+	Struktur::UI::UIPanel* panel = dynamic_cast<Struktur::UI::UIPanel*>(uiElement->element);
+	panel->SetBackgroundColor(rayColor);
+}
+
+// UIPanel.setBorderColor(color)
+void wren_UIPanelSetBorderColor(WrenVM* vm)
+{
+	WrenUIElement* uiElement = static_cast<WrenUIElement*>(wrenGetSlotForeign(vm, 0));
+	if (!uiElement->element)
+	{
+		DEBUG_ERROR("UIPanel.setBorderColor: panel is Null");
+		return;
+	}
+	WrenVec4* color = static_cast<WrenVec4*>(wrenGetSlotForeign(vm, 1));
+	Struktur::Util::Color rayColor{(unsigned char)color->value.r, (unsigned char)color->value.g,
+	                               (unsigned char)color->value.b, (unsigned char)color->value.a};
+	Struktur::UI::UIPanel* panel = dynamic_cast<Struktur::UI::UIPanel*>(uiElement->element);
+	panel->SetBorderColor(rayColor);
+}
+
+// UIPanel.setBorderWidth(width)
+void wren_UIPanelSetBorderWidth(WrenVM* vm)
+{
+	WrenUIElement* uiElement = static_cast<WrenUIElement*>(wrenGetSlotForeign(vm, 0));
+	if (!uiElement->element)
+	{
+		DEBUG_ERROR("UIPanel.setBorderWidth: panel is Null");
+		return;
+	}
+	float width                   = (float)wrenGetSlotDouble(vm, 1);
+	Struktur::UI::UIPanel* panel = dynamic_cast<Struktur::UI::UIPanel*>(uiElement->element);
+	panel->SetBorderWidth(width);
+}
+
+// ============================================================================
+// UICOLOR BINDINGS
+// ============================================================================
+
+void wren_UIColorAllocate(WrenVM* vm)
+{
+	wrenSetSlotNewForeign(vm, 0, 0, sizeof(WrenUIElement));
+}
+
+void wren_UIColorFinalize(void* data)
+{
+	WrenUIElement* uiElement = (WrenUIElement*)data;
+	uiElement->~WrenUIElement();
+}
+
+// UIColor.new(_,_,_,_)
+void wren_UIColorNew(WrenVM* vm)
+{
+	WrenUIElement* uiElement = static_cast<WrenUIElement*>(wrenGetSlotForeign(vm, 0));
+
+	WrenVec2* positionPixel      = static_cast<WrenVec2*>(wrenGetSlotForeign(vm, 1));
+	WrenVec2* positionPercentage = static_cast<WrenVec2*>(wrenGetSlotForeign(vm, 2));
+	WrenVec2* sizePixel          = static_cast<WrenVec2*>(wrenGetSlotForeign(vm, 3));
+	WrenVec2* sizePercentage     = static_cast<WrenVec2*>(wrenGetSlotForeign(vm, 4));
+	auto* color = new Struktur::UI::UIColor(positionPixel->value, positionPercentage->value, sizePixel->value,
+	                                        sizePercentage->value);
+	new (uiElement) WrenUIElement{color};
+#ifdef DEBUG
+	char stackBuffer[4096];
+	uiElement->callstack = wrenTraceGetCallStackString(vm, stackBuffer, sizeof(stackBuffer));
+#endif
+}
+
+// UIColor.setColor(color)
+void wren_UIColorSetColor(WrenVM* vm)
+{
+	WrenUIElement* uiElement = static_cast<WrenUIElement*>(wrenGetSlotForeign(vm, 0));
+	if (!uiElement->element)
+	{
+		DEBUG_ERROR("UIColor.setColor: element is Null");
+		return;
+	}
+	WrenVec4* color = static_cast<WrenVec4*>(wrenGetSlotForeign(vm, 1));
+	Struktur::Util::Color rayColor{(unsigned char)color->value.r, (unsigned char)color->value.g,
+	                               (unsigned char)color->value.b, (unsigned char)color->value.a};
+	Struktur::UI::UIColor* uiColor = dynamic_cast<Struktur::UI::UIColor*>(uiElement->element);
+	uiColor->SetColor(rayColor);
+}
+
+// ============================================================================
+// UITEXTURE BINDINGS
+// ============================================================================
+
+void wren_UITextureAllocate(WrenVM* vm)
+{
+	wrenSetSlotNewForeign(vm, 0, 0, sizeof(WrenUIElement));
+}
+
+void wren_UITextureFinalize(void* data)
+{
+	WrenUIElement* uiElement = (WrenUIElement*)data;
+	uiElement->~WrenUIElement();
+}
+
+// UITexture.new(_,_,_,_)
+void wren_UITextureNew(WrenVM* vm)
+{
+	WrenUIElement* uiElement = static_cast<WrenUIElement*>(wrenGetSlotForeign(vm, 0));
+
+	WrenVec2* positionPixel      = static_cast<WrenVec2*>(wrenGetSlotForeign(vm, 1));
+	WrenVec2* positionPercentage = static_cast<WrenVec2*>(wrenGetSlotForeign(vm, 2));
+	WrenVec2* sizePixel          = static_cast<WrenVec2*>(wrenGetSlotForeign(vm, 3));
+	WrenVec2* sizePercentage     = static_cast<WrenVec2*>(wrenGetSlotForeign(vm, 4));
+	auto* texture = new Struktur::UI::UITexture(positionPixel->value, positionPercentage->value, sizePixel->value,
+	                                            sizePercentage->value);
+	new (uiElement) WrenUIElement{texture};
+#ifdef DEBUG
+	char stackBuffer[4096];
+	uiElement->callstack = wrenTraceGetCallStackString(vm, stackBuffer, sizeof(stackBuffer));
+#endif
+}
+
+// UITexture.setTexture(texture)
+void wren_UITextureSetTexture(WrenVM* vm)
+{
+	WrenUIElement* uiElement = static_cast<WrenUIElement*>(wrenGetSlotForeign(vm, 0));
+	if (!uiElement->element)
+	{
+		DEBUG_ERROR("UITexture.setTexture: element is Null");
+		return;
+	}
+	WrenTextureHandle* texture         = (WrenTextureHandle*)wrenGetSlotForeign(vm, 1);
+	Struktur::UI::UITexture* uiTexture = dynamic_cast<Struktur::UI::UITexture*>(uiElement->element);
+	uiTexture->SetTexture(texture->resource);
+}
+
+// UITexture.setTint(color)
+void wren_UITextureSetTint(WrenVM* vm)
+{
+	WrenUIElement* uiElement = static_cast<WrenUIElement*>(wrenGetSlotForeign(vm, 0));
+	if (!uiElement->element)
+	{
+		DEBUG_ERROR("UITexture.setTint: element is Null");
+		return;
+	}
+	WrenVec4* color = static_cast<WrenVec4*>(wrenGetSlotForeign(vm, 1));
+	Struktur::Util::Color rayColor{(unsigned char)color->value.r, (unsigned char)color->value.g,
+	                               (unsigned char)color->value.b, (unsigned char)color->value.a};
+	Struktur::UI::UITexture* uiTexture = dynamic_cast<Struktur::UI::UITexture*>(uiElement->element);
+	uiTexture->SetTint(rayColor);
+}
+
+// ============================================================================
+// UIBORDER BINDINGS
+// ============================================================================
+
+void wren_UIBorderAllocate(WrenVM* vm)
+{
+	wrenSetSlotNewForeign(vm, 0, 0, sizeof(WrenUIElement));
+}
+
+void wren_UIBorderFinalize(void* data)
+{
+	WrenUIElement* uiElement = (WrenUIElement*)data;
+	uiElement->~WrenUIElement();
+}
+
+// UIBorder.new(_,_,_,_)
+void wren_UIBorderNew(WrenVM* vm)
+{
+	WrenUIElement* uiElement = static_cast<WrenUIElement*>(wrenGetSlotForeign(vm, 0));
+
+	WrenVec2* positionPixel      = static_cast<WrenVec2*>(wrenGetSlotForeign(vm, 1));
+	WrenVec2* positionPercentage = static_cast<WrenVec2*>(wrenGetSlotForeign(vm, 2));
+	WrenVec2* sizePixel          = static_cast<WrenVec2*>(wrenGetSlotForeign(vm, 3));
+	WrenVec2* sizePercentage     = static_cast<WrenVec2*>(wrenGetSlotForeign(vm, 4));
+	auto* border = new Struktur::UI::UIBorder(positionPixel->value, positionPercentage->value, sizePixel->value,
+	                                          sizePercentage->value);
+	new (uiElement) WrenUIElement{border};
+#ifdef DEBUG
+	char stackBuffer[4096];
+	uiElement->callstack = wrenTraceGetCallStackString(vm, stackBuffer, sizeof(stackBuffer));
+#endif
+}
+
+// UIBorder.setColor(color)
+void wren_UIBorderSetColor(WrenVM* vm)
+{
+	WrenUIElement* uiElement = static_cast<WrenUIElement*>(wrenGetSlotForeign(vm, 0));
+	if (!uiElement->element)
+	{
+		DEBUG_ERROR("UIBorder.setColor: element is Null");
+		return;
+	}
+	WrenVec4* color = static_cast<WrenVec4*>(wrenGetSlotForeign(vm, 1));
+	Struktur::Util::Color rayColor{(unsigned char)color->value.r, (unsigned char)color->value.g,
+	                               (unsigned char)color->value.b, (unsigned char)color->value.a};
+	Struktur::UI::UIBorder* uiBorder = dynamic_cast<Struktur::UI::UIBorder*>(uiElement->element);
+	uiBorder->SetColor(rayColor);
+}
+
+// UIBorder.setWidth(width)
+void wren_UIBorderSetWidth(WrenVM* vm)
+{
+	WrenUIElement* uiElement = static_cast<WrenUIElement*>(wrenGetSlotForeign(vm, 0));
+	if (!uiElement->element)
+	{
+		DEBUG_ERROR("UIBorder.setWidth: element is Null");
+		return;
+	}
+	float width                     = (float)wrenGetSlotDouble(vm, 1);
+	Struktur::UI::UIBorder* uiBorder = dynamic_cast<Struktur::UI::UIBorder*>(uiElement->element);
+	uiBorder->SetWidth(width);
+}
+
 WREN_BINDING_MODULE(UI)
 {
 	// NAVIGATION DIRECTION BINDINGS
@@ -860,12 +1041,6 @@ WREN_BINDING_MODULE(UI)
 	                  "adds a UI Element as a navigation neighbor");
 	WREN_CLASS_METHOD(registry, "ui", "UIElement", "getNavigationNeighbor(_)", wren_UIElementGetNavigationNeighbor,
 	                  "Gets a UI Element navigation neighbor from a direction");
-	WREN_CLASS_METHOD(registry, "ui", "UIElement", "setBackgroundColor(_)", wren_UIElementSetBackgroundColor,
-	                  "Sets the UI Elements background color");
-	WREN_CLASS_METHOD(registry, "ui", "UIElement", "setBorderColor(_)", wren_UIElementSetBorderColor,
-	                  "Sets the UI Elements border color");
-	WREN_CLASS_METHOD(registry, "ui", "UIElement", "setBorderWidth(_)", wren_UIElementSetBorderWidth,
-	                  "Sets the UI Elements border width");
 	WREN_CLASS_METHOD(registry, "ui", "UIElement", "getParent()", wren_UIElementGetParent,
 	                  "Gets the UI Elements parent");
 	WREN_CLASS_METHOD(registry, "ui", "UIElement", "getChildren()", wren_UIElementGetChildren,
@@ -931,4 +1106,42 @@ WREN_BINDING_MODULE(UI)
 	                  "Sets the UI Panels background texture");
 	WREN_CLASS_METHOD(registry, "ui", "UIPanel", "ClearBackgroundTexture()", wren_UIPanelClearBackgroundTexture,
 	                  "Clears the UI Panels background texture");
+	WREN_CLASS_METHOD(registry, "ui", "UIPanel", "setBackgroundColor(_)", wren_UIPanelSetBackgroundColor,
+	                  "Sets the UI Panels background color");
+	WREN_CLASS_METHOD(registry, "ui", "UIPanel", "setBorderColor(_)", wren_UIPanelSetBorderColor,
+	                  "Sets the UI Panels border color");
+	WREN_CLASS_METHOD(registry, "ui", "UIPanel", "setBorderWidth(_)", wren_UIPanelSetBorderWidth,
+	                  "Sets the UI Panels border width");
+
+	// Register UIColor foreign class - minimal solid-color rect (see UIColor.h), for when you only want a color
+	// fill without UIPanel's bundled texture/border support.
+	WREN_FOREIGN_CLASS(registry, "ui", "UIColor", wren_UIColorAllocate, wren_UIColorFinalize,
+	                   "UI minimal solid-color rect component");
+	WREN_CLASS_INHERITANCE(registry, "ui", "UIColor", "UIElement");
+	WREN_CONSTRUCTOR(registry, "ui", "UIColor", "new(_,_,_,_)", wren_UIColorNew,
+	                 "Create UIColor with absolutePosition, relativePosition, absoluteSize, relativeSize components");
+	WREN_CLASS_METHOD(registry, "ui", "UIColor", "setColor(_)", wren_UIColorSetColor, "Sets the UIColor's color");
+
+	// Register UITexture foreign class - minimal textured rect (see UITexture.h), for when you only want a
+	// texture without UIPanel's bundled solid-color/border support.
+	WREN_FOREIGN_CLASS(registry, "ui", "UITexture", wren_UITextureAllocate, wren_UITextureFinalize,
+	                   "UI minimal textured rect component");
+	WREN_CLASS_INHERITANCE(registry, "ui", "UITexture", "UIElement");
+	WREN_CONSTRUCTOR(
+	    registry, "ui", "UITexture", "new(_,_,_,_)", wren_UITextureNew,
+	    "Create UITexture with absolutePosition, relativePosition, absoluteSize, relativeSize components");
+	WREN_CLASS_METHOD(registry, "ui", "UITexture", "setTexture(_)", wren_UITextureSetTexture,
+	                  "Sets the UITexture's texture");
+	WREN_CLASS_METHOD(registry, "ui", "UITexture", "setTint(_)", wren_UITextureSetTint,
+	                  "Sets the UITexture's tint color");
+
+	// Register UIBorder foreign class - minimal border outline (see UIBorder.h), for when you only want a border
+	// without UIPanel's bundled solid-color/texture support.
+	WREN_FOREIGN_CLASS(registry, "ui", "UIBorder", wren_UIBorderAllocate, wren_UIBorderFinalize,
+	                   "UI minimal border outline component");
+	WREN_CLASS_INHERITANCE(registry, "ui", "UIBorder", "UIElement");
+	WREN_CONSTRUCTOR(registry, "ui", "UIBorder", "new(_,_,_,_)", wren_UIBorderNew,
+	                 "Create UIBorder with absolutePosition, relativePosition, absoluteSize, relativeSize components");
+	WREN_CLASS_METHOD(registry, "ui", "UIBorder", "setColor(_)", wren_UIBorderSetColor, "Sets the UIBorder's color");
+	WREN_CLASS_METHOD(registry, "ui", "UIBorder", "setWidth(_)", wren_UIBorderSetWidth, "Sets the UIBorder's width");
 }

@@ -19,9 +19,7 @@ Struktur::UI::UILabel::UILabel(GameContext& context, const glm::vec2& absolutePo
 	// SetSize({textSize.x + 10, textSize.y + 5}, {0, 0}); // Add some padding
 
 	// Labels are typically not focusable
-	m_focusable       = false;
-	m_backgroundColor = Util::ColorBlank;  // Transparent by default
-	m_borderWidth     = 0.0f;
+	m_focusable = false;
 }
 
 void Struktur::UI::UILabel::SetText(const std::string& newText)
@@ -48,45 +46,24 @@ void Struktur::UI::UILabel::Render(GameContext& context)
 {
 	if (m_visualDirty)
 	{
-		// GetRequiredQuadCount() can change at runtime (text edited, border/background toggled) - grow the slot
-		// first if it no longer fits, per DrawText's own AllocateOrResizeSlot-before-write contract.
+		// GetRequiredQuadCount() can change at runtime (text edited) - grow the slot first if it no longer fits,
+		// per DrawText's own AllocateOrResizeSlot-before-write contract. Pure text now (no background/border -
+		// wrap in a UIPanel, or add a UIColor/UIBorder sibling, if you need either), so text always starts at
+		// quad 0, no offset bookkeeping needed.
 		uint32_t requiredQuads = GetRequiredQuadCount();
 		if (m_batchSlot.quadCapacity < requiredQuads)
 		{
 			m_batchSlot = context.GetUIRenderer().AllocateOrResizeSlot(m_batch, m_batchSlot, requiredQuads);
 		}
 
-		// Background/border occupy the slot's first quads (1 + optionally 4, matching GetRequiredQuadCount()'s
-		// own layout exactly), text fills the rest - quadOffset tracks where the next write should start so
-		// none of these stomp on each other. Each write tags its own quads with its own texture (see
-		// UIBatch::quadTextures), so the background/border's white and the text's font atlas safely coexist.
-		uint32_t quadOffset = 0;
-
-		if (m_backgroundColor.a > 0)
-		{
-			Renderer::UIBatchSlot backgroundSlot = m_batchSlot;
-			backgroundSlot.quadCapacity          = 1;
-			context.GetUIRenderer().DrawRect(m_batch, backgroundSlot, m_bounds, m_backgroundColor, GetZIndex());
-			quadOffset += 1;
-		}
-		if (m_borderWidth > 0)
-		{
-			Renderer::UIBatchSlot borderSlot = m_batchSlot;
-			borderSlot.vertexOffset += quadOffset * 4;
-			borderSlot.quadCapacity = 4;
-			context.GetUIRenderer().DrawRectOutline(m_batch, borderSlot, m_bounds, m_borderWidth, m_borderColor,
-			                                         GetZIndex());
-			quadOffset += 4;
-		}
-
 		float lineHeight       = GetLineHeight();
 		glm::vec2 startPos     = {m_bounds.x + 5, m_bounds.y + 2.5f};
-		uint32_t textQuadsUsed = RenderTextLines(context, m_text, startPos, lineHeight, quadOffset);
+		uint32_t textQuadsUsed = RenderTextLines(context, m_text, startPos, lineHeight, 0);
 
 		// Text is variable-length, so a shorter string than last time can leave real, already-written glyph
 		// quads sitting unused past what was just written - Flush() draws a batch's whole allocated region
 		// regardless, so without this those stale glyphs would keep rendering as leftover ghost text.
-		context.GetUIRenderer().ClearSlotFrom(m_batch, m_batchSlot, quadOffset + textQuadsUsed);
+		context.GetUIRenderer().ClearSlotFrom(m_batch, m_batchSlot, textQuadsUsed);
 
 		m_visualDirty = false;
 	}
@@ -96,7 +73,7 @@ void Struktur::UI::UILabel::Render(GameContext& context)
 
 uint32_t Struktur::UI::UILabel::GetRequiredQuadCount() const
 {
-	uint32_t quads = (m_backgroundColor.a > 0 ? 1 : 0) + (m_borderWidth > 0 ? 4 : 0);
+	uint32_t quads = 0;
 
 	// One quad per non-space/tab/newline codepoint - matches UIRenderer::DrawText's own space/tab skip, plus
 	// '\n' since GetTextLines() strips newlines out before any per-character drawing ever sees them.

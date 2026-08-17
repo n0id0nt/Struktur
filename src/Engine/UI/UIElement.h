@@ -142,36 +142,6 @@ public:
 	void SetNavigationNeighbor(NavigationDirection dir, UIElement* neighbor);
 	UIElement* GetNavigationNeighbor(NavigationDirection dir) const;
 
-	// Styling
-	void SetBackgroundColor(Util::Color color)
-	{
-		m_backgroundColor = color;
-		m_visualDirty     = true;
-	}
-	void SetBorderColor(Util::Color color)
-	{
-		m_borderColor = color;
-		m_visualDirty = true;
-	}
-	void SetBorderWidth(float width)
-	{
-		m_borderWidth = width;
-		m_visualDirty = true;
-	}
-
-	Util::Color GetBackgroundColor() const
-	{
-		return m_backgroundColor;
-	}
-	Util::Color GetBorderColor() const
-	{
-		return m_borderColor;
-	}
-	float GetBorderWidth() const
-	{
-		return m_borderWidth;
-	}
-
 	// Hierarchy
 	UIElement* GetParent() const
 	{
@@ -264,9 +234,6 @@ protected:
 	glm::vec2 m_absoluteSize;
 	glm::vec2 m_relativeSize;
 	glm::vec2 m_anchorPoint;
-	Util::Color m_backgroundColor;
-	Util::Color m_borderColor;
-	float m_borderWidth;
 	bool m_visible;
 	bool m_enabled;
 	bool m_focusable;
@@ -283,8 +250,9 @@ protected:
 	Renderer::UIBatchHandle m_ownBatch;  // only valid/meaningful if m_isBatchRoot
 	Renderer::UIBatchSlot m_batchSlot;
 	bool m_isBatchRoot = false;
-	// Set whenever this element's own drawable content changes (position/size/color/text/z-index/...) - read by
-	// UIPanel/UILabel's Render() to decide when a WriteX re-write, as opposed to just re-Flush, is needed.
+	// Set whenever this element's own drawable content changes (position/size/text/z-index/...; color/border on
+	// whichever derived class owns those - see UIPanel/UIColor/UITexture/UIBorder) - read by each derived
+	// class's own Render() to decide when a DrawX re-write, as opposed to just re-Flush, is needed.
 	// Defaults true so a freshly constructed element's first real write isn't skipped as "unchanged".
 	bool m_visualDirty = true;
 

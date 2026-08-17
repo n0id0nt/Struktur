@@ -32,7 +32,12 @@
 #include "Engine/GameContext.h"
 #include "Engine/Physics/PhysicsWorld.h"
 #include "Engine/Scripting/WrenScriptComponentRegistry.h"
+#include "Engine/UI/UIBorder.h"
+#include "Engine/UI/UIColor.h"
 #include "Engine/UI/UIElement.h"
+#include "Engine/UI/UILabel.h"
+#include "Engine/UI/UIPanel.h"
+#include "Engine/UI/UITexture.h"
 #include "Engine/World/RenderLayer.h"
 
 namespace Struktur::Debug
@@ -437,33 +442,71 @@ void InspectorWindow::RenderUIElementProperties(UI::UIElement* element)
 		ImGui::PopID();
 	}
 
-	// Appearance
-	if (ImGui::CollapsingHeader("Appearance"))
+	// Appearance - background/border live on whichever concrete type actually has them (UIPanel bundles all
+	// three; UIColor/UITexture/UIBorder each have just their own one - see UIElement's class comment), not the
+	// shared UIElement base, so which fields (if any) show up here depends on element's real type.
+	if (auto* panel = dynamic_cast<UI::UIPanel*>(element))
 	{
-		ImGui::PushID("Appearance");
-
-		// Background color
-		Util::Color bgColor = element->GetBackgroundColor();
-		if (RenderColor("Background Color", bgColor))
+		if (ImGui::CollapsingHeader("Appearance"))
 		{
-			element->SetBackgroundColor(bgColor);
-		}
+			ImGui::PushID("Appearance");
 
-		// Border color
-		Util::Color borderColor = element->GetBorderColor();
-		if (RenderColor("Border Color", borderColor))
+			Util::Color bgColor = panel->GetBackgroundColor();
+			if (RenderColor("Background Color", bgColor))
+			{
+				panel->SetBackgroundColor(bgColor);
+			}
+
+			Util::Color borderColor = panel->GetBorderColor();
+			if (RenderColor("Border Color", borderColor))
+			{
+				panel->SetBorderColor(borderColor);
+			}
+
+			float borderWidth = panel->GetBorderWidth();
+			if (ImGui::DragFloat("Border Width", &borderWidth, 0.1f, 0.0f, 20.0f))
+			{
+				panel->SetBorderWidth(borderWidth);
+			}
+
+			ImGui::PopID();
+		}
+	}
+	else if (auto* color = dynamic_cast<UI::UIColor*>(element))
+	{
+		if (ImGui::CollapsingHeader("Appearance"))
 		{
-			element->SetBorderColor(borderColor);
-		}
+			ImGui::PushID("Appearance");
 
-		// Border width
-		float borderWidth = element->GetBorderWidth();
-		if (ImGui::DragFloat("Border Width", &borderWidth, 0.1f, 0.0f, 20.0f))
+			Util::Color rectColor = color->GetColor();
+			if (RenderColor("Color", rectColor))
+			{
+				color->SetColor(rectColor);
+			}
+
+			ImGui::PopID();
+		}
+	}
+	else if (auto* border = dynamic_cast<UI::UIBorder*>(element))
+	{
+		if (ImGui::CollapsingHeader("Appearance"))
 		{
-			element->SetBorderWidth(borderWidth);
-		}
+			ImGui::PushID("Appearance");
 
-		ImGui::PopID();
+			Util::Color borderColor = border->GetColor();
+			if (RenderColor("Color", borderColor))
+			{
+				border->SetColor(borderColor);
+			}
+
+			float borderWidth = border->GetWidth();
+			if (ImGui::DragFloat("Width", &borderWidth, 0.1f, 0.0f, 20.0f))
+			{
+				border->SetWidth(borderWidth);
+			}
+
+			ImGui::PopID();
+		}
 	}
 
 	// Layout

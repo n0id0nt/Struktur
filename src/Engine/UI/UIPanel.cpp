@@ -8,8 +8,7 @@ Struktur::UI::UIPanel::UIPanel(const glm::vec2& absolutePosition, const glm::vec
     : UIElement(absolutePosition, relativePosition, absoluteSize, relativeSize),
       m_hasBackgroundTexture(false)
 {
-	m_backgroundColor = Util::ColorLightGray;
-	m_focusable       = false;  // Panels typically don't receive focus
+	m_focusable = false;  // Panels typically don't receive focus
 }
 
 void Struktur::UI::UIPanel::SetBackgroundTexture(const Resource::ResourcePtr<Resource::TextureResource>& texture)
