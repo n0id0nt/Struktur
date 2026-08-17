@@ -1,8 +1,8 @@
 #pragma once
 
-#include <cstdint>
-
 #include <bgfx/bgfx.h>
+
+#include <cstdint>
 
 namespace Struktur
 {
@@ -12,7 +12,7 @@ namespace Renderer
 // singleton, owned by GameContext via unique_ptr and reached through it like every other subsystem.
 class GraphicsDevice
 {
-   public:
+public:
 	// The world view all sprites/tiles render into.
 	static constexpr bgfx::ViewId WorldViewId = 0;
 	// Physics shapes/gizmos/grid/level bounds (DebugSystem) - composited on top of WorldViewId's contents in the
@@ -71,7 +71,7 @@ class GraphicsDevice
 	// this instead of relying on an implicit default the way raylib's rlgl provided one.
 	bgfx::ProgramHandle GetDefaultSpriteProgram() const;
 
-   private:
+private:
 	int m_width  = 0;
 	int m_height = 0;
 	// Cached for RestoreWorldRenderTarget - ResetWorldRenderTarget intentionally leaves these untouched.

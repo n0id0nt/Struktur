@@ -7,7 +7,7 @@ namespace Struktur::Debug
 {
 class TexturePreviewRenderer : public IPreviewRenderer
 {
-   public:
+public:
 	TexturePreviewRenderer(const Resource::ResourcePtr<Resource::TextureResource>& texture, const std::string& name)
 	    : m_texture(texture),
 	      m_name(name)
@@ -20,7 +20,7 @@ class TexturePreviewRenderer : public IPreviewRenderer
 		return m_name;
 	}
 
-   private:
+private:
 	Resource::ResourcePtr<Resource::TextureResource> m_texture;
 	std::string m_name;
 };

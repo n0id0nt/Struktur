@@ -24,9 +24,9 @@ void Struktur::System::GameObjectManager::CreateObjectCallBack(GameContext& cont
 	registry.on_construct<Component::WrenScript>().connect<&GameObjectManager::OnScriptConstruct>(*this);
 	registry.on_destroy<Component::WrenScript>().connect<&GameObjectManager::OnScriptDestory>(*this);
 
-    // In GameObjectManager::Init or wherever you set up your registry signals
-    registry.on_construct<Component::Active>().connect<&GameObjectManager::OnActiveStateChanged>(*this);
-    registry.on_update<Component::Active>().connect<&GameObjectManager::OnActiveStateChanged>(*this);
+	// In GameObjectManager::Init or wherever you set up your registry signals
+	registry.on_construct<Component::Active>().connect<&GameObjectManager::OnActiveStateChanged>(*this);
+	registry.on_update<Component::Active>().connect<&GameObjectManager::OnActiveStateChanged>(*this);
 }
 
 void Struktur::System::GameObjectManager::Shutdown(GameContext& context)
@@ -37,8 +37,8 @@ void Struktur::System::GameObjectManager::Shutdown(GameContext& context)
 	registry.on_destroy<Component::PhysicsBody>().disconnect<&GameObjectManager::OnPhysicsBodyDestory>(*this);
 	registry.on_construct<Component::WrenScript>().disconnect<&GameObjectManager::OnScriptConstruct>(*this);
 	registry.on_destroy<Component::WrenScript>().disconnect<&GameObjectManager::OnScriptDestory>(*this);
-    registry.on_construct<Component::Active>().disconnect<&GameObjectManager::OnActiveStateChanged>(*this);
-    registry.on_update<Component::Active>().disconnect<&GameObjectManager::OnActiveStateChanged>(*this);
+	registry.on_construct<Component::Active>().disconnect<&GameObjectManager::OnActiveStateChanged>(*this);
+	registry.on_update<Component::Active>().disconnect<&GameObjectManager::OnActiveStateChanged>(*this);
 }
 
 entt::entity Struktur::System::GameObjectManager::CreateGameObject(GameContext& context, const std::string& identifier,

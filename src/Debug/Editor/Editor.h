@@ -20,7 +20,7 @@ class GameViewportWindow;
 
 class Editor
 {
-   public:
+public:
 	Editor();
 	~Editor() = default;
 
@@ -70,7 +70,7 @@ class Editor
 		return m_settings;
 	}
 
-   private:
+private:
 	// Render the complete editor layout
 	void RenderEditorLayout(GameContext& context);
 

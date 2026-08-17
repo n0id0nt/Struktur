@@ -25,7 +25,7 @@ namespace Struktur::Dialogue
 // Manages dialogue flow, node processing, and condition/command execution
 class DialogueManager
 {
-   public:
+public:
 	DialogueManager();
 	~DialogueManager();
 
@@ -47,7 +47,7 @@ class DialogueManager
 	const DialogueNode* GetNode(const std::string& nodeId) const;
 	size_t GetNodeCount() const;
 
-   private:
+private:
 	// Internal processing
 	DialogueResult ProcessNode(GameContext& context, const std::string& nodeId);
 	// TODO move this to the node

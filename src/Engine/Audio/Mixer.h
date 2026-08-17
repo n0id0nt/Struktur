@@ -11,7 +11,7 @@ namespace Audio
 // Owns the SDL3_mixer mixer device; replaces raylib's raudio (InitAudioDevice/CloseAudioDevice).
 class Mixer
 {
-   public:
+public:
 	Mixer();
 	~Mixer();
 
@@ -24,7 +24,7 @@ class Mixer
 	void SetMasterVolume(float volume) const;
 	float GetMasterVolume() const;
 
-   private:
+private:
 	// Lets unique_ptr manage the opaque MIX_Mixer without needing SDL_mixer.h in this header.
 	struct MixerDeleter
 	{

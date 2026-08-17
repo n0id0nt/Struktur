@@ -16,10 +16,10 @@ namespace Resource
 {
 class SoundPool : public ResourcePool<SoundResource>
 {
-   protected:
+protected:
 	SoundResource* LoadResource(GameContext& context, const std::string& filePath) override;
 
-   public:
+public:
 	bool EnsureResourceReady(GameContext& context, ResourceHandle handle) override;
 };
 }  // namespace Resource

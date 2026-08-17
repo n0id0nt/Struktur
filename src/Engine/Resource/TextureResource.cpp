@@ -21,7 +21,7 @@ Struktur::Resource::TextureResource::TextureResource(TextureResource&& other) no
       m_height(other.m_height),
       texture(other.texture)
 {
-	other.texture = BGFX_INVALID_HANDLE;
+	other.texture  = BGFX_INVALID_HANDLE;
 	other.m_width  = 0;
 	other.m_height = 0;
 }
@@ -33,10 +33,10 @@ Struktur::Resource::TextureResource& Struktur::Resource::TextureResource::operat
 		UnloadFromGpu();
 		UnloadFromDisk();
 		GpuResource::operator=(std::move(other));
-		m_pixels = std::move(other.m_pixels);
-		m_width  = other.m_width;
-		m_height = other.m_height;
-		texture  = other.texture;
+		m_pixels       = std::move(other.m_pixels);
+		m_width        = other.m_width;
+		m_height       = other.m_height;
+		texture        = other.texture;
 		other.texture  = BGFX_INVALID_HANDLE;
 		other.m_width  = 0;
 		other.m_height = 0;
@@ -100,7 +100,7 @@ bool Struktur::Resource::TextureResource::LoadToGpu(GameContext& context)
 	// Point (nearest-neighbor) sampling instead of bgfx's default bilinear - keeps pixel art crisp instead of
 	// blurring it when sprites/tiles are scaled or land on non-integer pixel boundaries.
 	texture = bgfx::createTexture2D((uint16_t)m_width, (uint16_t)m_height, false, 1, bgfx::TextureFormat::RGBA8,
-	                                 BGFX_SAMPLER_POINT, memory);
+	                                BGFX_SAMPLER_POINT, memory);
 	if (bgfx::isValid(texture))
 	{
 		gpuState = GpuState::LoadedToGpu;

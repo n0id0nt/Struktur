@@ -2,9 +2,9 @@
 
 #include <string>
 
-#include "Engine/World/RenderLayer.h"
 #include "Engine/Resource/TextureResource.h"
 #include "Engine/Util/Color.h"
+#include "Engine/World/RenderLayer.h"
 #include "glm/glm.hpp"
 
 namespace Struktur

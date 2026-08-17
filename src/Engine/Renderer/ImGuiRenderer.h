@@ -16,7 +16,7 @@ namespace Renderer
 // BuildQuadVertexLayout() and GraphicsDevice::GetDefaultSpriteProgram() rather than defining new ones.
 class ImGuiRenderer
 {
-   public:
+public:
 	ImGuiRenderer()  = default;
 	~ImGuiRenderer() = default;
 
@@ -33,7 +33,7 @@ class ImGuiRenderer
 
 	void Render(ImDrawData* drawData);
 
-   private:
+private:
 	bgfx::TextureHandle m_fontTexture     = BGFX_INVALID_HANDLE;
 	bgfx::UniformHandle m_texColorSampler = BGFX_INVALID_HANDLE;
 };

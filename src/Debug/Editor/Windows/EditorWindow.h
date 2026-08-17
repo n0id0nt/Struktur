@@ -13,7 +13,7 @@ namespace Debug
 // Base class for all editor windows
 class EditorWindow
 {
-   public:
+public:
 	EditorWindow(const std::string& name, const std::string& dockName = "");
 
 	virtual ~EditorWindow();
@@ -40,7 +40,7 @@ class EditorWindow
 	// Toggle visibility
 	void ToggleVisible();
 
-   protected:
+protected:
 	std::string m_name;      // Display name
 	std::string m_dockName;  // Name used for docking
 	bool m_isOpen;           // Whether window is open (has close button)

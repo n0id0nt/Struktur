@@ -12,7 +12,7 @@
 #include "Engine/ECS/Component/World.h"
 #include "Engine/ECS/Component/WrenScript.h"
 
-#define COMPONENT(component_name, component_type, component_name_string)                   \
+#define COMPONENT(component_name, component_type, component_name_string)                  \
 	struct Wren##component_name                                                           \
 	{                                                                                     \
 		entt::entity entity                            = entt::null;                      \

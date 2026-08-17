@@ -10,7 +10,7 @@ namespace System
 {
 class SoundSystem : public ISystem
 {
-   public:
+public:
 	void Update(GameContext& context) override;
 
 	std::string Name() const override

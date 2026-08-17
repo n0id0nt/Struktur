@@ -77,10 +77,10 @@ std::vector<Struktur::Renderer::TileChunk> Struktur::Renderer::BuildTileChunks(
 			float destW = (float)tileSize;
 			float destH = (float)tileSize;
 
-			float u0 = sourceRec.x / (float)textureWidth;
-			float v0 = sourceRec.y / (float)textureHeight;
-			float u1 = (sourceRec.x + sourceRec.width) / (float)textureWidth;
-			float v1 = (sourceRec.y + sourceRec.height) / (float)textureHeight;
+			float u0      = sourceRec.x / (float)textureWidth;
+			float v0      = sourceRec.y / (float)textureHeight;
+			float u1      = (sourceRec.x + sourceRec.width) / (float)textureWidth;
+			float v1      = (sourceRec.y + sourceRec.height) / (float)textureHeight;
 			uint32_t abgr = PackColor(Util::ColorWhite);
 
 			uint16_t base = (uint16_t)vertices.size();
@@ -110,8 +110,9 @@ std::vector<Struktur::Renderer::TileChunk> Struktur::Renderer::BuildTileChunks(
 		static const bgfx::VertexLayout layout = BuildQuadVertexLayout();
 
 		TileChunk chunk;
-		chunk.vb = bgfx::createVertexBuffer(
-		    bgfx::copy(vertices.data(), (uint32_t)(vertices.size() * sizeof(QuadVertex))), layout);
+		chunk.vb =
+		    bgfx::createVertexBuffer(bgfx::copy(vertices.data(), (uint32_t)(vertices.size() * sizeof(QuadVertex))),
+		                             layout);
 		chunk.ib = bgfx::createIndexBuffer(bgfx::copy(indices.data(), (uint32_t)(indices.size() * sizeof(uint16_t))));
 		chunk.indexCount  = (uint32_t)indices.size();
 		chunk.worldBounds = Util::Math::Rect{minX, minY, maxX - minX, maxY - minY};

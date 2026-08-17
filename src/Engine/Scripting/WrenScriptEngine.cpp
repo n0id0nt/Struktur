@@ -164,8 +164,7 @@ WrenLoadModuleResult Struktur::Wren::WrenScriptEngine::OnLoadModule(WrenVM* vm, 
 	}
 #else
 	{
-		std::string searchPath =
-		    FileSystem::GetWorkingDirectory() + "/../src/WrenBindings/Bindings/" + name + ".wren";
+		std::string searchPath = FileSystem::GetWorkingDirectory() + "/../src/WrenBindings/Bindings/" + name + ".wren";
 		std::ifstream file(searchPath);
 		if (file)
 		{

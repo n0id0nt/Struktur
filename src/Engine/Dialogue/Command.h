@@ -20,7 +20,7 @@ namespace Struktur::Dialogue
 // Command that executes by calling a Wren callback
 class Command
 {
-   public:
+public:
 	// Constructor
 	// callback is borrowed from DialogueRegistry, not owned
 	Command(const std::string& key, const std::unordered_map<std::string, DialogueValue>& params);
@@ -44,7 +44,7 @@ class Command
 	void RemoveParameter(const std::string& key);
 	void ChangeParameterKey(const std::string& oldKey, const std::string& newKey);
 
-   private:
+private:
 	std::string m_key;
 	std::unordered_map<std::string, DialogueValue> m_params;
 };

@@ -8,7 +8,7 @@ namespace Struktur::Debug
 {
 class HierarchyWindow : public EditorWindow
 {
-   public:
+public:
 	HierarchyWindow()
 	    : EditorWindow("Hierarchy"),
 	      m_selectedEntity(entt::null)
@@ -27,7 +27,7 @@ class HierarchyWindow : public EditorWindow
 		m_selectedEntity = entity;
 	}
 
-   private:
+private:
 	// Render the entire scene graph starting from root entities
 	void RenderSceneGraph(GameContext& context);
 
@@ -40,7 +40,7 @@ class HierarchyWindow : public EditorWindow
 	// Check if entity has children
 	bool HasChildren(GameContext& context, entt::entity entity);
 
-   private:
+private:
 	entt::entity m_selectedEntity;  // Currently selected entity in hierarchy
 };
 }  // namespace Struktur::Debug

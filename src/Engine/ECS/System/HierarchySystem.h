@@ -14,7 +14,7 @@ namespace System
 {
 class HierarchySystem : public ISystem
 {
-   public:
+public:
 	HierarchySystem() {}
 
 	void Update(GameContext& context) override {}  // Empty Update loop
@@ -30,7 +30,7 @@ class HierarchySystem : public ISystem
 		return "Hierarchy System";
 	}
 
-   private:
+private:
 	void PropagateActiveStateToChildren(GameContext& context, entt::entity entity,
 	                                    Component::Active::ActiveState active);
 };

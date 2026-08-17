@@ -8,7 +8,7 @@ namespace Struktur::Debug
 {
 class TextFilePreviewRenderer : public IPreviewRenderer
 {
-   public:
+public:
 	TextFilePreviewRenderer(const std::string& filePath, const std::string& name)
 	    : m_filePath(filePath),
 	      m_name(name)
@@ -22,10 +22,10 @@ class TextFilePreviewRenderer : public IPreviewRenderer
 		return m_name;
 	}
 
-   private:
+private:
 	void LoadFile();
 
-   private:
+private:
 	std::string m_filePath;
 	std::string m_name;
 	std::string m_fileContent;

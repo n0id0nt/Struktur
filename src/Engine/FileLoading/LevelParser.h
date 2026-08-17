@@ -80,7 +80,7 @@ struct GridTile
 {
 	glm::vec2 px;
 	glm::vec2 src;
-	//glm::vec2 d;
+	// glm::vec2 d;
 	FlipBit f;
 	int t;
 	int a;

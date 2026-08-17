@@ -19,7 +19,7 @@ namespace System
 {
 class WrenScriptSystem : public ISystem
 {
-   public:
+public:
 	WrenScriptSystem() {}
 
 	// Initialise a script component (load and instantiate)
@@ -28,7 +28,8 @@ class WrenScriptSystem : public ISystem
 	// Call Start() on the script
 	bool CallStart(GameContext& context, Component::WrenScript& script);
 
-	// Queue a just-created script to be initialised and started at the top of the next Update() - see GameObjectManager::OnScriptConstruct.
+	// Queue a just-created script to be initialised and started at the top of the next Update() - see
+	// GameObjectManager::OnScriptConstruct.
 	void QueuePendingInitialise(entt::entity entity);
 
 	// Update all scripted entities
@@ -57,7 +58,7 @@ class WrenScriptSystem : public ISystem
 		return "Wren Script System";
 	}
 
-   private:
+private:
 	std::vector<entt::entity> m_pendingInitialise;
 };
 }  // namespace System

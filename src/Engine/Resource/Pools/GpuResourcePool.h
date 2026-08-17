@@ -21,11 +21,11 @@ class GpuResourcePool : public ResourcePool<T>
 {
 	static_assert(std::is_base_of_v<GpuResource, T>, "GpuResourcePool requires GpuResource-derived types");
 
-   private:
+private:
 	size_t m_maxGpuMemory;
 	size_t m_currentGpuMemory;
 
-   protected:
+protected:
 	// Only pool-level bookkeeping - the resource's own ~T() (via SparseSet::Erase, right after this runs) calls
 	// UnloadFromGpu() itself, so this just keeps m_currentGpuMemory in sync before that happens.
 	void UnloadResource(const std::string& filePath, T& resource) override
@@ -36,7 +36,7 @@ class GpuResourcePool : public ResourcePool<T>
 		}
 	}
 
-   public:
+public:
 	GpuResourcePool(size_t maxGpuMemory = 512 * 1024 * 1024)  // Default 512MB
 	    : m_maxGpuMemory(maxGpuMemory),
 	      m_currentGpuMemory(0)

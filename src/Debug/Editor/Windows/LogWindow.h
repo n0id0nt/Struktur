@@ -25,7 +25,7 @@ struct LogEntry
 
 class LogWindow : public EditorWindow
 {
-   public:
+public:
 	LogWindow();
 	~LogWindow();
 
@@ -41,7 +41,7 @@ class LogWindow : public EditorWindow
 	void ClearLogs();
 	void AddLog(int logLevel, const std::string& message);
 
-   private:
+private:
 	void RenderToolbar();
 	void RenderLogList();
 	void RenderLogDetails();
@@ -51,7 +51,7 @@ class LogWindow : public EditorWindow
 	ImVec4 GetLogLevelColor(int level) const;
 	bool ShouldShowLog(const LogEntry& entry) const;
 
-   private:
+private:
 	// Log storage
 	std::vector<LogEntry> m_logs;
 	std::unordered_set<int> m_expandedLogs;

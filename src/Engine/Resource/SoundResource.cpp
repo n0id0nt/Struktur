@@ -1,10 +1,10 @@
 #include "SoundResource.h"
 
-#include "Engine/Core/FileSystem.h"
-#include "Engine/GameContext.h"
-
 #include <SDL3/SDL.h>
 #include <SDL3_mixer/SDL_mixer.h>
+
+#include "Engine/Core/FileSystem.h"
+#include "Engine/GameContext.h"
 
 Struktur::Resource::SoundResource::SoundResource(const std::string& filePath)
     : CpuResource(filePath)
@@ -27,8 +27,8 @@ Struktur::Resource::SoundResource& Struktur::Resource::SoundResource::operator=(
 		UnloadFromHardware();
 		UnloadFromDisk();
 		CpuResource::operator=(std::move(other));
-		m_audio = other.m_audio;
-		track   = other.track;
+		m_audio       = other.m_audio;
+		track         = other.track;
 		other.m_audio = nullptr;
 		other.track   = nullptr;
 	}

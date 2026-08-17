@@ -1,15 +1,15 @@
 #include "ImGuiRenderer.h"
 
+#include <imgui.h>
+
 #include <cstring>
+#include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtc/type_ptr.hpp>
 
 #include "Debug/Assertions.h"
 #include "Engine/Renderer/EmbeddedShaders.h"
 #include "Engine/Renderer/GraphicsDevice.h"
 #include "Engine/Renderer/QuadVertex.h"
-
-#include <glm/gtc/matrix_transform.hpp>
-#include <glm/gtc/type_ptr.hpp>
-#include <imgui.h>
 
 void Struktur::Renderer::ImGuiRenderer::Initialise()
 {
@@ -59,9 +59,9 @@ void Struktur::Renderer::ImGuiRenderer::Render(ImDrawData* drawData)
 	bgfx::setViewTransform(GraphicsDevice::EditorViewId, glm::value_ptr(identity), glm::value_ptr(proj));
 
 	static const bgfx::VertexLayout layout = BuildQuadVertexLayout();
-	bgfx::ProgramHandle program              = GetEmbeddedProgram("sprite");
-	ImVec2 clipOff                           = drawData->DisplayPos;
-	ImVec2 clipScale                         = drawData->FramebufferScale;
+	bgfx::ProgramHandle program            = GetEmbeddedProgram("sprite");
+	ImVec2 clipOff                         = drawData->DisplayPos;
+	ImVec2 clipScale                       = drawData->FramebufferScale;
 
 	for (int listIndex = 0; listIndex < drawData->CmdListsCount; ++listIndex)
 	{

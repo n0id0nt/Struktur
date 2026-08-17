@@ -10,7 +10,7 @@ namespace Struktur::Dialogue
 // Simple variant for dialogue parameters
 class DialogueValue
 {
-   public:
+public:
 	using ValueVariant = std::variant<std::string, int, bool, double>;
 
 	// Constructors for each type
@@ -71,7 +71,7 @@ class DialogueValue
 		return m_value;
 	}
 
-   private:
+private:
 	ValueVariant m_value;
 };
 }  // namespace Struktur::Dialogue

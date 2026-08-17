@@ -1,13 +1,13 @@
 #include "DebugRenderer.h"
 
+#include <glm/gtc/type_ptr.hpp>
+
 #include "Debug/Assertions.h"
 #include "Engine/Core/GameData.h"
 #include "Engine/GameContext.h"
 #include "Engine/Renderer/EmbeddedShaders.h"
 #include "Engine/Renderer/GraphicsDevice.h"
 #include "Engine/Renderer/QuadVertex.h"
-
-#include <glm/gtc/type_ptr.hpp>
 
 Struktur::Renderer::DebugRenderer::DebugRenderer()
 {
@@ -28,10 +28,10 @@ Struktur::Renderer::DebugRenderer::~DebugRenderer()
 
 void Struktur::Renderer::DebugRenderer::SetupView(GameContext& context)
 {
-	World::Camera& camera = context.GetCamera();
-	Core::GameData& gameData     = context.GetGameData();
-	glm::mat4 view                = camera.GetViewMatrix();
-	glm::mat4 proj                = camera.GetProjectionMatrix(gameData.gameWidth, gameData.gameHeight);
+	World::Camera& camera    = context.GetCamera();
+	Core::GameData& gameData = context.GetGameData();
+	glm::mat4 view           = camera.GetViewMatrix();
+	glm::mat4 proj           = camera.GetProjectionMatrix(gameData.gameWidth, gameData.gameHeight);
 	bgfx::setViewTransform(GraphicsDevice::DebugViewId, glm::value_ptr(view), glm::value_ptr(proj));
 }
 
@@ -43,8 +43,8 @@ void Struktur::Renderer::DebugRenderer::SubmitTriangleFan(const glm::vec2* point
 	}
 
 	static const bgfx::VertexLayout layout = BuildQuadVertexLayout();
-	uint32_t vertexCount                    = (uint32_t)count;
-	uint32_t indexCount                     = (uint32_t)((count - 2) * 3);
+	uint32_t vertexCount                   = (uint32_t)count;
+	uint32_t indexCount                    = (uint32_t)((count - 2) * 3);
 	if (vertexCount > bgfx::getAvailTransientVertexBuffer(vertexCount, layout) ||
 	    indexCount > bgfx::getAvailTransientIndexBuffer(indexCount))
 	{
@@ -90,7 +90,7 @@ void Struktur::Renderer::DebugRenderer::DrawLine(const glm::vec2& p1, const glm:
 
 	// Thick line as a rotated quad - generalises UIRenderer::DrawRectOutline's axis-aligned-only trick to
 	// arbitrary angles, still needing no new shader or vertex layout.
-	glm::vec2 normal = glm::vec2(-dir.y, dir.x) * (thickness * 0.5f / len);
+	glm::vec2 normal  = glm::vec2(-dir.y, dir.x) * (thickness * 0.5f / len);
 	glm::vec2 quad[4] = {p1 - normal, p2 - normal, p2 + normal, p1 + normal};
 	SubmitTriangleFan(quad, 4, PackColor(color));
 }

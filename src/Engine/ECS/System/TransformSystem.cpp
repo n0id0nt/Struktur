@@ -7,7 +7,7 @@
 #include "glm/gtx/matrix_decompose.hpp"
 
 Struktur::Component::Transform& Struktur::System::TransformSystem::EnsureWorldUpToDate(GameContext& context,
-                                                                                        entt::entity entity)
+                                                                                       entt::entity entity)
 {
 	entt::registry& registry = context.GetRegistry();
 	auto& transform          = registry.get<Component::Transform>(entity);

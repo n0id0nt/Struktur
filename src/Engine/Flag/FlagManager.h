@@ -7,7 +7,7 @@ namespace Struktur::Flag
 {
 class FlagManager
 {
-   public:
+public:
 	FlagManager();
 	~FlagManager();
 
@@ -85,7 +85,7 @@ class FlagManager
 		return m_stringFlags;
 	}
 
-   private:
+private:
 	std::unordered_map<std::string, bool> m_boolFlags;
 	std::unordered_map<std::string, int> m_intFlags;
 	std::unordered_map<std::string, float> m_floatFlags;

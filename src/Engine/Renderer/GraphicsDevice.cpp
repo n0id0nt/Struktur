@@ -15,7 +15,7 @@ void Struktur::Renderer::GraphicsDevice::Initialise(void* nativeWindowHandle, in
 	platformData.nwh = nativeWindowHandle;
 
 	bgfx::Init init;
-	init.type             = bgfx::RendererType::Count;  // auto-select the platform's preferred backend
+	init.type              = bgfx::RendererType::Count;  // auto-select the platform's preferred backend
 	init.resolution.width  = (uint32_t)width;
 	init.resolution.height = (uint32_t)height;
 	init.resolution.reset  = BGFX_RESET_VSYNC;
@@ -91,7 +91,7 @@ void Struktur::Renderer::GraphicsDevice::Resize(int width, int height)
 }
 
 void Struktur::Renderer::GraphicsDevice::SetWorldRenderTarget(bgfx::FrameBufferHandle frameBuffer, uint16_t width,
-                                                               uint16_t height)
+                                                              uint16_t height)
 {
 	m_worldFrameBuffer       = frameBuffer;
 	m_worldFrameBufferWidth  = width;

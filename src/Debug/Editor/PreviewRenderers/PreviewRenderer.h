@@ -14,7 +14,7 @@ namespace Struktur::Debug
 // Base class for all preview renderers
 class IPreviewRenderer
 {
-   public:
+public:
 	virtual ~IPreviewRenderer() = default;
 
 	// Render the preview content

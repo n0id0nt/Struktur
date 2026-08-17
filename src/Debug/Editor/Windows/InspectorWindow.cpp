@@ -1,10 +1,9 @@
 #include "InspectorWindow.h"
 
 #include <cmath>
-#include <unordered_map>
-
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
+#include <unordered_map>
 #define GLM_ENABLE_EXPERIMENTAL
 #include <glm/gtx/quaternion.hpp>
 
@@ -12,8 +11,8 @@
 #include "Debug/Editor/Windows/HierarchyWindow.h"
 #include "Debug/Editor/Windows/PreviewWindow.h"
 #include "Debug/Editor/Windows/UIHierarchyWindow.h"
-#include "Engine/ECS/Component/Active.h"
 #include "Engine/Animation/SpriteAnimation.h"
+#include "Engine/ECS/Component/Active.h"
 #include "Engine/ECS/Component/Camera.h"
 #include "Engine/ECS/Component/Identifier.h"
 #include "Engine/ECS/Component/Level.h"
@@ -29,12 +28,12 @@
 #include "Engine/ECS/System/HierarchySystem.h"
 #include "Engine/ECS/System/TransformSystem.h"
 #include "Engine/ECS/System/WrenScriptSystem.h"
-#include "Engine/Scripting/WrenScriptComponentRegistry.h"
 #include "Engine/FileLoading/LevelParser.h"
 #include "Engine/GameContext.h"
 #include "Engine/Physics/PhysicsWorld.h"
-#include "Engine/World/RenderLayer.h"
+#include "Engine/Scripting/WrenScriptComponentRegistry.h"
 #include "Engine/UI/UIElement.h"
+#include "Engine/World/RenderLayer.h"
 
 namespace Struktur::Debug
 {
@@ -128,8 +127,8 @@ void InspectorWindow::RegisterDefaultRenderers()
 	// Register LocalTransform renderer
 	RegisterComponentRenderer<Component::Transform>(
 	    "LocalTransform",
-	    [this](GameContext& context, Component::Transform& transform, entt::registry& registry,
-	           entt::entity entity) { RenderLocalTransformComponent(context, transform, registry, entity); });
+	    [this](GameContext& context, Component::Transform& transform, entt::registry& registry, entt::entity entity)
+	    { RenderLocalTransformComponent(context, transform, registry, entity); });
 
 	// Register Sprite renderer
 	RegisterComponentRenderer<Component::Sprite>("Sprite", [this](GameContext& context, Component::Sprite& sprite,
@@ -547,7 +546,7 @@ void InspectorWindow::RenderUIElementProperties(UI::UIElement* element)
 void InspectorWindow::RenderActiveComponent(GameContext& context, Component::Active& active, entt::registry& registry,
                                             entt::entity entity)
 {
-	bool isActive = active.activeState == Component::Active::ActiveState::Active;
+	bool isActive         = active.activeState == Component::Active::ActiveState::Active;
 	bool isInactiveParent = active.activeState == Component::Active::ActiveState::InactiveParent;
 
 	// Disabled when inactive purely because an ancestor is inactive - can't override that from here
@@ -614,11 +613,11 @@ void InspectorWindow::RenderPhysicsBodyComponent(GameContext& context, Component
 	b2Body* body = physicsBody.body;
 
 	Physics::PhysicsWorld& physicsWorld = context.GetPhysicsWorld();
-	const float ppm            = physicsWorld.GetPixelsPerMeter();
-	const float metersPerPixel = 1.0f / ppm;
+	const float ppm                     = physicsWorld.GetPixelsPerMeter();
+	const float metersPerPixel          = 1.0f / ppm;
 
 	static const char* k_bodyTypeNames[] = {"Static", "Kinematic", "Dynamic"};
-	int bodyTypeIndex = static_cast<int>(body->GetType());
+	int bodyTypeIndex                    = static_cast<int>(body->GetType());
 	if (ImGui::Combo("Body Type", &bodyTypeIndex, k_bodyTypeNames, IM_ARRAYSIZE(k_bodyTypeNames)))
 	{
 		body->SetType(static_cast<b2BodyType>(bodyTypeIndex));
@@ -722,7 +721,7 @@ void InspectorWindow::RenderSpriteAnimationComponent(GameContext& context, Compo
 	auto& animationSystem = context.GetSystemManager().GetSystem<System::AnimationSystem>();
 
 	ImGui::Text("Current Animation: %s",
-	           spriteAnimation.curAnimation.empty() ? "[None]" : spriteAnimation.curAnimation.c_str());
+	            spriteAnimation.curAnimation.empty() ? "[None]" : spriteAnimation.curAnimation.c_str());
 
 	ImGui::Spacing();
 	ImGui::Separator();
@@ -740,7 +739,7 @@ void InspectorWindow::RenderSpriteAnimationComponent(GameContext& context, Compo
 			ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.5f, 1.0f, 0.5f, 1.0f));
 		}
 		bool open = ImGui::TreeNodeEx(name.c_str(), isCurrent ? ImGuiTreeNodeFlags_DefaultOpen : 0, "%s%s",
-		                             name.c_str(), isCurrent ? " (Current)" : "");
+		                              name.c_str(), isCurrent ? " (Current)" : "");
 		if (isCurrent)
 		{
 			ImGui::PopStyleColor();
@@ -901,9 +900,9 @@ void InspectorWindow::RenderTileMapComponent(GameContext& context, Component::Ti
 	ImGui::Text("Visible Tiles: %zu", tileMap.gridTiles.size());
 	ImGui::TextDisabled("The dense collision grid is baked into physics at load and isn't re-generated here");
 
-	static const char* k_renderLayerNames[] = {"Background Far",    "Background Mid", "Entities",
+	static const char* k_renderLayerNames[] = {"Background Far",     "Background Mid", "Entities",
 	                                           "Background Overlay", "Foreground",     "UI"};
-	int layerIndex = static_cast<int>(tileMap.layer);
+	int layerIndex                          = static_cast<int>(tileMap.layer);
 	if (ImGui::Combo("Render Layer", &layerIndex, k_renderLayerNames, IM_ARRAYSIZE(k_renderLayerNames)))
 	{
 		tileMap.layer = static_cast<World::RenderLayer>(layerIndex);
@@ -932,8 +931,8 @@ void InspectorWindow::RenderTileMapComponent(GameContext& context, Component::Ti
 	for (int i = 0; i < (int)tileMap.gridTiles.size(); i++)
 	{
 		const World::TileMap::GridTile& tile = tileMap.gridTiles[i];
-		int col = (int)std::round(tile.position.x / tileMap.tileSize);
-		int row = (int)std::round(tile.position.y / tileMap.tileSize);
+		int col                              = (int)std::round(tile.position.x / tileMap.tileSize);
+		int row                              = (int)std::round(tile.position.y / tileMap.tileSize);
 		if (col >= 0 && col < tileMap.width && row >= 0 && row < tileMap.height)
 		{
 			cellToTileIndex[row * tileMap.width + col] = i;
@@ -954,7 +953,7 @@ void InspectorWindow::RenderTileMapComponent(GameContext& context, Component::Ti
 			bool selected = m_selectedTileMapCell == cellIndex;
 
 			ImVec4 color = selected ? ImVec4(1.0f, 0.8f, 0.2f, 1.0f)
-			                       : (hasTile ? ImVec4(0.3f, 0.6f, 0.9f, 1.0f) : ImVec4(0.25f, 0.25f, 0.25f, 1.0f));
+			                        : (hasTile ? ImVec4(0.3f, 0.6f, 0.9f, 1.0f) : ImVec4(0.25f, 0.25f, 0.25f, 1.0f));
 
 			ImGui::PushID(col);
 			ImGui::PushStyleColor(ImGuiCol_Button, color);
@@ -1005,7 +1004,7 @@ void InspectorWindow::RenderTileMapComponent(GameContext& context, Component::Ti
 	}
 
 	World::TileMap::GridTile& tile = tileMap.gridTiles[it->second];
-	bool changed                  = false;
+	bool changed                   = false;
 
 	int atlasCol = (int)std::round(tile.sourcePosition.x / tileMap.tileSize);
 	int atlasRow = (int)std::round(tile.sourcePosition.y / tileMap.tileSize);
@@ -1023,7 +1022,7 @@ void InspectorWindow::RenderTileMapComponent(GameContext& context, Component::Ti
 	}
 
 	static const char* k_flipNames[] = {"None", "Horizontal", "Vertical", "Both"};
-	int flipIndex = static_cast<int>(tile.flipBit);
+	int flipIndex                    = static_cast<int>(tile.flipBit);
 	if (ImGui::Combo("Flip", &flipIndex, k_flipNames, IM_ARRAYSIZE(k_flipNames)))
 	{
 		tile.flipBit = static_cast<World::TileMap::FlipBit>(flipIndex);
@@ -1086,8 +1085,7 @@ void InspectorWindow::RenderWrenScriptComponent(GameContext& context, Component:
 					ImGui::Text("%s: %s", arg.identifier.c_str(), std::any_cast<bool>(arg.value) ? "true" : "false");
 					break;
 				case WREN_TYPE_STRING:
-					ImGui::Text("%s: \"%s\"", arg.identifier.c_str(),
-					           std::any_cast<std::string>(arg.value).c_str());
+					ImGui::Text("%s: \"%s\"", arg.identifier.c_str(), std::any_cast<std::string>(arg.value).c_str());
 					break;
 				case WREN_TYPE_NULL:
 					ImGui::Text("%s: null", arg.identifier.c_str());
@@ -1201,8 +1199,8 @@ void InspectorWindow::RenderLocalTransformComponent(GameContext& context, Compon
 	bool modified = false;
 
 	glm::vec3 position = transform.localPosition;
-	glm::vec3 scale     = transform.localScale;
-	glm::quat rotation  = transform.localRotation;
+	glm::vec3 scale    = transform.localScale;
+	glm::quat rotation = transform.localRotation;
 
 	// Position
 	if (RenderVec3("Position", position))
@@ -1310,9 +1308,9 @@ void InspectorWindow::RenderSpriteComponent(GameContext& context, Component::Spr
 	ImGui::Checkbox("Flipped", &sprite.flipped);
 
 	// Render layer + order
-	static const char* k_renderLayerNames[] = {"Background Far",    "Background Mid", "Entities",
+	static const char* k_renderLayerNames[] = {"Background Far",     "Background Mid", "Entities",
 	                                           "Background Overlay", "Foreground",     "UI"};
-	int layerIndex = static_cast<int>(sprite.layer);
+	int layerIndex                          = static_cast<int>(sprite.layer);
 	if (ImGui::Combo("Render Layer", &layerIndex, k_renderLayerNames, IM_ARRAYSIZE(k_renderLayerNames)))
 	{
 		sprite.layer = static_cast<World::RenderLayer>(layerIndex);

@@ -9,7 +9,7 @@ namespace Struktur::Debug
 {
 class PreviewWindow : public EditorWindow
 {
-   public:
+public:
 	PreviewWindow()
 	    : EditorWindow("Preview"),
 	      m_currentRenderer(nullptr)
@@ -36,7 +36,7 @@ class PreviewWindow : public EditorWindow
 		return m_currentRenderer != nullptr;
 	}
 
-   private:
+private:
 	std::unique_ptr<IPreviewRenderer> m_currentRenderer;
 };
 }  // namespace Struktur::Debug

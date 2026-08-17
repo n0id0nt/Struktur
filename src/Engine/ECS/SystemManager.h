@@ -13,11 +13,13 @@ class GameContext;
 
 namespace System
 {
-struct Inactive {};
+struct Inactive
+{
+};
 
 class ISystem
 {
-   public:
+public:
 	virtual ~ISystem()                        = default;
 	virtual void Update(GameContext& context) = 0;
 	virtual std::string Name() const          = 0;
@@ -25,7 +27,7 @@ class ISystem
 
 class SystemManager
 {
-   public:
+public:
 	SystemManager() {}
 	~SystemManager() {}
 
@@ -99,7 +101,7 @@ class SystemManager
 		return *system;
 	}
 
-   private:
+private:
 	std::vector<std::type_index> m_updateSystems;
 	std::vector<std::type_index> m_renderSystems;
 	std::vector<std::type_index> m_helperSystems;

@@ -11,19 +11,18 @@
 // compiled for (CMakeLists.txt's struktur_compile_shader doesn't request the wgsl profile) - disabled explicitly.
 #define BGFX_PLATFORM_SUPPORTS_WGSL 0
 #include <bgfx/embedded_shader.h>
-
-#include <spirv/vs_sprite.sc.bin.h>
-#include <spirv/fs_sprite.sc.bin.h>
-#include <spirv/vs_soulEffect.sc.bin.h>
-#include <spirv/fs_soulEffect.sc.bin.h>
-#include <glsl/vs_sprite.sc.bin.h>
-#include <glsl/fs_sprite.sc.bin.h>
-#include <glsl/vs_soulEffect.sc.bin.h>
-#include <glsl/fs_soulEffect.sc.bin.h>
-#include <essl/vs_sprite.sc.bin.h>
+#include <essl/fs_soulEffect.sc.bin.h>
 #include <essl/fs_sprite.sc.bin.h>
 #include <essl/vs_soulEffect.sc.bin.h>
-#include <essl/fs_soulEffect.sc.bin.h>
+#include <essl/vs_sprite.sc.bin.h>
+#include <glsl/fs_soulEffect.sc.bin.h>
+#include <glsl/fs_sprite.sc.bin.h>
+#include <glsl/vs_soulEffect.sc.bin.h>
+#include <glsl/vs_sprite.sc.bin.h>
+#include <spirv/fs_soulEffect.sc.bin.h>
+#include <spirv/fs_sprite.sc.bin.h>
+#include <spirv/vs_soulEffect.sc.bin.h>
+#include <spirv/vs_sprite.sc.bin.h>
 #if defined(_WIN32)
 	#include <dxbc/vs_sprite.sc.bin.h>
 	#include <dxbc/fs_sprite.sc.bin.h>
@@ -44,11 +43,8 @@
 namespace
 {
 static const bgfx::EmbeddedShader kEmbeddedShaders[] = {
-    BGFX_EMBEDDED_SHADER(vs_sprite),
-    BGFX_EMBEDDED_SHADER(fs_sprite),
-    BGFX_EMBEDDED_SHADER(vs_soulEffect),
-    BGFX_EMBEDDED_SHADER(fs_soulEffect),
-    BGFX_EMBEDDED_SHADER_END(),
+    BGFX_EMBEDDED_SHADER(vs_sprite),     BGFX_EMBEDDED_SHADER(fs_sprite), BGFX_EMBEDDED_SHADER(vs_soulEffect),
+    BGFX_EMBEDDED_SHADER(fs_soulEffect), BGFX_EMBEDDED_SHADER_END(),
 };
 
 std::unordered_map<std::string, bgfx::ShaderHandle> g_shaderCache;
@@ -78,8 +74,8 @@ bgfx::ProgramHandle Struktur::Renderer::GetEmbeddedProgram(const char* name)
 		return it->second;
 	}
 
-	std::string vsName = std::string("vs_") + name;
-	std::string fsName = std::string("fs_") + name;
+	std::string vsName    = std::string("vs_") + name;
+	std::string fsName    = std::string("fs_") + name;
 	bgfx::ShaderHandle vs = GetEmbeddedShader(vsName.c_str());
 	bgfx::ShaderHandle fs = GetEmbeddedShader(fsName.c_str());
 

@@ -9,12 +9,11 @@
 #include "Engine/ECS/System/TransformSystem.h"
 #include "Engine/GameContext.h"
 #include "Engine/Renderer/GraphicsDevice.h"
+#include "Engine/Renderer/TileChunkBuilder.h"
 #include "Engine/Renderer/WorldRenderer.h"
 #include "Engine/Util/MathUtil.h"
 #include "glm/glm.hpp"
 #include "glm/gtc/quaternion.hpp."
-
-#include "Engine/Renderer/TileChunkBuilder.h"
 
 void Struktur::System::SpriteRenderSystem::Update(GameContext& context)
 {
@@ -52,16 +51,16 @@ void Struktur::System::SpriteRenderSystem::Update(GameContext& context)
 				// walked and resubmitted every frame - see the chunking design discussion for why.
 				if (!tileMap.chunksBuilt)
 				{
-					tileMap.chunks     = Renderer::BuildTileChunks(tileMap.gridTiles, tileMap.tileSize,
-					                                               glm::vec2(worldPosition.x, worldPosition.y),
-					                                               texture->GetWidth(), texture->GetHeight());
+					tileMap.chunks      = Renderer::BuildTileChunks(tileMap.gridTiles, tileMap.tileSize,
+					                                                glm::vec2(worldPosition.x, worldPosition.y),
+					                                                texture->GetWidth(), texture->GetHeight());
 					tileMap.chunksBuilt = true;
 				}
 
 				// Resolved from the tilemap's own entity (not entt::null) so a Component::Shader on the tilemap
 				// actually takes effect - all of a tilemap's chunks share this one resolve since they're all the
 				// same entity's shader, just different cached mesh ranges.
-				bgfx::ProgramHandle program       = shaderSystem.ResolveProgram(context, entity, defaultProgram);
+				bgfx::ProgramHandle program     = shaderSystem.ResolveProgram(context, entity, defaultProgram);
 				const Component::Shader* shader = registry.try_get<Component::Shader>(entity);
 				for (const Renderer::TileChunk& chunk : tileMap.chunks)
 				{
@@ -115,7 +114,7 @@ void Struktur::System::SpriteRenderSystem::Update(GameContext& context)
 				sourceRec.height -= 0.0002f;
 
 				Util::Math::Rect destRec{::round(worldPosition.x * 2) / 2, ::round(worldPosition.y * 2) / 2,
-				                       size.x * worldScale.x, size.y * worldScale.x};
+				                         size.x * worldScale.x, size.y * worldScale.x};
 				glm::vec2 offset{sprite.offset.x, sprite.offset.y};
 
 				float orderInLayer = sprite.orderInLayer;
@@ -125,10 +124,10 @@ void Struktur::System::SpriteRenderSystem::Update(GameContext& context)
 					orderInLayer += worldPosition.y;
 				}
 
-				bgfx::ProgramHandle program       = shaderSystem.ResolveProgram(context, entity, defaultProgram);
+				bgfx::ProgramHandle program     = shaderSystem.ResolveProgram(context, entity, defaultProgram);
 				const Component::Shader* shader = registry.try_get<Component::Shader>(entity);
-				worldRenderer.SubmitSprite(sprite.layer, orderInLayer, program, shader, texture->GetHandle(),
-				                           sourceRec, destRec, offset, glm::degrees(angleZ), sprite.color, cullBounds);
+				worldRenderer.SubmitSprite(sprite.layer, orderInLayer, program, shader, texture->GetHandle(), sourceRec,
+				                           destRec, offset, glm::degrees(angleZ), sprite.color, cullBounds);
 			}
 		}
 

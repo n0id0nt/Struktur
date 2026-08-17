@@ -38,7 +38,7 @@ struct ResourceHandle
 // Base resource class
 class GameResource
 {
-   public:
+public:
 	std::string filePath;
 	bool isLoaded;
 	// Set by whichever ResourcePool<T> owns this resource, right after it's emplaced - see ResourceHandle's own
@@ -56,21 +56,21 @@ class GameResource
 	// implicit move generation, and ResourcePool<T>'s SparseSet-backed storage needs T (and therefore every base
 	// subobject) to be movable, both to relocate elements on Erase()'s swap-and-pop and for std::vector to grow
 	// the dense array without falling back to copying.
-	GameResource(GameResource&&)            = default;
-	GameResource& operator=(GameResource&&) = default;
-	GameResource(const GameResource&)       = delete;
+	GameResource(GameResource&&)                 = default;
+	GameResource& operator=(GameResource&&)      = default;
+	GameResource(const GameResource&)            = delete;
 	GameResource& operator=(const GameResource&) = delete;
 
 	// Common resource management
 	virtual bool LoadFromDisk(GameContext& context) = 0;
-	virtual void UnloadFromDisk()         = 0;
-	virtual size_t GetMemoryUsage() const = 0;
+	virtual void UnloadFromDisk()                   = 0;
+	virtual size_t GetMemoryUsage() const           = 0;
 };
 
 // GPU resource base class
 class GpuResource : public GameResource
 {
-   public:
+public:
 	enum class GpuState
 	{
 		Unloaded,     // Not loaded to GPU
@@ -92,8 +92,8 @@ class GpuResource : public GameResource
 	// GPU-specific methods
 	virtual bool LoadToGpu(GameContext& context) = 0;
 	virtual void UnloadFromGpu()                 = 0;
-	virtual bool IsGpuResourceValid() const  = 0;
-	virtual size_t GetGpuMemoryUsage() const = 0;
+	virtual bool IsGpuResourceValid() const      = 0;
+	virtual size_t GetGpuMemoryUsage() const     = 0;
 
 	// State queries
 	bool IsGpuReady() const
@@ -109,7 +109,7 @@ class GpuResource : public GameResource
 // CPU resource base class (for sounds, music, config files, etc.)
 class CpuResource : public GameResource
 {
-   public:
+public:
 	CpuResource(const std::string& filePath)
 	    : GameResource(filePath)
 	{
@@ -122,7 +122,7 @@ class CpuResource : public GameResource
 	virtual bool LoadToHardware(GameContext& context)
 	{
 		return true;
-	}                                     // Default: no special hardware loading
+	}  // Default: no special hardware loading
 	virtual void UnloadFromHardware() {}  // Default: no special hardware unloading
 	virtual bool IsHardwareReady() const
 	{

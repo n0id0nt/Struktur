@@ -14,7 +14,7 @@ namespace UI
 //=============================================================================
 class UIManager
 {
-   public:
+public:
 	UIManager();
 
 	~UIManager() = default;
@@ -44,7 +44,7 @@ class UIManager
 	FocusNavigator* GetFocusNavigator() const;
 	const std::vector<std::unique_ptr<UIElement>>& GetElements() const;
 
-   private:
+private:
 	void HandleInput(GameContext& context);
 
 	std::vector<std::unique_ptr<UIElement>> m_elements;

@@ -1,10 +1,9 @@
 #pragma once
 
+#include <glm/glm.hpp>
 #include <unordered_map>
 
 #include "Engine/Resource/ShaderResource.h"
-
-#include <glm/glm.hpp>
 
 namespace Struktur
 {

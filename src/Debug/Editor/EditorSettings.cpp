@@ -5,7 +5,7 @@ void Struktur::Debug::EditorSettings::SaveToFile(const std::string &filename) {}
 void Struktur::Debug::EditorSettings::LoadFromFile(const std::string &filename) {}
 
 void Struktur::Debug::EditorSettings::RegisterOnChangeCallback(const std::string &settingCategory,
-                                                                std::function<void()> callback)
+                                                               std::function<void()> callback)
 {
 	m_changeCallbacks[settingCategory] = callback;
 }

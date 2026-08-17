@@ -1,10 +1,10 @@
 #pragma once
 
+#include <bgfx/bgfx.h>
+
 #include <cstdint>
 
 #include "Engine/Util/MathUtil.h"
-
-#include <bgfx/bgfx.h>
 
 namespace Struktur
 {

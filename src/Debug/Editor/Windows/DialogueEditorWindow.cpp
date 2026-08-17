@@ -1425,7 +1425,8 @@ void DialogueEditorWindow::RenderNodeEditor(GameContext& context)
 	// No continuation
 	else
 	{
-		ImGui::TextColored(ImVec4(1.0f, 0.7f, 0.3f, 1.0f), "[!] This node has no continuation (dialogue will end here)");
+		ImGui::TextColored(ImVec4(1.0f, 0.7f, 0.3f, 1.0f),
+		                   "[!] This node has no continuation (dialogue will end here)");
 	}
 
 	ImGui::Separator();
@@ -3285,11 +3286,11 @@ bool DialogueEditorWindow::EvaluatePlaybackCondition(const Dialogue::Condition& 
 			return false;
 		}
 
-		auto flagIt         = params.find("flag");
-		auto currentFlagIt  = flagIt != params.end() ? m_playbackIntFlags.find(flagIt->second.AsString())
-		                                             : m_playbackIntFlags.end();
-		int flagValue       = currentFlagIt != m_playbackIntFlags.end() ? currentFlagIt->second : 0;
-		int compareValue    = valueIt->second.AsInt();
+		auto flagIt = params.find("flag");
+		auto currentFlagIt =
+		    flagIt != params.end() ? m_playbackIntFlags.find(flagIt->second.AsString()) : m_playbackIntFlags.end();
+		int flagValue         = currentFlagIt != m_playbackIntFlags.end() ? currentFlagIt->second : 0;
+		int compareValue      = valueIt->second.AsInt();
 		const std::string& op = opIt->second.AsString();
 
 		if (op == "==" || op == "is")

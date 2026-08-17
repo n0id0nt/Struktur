@@ -6,7 +6,7 @@ namespace Struktur::Debug
 {
 class SettingsWindow : public EditorWindow
 {
-   public:
+public:
 	SettingsWindow()
 	    : EditorWindow("Editor Settings")
 	{
@@ -14,7 +14,7 @@ class SettingsWindow : public EditorWindow
 
 	void Render(GameContext& context) override;
 
-   private:
+private:
 	void RenderDebugRenderSettings(GameContext& context);
 	void RenderViewportSettings(GameContext& context);
 	void RenderHierarchySettings(GameContext& context);

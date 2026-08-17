@@ -1,10 +1,10 @@
 #pragma once
 
+#include <bgfx/bgfx.h>
+
 #include "Engine/ECS/SystemManager.h"
 #include "entt/entt.hpp"
 #include "glm/glm.hpp"
-
-#include <bgfx/bgfx.h>
 
 namespace Struktur
 {
@@ -18,7 +18,7 @@ namespace System
 {
 class ShaderSystem : public ISystem
 {
-   public:
+public:
 	void Update(GameContext& context) override {}
 
 	void SetUniform(GameContext& context, entt::entity entity, const std::string& name, float value);

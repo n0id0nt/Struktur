@@ -7,12 +7,12 @@
 #include "Engine/ECS/System/ShaderSystem.h"
 #include "Engine/ECS/System/TransformSystem.h"
 #include "Engine/ECS/System/WrenScriptSystem.h"
-#include "Engine/World/Level.h"
-#include "Engine/World/RenderLayer.h"
 #include "Engine/GameContext.h"
 #include "Engine/Scripting/WrenBindingRegistry.h"
 #include "Engine/Scripting/WrenUtil.h"
 #include "Engine/Util/Color.h"
+#include "Engine/World/Level.h"
+#include "Engine/World/RenderLayer.h"
 #include "WrenAnimation.h"
 #include "WrenMath.h"
 #include "WrenPhysics.h"
@@ -23,10 +23,10 @@
 // COMPONENT ALLOCATOR BINDINGS
 // ============================================================================
 
-#define COMPONENT(component_name, component_type, component_name_string)               \
-	void wren_##component_name##Allocate(WrenVM* vm)                   \
-	{                                                                  \
-		wrenSetSlotNewForeign(vm, 0, 0, sizeof(Wren##component_name)); \
+#define COMPONENT(component_name, component_type, component_name_string) \
+	void wren_##component_name##Allocate(WrenVM* vm)                     \
+	{                                                                    \
+		wrenSetSlotNewForeign(vm, 0, 0, sizeof(Wren##component_name));   \
 	}
 COMPONENT_LIST
 #undef COMPONENT
@@ -35,11 +35,11 @@ COMPONENT_LIST
 // COMPONENT FINALIZER BINDINGS
 // ============================================================================
 
-#define COMPONENT(component_name, component_type, component_name_string)           \
-	void wren_##component_name##Finalize(void* data)               \
-	{                                                              \
-		Wren##component_name* value = (Wren##component_name*)data; \
-		value->~Wren##component_name();                            \
+#define COMPONENT(component_name, component_type, component_name_string) \
+	void wren_##component_name##Finalize(void* data)                     \
+	{                                                                    \
+		Wren##component_name* value = (Wren##component_name*)data;       \
+		value->~Wren##component_name();                                  \
 	}
 COMPONENT_LIST
 #undef COMPONENT
@@ -48,7 +48,7 @@ COMPONENT_LIST
 // COMPONENT GET BINDINGS
 // ============================================================================
 
-#define COMPONENT(component_name, component_type, component_name_string)                                              \
+#define COMPONENT(component_name, component_type, component_name_string)                              \
 	void wren_##component_name##Get(WrenVM* vm)                                                       \
 	{                                                                                                 \
 		Struktur::GameContext* context = static_cast<Struktur::GameContext*>(wrenGetUserData(vm));    \
@@ -137,7 +137,7 @@ void wren_CameraSetDamping(WrenVM* vm)
 // Camera.worldPosToScreenPos(worldPos) -> Vec2
 void wren_CameraWorldPosToScreenPos(WrenVM* vm)
 {
-	Struktur::GameContext* context         = static_cast<Struktur::GameContext*>(wrenGetUserData(vm));
+	Struktur::GameContext* context  = static_cast<Struktur::GameContext*>(wrenGetUserData(vm));
 	Struktur::World::Camera& camera = context->GetCamera();
 
 	WrenVec2* worldPos  = static_cast<WrenVec2*>(wrenGetSlotForeign(vm, 1));
@@ -151,7 +151,7 @@ void wren_CameraWorldPosToScreenPos(WrenVM* vm)
 // Camera.screenPosToWorldPos(worldPos) -> Vec2
 void wren_CameraScreenPosToWorldPos(WrenVM* vm)
 {
-	Struktur::GameContext* context         = static_cast<Struktur::GameContext*>(wrenGetUserData(vm));
+	Struktur::GameContext* context  = static_cast<Struktur::GameContext*>(wrenGetUserData(vm));
 	Struktur::World::Camera& camera = context->GetCamera();
 
 	WrenVec2* screenPos = static_cast<WrenVec2*>(wrenGetSlotForeign(vm, 1));
@@ -638,7 +638,7 @@ void wren_SpriteCreate(WrenVM* vm)
 	float orderInLayer         = static_cast<float>(wrenGetSlotDouble(vm, 10));
 
 	Struktur::Util::Color rayColor{(unsigned char)color->value.r, (unsigned char)color->value.g,
-	                                  (unsigned char)color->value.b, (unsigned char)color->value.a};
+	                               (unsigned char)color->value.b, (unsigned char)color->value.a};
 
 	registry.emplace<Struktur::Component::Sprite>(levelEntity, texture->resource, rayColor, offset->value, columns,
 	                                              rows, flipped, index, layer, orderInLayer);
@@ -674,7 +674,7 @@ void wren_SpriteSetColor(WrenVM* vm)
 	WrenSprite* sprite = (WrenSprite*)wrenGetSlotForeign(vm, 0);
 	WrenVec4* color    = (WrenVec4*)wrenGetSlotForeign(vm, 1);
 	Struktur::Util::Color rayColor{(unsigned char)color->value.r, (unsigned char)color->value.g,
-	                                  (unsigned char)color->value.b, (unsigned char)color->value.a};
+	                               (unsigned char)color->value.b, (unsigned char)color->value.a};
 	sprite->component->color = rayColor;
 }
 
@@ -748,8 +748,8 @@ void wren_SpriteGetLayer(WrenVM* vm)
 
 void wren_SpriteSetLayer(WrenVM* vm)
 {
-	WrenSprite* sprite      = (WrenSprite*)wrenGetSlotForeign(vm, 0);
-	int layer               = static_cast<int>(wrenGetSlotDouble(vm, 1));
+	WrenSprite* sprite       = (WrenSprite*)wrenGetSlotForeign(vm, 0);
+	int layer                = static_cast<int>(wrenGetSlotDouble(vm, 1));
 	sprite->component->layer = static_cast<Struktur::World::RenderLayer>(layer);
 }
 
@@ -763,8 +763,8 @@ void wren_SpriteGetOrderInLayer(WrenVM* vm)
 
 void wren_SpriteSetOrderInLayer(WrenVM* vm)
 {
-	WrenSprite* sprite               = (WrenSprite*)wrenGetSlotForeign(vm, 0);
-	float orderInLayer               = static_cast<float>(wrenGetSlotDouble(vm, 1));
+	WrenSprite* sprite              = (WrenSprite*)wrenGetSlotForeign(vm, 0);
+	float orderInLayer              = static_cast<float>(wrenGetSlotDouble(vm, 1));
 	sprite->component->orderInLayer = orderInLayer;
 }
 
@@ -809,9 +809,9 @@ void wren_SpriteStaticSetOrderInLayer(WrenVM* vm)
 	Struktur::GameContext* context = static_cast<Struktur::GameContext*>(wrenGetUserData(vm));
 	auto& registry                 = context->GetRegistry();
 
-	double entityId      = wrenGetSlotDouble(vm, 1);
-	double orderInLayer  = wrenGetSlotDouble(vm, 2);
-	entt::entity entity  = static_cast<entt::entity>(entityId);
+	double entityId     = wrenGetSlotDouble(vm, 1);
+	double orderInLayer = wrenGetSlotDouble(vm, 2);
+	entt::entity entity = static_cast<entt::entity>(entityId);
 
 	auto* sprite = registry.try_get<Struktur::Component::Sprite>(entity);
 
@@ -1177,9 +1177,9 @@ void wren_LocalTransformStaticSetMatrix(WrenVM* vm)
 // WorldTransform.getPosition() -> vec3 or null
 void wren_WorldTransformGetPosition(WrenVM* vm)
 {
-	Struktur::GameContext* context   = static_cast<Struktur::GameContext*>(wrenGetUserData(vm));
-	auto& transformSystem            = context->GetSystemManager().GetSystem<Struktur::System::TransformSystem>();
-	WrenWorldTransform* transform    = (WrenWorldTransform*)wrenGetSlotForeign(vm, 0);
+	Struktur::GameContext* context = static_cast<Struktur::GameContext*>(wrenGetUserData(vm));
+	auto& transformSystem          = context->GetSystemManager().GetSystem<Struktur::System::TransformSystem>();
+	WrenWorldTransform* transform  = (WrenWorldTransform*)wrenGetSlotForeign(vm, 0);
 	// Create Vec3 foreign object with position
 	wrenGetVariable(vm, "math", "Vec3", 1);  // Get class into slot 1
 	WrenVec3* vec = (WrenVec3*)wrenSetSlotNewForeign(vm, 0, 1, sizeof(WrenVec3));
@@ -1662,13 +1662,12 @@ void wren_ScriptStaticGetInstance(WrenVM* vm)
 WREN_BINDING_MODULE(GameObjectComponent)
 {
 	WREN_ENUM(registry, "gameObjectComponents", RenderLayer, "Coarse draw-order buckets for sprites and tile layers",
-		WREN_ENUM_PAIR("BACKGROUND_FAR", Struktur::World::RenderLayer::BackgroundFar),
-		WREN_ENUM_PAIR("BACKGROUND_MID", Struktur::World::RenderLayer::BackgroundMid),
-		WREN_ENUM_PAIR("ENTITIES", Struktur::World::RenderLayer::Entities),
-		WREN_ENUM_PAIR("BACKGROUND_OVERLAY", Struktur::World::RenderLayer::BackgroundOverlay),
-		WREN_ENUM_PAIR("FOREGROUND", Struktur::World::RenderLayer::Foreground),
-		WREN_ENUM_PAIR("UI", Struktur::World::RenderLayer::UI),
-		);
+	          WREN_ENUM_PAIR("BACKGROUND_FAR", Struktur::World::RenderLayer::BackgroundFar),
+	          WREN_ENUM_PAIR("BACKGROUND_MID", Struktur::World::RenderLayer::BackgroundMid),
+	          WREN_ENUM_PAIR("ENTITIES", Struktur::World::RenderLayer::Entities),
+	          WREN_ENUM_PAIR("BACKGROUND_OVERLAY", Struktur::World::RenderLayer::BackgroundOverlay),
+	          WREN_ENUM_PAIR("FOREGROUND", Struktur::World::RenderLayer::Foreground),
+	          WREN_ENUM_PAIR("UI", Struktur::World::RenderLayer::UI), );
 
 	// Register Camera Component foreign class
 	WREN_FOREIGN_CLASS(registry, "gameObjectComponents", "Camera", wren_CameraAllocate, wren_CameraFinalize,
@@ -1957,8 +1956,9 @@ WREN_BINDING_MODULE(GameObjectComponent)
 
 	WREN_CLASS_STATIC(registry, "gameObjectComponents", "Script", "create(_,_)", wren_ScriptCreate,
 	                  "Creates the script Component.");
-	WREN_CLASS_STATIC(registry, "gameObjectComponents", "Script", "createArgPairs(_,_,_)", wren_ScriptCreateArgPairs,
-	                  "Internal: creates the script Component from a MapUtil-encoded arg map. Prefer createArg(_,_,_).");
+	WREN_CLASS_STATIC(
+	    registry, "gameObjectComponents", "Script", "createArgPairs(_,_,_)", wren_ScriptCreateArgPairs,
+	    "Internal: creates the script Component from a MapUtil-encoded arg map. Prefer createArg(_,_,_).");
 	WREN_CLASS_STATIC(registry, "gameObjectComponents", "Script", "get(_)", wren_WrenScriptGet,
 	                  "Gets the script component");
 	WREN_CLASS_STATIC(registry, "gameObjectComponents", "Script", "getInstance(_)", wren_ScriptStaticGetInstance,
@@ -1966,7 +1966,7 @@ WREN_BINDING_MODULE(GameObjectComponent)
 
 	WREN_IMPORT(registry, "gameObjectComponents", "serialisation", "MapUtil");
 	WREN_IMPL(registry, "gameObjectComponents", "Script", true,
-	         "static createArg(entity, className, args) {\n"
-	         "    return createArgPairs(entity, className, MapUtil.mapToPairs(args))\n"
-	         "}");
+	          "static createArg(entity, className, args) {\n"
+	          "    return createArgPairs(entity, className, MapUtil.mapToPairs(args))\n"
+	          "}");
 }

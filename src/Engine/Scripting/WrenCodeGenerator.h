@@ -12,17 +12,17 @@ namespace Struktur::Wren
 {
 class CodeGenerator
 {
-   public:
+public:
 	static void GenerateBindingFiles(const BindingRegistry& registry, const std::string& outputDir);
 
-   private:
+private:
 	static void GenerateModuleFile(const std::string& outputDir, const std::string& moduleName,
 	                               const std::vector<const MethodBinding*>& methods,
 	                               const std::vector<const ClassBinding*>& classes,
 	                               const std::vector<const EnumBinding*>& enums,
 	                               const std::vector<const ConstantBinding*>& constants,
-								   const std::vector<const WrenImplementationBinding*>& wrenImpls,
-								   const std::vector<const ModuleImportBinding*>& imports);
+	                               const std::vector<const WrenImplementationBinding*>& wrenImpls,
+	                               const std::vector<const ModuleImportBinding*>& imports);
 
 	static std::string ConvertSignature(const std::string& signature);
 

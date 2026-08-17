@@ -31,7 +31,7 @@ enum class TextWrapping
 //=============================================================================
 class UILabel : public UIElement
 {
-   private:
+private:
 	std::string m_text;
 	Resource::ResourcePtr<Resource::FontResource> m_font;
 	Util::Color m_textColor;
@@ -39,7 +39,7 @@ class UILabel : public UIElement
 	TextWrapping m_wrapping;
 	float m_fontSize;
 
-   public:
+public:
 	UILabel(GameContext& context, const glm::vec2& absolutePosition, const glm::vec2& relativePosition,
 	        const std::string& labelText, float fontSz = 20.0f);
 
@@ -95,7 +95,7 @@ class UILabel : public UIElement
 	glm::vec2 GetFormattedTextSize() const;
 	float GetLineHeight() const;
 
-   private:
+private:
 	// FontResource populates real glyph metrics (baseSize/glyphs) on both platforms, so Text::MeasureTextEx
 	// (GPU-independent - see FontResource) works everywhere; centralising it here just keeps every layout call
 	// site (wrapping, justification, bounding box) going through one place.

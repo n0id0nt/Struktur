@@ -13,11 +13,11 @@ namespace UI
 //=============================================================================
 class UIPanel : public UIElement
 {
-   private:
+private:
 	Resource::ResourcePtr<Resource::TextureResource> m_backgroundTexture;
 	bool m_hasBackgroundTexture;
 
-   public:
+public:
 	UIPanel(const glm::vec2& absolutePosition, const glm::vec2& relativePosition, const glm::vec2& absoluteSize,
 	        const glm::vec2& relativeSize);
 

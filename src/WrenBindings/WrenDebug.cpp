@@ -1,13 +1,11 @@
-#include "wren.hpp"
-
-#include <string.h>
 #include <Trace/wren_trace.h>
+#include <string.h>
 
-#include "Engine/Scripting/WrenBindingRegistry.h"
-#include "Engine/GameContext.h"
-
-#include "Debug/Profiling/Profiler.h"
 #include "Debug/Assertions.h"
+#include "Debug/Profiling/Profiler.h"
+#include "Engine/GameContext.h"
+#include "Engine/Scripting/WrenBindingRegistry.h"
+#include "wren.hpp"
 
 // Profile.begin(name)
 void wren_ProfileStaticProfileBegin(WrenVM* vm)

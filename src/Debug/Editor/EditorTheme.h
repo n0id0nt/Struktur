@@ -4,9 +4,9 @@ namespace Struktur::Debug
 {
 class EditorTheme
 {
-   public:
+public:
 	static void ApplyDarkTheme();
 	static void ApplyLightTheme();
 	static void ApplyClassicTheme();
 };
-}
+}  // namespace Struktur::Debug

@@ -17,7 +17,7 @@ namespace Physics
 {
 class ContactListener : public b2ContactListener
 {
-   public:
+public:
 	struct Contact
 	{
 		Contact(b2Fixture* fixture, b2Fixture* otherFixture, entt::entity other, b2Contact* contact);
@@ -44,7 +44,7 @@ class ContactListener : public b2ContactListener
 
 	void PreSolve(b2Contact* contact, const b2Manifold* oldManifold) override;
 
-   private:
+private:
 	// Resolves both fixtures' owning entities via body user-data - see PhysicsSystem::CreatePhysicsBody, the sole
 	// place bodies are created in this codebase, which always sets this before a body can generate a contact.
 	void GetContactEntities(b2Contact* contact, entt::entity& entityA, entt::entity& entityB);

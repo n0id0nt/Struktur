@@ -16,7 +16,7 @@ namespace System
 {
 class PhysicsSystem : public ISystem
 {
-   public:
+public:
 	void Update(GameContext& context) override;
 
 	void StepPhysics(GameContext& context, float deltaTime);

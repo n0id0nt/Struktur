@@ -15,11 +15,11 @@
 #include "Engine/ECS/System/AnimationSystem.h"
 #include "Engine/ECS/System/PhysicsSystem.h"
 #include "Engine/ECS/System/TransformSystem.h"
-#include "Engine/Util/Color.h"
 #include "Engine/ECS/System/WrenScriptSystem.h"
 #include "Engine/FileLoading/LevelParser.h"
 #include "Engine/GameContext.h"
 #include "Engine/Physics/CollisionShapeGenerators/TileMapCollisionBodyGenerator.h"
+#include "Engine/Util/Color.h"
 
 entt::entity Struktur::World::Level::CreateWorldEntity(GameContext& context, const std::string& filePath)
 {
@@ -35,7 +35,7 @@ entt::entity Struktur::World::Level::CreateWorldEntity(GameContext& context, con
 }
 
 entt::entity Struktur::World::Level::LoadLevelEntities(GameContext& context, const entt::entity worldEntity,
-                                                              int levelIndex)
+                                                       int levelIndex)
 {
 	entt::registry& registry                     = context.GetRegistry();
 	System::GameObjectManager& gameObjectManager = context.GetGameObjectManager();
@@ -85,9 +85,10 @@ entt::entity Struktur::World::Level::LoadLevelEntities(GameContext& context, con
 
 				// TODO - grab the tileset path from the level somehow - possibly have a store the tilesets in the
 				// resource pool and grab is here
-				Component::TileMap& tileMap = registry.emplace<Component::TileMap>(
-				    layerEntity, std::move(texture), layer.cWid, layer.cHei, layer.gridSize, grid, layer.intGrid,
-				    layer.renderLayer, layer.orderInLayer);
+				Component::TileMap& tileMap =
+				    registry.emplace<Component::TileMap>(layerEntity, std::move(texture), layer.cWid, layer.cHei,
+				                                         layer.gridSize, grid, layer.intGrid, layer.renderLayer,
+				                                         layer.orderInLayer);
 
 				if (layer.identifier == "Collision")
 				{

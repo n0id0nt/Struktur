@@ -15,15 +15,15 @@
 #include "Engine/ECS/SystemManager.h"
 #include "Engine/Event/EventManager.h"
 #include "Engine/Flag/FlagManager.h"
-#include "Engine/World/Camera.h"
 #include "Engine/Input/Input.h"
 #include "Engine/Physics/CollisionLayers.h"
 #include "Engine/Physics/PhysicsWorld.h"
-#include "Engine/Renderer/WorldRenderer.h"
 #include "Engine/Platform/Window.h"
 #include "Engine/Renderer/GraphicsDevice.h"
 #include "Engine/Renderer/UIRenderer.h"
+#include "Engine/Renderer/WorldRenderer.h"
 #include "Engine/Resource/ResourceManager.h"
+#include "Engine/World/Camera.h"
 #if defined(EDITOR)
 	#include "Engine/Renderer/ImGuiRenderer.h"
 #endif
@@ -43,7 +43,7 @@ namespace Struktur
 {
 class GameContext
 {
-   public:
+public:
 	GameContext();
 
 	void Shutdown();
@@ -82,7 +82,7 @@ class GameContext
 	Wren::WrenScriptEngine& GetWrenScriptEngine() const;
 	Wren::WrenStateManager& GetWrenStateManager() const;
 
-   private:
+private:
 	std::unique_ptr<World::Camera> m_camera;
 	std::unique_ptr<Physics::CollisionLayers> m_collisionLayers;
 	std::unique_ptr<Dialogue::DialogueManager> m_dialogueManager;

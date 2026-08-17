@@ -360,8 +360,7 @@ void wren_ResourceMusicLoad(WrenVM* vm)
 	const char* path = wrenGetSlotString(vm, 1);
 
 	// Load music through resource manager
-	Struktur::Resource::ResourcePtr<Struktur::Resource::MusicResource> music =
-	    resourceManager.GetMusic(*context, path);
+	Struktur::Resource::ResourcePtr<Struktur::Resource::MusicResource> music = resourceManager.GetMusic(*context, path);
 
 	if (!music)
 	{
@@ -565,8 +564,7 @@ void wren_ResourceSoundLoad(WrenVM* vm)
 	const char* path = wrenGetSlotString(vm, 1);
 
 	// Load sound through resource manager
-	Struktur::Resource::ResourcePtr<Struktur::Resource::SoundResource> sound =
-	    resourceManager.GetSound(*context, path);
+	Struktur::Resource::ResourcePtr<Struktur::Resource::SoundResource> sound = resourceManager.GetSound(*context, path);
 
 	if (!sound)
 	{

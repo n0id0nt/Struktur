@@ -55,7 +55,7 @@ struct ValidationWarning
 
 class DialogueEditorWindow : public EditorWindow
 {
-   public:
+public:
 	DialogueEditorWindow(PreviewWindow* previewWindow);
 
 	void Render(GameContext& context) override;
@@ -78,7 +78,7 @@ class DialogueEditorWindow : public EditorWindow
 	void ContinuePlayback(GameContext& context);
 	void MakePlaybackChoice(GameContext& context, int choiceIndex);
 
-   private:
+private:
 	enum class ViewMode
 	{
 		Edit,

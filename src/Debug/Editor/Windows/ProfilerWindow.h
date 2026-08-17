@@ -7,7 +7,7 @@ namespace Struktur::Debug
 {
 class ProfilerWindow : public EditorWindow
 {
-   public:
+public:
 	ProfilerWindow()
 	    : EditorWindow("Profiler")
 	{
@@ -17,7 +17,7 @@ class ProfilerWindow : public EditorWindow
 
 	void Render(GameContext& context) override;
 
-   private:
+private:
 	enum class SortMode
 	{
 		Duration,

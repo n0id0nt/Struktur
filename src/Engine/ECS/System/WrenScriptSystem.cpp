@@ -144,13 +144,15 @@ void WrenScriptSystem::Update(GameContext& context)
 
 	auto& registry = context.GetRegistry();
 
-	// Construct + Start every script queued since the last Update() - the only safe place to do so, see QueuePendingInitialise().
+	// Construct + Start every script queued since the last Update() - the only safe place to do so, see
+	// QueuePendingInitialise().
 	if (!m_pendingInitialise.empty())
 	{
 		std::vector<entt::entity> toStart;
 		toStart.reserve(m_pendingInitialise.size());
 
-		// Index-based since InitialiseScript() may queue more entries (nested Script.createArg) that should run this same pass.
+		// Index-based since InitialiseScript() may queue more entries (nested Script.createArg) that should run this
+		// same pass.
 		for (int i = 0; i < m_pendingInitialise.size(); ++i)
 		{
 			entt::entity entity = m_pendingInitialise[i];
@@ -294,7 +296,7 @@ void WrenScriptSystem::SendEvent(GameContext& context, entt::entity entity, Comp
 namespace
 {
 const Wren::WrenExportedField* FindExportedField(const Wren::WrenScriptComponent& scriptComponent,
-                                                  const std::string& fieldName)
+                                                 const std::string& fieldName)
 {
 	for (const Wren::WrenExportedField& field : scriptComponent.exportedFields)
 	{

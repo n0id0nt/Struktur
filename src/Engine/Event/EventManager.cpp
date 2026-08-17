@@ -69,14 +69,12 @@ bool Struktur::Event::EventManager::DrainIterator::operator!=(const DrainIterato
 	return !(*this == other);
 }
 
-Struktur::Event::EventManager::DrainIterator::reference Struktur::Event::EventManager::DrainIterator::operator*()
-    const
+Struktur::Event::EventManager::DrainIterator::reference Struktur::Event::EventManager::DrainIterator::operator*() const
 {
 	return m_queue->front();
 }
 
-Struktur::Event::EventManager::DrainIterator::pointer Struktur::Event::EventManager::DrainIterator::operator->()
-    const
+Struktur::Event::EventManager::DrainIterator::pointer Struktur::Event::EventManager::DrainIterator::operator->() const
 {
 	return &m_queue->front();
 }

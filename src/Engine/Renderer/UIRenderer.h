@@ -1,6 +1,9 @@
 #pragma once
 
+#include <bgfx/bgfx.h>
+
 #include <cstdint>
+#include <glm/glm.hpp>
 #include <string>
 #include <vector>
 
@@ -10,9 +13,6 @@
 #include "Engine/Text/Font.h"
 #include "Engine/Util/Color.h"
 #include "Engine/Util/MathUtil.h"
-
-#include <bgfx/bgfx.h>
-#include <glm/glm.hpp>
 
 namespace Struktur
 {
@@ -64,7 +64,7 @@ struct UIBatch
 // a persistent slot - RenderFocusIndicator and debug/overlay drawing use these directly.
 class UIRenderer
 {
-   public:
+public:
 	UIRenderer()  = default;
 	~UIRenderer() = default;
 
@@ -120,11 +120,11 @@ class UIRenderer
 	// used (UIBatch::quadTextures) - a batch is not limited to one texture (see Flush()), so writes from
 	// differently-textured widgets sharing a batch don't stomp on each other.
 	void WriteRect(UIBatchHandle batch, const UIBatchSlot& slot, const Util::Math::Rect& rect,
-	              const Util::Color& color);
+	               const Util::Color& color);
 	// Writes 4 quads (top/bottom/left/right bars, the same decomposition DrawRectOutline uses) - slot must have
 	// quadCapacity >= 4.
-	void WriteRectOutline(UIBatchHandle batch, const UIBatchSlot& slot, const Util::Math::Rect& rect,
-	                      float thickness, const Util::Color& color);
+	void WriteRectOutline(UIBatchHandle batch, const UIBatchSlot& slot, const Util::Math::Rect& rect, float thickness,
+	                      const Util::Color& color);
 	void WriteTexturedRect(UIBatchHandle batch, const UIBatchSlot& slot, const Util::Math::Rect& rect,
 	                       const TextureHandle& texture, const Util::Color& tint);
 	// Same UTF-8 glyph-walk as DrawText (Text::GetCodepointNext/Text::GetGlyphIndex), writing into batch's
@@ -161,9 +161,9 @@ class UIRenderer
 	// setters that any other caller could also reach for.
 	void AssignBatches(UI::UIElement* element, UIBatchHandle sharedBatch);
 
-   private:
-	void SubmitTexturedQuad(float x, float y, float w, float h, float u0, float v0, float u1, float v1,
-	                         uint32_t abgr, bgfx::TextureHandle texture);
+private:
+	void SubmitTexturedQuad(float x, float y, float w, float h, float u0, float v0, float u1, float v1, uint32_t abgr,
+	                        bgfx::TextureHandle texture);
 
 	// Resolves handle to its UIBatch for a WriteX call, ASSERT_MSGing (see Debug/Assertions.h) on an invalid
 	// handle - returns nullptr on failure so callers can bail out safely even in Release, where the assert

@@ -16,7 +16,7 @@ namespace Wren
 {
 class WrenScriptEngine
 {
-   public:
+public:
 	WrenScriptEngine()
 	    : m_vm(nullptr)
 	{
@@ -37,7 +37,7 @@ class WrenScriptEngine
 	bool InterpretString(const char* module, const char* source);
 	bool InterpretFile(const char* path);
 
-   private:
+private:
 	WrenVM* m_vm;
 	BindingRegistry m_registry;
 

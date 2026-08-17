@@ -1,8 +1,8 @@
 #pragma once
 
-#include <glm/glm.hpp>
-
 #include <bgfx/bgfx.h>
+
+#include <glm/glm.hpp>
 
 #include "EditorWindow.h"
 
@@ -10,7 +10,7 @@ namespace Struktur::Debug
 {
 class GameViewportWindow : public EditorWindow
 {
-   public:
+public:
 	GameViewportWindow()
 	    : EditorWindow("Game Viewport"),
 	      m_viewportFocused(false),
@@ -35,7 +35,7 @@ class GameViewportWindow : public EditorWindow
 	// Get mouse position in game coordinates.
 	glm::vec2 GetGameMousePosition(GameContext& context) const;
 
-   private:
+private:
 	// The world view (GraphicsDevice::WorldViewId) renders into this instead of the backbuffer while the
 	// editor is active - see GameViewportWindow::Initialise and GraphicsDevice::SetWorldRenderTarget.
 	bgfx::FrameBufferHandle m_frameBuffer = BGFX_INVALID_HANDLE;

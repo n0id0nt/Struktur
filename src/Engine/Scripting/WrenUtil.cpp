@@ -2,14 +2,14 @@
 
 #include "Engine/Scripting/WrenValueWrapper.h"
 
-std::vector<Struktur::Wren::WrenItem> Struktur::Wren::Util::GetWrenMapFromPairs(WrenVM *vm, int pairsSlot,
-                                                                                 int firstClearSlot)
+std::vector<Struktur::Wren::WrenItem> Struktur::Wren::Util::GetWrenMapFromPairs(WrenVM* vm, int pairsSlot,
+                                                                                int firstClearSlot)
 {
 	std::vector<Wren::WrenItem> items;
 
-	int pairCount  = wrenGetListCount(vm, pairsSlot);
-	int pairSlot   = firstClearSlot;
-	int valueSlot  = firstClearSlot + 1;
+	int pairCount = wrenGetListCount(vm, pairsSlot);
+	int pairSlot  = firstClearSlot;
+	int valueSlot = firstClearSlot + 1;
 	wrenEnsureSlots(vm, valueSlot + 1);
 
 	// Index 0 is the ["__type", "map"] sentinel written by MapUtil.mapToPairs - the actual entries start at 1

@@ -16,13 +16,13 @@ namespace Resource
 {
 class ShaderPool : public GpuResourcePool<ShaderResource>
 {
-   public:
+public:
 	ShaderPool()
 	    : GpuResourcePool<ShaderResource>(1 * 1024 * 1024)
 	{
 	}  // 1MB for textures
 
-   protected:
+protected:
 	ShaderResource* LoadResource(GameContext& context, const std::string& resourceString) override;
 };
 }  // namespace Resource

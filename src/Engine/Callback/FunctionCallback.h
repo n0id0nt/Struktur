@@ -13,7 +13,7 @@ namespace Struktur::Callback
 // C++ function/lambda callback implementation
 class FunctionCallback : public ICallback
 {
-   public:
+public:
 	// Construct from function that takes variant vector
 	FunctionCallback(std::function<Variant(const std::vector<Variant>&)> func);
 
@@ -32,7 +32,7 @@ class FunctionCallback : public ICallback
 	Variant Invoke(GameContext& context, const std::vector<Variant>& args) override;
 	bool IsValid() const override;
 
-   private:
+private:
 	std::function<Variant(const std::vector<Variant>&)> m_function;
 };
 }  // namespace Struktur::Callback

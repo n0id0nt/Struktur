@@ -1,11 +1,11 @@
 #include "Input.h"
 
+#include <SDL3/SDL.h>
+
 #include <cmath>
 
 #include "InputConfigLoader.h"
 #include "InputMaps.h"
-
-#include <SDL3/SDL.h>
 
 namespace
 {
@@ -13,9 +13,9 @@ namespace
 // re-derives "the Nth currently connected gamepad" from SDL_GetGamepads()'s list.
 SDL_JoystickID GetGamepadInstanceIdAtIndex(int index)
 {
-	int count               = 0;
+	int count                = 0;
 	SDL_JoystickID* gamepads = ::SDL_GetGamepads(&count);
-	SDL_JoystickID result   = 0;
+	SDL_JoystickID result    = 0;
 	if (gamepads && index >= 0 && index < count)
 	{
 		result = gamepads[index];
@@ -73,7 +73,7 @@ void Input::Update()
 			{
 				::SDL_CloseGamepad(m_sdlGamepad);
 			}
-			m_sdlGamepad           = ::SDL_OpenGamepad(instanceId);
+			m_sdlGamepad          = ::SDL_OpenGamepad(instanceId);
 			std::string currentId = m_sdlGamepad ? ::SDL_GetGamepadName(m_sdlGamepad) : "";
 			if (currentId != m_gamepadId)
 			{
@@ -95,7 +95,7 @@ void Input::Update()
 	}
 
 	// Rotate snapshots so IsKeyJustPressed/IsKeyJustReleased can diff "this frame" against "last frame".
-	m_prevKeyboardState = m_currKeyboardState;
+	m_prevKeyboardState       = m_currKeyboardState;
 	int numKeys               = 0;
 	const bool* keyboardState = ::SDL_GetKeyboardState(&numKeys);
 	for (int i = 0; i < (int)m_currKeyboardState.size() && i < numKeys; ++i)
@@ -107,11 +107,11 @@ void Input::Update()
 	// LEFT_TRIGGER/RIGHT_TRIGGER are excluded - they're analog axes in SDL3 (SDL_GAMEPAD_AXIS_LEFT/RIGHT_TRIGGER),
 	// not digital buttons; GetControllerAxisValue() is the correct query for those.
 	static const SDL_GamepadButton kAllButtons[] = {
-	    SDL_GAMEPAD_BUTTON_DPAD_UP,        SDL_GAMEPAD_BUTTON_DPAD_RIGHT,    SDL_GAMEPAD_BUTTON_DPAD_DOWN,
-	    SDL_GAMEPAD_BUTTON_DPAD_LEFT,      SDL_GAMEPAD_BUTTON_NORTH,        SDL_GAMEPAD_BUTTON_EAST,
-	    SDL_GAMEPAD_BUTTON_SOUTH,          SDL_GAMEPAD_BUTTON_WEST,         SDL_GAMEPAD_BUTTON_LEFT_SHOULDER,
-	    SDL_GAMEPAD_BUTTON_RIGHT_SHOULDER, SDL_GAMEPAD_BUTTON_BACK,         SDL_GAMEPAD_BUTTON_GUIDE,
-	    SDL_GAMEPAD_BUTTON_START,          SDL_GAMEPAD_BUTTON_LEFT_STICK,   SDL_GAMEPAD_BUTTON_RIGHT_STICK,
+	    SDL_GAMEPAD_BUTTON_DPAD_UP,        SDL_GAMEPAD_BUTTON_DPAD_RIGHT, SDL_GAMEPAD_BUTTON_DPAD_DOWN,
+	    SDL_GAMEPAD_BUTTON_DPAD_LEFT,      SDL_GAMEPAD_BUTTON_NORTH,      SDL_GAMEPAD_BUTTON_EAST,
+	    SDL_GAMEPAD_BUTTON_SOUTH,          SDL_GAMEPAD_BUTTON_WEST,       SDL_GAMEPAD_BUTTON_LEFT_SHOULDER,
+	    SDL_GAMEPAD_BUTTON_RIGHT_SHOULDER, SDL_GAMEPAD_BUTTON_BACK,       SDL_GAMEPAD_BUTTON_GUIDE,
+	    SDL_GAMEPAD_BUTTON_START,          SDL_GAMEPAD_BUTTON_LEFT_STICK, SDL_GAMEPAD_BUTTON_RIGHT_STICK,
 	};
 	for (SDL_GamepadButton button : kAllButtons)
 	{
@@ -441,7 +441,8 @@ void Input::CreateVariableBinding(const std::string& input, SDL_GamepadButton co
 	m_variableBindings[input].buttonBindings.controllerButtons.insert(code);
 }
 
-void Input::CreateVariableBinding(const std::string& input, SDL_GamepadAxis code, VariableBindingAxis variableBindingAxis)
+void Input::CreateVariableBinding(const std::string& input, SDL_GamepadAxis code,
+                                  VariableBindingAxis variableBindingAxis)
 {
 	m_variableBindings[input].controllerVariables.insert({variableBindingAxis, code});
 }

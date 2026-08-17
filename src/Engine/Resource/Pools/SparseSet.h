@@ -27,7 +27,7 @@ namespace Resource
 template <typename T>
 class SparseSet
 {
-   public:
+public:
 	struct Handle
 	{
 		static constexpr uint32_t kInvalidIndex = std::numeric_limits<uint32_t>::max();
@@ -72,16 +72,16 @@ class SparseSet
 			return false;
 		}
 
-		uint32_t slot        = handle.index;
-		uint32_t denseIndex  = m_sparse[slot].denseIndex;
-		uint32_t lastIndex   = (uint32_t)m_dense.size() - 1;
+		uint32_t slot       = handle.index;
+		uint32_t denseIndex = m_sparse[slot].denseIndex;
+		uint32_t lastIndex  = (uint32_t)m_dense.size() - 1;
 
 		if (denseIndex != lastIndex)
 		{
 			// Relocate the last element into the gap left by the erased one, then fix up the sparse entry for
 			// whichever slot that last element belongs to, since its dense position just changed.
-			m_dense[denseIndex]       = std::move(m_dense[lastIndex]);
-			m_denseToSlot[denseIndex] = m_denseToSlot[lastIndex];
+			m_dense[denseIndex]                            = std::move(m_dense[lastIndex]);
+			m_denseToSlot[denseIndex]                      = m_denseToSlot[lastIndex];
 			m_sparse[m_denseToSlot[denseIndex]].denseIndex = denseIndex;
 		}
 		m_dense.pop_back();
@@ -125,13 +125,13 @@ class SparseSet
 	T& operator[](Handle handle)
 	{
 		ASSERT_MSG(IsValid(handle), "SparseSet: handle (index %u, generation %u) is not valid", handle.index,
-		          handle.generation);
+		           handle.generation);
 		return m_dense[m_sparse[handle.index].denseIndex];
 	}
 	const T& operator[](Handle handle) const
 	{
 		ASSERT_MSG(IsValid(handle), "SparseSet: handle (index %u, generation %u) is not valid", handle.index,
-		          handle.generation);
+		           handle.generation);
 		return m_dense[m_sparse[handle.index].denseIndex];
 	}
 
@@ -195,7 +195,7 @@ class SparseSet
 		return m_dense.end();
 	}
 
-   private:
+private:
 	struct SparseEntry
 	{
 		uint32_t denseIndex = Handle::kInvalidIndex;

@@ -1,6 +1,10 @@
 #pragma once
 
+#include <SDL3/SDL_gamepad.h>
+#include <SDL3/SDL_scancode.h>
+
 #include <algorithm>
+#include <array>
 #include <set>
 #include <string>
 #include <unordered_map>
@@ -8,17 +12,13 @@
 #include "Debug/Assertions.h"
 #include "glm/glm.hpp"
 
-#include <SDL3/SDL_gamepad.h>
-#include <SDL3/SDL_scancode.h>
-#include <array>
-
 namespace Struktur::Input
 {
 class InputConfigLoader;
 
 class Input
 {
-   public:
+public:
 	// Enums need to be public for InputConfigLoader
 	enum class VariableBindingAxis
 	{
@@ -56,7 +56,7 @@ class Input
 		Count
 	};
 
-   private:
+private:
 	struct Binding
 	{
 		std::set<SDL_Scancode> keycodes;
@@ -98,7 +98,7 @@ class Input
 		AxisBinding yAxis;
 	};
 
-   public:
+public:
 	Input(int gamepadIndex = 0);
 	~Input();
 
@@ -182,7 +182,7 @@ class Input
 	static Axis2Direction ParseAxis2Direction(const std::string& direction);
 	static VariableBindingAxis ParseVariableBindingAxis(const std::string& axis);
 
-   private:
+private:
 	// Binding storage
 	std::unordered_map<std::string, Binding> m_buttonBindings;
 	std::unordered_map<std::string, VariableBinding> m_variableBindings;

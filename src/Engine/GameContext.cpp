@@ -4,39 +4,39 @@ namespace Struktur
 {
 GameContext::GameContext()
 {
-	m_camera            = std::make_unique<World::Camera>();
-	m_collisionLayers    = std::make_unique<Physics::CollisionLayers>();
-	m_dialogueManager    = std::make_unique<Dialogue::DialogueManager>();
-	m_dialogueRegistry   = std::make_unique<Dialogue::DialogueRegistry>();
+	m_camera           = std::make_unique<World::Camera>();
+	m_collisionLayers  = std::make_unique<Physics::CollisionLayers>();
+	m_dialogueManager  = std::make_unique<Dialogue::DialogueManager>();
+	m_dialogueRegistry = std::make_unique<Dialogue::DialogueRegistry>();
 #ifdef EDITOR
 	m_editor = std::make_unique<Debug::Editor>();
 #endif
-	m_eventManager       = std::make_unique<Event::EventManager>();
-	m_flagManager        = std::make_unique<Flag::FlagManager>();
-	m_gameData           = std::make_unique<Core::GameData>();
-	m_gameObjectManager  = std::make_unique<System::GameObjectManager>();
-	m_graphicsDevice     = std::make_unique<Renderer::GraphicsDevice>();
+	m_eventManager      = std::make_unique<Event::EventManager>();
+	m_flagManager       = std::make_unique<Flag::FlagManager>();
+	m_gameData          = std::make_unique<Core::GameData>();
+	m_gameObjectManager = std::make_unique<System::GameObjectManager>();
+	m_graphicsDevice    = std::make_unique<Renderer::GraphicsDevice>();
 #ifdef EDITOR
 	m_imGuiRenderer = std::make_unique<Renderer::ImGuiRenderer>();
 #endif
-	m_input                       = std::make_unique<Input::Input>(0);
-	m_mixer                       = std::make_unique<Audio::Mixer>();
-	m_physicsWorld                = std::make_unique<Physics::PhysicsWorld>();
+	m_input        = std::make_unique<Input::Input>(0);
+	m_mixer        = std::make_unique<Audio::Mixer>();
+	m_physicsWorld = std::make_unique<Physics::PhysicsWorld>();
 #ifdef DEBUG
 	m_profiler = std::make_unique<Debug::Profiler>();
 #endif
 	m_registry                    = std::make_unique<entt::registry>();
-	m_resourceManager              = std::make_unique<Resource::ResourceManager>();
-	m_systemManager                = std::make_unique<System::SystemManager>();
-	m_timeSystem                   = std::make_unique<Core::TimeSystem>();
-	m_uiManager                    = std::make_unique<UI::UIManager>();
-	m_uiRenderer                   = std::make_unique<Renderer::UIRenderer>();
-	m_variableSubstitutionSystem   = std::make_unique<Dialogue::VariableSubstitutionSystem>();
-	m_window                       = std::make_unique<Platform::Window>();
-	m_worldRenderer                = std::make_unique<Renderer::WorldRenderer>();
-	m_wrenScriptComponentRegistry  = std::make_unique<Wren::WrenScriptComponentRegistry>();
-	m_wrenScriptEngine             = std::make_unique<Wren::WrenScriptEngine>();
-	m_wrenStateManager             = std::make_unique<Wren::WrenStateManager>();
+	m_resourceManager             = std::make_unique<Resource::ResourceManager>();
+	m_systemManager               = std::make_unique<System::SystemManager>();
+	m_timeSystem                  = std::make_unique<Core::TimeSystem>();
+	m_uiManager                   = std::make_unique<UI::UIManager>();
+	m_uiRenderer                  = std::make_unique<Renderer::UIRenderer>();
+	m_variableSubstitutionSystem  = std::make_unique<Dialogue::VariableSubstitutionSystem>();
+	m_window                      = std::make_unique<Platform::Window>();
+	m_worldRenderer               = std::make_unique<Renderer::WorldRenderer>();
+	m_wrenScriptComponentRegistry = std::make_unique<Wren::WrenScriptComponentRegistry>();
+	m_wrenScriptEngine            = std::make_unique<Wren::WrenScriptEngine>();
+	m_wrenStateManager            = std::make_unique<Wren::WrenStateManager>();
 }
 
 void GameContext::Shutdown()

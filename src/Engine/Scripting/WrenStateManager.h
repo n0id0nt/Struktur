@@ -16,7 +16,7 @@ namespace Wren
 // Holds handle to Wren Game instance and delegates all calls to Wren
 class WrenStateManager
 {
-   public:
+public:
 	WrenStateManager()
 	    : m_rootStateInstanceHandle(nullptr),
 	      m_updateMethodHandle(nullptr),
@@ -64,7 +64,7 @@ class WrenStateManager
 		return m_rootStateInstanceHandle;
 	}
 
-   private:
+private:
 	WrenHandle* m_rootStateInstanceHandle;  // Handle to Wren Game object
 	WrenHandle* m_updateMethodHandle;       // Cached Game.update() method
 	WrenHandle* m_renderMethodHandle;       // Cached Game.render() method

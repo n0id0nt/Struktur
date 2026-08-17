@@ -60,12 +60,12 @@ glm::vec2 Struktur::Text::MeasureTextEx(const Font& font, const std::string& tex
 		return glm::vec2(0.0f, 0.0f);
 	}
 
-	float scaleFactor    = fontSize / (float)font.baseSize;
-	float textWidth      = 0.0f;
-	float tempTextWidth  = 0.0f;
-	float textHeight     = (float)font.baseSize;
-	int byteCounter      = 0;
-	int tempByteCounter  = 0;
+	float scaleFactor   = fontSize / (float)font.baseSize;
+	float textWidth     = 0.0f;
+	float tempTextWidth = 0.0f;
+	float textHeight    = (float)font.baseSize;
+	int byteCounter     = 0;
+	int tempByteCounter = 0;
 
 	int index = 0;
 	int size  = (int)text.size();
@@ -73,8 +73,8 @@ glm::vec2 Struktur::Text::MeasureTextEx(const Font& font, const std::string& tex
 	{
 		byteCounter++;
 		int codepointSize = 0;
-		int codepoint      = GetCodepointNext(&text[index], &codepointSize);
-		int glyphIndex     = GetGlyphIndex(font, codepoint);
+		int codepoint     = GetCodepointNext(&text[index], &codepointSize);
+		int glyphIndex    = GetGlyphIndex(font, codepoint);
 		index += codepointSize;
 
 		if (codepoint != '\n')

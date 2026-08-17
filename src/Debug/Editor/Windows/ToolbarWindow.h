@@ -6,7 +6,7 @@ namespace Struktur::Debug
 {
 class ToolbarWindow : public EditorWindow
 {
-   public:
+public:
 	ToolbarWindow()
 	    : EditorWindow("Toolbar")
 	{

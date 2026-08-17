@@ -1,10 +1,10 @@
 #pragma once
 
+#include <bgfx/bgfx.h>
+
 #include <cstdint>
 #include <string>
 #include <vector>
-
-#include <bgfx/bgfx.h>
 
 #include "Engine/Renderer/RenderTypes.h"
 #include "Engine/Resource/Pointers/ResourcePtr.h"
@@ -22,12 +22,12 @@ namespace Resource
 {
 class TextureResource : public GpuResource
 {
-   private:
+private:
 	std::vector<uint8_t> m_pixels;  // decoded RGBA8, kept until LoadToGpu() uploads it
 	int m_width  = 0;
 	int m_height = 0;
 
-   public:
+public:
 	bgfx::TextureHandle texture = BGFX_INVALID_HANDLE;
 
 	TextureResource(const std::string& filePath);

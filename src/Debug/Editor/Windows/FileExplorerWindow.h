@@ -21,7 +21,7 @@ struct FileEntry
 
 class FileExplorerWindow : public EditorWindow
 {
-   public:
+public:
 	FileExplorerWindow(PreviewWindow* previewWindow, const std::string& assetsPath = "assets")
 	    : EditorWindow("File Explorer"),
 	      m_previewWindow(previewWindow),
@@ -35,7 +35,7 @@ class FileExplorerWindow : public EditorWindow
 
 	void SetAssetsPath(const std::string& path);
 
-   private:
+private:
 	void RefreshFileList();
 	void RenderFileList(GameContext& context);
 	void RenderFileGrid(GameContext& context);

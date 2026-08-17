@@ -65,7 +65,7 @@ void Struktur::UI::UILabel::Render(GameContext& context)
 		if (m_backgroundColor.a > 0)
 		{
 			Renderer::UIBatchSlot backgroundSlot = m_batchSlot;
-			backgroundSlot.quadCapacity           = 1;
+			backgroundSlot.quadCapacity          = 1;
 			context.GetUIRenderer().WriteRect(m_batch, backgroundSlot, m_bounds, m_backgroundColor);
 			quadOffset += 1;
 		}
@@ -73,7 +73,7 @@ void Struktur::UI::UILabel::Render(GameContext& context)
 		{
 			Renderer::UIBatchSlot borderSlot = m_batchSlot;
 			borderSlot.vertexOffset += quadOffset * 4;
-			borderSlot.quadCapacity  = 4;
+			borderSlot.quadCapacity = 4;
 			context.GetUIRenderer().WriteRectOutline(m_batch, borderSlot, m_bounds, m_borderWidth, m_borderColor);
 			quadOffset += 4;
 		}
@@ -190,7 +190,7 @@ std::vector<std::string> Struktur::UI::UILabel::WrapText(const std::string& text
 			if (c == ' ' || c == '\t')
 			{
 				std::string testLine = currentLine + word + c;
-				glm::vec2 size        = MeasureText(m_font->font, testLine, m_fontSize);
+				glm::vec2 size       = MeasureText(m_font->font, testLine, m_fontSize);
 
 				if (size.x > maxWidth && !currentLine.empty())
 				{
@@ -212,7 +212,7 @@ std::vector<std::string> Struktur::UI::UILabel::WrapText(const std::string& text
 		{
 			// Character wrap mode
 			std::string testLine = currentLine + c;
-			glm::vec2 size        = MeasureText(m_font->font, testLine, m_fontSize);
+			glm::vec2 size       = MeasureText(m_font->font, testLine, m_fontSize);
 
 			if (size.x > maxWidth && !currentLine.empty())
 			{
@@ -313,8 +313,8 @@ void Struktur::UI::UILabel::RenderText(GameContext& context, const std::string& 
 	for (size_t i = 0; i < lines.size(); ++i)
 	{
 		const std::string& line = lines[i];
-		glm::vec2 textSize       = MeasureText(m_font->font, line, m_fontSize);
-		glm::vec2 textPos        = {startPos.x, currentY};
+		glm::vec2 textSize      = MeasureText(m_font->font, line, m_fontSize);
+		glm::vec2 textPos       = {startPos.x, currentY};
 
 		switch (m_alignment)
 		{
@@ -413,7 +413,7 @@ uint32_t Struktur::UI::UILabel::WriteGlyphs(GameContext& context, const std::str
 }
 
 uint32_t Struktur::UI::UILabel::WriteJustifiedLine(GameContext& context, const std::string& line, glm::vec2 pos,
-                                                    float targetWidth, bool isLastLine, uint32_t quadOffset)
+                                                   float targetWidth, bool isLastLine, uint32_t quadOffset)
 {
 	// Mirrors RenderJustifiedLine exactly, just calling WriteGlyphs (batched) instead of DrawGlyphs (immediate).
 	if (isLastLine || line.find(' ') == std::string::npos)
@@ -472,7 +472,7 @@ uint32_t Struktur::UI::UILabel::WriteJustifiedLine(GameContext& context, const s
 }
 
 uint32_t Struktur::UI::UILabel::WriteTextLines(GameContext& context, const std::string& text, glm::vec2 startPos,
-                                                float lineHeight, uint32_t quadOffset)
+                                               float lineHeight, uint32_t quadOffset)
 {
 	// Mirrors RenderText exactly, just calling WriteGlyphs/WriteJustifiedLine (batched) instead of
 	// DrawGlyphs/RenderJustifiedLine (immediate), threading the running quad offset through.
@@ -484,8 +484,8 @@ uint32_t Struktur::UI::UILabel::WriteTextLines(GameContext& context, const std::
 	for (size_t i = 0; i < lines.size(); ++i)
 	{
 		const std::string& line = lines[i];
-		glm::vec2 textSize       = MeasureText(m_font->font, line, m_fontSize);
-		glm::vec2 textPos        = {startPos.x, currentY};
+		glm::vec2 textSize      = MeasureText(m_font->font, line, m_fontSize);
+		glm::vec2 textPos       = {startPos.x, currentY};
 
 		switch (m_alignment)
 		{

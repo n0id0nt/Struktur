@@ -91,7 +91,7 @@ struct FileResult<void>
 
 class FileSystem
 {
-   public:
+public:
 	//-----------------------------------------------------------------------------------
 	// Lifecycle
 	//-----------------------------------------------------------------------------------
@@ -198,7 +198,7 @@ class FileSystem
 	                            const std::string& defaultValue = "");
 #endif
 
-   private:
+private:
 	static FileResult<std::vector<uint8_t>> ReadFile(const std::string& path);
 
 #ifdef EDITOR

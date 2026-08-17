@@ -50,7 +50,7 @@ class UIElement
 	// than exposed through public setters that any other caller could also reach for.
 	friend class Renderer::UIRenderer;
 
-   public:
+public:
 	UIElement(const glm::vec2& absolutePosition, const glm::vec2& relativePosition, const glm::vec2& absoluteSize,
 	          const glm::vec2& relativeSize);
 	virtual ~UIElement();
@@ -248,7 +248,7 @@ class UIElement
 	void ForEachRecursive(std::function<void(UIElement*)> func);
 	void ForEachRecursivePostOrder(std::function<void(UIElement*)> func);
 
-   protected:
+protected:
 	void UpdateChildren(GameContext& context);
 	void RenderChildren(GameContext& context);
 

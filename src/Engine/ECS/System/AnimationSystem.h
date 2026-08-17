@@ -18,7 +18,7 @@ namespace System
 {
 class AnimationSystem : public ISystem
 {
-   public:
+public:
 	void Update(GameContext& context) override;
 
 	void AddAnimation(GameContext& context, entt::entity entity, const std::string& animationName,

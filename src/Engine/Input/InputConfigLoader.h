@@ -13,7 +13,7 @@ class Input;
  */
 class InputConfigLoader
 {
-   public:
+public:
 	/**
 	 * Load input bindings from a JSON file into an Input instance
 	 * @param input The Input instance to configure
@@ -22,7 +22,7 @@ class InputConfigLoader
 	 */
 	static bool LoadFromFile(Input& input, const std::string& filePath);
 
-   private:
+private:
 	InputConfigLoader() = delete;  // Static class, no instances
 };
 }  // namespace Struktur::Input

@@ -28,9 +28,9 @@ namespace Wren
 struct WrenExportedField
 {
 	std::string name;
-	bool hasSetter            = false;
-	WrenHandle* getterHandle  = nullptr;
-	WrenHandle* setterHandle  = nullptr;
+	bool hasSetter           = false;
+	WrenHandle* getterHandle = nullptr;
+	WrenHandle* setterHandle = nullptr;
 };
 #endif
 
@@ -52,7 +52,7 @@ struct WrenScriptComponent
 
 class WrenScriptComponentRegistry
 {
-   public:
+public:
 	WrenScriptComponentRegistry()
 	    : m_scriptComponents()
 	{
@@ -73,7 +73,7 @@ class WrenScriptComponentRegistry
 	// Empty (never null) if the class has no exports or isn't loaded.
 	const std::vector<WrenExportedField>& GetExportedFields(GameContext& context, const std::string& className);
 
-   private:
+private:
 	time_t GetFileModificationTime(const std::string& path);
 	void ResolveExportedFields(GameContext& context, WrenScriptComponent& scriptComponent);
 	void EnsureExportReflectionBootstrap(GameContext& context);

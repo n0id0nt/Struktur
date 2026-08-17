@@ -35,7 +35,7 @@ struct ProfileNode
 
 class Profiler
 {
-   public:
+public:
 	Profiler()
 	    : m_rootNode("Frame", 0),
 	      m_pausedRootNode("Frame", 0),
@@ -76,7 +76,7 @@ class Profiler
 		m_targetFrameTimeMs = ms;
 	}
 
-   private:
+private:
 	ProfileNode m_rootNode;
 	ProfileNode m_pausedRootNode;
 	ProfileNode* m_currentNode;
@@ -99,7 +99,7 @@ class Profiler
 
 class ScopedProfile
 {
-   public:
+public:
 	ScopedProfile(Profiler* profiler, const std::string& name)
 	    : m_profiler(profiler)
 	{
@@ -128,7 +128,7 @@ class ScopedProfile
 		EndProfile();
 	}
 
-   private:
+private:
 	Profiler* m_profiler;
 	bool m_active;
 };

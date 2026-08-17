@@ -21,10 +21,10 @@ namespace Resource
 // SDL3_mixer sound - CPU resource (uses audio hardware)
 class SoundResource : public CpuResource
 {
-   private:
+private:
 	MIX_Audio* m_audio = nullptr;
 
-   public:
+public:
 	// Persistent playback instance, created once in LoadToHardware() and reused thereafter.
 	MIX_Track* track = nullptr;
 

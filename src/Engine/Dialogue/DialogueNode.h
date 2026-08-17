@@ -57,7 +57,7 @@ struct ConditionalTarget
 // A single node in the dialogue graph
 class DialogueNode
 {
-   public:
+public:
 	DialogueNode(const std::string& id);
 	~DialogueNode() = default;
 
@@ -141,7 +141,7 @@ class DialogueNode
 	void ClearChoices();
 	void ClearTargets();
 
-   private:
+private:
 	std::string m_id;
 	std::optional<std::string> m_speaker;
 	std::optional<std::string> m_text;

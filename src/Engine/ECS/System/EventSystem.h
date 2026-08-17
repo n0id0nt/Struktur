@@ -14,7 +14,7 @@ namespace System
 {
 class EventSystem : public ISystem
 {
-   public:
+public:
 	EventSystem() {}
 
 	void Update(GameContext& context) override;

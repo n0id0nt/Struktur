@@ -12,9 +12,7 @@
 #include "Engine/Resource/FontResource.h"
 #include "Engine/Resource/Pointers/ResourcePtr.h"
 
-Struktur::System::DebugSystem::DebugSystem()
-{
-}
+Struktur::System::DebugSystem::DebugSystem() {}
 
 void Struktur::System::DebugSystem::Update(GameContext& context)
 {
@@ -51,7 +49,8 @@ void Struktur::System::DebugSystem::Update(GameContext& context)
 	{
 		RenderPhysicsShapes(context);
 	}
-	// showPhysicsContactPoints: dead on web too (// TODO: Implement contact point rendering, never called) - not ported.
+	// showPhysicsContactPoints: dead on web too (// TODO: Implement contact point rendering, never called) - not
+	// ported.
 
 	if (debugSettings.showLevelBounds)
 	{
@@ -101,7 +100,7 @@ void Struktur::System::DebugSystem::RenderEntityGizmos(GameContext& context)
 		glm::vec3 worldPosition = transformSystem.GetWorldPosition(context, entity);
 
 		float crossSize = 10.0f;
-		glm::vec2 pos    = {worldPosition.x, worldPosition.y};
+		glm::vec2 pos   = {worldPosition.x, worldPosition.y};
 
 		m_debugRenderer.DrawLine({pos.x - crossSize, pos.y}, {pos.x + crossSize, pos.y}, 2.0f, Util::ColorGreen);
 		m_debugRenderer.DrawLine({pos.x, pos.y - crossSize}, {pos.x, pos.y + crossSize}, 2.0f, Util::ColorGreen);
@@ -118,8 +117,8 @@ void Struktur::System::DebugSystem::RenderSelectedEntityHighlight(GameContext& c
 		return;
 	}
 
-	entt::entity selected     = hierarchyWindow->GetSelectedEntity();
-	entt::registry& registry  = context.GetRegistry();
+	entt::entity selected    = hierarchyWindow->GetSelectedEntity();
+	entt::registry& registry = context.GetRegistry();
 	if (selected == entt::null || !registry.valid(selected) || !registry.all_of<Component::Transform>(selected))
 	{
 		return;
@@ -199,8 +198,8 @@ void Struktur::System::DebugSystem::RenderPhysicsShapes(GameContext& context)
 					case b2Shape::e_edge:
 					{
 						b2EdgeShape* edge = (b2EdgeShape*)fixture->GetShape();
-						b2Vec2 v1          = b2Mul(xf, edge->m_vertex1);
-						b2Vec2 v2          = b2Mul(xf, edge->m_vertex2);
+						b2Vec2 v1         = b2Mul(xf, edge->m_vertex1);
+						b2Vec2 v2         = b2Mul(xf, edge->m_vertex2);
 						m_box2dBgfxDebugDraw.DrawSegment(v1, v2, color);
 						break;
 					}
@@ -211,9 +210,9 @@ void Struktur::System::DebugSystem::RenderPhysicsShapes(GameContext& context)
 						// loop (matches CreateLoop's vertex list, which already omits the duplicate final
 						// vertex before calling b2ChainShape::CreateLoop).
 						b2ChainShape* chain    = (b2ChainShape*)fixture->GetShape();
-						int32 count             = chain->m_count;
+						int32 count            = chain->m_count;
 						const b2Vec2* vertices = chain->m_vertices;
-						b2Vec2 v1               = b2Mul(xf, vertices[0]);
+						b2Vec2 v1              = b2Mul(xf, vertices[0]);
 						for (int32 i = 1; i < count; ++i)
 						{
 							b2Vec2 v2 = b2Mul(xf, vertices[i]);
@@ -225,7 +224,7 @@ void Struktur::System::DebugSystem::RenderPhysicsShapes(GameContext& context)
 					case b2Shape::e_polygon:
 					{
 						b2PolygonShape* poly = (b2PolygonShape*)fixture->GetShape();
-						int32 vertexCount     = poly->m_count;
+						int32 vertexCount    = poly->m_count;
 						b2Vec2 vertices[b2_maxPolygonVertices];
 						for (int32 i = 0; i < vertexCount; ++i)
 						{
@@ -246,7 +245,7 @@ void Struktur::System::DebugSystem::RenderPhysicsShapes(GameContext& context)
 			// inactive/disabled body's axis marker is skipped along with its shapes - box2d's built-in walk
 			// draws this marker for every body unconditionally, with no IsEnabled() check at all.
 			b2Transform centerXf = xf;
-			centerXf.p            = body->GetWorldCenter();
+			centerXf.p           = body->GetWorldCenter();
 			m_box2dBgfxDebugDraw.DrawTransform(centerXf);
 		}
 	}
@@ -254,22 +253,22 @@ void Struktur::System::DebugSystem::RenderPhysicsShapes(GameContext& context)
 
 void Struktur::System::DebugSystem::RenderGrid(GameContext& context)
 {
-	auto& gridSettings            = context.GetEditor().GetSettings().grid;
-	World::Camera& camera = context.GetCamera();
-	Core::GameData& gameData     = context.GetGameData();
+	auto& gridSettings       = context.GetEditor().GetSettings().grid;
+	World::Camera& camera    = context.GetCamera();
+	Core::GameData& gameData = context.GetGameData();
 
 	glm::vec2 topLeft     = camera.ScreenPosToWorldPos(glm::vec2(0, 0));
 	glm::vec2 bottomRight = camera.ScreenPosToWorldPos(glm::vec2(gameData.gameWidth, gameData.gameHeight));
 
-	float gridSize      = gridSettings.gridSize;
-	unsigned char alpha = (unsigned char)(gridSettings.gridOpacity * 255.0f);
+	float gridSize        = gridSettings.gridSize;
+	unsigned char alpha   = (unsigned char)(gridSettings.gridOpacity * 255.0f);
 	Util::Color gridColor = {200, 200, 200, alpha};
 
 	float margin = gridSize * 2;
-	int startX    = (int)((topLeft.x - margin) / gridSize) * gridSize;
-	int endX      = (int)((bottomRight.x + margin) / gridSize + 1) * gridSize;
-	int startY    = (int)((topLeft.y - margin) / gridSize) * gridSize;
-	int endY      = (int)((bottomRight.y + margin) / gridSize + 1) * gridSize;
+	int startX   = (int)((topLeft.x - margin) / gridSize) * gridSize;
+	int endX     = (int)((bottomRight.x + margin) / gridSize + 1) * gridSize;
+	int startY   = (int)((topLeft.y - margin) / gridSize) * gridSize;
+	int endY     = (int)((bottomRight.y + margin) / gridSize + 1) * gridSize;
 
 	for (int x = startX; x <= endX; x += gridSize)
 	{
@@ -292,16 +291,16 @@ void Struktur::System::DebugSystem::RenderGrid(GameContext& context)
 
 void Struktur::System::DebugSystem::RenderLevelBounds(GameContext& context)
 {
-	auto& debugSettings               = context.GetEditor().GetSettings().debugRender;
-	entt::registry& registry          = context.GetRegistry();
-	TransformSystem& transformSystem  = context.GetSystemManager().GetSystem<TransformSystem>();
+	auto& debugSettings              = context.GetEditor().GetSettings().debugRender;
+	entt::registry& registry         = context.GetRegistry();
+	TransformSystem& transformSystem = context.GetSystemManager().GetSystem<TransformSystem>();
 
 	auto view = registry.view<Component::Level, Component::Transform>(entt::exclude<Inactive>);
 	for (auto [entity, level, transform] : view.each())
 	{
 		glm::vec3 worldPosition = transformSystem.GetWorldPosition(context, entity);
-		glm::vec2 min            = {worldPosition.x, worldPosition.y};
-		glm::vec2 max            = {worldPosition.x + level.width, worldPosition.y + level.height};
+		glm::vec2 min           = {worldPosition.x, worldPosition.y};
+		glm::vec2 max           = {worldPosition.x + level.width, worldPosition.y + level.height};
 		m_debugRenderer.DrawRectOutline(min, max, debugSettings.levelBoundsThickness, Util::ColorOrange);
 	}
 }

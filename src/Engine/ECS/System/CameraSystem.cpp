@@ -3,10 +3,10 @@
 #include "Engine/ECS/Component/Camera.h"
 #include "Engine/ECS/Component/Transform.h"
 #include "Engine/ECS/System/TransformSystem.h"
-#include "Engine/World/Camera.h"
 #include "Engine/GameContext.h"
 #include "Engine/Util/MathUtil.h"
 #include "Engine/Util/Noise.h"
+#include "Engine/World/Camera.h"
 #include "glm/gtc/quaternion.hpp."
 
 void Struktur::System::CameraSystem::Update(GameContext& context)
@@ -36,18 +36,17 @@ void Struktur::System::CameraSystem::Update(GameContext& context)
 
 		glm::vec3 focusedWorldPosition = transformSystem.GetWorldPosition(context, focusedCameraEntity);
 
-		float gameTime                   = timeSystem.scaledTime;
-		float deltaTime                  = timeSystem.scaledDelta;
-		int screenWidth                  = gameData.gameWidth;
-		int screenHeight                 = gameData.gameHeight;
+		float gameTime            = timeSystem.scaledTime;
+		float deltaTime           = timeSystem.scaledDelta;
+		int screenWidth           = gameData.gameWidth;
+		int screenHeight          = gameData.gameHeight;
 		World::Camera& out_camera = context.GetCamera();
 		// out_camera.target = out_camera.previousCameraPosition;
-		glm::vec2 newPos =
-		    focusedCameraComponent->forcePosition
-		        ? TargetPosition(gameTime, deltaTime, screenWidth, screenHeight, focusedCameraComponent,
-		                         focusedWorldPosition, out_camera)
-		        : CalculateSmoothedPosition(gameTime, deltaTime, screenWidth, screenHeight, focusedCameraComponent,
-		                                    focusedWorldPosition, out_camera);
+		glm::vec2 newPos                      = focusedCameraComponent->forcePosition
+		                                            ? TargetPosition(gameTime, deltaTime, screenWidth, screenHeight, focusedCameraComponent,
+		                                                             focusedWorldPosition, out_camera)
+		                                            : CalculateSmoothedPosition(gameTime, deltaTime, screenWidth, screenHeight,
+		                                                                        focusedCameraComponent, focusedWorldPosition, out_camera);
 		focusedCameraComponent->forcePosition = false;
 		out_camera.target                     = newPos;
 		out_camera.offset                     = glm::vec2{screenWidth / 2.f + focusedCameraComponent->offset.x,
@@ -74,30 +73,34 @@ glm::vec2 Struktur::System::CameraSystem::CalculateSmoothedPosition(float gameTi
 	{
 		if (cameraComponent->offset.x + cameraComponent->deadZone.x < cameraComponentScreenPos.x)
 		{
-			newPos.x = Util::Math::Lerp(screenWidth / 2.f,
-			                  cameraComponentScreenPos.x - cameraComponent->offset.x - cameraComponent->deadZone.x,
-			                  cameraComponent->damping.x * deltaTime);
+			newPos.x =
+			    Util::Math::Lerp(screenWidth / 2.f,
+			                     cameraComponentScreenPos.x - cameraComponent->offset.x - cameraComponent->deadZone.x,
+			                     cameraComponent->damping.x * deltaTime);
 		}
 		else if (cameraComponent->offset.x - cameraComponent->deadZone.x > cameraComponentScreenPos.x)
 		{
-			newPos.x = Util::Math::Lerp(screenWidth / 2.f,
-			                  cameraComponentScreenPos.x - cameraComponent->offset.x + cameraComponent->deadZone.x,
-			                  cameraComponent->damping.x * deltaTime);
+			newPos.x =
+			    Util::Math::Lerp(screenWidth / 2.f,
+			                     cameraComponentScreenPos.x - cameraComponent->offset.x + cameraComponent->deadZone.x,
+			                     cameraComponent->damping.x * deltaTime);
 		}
 	}
 	// y
 	{
 		if (cameraComponent->offset.y + cameraComponent->deadZone.y < cameraComponentScreenPos.y)
 		{
-			newPos.y = Util::Math::Lerp(screenHeight / 2.f,
-			                  cameraComponentScreenPos.y - cameraComponent->offset.y - cameraComponent->deadZone.y,
-			                  cameraComponent->damping.y * deltaTime);
+			newPos.y =
+			    Util::Math::Lerp(screenHeight / 2.f,
+			                     cameraComponentScreenPos.y - cameraComponent->offset.y - cameraComponent->deadZone.y,
+			                     cameraComponent->damping.y * deltaTime);
 		}
 		else if (cameraComponent->offset.y - cameraComponent->deadZone.y > cameraComponentScreenPos.y)
 		{
-			newPos.y = Util::Math::Lerp(screenHeight / 2.f,
-			                  cameraComponentScreenPos.y - cameraComponent->offset.y + cameraComponent->deadZone.y,
-			                  cameraComponent->damping.y * deltaTime);
+			newPos.y =
+			    Util::Math::Lerp(screenHeight / 2.f,
+			                     cameraComponentScreenPos.y - cameraComponent->offset.y + cameraComponent->deadZone.y,
+			                     cameraComponent->damping.y * deltaTime);
 		}
 	}
 
@@ -106,8 +109,7 @@ glm::vec2 Struktur::System::CameraSystem::CalculateSmoothedPosition(float gameTi
 
 glm::vec2 Struktur::System::CameraSystem::TargetPosition(float gameTime, float deltaTime, int screenWidth,
                                                          int screenHeight, Struktur::Component::Camera* cameraComponent,
-                                                         const glm::vec2& cameraComponentPos,
-                                                         World::Camera& camera)
+                                                         const glm::vec2& cameraComponentPos, World::Camera& camera)
 {
 	return cameraComponentPos;
 }

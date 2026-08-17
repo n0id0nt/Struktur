@@ -21,7 +21,7 @@ enum class ShaderPreviewShape
 
 class ShaderPreviewRenderer : public IPreviewRenderer
 {
-   public:
+public:
 	ShaderPreviewRenderer(const Component::Shader* shader, const std::string& name)
 	    : m_shader(shader),
 	      m_name(name),
@@ -48,13 +48,13 @@ class ShaderPreviewRenderer : public IPreviewRenderer
 		CleanupPreview();
 	}
 
-   private:
+private:
 	void InitialisePreview();
 	void CleanupPreview();
 	void RenderShaderPreview(const ImVec2& size);
 	void ApplyShaderUniforms();
 
-   private:
+private:
 	const Component::Shader* m_shader;
 	std::string m_name;
 	ShaderPreviewShape m_previewShape;

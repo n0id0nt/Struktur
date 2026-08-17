@@ -14,7 +14,7 @@ namespace System
 {
 class DebugSystem : public ISystem
 {
-   public:
+public:
 	DebugSystem();
 
 	void Update(GameContext &context) override;
@@ -39,7 +39,7 @@ class DebugSystem : public ISystem
 		return "Debug System";
 	}
 
-   private:
+private:
 	Renderer::DebugRenderer m_debugRenderer;
 	Debug::Box2DBgfxDebugDraw m_box2dBgfxDebugDraw{m_debugRenderer};
 	// Fetched once on first showFPS draw and held for the system's lifetime - avoids doing a ResourcePool

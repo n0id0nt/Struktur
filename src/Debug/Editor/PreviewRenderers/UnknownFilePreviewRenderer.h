@@ -8,7 +8,7 @@ namespace Struktur::Debug
 {
 class UnknownFilePreviewRenderer : public IPreviewRenderer
 {
-   public:
+public:
 	UnknownFilePreviewRenderer(const std::string& fileName)
 	    : m_fileName(fileName)
 	{
@@ -20,7 +20,7 @@ class UnknownFilePreviewRenderer : public IPreviewRenderer
 		return m_fileName;
 	}
 
-   private:
+private:
 	std::string m_fileName;
 };
 }  // namespace Struktur::Debug

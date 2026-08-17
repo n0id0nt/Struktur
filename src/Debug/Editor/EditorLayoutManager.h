@@ -27,11 +27,11 @@ struct LayoutConfig
 
 class EditorLayoutManager
 {
-   public:
+public:
 	// Canonical files used both for ImGui's own ini autosave/autoload (io.IniFilename) and for the explicit
 	// Save/Load Layout menu actions, so they always agree on where the layout lives.
-	static constexpr const char* kDefaultLayoutFilePath        = "editor_layout.ini";
-	static constexpr const char* kDefaultWindowStatesFilePath  = "editor_layout_windows.json";
+	static constexpr const char* kDefaultLayoutFilePath       = "editor_layout.ini";
+	static constexpr const char* kDefaultWindowStatesFilePath = "editor_layout_windows.json";
 
 	// Setup a layout configuration
 	void SetupLayout(ImGuiID dockspace_id, const std::string& layoutName, ImVec2 viewportSize);
@@ -60,7 +60,7 @@ class EditorLayoutManager
 	// Clear all setup flags (force re-layout)
 	void ResetAllLayouts();
 
-   private:
+private:
 	void ApplyLayoutConfig(ImGuiID dockspace_id, const LayoutConfig& config);
 	void ApplyDefaultLayout(ImGuiID dockspace_id);
 

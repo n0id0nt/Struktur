@@ -21,7 +21,7 @@ namespace Debug
 // so no shape-type switching or transform math is needed here (unlike Box2DDebugRenderer).
 class Box2DBgfxDebugDraw : public b2Draw
 {
-   public:
+public:
 	explicit Box2DBgfxDebugDraw(Renderer::DebugRenderer& renderer);
 
 	void SetPixelsPerMeter(float pixelsPerMeter)
@@ -37,7 +37,7 @@ class Box2DBgfxDebugDraw : public b2Draw
 	void DrawTransform(const b2Transform& xf) override;
 	void DrawPoint(const b2Vec2& p, float size, const b2Color& color) override;
 
-   private:
+private:
 	Renderer::DebugRenderer& m_renderer;
 	float m_pixelsPerMeter = 32.0f;
 };

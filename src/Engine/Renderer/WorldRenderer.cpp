@@ -1,7 +1,10 @@
 #include "WorldRenderer.h"
 
+#include <bgfx/bgfx.h>
+
 #include <algorithm>
 #include <cfloat>
+#include <glm/gtc/type_ptr.hpp>
 
 #include "Engine/Core/GameData.h"
 #include "Engine/ECS/System/ShaderSystem.h"
@@ -10,9 +13,6 @@
 #include "Engine/Renderer/GraphicsDevice.h"
 #include "Engine/Renderer/QuadVertex.h"
 
-#include <bgfx/bgfx.h>
-#include <glm/gtc/type_ptr.hpp>
-
 Struktur::Renderer::WorldRenderer::WorldRenderer()
 {
 	m_drawItems.reserve(2048);
@@ -20,8 +20,8 @@ Struktur::Renderer::WorldRenderer::WorldRenderer()
 
 Struktur::Renderer::CullBounds Struktur::Renderer::WorldRenderer::ComputeCullBounds(GameContext& context)
 {
-	World::Camera& camera = context.GetCamera();
-	Core::GameData& gameData     = context.GetGameData();
+	World::Camera& camera    = context.GetCamera();
+	Core::GameData& gameData = context.GetGameData();
 
 	glm::mat4 view = camera.GetViewMatrix();
 	glm::mat4 inv  = glm::inverse(view);
@@ -96,7 +96,7 @@ void ComputeQuadCorners(const Struktur::Util::Math::Rect& destRec, const glm::ve
 // and 4-point min/max reduction below: an unrotated quad's AABB is just destRec translated by -origin, which is
 // both cheaper and the overwhelmingly common case (most sprites don't rotate).
 Struktur::Util::Math::Rect ComputeQuadWorldBounds(const Struktur::Util::Math::Rect& destRec, const glm::vec2& origin,
-                                                   float rotationDegrees)
+                                                  float rotationDegrees)
 {
 	if (rotationDegrees == 0.0f)
 	{
@@ -115,11 +115,11 @@ Struktur::Util::Math::Rect ComputeQuadWorldBounds(const Struktur::Util::Math::Re
 }  // namespace
 
 void Struktur::Renderer::WorldRenderer::SubmitSprite(World::RenderLayer layer, float orderInLayer,
-                                                      bgfx::ProgramHandle program, const Component::Shader* shader,
-                                                      const TextureHandle& texture, const Util::Math::Rect& sourceRec,
-                                                      const Util::Math::Rect& destRec, const glm::vec2& origin,
-                                                      float rotation, const Util::Color& tint,
-                                                      const CullBounds& cullBounds)
+                                                     bgfx::ProgramHandle program, const Component::Shader* shader,
+                                                     const TextureHandle& texture, const Util::Math::Rect& sourceRec,
+                                                     const Util::Math::Rect& destRec, const glm::vec2& origin,
+                                                     float rotation, const Util::Color& tint,
+                                                     const CullBounds& cullBounds)
 {
 	Util::Math::Rect worldBounds = ComputeQuadWorldBounds(destRec, origin, rotation);
 	if (!Util::Math::RectOverlaps(worldBounds, cullBounds.minX, cullBounds.minY, cullBounds.maxX, cullBounds.maxY))
@@ -128,14 +128,14 @@ void Struktur::Renderer::WorldRenderer::SubmitSprite(World::RenderLayer layer, f
 	}
 
 	DrawItem item{PackSortKey(layer, orderInLayer, texture.id, program.idx),
-	             texture,
-	             program,
-	             shader,
-	             sourceRec,
-	             destRec,
-	             origin,
-	             rotation,
-	             tint};
+	              texture,
+	              program,
+	              shader,
+	              sourceRec,
+	              destRec,
+	              origin,
+	              rotation,
+	              tint};
 	m_drawItems.push_back(item);
 }
 
@@ -150,8 +150,16 @@ void Struktur::Renderer::WorldRenderer::SubmitChunk(World::RenderLayer layer, fl
 		return;
 	}
 
-	DrawItem item{PackSortKey(layer, orderInLayer, texture.id, program.idx), texture, program, shader, {}, {}, {},
-	             0.0f, {}, &chunk};
+	DrawItem item{PackSortKey(layer, orderInLayer, texture.id, program.idx),
+	              texture,
+	              program,
+	              shader,
+	              {},
+	              {},
+	              {},
+	              0.0f,
+	              {},
+	              &chunk};
 	m_drawItems.push_back(item);
 }
 
@@ -167,16 +175,15 @@ void Struktur::Renderer::WorldRenderer::Flush(GameContext& context)
 	                 [](const DrawItem& a, const DrawItem& b) { return a.sortKey < b.sortKey; });
 
 	System::ShaderSystem& shaderSystem = context.GetSystemManager().GetSystem<System::ShaderSystem>();
-	World::Camera& camera               = context.GetCamera();
-	Core::GameData& gameData            = context.GetGameData();
+	World::Camera& camera              = context.GetCamera();
+	Core::GameData& gameData           = context.GetGameData();
 
 	glm::mat4 view = camera.GetViewMatrix();
 	glm::mat4 proj = camera.GetProjectionMatrix(gameData.gameWidth, gameData.gameHeight);
 	bgfx::setViewTransform(GraphicsDevice::WorldViewId, glm::value_ptr(view), glm::value_ptr(proj));
 
-	static const bgfx::VertexLayout quadLayout = BuildQuadVertexLayout();
-	static const bgfx::UniformHandle texColorSampler =
-	    bgfx::createUniform("s_texColor", bgfx::UniformType::Sampler);
+	static const bgfx::VertexLayout quadLayout       = BuildQuadVertexLayout();
+	static const bgfx::UniformHandle texColorSampler = bgfx::createUniform("s_texColor", bgfx::UniformType::Sampler);
 
 	uint64_t drawState = BGFX_STATE_WRITE_RGB | BGFX_STATE_WRITE_A |
 	                     BGFX_STATE_BLEND_FUNC(BGFX_STATE_BLEND_SRC_ALPHA, BGFX_STATE_BLEND_INV_SRC_ALPHA);
@@ -257,10 +264,10 @@ void Struktur::Renderer::WorldRenderer::FlushRun(GameContext& context, size_t ru
 	bgfx::allocTransientVertexBuffer(&tvb, (uint32_t)(count * 4), quadLayout);
 	bgfx::allocTransientIndexBuffer(&tib, (uint32_t)(count * 6));
 
-	QuadVertex* verts  = (QuadVertex*)tvb.data;
-	uint16_t* indices    = (uint16_t*)tib.data;
-	float texWidth       = (float)runTexture.width;
-	float texHeight      = (float)runTexture.height;
+	QuadVertex* verts = (QuadVertex*)tvb.data;
+	uint16_t* indices = (uint16_t*)tib.data;
+	float texWidth    = (float)runTexture.width;
+	float texHeight   = (float)runTexture.height;
 
 	for (size_t i = runStart; i < runEnd; ++i)
 	{
@@ -268,19 +275,19 @@ void Struktur::Renderer::WorldRenderer::FlushRun(GameContext& context, size_t ru
 		glm::vec2 corners[4];
 		ComputeQuadCorners(item.destRec, item.origin, item.rotation, corners);
 
-		float u0 = item.sourceRec.x / texWidth;
-		float v0 = item.sourceRec.y / texHeight;
-		float u1 = (item.sourceRec.x + item.sourceRec.width) / texWidth;
-		float v1 = (item.sourceRec.y + item.sourceRec.height) / texHeight;
+		float u0      = item.sourceRec.x / texWidth;
+		float v0      = item.sourceRec.y / texHeight;
+		float u1      = (item.sourceRec.x + item.sourceRec.width) / texWidth;
+		float v1      = (item.sourceRec.y + item.sourceRec.height) / texHeight;
 		uint32_t abgr = PackColor(item.tint);
 
-		uint32_t base                = (uint32_t)((i - runStart) * 4);
-		verts[base + 0]              = {corners[0].x, corners[0].y, u0, v0, abgr};
-		verts[base + 1]              = {corners[1].x, corners[1].y, u1, v0, abgr};
-		verts[base + 2]              = {corners[2].x, corners[2].y, u0, v1, abgr};
-		verts[base + 3]              = {corners[3].x, corners[3].y, u1, v1, abgr};
+		uint32_t base   = (uint32_t)((i - runStart) * 4);
+		verts[base + 0] = {corners[0].x, corners[0].y, u0, v0, abgr};
+		verts[base + 1] = {corners[1].x, corners[1].y, u1, v0, abgr};
+		verts[base + 2] = {corners[2].x, corners[2].y, u0, v1, abgr};
+		verts[base + 3] = {corners[3].x, corners[3].y, u1, v1, abgr};
 
-		uint16_t ibase      = (uint16_t)base;
+		uint16_t ibase                  = (uint16_t)base;
 		indices[(i - runStart) * 6 + 0] = ibase + 0;
 		indices[(i - runStart) * 6 + 1] = ibase + 1;
 		indices[(i - runStart) * 6 + 2] = ibase + 2;

@@ -13,13 +13,13 @@ namespace UI
 //=============================================================================
 class FocusNavigator
 {
-   private:
+private:
 	std::vector<UIElement*> m_focusableElements;
 	UIElement* m_currentFocus;
 	float m_navigationCooldown;
 	float m_currentCooldownTimer;
 
-   public:
+public:
 	FocusNavigator()
 	    : m_currentFocus(nullptr),
 	      m_navigationCooldown(0.2f),
@@ -41,7 +41,7 @@ class FocusNavigator
 
 	void Clear(GameContext& context);
 
-   private:
+private:
 	UIElement* FindNextElement(NavigationDirection direction);
 	UIElement* FindElementByDirection(NavigationDirection direction);
 

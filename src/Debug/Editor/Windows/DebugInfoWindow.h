@@ -8,7 +8,7 @@ class GameViewportWindow;
 
 class DebugInfoWindow : public EditorWindow
 {
-   public:
+public:
 	DebugInfoWindow(GameViewportWindow* viewportWindow)
 	    : EditorWindow("Debug Info"),
 	      m_viewportWindow(viewportWindow)
@@ -17,7 +17,7 @@ class DebugInfoWindow : public EditorWindow
 
 	void Render(GameContext& context) override;
 
-   private:
+private:
 	GameViewportWindow* m_viewportWindow;
 };
 }  // namespace Struktur::Debug

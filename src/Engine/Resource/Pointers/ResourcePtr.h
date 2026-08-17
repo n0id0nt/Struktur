@@ -24,7 +24,7 @@ class ResourcePool;
 template <typename T>
 class ResourcePtr
 {
-   private:
+private:
 	ResourcePool<T>* m_pool = nullptr;
 	ResourceHandle m_handle;
 
@@ -38,7 +38,7 @@ class ResourcePtr
 		m_handle = ResourceHandle{};
 	}
 
-   public:
+public:
 	ResourcePtr() = default;
 
 	ResourcePtr(ResourcePool<T>* pool, ResourceHandle handle)

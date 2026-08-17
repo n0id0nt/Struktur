@@ -1,16 +1,15 @@
 #pragma once
 
+#include <bgfx/bgfx.h>
+
 #include <format>
 #include <string>
-
-#include <bgfx/bgfx.h>
+#include <vector>
 
 #include "Engine/Resource/Pointers/ResourcePtr.h"
 #include "Engine/Resource/Pools/ResourcePool.h"
 #include "Engine/Resource/Resource.h"
 #include "Engine/Text/Font.h"
-
-#include <vector>
 
 namespace Struktur
 {
@@ -24,7 +23,7 @@ namespace Resource
 // Font - GPU resource (contains texture atlas), atlas baked via stb_truetype on both platforms.
 class FontResource : public GpuResource
 {
-   private:
+private:
 	bool m_fontLoaded;
 	int m_fontSize;
 	int* m_codepoints;  // Custom codepoints for font loading
@@ -36,7 +35,7 @@ class FontResource : public GpuResource
 	int m_atlasWidth  = 0;
 	int m_atlasHeight = 0;
 
-   public:
+public:
 	Text::Font font;
 
 	FontResource(const std::string& filePath, int size);

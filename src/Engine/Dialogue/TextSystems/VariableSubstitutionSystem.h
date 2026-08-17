@@ -24,7 +24,7 @@ class DialogueRegistry;
 
 class VariableModifier
 {
-   public:
+public:
 	virtual ~VariableModifier() = default;
 
 	// Apply this modifier to a value
@@ -50,7 +50,7 @@ struct VariableTemplate
 
 class VariableSubstitutionSystem
 {
-   public:
+public:
 	VariableSubstitutionSystem();
 	~VariableSubstitutionSystem();
 
@@ -66,7 +66,7 @@ class VariableSubstitutionSystem
 	// Get a template (for inspection)
 	std::optional<VariableTemplate> GetTemplate(const std::string& name) const;
 
-   private:
+private:
 	std::map<std::string, std::unique_ptr<VariableModifier>> m_modifiers;
 	std::map<std::string, VariableTemplate> m_templates;
 
@@ -91,7 +91,7 @@ class VariableSubstitutionSystem
 // Round numbers
 class RoundModifier : public VariableModifier
 {
-   public:
+public:
 	std::string Apply(GameContext& context, const DialogueValue& value, const std::string& arg,
 	                  const DialogueRegistry& dialogueRegistry) const override;
 };
@@ -99,7 +99,7 @@ class RoundModifier : public VariableModifier
 // Add suffix
 class SuffixModifier : public VariableModifier
 {
-   public:
+public:
 	std::string Apply(GameContext& context, const DialogueValue& value, const std::string& arg,
 	                  const DialogueRegistry& dialogueRegistry) const override;
 };
@@ -107,7 +107,7 @@ class SuffixModifier : public VariableModifier
 // Add prefix
 class PrefixModifier : public VariableModifier
 {
-   public:
+public:
 	std::string Apply(GameContext& context, const DialogueValue& value, const std::string& arg,
 	                  const DialogueRegistry& dialogueRegistry) const override;
 };
@@ -115,7 +115,7 @@ class PrefixModifier : public VariableModifier
 // Pluralization
 class PluralModifier : public VariableModifier
 {
-   public:
+public:
 	std::string Apply(GameContext& context, const DialogueValue& value, const std::string& arg,
 	                  const DialogueRegistry& dialogueRegistry) const override;
 };
@@ -123,7 +123,7 @@ class PluralModifier : public VariableModifier
 // Boolean aliases
 class BoolModifier : public VariableModifier
 {
-   public:
+public:
 	std::string Apply(GameContext& context, const DialogueValue& value, const std::string& arg,
 	                  const DialogueRegistry& dialogueRegistry) const override;
 };
@@ -131,7 +131,7 @@ class BoolModifier : public VariableModifier
 // Uppercase
 class UpperModifier : public VariableModifier
 {
-   public:
+public:
 	std::string Apply(GameContext& context, const DialogueValue& value, const std::string& arg,
 	                  const DialogueRegistry& dialogueRegistry) const override;
 };
@@ -139,7 +139,7 @@ class UpperModifier : public VariableModifier
 // Lowercase
 class LowerModifier : public VariableModifier
 {
-   public:
+public:
 	std::string Apply(GameContext& context, const DialogueValue& value, const std::string& arg,
 	                  const DialogueRegistry& dialogueRegistry) const override;
 };
@@ -147,7 +147,7 @@ class LowerModifier : public VariableModifier
 // Absolute value
 class AbsModifier : public VariableModifier
 {
-   public:
+public:
 	std::string Apply(GameContext& context, const DialogueValue& value, const std::string& arg,
 	                  const DialogueRegistry& dialogueRegistry) const override;
 };
@@ -155,7 +155,7 @@ class AbsModifier : public VariableModifier
 // Zero-pad
 class PadModifier : public VariableModifier
 {
-   public:
+public:
 	std::string Apply(GameContext& context, const DialogueValue& value, const std::string& arg,
 	                  const DialogueRegistry& dialogueRegistry) const override;
 };
@@ -163,7 +163,7 @@ class PadModifier : public VariableModifier
 // Template application
 class TemplateModifier : public VariableModifier
 {
-   public:
+public:
 	std::string Apply(GameContext& context, const DialogueValue& value, const std::string& arg,
 	                  const DialogueRegistry& dialogueRegistry) const override;
 };

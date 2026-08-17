@@ -1,17 +1,16 @@
 #pragma once
 
+#include <bgfx/bgfx.h>
+
 #include <cstdint>
 #include <vector>
 
-#include "Engine/World/RenderLayer.h"
 #include "Engine/Renderer/RenderTypes.h"
+#include "Engine/Renderer/TileChunk.h"
 #include "Engine/Util/Color.h"
 #include "Engine/Util/MathUtil.h"
+#include "Engine/World/RenderLayer.h"
 #include "glm/glm.hpp"
-
-#include <bgfx/bgfx.h>
-
-#include "Engine/Renderer/TileChunk.h"
 
 namespace Struktur
 {
@@ -59,7 +58,7 @@ struct CullBounds
 // even though tiles-as-a-chunk and a moving sprite end up drawn very differently once Flush() gets to them.
 class WorldRenderer
 {
-   public:
+public:
 	WorldRenderer();
 
 	static CullBounds ComputeCullBounds(GameContext& context);
@@ -81,14 +80,14 @@ class WorldRenderer
 	                 const CullBounds& cullBounds);
 	void Flush(GameContext& context);
 
-   private:
+private:
 	// Builds a transient vertex/index buffer for m_drawItems[runStart, runEnd) - all sharing runTexture/runProgram
 	// - and submits it in a single draw call. See Flush() for how runs are formed. Takes GameContext& (unlike
 	// SubmitSprite/SubmitChunk) purely to reach ShaderSystem::ApplyUniforms right before this run's own submit -
 	// see DrawItem::shader.
 	void FlushRun(GameContext& context, size_t runStart, size_t runEnd, const bgfx::VertexLayout& quadLayout,
-	             bgfx::UniformHandle texColorSampler, uint64_t drawState, const TextureHandle& runTexture,
-	             bgfx::ProgramHandle runProgram);
+	              bgfx::UniformHandle texColorSampler, uint64_t drawState, const TextureHandle& runTexture,
+	              bgfx::ProgramHandle runProgram);
 
 	// FlushRun's transient index buffer uses 16-bit indices (uint16_t ibase) - a run any longer than this would
 	// wrap the index space and silently corrupt geometry instead of erroring, so Flush() forces a run boundary

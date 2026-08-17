@@ -21,7 +21,7 @@ namespace System
 {
 class CameraSystem : public ISystem
 {
-   public:
+public:
 	void Update(GameContext& context) override;
 
 	glm::vec2 CalculateSmoothedPosition(float gameTime, float deltaTime, int screenWidth, int screenHeight,

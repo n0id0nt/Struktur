@@ -1,8 +1,8 @@
 #pragma once
 
-#include <string>
-
 #include <bgfx/bgfx.h>
+
+#include <string>
 
 namespace Struktur
 {

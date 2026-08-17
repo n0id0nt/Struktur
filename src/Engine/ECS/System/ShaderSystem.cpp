@@ -1,10 +1,9 @@
 #include "ShaderSystem.h"
 
-#include "Engine/ECS/Component/Shader.h"
-#include "Engine/GameContext.h"
-
 #include <glm/gtc/type_ptr.hpp>
 
+#include "Engine/ECS/Component/Shader.h"
+#include "Engine/GameContext.h"
 #include "Engine/Renderer/EmbeddedShaders.h"
 
 void Struktur::System::ShaderSystem::SetUniform(GameContext& context, entt::entity entity, const std::string& name,
@@ -101,10 +100,10 @@ void Struktur::System::ShaderSystem::ApplyUniforms(GameContext& context, const C
 }
 
 bgfx::ProgramHandle Struktur::System::ShaderSystem::ResolveProgram(GameContext& context, entt::entity entity,
-                                                                    bgfx::ProgramHandle defaultProgram)
+                                                                   bgfx::ProgramHandle defaultProgram)
 {
 	entt::registry& registry = context.GetRegistry();
-	auto* shader              = registry.try_get<Component::Shader>(entity);
+	auto* shader             = registry.try_get<Component::Shader>(entity);
 	if (!shader)
 	{
 		return defaultProgram;

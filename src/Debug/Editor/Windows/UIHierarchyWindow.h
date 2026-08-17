@@ -7,7 +7,7 @@ namespace Struktur::Debug
 {
 class UIHierarchyWindow : public EditorWindow
 {
-   public:
+public:
 	UIHierarchyWindow()
 	    : EditorWindow("UI Hierarchy"),
 	      m_selectedElement(nullptr)
@@ -26,7 +26,7 @@ class UIHierarchyWindow : public EditorWindow
 		m_selectedElement = element;
 	}
 
-   private:
+private:
 	// Render the entire UI hierarchy starting from root elements
 	void RenderUIHierarchy(GameContext& context);
 
@@ -36,7 +36,7 @@ class UIHierarchyWindow : public EditorWindow
 	// Render context menu for a UI element
 	void RenderElementContextMenu(UI::UIElement* element);
 
-   private:
+private:
 	UI::UIElement* m_selectedElement;  // Currently selected UI element in hierarchy
 };
 }  // namespace Struktur::Debug

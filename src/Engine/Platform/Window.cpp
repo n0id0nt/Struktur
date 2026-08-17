@@ -1,8 +1,8 @@
 #include "Window.h"
 
-#include "Debug/Assertions.h"
-
 #include <SDL3/SDL.h>
+
+#include "Debug/Assertions.h"
 
 void Struktur::Platform::Window::Initialise(int width, int height, const std::string& title, bool resizable)
 {

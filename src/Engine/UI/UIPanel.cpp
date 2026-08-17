@@ -50,7 +50,7 @@ void Struktur::UI::UIPanel::Render(GameContext& context)
 		// quads with its own texture (see UIBatch::quadTextures), so the background's real texture and the
 		// border's white one can safely coexist in the same batch/slot.
 		Renderer::UIBatchSlot backgroundSlot = m_batchSlot;
-		backgroundSlot.quadCapacity           = 1;
+		backgroundSlot.quadCapacity          = 1;
 
 		if (m_hasBackgroundTexture)
 		{

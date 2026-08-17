@@ -33,13 +33,13 @@
 #include "Engine/ECS/System/WrenStateSystem.h"
 #include "Engine/ECS/SystemManager.h"
 #include "Engine/FileLoading/LevelParser.h"
-#include "Engine/World/Level.h"
 #include "Engine/GameContext.h"
 #include "Engine/Input/Input.h"
 #include "Engine/Scripting/WrenScriptEngine.h"
 #include "Engine/Text/Font.h"
 #include "Engine/Util/Color.h"
 #include "Engine/Util/MathUtil.h"
+#include "Engine/World/Level.h"
 
 #ifdef DEBUG
 	#include "Engine/Scripting/WrenCodeGenerator.h"
@@ -510,20 +510,20 @@ void Struktur::ClearGameSystems(GameContext& context)
 	// now, while it's still attributable to a specific pool, rather than letting Clear() below silently force-free
 	// it out from under whatever's still holding it.
 	ASSERT_MSG(resourceManager.GetTexturePool().GetLoadedCount() == 0,
-	          "Texture pool still has %zu resource(s) loaded before Clear() - something is leaking a ResourcePtr",
-	          resourceManager.GetTexturePool().GetLoadedCount());
+	           "Texture pool still has %zu resource(s) loaded before Clear() - something is leaking a ResourcePtr",
+	           resourceManager.GetTexturePool().GetLoadedCount());
 	ASSERT_MSG(resourceManager.GetSoundPool().GetLoadedCount() == 0,
-	          "Sound pool still has %zu resource(s) loaded before Clear() - something is leaking a ResourcePtr",
-	          resourceManager.GetSoundPool().GetLoadedCount());
+	           "Sound pool still has %zu resource(s) loaded before Clear() - something is leaking a ResourcePtr",
+	           resourceManager.GetSoundPool().GetLoadedCount());
 	ASSERT_MSG(resourceManager.GetMusicPool().GetLoadedCount() == 0,
-	          "Music pool still has %zu resource(s) loaded before Clear() - something is leaking a ResourcePtr",
-	          resourceManager.GetMusicPool().GetLoadedCount());
+	           "Music pool still has %zu resource(s) loaded before Clear() - something is leaking a ResourcePtr",
+	           resourceManager.GetMusicPool().GetLoadedCount());
 	ASSERT_MSG(resourceManager.GetFontPool().GetLoadedCount() == 0,
-	          "Font pool still has %zu resource(s) loaded before Clear() - something is leaking a ResourcePtr",
-	          resourceManager.GetFontPool().GetLoadedCount());
+	           "Font pool still has %zu resource(s) loaded before Clear() - something is leaking a ResourcePtr",
+	           resourceManager.GetFontPool().GetLoadedCount());
 	ASSERT_MSG(resourceManager.GetShaderPool().GetLoadedCount() == 0,
-	          "Shader pool still has %zu resource(s) loaded before Clear() - something is leaking a ResourcePtr",
-	          resourceManager.GetShaderPool().GetLoadedCount());
+	           "Shader pool still has %zu resource(s) loaded before Clear() - something is leaking a ResourcePtr",
+	           resourceManager.GetShaderPool().GetLoadedCount());
 
 	resourceManager.Clear();
 }

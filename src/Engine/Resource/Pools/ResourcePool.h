@@ -26,7 +26,7 @@ namespace Resource
 template <typename T>
 class ResourcePool
 {
-   protected:
+protected:
 	struct ResourceEntry
 	{
 		T resource;
@@ -66,9 +66,7 @@ class ResourcePool
 	// subclasses (GpuResourcePool) needing to react before the resource itself is destroyed. The resource's own
 	// destructor (run by SparseSet::Erase) already handles its own GPU/hardware teardown (UnloadFromGpu,
 	// UnloadFromHardware, etc. - see ~TextureResource() and friends); this is for pool-level bookkeeping only.
-	virtual void UnloadResource(const std::string& filePath, T& resource)
-	{
-	}
+	virtual void UnloadResource(const std::string& filePath, T& resource) {}
 
 	// ResourcePtr<T> holds the plain, non-template ResourceHandle (see Resource.h - avoids needing ResourcePool<T>
 	// complete just to declare a member of this type, which would create a circular include with ResourcePtr.h).
@@ -82,7 +80,7 @@ class ResourcePool
 		return ResourceHandle{handle.index, handle.generation};
 	}
 
-   public:
+public:
 	virtual ~ResourcePool()
 	{
 		Clear();
@@ -122,10 +120,10 @@ class ResourcePool
 		typename SparseSet<ResourceEntry>::Handle internalHandle = m_resources.Emplace(std::move(*loaded));
 		delete loaded;
 
-		ResourceHandle handle      = ToExternal(internalHandle);
-		ResourceEntry& entry       = m_resources[internalHandle];
-		entry.name                 = name;
-		entry.resource.selfHandle  = handle;
+		ResourceHandle handle     = ToExternal(internalHandle);
+		ResourceEntry& entry      = m_resources[internalHandle];
+		entry.name                = name;
+		entry.resource.selfHandle = handle;
 		m_nameToHandle.emplace(name, internalHandle);
 
 		return ResourcePtr<T>(this, handle);

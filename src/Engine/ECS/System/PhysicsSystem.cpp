@@ -4,10 +4,10 @@
 #include "Engine/ECS/Component/PhysicsBody.h"
 #include "Engine/ECS/Component/Transform.h"
 #include "Engine/ECS/System/TransformSystem.h"
-#include "Engine/World/TileMap.h"
 #include "Engine/GameContext.h"
 #include "Engine/Physics/PhysicsWorld.h"
 #include "Engine/Util/MathUtil.h"
+#include "Engine/World/TileMap.h"
 #include "glm/gtc/quaternion.hpp."
 
 void Struktur::System::PhysicsSystem::Update(GameContext& context)
@@ -85,8 +85,8 @@ void Struktur::System::PhysicsSystem::SyncTransformsToPhysics(GameContext& conte
 			PROFILE_END_SCOPE(convertAngle);
 			// create helper functions to convert to and from b2vec to glm::vec2 using hte physics scale
 			PROFILE_BEGIN_SCOPE(uploadToPhysics, "Upload To Physics");
-			physicsBody.body->SetTransform(
-			    b2Vec2(worldPosition.x * metersPerPixel, worldPosition.y * metersPerPixel), angleZ);
+			physicsBody.body->SetTransform(b2Vec2(worldPosition.x * metersPerPixel, worldPosition.y * metersPerPixel),
+			                               angleZ);
 			PROFILE_END_SCOPE(uploadToPhysics);
 		}
 	}
@@ -134,7 +134,7 @@ Struktur::Component::PhysicsBody& Struktur::System::PhysicsSystem::CreatePhysics
 }
 
 void Struktur::System::PhysicsSystem::SetCollisionFilter(Component::PhysicsBody& physicsBody, uint16_t categoryBits,
-                                                          uint16_t maskBits)
+                                                         uint16_t maskBits)
 {
 	if (!physicsBody.body)
 	{
@@ -143,7 +143,7 @@ void Struktur::System::PhysicsSystem::SetCollisionFilter(Component::PhysicsBody&
 
 	b2Filter filter;
 	filter.categoryBits = categoryBits;
-	filter.maskBits      = maskBits;
+	filter.maskBits     = maskBits;
 
 	for (b2Fixture* fixture = physicsBody.body->GetFixtureList(); fixture; fixture = fixture->GetNext())
 	{

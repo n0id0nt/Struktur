@@ -1,11 +1,10 @@
 #include <string>
 #include <vector>
 
-#include "wren.hpp"
-
 #include "Engine/GameContext.h"
 #include "Engine/Physics/CollisionLayers.h"
 #include "Engine/Scripting/WrenBindingRegistry.h"
+#include "wren.hpp"
 
 // ============================================================================
 // COLLISION LAYERS BINDINGS - name <-> bitmask registry for Box2D collision filtering
@@ -14,32 +13,32 @@
 // CollisionLayers.registerLayer(name)
 void wren_CollisionLayersRegisterLayer(WrenVM* vm)
 {
-	Struktur::GameContext* context                     = static_cast<Struktur::GameContext*>(wrenGetUserData(vm));
+	Struktur::GameContext* context                      = static_cast<Struktur::GameContext*>(wrenGetUserData(vm));
 	Struktur::Physics::CollisionLayers& collisionLayers = context->GetCollisionLayers();
 
 	const char* name = wrenGetSlotString(vm, 1);
-	uint16_t bit      = collisionLayers.RegisterLayer(name);
+	uint16_t bit     = collisionLayers.RegisterLayer(name);
 	wrenSetSlotDouble(vm, 0, static_cast<double>(bit));
 }
 
 // CollisionLayers.getLayer(name)
 void wren_CollisionLayersGetLayer(WrenVM* vm)
 {
-	Struktur::GameContext* context                     = static_cast<Struktur::GameContext*>(wrenGetUserData(vm));
+	Struktur::GameContext* context                      = static_cast<Struktur::GameContext*>(wrenGetUserData(vm));
 	Struktur::Physics::CollisionLayers& collisionLayers = context->GetCollisionLayers();
 
 	const char* name = wrenGetSlotString(vm, 1);
-	uint16_t bit      = collisionLayers.GetLayer(name);
+	uint16_t bit     = collisionLayers.GetLayer(name);
 	wrenSetSlotDouble(vm, 0, static_cast<double>(bit));
 }
 
 // CollisionLayers.getLayerName(bit)
 void wren_CollisionLayersGetLayerName(WrenVM* vm)
 {
-	Struktur::GameContext* context                     = static_cast<Struktur::GameContext*>(wrenGetUserData(vm));
+	Struktur::GameContext* context                      = static_cast<Struktur::GameContext*>(wrenGetUserData(vm));
 	Struktur::Physics::CollisionLayers& collisionLayers = context->GetCollisionLayers();
 
-	uint16_t bit             = static_cast<uint16_t>(wrenGetSlotDouble(vm, 1));
+	uint16_t bit            = static_cast<uint16_t>(wrenGetSlotDouble(vm, 1));
 	const std::string& name = collisionLayers.GetLayerName(bit);
 	wrenSetSlotString(vm, 0, name.c_str());
 }
@@ -47,7 +46,7 @@ void wren_CollisionLayersGetLayerName(WrenVM* vm)
 // CollisionLayers.hasLayer(name)
 void wren_CollisionLayersHasLayer(WrenVM* vm)
 {
-	Struktur::GameContext* context                     = static_cast<Struktur::GameContext*>(wrenGetUserData(vm));
+	Struktur::GameContext* context                      = static_cast<Struktur::GameContext*>(wrenGetUserData(vm));
 	Struktur::Physics::CollisionLayers& collisionLayers = context->GetCollisionLayers();
 
 	const char* name = wrenGetSlotString(vm, 1);
@@ -58,7 +57,7 @@ void wren_CollisionLayersHasLayer(WrenVM* vm)
 // CollisionLayers.registerGroup(groupName, layerNames)
 void wren_CollisionLayersRegisterGroup(WrenVM* vm)
 {
-	Struktur::GameContext* context                     = static_cast<Struktur::GameContext*>(wrenGetUserData(vm));
+	Struktur::GameContext* context                      = static_cast<Struktur::GameContext*>(wrenGetUserData(vm));
 	Struktur::Physics::CollisionLayers& collisionLayers = context->GetCollisionLayers();
 
 	const char* groupName = wrenGetSlotString(vm, 1);
@@ -90,22 +89,22 @@ void wren_CollisionLayersRegisterGroup(WrenVM* vm)
 // CollisionLayers.getGroup(groupName)
 void wren_CollisionLayersGetGroup(WrenVM* vm)
 {
-	Struktur::GameContext* context                     = static_cast<Struktur::GameContext*>(wrenGetUserData(vm));
+	Struktur::GameContext* context                      = static_cast<Struktur::GameContext*>(wrenGetUserData(vm));
 	Struktur::Physics::CollisionLayers& collisionLayers = context->GetCollisionLayers();
 
 	const char* groupName = wrenGetSlotString(vm, 1);
-	uint16_t mask          = collisionLayers.GetGroup(groupName);
+	uint16_t mask         = collisionLayers.GetGroup(groupName);
 	wrenSetSlotDouble(vm, 0, static_cast<double>(mask));
 }
 
 // CollisionLayers.hasGroup(groupName)
 void wren_CollisionLayersHasGroup(WrenVM* vm)
 {
-	Struktur::GameContext* context                     = static_cast<Struktur::GameContext*>(wrenGetUserData(vm));
+	Struktur::GameContext* context                      = static_cast<Struktur::GameContext*>(wrenGetUserData(vm));
 	Struktur::Physics::CollisionLayers& collisionLayers = context->GetCollisionLayers();
 
 	const char* groupName = wrenGetSlotString(vm, 1);
-	bool exists            = collisionLayers.HasGroup(groupName);
+	bool exists           = collisionLayers.HasGroup(groupName);
 	wrenSetSlotBool(vm, 0, exists);
 }
 
@@ -124,8 +123,7 @@ WREN_BINDING_MODULE(CollisionLayers)
 	WREN_CLASS_STATIC(registry, "physics", "CollisionLayers", "hasLayer(_)", wren_CollisionLayersHasLayer,
 	                  "Returns true if this layer name has already been registered.");
 
-	WREN_CLASS_STATIC(registry, "physics", "CollisionLayers", "registerGroup(_,_)",
-	                  wren_CollisionLayersRegisterGroup,
+	WREN_CLASS_STATIC(registry, "physics", "CollisionLayers", "registerGroup(_,_)", wren_CollisionLayersRegisterGroup,
 	                  "Defines (or redefines) a named group as the combined mask of the given list of layer "
 	                  "names, auto-registering any that aren't already registered layers, and returns the "
 	                  "combined mask.");

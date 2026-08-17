@@ -63,19 +63,19 @@ struct ConstantBinding
 
 struct WrenImplementationBinding
 {
-    std::string moduleName;
-    std::string className;
-    std::string wrenSource;
-    bool isStatic;
+	std::string moduleName;
+	std::string className;
+	std::string wrenSource;
+	bool isStatic;
 };
 
 // A `import "fromModule" for Name1, Name2` line needed at the top of a generated module file,
 // e.g. so a WrenImplementationBinding in that module can reference classes from another module.
 struct ModuleImportBinding
 {
-    std::string moduleName;
-    std::string fromModule;
-    std::vector<std::string> names;
+	std::string moduleName;
+	std::string fromModule;
+	std::vector<std::string> names;
 };
 
 // ============================================================================
@@ -150,14 +150,14 @@ struct BindingRegistry
 	}
 
 	void AddWrenImpl(const char* module, const char* className, bool isStatic, const char* wrenSource)
-    {
-        wrenImpls.push_back({module, className, wrenSource, isStatic});
-    }
+	{
+		wrenImpls.push_back({module, className, wrenSource, isStatic});
+	}
 
 	void AddImport(const char* module, const char* fromModule, std::initializer_list<const char*> names)
-    {
-        imports.push_back({module, fromModule, std::vector<std::string>(names.begin(), names.end())});
-    }
+	{
+		imports.push_back({module, fromModule, std::vector<std::string>(names.begin(), names.end())});
+	}
 
 	WrenForeignMethodFn FindMethod(const char* module, const char* className, bool isStatic,
 	                               const char* signature) const
@@ -258,9 +258,7 @@ void RegisterAllBindings(BindingRegistry& registry);
 #define WREN_VARIABLE(registry, module, cls, name, getterFunc, setterFunc, doc) \
 	(registry).AddMethod(module, cls, #name, true, getterFunc, doc);            \
 	(registry).AddMethod(module, cls, #name "=(_)", true, setterFunc, doc " (setter)")
-	
-#define WREN_IMPL(registry, module, cls, isStatic, wrenSource) \
-    (registry).AddWrenImpl(module, cls, isStatic, wrenSource)
 
-#define WREN_IMPORT(registry, module, fromModule, ...) \
-    (registry).AddImport(module, fromModule, {__VA_ARGS__})
+#define WREN_IMPL(registry, module, cls, isStatic, wrenSource) (registry).AddWrenImpl(module, cls, isStatic, wrenSource)
+
+#define WREN_IMPORT(registry, module, fromModule, ...) (registry).AddImport(module, fromModule, {__VA_ARGS__})

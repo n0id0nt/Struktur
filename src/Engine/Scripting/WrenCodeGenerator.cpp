@@ -62,8 +62,8 @@ void CodeGenerator::GenerateModuleFile(const std::string& outputDir, const std::
                                        const std::vector<const ClassBinding*>& classes,
                                        const std::vector<const EnumBinding*>& enums,
                                        const std::vector<const ConstantBinding*>& constants,
-								   	   const std::vector<const WrenImplementationBinding*>& wrenImpls,
-								   	   const std::vector<const ModuleImportBinding*>& imports)
+                                       const std::vector<const WrenImplementationBinding*>& wrenImpls,
+                                       const std::vector<const ModuleImportBinding*>& imports)
 {
 	std::string filePath = outputDir + "/" + moduleName + ".wren";
 	std::ofstream file(filePath);
@@ -84,7 +84,10 @@ void CodeGenerator::GenerateModuleFile(const std::string& outputDir, const std::
 		file << "import \"" << import->fromModule << "\" for ";
 		for (size_t i = 0; i < import->names.size(); ++i)
 		{
-			if (i > 0) file << ", ";
+			if (i > 0)
+			{
+				file << ", ";
+			}
 			file << import->names[i];
 		}
 		file << "\n";
@@ -285,12 +288,15 @@ void CodeGenerator::GenerateModuleFile(const std::string& outputDir, const std::
 				while (std::getline(stream, line))
 				{
 					// Skip blank leading/trailing lines from raw string literals
-					if (line.find_first_not_of(" \t\r\n") == std::string::npos) continue;
+					if (line.find_first_not_of(" \t\r\n") == std::string::npos)
+					{
+						continue;
+					}
 					file << "    " << line << "\n";
 				}
 			}
 		}
-		
+
 		file << "}\n\n";
 	}
 

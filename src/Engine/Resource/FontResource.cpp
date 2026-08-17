@@ -40,15 +40,15 @@ Struktur::Resource::FontResource& Struktur::Resource::FontResource::operator=(Fo
 		UnloadFromGpu();
 		UnloadFromDisk();
 		GpuResource::operator=(std::move(other));
-		m_fontLoaded     = other.m_fontLoaded;
-		m_fontSize       = other.m_fontSize;
-		m_codepoints     = other.m_codepoints;
-		m_codepointCount = other.m_codepointCount;
-		m_atlasTexture   = other.m_atlasTexture;
-		m_atlasAlpha     = std::move(other.m_atlasAlpha);
-		m_atlasWidth     = other.m_atlasWidth;
-		m_atlasHeight    = other.m_atlasHeight;
-		font             = std::move(other.font);
+		m_fontLoaded         = other.m_fontLoaded;
+		m_fontSize           = other.m_fontSize;
+		m_codepoints         = other.m_codepoints;
+		m_codepointCount     = other.m_codepointCount;
+		m_atlasTexture       = other.m_atlasTexture;
+		m_atlasAlpha         = std::move(other.m_atlasAlpha);
+		m_atlasWidth         = other.m_atlasWidth;
+		m_atlasHeight        = other.m_atlasHeight;
+		font                 = std::move(other.font);
 		other.m_fontLoaded   = false;
 		other.m_atlasTexture = BGFX_INVALID_HANDLE;
 	}
@@ -82,7 +82,7 @@ bool Struktur::Resource::FontResource::LoadFromDisk(GameContext& context)
 	}
 
 	const std::string& path = (filePath.empty() || filePath == "default") ? kDefaultFontPath : filePath;
-	auto result              = FileSystem::ReadBytes(path);
+	auto result             = FileSystem::ReadBytes(path);
 	ASSERT_MSG(result.success, "Failed to load font: %s", result.errorMessage.c_str());
 
 	stbtt_fontinfo fontInfo{};
@@ -94,9 +94,9 @@ bool Struktur::Resource::FontResource::LoadFromDisk(GameContext& context)
 
 	int ascent = 0, descent = 0, lineGap = 0;
 	stbtt_GetFontVMetrics(&fontInfo, &ascent, &descent, &lineGap);
-	float scale         = stbtt_ScaleForPixelHeight(&fontInfo, (float)m_fontSize);
-	float ascentPixels  = (float)ascent * scale;
-	int codepointCount  = (m_codepoints != nullptr && m_codepointCount > 0) ? m_codepointCount : 95;
+	float scale        = stbtt_ScaleForPixelHeight(&fontInfo, (float)m_fontSize);
+	float ascentPixels = (float)ascent * scale;
+	int codepointCount = (m_codepoints != nullptr && m_codepointCount > 0) ? m_codepointCount : 95;
 
 	m_atlasWidth  = kAtlasWidth;
 	m_atlasHeight = kAtlasHeight;
@@ -107,8 +107,8 @@ bool Struktur::Resource::FontResource::LoadFromDisk(GameContext& context)
 	stbtt_PackBegin(&packContext, m_atlasAlpha.data(), m_atlasWidth, m_atlasHeight, 0, kAtlasPadding, nullptr);
 
 	stbtt_pack_range range{};
-	range.font_size         = (float)m_fontSize;
-	range.num_chars         = codepointCount;
+	range.font_size          = (float)m_fontSize;
+	range.num_chars          = codepointCount;
 	range.chardata_for_range = packedChars.data();
 	if (m_codepoints != nullptr && m_codepointCount > 0)
 	{
@@ -136,15 +136,15 @@ bool Struktur::Resource::FontResource::LoadFromDisk(GameContext& context)
 		int codepoint = (m_codepoints != nullptr && m_codepointCount > 0) ? m_codepoints[i] : (32 + i);
 
 		Text::Glyph& glyph = font.glyphs[i];
-		glyph.value         = codepoint;
-		glyph.offsetX       = (int)std::round(packedChar.xoff);
+		glyph.value        = codepoint;
+		glyph.offsetX      = (int)std::round(packedChar.xoff);
 		// stb's yoff is baseline-relative; raylib's convention is relative to the line's top (see raylib's
 		// rtext.c LoadFontData: offsetY = stbGlyphBoxTop + ascent*scale) - replicate the same shift here so
 		// glyphs from this atlas line up the same way raylib's own would.
 		glyph.offsetY  = (int)std::round(packedChar.yoff + ascentPixels);
 		glyph.advanceX = (int)std::round(packedChar.xadvance);
-		glyph.rec      = Util::Math::Rect{(float)packedChar.x0, (float)packedChar.y0,
-		                                   (float)(packedChar.x1 - packedChar.x0), (float)(packedChar.y1 - packedChar.y0)};
+		glyph.rec = Util::Math::Rect{(float)packedChar.x0, (float)packedChar.y0, (float)(packedChar.x1 - packedChar.x0),
+		                             (float)(packedChar.y1 - packedChar.y0)};
 	}
 
 	m_fontLoaded = true;
@@ -188,18 +188,18 @@ bool Struktur::Resource::FontResource::LoadToGpu(GameContext& context)
 	}
 
 	const bgfx::Memory* memory = bgfx::copy(rgba.data(), (uint32_t)rgba.size());
-	m_atlasTexture = bgfx::createTexture2D((uint16_t)m_atlasWidth, (uint16_t)m_atlasHeight, false, 1,
-	                                       bgfx::TextureFormat::RGBA8, 0, memory);
+	m_atlasTexture             = bgfx::createTexture2D((uint16_t)m_atlasWidth, (uint16_t)m_atlasHeight, false, 1,
+	                                                   bgfx::TextureFormat::RGBA8, 0, memory);
 	if (!bgfx::isValid(m_atlasTexture))
 	{
 		return false;
 	}
 
 	// Same "id doubles as the bgfx handle's idx" convention TextureResource::GetHandle() already uses on desktop.
-	font.texture.id      = (unsigned int)m_atlasTexture.idx;
-	font.texture.width   = m_atlasWidth;
-	font.texture.height  = m_atlasHeight;
-	gpuState             = GpuState::LoadedToGpu;
+	font.texture.id     = (unsigned int)m_atlasTexture.idx;
+	font.texture.width  = m_atlasWidth;
+	font.texture.height = m_atlasHeight;
+	gpuState            = GpuState::LoadedToGpu;
 	return true;
 }
 

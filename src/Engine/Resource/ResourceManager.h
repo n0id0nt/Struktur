@@ -28,14 +28,14 @@ namespace Resource
 // Enhanced resource manager
 class ResourceManager
 {
-   private:
+private:
 	TexturePool m_texturePool;
 	SoundPool m_soundPool;
 	MusicPool m_musicPool;
 	FontPool m_fontPool;
 	ShaderPool m_shaderPool;
 
-   public:
+public:
 	ResourcePtr<TextureResource> GetTexture(GameContext& context, const std::string& filePath);
 	ResourcePtr<SoundResource> GetSound(GameContext& context, const std::string& filePath);
 	ResourcePtr<MusicResource> GetMusic(GameContext& context, const std::string& filePath);

@@ -48,7 +48,7 @@ using ComponentRenderer = std::function<void(entt::registry&, entt::entity)>;
 
 class InspectorWindow : public EditorWindow
 {
-   private:
+private:
 	enum class InspectorDisplayType
 	{
 		None,
@@ -58,7 +58,7 @@ class InspectorWindow : public EditorWindow
 		Count
 	};
 
-   public:
+public:
 	InspectorWindow(HierarchyWindow* hierarchyWindow, UIHierarchyWindow* uiHierarchyWindow,
 	                PreviewWindow* previewWindow);
 
@@ -80,7 +80,7 @@ class InspectorWindow : public EditorWindow
 		// };
 	}
 
-   private:
+private:
 	void RegisterDefaultRenderers();
 
 	// Entity rendering
@@ -97,8 +97,8 @@ class InspectorWindow : public EditorWindow
 	void RenderActiveComponent(GameContext& context, Component::Active& active, entt::registry& registry,
 	                           entt::entity entity);
 
-	void RenderLocalTransformComponent(GameContext& context, Component::Transform& transform,
-	                                   entt::registry& registry, entt::entity entity);
+	void RenderLocalTransformComponent(GameContext& context, Component::Transform& transform, entt::registry& registry,
+	                                   entt::entity entity);
 
 	void RenderSpriteComponent(GameContext& context, Component::Sprite& sprite, entt::registry& registry,
 	                           entt::entity entity);
@@ -109,8 +109,8 @@ class InspectorWindow : public EditorWindow
 	void RenderCameraComponent(GameContext& context, Component::Camera& camera, entt::registry& registry,
 	                           entt::entity entity);
 
-	void RenderPhysicsBodyComponent(GameContext& context, Component::PhysicsBody& physicsBody,
-	                                entt::registry& registry, entt::entity entity);
+	void RenderPhysicsBodyComponent(GameContext& context, Component::PhysicsBody& physicsBody, entt::registry& registry,
+	                                entt::entity entity);
 
 	void RenderSpriteAnimationComponent(GameContext& context, Component::SpriteAnimation& spriteAnimation,
 	                                    entt::registry& registry, entt::entity entity);

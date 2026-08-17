@@ -18,7 +18,7 @@ namespace System
 {
 class TransformSystem : public ISystem
 {
-   public:
+public:
 	void Update(GameContext& context) override {}
 
 	glm::vec3 WorldToLocal(GameContext& context, const glm::vec3& worldPos, entt::entity parentEntity);
@@ -49,7 +49,7 @@ class TransformSystem : public ISystem
 		return "Transform System";
 	}
 
-   private:
+private:
 	// Resolves this entity's world-space cache if dirty (recursing on its parent first) and returns
 	// the now-up-to-date component.
 	Component::Transform& EnsureWorldUpToDate(GameContext& context, entt::entity entity);

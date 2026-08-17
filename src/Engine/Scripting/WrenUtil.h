@@ -15,4 +15,4 @@ std::vector<Wren::WrenItem> GetWrenMapFromPairs(WrenVM* vm, int pairsSlot, int f
 // callers that only need one slot (e.g. reading/writing an exported script field) don't need a list.
 WrenItem GetWrenItemFromSlot(WrenVM* vm, int slot);
 void SetSlotFromWrenItem(WrenVM* vm, int slot, const WrenItem& item);
-}
+}  // namespace Struktur::Wren::Util

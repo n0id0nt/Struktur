@@ -1,11 +1,10 @@
 #pragma once
 
+#include <glm/glm.hpp>
 #include <string>
 #include <vector>
 
 #include "Engine/Util/MathUtil.h"
-
-#include <glm/glm.hpp>
 
 namespace Struktur
 {

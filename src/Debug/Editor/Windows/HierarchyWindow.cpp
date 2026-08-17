@@ -146,7 +146,7 @@ void HierarchyWindow::RenderEntityNode(GameContext& context, entt::entity entity
 	// Right-aligned on the same row as the tree node.
 	if (auto* active = registry.try_get<Component::Active>(entity))
 	{
-		bool isActive = active->activeState == Component::Active::ActiveState::Active;
+		bool isActive         = active->activeState == Component::Active::ActiveState::Active;
 		bool isInactiveParent = active->activeState == Component::Active::ActiveState::InactiveParent;
 
 		float checkboxWidth = ImGui::GetFrameHeight();

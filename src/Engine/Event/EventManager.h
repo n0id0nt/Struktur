@@ -13,12 +13,12 @@ namespace Event
 {
 class EventManager
 {
-   public:
+public:
 	void AddEvent(const std::string& type, const Struktur::Callback::Variant& data);
 
 	class ReadIterator
 	{
-	   public:
+	public:
 		using iterator_category = std::forward_iterator_tag;
 		using value_type        = const Event;
 		using pointer           = const Event*;
@@ -37,7 +37,7 @@ class EventManager
 		pointer operator->() const;
 		ReadIterator& operator++();
 
-	   private:
+	private:
 		std::queue<Event> m_snapshot;
 	};
 
@@ -54,7 +54,7 @@ class EventManager
 
 	class DrainIterator
 	{
-	   public:
+	public:
 		using iterator_category = std::forward_iterator_tag;
 		using value_type        = Event;
 		using pointer           = const Event*;
@@ -73,7 +73,7 @@ class EventManager
 		pointer operator->() const;
 		DrainIterator& operator++();
 
-	   private:
+	private:
 		std::queue<Event>* m_queue = nullptr;
 	};
 
@@ -93,7 +93,7 @@ class EventManager
 	bool IsEmpty() const;
 	std::size_t Size() const;
 
-   private:
+private:
 	std::queue<Event> m_eventQueue;
 };
 }  // namespace Event

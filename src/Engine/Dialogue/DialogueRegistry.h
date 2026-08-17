@@ -22,7 +22,7 @@ namespace Struktur::Dialogue
 {
 class DialogueRegistry
 {
-   public:
+public:
 	explicit DialogueRegistry();
 	~DialogueRegistry();
 
@@ -56,7 +56,7 @@ class DialogueRegistry
 	Callback::ICallback* GetCommand(const std::string& type) const;
 	Callback::ICallback* GetVariable(const std::string& type) const;
 
-   private:
+private:
 	std::unordered_map<std::string, std::unique_ptr<Callback::ICallback>> m_conditionCallbacks;
 	std::unordered_map<std::string, std::unique_ptr<Callback::ICallback>> m_commandCallbacks;
 	std::unordered_map<std::string, std::unique_ptr<Callback::ICallback>> m_variableCallbacks;

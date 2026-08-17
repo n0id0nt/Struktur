@@ -16,13 +16,13 @@ namespace Resource
 {
 class TexturePool : public GpuResourcePool<TextureResource>
 {
-   public:
+public:
 	TexturePool()
 	    : GpuResourcePool<TextureResource>(256 * 1024 * 1024)
 	{
 	}  // 256MB for textures
 
-   protected:
+protected:
 	TextureResource* LoadResource(GameContext& context, const std::string& filePath) override;
 };
 }  // namespace Resource

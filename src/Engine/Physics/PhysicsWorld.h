@@ -15,7 +15,7 @@ namespace Physics
 {
 class PhysicsWorld
 {
-   public:
+public:
 	PhysicsWorld();
 	void Initialise(glm::vec2 gravity, int velocityIterations, int positionIterations, float pixelsPerMeter);
 
@@ -38,7 +38,7 @@ class PhysicsWorld
 
 	void Clear();
 
-   private:
+private:
 	ContactListener m_contactListener;
 
 	float m_pixelsPerMeter;

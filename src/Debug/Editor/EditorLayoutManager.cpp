@@ -5,9 +5,8 @@
 #include <filesystem>
 #include <fstream>
 
-#include "nlohmann/json.hpp"
-
 #include "Debug/Assertions.h"
+#include "nlohmann/json.hpp"
 
 void Struktur::Debug::EditorLayoutManager::SetupLayout(ImGuiID dockspace_id, const std::string &layoutName,
                                                        ImVec2 viewportSize)
@@ -104,7 +103,7 @@ void Struktur::Debug::EditorLayoutManager::LoadLayout(const std::string &filenam
 }
 
 void Struktur::Debug::EditorLayoutManager::SaveWindowStates(const std::unordered_map<std::string, bool> &windowStates,
-                                                             const std::string &filename)
+                                                            const std::string &filename)
 {
 	nlohmann::json json;
 	for (const auto &[name, isOpen] : windowStates)

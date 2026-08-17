@@ -14,7 +14,7 @@ namespace Struktur::Debug
 {
 class SpritePreviewRenderer : public IPreviewRenderer
 {
-   public:
+public:
 	SpritePreviewRenderer(const Component::Sprite* sprite, const std::string& name)
 	    : m_sprite(sprite),
 	      m_name(name)
@@ -27,7 +27,7 @@ class SpritePreviewRenderer : public IPreviewRenderer
 		return m_name;
 	}
 
-   private:
+private:
 	const Component::Sprite* m_sprite;
 	std::string m_name;
 };

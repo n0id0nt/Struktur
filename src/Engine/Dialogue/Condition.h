@@ -20,7 +20,7 @@ namespace Struktur::Dialogue
 // Command that executes by calling a Wren callback
 class Condition
 {
-   public:
+public:
 	// Constructor
 	// callback is borrowed from DialogueRegistry, not owned
 	Condition(const std::string& key, const std::unordered_map<std::string, DialogueValue>& params);
@@ -44,7 +44,7 @@ class Condition
 	void RemoveParameter(const std::string& key);
 	void ChangeParameterKey(const std::string& oldKey, const std::string& newKey);
 
-   private:
+private:
 	std::string m_key;
 	std::unordered_map<std::string, DialogueValue> m_params;
 };

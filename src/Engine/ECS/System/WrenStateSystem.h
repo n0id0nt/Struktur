@@ -10,7 +10,7 @@ namespace System
 {
 class WrenStateSystem : public ISystem
 {
-   public:
+public:
 	void Update(GameContext& context) override;
 	std::string Name() const override
 	{
@@ -20,7 +20,7 @@ class WrenStateSystem : public ISystem
 
 class WrenStateRenderSystem : public ISystem
 {
-   public:
+public:
 	void Update(GameContext& context) override;
 	std::string Name() const override
 	{

@@ -12,7 +12,7 @@ namespace System
 {
 class GameObjectManager
 {
-   public:
+public:
 	GameObjectManager() {}
 	~GameObjectManager() {}
 
@@ -27,7 +27,7 @@ class GameObjectManager
 	void UpdateGameObjectsActiveStateQueue(GameContext& context);
 	void DestroyGameObject(GameContext& context, entt::entity entity);
 
-   private:
+private:
 	void OnChildrenDestroy(entt::registry& reg, entt::entity entity);
 	void OnPhysicsBodyDestory(entt::registry& reg, entt::entity entity);
 	void OnScriptConstruct(entt::registry& reg, entt::entity entity);

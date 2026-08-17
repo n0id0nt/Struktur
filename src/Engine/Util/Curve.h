@@ -51,7 +51,7 @@ struct CurveKeyframe
 // Animation curve class (like Unity's AnimationCurve)
 class Curve
 {
-   public:
+public:
 	Curve()
 	    : m_preWrapMode(WrapMode::Clamp),
 	      m_postWrapMode(WrapMode::Clamp)
@@ -235,7 +235,7 @@ class Curve
 		m_keyframes.clear();
 	}
 
-   private:
+private:
 	std::vector<CurveKeyframe> m_keyframes;
 	WrapMode m_preWrapMode;
 	WrapMode m_postWrapMode;

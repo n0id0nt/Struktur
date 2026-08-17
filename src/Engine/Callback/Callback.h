@@ -16,7 +16,7 @@ namespace Struktur::Callback
 // Base interface for all callback implementations
 class ICallback
 {
-   public:
+public:
 	virtual ~ICallback()                                                           = default;
 	virtual void Dispose(GameContext& context)                                     = 0;
 	virtual Variant Invoke(GameContext& context, const std::vector<Variant>& args) = 0;
@@ -32,7 +32,7 @@ class TypedCallback;
 template <typename R, typename... Args>
 class TypedCallback<R(Args...)>
 {
-   public:
+public:
 	TypedCallback() = default;
 
 	// Construct from ICallback pointer (takes ownership)
@@ -113,7 +113,7 @@ class TypedCallback<R(Args...)>
 		return std::move(m_callback);
 	}
 
-   private:
+private:
 	std::unique_ptr<ICallback> m_callback;
 };
 }  // namespace Struktur::Callback

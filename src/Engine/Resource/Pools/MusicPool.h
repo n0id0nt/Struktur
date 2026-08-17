@@ -16,7 +16,7 @@ namespace Resource
 {
 class MusicPool : public ResourcePool<MusicResource>
 {
-   protected:
+protected:
 	MusicResource* LoadResource(GameContext& context, const std::string& filePath) override;
 };
 }  // namespace Resource

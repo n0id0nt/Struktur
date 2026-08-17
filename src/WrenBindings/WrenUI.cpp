@@ -321,8 +321,8 @@ void wren_UIElementSetBackgroundColor(WrenVM* vm)
 		return;
 	}
 	WrenVec4* color = static_cast<WrenVec4*>(wrenGetSlotForeign(vm, 1));
-	Struktur::Util::Color rayColor{(unsigned char)color->value.r, (unsigned char)color->value.g, (unsigned char)color->value.b,
-	                 (unsigned char)color->value.a};
+	Struktur::Util::Color rayColor{(unsigned char)color->value.r, (unsigned char)color->value.g,
+	                               (unsigned char)color->value.b, (unsigned char)color->value.a};
 	uiElement->element->SetBackgroundColor(rayColor);
 }
 
@@ -336,8 +336,8 @@ void wren_UIElementSetBorderColor(WrenVM* vm)
 		return;
 	}
 	WrenVec4* color = static_cast<WrenVec4*>(wrenGetSlotForeign(vm, 1));
-	Struktur::Util::Color rayColor{(unsigned char)color->value.r, (unsigned char)color->value.g, (unsigned char)color->value.b,
-	                 (unsigned char)color->value.a};
+	Struktur::Util::Color rayColor{(unsigned char)color->value.r, (unsigned char)color->value.g,
+	                               (unsigned char)color->value.b, (unsigned char)color->value.a};
 	uiElement->element->SetBorderColor(rayColor);
 }
 
@@ -426,7 +426,7 @@ void wren_UIElementAddChild(WrenVM* vm)
 	// should share. Reuses the root's already-assigned ambient batch (set by UIManager.addUIElement's initial
 	// pass, or an earlier one of these calls) if it has one, rather than minting a new one every time.
 	Struktur::GameContext* context                 = static_cast<Struktur::GameContext*>(wrenGetUserData(vm));
-	Struktur::UI::UIElement* root                   = uiElement->element->GetRoot();
+	Struktur::UI::UIElement* root                  = uiElement->element->GetRoot();
 	Struktur::Renderer::UIBatchHandle ambientBatch = root->GetBatch();
 	if (!ambientBatch.IsValid())
 	{
@@ -452,7 +452,7 @@ void wren_UIElementRemoveChild(WrenVM* vm)
 	if (success)
 	{
 		Struktur::GameContext* context                 = static_cast<Struktur::GameContext*>(wrenGetUserData(vm));
-		Struktur::UI::UIElement* root                   = uiElement->element->GetRoot();
+		Struktur::UI::UIElement* root                  = uiElement->element->GetRoot();
 		Struktur::Renderer::UIBatchHandle ambientBatch = root->GetBatch();
 		if (!ambientBatch.IsValid())
 		{
@@ -627,8 +627,8 @@ void wren_UILabelSetTextColor(WrenVM* vm)
 		return;
 	}
 	WrenVec4* color = static_cast<WrenVec4*>(wrenGetSlotForeign(vm, 1));
-	Struktur::Util::Color rayColor{(unsigned char)color->value.r, (unsigned char)color->value.g, (unsigned char)color->value.b,
-	                 (unsigned char)color->value.a};
+	Struktur::Util::Color rayColor{(unsigned char)color->value.r, (unsigned char)color->value.g,
+	                               (unsigned char)color->value.b, (unsigned char)color->value.a};
 	Struktur::UI::UILabel* label = dynamic_cast<Struktur::UI::UILabel*>(uiElement->element);
 	label->SetTextColor(rayColor);
 }

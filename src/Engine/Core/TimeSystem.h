@@ -12,7 +12,7 @@ struct TimeSystem
 	double scaledTime   = 0.0;
 	float timeScale     = 1.0f;
 
-   private:
+private:
 	double m_scaleChangeUnscaledTime = 0.0;
 	double m_scaleChangeScaledTime   = 0.0;
 	// Frame delta measured via SDL3's performance counter (works on both platforms via SDL3's Emscripten
@@ -20,7 +20,7 @@ struct TimeSystem
 	uint64_t m_lastTicks = 0;
 	bool m_hasLastTicks  = false;
 
-   public:
+public:
 	void SetTimeScale(float newScale);
 	void Update();
 };

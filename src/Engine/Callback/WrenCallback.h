@@ -11,7 +11,7 @@ namespace Struktur::Callback
 // Wren closure/function callback implementation
 class WrenCallback : public ICallback
 {
-   public:
+public:
 	// Construct from Wren VM and closure handle
 	WrenCallback(WrenHandle* handle);
 	~WrenCallback() override;
@@ -34,7 +34,7 @@ class WrenCallback : public ICallback
 		return m_callbackHandle;
 	}
 
-   private:
+private:
 	WrenHandle* m_callbackHandle;
 	bool m_disposed;
 };

@@ -22,7 +22,7 @@ namespace Resource
 // SDL3_mixer music - CPU resource (streaming audio)
 class MusicResource : public CpuResource
 {
-   public:
+public:
 	MIX_Audio* audio = nullptr;
 	// Persistent playback instance, created once in LoadToHardware() and reused thereafter.
 	MIX_Track* track = nullptr;

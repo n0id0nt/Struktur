@@ -1,10 +1,10 @@
 #pragma once
 
+#include <bgfx/bgfx.h>
+
 #include <glm/glm.hpp>
 
 #include "Engine/Util/Color.h"
-
-#include <bgfx/bgfx.h>
 
 namespace Struktur
 {
@@ -23,7 +23,7 @@ namespace Renderer
 // texture.rgba * vertexColor.rgba blend model.
 class DebugRenderer
 {
-   public:
+public:
 	DebugRenderer();
 	~DebugRenderer();
 
@@ -44,7 +44,7 @@ class DebugRenderer
 	void DrawSolidCircle(const glm::vec2& center, float radius, const Util::Color& color);
 	void DrawRectOutline(const glm::vec2& min, const glm::vec2& max, float thickness, const Util::Color& color);
 
-   private:
+private:
 	void SubmitTriangleFan(const glm::vec2* points, int count, uint32_t abgr);
 
 	bgfx::TextureHandle m_whiteTexture    = BGFX_INVALID_HANDLE;

@@ -14,7 +14,7 @@ namespace Platform
 // owns rendering now and doesn't need (or want) raylib's GL-context-creating window layer underneath it.
 class Window
 {
-   public:
+public:
 	Window() = default;
 	~Window();
 
@@ -68,14 +68,14 @@ class Window
 		return m_window;
 	}
 
-   private:
+private:
 	SDL_Window* m_window = nullptr;
 	std::function<void(const SDL_Event&)> m_eventCallback;
-	int m_width           = 0;
-	int m_height          = 0;
-	bool m_isFullscreen   = false;
-	bool m_shouldClose    = false;
-	bool m_wasResized     = false;
+	int m_width         = 0;
+	int m_height        = 0;
+	bool m_isFullscreen = false;
+	bool m_shouldClose  = false;
+	bool m_wasResized   = false;
 };
 }  // namespace Platform
 }  // namespace Struktur

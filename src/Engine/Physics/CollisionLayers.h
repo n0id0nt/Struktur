@@ -17,7 +17,7 @@ namespace Physics
 // PhysicsSystem::SetCollisionFilter).
 class CollisionLayers
 {
-   public:
+public:
 	// A mask that matches every layer, registered or not - Box2D's own default maskBits (see b2Filter's
 	// constructor), exposed here so callers don't need to know that detail to ask for "collide with everything".
 	static constexpr uint16_t kAllLayersMask = 0xFFFF;
@@ -44,7 +44,7 @@ class CollisionLayers
 
 	bool HasGroup(const std::string& groupName) const;
 
-   private:
+private:
 	std::unordered_map<std::string, uint16_t> m_layers;
 	std::unordered_map<uint16_t, std::string> m_layerNames;
 	uint16_t m_nextBit = 0x0001;

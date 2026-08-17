@@ -4,11 +4,11 @@
 
 namespace Struktur
 {
-	namespace Component
-	{
-        struct World
-        {
-            FileLoading::LevelParser::World worldMap;
-        };
-    }
-}
+namespace Component
+{
+struct World
+{
+	FileLoading::LevelParser::World worldMap;
+};
+}  // namespace Component
+}  // namespace Struktur

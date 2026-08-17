@@ -1,7 +1,7 @@
 #include "LevelParser.h"
 
-#include <fstream>
 #include <filesystem>
+#include <fstream>
 
 #include "Debug/Assertions.h"
 #include "Engine/Core/FileSystem.h"
@@ -24,9 +24,9 @@ Struktur::FileLoading::LevelParser::World Struktur::FileLoading::LevelParser::Lo
 	DEBUG_INFO("Loading world");
 
 	World world;
-	world.Iid = data["iid"];
+	world.Iid      = data["iid"];
 	world.filePath = filePath;
-	
+
 	Definitions definitions;
 	LoadDefinitions(world, definitions, data["defs"]);
 	LoadLevels(world, data["levels"]);
@@ -135,7 +135,7 @@ void Struktur::FileLoading::LevelParser::LoadLayers(World& world, Level& level, 
 			}
 			else if (layerType == "AutoLayer")
 			{
-				layer.type = LayerType::AUTO_LAYER;
+				layer.type                         = LayerType::AUTO_LAYER;
 				std::filesystem::path relativePath = layerJson["__tilesetRelPath"];
 				std::filesystem::path baseFile     = world.filePath;
 				layer.tilesetPath = (baseFile.parent_path() / relativePath).lexically_normal().generic_string();
@@ -143,7 +143,7 @@ void Struktur::FileLoading::LevelParser::LoadLayers(World& world, Level& level, 
 			}
 			else if (layerType == "Tiles")
 			{
-				layer.type = LayerType::TILES;
+				layer.type                         = LayerType::TILES;
 				std::filesystem::path relativePath = layerJson["__tilesetRelPath"];
 				std::filesystem::path baseFile     = world.filePath;
 				layer.tilesetPath = (baseFile.parent_path() / relativePath).lexically_normal().generic_string();
@@ -170,16 +170,16 @@ void Struktur::FileLoading::LevelParser::LoadLayers(World& world, Level& level, 
 		else if (entitiesIndex >= 0 && layerIndex < entitiesIndex)
 		{
 			// Listed above Entities in the layer panel -> drawn in front of entities.
-			bool isForeground   = LayerNameStartsWithAny(layerName, {"FG_", "Foreground"});
-			layer.renderLayer   = isForeground ? Struktur::World::RenderLayer::Foreground
-			                                    : Struktur::World::RenderLayer::BackgroundOverlay;
+			bool isForeground = LayerNameStartsWithAny(layerName, {"FG_", "Foreground"});
+			layer.renderLayer = isForeground ? Struktur::World::RenderLayer::Foreground
+			                                 : Struktur::World::RenderLayer::BackgroundOverlay;
 		}
 		else
 		{
 			// Listed below Entities (or no Entities layer in this level) -> drawn behind entities.
-			bool isFar        = LayerNameStartsWithAny(layerName, {"BG_Far", "Far_"});
-			layer.renderLayer = isFar ? Struktur::World::RenderLayer::BackgroundFar
-			                          : Struktur::World::RenderLayer::BackgroundMid;
+			bool isFar = LayerNameStartsWithAny(layerName, {"BG_Far", "Far_"});
+			layer.renderLayer =
+			    isFar ? Struktur::World::RenderLayer::BackgroundFar : Struktur::World::RenderLayer::BackgroundMid;
 		}
 
 		level.layers.push_back(layer);
@@ -288,10 +288,10 @@ void Struktur::FileLoading::LevelParser::LoadGridTiles(Layer& gridLayer, const n
 		GridTile gridTile;
 		gridTile.px  = LoadJsonVector2(layerTileJson["px"]);
 		gridTile.src = LoadJsonVector2(layerTileJson["src"]);
-		//gridTile.d   = LoadJsonVector2(layerTileJson["d"]);
-		gridTile.f   = layerTileJson["f"];
-		gridTile.t   = layerTileJson["t"];
-		gridTile.a   = layerTileJson["a"];
+		// gridTile.d   = LoadJsonVector2(layerTileJson["d"]);
+		gridTile.f = layerTileJson["f"];
+		gridTile.t = layerTileJson["t"];
+		gridTile.a = layerTileJson["a"];
 		gridLayer.autoLayerTiles.push_back(gridTile);
 	}
 }

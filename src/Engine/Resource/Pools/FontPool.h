@@ -16,16 +16,16 @@ namespace Resource
 {
 class FontPool : public GpuResourcePool<FontResource>
 {
-   private:
+private:
 	int defaultFontSize = 32;
 
-   public:
+public:
 	FontPool()
 	    : GpuResourcePool<FontResource>(32 * 1024 * 1024)
 	{
 	}  // 32MB for textures
 
-   protected:
+protected:
 	FontResource* LoadResource(GameContext& context, const std::string& resourceString) override;
 };
 }  // namespace Resource

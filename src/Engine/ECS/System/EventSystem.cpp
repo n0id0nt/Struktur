@@ -10,7 +10,7 @@ void Struktur::System::EventSystem::Update(GameContext& context)
 	auto& systemManager            = context.GetSystemManager();
 	auto& eventManager             = context.GetEventManager();
 	WrenScriptSystem& scriptSystem = systemManager.GetSystem<WrenScriptSystem>();
-	auto view                      = registry.view<Component::WrenScript>(); // Can send events when inactive
+	auto view                      = registry.view<Component::WrenScript>();  // Can send events when inactive
 
 	for (auto& event : eventManager.Drain())
 	{

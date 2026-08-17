@@ -49,8 +49,8 @@ void Struktur::Physics::ContactListener::GetContactEntities(b2Contact* contact, 
 	entityB = static_cast<entt::entity>(fixtureB->GetBody()->GetUserData().pointer);
 }
 
-void Struktur::Physics::ContactListener::PublishContactEvent(const char* type, b2Contact* contact,
-                                                              entt::entity entityA, entt::entity entityB)
+void Struktur::Physics::ContactListener::PublishContactEvent(const char* type, b2Contact* contact, entt::entity entityA,
+                                                             entt::entity entityB)
 {
 	if (!m_context)
 	{
