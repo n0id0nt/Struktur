@@ -1,5 +1,6 @@
 #include "FontResource.h"
 
+#include <algorithm>
 #include <cmath>
 
 #include "Debug/Assertions.h"
@@ -69,9 +70,15 @@ namespace
 // raylib's built-in bitmap font (the old "default" shortcut) has no equivalent without a real file - point the
 // same shortcut at an already-shipped ttf instead. Invisible to callers either way.
 constexpr const char* kDefaultFontPath = "Fonts/machine-std/machine-std-regular.ttf";
-constexpr int kAtlasWidth              = 512;
-constexpr int kAtlasHeight             = 512;
-constexpr int kAtlasPadding            = 1;
+// Starting size for the pack-and-retry loop below, not a hard limit - a fixed atlas size that happened to fit
+// this project's original, smaller font sizes silently dropped glyphs (as zero-size, invisible rects) the moment
+// a larger fontSize/codepoint-count combination needed more area than one atlas this size could hold.
+constexpr int kInitialAtlasSize = 512;
+// Doubled from kInitialAtlasSize on each overflow until packing succeeds or this cap is hit - 4096 comfortably
+// fits every font size this project actually uses (see LoadFromDisk) while staying well within any GPU's texture
+// size limits.
+constexpr int kMaxAtlasSize = 4096;
+constexpr int kAtlasPadding = 1;
 }  // namespace
 
 bool Struktur::Resource::FontResource::LoadFromDisk(GameContext& context)
@@ -98,33 +105,50 @@ bool Struktur::Resource::FontResource::LoadFromDisk(GameContext& context)
 	float ascentPixels = (float)ascent * scale;
 	int codepointCount = (m_codepoints != nullptr && m_codepointCount > 0) ? m_codepointCount : 95;
 
-	m_atlasWidth  = kAtlasWidth;
-	m_atlasHeight = kAtlasHeight;
-	m_atlasAlpha.assign((size_t)m_atlasWidth * (size_t)m_atlasHeight, 0);
-
 	std::vector<stbtt_packedchar> packedChars(codepointCount);
-	stbtt_pack_context packContext{};
-	stbtt_PackBegin(&packContext, m_atlasAlpha.data(), m_atlasWidth, m_atlasHeight, 0, kAtlasPadding, nullptr);
 
-	stbtt_pack_range range{};
-	range.font_size          = (float)m_fontSize;
-	range.num_chars          = codepointCount;
-	range.chardata_for_range = packedChars.data();
-	if (m_codepoints != nullptr && m_codepointCount > 0)
+	// Retry at double the size on overflow rather than failing once at a fixed size - stbtt_PackFontRanges only
+	// fills chardata_for_range entries it actually manages to place, so a failed attempt can leave some entries
+	// holding coordinates from a smaller, no-longer-relevant atlas size; re-zeroing before each attempt means a
+	// glyph that still doesn't fit even at kMaxAtlasSize ends up with a clean zero-size (invisible) rect instead
+	// of stale, wrongly-offset ones pointing at the wrong spot in the final atlas.
+	int packOk = 0;
+	for (int atlasSize = kInitialAtlasSize; atlasSize <= kMaxAtlasSize; atlasSize *= 2)
 	{
-		range.array_of_unicode_codepoints = m_codepoints;
-	}
-	else
-	{
-		// Matches raylib's default 95-char ASCII range (32-126, includes the '?' fallback glyph at 63).
-		range.first_unicode_codepoint_in_range = 32;
+		m_atlasWidth  = atlasSize;
+		m_atlasHeight = atlasSize;
+		m_atlasAlpha.assign((size_t)m_atlasWidth * (size_t)m_atlasHeight, 0);
+		std::fill(packedChars.begin(), packedChars.end(), stbtt_packedchar{});
+
+		stbtt_pack_context packContext{};
+		stbtt_PackBegin(&packContext, m_atlasAlpha.data(), m_atlasWidth, m_atlasHeight, 0, kAtlasPadding, nullptr);
+
+		stbtt_pack_range range{};
+		range.font_size          = (float)m_fontSize;
+		range.num_chars          = codepointCount;
+		range.chardata_for_range = packedChars.data();
+		if (m_codepoints != nullptr && m_codepointCount > 0)
+		{
+			range.array_of_unicode_codepoints = m_codepoints;
+		}
+		else
+		{
+			// Matches raylib's default 95-char ASCII range (32-126, includes the '?' fallback glyph at 63).
+			range.first_unicode_codepoint_in_range = 32;
+		}
+
+		packOk = stbtt_PackFontRanges(&packContext, result.value.data(), 0, &range, 1);
+		stbtt_PackEnd(&packContext);
+		if (packOk)
+		{
+			break;
+		}
 	}
 
-	int packOk = stbtt_PackFontRanges(&packContext, result.value.data(), 0, &range, 1);
-	stbtt_PackEnd(&packContext);
 	if (!packOk)
 	{
-		DEBUG_WARNING("Font atlas overflowed for %s - some glyphs may be missing", path);
+		DEBUG_WARNING("Font atlas overflowed for %s even at the max %dx%d size - some glyphs may be missing", path,
+		             kMaxAtlasSize, kMaxAtlasSize);
 	}
 
 	font.baseSize = m_fontSize;
