@@ -331,17 +331,33 @@ void Struktur::Renderer::UIRenderer::Flush(GameContext& context)
 			// Built by walking sortedQuadOrder rather than 0..quadCount directly - a quad's vertex data never
 			// moves from wherever AllocateOrResizeSlot placed it, only which index-buffer position references it,
 			// so base is still that quad's own real vertexOffset-derived index, just written at its sorted slot.
+			//
+			// Also derives runs (see UIBatch::runs/UIBatchRun) in this same pass, rather than re-walking
+			// sortedQuadOrder a second time just to redetect texture-run boundaries every single frame in the
+			// submit loop below (mirroring ImGui's ImDrawList: a cached draw list, rebuilt only when something
+			// actually changed) - this is the only place either the index buffer or runs are allowed to change,
+			// so both staying in sync only costs anything on the same frames re-upload was already unavoidable.
 			std::vector<uint16_t> indices(quadCount * 6);
+			batch.runs.clear();
+			bgfx::TextureHandle runTexture = batch.quadTextures[batch.sortedQuadOrder[0]];
 			for (uint32_t i = 0; i < quadCount; ++i)
 			{
-				uint16_t base    = (uint16_t)(batch.sortedQuadOrder[i] * 4);
+				uint16_t base       = (uint16_t)(batch.sortedQuadOrder[i] * 4);
 				indices[i * 6 + 0] = base + 0;
 				indices[i * 6 + 1] = base + 1;
 				indices[i * 6 + 2] = base + 2;
 				indices[i * 6 + 3] = base + 0;
 				indices[i * 6 + 4] = base + 2;
 				indices[i * 6 + 5] = base + 3;
+
+				bgfx::TextureHandle quadTexture = batch.quadTextures[batch.sortedQuadOrder[i]];
+				if (quadTexture.idx != runTexture.idx)
+				{
+					batch.runs.push_back(UIBatchRun{i, runTexture});
+					runTexture = quadTexture;
+				}
 			}
+			batch.runs.push_back(UIBatchRun{quadCount, runTexture});
 
 			bgfx::update(batch.vb, 0,
 			             bgfx::copy(batch.cpuVertices.data(),
@@ -350,50 +366,33 @@ void Struktur::Renderer::UIRenderer::Flush(GameContext& context)
 			batch.dirty = false;
 		}
 
-		// Walk quads in sortedQuadOrder (z-index order, not raw quad index - see above), submitting once per
-		// contiguous same-texture run (see UIBatch::quadTextures) - mirrors WorldRenderer::Flush's own
-		// texture-based run-splitting, except every run here draws from this one persistent vb/ib via offset+count
-		// rather than a fresh transient buffer, since the vertex data itself was already uploaded above (if
-		// dirty). This is what lets e.g. a panel's white-texture background/border and a label's font-atlas text
-		// safely share one batch, each still drawing at its own z-index rather than in raw write order.
-		uint32_t runStart              = 0;
-		bgfx::TextureHandle runTexture = batch.quadTextures[batch.sortedQuadOrder[0]];
-		for (uint32_t quad = 0; quad <= quadCount; ++quad)
+		// Just walks the cached runs (see above) - no per-frame texture-boundary detection. Every run draws from
+		// this one persistent vb/ib via offset+count rather than a fresh transient buffer, since the vertex data
+		// itself was already uploaded above (if dirty). This is what lets e.g. a panel's white-texture
+		// background/border and a label's font-atlas text safely share one batch, each still drawing at its own
+		// z-index rather than in raw write order.
+		uint32_t runStart = 0;
+		for (const UIBatchRun& run : batch.runs)
 		{
-			bool boundary =
-			    (quad == quadCount) || (batch.quadTextures[batch.sortedQuadOrder[quad]].idx != runTexture.idx);
-			if (!boundary)
+			// The index buffer's values are absolute vertex indices (base = quad*4 across the whole batch, see
+			// the rebuild above), not relative to this run. bgfx applies setVertexBuffer's startVertex by
+			// rebasing which vertex each index resolves to (offsetting the buffer binding itself), so passing
+			// runStart*4 here on top of already-absolute indices would double-offset every run after the
+			// first - reading some other quad's vertex data (wrong position/UV) while still drawing it with
+			// this run's texture. Always bind from vertex 0 and let the index values (via setIndexBuffer's
+			// offset below) do the addressing.
+			bgfx::setVertexBuffer(0, batch.vb, 0, quadCount * 4);
+			bgfx::setIndexBuffer(batch.ib, runStart * 6, (run.endQuad - runStart) * 6);
+			bgfx::setTexture(0, m_texColorSampler, run.texture);
+			if (batch.hasClip)
 			{
-				continue;
+				bgfx::setScissor((uint16_t)batch.clipRect.x, (uint16_t)batch.clipRect.y,
+				                 (uint16_t)batch.clipRect.width, (uint16_t)batch.clipRect.height);
 			}
+			bgfx::setState(drawState);
+			bgfx::submit(GraphicsDevice::UIViewId, GetEmbeddedProgram("sprite"));
 
-			uint32_t runCount = quad - runStart;
-			if (runCount > 0)
-			{
-				// The index buffer's values are absolute vertex indices (base = quad*4 across the whole batch, see
-				// the rebuild above), not relative to this run. bgfx applies setVertexBuffer's startVertex by
-				// rebasing which vertex each index resolves to (offsetting the buffer binding itself), so passing
-				// runStart*4 here on top of already-absolute indices would double-offset every run after the
-				// first - reading some other quad's vertex data (wrong position/UV) while still drawing it with
-				// this run's texture. Always bind from vertex 0 and let the index values (via setIndexBuffer's
-				// offset below) do the addressing.
-				bgfx::setVertexBuffer(0, batch.vb, 0, quadCount * 4);
-				bgfx::setIndexBuffer(batch.ib, runStart * 6, runCount * 6);
-				bgfx::setTexture(0, m_texColorSampler, runTexture);
-				if (batch.hasClip)
-				{
-					bgfx::setScissor((uint16_t)batch.clipRect.x, (uint16_t)batch.clipRect.y,
-					                 (uint16_t)batch.clipRect.width, (uint16_t)batch.clipRect.height);
-				}
-				bgfx::setState(drawState);
-				bgfx::submit(GraphicsDevice::UIViewId, GetEmbeddedProgram("sprite"));
-			}
-
-			runStart = quad;
-			if (quad < quadCount)
-			{
-				runTexture = batch.quadTextures[batch.sortedQuadOrder[quad]];
-			}
+			runStart = run.endQuad;
 		}
 	}
 }

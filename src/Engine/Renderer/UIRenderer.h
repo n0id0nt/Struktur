@@ -28,6 +28,15 @@ namespace Struktur
 {
 namespace Renderer
 {
+// One contiguous same-texture span within a batch's sortedQuadOrder (see UIBatch::runs) - start is implicit
+// (0 for the first run, otherwise the previous run's own endQuad), since runs are always contiguous and
+// gap-free by construction.
+struct UIBatchRun
+{
+	uint32_t endQuad;
+	bgfx::TextureHandle texture;
+};
+
 // One persistent, update-in-place bgfx buffer pair plus its CPU-side vertex mirror. Unlike WorldRenderer's
 // transient per-frame sprite batches, UI content (panels/labels) mostly doesn't change frame to frame, so this
 // is only re-uploaded to the GPU when actually dirtied (see UIRenderer::Flush), not rebuilt every frame.
@@ -54,6 +63,10 @@ struct UIBatch
 	// what ends up in the index buffer, so a slot's vertexOffset stays a stable, reusable address regardless of
 	// z-index.
 	std::vector<uint32_t> sortedQuadOrder;
+	// Cached, dirty-gated draw list (like ImGui's ImDrawList) - contiguous same-texture runs over sortedQuadOrder,
+	// derived once alongside it (see Flush()) instead of every frame. Flush()'s per-frame submit loop just walks
+	// this directly; the O(quadCount) work of re-detecting texture-run boundaries only happens when dirty.
+	std::vector<UIBatchRun> runs;
 	Util::Math::Rect clipRect;
 	bool hasClip = false;
 	// Cross-batch draw order only (each UIManager-level root element gets its own batch - see
