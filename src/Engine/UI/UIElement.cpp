@@ -328,22 +328,15 @@ void Struktur::UI::UIElement::UpdateChildren(GameContext& context)
 
 void Struktur::UI::UIElement::RenderChildren(GameContext& context)
 {
-	// Sort children by z-index before drawing
-	std::vector<UIElement*> sortedChildren;
+	// No z-index sort here - children write into stable, pre-allocated batch slots (see AssignBatches), so the
+	// order Render() is called in doesn't control final draw order. Quads sharing a batch draw in z-index order
+	// via UIBatch::quadZIndex/sortedQuadOrder (see UIRenderer::WriteRect/Flush) regardless of call order.
 	for (auto& child : m_children)
 	{
 		if (child->IsVisible())
 		{
-			sortedChildren.push_back(child.get());
+			child->Render(context);
 		}
-	}
-
-	std::sort(sortedChildren.begin(), sortedChildren.end(),
-	          [](UIElement* a, UIElement* b) { return a->GetZIndex() < b->GetZIndex(); });
-
-	for (UIElement* child : sortedChildren)
-	{
-		child->Render(context);
 	}
 }
 

@@ -60,11 +60,11 @@ void Struktur::UI::UIPanel::Render(GameContext& context)
 				texture->LoadToGpu(context);
 			}
 			context.GetUIRenderer().WriteTexturedRect(m_batch, backgroundSlot, m_bounds, texture->GetHandle(),
-			                                          Util::ColorWhite);
+			                                          Util::ColorWhite, GetZIndex());
 		}
 		else
 		{
-			context.GetUIRenderer().WriteRect(m_batch, backgroundSlot, m_bounds, m_backgroundColor);
+			context.GetUIRenderer().WriteRect(m_batch, backgroundSlot, m_bounds, m_backgroundColor, GetZIndex());
 		}
 
 		uint32_t quadsUsed = 1;
@@ -73,7 +73,8 @@ void Struktur::UI::UIPanel::Render(GameContext& context)
 			Renderer::UIBatchSlot borderSlot = m_batchSlot;
 			borderSlot.vertexOffset += 4;  // past the background's 1 quad (4 vertices)
 			borderSlot.quadCapacity = 4;
-			context.GetUIRenderer().WriteRectOutline(m_batch, borderSlot, m_bounds, m_borderWidth, m_borderColor);
+			context.GetUIRenderer().WriteRectOutline(m_batch, borderSlot, m_bounds, m_borderWidth, m_borderColor,
+			                                         GetZIndex());
 			quadsUsed += 4;
 		}
 

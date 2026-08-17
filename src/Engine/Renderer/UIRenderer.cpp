@@ -216,6 +216,17 @@ void Struktur::Renderer::UIRenderer::DestroyBatch(UIBatchHandle handle)
 	m_freeBatchSlots.push_back(handle.index);
 }
 
+void Struktur::Renderer::UIRenderer::SetBatchDrawOrder(UIBatchHandle handle, int32_t drawOrder)
+{
+	ASSERT_MSG(handle.IsValid() && handle.index < m_batches.size(),
+	           "SetBatchDrawOrder: invalid batch handle (index %u)", handle.index);
+	if (!handle.IsValid() || handle.index >= m_batches.size())
+	{
+		return;
+	}
+	m_batches[handle.index].drawOrder = drawOrder;
+}
+
 Struktur::Renderer::UIBatchSlot Struktur::Renderer::UIRenderer::AllocateOrResizeSlot(UIBatchHandle batchHandle,
                                                                                      UIBatchSlot existing,
                                                                                      uint32_t quadCount)
@@ -253,6 +264,7 @@ Struktur::Renderer::UIBatchSlot Struktur::Renderer::UIRenderer::AllocateOrResize
 	// texture for the newly-appended region until a WriteX call actually tags it, which is harmless since
 	// nothing indexes an unwritten quad until some WriteX gives it real vertex data too.
 	batch.quadTextures.resize(batch.quadTextures.size() + newQuadCapacity, m_whiteTexture);
+	batch.quadZIndex.resize(batch.quadZIndex.size() + newQuadCapacity, 0);
 	batch.dirty = true;
 
 	// existing.quadCapacity == 0 means this is a first-ever allocation (default-constructed UIBatchSlot), not a
@@ -295,19 +307,40 @@ void Struktur::Renderer::UIRenderer::Flush(GameContext& context)
 
 		if (batch.dirty)
 		{
-			// Index content is a fixed, deterministic pattern derived purely from quad count (the same
-			// 0,1,2,0,2,3-per-quad layout WorldRenderer/SubmitTexturedQuad use) - not worth mirroring on
-			// UIBatch itself alongside cpuVertices, so it's rebuilt here whenever an upload is actually needed.
-			std::vector<uint16_t> indices(quadCount * 6);
+			// Draw order within this one batch (see UIBatch::sortedQuadOrder) - z-index first, then the quad's
+			// own raw index as a stable "order added to the batch" tiebreak for equal z-indices, since std::sort
+			// isn't guaranteed stable and quad index already reflects original write/allocation order.
+			batch.sortedQuadOrder.resize(quadCount);
 			for (uint32_t quad = 0; quad < quadCount; ++quad)
 			{
-				uint16_t base         = (uint16_t)(quad * 4);
-				indices[quad * 6 + 0] = base + 0;
-				indices[quad * 6 + 1] = base + 1;
-				indices[quad * 6 + 2] = base + 2;
-				indices[quad * 6 + 3] = base + 0;
-				indices[quad * 6 + 4] = base + 2;
-				indices[quad * 6 + 5] = base + 3;
+				batch.sortedQuadOrder[quad] = quad;
+			}
+			std::sort(batch.sortedQuadOrder.begin(), batch.sortedQuadOrder.end(),
+			          [&batch](uint32_t a, uint32_t b)
+			          {
+				          if (batch.quadZIndex[a] != batch.quadZIndex[b])
+				          {
+					          return batch.quadZIndex[a] < batch.quadZIndex[b];
+				          }
+				          return a < b;
+			          });
+
+			// Index content is otherwise a fixed, deterministic pattern derived purely from quad count (the same
+			// 0,1,2,0,2,3-per-quad layout WorldRenderer/SubmitTexturedQuad use) - not worth mirroring on
+			// UIBatch itself alongside cpuVertices, so it's rebuilt here whenever an upload is actually needed.
+			// Built by walking sortedQuadOrder rather than 0..quadCount directly - a quad's vertex data never
+			// moves from wherever AllocateOrResizeSlot placed it, only which index-buffer position references it,
+			// so base is still that quad's own real vertexOffset-derived index, just written at its sorted slot.
+			std::vector<uint16_t> indices(quadCount * 6);
+			for (uint32_t i = 0; i < quadCount; ++i)
+			{
+				uint16_t base    = (uint16_t)(batch.sortedQuadOrder[i] * 4);
+				indices[i * 6 + 0] = base + 0;
+				indices[i * 6 + 1] = base + 1;
+				indices[i * 6 + 2] = base + 2;
+				indices[i * 6 + 3] = base + 0;
+				indices[i * 6 + 4] = base + 2;
+				indices[i * 6 + 5] = base + 3;
 			}
 
 			bgfx::update(batch.vb, 0,
@@ -317,16 +350,18 @@ void Struktur::Renderer::UIRenderer::Flush(GameContext& context)
 			batch.dirty = false;
 		}
 
-		// Walk quads in order, submitting once per contiguous same-texture run (see UIBatch::quadTextures) -
-		// mirrors WorldRenderer::Flush's own texture-based run-splitting, except every run here draws from this
-		// one persistent vb/ib via offset+count rather than a fresh transient buffer, since the vertex data
-		// itself was already uploaded above (if dirty). This is what lets e.g. a panel's white-texture
-		// background/border and a label's font-atlas text safely share one batch.
+		// Walk quads in sortedQuadOrder (z-index order, not raw quad index - see above), submitting once per
+		// contiguous same-texture run (see UIBatch::quadTextures) - mirrors WorldRenderer::Flush's own
+		// texture-based run-splitting, except every run here draws from this one persistent vb/ib via offset+count
+		// rather than a fresh transient buffer, since the vertex data itself was already uploaded above (if
+		// dirty). This is what lets e.g. a panel's white-texture background/border and a label's font-atlas text
+		// safely share one batch, each still drawing at its own z-index rather than in raw write order.
 		uint32_t runStart              = 0;
-		bgfx::TextureHandle runTexture = batch.quadTextures[0];
+		bgfx::TextureHandle runTexture = batch.quadTextures[batch.sortedQuadOrder[0]];
 		for (uint32_t quad = 0; quad <= quadCount; ++quad)
 		{
-			bool boundary = (quad == quadCount) || (batch.quadTextures[quad].idx != runTexture.idx);
+			bool boundary =
+			    (quad == quadCount) || (batch.quadTextures[batch.sortedQuadOrder[quad]].idx != runTexture.idx);
 			if (!boundary)
 			{
 				continue;
@@ -357,7 +392,7 @@ void Struktur::Renderer::UIRenderer::Flush(GameContext& context)
 			runStart = quad;
 			if (quad < quadCount)
 			{
-				runTexture = batch.quadTextures[quad];
+				runTexture = batch.quadTextures[batch.sortedQuadOrder[quad]];
 			}
 		}
 	}
@@ -387,7 +422,7 @@ bool Struktur::Renderer::UIRenderer::ValidateSlotCapacity(const UIBatch& batch, 
 }
 
 void Struktur::Renderer::UIRenderer::WriteRect(UIBatchHandle batchHandle, const UIBatchSlot& slot,
-                                               const Util::Math::Rect& rect, const Util::Color& color)
+                                               const Util::Math::Rect& rect, const Util::Color& color, int32_t zIndex)
 {
 	UIBatch* batch = ResolveBatch(batchHandle, "WriteRect");
 	if (!batch || !ValidateSlotCapacity(*batch, slot, 1, "WriteRect"))
@@ -396,6 +431,7 @@ void Struktur::Renderer::UIRenderer::WriteRect(UIBatchHandle batchHandle, const 
 	}
 
 	batch->quadTextures[slot.vertexOffset / 4] = m_whiteTexture;
+	batch->quadZIndex[slot.vertexOffset / 4]   = zIndex;
 	FillQuadVertices(&batch->cpuVertices[slot.vertexOffset], rect.x, rect.y, rect.width, rect.height, 0.0f, 0.0f, 1.0f,
 	                 1.0f, PackColor(color));
 	batch->dirty = true;
@@ -403,7 +439,7 @@ void Struktur::Renderer::UIRenderer::WriteRect(UIBatchHandle batchHandle, const 
 
 void Struktur::Renderer::UIRenderer::WriteRectOutline(UIBatchHandle batchHandle, const UIBatchSlot& slot,
                                                       const Util::Math::Rect& rect, float thickness,
-                                                      const Util::Color& color)
+                                                      const Util::Color& color, int32_t zIndex)
 {
 	UIBatch* batch = ResolveBatch(batchHandle, "WriteRectOutline");
 	if (!batch || !ValidateSlotCapacity(*batch, slot, 4, "WriteRectOutline"))
@@ -415,6 +451,7 @@ void Struktur::Renderer::UIRenderer::WriteRectOutline(UIBatchHandle batchHandle,
 	for (uint32_t i = 0; i < 4; ++i)
 	{
 		batch->quadTextures[quadIndex + i] = m_whiteTexture;
+		batch->quadZIndex[quadIndex + i]   = zIndex;
 	}
 	uint32_t abgr        = PackColor(color);
 	QuadVertex* quadBase = &batch->cpuVertices[slot.vertexOffset];
@@ -433,7 +470,7 @@ void Struktur::Renderer::UIRenderer::WriteRectOutline(UIBatchHandle batchHandle,
 
 void Struktur::Renderer::UIRenderer::WriteTexturedRect(UIBatchHandle batchHandle, const UIBatchSlot& slot,
                                                        const Util::Math::Rect& rect, const TextureHandle& texture,
-                                                       const Util::Color& tint)
+                                                       const Util::Color& tint, int32_t zIndex)
 {
 	UIBatch* batch = ResolveBatch(batchHandle, "WriteTexturedRect");
 	if (!batch || !ValidateSlotCapacity(*batch, slot, 1, "WriteTexturedRect"))
@@ -442,6 +479,7 @@ void Struktur::Renderer::UIRenderer::WriteTexturedRect(UIBatchHandle batchHandle
 	}
 
 	batch->quadTextures[slot.vertexOffset / 4] = bgfx::TextureHandle{(uint16_t)texture.id};
+	batch->quadZIndex[slot.vertexOffset / 4]   = zIndex;
 	FillQuadVertices(&batch->cpuVertices[slot.vertexOffset], rect.x, rect.y, rect.width, rect.height, 0.0f, 0.0f, 1.0f,
 	                 1.0f, PackColor(tint));
 	batch->dirty = true;
@@ -449,7 +487,8 @@ void Struktur::Renderer::UIRenderer::WriteTexturedRect(UIBatchHandle batchHandle
 
 uint32_t Struktur::Renderer::UIRenderer::WriteText(UIBatchHandle batchHandle, const UIBatchSlot& slot,
                                                    const Text::Font& font, const std::string& text,
-                                                   const glm::vec2& position, float fontSize, const Util::Color& color)
+                                                   const glm::vec2& position, float fontSize, const Util::Color& color,
+                                                   int32_t zIndex)
 {
 	UIBatch* batch = ResolveBatch(batchHandle, "WriteText");
 	if (!batch || !ValidateSlotCapacity(*batch, slot, 0, "WriteText"))
@@ -500,6 +539,7 @@ uint32_t Struktur::Renderer::UIRenderer::WriteText(UIBatchHandle batchHandle, co
 			float dstX                                    = penX + (float)glyph.offsetX * scale;
 			float dstY                                    = position.y + (float)glyph.offsetY * scale;
 			batch->quadTextures[quadIndex + quadsWritten] = atlas;
+			batch->quadZIndex[quadIndex + quadsWritten]   = zIndex;
 			FillQuadVertices(&batch->cpuVertices[slot.vertexOffset + quadsWritten * 4], dstX, dstY, rec.width * scale,
 			                 rec.height * scale, rec.x / atlasWidth, rec.y / atlasHeight,
 			                 (rec.x + rec.width) / atlasWidth, (rec.y + rec.height) / atlasHeight, abgr);
@@ -528,6 +568,7 @@ void Struktur::Renderer::UIRenderer::ClearSlotFrom(UIBatchHandle batchHandle, co
 		QuadVertex* v = &batch->cpuVertices[slot.vertexOffset + quad * 4];
 		v[0] = v[1] = v[2] = v[3]             = QuadVertex{0.0f, 0.0f, 0.0f, 0.0f, 0};
 		batch->quadTextures[quadIndex + quad] = m_whiteTexture;
+		batch->quadZIndex[quadIndex + quad]   = 0;
 	}
 	batch->dirty = true;
 }
@@ -549,6 +590,10 @@ void Struktur::Renderer::UIRenderer::AssignBatches(UI::UIElement* element, UIBat
 		if (!element->m_ownBatch.IsValid())
 		{
 			element->m_ownBatch = CreateBatch();
+			// Initial sync only - SetZIndex on an already-assigned batch root must call SetBatchDrawOrder itself
+			// (see WrenUI.cpp's setZIndex binding) to update this afterward, same as this class's other
+			// "renderer-side state needs an explicit follow-up call" spots (see SetBatchRoot's own comment).
+			m_batches[element->m_ownBatch.index].drawOrder = element->GetZIndex();
 		}
 		effectiveBatch = element->m_ownBatch;
 	}

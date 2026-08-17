@@ -112,23 +112,15 @@ void Struktur::UI::UIManager::Render(GameContext& context)
 	// UIRenderSystem already set UIViewId's own screen-space ortho projection for this frame (see
 	// UIRenderer::SetupView).
 
-	// Sort elements by z-index
-	std::vector<UIElement*> sortedElements;
+	// No z-index sort here - every element in m_elements is a batch root with its own batch (see
+	// UIManager::AddElement/wren_UIManagerAddUIElement), and cross-batch draw order is UIBatch::drawOrder's job
+	// (set from this element's z-index - see UIRenderer::AssignBatches/SetBatchDrawOrder), not this call order.
 	for (auto& element : m_elements)
 	{
 		if (element->IsVisible())
 		{
-			sortedElements.push_back(element.get());
+			element->Render(context);
 		}
-	}
-
-	std::sort(sortedElements.begin(), sortedElements.end(),
-	          [](UIElement* a, UIElement* b) { return a->GetZIndex() < b->GetZIndex(); });
-
-	// Draw all elements
-	for (UIElement* element : sortedElements)
-	{
-		element->Render(context);
 	}
 
 	// Draw focus indicator on top

@@ -66,7 +66,7 @@ void Struktur::UI::UILabel::Render(GameContext& context)
 		{
 			Renderer::UIBatchSlot backgroundSlot = m_batchSlot;
 			backgroundSlot.quadCapacity          = 1;
-			context.GetUIRenderer().WriteRect(m_batch, backgroundSlot, m_bounds, m_backgroundColor);
+			context.GetUIRenderer().WriteRect(m_batch, backgroundSlot, m_bounds, m_backgroundColor, GetZIndex());
 			quadOffset += 1;
 		}
 		if (m_borderWidth > 0)
@@ -74,7 +74,8 @@ void Struktur::UI::UILabel::Render(GameContext& context)
 			Renderer::UIBatchSlot borderSlot = m_batchSlot;
 			borderSlot.vertexOffset += quadOffset * 4;
 			borderSlot.quadCapacity = 4;
-			context.GetUIRenderer().WriteRectOutline(m_batch, borderSlot, m_bounds, m_borderWidth, m_borderColor);
+			context.GetUIRenderer().WriteRectOutline(m_batch, borderSlot, m_bounds, m_borderWidth, m_borderColor,
+			                                         GetZIndex());
 			quadOffset += 4;
 		}
 
@@ -409,7 +410,8 @@ uint32_t Struktur::UI::UILabel::WriteGlyphs(GameContext& context, const std::str
 	Renderer::UIBatchSlot subSlot = m_batchSlot;
 	subSlot.vertexOffset += quadOffset * 4;
 	subSlot.quadCapacity -= quadOffset;
-	return context.GetUIRenderer().WriteText(m_batch, subSlot, m_font->font, text, pos, m_fontSize, m_textColor);
+	return context.GetUIRenderer().WriteText(m_batch, subSlot, m_font->font, text, pos, m_fontSize, m_textColor,
+	                                         GetZIndex());
 }
 
 uint32_t Struktur::UI::UILabel::WriteJustifiedLine(GameContext& context, const std::string& line, glm::vec2 pos,

@@ -394,6 +394,15 @@ void wren_UIElementSetZIndex(WrenVM* vm)
 	}
 	int zIndex = static_cast<int>(wrenGetSlotDouble(vm, 1));
 	uiElement->element->SetZIndex(zIndex);
+
+	// SetZIndex alone only reorders quads within a shared batch (see UIElement::SetZIndex's own comment) - a
+	// batch root's cross-batch order (UIBatch::drawOrder) needs this explicit follow-up, the same "renderer-side
+	// state needs its own sync call" contract SetBatchRoot's comment already documents for AssignBatches.
+	if (uiElement->element->IsBatchRoot())
+	{
+		Struktur::GameContext* context = static_cast<Struktur::GameContext*>(wrenGetUserData(vm));
+		context->GetUIRenderer().SetBatchDrawOrder(uiElement->element->GetBatch(), zIndex);
+	}
 }
 
 // UIElement.getZIndex()

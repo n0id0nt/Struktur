@@ -227,10 +227,14 @@ public:
 		return m_id;
 	}
 
-	// Z-order
+	// Z-order - only reorders quads sharing a batch (see UIRenderer::WriteRect/quadZIndex); has no effect on
+	// cross-batch order (UIBatch::drawOrder) unless this element is a batch root, in which case the Wren binding
+	// (WrenUI.cpp's setZIndex) must also call UIRenderer::SetBatchDrawOrder - matching the "renderer-side state
+	// needs an explicit follow-up call" contract SetBatchRoot's own comment already documents.
 	void SetZIndex(int z)
 	{
-		m_zIndex = z;
+		m_zIndex      = z;
+		m_visualDirty = true;
 	}
 	int GetZIndex() const
 	{
@@ -281,8 +285,8 @@ protected:
 	Renderer::UIBatchHandle m_ownBatch;  // only valid/meaningful if m_isBatchRoot
 	Renderer::UIBatchSlot m_batchSlot;
 	bool m_isBatchRoot = false;
-	// Set whenever this element's own drawable content changes (position/size/color/text/...) - not yet read by
-	// anything (phase 4 will use it to decide when a WriteX re-write, as opposed to just re-Flush, is needed).
+	// Set whenever this element's own drawable content changes (position/size/color/text/z-index/...) - read by
+	// UIPanel/UILabel's Render() to decide when a WriteX re-write, as opposed to just re-Flush, is needed.
 	// Defaults true so a freshly constructed element's first real write isn't skipped as "unchanged".
 	bool m_visualDirty = true;
 

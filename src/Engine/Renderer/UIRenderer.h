@@ -43,11 +43,25 @@ struct UIBatch
 	// offset+count, not a fresh buffer per run. This is what lets differently-textured widgets (e.g. a panel's
 	// solid-color background next to a label's font atlas) safely share one batch/vertex cache.
 	std::vector<bgfx::TextureHandle> quadTextures;
+	// One entry per quad, parallel to quadTextures - the z-index of whichever element wrote that quad (see
+	// WriteRect/WriteRectOutline/WriteTexturedRect/WriteText). Used only to order quads sharing this one batch
+	// against each other (see sortedQuadOrder below); ordering BETWEEN batches is drawOrder's job, not this.
+	std::vector<int32_t> quadZIndex;
+	// Index-buffer build order, cached and only recomputed when dirty (see Flush()) - quad indices sorted by
+	// (quadZIndex, quad index itself as the "added to the batch" tiebreak), so quads with equal z-index draw in
+	// the order they were originally written rather than in some sort-unstable arbitrary order. Quad vertex data
+	// never moves from wherever AllocateOrResizeSlot placed it - only the order this list visits quads in changes
+	// what ends up in the index buffer, so a slot's vertexOffset stays a stable, reusable address regardless of
+	// z-index.
+	std::vector<uint32_t> sortedQuadOrder;
 	Util::Math::Rect clipRect;
-	bool hasClip       = false;
-	uint32_t drawOrder = 0;
-	bool dirty         = true;
-	bool active        = false;
+	bool hasClip = false;
+	// Cross-batch draw order only (each UIManager-level root element gets its own batch - see
+	// UIRenderer::AssignBatches/UIManager::AddElement) - has no bearing on quad order within one batch, see
+	// sortedQuadOrder above for that.
+	int32_t drawOrder = 0;
+	bool dirty        = true;
+	bool active       = false;
 };
 
 // bgfx-native replacement for raylib's DrawRectangleRec/DrawRectangleLinesEx/DrawTexturePro/DrawTextEx on the
@@ -102,6 +116,10 @@ public:
 	// the free-list for a future CreateBatch to reuse. Asserts (see Debug/Assertions.h's ASSERT_MSG) on an
 	// invalid handle or a double-destroy, but still bails out safely afterward rather than trusting the handle.
 	void DestroyBatch(UIBatchHandle handle);
+	// Cross-batch draw order (see UIBatch::drawOrder) - callers must call this again themselves whenever a batch
+	// root's z-index changes after the fact (see WrenUI.cpp's setZIndex binding), same "renderer-side state needs
+	// an explicit follow-up call" contract SetBatchRoot's own comment already documents for AssignBatches.
+	void SetBatchDrawOrder(UIBatchHandle handle, int32_t drawOrder);
 	// Ensures batch's cpuVertices can hold quadCount quads, reusing existing's slot in place if it's already
 	// big enough (only quadCount changes), or relocating to a freshly appended region at the end of
 	// cpuVertices sized to ceil(quadCount * 1.5) quads otherwise - growing in place isn't attempted, so the old
@@ -119,14 +137,16 @@ public:
 	// WriteX function below sets batch.dirty = true and tags the quads it just wrote with whatever texture it
 	// used (UIBatch::quadTextures) - a batch is not limited to one texture (see Flush()), so writes from
 	// differently-textured widgets sharing a batch don't stomp on each other.
+	// zIndex tags the quad(s) written for later ordering against other quads sharing this batch (see
+	// UIBatch::quadZIndex/sortedQuadOrder and Flush()) - callers pass their own GetZIndex().
 	void WriteRect(UIBatchHandle batch, const UIBatchSlot& slot, const Util::Math::Rect& rect,
-	               const Util::Color& color);
+	               const Util::Color& color, int32_t zIndex);
 	// Writes 4 quads (top/bottom/left/right bars, the same decomposition DrawRectOutline uses) - slot must have
 	// quadCapacity >= 4.
 	void WriteRectOutline(UIBatchHandle batch, const UIBatchSlot& slot, const Util::Math::Rect& rect, float thickness,
-	                      const Util::Color& color);
+	                      const Util::Color& color, int32_t zIndex);
 	void WriteTexturedRect(UIBatchHandle batch, const UIBatchSlot& slot, const Util::Math::Rect& rect,
-	                       const TextureHandle& texture, const Util::Color& tint);
+	                       const TextureHandle& texture, const Util::Color& tint, int32_t zIndex);
 	// Same UTF-8 glyph-walk as DrawText (Text::GetCodepointNext/Text::GetGlyphIndex), writing into batch's
 	// cpuVertices at slot instead of submitting immediately, and skipping a quad for space/tab exactly like
 	// DrawText does - so the number of quads written can be less than text's codepoint count. Returns the quad
@@ -139,7 +159,7 @@ public:
 	// AllocateOrResizeSlot first whenever text content changes and may have grown past the slot's current
 	// capacity - this function does not, and cannot, know whether that happened.
 	uint32_t WriteText(UIBatchHandle batch, const UIBatchSlot& slot, const Text::Font& font, const std::string& text,
-	                   const glm::vec2& position, float fontSize, const Util::Color& color);
+	                   const glm::vec2& position, float fontSize, const Util::Color& color, int32_t zIndex);
 
 	// Degenerates (zero-area, so Flush() draws nothing for them) every quad in slot from fromQuad up to
 	// slot.quadCapacity. Flush() draws a batch's whole allocated cpuVertices region regardless of how many quads
