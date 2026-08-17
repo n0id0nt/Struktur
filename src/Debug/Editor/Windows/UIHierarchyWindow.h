@@ -36,6 +36,10 @@ private:
 	// Render context menu for a UI element
 	void RenderElementContextMenu(UI::UIElement* element);
 
+	// Outlines m_selectedElement's on-screen bounds via DebugRenderer::SetupUIView/DrawRectOutline - a no-op
+	// when nothing's selected.
+	void RenderSelectedElementHighlight(GameContext& context);
+
 private:
 	UI::UIElement* m_selectedElement;  // Currently selected UI element in hierarchy
 };

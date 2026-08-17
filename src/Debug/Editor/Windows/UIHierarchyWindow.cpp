@@ -1,5 +1,6 @@
 #include "UIHierarchyWindow.h"
 
+#include "Engine/ECS/System/DebugSystem.h"
 #include "Engine/GameContext.h"
 #include "Engine/UI/UIManager.h"
 
@@ -19,6 +20,7 @@ void UIHierarchyWindow::Render(GameContext& context)
 
 	// Render the UI hierarchy
 	RenderUIHierarchy(context);
+	RenderSelectedElementHighlight(context);
 
 	ImGui::Separator();
 
@@ -182,5 +184,20 @@ void UIHierarchyWindow::RenderElementContextMenu(UI::UIElement* element)
 
 		ImGui::EndPopup();
 	}
+}
+
+void UIHierarchyWindow::RenderSelectedElementHighlight(GameContext& context)
+{
+	if (!m_selectedElement)
+	{
+		return;
+	}
+
+	Renderer::DebugRenderer& debugRenderer = context.GetSystemManager().GetSystem<System::DebugSystem>().GetDebugRenderer();
+	debugRenderer.SetupUIView(context);
+
+	Util::Math::Rect bounds = m_selectedElement->GetBounds();
+	debugRenderer.DrawRectOutline({bounds.x, bounds.y}, {bounds.x + bounds.width, bounds.y + bounds.height}, 2.0f,
+	                              Util::ColorGreen);
 }
 }  // namespace Struktur::Debug

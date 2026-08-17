@@ -1,5 +1,6 @@
 #include "DebugRenderer.h"
 
+#include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 
 #include "Debug/Assertions.h"
@@ -11,6 +12,8 @@
 
 Struktur::Renderer::DebugRenderer::DebugRenderer()
 {
+	m_currentViewId = GraphicsDevice::DebugViewId;
+
 	m_texColorSampler = bgfx::createUniform("s_texColor", bgfx::UniformType::Sampler);
 
 	uint8_t whitePixel[4] = {255, 255, 255, 255};
@@ -37,6 +40,19 @@ void Struktur::Renderer::DebugRenderer::SetupView(GameContext& context)
 	glm::mat4 view           = camera.GetViewMatrix();
 	glm::mat4 proj           = camera.GetProjectionMatrix(gameData.gameWidth, gameData.gameHeight);
 	bgfx::setViewTransform(GraphicsDevice::DebugViewId, glm::value_ptr(view), glm::value_ptr(proj));
+	m_currentViewId = GraphicsDevice::DebugViewId;
+}
+
+void Struktur::Renderer::DebugRenderer::SetupUIView(GameContext& context)
+{
+	Core::GameData& gameData = context.GetGameData();
+	glm::mat4 identity(1.0f);
+	// Matches UIRenderer::SetupView exactly - screen-space, top-left origin, sized to the game's logical
+	// resolution, so a UIElement's own m_bounds (already in that same space) can be passed straight into
+	// DrawRectOutline/etc. below with no extra transform.
+	glm::mat4 proj = glm::ortho(0.0f, (float)gameData.gameWidth, (float)gameData.gameHeight, 0.0f, -1.0f, 1.0f);
+	bgfx::setViewTransform(GraphicsDevice::DebugUIViewId, glm::value_ptr(identity), glm::value_ptr(proj));
+	m_currentViewId = GraphicsDevice::DebugUIViewId;
 }
 
 void Struktur::Renderer::DebugRenderer::SubmitTriangleFan(const glm::vec2* points, int count, uint32_t abgr)
@@ -79,7 +95,7 @@ void Struktur::Renderer::DebugRenderer::SubmitTriangleFan(const glm::vec2* point
 	bgfx::setIndexBuffer(&tib, 0, indexCount);
 	bgfx::setState(BGFX_STATE_WRITE_RGB | BGFX_STATE_WRITE_A |
 	               BGFX_STATE_BLEND_FUNC(BGFX_STATE_BLEND_SRC_ALPHA, BGFX_STATE_BLEND_INV_SRC_ALPHA));
-	bgfx::submit(GraphicsDevice::DebugViewId, GetEmbeddedProgram("sprite"));
+	bgfx::submit(m_currentViewId, GetEmbeddedProgram("sprite"));
 }
 
 void Struktur::Renderer::DebugRenderer::DrawLine(const glm::vec2& p1, const glm::vec2& p2, float thickness,

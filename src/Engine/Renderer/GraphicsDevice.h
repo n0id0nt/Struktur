@@ -27,10 +27,17 @@ public:
 	// displays this shared framebuffer via ImGui::Image from within EditorViewId, so if EditorViewId ran first it
 	// would sample the texture one step before UIViewId's draws land in it, and in-game UI would never appear.
 	static constexpr bgfx::ViewId UIViewId = 2;
+	// Screen-space debug overlays on top of UI (DebugRenderer::SetupUIView, not the world-space DebugViewId
+	// above) - e.g. Debug::HierarchyWindow highlighting a selected UIElement's on-screen bounds. Shares UIViewId's
+	// render target redirect for the same reason UIViewId shares WorldViewId's, and must have a higher ViewId
+	// than UIViewId so the highlight actually draws on top of the UI it's outlining instead of being drawn under
+	// it and immediately covered up.
+	static constexpr bgfx::ViewId DebugUIViewId = 3;
 #ifdef EDITOR
-	// Composited after WorldViewId/DebugViewId/UIViewId, straight to the backbuffer - the editor's ImGui overlay
-	// (see ImGuiRenderer), including the Game Viewport's display of the shared framebuffer (see UIViewId above).
-	static constexpr bgfx::ViewId EditorViewId = 3;
+	// Composited after WorldViewId/DebugViewId/UIViewId/DebugUIViewId, straight to the backbuffer - the editor's
+	// ImGui overlay (see ImGuiRenderer), including the Game Viewport's display of the shared framebuffer (see
+	// UIViewId above).
+	static constexpr bgfx::ViewId EditorViewId = 4;
 #endif
 
 	GraphicsDevice()  = default;
