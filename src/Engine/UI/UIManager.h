@@ -46,11 +46,6 @@ public:
 
 private:
 	void HandleInput(GameContext& context);
-	// Focus ring around whichever element currently has focus - a UIManager-owned batch/slot (RenderFocusIndicator
-	// used to be a virtual UIElement method instead, but nothing ever overrode it, and focus is inherently
-	// UIManager's own concept - which element is focused right now - not any one element's, so centralizing the
-	// batch here removes a per-element indirection that was never actually used polymorphically).
-	void RenderFocusIndicator(GameContext& context);
 
 	std::vector<std::unique_ptr<UIElement>> m_elements;
 	UIElement* m_focusedElement;
@@ -59,11 +54,6 @@ private:
 	bool m_hoveredJustChanged;
 	bool m_capturingInput;
 	std::unique_ptr<FocusNavigator> m_focusNavigator;
-	Renderer::UIBatchHandle m_focusIndicatorBatch;
-	Renderer::UIBatchSlot m_focusIndicatorSlot;
-	// True once the focus ring has real (non-degenerated) geometry written - lets Render() clear it exactly once
-	// on the transition to "nothing focused" instead of calling ClearSlotFrom every frame in that steady state.
-	bool m_focusIndicatorVisible = false;
 };
 }  // namespace UI
 }  // namespace Struktur

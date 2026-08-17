@@ -105,14 +105,6 @@ void Struktur::UI::UIManager::Clear(GameContext& context)
 		element->Dispose(context);
 	}
 	m_elements.clear();
-
-	if (m_focusIndicatorBatch.IsValid())
-	{
-		context.GetUIRenderer().DestroyBatch(m_focusIndicatorBatch);
-		m_focusIndicatorBatch   = Renderer::UIBatchHandle{};
-		m_focusIndicatorSlot    = Renderer::UIBatchSlot{};
-		m_focusIndicatorVisible = false;
-	}
 }
 
 void Struktur::UI::UIManager::Render(GameContext& context)
@@ -130,45 +122,6 @@ void Struktur::UI::UIManager::Render(GameContext& context)
 			element->Render(context);
 		}
 	}
-
-	RenderFocusIndicator(context);
-}
-
-void Struktur::UI::UIManager::RenderFocusIndicator(GameContext& context)
-{
-	if (!m_focusedElement)
-	{
-		// Only clear once, on the transition to "nothing focused" - not every frame in this (common) steady
-		// state, matching UIPanel/UILabel's own "only touch the batch when something actually changed" pattern.
-		if (m_focusIndicatorVisible)
-		{
-			context.GetUIRenderer().ClearSlotFrom(m_focusIndicatorBatch, m_focusIndicatorSlot, 0);
-			m_focusIndicatorVisible = false;
-		}
-		return;
-	}
-
-	if (!m_focusIndicatorBatch.IsValid())
-	{
-		m_focusIndicatorBatch = context.GetUIRenderer().CreateBatch();
-		// Always draws on top of every other UI batch regardless of any element's own z-index - matches the
-		// focus ring's old immediate-mode behavior of always being the last thing submitted each frame. This is
-		// cross-batch order (UIBatch::drawOrder), unrelated to the per-quad zIndex DrawRectOutline takes below,
-		// which only matters for ordering quads sharing the SAME batch - irrelevant here since this batch only
-		// ever holds these 4 outline quads.
-		context.GetUIRenderer().SetBatchDrawOrder(m_focusIndicatorBatch, INT32_MAX);
-	}
-	if (m_focusIndicatorSlot.quadCapacity < 4)
-	{
-		m_focusIndicatorSlot =
-		    context.GetUIRenderer().AllocateOrResizeSlot(m_focusIndicatorBatch, m_focusIndicatorSlot, 4);
-	}
-
-	// Rewritten every frame (not gated behind a dirty check) since the focused element - or its bounds, for
-	// something that can move/resize while focused - can change from one frame to the next.
-	context.GetUIRenderer().DrawRectOutline(m_focusIndicatorBatch, m_focusIndicatorSlot, m_focusedElement->GetBounds(),
-	                                        2.0f, Util::ColorBlue, 0);
-	m_focusIndicatorVisible = true;
 }
 
 Struktur::UI::FocusNavigator* Struktur::UI::UIManager::GetFocusNavigator() const

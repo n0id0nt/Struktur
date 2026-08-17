@@ -25,6 +25,144 @@ class TextWrapping {
     static CHARACTER_WRAP { 2 }
 }
 
+// UI minimal textured rect component
+foreign class UITexture {
+    // Create UITexture with absolutePosition, relativePosition, absoluteSize, relativeSize components
+    foreign construct new(arg0,arg1,arg2,arg3)
+    // Sets the UITexture's texture
+    foreign setTexture(arg0)
+    // Sets the UITexture's tint color
+    foreign setTint(arg0)
+    // Sets UI Element to be visible
+    foreign isVisible=(arg0)
+    // Sets UI Element to be visible
+    foreign setVisible(arg0)
+    // Gets UI Element to be visible
+    foreign isVisible
+    // Sets UI Element to be enabled
+    foreign IsEnabled=(arg0)
+    // Gets UI Element to be enabled
+    foreign IsEnabled
+    // Sets UI Element to be focusable
+    foreign IsFocusable=(arg0)
+    // Sets UI Element to be focusable
+    foreign setFocusable(arg0)
+    // Gets UI Element to be focusable
+    foreign IsFocusable
+    // Sets the UI Elements position
+    foreign setPosition(arg0,arg1)
+    // Gets the UI Elements position
+    foreign getPosition()
+    // Sets the UI Elements anchor point
+    foreign setAnchorPoint(arg0)
+    // Sets the UI Elements anchor point
+    foreign setSize(arg0,arg1)
+    // Gets the UI Elements size
+    foreign getSize()
+    // Gets the UI Elements bounds
+    foreign getBounds()
+    // Sets the UI Elements tab index
+    foreign setTabIndex(arg0)
+    // Gets the UI Elements tab index
+    foreign getTabIndex()
+    // adds a UI Element as a navigation neighbor
+    foreign setNavigationNeighbor(arg0,arg1)
+    // Gets a UI Element navigation neighbor from a direction
+    foreign getNavigationNeighbor(arg0)
+    // Gets the UI Elements parent
+    foreign getParent()
+    // Sets the UI Elements children
+    foreign getChildren()
+    // Sets the UI Elements Z index
+    foreign setZIndex(arg0)
+    // Sets the UI Elements Z index
+    foreign getZIndex()
+    // Adds a UI Element to elements children
+    foreign addChild(arg0)
+    // Removes a UI Element from the children
+    foreign removeChild(arg0)
+    // Sets the UI Elements on click callback
+    foreign setOnClick(arg0)
+    // Sets the UI Elements on focus callback
+    foreign setOnFocus(arg0)
+    // Sets the UI Elements on lose focus callback
+    foreign setOnLoseFocus(arg0)
+    // Sets the UI Elements on hover callback
+    foreign setOnHover(arg0)
+    // Sets the UI Elements on key pressed callback
+    foreign setOnKeyPressed(arg0)
+    // Sets the UI Elements on activate callback
+    foreign setOnActivate(arg0)
+}
+
+// UI minimal solid-color rect component
+foreign class UIColor {
+    // Create UIColor with absolutePosition, relativePosition, absoluteSize, relativeSize components
+    foreign construct new(arg0,arg1,arg2,arg3)
+    // Sets the UIColor's color
+    foreign setColor(arg0)
+    // Sets UI Element to be visible
+    foreign isVisible=(arg0)
+    // Sets UI Element to be visible
+    foreign setVisible(arg0)
+    // Gets UI Element to be visible
+    foreign isVisible
+    // Sets UI Element to be enabled
+    foreign IsEnabled=(arg0)
+    // Gets UI Element to be enabled
+    foreign IsEnabled
+    // Sets UI Element to be focusable
+    foreign IsFocusable=(arg0)
+    // Sets UI Element to be focusable
+    foreign setFocusable(arg0)
+    // Gets UI Element to be focusable
+    foreign IsFocusable
+    // Sets the UI Elements position
+    foreign setPosition(arg0,arg1)
+    // Gets the UI Elements position
+    foreign getPosition()
+    // Sets the UI Elements anchor point
+    foreign setAnchorPoint(arg0)
+    // Sets the UI Elements anchor point
+    foreign setSize(arg0,arg1)
+    // Gets the UI Elements size
+    foreign getSize()
+    // Gets the UI Elements bounds
+    foreign getBounds()
+    // Sets the UI Elements tab index
+    foreign setTabIndex(arg0)
+    // Gets the UI Elements tab index
+    foreign getTabIndex()
+    // adds a UI Element as a navigation neighbor
+    foreign setNavigationNeighbor(arg0,arg1)
+    // Gets a UI Element navigation neighbor from a direction
+    foreign getNavigationNeighbor(arg0)
+    // Gets the UI Elements parent
+    foreign getParent()
+    // Sets the UI Elements children
+    foreign getChildren()
+    // Sets the UI Elements Z index
+    foreign setZIndex(arg0)
+    // Sets the UI Elements Z index
+    foreign getZIndex()
+    // Adds a UI Element to elements children
+    foreign addChild(arg0)
+    // Removes a UI Element from the children
+    foreign removeChild(arg0)
+    // Sets the UI Elements on click callback
+    foreign setOnClick(arg0)
+    // Sets the UI Elements on focus callback
+    foreign setOnFocus(arg0)
+    // Sets the UI Elements on lose focus callback
+    foreign setOnLoseFocus(arg0)
+    // Sets the UI Elements on hover callback
+    foreign setOnHover(arg0)
+    // Sets the UI Elements on key pressed callback
+    foreign setOnKeyPressed(arg0)
+    // Sets the UI Elements on activate callback
+    foreign setOnActivate(arg0)
+}
+
 class UIManager {
     // Add a UI Element to the UI system.
     foreign static addUIElement(arg0)
@@ -34,6 +172,76 @@ class UIManager {
     foreign static setFocus(arg0)
     // Will set the focus of the current element.
     foreign static clearFocusElements()
+}
+
+// UI minimal border outline component
+foreign class UIBorder {
+    // Create UIBorder with absolutePosition, relativePosition, absoluteSize, relativeSize components
+    foreign construct new(arg0,arg1,arg2,arg3)
+    // Sets the UIBorder's color
+    foreign setColor(arg0)
+    // Sets the UIBorder's width
+    foreign setWidth(arg0)
+    // Sets UI Element to be visible
+    foreign isVisible=(arg0)
+    // Sets UI Element to be visible
+    foreign setVisible(arg0)
+    // Gets UI Element to be visible
+    foreign isVisible
+    // Sets UI Element to be enabled
+    foreign IsEnabled=(arg0)
+    // Gets UI Element to be enabled
+    foreign IsEnabled
+    // Sets UI Element to be focusable
+    foreign IsFocusable=(arg0)
+    // Sets UI Element to be focusable
+    foreign setFocusable(arg0)
+    // Gets UI Element to be focusable
+    foreign IsFocusable
+    // Sets the UI Elements position
+    foreign setPosition(arg0,arg1)
+    // Gets the UI Elements position
+    foreign getPosition()
+    // Sets the UI Elements anchor point
+    foreign setAnchorPoint(arg0)
+    // Sets the UI Elements anchor point
+    foreign setSize(arg0,arg1)
+    // Gets the UI Elements size
+    foreign getSize()
+    // Gets the UI Elements bounds
+    foreign getBounds()
+    // Sets the UI Elements tab index
+    foreign setTabIndex(arg0)
+    // Gets the UI Elements tab index
+    foreign getTabIndex()
+    // adds a UI Element as a navigation neighbor
+    foreign setNavigationNeighbor(arg0,arg1)
+    // Gets a UI Element navigation neighbor from a direction
+    foreign getNavigationNeighbor(arg0)
+    // Gets the UI Elements parent
+    foreign getParent()
+    // Sets the UI Elements children
+    foreign getChildren()
+    // Sets the UI Elements Z index
+    foreign setZIndex(arg0)
+    // Sets the UI Elements Z index
+    foreign getZIndex()
+    // Adds a UI Element to elements children
+    foreign addChild(arg0)
+    // Removes a UI Element from the children
+    foreign removeChild(arg0)
+    // Sets the UI Elements on click callback
+    foreign setOnClick(arg0)
+    // Sets the UI Elements on focus callback
+    foreign setOnFocus(arg0)
+    // Sets the UI Elements on lose focus callback
+    foreign setOnLoseFocus(arg0)
+    // Sets the UI Elements on hover callback
+    foreign setOnHover(arg0)
+    // Sets the UI Elements on key pressed callback
+    foreign setOnKeyPressed(arg0)
+    // Sets the UI Elements on activate callback
+    foreign setOnActivate(arg0)
 }
 
 // UI Element component
@@ -74,12 +282,6 @@ foreign class UIElement {
     foreign setNavigationNeighbor(arg0,arg1)
     // Gets a UI Element navigation neighbor from a direction
     foreign getNavigationNeighbor(arg0)
-    // Sets the UI Elements background color
-    foreign setBackgroundColor(arg0)
-    // Sets the UI Elements border color
-    foreign setBorderColor(arg0)
-    // Sets the UI Elements border width
-    foreign setBorderWidth(arg0)
     // Gets the UI Elements parent
     foreign getParent()
     // Sets the UI Elements children
@@ -114,6 +316,12 @@ foreign class UIPanel {
     foreign setBackgroundTexture(arg0)
     // Clears the UI Panels background texture
     foreign ClearBackgroundTexture()
+    // Sets the UI Panels background color
+    foreign setBackgroundColor(arg0)
+    // Sets the UI Panels border color
+    foreign setBorderColor(arg0)
+    // Sets the UI Panels border width
+    foreign setBorderWidth(arg0)
     // Sets UI Element to be visible
     foreign isVisible=(arg0)
     // Sets UI Element to be visible
@@ -150,12 +358,6 @@ foreign class UIPanel {
     foreign setNavigationNeighbor(arg0,arg1)
     // Gets a UI Element navigation neighbor from a direction
     foreign getNavigationNeighbor(arg0)
-    // Sets the UI Elements background color
-    foreign setBackgroundColor(arg0)
-    // Sets the UI Elements border color
-    foreign setBorderColor(arg0)
-    // Sets the UI Elements border width
-    foreign setBorderWidth(arg0)
     // Gets the UI Elements parent
     foreign getParent()
     // Sets the UI Elements children
@@ -240,12 +442,6 @@ foreign class UILabel {
     foreign setNavigationNeighbor(arg0,arg1)
     // Gets a UI Element navigation neighbor from a direction
     foreign getNavigationNeighbor(arg0)
-    // Sets the UI Elements background color
-    foreign setBackgroundColor(arg0)
-    // Sets the UI Elements border color
-    foreign setBorderColor(arg0)
-    // Sets the UI Elements border width
-    foreign setBorderWidth(arg0)
     // Gets the UI Elements parent
     foreign getParent()
     // Sets the UI Elements children
