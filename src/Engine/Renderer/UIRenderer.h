@@ -7,6 +7,7 @@
 #include <string>
 #include <vector>
 
+#include "Engine/Renderer/AnimQuadVertex.h"
 #include "Engine/Renderer/QuadVertex.h"
 #include "Engine/Renderer/RenderTypes.h"
 #include "Engine/Renderer/UIBatchTypes.h"
@@ -87,6 +88,58 @@ struct UIBatch
 	int32_t drawOrder = 0;
 	bool dirty        = true;
 	bool active       = false;
+};
+
+// One animated-glyph batch always holds exactly one (texture, resolved effect-param) group's worth of quads -
+// unlike UIBatch, there's no internal multi-texture run-splitting here (see AnimatedBatchHandle's own
+// comment): UIRichLabel creates one of these per distinct animated group instead. Deliberately simpler than
+// UIBatch since animated content is a handful of quads at most in realistic usage - see the Phase 8 design
+// doc for why this trade was made.
+struct AnimatedTextBatch
+{
+	bgfx::DynamicVertexBufferHandle vb = BGFX_INVALID_HANDLE;
+	bgfx::DynamicIndexBufferHandle ib  = BGFX_INVALID_HANDLE;
+	std::vector<AnimQuadVertex> cpuVertices;
+	bgfx::TextureHandle texture = BGFX_INVALID_HANDLE;
+	// Resolved uniform values for whichever effect bits the vertex data's packed animEffectMask actually turns
+	// on - an inactive effect's fields are simply never read by the shader, so leaving them at 0 is harmless
+	// (see vs_richTextAnim.sc).
+	float waveAmplitude     = 0.0f;
+	float waveFrequency     = 0.0f;
+	float shakeRate         = 0.0f;
+	float shakeLevel        = 0.0f;
+	float pulseFrequency    = 0.0f;
+	float rainbowFrequency  = 0.0f;
+	float rainbowSaturation = 0.0f;
+	float rainbowValue      = 0.0f;
+	float tornadoRadius     = 0.0f;
+	float tornadoFrequency  = 0.0f;
+	float fadeStart         = 0.0f;
+	float fadeLength        = 0.0f;
+	// Cross-batch draw order, same role/semantics as UIBatch::drawOrder - UIRenderer::Flush() merge-sorts both
+	// handle spaces together by this so an animated batch interleaves correctly with regular UIBatches.
+	int32_t drawOrder = 0;
+	bool dirty        = true;
+	bool active       = false;
+};
+
+// Effect parameter values a caller (UIRichLabel) resolves once per animated group and hands to
+// CreateOrUpdateAnimatedBatch - a plain value type so the caller doesn't need to reach into
+// AnimatedTextBatch's own fields directly.
+struct AnimationUniformValues
+{
+	float waveAmplitude     = 0.0f;
+	float waveFrequency     = 0.0f;
+	float shakeRate         = 0.0f;
+	float shakeLevel        = 0.0f;
+	float pulseFrequency    = 0.0f;
+	float rainbowFrequency  = 0.0f;
+	float rainbowSaturation = 0.0f;
+	float rainbowValue      = 0.0f;
+	float tornadoRadius     = 0.0f;
+	float tornadoFrequency  = 0.0f;
+	float fadeStart         = 0.0f;
+	float fadeLength        = 0.0f;
 };
 
 // bgfx-native replacement for raylib's DrawRectangleRec/DrawRectangleLinesEx/DrawTexturePro/DrawTextEx on the
@@ -212,7 +265,32 @@ public:
 	// setters that any other caller could also reach for.
 	void AssignBatches(UI::UIElement* element, UIBatchHandle sharedBatch);
 
+	// --- Animated text batch storage (see AnimatedTextBatch's own comment) - a separate small subsystem from
+	// the UIBatch path above, not an extension of it. ---
+
+	// Creates a fresh animated batch (existing invalid) or updates an existing one's content/params/texture in
+	// place (existing valid, reusing its vb/ib exactly like AllocateOrResizeSlot's grow-in-place story - the
+	// underlying BGFX_BUFFER_ALLOW_RESIZE buffers already support this). Unlike the regular UIBatch path,
+	// there's no separate "allocate slot, then write into it" split - callers always hand over the group's
+	// complete vertex data in one call, since animated content changes shape rarely enough that rebuilding it
+	// wholesale each time is simpler than incremental slot management for a second vertex format.
+	AnimatedBatchHandle CreateOrUpdateAnimatedBatch(AnimatedBatchHandle existing,
+	                                                const std::vector<AnimQuadVertex>& vertices,
+	                                                bgfx::TextureHandle texture, const AnimationUniformValues& params,
+	                                                int32_t drawOrder);
+	void DestroyAnimatedBatch(AnimatedBatchHandle handle);
+
 private:
+	// Submits one already-uploaded UIBatch's cached runs (see UIBatch::runs) - the body of Flush()'s original
+	// per-batch loop, extracted so Flush() can merge-sort regular and animated batches together by drawOrder
+	// and dispatch to whichever submit helper each item needs.
+	void SubmitBatch(UIBatch& batch, uint64_t drawState);
+	// Submits one animated batch - re-uploads its vertex/index data only if dirty (same as SubmitBatch), but
+	// always (re)binds the current time + per-effect-type uniforms before every submit regardless of dirty,
+	// since that's what actually animates the already-uploaded vertex data frame to frame (see the Phase 8
+	// design doc - this is the "zero per-frame CPU rebuild" property the shader-based approach was chosen for).
+	void SubmitAnimatedBatch(GameContext& context, AnimatedTextBatch& batch, uint64_t drawState);
+
 	// Resolves handle to its UIBatch for a DrawX call, ASSERT_MSGing (see Debug/Assertions.h) on an invalid
 	// handle - returns nullptr on failure so callers can bail out safely even in Release, where the assert
 	// itself is a no-op. callerName is folded into the assert message so it names the actual DrawX function
@@ -237,6 +315,11 @@ private:
 	// instead of the vector ever resizing down.
 	std::vector<UIBatch> m_batches;
 	std::vector<uint32_t> m_freeBatchSlots;
+
+	// Same stability/free-list-reuse story as m_batches/m_freeBatchSlots above, just for AnimatedTextBatch's
+	// separate handle space (see AnimatedBatchHandle).
+	std::vector<AnimatedTextBatch> m_animBatches;
+	std::vector<uint32_t> m_freeAnimBatchSlots;
 };
 }  // namespace Renderer
 }  // namespace Struktur

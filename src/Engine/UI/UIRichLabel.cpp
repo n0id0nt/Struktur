@@ -58,6 +58,101 @@ std::string TruncateToVisibleCount(const std::string& text, int maxVisible)
 	}
 	return text.substr(0, index);
 }
+
+// Finds a group in `groups` matching texture/effect/params exactly, or appends and returns a fresh one - so
+// non-contiguous runs sharing the same animated style still end up drawn as one UIRenderer batch/submit
+// instead of one per run (see UIRichLabelAnimGroup's own comment).
+Struktur::UI::UIRichLabelAnimGroup& FindOrCreateAnimGroup(std::vector<Struktur::UI::UIRichLabelAnimGroup>& groups,
+                                                          bgfx::TextureHandle texture,
+                                                          const Struktur::Text::RichRun& run)
+{
+	for (Struktur::UI::UIRichLabelAnimGroup& group : groups)
+	{
+		if (group.texture.idx == texture.idx && group.effectMask == run.effectMask &&
+		    group.waveAmplitude == run.waveAmplitude && group.waveFrequency == run.waveFrequency &&
+		    group.shakeRate == run.shakeRate && group.shakeLevel == run.shakeLevel &&
+		    group.pulseFrequency == run.pulseFrequency && group.rainbowFrequency == run.rainbowFrequency &&
+		    group.rainbowSaturation == run.rainbowSaturation && group.rainbowValue == run.rainbowValue &&
+		    group.tornadoRadius == run.tornadoRadius && group.tornadoFrequency == run.tornadoFrequency &&
+		    group.fadeStart == run.fadeStart && group.fadeLength == run.fadeLength)
+		{
+			return group;
+		}
+	}
+
+	Struktur::UI::UIRichLabelAnimGroup fresh;
+	fresh.texture           = texture;
+	fresh.effectMask        = run.effectMask;
+	fresh.waveAmplitude     = run.waveAmplitude;
+	fresh.waveFrequency     = run.waveFrequency;
+	fresh.shakeRate         = run.shakeRate;
+	fresh.shakeLevel        = run.shakeLevel;
+	fresh.pulseFrequency    = run.pulseFrequency;
+	fresh.rainbowFrequency  = run.rainbowFrequency;
+	fresh.rainbowSaturation = run.rainbowSaturation;
+	fresh.rainbowValue      = run.rainbowValue;
+	fresh.tornadoRadius     = run.tornadoRadius;
+	fresh.tornadoFrequency  = run.tornadoFrequency;
+	fresh.fadeStart         = run.fadeStart;
+	fresh.fadeLength        = run.fadeLength;
+	groups.push_back(std::move(fresh));
+	return groups.back();
+}
+
+// Builds AnimQuadVertex data for text into group.vertices, walking it exactly the way UIRenderer::DrawText's
+// own inner loop does (UTF-8 decode, glyph lookup, pen advance) - DrawText itself has no hook for per-glyph
+// output, only "write a whole string as one static call", so this can't just delegate to it. Each drawable
+// glyph is tagged with the running animCharIndex counter (see UIRichLabel::RenderLine) before it's
+// incremented, giving every glyph in the label a stable, reading-order-based phase index regardless of which
+// run or group it ends up in. Returns the final pen X, for the caller to continue the next run from.
+float AppendAnimatedGlyphs(Struktur::UI::UIRichLabelAnimGroup& group, const Struktur::Text::Font& font,
+                          const std::string& text, float startX, float y, float fontSize, uint32_t abgr,
+                          int& animCharIndex)
+{
+	float scale       = fontSize / (float)font.baseSize;
+	float atlasWidth  = (float)font.texture.width;
+	float atlasHeight = (float)font.texture.height;
+	float penX        = startX;
+	int index         = 0;
+	int size          = (int)text.size();
+	while (index < size)
+	{
+		int codepointByteCount = 0;
+		int codepoint          = Struktur::Text::GetCodepointNext(&text[index], &codepointByteCount);
+		int glyphIndex          = Struktur::Text::GetGlyphIndex(font, codepoint);
+		index += codepointByteCount;
+
+		const Struktur::Text::Glyph& glyph    = font.glyphs[glyphIndex];
+		const Struktur::Util::Math::Rect& rec = glyph.rec;
+
+		if (codepoint != ' ' && codepoint != '\t')
+		{
+			float dstX = penX + (float)glyph.offsetX * scale;
+			float dstY = y + (float)glyph.offsetY * scale;
+			float w    = rec.width * scale;
+			float h    = rec.height * scale;
+			float u0   = rec.x / atlasWidth;
+			float v0   = rec.y / atlasHeight;
+			float u1   = (rec.x + rec.width) / atlasWidth;
+			float v1   = (rec.y + rec.height) / atlasHeight;
+
+			uint8_t maskByte, lowByte, highByte;
+			Struktur::Renderer::PackAnimData(group.effectMask, animCharIndex, maskByte, lowByte, highByte);
+
+			Struktur::Renderer::AnimQuadVertex quad[4] = {
+			    {dstX, dstY, u0, v0, abgr, maskByte, lowByte, highByte, 0},
+			    {dstX + w, dstY, u1, v0, abgr, maskByte, lowByte, highByte, 0},
+			    {dstX + w, dstY + h, u1, v1, abgr, maskByte, lowByte, highByte, 0},
+			    {dstX, dstY + h, u0, v1, abgr, maskByte, lowByte, highByte, 0},
+			};
+			group.vertices.insert(group.vertices.end(), quad, quad + 4);
+			++animCharIndex;
+		}
+
+		penX += (float)(glyph.advanceX > 0 ? glyph.advanceX : (int)rec.width) * scale;
+	}
+	return penX;
+}
 }  // namespace
 
 Struktur::UI::UIRichLabel::UIRichLabel(GameContext& context, const glm::vec2& absolutePosition,
@@ -116,12 +211,17 @@ void Struktur::UI::UIRichLabel::Render(GameContext& context)
 		// See SetVisibleGlyphCount - a negative count means "unlimited", represented here as INT_MAX so
 		// RenderLine's per-glyph decrement never actually runs out for the unlimited case.
 		int remainingVisible = m_visibleGlyphCount < 0 ? INT_MAX : m_visibleGlyphCount;
+		// Running per-label phase index for animated glyphs (see RenderLine/AppendAnimatedGlyphs) - not reset
+		// between lines/runs, so a wave/shake/pulse effect ripples continuously across the whole label rather
+		// than restarting at each line or run boundary.
+		int animCharIndex = 0;
+		std::vector<UIRichLabelAnimGroup> animGroups;
 
 		glm::vec2 pos      = {m_bounds.x + 5, m_bounds.y + 2.5f};
 		uint32_t quadsUsed = 0;
 		for (const Text::RichLine& line : renderLines)
 		{
-			quadsUsed += RenderLine(context, line, pos, quadsUsed, remainingVisible);
+			quadsUsed += RenderLine(context, line, pos, quadsUsed, remainingVisible, animCharIndex, animGroups);
 			pos.y += ComputeLineHeight(line);
 		}
 
@@ -129,10 +229,53 @@ void Struktur::UI::UIRichLabel::Render(GameContext& context)
 		// previously-written glyph quads still rendering past what was actually written this time.
 		context.GetUIRenderer().ClearSlotFrom(m_batch, m_batchSlot, quadsUsed);
 
+		// Animated batches are always rebuilt wholesale on a dirty pass (see m_animBatches' own comment) -
+		// simpler than diffing group identity/count across frames, and no more expensive than the static path
+		// already is during a reveal (which also fully re-walks/re-uploads every dirty frame).
+		for (Renderer::AnimatedBatchHandle handle : m_animBatches)
+		{
+			context.GetUIRenderer().DestroyAnimatedBatch(handle);
+		}
+		m_animBatches.clear();
+		m_animBatches.reserve(animGroups.size());
+		for (const UIRichLabelAnimGroup& group : animGroups)
+		{
+			Renderer::AnimationUniformValues params;
+			params.waveAmplitude     = group.waveAmplitude;
+			params.waveFrequency     = group.waveFrequency;
+			params.shakeRate         = group.shakeRate;
+			params.shakeLevel        = group.shakeLevel;
+			params.pulseFrequency    = group.pulseFrequency;
+			params.rainbowFrequency  = group.rainbowFrequency;
+			params.rainbowSaturation = group.rainbowSaturation;
+			params.rainbowValue      = group.rainbowValue;
+			params.tornadoRadius     = group.tornadoRadius;
+			params.tornadoFrequency  = group.tornadoFrequency;
+			params.fadeStart         = group.fadeStart;
+			params.fadeLength        = group.fadeLength;
+			// GetZIndex() as drawOrder - a reasonable, not perfectly fine-grained, cross-batch ordering (see
+			// the design doc's own note on this): animated content lives in a wholly separate batch from any
+			// same-batch siblings, so it can only interleave with OTHER BATCHES' z-order, not individual
+			// same-batch quads' quadZIndex.
+			m_animBatches.push_back(context.GetUIRenderer().CreateOrUpdateAnimatedBatch(
+			    Renderer::AnimatedBatchHandle{}, group.vertices, group.texture, params, GetZIndex()));
+		}
+
 		m_visualDirty = false;
 	}
 
 	RenderChildren(context);
+}
+
+void Struktur::UI::UIRichLabel::Dispose(GameContext& context)
+{
+	for (Renderer::AnimatedBatchHandle handle : m_animBatches)
+	{
+		context.GetUIRenderer().DestroyAnimatedBatch(handle);
+	}
+	m_animBatches.clear();
+
+	UIElement::Dispose(context);
 }
 
 uint32_t Struktur::UI::UIRichLabel::GetRequiredQuadCount() const
@@ -152,6 +295,13 @@ uint32_t Struktur::UI::UIRichLabel::GetRequiredQuadCount() const
 				{
 					++quads;
 				}
+				continue;
+			}
+
+			if (run.effectMask != 0)
+			{
+				// Animated runs never occupy m_batchSlot capacity - their quads go into m_animBatches instead
+				// (see class comment).
 				continue;
 			}
 
@@ -260,7 +410,20 @@ std::vector<Struktur::Text::RichLine> Struktur::UI::UIRichLabel::BuildRenderLine
 				// matching what Text::ParseMarkup already produces for a line that never needed wrapping.
 				if (!outLine.runs.empty() && outLine.runs.back().iconName.empty() &&
 				    outLine.runs.back().bold == sourceRun.bold && outLine.runs.back().italic == sourceRun.italic &&
-				    outLine.runs.back().color == sourceRun.color)
+				    outLine.runs.back().color == sourceRun.color &&
+				    outLine.runs.back().effectMask == sourceRun.effectMask &&
+				    outLine.runs.back().waveAmplitude == sourceRun.waveAmplitude &&
+				    outLine.runs.back().waveFrequency == sourceRun.waveFrequency &&
+				    outLine.runs.back().shakeRate == sourceRun.shakeRate &&
+				    outLine.runs.back().shakeLevel == sourceRun.shakeLevel &&
+				    outLine.runs.back().pulseFrequency == sourceRun.pulseFrequency &&
+				    outLine.runs.back().rainbowFrequency == sourceRun.rainbowFrequency &&
+				    outLine.runs.back().rainbowSaturation == sourceRun.rainbowSaturation &&
+				    outLine.runs.back().rainbowValue == sourceRun.rainbowValue &&
+				    outLine.runs.back().tornadoRadius == sourceRun.tornadoRadius &&
+				    outLine.runs.back().tornadoFrequency == sourceRun.tornadoFrequency &&
+				    outLine.runs.back().fadeStart == sourceRun.fadeStart &&
+				    outLine.runs.back().fadeLength == sourceRun.fadeLength)
 				{
 					outLine.runs.back().text += token.text;
 				}
@@ -289,7 +452,8 @@ float Struktur::UI::UIRichLabel::ComputeLineHeight(const Text::RichLine& line) c
 }
 
 uint32_t Struktur::UI::UIRichLabel::RenderLine(GameContext& context, const Text::RichLine& line, glm::vec2 pos,
-                                               uint32_t quadOffset, int& remainingVisible)
+                                               uint32_t quadOffset, int& remainingVisible, int& animCharIndex,
+                                               std::vector<UIRichLabelAnimGroup>& animGroups)
 {
 	uint32_t quadsWritten = 0;
 	float penX            = pos.x;
@@ -302,6 +466,32 @@ uint32_t Struktur::UI::UIRichLabel::RenderLine(GameContext& context, const Text:
 		// for later lines regardless - see its own comment).
 		if (remainingVisible <= 0)
 		{
+			continue;
+		}
+
+		if (run.effectMask != 0 && run.iconName.empty())
+		{
+			// Animated text run - a completely separate path from everything below (see class comment): no
+			// m_batchSlot/quadOffset involvement at all, glyphs go into whichever animGroups entry matches
+			// this run's (font texture, effect+params) via AppendAnimatedGlyphs. Still participates in the
+			// same reveal budget/pen position as static runs, just via a different write target.
+			bool isRealItalic = false;
+			const Resource::ResourcePtr<Resource::FontResource>& font = ResolveFont(run.bold, run.italic, isRealItalic);
+			if (!font->IsGpuReady())
+			{
+				font->LoadToGpu(context);
+			}
+
+			int visibleInRun = CountVisibleCodepoints(run.text);
+			const std::string& textToDraw =
+			    visibleInRun <= remainingVisible ? run.text : TruncateToVisibleCount(run.text, remainingVisible);
+
+			bgfx::TextureHandle texture = {(uint16_t)font->font.texture.id};
+			UIRichLabelAnimGroup& group = FindOrCreateAnimGroup(animGroups, texture, run);
+			penX = AppendAnimatedGlyphs(group, font->font, textToDraw, penX, pos.y, m_fontSize,
+			                            Renderer::PackColor(run.color), animCharIndex);
+
+			remainingVisible -= std::min(visibleInRun, remainingVisible);
 			continue;
 		}
 

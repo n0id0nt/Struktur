@@ -68,9 +68,10 @@ class MainMenuState is BaseState {
     // Rich-text showcase - demonstrates every UIRichLabel feature: real bold/italic/bold-italic fonts (the
     // medieval_sharp family's own Book/Bold/BookOblique/BoldOblique variants - not the synthetic shear
     // fallback, since real fonts are set for every style here), inline [color=] spans, an [icon=] pulled from
-    // a real item sprite, word wrap, and a Time.scaledTime-driven reveal via setVisibleGlyphCount - the same
-    // typewriter effect InteractState's dialogue box gets via raw string truncation (see
-    // RICH_TEXT_REVEAL_SPEED/update()), just without ever risking a cut mid-tag.
+    // a real item sprite, word wrap, a Time.scaledTime-driven reveal via setVisibleGlyphCount (the same
+    // typewriter effect InteractState's dialogue box gets via raw string truncation, just without ever
+    // risking a cut mid-tag), and Phase 8's shader-driven [wave]/[shake]/[pulse] animated tags, including a
+    // layered combination on one span.
     showcaseRichText() {
         var regularFont    = Font.load("Fonts/medieval_sharp/MedievalSharp-Book.ttf", 24)
         var boldFont       = Font.load("Fonts/medieval_sharp/MedievalSharp-Bold.ttf", 24)
@@ -81,7 +82,7 @@ class MainMenuState is BaseState {
         iconAtlas.setTexture(Texture.load("Tiles/Items/Ornate Key.png"))
         iconAtlas.addIcon("key", 0, 0, 64, 64)
 
-        var showcasePanel = UIPanel.new(Vec2.new(0, 200), Vec2.new(0.5, 0), Vec2.new(820, 220), Vec2.new(0, 0))
+        var showcasePanel = UIPanel.new(Vec2.new(0, 200), Vec2.new(0.5, 0), Vec2.new(820, 380), Vec2.new(0, 0))
         showcasePanel.setAnchorPoint(Vec2.new(0.5, 0))
         showcasePanel.setBackgroundColor(LIGHTGRAY)
         showcasePanel.setBorderColor(WHITE)
@@ -94,7 +95,12 @@ class MainMenuState is BaseState {
             "variants (not synthesized). Colors work too: [color=#d9534f]red[/color], " +
             "[color=#0275d8]blue[/color], and [color=#5cb85c]green[/color]. You can even embed icons " +
             "inline, like an [icon=key] ornate key, right in the middle of a sentence that keeps going " +
-            "long enough to wrap across several lines.", 22.0)
+            "long enough to wrap across several lines.\n" +
+            "Phase 8 adds shader-driven animated tags: [wave]this text waves[/wave], " +
+            "[shake]this text shakes[/shake], and [pulse]this text pulses[/pulse] - and they layer: " +
+            "[shake][pulse][color=#d9534f]shaky pulsing red text[/color][/pulse][/shake].\n" +
+            "v2-v4 add more: [rainbow]this text cycles hue[/rainbow], " +
+            "[tornado]this text orbits[/tornado], and [fade]this text fades out toward the end[/fade].", 22.0)
         _richLabel.setFont(regularFont)
         _richLabel.setBoldFont(boldFont)
         _richLabel.setItalicFont(italicFont)
@@ -122,7 +128,7 @@ class MainMenuState is BaseState {
         var buttonWidth = 280
         var buttonHeight = 64
         var spacing = 24
-        var startY = 450
+        var startY = 610
 
         var button = UIPanel.new(Vec2.new(0, startY + index * (buttonHeight + spacing)), Vec2.new(0.5, 0),
             Vec2.new(buttonWidth, buttonHeight), Vec2.new(0, 0))

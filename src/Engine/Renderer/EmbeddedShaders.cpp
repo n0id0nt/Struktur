@@ -11,21 +11,27 @@
 // compiled for (CMakeLists.txt's struktur_compile_shader doesn't request the wgsl profile) - disabled explicitly.
 #define BGFX_PLATFORM_SUPPORTS_WGSL 0
 #include <bgfx/embedded_shader.h>
+#include <essl/fs_richTextAnim.sc.bin.h>
 #include <essl/fs_soulEffect.sc.bin.h>
 #include <essl/fs_sprite.sc.bin.h>
 #include <essl/fs_spriteCoverage.sc.bin.h>
+#include <essl/vs_richTextAnim.sc.bin.h>
 #include <essl/vs_soulEffect.sc.bin.h>
 #include <essl/vs_sprite.sc.bin.h>
 #include <essl/vs_spriteCoverage.sc.bin.h>
+#include <glsl/fs_richTextAnim.sc.bin.h>
 #include <glsl/fs_soulEffect.sc.bin.h>
 #include <glsl/fs_sprite.sc.bin.h>
 #include <glsl/fs_spriteCoverage.sc.bin.h>
+#include <glsl/vs_richTextAnim.sc.bin.h>
 #include <glsl/vs_soulEffect.sc.bin.h>
 #include <glsl/vs_sprite.sc.bin.h>
 #include <glsl/vs_spriteCoverage.sc.bin.h>
+#include <spirv/fs_richTextAnim.sc.bin.h>
 #include <spirv/fs_soulEffect.sc.bin.h>
 #include <spirv/fs_sprite.sc.bin.h>
 #include <spirv/fs_spriteCoverage.sc.bin.h>
+#include <spirv/vs_richTextAnim.sc.bin.h>
 #include <spirv/vs_soulEffect.sc.bin.h>
 #include <spirv/vs_sprite.sc.bin.h>
 #include <spirv/vs_spriteCoverage.sc.bin.h>
@@ -34,12 +40,16 @@
 	#include <dxbc/fs_sprite.sc.bin.h>
 	#include <dxbc/vs_spriteCoverage.sc.bin.h>
 	#include <dxbc/fs_spriteCoverage.sc.bin.h>
+	#include <dxbc/vs_richTextAnim.sc.bin.h>
+	#include <dxbc/fs_richTextAnim.sc.bin.h>
 	#include <dxbc/vs_soulEffect.sc.bin.h>
 	#include <dxbc/fs_soulEffect.sc.bin.h>
 	#include <dxil/vs_sprite.sc.bin.h>
 	#include <dxil/fs_sprite.sc.bin.h>
 	#include <dxil/vs_spriteCoverage.sc.bin.h>
 	#include <dxil/fs_spriteCoverage.sc.bin.h>
+	#include <dxil/vs_richTextAnim.sc.bin.h>
+	#include <dxil/fs_richTextAnim.sc.bin.h>
 	#include <dxil/vs_soulEffect.sc.bin.h>
 	#include <dxil/fs_soulEffect.sc.bin.h>
 #endif
@@ -48,6 +58,8 @@
 	#include <metal/fs_sprite.sc.bin.h>
 	#include <metal/vs_spriteCoverage.sc.bin.h>
 	#include <metal/fs_spriteCoverage.sc.bin.h>
+	#include <metal/vs_richTextAnim.sc.bin.h>
+	#include <metal/fs_richTextAnim.sc.bin.h>
 	#include <metal/vs_soulEffect.sc.bin.h>
 	#include <metal/fs_soulEffect.sc.bin.h>
 #endif
@@ -57,6 +69,7 @@ namespace
 static const bgfx::EmbeddedShader kEmbeddedShaders[] = {
     BGFX_EMBEDDED_SHADER(vs_sprite),         BGFX_EMBEDDED_SHADER(fs_sprite),
     BGFX_EMBEDDED_SHADER(vs_spriteCoverage), BGFX_EMBEDDED_SHADER(fs_spriteCoverage),
+    BGFX_EMBEDDED_SHADER(vs_richTextAnim),   BGFX_EMBEDDED_SHADER(fs_richTextAnim),
     BGFX_EMBEDDED_SHADER(vs_soulEffect),     BGFX_EMBEDDED_SHADER(fs_soulEffect),
     BGFX_EMBEDDED_SHADER_END(),
 };

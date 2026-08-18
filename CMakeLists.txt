@@ -237,6 +237,7 @@ if(PLATFORM_DESKTOP OR PLATFORM_WEB)
         endfunction()
         struktur_compile_shader(sprite)
         struktur_compile_shader(spriteCoverage)
+        struktur_compile_shader(richTextAnim)
         struktur_compile_shader(soulEffect)
     else()
         # Web doesn't (can't) invoke shaderc itself - just reference whatever a prior desktop build already

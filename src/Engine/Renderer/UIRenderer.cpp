@@ -192,122 +192,295 @@ void Struktur::Renderer::UIRenderer::Flush(GameContext& context)
 	uint64_t drawState = BGFX_STATE_WRITE_RGB | BGFX_STATE_WRITE_A |
 	                     BGFX_STATE_BLEND_FUNC(BGFX_STATE_BLEND_SRC_ALPHA, BGFX_STATE_BLEND_INV_SRC_ALPHA);
 
-	// Active batches, ordered by drawOrder - separate from m_batches' own slot indices (see CreateBatch/
-	// DestroyBatch), which are stable but otherwise unordered.
-	std::vector<uint32_t> order;
-	order.reserve(m_batches.size());
+	// Active batches AND active animated batches, merged into one drawOrder-sorted sequence - separate handle
+	// spaces (see AnimatedBatchHandle) but they still need to interleave correctly by z-order with each other
+	// (a wave-text UIRichLabel behind/in front of a sibling panel, say), not just within their own kind.
+	// isAnimated + index distinguishes which vector/submit path each entry needs.
+	struct FlushItem
+	{
+		bool isAnimated;
+		uint32_t index;
+		int32_t drawOrder;
+	};
+	std::vector<FlushItem> order;
+	order.reserve(m_batches.size() + m_animBatches.size());
 	for (uint32_t i = 0; i < (uint32_t)m_batches.size(); ++i)
 	{
 		if (m_batches[i].active)
 		{
-			order.push_back(i);
+			order.push_back({false, i, m_batches[i].drawOrder});
+		}
+	}
+	for (uint32_t i = 0; i < (uint32_t)m_animBatches.size(); ++i)
+	{
+		if (m_animBatches[i].active)
+		{
+			order.push_back({true, i, m_animBatches[i].drawOrder});
 		}
 	}
 	std::sort(order.begin(), order.end(),
-	          [this](uint32_t a, uint32_t b) { return m_batches[a].drawOrder < m_batches[b].drawOrder; });
+	          [](const FlushItem& a, const FlushItem& b) { return a.drawOrder < b.drawOrder; });
 
-	for (uint32_t index : order)
+	for (const FlushItem& item : order)
 	{
-		UIBatch& batch     = m_batches[index];
-		uint32_t quadCount = (uint32_t)(batch.cpuVertices.size() / 4);
-		if (quadCount == 0)
+		if (item.isAnimated)
 		{
-			continue;
+			SubmitAnimatedBatch(context, m_animBatches[item.index], drawState);
 		}
-
-		if (batch.dirty)
+		else
 		{
-			// Draw order within this one batch (see UIBatch::sortedQuadOrder) - z-index first, then the quad's
-			// own raw index as a stable "order added to the batch" tiebreak for equal z-indices, since std::sort
-			// isn't guaranteed stable and quad index already reflects original write/allocation order.
-			batch.sortedQuadOrder.resize(quadCount);
-			for (uint32_t quad = 0; quad < quadCount; ++quad)
-			{
-				batch.sortedQuadOrder[quad] = quad;
-			}
-			std::sort(batch.sortedQuadOrder.begin(), batch.sortedQuadOrder.end(),
-			          [&batch](uint32_t a, uint32_t b)
-			          {
-				          if (batch.quadZIndex[a] != batch.quadZIndex[b])
-				          {
-					          return batch.quadZIndex[a] < batch.quadZIndex[b];
-				          }
-				          return a < b;
-			          });
-
-			// Index content is otherwise a fixed, deterministic pattern derived purely from quad count (the same
-			// 0,1,2,0,2,3-per-quad layout WorldRenderer's own transient sprite batches use) - not worth mirroring
-			// on UIBatch itself alongside cpuVertices, so it's rebuilt here whenever an upload is actually needed.
-			// Built by walking sortedQuadOrder rather than 0..quadCount directly - a quad's vertex data never
-			// moves from wherever AllocateOrResizeSlot placed it, only which index-buffer position references it,
-			// so base is still that quad's own real vertexOffset-derived index, just written at its sorted slot.
-			//
-			// Also derives runs (see UIBatch::runs/UIBatchRun) in this same pass, rather than re-walking
-			// sortedQuadOrder a second time just to redetect texture-run boundaries every single frame in the
-			// submit loop below (mirroring ImGui's ImDrawList: a cached draw list, rebuilt only when something
-			// actually changed) - this is the only place either the index buffer or runs are allowed to change,
-			// so both staying in sync only costs anything on the same frames re-upload was already unavoidable.
-			std::vector<uint16_t> indices(quadCount * 6);
-			batch.runs.clear();
-			bgfx::TextureHandle runTexture = batch.quadTextures[batch.sortedQuadOrder[0]];
-			bool runIsCoverage             = batch.quadIsCoverage[batch.sortedQuadOrder[0]] != 0;
-			for (uint32_t i = 0; i < quadCount; ++i)
-			{
-				uint16_t base       = (uint16_t)(batch.sortedQuadOrder[i] * 4);
-				indices[i * 6 + 0] = base + 0;
-				indices[i * 6 + 1] = base + 1;
-				indices[i * 6 + 2] = base + 2;
-				indices[i * 6 + 3] = base + 0;
-				indices[i * 6 + 4] = base + 2;
-				indices[i * 6 + 5] = base + 3;
-
-				bgfx::TextureHandle quadTexture = batch.quadTextures[batch.sortedQuadOrder[i]];
-				if (quadTexture.idx != runTexture.idx)
-				{
-					batch.runs.push_back(UIBatchRun{i, runTexture, runIsCoverage});
-					runTexture    = quadTexture;
-					runIsCoverage = batch.quadIsCoverage[batch.sortedQuadOrder[i]] != 0;
-				}
-			}
-			batch.runs.push_back(UIBatchRun{quadCount, runTexture, runIsCoverage});
-
-			bgfx::update(batch.vb, 0,
-			             bgfx::copy(batch.cpuVertices.data(),
-			                        (uint32_t)(batch.cpuVertices.size() * sizeof(QuadVertex))));
-			bgfx::update(batch.ib, 0, bgfx::copy(indices.data(), (uint32_t)(indices.size() * sizeof(uint16_t))));
-			batch.dirty = false;
-		}
-
-		// Just walks the cached runs (see above) - no per-frame texture-boundary detection. Every run draws from
-		// this one persistent vb/ib via offset+count rather than a fresh transient buffer, since the vertex data
-		// itself was already uploaded above (if dirty). This is what lets e.g. a panel's white-texture
-		// background/border and a label's font-atlas text safely share one batch, each still drawing at its own
-		// z-index rather than in raw write order.
-		uint32_t runStart = 0;
-		for (const UIBatchRun& run : batch.runs)
-		{
-			// The index buffer's values are absolute vertex indices (base = quad*4 across the whole batch, see
-			// the rebuild above), not relative to this run. bgfx applies setVertexBuffer's startVertex by
-			// rebasing which vertex each index resolves to (offsetting the buffer binding itself), so passing
-			// runStart*4 here on top of already-absolute indices would double-offset every run after the
-			// first - reading some other quad's vertex data (wrong position/UV) while still drawing it with
-			// this run's texture. Always bind from vertex 0 and let the index values (via setIndexBuffer's
-			// offset below) do the addressing.
-			bgfx::setVertexBuffer(0, batch.vb, 0, quadCount * 4);
-			bgfx::setIndexBuffer(batch.ib, runStart * 6, (run.endQuad - runStart) * 6);
-			bgfx::setTexture(0, m_texColorSampler, run.texture);
-			if (batch.hasClip)
-			{
-				bgfx::setScissor((uint16_t)batch.clipRect.x, (uint16_t)batch.clipRect.y,
-				                 (uint16_t)batch.clipRect.width, (uint16_t)batch.clipRect.height);
-			}
-			bgfx::setState(drawState);
-			bgfx::submit(GraphicsDevice::UIViewId,
-			            GetEmbeddedProgram(run.isCoverage ? "spriteCoverage" : "sprite"));
-
-			runStart = run.endQuad;
+			SubmitBatch(m_batches[item.index], drawState);
 		}
 	}
+}
+
+void Struktur::Renderer::UIRenderer::SubmitBatch(UIBatch& batch, uint64_t drawState)
+{
+	uint32_t quadCount = (uint32_t)(batch.cpuVertices.size() / 4);
+	if (quadCount == 0)
+	{
+		return;
+	}
+
+	if (batch.dirty)
+	{
+		// Draw order within this one batch (see UIBatch::sortedQuadOrder) - z-index first, then the quad's own
+		// raw index as a stable "order added to the batch" tiebreak for equal z-indices, since std::sort isn't
+		// guaranteed stable and quad index already reflects original write/allocation order.
+		batch.sortedQuadOrder.resize(quadCount);
+		for (uint32_t quad = 0; quad < quadCount; ++quad)
+		{
+			batch.sortedQuadOrder[quad] = quad;
+		}
+		std::sort(batch.sortedQuadOrder.begin(), batch.sortedQuadOrder.end(),
+		          [&batch](uint32_t a, uint32_t b)
+		          {
+			          if (batch.quadZIndex[a] != batch.quadZIndex[b])
+			          {
+				          return batch.quadZIndex[a] < batch.quadZIndex[b];
+			          }
+			          return a < b;
+		          });
+
+		// Index content is otherwise a fixed, deterministic pattern derived purely from quad count (the same
+		// 0,1,2,0,2,3-per-quad layout WorldRenderer's own transient sprite batches use) - not worth mirroring
+		// on UIBatch itself alongside cpuVertices, so it's rebuilt here whenever an upload is actually needed.
+		// Built by walking sortedQuadOrder rather than 0..quadCount directly - a quad's vertex data never
+		// moves from wherever AllocateOrResizeSlot placed it, only which index-buffer position references it,
+		// so base is still that quad's own real vertexOffset-derived index, just written at its sorted slot.
+		//
+		// Also derives runs (see UIBatch::runs/UIBatchRun) in this same pass, rather than re-walking
+		// sortedQuadOrder a second time just to redetect texture-run boundaries every single frame in the
+		// submit loop below (mirroring ImGui's ImDrawList: a cached draw list, rebuilt only when something
+		// actually changed) - this is the only place either the index buffer or runs are allowed to change,
+		// so both staying in sync only costs anything on the same frames re-upload was already unavoidable.
+		std::vector<uint16_t> indices(quadCount * 6);
+		batch.runs.clear();
+		bgfx::TextureHandle runTexture = batch.quadTextures[batch.sortedQuadOrder[0]];
+		bool runIsCoverage             = batch.quadIsCoverage[batch.sortedQuadOrder[0]] != 0;
+		for (uint32_t i = 0; i < quadCount; ++i)
+		{
+			uint16_t base       = (uint16_t)(batch.sortedQuadOrder[i] * 4);
+			indices[i * 6 + 0] = base + 0;
+			indices[i * 6 + 1] = base + 1;
+			indices[i * 6 + 2] = base + 2;
+			indices[i * 6 + 3] = base + 0;
+			indices[i * 6 + 4] = base + 2;
+			indices[i * 6 + 5] = base + 3;
+
+			bgfx::TextureHandle quadTexture = batch.quadTextures[batch.sortedQuadOrder[i]];
+			if (quadTexture.idx != runTexture.idx)
+			{
+				batch.runs.push_back(UIBatchRun{i, runTexture, runIsCoverage});
+				runTexture    = quadTexture;
+				runIsCoverage = batch.quadIsCoverage[batch.sortedQuadOrder[i]] != 0;
+			}
+		}
+		batch.runs.push_back(UIBatchRun{quadCount, runTexture, runIsCoverage});
+
+		bgfx::update(batch.vb, 0,
+		             bgfx::copy(batch.cpuVertices.data(), (uint32_t)(batch.cpuVertices.size() * sizeof(QuadVertex))));
+		bgfx::update(batch.ib, 0, bgfx::copy(indices.data(), (uint32_t)(indices.size() * sizeof(uint16_t))));
+		batch.dirty = false;
+	}
+
+	// Just walks the cached runs (see above) - no per-frame texture-boundary detection. Every run draws from
+	// this one persistent vb/ib via offset+count rather than a fresh transient buffer, since the vertex data
+	// itself was already uploaded above (if dirty). This is what lets e.g. a panel's white-texture
+	// background/border and a label's font-atlas text safely share one batch, each still drawing at its own
+	// z-index rather than in raw write order.
+	uint32_t runStart = 0;
+	for (const UIBatchRun& run : batch.runs)
+	{
+		// The index buffer's values are absolute vertex indices (base = quad*4 across the whole batch, see
+		// the rebuild above), not relative to this run. bgfx applies setVertexBuffer's startVertex by
+		// rebasing which vertex each index resolves to (offsetting the buffer binding itself), so passing
+		// runStart*4 here on top of already-absolute indices would double-offset every run after the
+		// first - reading some other quad's vertex data (wrong position/UV) while still drawing it with
+		// this run's texture. Always bind from vertex 0 and let the index values (via setIndexBuffer's
+		// offset below) do the addressing.
+		bgfx::setVertexBuffer(0, batch.vb, 0, quadCount * 4);
+		bgfx::setIndexBuffer(batch.ib, runStart * 6, (run.endQuad - runStart) * 6);
+		bgfx::setTexture(0, m_texColorSampler, run.texture);
+		if (batch.hasClip)
+		{
+			bgfx::setScissor((uint16_t)batch.clipRect.x, (uint16_t)batch.clipRect.y, (uint16_t)batch.clipRect.width,
+			                 (uint16_t)batch.clipRect.height);
+		}
+		bgfx::setState(drawState);
+		bgfx::submit(GraphicsDevice::UIViewId, GetEmbeddedProgram(run.isCoverage ? "spriteCoverage" : "sprite"));
+
+		runStart = run.endQuad;
+	}
+}
+
+void Struktur::Renderer::UIRenderer::SubmitAnimatedBatch(GameContext& context, AnimatedTextBatch& batch,
+                                                          uint64_t drawState)
+{
+	uint32_t quadCount = (uint32_t)(batch.cpuVertices.size() / 4);
+	if (quadCount == 0)
+	{
+		return;
+	}
+
+	if (batch.dirty)
+	{
+		// No sortedQuadOrder/run-splitting needed here (unlike SubmitBatch) - one AnimatedTextBatch always
+		// holds exactly one texture/effect-param group by construction (see AnimatedTextBatch's own comment),
+		// so the index pattern is just the plain 0,1,2,0,2,3-per-quad layout in original write order.
+		std::vector<uint16_t> indices(quadCount * 6);
+		for (uint32_t i = 0; i < quadCount; ++i)
+		{
+			uint16_t base       = (uint16_t)(i * 4);
+			indices[i * 6 + 0] = base + 0;
+			indices[i * 6 + 1] = base + 1;
+			indices[i * 6 + 2] = base + 2;
+			indices[i * 6 + 3] = base + 0;
+			indices[i * 6 + 4] = base + 2;
+			indices[i * 6 + 5] = base + 3;
+		}
+		bgfx::update(batch.vb, 0,
+		             bgfx::copy(batch.cpuVertices.data(),
+		                        (uint32_t)(batch.cpuVertices.size() * sizeof(AnimQuadVertex))));
+		bgfx::update(batch.ib, 0, bgfx::copy(indices.data(), (uint32_t)(indices.size() * sizeof(uint16_t))));
+		batch.dirty = false;
+	}
+
+	// Time + every effect type's params, rebound every single submit regardless of dirty - this (not the
+	// vertex data, which is only rebuilt above when the label's content actually changes) is what makes the
+	// already-uploaded quads actually move/pulse frame to frame. An inactive effect's uniforms are simply
+	// never read by the shader for a vertex whose packed animEffectMask doesn't set that bit, so binding all
+	// of them unconditionally here (rather than branching per-batch on which bits are active) is harmless.
+	float timeValue[4] = {(float)context.GetTimeSystem().scaledTime, 0.0f, 0.0f, 0.0f};
+	bgfx::setUniform(GetOrCreateUniform("time"), timeValue);
+	float waveAmplitude[4] = {batch.waveAmplitude, 0.0f, 0.0f, 0.0f};
+	bgfx::setUniform(GetOrCreateUniform("waveAmplitude"), waveAmplitude);
+	float waveFrequency[4] = {batch.waveFrequency, 0.0f, 0.0f, 0.0f};
+	bgfx::setUniform(GetOrCreateUniform("waveFrequency"), waveFrequency);
+	float shakeRate[4] = {batch.shakeRate, 0.0f, 0.0f, 0.0f};
+	bgfx::setUniform(GetOrCreateUniform("shakeRate"), shakeRate);
+	float shakeLevel[4] = {batch.shakeLevel, 0.0f, 0.0f, 0.0f};
+	bgfx::setUniform(GetOrCreateUniform("shakeLevel"), shakeLevel);
+	float pulseFrequency[4] = {batch.pulseFrequency, 0.0f, 0.0f, 0.0f};
+	bgfx::setUniform(GetOrCreateUniform("pulseFrequency"), pulseFrequency);
+	float rainbowFrequency[4] = {batch.rainbowFrequency, 0.0f, 0.0f, 0.0f};
+	bgfx::setUniform(GetOrCreateUniform("rainbowFrequency"), rainbowFrequency);
+	float rainbowSaturation[4] = {batch.rainbowSaturation, 0.0f, 0.0f, 0.0f};
+	bgfx::setUniform(GetOrCreateUniform("rainbowSaturation"), rainbowSaturation);
+	float rainbowValue[4] = {batch.rainbowValue, 0.0f, 0.0f, 0.0f};
+	bgfx::setUniform(GetOrCreateUniform("rainbowValue"), rainbowValue);
+	float tornadoRadius[4] = {batch.tornadoRadius, 0.0f, 0.0f, 0.0f};
+	bgfx::setUniform(GetOrCreateUniform("tornadoRadius"), tornadoRadius);
+	float tornadoFrequency[4] = {batch.tornadoFrequency, 0.0f, 0.0f, 0.0f};
+	bgfx::setUniform(GetOrCreateUniform("tornadoFrequency"), tornadoFrequency);
+	float fadeStart[4] = {batch.fadeStart, 0.0f, 0.0f, 0.0f};
+	bgfx::setUniform(GetOrCreateUniform("fadeStart"), fadeStart);
+	float fadeLength[4] = {batch.fadeLength, 0.0f, 0.0f, 0.0f};
+	bgfx::setUniform(GetOrCreateUniform("fadeLength"), fadeLength);
+
+	bgfx::setVertexBuffer(0, batch.vb, 0, quadCount * 4);
+	bgfx::setIndexBuffer(batch.ib, 0, quadCount * 6);
+	bgfx::setTexture(0, m_texColorSampler, batch.texture);
+	bgfx::setState(drawState);
+	bgfx::submit(GraphicsDevice::UIViewId, GetEmbeddedProgram("richTextAnim"));
+}
+
+Struktur::Renderer::AnimatedBatchHandle Struktur::Renderer::UIRenderer::CreateOrUpdateAnimatedBatch(
+    AnimatedBatchHandle existing, const std::vector<AnimQuadVertex>& vertices, bgfx::TextureHandle texture,
+    const AnimationUniformValues& params, int32_t drawOrder)
+{
+	AnimatedBatchHandle handle = existing;
+	if (!handle.IsValid())
+	{
+		uint32_t index;
+		if (!m_freeAnimBatchSlots.empty())
+		{
+			index = m_freeAnimBatchSlots.back();
+			m_freeAnimBatchSlots.pop_back();
+		}
+		else
+		{
+			index = (uint32_t)m_animBatches.size();
+			m_animBatches.emplace_back();
+		}
+
+		AnimatedTextBatch& fresh = m_animBatches[index];
+		fresh                    = AnimatedTextBatch{};
+		fresh.active             = true;
+
+		static const bgfx::VertexLayout animLayout = BuildAnimQuadVertexLayout();
+		fresh.vb =
+		    bgfx::createDynamicVertexBuffer(kInitialBatchQuadCapacity * 4, animLayout, BGFX_BUFFER_ALLOW_RESIZE);
+		fresh.ib = bgfx::createDynamicIndexBuffer(kInitialBatchQuadCapacity * 6, BGFX_BUFFER_ALLOW_RESIZE);
+		ASSERT_MSG(bgfx::isValid(fresh.vb), "Failed to create animated text batch vertex buffer");
+		ASSERT_MSG(bgfx::isValid(fresh.ib), "Failed to create animated text batch index buffer");
+
+		handle = AnimatedBatchHandle{index};
+	}
+
+	AnimatedTextBatch& batch = m_animBatches[handle.index];
+	batch.cpuVertices        = vertices;
+	batch.texture            = texture;
+	batch.waveAmplitude      = params.waveAmplitude;
+	batch.waveFrequency      = params.waveFrequency;
+	batch.shakeRate          = params.shakeRate;
+	batch.shakeLevel         = params.shakeLevel;
+	batch.pulseFrequency     = params.pulseFrequency;
+	batch.rainbowFrequency   = params.rainbowFrequency;
+	batch.rainbowSaturation  = params.rainbowSaturation;
+	batch.rainbowValue       = params.rainbowValue;
+	batch.tornadoRadius      = params.tornadoRadius;
+	batch.tornadoFrequency   = params.tornadoFrequency;
+	batch.fadeStart          = params.fadeStart;
+	batch.fadeLength         = params.fadeLength;
+	batch.drawOrder          = drawOrder;
+	batch.dirty              = true;
+	return handle;
+}
+
+void Struktur::Renderer::UIRenderer::DestroyAnimatedBatch(AnimatedBatchHandle handle)
+{
+	if (!handle.IsValid() || handle.index >= m_animBatches.size())
+	{
+		return;
+	}
+	AnimatedTextBatch& batch = m_animBatches[handle.index];
+	if (!batch.active)
+	{
+		return;
+	}
+
+	if (bgfx::isValid(batch.vb))
+	{
+		bgfx::destroy(batch.vb);
+	}
+	if (bgfx::isValid(batch.ib))
+	{
+		bgfx::destroy(batch.ib);
+	}
+
+	batch = AnimatedTextBatch{};
+	m_freeAnimBatchSlots.push_back(handle.index);
 }
 
 // --- Batch writes (see UIRenderer's class comment) ---

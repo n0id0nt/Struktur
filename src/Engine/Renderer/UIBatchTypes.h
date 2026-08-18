@@ -28,5 +28,18 @@ struct UIBatchSlot
 	uint32_t quadCapacity = 0;
 	uint32_t quadCount    = 0;
 };
+
+// Opaque reference to a slot in UIRenderer's internal *animated* batch pool (see
+// UIRenderer::CreateOrUpdateAnimatedBatch) - a separate handle space from UIBatchHandle above, since animated
+// glyph quads (AnimQuadVertex) aren't QuadVertex-compatible and live in their own pool. Same
+// never-erased-only-reused-via-free-list stability guarantee as UIBatchHandle.
+struct AnimatedBatchHandle
+{
+	uint32_t index = UINT32_MAX;
+	bool IsValid() const
+	{
+		return index != UINT32_MAX;
+	}
+};
 }  // namespace Renderer
 }  // namespace Struktur
