@@ -66,6 +66,28 @@ public:
 	{
 		return m_text;
 	}
+	Util::Color GetTextColor() const
+	{
+		return m_textColor;
+	}
+	TextAlignment GetAlignment() const
+	{
+		return m_alignment;
+	}
+	TextWrapping GetWordWrap() const
+	{
+		return m_wrapping;
+	}
+	float GetFontSize() const
+	{
+		return m_fontSize;
+	}
+	// Const-ref, not a bool - lets a caller (the editor inspector) distinguish "no font set" from "a font is set"
+	// without needing a separate HasFont() as well.
+	const Resource::ResourcePtr<Resource::FontResource>& GetFont() const
+	{
+		return m_font;
+	}
 
 	void Update(GameContext& context) override;
 	void Render(GameContext& context) override;

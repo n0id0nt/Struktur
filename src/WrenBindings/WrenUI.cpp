@@ -1490,7 +1490,7 @@ void wren_UIRichLabelGetGlyphCount(WrenVM* vm)
 		return;
 	}
 	Struktur::UI::UIRichLabel* richLabel = dynamic_cast<Struktur::UI::UIRichLabel*>(uiElement->element);
-	wrenSetSlotDouble(vm, 0, (double)richLabel->GetRequiredQuadCount());
+	wrenSetSlotDouble(vm, 0, (double)richLabel->GetTotalGlyphCount());
 }
 
 WREN_BINDING_MODULE(UI)

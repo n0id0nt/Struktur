@@ -35,6 +35,11 @@ struct WrenScript;
 namespace UI
 {
 class UIElement;
+class UILabel;
+class UIRichLabel;
+class UITexture;
+class UIScroll;
+class UINineSlice;
 }
 
 namespace Debug
@@ -91,7 +96,29 @@ private:
 	// UI Element rendering
 	void RenderUIElementInspector(GameContext& context, UI::UIElement* element);
 	void RenderUIElementHeader(UI::UIElement* element);
-	void RenderUIElementProperties(UI::UIElement* element);
+	void RenderUIElementProperties(GameContext& context, UI::UIElement* element);
+
+	// Type-specific UI element property sections - dispatched from RenderUIElementProperties by dynamic_cast,
+	// same pattern RenderComponents uses for entity components. One method per concrete type regardless of size,
+	// for the same reason every entity component gets its own Render*Component method even when small (see
+	// RenderActiveComponent) - keeps each type's fields in one place rather than growing one giant function.
+	// UIClip has no properties of its own beyond base UIElement (pure clipping boundary, see its class comment)
+	// so it doesn't get a dedicated method - RenderUIElementProperties just notes that inline.
+	void RenderUILabelProperties(UI::UILabel* label);
+	void RenderUIRichLabelProperties(UI::UIRichLabel* richLabel);
+	void RenderUITextureProperties(UI::UITexture* texture);
+	void RenderUIScrollProperties(GameContext& context, UI::UIScroll* scroll);
+	void RenderUINineSliceProperties(UI::UINineSlice* nineSlice);
+
+	// Dropdown of every other UIElement currently in the tree (walked from UIManager's roots), for fields that
+	// reference another element by pointer (navigation neighbors, UIScroll's scroll indicator) - there's no
+	// other way to "author" a UIElement* from within an ImGui panel. Elements without an ID are listed by
+	// address so they're still selectable, just not nameable - see the comment where this is used for why IDs
+	// matter here more than they do elsewhere. Returns true and writes the newly picked element (nullptr for
+	// "[None]") into value if the selection changed this frame; excludeSelf is omitted from the candidate list
+	// so a field can't be pointed at its own owning element.
+	bool RenderUIElementPicker(const char* label, GameContext& context, UI::UIElement* excludeSelf,
+	                           UI::UIElement*& value);
 
 	// Component-specific renderers
 	void RenderActiveComponent(GameContext& context, Component::Active& active, entt::registry& registry,

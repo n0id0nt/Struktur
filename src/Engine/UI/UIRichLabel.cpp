@@ -278,37 +278,53 @@ void Struktur::UI::UIRichLabel::Dispose(GameContext& context)
 	UIElement::Dispose(context);
 }
 
-uint32_t Struktur::UI::UIRichLabel::GetRequiredQuadCount() const
+namespace
 {
-	uint32_t quads = 0;
-	for (const Text::RichLine& line : m_parsedLines)
+// Shared counting core for GetRequiredQuadCount (includeAnimated=false - m_batchSlot never holds animated
+// glyphs, see class comment) and GetTotalGlyphCount (includeAnimated=true - RenderLine's reveal budget is spent
+// by every run type uniformly) - factored out so the two can't silently drift apart on icon-resolution/
+// animated-run handling the way they already had before this split existed.
+uint32_t CountGlyphs(const std::vector<Struktur::Text::RichLine>& lines, const Struktur::UI::IconAtlas& iconAtlas,
+                     bool includeAnimated)
+{
+	uint32_t count = 0;
+	for (const Struktur::Text::RichLine& line : lines)
 	{
-		for (const Text::RichRun& run : line.runs)
+		for (const Struktur::Text::RichRun& run : line.runs)
 		{
 			if (!run.iconName.empty())
 			{
-				// Only reserve a quad for an icon run that will actually resolve against the current atlas -
-				// RenderLine silently skips drawing anything for one that doesn't (see its own comment), so
-				// counting it here too would leave a permanently-unused, wastefully-allocated slot quad.
-				Util::Math::Rect unused;
-				if (m_iconAtlas.HasTexture() && m_iconAtlas.TryGetIconRect(run.iconName, unused))
+				// Only counted if it'll actually resolve against the current atlas - RenderLine silently skips
+				// drawing anything for one that doesn't (see its own comment), so counting it here too would
+				// either waste a slot quad or overstate the reveal total past what could ever be reached.
+				Struktur::Util::Math::Rect unused;
+				if (iconAtlas.HasTexture() && iconAtlas.TryGetIconRect(run.iconName, unused))
 				{
-					++quads;
+					++count;
 				}
 				continue;
 			}
 
-			if (run.effectMask != 0)
+			if (!includeAnimated && run.effectMask != 0)
 			{
-				// Animated runs never occupy m_batchSlot capacity - their quads go into m_animBatches instead
-				// (see class comment).
 				continue;
 			}
 
-			quads += (uint32_t)CountVisibleCodepoints(run.text);
+			count += (uint32_t)CountVisibleCodepoints(run.text);
 		}
 	}
-	return quads;
+	return count;
+}
+}  // namespace
+
+uint32_t Struktur::UI::UIRichLabel::GetRequiredQuadCount() const
+{
+	return CountGlyphs(m_parsedLines, m_iconAtlas, false);
+}
+
+uint32_t Struktur::UI::UIRichLabel::GetTotalGlyphCount() const
+{
+	return CountGlyphs(m_parsedLines, m_iconAtlas, true);
 }
 
 const Struktur::Resource::ResourcePtr<Struktur::Resource::FontResource>& Struktur::UI::UIRichLabel::ResolveFont(
@@ -385,8 +401,15 @@ std::vector<Struktur::Text::RichLine> Struktur::UI::UIRichLabel::BuildRenderLine
 			bool unusedIsRealItalic;
 			const Resource::ResourcePtr<Resource::FontResource>& font =
 			    ResolveFont(run.bold, run.italic, unusedIsRealItalic);
+			// spacing=0 - must match UIRenderer::DrawText's own actual glyph advance exactly (pure
+			// glyph.advanceX*scale sum, no added letter-spacing), since RenderLine below uses this same
+			// MeasureTextEx call to bridge the pen position between two separate DrawText calls (one run's end
+			// to the next run's start). MeasureTextEx's spacing!=0 default adds (charCount-1)*spacing on top of
+			// the real advance sum - passing 1.0 here (or anywhere else this needs to predict DrawText's actual
+			// consumed width) made every run boundary overshoot by that amount, opening a visible gap before the
+			// next run that grew with however much text was in the run that just ended.
 			auto measure = [this, &font](const std::string& text)
-			{ return Text::MeasureTextEx(font->font, text, m_fontSize, 1.0f).x; };
+			{ return Text::MeasureTextEx(font->font, text, m_fontSize, 0.0f).x; };
 			std::vector<TextLayout::WrapToken> runTokens =
 			    TextLayout::Tokenize(run.text, m_wrapping, runIndex, measure);
 			tokens.insert(tokens.end(), runTokens.begin(), runTokens.end());
@@ -558,8 +581,9 @@ uint32_t Struktur::UI::UIRichLabel::RenderLine(GameContext& context, const Text:
 
 		// No core rendering change needed for multi-run lines - just measure this run's own (possibly
 		// truncated) width (GPU-independent, works even before font->LoadToGpu above) and advance the pen
-		// before the next run, exactly the loop UILabel::RenderJustifiedLine already does per word.
-		penX += Text::MeasureTextEx(font->font, textToDraw, m_fontSize, 1.0f).x;
+		// before the next run, exactly the loop UILabel::RenderJustifiedLine already does per word. spacing=0 -
+		// must match DrawText's real advance exactly, see the wrap-measure lambda's comment above for why.
+		penX += Text::MeasureTextEx(font->font, textToDraw, m_fontSize, 0.0f).x;
 	}
 
 	return quadsWritten;

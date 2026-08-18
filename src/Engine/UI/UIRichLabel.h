@@ -190,6 +190,40 @@ public:
 	{
 		return m_markupText;
 	}
+	Util::Color GetTextColor() const
+	{
+		return m_baseColor;
+	}
+	float GetFontSize() const
+	{
+		return m_fontSize;
+	}
+	TextWrapping GetWordWrap() const
+	{
+		return m_wrapping;
+	}
+	// Const-refs, not bools - lets a caller (the editor inspector) distinguish "not set" from "set" without a
+	// separate HasXFont() for each, same reasoning as UILabel::GetFont().
+	const Resource::ResourcePtr<Resource::FontResource>& GetFont() const
+	{
+		return m_font;
+	}
+	const Resource::ResourcePtr<Resource::FontResource>& GetBoldFont() const
+	{
+		return m_boldFont;
+	}
+	const Resource::ResourcePtr<Resource::FontResource>& GetItalicFont() const
+	{
+		return m_italicFont;
+	}
+	const Resource::ResourcePtr<Resource::FontResource>& GetBoldItalicFont() const
+	{
+		return m_boldItalicFont;
+	}
+	bool HasIconAtlas() const
+	{
+		return m_iconAtlas.HasTexture();
+	}
 
 	void Update(GameContext& context) override;
 	void Render(GameContext& context) override;
@@ -198,13 +232,22 @@ public:
 	void Dispose(GameContext& context) override;
 
 	// One quad per non-space/tab codepoint across every NON-ANIMATED text run's text, plus one per icon run
-	// that actually resolves against the current IconAtlas, summed over every line - the same "how many
-	// glyphs total" count SetVisibleGlyphCount's cap is measured against (animated + static glyphs are
-	// revealed in the same overall reading-order budget, see RenderLine). Independent of m_visibleGlyphCount
-	// itself - this is the full count regardless of how much is currently set to actually render. Animated
-	// runs are deliberately excluded from this total: they never occupy m_batchSlot capacity, since their
-	// quads go into m_animBatches instead (see class comment).
+	// that actually resolves against the current IconAtlas, summed over every line - purely for sizing
+	// m_batchSlot (see AssignBatches). Animated runs are deliberately excluded: their quads go into
+	// m_animBatches instead (see class comment), never m_batchSlot, so counting them here would over-allocate
+	// slot capacity that would never be written to. NOT the same count SetVisibleGlyphCount's cap should be
+	// measured against - see GetTotalGlyphCount for that (RenderLine's reveal budget is spent by every run
+	// type uniformly, static and animated alike).
 	uint32_t GetRequiredQuadCount() const override;
+
+	// Total drawable glyph count across the WHOLE label in reading order - static text, animated text, AND
+	// resolved icon runs - matching exactly what RenderLine's remainingVisible reveal budget is actually spent
+	// on (see its own comment). This is the count a Wren-side typewriter/reveal loop must drive
+	// SetVisibleGlyphCount up to; using GetRequiredQuadCount() for that instead (as this class briefly did)
+	// undercounts whenever any animated tag is present, since that function deliberately excludes animated
+	// runs for its own (unrelated) m_batchSlot-sizing purpose - the reveal would then cap out before reaching
+	// the true end of the string, silently truncating everything after the last counted glyph.
+	uint32_t GetTotalGlyphCount() const;
 
 private:
 	// tan(~11 degrees) - a typical real italic font's slant angle, applied as a horizontal shear (see

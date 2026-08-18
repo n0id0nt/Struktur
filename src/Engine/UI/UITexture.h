@@ -33,6 +33,14 @@ public:
 		m_tint = tint;
 		m_visualDirty = true;
 	}
+	Util::Color GetTint() const
+	{
+		return m_tint;
+	}
+	bool HasTexture() const
+	{
+		return (bool)m_texture;
+	}
 
 	void Update(GameContext& context) override;
 	void Render(GameContext& context) override;

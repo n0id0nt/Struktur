@@ -73,6 +73,14 @@ public:
 	{
 		m_focusDamping = damping;
 	}
+	glm::vec2 GetFocusDeadzone() const
+	{
+		return m_focusDeadzone;
+	}
+	glm::vec2 GetFocusDamping() const
+	{
+		return m_focusDamping;
+	}
 
 	// indicator can be any existing widget (most naturally a UIPanel acting as a scrollbar thumb), positioned
 	// within its own parent's bounds (the "track") - see UpdateScrollIndicator()'s own comment for the full
@@ -81,6 +89,10 @@ public:
 	{
 		m_scrollIndicator      = indicator;
 		m_hasWrittenIndicator  = false;
+	}
+	UIElement* GetScrollIndicator() const
+	{
+		return m_scrollIndicator;
 	}
 
 	glm::vec2 GetContentOffset() const override

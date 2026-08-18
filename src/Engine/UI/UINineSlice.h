@@ -49,6 +49,30 @@ public:
 		m_borderBottom = bottom;
 		m_visualDirty = true;
 	}
+	Util::Color GetTint() const
+	{
+		return m_tint;
+	}
+	float GetBorderLeft() const
+	{
+		return m_borderLeft;
+	}
+	float GetBorderRight() const
+	{
+		return m_borderRight;
+	}
+	float GetBorderTop() const
+	{
+		return m_borderTop;
+	}
+	float GetBorderBottom() const
+	{
+		return m_borderBottom;
+	}
+	bool HasTexture() const
+	{
+		return (bool)m_texture;
+	}
 
 	void Update(GameContext& context) override;
 	void Render(GameContext& context) override;

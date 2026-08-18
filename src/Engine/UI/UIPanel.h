@@ -58,6 +58,10 @@ public:
 	{
 		return m_borderWidth;
 	}
+	bool HasBackgroundTexture() const
+	{
+		return m_hasBackgroundTexture;
+	}
 
 	void Update(GameContext& context) override;
 	void Render(GameContext& context) override;

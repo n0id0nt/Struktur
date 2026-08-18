@@ -33,10 +33,15 @@
 #include "Engine/Physics/PhysicsWorld.h"
 #include "Engine/Scripting/WrenScriptComponentRegistry.h"
 #include "Engine/UI/UIBorder.h"
+#include "Engine/UI/UIClip.h"
 #include "Engine/UI/UIColor.h"
 #include "Engine/UI/UIElement.h"
 #include "Engine/UI/UILabel.h"
+#include "Engine/UI/UIManager.h"
+#include "Engine/UI/UINineSlice.h"
 #include "Engine/UI/UIPanel.h"
+#include "Engine/UI/UIRichLabel.h"
+#include "Engine/UI/UIScroll.h"
 #include "Engine/UI/UITexture.h"
 #include "Engine/World/RenderLayer.h"
 
@@ -360,7 +365,7 @@ void InspectorWindow::RenderUIElementInspector(GameContext& context, UI::UIEleme
 	ImGui::Separator();
 
 	// Render UI element properties
-	RenderUIElementProperties(element);
+	RenderUIElementProperties(context, element);
 }
 
 void InspectorWindow::RenderUIElementHeader(UI::UIElement* element)
@@ -372,7 +377,7 @@ void InspectorWindow::RenderUIElementHeader(UI::UIElement* element)
 	ImGui::Text("Type: UI Element");
 }
 
-void InspectorWindow::RenderUIElementProperties(UI::UIElement* element)
+void InspectorWindow::RenderUIElementProperties(GameContext& context, UI::UIElement* element)
 {
 	// Basic Properties
 	if (ImGui::CollapsingHeader("Basic Properties", ImGuiTreeNodeFlags_DefaultOpen))
@@ -410,34 +415,61 @@ void InspectorWindow::RenderUIElementProperties(UI::UIElement* element)
 		ImGui::PopID();
 	}
 
-	// Transform
+	// Transform - edits the raw absolute/relative components SetPosition/SetSize/SetAnchorPoint actually take
+	// (see UIElement::GetAbsolutePosition's own comment for why the live, parent-walked GetPosition()/GetSize()
+	// can't be edited directly: many different (absolute, relative) pairs can produce the same combined result
+	// for a given parent size, so there's no way to reverse a live value back into the two). SetPosition/
+	// SetSize/SetAnchorPoint all call UpdateBounds() internally (which recursively refreshes every descendant's
+	// cached bounds and sets m_visualDirty - see UIElement.cpp), so editing here already gets the dirty-flag
+	// propagation for free without this window needing to poke it directly.
 	if (ImGui::CollapsingHeader("Transform", ImGuiTreeNodeFlags_DefaultOpen))
 	{
 		ImGui::PushID("Transform");
 
-		// Position
-		glm::vec2 pos = element->GetPosition();
-		if (RenderVec2("Position", pos))
+		glm::vec2 absPosition = element->GetAbsolutePosition();
+		glm::vec2 relPosition = element->GetRelativePosition();
+		bool positionChanged  = RenderVec2("Absolute Position", absPosition);
+		positionChanged |= RenderVec2("Relative Position", relPosition);
+		if (positionChanged)
 		{
-			// Note: UIElement doesn't have a direct SetPosition(vec2) method
-			// You might need to calculate absolute/relative positions
-			ImGui::TextColored(ImVec4(1.0f, 0.5f, 0.0f, 1.0f), "Position editing requires absolute/relative split");
+			element->SetPosition(absPosition, relPosition);
+		}
+		if (ImGui::IsItemHovered() || ImGui::IsItemActive())
+		{
+			ImGui::SetTooltip("Relative Position is a fraction (0..1) of the parent's size, added to Absolute "
+			                  "Position in pixels");
 		}
 
-		// Size
-		glm::vec2 size = element->GetSize();
-		if (RenderVec2("Size", size))
+		glm::vec2 absSize = element->GetAbsoluteSize();
+		glm::vec2 relSize = element->GetRelativeSize();
+		bool sizeChanged  = RenderVec2("Absolute Size", absSize);
+		sizeChanged |= RenderVec2("Relative Size", relSize);
+		if (sizeChanged)
 		{
-			ImGui::TextColored(ImVec4(1.0f, 0.5f, 0.0f, 1.0f), "Size editing requires absolute/relative split");
+			element->SetSize(absSize, relSize);
 		}
 
-		// Bounds (read-only)
+		glm::vec2 anchor = element->GetAnchorPoint();
+		if (RenderVec2("Anchor Point", anchor))
+		{
+			element->SetAnchorPoint(anchor);
+		}
+		if (ImGui::IsItemHovered() || ImGui::IsItemActive())
+		{
+			ImGui::SetTooltip("0..1 fraction of this element's own size subtracted from its position - (0.5, 0.5) "
+			                  "centers the element on its position point instead of anchoring its top-left corner");
+		}
+
+		ImGui::Spacing();
+
+		// Live, computed result of combining the above with the parent chain - read-only, shown for reference
+		// while tuning the editable fields above.
+		glm::vec2 livePosition  = element->GetPosition();
+		glm::vec2 liveSize      = element->GetSize();
 		Util::Math::Rect bounds = element->GetBounds();
-		ImGui::Text("Bounds:");
-		ImGui::Indent();
-		ImGui::Text("X: %.1f, Y: %.1f", bounds.x, bounds.y);
-		ImGui::Text("W: %.1f, H: %.1f", bounds.width, bounds.height);
-		ImGui::Unindent();
+		ImGui::TextDisabled("Computed Position: %.1f, %.1f", livePosition.x, livePosition.y);
+		ImGui::TextDisabled("Computed Size: %.1f, %.1f", liveSize.x, liveSize.y);
+		ImGui::TextDisabled("Bounds: X %.1f Y %.1f  W %.1f H %.1f", bounds.x, bounds.y, bounds.width, bounds.height);
 
 		ImGui::PopID();
 	}
@@ -508,6 +540,65 @@ void InspectorWindow::RenderUIElementProperties(UI::UIElement* element)
 			ImGui::PopID();
 		}
 	}
+	else if (auto* texture = dynamic_cast<UI::UITexture*>(element))
+	{
+		if (ImGui::CollapsingHeader("Appearance"))
+		{
+			ImGui::PushID("Appearance");
+			RenderUITextureProperties(texture);
+			ImGui::PopID();
+		}
+	}
+	else if (auto* nineSlice = dynamic_cast<UI::UINineSlice*>(element))
+	{
+		if (ImGui::CollapsingHeader("Appearance"))
+		{
+			ImGui::PushID("Appearance");
+			RenderUINineSliceProperties(nineSlice);
+			ImGui::PopID();
+		}
+	}
+	else if (auto* richLabel = dynamic_cast<UI::UIRichLabel*>(element))
+	{
+		if (ImGui::CollapsingHeader("Rich Text", ImGuiTreeNodeFlags_DefaultOpen))
+		{
+			ImGui::PushID("RichText");
+			RenderUIRichLabelProperties(richLabel);
+			ImGui::PopID();
+		}
+	}
+	else if (auto* label = dynamic_cast<UI::UILabel*>(element))
+	{
+		if (ImGui::CollapsingHeader("Text", ImGuiTreeNodeFlags_DefaultOpen))
+		{
+			ImGui::PushID("Text");
+			RenderUILabelProperties(label);
+			ImGui::PopID();
+		}
+	}
+	// UIScroll before UIClip - UIScroll IS a UIClip (see UIScroll.h), so the UIClip check below would also
+	// match a UIScroll instance if it ran first, hiding the scroll-specific section behind the generic one.
+	else if (auto* scroll = dynamic_cast<UI::UIScroll*>(element))
+	{
+		if (ImGui::CollapsingHeader("Scroll", ImGuiTreeNodeFlags_DefaultOpen))
+		{
+			ImGui::PushID("Scroll");
+			RenderUIScrollProperties(context, scroll);
+			ImGui::PopID();
+		}
+	}
+	else if (dynamic_cast<UI::UIClip*>(element))
+	{
+		if (ImGui::CollapsingHeader("Clip"))
+		{
+			ImGui::PushID("Clip");
+			// Pure clipping boundary - masks children to this element's own Bounds (see Transform above), no
+			// other configurable state (see UIClip's class comment). Nothing to expose here beyond what every
+			// UIElement already has.
+			ImGui::TextDisabled("No additional properties - masks children to Bounds above");
+			ImGui::PopID();
+		}
+	}
 
 	// Layout
 	if (ImGui::CollapsingHeader("Layout"))
@@ -561,25 +652,298 @@ void InspectorWindow::RenderUIElementProperties(UI::UIElement* element)
 	{
 		ImGui::PushID("Navigation");
 
-		const char* directions[] = {"Up", "Down", "Left", "Right"};
+		const char* directions[]     = {"Up", "Down", "Left", "Right"};
+		const char* pickerLabels[]   = {"Up##NavPicker", "Down##NavPicker", "Left##NavPicker", "Right##NavPicker"};
 		for (int i = 0; i < 4; ++i)
 		{
-			auto* neighbor = element->GetNavigationNeighbor(static_cast<UI::NavigationDirection>(i));
-			ImGui::Text("%s: %s", directions[i],
-			            neighbor ? (neighbor->GetId().empty() ? "[Unnamed]" : neighbor->GetId().c_str()) : "[None]");
+			UI::NavigationDirection direction = static_cast<UI::NavigationDirection>(i);
+			UI::UIElement* neighbor           = element->GetNavigationNeighbor(direction);
+			if (RenderUIElementPicker(pickerLabels[i], context, element, neighbor))
+			{
+				element->SetNavigationNeighbor(direction, neighbor);
+			}
+			ImGui::SameLine();
+			ImGui::TextDisabled("%s", directions[i]);
 		}
 
 		ImGui::PopID();
 	}
 
-	// Callbacks (read-only info)
+	// Callbacks - deliberately read-only. A callback here (UIClickCallback etc., see UIElement.h) wraps a Wren
+	// fiber/closure captured at script-authoring time (see Engine/Callback/WrenCallback.h) - there's no
+	// serializable, editable representation of a closure to put in an ImGui panel, the same reason a
+	// WrenScript component's methods aren't editable here either (only its #!export-tagged fields are, since
+	// those are plain data, not code). Wiring a callback is a script/code-time decision, not a per-instance
+	// tunable value, so it stays out of scope for this inspector by design rather than by omission.
 	if (ImGui::CollapsingHeader("Callbacks"))
 	{
 		ImGui::PushID("Callbacks");
-		ImGui::TextDisabled("Callback information is not directly accessible");
-		ImGui::Text("Callbacks may be set via code");
+		ImGui::TextDisabled("Not editable here - callbacks are Wren closures captured in script, not data");
+		ImGui::TextDisabled("(setOnClick/setOnFocus/setOnLoseFocus/setOnHover/setOnKeyPressed/setOnActivate)");
 		ImGui::PopID();
 	}
+}
+
+void InspectorWindow::RenderUITextureProperties(UI::UITexture* texture)
+{
+	// No in-editor texture/asset picker exists yet - matches every other texture field already in this
+	// inspector (see RenderSpriteComponent/RenderTileMapComponent above, both status-only for the same reason).
+	// Adding one would mean wiring a resource browser into this window, out of scope here.
+	ImGui::Text("Texture: %s", texture->HasTexture() ? "Loaded" : "[None]");
+	ImGui::TextDisabled("No asset picker in this build - set via script (Texture.load)");
+
+	Util::Color tint = texture->GetTint();
+	if (RenderColor("Tint", tint))
+	{
+		texture->SetTint(tint);
+	}
+}
+
+void InspectorWindow::RenderUINineSliceProperties(UI::UINineSlice* nineSlice)
+{
+	ImGui::Text("Texture: %s", nineSlice->HasTexture() ? "Loaded" : "[None]");
+	ImGui::TextDisabled("No asset picker in this build - set via script (Texture.load)");
+
+	Util::Color tint = nineSlice->GetTint();
+	if (RenderColor("Tint", tint))
+	{
+		nineSlice->SetTint(tint);
+	}
+
+	float borderLeft   = nineSlice->GetBorderLeft();
+	float borderRight  = nineSlice->GetBorderRight();
+	float borderTop    = nineSlice->GetBorderTop();
+	float borderBottom = nineSlice->GetBorderBottom();
+	bool borderChanged = false;
+	borderChanged |= ImGui::DragFloat("Border Left", &borderLeft, 0.5f, 0.0f, 512.0f);
+	borderChanged |= ImGui::DragFloat("Border Right", &borderRight, 0.5f, 0.0f, 512.0f);
+	borderChanged |= ImGui::DragFloat("Border Top", &borderTop, 0.5f, 0.0f, 512.0f);
+	borderChanged |= ImGui::DragFloat("Border Bottom", &borderBottom, 0.5f, 0.0f, 512.0f);
+	if (borderChanged)
+	{
+		nineSlice->SetBorder(borderLeft, borderRight, borderTop, borderBottom);
+	}
+	ImGui::TextDisabled("Border insets are in SOURCE TEXTURE pixel space - corners keep this pixel size on");
+	ImGui::TextDisabled("screen regardless of the element's own size (see UINineSlice.h)");
+}
+
+void InspectorWindow::RenderUIRichLabelProperties(UI::UIRichLabel* richLabel)
+{
+	// 4096 chars ought to cover any realistic UI label - if the live markup text is ever longer than that, this
+	// truncates the buffer at construction (before any edit happens), matching the same char-buffer approach
+	// already used for the ID field/WrenScript exported strings elsewhere in this window.
+	std::string markup = richLabel->GetMarkupText();
+	char buffer[4096];
+	strncpy(buffer, markup.c_str(), sizeof(buffer) - 1);
+	buffer[sizeof(buffer) - 1] = '\0';
+	if (ImGui::InputTextMultiline("Markup Text", buffer, sizeof(buffer), ImVec2(0, 100)))
+	{
+		richLabel->SetMarkupText(buffer);
+	}
+	ImGui::TextDisabled("Tags: [b] [i] [color=#rrggbb] [icon=name] [wave] [shake] [pulse] [rainbow] [tornado] [fade]");
+
+	Util::Color textColor = richLabel->GetTextColor();
+	if (RenderColor("Base Text Color", textColor))
+	{
+		richLabel->SetTextColor(textColor);
+	}
+	if (ImGui::IsItemHovered())
+	{
+		ImGui::SetTooltip("Color a run starts with before any [color=] tag opens - and what an unbalanced "
+		                  "closing [/color] falls back to");
+	}
+
+	float fontSize = richLabel->GetFontSize();
+	if (ImGui::DragFloat("Font Size", &fontSize, 0.5f, 1.0f, 200.0f))
+	{
+		richLabel->SetFontSize(fontSize);
+	}
+
+	static const char* k_wrapNames[] = {"None", "Word Wrap", "Character Wrap"};
+	int wrapIndex                    = static_cast<int>(richLabel->GetWordWrap());
+	if (ImGui::Combo("Word Wrap", &wrapIndex, k_wrapNames, IM_ARRAYSIZE(k_wrapNames)))
+	{
+		richLabel->SetWordWrap(static_cast<UI::TextWrapping>(wrapIndex));
+	}
+
+	int visibleGlyphCount = richLabel->GetVisibleGlyphCount();
+	if (ImGui::DragInt("Visible Glyph Count", &visibleGlyphCount, 1.0f, -1, 10000))
+	{
+		richLabel->SetVisibleGlyphCount(visibleGlyphCount);
+	}
+	if (ImGui::IsItemHovered())
+	{
+		ImGui::SetTooltip("-1 shows everything - see SetVisibleGlyphCount for the typewriter/reveal use case");
+	}
+
+	ImGui::Spacing();
+	// Fonts/icon atlas: the same "no asset picker" gap as RenderUITextureProperties, just for
+	// ResourcePtr<FontResource>/IconAtlas instead of a plain texture - status-only, set via script.
+	ImGui::Text("Regular Font: %s", richLabel->GetFont() ? "Set" : "[None - required, always the final fallback]");
+	ImGui::Text("Bold Font: %s", richLabel->GetBoldFont() ? "Set" : "[None - falls back to regular]");
+	ImGui::Text("Italic Font: %s", richLabel->GetItalicFont() ? "Set" : "[None - synthetic shear fallback]");
+	ImGui::Text("Bold Italic Font: %s", richLabel->GetBoldItalicFont() ? "Set" : "[None - falls back progressively]");
+	ImGui::Text("Icon Atlas: %s", richLabel->HasIconAtlas() ? "Set" : "[None - [icon=] tags won't draw]");
+	ImGui::TextDisabled("No asset picker in this build - set via script (Font.load / IconAtlas.new)");
+}
+
+void InspectorWindow::RenderUILabelProperties(UI::UILabel* label)
+{
+	std::string text = label->GetText();
+	char buffer[4096];
+	strncpy(buffer, text.c_str(), sizeof(buffer) - 1);
+	buffer[sizeof(buffer) - 1] = '\0';
+	if (ImGui::InputTextMultiline("Text", buffer, sizeof(buffer), ImVec2(0, 80)))
+	{
+		label->SetText(buffer);
+	}
+
+	Util::Color textColor = label->GetTextColor();
+	if (RenderColor("Text Color", textColor))
+	{
+		label->SetTextColor(textColor);
+	}
+
+	float fontSize = label->GetFontSize();
+	if (ImGui::DragFloat("Font Size", &fontSize, 0.5f, 1.0f, 200.0f))
+	{
+		label->SetFontSize(fontSize);
+	}
+
+	static const char* k_alignNames[] = {"Left", "Center", "Right", "Justify"};
+	int alignIndex                    = static_cast<int>(label->GetAlignment());
+	if (ImGui::Combo("Alignment", &alignIndex, k_alignNames, IM_ARRAYSIZE(k_alignNames)))
+	{
+		label->SetAlignment(static_cast<UI::TextAlignment>(alignIndex));
+	}
+
+	static const char* k_wrapNames[] = {"None", "Word Wrap", "Character Wrap"};
+	int wrapIndex                    = static_cast<int>(label->GetWordWrap());
+	if (ImGui::Combo("Word Wrap", &wrapIndex, k_wrapNames, IM_ARRAYSIZE(k_wrapNames)))
+	{
+		label->SetWordWrap(static_cast<UI::TextWrapping>(wrapIndex));
+	}
+
+	if (ImGui::Button("Set Bounding Box To Text"))
+	{
+		label->SetBoundingBoxToText();
+	}
+
+	ImGui::Spacing();
+	ImGui::Text("Font: %s", label->GetFont() ? "Set" : "[None]");
+	ImGui::TextDisabled("No asset picker in this build - set via script (Font.load)");
+}
+
+void InspectorWindow::RenderUIScrollProperties(GameContext& context, UI::UIScroll* scroll)
+{
+	bool verticalEnabled = scroll->IsVerticalScrollEnabled();
+	if (ImGui::Checkbox("Vertical Scroll Enabled", &verticalEnabled))
+	{
+		scroll->SetVerticalScrollEnabled(verticalEnabled);
+	}
+
+	bool horizontalEnabled = scroll->IsHorizontalScrollEnabled();
+	if (ImGui::Checkbox("Horizontal Scroll Enabled", &horizontalEnabled))
+	{
+		scroll->SetHorizontalScrollEnabled(horizontalEnabled);
+	}
+
+	glm::vec2 offset = scroll->GetScrollOffset();
+	if (RenderVec2("Scroll Offset", offset))
+	{
+		scroll->SetScrollOffset(offset);
+	}
+
+	glm::vec2 contentSize = scroll->GetContentSize();
+	ImGui::TextDisabled("Content Size (computed): %.1f, %.1f", contentSize.x, contentSize.y);
+
+	glm::vec2 deadzone = scroll->GetFocusDeadzone();
+	if (RenderVec2("Focus Deadzone", deadzone))
+	{
+		scroll->SetFocusDeadzone(deadzone);
+	}
+
+	glm::vec2 damping = scroll->GetFocusDamping();
+	if (RenderVec2("Focus Damping", damping))
+	{
+		scroll->SetFocusDamping(damping);
+	}
+	if (ImGui::IsItemHovered())
+	{
+		ImGui::SetTooltip("Camera-style deadzone follow (see Component::Camera) - deadzone is the slack band "
+		                  "around the viewport center, damping is the lerp rate used while catching up");
+	}
+
+	UI::UIElement* indicator = scroll->GetScrollIndicator();
+	if (RenderUIElementPicker("Scroll Indicator", context, scroll, indicator))
+	{
+		scroll->SetScrollIndicator(indicator);
+	}
+	if (ImGui::IsItemHovered())
+	{
+		ImGui::SetTooltip("A plain UIElement (typically a UIPanel) two-way synced as this scroll's thumb - see "
+		                  "SetScrollIndicator");
+	}
+}
+
+bool InspectorWindow::RenderUIElementPicker(const char* label, GameContext& context, UI::UIElement* excludeSelf,
+                                            UI::UIElement*& value)
+{
+	std::vector<UI::UIElement*> candidates;
+	candidates.push_back(nullptr);  // "[None]"
+	for (const auto& root : context.GetUIManager().GetElements())
+	{
+		root->ForEachRecursive(
+		    [&](UI::UIElement* elem)
+		    {
+			    if (elem != excludeSelf)
+			    {
+				    candidates.push_back(elem);
+			    }
+		    });
+	}
+
+	std::vector<std::string> labels;
+	labels.reserve(candidates.size());
+	int currentIndex = 0;
+	for (int i = 0; i < (int)candidates.size(); ++i)
+	{
+		UI::UIElement* candidate = candidates[i];
+		if (!candidate)
+		{
+			labels.push_back("[None]");
+		}
+		else if (!candidate->GetId().empty())
+		{
+			labels.push_back(candidate->GetId());
+		}
+		else
+		{
+			// No ID to show - listed by its position in this frame's walk instead so it's still selectable,
+			// just not nameable. Fine for a debug tool; give it a real ID via SetId (Basic Properties above) if
+			// you want it to show up meaningfully here.
+			labels.push_back("[Unnamed " + std::to_string(i) + "]");
+		}
+		if (candidate == value)
+		{
+			currentIndex = i;
+		}
+	}
+
+	std::vector<const char*> labelPtrs;
+	labelPtrs.reserve(labels.size());
+	for (const std::string& l : labels)
+	{
+		labelPtrs.push_back(l.c_str());
+	}
+
+	int selectedIndex = currentIndex;
+	if (ImGui::Combo(label, &selectedIndex, labelPtrs.data(), (int)labelPtrs.size()))
+	{
+		value = candidates[selectedIndex];
+		return true;
+	}
+	return false;
 }
 
 // ====================================================================

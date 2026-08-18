@@ -100,6 +100,33 @@ public:
 	glm::vec2 GetSize() const;
 	Util::Math::Rect GetBounds() const;
 
+	// Raw, unmixed components SetPosition/SetSize/SetAnchorPoint each take - as opposed to GetPosition()/
+	// GetSize() above, which are the live parent-walked RESULT of combining these with the parent's own
+	// position/size/content offset. Exists so a caller (the editor inspector, primarily) can show/edit the
+	// absolute and relative parts independently without needing to reverse-engineer them out of the combined
+	// live value, which isn't possible in general (multiple (absolute, relative) pairs can produce the same
+	// GetPosition() for a given parent size).
+	glm::vec2 GetAbsolutePosition() const
+	{
+		return m_absolutePosition;
+	}
+	glm::vec2 GetRelativePosition() const
+	{
+		return m_relativePosition;
+	}
+	glm::vec2 GetAbsoluteSize() const
+	{
+		return m_absoluteSize;
+	}
+	glm::vec2 GetRelativeSize() const
+	{
+		return m_relativeSize;
+	}
+	glm::vec2 GetAnchorPoint() const
+	{
+		return m_anchorPoint;
+	}
+
 	// Additive offset a parent applies to every child's GetPosition() (e.g. a scroll container's current scroll
 	// offset) - defaults to zero, so every existing widget is unaffected. Override in a subclass that needs to
 	// reposition its whole subtree without touching each child's own m_absolutePosition/m_relativePosition, and
