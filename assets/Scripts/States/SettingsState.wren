@@ -83,6 +83,12 @@ class SettingsState is BaseState {
         y = addFullscreenRow(rowFont, y)
         y = addVolumeRow(rowFont, y)
         y = addBackRow(rowFont, y)
+        y = addBackRow(rowFont, y)
+        y = addBackRow(rowFont, y)
+        y = addBackRow(rowFont, y)
+        y = addBackRow(rowFont, y)
+        y = addBackRow(rowFont, y)
+        y = addBackRow(rowFont, y)
 
         var track = UIPanel.new(Vec2.new(-24, 8), Vec2.new(1, 0), Vec2.new(16, -16), Vec2.new(0, 1))
         track.setBackgroundColor(DARKGRAY)

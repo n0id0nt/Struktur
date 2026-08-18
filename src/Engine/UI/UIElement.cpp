@@ -358,6 +358,7 @@ void Struktur::UI::UIElement::UpdateBounds()
 	glm::vec2 position = GetPosition();
 	glm::vec2 size     = GetSize();
 	m_bounds           = Util::Math::Rect{position.x, position.y, size.x, size.y};
+	m_visualDirty      = true;
 
 	// Cascade to children so a parent move/resize (or content-offset change, e.g. scrolling) keeps every
 	// descendant's cached m_bounds in sync with the live GetPosition()/GetSize() parent-walk formula, instead of
