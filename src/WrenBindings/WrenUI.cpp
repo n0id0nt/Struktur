@@ -11,6 +11,7 @@
 #include "Engine/UI/UIClip.h"
 #include "Engine/UI/UIColor.h"
 #include "Engine/UI/UILabel.h"
+#include "Engine/UI/UINineSlice.h"
 #include "Engine/UI/UIPanel.h"
 #include "Engine/UI/UIRichLabel.h"
 #include "Engine/UI/UIScroll.h"
@@ -915,6 +916,86 @@ void wren_UITextureSetTint(WrenVM* vm)
 }
 
 // ============================================================================
+// UININESLICE BINDINGS
+// ============================================================================
+
+void wren_UINineSliceAllocate(WrenVM* vm)
+{
+	wrenSetSlotNewForeign(vm, 0, 0, sizeof(WrenUIElement));
+}
+
+void wren_UINineSliceFinalize(void* data)
+{
+	WrenUIElement* uiElement = (WrenUIElement*)data;
+	uiElement->~WrenUIElement();
+}
+
+// UINineSlice.new(_,_,_,_)
+void wren_UINineSliceNew(WrenVM* vm)
+{
+	WrenUIElement* uiElement = static_cast<WrenUIElement*>(wrenGetSlotForeign(vm, 0));
+
+	WrenVec2* positionPixel      = static_cast<WrenVec2*>(wrenGetSlotForeign(vm, 1));
+	WrenVec2* positionPercentage = static_cast<WrenVec2*>(wrenGetSlotForeign(vm, 2));
+	WrenVec2* sizePixel          = static_cast<WrenVec2*>(wrenGetSlotForeign(vm, 3));
+	WrenVec2* sizePercentage     = static_cast<WrenVec2*>(wrenGetSlotForeign(vm, 4));
+	auto* nineSlice = new Struktur::UI::UINineSlice(positionPixel->value, positionPercentage->value,
+	                                                sizePixel->value, sizePercentage->value);
+	new (uiElement) WrenUIElement{nineSlice};
+#ifdef DEBUG
+	char stackBuffer[4096];
+	uiElement->callstack = wrenTraceGetCallStackString(vm, stackBuffer, sizeof(stackBuffer));
+#endif
+}
+
+// UINineSlice.setTexture(texture)
+void wren_UINineSliceSetTexture(WrenVM* vm)
+{
+	WrenUIElement* uiElement = static_cast<WrenUIElement*>(wrenGetSlotForeign(vm, 0));
+	if (!uiElement->element)
+	{
+		DEBUG_ERROR("UINineSlice.setTexture: element is Null");
+		return;
+	}
+	WrenTextureHandle* texture           = (WrenTextureHandle*)wrenGetSlotForeign(vm, 1);
+	Struktur::UI::UINineSlice* nineSlice = dynamic_cast<Struktur::UI::UINineSlice*>(uiElement->element);
+	nineSlice->SetTexture(texture->resource);
+}
+
+// UINineSlice.setTint(color)
+void wren_UINineSliceSetTint(WrenVM* vm)
+{
+	WrenUIElement* uiElement = static_cast<WrenUIElement*>(wrenGetSlotForeign(vm, 0));
+	if (!uiElement->element)
+	{
+		DEBUG_ERROR("UINineSlice.setTint: element is Null");
+		return;
+	}
+	WrenVec4* color = static_cast<WrenVec4*>(wrenGetSlotForeign(vm, 1));
+	Struktur::Util::Color rayColor{(unsigned char)color->value.r, (unsigned char)color->value.g,
+	                               (unsigned char)color->value.b, (unsigned char)color->value.a};
+	Struktur::UI::UINineSlice* nineSlice = dynamic_cast<Struktur::UI::UINineSlice*>(uiElement->element);
+	nineSlice->SetTint(rayColor);
+}
+
+// UINineSlice.setBorder(left, right, top, bottom)
+void wren_UINineSliceSetBorder(WrenVM* vm)
+{
+	WrenUIElement* uiElement = static_cast<WrenUIElement*>(wrenGetSlotForeign(vm, 0));
+	if (!uiElement->element)
+	{
+		DEBUG_ERROR("UINineSlice.setBorder: element is Null");
+		return;
+	}
+	float left                           = (float)wrenGetSlotDouble(vm, 1);
+	float right                          = (float)wrenGetSlotDouble(vm, 2);
+	float top                            = (float)wrenGetSlotDouble(vm, 3);
+	float bottom                         = (float)wrenGetSlotDouble(vm, 4);
+	Struktur::UI::UINineSlice* nineSlice = dynamic_cast<Struktur::UI::UINineSlice*>(uiElement->element);
+	nineSlice->SetBorder(left, right, top, bottom);
+}
+
+// ============================================================================
 // UIBORDER BINDINGS
 // ============================================================================
 
@@ -1576,6 +1657,22 @@ WREN_BINDING_MODULE(UI)
 	                  "Sets the UITexture's texture");
 	WREN_CLASS_METHOD(registry, "ui", "UITexture", "setTint(_)", wren_UITextureSetTint,
 	                  "Sets the UITexture's tint color");
+
+	// Register UINineSlice foreign class - a texture drawn as a nine-slice/9-patch (see UINineSlice.h): corners
+	// keep their native pixel size, edges/center stretch to fill the rest.
+	WREN_FOREIGN_CLASS(registry, "ui", "UINineSlice", wren_UINineSliceAllocate, wren_UINineSliceFinalize,
+	                   "UI nine-slice/9-patch textured rect component");
+	WREN_CLASS_INHERITANCE(registry, "ui", "UINineSlice", "UIElement");
+	WREN_CONSTRUCTOR(
+	    registry, "ui", "UINineSlice", "new(_,_,_,_)", wren_UINineSliceNew,
+	    "Create UINineSlice with absolutePosition, relativePosition, absoluteSize, relativeSize components");
+	WREN_CLASS_METHOD(registry, "ui", "UINineSlice", "setTexture(_)", wren_UINineSliceSetTexture,
+	                  "Sets the UINineSlice's texture");
+	WREN_CLASS_METHOD(registry, "ui", "UINineSlice", "setTint(_)", wren_UINineSliceSetTint,
+	                  "Sets the UINineSlice's tint color");
+	WREN_CLASS_METHOD(registry, "ui", "UINineSlice", "setBorder(_,_,_,_)", wren_UINineSliceSetBorder,
+	                  "Sets the border insets (left, right, top, bottom), in source-texture pixel space, that stay "
+	                  "fixed-size on screen while the edges/center stretch to fill the rest");
 
 	// Register UIBorder foreign class - minimal border outline (see UIBorder.h), for when you only want a border
 	// without UIPanel's bundled solid-color/texture support.

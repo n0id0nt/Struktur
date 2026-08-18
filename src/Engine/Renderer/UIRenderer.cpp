@@ -623,6 +623,71 @@ void Struktur::Renderer::UIRenderer::DrawTexturedRectRegion(UIBatchHandle batchH
 	batch->dirty = true;
 }
 
+void Struktur::Renderer::UIRenderer::DrawNineSlice(UIBatchHandle batchHandle, const UIBatchSlot& slot,
+                                                    const Util::Math::Rect& rect, const TextureHandle& texture,
+                                                    const NineSliceBorder& border, const Util::Color& tint,
+                                                    int32_t zIndex)
+{
+	UIBatch* batch = ResolveBatch(batchHandle, "DrawNineSlice");
+	if (!batch || !ValidateSlotCapacity(*batch, slot, 9, "DrawNineSlice"))
+	{
+		return;
+	}
+
+	float texWidth  = (float)texture.width;
+	float texHeight = (float)texture.height;
+
+	// On-screen corner/edge thickness, clamped so opposing edges never overlap when rect is smaller than the
+	// border insets - the source-space boundaries below deliberately keep using the un-clamped border values, so
+	// the sampled corner/edge art itself is never distorted by this, only its on-screen size shrinks.
+	float left   = std::min(border.left, rect.width * 0.5f);
+	float right  = std::min(border.right, rect.width * 0.5f);
+	float top    = std::min(border.top, rect.height * 0.5f);
+	float bottom = std::min(border.bottom, rect.height * 0.5f);
+
+	// Column/row boundaries for the 3x3 grid, source (pixel) and destination (screen) space respectively -
+	// index 0/3 are the rect's own edges, 1/2 are the inner border seams.
+	float srcColX[4] = {0.0f, border.left, texWidth - border.right, texWidth};
+	float srcRowY[4] = {0.0f, border.top, texHeight - border.bottom, texHeight};
+	float dstColX[4] = {rect.x, rect.x + left, rect.x + rect.width - right, rect.x + rect.width};
+	float dstRowY[4] = {rect.y, rect.y + top, rect.y + rect.height - bottom, rect.y + rect.height};
+
+	uint32_t abgr                   = PackColor(tint);
+	uint32_t quadIndex              = slot.vertexOffset / 4;
+	QuadVertex* quadBase            = &batch->cpuVertices[slot.vertexOffset];
+	bgfx::TextureHandle bgfxTexture = bgfx::TextureHandle{(uint16_t)texture.id};
+
+	int quad = 0;
+	for (int row = 0; row < 3; ++row)
+	{
+		for (int col = 0; col < 3; ++col)
+		{
+			float srcX = srcColX[col];
+			float srcY = srcRowY[row];
+			float srcW = srcColX[col + 1] - srcX;
+			float srcH = srcRowY[row + 1] - srcY;
+
+			float dstX = dstColX[col];
+			float dstY = dstRowY[row];
+			float dstW = dstColX[col + 1] - dstX;
+			float dstH = dstRowY[row + 1] - dstY;
+
+			float u0 = texWidth > 0.0f ? srcX / texWidth : 0.0f;
+			float v0 = texHeight > 0.0f ? srcY / texHeight : 0.0f;
+			float u1 = texWidth > 0.0f ? (srcX + srcW) / texWidth : 1.0f;
+			float v1 = texHeight > 0.0f ? (srcY + srcH) / texHeight : 1.0f;
+
+			batch->quadTextures[quadIndex + quad]   = bgfxTexture;
+			batch->quadIsCoverage[quadIndex + quad] = 0;
+			batch->quadZIndex[quadIndex + quad]     = zIndex;
+			FillQuadVertices(quadBase + quad * 4, dstX, dstY, dstW, dstH, u0, v0, u1, v1, abgr);
+			++quad;
+		}
+	}
+
+	batch->dirty = true;
+}
+
 uint32_t Struktur::Renderer::UIRenderer::DrawText(UIBatchHandle batchHandle, const UIBatchSlot& slot,
                                                    const Text::Font& font, const std::string& text,
                                                    const glm::vec2& position, float fontSize, const Util::Color& color,

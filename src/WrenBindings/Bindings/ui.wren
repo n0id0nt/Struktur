@@ -466,6 +466,78 @@ foreign class UIElement {
     foreign setOnActivate(arg0)
 }
 
+// UI nine-slice/9-patch textured rect component
+foreign class UINineSlice {
+    // Create UINineSlice with absolutePosition, relativePosition, absoluteSize, relativeSize components
+    foreign construct new(arg0,arg1,arg2,arg3)
+    // Sets the UINineSlice's texture
+    foreign setTexture(arg0)
+    // Sets the UINineSlice's tint color
+    foreign setTint(arg0)
+    // Sets the border insets (left, right, top, bottom), in source-texture pixel space, that stay fixed-size on screen while the edges/center stretch to fill the rest
+    foreign setBorder(arg0,arg1,arg2,arg3)
+    // Sets UI Element to be visible
+    foreign isVisible=(arg0)
+    // Sets UI Element to be visible
+    foreign setVisible(arg0)
+    // Gets UI Element to be visible
+    foreign isVisible
+    // Sets UI Element to be enabled
+    foreign IsEnabled=(arg0)
+    // Gets UI Element to be enabled
+    foreign IsEnabled
+    // Sets UI Element to be focusable
+    foreign IsFocusable=(arg0)
+    // Sets UI Element to be focusable
+    foreign setFocusable(arg0)
+    // Gets UI Element to be focusable
+    foreign IsFocusable
+    // Sets the UI Elements position
+    foreign setPosition(arg0,arg1)
+    // Gets the UI Elements position
+    foreign getPosition()
+    // Sets the UI Elements anchor point
+    foreign setAnchorPoint(arg0)
+    // Sets the UI Elements anchor point
+    foreign setSize(arg0,arg1)
+    // Gets the UI Elements size
+    foreign getSize()
+    // Gets the UI Elements bounds
+    foreign getBounds()
+    // Sets the UI Elements tab index
+    foreign setTabIndex(arg0)
+    // Gets the UI Elements tab index
+    foreign getTabIndex()
+    // adds a UI Element as a navigation neighbor
+    foreign setNavigationNeighbor(arg0,arg1)
+    // Gets a UI Element navigation neighbor from a direction
+    foreign getNavigationNeighbor(arg0)
+    // Gets the UI Elements parent
+    foreign getParent()
+    // Sets the UI Elements children
+    foreign getChildren()
+    // Sets the UI Elements Z index
+    foreign setZIndex(arg0)
+    // Sets the UI Elements Z index
+    foreign getZIndex()
+    // Adds a UI Element to elements children
+    foreign addChild(arg0)
+    // Removes a UI Element from the children
+    foreign removeChild(arg0)
+    // Sets the UI Elements on click callback
+    foreign setOnClick(arg0)
+    // Sets the UI Elements on focus callback
+    foreign setOnFocus(arg0)
+    // Sets the UI Elements on lose focus callback
+    foreign setOnLoseFocus(arg0)
+    // Sets the UI Elements on hover callback
+    foreign setOnHover(arg0)
+    // Sets the UI Elements on key pressed callback
+    foreign setOnKeyPressed(arg0)
+    // Sets the UI Elements on activate callback
+    foreign setOnActivate(arg0)
+}
+
 // UI Panel component
 foreign class UIPanel {
     // Create UI panel with absolutePosition, relativePosition, absoluteSize, relativeSize components

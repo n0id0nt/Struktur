@@ -29,6 +29,15 @@ namespace Struktur
 {
 namespace Renderer
 {
+// Border insets for UIRenderer::DrawNineSlice, in SOURCE TEXTURE pixel space - the four corners are sampled and
+// drawn at this native pixel size regardless of the target rect's own size (never scaled), while the four edges
+// stretch along one axis and the center stretches along both to fill whatever's left. Matches the conventional
+// nine-slice/9-patch interpretation (Unity's Image "Sliced" mode, Godot's NinePatchRect, CSS border-image).
+struct NineSliceBorder
+{
+	float left, right, top, bottom;
+};
+
 // One contiguous same-texture span within a batch's sortedQuadOrder (see UIBatch::runs) - start is implicit
 // (0 for the first run, otherwise the previous run's own endQuad), since runs are always contiguous and
 // gap-free by construction.
@@ -233,6 +242,14 @@ public:
 	void DrawTexturedRectRegion(UIBatchHandle batch, const UIBatchSlot& slot, const Util::Math::Rect& rect,
 	                            const TextureHandle& texture, const Util::Math::Rect& sourceRectPixels,
 	                            const Util::Color& tint, int32_t zIndex);
+	// Writes 9 quads (4 fixed-size corners, 4 stretched edges, 1 stretched center - see NineSliceBorder) - slot
+	// must have quadCapacity >= 9. `border` is clamped internally so opposing edges never overlap when rect is
+	// smaller than the border insets (the sampled source region itself is never distorted by that clamp, only
+	// the on-screen size), matching the defensive handling other engines' nine-slice implementations apply at
+	// very small sizes.
+	void DrawNineSlice(UIBatchHandle batch, const UIBatchSlot& slot, const Util::Math::Rect& rect,
+	                   const TextureHandle& texture, const NineSliceBorder& border, const Util::Color& tint,
+	                   int32_t zIndex);
 	// Walks `text` as UTF-8 via Text::GetCodepointNext/Text::GetGlyphIndex, writing into batch's cpuVertices at
 	// slot - one quad per glyph, skipping space/tab - so the number of quads written can be less than text's
 	// codepoint count. Single line only (callers already split multi-line text, see UILabel::GetTextLines).

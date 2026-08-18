@@ -508,6 +508,7 @@ set(SOURCES
     src/Engine/UI/UIPanel.h                     src/Engine/UI/UIPanel.cpp
     src/Engine/UI/UIColor.h                     src/Engine/UI/UIColor.cpp
     src/Engine/UI/UITexture.h                   src/Engine/UI/UITexture.cpp
+    src/Engine/UI/UINineSlice.h                 src/Engine/UI/UINineSlice.cpp
     src/Engine/UI/UIBorder.h                    src/Engine/UI/UIBorder.cpp
     src/Engine/UI/UIClip.h                      src/Engine/UI/UIClip.cpp
     src/Engine/UI/UIScroll.h                    src/Engine/UI/UIScroll.cpp
