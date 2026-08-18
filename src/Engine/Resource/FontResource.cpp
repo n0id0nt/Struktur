@@ -199,21 +199,13 @@ bool Struktur::Resource::FontResource::LoadToGpu(GameContext& context)
 		return true;
 	}
 
-	// Expand the single-channel coverage bitmap into RGBA8 {255,255,255,coverage} - fs_sprite.sc's
-	// texture.rgba * vertexColor.rgba blend model then tints glyphs via vertex color, not the texture itself,
-	// matching every other sprite/UI draw in the desktop pipeline (see UIRenderer).
-	std::vector<uint8_t> rgba((size_t)m_atlasWidth * (size_t)m_atlasHeight * 4);
-	for (size_t i = 0; i < m_atlasAlpha.size(); ++i)
-	{
-		rgba[i * 4 + 0] = 255;
-		rgba[i * 4 + 1] = 255;
-		rgba[i * 4 + 2] = 255;
-		rgba[i * 4 + 3] = m_atlasAlpha[i];
-	}
-
-	const bgfx::Memory* memory = bgfx::copy(rgba.data(), (uint32_t)rgba.size());
+	// Uploaded as-is (one byte of coverage per texel) rather than expanded to RGBA8 - a quarter the GPU memory
+	// of the old {255,255,255,coverage} expansion. fs_spriteCoverage.sc (UIRenderer::Flush picks it for any run
+	// whose quads are tagged coverage=true, see UIBatch::quadIsCoverage) broadcasts the sampled .r channel into
+	// rgba and tints via vertex color, in place of fs_sprite.sc's texture.rgba * vertexColor.rgba.
+	const bgfx::Memory* memory = bgfx::copy(m_atlasAlpha.data(), (uint32_t)m_atlasAlpha.size());
 	m_atlasTexture             = bgfx::createTexture2D((uint16_t)m_atlasWidth, (uint16_t)m_atlasHeight, false, 1,
-	                                                   bgfx::TextureFormat::RGBA8, 0, memory);
+	                                                   bgfx::TextureFormat::R8, 0, memory);
 	if (!bgfx::isValid(m_atlasTexture))
 	{
 		return false;
@@ -253,13 +245,14 @@ size_t Struktur::Resource::FontResource::GetMemoryUsage() const
 
 	// Estimate: glyph data + texture data
 	size_t glyphDataSize = font.glyphs.size() * sizeof(Text::Glyph);
-	size_t textureSize   = (size_t)font.texture.width * (size_t)font.texture.height * 4;  // RGBA
+	size_t textureSize   = (size_t)font.texture.width * (size_t)font.texture.height;  // R8, 1 byte/texel
 	return glyphDataSize + textureSize;
 }
 
 size_t Struktur::Resource::FontResource::GetGpuMemoryUsage() const
 {
-	return m_fontLoaded ? ((size_t)font.texture.width * (size_t)font.texture.height * 4) : 0;
+	// R8, 1 byte/texel (see LoadToGpu).
+	return m_fontLoaded ? ((size_t)font.texture.width * (size_t)font.texture.height) : 0;
 }
 
 void Struktur::Resource::FontResource::SetCodepoints(int* customCodepoints, int count)

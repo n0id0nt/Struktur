@@ -11,6 +11,7 @@
 #include "Engine/UI/UIColor.h"
 #include "Engine/UI/UILabel.h"
 #include "Engine/UI/UIPanel.h"
+#include "Engine/UI/UIRichLabel.h"
 #include "Engine/UI/UITexture.h"
 #include "WrenMath.h"
 #include "WrenResourceManager.h"
@@ -970,6 +971,261 @@ void wren_UIBorderSetWidth(WrenVM* vm)
 	uiBorder->SetWidth(width);
 }
 
+// ============================================================================
+// ICONATLAS BINDINGS - not a UIElement (see WrenIconAtlasHandle), just a data value UIRichLabel.setIconAtlas
+// copies out of.
+// ============================================================================
+
+void wren_IconAtlasAllocate(WrenVM* vm)
+{
+	wrenSetSlotNewForeign(vm, 0, 0, sizeof(WrenIconAtlasHandle));
+}
+
+void wren_IconAtlasFinalize(void* data)
+{
+	WrenIconAtlasHandle* handle = static_cast<WrenIconAtlasHandle*>(data);
+	handle->~WrenIconAtlasHandle();
+}
+
+// IconAtlas.new()
+void wren_IconAtlasNew(WrenVM* vm)
+{
+	WrenIconAtlasHandle* handle = static_cast<WrenIconAtlasHandle*>(wrenGetSlotForeign(vm, 0));
+	new (handle) WrenIconAtlasHandle();
+}
+
+// IconAtlas.setTexture(texture)
+void wren_IconAtlasSetTexture(WrenVM* vm)
+{
+	WrenIconAtlasHandle* handle = static_cast<WrenIconAtlasHandle*>(wrenGetSlotForeign(vm, 0));
+	WrenTextureHandle* texture  = static_cast<WrenTextureHandle*>(wrenGetSlotForeign(vm, 1));
+	handle->atlas.SetTexture(texture->resource);
+}
+
+// IconAtlas.addIcon(name, x, y, width, height)
+void wren_IconAtlasAddIcon(WrenVM* vm)
+{
+	WrenIconAtlasHandle* handle = static_cast<WrenIconAtlasHandle*>(wrenGetSlotForeign(vm, 0));
+	const char* name            = wrenGetSlotString(vm, 1);
+	float x                     = (float)wrenGetSlotDouble(vm, 2);
+	float y                     = (float)wrenGetSlotDouble(vm, 3);
+	float width                 = (float)wrenGetSlotDouble(vm, 4);
+	float height                = (float)wrenGetSlotDouble(vm, 5);
+	handle->atlas.AddIcon(name, Struktur::Util::Math::Rect{x, y, width, height});
+}
+
+// ============================================================================
+// UIRICHLABEL BINDINGS
+// ============================================================================
+
+void wren_UIRichLabelAllocate(WrenVM* vm)
+{
+	wrenSetSlotNewForeign(vm, 0, 0, sizeof(WrenUIElement));
+}
+
+void wren_UIRichLabelFinalize(void* data)
+{
+	WrenUIElement* uiElement = static_cast<WrenUIElement*>(data);
+	uiElement->~WrenUIElement();
+}
+
+// UIRichLabel.new(_,_,_) / new(_,_,_,_)
+void wren_UIRichLabelNew(WrenVM* vm)
+{
+	Struktur::GameContext* context = static_cast<Struktur::GameContext*>(wrenGetUserData(vm));
+	WrenUIElement* uiElement       = static_cast<WrenUIElement*>(wrenGetSlotForeign(vm, 0));
+	WrenVec2* positionPixel        = static_cast<WrenVec2*>(wrenGetSlotForeign(vm, 1));
+	WrenVec2* positionPercentage   = static_cast<WrenVec2*>(wrenGetSlotForeign(vm, 2));
+	const char* markupText         = wrenGetSlotString(vm, 3);
+	if (wrenGetSlotCount(vm) >= 5)
+	{
+		float fontSize = static_cast<float>(wrenGetSlotDouble(vm, 4));
+		auto* richLabel = new Struktur::UI::UIRichLabel(*context, positionPixel->value, positionPercentage->value,
+		                                                markupText, fontSize);
+		new (uiElement) WrenUIElement{richLabel};
+	}
+	else
+	{
+		auto* richLabel =
+		    new Struktur::UI::UIRichLabel(*context, positionPixel->value, positionPercentage->value, markupText);
+		new (uiElement) WrenUIElement{richLabel};
+	}
+#ifdef DEBUG
+	char stackBuffer[4096];
+	uiElement->callstack = wrenTraceGetCallStackString(vm, stackBuffer, sizeof(stackBuffer));
+#endif
+}
+
+// UIRichLabel.setFont(font)
+void wren_UIRichLabelSetFont(WrenVM* vm)
+{
+	WrenUIElement* uiElement = static_cast<WrenUIElement*>(wrenGetSlotForeign(vm, 0));
+	if (!uiElement->element)
+	{
+		DEBUG_ERROR("UIRichLabel.setFont: element is Null");
+		return;
+	}
+	WrenFontHandle* font                  = static_cast<WrenFontHandle*>(wrenGetSlotForeign(vm, 1));
+	Struktur::UI::UIRichLabel* richLabel = dynamic_cast<Struktur::UI::UIRichLabel*>(uiElement->element);
+	richLabel->SetFont(font->resource);
+}
+
+// UIRichLabel.setBoldFont(font)
+void wren_UIRichLabelSetBoldFont(WrenVM* vm)
+{
+	WrenUIElement* uiElement = static_cast<WrenUIElement*>(wrenGetSlotForeign(vm, 0));
+	if (!uiElement->element)
+	{
+		DEBUG_ERROR("UIRichLabel.setBoldFont: element is Null");
+		return;
+	}
+	WrenFontHandle* font                  = static_cast<WrenFontHandle*>(wrenGetSlotForeign(vm, 1));
+	Struktur::UI::UIRichLabel* richLabel = dynamic_cast<Struktur::UI::UIRichLabel*>(uiElement->element);
+	richLabel->SetBoldFont(font->resource);
+}
+
+// UIRichLabel.setItalicFont(font)
+void wren_UIRichLabelSetItalicFont(WrenVM* vm)
+{
+	WrenUIElement* uiElement = static_cast<WrenUIElement*>(wrenGetSlotForeign(vm, 0));
+	if (!uiElement->element)
+	{
+		DEBUG_ERROR("UIRichLabel.setItalicFont: element is Null");
+		return;
+	}
+	WrenFontHandle* font                  = static_cast<WrenFontHandle*>(wrenGetSlotForeign(vm, 1));
+	Struktur::UI::UIRichLabel* richLabel = dynamic_cast<Struktur::UI::UIRichLabel*>(uiElement->element);
+	richLabel->SetItalicFont(font->resource);
+}
+
+// UIRichLabel.setBoldItalicFont(font)
+void wren_UIRichLabelSetBoldItalicFont(WrenVM* vm)
+{
+	WrenUIElement* uiElement = static_cast<WrenUIElement*>(wrenGetSlotForeign(vm, 0));
+	if (!uiElement->element)
+	{
+		DEBUG_ERROR("UIRichLabel.setBoldItalicFont: element is Null");
+		return;
+	}
+	WrenFontHandle* font                  = static_cast<WrenFontHandle*>(wrenGetSlotForeign(vm, 1));
+	Struktur::UI::UIRichLabel* richLabel = dynamic_cast<Struktur::UI::UIRichLabel*>(uiElement->element);
+	richLabel->SetBoldItalicFont(font->resource);
+}
+
+// UIRichLabel.setTextColor(color)
+void wren_UIRichLabelSetTextColor(WrenVM* vm)
+{
+	WrenUIElement* uiElement = static_cast<WrenUIElement*>(wrenGetSlotForeign(vm, 0));
+	if (!uiElement->element)
+	{
+		DEBUG_ERROR("UIRichLabel.setTextColor: element is Null");
+		return;
+	}
+	WrenVec4* color = static_cast<WrenVec4*>(wrenGetSlotForeign(vm, 1));
+	Struktur::Util::Color rayColor{(unsigned char)color->value.r, (unsigned char)color->value.g,
+	                               (unsigned char)color->value.b, (unsigned char)color->value.a};
+	Struktur::UI::UIRichLabel* richLabel = dynamic_cast<Struktur::UI::UIRichLabel*>(uiElement->element);
+	richLabel->SetTextColor(rayColor);
+}
+
+// UIRichLabel.setFontSize(size)
+void wren_UIRichLabelSetFontSize(WrenVM* vm)
+{
+	WrenUIElement* uiElement = static_cast<WrenUIElement*>(wrenGetSlotForeign(vm, 0));
+	if (!uiElement->element)
+	{
+		DEBUG_ERROR("UIRichLabel.setFontSize: element is Null");
+		return;
+	}
+	float size                            = static_cast<float>(wrenGetSlotDouble(vm, 1));
+	Struktur::UI::UIRichLabel* richLabel = dynamic_cast<Struktur::UI::UIRichLabel*>(uiElement->element);
+	richLabel->SetFontSize(size);
+}
+
+// UIRichLabel.setWordWrap(wordWrap)
+void wren_UIRichLabelSetWordWrap(WrenVM* vm)
+{
+	WrenUIElement* uiElement = static_cast<WrenUIElement*>(wrenGetSlotForeign(vm, 0));
+	if (!uiElement->element)
+	{
+		DEBUG_ERROR("UIRichLabel.setWordWrap: element is Null");
+		return;
+	}
+	Struktur::UI::TextWrapping textWrapping = static_cast<Struktur::UI::TextWrapping>(wrenGetSlotDouble(vm, 1));
+	Struktur::UI::UIRichLabel* richLabel    = dynamic_cast<Struktur::UI::UIRichLabel*>(uiElement->element);
+	richLabel->SetWordWrap(textWrapping);
+}
+
+// UIRichLabel.setMarkupText(newMarkupText)
+void wren_UIRichLabelSetMarkupText(WrenVM* vm)
+{
+	WrenUIElement* uiElement = static_cast<WrenUIElement*>(wrenGetSlotForeign(vm, 0));
+	if (!uiElement->element)
+	{
+		DEBUG_ERROR("UIRichLabel.setMarkupText: element is Null");
+		return;
+	}
+	const char* newMarkupText             = wrenGetSlotString(vm, 1);
+	Struktur::UI::UIRichLabel* richLabel = dynamic_cast<Struktur::UI::UIRichLabel*>(uiElement->element);
+	richLabel->SetMarkupText(newMarkupText);
+}
+
+// UIRichLabel.getMarkupText()
+void wren_UIRichLabelGetMarkupText(WrenVM* vm)
+{
+	WrenUIElement* uiElement = static_cast<WrenUIElement*>(wrenGetSlotForeign(vm, 0));
+	if (!uiElement->element)
+	{
+		DEBUG_ERROR("UIRichLabel.getMarkupText: element is Null");
+		return;
+	}
+	Struktur::UI::UIRichLabel* richLabel = dynamic_cast<Struktur::UI::UIRichLabel*>(uiElement->element);
+	wrenSetSlotString(vm, 0, richLabel->GetMarkupText().c_str());
+}
+
+// UIRichLabel.setIconAtlas(atlas)
+void wren_UIRichLabelSetIconAtlas(WrenVM* vm)
+{
+	WrenUIElement* uiElement = static_cast<WrenUIElement*>(wrenGetSlotForeign(vm, 0));
+	if (!uiElement->element)
+	{
+		DEBUG_ERROR("UIRichLabel.setIconAtlas: element is Null");
+		return;
+	}
+	WrenIconAtlasHandle* atlasHandle      = static_cast<WrenIconAtlasHandle*>(wrenGetSlotForeign(vm, 1));
+	Struktur::UI::UIRichLabel* richLabel = dynamic_cast<Struktur::UI::UIRichLabel*>(uiElement->element);
+	richLabel->SetIconAtlas(atlasHandle->atlas);
+}
+
+// UIRichLabel.setVisibleGlyphCount(count)
+void wren_UIRichLabelSetVisibleGlyphCount(WrenVM* vm)
+{
+	WrenUIElement* uiElement = static_cast<WrenUIElement*>(wrenGetSlotForeign(vm, 0));
+	if (!uiElement->element)
+	{
+		DEBUG_ERROR("UIRichLabel.setVisibleGlyphCount: element is Null");
+		return;
+	}
+	int count                             = (int)wrenGetSlotDouble(vm, 1);
+	Struktur::UI::UIRichLabel* richLabel = dynamic_cast<Struktur::UI::UIRichLabel*>(uiElement->element);
+	richLabel->SetVisibleGlyphCount(count);
+}
+
+// UIRichLabel.getGlyphCount() - total drawable glyph count (see GetRequiredQuadCount), for a Wren-side reveal
+// loop to compare its own elapsed-time-driven count against (matching Godot's own
+// visible_characters/text-length pattern for a typewriter effect).
+void wren_UIRichLabelGetGlyphCount(WrenVM* vm)
+{
+	WrenUIElement* uiElement = static_cast<WrenUIElement*>(wrenGetSlotForeign(vm, 0));
+	if (!uiElement->element)
+	{
+		DEBUG_ERROR("UIRichLabel.getGlyphCount: element is Null");
+		return;
+	}
+	Struktur::UI::UIRichLabel* richLabel = dynamic_cast<Struktur::UI::UIRichLabel*>(uiElement->element);
+	wrenSetSlotDouble(vm, 0, (double)richLabel->GetRequiredQuadCount());
+}
+
 WREN_BINDING_MODULE(UI)
 {
 	// NAVIGATION DIRECTION BINDINGS
@@ -1144,4 +1400,50 @@ WREN_BINDING_MODULE(UI)
 	                 "Create UIBorder with absolutePosition, relativePosition, absoluteSize, relativeSize components");
 	WREN_CLASS_METHOD(registry, "ui", "UIBorder", "setColor(_)", wren_UIBorderSetColor, "Sets the UIBorder's color");
 	WREN_CLASS_METHOD(registry, "ui", "UIBorder", "setWidth(_)", wren_UIBorderSetWidth, "Sets the UIBorder's width");
+
+	// Register IconAtlas foreign class - not a UIElement, just a name->rect data table over a texture (see
+	// IconAtlas.h) that UIRichLabel.setIconAtlas copies out of.
+	WREN_FOREIGN_CLASS(registry, "ui", "IconAtlas", wren_IconAtlasAllocate, wren_IconAtlasFinalize,
+	                   "Named-icon lookup table over a texture, for UIRichLabel's [icon=name] tags");
+	WREN_CONSTRUCTOR(registry, "ui", "IconAtlas", "new()", wren_IconAtlasNew, "Create an empty IconAtlas");
+	WREN_CLASS_METHOD(registry, "ui", "IconAtlas", "setTexture(_)", wren_IconAtlasSetTexture,
+	                  "Sets the texture this atlas's icons are sub-rects of");
+	WREN_CLASS_METHOD(registry, "ui", "IconAtlas", "addIcon(_,_,_,_,_)", wren_IconAtlasAddIcon,
+	                  "Registers name -> a pixel-space (x, y, width, height) sub-rect of the atlas texture");
+
+	// Register UIRichLabel foreign class - markup-driven text ([b]/[i]/[color=#rrggbb]/[icon=name], see
+	// Text::ParseMarkup), a sibling to UILabel rather than a subclass of it (see UIRichLabel.h's class
+	// comment for why).
+	WREN_FOREIGN_CLASS(registry, "ui", "UIRichLabel", wren_UIRichLabelAllocate, wren_UIRichLabelFinalize,
+	                   "Markup-driven UI Label component supporting inline bold/italic/color/icon formatting");
+	WREN_CLASS_INHERITANCE(registry, "ui", "UIRichLabel", "UIElement");
+	WREN_CONSTRUCTOR(registry, "ui", "UIRichLabel", "new(_,_,_)", wren_UIRichLabelNew,
+	                 "Create UIRichLabel with absolutePosition, relativePosition, markupText components");
+	WREN_CONSTRUCTOR(registry, "ui", "UIRichLabel", "new(_,_,_,_)", wren_UIRichLabelNew,
+	                 "Create UIRichLabel with absolutePosition, relativePosition, markupText, fontSize components");
+	WREN_CLASS_METHOD(registry, "ui", "UIRichLabel", "setFont(_)", wren_UIRichLabelSetFont,
+	                  "Sets the UIRichLabel's regular-style font");
+	WREN_CLASS_METHOD(registry, "ui", "UIRichLabel", "setBoldFont(_)", wren_UIRichLabelSetBoldFont,
+	                  "Sets the font used for [b] runs");
+	WREN_CLASS_METHOD(registry, "ui", "UIRichLabel", "setItalicFont(_)", wren_UIRichLabelSetItalicFont,
+	                  "Sets the font used for [i] runs");
+	WREN_CLASS_METHOD(registry, "ui", "UIRichLabel", "setBoldItalicFont(_)", wren_UIRichLabelSetBoldItalicFont,
+	                  "Sets the font used for [b][i] runs");
+	WREN_CLASS_METHOD(registry, "ui", "UIRichLabel", "setTextColor(_)", wren_UIRichLabelSetTextColor,
+	                  "Sets the UIRichLabel's base text color (the color runs without an explicit [color=] use)");
+	WREN_CLASS_METHOD(registry, "ui", "UIRichLabel", "setFontSize(_)", wren_UIRichLabelSetFontSize,
+	                  "Sets the UIRichLabel's font size");
+	WREN_CLASS_METHOD(registry, "ui", "UIRichLabel", "setWordWrap(_)", wren_UIRichLabelSetWordWrap,
+	                  "Sets the UIRichLabel's word wrap");
+	WREN_CLASS_METHOD(registry, "ui", "UIRichLabel", "setMarkupText(_)", wren_UIRichLabelSetMarkupText,
+	                  "Sets the UIRichLabel's markup text");
+	WREN_CLASS_METHOD(registry, "ui", "UIRichLabel", "getMarkupText()", wren_UIRichLabelGetMarkupText,
+	                  "Gets the UIRichLabel's markup text");
+	WREN_CLASS_METHOD(registry, "ui", "UIRichLabel", "setIconAtlas(_)", wren_UIRichLabelSetIconAtlas,
+	                  "Sets the IconAtlas [icon=name] tags resolve against");
+	WREN_CLASS_METHOD(registry, "ui", "UIRichLabel", "setVisibleGlyphCount(_)", wren_UIRichLabelSetVisibleGlyphCount,
+	                  "Caps rendering to the first N drawable glyphs, for a typewriter/reveal effect - negative "
+	                  "means show everything");
+	WREN_CLASS_METHOD(registry, "ui", "UIRichLabel", "getGlyphCount()", wren_UIRichLabelGetGlyphCount,
+	                  "Gets the total drawable glyph count, for a reveal loop to compare its progress against");
 }

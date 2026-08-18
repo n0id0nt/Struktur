@@ -3,6 +3,7 @@
 #include "Engine/Resource/FontResource.h"
 #include "Engine/Resource/Pointers/ResourcePtr.h"
 #include "Engine/Text/Font.h"
+#include "Engine/UI/TextLayout.h"
 #include "Engine/UI/UIElement.h"
 
 namespace Struktur
@@ -11,20 +12,9 @@ class GameContext;
 
 namespace UI
 {
-enum class TextAlignment
-{
-	LEFT,
-	CENTER,
-	RIGHT,
-	JUSTIFY
-};
-
-enum class TextWrapping
-{
-	NONE,
-	WORD_WRAP,
-	CHARACTER_WRAP
-};
+// TextAlignment/TextWrapping now live in TextLayout.h (still Struktur::UI::TextAlignment/TextWrapping - no
+// change for existing callers, including the Wren enum bindings) alongside the layout math that operates on
+// them, so a future multi-font rich-text label can share both without depending on UILabel itself.
 
 //=============================================================================
 // UILabel - Text display element

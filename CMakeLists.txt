@@ -236,6 +236,7 @@ if(PLATFORM_DESKTOP OR PLATFORM_WEB)
             set(STRUKTUR_SHADER_OUTPUTS ${STRUKTUR_SHADER_OUTPUTS} ${${NAME}_VS_OUT} ${${NAME}_FS_OUT} PARENT_SCOPE)
         endfunction()
         struktur_compile_shader(sprite)
+        struktur_compile_shader(spriteCoverage)
         struktur_compile_shader(soulEffect)
     else()
         # Web doesn't (can't) invoke shaderc itself - just reference whatever a prior desktop build already
@@ -499,7 +500,9 @@ set(SOURCES
     src/Engine/UI/UIManager.h                   src/Engine/UI/UIManager.cpp
     src/Engine/UI/FocusNavigator.h              src/Engine/UI/FocusNavigator.cpp
     src/Engine/UI/UIElement.h                   src/Engine/UI/UIElement.cpp
+    src/Engine/UI/TextLayout.h                  src/Engine/UI/TextLayout.cpp
     src/Engine/UI/UILabel.h                     src/Engine/UI/UILabel.cpp
+    src/Engine/UI/UIRichLabel.h                 src/Engine/UI/UIRichLabel.cpp
     src/Engine/UI/UIPanel.h                     src/Engine/UI/UIPanel.cpp
     src/Engine/UI/UIColor.h                     src/Engine/UI/UIColor.cpp
     src/Engine/UI/UITexture.h                   src/Engine/UI/UITexture.cpp
@@ -525,6 +528,7 @@ set(SOURCES
     src/Engine/Util/Curve.h
 
     src/Engine/Text/Font.h                      src/Engine/Text/Font.cpp
+    src/Engine/Text/RichText.h                  src/Engine/Text/RichText.cpp
 
     src/Engine/Event/Event.h
     src/Engine/Event/EventManager.h             src/Engine/Event/EventManager.cpp

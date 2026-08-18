@@ -50,12 +50,16 @@ namespace
 {
 // Fills one quad's 4 vertices (position/UV/packed color), CCW starting top-left - shared by every batch-write
 // function below (DrawRect/DrawRectOutline/DrawTexturedRect/DrawText), so this layout/winding only exists in
-// one place.
+// one place. shearX (default 0, every existing caller unaffected) skews the top edge rightward by shearX*h
+// relative to the bottom edge, turning the rectangle into a parallelogram - DrawText's synthetic-italic
+// fallback (see UIRichLabel::ResolveFont) is the only caller that ever passes a non-zero value. Pure
+// CPU-side geometry, no shader/vertex-format change needed.
 void FillQuadVertices(Struktur::Renderer::QuadVertex* quad, float x, float y, float w, float h, float u0, float v0,
-                      float u1, float v1, uint32_t abgr)
+                      float u1, float v1, uint32_t abgr, float shearX = 0.0f)
 {
-	quad[0] = {x, y, u0, v0, abgr};
-	quad[1] = {x + w, y, u1, v0, abgr};
+	float topShift = shearX * h;
+	quad[0] = {x + topShift, y, u0, v0, abgr};
+	quad[1] = {x + w + topShift, y, u1, v0, abgr};
 	quad[2] = {x + w, y + h, u1, v1, abgr};
 	quad[3] = {x, y + h, u0, v1, abgr};
 }
@@ -169,6 +173,7 @@ Struktur::Renderer::UIBatchSlot Struktur::Renderer::UIRenderer::AllocateOrResize
 	// texture for the newly-appended region until a DrawX call actually tags it, which is harmless since
 	// nothing indexes an unwritten quad until some DrawX gives it real vertex data too.
 	batch.quadTextures.resize(batch.quadTextures.size() + newQuadCapacity, m_whiteTexture);
+	batch.quadIsCoverage.resize(batch.quadIsCoverage.size() + newQuadCapacity, 0);
 	batch.quadZIndex.resize(batch.quadZIndex.size() + newQuadCapacity, 0);
 	batch.dirty = true;
 
@@ -245,6 +250,7 @@ void Struktur::Renderer::UIRenderer::Flush(GameContext& context)
 			std::vector<uint16_t> indices(quadCount * 6);
 			batch.runs.clear();
 			bgfx::TextureHandle runTexture = batch.quadTextures[batch.sortedQuadOrder[0]];
+			bool runIsCoverage             = batch.quadIsCoverage[batch.sortedQuadOrder[0]] != 0;
 			for (uint32_t i = 0; i < quadCount; ++i)
 			{
 				uint16_t base       = (uint16_t)(batch.sortedQuadOrder[i] * 4);
@@ -258,11 +264,12 @@ void Struktur::Renderer::UIRenderer::Flush(GameContext& context)
 				bgfx::TextureHandle quadTexture = batch.quadTextures[batch.sortedQuadOrder[i]];
 				if (quadTexture.idx != runTexture.idx)
 				{
-					batch.runs.push_back(UIBatchRun{i, runTexture});
-					runTexture = quadTexture;
+					batch.runs.push_back(UIBatchRun{i, runTexture, runIsCoverage});
+					runTexture    = quadTexture;
+					runIsCoverage = batch.quadIsCoverage[batch.sortedQuadOrder[i]] != 0;
 				}
 			}
-			batch.runs.push_back(UIBatchRun{quadCount, runTexture});
+			batch.runs.push_back(UIBatchRun{quadCount, runTexture, runIsCoverage});
 
 			bgfx::update(batch.vb, 0,
 			             bgfx::copy(batch.cpuVertices.data(),
@@ -295,7 +302,8 @@ void Struktur::Renderer::UIRenderer::Flush(GameContext& context)
 				                 (uint16_t)batch.clipRect.width, (uint16_t)batch.clipRect.height);
 			}
 			bgfx::setState(drawState);
-			bgfx::submit(GraphicsDevice::UIViewId, GetEmbeddedProgram("sprite"));
+			bgfx::submit(GraphicsDevice::UIViewId,
+			            GetEmbeddedProgram(run.isCoverage ? "spriteCoverage" : "sprite"));
 
 			runStart = run.endQuad;
 		}
@@ -334,8 +342,9 @@ void Struktur::Renderer::UIRenderer::DrawRect(UIBatchHandle batchHandle, const U
 		return;
 	}
 
-	batch->quadTextures[slot.vertexOffset / 4] = m_whiteTexture;
-	batch->quadZIndex[slot.vertexOffset / 4]   = zIndex;
+	batch->quadTextures[slot.vertexOffset / 4]   = m_whiteTexture;
+	batch->quadIsCoverage[slot.vertexOffset / 4] = 0;
+	batch->quadZIndex[slot.vertexOffset / 4]     = zIndex;
 	FillQuadVertices(&batch->cpuVertices[slot.vertexOffset], rect.x, rect.y, rect.width, rect.height, 0.0f, 0.0f, 1.0f,
 	                 1.0f, PackColor(color));
 	batch->dirty = true;
@@ -354,8 +363,9 @@ void Struktur::Renderer::UIRenderer::DrawRectOutline(UIBatchHandle batchHandle, 
 	uint32_t quadIndex = slot.vertexOffset / 4;
 	for (uint32_t i = 0; i < 4; ++i)
 	{
-		batch->quadTextures[quadIndex + i] = m_whiteTexture;
-		batch->quadZIndex[quadIndex + i]   = zIndex;
+		batch->quadTextures[quadIndex + i]   = m_whiteTexture;
+		batch->quadIsCoverage[quadIndex + i] = 0;
+		batch->quadZIndex[quadIndex + i]     = zIndex;
 	}
 	uint32_t abgr        = PackColor(color);
 	QuadVertex* quadBase = &batch->cpuVertices[slot.vertexOffset];
@@ -382,17 +392,45 @@ void Struktur::Renderer::UIRenderer::DrawTexturedRect(UIBatchHandle batchHandle,
 		return;
 	}
 
-	batch->quadTextures[slot.vertexOffset / 4] = bgfx::TextureHandle{(uint16_t)texture.id};
-	batch->quadZIndex[slot.vertexOffset / 4]   = zIndex;
+	batch->quadTextures[slot.vertexOffset / 4]   = bgfx::TextureHandle{(uint16_t)texture.id};
+	batch->quadIsCoverage[slot.vertexOffset / 4] = 0;
+	batch->quadZIndex[slot.vertexOffset / 4]     = zIndex;
 	FillQuadVertices(&batch->cpuVertices[slot.vertexOffset], rect.x, rect.y, rect.width, rect.height, 0.0f, 0.0f, 1.0f,
 	                 1.0f, PackColor(tint));
+	batch->dirty = true;
+}
+
+void Struktur::Renderer::UIRenderer::DrawTexturedRectRegion(UIBatchHandle batchHandle, const UIBatchSlot& slot,
+                                                             const Util::Math::Rect& rect,
+                                                             const TextureHandle& texture,
+                                                             const Util::Math::Rect& sourceRectPixels,
+                                                             const Util::Color& tint, int32_t zIndex)
+{
+	UIBatch* batch = ResolveBatch(batchHandle, "DrawTexturedRectRegion");
+	if (!batch || !ValidateSlotCapacity(*batch, slot, 1, "DrawTexturedRectRegion"))
+	{
+		return;
+	}
+
+	float texWidth  = (float)texture.width;
+	float texHeight = (float)texture.height;
+	float u0        = texWidth > 0.0f ? sourceRectPixels.x / texWidth : 0.0f;
+	float v0        = texHeight > 0.0f ? sourceRectPixels.y / texHeight : 0.0f;
+	float u1        = texWidth > 0.0f ? (sourceRectPixels.x + sourceRectPixels.width) / texWidth : 1.0f;
+	float v1        = texHeight > 0.0f ? (sourceRectPixels.y + sourceRectPixels.height) / texHeight : 1.0f;
+
+	batch->quadTextures[slot.vertexOffset / 4]   = bgfx::TextureHandle{(uint16_t)texture.id};
+	batch->quadIsCoverage[slot.vertexOffset / 4] = 0;
+	batch->quadZIndex[slot.vertexOffset / 4]     = zIndex;
+	FillQuadVertices(&batch->cpuVertices[slot.vertexOffset], rect.x, rect.y, rect.width, rect.height, u0, v0, u1, v1,
+	                 PackColor(tint));
 	batch->dirty = true;
 }
 
 uint32_t Struktur::Renderer::UIRenderer::DrawText(UIBatchHandle batchHandle, const UIBatchSlot& slot,
                                                    const Text::Font& font, const std::string& text,
                                                    const glm::vec2& position, float fontSize, const Util::Color& color,
-                                                   int32_t zIndex)
+                                                   int32_t zIndex, float shearAmount)
 {
 	UIBatch* batch = ResolveBatch(batchHandle, "DrawText");
 	if (!batch || !ValidateSlotCapacity(*batch, slot, 0, "DrawText"))
@@ -440,13 +478,14 @@ uint32_t Struktur::Renderer::UIRenderer::DrawText(UIBatchHandle batchHandle, con
 				break;
 			}
 
-			float dstX                                    = penX + (float)glyph.offsetX * scale;
-			float dstY                                    = position.y + (float)glyph.offsetY * scale;
-			batch->quadTextures[quadIndex + quadsWritten] = atlas;
-			batch->quadZIndex[quadIndex + quadsWritten]   = zIndex;
+			float dstX                                      = penX + (float)glyph.offsetX * scale;
+			float dstY                                      = position.y + (float)glyph.offsetY * scale;
+			batch->quadTextures[quadIndex + quadsWritten]   = atlas;
+			batch->quadIsCoverage[quadIndex + quadsWritten] = 1;
+			batch->quadZIndex[quadIndex + quadsWritten]     = zIndex;
 			FillQuadVertices(&batch->cpuVertices[slot.vertexOffset + quadsWritten * 4], dstX, dstY, rec.width * scale,
 			                 rec.height * scale, rec.x / atlasWidth, rec.y / atlasHeight,
-			                 (rec.x + rec.width) / atlasWidth, (rec.y + rec.height) / atlasHeight, abgr);
+			                 (rec.x + rec.width) / atlasWidth, (rec.y + rec.height) / atlasHeight, abgr, shearAmount);
 			++quadsWritten;
 		}
 
@@ -470,9 +509,10 @@ void Struktur::Renderer::UIRenderer::ClearSlotFrom(UIBatchHandle batchHandle, co
 	for (uint32_t quad = fromQuad; quad < slot.quadCapacity; ++quad)
 	{
 		QuadVertex* v = &batch->cpuVertices[slot.vertexOffset + quad * 4];
-		v[0] = v[1] = v[2] = v[3]             = QuadVertex{0.0f, 0.0f, 0.0f, 0.0f, 0};
-		batch->quadTextures[quadIndex + quad] = m_whiteTexture;
-		batch->quadZIndex[quadIndex + quad]   = 0;
+		v[0] = v[1] = v[2] = v[3]               = QuadVertex{0.0f, 0.0f, 0.0f, 0.0f, 0};
+		batch->quadTextures[quadIndex + quad]   = m_whiteTexture;
+		batch->quadIsCoverage[quadIndex + quad] = 0;
+		batch->quadZIndex[quadIndex + quad]     = 0;
 	}
 	batch->dirty = true;
 }

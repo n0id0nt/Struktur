@@ -3,6 +3,7 @@
 #include <vector>
 
 #include "Debug/Assertions.h"
+#include "Engine/UI/IconAtlas.h"
 #include "Engine/UI/UIElement.h"
 #include "wren.hpp"
 
@@ -23,4 +24,14 @@ struct WrenUIElement
 			delete element;
 		}
 	}
+};
+
+// Not a UIElement - a plain value wrapper around UI::IconAtlas (itself just a name->rect table over a
+// TextureResource, see IconAtlas.h), for UIRichLabel.setIconAtlas. No ownership handshake with UIManager is
+// needed here (unlike WrenUIElement above), since an IconAtlas is never added to the UI tree itself - it's
+// just data a rich label copies out of via setIconAtlas, so the Wren GC can free this immediately once the
+// script drops its reference.
+struct WrenIconAtlasHandle
+{
+	Struktur::UI::IconAtlas atlas;
 };

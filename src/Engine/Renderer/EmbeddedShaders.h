@@ -10,7 +10,8 @@ namespace Renderer
 {
 // bgfx shaders are precompiled per-platform at build time (see CMakeLists.txt's struktur_compile_shader) and
 // embedded into the binary, rather than loaded from disk at runtime like raylib's raw-GLSL shaders were.
-// name must be one of "vs_sprite", "fs_sprite", "vs_soulEffect", "fs_soulEffect" (the compiled shader names).
+// name must be one of "vs_sprite", "fs_sprite", "vs_spriteCoverage", "fs_spriteCoverage", "vs_soulEffect",
+// "fs_soulEffect" (the compiled shader names).
 bgfx::ShaderHandle GetEmbeddedShader(const char* name);
 
 // Convenience: creates (and caches) the linked vs+fs program for a name pair, e.g. GetEmbeddedProgram("sprite").

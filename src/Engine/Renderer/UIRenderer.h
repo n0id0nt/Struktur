@@ -35,6 +35,12 @@ struct UIBatchRun
 {
 	uint32_t endQuad;
 	bgfx::TextureHandle texture;
+	// Whether this run's texture is a single-channel coverage atlas (font glyphs, see UIBatch::quadIsCoverage)
+	// rather than a normal RGBA texture (backgrounds, borders, icons) - selects fs_spriteCoverage.sc instead of
+	// fs_sprite.sc in Flush()'s submit loop. Safe to read off just the run's first quad: run-splitting already
+	// groups strictly by texture identity, and a given bgfx texture handle is always either the font atlas or
+	// not, so coverage-ness never changes mid-run.
+	bool isCoverage;
 };
 
 // One persistent, update-in-place bgfx buffer pair plus its CPU-side vertex mirror. Unlike WorldRenderer's
@@ -52,6 +58,12 @@ struct UIBatch
 	// offset+count, not a fresh buffer per run. This is what lets differently-textured widgets (e.g. a panel's
 	// solid-color background next to a label's font atlas) safely share one batch/vertex cache.
 	std::vector<bgfx::TextureHandle> quadTextures;
+	// One entry per quad, parallel to quadTextures - true if that quad samples a single-channel coverage atlas
+	// (currently only DrawText's font atlas) and should be drawn with fs_spriteCoverage.sc instead of
+	// fs_sprite.sc (see UIBatchRun::isCoverage and Flush()). Kept per-quad rather than per-texture-handle
+	// because runs are already split by texture identity, so folding this into that same run-detection pass is
+	// free - see Flush()'s run-building loop.
+	std::vector<uint8_t> quadIsCoverage;
 	// One entry per quad, parallel to quadTextures - the z-index of whichever element wrote that quad (see
 	// DrawRect/DrawRectOutline/DrawTexturedRect/DrawText). Used only to order quads sharing this one batch
 	// against each other (see sortedQuadOrder below); ordering BETWEEN batches is drawOrder's job, not this.
@@ -152,6 +164,14 @@ public:
 	                     const Util::Color& color, int32_t zIndex);
 	void DrawTexturedRect(UIBatchHandle batch, const UIBatchSlot& slot, const Util::Math::Rect& rect,
 	                      const TextureHandle& texture, const Util::Color& tint, int32_t zIndex);
+	// Same as DrawTexturedRect, but samples sourceRectPixels (a pixel-space sub-rect of texture, converted to
+	// UV internally via texture's own width/height) instead of the whole 0..1 UV range - for atlas-style
+	// textures where many sprites/icons share one texture (see UI::IconAtlas). Still a single quad, still
+	// tagged quadIsCoverage=false (full RGBA, tinted by `tint` in fs_sprite.sc) - no shader/batching changes
+	// needed versus DrawTexturedRect, only the UV math differs.
+	void DrawTexturedRectRegion(UIBatchHandle batch, const UIBatchSlot& slot, const Util::Math::Rect& rect,
+	                            const TextureHandle& texture, const Util::Math::Rect& sourceRectPixels,
+	                            const Util::Color& tint, int32_t zIndex);
 	// Walks `text` as UTF-8 via Text::GetCodepointNext/Text::GetGlyphIndex, writing into batch's cpuVertices at
 	// slot - one quad per glyph, skipping space/tab - so the number of quads written can be less than text's
 	// codepoint count. Single line only (callers already split multi-line text, see UILabel::GetTextLines).
@@ -163,8 +183,14 @@ public:
 	// rather than writing past the end of cpuVertices). Callers (UILabel) are responsible for calling
 	// AllocateOrResizeSlot first whenever text content changes and may have grown past the slot's current
 	// capacity - this function does not, and cannot, know whether that happened.
+	//
+	// shearAmount (default 0, every existing caller unaffected) skews every glyph quad into a parallelogram -
+	// see FillQuadVertices in UIRenderer.cpp. Exists for UIRichLabel's synthetic-italic fallback (see
+	// UIRichLabel::ResolveFont): a run that needs italics but has no dedicated italic FontResource set still
+	// gets a plausible slant instead of silently rendering upright.
 	uint32_t DrawText(UIBatchHandle batch, const UIBatchSlot& slot, const Text::Font& font, const std::string& text,
-	                  const glm::vec2& position, float fontSize, const Util::Color& color, int32_t zIndex);
+	                  const glm::vec2& position, float fontSize, const Util::Color& color, int32_t zIndex,
+	                  float shearAmount = 0.0f);
 
 	// Degenerates (zero-area, so Flush() draws nothing for them) every quad in slot from fromQuad up to
 	// slot.quadCapacity. Flush() draws a batch's whole allocated cpuVertices region regardless of how many quads

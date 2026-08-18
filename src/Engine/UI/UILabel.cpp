@@ -128,81 +128,11 @@ std::vector<std::string> Struktur::UI::UILabel::GetTextLines(const std::string& 
 
 std::vector<std::string> Struktur::UI::UILabel::WrapText(const std::string& text, float maxWidth) const
 {
-	std::vector<std::string> lines;
-
-	std::string currentLine;
-	std::string word;
-
-	for (size_t i = 0; i < text.length(); ++i)
-	{
-		char c = text[i];
-
-		// Handle newlines
-		if (c == '\n')
-		{
-			if (!word.empty())
-			{
-				currentLine += word;
-				word.clear();
-			}
-			lines.push_back(currentLine);
-			currentLine.clear();
-			continue;
-		}
-
-		if (m_wrapping == TextWrapping::WORD_WRAP)
-		{
-			// Word wrap mode
-			if (c == ' ' || c == '\t')
-			{
-				std::string testLine = currentLine + word + c;
-				glm::vec2 size       = MeasureText(m_font->font, testLine, m_fontSize);
-
-				if (size.x > maxWidth && !currentLine.empty())
-				{
-					lines.push_back(currentLine);
-					currentLine = word + c;
-				}
-				else
-				{
-					currentLine = testLine;
-				}
-				word.clear();
-			}
-			else
-			{
-				word += c;
-			}
-		}
-		else if (m_wrapping == TextWrapping::CHARACTER_WRAP)
-		{
-			// Character wrap mode
-			std::string testLine = currentLine + c;
-			glm::vec2 size       = MeasureText(m_font->font, testLine, m_fontSize);
-
-			if (size.x > maxWidth && !currentLine.empty())
-			{
-				lines.push_back(currentLine);
-				currentLine = std::string(1, c);
-			}
-			else
-			{
-				currentLine += c;
-			}
-		}
-	}
-
-	// Add remaining content
-	if (!word.empty())
-	{
-		currentLine += word;
-	}
-	if (!currentLine.empty())
-	{
-		lines.push_back(currentLine);
-	}
-
-	return lines;
+	// Algorithm itself lives in TextLayout::WrapText (shared with any future multi-font caller) - this just
+	// supplies the single-font measurement UILabel has always used as the callback.
+	return TextLayout::WrapText(text, maxWidth, m_wrapping,
+	                            [this](const std::string& candidate)
+	                            { return MeasureText(m_font->font, candidate, m_fontSize).x; });
 }
 
 Struktur::Util::Math::Rect Struktur::UI::UILabel::GetFormattedTextBounds() const
@@ -222,32 +152,25 @@ glm::vec2 Struktur::UI::UILabel::GetFormattedTextSize() const
 
 	std::vector<std::string> lines = GetTextLines(m_text);
 
-	float totalWidth  = 0;
-	float totalHeight = 0;
-	float lineHeight  = GetLineHeight();
-
-	for (const auto& line : lines)
+	float lineHeight = GetLineHeight();
+	std::vector<float> lineWidths;
+	lineWidths.reserve(lines.size());
+	for (size_t i = 0; i < lines.size(); ++i)
 	{
-		glm::vec2 lineSize = MeasureText(m_font->font, line, m_fontSize);
-
 		// For justified text, use the full available width (except last line)
-		if (m_alignment == TextAlignment::JUSTIFY && &line != &lines.back())
+		if (m_alignment == TextAlignment::JUSTIFY && i != lines.size() - 1)
 		{
-			totalWidth = std::max(totalWidth, m_bounds.width - 10);
+			lineWidths.push_back(m_bounds.width - 10);
 		}
 		else
 		{
-			totalWidth = std::max(totalWidth, lineSize.x);
+			lineWidths.push_back(MeasureText(m_font->font, lines[i], m_fontSize).x);
 		}
-
-		totalHeight += lineHeight;
 	}
+	std::vector<float> lineHeights(lines.size(), lineHeight);
 
-	// Add padding
-	totalWidth += 10;  // 5px on each side
-	totalHeight += 5;  // 2.5px top + 2.5px bottom
-
-	return {totalWidth, totalHeight};
+	// 5px padding each side horizontally, 2.5px top+bottom vertically.
+	return TextLayout::SumLineBounds(lineWidths, lineHeights, 10.0f, 5.0f);
 }
 
 float Struktur::UI::UILabel::GetLineHeight() const
@@ -281,27 +204,7 @@ uint32_t Struktur::UI::UILabel::RenderJustifiedLine(GameContext& context, const 
 		return RenderGlyphs(context, line, pos, quadOffset);
 	}
 
-	std::vector<std::string> words;
-	std::string currentWord;
-	for (char c : line)
-	{
-		if (c == ' ' || c == '\t')
-		{
-			if (!currentWord.empty())
-			{
-				words.push_back(currentWord);
-				currentWord.clear();
-			}
-		}
-		else
-		{
-			currentWord += c;
-		}
-	}
-	if (!currentWord.empty())
-	{
-		words.push_back(currentWord);
-	}
+	std::vector<std::string> words = TextLayout::SplitWords(line);
 
 	if (words.size() <= 1)
 	{
@@ -315,8 +218,7 @@ uint32_t Struktur::UI::UILabel::RenderJustifiedLine(GameContext& context, const 
 		totalWordWidth += wordSize.x;
 	}
 
-	float totalSpaceWidth = targetWidth - totalWordWidth;
-	float spaceWidth      = totalSpaceWidth / (words.size() - 1);
+	float spaceWidth = TextLayout::ComputeJustifySpaceWidth(targetWidth, totalWordWidth, words.size());
 
 	float currentX        = pos.x;
 	uint32_t quadsWritten = 0;
@@ -345,32 +247,17 @@ uint32_t Struktur::UI::UILabel::RenderTextLines(GameContext& context, const std:
 		glm::vec2 textSize      = MeasureText(m_font->font, line, m_fontSize);
 		glm::vec2 textPos       = {startPos.x, currentY};
 
-		switch (m_alignment)
+		if (m_alignment == TextAlignment::JUSTIFY)
 		{
-			case TextAlignment::CENTER:
-				textPos.x = m_bounds.x + (m_bounds.width - textSize.x) / 2.0f;
-				totalQuadsWritten += RenderGlyphs(context, line, textPos, quadOffset + totalQuadsWritten);
-				break;
-
-			case TextAlignment::RIGHT:
-				textPos.x = m_bounds.x + m_bounds.width - textSize.x - 5;
-				totalQuadsWritten += RenderGlyphs(context, line, textPos, quadOffset + totalQuadsWritten);
-				break;
-
-			case TextAlignment::JUSTIFY:
-			{
-				textPos.x       = m_bounds.x + 5;
-				bool isLastLine = (i == lines.size() - 1);
-				totalQuadsWritten += RenderJustifiedLine(context, line, textPos, m_bounds.x - 10.0f, isLastLine,
-				                                         quadOffset + totalQuadsWritten);
-				break;
-			}
-
-			case TextAlignment::LEFT:
-			default:
-				textPos.x = m_bounds.x + 5;
-				totalQuadsWritten += RenderGlyphs(context, line, textPos, quadOffset + totalQuadsWritten);
-				break;
+			textPos.x       = TextLayout::ComputeAlignedStartX(m_alignment, m_bounds.x, m_bounds.width, textSize.x, 5.0f);
+			bool isLastLine = (i == lines.size() - 1);
+			totalQuadsWritten += RenderJustifiedLine(context, line, textPos, m_bounds.x - 10.0f, isLastLine,
+			                                         quadOffset + totalQuadsWritten);
+		}
+		else
+		{
+			textPos.x = TextLayout::ComputeAlignedStartX(m_alignment, m_bounds.x, m_bounds.width, textSize.x, 5.0f);
+			totalQuadsWritten += RenderGlyphs(context, line, textPos, quadOffset + totalQuadsWritten);
 		}
 
 		currentY += lineHeight;
