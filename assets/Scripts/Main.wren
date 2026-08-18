@@ -10,6 +10,7 @@ import "fileSystem" for FileSystem
 import "States/StateManager" for StateManager
 import "States/GameWorldState" for GameWorldState
 import "States/MainMenuState" for MainMenuState
+import "States/SettingsState" for SettingsState
 import "Inventory" for Inventory
 import "Dialogue/DialogueLoader" for DialogueLoader
 
@@ -52,6 +53,7 @@ class Game {
         // Initial states
         _stateManager.insertState("GameWorld", GameWorldState)
         _stateManager.insertState("MainMenu", MainMenuState)
+        _stateManager.insertState("Settings", SettingsState)
 
         _stateManager.changeState("MainMenu")
     }

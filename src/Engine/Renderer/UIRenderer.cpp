@@ -136,6 +136,29 @@ void Struktur::Renderer::UIRenderer::SetBatchDrawOrder(UIBatchHandle handle, int
 	m_batches[handle.index].drawOrder = drawOrder;
 }
 
+void Struktur::Renderer::UIRenderer::SetBatchClip(UIBatchHandle handle, const Util::Math::Rect& clipRect)
+{
+	ASSERT_MSG(handle.IsValid() && handle.index < m_batches.size(), "SetBatchClip: invalid batch handle (index %u)",
+	           handle.index);
+	if (!handle.IsValid() || handle.index >= m_batches.size())
+	{
+		return;
+	}
+	m_batches[handle.index].clipRect = clipRect;
+	m_batches[handle.index].hasClip  = true;
+}
+
+void Struktur::Renderer::UIRenderer::ClearBatchClip(UIBatchHandle handle)
+{
+	ASSERT_MSG(handle.IsValid() && handle.index < m_batches.size(),
+	           "ClearBatchClip: invalid batch handle (index %u)", handle.index);
+	if (!handle.IsValid() || handle.index >= m_batches.size())
+	{
+		return;
+	}
+	m_batches[handle.index].hasClip = false;
+}
+
 Struktur::Renderer::UIBatchSlot Struktur::Renderer::UIRenderer::AllocateOrResizeSlot(UIBatchHandle batchHandle,
                                                                                      UIBatchSlot existing,
                                                                                      uint32_t quadCount)

@@ -174,6 +174,72 @@ foreign class UIColor {
     foreign setOnActivate(arg0)
 }
 
+// UI element that masks its children to its own bounds
+foreign class UIClip {
+    // Create UIClip with absolutePosition, relativePosition, absoluteSize, relativeSize components
+    foreign construct new(arg0,arg1,arg2,arg3)
+    // Sets UI Element to be visible
+    foreign isVisible=(arg0)
+    // Sets UI Element to be visible
+    foreign setVisible(arg0)
+    // Gets UI Element to be visible
+    foreign isVisible
+    // Sets UI Element to be enabled
+    foreign IsEnabled=(arg0)
+    // Gets UI Element to be enabled
+    foreign IsEnabled
+    // Sets UI Element to be focusable
+    foreign IsFocusable=(arg0)
+    // Sets UI Element to be focusable
+    foreign setFocusable(arg0)
+    // Gets UI Element to be focusable
+    foreign IsFocusable
+    // Sets the UI Elements position
+    foreign setPosition(arg0,arg1)
+    // Gets the UI Elements position
+    foreign getPosition()
+    // Sets the UI Elements anchor point
+    foreign setAnchorPoint(arg0)
+    // Sets the UI Elements anchor point
+    foreign setSize(arg0,arg1)
+    // Gets the UI Elements size
+    foreign getSize()
+    // Gets the UI Elements bounds
+    foreign getBounds()
+    // Sets the UI Elements tab index
+    foreign setTabIndex(arg0)
+    // Gets the UI Elements tab index
+    foreign getTabIndex()
+    // adds a UI Element as a navigation neighbor
+    foreign setNavigationNeighbor(arg0,arg1)
+    // Gets a UI Element navigation neighbor from a direction
+    foreign getNavigationNeighbor(arg0)
+    // Gets the UI Elements parent
+    foreign getParent()
+    // Sets the UI Elements children
+    foreign getChildren()
+    // Sets the UI Elements Z index
+    foreign setZIndex(arg0)
+    // Sets the UI Elements Z index
+    foreign getZIndex()
+    // Adds a UI Element to elements children
+    foreign addChild(arg0)
+    // Removes a UI Element from the children
+    foreign removeChild(arg0)
+    // Sets the UI Elements on click callback
+    foreign setOnClick(arg0)
+    // Sets the UI Elements on focus callback
+    foreign setOnFocus(arg0)
+    // Sets the UI Elements on lose focus callback
+    foreign setOnLoseFocus(arg0)
+    // Sets the UI Elements on hover callback
+    foreign setOnHover(arg0)
+    // Sets the UI Elements on key pressed callback
+    foreign setOnKeyPressed(arg0)
+    // Sets the UI Elements on activate callback
+    foreign setOnActivate(arg0)
+}
+
 // UI minimal border outline component
 foreign class UIBorder {
     // Create UIBorder with absolutePosition, relativePosition, absoluteSize, relativeSize components
@@ -568,5 +634,87 @@ foreign class IconAtlas {
     foreign setTexture(arg0)
     // Registers name -> a pixel-space (x, y, width, height) sub-rect of the atlas texture
     foreign addIcon(arg0,arg1,arg2,arg3,arg4)
+}
+
+// UI element that adds scrolling on top of UIClip's masking
+foreign class UIScroll {
+    // Create UIScroll with absolutePosition, relativePosition, absoluteSize, relativeSize components
+    foreign construct new(arg0,arg1,arg2,arg3)
+    // Toggles vertical scrolling (default true)
+    foreign setVerticalScrollEnabled(arg0)
+    // Toggles horizontal scrolling (default true)
+    foreign setHorizontalScrollEnabled(arg0)
+    // Sets the scroll offset directly (clamped to content bounds)
+    foreign setScrollOffset(arg0)
+    // Gets the current scroll offset
+    foreign getScrollOffset()
+    // Gets the combined extent of this element's direct children
+    foreign getContentSize()
+    // Sets the camera-style focus-follow deadzone band
+    foreign setFocusDeadzone(arg0)
+    // Sets the camera-style focus-follow lerp damping rate
+    foreign setFocusDamping(arg0)
+    // Sets a UIElement (typically a UIPanel) to two-way sync as this scroll's thumb/indicator
+    foreign setScrollIndicator(arg0)
+    // Sets UI Element to be visible
+    foreign isVisible=(arg0)
+    // Sets UI Element to be visible
+    foreign setVisible(arg0)
+    // Gets UI Element to be visible
+    foreign isVisible
+    // Sets UI Element to be enabled
+    foreign IsEnabled=(arg0)
+    // Gets UI Element to be enabled
+    foreign IsEnabled
+    // Sets UI Element to be focusable
+    foreign IsFocusable=(arg0)
+    // Sets UI Element to be focusable
+    foreign setFocusable(arg0)
+    // Gets UI Element to be focusable
+    foreign IsFocusable
+    // Sets the UI Elements position
+    foreign setPosition(arg0,arg1)
+    // Gets the UI Elements position
+    foreign getPosition()
+    // Sets the UI Elements anchor point
+    foreign setAnchorPoint(arg0)
+    // Sets the UI Elements anchor point
+    foreign setSize(arg0,arg1)
+    // Gets the UI Elements size
+    foreign getSize()
+    // Gets the UI Elements bounds
+    foreign getBounds()
+    // Sets the UI Elements tab index
+    foreign setTabIndex(arg0)
+    // Gets the UI Elements tab index
+    foreign getTabIndex()
+    // adds a UI Element as a navigation neighbor
+    foreign setNavigationNeighbor(arg0,arg1)
+    // Gets a UI Element navigation neighbor from a direction
+    foreign getNavigationNeighbor(arg0)
+    // Gets the UI Elements parent
+    foreign getParent()
+    // Sets the UI Elements children
+    foreign getChildren()
+    // Sets the UI Elements Z index
+    foreign setZIndex(arg0)
+    // Sets the UI Elements Z index
+    foreign getZIndex()
+    // Adds a UI Element to elements children
+    foreign addChild(arg0)
+    // Removes a UI Element from the children
+    foreign removeChild(arg0)
+    // Sets the UI Elements on click callback
+    foreign setOnClick(arg0)
+    // Sets the UI Elements on focus callback
+    foreign setOnFocus(arg0)
+    // Sets the UI Elements on lose focus callback
+    foreign setOnLoseFocus(arg0)
+    // Sets the UI Elements on hover callback
+    foreign setOnHover(arg0)
+    // Sets the UI Elements on key pressed callback
+    foreign setOnKeyPressed(arg0)
+    // Sets the UI Elements on activate callback
+    foreign setOnActivate(arg0)
 }
 

@@ -190,6 +190,14 @@ public:
 	// root's z-index changes after the fact (see WrenUI.cpp's setZIndex binding), same "renderer-side state needs
 	// an explicit follow-up call" contract SetBatchRoot's own comment already documents for AssignBatches.
 	void SetBatchDrawOrder(UIBatchHandle handle, int32_t drawOrder);
+	// Sets the batch's scissor rect (see UIBatch::clipRect/hasClip, already consumed by SubmitBatch's
+	// bgfx::setScissor) - clipping is strictly per-batch, applied uniformly to every run within it, so a subtree
+	// that needs to be clipped independent of whatever it's nested inside must be its own batch root (see
+	// UIClip). Safe to call on any batch regardless of prior clip state; bgfx resets scissor to none after every
+	// submit() (BGFX_DISCARD_ALL, this codebase's default), so there's no bleed risk between batches even without
+	// an explicit Clear.
+	void SetBatchClip(UIBatchHandle handle, const Util::Math::Rect& clipRect);
+	void ClearBatchClip(UIBatchHandle handle);
 	// Ensures batch's cpuVertices can hold quadCount quads, reusing existing's slot in place if it's already
 	// big enough (only quadCount changes), or relocating to a freshly appended region at the end of
 	// cpuVertices sized to ceil(quadCount * 1.5) quads otherwise - growing in place isn't attempted, so the old

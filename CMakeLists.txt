@@ -404,6 +404,7 @@ set(WREN_BINDING_SOURCES
                                                 src/WrenBindings/WrenFlags.cpp
                                                 src/WrenBindings/WrenEvents.cpp
                                                 src/WrenBindings/WrenApplication.cpp
+                                                src/WrenBindings/WrenAudio.cpp
                                                 src/WrenBindings/WrenGameObject.cpp
                                                 src/WrenBindings/WrenInput.cpp
                                                 src/WrenBindings/WrenDebug.cpp
@@ -508,6 +509,8 @@ set(SOURCES
     src/Engine/UI/UIColor.h                     src/Engine/UI/UIColor.cpp
     src/Engine/UI/UITexture.h                   src/Engine/UI/UITexture.cpp
     src/Engine/UI/UIBorder.h                    src/Engine/UI/UIBorder.cpp
+    src/Engine/UI/UIClip.h                      src/Engine/UI/UIClip.cpp
+    src/Engine/UI/UIScroll.h                    src/Engine/UI/UIScroll.cpp
 
     src/Engine/World/Level.h                    src/Engine/World/Level.cpp
     src/Engine/World/TileMap.h                  src/Engine/World/TileMap.cpp

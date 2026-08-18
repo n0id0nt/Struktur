@@ -227,20 +227,27 @@ WrenForeignMethodFn Struktur::Wren::WrenScriptEngine::OnBindForeignMethod(WrenVM
 		method = registry.FindMethod(module, className, isStatic, signature);
 	}
 
-	// Check for inherited methods
-	if (!method)
+	// Check for inherited methods - walks the full ancestor chain (not just one level), since a foreign class can
+	// itself inherit from another foreign class (see UIScroll : UIClip : UIElement) rather than only ever
+	// inheriting directly from a class that already has every method natively registered on it.
+	std::string currentClassName = className;
+	while (!method)
 	{
+		std::string parentClassName;
 		for (const auto& binding : registry.classes)
 		{
-			if (binding.moduleName == module && binding.className == className)
+			if (binding.moduleName == module && binding.className == currentClassName)
 			{
-				if (!binding.parentClassName.empty())
-				{
-					method = registry.FindMethod(module, binding.parentClassName.c_str(), isStatic, signature);
-				}
+				parentClassName = binding.parentClassName;
 				break;
 			}
 		}
+		if (parentClassName.empty())
+		{
+			break;
+		}
+		method          = registry.FindMethod(module, parentClassName.c_str(), isStatic, signature);
+		currentClassName = parentClassName;
 	}
 
 	if (!method)

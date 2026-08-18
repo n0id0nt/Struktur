@@ -190,7 +190,7 @@ class MainMenuState is BaseState {
     }
 
     openSettings() {
-        System.print("Settings not implemented yet")
+        _stateManager.changeState("Settings")
     }
 
     quit() {

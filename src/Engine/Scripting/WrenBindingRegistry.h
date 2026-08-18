@@ -211,6 +211,7 @@ void RegisterDebugBindings(BindingRegistry& registry);
 void RegisterSerialisationBindings(BindingRegistry& registry);
 void RegisterVariableSubstitutionBindings(BindingRegistry& registry);
 void RegisterEventsBindings(BindingRegistry& registry);
+void RegisterAudioBindings(BindingRegistry& registry);
 
 // Call this once at startup
 void RegisterAllBindings(BindingRegistry& registry);

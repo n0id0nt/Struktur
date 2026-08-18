@@ -193,13 +193,22 @@ void CodeGenerator::GenerateModuleFile(const std::string& outputDir, const std::
 			auto parentIt = classMap.find(cls->parentClassName);
 			if (parentIt != classMap.end())
 			{
-				// Copy parent's methods to this class
+				// Copy parent's methods to this class - excluding constructors ("init ..."). Each foreign class
+				// has its own native allocate/finalize pair (see WREN_FOREIGN_CLASS), so a parent's constructor
+				// isn't meaningful to inherit textually the way instance methods are; blindly copying it also
+				// collides when the child (as every current one does) declares its own same-signature
+				// constructor, which Wren then rejects as a duplicate method definition.
 				auto parentMethodsIt = methodsByClass.find(cls->parentClassName);
 				if (parentMethodsIt != methodsByClass.end())
 				{
 					auto& childMethods = methodsByClass[cls->className];
-					childMethods.insert(childMethods.end(), parentMethodsIt->second.begin(),
-					                    parentMethodsIt->second.end());
+					for (const auto* parentMethod : parentMethodsIt->second)
+					{
+						if (!parentMethod->signature.starts_with("init "))
+						{
+							childMethods.push_back(parentMethod);
+						}
+					}
 				}
 			}
 		}

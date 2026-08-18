@@ -8,10 +8,12 @@
 #include "Engine/Renderer/UIRenderer.h"
 #include "Engine/Scripting/WrenBindingRegistry.h"
 #include "Engine/UI/UIBorder.h"
+#include "Engine/UI/UIClip.h"
 #include "Engine/UI/UIColor.h"
 #include "Engine/UI/UILabel.h"
 #include "Engine/UI/UIPanel.h"
 #include "Engine/UI/UIRichLabel.h"
+#include "Engine/UI/UIScroll.h"
 #include "Engine/UI/UITexture.h"
 #include "WrenMath.h"
 #include "WrenResourceManager.h"
@@ -296,7 +298,7 @@ void wren_UIElementSetNavigationNeighbor(WrenVM* vm)
 		return;
 	}
 	Struktur::UI::NavigationDirection dir = static_cast<Struktur::UI::NavigationDirection>(wrenGetSlotDouble(vm, 1));
-	WrenUIElement* neighborElement        = static_cast<WrenUIElement*>(wrenGetSlotForeign(vm, 0));
+	WrenUIElement* neighborElement        = static_cast<WrenUIElement*>(wrenGetSlotForeign(vm, 2));
 	uiElement->element->SetNavigationNeighbor(dir, neighborElement->element);
 }
 
@@ -358,8 +360,12 @@ void wren_UIElementSetZIndex(WrenVM* vm)
 
 	// SetZIndex alone only reorders quads within a shared batch (see UIElement::SetZIndex's own comment) - a
 	// batch root's cross-batch order (UIBatch::drawOrder) needs this explicit follow-up, the same "renderer-side
-	// state needs its own sync call" contract SetBatchRoot's comment already documents for AssignBatches.
-	if (uiElement->element->IsBatchRoot())
+	// state needs its own sync call" contract SetBatchRoot's comment already documents for AssignBatches. Only
+	// meaningful once a real batch actually exists (GetBatch().IsValid()) - a batch root set up before its first
+	// AssignBatches pass (e.g. UIClip/UIScroll, which call SetBatchRoot(true) in their own constructor rather
+	// than only once attached via UIManager.addUIElement) has no batch yet to redirect; AssignBatches' own
+	// "Initial sync only" step already seeds drawOrder from GetZIndex() once that first pass actually runs.
+	if (uiElement->element->IsBatchRoot() && uiElement->element->GetBatch().IsValid())
 	{
 		Struktur::GameContext* context = static_cast<Struktur::GameContext*>(wrenGetUserData(vm));
 		context->GetUIRenderer().SetBatchDrawOrder(uiElement->element->GetBatch(), zIndex);
@@ -972,6 +978,186 @@ void wren_UIBorderSetWidth(WrenVM* vm)
 }
 
 // ============================================================================
+// UICLIP BINDINGS
+// ============================================================================
+
+void wren_UIClipAllocate(WrenVM* vm)
+{
+	wrenSetSlotNewForeign(vm, 0, 0, sizeof(WrenUIElement));
+}
+
+void wren_UIClipFinalize(void* data)
+{
+	WrenUIElement* uiElement = (WrenUIElement*)data;
+	uiElement->~WrenUIElement();
+}
+
+// UIClip.new(_,_,_,_)
+void wren_UIClipNew(WrenVM* vm)
+{
+	WrenUIElement* uiElement = static_cast<WrenUIElement*>(wrenGetSlotForeign(vm, 0));
+
+	WrenVec2* positionPixel      = static_cast<WrenVec2*>(wrenGetSlotForeign(vm, 1));
+	WrenVec2* positionPercentage = static_cast<WrenVec2*>(wrenGetSlotForeign(vm, 2));
+	WrenVec2* sizePixel          = static_cast<WrenVec2*>(wrenGetSlotForeign(vm, 3));
+	WrenVec2* sizePercentage     = static_cast<WrenVec2*>(wrenGetSlotForeign(vm, 4));
+	auto* clip = new Struktur::UI::UIClip(positionPixel->value, positionPercentage->value, sizePixel->value,
+	                                      sizePercentage->value);
+	new (uiElement) WrenUIElement{clip};
+#ifdef DEBUG
+	char stackBuffer[4096];
+	uiElement->callstack = wrenTraceGetCallStackString(vm, stackBuffer, sizeof(stackBuffer));
+#endif
+}
+
+// ============================================================================
+// UISCROLL BINDINGS
+// ============================================================================
+
+void wren_UIScrollAllocate(WrenVM* vm)
+{
+	wrenSetSlotNewForeign(vm, 0, 0, sizeof(WrenUIElement));
+}
+
+void wren_UIScrollFinalize(void* data)
+{
+	WrenUIElement* uiElement = (WrenUIElement*)data;
+	uiElement->~WrenUIElement();
+}
+
+// UIScroll.new(_,_,_,_)
+void wren_UIScrollNew(WrenVM* vm)
+{
+	WrenUIElement* uiElement = static_cast<WrenUIElement*>(wrenGetSlotForeign(vm, 0));
+
+	WrenVec2* positionPixel      = static_cast<WrenVec2*>(wrenGetSlotForeign(vm, 1));
+	WrenVec2* positionPercentage = static_cast<WrenVec2*>(wrenGetSlotForeign(vm, 2));
+	WrenVec2* sizePixel          = static_cast<WrenVec2*>(wrenGetSlotForeign(vm, 3));
+	WrenVec2* sizePercentage     = static_cast<WrenVec2*>(wrenGetSlotForeign(vm, 4));
+	auto* scroll = new Struktur::UI::UIScroll(positionPixel->value, positionPercentage->value, sizePixel->value,
+	                                          sizePercentage->value);
+	new (uiElement) WrenUIElement{scroll};
+#ifdef DEBUG
+	char stackBuffer[4096];
+	uiElement->callstack = wrenTraceGetCallStackString(vm, stackBuffer, sizeof(stackBuffer));
+#endif
+}
+
+// UIScroll.setVerticalScrollEnabled(enabled)
+void wren_UIScrollSetVerticalScrollEnabled(WrenVM* vm)
+{
+	WrenUIElement* uiElement = static_cast<WrenUIElement*>(wrenGetSlotForeign(vm, 0));
+	if (!uiElement->element)
+	{
+		DEBUG_ERROR("UIScroll.setVerticalScrollEnabled: element is Null");
+		return;
+	}
+	bool enabled                    = wrenGetSlotBool(vm, 1);
+	Struktur::UI::UIScroll* uiScroll = dynamic_cast<Struktur::UI::UIScroll*>(uiElement->element);
+	uiScroll->SetVerticalScrollEnabled(enabled);
+}
+
+// UIScroll.setHorizontalScrollEnabled(enabled)
+void wren_UIScrollSetHorizontalScrollEnabled(WrenVM* vm)
+{
+	WrenUIElement* uiElement = static_cast<WrenUIElement*>(wrenGetSlotForeign(vm, 0));
+	if (!uiElement->element)
+	{
+		DEBUG_ERROR("UIScroll.setHorizontalScrollEnabled: element is Null");
+		return;
+	}
+	bool enabled                    = wrenGetSlotBool(vm, 1);
+	Struktur::UI::UIScroll* uiScroll = dynamic_cast<Struktur::UI::UIScroll*>(uiElement->element);
+	uiScroll->SetHorizontalScrollEnabled(enabled);
+}
+
+// UIScroll.setScrollOffset(offset)
+void wren_UIScrollSetScrollOffset(WrenVM* vm)
+{
+	WrenUIElement* uiElement = static_cast<WrenUIElement*>(wrenGetSlotForeign(vm, 0));
+	if (!uiElement->element)
+	{
+		DEBUG_ERROR("UIScroll.setScrollOffset: element is Null");
+		return;
+	}
+	WrenVec2* offset                = static_cast<WrenVec2*>(wrenGetSlotForeign(vm, 1));
+	Struktur::UI::UIScroll* uiScroll = dynamic_cast<Struktur::UI::UIScroll*>(uiElement->element);
+	uiScroll->SetScrollOffset(offset->value);
+}
+
+// UIScroll.getScrollOffset()
+void wren_UIScrollGetScrollOffset(WrenVM* vm)
+{
+	WrenUIElement* uiElement = static_cast<WrenUIElement*>(wrenGetSlotForeign(vm, 0));
+	if (!uiElement->element)
+	{
+		DEBUG_ERROR("UIScroll.getScrollOffset: element is Null");
+		return;
+	}
+	Struktur::UI::UIScroll* uiScroll = dynamic_cast<Struktur::UI::UIScroll*>(uiElement->element);
+	wrenGetVariable(vm, "math", "Vec2", 1);  // Get class into slot 1
+	WrenVec2* vec2 = (WrenVec2*)wrenSetSlotNewForeign(vm, 0, 1, sizeof(WrenVec2));
+	new (vec2) WrenVec2(uiScroll->GetScrollOffset());
+}
+
+// UIScroll.getContentSize()
+void wren_UIScrollGetContentSize(WrenVM* vm)
+{
+	WrenUIElement* uiElement = static_cast<WrenUIElement*>(wrenGetSlotForeign(vm, 0));
+	if (!uiElement->element)
+	{
+		DEBUG_ERROR("UIScroll.getContentSize: element is Null");
+		return;
+	}
+	Struktur::UI::UIScroll* uiScroll = dynamic_cast<Struktur::UI::UIScroll*>(uiElement->element);
+	wrenGetVariable(vm, "math", "Vec2", 1);  // Get class into slot 1
+	WrenVec2* vec2 = (WrenVec2*)wrenSetSlotNewForeign(vm, 0, 1, sizeof(WrenVec2));
+	new (vec2) WrenVec2(uiScroll->GetContentSize());
+}
+
+// UIScroll.setFocusDeadzone(deadzone)
+void wren_UIScrollSetFocusDeadzone(WrenVM* vm)
+{
+	WrenUIElement* uiElement = static_cast<WrenUIElement*>(wrenGetSlotForeign(vm, 0));
+	if (!uiElement->element)
+	{
+		DEBUG_ERROR("UIScroll.setFocusDeadzone: element is Null");
+		return;
+	}
+	WrenVec2* deadzone               = static_cast<WrenVec2*>(wrenGetSlotForeign(vm, 1));
+	Struktur::UI::UIScroll* uiScroll = dynamic_cast<Struktur::UI::UIScroll*>(uiElement->element);
+	uiScroll->SetFocusDeadzone(deadzone->value);
+}
+
+// UIScroll.setFocusDamping(damping)
+void wren_UIScrollSetFocusDamping(WrenVM* vm)
+{
+	WrenUIElement* uiElement = static_cast<WrenUIElement*>(wrenGetSlotForeign(vm, 0));
+	if (!uiElement->element)
+	{
+		DEBUG_ERROR("UIScroll.setFocusDamping: element is Null");
+		return;
+	}
+	WrenVec2* damping                = static_cast<WrenVec2*>(wrenGetSlotForeign(vm, 1));
+	Struktur::UI::UIScroll* uiScroll = dynamic_cast<Struktur::UI::UIScroll*>(uiElement->element);
+	uiScroll->SetFocusDamping(damping->value);
+}
+
+// UIScroll.setScrollIndicator(indicator)
+void wren_UIScrollSetScrollIndicator(WrenVM* vm)
+{
+	WrenUIElement* uiElement = static_cast<WrenUIElement*>(wrenGetSlotForeign(vm, 0));
+	if (!uiElement->element)
+	{
+		DEBUG_ERROR("UIScroll.setScrollIndicator: element is Null");
+		return;
+	}
+	WrenUIElement* indicator         = static_cast<WrenUIElement*>(wrenGetSlotForeign(vm, 1));
+	Struktur::UI::UIScroll* uiScroll = dynamic_cast<Struktur::UI::UIScroll*>(uiElement->element);
+	uiScroll->SetScrollIndicator(indicator->element);
+}
+
+// ============================================================================
 // ICONATLAS BINDINGS - not a UIElement (see WrenIconAtlasHandle), just a data value UIRichLabel.setIconAtlas
 // copies out of.
 // ============================================================================
@@ -1446,4 +1632,35 @@ WREN_BINDING_MODULE(UI)
 	                  "means show everything");
 	WREN_CLASS_METHOD(registry, "ui", "UIRichLabel", "getGlyphCount()", wren_UIRichLabelGetGlyphCount,
 	                  "Gets the total drawable glyph count, for a reveal loop to compare its progress against");
+
+	// Register UIClip foreign class - masks its children to its own bounds (see UIClip.h), no scroll logic.
+	WREN_FOREIGN_CLASS(registry, "ui", "UIClip", wren_UIClipAllocate, wren_UIClipFinalize,
+	                   "UI element that masks its children to its own bounds");
+	WREN_CLASS_INHERITANCE(registry, "ui", "UIClip", "UIElement");
+	WREN_CONSTRUCTOR(registry, "ui", "UIClip", "new(_,_,_,_)", wren_UIClipNew,
+	                 "Create UIClip with absolutePosition, relativePosition, absoluteSize, relativeSize components");
+
+	// Register UIScroll foreign class - adds per-axis scrolling, camera-style deadzone focus-follow, and a
+	// two-way scroll-indicator sync on top of UIClip's masking (see UIScroll.h).
+	WREN_FOREIGN_CLASS(registry, "ui", "UIScroll", wren_UIScrollAllocate, wren_UIScrollFinalize,
+	                   "UI element that adds scrolling on top of UIClip's masking");
+	WREN_CLASS_INHERITANCE(registry, "ui", "UIScroll", "UIClip");
+	WREN_CONSTRUCTOR(registry, "ui", "UIScroll", "new(_,_,_,_)", wren_UIScrollNew,
+	                 "Create UIScroll with absolutePosition, relativePosition, absoluteSize, relativeSize components");
+	WREN_CLASS_METHOD(registry, "ui", "UIScroll", "setVerticalScrollEnabled(_)",
+	                  wren_UIScrollSetVerticalScrollEnabled, "Toggles vertical scrolling (default true)");
+	WREN_CLASS_METHOD(registry, "ui", "UIScroll", "setHorizontalScrollEnabled(_)",
+	                  wren_UIScrollSetHorizontalScrollEnabled, "Toggles horizontal scrolling (default true)");
+	WREN_CLASS_METHOD(registry, "ui", "UIScroll", "setScrollOffset(_)", wren_UIScrollSetScrollOffset,
+	                  "Sets the scroll offset directly (clamped to content bounds)");
+	WREN_CLASS_METHOD(registry, "ui", "UIScroll", "getScrollOffset()", wren_UIScrollGetScrollOffset,
+	                  "Gets the current scroll offset");
+	WREN_CLASS_METHOD(registry, "ui", "UIScroll", "getContentSize()", wren_UIScrollGetContentSize,
+	                  "Gets the combined extent of this element's direct children");
+	WREN_CLASS_METHOD(registry, "ui", "UIScroll", "setFocusDeadzone(_)", wren_UIScrollSetFocusDeadzone,
+	                  "Sets the camera-style focus-follow deadzone band");
+	WREN_CLASS_METHOD(registry, "ui", "UIScroll", "setFocusDamping(_)", wren_UIScrollSetFocusDamping,
+	                  "Sets the camera-style focus-follow lerp damping rate");
+	WREN_CLASS_METHOD(registry, "ui", "UIScroll", "setScrollIndicator(_)", wren_UIScrollSetScrollIndicator,
+	                  "Sets a UIElement (typically a UIPanel) to two-way sync as this scroll's thumb/indicator");
 }

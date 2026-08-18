@@ -100,6 +100,15 @@ public:
 	glm::vec2 GetSize() const;
 	Util::Math::Rect GetBounds() const;
 
+	// Additive offset a parent applies to every child's GetPosition() (e.g. a scroll container's current scroll
+	// offset) - defaults to zero, so every existing widget is unaffected. Override in a subclass that needs to
+	// reposition its whole subtree without touching each child's own m_absolutePosition/m_relativePosition, and
+	// call UpdateBounds() when the value changes so the recursive cascade refreshes descendants' cached bounds.
+	virtual glm::vec2 GetContentOffset() const
+	{
+		return glm::vec2(0.0f, 0.0f);
+	}
+
 	// Utility methods
 	bool IsPointInside(const glm::vec2& point) const;
 
@@ -119,6 +128,18 @@ public:
 	bool IsEnabled() const
 	{
 		return m_enabled;
+	}
+	// IsVisible() plus a bounds-overlap check against the nearest clipping ancestor's current viewport (see
+	// ClipsChildren) - an element scrolled/clipped out of view is IsVisible()==true (nothing toggled it off) but
+	// not effectively visible. No clipping ancestor -> identical to IsVisible(). Used by FocusNavigator so
+	// navigation skips elements the player can't actually see (see FocusNavigator.cpp).
+	bool IsEffectivelyVisible() const;
+
+	// True for elements that mask their children to their own current bounds (see UIClip) - checked by
+	// IsEffectivelyVisible's ancestor walk. Default false so every existing widget is unaffected.
+	virtual bool ClipsChildren() const
+	{
+		return false;
 	}
 
 	// Focus and navigation

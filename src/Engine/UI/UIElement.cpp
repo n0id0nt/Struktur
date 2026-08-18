@@ -91,19 +91,21 @@ void Struktur::UI::UIElement::SetAnchorPoint(const glm::vec2& anchorPoint)
 
 glm::vec2 Struktur::UI::UIElement::GetPosition() const
 {
-	glm::vec2 basePosition = glm::vec2();
-	glm::vec2 baseSize     = glm::vec2();
+	glm::vec2 basePosition  = glm::vec2();
+	glm::vec2 baseSize      = glm::vec2();
+	glm::vec2 contentOffset = glm::vec2();
 	if (m_parent)
 	{
-		basePosition = m_parent->GetPosition();
-		baseSize     = m_parent->GetSize();
+		basePosition  = m_parent->GetPosition();
+		baseSize      = m_parent->GetSize();
+		contentOffset = m_parent->GetContentOffset();
 	}
 
 	glm::vec2 absolutePosition = m_absolutePosition;
 	glm::vec2 relativePosition = baseSize * m_relativePosition;
 	glm::vec2 anchorOffset     = m_anchorPoint * GetSize();
 
-	return basePosition + absolutePosition + relativePosition - anchorOffset;
+	return basePosition + contentOffset + absolutePosition + relativePosition - anchorOffset;
 }
 
 glm::vec2 Struktur::UI::UIElement::GetSize() const
@@ -131,6 +133,26 @@ bool Struktur::UI::UIElement::IsPointInside(const glm::vec2& point) const
 {
 	return point.x >= m_bounds.x && point.x <= m_bounds.x + m_bounds.width && point.y >= m_bounds.y &&
 	       point.y <= m_bounds.y + m_bounds.height;
+}
+
+bool Struktur::UI::UIElement::IsEffectivelyVisible() const
+{
+	if (!m_visible)
+	{
+		return false;
+	}
+
+	for (UIElement* ancestor = m_parent; ancestor != nullptr; ancestor = ancestor->m_parent)
+	{
+		if (ancestor->ClipsChildren())
+		{
+			const Util::Math::Rect& viewport = ancestor->m_bounds;
+			return Util::Math::RectOverlaps(m_bounds, viewport.x, viewport.y, viewport.x + viewport.width,
+			                                viewport.y + viewport.height);
+		}
+	}
+
+	return true;
 }
 
 void Struktur::UI::UIElement::SetNavigationNeighbor(NavigationDirection dir, UIElement* neighbor)
@@ -336,4 +358,12 @@ void Struktur::UI::UIElement::UpdateBounds()
 	glm::vec2 position = GetPosition();
 	glm::vec2 size     = GetSize();
 	m_bounds           = Util::Math::Rect{position.x, position.y, size.x, size.y};
+
+	// Cascade to children so a parent move/resize (or content-offset change, e.g. scrolling) keeps every
+	// descendant's cached m_bounds in sync with the live GetPosition()/GetSize() parent-walk formula, instead of
+	// only refreshing this element's own snapshot.
+	for (auto& child : m_children)
+	{
+		child->UpdateBounds();
+	}
 }

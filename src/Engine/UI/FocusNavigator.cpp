@@ -52,6 +52,14 @@ bool Struktur::UI::FocusNavigator::NavigateDirection(GameContext& context, Navig
 	return false;
 }
 
+namespace
+{
+bool IsNavigable(const Struktur::UI::UIElement* element)
+{
+	return element->IsEffectivelyVisible() && element->IsEnabled() && element->IsFocusable();
+}
+}  // namespace
+
 bool Struktur::UI::FocusNavigator::NavigateToNext(GameContext& context)
 {
 	if (m_focusableElements.empty())
@@ -59,22 +67,33 @@ bool Struktur::UI::FocusNavigator::NavigateToNext(GameContext& context)
 		return false;
 	}
 
+	size_t startIndex;
 	if (!m_currentFocus)
 	{
-		SetFocus(context, m_focusableElements[0]);
-		return true;
+		startIndex = m_focusableElements.size() - 1;  // so step 1 below lands on index 0 first
 	}
-
-	auto it = std::find(m_focusableElements.begin(), m_focusableElements.end(), m_currentFocus);
-	if (it != m_focusableElements.end())
+	else
 	{
-		++it;
+		auto it = std::find(m_focusableElements.begin(), m_focusableElements.end(), m_currentFocus);
 		if (it == m_focusableElements.end())
 		{
-			it = m_focusableElements.begin();  // Wrap around
+			return false;
 		}
-		SetFocus(context, *it);
-		return true;
+		startIndex = static_cast<size_t>(std::distance(m_focusableElements.begin(), it));
+	}
+
+	// Walk forward from the current element, skipping any candidate that isn't actually navigable (see
+	// IsNavigable) - bounded by the list's own size so an all-invisible list terminates instead of spinning
+	// forever.
+	for (size_t step = 1; step <= m_focusableElements.size(); ++step)
+	{
+		size_t index          = (startIndex + step) % m_focusableElements.size();
+		UIElement* candidate = m_focusableElements[index];
+		if (IsNavigable(candidate))
+		{
+			SetFocus(context, candidate);
+			return true;
+		}
 	}
 	return false;
 }
@@ -86,22 +105,32 @@ bool Struktur::UI::FocusNavigator::NavigateToPrevious(GameContext& context)
 		return false;
 	}
 
+	size_t startIndex;
 	if (!m_currentFocus)
 	{
-		SetFocus(context, m_focusableElements.back());
-		return true;
+		startIndex = 0;  // so step 1 below lands on back() first
+	}
+	else
+	{
+		auto it = std::find(m_focusableElements.begin(), m_focusableElements.end(), m_currentFocus);
+		if (it == m_focusableElements.end())
+		{
+			return false;
+		}
+		startIndex = static_cast<size_t>(std::distance(m_focusableElements.begin(), it));
 	}
 
-	auto it = std::find(m_focusableElements.begin(), m_focusableElements.end(), m_currentFocus);
-	if (it != m_focusableElements.end())
+	for (size_t step = 1; step <= m_focusableElements.size(); ++step)
 	{
-		if (it == m_focusableElements.begin())
+		// + size() before the modulo so this stays well-defined for unsigned arithmetic when startIndex - step
+		// would otherwise underflow.
+		size_t index          = (startIndex + m_focusableElements.size() - step) % m_focusableElements.size();
+		UIElement* candidate = m_focusableElements[index];
+		if (IsNavigable(candidate))
 		{
-			it = m_focusableElements.end();  // Wrap around
+			SetFocus(context, candidate);
+			return true;
 		}
-		--it;
-		SetFocus(context, *it);
-		return true;
 	}
 	return false;
 }
@@ -154,7 +183,7 @@ Struktur::UI::UIElement* Struktur::UI::FocusNavigator::FindNextElement(Navigatio
 
 	// First check manual navigation neighbors
 	UIElement* neighbor = m_currentFocus->GetNavigationNeighbor(direction);
-	if (neighbor && neighbor->IsVisible() && neighbor->IsEnabled() && neighbor->IsFocusable())
+	if (neighbor && neighbor->IsEffectivelyVisible() && neighbor->IsEnabled() && neighbor->IsFocusable())
 	{
 		return neighbor;
 	}
@@ -176,7 +205,8 @@ Struktur::UI::UIElement* Struktur::UI::FocusNavigator::FindElementByDirection(Na
 
 	for (UIElement* element : m_focusableElements)
 	{
-		if (element == m_currentFocus || !element->IsVisible() || !element->IsEnabled() || !element->IsFocusable())
+		if (element == m_currentFocus || !element->IsEffectivelyVisible() || !element->IsEnabled() ||
+		    !element->IsFocusable())
 		{
 			continue;
 		}
