@@ -217,6 +217,15 @@ if(PLATFORM_DESKTOP OR PLATFORM_WEB)
         # PROFILES (see bgfxToolUtils.cmake) includes 100_es (GLES2/WebGL-compatible) alongside the desktop
         # profiles, for free, on every desktop build - that's what web's bgfx picks up at runtime below.
         function(struktur_compile_shader NAME)
+            # DEBUG requests shaderc's --debug (embeds source-level debug info, e.g. into the compiled DXBC/DXIL
+            # blob on Windows) so a GPU capture tool (RenderDoc) can show real disassembly/source and let you
+            # step a shader's execution with named variables instead of raw, symbol-free bytecode. Passed
+            # unconditionally (not gated to Debug-vs-Release config) because this project uses a multi-config
+            # generator (Visual Studio) where CMAKE_BUILD_TYPE isn't meaningful at configure time - the config
+            # is only chosen at build time - and a real per-config gate would need a generator expression
+            # threaded through as a bare option, which is exactly the bug this DEBUG option itself was just
+            # fixed to avoid (see bgfxToolUtils.cmake's own comment on this same line shape). The extra debug
+            # info is small and harmless for a project this size; revisit if that ever stops being true.
             bgfx_compile_shaders(
                 TYPE VERTEX
                 SHADERS ${STRUKTUR_SHADER_DIR}/vs_${NAME}.sc
@@ -224,6 +233,7 @@ if(PLATFORM_DESKTOP OR PLATFORM_WEB)
                 OUTPUT_DIR ${STRUKTUR_SHADER_OUTPUT_DIR}
                 OUT_FILES_VAR ${NAME}_VS_OUT
                 AS_HEADERS
+                DEBUG
             )
             bgfx_compile_shaders(
                 TYPE FRAGMENT
@@ -232,6 +242,7 @@ if(PLATFORM_DESKTOP OR PLATFORM_WEB)
                 OUTPUT_DIR ${STRUKTUR_SHADER_OUTPUT_DIR}
                 OUT_FILES_VAR ${NAME}_FS_OUT
                 AS_HEADERS
+                DEBUG
             )
             set(STRUKTUR_SHADER_OUTPUTS ${STRUKTUR_SHADER_OUTPUTS} ${${NAME}_VS_OUT} ${${NAME}_FS_OUT} PARENT_SCOPE)
         endfunction()
