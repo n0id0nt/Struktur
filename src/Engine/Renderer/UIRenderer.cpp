@@ -394,7 +394,8 @@ void Struktur::Renderer::UIRenderer::SubmitAnimatedBatch(GameContext& context, A
 	// already-uploaded quads actually move/pulse frame to frame. An inactive effect's uniforms are simply
 	// never read by the shader for a vertex whose packed animEffectMask doesn't set that bit, so binding all
 	// of them unconditionally here (rather than branching per-batch on which bits are active) is harmless.
-	float timeValue[4] = {(float)context.GetTimeSystem().scaledTime, 0.0f, 0.0f, 0.0f};
+	double timeSource  = batch.useUnscaledTime ? context.GetTimeSystem().unscaledTime : context.GetTimeSystem().scaledTime;
+	float timeValue[4] = {(float)timeSource, 0.0f, 0.0f, 0.0f};
 	bgfx::setUniform(GetOrCreateUniform("time"), timeValue);
 	float waveAmplitude[4] = {batch.waveAmplitude, 0.0f, 0.0f, 0.0f};
 	bgfx::setUniform(GetOrCreateUniform("waveAmplitude"), waveAmplitude);
@@ -476,6 +477,7 @@ Struktur::Renderer::AnimatedBatchHandle Struktur::Renderer::UIRenderer::CreateOr
 	batch.tornadoFrequency   = params.tornadoFrequency;
 	batch.fadeStart          = params.fadeStart;
 	batch.fadeLength         = params.fadeLength;
+	batch.useUnscaledTime    = params.useUnscaledTime;
 	batch.drawOrder          = drawOrder;
 	batch.dirty              = true;
 	return handle;

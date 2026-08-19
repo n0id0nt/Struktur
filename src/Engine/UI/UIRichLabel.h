@@ -112,6 +112,11 @@ private:
 	// space/tab text codepoints plus resolved icon runs, in reading order across the whole label) are actually
 	// drawn - see SetVisibleGlyphCount.
 	int m_visibleGlyphCount = -1;
+	// Which clock drives [wave]/[shake]/[pulse]/etc. animation for this label (see AnimatedTextBatch::
+	// useUnscaledTime) - false (the default) follows GameContext::GetTimeSystem().scaledTime, matching gameplay
+	// rich text that should pause/slow along with the rest of the game. Set true for UI that must keep animating
+	// through a pause or slow-mo, e.g. a main-menu label rendered while gameplay time is stopped.
+	bool m_useUnscaledTime = false;
 
 	// One handle per animated draw group from the most recent dirty Render() pass (see RenderLine/
 	// UIRichLabelAnimGroup) - fully destroyed and rebuilt from scratch every time m_visualDirty triggers a
@@ -184,6 +189,18 @@ public:
 	int GetVisibleGlyphCount() const
 	{
 		return m_visibleGlyphCount;
+	}
+
+	// See m_useUnscaledTime. Marks dirty so any already-built animated batches pick up the new clock on the
+	// next Render() pass rather than waiting for some unrelated change to trigger a rebuild.
+	void SetUseUnscaledTime(bool useUnscaled)
+	{
+		m_useUnscaledTime = useUnscaled;
+		m_visualDirty     = true;
+	}
+	bool GetUseUnscaledTime() const
+	{
+		return m_useUnscaledTime;
 	}
 
 	const std::string& GetMarkupText() const

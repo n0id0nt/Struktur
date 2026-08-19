@@ -1493,6 +1493,34 @@ void wren_UIRichLabelGetGlyphCount(WrenVM* vm)
 	wrenSetSlotDouble(vm, 0, (double)richLabel->GetTotalGlyphCount());
 }
 
+// UIRichLabel.setUseUnscaledTime(useUnscaled) - see UIRichLabel::SetUseUnscaledTime. Lets e.g. a main-menu
+// label keep animating while gameplay time is paused/scaled, by reading GetTimeSystem().unscaledTime instead
+// of scaledTime for its wave/shake/pulse/etc. uniforms.
+void wren_UIRichLabelSetUseUnscaledTime(WrenVM* vm)
+{
+	WrenUIElement* uiElement = static_cast<WrenUIElement*>(wrenGetSlotForeign(vm, 0));
+	if (!uiElement->element)
+	{
+		DEBUG_ERROR("UIRichLabel.setUseUnscaledTime: element is Null");
+		return;
+	}
+	bool useUnscaled                     = wrenGetSlotBool(vm, 1);
+	Struktur::UI::UIRichLabel* richLabel = dynamic_cast<Struktur::UI::UIRichLabel*>(uiElement->element);
+	richLabel->SetUseUnscaledTime(useUnscaled);
+}
+
+void wren_UIRichLabelGetUseUnscaledTime(WrenVM* vm)
+{
+	WrenUIElement* uiElement = static_cast<WrenUIElement*>(wrenGetSlotForeign(vm, 0));
+	if (!uiElement->element)
+	{
+		DEBUG_ERROR("UIRichLabel.getUseUnscaledTime: element is Null");
+		return;
+	}
+	Struktur::UI::UIRichLabel* richLabel = dynamic_cast<Struktur::UI::UIRichLabel*>(uiElement->element);
+	wrenSetSlotBool(vm, 0, richLabel->GetUseUnscaledTime());
+}
+
 WREN_BINDING_MODULE(UI)
 {
 	// NAVIGATION DIRECTION BINDINGS
@@ -1729,6 +1757,11 @@ WREN_BINDING_MODULE(UI)
 	                  "means show everything");
 	WREN_CLASS_METHOD(registry, "ui", "UIRichLabel", "getGlyphCount()", wren_UIRichLabelGetGlyphCount,
 	                  "Gets the total drawable glyph count, for a reveal loop to compare its progress against");
+	WREN_CLASS_METHOD(registry, "ui", "UIRichLabel", "setUseUnscaledTime(_)", wren_UIRichLabelSetUseUnscaledTime,
+	                  "Sets whether wave/shake/pulse/etc. animation follows unscaled (real) time instead of "
+	                  "scaled game time - true keeps animating through a pause or slow-mo");
+	WREN_CLASS_METHOD(registry, "ui", "UIRichLabel", "getUseUnscaledTime()", wren_UIRichLabelGetUseUnscaledTime,
+	                  "Gets whether this label's animation follows unscaled time");
 
 	// Register UIClip foreign class - masks its children to its own bounds (see UIClip.h), no scroll logic.
 	WREN_FOREIGN_CLASS(registry, "ui", "UIClip", wren_UIClipAllocate, wren_UIClipFinalize,

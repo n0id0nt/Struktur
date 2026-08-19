@@ -776,6 +776,18 @@ void InspectorWindow::RenderUIRichLabelProperties(UI::UIRichLabel* richLabel)
 		ImGui::SetTooltip("-1 shows everything - see SetVisibleGlyphCount for the typewriter/reveal use case");
 	}
 
+	bool useUnscaledTime = richLabel->GetUseUnscaledTime();
+	if (ImGui::Checkbox("Animate With Unscaled Time", &useUnscaledTime))
+	{
+		richLabel->SetUseUnscaledTime(useUnscaledTime);
+	}
+	if (ImGui::IsItemHovered())
+	{
+		ImGui::SetTooltip("Off: [wave]/[shake]/[pulse]/etc. follow scaled game time (pauses/slows with gameplay). "
+		                  "On: follows real unscaled time instead, so this label keeps animating through a pause "
+		                  "or time-scale change - e.g. a main menu label rendered while gameplay time is stopped");
+	}
+
 	ImGui::Spacing();
 	// Fonts/icon atlas: the same "no asset picker" gap as RenderUITextureProperties, just for
 	// ResourcePtr<FontResource>/IconAtlas instead of a plain texture - status-only, set via script.

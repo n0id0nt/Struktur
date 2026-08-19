@@ -253,6 +253,7 @@ void Struktur::UI::UIRichLabel::Render(GameContext& context)
 			params.tornadoFrequency  = group.tornadoFrequency;
 			params.fadeStart         = group.fadeStart;
 			params.fadeLength        = group.fadeLength;
+			params.useUnscaledTime   = m_useUnscaledTime;
 			// GetZIndex() as drawOrder - a reasonable, not perfectly fine-grained, cross-batch ordering (see
 			// the design doc's own note on this): animated content lives in a wholly separate batch from any
 			// same-batch siblings, so it can only interleave with OTHER BATCHES' z-order, not individual

@@ -22,12 +22,35 @@ uniform vec4 fadeStart;
 uniform vec4 fadeLength;
 
 // Classic cheap GLSL pseudo-random hash (sin/fract-based) - portable across every profile this project
-// targets, unlike a true noise texture or bitwise-hash approach. Used by the shake effect below so each
-// glyph's jitter is deterministic per (charIndex, time-step) rather than truly random - reproducible, no
-// per-frame CPU-side random-number generation needed.
+// targets, unlike a true noise texture or bitwise-hash approach. Building block for gradientNoise1 below
+// (deterministic per input, reproducible, no per-frame CPU-side random-number generation needed).
 float hash(float n)
 {
 	return fract(sin(n) * 43758.5453123);
+}
+
+// 1D gradient ("Perlin-style") noise - same smoothstep-eased, lerp-between-lattice-points shape as
+// Util::Noise::PerlinNoise1 (see CameraSystem::CalculateCameraShake, the screen-shake feature this mirrors),
+// just built on the hash() function above instead of a CPU-side permutation table: a GPU vertex shader can't
+// cheaply build/index a 512-entry table per invocation the way that CPU code does once per frame, and a large
+// const array wouldn't be portable across every profile this project targets either. `seed` distinguishes
+// independent noise fields sampled at the same `value` (e.g. one per axis, or per character) the same way
+// PerlinNoise1's own seed parameter does - offset into hash()'s input rather than a literal RNG seed.
+float gradientNoise1(float seed, float value)
+{
+	float cell = floor(value);
+	float frac = value - cell;
+
+	// Smoothstep easing (3t^2 - 2t^3) - identical curve to Util::Noise::Smoothstep, so interpolation between
+	// lattice points has the same ease-in/ease-out shape the camera shake already uses.
+	float u = frac * frac * (3.0 - 2.0 * frac);
+
+	// Per-lattice-point signed gradient magnitude from the hash, in [-1, 1) - the 1D analogue of Grad()'s
+	// hash-driven magnitude (a 1D "gradient" has no direction to dot against, just a signed scale).
+	float gradA = hash(seed + cell) * 2.0 - 1.0;
+	float gradB = hash(seed + cell + 1.0) * 2.0 - 1.0;
+
+	return mix(gradA * frac, gradB * (frac - 1.0), u);
 }
 
 // Standard compact HSV->RGB (h/s/v all 0..1) - used by the rainbow effect below. No portability concerns
@@ -76,12 +99,18 @@ void main()
 
 	if (hasShake)
 	{
-		// floor(time * rate) steps to a new pseudo-random offset `rate` times per second (matching Godot's own
-		// "rate = updates per second" semantics for [shake]) - charIndex offsets the hash seed so every
-		// character shakes independently rather than in unison.
-		float shakeSeed = floor(time.x * shakeRate.x) + charIndex * 13.37;
-		displaced.x += (hash(shakeSeed) - 0.5) * 2.0 * shakeLevel.x;
-		displaced.y += (hash(shakeSeed + 91.7) - 0.5) * 2.0 * shakeLevel.x;
+		// Smooth, continuous noise-driven wobble (gradientNoise1 above) rather than snapping to a new random
+		// offset shakeRate times per second - the same continuous-Perlin-field feel Component::Camera's own
+		// screen shake has (see CameraSystem::CalculateCameraShake), instead of the old sin/fract per-step
+		// jitter this replaced. shakeRate now controls how fast the noise field is traversed (higher = faster
+		// wobble) rather than a discrete update count - conceptually the same "shake speed" knob as before, see
+		// Text::ParseMarkup's [shake rate=...] tag, just driving a continuous domain instead of a step counter.
+		// x/y each sample a different point along the field (charIndex offsets which "lane", the +100 constant
+		// offsets y from x) so a glyph's wobble isn't a single oscillating line, and every character's own
+		// lane is independent rather than shaking in lockstep.
+		float shakeTime = time.x * shakeRate.x;
+		displaced.x += gradientNoise1(charIndex * 0.5, shakeTime) * shakeLevel.x;
+		displaced.y += gradientNoise1(charIndex * 0.5 + 100.0, shakeTime) * shakeLevel.x;
 	}
 
 	if (hasTornado)

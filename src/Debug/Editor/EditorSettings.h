@@ -17,6 +17,7 @@ public:
 	struct DebugRenderSettings
 	{
 		float audioVolume                = 1.0f;  // 0 = silent, 1 = unattenuated (see Audio::Mixer::SetMasterVolume)
+		float gameTimeScale              = 1.0f;  // 1 = normal speed (see Core::TimeSystem::SetTimeScale)
 		bool showPhysicsShapes           = true;
 		bool showPhysicsBodies           = true;
 		bool showPhysicsJoints           = true;

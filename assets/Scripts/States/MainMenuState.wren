@@ -111,6 +111,9 @@ class MainMenuState is BaseState {
         _richLabel.setSize(Vec2.new(-32, -24), Vec2.new(1, 1))
         _richLabel.setZIndex(6)
         _richLabel.setVisibleGlyphCount(0)
+        // Main menu content should keep animating (wave/shake/pulse/etc.) even while gameplay time is paused or
+        // scaled - it isn't gameplay itself, so it follows real unscaled time instead of Time.scaledTime.
+        _richLabel.setUseUnscaledTime(true)
         showcasePanel.addChild(_richLabel)
 
         _richTextGlyphCount = _richLabel.getGlyphCount()

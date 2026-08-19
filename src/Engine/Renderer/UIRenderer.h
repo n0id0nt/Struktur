@@ -125,6 +125,12 @@ struct AnimatedTextBatch
 	float tornadoFrequency  = 0.0f;
 	float fadeStart         = 0.0f;
 	float fadeLength        = 0.0f;
+	// Which of GameContext::GetTimeSystem()'s two clocks drives the `time` uniform for this batch (see
+	// SubmitAnimatedBatch) - per-batch rather than a single global choice so e.g. a main-menu label can animate
+	// while the game itself is paused/time-scaled (scaledTime would freeze/slow with it) while gameplay rich
+	// text still follows scaledTime as before. Set once by UIRichLabel from its own m_useUnscaledTime at group-
+	// build time (see CreateOrUpdateAnimatedBatch's AnimationUniformValues parameter).
+	bool useUnscaledTime = false;
 	// Cross-batch draw order, same role/semantics as UIBatch::drawOrder - UIRenderer::Flush() merge-sorts both
 	// handle spaces together by this so an animated batch interleaves correctly with regular UIBatches.
 	int32_t drawOrder = 0;
@@ -149,6 +155,8 @@ struct AnimationUniformValues
 	float tornadoFrequency  = 0.0f;
 	float fadeStart         = 0.0f;
 	float fadeLength        = 0.0f;
+	// See AnimatedTextBatch::useUnscaledTime - copied straight through by CreateOrUpdateAnimatedBatch.
+	bool useUnscaledTime = false;
 };
 
 // bgfx-native replacement for raylib's DrawRectangleRec/DrawRectangleLinesEx/DrawTexturePro/DrawTextEx on the

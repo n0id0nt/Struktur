@@ -131,6 +131,21 @@ void ToolbarWindow::Render(GameContext& context)
 		ImGui::SetTooltip("Master game audio volume (applies to all currently playing and future sounds/music)");
 	}
 
+	ImGui::SameLine();
+
+	ImGui::Text("Time Scale");
+	ImGui::SameLine();
+	ImGui::SetNextItemWidth(100.0f);
+	if (ImGui::SliderFloat("##GameTimeScale", &debugSettings.gameTimeScale, 0.0f, 4.0f, "%.2f"))
+	{
+		context.GetTimeSystem().SetTimeScale(debugSettings.gameTimeScale);
+	}
+	if (ImGui::IsItemHovered())
+	{
+		ImGui::SetTooltip("Game time scale (Time.scaledTime/scaledDelta) - 1 = normal speed, 0 = frozen. UI "
+		                  "animation set to use unscaled time (see UIRichLabel.setUseUnscaledTime) is unaffected.");
+	}
+
 	ImGui::End();
 	ImGui::PopStyleVar();
 }
