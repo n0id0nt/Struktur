@@ -41,13 +41,18 @@ vec3 hsv2rgb(vec3 c)
 
 void main()
 {
-	// a_texcoord1 arrives as raw 0..255 floats (unnormalized uint8 vertex fetch - see
-	// AnimQuadVertex::BuildAnimQuadVertexLayout), not 0..1 normalized color-style values. Reconstructing
-	// charIndex from two bytes (rather than relying on a single wide integer attribute) avoids any reliance on
-	// bgfx's asInt integer vertex fetch, which isn't supported on every profile this project targets (notably
-	// GLES2/the "100_es" web profile) - see AnimQuadVertex.h's own comment.
-	float effectMask = a_texcoord1.x;
-	float charIndex  = a_texcoord1.z * 256.0 + a_texcoord1.y;
+	// a_texcoord1 arrives NORMALIZED (0.0-1.0 range, real UNORM hardware conversion - see
+	// AnimQuadVertex::BuildAnimQuadVertexLayout's own comment for why this can't be an unnormalized fetch on
+	// Direct3D: there's no vertex format there for "unnormalized uint8 numerically converted to float", only
+	// UNORM or a true integer fetch, and the integer path needs bgfx's asInt (unsupported on GLES2/the "100_es"
+	// web profile this project also targets). Recover the original 0-255 byte values by multiplying back up,
+	// snapping to the nearest integer to remove the tiny (~1e-5) UNORM round-trip error before it can perturb
+	// the mod()/floor() bit tests below.
+	float effectMaskByte    = floor(a_texcoord1.x * 255.0 + 0.5);
+	float charIndexLowByte  = floor(a_texcoord1.y * 255.0 + 0.5);
+	float charIndexHighByte = floor(a_texcoord1.z * 255.0 + 0.5);
+	float effectMask = effectMaskByte;
+	float charIndex  = charIndexHighByte * 256.0 + charIndexLowByte;
 
 	// Bit tests via floor/mod rather than bitwise ops, for the same GLES2/old-HLSL-profile portability reason -
 	// effectMask is always a small (0-63) integer-valued float, so this is exact, not approximate. Bit order
