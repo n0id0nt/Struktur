@@ -17,6 +17,7 @@
 #include "Debug/Editor/Windows/LogWindow.h"
 #include "Debug/Editor/Windows/PreviewWindow.h"
 #include "Debug/Editor/Windows/ProfilerWindow.h"
+#include "Debug/Editor/Windows/ResourceManagerWindow.h"
 #include "Debug/Editor/Windows/SettingsWindow.h"
 #include "Debug/Editor/Windows/ToolbarWindow.h"
 #include "Debug/Editor/Windows/UIHierarchyWindow.h"
@@ -62,13 +63,16 @@ void Editor::Initialise(GameContext& context)
 	auto previewPtr = CreateWindow<PreviewWindow>();
 
 	// File Explorer (depends on preview window)
-	CreateWindow<FileExplorerWindow>(previewPtr, "assets");
+	CreateWindow<FileExplorerWindow>(previewPtr);
 
 	// Inspector window (depends on hierarchy)
 	CreateWindow<InspectorWindow>(hierarchyPtr, uiHierarchyPtr, previewPtr);
 
 	// Inspector window (depends on hierarchy)
 	CreateWindow<DialogueEditorWindow>(previewPtr);
+
+	// Resource manager window (depends on preview window - texture rows preview through it)
+	CreateWindow<ResourceManagerWindow>(previewPtr);
 
 	// Route ImGui's own ini autosave/autoload through a single canonical file (also used by the explicit
 	// Save/Load Layout menu actions), so docking state persists automatically across launches.

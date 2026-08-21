@@ -154,10 +154,6 @@ void wren_UIElementGetEnabled(WrenVM* vm)
 // UIElement.setFocusable(isFocusable)
 void wren_UIElementSetFocusable(WrenVM* vm)
 {
-	Struktur::GameContext* context               = static_cast<Struktur::GameContext*>(wrenGetUserData(vm));
-	Struktur::UI::UIManager& uiManager           = context->GetUIManager();
-	Struktur::UI::FocusNavigator* focusNavigator = uiManager.GetFocusNavigator();
-
 	WrenUIElement* uiElement = static_cast<WrenUIElement*>(wrenGetSlotForeign(vm, 0));
 	if (!uiElement->element)
 	{
@@ -165,8 +161,9 @@ void wren_UIElementSetFocusable(WrenVM* vm)
 		return;
 	}
 	bool isFocusable = wrenGetSlotBool(vm, 1);
+	// SetFocusable now registers/unregisters with the owning UIManager's FocusNavigator itself (see
+	// UIElement::SetFocusable) - no follow-up call needed here any more.
 	uiElement->element->SetFocusable(isFocusable);
-	focusNavigator->RegisterElement(uiElement->element);
 }
 
 // UIElement.getFocusable()
@@ -422,13 +419,22 @@ void wren_UIElementRemoveChild(WrenVM* vm)
 		return;
 	}
 	WrenUIElement* child = static_cast<WrenUIElement*>(wrenGetSlotForeign(vm, 1));
-	bool success         = uiElement->element->RemoveChild(child->element);
+
+	// RemoveChild now needs a context (it Dispose()s the removed subtree before destroying it - see
+	// UIElement::RemoveChild's own comment), so fetch it before the call rather than only in the success branch
+	// below.
+	Struktur::GameContext* context = static_cast<Struktur::GameContext*>(wrenGetUserData(vm));
+	bool success                   = uiElement->element->RemoveChild(*context, child->element);
 	wrenSetSlotBool(vm, 0, success);
 
-	// Same re-assignment as addChild above - only needed if a child actually came out.
 	if (success)
 	{
-		Struktur::GameContext* context                 = static_cast<Struktur::GameContext*>(wrenGetUserData(vm));
+		// child->element now points at a destroyed object (RemoveChild erases it immediately) - null it so any
+		// further access from Wren hits this file's usual "element is Null" guard instead of dereferencing freed
+		// memory, matching wren_UIManagerRemoveUIElement's own pattern for the equivalent case.
+		child->element = nullptr;
+
+		// Same re-assignment as addChild above.
 		Struktur::UI::UIElement* root                  = uiElement->element->GetRoot();
 		Struktur::Renderer::UIBatchHandle ambientBatch = root->GetBatch();
 		if (!ambientBatch.IsValid())

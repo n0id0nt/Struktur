@@ -340,6 +340,10 @@ foreign class UIRichLabel {
     foreign setVisibleGlyphCount(arg0)
     // Gets the total drawable glyph count, for a reveal loop to compare its progress against
     foreign getGlyphCount()
+    // Sets whether wave/shake/pulse/etc. animation follows unscaled (real) time instead of scaled game time - true keeps animating through a pause or slow-mo
+    foreign setUseUnscaledTime(arg0)
+    // Gets whether this label's animation follows unscaled time
+    foreign getUseUnscaledTime()
     // Sets UI Element to be visible
     foreign isVisible=(arg0)
     // Sets UI Element to be visible

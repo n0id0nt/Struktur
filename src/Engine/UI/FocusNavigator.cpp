@@ -167,10 +167,11 @@ void Struktur::UI::FocusNavigator::Clear(GameContext& context)
 		m_currentFocus->OnLoseFocus(context);
 	}
 	m_currentFocus = nullptr;
-	for (auto& focusable : m_focusableElements)
-	{
-		focusable->SetFocusable(false);
-	}
+	// Deliberately doesn't call SetFocusable(false) on each entry any more - now that SetFocusable
+	// self-unregisters (erasing from this exact vector), doing that mid-range-for here would invalidate the
+	// iterator. This method's only caller (UIManager::Clear) always Dispose()s every element immediately
+	// afterward anyway, which unregisters each one on its own via UIManager::OnElementDisposed - so this just
+	// needs to drop its own bookkeeping, not touch each element's flag.
 	m_focusableElements.clear();
 }
 

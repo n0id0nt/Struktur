@@ -33,6 +33,10 @@ enum class NavigationDirection
 };
 
 class UIElement;
+// Forward-declared only (see m_uiManager) - UIManager.h already includes this header (it owns
+// UIElement instances), so a full include here would be circular. Only used as a pointer/reference
+// in this header; the .cpp includes UIManager.h where it needs the complete type.
+class UIManager;
 
 // Callback function types
 using UIClickCallback    = Callback::TypedCallback<void(UIElement* sender, const glm::vec2& mousePos)>;
@@ -89,7 +93,10 @@ public:
 	// Child management
 	UIElement* AddChild(std::unique_ptr<UIElement> child);
 	UIElement* AddChild(UIElement* child);
-	bool RemoveChild(UIElement* child);
+	// Takes GameContext now (unlike AddChild) because it must Dispose(context) the removed subtree before
+	// erasing it - see Dispose's own comment for why that's required, not optional, before a UIElement is
+	// destroyed. Its only caller (WrenUI.cpp's removeChild binding) already has a context on hand.
+	bool RemoveChild(GameContext& context, UIElement* child);
 
 	// Position and size
 	void SetPosition(const glm::vec2& absolutePosition, const glm::vec2& relativePosition);
@@ -170,10 +177,11 @@ public:
 	}
 
 	// Focus and navigation
-	void SetFocusable(bool focus)
-	{
-		m_focusable = focus;
-	}
+	// Defined in UIElement.cpp (not inline) - unlike a plain flag flip, this now needs to reach the owning
+	// UIManager's FocusNavigator (see m_uiManager) to register/unregister itself, which needs UIManager.h's
+	// complete type. Self-maintaining regardless of caller (C++ or Wren) - if m_uiManager isn't set yet (element
+	// not attached to a live tree), this just stores the flag; AttachToManager picks it up once attached.
+	void SetFocusable(bool focus);
 	bool IsFocusable() const
 	{
 		return m_focusable;
@@ -268,6 +276,13 @@ public:
 	void ForEachRecursive(std::function<void(UIElement*)> func);
 	void ForEachRecursivePostOrder(std::function<void(UIElement*)> func);
 
+	// Internal plumbing: marks this single element as belonging to `manager` and registers it with the
+	// FocusNavigator if IsFocusable() - see m_uiManager's own comment. Non-recursive by design: callers walk the
+	// tree themselves via ForEachRecursive (see UIManager::AddElement and AddChild), the same primitive
+	// UIManager::RemoveElement already uses for the equivalent teardown walk. Public because it's called from
+	// UIManager, not because scripts/general callers should ever call this directly.
+	void AttachToManager(UIManager* manager);
+
 protected:
 	void UpdateChildren(GameContext& context);
 	void RenderChildren(GameContext& context);
@@ -286,6 +301,13 @@ protected:
 	bool m_enabled;
 	bool m_focusable;
 	UIElement* m_parent;
+	// The UIManager this element is currently attached to (reachable from a UIManager::AddElement-rooted tree),
+	// or null if this subtree hasn't been mounted yet - e.g. still being built off-screen before its root is
+	// added. Set by AttachToManager (called by UIManager::AddElement's initial tree walk, and by AddChild when
+	// parenting onto an already-live parent), cleared by Dispose(). This is what lets SetFocusable/AddChild/
+	// RemoveChild register/unregister with FocusNavigator on their own, regardless of call order or whether the
+	// caller is C++ or Wren - see the class comment's "self-maintaining registration" note.
+	UIManager* m_uiManager = nullptr;
 	std::vector<std::unique_ptr<UIElement>> m_children;
 	std::string m_id;
 	int m_zIndex;

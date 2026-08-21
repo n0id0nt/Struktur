@@ -1,5 +1,9 @@
 #include "SoundPool.h"
 
+#ifdef EDITOR
+#include <chrono>
+#endif
+
 Struktur::Resource::SoundResource* Struktur::Resource::SoundPool::LoadResource(GameContext& context,
                                                                                const std::string& filePath)
 {
@@ -28,6 +32,19 @@ bool Struktur::Resource::SoundPool::EnsureResourceReady(GameContext& context, Re
 		return false;
 	}
 
-	// Then load to audio hardware
-	return sound->LoadToHardware(context);
+	// Then load to audio hardware - LoadToHardware() is idempotent (returns early if already ready, see its own
+	// comment), so this compares before/after rather than firing ReadyForUse on every call.
+#ifdef EDITOR
+	bool wasReady    = sound->IsHardwareReady();
+	auto uploadStart = std::chrono::steady_clock::now();
+#endif
+	bool ready = sound->LoadToHardware(context);
+#ifdef EDITOR
+	if (ready && !wasReady && m_eventCallback)
+	{
+		double uploadSeconds = std::chrono::duration<double>(std::chrono::steady_clock::now() - uploadStart).count();
+		m_eventCallback(ResourceEventType::ReadyForUse, GetName(handle), sound->GetMemoryUsage(), uploadSeconds);
+	}
+#endif
+	return ready;
 }

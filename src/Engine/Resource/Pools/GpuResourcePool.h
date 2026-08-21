@@ -6,6 +6,10 @@
 #include "Engine/Resource/Pools/ResourcePool.h"
 #include "Engine/Resource/Resource.h"
 
+#ifdef EDITOR
+#include <chrono>
+#endif
+
 namespace Struktur
 {
 class GameContext;
@@ -77,11 +81,27 @@ public:
 			}
 
 			// Load to GPU
-			if (resource->LoadToGpu(context))
+#ifdef EDITOR
+			auto uploadStart = std::chrono::steady_clock::now();
+#endif
+			bool uploaded = resource->LoadToGpu(context);
+#ifdef EDITOR
+			double uploadSeconds = std::chrono::duration<double>(std::chrono::steady_clock::now() - uploadStart).count();
+#endif
+			if (uploaded)
 			{
 				m_currentGpuMemory += requiredMemory;
 				resource->gpuState = GpuResource::GpuState::LoadedToGpu;
 				DEBUG_INFO("Loaded '%s' to GPU (%zu bytes)", resource->filePath, requiredMemory);
+#ifdef EDITOR
+				if (this->m_eventCallback)
+				{
+					// this->GetName(handle), not resource->filePath - see GetName's own comment (they can differ,
+					// e.g. FontResource's filePath has the "_<size>" cache-key suffix stripped off).
+					this->m_eventCallback(ResourceEventType::ReadyForUse, this->GetName(handle), requiredMemory,
+					                      uploadSeconds);
+				}
+#endif
 				return true;
 			}
 			else

@@ -5,11 +5,25 @@
 
 #include "Debug/Assertions.h"
 #include "Debug/Editor/PreviewRenderers/PreviewHelpers.h"
+#include "Engine/Core/FileSystem.h"
 #include "Engine/GameContext.h"
+#include "Engine/Resource/ResourceManager.h"
 #include "PreviewWindow.h"
 
 namespace Struktur::Debug
 {
+namespace
+{
+// Pure string manipulation (no disk access) over a PhysFS-style, no-leading-slash path (see FileExplorerWindow's
+// own comment on the convention) - deliberately not std::filesystem::path, which reasons about OS separators/
+// roots that don't apply to the mounted virtual filesystem's own "" root (see FileSystem::Mount).
+std::string ParentPath(const std::string& path)
+{
+	size_t slash = path.find_last_of('/');
+	return slash == std::string::npos ? "" : path.substr(0, slash);
+}
+}  // namespace
+
 void FileExplorerWindow::Render(GameContext& context)
 {
 	if (!m_isVisible)
@@ -22,10 +36,9 @@ void FileExplorerWindow::Render(GameContext& context)
 	// Toolbar
 	if (ImGui::Button("< Back"))
 	{
-		std::filesystem::path current(m_currentPath);
-		if (current.has_parent_path() && current != m_assetsPath)
+		if (!m_currentPath.empty() && m_currentPath != m_assetsPath)
 		{
-			m_currentPath = current.parent_path().string();
+			m_currentPath = ParentPath(m_currentPath);
 			RefreshFileList();
 		}
 	}
@@ -59,44 +72,41 @@ void FileExplorerWindow::RefreshFileList()
 {
 	m_files.clear();
 
-	try
+	// PhysFS-backed listing (see FileSystem::ListDirectory's own comment for why this isn't
+	// std::filesystem::directory_iterator) - names only, so each child's full path is built by joining onto
+	// m_currentPath here.
+	for (const std::string& name : FileSystem::ListDirectory(m_currentPath))
 	{
-		for (const auto& entry : std::filesystem::directory_iterator(m_currentPath))
+		FileEntry fileEntry;
+		fileEntry.name        = name;
+		fileEntry.path        = m_currentPath.empty() ? name : m_currentPath + "/" + name;
+		fileEntry.isDirectory = FileSystem::IsDirectory(fileEntry.path);
+
+		if (!fileEntry.isDirectory)
 		{
-			FileEntry fileEntry;
-			fileEntry.name        = entry.path().filename().string();
-			fileEntry.path        = entry.path().string();
-			fileEntry.isDirectory = entry.is_directory();
-
-			if (!fileEntry.isDirectory)
-			{
-				fileEntry.fileSize  = std::filesystem::file_size(entry.path());
-				fileEntry.extension = GetFileExtension(fileEntry.name);
-			}
-			else
-			{
-				fileEntry.fileSize  = 0;
-				fileEntry.extension = "";
-			}
-
-			m_files.push_back(fileEntry);
+			auto sizeResult    = FileSystem::GetFileSize(fileEntry.path);
+			fileEntry.fileSize = sizeResult ? (size_t)sizeResult.value : 0;
+			fileEntry.extension = GetFileExtension(fileEntry.name);
+		}
+		else
+		{
+			fileEntry.fileSize  = 0;
+			fileEntry.extension = "";
 		}
 
-		// Sort: directories first, then files alphabetically
-		std::sort(m_files.begin(), m_files.end(),
-		          [](const FileEntry& a, const FileEntry& b)
+		m_files.push_back(fileEntry);
+	}
+
+	// Sort: directories first, then files alphabetically
+	std::sort(m_files.begin(), m_files.end(),
+	          [](const FileEntry& a, const FileEntry& b)
+	          {
+		          if (a.isDirectory != b.isDirectory)
 		          {
-			          if (a.isDirectory != b.isDirectory)
-			          {
-				          return a.isDirectory;
-			          }
-			          return a.name < b.name;
-		          });
-	}
-	catch (const std::filesystem::filesystem_error& e)
-	{
-		// Handle error silently or log
-	}
+			          return a.isDirectory;
+		          }
+		          return a.name < b.name;
+	          });
 }
 
 void FileExplorerWindow::RenderFileList(GameContext& context)
@@ -312,18 +322,31 @@ void FileExplorerWindow::OnFileSelected(const FileEntry& file, GameContext& cont
 
 	// Determine file type and preview accordingly
 	// Improve way this is handled. load this from somewhere
-	if (ext == ".png" || ext == ".jpg" || ext == ".jpeg" || ext == ".bmp" || ext == ".tga")
+	//
+	// Images: decodable by stb_image (see TextureResource::LoadFromDisk) - fetched through the resource manager
+	// (not read directly) so this reuses whatever's already cached and the preview stays alive via the
+	// ResourcePtr TexturePreviewRenderer holds, same pattern as ResourceManagerWindow's texture-row preview.
+	if (ext == ".png" || ext == ".jpg" || ext == ".jpeg" || ext == ".bmp" || ext == ".tga" || ext == ".gif" ||
+	    ext == ".psd" || ext == ".pic" || ext == ".hdr")
 	{
-		PreviewUnknownFile(m_previewWindow, file.name);
+		auto texture = context.GetResourceManager().GetTexture(context, file.path);
+		PreviewTexture(m_previewWindow, texture, file.name);
 	}
 	else if (ext == ".txt" || ext == ".cpp" || ext == ".h" || ext == ".hpp" || ext == ".c" || ext == ".cs" ||
 	         ext == ".lua" || ext == ".py" || ext == ".wren" || ext == ".fs" || ext == ".vs" || ext == ".json" ||
-	         ext == ".xml" || ext == ".glsl" || ext == ".frag" || ext == ".vert")
+	         ext == ".xml" || ext == ".glsl" || ext == ".frag" || ext == ".vert" || ext == ".sc" || ext == ".hlsl" ||
+	         ext == ".md" || ext == ".ldtk" || ext == ".ini" || ext == ".cfg" || ext == ".yaml" || ext == ".yml" ||
+	         ext == ".toml" || ext == ".csv")
 	{
 		PreviewTextFile(m_previewWindow, file.path, file.name);
 	}
 	else
 	{
+		// Genuinely unsupported today - no renderer decodes these (see UnknownFilePreviewRenderer): audio
+		// (.wav/.ogg - no audio-preview renderer exists), Aseprite's proprietary binary sprite format
+		// (.aseprite - not a stb_image-decodable image despite being image-adjacent), and font binaries (.ttf -
+		// no glyph-rendering preview exists). Not a fixable case in OnFileSelected itself; would need a new
+		// PreviewRenderer subclass per format.
 		PreviewUnknownFile(m_previewWindow, file.name);
 	}
 }

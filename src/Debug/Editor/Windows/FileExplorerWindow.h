@@ -1,6 +1,5 @@
 #pragma once
 
-#include <filesystem>
 #include <string>
 #include <vector>
 
@@ -22,7 +21,14 @@ struct FileEntry
 class FileExplorerWindow : public EditorWindow
 {
 public:
-	FileExplorerWindow(PreviewWindow* previewWindow, const std::string& assetsPath = "assets")
+	// assetsPath is a path in the mounted virtual filesystem (see Engine/Core/FileSystem.h - PhysFS-backed, NOT
+	// an OS path), so "" (the mount root - see FileSystem::Mount) is the correct default, matching whatever the
+	// user picked via OpenFolderDialog at startup (or the assets/ fallback) rather than an OS-relative "assets"
+	// guess that may not exist relative to the process's actual working directory. No leading slash anywhere in
+	// this class's paths - matches the convention every other path in this codebase already uses (e.g.
+	// Texture.load("Tiles/Items/...")), so a file clicked here resolves to the exact same resource-pool cache
+	// key a script loading the same asset would use.
+	FileExplorerWindow(PreviewWindow* previewWindow, const std::string& assetsPath = "")
 	    : EditorWindow("File Explorer"),
 	      m_previewWindow(previewWindow),
 	      m_assetsPath(assetsPath),
@@ -39,7 +45,6 @@ private:
 	void RefreshFileList();
 	void RenderFileList(GameContext& context);
 	void RenderFileGrid(GameContext& context);
-	void RenderDirectoryTree(GameContext& context, const std::filesystem::path& path, int depth = 0);
 	void OnFileSelected(const FileEntry& file, GameContext& context);
 	std::string GetFileExtension(const std::string& filename);
 	std::string FormatFileSize(size_t bytes);

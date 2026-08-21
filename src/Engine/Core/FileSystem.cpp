@@ -315,6 +315,44 @@ std::vector<uint8_t> FileSystem::Decrypt(const std::vector<uint8_t>& data)
 
 #ifdef EDITOR
 
+FileResult<uint64_t> FileSystem::GetFileSize(const std::string& path)
+{
+	PHYSFS_Stat stat;
+	if (!PHYSFS_stat(path.c_str(), &stat) || stat.filesize < 0)
+	{
+		auto physfsError = GetLastPhysFSError();
+		return FileResult<uint64_t>::Fail(physfsError.error, physfsError.message);
+	}
+	return FileResult<uint64_t>::Ok((uint64_t)stat.filesize);
+}
+
+std::vector<std::string> FileSystem::ListDirectory(const std::string& path)
+{
+	std::vector<std::string> result;
+	// "" means "the mount root" by this codebase's own path convention (no leading slash anywhere - see
+	// FileExplorerWindow) - PHYSFS itself wants "/" for that, not "".
+	char** files = PHYSFS_enumerateFiles(path.empty() ? "/" : path.c_str());
+	if (files)
+	{
+		for (char** entry = files; *entry != nullptr; ++entry)
+		{
+			result.emplace_back(*entry);
+		}
+		PHYSFS_freeList(files);
+	}
+	return result;
+}
+
+bool FileSystem::IsDirectory(const std::string& path)
+{
+	PHYSFS_Stat stat;
+	if (!PHYSFS_stat(path.c_str(), &stat))
+	{
+		return false;
+	}
+	return stat.filetype == PHYSFS_FILETYPE_DIRECTORY;
+}
+
 std::string FileSystem::OpenFolderDialog(const std::string& title, const std::string& defaultPath)
 {
 	const char* result = tinyfd_selectFolderDialog(title.c_str(), defaultPath.empty() ? nullptr : defaultPath.c_str());

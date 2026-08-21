@@ -8,6 +8,11 @@
 #include "Engine/Resource/Pointers/ResourcePtr.h"
 #include "Engine/Resource/Pools/SparseSet.h"
 #include "Engine/Resource/Resource.h"
+#include "Engine/Resource/ResourceEvents.h"
+
+#ifdef EDITOR
+#include <chrono>
+#endif
 
 namespace Struktur
 {
@@ -53,6 +58,14 @@ protected:
 		}
 
 		DEBUG_INFO("Unloading unreferenced resource '%s'", entry.name);
+#ifdef EDITOR
+		if (m_eventCallback)
+		{
+			// Nothing to time on an unload, so 0.0 seconds - see PoolResourceEventCallback's own comment for why
+			// this callback doesn't carry a category (ResourceManager tags that on, one layer up).
+			m_eventCallback(ResourceEventType::Unloaded, entry.name, entry.resource.GetMemoryUsage(), 0.0);
+		}
+#endif
 		UnloadResource(entry.name, entry.resource);
 		m_nameToHandle.erase(entry.name);
 		m_resources.Erase(internalHandle);
@@ -60,6 +73,10 @@ protected:
 
 	SparseSet<ResourceEntry> m_resources;
 	std::unordered_map<std::string, typename SparseSet<ResourceEntry>::Handle> m_nameToHandle;
+
+#ifdef EDITOR
+	PoolResourceEventCallback m_eventCallback;
+#endif
 
 	virtual T* LoadResource(GameContext& context, const std::string& filePath) = 0;
 	// Called for every entry right before it's erased (Release() dropping the last ref, or Clear()) - a hook for
@@ -107,7 +124,16 @@ public:
 		}
 
 		DEBUG_INFO("Loading resource '%s'", name);
+#ifdef EDITOR
+		// Brackets only the disk-load half (LoadResource -> LoadFromDisk) - GPU/hardware upload is a separate,
+		// lazy step timed independently in GpuResourcePool<T>::EnsureResourceReady/SoundPool::EnsureResourceReady,
+		// since it may happen much later than this call (see ResourceEventType::ReadyForUse's own comment).
+		auto loadStart = std::chrono::steady_clock::now();
+#endif
 		T* loaded = LoadResource(context, name);
+#ifdef EDITOR
+		double loadSeconds = std::chrono::duration<double>(std::chrono::steady_clock::now() - loadStart).count();
+#endif
 		if (!loaded)
 		{
 			DEBUG_INFO("Failed to load resource '%s'", name);
@@ -125,6 +151,13 @@ public:
 		entry.name                = name;
 		entry.resource.selfHandle = handle;
 		m_nameToHandle.emplace(name, internalHandle);
+
+#ifdef EDITOR
+		if (m_eventCallback)
+		{
+			m_eventCallback(ResourceEventType::Loaded, entry.name, entry.resource.GetMemoryUsage(), loadSeconds);
+		}
+#endif
 
 		return ResourcePtr<T>(this, handle);
 	}
@@ -211,6 +244,17 @@ public:
 		return entry ? entry->refCount : 0;
 	}
 
+	// The pool's own cache key for this handle - NOT always the same as resource.filePath (e.g. FontPool strips
+	// the "_<size>" suffix off before constructing FontResource, ShaderPool splits "vs,fs" into two separate
+	// paths - see each pool's own LoadResource). Lets a caller (GpuResourcePool<T>::EnsureResourceReady firing a
+	// ReadyForUse event, see ResourceEvents.h) report the same name the table/Loaded/Unloaded events already use,
+	// instead of a resource-type-specific filePath that can disagree with it.
+	std::string GetName(ResourceHandle handle) const
+	{
+		const ResourceEntry* entry = m_resources.Resolve(ToInternal(handle));
+		return entry ? entry->name : std::string();
+	}
+
 	size_t GetLoadedCount() const
 	{
 		return m_resources.Size();
@@ -225,6 +269,30 @@ public:
 		}
 		return total;
 	}
+
+#ifdef EDITOR
+	// Read-only walk over every currently-cached entry - for the resource manager editor window's live table
+	// (ResourceManagerWindow.cpp). fn is called once per entry with (name, resource, refCount, pinned); m_resources
+	// (a SparseSet) already supports const range-for internally (see GetTotalMemoryUsage above), this just
+	// surfaces that publicly instead of leaving it protected.
+	template <typename F>
+	void ForEachEntry(F&& fn) const
+	{
+		for (const auto& entry : m_resources)
+		{
+			fn(entry.name, entry.resource, entry.refCount, entry.pinned);
+		}
+	}
+
+	// Registers a sink for Loaded/Unloaded events fired by this pool (ReadyForUse is fired by subclasses that
+	// have a GPU/hardware-upload step - see GpuResourcePool<T>/SoundPool). No category is included - see
+	// PoolResourceEventCallback's own comment; ResourceManager::SetResourceEventCallback is the category-aware
+	// public entry point everything outside this file should actually use.
+	void SetResourceEventCallback(PoolResourceEventCallback cb)
+	{
+		m_eventCallback = std::move(cb);
+	}
+#endif
 };
 }  // namespace Resource
 }  // namespace Struktur

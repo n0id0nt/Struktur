@@ -3,6 +3,7 @@
 #include "Debug/Assertions.h"
 #include "Engine/GameContext.h"
 #include "Engine/Renderer/UIRenderer.h"
+#include "Engine/UI/UIManager.h"
 
 Struktur::UI::UIElement::UIElement(const glm::vec2& absolutePosition, const glm::vec2& relativePosition,
                                    const glm::vec2& absoluteSize, const glm::vec2& relativeSize)
@@ -35,6 +36,13 @@ Struktur::UI::UIElement* Struktur::UI::UIElement::AddChild(std::unique_ptr<UIEle
 		UIElement* childPtr = child.get();
 		m_children.push_back(std::move(child));
 		childPtr->UpdateBounds();
+		// Only meaningful if this element is itself already attached (see m_uiManager's own comment) - if it
+		// isn't yet, the whole subtree gets picked up later in one pass when a mounted ancestor eventually calls
+		// UIManager::AddElement.
+		if (m_uiManager)
+		{
+			childPtr->ForEachRecursive([manager = m_uiManager](UIElement* elem) { elem->AttachToManager(manager); });
+		}
 		return childPtr;
 	}
 	return nullptr;
@@ -47,12 +55,16 @@ Struktur::UI::UIElement* Struktur::UI::UIElement::AddChild(UIElement* child)
 		child->m_parent = this;
 		m_children.push_back(std::unique_ptr<UIElement>(child));
 		child->UpdateBounds();
+		if (m_uiManager)
+		{
+			child->ForEachRecursive([manager = m_uiManager](UIElement* elem) { elem->AttachToManager(manager); });
+		}
 		return child;
 	}
 	return nullptr;
 }
 
-bool Struktur::UI::UIElement::RemoveChild(UIElement* child)
+bool Struktur::UI::UIElement::RemoveChild(GameContext& context, UIElement* child)
 {
 	auto it = std::find_if(m_children.begin(), m_children.end(),
 	                       [child](const std::unique_ptr<UIElement>& ptr) { return ptr.get() == child; });
@@ -60,6 +72,12 @@ bool Struktur::UI::UIElement::RemoveChild(UIElement* child)
 	if (it != m_children.end())
 	{
 		child->UpdateBounds();
+		// Dispose before erasing - erase destroys the child (and its whole subtree) immediately via unique_ptr,
+		// and ~UIElement() asserts m_disposed. Dispose() itself detaches from m_uiManager (unregistering from
+		// FocusNavigator, clearing UIManager's focused/hovered pointers if needed) for every node it recurses
+		// into, so this is also what makes removing a focusable child through here as safe as going through
+		// UIManager::RemoveElement.
+		child->Dispose(context);
 		m_children.erase(it);
 		return true;
 	}
@@ -155,6 +173,38 @@ bool Struktur::UI::UIElement::IsEffectivelyVisible() const
 	return true;
 }
 
+void Struktur::UI::UIElement::SetFocusable(bool focus)
+{
+	if (focus == m_focusable)
+	{
+		return;
+	}
+	m_focusable = focus;
+
+	// Self-maintaining registration - see m_uiManager's own comment. If this element isn't attached to a live
+	// tree yet, there's nothing to register with; AttachToManager will pick up the flag once it is.
+	if (m_uiManager)
+	{
+		if (focus)
+		{
+			m_uiManager->GetFocusNavigator()->RegisterElement(this);
+		}
+		else
+		{
+			m_uiManager->GetFocusNavigator()->UnregisterElement(this);
+		}
+	}
+}
+
+void Struktur::UI::UIElement::AttachToManager(UIManager* manager)
+{
+	m_uiManager = manager;
+	if (m_focusable)
+	{
+		manager->GetFocusNavigator()->RegisterElement(this);
+	}
+}
+
 void Struktur::UI::UIElement::SetNavigationNeighbor(NavigationDirection dir, UIElement* neighbor)
 {
 	m_navigationNeighbors[static_cast<int>(dir)].clear();
@@ -232,6 +282,15 @@ void Struktur::UI::UIElement::ForEachRecursivePostOrder(std::function<void(UIEle
 
 void Struktur::UI::UIElement::Dispose(GameContext& context)
 {
+	// Detach from whatever manager was tracking this element (unregisters from FocusNavigator, clears
+	// UIManager's focused/hovered pointers if either pointed here) - the single place this happens, called once
+	// per node since this method already recurses into every child below. See m_uiManager's own comment.
+	if (m_uiManager)
+	{
+		m_uiManager->OnElementDisposed(this);
+		m_uiManager = nullptr;
+	}
+
 	if (m_onClickCallback)
 	{
 		m_onClickCallback.Dispose(context);

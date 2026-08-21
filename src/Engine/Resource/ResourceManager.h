@@ -12,6 +12,7 @@
 #include "Engine/Resource/Pools/SoundPool.h"
 #include "Engine/Resource/Pools/TexturePool.h"
 #include "Engine/Resource/Resource.h"
+#include "Engine/Resource/ResourceEvents.h"
 #include "Engine/Resource/ShaderResource.h"
 #include "Engine/Resource/SoundResource.h"
 #include "Engine/Resource/TextureResource.h"
@@ -71,6 +72,32 @@ public:
 	void ReloadAllGpuResources(GameContext& context);
 
 	void PrintResourceStats() const;
+
+#ifdef EDITOR
+	// Registers ONE callback that receives Loaded/ReadyForUse/Unloaded events from every pool, each tagged with
+	// its own ResourceCategory - the resource manager editor window (ResourceManagerWindow) calls this once
+	// from Initialise() rather than reaching into each pool individually. Each pool itself has no notion of its
+	// own category (see PoolResourceEventCallback's comment in ResourceEvents.h), so this is where that tag
+	// actually gets attached, one small forwarding lambda per pool.
+	void SetResourceEventCallback(ResourceEventCallback cb)
+	{
+		m_texturePool.SetResourceEventCallback(
+		    [cb](ResourceEventType e, const std::string& n, size_t m, double t)
+		    { cb(ResourceCategory::Texture, e, n, m, t); });
+		m_soundPool.SetResourceEventCallback(
+		    [cb](ResourceEventType e, const std::string& n, size_t m, double t)
+		    { cb(ResourceCategory::Sound, e, n, m, t); });
+		m_musicPool.SetResourceEventCallback(
+		    [cb](ResourceEventType e, const std::string& n, size_t m, double t)
+		    { cb(ResourceCategory::Music, e, n, m, t); });
+		m_fontPool.SetResourceEventCallback(
+		    [cb](ResourceEventType e, const std::string& n, size_t m, double t)
+		    { cb(ResourceCategory::Font, e, n, m, t); });
+		m_shaderPool.SetResourceEventCallback(
+		    [cb](ResourceEventType e, const std::string& n, size_t m, double t)
+		    { cb(ResourceCategory::Shader, e, n, m, t); });
+	}
+#endif
 };
 }  // namespace Resource
 }  // namespace Struktur

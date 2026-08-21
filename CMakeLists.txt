@@ -388,6 +388,7 @@ if(EDITOR)
         src/Debug/Editor/Windows/LogWindow.h        src/Debug/Editor/Windows/LogWindow.cpp
         src/Debug/Editor/Windows/ProfilerWindow.h   src/Debug/Editor/Windows/ProfilerWindow.cpp
         src/Debug/Editor/Windows/DialogueEditorWindow.h src/Debug/Editor/Windows/DialogueEditorWindow.cpp
+        src/Debug/Editor/Windows/ResourceManagerWindow.h src/Debug/Editor/Windows/ResourceManagerWindow.cpp
 
         src/Debug/Editor/PreviewRenderers/PreviewRenderer.h
         src/Debug/Editor/PreviewRenderers/TexturePreviewRenderer.h src/Debug/Editor/PreviewRenderers/TexturePreviewRenderer.cpp

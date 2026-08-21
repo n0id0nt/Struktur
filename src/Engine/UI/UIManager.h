@@ -44,6 +44,13 @@ public:
 	FocusNavigator* GetFocusNavigator() const;
 	const std::vector<std::unique_ptr<UIElement>>& GetElements() const;
 
+	// Called by UIElement::Dispose() (once per node, since Dispose already recurses into every child) as the
+	// single place a UIElement detaches from everything this manager was tracking about it: clears
+	// m_focusedElement/m_hoveredElement if either pointed at it, and unregisters it from the FocusNavigator.
+	// Not meant to be called from anywhere else - UIElement is the only thing that knows its own lifecycle is
+	// actually ending.
+	void OnElementDisposed(UIElement* element);
+
 private:
 	void HandleInput(GameContext& context);
 

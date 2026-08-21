@@ -163,6 +163,24 @@ public:
 	//-----------------------------------------------------------------------------------
 
 #ifdef EDITOR
+	// On-disk file size in bytes via PHYSFS_stat - does not open/read the file, so this is cheap enough to call
+	// once per visible row every frame (see the resource manager editor window's inspector table). Fails for
+	// keys that aren't real mounted files (e.g. ShaderPool's "vs,fs" combined cache key).
+	static FileResult<uint64_t> GetFileSize(const std::string& path);
+
+	// Immediate children (files and directories, names only - no path prefix) of a directory in the mounted
+	// virtual filesystem, via PHYSFS_enumerateFiles - for the File Explorer editor window's directory browsing.
+	// Deliberately not std::filesystem: the mount root ("/") doesn't correspond to any single real OS directory
+	// in general (see FileSystem::Mount - it's whatever the user picked via OpenFolderDialog, or a PAK file in
+	// shipped builds), so only PhysFS's own view of the virtual filesystem is guaranteed to match what
+	// FileSystem::ReadBytes/ReadString and every resource pool actually load from. Returns empty on failure
+	// (unmounted path) rather than an error type - matches PHYSFS_enumerateFiles's own "empty list" failure mode.
+	static std::vector<std::string> ListDirectory(const std::string& path);
+
+	// Whether `path` names a directory (vs a file) in the mounted virtual filesystem - PHYSFS_stat-based, same
+	// cost/notes as GetFileSize.
+	static bool IsDirectory(const std::string& path);
+
 	// Opens a native OS folder picker
 	// Returns empty string if user cancels
 	static std::string OpenFolderDialog(const std::string& title, const std::string& defaultPath = "");

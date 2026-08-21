@@ -19,10 +19,10 @@ Struktur::UI::UIElement* Struktur::UI::UIManager::AddElement(std::unique_ptr<UIE
 		UIElement* ptr = element.get();
 		m_elements.push_back(std::move(element));
 
-		if (ptr->IsFocusable())
-		{
-			m_focusNavigator->RegisterElement(ptr);
-		}
+		// Full-tree attach, not just the root - the tree is almost always built (AddChild'd together) before its
+		// root is ever handed here, so this is what actually picks up every already-focusable descendant (see
+		// UIElement::AttachToManager's own comment). Mirrors RemoveElement's own recursive teardown walk below.
+		ptr->ForEachRecursive([this](UIElement* elem) { elem->AttachToManager(this); });
 
 		return ptr;
 	}
@@ -36,27 +36,24 @@ void Struktur::UI::UIManager::RemoveElement(GameContext& context, UIElement* ele
 		return;
 	}
 
-	// Process element and all its children recursively
-	element->ForEachRecursive(
-	    [this](UIElement* elem)
-	    {
-		    // Check if this element is focused
-		    if (m_focusedElement == elem)
-		    {
-			    m_focusedElement = nullptr;
-		    }
-		    if (m_hoveredElement == elem)
-		    {
-			    m_hoveredElement = nullptr;
-		    }
-
-		    // Remove from focus navigator
-		    m_focusNavigator->UnregisterElement(elem);
-	    });
-
+	// Dispose recurses into every child itself and, per-node, calls OnElementDisposed (below) - that single
+	// walk now covers what used to be a separate ForEachRecursive pass here just for focus/hover bookkeeping.
 	element->Dispose(context);
 
 	std::erase_if(m_elements, [element](const std::unique_ptr<UIElement>& ptr) { return ptr.get() == element; });
+}
+
+void Struktur::UI::UIManager::OnElementDisposed(UIElement* element)
+{
+	if (m_focusedElement == element)
+	{
+		m_focusedElement = nullptr;
+	}
+	if (m_hoveredElement == element)
+	{
+		m_hoveredElement = nullptr;
+	}
+	m_focusNavigator->UnregisterElement(element);
 }
 
 void Struktur::UI::UIManager::Update(GameContext& context)
