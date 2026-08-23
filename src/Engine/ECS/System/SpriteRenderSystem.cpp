@@ -1,6 +1,7 @@
 #include "SpriteRenderSystem.h"
 
 #include "Debug/Assertions.h"
+#include "Engine/ECS/Component/ParticleEmitter.h"
 #include "Engine/ECS/Component/Shader.h"
 #include "Engine/ECS/Component/Sprite.h"
 #include "Engine/ECS/Component/TileMap.h"
@@ -127,7 +128,64 @@ void Struktur::System::SpriteRenderSystem::Update(GameContext& context)
 				bgfx::ProgramHandle program     = shaderSystem.ResolveProgram(context, entity, defaultProgram);
 				const Component::Shader* shader = registry.try_get<Component::Shader>(entity);
 				worldRenderer.SubmitSprite(sprite.layer, orderInLayer, program, shader, texture->GetHandle(), sourceRec,
-				                           destRec, offset, glm::degrees(angleZ), sprite.color, cullBounds);
+				                           destRec, offset, glm::degrees(angleZ), sprite.color, false, cullBounds);
+			}
+		}
+
+		// Particles - System::ParticleSystem (an update system, so it's already run this frame) owns spawning
+		// and simulating each Component::ParticleEmitter's pool; this just turns every currently-alive particle
+		// into a sprite submission, reusing the exact same texture-atlas frame math as Component::Sprite above
+		// (see ParticleEmitter's own comment for why rendering lives here instead of in ParticleSystem).
+		{
+			// No Component::Transform needed here (unlike the sprite loop above) - particle.position is already
+			// absolute world space, computed once at spawn time from the emitter's world position and integrated
+			// there ever since by System::ParticleSystem (which does need Transform, for that spawn-time read).
+			auto view = registry.view<Component::ParticleEmitter>(entt::exclude<Inactive>);
+			for (const auto& [entity, emitter] : view.each())
+			{
+				Resource::TextureResource* texture = emitter.texture.Get();
+				if (!texture)
+				{
+					continue;
+				}
+
+				if (!texture->IsGpuReady())
+				{
+					texture->LoadToGpu(context);
+				}
+
+				int imageWidth  = texture->GetWidth();
+				int imageHeight = texture->GetHeight();
+
+				ASSERT_MSG(emitter.columns > 0, "ParticleEmitter needs to have at least one column");
+				ASSERT_MSG(emitter.rows > 0, "ParticleEmitter needs to have at least one row");
+				glm::vec2 frameSize = glm::vec2(imageWidth / emitter.columns, imageHeight / emitter.rows);
+
+				// Frame index 0 for every particle - flipbook animation (driving this from each particle's own
+				// age) is a documented follow-up, not part of this build (see ParticleEmitter's own comment).
+				Util::Math::Rect sourceRec{0.0f, 0.0f, frameSize.x, frameSize.y};
+
+				bgfx::ProgramHandle program     = shaderSystem.ResolveProgram(context, entity, defaultProgram);
+				const Component::Shader* shader = registry.try_get<Component::Shader>(entity);
+
+				for (const Component::Particle& particle : emitter.particles)
+				{
+					if (!particle.alive)
+					{
+						continue;
+					}
+
+					float t              = particle.age / particle.lifetime;
+					float scale          = Util::Math::Lerp(emitter.startScale, emitter.endScale, t);
+					Util::Color color    = Util::Color(glm::mix(glm::vec4(emitter.startColor), glm::vec4(emitter.endColor), t));
+					Util::Math::Rect destRec{::round(particle.position.x * 2) / 2, ::round(particle.position.y * 2) / 2,
+					                         frameSize.x * scale, frameSize.y * scale};
+					glm::vec2 origin{destRec.width * 0.5f, destRec.height * 0.5f};  // rotate/scale about center
+
+					worldRenderer.SubmitSprite(emitter.layer, emitter.orderInLayer, program, shader,
+					                           texture->GetHandle(), sourceRec, destRec, origin,
+					                           glm::degrees(particle.rotation), color, emitter.additive, cullBounds);
+				}
 			}
 		}
 

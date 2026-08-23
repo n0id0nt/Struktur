@@ -3,6 +3,7 @@
 #include "ComponentListXMacro.h"
 #include "Engine/ECS/Component/Camera.h"
 #include "Engine/ECS/Component/Level.h"
+#include "Engine/ECS/Component/ParticleEmitter.h"
 #include "Engine/ECS/Component/PhysicsBody.h"
 #include "Engine/ECS/Component/Shader.h"
 #include "Engine/ECS/Component/Sprite.h"

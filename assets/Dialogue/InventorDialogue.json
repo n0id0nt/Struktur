@@ -4,24 +4,82 @@
       "targets": [
         {
           "conditions": [
-            { "parameters": [{ "type": "flag", "value": "inventor_quest_state" }, { "type": "op", "value": "==" }, { "type": "value", "value": 5.0 }], "type": "hasIntFlag" }
+            {
+              "parameters": [
+                {
+                  "type": "flag",
+                  "value": "inventor_quest_state"
+                },
+                {
+                  "type": "op",
+                  "value": "=="
+                },
+                {
+                  "type": "value",
+                  "value": 5.0
+                }
+              ],
+              "type": "hasIntFlag"
+            }
           ],
           "node": "inventor_complete"
         },
         {
           "conditions": [
-            { "parameters": [{ "type": "flag", "value": "inventor_quest_state" }, { "type": "op", "value": "==" }, { "type": "value", "value": 3.0 }], "type": "hasIntFlag" },
-            { "parameters": [{ "type": "item", "value": "Tool Box" }], "type": "hasItem" }
+            {
+              "parameters": [
+                {
+                  "type": "flag",
+                  "value": "inventor_quest_state"
+                },
+                {
+                  "type": "op",
+                  "value": "=="
+                },
+                {
+                  "type": "value",
+                  "value": 3.0
+                }
+              ],
+              "type": "hasIntFlag"
+            },
+            {
+              "parameters": [
+                {
+                  "type": "item",
+                  "value": "Tool Box"
+                }
+              ],
+              "type": "hasItem"
+            }
           ],
           "node": "inventor_has_toolbox_1"
         },
         {
           "conditions": [
-            { "parameters": [{ "type": "flag", "value": "inventor_quest_state" }, { "type": "op", "value": "==" }, { "type": "value", "value": 3.0 }], "type": "hasIntFlag" }
+            {
+              "parameters": [
+                {
+                  "type": "flag",
+                  "value": "inventor_quest_state"
+                },
+                {
+                  "type": "op",
+                  "value": "=="
+                },
+                {
+                  "type": "value",
+                  "value": 3.0
+                }
+              ],
+              "type": "hasIntFlag"
+            }
           ],
           "node": "inventor_needs_toolbox"
         },
-        { "node": "inventor_first_1" }
+        {
+          "node": "inventor_first_1"
+        }
       ]
     },
     "node": "inventor"
@@ -30,19 +88,28 @@
     "data": {
       "next": "inventor_first_2",
       "speaker": "Inventor",
-      "text": "Workshop's this way — mind the lathe, it lists left.\nI'm Cornelius. Been here since '43, been building since '44.\nFirst year was, admittedly, mostly sitting."
+      "text": "dialogue.inventor.inventor_first_1"
     },
     "node": "inventor_first_1"
   },
   {
     "data": {
       "choices": [
-        { "target": "inventor_ask_split", "text": "How did your toolbox end up in pieces?" },
-        { "target": "inventor_ask_cook", "text": "I heard Margaret needs the pantry door fixed." },
-        { "target": "inventor_ask_help", "text": "What do you need help with?" }
+        {
+          "target": "inventor_ask_split",
+          "text": "dialogue.inventor.inventor_first_2.choice1"
+        },
+        {
+          "target": "inventor_ask_cook",
+          "text": "dialogue.inventor.inventor_first_2.choice2"
+        },
+        {
+          "target": "inventor_ask_help",
+          "text": "dialogue.inventor.inventor_first_2.choice3"
+        }
       ],
       "speaker": "Inventor",
-      "text": "Right — current problem. My toolbox is in two pieces and I can't fix anything without it.\nIncluding the pantry door, which Margaret has been waiting on for years."
+      "text": "dialogue.inventor.inventor_first_2"
     },
     "node": "inventor_first_2"
   },
@@ -50,7 +117,7 @@
     "data": {
       "next": "inventor_the_task",
       "speaker": "Inventor",
-      "text": "House shifted about thirty years ago — moved whole rooms around. Toolbox was open on the bench.\nHandle ended up in the workshop, body went down to the cellar.\nDon't ask me to explain the physics. I've tried."
+      "text": "dialogue.inventor.inventor_ask_split"
     },
     "node": "inventor_ask_split"
   },
@@ -58,7 +125,7 @@
     "data": {
       "next": "inventor_the_task",
       "speaker": "Inventor",
-      "text": "Margaret. Yes. She's been making do without flour for too long.\nI'd have fixed the pantry years ago but I can't work without my full kit.\nIt's a simple latch mechanism — thirty seconds with the right tools."
+      "text": "dialogue.inventor.inventor_ask_cook"
     },
     "node": "inventor_ask_cook"
   },
@@ -66,24 +133,36 @@
     "data": {
       "next": "inventor_the_task",
       "speaker": "Inventor",
-      "text": "Toolbox. Two pieces. That's the whole problem.\nGet me the pieces and I can fix the pantry. Fix the pantry and Margaret can bake.\nEverything downstream of that sorts itself."
+      "text": "dialogue.inventor.inventor_ask_help"
     },
     "node": "inventor_ask_help"
   },
   {
     "data": {
       "commands": [
-        { "parameters": [{ "type": "flag", "value": "inventor_quest_state" }, { "type": "value", "value": 3.0 }], "type": "setIntFlag" }
+        {
+          "parameters": [
+            {
+              "type": "flag",
+              "value": "inventor_quest_state"
+            },
+            {
+              "type": "value",
+              "value": 3.0
+            }
+          ],
+          "type": "setIntFlag"
+        }
       ],
       "speaker": "Inventor",
-      "text": "Toolbox Handle — east bench, right here in the workshop.\nToolbox Body — cellar, ground floor.\nBring both to the workbench here. I'll have it assembled in thirty seconds."
+      "text": "dialogue.inventor.inventor_the_task"
     },
     "node": "inventor_the_task"
   },
   {
     "data": {
       "speaker": "Inventor",
-      "text": "Two pieces needed — Handle and Body.\nHandle: {item_count:item=Toolbox Handle|bool:got it/east bench in this workshop}.\nBody: {item_count:item=Toolbox Body|bool:got it/cellar, ground floor}.\nBring both here to the workbench."
+      "text": "dialogue.inventor.inventor_needs_toolbox"
     },
     "node": "inventor_needs_toolbox"
   },
@@ -91,34 +170,66 @@
     "data": {
       "next": "inventor_has_toolbox_2",
       "speaker": "Inventor",
-      "text": "Both halves — yes.\n*he snaps the toolbox together*\nThirty seconds, as advertised. Now — the pantry."
+      "text": "dialogue.inventor.inventor_has_toolbox_1"
     },
     "node": "inventor_has_toolbox_1"
   },
   {
     "data": {
       "commands": [
-        { "parameters": [{ "type": "flag", "value": "inventor_quest_state" }, { "type": "value", "value": 5.0 }], "type": "setIntFlag" },
-        { "parameters": [{ "type": "item", "value": "Tool Box" }], "type": "removeItem" },
-        { "parameters": [{ "type": "flag", "value": "pantry_unlocked" }, { "type": "value", "value": true }], "type": "setFlag" }
+        {
+          "parameters": [
+            {
+              "type": "flag",
+              "value": "inventor_quest_state"
+            },
+            {
+              "type": "value",
+              "value": 5.0
+            }
+          ],
+          "type": "setIntFlag"
+        },
+        {
+          "parameters": [
+            {
+              "type": "item",
+              "value": "Tool Box"
+            }
+          ],
+          "type": "removeItem"
+        },
+        {
+          "parameters": [
+            {
+              "type": "flag",
+              "value": "pantry_unlocked"
+            },
+            {
+              "type": "value",
+              "value": true
+            }
+          ],
+          "type": "setFlag"
+        }
       ],
       "next": "inventor_has_toolbox_3",
       "speaker": "Inventor",
-      "text": "Pantry door's fixed — latch mechanism reset, should open freely now.\nFlour's in there. Honey's in the larder off the kitchen. Dried herbs are above the stove.\nMargaret will know what to do with all three.\nShe's in the kitchen. Probably still waiting."
+      "text": "dialogue.inventor.inventor_has_toolbox_2"
     },
     "node": "inventor_has_toolbox_2"
   },
   {
     "data": {
       "speaker": "Inventor",
-      "text": "Pantry access unlocked.\nFlour Sack, Jar of Honey and Dried Herbs are now accessible.\nTake them all to Margaret."
+      "text": "dialogue.inventor.inventor_has_toolbox_3"
     },
     "node": "inventor_has_toolbox_3"
   },
   {
     "data": {
       "speaker": "Inventor",
-      "text": "Pantry's open. Flour's in there, honey's in the larder, herbs above the stove.\nTake the lot to Margaret."
+      "text": "dialogue.inventor.inventor_complete"
     },
     "node": "inventor_complete"
   }

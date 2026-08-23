@@ -16,6 +16,7 @@
 #include "Engine/ECS/Component/Camera.h"
 #include "Engine/ECS/Component/Identifier.h"
 #include "Engine/ECS/Component/Level.h"
+#include "Engine/ECS/Component/ParticleEmitter.h"
 #include "Engine/ECS/Component/PhysicsBody.h"
 #include "Engine/ECS/Component/Shader.h"
 #include "Engine/ECS/Component/Sprite.h"
@@ -239,6 +240,17 @@ void InspectorWindow::RenderComponents(GameContext& context, entt::entity entity
 		{
 			ImGui::PushID("Camera");
 			RenderCameraComponent(context, *camera, registry, entity);
+			ImGui::PopID();
+		}
+	}
+
+	// Render ParticleEmitter if exists
+	if (auto* particleEmitter = registry.try_get<Component::ParticleEmitter>(entity))
+	{
+		if (ImGui::CollapsingHeader("Particle Emitter", ImGuiTreeNodeFlags_DefaultOpen))
+		{
+			ImGui::PushID("ParticleEmitter");
+			RenderParticleEmitterComponent(context, *particleEmitter, registry, entity);
 			ImGui::PopID();
 		}
 	}
@@ -1757,6 +1769,94 @@ void InspectorWindow::RenderSpriteComponent(GameContext& context, Component::Spr
 
 		ImGui::TreePop();
 	}
+}
+
+void InspectorWindow::RenderParticleEmitterComponent(GameContext& context, Component::ParticleEmitter& emitter,
+                                                      entt::registry& registry, entt::entity entity)
+{
+	// Texture info - status only, same "no asset picker in this build" convention as RenderSpriteComponent's
+	// own texture field above.
+	if (emitter.texture)
+	{
+		ImGui::Text("Texture: Loaded");
+	}
+	else
+	{
+		ImGui::TextColored(ImVec4(1.0f, 0.5f, 0.5f, 1.0f), "Texture: None");
+	}
+
+	int aliveCount = 0;
+	for (const auto& particle : emitter.particles)
+	{
+		if (particle.alive)
+		{
+			++aliveCount;
+		}
+	}
+	ImGui::Text("Alive: %d / %d", aliveCount, emitter.maxParticles);
+
+	ImGui::Spacing();
+
+	// Sprite sheet properties - same fields/ranges as RenderSpriteComponent's own, since flipbook animation
+	// (driving index from a particle's own age) reuses that exact math - see ParticleEmitter's own comment.
+	ImGui::Text("Sprite Sheet:");
+	ImGui::DragInt("Columns", &emitter.columns, 1.0f, 1, 100);
+	ImGui::DragInt("Rows", &emitter.rows, 1.0f, 1, 100);
+
+	ImGui::Spacing();
+
+	ImGui::Text("Emission:");
+	ImGui::Checkbox("Looping", &emitter.looping);
+	ImGui::DragFloat("Emission Rate", &emitter.emissionRate, 0.5f, 0.0f, 1000.0f, "%.1f/sec");
+	if (ImGui::DragInt("Burst Count", &emitter.burstCount, 1.0f, 0, 10000))
+	{
+		// A new burst count should fire again - matches wren_ParticleEmitterSetBurstCount's own behavior for
+		// scripts (WrenGameObjectComponents.cpp), so editing this field live behaves the same way.
+		emitter.hasBurst = false;
+	}
+	ImGui::DragFloat("Spawn Radius", &emitter.spawnRadius, 0.5f, 0.0f, 1000.0f);
+	ImGui::DragInt("Max Particles", &emitter.maxParticles, 1.0f, 1, 10000);
+
+	ImGui::Spacing();
+
+	ImGui::Text("Motion:");
+	RenderVec2("Velocity Min", emitter.velocityMin);
+	RenderVec2("Velocity Max", emitter.velocityMax);
+	RenderVec2("Acceleration", emitter.acceleration);
+	ImGui::DragFloat("Rotation Speed Min", &emitter.rotationSpeedMin, 0.01f, -20.0f, 20.0f, "%.2f rad/s");
+	ImGui::DragFloat("Rotation Speed Max", &emitter.rotationSpeedMax, 0.01f, -20.0f, 20.0f, "%.2f rad/s");
+
+	ImGui::Spacing();
+
+	ImGui::Text("Lifetime:");
+	ImGui::DragFloat("Lifetime Min", &emitter.lifetimeMin, 0.05f, 0.01f, 60.0f, "%.2fs");
+	ImGui::DragFloat("Lifetime Max", &emitter.lifetimeMax, 0.05f, 0.01f, 60.0f, "%.2fs");
+
+	ImGui::Spacing();
+
+	ImGui::Text("Appearance Over Lifetime:");
+	RenderColor("Start Color", emitter.startColor);
+	RenderColor("End Color", emitter.endColor);
+	ImGui::DragFloat("Start Scale", &emitter.startScale, 0.05f, 0.0f, 100.0f);
+	ImGui::DragFloat("End Scale", &emitter.endScale, 0.05f, 0.0f, 100.0f);
+	ImGui::Checkbox("Additive Blend", &emitter.additive);
+	if (ImGui::IsItemHovered())
+	{
+		ImGui::SetTooltip("Order-independent - the natural default for sparks/fire/glow. Off gives normal alpha "
+		                  "blending, better for smoke/dust (see WorldRenderer's own additive-blend comment).");
+	}
+
+	ImGui::Spacing();
+
+	// Render layer + order - same fields/ranges as RenderSpriteComponent's own.
+	static const char* k_renderLayerNames[] = {"Background Far",     "Background Mid", "Entities",
+	                                           "Background Overlay", "Foreground",     "UI"};
+	int layerIndex                          = static_cast<int>(emitter.layer);
+	if (ImGui::Combo("Render Layer", &layerIndex, k_renderLayerNames, IM_ARRAYSIZE(k_renderLayerNames)))
+	{
+		emitter.layer = static_cast<World::RenderLayer>(layerIndex);
+	}
+	ImGui::DragFloat("Order In Layer", &emitter.orderInLayer, 1.0f, -1000.0f, 1000.0f);
 }
 
 void InspectorWindow::RenderShaderComponent(GameContext& context, Component::Shader& shader, entt::registry& registry,

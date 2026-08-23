@@ -2,6 +2,7 @@
 
 #include <functional>
 #include <string>
+#include <vector>
 
 struct SDL_Window;
 union SDL_Event;
@@ -29,11 +30,15 @@ public:
 	void PollEvents();
 
 	// Called for every raw SDL_Event seen by PollEvents(), before Window's own handling - lets the editor feed
-	// events to ImGui_ImplSDL3_ProcessEvent, which needs the actual event stream (text input, wheel, focus),
-	// not just polled state.
-	void SetEventCallback(std::function<void(const SDL_Event&)> callback)
+	// events to ImGui_ImplSDL3_ProcessEvent (which needs the actual event stream: text input, wheel, focus, not
+	// just polled state) and, separately, Input::HandleEvent see touch-finger events (SDL3 has no pollable
+	// touch-state function the way keyboard/mouse have). Multiple independent callbacks rather than one slot -
+	// both of the above need to observe the same single SDL_PollEvent drain each frame; calling PollEvents()
+	// twice per frame would silently starve whichever caller polled second, since SDL_PollEvent() drains the
+	// queue as it goes.
+	void AddEventCallback(std::function<void(const SDL_Event&)> callback)
 	{
-		m_eventCallback = std::move(callback);
+		m_eventCallbacks.push_back(std::move(callback));
 	}
 
 	bool ShouldClose() const
@@ -70,7 +75,7 @@ public:
 
 private:
 	SDL_Window* m_window = nullptr;
-	std::function<void(const SDL_Event&)> m_eventCallback;
+	std::vector<std::function<void(const SDL_Event&)>> m_eventCallbacks;
 	int m_width         = 0;
 	int m_height        = 0;
 	bool m_isFullscreen = false;

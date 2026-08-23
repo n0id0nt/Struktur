@@ -127,7 +127,7 @@ void Struktur::Renderer::WorldRenderer::SubmitSprite(World::RenderLayer layer, f
                                                      bgfx::ProgramHandle program, const Component::Shader* shader,
                                                      const TextureHandle& texture, const Util::Math::Rect& sourceRec,
                                                      const Util::Math::Rect& destRec, const glm::vec2& origin,
-                                                     float rotation, const Util::Color& tint,
+                                                     float rotation, const Util::Color& tint, bool additive,
                                                      const CullBounds& cullBounds)
 {
 	Util::Math::Rect worldBounds = ComputeQuadWorldBounds(destRec, origin, rotation);
@@ -144,7 +144,8 @@ void Struktur::Renderer::WorldRenderer::SubmitSprite(World::RenderLayer layer, f
 	              destRec,
 	              origin,
 	              rotation,
-	              tint};
+	              tint,
+	              additive};
 	m_drawItems.push_back(item);
 }
 
@@ -168,6 +169,7 @@ void Struktur::Renderer::WorldRenderer::SubmitChunk(World::RenderLayer layer, fl
 	              {},
 	              0.0f,
 	              {},
+	              false,
 	              &chunk};
 	m_drawItems.push_back(item);
 }
@@ -198,19 +200,24 @@ void Struktur::Renderer::WorldRenderer::Flush(GameContext& context)
 	}
 	const bgfx::UniformHandle& texColorSampler = m_texColorSampler;
 
-	uint64_t drawState = BGFX_STATE_WRITE_RGB | BGFX_STATE_WRITE_A |
-	                     BGFX_STATE_BLEND_FUNC(BGFX_STATE_BLEND_SRC_ALPHA, BGFX_STATE_BLEND_INV_SRC_ALPHA);
+	// Chunks (tilemaps) never go additive - normal alpha blend, computed once here for their own direct submit
+	// below. Runs of regular/particle sprites pick their blend state per-run inside FlushRun instead (see
+	// DrawItem::additive), since a run can be either normal or additive but never both.
+	uint64_t chunkDrawState = BGFX_STATE_WRITE_RGB | BGFX_STATE_WRITE_A |
+	                         BGFX_STATE_BLEND_FUNC(BGFX_STATE_BLEND_SRC_ALPHA, BGFX_STATE_BLEND_INV_SRC_ALPHA);
 
 	// The sort key already puts same-texture-same-program items adjacent (see PackSortKey); this walks the
-	// list once, closing the current batch whenever the texture or program changes (both already resolved at
-	// submit time - see DrawItem::program) and emitting exactly one bgfx draw call per contiguous run instead
-	// of one per sprite. A chunk item always closes the run around it and submits its own cached buffer
-	// directly - it's already a pre-built batch, so there's nothing to accumulate. A run is also force-closed
-	// once it hits kMaxQuadsPerRun, even without a texture/program change, since FlushRun's 16-bit index
-	// buffer would otherwise silently wrap and corrupt geometry past that many quads.
+	// list once, closing the current batch whenever the texture, program, or additive-ness changes (all
+	// already resolved at submit time - see DrawItem::program/additive) and emitting exactly one bgfx draw
+	// call per contiguous run instead of one per sprite. A chunk item always closes the run around it and
+	// submits its own cached buffer directly - it's already a pre-built batch, so there's nothing to
+	// accumulate. A run is also force-closed once it hits kMaxQuadsPerRun, even without a texture/program
+	// change, since FlushRun's 16-bit index buffer would otherwise silently wrap and corrupt geometry past
+	// that many quads.
 	size_t runStart                = 0;
 	bgfx::ProgramHandle runProgram = BGFX_INVALID_HANDLE;
 	Renderer::TextureHandle runTexture{0, 0, 0};
+	bool runAdditive = false;
 
 	for (size_t i = 0; i < m_drawItems.size(); ++i)
 	{
@@ -218,7 +225,7 @@ void Struktur::Renderer::WorldRenderer::Flush(GameContext& context)
 
 		if (item.chunk)
 		{
-			FlushRun(context, runStart, i, quadLayout, texColorSampler, drawState, runTexture, runProgram);
+			FlushRun(context, runStart, i, quadLayout, texColorSampler, runAdditive, runTexture, runProgram);
 			// Applied immediately before this chunk's own submit, not any earlier - see DrawItem::shader.
 			if (item.shader)
 			{
@@ -227,7 +234,7 @@ void Struktur::Renderer::WorldRenderer::Flush(GameContext& context)
 			bgfx::setVertexBuffer(0, item.chunk->vb);
 			bgfx::setIndexBuffer(item.chunk->ib);
 			bgfx::setTexture(0, texColorSampler, {(uint16_t)item.texture.id});
-			bgfx::setState(drawState);
+			bgfx::setState(chunkDrawState);
 			bgfx::submit(GraphicsDevice::WorldViewId, item.program);
 			runStart = i + 1;
 			continue;
@@ -235,21 +242,22 @@ void Struktur::Renderer::WorldRenderer::Flush(GameContext& context)
 
 		bool boundary = (i == runStart) ? false
 		                                : (item.texture.id != runTexture.id || item.program.idx != runProgram.idx ||
-		                                   (i - runStart) >= kMaxQuadsPerRun);
+		                                   item.additive != runAdditive || (i - runStart) >= kMaxQuadsPerRun);
 		if (boundary)
 		{
-			FlushRun(context, runStart, i, quadLayout, texColorSampler, drawState, runTexture, runProgram);
+			FlushRun(context, runStart, i, quadLayout, texColorSampler, runAdditive, runTexture, runProgram);
 			runStart = i;
 		}
-		runTexture = item.texture;
-		runProgram = item.program;
+		runTexture  = item.texture;
+		runProgram  = item.program;
+		runAdditive = item.additive;
 	}
-	FlushRun(context, runStart, m_drawItems.size(), quadLayout, texColorSampler, drawState, runTexture, runProgram);
+	FlushRun(context, runStart, m_drawItems.size(), quadLayout, texColorSampler, runAdditive, runTexture, runProgram);
 }
 
 void Struktur::Renderer::WorldRenderer::FlushRun(GameContext& context, size_t runStart, size_t runEnd,
                                                  const bgfx::VertexLayout& quadLayout,
-                                                 bgfx::UniformHandle texColorSampler, uint64_t drawState,
+                                                 bgfx::UniformHandle texColorSampler, bool runAdditive,
                                                  const TextureHandle& runTexture, bgfx::ProgramHandle runProgram)
 {
 	size_t count = runEnd - runStart;
@@ -257,6 +265,12 @@ void Struktur::Renderer::WorldRenderer::FlushRun(GameContext& context, size_t ru
 	{
 		return;
 	}
+
+	// Additive (SRC_ALPHA, ONE) instead of the default (SRC_ALPHA, INV_SRC_ALPHA) - see DrawItem::additive.
+	uint64_t blendFunc = runAdditive
+	                        ? BGFX_STATE_BLEND_FUNC(BGFX_STATE_BLEND_SRC_ALPHA, BGFX_STATE_BLEND_ONE)
+	                        : BGFX_STATE_BLEND_FUNC(BGFX_STATE_BLEND_SRC_ALPHA, BGFX_STATE_BLEND_INV_SRC_ALPHA);
+	uint64_t drawState = BGFX_STATE_WRITE_RGB | BGFX_STATE_WRITE_A | blendFunc;
 
 	// Every item in a run shares the same program (that's what makes it a run - see Flush()'s boundary check),
 	// but not necessarily the same Component::Shader instance, so only the first item's custom uniform values

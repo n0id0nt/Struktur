@@ -4,30 +4,79 @@
       "targets": [
         {
           "conditions": [
-            { "parameters": [{ "type": "item", "value": "Red Pedestal Active" }], "type": "hasItem" },
-            { "parameters": [{ "type": "item", "value": "Green Pedestal Active" }], "type": "hasItem" },
-            { "parameters": [{ "type": "item", "value": "Yellow Pedestal Active" }], "type": "hasItem" },
-            { "parameters": [{ "type": "item", "value": "Blue Pedestal Active" }], "type": "hasItem" }
+            {
+              "parameters": [
+                {
+                  "type": "item",
+                  "value": "Red Pedestal Active"
+                }
+              ],
+              "type": "hasItem"
+            },
+            {
+              "parameters": [
+                {
+                  "type": "item",
+                  "value": "Green Pedestal Active"
+                }
+              ],
+              "type": "hasItem"
+            },
+            {
+              "parameters": [
+                {
+                  "type": "item",
+                  "value": "Yellow Pedestal Active"
+                }
+              ],
+              "type": "hasItem"
+            },
+            {
+              "parameters": [
+                {
+                  "type": "item",
+                  "value": "Blue Pedestal Active"
+                }
+              ],
+              "type": "hasItem"
+            }
           ],
           "node": "cordelia_complete"
         },
         {
           "conditions": [
-            { "parameters": [{ "type": "flag", "value": "cordelia_met" }, { "type": "op", "value": "==" }, { "type": "value", "value": 1.0 }], "type": "hasIntFlag" }
+            {
+              "parameters": [
+                {
+                  "type": "flag",
+                  "value": "cordelia_met"
+                },
+                {
+                  "type": "op",
+                  "value": "=="
+                },
+                {
+                  "type": "value",
+                  "value": 1.0
+                }
+              ],
+              "type": "hasIntFlag"
+            }
           ],
           "node": "cordelia_progress"
         },
-        { "node": "cordelia_intro_1" }
+        {
+          "node": "cordelia_intro_1"
+        }
       ]
     },
     "node": "cordelia"
   },
-
   {
     "data": {
       "next": "cordelia_intro_2",
       "speaker": "Cordelia",
-      "text": "Oh — you're real. You're actually here.\nI've been waiting so long I stopped being certain what was real.\nI am Cordelia Ashfield. This is — was — my family's house.\nPlease, stay a moment. I have to explain something important."
+      "text": "dialogue.cordelia.cordelia_intro_1"
     },
     "node": "cordelia_intro_1"
   },
@@ -35,19 +84,28 @@
     "data": {
       "next": "cordelia_intro_curse",
       "speaker": "Cordelia",
-      "text": "My great-nephew Theodore performed a ritual in 1943.\nHe was trying to preserve this house and everyone in it — make it last forever.\nIt worked. In the worst possible way.\nWe have been here ever since. The house is intact. We are intact.\nBut we cannot leave. We cannot age. We cannot rest."
+      "text": "dialogue.cordelia.cordelia_intro_2"
     },
     "node": "cordelia_intro_2"
   },
   {
     "data": {
       "choices": [
-        { "target": "cordelia_ask_theodore_intro", "text": "Why did Theodore do it?" },
-        { "target": "cordelia_ask_others_intro", "text": "Who else is trapped here?" },
-        { "target": "cordelia_ask_whatnow", "text": "What do you need me to do?" }
+        {
+          "target": "cordelia_ask_theodore_intro",
+          "text": "dialogue.cordelia.cordelia_intro_curse.choice1"
+        },
+        {
+          "target": "cordelia_ask_others_intro",
+          "text": "dialogue.cordelia.cordelia_intro_curse.choice2"
+        },
+        {
+          "target": "cordelia_ask_whatnow",
+          "text": "dialogue.cordelia.cordelia_intro_curse.choice3"
+        }
       ],
       "speaker": "Cordelia",
-      "text": "I have spent eighty years trying to understand what he did well enough to undo it.\nAnd I believe I finally have."
+      "text": "dialogue.cordelia.cordelia_intro_curse"
     },
     "node": "cordelia_intro_curse"
   },
@@ -55,7 +113,7 @@
     "data": {
       "next": "cordelia_intro_solution",
       "speaker": "Cordelia",
-      "text": "He was afraid.\nThe war was coming — he could feel it even out here. He thought the house would be destroyed, that everyone he loved would be taken.\nHe found an old ritual in the library and he used it without fully understanding it.\nHe thought he was being protective.\n*a pause*\nHe was twenty-three years old."
+      "text": "dialogue.cordelia.cordelia_ask_theodore_intro"
     },
     "node": "cordelia_ask_theodore_intro"
   },
@@ -63,7 +121,7 @@
     "data": {
       "next": "cordelia_intro_solution",
       "speaker": "Cordelia",
-      "text": "There were eight of us when the curse took hold.\nFour remain who can still help you — Edmund in the library, Isabelle in the west wing, Margaret in the kitchen, Cedric guarding the vault.\nThe others have... faded. Become part of the house.\nI try not to think about that too often."
+      "text": "dialogue.cordelia.cordelia_ask_others_intro"
     },
     "node": "cordelia_ask_others_intro"
   },
@@ -71,194 +129,304 @@
     "data": {
       "next": "cordelia_intro_solution",
       "speaker": "Cordelia",
-      "text": "That's the right question. And I'm grateful you're asking it rather than simply running.\nMost people, I imagine, would run."
+      "text": "dialogue.cordelia.cordelia_ask_whatnow"
     },
     "node": "cordelia_ask_whatnow"
   },
   {
     "data": {
       "commands": [
-        { "parameters": [{ "type": "flag", "value": "cordelia_met" }, { "type": "value", "value": 1.0 }], "type": "setIntFlag" }
+        {
+          "parameters": [
+            {
+              "type": "flag",
+              "value": "cordelia_met"
+            },
+            {
+              "type": "value",
+              "value": 1.0
+            }
+          ],
+          "type": "setIntFlag"
+        }
       ],
       "speaker": "Cordelia",
-      "text": "Four Crystal Keys. Four pedestals in the main hall.\nWhen all four are activated together, the curse breaks.\nEach key is held by one of the people still trapped here — and each of them needs something from you before they'll part with it.\nEdmund is in the library. His key is red.\nIsabelle is in the west wing. Her key is yellow.\nMargaret is in the kitchen. Her key is green.\nCedric guards the vault. His key is blue.\nFind them. Help them. Bring the keys to the pedestals.\nI will be here."
+      "text": "dialogue.cordelia.cordelia_intro_solution"
     },
     "node": "cordelia_intro_solution"
   },
-
   {
     "data": {
       "targets": [
         {
           "conditions": [
-            { "parameters": [{ "type": "flag", "value": "keys_collected" }, { "type": "op", "value": ">=" }, { "type": "value", "value": 3.0 }], "type": "hasIntFlag" }
+            {
+              "parameters": [
+                {
+                  "type": "flag",
+                  "value": "keys_collected"
+                },
+                {
+                  "type": "op",
+                  "value": ">="
+                },
+                {
+                  "type": "value",
+                  "value": 3.0
+                }
+              ],
+              "type": "hasIntFlag"
+            }
           ],
           "node": "cordelia_progress_3keys"
         },
         {
           "conditions": [
-            { "parameters": [{ "type": "flag", "value": "keys_collected" }, { "type": "op", "value": ">=" }, { "type": "value", "value": 2.0 }], "type": "hasIntFlag" }
+            {
+              "parameters": [
+                {
+                  "type": "flag",
+                  "value": "keys_collected"
+                },
+                {
+                  "type": "op",
+                  "value": ">="
+                },
+                {
+                  "type": "value",
+                  "value": 2.0
+                }
+              ],
+              "type": "hasIntFlag"
+            }
           ],
           "node": "cordelia_progress_2keys"
         },
         {
           "conditions": [
-            { "parameters": [{ "type": "flag", "value": "keys_collected" }, { "type": "op", "value": ">=" }, { "type": "value", "value": 1.0 }], "type": "hasIntFlag" }
+            {
+              "parameters": [
+                {
+                  "type": "flag",
+                  "value": "keys_collected"
+                },
+                {
+                  "type": "op",
+                  "value": ">="
+                },
+                {
+                  "type": "value",
+                  "value": 1.0
+                }
+              ],
+              "type": "hasIntFlag"
+            }
           ],
           "node": "cordelia_progress_1key"
         },
-        { "node": "cordelia_progress_0keys" }
+        {
+          "node": "cordelia_progress_0keys"
+        }
       ]
     },
     "node": "cordelia_progress"
   },
-
   {
     "data": {
       "choices": [
-        { "target": "cordelia_0keys_ask_hints", "text": "Where should I start?" },
-        { "target": "cordelia_0keys_ask_curse", "text": "Tell me more about the curse." },
-        { "target": "cordelia_0keys_ask_cordelia", "text": "How have you survived eighty years of this?" }
+        {
+          "target": "cordelia_0keys_ask_hints",
+          "text": "dialogue.cordelia.cordelia_progress_0keys.choice1"
+        },
+        {
+          "target": "cordelia_0keys_ask_curse",
+          "text": "dialogue.cordelia.cordelia_progress_0keys.choice2"
+        },
+        {
+          "target": "cordelia_0keys_ask_cordelia",
+          "text": "dialogue.cordelia.cordelia_progress_0keys.choice3"
+        }
       ],
       "speaker": "Cordelia",
-      "text": "You have {keys_collected} of the four keys.\nThere's no rush — but there is urgency, if that distinction makes sense."
+      "text": "dialogue.cordelia.cordelia_progress_0keys"
     },
     "node": "cordelia_progress_0keys"
   },
   {
     "data": {
       "speaker": "Cordelia",
-      "text": "Edmund in the library is a good first stop — he's methodical and he'll explain things clearly.\nHe's been working on understanding the curse for decades. What he knows, you should know too.\nThrough the east corridor, up the main stairs."
+      "text": "dialogue.cordelia.cordelia_0keys_ask_hints"
     },
     "node": "cordelia_0keys_ask_hints"
   },
   {
     "data": {
       "speaker": "Cordelia",
-      "text": "The ritual Theodore used was a binding — it tied the house and everyone inside it to a fixed moment.\nThe Crystal Keys were hidden inside it as release mechanisms. Theodore built them in deliberately, I think — some part of him knew he might need a way out.\nOr perhaps he was just careful, once, in his life."
+      "text": "dialogue.cordelia.cordelia_0keys_ask_curse"
     },
     "node": "cordelia_0keys_ask_curse"
   },
   {
     "data": {
       "speaker": "Cordelia",
-      "text": "I'm not sure I have survived, exactly.\nI exist. I observe. I think.\nFor the first twenty years I was quite despairing. After that I became... determined.\nDetermination is surprisingly sustaining."
+      "text": "dialogue.cordelia.cordelia_0keys_ask_cordelia"
     },
     "node": "cordelia_0keys_ask_cordelia"
   },
-
   {
     "data": {
       "choices": [
-        { "target": "cordelia_1key_ask_who", "text": "Who should I go to next?" },
-        { "target": "cordelia_1key_ask_keys", "text": "What do the Crystal Keys actually do?" },
-        { "target": "cordelia_1key_ask_them", "text": "How are the others holding up?" }
+        {
+          "target": "cordelia_1key_ask_who",
+          "text": "dialogue.cordelia.cordelia_progress_1key.choice1"
+        },
+        {
+          "target": "cordelia_1key_ask_keys",
+          "text": "dialogue.cordelia.cordelia_progress_1key.choice2"
+        },
+        {
+          "target": "cordelia_1key_ask_them",
+          "text": "dialogue.cordelia.cordelia_progress_1key.choice3"
+        }
       ],
       "speaker": "Cordelia",
-      "text": "{keys_collected} of four — you've made a start.\nThree more people in this house still need your help."
+      "text": "dialogue.cordelia.cordelia_progress_1key"
     },
     "node": "cordelia_progress_1key"
   },
   {
     "data": {
       "speaker": "Cordelia",
-      "text": "Each of them needs something lost returned to them.\nIsabelle has been losing herself without her diary — she's in the west wing.\nMargaret is waiting on ingredients she can't reach — kitchen.\nCedric is maintaining his post regardless — east vault.\nAny of them will do. Follow what calls to you."
+      "text": "dialogue.cordelia.cordelia_1key_ask_who"
     },
     "node": "cordelia_1key_ask_who"
   },
   {
     "data": {
       "speaker": "Cordelia",
-      "text": "Each key resonates with something the holder represents — knowledge, dreams, creation, protection.\nWhen all four are placed in the pedestals, those four forces together are enough to break the binding Theodore created.\nHe balanced the curse on four pillars. We remove them together."
+      "text": "dialogue.cordelia.cordelia_1key_ask_keys"
     },
     "node": "cordelia_1key_ask_keys"
   },
   {
     "data": {
       "speaker": "Cordelia",
-      "text": "Better than I feared, honestly.\nEdmund is still working. Isabelle still dreams, even if it frightens her. Margaret still cooks.\nCedric has maintained his post without relief for eighty years and has not once complained about it.\nThey are more resilient than I gave them credit for."
+      "text": "dialogue.cordelia.cordelia_1key_ask_them"
     },
     "node": "cordelia_1key_ask_them"
   },
-
   {
     "data": {
       "choices": [
-        { "target": "cordelia_2keys_ask_who", "text": "Who's left?" },
-        { "target": "cordelia_2keys_ask_theodore", "text": "Where is Theodore now?" },
-        { "target": "cordelia_2keys_ask_outside", "text": "What's happened outside, do you know?" }
+        {
+          "target": "cordelia_2keys_ask_who",
+          "text": "dialogue.cordelia.cordelia_progress_2keys.choice1"
+        },
+        {
+          "target": "cordelia_2keys_ask_theodore",
+          "text": "dialogue.cordelia.cordelia_progress_2keys.choice2"
+        },
+        {
+          "target": "cordelia_2keys_ask_outside",
+          "text": "dialogue.cordelia.cordelia_progress_2keys.choice3"
+        }
       ],
       "speaker": "Cordelia",
-      "text": "Halfway there — {keys_collected} of four.\nYou're doing what I tried to do for decades and couldn't.\nI never had the freedom to move between them properly. You do."
+      "text": "dialogue.cordelia.cordelia_progress_2keys"
     },
     "node": "cordelia_progress_2keys"
   },
   {
     "data": {
       "speaker": "Cordelia",
-      "text": "Two more keys still outstanding.\nCheck who you haven't yet helped — Edmund, Isabelle, Margaret, Cedric.\nWhichever two you haven't visited, start there. They've been waiting a long time."
+      "text": "dialogue.cordelia.cordelia_2keys_ask_who"
     },
     "node": "cordelia_2keys_ask_who"
   },
   {
     "data": {
       "speaker": "Cordelia",
-      "text": "Theodore faded a long time ago.\nHe tried to undo what he'd done almost immediately — it broke him, I think, realising what he'd caused.\nHe became less and less present over the years. By 1970 he was gone entirely.\nHe never stopped being sorry. I suppose that's something."
+      "text": "dialogue.cordelia.cordelia_2keys_ask_theodore"
     },
     "node": "cordelia_2keys_ask_theodore"
   },
   {
     "data": {
       "speaker": "Cordelia",
-      "text": "Very little, I'm afraid.\nOccasionally someone comes near the house — we can sense it — but no one has entered until you.\nI assume the war ended. I assume the world continued.\nI try to hold onto the assumption that it got better."
+      "text": "dialogue.cordelia.cordelia_2keys_ask_outside"
     },
     "node": "cordelia_2keys_ask_outside"
   },
-
   {
     "data": {
       "choices": [
-        { "target": "cordelia_3keys_ask_last", "text": "Who has the last key?" },
-        { "target": "cordelia_3keys_ask_after", "text": "What happens to everyone after the curse breaks?" },
-        { "target": "cordelia_3keys_ask_ready", "text": "I'm almost done. Are you ready?" }
+        {
+          "target": "cordelia_3keys_ask_last",
+          "text": "dialogue.cordelia.cordelia_progress_3keys.choice1"
+        },
+        {
+          "target": "cordelia_3keys_ask_after",
+          "text": "dialogue.cordelia.cordelia_progress_3keys.choice2"
+        },
+        {
+          "target": "cordelia_3keys_ask_ready",
+          "text": "dialogue.cordelia.cordelia_progress_3keys.choice3"
+        }
       ],
       "speaker": "Cordelia",
-      "text": "{keys_collected} of four. One more.\nI can feel the binding loosening — even from here, I can feel it.\nSomeone in this house still has the last key."
+      "text": "dialogue.cordelia.cordelia_progress_3keys"
     },
     "node": "cordelia_progress_3keys"
   },
   {
     "data": {
       "speaker": "Cordelia",
-      "text": "Look at who you haven't helped yet — Edmund, Isabelle, Margaret, Cedric.\nOne of them is still waiting.\nThey've kept that key safe for eighty years. Whatever they need from you, it matters to them."
+      "text": "dialogue.cordelia.cordelia_3keys_ask_last"
     },
     "node": "cordelia_3keys_ask_last"
   },
   {
     "data": {
       "speaker": "Cordelia",
-      "text": "I've thought about this for a long time.\nI believe we rest. Properly, finally.\nWhat that means exactly — I don't know. But I know it's better than this.\n*quietly*\nI'm not afraid of it."
+      "text": "dialogue.cordelia.cordelia_3keys_ask_after"
     },
     "node": "cordelia_3keys_ask_after"
   },
   {
     "data": {
       "speaker": "Cordelia",
-      "text": "I have been ready for a very long time.\nGo. Find the last key. Come back to the pedestals.\nI'll be here."
+      "text": "dialogue.cordelia.cordelia_3keys_ask_ready"
     },
     "node": "cordelia_3keys_ask_ready"
   },
-
   {
     "data": {
       "targets": [
         {
           "conditions": [
-            { "parameters": [{ "type": "flag", "value": "scholar_persuaded" }, { "type": "op", "value": "==" }, { "type": "value", "value": 1.0 }], "type": "hasIntFlag" }
+            {
+              "parameters": [
+                {
+                  "type": "flag",
+                  "value": "scholar_persuaded"
+                },
+                {
+                  "type": "op",
+                  "value": "=="
+                },
+                {
+                  "type": "value",
+                  "value": 1.0
+                }
+              ],
+              "type": "hasIntFlag"
+            }
           ],
           "node": "cordelia_complete_scholar_persuaded"
         },
-        { "node": "cordelia_complete_standard" }
+        {
+          "node": "cordelia_complete_standard"
+        }
       ]
     },
     "node": "cordelia_complete"
@@ -267,7 +435,7 @@
     "data": {
       "next": "cordelia_complete_choice",
       "speaker": "Cordelia",
-      "text": "All four pedestals.\nAfter eighty years.\n*she is quiet for a long moment*\nThank you, Elena. For doing what I spent my whole life trying to do."
+      "text": "dialogue.cordelia.cordelia_complete_standard"
     },
     "node": "cordelia_complete_standard"
   },
@@ -275,19 +443,28 @@
     "data": {
       "next": "cordelia_complete_choice",
       "speaker": "Cordelia",
-      "text": "All four pedestals lit.\n*she pauses, and then almost to herself*\nEdmund trusted you enough to give you that key without his book.\nHe hasn't trusted anyone with anything since 1943.\n*she looks at you properly*\nThank you. For all of it."
+      "text": "dialogue.cordelia.cordelia_complete_scholar_persuaded"
     },
     "node": "cordelia_complete_scholar_persuaded"
   },
   {
     "data": {
       "choices": [
-        { "target": "cordelia_end_ask_free", "text": "Will you be free too?" },
-        { "target": "cordelia_end_ask_theodore", "text": "Do you forgive Theodore?" },
-        { "target": "cordelia_end_goodbye", "text": "Goodbye, Cordelia." }
+        {
+          "target": "cordelia_end_ask_free",
+          "text": "dialogue.cordelia.cordelia_complete_choice.choice1"
+        },
+        {
+          "target": "cordelia_end_ask_theodore",
+          "text": "dialogue.cordelia.cordelia_complete_choice.choice2"
+        },
+        {
+          "target": "cordelia_end_goodbye",
+          "text": "dialogue.cordelia.cordelia_complete_choice.choice3"
+        }
       ],
       "speaker": "Cordelia",
-      "text": "The exit portal is open — through the main hall.\nGo. Be free.\nWe will be alright now."
+      "text": "dialogue.cordelia.cordelia_complete_choice"
     },
     "node": "cordelia_complete_choice"
   },
@@ -295,7 +472,7 @@
     "data": {
       "next": "cordelia_end_portal",
       "speaker": "Cordelia",
-      "text": "I believe so.\nI've held onto that belief for eighty years — it's what kept me from fading the way the others did.\nI think I'll finally find out if I was right.\n*a small smile*\nI rather think I was."
+      "text": "dialogue.cordelia.cordelia_end_ask_free"
     },
     "node": "cordelia_end_ask_free"
   },
@@ -303,7 +480,7 @@
     "data": {
       "next": "cordelia_end_portal",
       "speaker": "Cordelia",
-      "text": "I forgave him a long time ago.\nHe was frightened and he loved us all in his clumsy way.\nThe hard part wasn't forgiving Theodore.\nThe hard part was forgiving myself for not stopping him."
+      "text": "dialogue.cordelia.cordelia_end_ask_theodore"
     },
     "node": "cordelia_end_ask_theodore"
   },
@@ -311,14 +488,14 @@
     "data": {
       "next": "cordelia_end_portal",
       "speaker": "Cordelia",
-      "text": "Goodbye, Elena.\nThank you for coming in."
+      "text": "dialogue.cordelia.cordelia_end_goodbye"
     },
     "node": "cordelia_end_goodbye"
   },
   {
     "data": {
       "speaker": "Cordelia",
-      "text": "The portal is in the main hall.\nGo home."
+      "text": "dialogue.cordelia.cordelia_end_portal"
     },
     "node": "cordelia_end_portal"
   }

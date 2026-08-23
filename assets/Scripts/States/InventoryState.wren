@@ -11,6 +11,7 @@ import "input" for Input
 import "States/BaseState" for BaseState
 import "Colors" for BLANK, WHITE
 import "Inventory" for Inventory
+import "Localization/DisplayNames" for DisplayNames
 
 class InventoryState is BaseState {
     construct new() {
@@ -97,7 +98,7 @@ class InventoryState is BaseState {
             inventoryItemPanel.setBackgroundTexture(texture)
 
             inventoryItemPanel.setOnFocus { |sender|
-                inventoryFocusedItemNameLabel.setText(item)
+                inventoryFocusedItemNameLabel.setText(DisplayNames.itemDisplay(item))
                 inventoryFocusedItemNameLabel.setBoundingBoxToText()
                 focusedItemPanel.setBackgroundTexture(texture)
                 _itemFocusSound.play()

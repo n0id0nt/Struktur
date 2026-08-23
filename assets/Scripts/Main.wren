@@ -4,6 +4,7 @@
 
 import "app" for Application
 import "input" for Input
+import "localization" for Localization
 import "flags" for FlagManager
 import "fileSystem" for FileSystem
 
@@ -46,6 +47,7 @@ class Game {
     start() {
         FileSystem.seedFromDefaults("Settings/InputBindings/InputConfig.json", "InputConfig.json")
         Input.loadInputBindings("Settings/InputBindings/InputConfig.json")
+        Localization.loadManifest("Localization/languages.json")
         FlagManager.load("flags.sav")
         Inventory.load("inventory.sav")
 

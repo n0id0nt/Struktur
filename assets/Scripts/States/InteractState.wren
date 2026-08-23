@@ -3,17 +3,19 @@
 
 import "States/BaseState" for BaseState
 import "resourceManager" for Font, Texture, Music, Sound
-import "ui" for UIManager, UILabel, UIPanel, TextWrapping
+import "ui" for UIManager, UILabel, UIRichLabel, UIPanel, TextWrapping
 import "app" for Application, Time
 import "math" for Vec2, Vec3, Vec4
 import "input" for Input
 import "gameObjectComponents" for Camera, Script
 import "gameObject" for GameObject
 import "debug" for Debug
+import "localization" for Localization
 
 import "Colors" for BLANK, BLACK, DARKGRAY, WHITE, LIGHTGRAY
 import "Inventory" for Inventory
 import "dialogue" for DialogueRegistry, DialogueManager, DialogueResult, VariableSubstitution
+import "Localization/DisplayNames" for DisplayNames
 
 var TEXT_SCROLL_SPEED = 0.02
 
@@ -220,12 +222,16 @@ class InteractState is BaseState {
 
         _interactingEntity       = null
         _dialogueScrolling       = false
-        _currentString           = ""
+        _currentGlyphCount       = 0    // reveal cap for the current line - see processDialogueResult/update
         _currentDialogueStartTime = 0
         _currentResult           = null
         _waitingForChoice        = false
 
         _font            = null
+        _regularFont     = null
+        _boldFont        = null
+        _italicFont      = null
+        _boldItalicFont  = null
         _menuMusic       = null
         _textScrollSound = null
     }
@@ -243,6 +249,12 @@ class InteractState is BaseState {
         _textScrollSound = Sound.load("Sounds/scroll.wav")
 
         _font = Font.load("Fonts/medieval_sharp/MedievalSharp-Bold.ttf", 30)
+        // Rich-text font variants for the dialogue label itself - same medieval_sharp family/sizing convention
+        // MainMenuState's showcaseRichText() uses, just at the dialogue box's existing text size (20).
+        _regularFont    = Font.load("Fonts/medieval_sharp/MedievalSharp-Book.ttf", 20)
+        _boldFont       = Font.load("Fonts/medieval_sharp/MedievalSharp-Bold.ttf", 20)
+        _italicFont     = Font.load("Fonts/medieval_sharp/MedievalSharp-BookOblique.ttf", 20)
+        _boldItalicFont = Font.load("Fonts/medieval_sharp/MedievalSharp-BoldOblique.ttf", 20)
         var dialoguePanelTexture = Texture.load("Tiles/DialoguePanel.png")
 
         //  Full-screen transparent root 
@@ -270,22 +282,32 @@ class InteractState is BaseState {
         dialoguePanelTexture.unload()
         _screenPanel.addChild(_textBackgroundPanel)
 
-        //  Dialogue text label (inside text box) 
-        _dialogueLabel = UILabel.new(Vec2.new(40, 25), Vec2.new(0, 0), "", 20.0)
+        //  Dialogue text label (inside text box)
+        _dialogueLabel = UIRichLabel.new(Vec2.new(40, 25), Vec2.new(0, 0), "", 20.0)
         _dialogueLabel.setTextColor(BLACK)
         _dialogueLabel.setAnchorPoint(Vec2.new(0, 0))
-        _dialogueLabel.setFont(_font)
+        _dialogueLabel.setFont(_regularFont)
+        _dialogueLabel.setBoldFont(_boldFont)
+        _dialogueLabel.setItalicFont(_italicFont)
+        _dialogueLabel.setBoldItalicFont(_boldItalicFont)
         _dialogueLabel.setWordWrap(TextWrapping.WORD_WRAP)
         // Fill the panel minus 40 px left/right margin and 60 px from bottom
         // so the continue prompt has room.
         _dialogueLabel.setSize(Vec2.new(-80, -60), Vec2.new(1, 1))
         _textBackgroundPanel.addChild(_dialogueLabel)
 
-        //  "Continue ▶" prompt – bottom-right of text box 
+        // UIRichLabel holds its own reference once set via setFont/setBoldFont/etc - safe to release ours
+        // immediately, matching MainMenuState.showcaseRichText()'s identical pattern.
+        _regularFont.unload()
+        _boldFont.unload()
+        _italicFont.unload()
+        _boldItalicFont.unload()
+
+        //  "Continue ▶" prompt – bottom-right of text box
         // Position: 20 px from right edge, 18 px from bottom edge.
         // setAnchorPoint(1,1) means the label's own bottom-right corner sits
         // at the specified position.
-        _continueLabel = UILabel.new(Vec2.new(-20, -18), Vec2.new(1, 1), "Continue ▶", 16.0)
+        _continueLabel = UILabel.new(Vec2.new(-20, -18), Vec2.new(1, 1), Localization.get("menu.interact.continue_prompt"), 16.0)
         _continueLabel.setTextColor(BLACK)
         _continueLabel.setAnchorPoint(Vec2.new(1, 1))
         _continueLabel.setFont(_font)
@@ -314,18 +336,19 @@ class InteractState is BaseState {
         //var inputNavUp      = Input.isInputJustReleased("NavigateUp")
         //var inputNavDown    = Input.isInputJustReleased("NavigateDown")
 
-        // Text scroll animation 
+        // Text scroll animation - glyph-count-based (not raw-string slicing) since the dialogue label is a
+        // UIRichLabel now: getGlyphCount()/setVisibleGlyphCount() count visible codepoints only, skipping markup
+        // tags entirely, so this paces correctly regardless of how much [b]/[color]/etc. markup a line carries.
         if (_dialogueScrolling) {
-            var fullText = DialogueManagerHelper.processString(_currentString)
             var charCount = ((Time.scaledTime - _currentDialogueStartTime) / TEXT_SCROLL_SPEED).floor
-            if (charCount >= fullText.count) {
-                charCount = fullText.count
+            if (charCount >= _currentGlyphCount) {
+                charCount = _currentGlyphCount
                 _dialogueScrolling = false
                 if (!_waitingForChoice) {
                     _continueLabel.setVisible(true)
                 }
             }
-            _dialogueLabel.setText(fullText[0...charCount])
+            _dialogueLabel.setVisibleGlyphCount(charCount)
         }
 
         // Choice navigation (up / down) 
@@ -345,7 +368,7 @@ class InteractState is BaseState {
             if (_dialogueScrolling) {
                 // Skip to end of scroll
                 _dialogueScrolling = false
-                _dialogueLabel.setText(DialogueManagerHelper.processString(_currentString))
+                _dialogueLabel.setVisibleGlyphCount(_currentGlyphCount)
                 if (!_waitingForChoice) {
                     _continueLabel.setVisible(true)
                 }
@@ -389,11 +412,20 @@ class InteractState is BaseState {
         var text    = result.text
 
         if (text) {
+            // result.text/result.speaker are localization keys/raw npc ids respectively - resolve both to
+            // display strings, then run the composed string through the existing {var} substitution pipeline
+            // once (not per-frame - rich-text markup shouldn't be re-parsed every frame during reveal).
+            var localizedText = Localization.get(text)
+            var composed
             if (speaker && speaker != "") {
-                _currentString = "%(speaker):\n%(text)"
+                var speakerDisplay = DisplayNames.npcDisplay(speaker)
+                composed = "%(speakerDisplay):\n%(localizedText)"
             } else {
-                _currentString = text
+                composed = localizedText
             }
+            var processed = DialogueManagerHelper.processString(composed)
+            _dialogueLabel.setMarkupText(processed)
+            _currentGlyphCount = _dialogueLabel.getGlyphCount()
         }
 
         _dialogueScrolling        = true
@@ -497,11 +529,12 @@ class InteractState is BaseState {
             _choiceContainerPanel.addChild(choicePanel)
             _choicePanels.add(choicePanel)
 
-            // Choice text label inside the row panel
+            // Choice text label inside the row panel - choice is a localization key (see the dialogue JSON's
+            // choice "text" fields), not literal text.
             var choiceLabel = UILabel.new(
                 Vec2.new(12, 0),
                 Vec2.new(0, 0.5),
-                "%(i + 1).  %(choice)",
+                "%(i + 1).  %(Localization.get(choice))",
                 16.0
             )
             choiceLabel.setTextColor(WHITE)

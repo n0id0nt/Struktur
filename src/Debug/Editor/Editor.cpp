@@ -14,6 +14,7 @@
 #include "Debug/Editor/Windows/GameViewportWindow.h"
 #include "Debug/Editor/Windows/HierarchyWindow.h"
 #include "Debug/Editor/Windows/InspectorWindow.h"
+#include "Debug/Editor/Windows/LocalizationWindow.h"
 #include "Debug/Editor/Windows/LogWindow.h"
 #include "Debug/Editor/Windows/PreviewWindow.h"
 #include "Debug/Editor/Windows/ProfilerWindow.h"
@@ -73,6 +74,9 @@ void Editor::Initialise(GameContext& context)
 
 	// Resource manager window (depends on preview window - texture rows preview through it)
 	CreateWindow<ResourceManagerWindow>(previewPtr);
+
+	// Localization audit window (key x language table)
+	CreateWindow<LocalizationWindow>();
 
 	// Route ImGui's own ini autosave/autoload through a single canonical file (also used by the explicit
 	// Save/Load Layout menu actions), so docking state persists automatically across launches.

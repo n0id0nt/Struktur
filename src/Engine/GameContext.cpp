@@ -19,8 +19,9 @@ GameContext::GameContext()
 #ifdef EDITOR
 	m_imGuiRenderer = std::make_unique<Renderer::ImGuiRenderer>();
 #endif
-	m_input        = std::make_unique<Input::Input>(0);
-	m_mixer        = std::make_unique<Audio::Mixer>();
+	m_input               = std::make_unique<Input::Input>(0);
+	m_localizationManager = std::make_unique<Localization::LocalizationManager>();
+	m_mixer               = std::make_unique<Audio::Mixer>();
 	m_physicsWorld = std::make_unique<Physics::PhysicsWorld>();
 #ifdef DEBUG
 	m_profiler = std::make_unique<Debug::Profiler>();
@@ -60,6 +61,7 @@ void GameContext::Shutdown()
 	m_imGuiRenderer.reset();
 #endif
 	m_input.reset();
+	m_localizationManager.reset();
 	m_mixer.reset();
 	m_physicsWorld.reset();
 #ifdef DEBUG
@@ -158,6 +160,12 @@ Input::Input& GameContext::GetInput() const
 {
 	ASSERT_MSG(m_input.get(), "Input not initialised");
 	return *m_input;
+}
+
+Localization::LocalizationManager& GameContext::GetLocalizationManager() const
+{
+	ASSERT_MSG(m_localizationManager.get(), "Localization Manager not initialised");
+	return *m_localizationManager;
 }
 
 Audio::Mixer& GameContext::GetMixer() const

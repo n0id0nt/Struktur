@@ -23,7 +23,7 @@
     "data": {
       "next": "love_letter_transform",
       "speaker": "Narrator",
-      "text": "A romantic letter filled with promises of eternal love.\nCarrying it awakens thoughts of gardens and blooming romance."
+      "text": "dialogue.item.love_letter_pickup"
     },
     "node": "love_letter_pickup"
   },
@@ -50,7 +50,7 @@
         }
       ],
       "speaker": "Narrator",
-      "text": "Obtained Telescope"
+      "text": "dialogue.item.telescope_obtain"
     },
     "node": "telescope_obtain"
   },
@@ -58,7 +58,7 @@
     "data": {
       "next": "love_letter_return_transform",
       "speaker": "Narrator",
-      "text": "You place the letter back on the nightstand where dreams of love belong."
+      "text": "dialogue.item.love_letter_return_place"
     },
     "node": "love_letter_return_place"
   },
@@ -72,7 +72,7 @@
       ],
       "next": "love_letter_obtain",
       "speaker": "Narrator",
-      "text": "The North Room stirs with romantic longing."
+      "text": "dialogue.item.love_letter_transform"
     },
     "node": "love_letter_transform"
   },
@@ -99,7 +99,7 @@
         }
       ],
       "speaker": "Narrator",
-      "text": "Obtained Love Letter"
+      "text": "dialogue.item.love_letter_obtain"
     },
     "node": "love_letter_obtain"
   },
@@ -134,7 +134,7 @@
       ],
       "next": "love_letter_return_putback",
       "speaker": "Narrator",
-      "text": "The North Room's romantic yearning settles back to scholarly calm."
+      "text": "dialogue.item.love_letter_return_transform"
     },
     "node": "love_letter_return_transform"
   },
@@ -161,7 +161,7 @@
         }
       ],
       "speaker": "Narrator",
-      "text": "Put Back Love Letter"
+      "text": "dialogue.item.love_letter_return_putback"
     },
     "node": "love_letter_return_putback"
   },
@@ -198,7 +198,7 @@
         }
       ],
       "speaker": "Narrator",
-      "text": "Obtained Tool Box"
+      "text": "dialogue.item.tool_box_obtain"
     },
     "node": "tool_box_obtain"
   },
@@ -206,7 +206,7 @@
     "data": {
       "next": "hammer_transform",
       "speaker": "Narrator",
-      "text": "A well-used hammer that speaks of creation and honest work.\nCarrying it awakens the urge to build and transform."
+      "text": "dialogue.item.hammer_pickup"
     },
     "node": "hammer_pickup"
   },
@@ -220,7 +220,7 @@
       ],
       "next": "hammer_obtain",
       "speaker": "Narrator",
-      "text": "The East Room resonates with creative potential."
+      "text": "dialogue.item.hammer_transform"
     },
     "node": "hammer_transform"
   },
@@ -247,7 +247,7 @@
         }
       ],
       "speaker": "Narrator",
-      "text": "Obtained Hammer"
+      "text": "dialogue.item.hammer_obtain"
     },
     "node": "hammer_obtain"
   },
@@ -285,7 +285,7 @@
   {
     "data": {
       "speaker": "Narrator",
-      "text": "A crimson pedestal carved with symbols of knowledge and wisdom.\nIt pulses faintly, waiting for the Red Crystal Key to unlock its power."
+      "text": "dialogue.item.red_pedestal_inactive"
     },
     "node": "red_pedestal_inactive"
   },
@@ -314,7 +314,7 @@
     "data": {
       "next": "tool_box_obtain",
       "speaker": "Narrator",
-      "text": "A weathered box filled with various tools and crafting implements.\nEach tool tells a story of problems solved and things built."
+      "text": "dialogue.item.tool_box_pickup"
     },
     "node": "tool_box_pickup"
   },
@@ -322,7 +322,7 @@
     "data": {
       "next": "hammer_return_transform",
       "speaker": "Narrator",
-      "text": "You return the hammer to its place among the valuables."
+      "text": "dialogue.item.hammer_return_place"
     },
     "node": "hammer_return_place"
   },
@@ -336,7 +336,7 @@
       ],
       "next": "ornate_key_return_putback",
       "speaker": "Narrator",
-      "text": "The West Room's protective aura settles back to simple commerce."
+      "text": "dialogue.item.ornate_key_return_transform"
     },
     "node": "ornate_key_return_transform"
   },
@@ -350,7 +350,7 @@
       ],
       "next": "hammer_return_putback",
       "speaker": "Narrator",
-      "text": "The East Room's creative energy settles back to domestic comfort."
+      "text": "dialogue.item.hammer_return_transform"
     },
     "node": "hammer_return_transform"
   },
@@ -377,7 +377,7 @@
         }
       ],
       "speaker": "Narrator",
-      "text": "Put Back Hammer"
+      "text": "dialogue.item.hammer_return_putback"
     },
     "node": "hammer_return_putback"
   },
@@ -385,7 +385,7 @@
     "data": {
       "next": "star_chart_transform",
       "speaker": "Narrator",
-      "text": "Ancient astronomical maps covered in mystical calculations.\nCarrying it awakens thoughts of celestial observations and cosmic mysteries."
+      "text": "dialogue.item.star_chart_pickup"
     },
     "node": "star_chart_pickup"
   },
@@ -409,7 +409,7 @@
       ],
       "next": "star_chart_obtain",
       "speaker": "Narrator",
-      "text": "The South Room reaches toward the stars and cosmic understanding."
+      "text": "dialogue.item.star_chart_transform"
     },
     "node": "star_chart_transform"
   },
@@ -436,7 +436,7 @@
         }
       ],
       "speaker": "Narrator",
-      "text": "Obtained Star Chart"
+      "text": "dialogue.item.star_chart_obtain"
     },
     "node": "star_chart_obtain"
   },
@@ -465,7 +465,7 @@
     "data": {
       "next": "star_chart_return_transform",
       "speaker": "Narrator",
-      "text": "You return the star chart to its secure place among the other valuable documents."
+      "text": "dialogue.item.star_chart_return_place"
     },
     "node": "star_chart_return_place"
   },
@@ -496,7 +496,7 @@
         }
       ],
       "speaker": "Narrator",
-      "text": "Activated Yellow Pedestal"
+      "text": "dialogue.item.yellow_pedestal_active_3"
     },
     "node": "yellow_pedestal_active_3"
   },
@@ -510,7 +510,7 @@
       ],
       "next": "star_chart_return_putback",
       "speaker": "Narrator",
-      "text": "The South Room's cosmic aspirations settle back to earthly rest."
+      "text": "dialogue.item.star_chart_return_transform"
     },
     "node": "star_chart_return_transform"
   },
@@ -537,7 +537,7 @@
         }
       ],
       "speaker": "Narrator",
-      "text": "Put Back Star Chart"
+      "text": "dialogue.item.star_chart_return_putback"
     },
     "node": "star_chart_return_putback"
   },
@@ -545,7 +545,7 @@
     "data": {
       "next": "telescope_obtain",
       "speaker": "Narrator",
-      "text": "A brass telescope for observing celestial phenomena.\nThrough its lens, you can see the cosmic patterns that influence earthly events."
+      "text": "dialogue.item.telescope_pickup"
     },
     "node": "telescope_pickup"
   },
@@ -563,7 +563,7 @@
     "data": {
       "next": "ornate_key_transform",
       "speaker": "Narrator",
-      "text": "An ornate key that promises to unlock hidden secrets.\nCarrying it awakens thoughts of security and protected treasures."
+      "text": "dialogue.item.ornate_key_pickup"
     },
     "node": "ornate_key_pickup"
   },
@@ -571,7 +571,7 @@
     "data": {
       "next": "yellow_pedestal_active_2",
       "speaker": "Narrator",
-      "text": "The Yellow Pedestal shimmers with the light of prophetic dreams.\nThe Dreamer's visions flow through the crystal, revealing glimpses of freedom."
+      "text": "dialogue.item.yellow_pedestal_active"
     },
     "node": "yellow_pedestal_active"
   },
@@ -585,7 +585,7 @@
       ],
       "next": "ornate_key_obtain",
       "speaker": "Narrator",
-      "text": "The West Room shifts toward impenetrable security."
+      "text": "dialogue.item.ornate_key_transform"
     },
     "node": "ornate_key_transform"
   },
@@ -593,7 +593,7 @@
     "data": {
       "next": "ornate_key_return_transform",
       "speaker": "Narrator",
-      "text": "You return the key to its place among the tools and inventions."
+      "text": "dialogue.item.ornate_key_return_place"
     },
     "node": "ornate_key_return_place"
   },
@@ -620,7 +620,7 @@
         }
       ],
       "speaker": "Narrator",
-      "text": "Obtained Key"
+      "text": "dialogue.item.ornate_key_obtain"
     },
     "node": "ornate_key_obtain"
   },
@@ -628,7 +628,7 @@
     "data": {
       "next": "green_pedestal_active_2",
       "speaker": "Narrator",
-      "text": "The Green Pedestal resonates with creative energy and the joy of building.\nThe Inventor's ingenuity flows through the crystal, sparking new possibilities."
+      "text": "dialogue.item.green_pedestal_active"
     },
     "node": "green_pedestal_active"
   },
@@ -655,7 +655,7 @@
         }
       ],
       "speaker": "Narrator",
-      "text": "Put Back Key"
+      "text": "dialogue.item.ornate_key_return_putback"
     },
     "node": "ornate_key_return_putback"
   },
@@ -673,7 +673,7 @@
     "data": {
       "next": "ancient_seal_obtain",
       "speaker": "Narrator",
-      "text": "A mystical seal carved with protective wards and binding runes.\nIt pulses with contained power - clearly a dangerous artifact that should be properly secured."
+      "text": "dialogue.item.ancient_seal_pickup"
     },
     "node": "ancient_seal_pickup"
   },
@@ -681,7 +681,7 @@
     "data": {
       "next": "rose_obtain",
       "speaker": "Narrator",
-      "text": "A perfect red rose that never wilts.\nIt smells of eternal spring and promises kept."
+      "text": "dialogue.item.rose_pickup"
     },
     "node": "rose_pickup"
   },
@@ -708,7 +708,7 @@
         }
       ],
       "speaker": "Narrator",
-      "text": "Obtained Rose"
+      "text": "dialogue.item.rose_obtain"
     },
     "node": "rose_obtain"
   },
@@ -716,7 +716,7 @@
     "data": {
       "next": "red_pedestal_active_2",
       "speaker": "Narrator",
-      "text": "The Red Pedestal blazes with the light of accumulated knowledge.\nThe Scholar's wisdom flows through the crystal, illuminating ancient secrets."
+      "text": "dialogue.item.red_pedestal_active"
     },
     "node": "red_pedestal_active"
   },
@@ -724,7 +724,7 @@
     "data": {
       "next": "yellow_pedestal_active_3",
       "speaker": "Narrator",
-      "text": "Prophetic energy swirls through the house like golden mist."
+      "text": "dialogue.item.yellow_pedestal_active_2"
     },
     "node": "yellow_pedestal_active_2"
   },
@@ -765,7 +765,7 @@
         }
       ],
       "speaker": "Narrator",
-      "text": "Activated Blue Pedestal"
+      "text": "dialogue.item.blue_pedestal_active_3"
     },
     "node": "blue_pedestal_active_3"
   },
@@ -773,7 +773,7 @@
     "data": {
       "next": "entrance_door_3",
       "speaker": "Narrator",
-      "text": "Strange symbols have appeared along the door frame, glowing faintly with an otherworldly light.\nA whispered voice seems to echo from within the wood:\n\t'None may leave until the four keys sing as one.'"
+      "text": "dialogue.item.entrance_door_2"
     },
     "node": "entrance_door_2"
   },
@@ -800,7 +800,7 @@
         }
       ],
       "speaker": "Narrator",
-      "text": "Obtained Ancient Seal"
+      "text": "dialogue.item.ancient_seal_obtain"
     },
     "node": "ancient_seal_obtain"
   },
@@ -808,14 +808,14 @@
     "data": {
       "next": "red_pedestal_active_3",
       "speaker": "Narrator",
-      "text": "Knowledge flows through the house's foundation like rivers of light."
+      "text": "dialogue.item.red_pedestal_active_2"
     },
     "node": "red_pedestal_active_2"
   },
   {
     "data": {
       "speaker": "Narrator",
-      "text": "An imposing vault safe covered in mystical symbols.\nIt emanates an aura of protection and hidden secrets."
+      "text": "dialogue.item.safe"
     },
     "node": "safe"
   },
@@ -846,14 +846,14 @@
         }
       ],
       "speaker": "Narrator",
-      "text": "Activated Red Pedestal"
+      "text": "dialogue.item.red_pedestal_active_3"
     },
     "node": "red_pedestal_active_3"
   },
   {
     "data": {
       "speaker": "Narrator",
-      "text": "An emerald pedestal carved with symbols of creation and craftsmanship.\nIt hums softly, waiting for the Green Crystal Key to awaken its potential."
+      "text": "dialogue.item.green_pedestal_inactive"
     },
     "node": "green_pedestal_inactive"
   },
@@ -861,7 +861,7 @@
     "data": {
       "next": "green_pedestal_active_3",
       "speaker": "Narrator",
-      "text": "Creative energy spreads through the house like growing vines."
+      "text": "dialogue.item.green_pedestal_active_2"
     },
     "node": "green_pedestal_active_2"
   },
@@ -892,7 +892,7 @@
         }
       ],
       "speaker": "Narrator",
-      "text": "Activated Green Pedestal"
+      "text": "dialogue.item.green_pedestal_active_3"
     },
     "node": "green_pedestal_active_3"
   },
@@ -900,21 +900,21 @@
     "data": {
       "next": "entrance_door_2",
       "speaker": "Narrator",
-      "text": "The heavy oak door you entered through stands firmly shut.\nThe handle turns, but the door refuses to budge - as if the house itself holds it closed."
+      "text": "dialogue.item.entrance_door"
     },
     "node": "entrance_door"
   },
   {
     "data": {
       "speaker": "Narrator",
-      "text": "A golden pedestal carved with symbols of dreams and visions.\nIt glows softly, waiting for the Yellow Crystal Key to fulfill its destiny."
+      "text": "dialogue.item.yellow_pedestal_inactive"
     },
     "node": "yellow_pedestal_inactive"
   },
   {
     "data": {
       "speaker": "Narrator",
-      "text": "A sapphire pedestal carved with symbols of protection and ancient secrets.\nIt emanates quiet power, waiting for the Blue Crystal Key to complete the circle."
+      "text": "dialogue.item.blue_pedestal_inactive"
     },
     "node": "blue_pedestal_inactive"
   },
@@ -922,7 +922,7 @@
     "data": {
       "next": "blue_pedestal_active_2",
       "speaker": "Narrator",
-      "text": "The Blue Pedestal radiates protective power and the weight of guarded secrets.\nThe Guardian's wisdom flows through the crystal, unlocking the final barrier."
+      "text": "dialogue.item.blue_pedestal_active"
     },
     "node": "blue_pedestal_active"
   },
@@ -930,21 +930,23 @@
     "data": {
       "next": "blue_pedestal_active_3",
       "speaker": "Narrator",
-      "text": "Protective energy surrounds the house like an ancient shield dissolving."
+      "text": "dialogue.item.blue_pedestal_active_2"
     },
     "node": "blue_pedestal_active_2"
   },
   {
     "data": {
       "speaker": "Narrator",
-      "text": "The door remembers your entry, but it has forgotten how to let you leave.\nYou sense this threshold will not open again until the house's curse is broken."
+      "text": "dialogue.item.entrance_door_3"
     },
     "node": "entrance_door_3"
   },
   {
     "data": {
       "targets": [
-        { "node": "journal_page_pickup" }
+        {
+          "node": "journal_page_pickup"
+        }
       ]
     },
     "node": "journal_page"
@@ -953,7 +955,7 @@
     "data": {
       "next": "journal_page_obtain",
       "speaker": "Narrator",
-      "text": "A loose page covered in cramped academic handwriting - footnotes spilling into margins, corrections layered over corrections.\nSomeone was working something out, and getting closer."
+      "text": "dialogue.item.journal_page_pickup"
     },
     "node": "journal_page_pickup"
   },
@@ -962,27 +964,34 @@
       "commands": [
         {
           "parameters": [
-            { "type": "item", "value": "Journal Page" }
+            {
+              "type": "item",
+              "value": "Journal Page"
+            }
           ],
           "type": "giveItem"
         },
         {
           "parameters": [
-            { "type": "name", "value": "Journal Page" }
+            {
+              "type": "name",
+              "value": "Journal Page"
+            }
           ],
           "type": "pickupEntity"
         }
       ],
       "speaker": "Narrator",
-      "text": "Obtained Journal Page ({item_count:item=Journal Page|round} of 3)"
+      "text": "dialogue.item.journal_page_obtain"
     },
     "node": "journal_page_obtain"
   },
-
   {
     "data": {
       "targets": [
-        { "node": "cabinet_key_pickup" }
+        {
+          "node": "cabinet_key_pickup"
+        }
       ]
     },
     "node": "cabinet_key"
@@ -991,7 +1000,7 @@
     "data": {
       "next": "cabinet_key_obtain",
       "speaker": "Narrator",
-      "text": "A small brass key on a faded ribbon.\nSomething about the way it was kept suggests it was never meant to be given away - only held onto."
+      "text": "dialogue.item.cabinet_key_pickup"
     },
     "node": "cabinet_key_pickup"
   },
@@ -1000,27 +1009,34 @@
       "commands": [
         {
           "parameters": [
-            { "type": "item", "value": "Cabinet Key" }
+            {
+              "type": "item",
+              "value": "Cabinet Key"
+            }
           ],
           "type": "giveItem"
         },
         {
           "parameters": [
-            { "type": "name", "value": "Cabinet Key" }
+            {
+              "type": "name",
+              "value": "Cabinet Key"
+            }
           ],
           "type": "pickupEntity"
         }
       ],
       "speaker": "Narrator",
-      "text": "Obtained Cabinet Key"
+      "text": "dialogue.item.cabinet_key_obtain"
     },
     "node": "cabinet_key_obtain"
   },
-
   {
     "data": {
       "targets": [
-        { "node": "rose_pickup" }
+        {
+          "node": "rose_pickup"
+        }
       ]
     },
     "node": "rose"
@@ -1029,7 +1045,7 @@
     "data": {
       "next": "rose_obtain",
       "speaker": "Narrator",
-      "text": "A red rose that has not wilted despite everything.\nThe air around it smells faintly of a garden that should no longer exist."
+      "text": "dialogue.item.rose_pickup"
     },
     "node": "rose_pickup"
   },
@@ -1038,27 +1054,34 @@
       "commands": [
         {
           "parameters": [
-            { "type": "item", "value": "Rose" }
+            {
+              "type": "item",
+              "value": "Rose"
+            }
           ],
           "type": "giveItem"
         },
         {
           "parameters": [
-            { "type": "name", "value": "Rose" }
+            {
+              "type": "name",
+              "value": "Rose"
+            }
           ],
           "type": "pickupEntity"
         }
       ],
       "speaker": "Narrator",
-      "text": "Obtained Rose ({item_count:item=Rose|round} of 3)"
+      "text": "dialogue.item.rose_obtain"
     },
     "node": "rose_obtain"
   },
-
   {
     "data": {
       "targets": [
-        { "node": "toolbox_handle_pickup" }
+        {
+          "node": "toolbox_handle_pickup"
+        }
       ]
     },
     "node": "toolbox_handle"
@@ -1067,7 +1090,7 @@
     "data": {
       "next": "toolbox_handle_obtain",
       "speaker": "Narrator",
-      "text": "The wooden handle of a toolbox - solid, worn smooth by decades of use.\nIt fits the hand perfectly. Someone used this constantly."
+      "text": "dialogue.item.toolbox_handle_pickup"
     },
     "node": "toolbox_handle_pickup"
   },
@@ -1076,27 +1099,34 @@
       "commands": [
         {
           "parameters": [
-            { "type": "item", "value": "Toolbox Handle" }
+            {
+              "type": "item",
+              "value": "Toolbox Handle"
+            }
           ],
           "type": "giveItem"
         },
         {
           "parameters": [
-            { "type": "name", "value": "Toolbox Handle" }
+            {
+              "type": "name",
+              "value": "Toolbox Handle"
+            }
           ],
           "type": "pickupEntity"
         }
       ],
       "speaker": "Narrator",
-      "text": "Obtained Toolbox Handle"
+      "text": "dialogue.item.toolbox_handle_obtain"
     },
     "node": "toolbox_handle_obtain"
   },
-
   {
     "data": {
       "targets": [
-        { "node": "toolbox_body_pickup" }
+        {
+          "node": "toolbox_body_pickup"
+        }
       ]
     },
     "node": "toolbox_body"
@@ -1105,7 +1135,7 @@
     "data": {
       "next": "toolbox_body_obtain",
       "speaker": "Narrator",
-      "text": "The metal body of a toolbox - dented in a few places, latches still functional.\nApart from the missing handle, it's intact."
+      "text": "dialogue.item.toolbox_body_pickup"
     },
     "node": "toolbox_body_pickup"
   },
@@ -1114,27 +1144,34 @@
       "commands": [
         {
           "parameters": [
-            { "type": "item", "value": "Toolbox Body" }
+            {
+              "type": "item",
+              "value": "Toolbox Body"
+            }
           ],
           "type": "giveItem"
         },
         {
           "parameters": [
-            { "type": "name", "value": "Toolbox Body" }
+            {
+              "type": "name",
+              "value": "Toolbox Body"
+            }
           ],
           "type": "pickupEntity"
         }
       ],
       "speaker": "Narrator",
-      "text": "Obtained Toolbox Body"
+      "text": "dialogue.item.toolbox_body_obtain"
     },
     "node": "toolbox_body_obtain"
   },
-
   {
     "data": {
       "targets": [
-        { "node": "toolbox_assembled_obtain" }
+        {
+          "node": "toolbox_assembled_obtain"
+        }
       ]
     },
     "node": "toolbox_assembled"
@@ -1144,33 +1181,43 @@
       "commands": [
         {
           "parameters": [
-            { "type": "item", "value": "Toolbox Handle" }
+            {
+              "type": "item",
+              "value": "Toolbox Handle"
+            }
           ],
           "type": "removeItem"
         },
         {
           "parameters": [
-            { "type": "item", "value": "Toolbox Body" }
+            {
+              "type": "item",
+              "value": "Toolbox Body"
+            }
           ],
           "type": "removeItem"
         },
         {
           "parameters": [
-            { "type": "item", "value": "Tool Box" }
+            {
+              "type": "item",
+              "value": "Tool Box"
+            }
           ],
           "type": "giveItem"
         }
       ],
       "speaker": "Narrator",
-      "text": "The handle slots into the body with a satisfying click.\nTool Box assembled."
+      "text": "dialogue.item.toolbox_assembled_obtain"
     },
     "node": "toolbox_assembled_obtain"
   },
-
   {
     "data": {
       "targets": [
-        { "node": "flour_sack_pickup" }
+        {
+          "node": "flour_sack_pickup"
+        }
       ]
     },
     "node": "flour_sack"
@@ -1179,7 +1226,7 @@
     "data": {
       "next": "flour_sack_obtain",
       "speaker": "Narrator",
-      "text": "A heavy cloth sack of flour, still fine and dry.\nThe pantry kept it perfectly - as if the house wanted a meal made eventually."
+      "text": "dialogue.item.flour_sack_pickup"
     },
     "node": "flour_sack_pickup"
   },
@@ -1188,27 +1235,34 @@
       "commands": [
         {
           "parameters": [
-            { "type": "item", "value": "Flour Sack" }
+            {
+              "type": "item",
+              "value": "Flour Sack"
+            }
           ],
           "type": "giveItem"
         },
         {
           "parameters": [
-            { "type": "name", "value": "Flour Sack" }
+            {
+              "type": "name",
+              "value": "Flour Sack"
+            }
           ],
           "type": "pickupEntity"
         }
       ],
       "speaker": "Narrator",
-      "text": "Obtained Flour Sack"
+      "text": "dialogue.item.flour_sack_obtain"
     },
     "node": "flour_sack_obtain"
   },
-
   {
     "data": {
       "targets": [
-        { "node": "jar_of_honey_pickup" }
+        {
+          "node": "jar_of_honey_pickup"
+        }
       ]
     },
     "node": "jar_of_honey"
@@ -1217,7 +1271,7 @@
     "data": {
       "next": "jar_of_honey_obtain",
       "speaker": "Narrator",
-      "text": "A glass jar of honey, amber and clear.\nThe label is in handwriting - someone made this themselves, a long time ago."
+      "text": "dialogue.item.jar_of_honey_pickup"
     },
     "node": "jar_of_honey_pickup"
   },
@@ -1226,27 +1280,34 @@
       "commands": [
         {
           "parameters": [
-            { "type": "item", "value": "Jar of Honey" }
+            {
+              "type": "item",
+              "value": "Jar of Honey"
+            }
           ],
           "type": "giveItem"
         },
         {
           "parameters": [
-            { "type": "name", "value": "Jar of Honey" }
+            {
+              "type": "name",
+              "value": "Jar of Honey"
+            }
           ],
           "type": "pickupEntity"
         }
       ],
       "speaker": "Narrator",
-      "text": "Obtained Jar of Honey"
+      "text": "dialogue.item.jar_of_honey_obtain"
     },
     "node": "jar_of_honey_obtain"
   },
-
   {
     "data": {
       "targets": [
-        { "node": "dried_herbs_pickup" }
+        {
+          "node": "dried_herbs_pickup"
+        }
       ]
     },
     "node": "dried_herbs"
@@ -1255,7 +1316,7 @@
     "data": {
       "next": "dried_herbs_obtain",
       "speaker": "Narrator",
-      "text": "A tied bundle of dried herbs hanging above the stove - rosemary, thyme, something sharper.\nThey smell exactly as they should, as though time forgot to touch them."
+      "text": "dialogue.item.dried_herbs_pickup"
     },
     "node": "dried_herbs_pickup"
   },
@@ -1264,27 +1325,34 @@
       "commands": [
         {
           "parameters": [
-            { "type": "item", "value": "Dried Herbs" }
+            {
+              "type": "item",
+              "value": "Dried Herbs"
+            }
           ],
           "type": "giveItem"
         },
         {
           "parameters": [
-            { "type": "name", "value": "Dried Herbs" }
+            {
+              "type": "name",
+              "value": "Dried Herbs"
+            }
           ],
           "type": "pickupEntity"
         }
       ],
       "speaker": "Narrator",
-      "text": "Obtained Dried Herbs"
+      "text": "dialogue.item.dried_herbs_obtain"
     },
     "node": "dried_herbs_obtain"
   },
-
   {
     "data": {
       "targets": [
-        { "node": "merchant_ledger_pickup" }
+        {
+          "node": "merchant_ledger_pickup"
+        }
       ]
     },
     "node": "merchant_ledger"
@@ -1293,7 +1361,7 @@
     "data": {
       "next": "merchant_ledger_obtain",
       "speaker": "Narrator",
-      "text": "A leather-bound ledger, pages dense with transactions.\nThe last entry is dated December 1943 and cuts off mid-sentence."
+      "text": "dialogue.item.merchant_ledger_pickup"
     },
     "node": "merchant_ledger_pickup"
   },
@@ -1302,27 +1370,34 @@
       "commands": [
         {
           "parameters": [
-            { "type": "item", "value": "Merchant Ledger" }
+            {
+              "type": "item",
+              "value": "Merchant Ledger"
+            }
           ],
           "type": "giveItem"
         },
         {
           "parameters": [
-            { "type": "name", "value": "Merchant Ledger" }
+            {
+              "type": "name",
+              "value": "Merchant Ledger"
+            }
           ],
           "type": "pickupEntity"
         }
       ],
       "speaker": "Narrator",
-      "text": "Obtained Merchant Ledger"
+      "text": "dialogue.item.merchant_ledger_obtain"
     },
     "node": "merchant_ledger_obtain"
   },
-
   {
     "data": {
       "targets": [
-        { "node": "merchant_voucher_pickup" }
+        {
+          "node": "merchant_voucher_pickup"
+        }
       ]
     },
     "node": "merchant_voucher"
@@ -1331,7 +1406,7 @@
     "data": {
       "next": "merchant_voucher_obtain",
       "speaker": "Narrator",
-      "text": "A letter in a careful hand, signed Augustus Goldstein.\nIt vouches, briefly and precisely, for the bearer's good character and honest intent."
+      "text": "dialogue.item.merchant_voucher_pickup"
     },
     "node": "merchant_voucher_pickup"
   },
@@ -1340,21 +1415,25 @@
       "commands": [
         {
           "parameters": [
-            { "type": "item", "value": "Merchant Voucher" }
+            {
+              "type": "item",
+              "value": "Merchant Voucher"
+            }
           ],
           "type": "giveItem"
         }
       ],
       "speaker": "Narrator",
-      "text": "Obtained Merchant Voucher"
+      "text": "dialogue.item.merchant_voucher_obtain"
     },
     "node": "merchant_voucher_obtain"
   },
-
   {
     "data": {
       "targets": [
-        { "node": "feast_loaf_obtain" }
+        {
+          "node": "feast_loaf_obtain"
+        }
       ]
     },
     "node": "feast_loaf"
@@ -1364,13 +1443,16 @@
       "commands": [
         {
           "parameters": [
-            { "type": "item", "value": "Feast Loaf" }
+            {
+              "type": "item",
+              "value": "Feast Loaf"
+            }
           ],
           "type": "giveItem"
         }
       ],
       "speaker": "Narrator",
-      "text": "The kitchen fills with warmth and the smell of fresh bread.\nFeast Loaf obtained."
+      "text": "dialogue.item.feast_loaf_obtain"
     },
     "node": "feast_loaf_obtain"
   }

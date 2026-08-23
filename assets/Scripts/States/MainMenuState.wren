@@ -6,6 +6,7 @@ import "app" for Application, Time
 import "math" for Vec2
 import "resourceManager" for Font, Texture
 import "ui" for UIManager, UILabel, UIPanel, UIRichLabel, IconAtlas, TextAlignment, TextWrapping
+import "localization" for Localization
 
 import "States/BaseState" for BaseState
 import "Colors" for WHITE, BLACK, BLANK, DARKGRAY, LIGHTGRAY
@@ -40,7 +41,7 @@ class MainMenuState is BaseState {
         _screenPanel.setBorderColor(BLANK)
         UIManager.addUIElement(_screenPanel)
 
-        var titleLabel = UILabel.new(Vec2.new(0, 90), Vec2.new(0.5, 0), "Memory Palace", 64.0)
+        var titleLabel = UILabel.new(Vec2.new(0, 90), Vec2.new(0.5, 0), Localization.get("menu.main.title"), 64.0)
         titleLabel.setFont(font)
         titleLabel.setTextColor(WHITE)
         titleLabel.setAlignment(TextAlignment.CENTER)
@@ -51,13 +52,13 @@ class MainMenuState is BaseState {
 
         showcaseRichText()
 
-        var startButton = makeButton("Start Game", 0, font)
+        var startButton = makeButton(Localization.get("menu.start_game"), 0, font)
         startButton.setOnClick { |sender, mousePos| startGame() }
 
-        var settingsButton = makeButton("Settings", 1, font)
+        var settingsButton = makeButton(Localization.get("menu.settings"), 1, font)
         settingsButton.setOnClick { |sender, mousePos| openSettings() }
 
-        var quitButton = makeButton("Quit", 2, font)
+        var quitButton = makeButton(Localization.get("menu.quit"), 2, font)
         quitButton.setOnClick { |sender, mousePos| quit() }
 
         UIManager.setFocus(startButton)

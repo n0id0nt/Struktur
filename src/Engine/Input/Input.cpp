@@ -1,6 +1,7 @@
 #include "Input.h"
 
 #include <SDL3/SDL.h>
+#include <SDL3/SDL_touch.h>
 
 #include <cmath>
 
@@ -50,6 +51,47 @@ Input::Input(int gamepadIndex)
 	{
 		DEBUG_WARNING("Gamepad %d is not connected.", m_gamepadIndex);
 	}
+
+	RegisterDefaultUIBindings();
+}
+
+void Input::RegisterDefaultUIBindings()
+{
+	// Mirrors InputConfig.json's own UIDir/UITab/UIAccept/UICancel bindings (assets/Settings/InputBindings/
+	// InputConfig.json) - a successfully-loaded config's own entries for these names simply overwrite these
+	// afterward. Deliberately real SDL enum constants directly rather than routing through InputMaps' string
+	// parsing (that layer exists for the JSON loader's benefit, not needed for a fixed C++-side default set) -
+	// and deliberately SDL_GAMEPAD_BUTTON_LEFT/RIGHT_SHOULDER rather than mirroring the JSON's own "lbumper"/
+	// "rbumper" strings for UITab, which InputMaps has no mapping for (resolves to SDL_GAMEPAD_BUTTON_INVALID,
+	// a pre-existing no-op in the JSON config, not something worth reproducing here).
+	CreateAxis2Binding("UIDir", SDL_SCANCODE_UP, Axis2Component::Up);
+	CreateAxis2Binding("UIDir", SDL_SCANCODE_W, Axis2Component::Up);
+	CreateAxis2Binding("UIDir", SDL_GAMEPAD_BUTTON_DPAD_UP, Axis2Component::Up);
+	CreateAxis2Binding("UIDir", SDL_SCANCODE_DOWN, Axis2Component::Down);
+	CreateAxis2Binding("UIDir", SDL_SCANCODE_S, Axis2Component::Down);
+	CreateAxis2Binding("UIDir", SDL_GAMEPAD_BUTTON_DPAD_DOWN, Axis2Component::Down);
+	CreateAxis2Binding("UIDir", SDL_SCANCODE_LEFT, Axis2Component::Left);
+	CreateAxis2Binding("UIDir", SDL_SCANCODE_A, Axis2Component::Left);
+	CreateAxis2Binding("UIDir", SDL_GAMEPAD_BUTTON_DPAD_LEFT, Axis2Component::Left);
+	CreateAxis2Binding("UIDir", SDL_SCANCODE_RIGHT, Axis2Component::Right);
+	CreateAxis2Binding("UIDir", SDL_SCANCODE_D, Axis2Component::Right);
+	CreateAxis2Binding("UIDir", SDL_GAMEPAD_BUTTON_DPAD_RIGHT, Axis2Component::Right);
+
+	CreateAxisBinding("UITab", SDL_SCANCODE_Q, AxisComponent::Negative);
+	CreateAxisBinding("UITab", SDL_GAMEPAD_BUTTON_LEFT_SHOULDER, AxisComponent::Negative);
+	CreateAxisBinding("UITab", SDL_SCANCODE_E, AxisComponent::Positive);
+	CreateAxisBinding("UITab", SDL_GAMEPAD_BUTTON_RIGHT_SHOULDER, AxisComponent::Positive);
+
+	CreateButtonBinding("UIAccept", SDL_SCANCODE_SPACE);
+	CreateButtonBinding("UIAccept", SDL_SCANCODE_RETURN);
+	CreateButtonBinding("UIAccept", SDL_GAMEPAD_BUTTON_SOUTH);
+	// Click/tap activates the hovered element the same way Space/Enter/GamepadA activates the focused one - see
+	// the pointer design's own reasoning (PointerButton, UIManager's hover/click wiring) for why this shares
+	// UIAccept rather than being a separate action.
+	CreateButtonBinding("UIAccept", PointerButton::Primary);
+
+	CreateButtonBinding("UICancel", SDL_SCANCODE_ESCAPE);
+	CreateButtonBinding("UICancel", SDL_GAMEPAD_BUTTON_EAST);
 }
 
 Input::~Input()
@@ -118,6 +160,22 @@ void Input::Update()
 		m_prevControllerButtons[button] = m_currControllerButtons[button];
 		m_currControllerButtons[button] = IsControllerButtonDown(button);
 	}
+
+	// Pointer - mouse position/buttons are polled here (SDL3's SDL_GetMouseState is a live global query, same
+	// shape as SDL_GetKeyboardState above), touch position/down-state is instead accumulated from HandleEvent
+	// (SDL3 only reports touch through the event stream, no equivalent poll function) and simply left alone
+	// here while a touch is active, so a platform's synthetic touch-driven mouse events (many platforms emit
+	// these by default) can't fight the real touch position for control of m_pointerPosition within one frame.
+	m_prevPointerButtons = m_currPointerButtons;
+	if (!m_hasActiveTouch)
+	{
+		float mouseX = 0.0f, mouseY = 0.0f;
+		SDL_MouseButtonFlags buttons = ::SDL_GetMouseState(&mouseX, &mouseY);
+		m_pointerPosition           = glm::vec2(mouseX, mouseY);
+		m_currPointerButtons[(size_t)PointerButton::Primary]   = (buttons & SDL_BUTTON_LMASK) != 0;
+		m_currPointerButtons[(size_t)PointerButton::Secondary] = (buttons & SDL_BUTTON_RMASK) != 0;
+		m_currPointerButtons[(size_t)PointerButton::Middle]    = (buttons & SDL_BUTTON_MMASK) != 0;
+	}
 }
 
 void Input::Clear()
@@ -127,6 +185,15 @@ void Input::Clear()
 	m_axisBindings.clear();
 	m_axis2Bindings.clear();
 	m_deadzone = 0.0f;
+
+	// Re-establish the reserved UI action names immediately, not just once at construction -
+	// InputConfigLoader::LoadFromFile calls Clear() right before loading a config file's own bindings
+	// (InputConfigLoader.cpp), and if that file turns out to be missing its "inputs" array (or isn't found at
+	// all), LoadFromFile bails out having already wiped everything Clear() just did. Re-registering here means
+	// UIDir/UITab/UIAccept/UICancel survive that specific failure too, not only "the config load was never
+	// attempted at all" (Game.start() erroring out before reaching Input.loadInputBindings). A config that DOES
+	// define these names simply overwrites the defaults again right after, same as always.
+	RegisterDefaultUIBindings();
 }
 
 // ============================================================================
@@ -252,6 +319,25 @@ Input::VariableBindingAxis Input::ParseVariableBindingAxis(const std::string& ax
 	return VariableBindingAxis::Positive;
 }
 
+Input::PointerButton Input::ParsePointerButton(const std::string& button)
+{
+	if (button == "primary")
+	{
+		return PointerButton::Primary;
+	}
+	if (button == "secondary")
+	{
+		return PointerButton::Secondary;
+	}
+	if (button == "middle")
+	{
+		return PointerButton::Middle;
+	}
+
+	ASSERT_MSG(false, "Invalid pointer button: '%s'", button);
+	return PointerButton::Primary;
+}
+
 // ============================================================================
 // DEADZONE APPLICATION
 // ============================================================================
@@ -328,6 +414,59 @@ bool Input::WasControllerButtonDownLastFrame(SDL_GamepadButton button)
 {
 	auto it = m_prevControllerButtons.find(button);
 	return it != m_prevControllerButtons.end() && it->second;
+}
+
+bool Input::IsPointerButtonDown(PointerButton button)
+{
+	return m_currPointerButtons[(size_t)button];
+}
+
+bool Input::IsPointerButtonJustPressed(PointerButton button)
+{
+	return m_currPointerButtons[(size_t)button] && !m_prevPointerButtons[(size_t)button];
+}
+
+bool Input::IsPointerButtonJustReleased(PointerButton button)
+{
+	return !m_currPointerButtons[(size_t)button] && m_prevPointerButtons[(size_t)button];
+}
+
+void Input::HandleEvent(const SDL_Event& event)
+{
+	// Only the first finger to touch down is tracked - see m_hasActiveTouch's own comment. A second
+	// simultaneous finger is simply ignored (real multi-touch is out of scope, see the pointer design's own
+	// explicit non-goals) rather than fighting the first for control of the pointer.
+	switch (event.type)
+	{
+		case SDL_EVENT_FINGER_DOWN:
+			if (!m_hasActiveTouch)
+			{
+				m_hasActiveTouch = true;
+				m_activeTouchId  = event.tfinger.fingerID;
+			}
+			if (event.tfinger.fingerID == m_activeTouchId)
+			{
+				m_pointerPosition = glm::vec2(event.tfinger.x * (float)m_windowWidth, event.tfinger.y * (float)m_windowHeight);
+				m_currPointerButtons[(size_t)PointerButton::Primary] = true;
+			}
+			break;
+		case SDL_EVENT_FINGER_MOTION:
+			if (m_hasActiveTouch && event.tfinger.fingerID == m_activeTouchId)
+			{
+				m_pointerPosition = glm::vec2(event.tfinger.x * (float)m_windowWidth, event.tfinger.y * (float)m_windowHeight);
+			}
+			break;
+		case SDL_EVENT_FINGER_UP:
+		case SDL_EVENT_FINGER_CANCELED:
+			if (m_hasActiveTouch && event.tfinger.fingerID == m_activeTouchId)
+			{
+				m_hasActiveTouch                                     = false;
+				m_currPointerButtons[(size_t)PointerButton::Primary] = false;
+			}
+			break;
+		default:
+			break;
+	}
 }
 
 float Input::GetControllerAxisValue(SDL_GamepadAxis code)
@@ -429,6 +568,11 @@ void Input::CreateButtonBinding(const std::string& input, SDL_Scancode code)
 void Input::CreateButtonBinding(const std::string& input, SDL_GamepadButton code)
 {
 	m_buttonBindings[input].controllerButtons.insert(code);
+}
+
+void Input::CreateButtonBinding(const std::string& input, PointerButton code)
+{
+	m_buttonBindings[input].pointerButtons.insert(code);
 }
 
 void Input::CreateVariableBinding(const std::string& input, SDL_Scancode code)
@@ -547,21 +691,24 @@ bool Input::IsInputDown(const std::string& input)
 {
 	return CheckBinding(
 	    input, [this](SDL_Scancode k) { return IsKeyDown(k); },
-	    [this](SDL_GamepadButton b) { return IsControllerButtonDown(b); });
+	    [this](SDL_GamepadButton b) { return IsControllerButtonDown(b); },
+	    [this](PointerButton p) { return IsPointerButtonDown(p); });
 }
 
 bool Input::IsInputJustPressed(const std::string& input)
 {
 	return CheckBinding(
 	    input, [this](SDL_Scancode k) { return IsKeyJustPressed(k); },
-	    [this](SDL_GamepadButton b) { return IsControllerButtonJustPressed(b); });
+	    [this](SDL_GamepadButton b) { return IsControllerButtonJustPressed(b); },
+	    [this](PointerButton p) { return IsPointerButtonJustPressed(p); });
 }
 
 bool Input::IsInputJustReleased(const std::string& input)
 {
 	return CheckBinding(
 	    input, [this](SDL_Scancode k) { return IsKeyJustReleased(k); },
-	    [this](SDL_GamepadButton b) { return IsControllerButtonJustReleased(b); });
+	    [this](SDL_GamepadButton b) { return IsControllerButtonJustReleased(b); },
+	    [this](PointerButton p) { return IsPointerButtonJustReleased(p); });
 }
 
 // ============================================================================
@@ -636,10 +783,25 @@ float Input::CalculateAxisValue(const AxisBinding& binding)
 // HIGH-LEVEL AXIS/VARIABLE INPUT
 // ============================================================================
 
+void Input::WarnMissingBindingOnce(const std::string& input)
+{
+	// insert() returns {iterator, false} if already present - only logs the first time a given name is queried
+	// and found missing, so a binding that's genuinely absent (polled every frame, e.g. UIDir/UIAccept before
+	// this whole safe-default fix existed) doesn't flood the log every single frame.
+	if (m_warnedMissingBindings.insert(input).second)
+	{
+		DEBUG_ERROR("Input binding '%s' not found - returning a safe default instead of asserting", input);
+	}
+}
+
 float Input::GetInputVariable(const std::string& input)
 {
 	auto it = m_variableBindings.find(input);
-	ASSERT_MSG(it != m_variableBindings.end(), "Variable binding '%s' not found", input);
+	if (it == m_variableBindings.end())
+	{
+		WarnMissingBindingOnce(input);
+		return 0.0f;
+	}
 
 	float value = 0.0f;
 
@@ -679,7 +841,11 @@ float Input::GetInputVariable(const std::string& input)
 float Input::GetInputAxis(const std::string& input)
 {
 	auto it = m_axisBindings.find(input);
-	ASSERT_MSG(it != m_axisBindings.end(), "Axis binding '%s' not found", input);
+	if (it == m_axisBindings.end())
+	{
+		WarnMissingBindingOnce(input);
+		return 0.0f;
+	}
 
 	return CalculateAxisValue(it->second);
 }
@@ -687,7 +853,11 @@ float Input::GetInputAxis(const std::string& input)
 glm::vec2 Input::GetInputAxis2(const std::string& input)
 {
 	auto it = m_axis2Bindings.find(input);
-	ASSERT_MSG(it != m_axis2Bindings.end(), "Axis2 binding '%s' not found", input);
+	if (it == m_axis2Bindings.end())
+	{
+		WarnMissingBindingOnce(input);
+		return glm::vec2(0.0f, 0.0f);
+	}
 
 	float xAxis = CalculateAxisValue(it->second.xAxis);
 	float yAxis = CalculateAxisValue(it->second.yAxis);

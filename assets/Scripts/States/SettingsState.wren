@@ -8,6 +8,7 @@ import "audio" for Audio
 import "math" for Vec2
 import "resourceManager" for Font
 import "ui" for UIManager, UILabel, UIPanel, UIScroll, TextAlignment
+import "localization" for Localization
 
 import "States/BaseState" for BaseState
 import "Colors" for WHITE, BLACK, BLANK, DARKGRAY, LIGHTGRAY
@@ -50,7 +51,7 @@ class SettingsState is BaseState {
         _screenPanel.setBorderColor(BLANK)
         UIManager.addUIElement(_screenPanel)
 
-        var titleLabel = UILabel.new(Vec2.new(0, 90), Vec2.new(0.5, 0), "Settings", 56.0)
+        var titleLabel = UILabel.new(Vec2.new(0, 90), Vec2.new(0.5, 0), Localization.get("menu.settings.title"), 56.0)
         titleLabel.setFont(titleFont)
         titleLabel.setTextColor(WHITE)
         titleLabel.setAlignment(TextAlignment.CENTER)
@@ -75,11 +76,11 @@ class SettingsState is BaseState {
         listPanel.addChild(_scroll)
 
         var y = 0
-        y = addHeaderLabel("Controls", headerFont, y)
-        y = addInfoLabel("Move: Arrow Keys / WASD", rowFont, y)
-        y = addInfoLabel("Interact: E / Enter", rowFont, y)
-        y = addInfoLabel("Inventory: I", rowFont, y)
-        y = addHeaderLabel("Audio & Display", headerFont, y)
+        y = addHeaderLabel(Localization.get("menu.settings.controls_header"), headerFont, y)
+        y = addInfoLabel(Localization.get("menu.settings.move_info"), rowFont, y)
+        y = addInfoLabel(Localization.get("menu.settings.interact_info"), rowFont, y)
+        y = addInfoLabel(Localization.get("menu.settings.inventory_info"), rowFont, y)
+        y = addHeaderLabel(Localization.get("menu.settings.audio_display_header"), headerFont, y)
         y = addFullscreenRow(rowFont, y)
         y = addVolumeRow(rowFont, y)
         y = addBackRow(rowFont, y)
@@ -180,14 +181,22 @@ class SettingsState is BaseState {
     }
 
     addBackRow(font, y) {
-        var pair = makeRow("Back", font, y)
+        var pair = makeRow(Localization.get("menu.settings.back"), font, y)
         var row = pair[0]
         row.setOnClick { |sender, mousePos| goBack() }
         return y + ROW_HEIGHT + ROW_SPACING
     }
 
-    fullscreenText() { "Fullscreen: " + (Application.isFullScreen ? "ON" : "OFF") }
-    volumeText() { "Master Volume: " + (VOLUME_LEVELS[_volumeIndex] * 100).round.toString + "\%" }
+    // Composed strings - separate keys for the prefix/value/suffix pieces, concatenated here, rather than one
+    // templated key, so each piece can be reused/reordered independently per language.
+    fullscreenText() {
+        return Localization.get("menu.settings.fullscreen_prefix") +
+            (Application.isFullScreen ? Localization.get("menu.settings.on") : Localization.get("menu.settings.off"))
+    }
+    volumeText() {
+        return Localization.get("menu.settings.volume_prefix") + (VOLUME_LEVELS[_volumeIndex] * 100).round.toString +
+            Localization.get("menu.settings.volume_suffix")
+    }
 
     toggleFullscreen() {
         Application.setIsFullScreen(!Application.isFullScreen)

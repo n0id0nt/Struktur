@@ -24,6 +24,7 @@ struct Transform;
 struct Sprite;
 struct Shader;
 struct Camera;
+struct ParticleEmitter;
 struct PhysicsBody;
 struct SpriteAnimation;
 struct Level;
@@ -135,6 +136,9 @@ private:
 
 	void RenderCameraComponent(GameContext& context, Component::Camera& camera, entt::registry& registry,
 	                           entt::entity entity);
+
+	void RenderParticleEmitterComponent(GameContext& context, Component::ParticleEmitter& emitter,
+	                                    entt::registry& registry, entt::entity entity);
 
 	void RenderPhysicsBodyComponent(GameContext& context, Component::PhysicsBody& physicsBody, entt::registry& registry,
 	                                entt::entity entity);

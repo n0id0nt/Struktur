@@ -4,37 +4,139 @@
       "targets": [
         {
           "conditions": [
-            { "parameters": [{ "type": "flag", "value": "scholar_quest_state" }, { "type": "op", "value": "==" }, { "type": "value", "value": 5.0 }], "type": "hasIntFlag" }
+            {
+              "parameters": [
+                {
+                  "type": "flag",
+                  "value": "scholar_quest_state"
+                },
+                {
+                  "type": "op",
+                  "value": "=="
+                },
+                {
+                  "type": "value",
+                  "value": 5.0
+                }
+              ],
+              "type": "hasIntFlag"
+            }
           ],
           "node": "scholar_complete"
         },
         {
           "conditions": [
-            { "parameters": [{ "type": "flag", "value": "scholar_quest_state" }, { "type": "op", "value": "==" }, { "type": "value", "value": 4.0 }], "type": "hasIntFlag" },
-            { "parameters": [{ "type": "item", "value": "Ancient Tome" }], "type": "hasItem" }
+            {
+              "parameters": [
+                {
+                  "type": "flag",
+                  "value": "scholar_quest_state"
+                },
+                {
+                  "type": "op",
+                  "value": "=="
+                },
+                {
+                  "type": "value",
+                  "value": 4.0
+                }
+              ],
+              "type": "hasIntFlag"
+            },
+            {
+              "parameters": [
+                {
+                  "type": "item",
+                  "value": "Ancient Tome"
+                }
+              ],
+              "type": "hasItem"
+            }
           ],
           "node": "scholar_has_tome_1"
         },
         {
           "conditions": [
-            { "parameters": [{ "type": "flag", "value": "scholar_quest_state" }, { "type": "op", "value": "==" }, { "type": "value", "value": 4.0 }], "type": "hasIntFlag" }
+            {
+              "parameters": [
+                {
+                  "type": "flag",
+                  "value": "scholar_quest_state"
+                },
+                {
+                  "type": "op",
+                  "value": "=="
+                },
+                {
+                  "type": "value",
+                  "value": 4.0
+                }
+              ],
+              "type": "hasIntFlag"
+            }
           ],
           "node": "scholar_knows_cabinet"
         },
         {
           "conditions": [
-            { "parameters": [{ "type": "flag", "value": "scholar_quest_state" }, { "type": "op", "value": "==" }, { "type": "value", "value": 2.0 }], "type": "hasIntFlag" },
-            { "parameters": [{ "type": "item", "value": "Journal Page" }, { "type": "quantity", "value": 3.0 }], "type": "hasItem" }
+            {
+              "parameters": [
+                {
+                  "type": "flag",
+                  "value": "scholar_quest_state"
+                },
+                {
+                  "type": "op",
+                  "value": "=="
+                },
+                {
+                  "type": "value",
+                  "value": 2.0
+                }
+              ],
+              "type": "hasIntFlag"
+            },
+            {
+              "parameters": [
+                {
+                  "type": "item",
+                  "value": "Journal Page"
+                },
+                {
+                  "type": "quantity",
+                  "value": 3.0
+                }
+              ],
+              "type": "hasItem"
+            }
           ],
           "node": "scholar_has_pages_1"
         },
         {
           "conditions": [
-            { "parameters": [{ "type": "flag", "value": "scholar_quest_state" }, { "type": "op", "value": "==" }, { "type": "value", "value": 2.0 }], "type": "hasIntFlag" }
+            {
+              "parameters": [
+                {
+                  "type": "flag",
+                  "value": "scholar_quest_state"
+                },
+                {
+                  "type": "op",
+                  "value": "=="
+                },
+                {
+                  "type": "value",
+                  "value": 2.0
+                }
+              ],
+              "type": "hasIntFlag"
+            }
           ],
           "node": "scholar_needs_pages"
         },
-        { "node": "scholar_first_1" }
+        {
+          "node": "scholar_first_1"
+        }
       ]
     },
     "node": "scholar"
@@ -43,19 +145,28 @@
     "data": {
       "next": "scholar_first_2",
       "speaker": "Scholar",
-      "text": "Welcome to my library, fellow seeker of knowledge.\nI've been here since 1943 — trapped, yes, but the books remained, so the work continued.\nI am Edmund Ashfield. Please, do not knock anything over."
+      "text": "dialogue.scholar.scholar_first_1"
     },
     "node": "scholar_first_1"
   },
   {
     "data": {
       "choices": [
-        { "target": "scholar_ask_curse", "text": "What happened to this house?" },
-        { "target": "scholar_ask_pages", "text": "You look distracted — what's wrong?" },
-        { "target": "scholar_goodbye", "text": "I won't disturb you." }
+        {
+          "target": "scholar_ask_curse",
+          "text": "dialogue.scholar.scholar_first_2.choice1"
+        },
+        {
+          "target": "scholar_ask_pages",
+          "text": "dialogue.scholar.scholar_first_2.choice2"
+        },
+        {
+          "target": "scholar_goodbye",
+          "text": "dialogue.scholar.scholar_first_2.choice3"
+        }
       ],
       "speaker": "Scholar",
-      "text": "Eighty years of research in this room alone. If I could only find my notes..."
+      "text": "dialogue.scholar.scholar_first_2"
     },
     "node": "scholar_first_2"
   },
@@ -63,31 +174,43 @@
     "data": {
       "next": "scholar_ask_pages",
       "speaker": "Scholar",
-      "text": "Theodore Ashfield — my great-nephew — performed a binding ritual in 1943.\nHe thought he was preserving the house. He was right, in the most catastrophic sense.\nI have been documenting the precise mechanism ever since, so it can be undone.\nWhich brings me to my current problem."
+      "text": "dialogue.scholar.scholar_ask_curse"
     },
     "node": "scholar_ask_curse"
   },
   {
     "data": {
       "commands": [
-        { "parameters": [{ "type": "flag", "value": "scholar_quest_state" }, { "type": "value", "value": 2.0 }], "type": "setIntFlag" }
+        {
+          "parameters": [
+            {
+              "type": "flag",
+              "value": "scholar_quest_state"
+            },
+            {
+              "type": "value",
+              "value": 2.0
+            }
+          ],
+          "type": "setIntFlag"
+        }
       ],
       "speaker": "Scholar",
-      "text": "My journal pages — three of them, the core of my reconstruction work — were scattered when the house last shifted.\nNorth room, east room, west room. Cramped handwriting — you'll recognise them.\nBring all three back and I can read them together. Context is everything."
+      "text": "dialogue.scholar.scholar_ask_pages"
     },
     "node": "scholar_ask_pages"
   },
   {
     "data": {
       "speaker": "Scholar",
-      "text": "Quite all right. The pages — north room, east room, west room. All three, please.\nI'll be here."
+      "text": "dialogue.scholar.scholar_goodbye"
     },
     "node": "scholar_goodbye"
   },
   {
     "data": {
       "speaker": "Scholar",
-      "text": "You have {item_count:item=Journal Page|round} of 3 pages so far.\nNorth room, east room, west room — cramped handwriting, dense margins.\nAll three before I can read them properly."
+      "text": "dialogue.scholar.scholar_needs_pages"
     },
     "node": "scholar_needs_pages"
   },
@@ -95,30 +218,60 @@
     "data": {
       "next": "scholar_has_pages_2",
       "speaker": "Scholar",
-      "text": "All three — yes! That's my hand.\nQuick, let me read them together. Context is everything with reconstruction work."
+      "text": "dialogue.scholar.scholar_has_pages_1"
     },
     "node": "scholar_has_pages_1"
   },
   {
     "data": {
       "commands": [
-        { "parameters": [{ "type": "item", "value": "Journal Page" }, { "type": "quantity", "value": 3.0 }], "type": "removeItem" },
-        { "parameters": [{ "type": "flag", "value": "scholar_quest_state" }, { "type": "value", "value": 4.0 }], "type": "setIntFlag" }
+        {
+          "parameters": [
+            {
+              "type": "item",
+              "value": "Journal Page"
+            },
+            {
+              "type": "quantity",
+              "value": 3.0
+            }
+          ],
+          "type": "removeItem"
+        },
+        {
+          "parameters": [
+            {
+              "type": "flag",
+              "value": "scholar_quest_state"
+            },
+            {
+              "type": "value",
+              "value": 4.0
+            }
+          ],
+          "type": "setIntFlag"
+        }
       ],
       "next": "scholar_decoded",
       "speaker": "Scholar",
-      "text": "The tome was locked away. Here — 'secured the volume in the oak cabinet, gave the key to...'\n*a long pause*\n...to Elara. For safekeeping.\nI see. Well.\nElara tends the garden. She would still have the key — she keeps everything. You should speak to her."
+      "text": "dialogue.scholar.scholar_has_pages_2"
     },
     "node": "scholar_has_pages_2"
   },
   {
     "data": {
       "choices": [
-        { "target": "scholar_ask_elara", "text": "Who is Elara?" },
-        { "target": "scholar_pages_done", "text": "I'll find the Gardener now." }
+        {
+          "target": "scholar_ask_elara",
+          "text": "dialogue.scholar.scholar_decoded.choice1"
+        },
+        {
+          "target": "scholar_pages_done",
+          "text": "dialogue.scholar.scholar_decoded.choice2"
+        }
       ],
       "speaker": "Scholar",
-      "text": "The cabinet key is with Elara — the Gardener, through the south passage.\nTell her Edmund sent you."
+      "text": "dialogue.scholar.scholar_decoded"
     },
     "node": "scholar_decoded"
   },
@@ -126,21 +279,21 @@
     "data": {
       "next": "scholar_pages_done",
       "speaker": "Scholar",
-      "text": "She tends the garden. Has done for — well, as long as I can remember, which is saying something.\n*he turns back to the shelves rather quickly*\nSouth passage. She'll have her own terms."
+      "text": "dialogue.scholar.scholar_ask_elara"
     },
     "node": "scholar_ask_elara"
   },
   {
     "data": {
       "speaker": "Scholar",
-      "text": "Good. South passage to the garden. She will want something in exchange — she always does."
+      "text": "dialogue.scholar.scholar_pages_done"
     },
     "node": "scholar_pages_done"
   },
   {
     "data": {
       "speaker": "Scholar",
-      "text": "The Gardener has the cabinet key. I gave it to her some years ago for safekeeping.\nShe is in the garden — south passage. She will want something in exchange."
+      "text": "dialogue.scholar.scholar_knows_cabinet"
     },
     "node": "scholar_knows_cabinet"
   },
@@ -148,34 +301,62 @@
     "data": {
       "next": "scholar_has_tome_2",
       "speaker": "Scholar",
-      "text": "My tome. Good lord, it's exactly as I left it.\n*he runs a hand across the cover*\nThank you. Genuinely."
+      "text": "dialogue.scholar.scholar_has_tome_1"
     },
     "node": "scholar_has_tome_1"
   },
   {
     "data": {
       "commands": [
-        { "parameters": [{ "type": "item", "value": "Red Crystal Key" }], "type": "giveItem" },
-        { "parameters": [{ "type": "item", "value": "Ancient Tome" }], "type": "removeItem" },
-        { "parameters": [{ "type": "flag", "value": "scholar_quest_state" }, { "type": "value", "value": 5.0 }], "type": "setIntFlag" }
+        {
+          "parameters": [
+            {
+              "type": "item",
+              "value": "Red Crystal Key"
+            }
+          ],
+          "type": "giveItem"
+        },
+        {
+          "parameters": [
+            {
+              "type": "item",
+              "value": "Ancient Tome"
+            }
+          ],
+          "type": "removeItem"
+        },
+        {
+          "parameters": [
+            {
+              "type": "flag",
+              "value": "scholar_quest_state"
+            },
+            {
+              "type": "value",
+              "value": 5.0
+            }
+          ],
+          "type": "setIntFlag"
+        }
       ],
       "next": "scholar_has_tome_3",
       "speaker": "Scholar",
-      "text": "The Crystal Key of Knowledge — take it. The red pedestal in the main hall is where it goes.\nThere are four pedestals in total. You will need all four keys to break the curse."
+      "text": "dialogue.scholar.scholar_has_tome_2"
     },
     "node": "scholar_has_tome_2"
   },
   {
     "data": {
       "speaker": "Scholar",
-      "text": "Obtained Red Crystal Key\nYou now have {keys_collected|round} of 4 Crystal Keys."
+      "text": "dialogue.scholar.scholar_has_tome_3"
     },
     "node": "scholar_has_tome_3"
   },
   {
     "data": {
       "speaker": "Scholar",
-      "text": "The tome is back. The key is yours.\nFour pedestals in the main hall — all four keys together will break the curse.\nYou have {keys_collected|round} so far. Keep going."
+      "text": "dialogue.scholar.scholar_complete"
     },
     "node": "scholar_complete"
   }

@@ -37,9 +37,9 @@ void Struktur::Platform::Window::PollEvents()
 	SDL_Event event;
 	while (::SDL_PollEvent(&event))
 	{
-		if (m_eventCallback)
+		for (const auto& callback : m_eventCallbacks)
 		{
-			m_eventCallback(event);
+			callback(event);
 		}
 
 		switch (event.type)

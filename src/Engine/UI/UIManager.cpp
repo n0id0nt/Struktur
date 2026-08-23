@@ -141,25 +141,33 @@ void Struktur::UI::UIManager::HandleInput(GameContext& context)
 {
 	Input::Input& input = context.GetInput();
 
-	// Handle mouse hover
-	// if (mouse.hasMoved) {
-	//    UIElement* elementUnderMouse = GetElementAt(mouse.position);
-	//    if (elementUnderMouse != hoveredElement) {
-	//        if (hoveredElement) {
-	//            // Mouse left previous element
-	//        }
-	//        hoveredElement = elementUnderMouse;
-	//        if (hoveredElement) {
-	//            hoveredElement->OnHover(mouse.position);
-	//        }
-	//    }
-	//}
+	// Handle pointer hover - Input::GetPointerPosition() is one unified coordinate regardless of whether it's
+	// currently driven by the real mouse or an active touch (see Input::GetPointerPosition's own comment), so
+	// this needs no separate touch-handling branch here.
+	UIElement* elementUnderPointer = GetElementAt(input.GetPointerPosition());
+	if (elementUnderPointer != m_hoveredElement)
+	{
+		m_hoveredElement = elementUnderPointer;
+		if (m_hoveredElement)
+		{
+			m_hoveredElement->OnHover(context, input.GetPointerPosition());
+		}
+	}
 
-	// Handle mouse clicks
-	// if (mouse.leftButton && m_hoveredElement) {
-	//    SetFocus(m_hoveredElement);
-	//    m_hoveredElement->OnClick(mouse.position);
-	//}
+	// Handle pointer click - focuses the hovered element immediately (via FocusNavigator::SetFocus directly,
+	// not the deferred UIManager::SetFocus path Update() applies next tick) so the "Handle activation" block
+	// below, later in this same call, activates the just-clicked element rather than whatever was focused
+	// before the click - matching how clicking a button in any UI toolkit both focuses and activates it in one
+	// motion, not over two frames. Checked against the pointer button directly (not the generic "UIAccept"
+	// binding it's also part of - see InputConfig.json), so this only fires for an actual click/tap, and on
+	// release (not press) to match UIAccept's own release-triggered activation below, letting a press-then-
+	// drag-off cancel a click the same way it already does for keyboard/gamepad.
+	if (m_hoveredElement && m_hoveredElement->IsFocusable() &&
+	    input.IsPointerButtonJustReleased(Input::Input::PointerButton::Primary))
+	{
+		m_focusedElement = m_hoveredElement;
+		m_focusNavigator->SetFocus(context, m_hoveredElement);
+	}
 
 	// Handle keyboard navigation
 	// float tabAxis = input.GetInputAxis("UITab");

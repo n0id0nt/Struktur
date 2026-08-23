@@ -43,6 +43,11 @@ struct DrawItem
 	glm::vec2 origin;
 	float rotation;
 	Util::Color tint;
+	// Additive (BGFX_STATE_BLEND_FUNC(SRC_ALPHA, ONE)) instead of the default alpha blend - see
+	// Component::ParticleEmitter::additive's own comment for why particles want this. Folded into the run-
+	// boundary check in Flush() (like texture/program) so additive and normal-blended items never merge into
+	// one draw call sharing one blend state.
+	bool additive           = false;
 	// Set only for chunk items (see SubmitChunk) - Flush() submits these directly from their own cached
 	// static buffers instead of folding them into a transient sprite batch.
 	const TileChunk* chunk = nullptr;
@@ -78,7 +83,7 @@ public:
 	void SubmitSprite(World::RenderLayer layer, float orderInLayer, bgfx::ProgramHandle program,
 	                  const Component::Shader* shader, const TextureHandle& texture, const Util::Math::Rect& sourceRec,
 	                  const Util::Math::Rect& destRec, const glm::vec2& origin, float rotation, const Util::Color& tint,
-	                  const CullBounds& cullBounds);
+	                  bool additive, const CullBounds& cullBounds);
 	void SubmitChunk(World::RenderLayer layer, float orderInLayer, bgfx::ProgramHandle program,
 	                 const Component::Shader* shader, const TileChunk& chunk, const TextureHandle& texture,
 	                 const CullBounds& cullBounds);
@@ -90,7 +95,7 @@ private:
 	// SubmitSprite/SubmitChunk) purely to reach ShaderSystem::ApplyUniforms right before this run's own submit -
 	// see DrawItem::shader.
 	void FlushRun(GameContext& context, size_t runStart, size_t runEnd, const bgfx::VertexLayout& quadLayout,
-	              bgfx::UniformHandle texColorSampler, uint64_t drawState, const TextureHandle& runTexture,
+	              bgfx::UniformHandle texColorSampler, bool runAdditive, const TextureHandle& runTexture,
 	              bgfx::ProgramHandle runProgram);
 
 	// FlushRun's transient index buffer uses 16-bit indices (uint16_t ibase) - a run any longer than this would

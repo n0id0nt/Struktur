@@ -606,6 +606,332 @@ void wren_SpriteAnimationIsAnimationPlaying(WrenVM* vm)
 }
 
 // ============================================================================
+// PARTICLE EMITTER BINDINGS
+// ============================================================================
+
+// ParticleEmitter.create(entity, texture) -> ParticleEmitter
+void wren_ParticleEmitterCreate(WrenVM* vm)
+{
+	Struktur::GameContext* context = static_cast<Struktur::GameContext*>(wrenGetUserData(vm));
+	entt::registry& registry       = context->GetRegistry();
+
+	entt::entity entity = static_cast<entt::entity>(wrenGetSlotDouble(vm, 1));
+
+	// Same guard as Sprite.create - texture is null when Texture.load() failed, and wrenGetSlotForeign on a
+	// null slot returns a garbage pointer rather than nullptr.
+	if (wrenGetSlotType(vm, 2) != WREN_TYPE_FOREIGN)
+	{
+		wrenSetSlotString(vm, 0, "ParticleEmitter.create: texture is not a valid Texture (did Texture.load() fail?)");
+		wrenAbortFiber(vm, 0);
+		return;
+	}
+	WrenTextureHandle* texture = static_cast<WrenTextureHandle*>(wrenGetSlotForeign(vm, 2));
+
+	auto& emitterComponent  = registry.emplace<Struktur::Component::ParticleEmitter>(entity);
+	emitterComponent.texture = texture->resource;
+
+	wrenGetVariable(vm, "gameObjectComponents", "ParticleEmitter", 1);  // Get class into slot 1
+	WrenParticleEmitter* emitter = (WrenParticleEmitter*)wrenSetSlotNewForeign(vm, 0, 1, sizeof(WrenParticleEmitter));
+	new (emitter) WrenParticleEmitter(entity, &emitterComponent);
+}
+
+void wren_ParticleEmitterSetTexture(WrenVM* vm)
+{
+	WrenParticleEmitter* emitter = (WrenParticleEmitter*)wrenGetSlotForeign(vm, 0);
+	WrenTextureHandle* texture   = (WrenTextureHandle*)wrenGetSlotForeign(vm, 1);
+	emitter->component->texture  = texture->resource;
+}
+
+void wren_ParticleEmitterSetColumns(WrenVM* vm)
+{
+	WrenParticleEmitter* emitter = (WrenParticleEmitter*)wrenGetSlotForeign(vm, 0);
+	emitter->component->columns  = static_cast<int>(wrenGetSlotDouble(vm, 1));
+}
+
+void wren_ParticleEmitterGetColumns(WrenVM* vm)
+{
+	WrenParticleEmitter* emitter = (WrenParticleEmitter*)wrenGetSlotForeign(vm, 0);
+	wrenSetSlotDouble(vm, 0, (double)emitter->component->columns);
+}
+
+void wren_ParticleEmitterSetRows(WrenVM* vm)
+{
+	WrenParticleEmitter* emitter = (WrenParticleEmitter*)wrenGetSlotForeign(vm, 0);
+	emitter->component->rows     = static_cast<int>(wrenGetSlotDouble(vm, 1));
+}
+
+void wren_ParticleEmitterGetRows(WrenVM* vm)
+{
+	WrenParticleEmitter* emitter = (WrenParticleEmitter*)wrenGetSlotForeign(vm, 0);
+	wrenSetSlotDouble(vm, 0, (double)emitter->component->rows);
+}
+
+void wren_ParticleEmitterSetEmissionRate(WrenVM* vm)
+{
+	WrenParticleEmitter* emitter      = (WrenParticleEmitter*)wrenGetSlotForeign(vm, 0);
+	emitter->component->emissionRate = (float)wrenGetSlotDouble(vm, 1);
+}
+
+void wren_ParticleEmitterGetEmissionRate(WrenVM* vm)
+{
+	WrenParticleEmitter* emitter = (WrenParticleEmitter*)wrenGetSlotForeign(vm, 0);
+	wrenSetSlotDouble(vm, 0, (double)emitter->component->emissionRate);
+}
+
+void wren_ParticleEmitterSetBurstCount(WrenVM* vm)
+{
+	WrenParticleEmitter* emitter    = (WrenParticleEmitter*)wrenGetSlotForeign(vm, 0);
+	emitter->component->burstCount = static_cast<int>(wrenGetSlotDouble(vm, 1));
+	// A new burst count should fire again - matches the intuitive "set it and it happens" script usage,
+	// rather than requiring the emitter to be destroyed/recreated to trigger a second burst.
+	emitter->component->hasBurst = false;
+}
+
+void wren_ParticleEmitterGetBurstCount(WrenVM* vm)
+{
+	WrenParticleEmitter* emitter = (WrenParticleEmitter*)wrenGetSlotForeign(vm, 0);
+	wrenSetSlotDouble(vm, 0, (double)emitter->component->burstCount);
+}
+
+void wren_ParticleEmitterSetSpawnRadius(WrenVM* vm)
+{
+	WrenParticleEmitter* emitter     = (WrenParticleEmitter*)wrenGetSlotForeign(vm, 0);
+	emitter->component->spawnRadius = (float)wrenGetSlotDouble(vm, 1);
+}
+
+void wren_ParticleEmitterGetSpawnRadius(WrenVM* vm)
+{
+	WrenParticleEmitter* emitter = (WrenParticleEmitter*)wrenGetSlotForeign(vm, 0);
+	wrenSetSlotDouble(vm, 0, (double)emitter->component->spawnRadius);
+}
+
+void wren_ParticleEmitterSetVelocityMin(WrenVM* vm)
+{
+	WrenParticleEmitter* emitter    = (WrenParticleEmitter*)wrenGetSlotForeign(vm, 0);
+	WrenVec2* velocity               = (WrenVec2*)wrenGetSlotForeign(vm, 1);
+	emitter->component->velocityMin = velocity->value;
+}
+
+void wren_ParticleEmitterGetVelocityMin(WrenVM* vm)
+{
+	WrenParticleEmitter* emitter = (WrenParticleEmitter*)wrenGetSlotForeign(vm, 0);
+	wrenGetVariable(vm, "math", "Vec2", 1);  // Get class into slot 1
+	WrenVec2* vec2 = (WrenVec2*)wrenSetSlotNewForeign(vm, 0, 1, sizeof(WrenVec2));
+	new (vec2) WrenVec2(emitter->component->velocityMin);
+}
+
+void wren_ParticleEmitterSetVelocityMax(WrenVM* vm)
+{
+	WrenParticleEmitter* emitter    = (WrenParticleEmitter*)wrenGetSlotForeign(vm, 0);
+	WrenVec2* velocity               = (WrenVec2*)wrenGetSlotForeign(vm, 1);
+	emitter->component->velocityMax = velocity->value;
+}
+
+void wren_ParticleEmitterGetVelocityMax(WrenVM* vm)
+{
+	WrenParticleEmitter* emitter = (WrenParticleEmitter*)wrenGetSlotForeign(vm, 0);
+	wrenGetVariable(vm, "math", "Vec2", 1);  // Get class into slot 1
+	WrenVec2* vec2 = (WrenVec2*)wrenSetSlotNewForeign(vm, 0, 1, sizeof(WrenVec2));
+	new (vec2) WrenVec2(emitter->component->velocityMax);
+}
+
+void wren_ParticleEmitterSetAcceleration(WrenVM* vm)
+{
+	WrenParticleEmitter* emitter      = (WrenParticleEmitter*)wrenGetSlotForeign(vm, 0);
+	WrenVec2* acceleration             = (WrenVec2*)wrenGetSlotForeign(vm, 1);
+	emitter->component->acceleration = acceleration->value;
+}
+
+void wren_ParticleEmitterGetAcceleration(WrenVM* vm)
+{
+	WrenParticleEmitter* emitter = (WrenParticleEmitter*)wrenGetSlotForeign(vm, 0);
+	wrenGetVariable(vm, "math", "Vec2", 1);  // Get class into slot 1
+	WrenVec2* vec2 = (WrenVec2*)wrenSetSlotNewForeign(vm, 0, 1, sizeof(WrenVec2));
+	new (vec2) WrenVec2(emitter->component->acceleration);
+}
+
+void wren_ParticleEmitterSetLifetimeMin(WrenVM* vm)
+{
+	WrenParticleEmitter* emitter    = (WrenParticleEmitter*)wrenGetSlotForeign(vm, 0);
+	emitter->component->lifetimeMin = (float)wrenGetSlotDouble(vm, 1);
+}
+
+void wren_ParticleEmitterGetLifetimeMin(WrenVM* vm)
+{
+	WrenParticleEmitter* emitter = (WrenParticleEmitter*)wrenGetSlotForeign(vm, 0);
+	wrenSetSlotDouble(vm, 0, (double)emitter->component->lifetimeMin);
+}
+
+void wren_ParticleEmitterSetLifetimeMax(WrenVM* vm)
+{
+	WrenParticleEmitter* emitter    = (WrenParticleEmitter*)wrenGetSlotForeign(vm, 0);
+	emitter->component->lifetimeMax = (float)wrenGetSlotDouble(vm, 1);
+}
+
+void wren_ParticleEmitterGetLifetimeMax(WrenVM* vm)
+{
+	WrenParticleEmitter* emitter = (WrenParticleEmitter*)wrenGetSlotForeign(vm, 0);
+	wrenSetSlotDouble(vm, 0, (double)emitter->component->lifetimeMax);
+}
+
+void wren_ParticleEmitterSetStartColor(WrenVM* vm)
+{
+	WrenParticleEmitter* emitter = (WrenParticleEmitter*)wrenGetSlotForeign(vm, 0);
+	WrenVec4* color               = (WrenVec4*)wrenGetSlotForeign(vm, 1);
+	emitter->component->startColor = Struktur::Util::Color{(unsigned char)color->value.r, (unsigned char)color->value.g,
+	                                                       (unsigned char)color->value.b, (unsigned char)color->value.a};
+}
+
+void wren_ParticleEmitterGetStartColor(WrenVM* vm)
+{
+	WrenParticleEmitter* emitter = (WrenParticleEmitter*)wrenGetSlotForeign(vm, 0);
+	wrenGetVariable(vm, "gameObjectComponents", "ParticleEmitter", 1);  // Get class into slot 1
+	WrenVec4* color = (WrenVec4*)wrenSetSlotNewForeign(vm, 0, 1, sizeof(WrenVec4));
+	new (color) WrenVec4(glm::vec4(emitter->component->startColor));
+}
+
+void wren_ParticleEmitterSetEndColor(WrenVM* vm)
+{
+	WrenParticleEmitter* emitter = (WrenParticleEmitter*)wrenGetSlotForeign(vm, 0);
+	WrenVec4* color               = (WrenVec4*)wrenGetSlotForeign(vm, 1);
+	emitter->component->endColor = Struktur::Util::Color{(unsigned char)color->value.r, (unsigned char)color->value.g,
+	                                                     (unsigned char)color->value.b, (unsigned char)color->value.a};
+}
+
+void wren_ParticleEmitterGetEndColor(WrenVM* vm)
+{
+	WrenParticleEmitter* emitter = (WrenParticleEmitter*)wrenGetSlotForeign(vm, 0);
+	wrenGetVariable(vm, "gameObjectComponents", "ParticleEmitter", 1);  // Get class into slot 1
+	WrenVec4* color = (WrenVec4*)wrenSetSlotNewForeign(vm, 0, 1, sizeof(WrenVec4));
+	new (color) WrenVec4(glm::vec4(emitter->component->endColor));
+}
+
+void wren_ParticleEmitterSetStartScale(WrenVM* vm)
+{
+	WrenParticleEmitter* emitter   = (WrenParticleEmitter*)wrenGetSlotForeign(vm, 0);
+	emitter->component->startScale = (float)wrenGetSlotDouble(vm, 1);
+}
+
+void wren_ParticleEmitterGetStartScale(WrenVM* vm)
+{
+	WrenParticleEmitter* emitter = (WrenParticleEmitter*)wrenGetSlotForeign(vm, 0);
+	wrenSetSlotDouble(vm, 0, (double)emitter->component->startScale);
+}
+
+void wren_ParticleEmitterSetEndScale(WrenVM* vm)
+{
+	WrenParticleEmitter* emitter = (WrenParticleEmitter*)wrenGetSlotForeign(vm, 0);
+	emitter->component->endScale = (float)wrenGetSlotDouble(vm, 1);
+}
+
+void wren_ParticleEmitterGetEndScale(WrenVM* vm)
+{
+	WrenParticleEmitter* emitter = (WrenParticleEmitter*)wrenGetSlotForeign(vm, 0);
+	wrenSetSlotDouble(vm, 0, (double)emitter->component->endScale);
+}
+
+void wren_ParticleEmitterSetRotationSpeedMin(WrenVM* vm)
+{
+	WrenParticleEmitter* emitter          = (WrenParticleEmitter*)wrenGetSlotForeign(vm, 0);
+	emitter->component->rotationSpeedMin = (float)wrenGetSlotDouble(vm, 1);
+}
+
+void wren_ParticleEmitterGetRotationSpeedMin(WrenVM* vm)
+{
+	WrenParticleEmitter* emitter = (WrenParticleEmitter*)wrenGetSlotForeign(vm, 0);
+	wrenSetSlotDouble(vm, 0, (double)emitter->component->rotationSpeedMin);
+}
+
+void wren_ParticleEmitterSetRotationSpeedMax(WrenVM* vm)
+{
+	WrenParticleEmitter* emitter          = (WrenParticleEmitter*)wrenGetSlotForeign(vm, 0);
+	emitter->component->rotationSpeedMax = (float)wrenGetSlotDouble(vm, 1);
+}
+
+void wren_ParticleEmitterGetRotationSpeedMax(WrenVM* vm)
+{
+	WrenParticleEmitter* emitter = (WrenParticleEmitter*)wrenGetSlotForeign(vm, 0);
+	wrenSetSlotDouble(vm, 0, (double)emitter->component->rotationSpeedMax);
+}
+
+void wren_ParticleEmitterSetAdditive(WrenVM* vm)
+{
+	WrenParticleEmitter* emitter  = (WrenParticleEmitter*)wrenGetSlotForeign(vm, 0);
+	emitter->component->additive = wrenGetSlotBool(vm, 1);
+}
+
+void wren_ParticleEmitterGetAdditive(WrenVM* vm)
+{
+	WrenParticleEmitter* emitter = (WrenParticleEmitter*)wrenGetSlotForeign(vm, 0);
+	wrenSetSlotBool(vm, 0, emitter->component->additive);
+}
+
+void wren_ParticleEmitterSetLayer(WrenVM* vm)
+{
+	WrenParticleEmitter* emitter = (WrenParticleEmitter*)wrenGetSlotForeign(vm, 0);
+	int layer                     = static_cast<int>(wrenGetSlotDouble(vm, 1));
+	emitter->component->layer    = static_cast<Struktur::World::RenderLayer>(layer);
+}
+
+void wren_ParticleEmitterGetLayer(WrenVM* vm)
+{
+	WrenParticleEmitter* emitter = (WrenParticleEmitter*)wrenGetSlotForeign(vm, 0);
+	wrenSetSlotDouble(vm, 0, (double)emitter->component->layer);
+}
+
+void wren_ParticleEmitterSetOrderInLayer(WrenVM* vm)
+{
+	WrenParticleEmitter* emitter      = (WrenParticleEmitter*)wrenGetSlotForeign(vm, 0);
+	emitter->component->orderInLayer = (float)wrenGetSlotDouble(vm, 1);
+}
+
+void wren_ParticleEmitterGetOrderInLayer(WrenVM* vm)
+{
+	WrenParticleEmitter* emitter = (WrenParticleEmitter*)wrenGetSlotForeign(vm, 0);
+	wrenSetSlotDouble(vm, 0, (double)emitter->component->orderInLayer);
+}
+
+void wren_ParticleEmitterSetMaxParticles(WrenVM* vm)
+{
+	WrenParticleEmitter* emitter     = (WrenParticleEmitter*)wrenGetSlotForeign(vm, 0);
+	emitter->component->maxParticles = static_cast<int>(wrenGetSlotDouble(vm, 1));
+}
+
+void wren_ParticleEmitterGetMaxParticles(WrenVM* vm)
+{
+	WrenParticleEmitter* emitter = (WrenParticleEmitter*)wrenGetSlotForeign(vm, 0);
+	wrenSetSlotDouble(vm, 0, (double)emitter->component->maxParticles);
+}
+
+void wren_ParticleEmitterSetLooping(WrenVM* vm)
+{
+	WrenParticleEmitter* emitter = (WrenParticleEmitter*)wrenGetSlotForeign(vm, 0);
+	emitter->component->looping  = wrenGetSlotBool(vm, 1);
+}
+
+void wren_ParticleEmitterGetLooping(WrenVM* vm)
+{
+	WrenParticleEmitter* emitter = (WrenParticleEmitter*)wrenGetSlotForeign(vm, 0);
+	wrenSetSlotBool(vm, 0, emitter->component->looping);
+}
+
+// ParticleEmitter.aliveCount -> Num - current live particle count, mostly useful for a script deciding when a
+// finished (looping=false, burst spent, no particles left alive) one-shot effect's entity can be torn down.
+void wren_ParticleEmitterGetAliveCount(WrenVM* vm)
+{
+	WrenParticleEmitter* emitter = (WrenParticleEmitter*)wrenGetSlotForeign(vm, 0);
+	int aliveCount                = 0;
+	for (const auto& particle : emitter->component->particles)
+	{
+		if (particle.alive)
+		{
+			++aliveCount;
+		}
+	}
+	wrenSetSlotDouble(vm, 0, (double)aliveCount);
+}
+
+// ============================================================================
 // SPRITE BINDINGS
 // ============================================================================
 
@@ -1668,6 +1994,105 @@ WREN_BINDING_MODULE(GameObjectComponent)
 	          WREN_ENUM_PAIR("BACKGROUND_OVERLAY", Struktur::World::RenderLayer::BackgroundOverlay),
 	          WREN_ENUM_PAIR("FOREGROUND", Struktur::World::RenderLayer::Foreground),
 	          WREN_ENUM_PAIR("UI", Struktur::World::RenderLayer::UI), );
+
+	// Register ParticleEmitter Component foreign class
+	WREN_FOREIGN_CLASS(registry, "gameObjectComponents", "ParticleEmitter", wren_ParticleEmitterAllocate,
+	                   wren_ParticleEmitterFinalize, "ParticleEmitter component class");
+
+	WREN_CLASS_METHOD(registry, "gameObjectComponents", "ParticleEmitter", "texture=(_)", wren_ParticleEmitterSetTexture,
+	                  "Set the emitted particles' texture");
+	WREN_CLASS_METHOD(registry, "gameObjectComponents", "ParticleEmitter", "columns", wren_ParticleEmitterGetColumns,
+	                  "Get the texture's atlas column count");
+	WREN_CLASS_METHOD(registry, "gameObjectComponents", "ParticleEmitter", "columns=(_)", wren_ParticleEmitterSetColumns,
+	                  "Set the texture's atlas column count");
+	WREN_CLASS_METHOD(registry, "gameObjectComponents", "ParticleEmitter", "rows", wren_ParticleEmitterGetRows,
+	                  "Get the texture's atlas row count");
+	WREN_CLASS_METHOD(registry, "gameObjectComponents", "ParticleEmitter", "rows=(_)", wren_ParticleEmitterSetRows,
+	                  "Set the texture's atlas row count");
+	WREN_CLASS_METHOD(registry, "gameObjectComponents", "ParticleEmitter", "emissionRate",
+	                  wren_ParticleEmitterGetEmissionRate, "Get particles spawned per second while looping");
+	WREN_CLASS_METHOD(registry, "gameObjectComponents", "ParticleEmitter", "emissionRate=(_)",
+	                  wren_ParticleEmitterSetEmissionRate, "Set particles spawned per second while looping");
+	WREN_CLASS_METHOD(registry, "gameObjectComponents", "ParticleEmitter", "burstCount", wren_ParticleEmitterGetBurstCount,
+	                  "Get the one-shot particle count spawned once when the emitter becomes active");
+	WREN_CLASS_METHOD(registry, "gameObjectComponents", "ParticleEmitter", "burstCount=(_)",
+	                  wren_ParticleEmitterSetBurstCount,
+	                  "Set the one-shot particle count - setting this fires a new burst");
+	WREN_CLASS_METHOD(registry, "gameObjectComponents", "ParticleEmitter", "spawnRadius",
+	                  wren_ParticleEmitterGetSpawnRadius, "Get the spawn area radius (0 = point emitter)");
+	WREN_CLASS_METHOD(registry, "gameObjectComponents", "ParticleEmitter", "spawnRadius=(_)",
+	                  wren_ParticleEmitterSetSpawnRadius, "Set the spawn area radius (0 = point emitter)");
+	WREN_CLASS_METHOD(registry, "gameObjectComponents", "ParticleEmitter", "velocityMin",
+	                  wren_ParticleEmitterGetVelocityMin, "Get the minimum per-axis spawn velocity");
+	WREN_CLASS_METHOD(registry, "gameObjectComponents", "ParticleEmitter", "velocityMin=(_)",
+	                  wren_ParticleEmitterSetVelocityMin, "Set the minimum per-axis spawn velocity");
+	WREN_CLASS_METHOD(registry, "gameObjectComponents", "ParticleEmitter", "velocityMax",
+	                  wren_ParticleEmitterGetVelocityMax, "Get the maximum per-axis spawn velocity");
+	WREN_CLASS_METHOD(registry, "gameObjectComponents", "ParticleEmitter", "velocityMax=(_)",
+	                  wren_ParticleEmitterSetVelocityMax, "Set the maximum per-axis spawn velocity");
+	WREN_CLASS_METHOD(registry, "gameObjectComponents", "ParticleEmitter", "acceleration",
+	                  wren_ParticleEmitterGetAcceleration, "Get the constant per-particle acceleration (e.g. gravity)");
+	WREN_CLASS_METHOD(registry, "gameObjectComponents", "ParticleEmitter", "acceleration=(_)",
+	                  wren_ParticleEmitterSetAcceleration, "Set the constant per-particle acceleration (e.g. gravity)");
+	WREN_CLASS_METHOD(registry, "gameObjectComponents", "ParticleEmitter", "lifetimeMin",
+	                  wren_ParticleEmitterGetLifetimeMin, "Get the minimum particle lifetime in seconds");
+	WREN_CLASS_METHOD(registry, "gameObjectComponents", "ParticleEmitter", "lifetimeMin=(_)",
+	                  wren_ParticleEmitterSetLifetimeMin, "Set the minimum particle lifetime in seconds");
+	WREN_CLASS_METHOD(registry, "gameObjectComponents", "ParticleEmitter", "lifetimeMax",
+	                  wren_ParticleEmitterGetLifetimeMax, "Get the maximum particle lifetime in seconds");
+	WREN_CLASS_METHOD(registry, "gameObjectComponents", "ParticleEmitter", "lifetimeMax=(_)",
+	                  wren_ParticleEmitterSetLifetimeMax, "Set the maximum particle lifetime in seconds");
+	WREN_CLASS_METHOD(registry, "gameObjectComponents", "ParticleEmitter", "startColor",
+	                  wren_ParticleEmitterGetStartColor, "Get the color a particle spawns with");
+	WREN_CLASS_METHOD(registry, "gameObjectComponents", "ParticleEmitter", "startColor=(_)",
+	                  wren_ParticleEmitterSetStartColor, "Set the color a particle spawns with");
+	WREN_CLASS_METHOD(registry, "gameObjectComponents", "ParticleEmitter", "endColor", wren_ParticleEmitterGetEndColor,
+	                  "Get the color a particle lerps to over its lifetime");
+	WREN_CLASS_METHOD(registry, "gameObjectComponents", "ParticleEmitter", "endColor=(_)", wren_ParticleEmitterSetEndColor,
+	                  "Set the color a particle lerps to over its lifetime");
+	WREN_CLASS_METHOD(registry, "gameObjectComponents", "ParticleEmitter", "startScale",
+	                  wren_ParticleEmitterGetStartScale, "Get the scale a particle spawns with");
+	WREN_CLASS_METHOD(registry, "gameObjectComponents", "ParticleEmitter", "startScale=(_)",
+	                  wren_ParticleEmitterSetStartScale, "Set the scale a particle spawns with");
+	WREN_CLASS_METHOD(registry, "gameObjectComponents", "ParticleEmitter", "endScale", wren_ParticleEmitterGetEndScale,
+	                  "Get the scale a particle lerps to over its lifetime");
+	WREN_CLASS_METHOD(registry, "gameObjectComponents", "ParticleEmitter", "endScale=(_)", wren_ParticleEmitterSetEndScale,
+	                  "Set the scale a particle lerps to over its lifetime");
+	WREN_CLASS_METHOD(registry, "gameObjectComponents", "ParticleEmitter", "rotationSpeedMin",
+	                  wren_ParticleEmitterGetRotationSpeedMin, "Get the minimum spawn rotation speed (radians/sec)");
+	WREN_CLASS_METHOD(registry, "gameObjectComponents", "ParticleEmitter", "rotationSpeedMin=(_)",
+	                  wren_ParticleEmitterSetRotationSpeedMin, "Set the minimum spawn rotation speed (radians/sec)");
+	WREN_CLASS_METHOD(registry, "gameObjectComponents", "ParticleEmitter", "rotationSpeedMax",
+	                  wren_ParticleEmitterGetRotationSpeedMax, "Get the maximum spawn rotation speed (radians/sec)");
+	WREN_CLASS_METHOD(registry, "gameObjectComponents", "ParticleEmitter", "rotationSpeedMax=(_)",
+	                  wren_ParticleEmitterSetRotationSpeedMax, "Set the maximum spawn rotation speed (radians/sec)");
+	WREN_CLASS_METHOD(registry, "gameObjectComponents", "ParticleEmitter", "additive", wren_ParticleEmitterGetAdditive,
+	                  "Get whether particles blend additively instead of with normal alpha blending");
+	WREN_CLASS_METHOD(registry, "gameObjectComponents", "ParticleEmitter", "additive=(_)", wren_ParticleEmitterSetAdditive,
+	                  "Set whether particles blend additively instead of with normal alpha blending");
+	WREN_CLASS_METHOD(registry, "gameObjectComponents", "ParticleEmitter", "layer", wren_ParticleEmitterGetLayer,
+	                  "Get the render layer particles draw on");
+	WREN_CLASS_METHOD(registry, "gameObjectComponents", "ParticleEmitter", "layer=(_)", wren_ParticleEmitterSetLayer,
+	                  "Set the render layer particles draw on");
+	WREN_CLASS_METHOD(registry, "gameObjectComponents", "ParticleEmitter", "orderInLayer",
+	                  wren_ParticleEmitterGetOrderInLayer, "Get the draw order within the render layer");
+	WREN_CLASS_METHOD(registry, "gameObjectComponents", "ParticleEmitter", "orderInLayer=(_)",
+	                  wren_ParticleEmitterSetOrderInLayer, "Set the draw order within the render layer");
+	WREN_CLASS_METHOD(registry, "gameObjectComponents", "ParticleEmitter", "maxParticles",
+	                  wren_ParticleEmitterGetMaxParticles, "Get the particle pool capacity");
+	WREN_CLASS_METHOD(registry, "gameObjectComponents", "ParticleEmitter", "maxParticles=(_)",
+	                  wren_ParticleEmitterSetMaxParticles, "Set the particle pool capacity");
+	WREN_CLASS_METHOD(registry, "gameObjectComponents", "ParticleEmitter", "looping", wren_ParticleEmitterGetLooping,
+	                  "Get whether the emitter continuously spawns particles at emissionRate");
+	WREN_CLASS_METHOD(registry, "gameObjectComponents", "ParticleEmitter", "looping=(_)", wren_ParticleEmitterSetLooping,
+	                  "Set whether the emitter continuously spawns particles at emissionRate");
+	WREN_CLASS_METHOD(registry, "gameObjectComponents", "ParticleEmitter", "aliveCount",
+	                  wren_ParticleEmitterGetAliveCount, "Get the current live particle count");
+
+	WREN_CLASS_STATIC(registry, "gameObjectComponents", "ParticleEmitter", "create(_,_)", wren_ParticleEmitterCreate,
+	                  "Creates a particle emitter component with the given texture.");
+	WREN_CLASS_STATIC(registry, "gameObjectComponents", "ParticleEmitter", "get(_)", wren_ParticleEmitterGet,
+	                  "Gets a particle emitter component.");
 
 	// Register Camera Component foreign class
 	WREN_FOREIGN_CLASS(registry, "gameObjectComponents", "Camera", wren_CameraAllocate, wren_CameraFinalize,

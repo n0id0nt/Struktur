@@ -8,6 +8,7 @@
 	COMPONENT(Camera, Camera, "Camera")                            \
 	COMPONENT(Level, Level, "Level")                               \
 	COMPONENT(World, World, "World")                               \
+	COMPONENT(ParticleEmitter, ParticleEmitter, "ParticleEmitter") \
 	COMPONENT(PhysicsBody, PhysicsBody, "PhysicsBody")             \
 	COMPONENT(Shader, Shader, "Shader")                            \
 	COMPONENT(Sprite, Sprite, "Sprite")                            \

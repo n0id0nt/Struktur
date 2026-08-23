@@ -4,37 +4,135 @@
       "targets": [
         {
           "conditions": [
-            { "parameters": [{ "type": "flag", "value": "dreamer_quest_state" }, { "type": "op", "value": "==" }, { "type": "value", "value": 5.0 }], "type": "hasIntFlag" }
+            {
+              "parameters": [
+                {
+                  "type": "flag",
+                  "value": "dreamer_quest_state"
+                },
+                {
+                  "type": "op",
+                  "value": "=="
+                },
+                {
+                  "type": "value",
+                  "value": 5.0
+                }
+              ],
+              "type": "hasIntFlag"
+            }
           ],
           "node": "dreamer_complete"
         },
         {
           "conditions": [
-            { "parameters": [{ "type": "flag", "value": "dreamer_quest_state" }, { "type": "op", "value": "==" }, { "type": "value", "value": 3.0 }], "type": "hasIntFlag" },
-            { "parameters": [{ "type": "item", "value": "Personal Diary" }], "type": "hasItem" }
+            {
+              "parameters": [
+                {
+                  "type": "flag",
+                  "value": "dreamer_quest_state"
+                },
+                {
+                  "type": "op",
+                  "value": "=="
+                },
+                {
+                  "type": "value",
+                  "value": 3.0
+                }
+              ],
+              "type": "hasIntFlag"
+            },
+            {
+              "parameters": [
+                {
+                  "type": "item",
+                  "value": "Personal Diary"
+                }
+              ],
+              "type": "hasItem"
+            }
           ],
           "node": "dreamer_has_diary_1"
         },
         {
           "conditions": [
-            { "parameters": [{ "type": "flag", "value": "dreamer_quest_state" }, { "type": "op", "value": "==" }, { "type": "value", "value": 3.0 }], "type": "hasIntFlag" }
+            {
+              "parameters": [
+                {
+                  "type": "flag",
+                  "value": "dreamer_quest_state"
+                },
+                {
+                  "type": "op",
+                  "value": "=="
+                },
+                {
+                  "type": "value",
+                  "value": 3.0
+                }
+              ],
+              "type": "hasIntFlag"
+            }
           ],
           "node": "dreamer_needs_diary"
         },
         {
           "conditions": [
-            { "parameters": [{ "type": "flag", "value": "dreamer_quest_state" }, { "type": "op", "value": "==" }, { "type": "value", "value": 1.0 }], "type": "hasIntFlag" },
-            { "parameters": [{ "type": "item", "value": "Love Letter" }], "type": "hasItem" }
+            {
+              "parameters": [
+                {
+                  "type": "flag",
+                  "value": "dreamer_quest_state"
+                },
+                {
+                  "type": "op",
+                  "value": "=="
+                },
+                {
+                  "type": "value",
+                  "value": 1.0
+                }
+              ],
+              "type": "hasIntFlag"
+            },
+            {
+              "parameters": [
+                {
+                  "type": "item",
+                  "value": "Love Letter"
+                }
+              ],
+              "type": "hasItem"
+            }
           ],
           "node": "dreamer_has_letter_1"
         },
         {
           "conditions": [
-            { "parameters": [{ "type": "flag", "value": "dreamer_quest_state" }, { "type": "op", "value": "==" }, { "type": "value", "value": 1.0 }], "type": "hasIntFlag" }
+            {
+              "parameters": [
+                {
+                  "type": "flag",
+                  "value": "dreamer_quest_state"
+                },
+                {
+                  "type": "op",
+                  "value": "=="
+                },
+                {
+                  "type": "value",
+                  "value": 1.0
+                }
+              ],
+              "type": "hasIntFlag"
+            }
           ],
           "node": "dreamer_needs_letter"
         },
-        { "node": "dreamer_first_1" }
+        {
+          "node": "dreamer_first_1"
+        }
       ]
     },
     "node": "dreamer"
@@ -43,19 +141,28 @@
     "data": {
       "next": "dreamer_first_2",
       "speaker": "Dreamer",
-      "text": "Oh... someone is here.\nI thought I dreamed you, but you're still here when I blink.\nI am — I was — I think I am still Isabelle."
+      "text": "dialogue.dreamer.dreamer_first_1"
     },
     "node": "dreamer_first_1"
   },
   {
     "data": {
       "choices": [
-        { "target": "dreamer_ask_visions", "text": "What do you dream about?" },
-        { "target": "dreamer_ask_diary", "text": "Have you lost something?" },
-        { "target": "dreamer_ask_key", "text": "I'm looking for a Crystal Key." }
+        {
+          "target": "dreamer_ask_visions",
+          "text": "dialogue.dreamer.dreamer_first_2.choice1"
+        },
+        {
+          "target": "dreamer_ask_diary",
+          "text": "dialogue.dreamer.dreamer_first_2.choice2"
+        },
+        {
+          "target": "dreamer_ask_key",
+          "text": "dialogue.dreamer.dreamer_first_2.choice3"
+        }
       ],
       "speaker": "Dreamer",
-      "text": "There is something in this room I can't quite reach. A key, I think. Warm like afternoon light.\nBut I can't... the edges of things keep moving."
+      "text": "dialogue.dreamer.dreamer_first_2"
     },
     "node": "dreamer_first_2"
   },
@@ -63,7 +170,7 @@
     "data": {
       "next": "dreamer_letter_hint",
       "speaker": "Dreamer",
-      "text": "I dream around things more than through them now.\nI used to write everything down — every vision, every fragment.\nBut my diary is gone and without it I can't find the edges of myself.\nI keep feeling like something was written for me, somewhere in this house. A letter, maybe."
+      "text": "dialogue.dreamer.dreamer_ask_visions"
     },
     "node": "dreamer_ask_visions"
   },
@@ -71,7 +178,7 @@
     "data": {
       "next": "dreamer_letter_hint",
       "speaker": "Dreamer",
-      "text": "My diary. I had it once — I wrote everything in it.\nI gave it to Professor Starweaver to study, and then...\nNo, wait. That's not right. I can't remember the order of things.\nThere was a letter somewhere. I keep feeling the letter."
+      "text": "dialogue.dreamer.dreamer_ask_diary"
     },
     "node": "dreamer_ask_diary"
   },
@@ -79,24 +186,36 @@
     "data": {
       "next": "dreamer_letter_hint",
       "speaker": "Dreamer",
-      "text": "The yellow key. Yes. It's here somewhere — I've dreamed it clearly.\nBut I can't reach it yet. I need to remember something first.\nThere was a letter. Somewhere in this house. If I could just see it..."
+      "text": "dialogue.dreamer.dreamer_ask_key"
     },
     "node": "dreamer_ask_key"
   },
   {
     "data": {
       "commands": [
-        { "parameters": [{ "type": "flag", "value": "dreamer_quest_state" }, { "type": "value", "value": 1.0 }], "type": "setIntFlag" }
+        {
+          "parameters": [
+            {
+              "type": "flag",
+              "value": "dreamer_quest_state"
+            },
+            {
+              "type": "value",
+              "value": 1.0
+            }
+          ],
+          "type": "setIntFlag"
+        }
       ],
       "speaker": "Dreamer",
-      "text": "A letter. Somewhere in the house — written for me, I think.\nI can feel it the way you feel a word you can't quite say.\nFind it. Bring it here."
+      "text": "dialogue.dreamer.dreamer_letter_hint"
     },
     "node": "dreamer_letter_hint"
   },
   {
     "data": {
       "speaker": "Dreamer",
-      "text": "A letter. Somewhere in the house.\nI can feel it the way you feel a word you can't quite say.\nFind it — bring it here."
+      "text": "dialogue.dreamer.dreamer_needs_letter"
     },
     "node": "dreamer_needs_letter"
   },
@@ -104,21 +223,39 @@
     "data": {
       "next": "dreamer_remembers",
       "speaker": "Dreamer",
-      "text": "Oh.\n*she takes it, very slowly*\nOh, I know this handwriting.\n*she reads in silence for a moment*"
+      "text": "dialogue.dreamer.dreamer_has_letter_1"
     },
     "node": "dreamer_has_letter_1"
   },
   {
     "data": {
       "choices": [
-        { "target": "dreamer_ask_who_wrote", "text": "Who wrote it?" },
-        { "target": "dreamer_ask_diary_now", "text": "Do you remember where your diary is?" }
+        {
+          "target": "dreamer_ask_who_wrote",
+          "text": "dialogue.dreamer.dreamer_remembers.choice1"
+        },
+        {
+          "target": "dreamer_ask_diary_now",
+          "text": "dialogue.dreamer.dreamer_remembers.choice2"
+        }
       ],
       "commands": [
-        { "parameters": [{ "type": "flag", "value": "dreamer_quest_state" }, { "type": "value", "value": 3.0 }], "type": "setIntFlag" }
+        {
+          "parameters": [
+            {
+              "type": "flag",
+              "value": "dreamer_quest_state"
+            },
+            {
+              "type": "value",
+              "value": 3.0
+            }
+          ],
+          "type": "setIntFlag"
+        }
       ],
       "speaker": "Dreamer",
-      "text": "I remember now. The diary — I gave it to Professor Starweaver.\nHe's in the observatory. Upstairs, east corridor.\nHe'll want something in return. He always does."
+      "text": "dialogue.dreamer.dreamer_remembers"
     },
     "node": "dreamer_remembers"
   },
@@ -126,21 +263,21 @@
     "data": {
       "next": "dreamer_ask_diary_now",
       "speaker": "Dreamer",
-      "text": "I'm not sure I should say.\nSomething I've been holding onto for a very long time.\nIt doesn't matter now — what matters is the diary."
+      "text": "dialogue.dreamer.dreamer_ask_who_wrote"
     },
     "node": "dreamer_ask_who_wrote"
   },
   {
     "data": {
       "speaker": "Dreamer",
-      "text": "The observatory. Professor Starweaver — upstairs, east corridor.\nHe'll want his telescope back, and there's something else he lost.\nA star chart. He mentioned it was locked in a box downstairs. The combination is somewhere in the garden."
+      "text": "dialogue.dreamer.dreamer_ask_diary_now"
     },
     "node": "dreamer_ask_diary_now"
   },
   {
     "data": {
       "speaker": "Dreamer",
-      "text": "The diary is with Professor Starweaver. The observatory — upstairs, east corridor.\nHe'll want his telescope back, and a star chart he locked away.\nThe combination for the box is in the garden."
+      "text": "dialogue.dreamer.dreamer_needs_diary"
     },
     "node": "dreamer_needs_diary"
   },
@@ -148,34 +285,62 @@
     "data": {
       "next": "dreamer_has_diary_2",
       "speaker": "Dreamer",
-      "text": "My diary.\n*she holds it without opening it*\nI don't need to read it. I just needed to know it existed.\nThat I existed. That I wrote things down and they were real."
+      "text": "dialogue.dreamer.dreamer_has_diary_1"
     },
     "node": "dreamer_has_diary_1"
   },
   {
     "data": {
       "commands": [
-        { "parameters": [{ "type": "item", "value": "Yellow Crystal Key" }], "type": "giveItem" },
-        { "parameters": [{ "type": "item", "value": "Personal Diary" }], "type": "removeItem" },
-        { "parameters": [{ "type": "flag", "value": "dreamer_quest_state" }, { "type": "value", "value": 5.0 }], "type": "setIntFlag" }
+        {
+          "parameters": [
+            {
+              "type": "item",
+              "value": "Yellow Crystal Key"
+            }
+          ],
+          "type": "giveItem"
+        },
+        {
+          "parameters": [
+            {
+              "type": "item",
+              "value": "Personal Diary"
+            }
+          ],
+          "type": "removeItem"
+        },
+        {
+          "parameters": [
+            {
+              "type": "flag",
+              "value": "dreamer_quest_state"
+            },
+            {
+              "type": "value",
+              "value": 5.0
+            }
+          ],
+          "type": "setIntFlag"
+        }
       ],
       "next": "dreamer_has_diary_3",
       "speaker": "Dreamer",
-      "text": "The yellow key — I dreamed someone would come for it. I dreamed you, I think.\nTake it to the yellow pedestal in the main hall.\nAll four together — that's how it ends."
+      "text": "dialogue.dreamer.dreamer_has_diary_2"
     },
     "node": "dreamer_has_diary_2"
   },
   {
     "data": {
       "speaker": "Dreamer",
-      "text": "Obtained Yellow Crystal Key\nYou now have {keys_collected|round} of 4 Crystal Keys."
+      "text": "dialogue.dreamer.dreamer_has_diary_3"
     },
     "node": "dreamer_has_diary_3"
   },
   {
     "data": {
       "speaker": "Dreamer",
-      "text": "I dreamed this moment clearly, for once.\nGo. The four pedestals.\nI'll still be here dreaming — but perhaps after this, the dreams will finally be peaceful."
+      "text": "dialogue.dreamer.dreamer_complete"
     },
     "node": "dreamer_complete"
   }

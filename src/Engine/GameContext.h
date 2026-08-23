@@ -16,6 +16,7 @@
 #include "Engine/Event/EventManager.h"
 #include "Engine/Flag/FlagManager.h"
 #include "Engine/Input/Input.h"
+#include "Engine/Localization/LocalizationManager.h"
 #include "Engine/Physics/CollisionLayers.h"
 #include "Engine/Physics/PhysicsWorld.h"
 #include "Engine/Platform/Window.h"
@@ -64,6 +65,7 @@ public:
 	Renderer::ImGuiRenderer& GetImGuiRenderer() const;
 #endif
 	Input::Input& GetInput() const;
+	Localization::LocalizationManager& GetLocalizationManager() const;
 	Audio::Mixer& GetMixer() const;
 	Physics::PhysicsWorld& GetPhysicsWorld() const;
 #ifdef DEBUG
@@ -99,6 +101,7 @@ private:
 	std::unique_ptr<Renderer::ImGuiRenderer> m_imGuiRenderer;
 #endif
 	std::unique_ptr<Input::Input> m_input;
+	std::unique_ptr<Localization::LocalizationManager> m_localizationManager;
 	std::unique_ptr<Audio::Mixer> m_mixer;
 	std::unique_ptr<Physics::PhysicsWorld> m_physicsWorld;
 #ifdef DEBUG

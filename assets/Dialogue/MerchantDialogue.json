@@ -4,24 +4,82 @@
       "targets": [
         {
           "conditions": [
-            { "parameters": [{ "type": "flag", "value": "merchant_quest_state" }, { "type": "op", "value": "==" }, { "type": "value", "value": 5.0 }], "type": "hasIntFlag" }
+            {
+              "parameters": [
+                {
+                  "type": "flag",
+                  "value": "merchant_quest_state"
+                },
+                {
+                  "type": "op",
+                  "value": "=="
+                },
+                {
+                  "type": "value",
+                  "value": 5.0
+                }
+              ],
+              "type": "hasIntFlag"
+            }
           ],
           "node": "merchant_complete"
         },
         {
           "conditions": [
-            { "parameters": [{ "type": "flag", "value": "merchant_quest_state" }, { "type": "op", "value": "==" }, { "type": "value", "value": 2.0 }], "type": "hasIntFlag" },
-            { "parameters": [{ "type": "item", "value": "Gold Coins" }], "type": "hasItem" }
+            {
+              "parameters": [
+                {
+                  "type": "flag",
+                  "value": "merchant_quest_state"
+                },
+                {
+                  "type": "op",
+                  "value": "=="
+                },
+                {
+                  "type": "value",
+                  "value": 2.0
+                }
+              ],
+              "type": "hasIntFlag"
+            },
+            {
+              "parameters": [
+                {
+                  "type": "item",
+                  "value": "Gold Coins"
+                }
+              ],
+              "type": "hasItem"
+            }
           ],
           "node": "merchant_has_gold_1"
         },
         {
           "conditions": [
-            { "parameters": [{ "type": "flag", "value": "merchant_quest_state" }, { "type": "op", "value": "==" }, { "type": "value", "value": 2.0 }], "type": "hasIntFlag" }
+            {
+              "parameters": [
+                {
+                  "type": "flag",
+                  "value": "merchant_quest_state"
+                },
+                {
+                  "type": "op",
+                  "value": "=="
+                },
+                {
+                  "type": "value",
+                  "value": 2.0
+                }
+              ],
+              "type": "hasIntFlag"
+            }
           ],
           "node": "merchant_needs_gold"
         },
-        { "node": "merchant_first_1" }
+        {
+          "node": "merchant_first_1"
+        }
       ]
     },
     "node": "merchant"
@@ -30,19 +88,28 @@
     "data": {
       "next": "merchant_first_2",
       "speaker": "Merchant",
-      "text": "Ah. A visitor who actually looks like they're going somewhere.\nMost people in this house have given up moving with any purpose.\nAugustus Goldstein. Merchant. Eighty years in this place and my instincts are still sharp."
+      "text": "dialogue.merchant.merchant_first_1"
     },
     "node": "merchant_first_1"
   },
   {
     "data": {
       "choices": [
-        { "target": "merchant_ask_cedric", "text": "What do you know about the Guardian?" },
-        { "target": "merchant_ask_vault", "text": "What's in the vault?" },
-        { "target": "merchant_ask_help", "text": "I need the Blue Crystal Key." }
+        {
+          "target": "merchant_ask_cedric",
+          "text": "dialogue.merchant.merchant_first_2.choice1"
+        },
+        {
+          "target": "merchant_ask_vault",
+          "text": "dialogue.merchant.merchant_first_2.choice2"
+        },
+        {
+          "target": "merchant_ask_help",
+          "text": "dialogue.merchant.merchant_first_2.choice3"
+        }
       ],
       "speaker": "Merchant",
-      "text": "I suspect you're here about the Blue Crystal Key.\nI know where it is. Whether I help you depends on whether we can do business."
+      "text": "dialogue.merchant.merchant_first_2"
     },
     "node": "merchant_first_2"
   },
@@ -50,7 +117,7 @@
     "data": {
       "next": "merchant_the_deal",
       "speaker": "Merchant",
-      "text": "Cedric is principled, which I respect, even when it's inconvenient.\nHe confiscated my ledger about forty years ago. He claimed it was for safekeeping.\nI maintain it was an overreach. He maintains it was procedure.\nWe have not reached an agreement on this point."
+      "text": "dialogue.merchant.merchant_ask_cedric"
     },
     "node": "merchant_ask_cedric"
   },
@@ -58,7 +125,7 @@
     "data": {
       "next": "merchant_the_deal",
       "speaker": "Merchant",
-      "text": "The Blue Crystal Key, among other things.\nAlso my ledger, which Cedric confiscated on technical grounds I still dispute.\nHe won't open the vault without two conditions — the Seal secured and the ledger returned.\nWhich means I need the ledger back before either of us gets what we want."
+      "text": "dialogue.merchant.merchant_ask_vault"
     },
     "node": "merchant_ask_vault"
   },
@@ -66,24 +133,36 @@
     "data": {
       "next": "merchant_the_deal",
       "speaker": "Merchant",
-      "text": "It's in Cedric's vault. He won't open it without two conditions — the Ancient Seal secured, and my ledger returned.\nI can help you with Cedric if you help me first.\nThat's how business works, even here."
+      "text": "dialogue.merchant.merchant_ask_help"
     },
     "node": "merchant_ask_help"
   },
   {
     "data": {
       "commands": [
-        { "parameters": [{ "type": "flag", "value": "merchant_quest_state" }, { "type": "value", "value": 2.0 }], "type": "setIntFlag" }
+        {
+          "parameters": [
+            {
+              "type": "flag",
+              "value": "merchant_quest_state"
+            },
+            {
+              "type": "value",
+              "value": 2.0
+            }
+          ],
+          "type": "setIntFlag"
+        }
       ],
       "speaker": "Merchant",
-      "text": "My gold coins went missing in all of this. They're in the house somewhere — I couldn't tell you exactly where.\nBring them back to me and I'll write you a letter of introduction for Cedric.\nHe trusts procedure. A voucher from me gives you standing.\nThat's the deal."
+      "text": "dialogue.merchant.merchant_the_deal"
     },
     "node": "merchant_the_deal"
   },
   {
     "data": {
       "speaker": "Merchant",
-      "text": "My gold coins — somewhere in the house.\nYou have {item_count:item=Gold Coins|bool:them/not found them yet}.\nBring them back and I'll write you the letter for Cedric."
+      "text": "dialogue.merchant.merchant_needs_gold"
     },
     "node": "merchant_needs_gold"
   },
@@ -91,34 +170,62 @@
     "data": {
       "next": "merchant_has_gold_2",
       "speaker": "Merchant",
-      "text": "My coins. Still exactly the right weight.\n*he counts them without looking down*\nSplendid. A deal's a deal."
+      "text": "dialogue.merchant.merchant_has_gold_1"
     },
     "node": "merchant_has_gold_1"
   },
   {
     "data": {
       "commands": [
-        { "parameters": [{ "type": "item", "value": "Merchant Voucher" }], "type": "giveItem" },
-        { "parameters": [{ "type": "item", "value": "Gold Coins" }], "type": "removeItem" },
-        { "parameters": [{ "type": "flag", "value": "merchant_quest_state" }, { "type": "value", "value": 5.0 }], "type": "setIntFlag" }
+        {
+          "parameters": [
+            {
+              "type": "item",
+              "value": "Merchant Voucher"
+            }
+          ],
+          "type": "giveItem"
+        },
+        {
+          "parameters": [
+            {
+              "type": "item",
+              "value": "Gold Coins"
+            }
+          ],
+          "type": "removeItem"
+        },
+        {
+          "parameters": [
+            {
+              "type": "flag",
+              "value": "merchant_quest_state"
+            },
+            {
+              "type": "value",
+              "value": 5.0
+            }
+          ],
+          "type": "setIntFlag"
+        }
       ],
       "next": "merchant_has_gold_3",
       "speaker": "Merchant",
-      "text": "Here — a letter of introduction. Show it to Cedric alongside the Seal and the Ledger.\nI wrote it out years ago on the off chance someone came through here with actual initiative.\nThe Blue Crystal Key is in that vault. Get it, use it on the blue pedestal in the main hall.\nAll four pedestals — that's the end of this."
+      "text": "dialogue.merchant.merchant_has_gold_2"
     },
     "node": "merchant_has_gold_2"
   },
   {
     "data": {
       "speaker": "Merchant",
-      "text": "Obtained Merchant Voucher\nYou now have {keys_collected|round} of 4 Crystal Keys."
+      "text": "dialogue.merchant.merchant_has_gold_3"
     },
     "node": "merchant_has_gold_3"
   },
   {
     "data": {
       "speaker": "Merchant",
-      "text": "The vault opened, the key is in your hands.\nI've been waiting eighty years for someone with enough sense to do this.\nI want it noted that I was helpful."
+      "text": "dialogue.merchant.merchant_complete"
     },
     "node": "merchant_complete"
   }

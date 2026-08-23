@@ -20,9 +20,23 @@ static void LoadAxis2Bindings(Input& input, const std::string& name, const nlohm
 bool InputConfigLoader::LoadFromFile(Input& input, const std::string& filePath)
 {
 	auto result = FileSystem::ReadString(filePath);
-	ASSERT_MSG(result.success, "Failed to load config: %s", result.errorMessage.c_str());
+	if (!result.success)
+	{
+		DEBUG_ERROR("Failed to load config: %s", result.errorMessage.c_str());
+		return false;
+	}
 
-	nlohmann::json config = nlohmann::json::parse(result.value);
+	// allow_exceptions=false + is_discarded() instead of a bare parse() call - parse() throws a native C++
+	// exception on malformed JSON, which would unwind straight through Input.loadInputBindings' Wren-native-
+	// function-call boundary (a different, worse failure mode than a normal caught Wren runtime error - see the
+	// input-robustness design doc). A malformed file now degrades to "log and return false", same as every
+	// other failure path in this function, rather than throwing.
+	nlohmann::json config = nlohmann::json::parse(result.value, nullptr, false);
+	if (config.is_discarded())
+	{
+		DEBUG_ERROR("Failed to parse config file (malformed JSON): %s", filePath);
+		return false;
+	}
 
 	// Clear existing bindings
 	input.Clear();
@@ -123,6 +137,11 @@ static void LoadButtonBindings(Input& input, const std::string& name, const nloh
 		else if (bindingType == "controllerButton")
 		{
 			input.CreateButtonBinding(name, InputMaps::GetControllerButtonFromString(value));
+		}
+		else if (bindingType == "pointerButton")
+		{
+			// Covers both real mouse buttons and touch (for "primary") - see Input::PointerButton's own comment.
+			input.CreateButtonBinding(name, Input::ParsePointerButton(value));
 		}
 		else
 		{

@@ -162,7 +162,8 @@
       "bindings": [
         { "type": "keycode", "value": "space" },
         { "type": "keycode", "value": "enter" },
-        { "type": "controllerButton", "value": "a" }
+        { "type": "controllerButton", "value": "a" },
+        { "type": "pointerButton", "value": "primary" }
       ]
     },
     {

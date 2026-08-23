@@ -389,6 +389,7 @@ if(EDITOR)
         src/Debug/Editor/Windows/ProfilerWindow.h   src/Debug/Editor/Windows/ProfilerWindow.cpp
         src/Debug/Editor/Windows/DialogueEditorWindow.h src/Debug/Editor/Windows/DialogueEditorWindow.cpp
         src/Debug/Editor/Windows/ResourceManagerWindow.h src/Debug/Editor/Windows/ResourceManagerWindow.cpp
+        src/Debug/Editor/Windows/LocalizationWindow.h src/Debug/Editor/Windows/LocalizationWindow.cpp
 
         src/Debug/Editor/PreviewRenderers/PreviewRenderer.h
         src/Debug/Editor/PreviewRenderers/TexturePreviewRenderer.h src/Debug/Editor/PreviewRenderers/TexturePreviewRenderer.cpp
@@ -414,6 +415,7 @@ set(WREN_BINDING_SOURCES
     src/WrenBindings/WrenFunctionCallback.h     src/WrenBindings/WrenFunctionCallback.cpp
     src/WrenBindings/WrenFileSystem.h           src/WrenBindings/WrenFileSystem.cpp
                                                 src/WrenBindings/WrenFlags.cpp
+                                                src/WrenBindings/WrenLocalization.cpp
                                                 src/WrenBindings/WrenEvents.cpp
                                                 src/WrenBindings/WrenApplication.cpp
                                                 src/WrenBindings/WrenAudio.cpp
@@ -442,6 +444,8 @@ set(SOURCES
     src/Engine/Audio/Mixer.h                    src/Engine/Audio/Mixer.cpp
 
     src/Engine/Flag/FlagManager.h               src/Engine/Flag/FlagManager.cpp
+
+    src/Engine/Localization/LocalizationManager.h src/Engine/Localization/LocalizationManager.cpp
 
     src/Engine/Callback/Callback.h 
     src/Engine/Callback/Variant.h
@@ -487,6 +491,7 @@ set(SOURCES
     src/Engine/ECS/Component/TileMap.h
     src/Engine/ECS/Component/Identifier.h
     src/Engine/ECS/Component/Camera.h
+    src/Engine/ECS/Component/ParticleEmitter.h
     src/Engine/ECS/Component/Shader.h
     src/Engine/ECS/Component/WrenScript.h
 
@@ -496,6 +501,7 @@ set(SOURCES
     src/Engine/ECS/System/AnimationSystem.h     src/Engine/ECS/System/AnimationSystem.cpp
     src/Engine/ECS/System/TransformSystem.h     src/Engine/ECS/System/TransformSystem.cpp
     src/Engine/ECS/System/CameraSystem.h        src/Engine/ECS/System/CameraSystem.cpp
+    src/Engine/ECS/System/ParticleSystem.h      src/Engine/ECS/System/ParticleSystem.cpp
     src/Engine/ECS/System/UISystem.h            src/Engine/ECS/System/UISystem.cpp
     src/Engine/ECS/System/UIRenderSystem.h      src/Engine/ECS/System/UIRenderSystem.cpp
     src/Engine/ECS/System/ShaderSystem.h        src/Engine/ECS/System/ShaderSystem.cpp

@@ -22,6 +22,7 @@
 #include "Engine/ECS/System/DebugSystem.h"
 #include "Engine/ECS/System/EventSystem.h"
 #include "Engine/ECS/System/HierarchySystem.h"
+#include "Engine/ECS/System/ParticleSystem.h"
 #include "Engine/ECS/System/PhysicsSystem.h"
 #include "Engine/ECS/System/ShaderSystem.h"
 #include "Engine/ECS/System/SoundSystem.h"
@@ -110,7 +111,7 @@ void Struktur::InitialiseGame(GameContext& context)
 	ImGui_ImplSDL3_InitForOther(window.GetSDLWindow());
 	// Window::PollEvents() drains the SDL event queue itself and only exposes close/resize - this callback is
 	// how ImGui sees the raw events it needs (text input, wheel, focus) that polled state can't provide.
-	window.SetEventCallback([](const SDL_Event& event) { ImGui_ImplSDL3_ProcessEvent(&event); });
+	window.AddEventCallback([](const SDL_Event& event) { ImGui_ImplSDL3_ProcessEvent(&event); });
 	context.GetImGuiRenderer().Initialise();
 
 	Debug::Editor& editor = context.GetEditor();
@@ -132,6 +133,12 @@ void Struktur::InitialiseGame(GameContext& context)
 		window.SetFullscreen(true);
 	}
 #endif
+
+	// Touch-finger events reach Input the same way ImGui's own events do above (Window::AddEventCallback) -
+	// unconditional (not EDITOR-gated), since touch is real gameplay input, not an editor-only concern. Mouse/
+	// keyboard/gamepad stay polled in Input::Update() as before; only touch needs the raw event stream (see
+	// Input::HandleEvent's own comment).
+	context.GetWindow().AddEventCallback([&context](const SDL_Event& event) { context.GetInput().HandleEvent(event); });
 
 #if defined(PLATFORM_WEB)
 	std::string saveDir = "/saves";  // Emscripten virtual path
@@ -164,6 +171,7 @@ void Struktur::InitialiseGame(GameContext& context)
 	systemManager.AddUpdateSystem<System::PhysicsSystem>();
 	systemManager.AddUpdateSystem<System::CameraSystem>();
 	systemManager.AddUpdateSystem<System::AnimationSystem>();
+	systemManager.AddUpdateSystem<System::ParticleSystem>();
 	systemManager.AddUpdateSystem<System::UISystem>();
 	systemManager.AddUpdateSystem<System::SoundSystem>();
 	systemManager.AddRenderSystem<System::SpriteRenderSystem>();
@@ -383,6 +391,11 @@ void Struktur::UpdateLoop(void* userData)
 
 	Core::GameData& gameData     = context.GetGameData();
 	Core::TimeSystem& timeSystem = context.GetTimeSystem();
+	// Before PollEvents() - a touch event arriving during this frame's poll needs the window size to convert
+	// its normalized (0-1) coordinates (see Input::HandleEvent/SetWindowSize's own comments); using the size as
+	// of the end of last frame is close enough (a resize and a touch landing in the same poll batch is a rare,
+	// harmless off-by-one-frame edge case, not worth guarding further).
+	context.GetInput().SetWindowSize(context.GetWindow().GetWidth(), context.GetWindow().GetHeight());
 	context.GetWindow().PollEvents();
 	context.GetInput().Update();
 	gameData.applicationWidth  = context.GetWindow().GetWidth();

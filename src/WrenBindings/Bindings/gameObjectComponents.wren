@@ -14,6 +14,102 @@ class RenderLayer {
     static UI { 5 }
 }
 
+// ParticleEmitter component class
+foreign class ParticleEmitter {
+    // Set the emitted particles' texture
+    foreign texture=(arg0)
+    // Get the texture's atlas column count
+    foreign columns
+    // Set the texture's atlas column count
+    foreign columns=(arg0)
+    // Get the texture's atlas row count
+    foreign rows
+    // Set the texture's atlas row count
+    foreign rows=(arg0)
+    // Get particles spawned per second while looping
+    foreign emissionRate
+    // Set particles spawned per second while looping
+    foreign emissionRate=(arg0)
+    // Get the one-shot particle count spawned once when the emitter becomes active
+    foreign burstCount
+    // Set the one-shot particle count - setting this fires a new burst
+    foreign burstCount=(arg0)
+    // Get the spawn area radius (0 = point emitter)
+    foreign spawnRadius
+    // Set the spawn area radius (0 = point emitter)
+    foreign spawnRadius=(arg0)
+    // Get the minimum per-axis spawn velocity
+    foreign velocityMin
+    // Set the minimum per-axis spawn velocity
+    foreign velocityMin=(arg0)
+    // Get the maximum per-axis spawn velocity
+    foreign velocityMax
+    // Set the maximum per-axis spawn velocity
+    foreign velocityMax=(arg0)
+    // Get the constant per-particle acceleration (e.g. gravity)
+    foreign acceleration
+    // Set the constant per-particle acceleration (e.g. gravity)
+    foreign acceleration=(arg0)
+    // Get the minimum particle lifetime in seconds
+    foreign lifetimeMin
+    // Set the minimum particle lifetime in seconds
+    foreign lifetimeMin=(arg0)
+    // Get the maximum particle lifetime in seconds
+    foreign lifetimeMax
+    // Set the maximum particle lifetime in seconds
+    foreign lifetimeMax=(arg0)
+    // Get the color a particle spawns with
+    foreign startColor
+    // Set the color a particle spawns with
+    foreign startColor=(arg0)
+    // Get the color a particle lerps to over its lifetime
+    foreign endColor
+    // Set the color a particle lerps to over its lifetime
+    foreign endColor=(arg0)
+    // Get the scale a particle spawns with
+    foreign startScale
+    // Set the scale a particle spawns with
+    foreign startScale=(arg0)
+    // Get the scale a particle lerps to over its lifetime
+    foreign endScale
+    // Set the scale a particle lerps to over its lifetime
+    foreign endScale=(arg0)
+    // Get the minimum spawn rotation speed (radians/sec)
+    foreign rotationSpeedMin
+    // Set the minimum spawn rotation speed (radians/sec)
+    foreign rotationSpeedMin=(arg0)
+    // Get the maximum spawn rotation speed (radians/sec)
+    foreign rotationSpeedMax
+    // Set the maximum spawn rotation speed (radians/sec)
+    foreign rotationSpeedMax=(arg0)
+    // Get whether particles blend additively instead of with normal alpha blending
+    foreign additive
+    // Set whether particles blend additively instead of with normal alpha blending
+    foreign additive=(arg0)
+    // Get the render layer particles draw on
+    foreign layer
+    // Set the render layer particles draw on
+    foreign layer=(arg0)
+    // Get the draw order within the render layer
+    foreign orderInLayer
+    // Set the draw order within the render layer
+    foreign orderInLayer=(arg0)
+    // Get the particle pool capacity
+    foreign maxParticles
+    // Set the particle pool capacity
+    foreign maxParticles=(arg0)
+    // Get whether the emitter continuously spawns particles at emissionRate
+    foreign looping
+    // Set whether the emitter continuously spawns particles at emissionRate
+    foreign looping=(arg0)
+    // Get the current live particle count
+    foreign aliveCount
+    // Creates a particle emitter component with the given texture.
+    foreign static create(arg0,arg1)
+    // Gets a particle emitter component.
+    foreign static get(arg0)
+}
+
 // PhysicsBody class wraps PhysicsBody component
 foreign class PhysicsBody {
     // Sets the physics body fixed rotation
@@ -123,44 +219,6 @@ foreign class SpriteAnimation {
 }
 
 // Sprite animation class wraps SpriteAnimation component
-foreign class LocalTransform {
-    // Sets the sprites texture
-    foreign position
-    // Sets the sprites texture
-    foreign position=(arg0)
-    // Sets the sprites texture
-    foreign rotation
-    // Sets the sprites texture
-    foreign rotation=(arg0)
-    // Sets the sprites texture
-    foreign scale
-    // Sets the sprites texture
-    foreign scale=(arg0)
-    // Sets the sprites texture
-    foreign matrix
-    // Sets the sprites texture
-    foreign matrix=(arg0)
-    // Get the position of an entity. Returns vec3 or null if no transform.
-    foreign static get(arg0)
-    // Get the position of an entity. Returns vec3 or null if no transform.
-    foreign static getPosition(arg0)
-    // Set the position of an entity.
-    foreign static setPosition(arg0,arg1)
-    // Get rotation of entity as Quat.
-    foreign static getRotation(arg0)
-    // Set rotation of entity from Quat.
-    foreign static setRotation(arg0,arg1)
-    // Get the position of an entity. Returns vec3 or null if no transform.
-    foreign static getScale(arg0)
-    // Set the position of an entity.
-    foreign static setScale(arg0,arg1)
-    // Get the position of an entity. Returns vec3 or null if no transform.
-    foreign static getMatrix(arg0)
-    // Set the position of an entity.
-    foreign static setMatrix(arg0,arg1)
-}
-
-// Sprite animation class wraps SpriteAnimation component
 foreign class Sprite {
     // Sets the sprites texture
     foreign texture
@@ -208,6 +266,44 @@ foreign class Sprite {
     foreign static setOrderInLayer(arg0,arg1)
     // Flips a sprite in a horizontal direction
     foreign static setFlipped(arg0,arg1)
+}
+
+// Sprite animation class wraps SpriteAnimation component
+foreign class LocalTransform {
+    // Sets the sprites texture
+    foreign position
+    // Sets the sprites texture
+    foreign position=(arg0)
+    // Sets the sprites texture
+    foreign rotation
+    // Sets the sprites texture
+    foreign rotation=(arg0)
+    // Sets the sprites texture
+    foreign scale
+    // Sets the sprites texture
+    foreign scale=(arg0)
+    // Sets the sprites texture
+    foreign matrix
+    // Sets the sprites texture
+    foreign matrix=(arg0)
+    // Get the position of an entity. Returns vec3 or null if no transform.
+    foreign static get(arg0)
+    // Get the position of an entity. Returns vec3 or null if no transform.
+    foreign static getPosition(arg0)
+    // Set the position of an entity.
+    foreign static setPosition(arg0,arg1)
+    // Get rotation of entity as Quat.
+    foreign static getRotation(arg0)
+    // Set rotation of entity from Quat.
+    foreign static setRotation(arg0,arg1)
+    // Get the position of an entity. Returns vec3 or null if no transform.
+    foreign static getScale(arg0)
+    // Set the position of an entity.
+    foreign static setScale(arg0,arg1)
+    // Get the position of an entity. Returns vec3 or null if no transform.
+    foreign static getMatrix(arg0)
+    // Set the position of an entity.
+    foreign static setMatrix(arg0,arg1)
 }
 
 // Sprite animation class wraps SpriteAnimation component
