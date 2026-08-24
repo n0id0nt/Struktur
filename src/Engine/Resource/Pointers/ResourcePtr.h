@@ -14,8 +14,28 @@ namespace Struktur
 {
 namespace Resource
 {
+// The subset of ResourcePool<T, KeyT>'s API that's handle-based rather than key-based - GetResource/LoadResource
+// (the only places a pool's cache-key type, KeyT, actually matters) are deliberately excluded, since a
+// ResourcePtr never calls them: it's handed an already-resolved ResourceHandle at construction (see
+// ResourcePool::GetResource) and never looks anything up by key again. Depending on this narrow interface
+// instead of ResourcePool<T, KeyT> directly means ResourcePtr<T> stays templated on T alone - a font's KeyT
+// (FontKey - path+size, see FontPool.h) is purely an implementation detail of how FontPool caches things, not
+// something every holder of a "pointer to a font" needs to know or spell out.
 template <typename T>
-class ResourcePool;
+class IResourceAccess
+{
+public:
+	virtual ~IResourceAccess() = default;
+
+	virtual T* Resolve(ResourceHandle handle)              = 0;
+	virtual void AddRef(ResourceHandle handle)              = 0;
+	virtual void Release(ResourceHandle handle)             = 0;
+	virtual void Pin(ResourceHandle handle)                 = 0;
+	virtual void Unpin(ResourceHandle handle)               = 0;
+	virtual bool IsPinned(ResourceHandle handle) const      = 0;
+	virtual size_t GetRefCount(ResourceHandle handle) const = 0;
+	virtual bool EnsureResourceReady(GameContext& context, ResourceHandle handle) = 0;
+};
 
 // Resource pointer - works with both GPU and non-GPU resources. Holds a ResourceHandle (see Resource.h) rather
 // than a cached T* - the pool's underlying storage is a SparseSet<T> (see Pools/SparseSet.h), which can relocate
@@ -25,7 +45,7 @@ template <typename T>
 class ResourcePtr
 {
 private:
-	ResourcePool<T>* m_pool = nullptr;
+	IResourceAccess<T>* m_pool = nullptr;
 	ResourceHandle m_handle;
 
 	void Release()
@@ -41,7 +61,7 @@ private:
 public:
 	ResourcePtr() = default;
 
-	ResourcePtr(ResourcePool<T>* pool, ResourceHandle handle)
+	ResourcePtr(IResourceAccess<T>* pool, ResourceHandle handle)
 	    : m_pool(pool),
 	      m_handle(handle)
 	{

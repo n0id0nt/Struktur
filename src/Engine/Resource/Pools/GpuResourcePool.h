@@ -20,8 +20,8 @@ namespace Struktur
 namespace Resource
 {
 // GPU-specific resource pool
-template <typename T>
-class GpuResourcePool : public ResourcePool<T>
+template <typename T, typename KeyT = std::string>
+class GpuResourcePool : public ResourcePool<T, KeyT>
 {
 	static_assert(std::is_base_of_v<GpuResource, T>, "GpuResourcePool requires GpuResource-derived types");
 

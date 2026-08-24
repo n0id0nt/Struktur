@@ -23,13 +23,32 @@ namespace Struktur
 {
 namespace Resource
 {
+// Identity->display-string conversion for a pool's cache key. Found by ADL: this generic overload covers the
+// default KeyT=std::string case (Texture/Sound/Music, where the key already IS the display name); a struct key
+// (FontKey, ShaderKey - see FontPool.h/ShaderPool.h) provides its own overload next to its definition. Used only
+// once, when a resource is first loaded (see GetResource) - ResourceEntry::name stores the resulting string, not
+// KeyT itself, so nothing downstream (logging, PoolResourceEventCallback, the resource manager editor window)
+// needs to know or care that a key might not be a plain string.
+inline std::string ToDisplayName(const std::string& key)
+{
+	return key;
+}
+
 // Base resource pool - loaded resources live packed/contiguous in a SparseSet<ResourceEntry> (see
 // Pools/SparseSet.h), cache-friendly to iterate, instead of individually heap-allocated and referenced by
-// pointer. GetResource() looks up by path via m_nameToHandle on a cache hit/miss check; every access after that
+// pointer. GetResource() looks up by key via m_nameToHandle on a cache hit/miss check; every access after that
 // (refcounting, dereferencing through ResourcePtr<T>) goes through the resource's own ResourceHandle (see
-// GameResource::selfHandle, set once right after it's loaded) rather than hashing its path again.
-template <typename T>
-class ResourcePool
+// GameResource::selfHandle, set once right after it's loaded) rather than hashing its key again.
+//
+// KeyT is the cache identity - std::string by default (a file path is the whole identity), but a resource type
+// that needs more than one field (Font: path+size, Shader: vs+fs paths) can use a small struct instead (see
+// FontKey/ShaderKey) rather than encoding everything into one string and parsing it back apart in LoadResource.
+//
+// Implements IResourceAccess<T> (ResourcePtr.h) so that ResourcePtr<T> - which only ever needs handle-based
+// operations, never GetResource/LoadResource - can hold a pointer to this pool without being templated on KeyT
+// itself. KeyT is purely this pool's own cache-lookup detail.
+template <typename T, typename KeyT = std::string>
+class ResourcePool : public IResourceAccess<T>
 {
 protected:
 	struct ResourceEntry
@@ -41,7 +60,8 @@ protected:
 		// splash/loading screen re-fetching its font from cache every frame) keep a resource resident by pinning
 		// it once, rather than needing some long-lived owner elsewhere just to hold a reference open.
 		bool pinned = false;
-		std::string name;
+		KeyT key;          // cache identity - what m_nameToHandle is actually keyed by, needed to erase on unload
+		std::string name;  // ToDisplayName(key) - for logging/events/the resource manager editor window only
 
 		ResourceEntry(T&& res)
 		    : resource(std::move(res))
@@ -67,23 +87,26 @@ protected:
 		}
 #endif
 		UnloadResource(entry.name, entry.resource);
-		m_nameToHandle.erase(entry.name);
+		m_nameToHandle.erase(entry.key);
 		m_resources.Erase(internalHandle);
 	}
 
 	SparseSet<ResourceEntry> m_resources;
-	std::unordered_map<std::string, typename SparseSet<ResourceEntry>::Handle> m_nameToHandle;
+	std::unordered_map<KeyT, typename SparseSet<ResourceEntry>::Handle> m_nameToHandle;
 
 #ifdef EDITOR
 	PoolResourceEventCallback m_eventCallback;
 #endif
 
-	virtual T* LoadResource(GameContext& context, const std::string& filePath) = 0;
+	virtual T* LoadResource(GameContext& context, const KeyT& key) = 0;
 	// Called for every entry right before it's erased (Release() dropping the last ref, or Clear()) - a hook for
 	// subclasses (GpuResourcePool) needing to react before the resource itself is destroyed. The resource's own
 	// destructor (run by SparseSet::Erase) already handles its own GPU/hardware teardown (UnloadFromGpu,
 	// UnloadFromHardware, etc. - see ~TextureResource() and friends); this is for pool-level bookkeeping only.
-	virtual void UnloadResource(const std::string& filePath, T& resource) {}
+	// Takes the display name (not KeyT) - it's purely informational (the actual erase already has the resolved
+	// SparseSet handle, no lookup happens here), and a human-readable string is more useful to a hook than a raw
+	// key struct would be.
+	virtual void UnloadResource(const std::string& name, T& resource) {}
 
 	// ResourcePtr<T> holds the plain, non-template ResourceHandle (see Resource.h - avoids needing ResourcePool<T>
 	// complete just to declare a member of this type, which would create a circular include with ResourcePtr.h).
@@ -113,30 +136,31 @@ public:
 		m_nameToHandle.clear();
 	}
 
-	ResourcePtr<T> GetResource(GameContext& context, const std::string& name)
+	ResourcePtr<T> GetResource(GameContext& context, const KeyT& key)
 	{
-		auto it = m_nameToHandle.find(name);
+		auto it = m_nameToHandle.find(key);
 		if (it != m_nameToHandle.end())
 		{
-			DEBUG_INFO("Resource '%s' found in cache", name);
+			DEBUG_INFO("Resource '%s' found in cache", m_resources[it->second].name);
 			m_resources[it->second].refCount++;
 			return ResourcePtr<T>(this, ToExternal(it->second));
 		}
 
-		DEBUG_INFO("Loading resource '%s'", name);
+		std::string displayName = ToDisplayName(key);
+		DEBUG_INFO("Loading resource '%s'", displayName);
 #ifdef EDITOR
 		// Brackets only the disk-load half (LoadResource -> LoadFromDisk) - GPU/hardware upload is a separate,
 		// lazy step timed independently in GpuResourcePool<T>::EnsureResourceReady/SoundPool::EnsureResourceReady,
 		// since it may happen much later than this call (see ResourceEventType::ReadyForUse's own comment).
 		auto loadStart = std::chrono::steady_clock::now();
 #endif
-		T* loaded = LoadResource(context, name);
+		T* loaded = LoadResource(context, key);
 #ifdef EDITOR
 		double loadSeconds = std::chrono::duration<double>(std::chrono::steady_clock::now() - loadStart).count();
 #endif
 		if (!loaded)
 		{
-			DEBUG_INFO("Failed to load resource '%s'", name);
+			DEBUG_INFO("Failed to load resource '%s'", displayName);
 			return ResourcePtr<T>();
 		}
 
@@ -148,9 +172,10 @@ public:
 
 		ResourceHandle handle     = ToExternal(internalHandle);
 		ResourceEntry& entry      = m_resources[internalHandle];
-		entry.name                = name;
+		entry.key                 = key;
+		entry.name                = std::move(displayName);
 		entry.resource.selfHandle = handle;
-		m_nameToHandle.emplace(name, internalHandle);
+		m_nameToHandle.emplace(key, internalHandle);
 
 #ifdef EDITOR
 		if (m_eventCallback)
@@ -162,7 +187,7 @@ public:
 		return ResourcePtr<T>(this, handle);
 	}
 
-	virtual bool EnsureResourceReady(GameContext& context, ResourceHandle handle)
+	bool EnsureResourceReady(GameContext& context, ResourceHandle handle) override
 	{
 		auto internalHandle = ToInternal(handle);
 		if (!m_resources.IsValid(internalHandle))
@@ -178,13 +203,13 @@ public:
 		return true;
 	}
 
-	T* Resolve(ResourceHandle handle)
+	T* Resolve(ResourceHandle handle) override
 	{
 		ResourceEntry* entry = m_resources.Resolve(ToInternal(handle));
 		return entry ? &entry->resource : nullptr;
 	}
 
-	void AddRef(ResourceHandle handle)
+	void AddRef(ResourceHandle handle) override
 	{
 		auto internalHandle = ToInternal(handle);
 		if (m_resources.IsValid(internalHandle))
@@ -193,7 +218,7 @@ public:
 		}
 	}
 
-	void Release(ResourceHandle handle)
+	void Release(ResourceHandle handle) override
 	{
 		auto internalHandle  = ToInternal(handle);
 		ResourceEntry* entry = m_resources.Resolve(internalHandle);
@@ -210,7 +235,7 @@ public:
 	// count: pinning an already-pinned resource or unpinning an already-unpinned one is a harmless no-op, but two
 	// independent call sites pinning the same resource need to coordinate their own unpin timing themselves,
 	// since either one's Unpin() clears it for both.
-	void Pin(ResourceHandle handle)
+	void Pin(ResourceHandle handle) override
 	{
 		auto internalHandle = ToInternal(handle);
 		if (m_resources.IsValid(internalHandle))
@@ -219,7 +244,7 @@ public:
 		}
 	}
 
-	void Unpin(ResourceHandle handle)
+	void Unpin(ResourceHandle handle) override
 	{
 		auto internalHandle  = ToInternal(handle);
 		ResourceEntry* entry = m_resources.Resolve(internalHandle);
@@ -232,21 +257,21 @@ public:
 		EvictIfUnused(internalHandle, *entry);
 	}
 
-	bool IsPinned(ResourceHandle handle) const
+	bool IsPinned(ResourceHandle handle) const override
 	{
 		const ResourceEntry* entry = m_resources.Resolve(ToInternal(handle));
 		return entry && entry->pinned;
 	}
 
-	size_t GetRefCount(ResourceHandle handle) const
+	size_t GetRefCount(ResourceHandle handle) const override
 	{
 		const ResourceEntry* entry = m_resources.Resolve(ToInternal(handle));
 		return entry ? entry->refCount : 0;
 	}
 
-	// The pool's own cache key for this handle - NOT always the same as resource.filePath (e.g. FontPool strips
-	// the "_<size>" suffix off before constructing FontResource, ShaderPool splits "vs,fs" into two separate
-	// paths - see each pool's own LoadResource). Lets a caller (GpuResourcePool<T>::EnsureResourceReady firing a
+	// The pool's own display name for this handle (ToDisplayName(key), computed once in GetResource) - NOT always
+	// the same as resource.filePath (e.g. ShaderResource's own filePath is independently built from its vs/fs
+	// paths - see ShaderResource's constructor). Lets a caller (GpuResourcePool<T>::EnsureResourceReady firing a
 	// ReadyForUse event, see ResourceEvents.h) report the same name the table/Loaded/Unloaded events already use,
 	// instead of a resource-type-specific filePath that can disagree with it.
 	std::string GetName(ResourceHandle handle) const

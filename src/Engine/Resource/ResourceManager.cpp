@@ -21,13 +21,13 @@ Struktur::Resource::ResourcePtr<Struktur::Resource::MusicResource> Struktur::Res
 Struktur::Resource::ResourcePtr<Struktur::Resource::FontResource> Struktur::Resource::ResourceManager::GetFont(
     GameContext& context, const std::string& filePath, int size)
 {
-	return m_fontPool.GetResource(context, std::format("{}_{}", filePath, size));
+	return m_fontPool.GetResource(context, FontKey{filePath, size});
 }
 
 Struktur::Resource::ResourcePtr<Struktur::Resource::ShaderResource> Struktur::Resource::ResourceManager::GetShader(
     GameContext& context, const std::string& vsFilePath, const std::string& fsFilePath)
 {
-	return m_shaderPool.GetResource(context, std::format("{},{}", vsFilePath, fsFilePath));
+	return m_shaderPool.GetResource(context, ShaderKey{vsFilePath, fsFilePath});
 }
 
 void Struktur::Resource::ResourceManager::Clear()
