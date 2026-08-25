@@ -228,54 +228,238 @@ void WrenStateManager::Shutdown(GameContext& context)
 	m_sendEventMethodHandle   = nullptr;
 	m_isInitialised           = false;
 
+#ifdef DEBUG
+	if (vm)
+	{
+		for (auto& [className, fields] : m_stateExportedFieldsCache)
+		{
+			ExportedFields::ReleaseFields(vm, fields);
+		}
+	}
+	m_stateExportedFieldsCache.clear();
+#endif
+
 	DEBUG_INFO("[WrenStateManager] Shutdown complete");
 }
 
-std::string WrenStateManager::GetCurrentStateName(GameContext& context)
+bool WrenStateManager::CallOnRootStateManager(GameContext& context, const char* methodSignature)
 {
 	if (!m_isInitialised || !m_rootStateInstanceHandle)
 	{
-		return "None";
+		return false;
 	}
 
 	WrenScriptEngine& scriptEngine = context.GetWrenScriptEngine();
 	WrenVM* vm                     = scriptEngine.GetVM();
+	if (!vm)
+	{
+		return false;
+	}
 
-	// Get StateManager from Game
-	wrenEnsureSlots(vm, 2);
+	wrenEnsureSlots(vm, 1);
 	wrenSetSlotHandle(vm, 0, m_rootStateInstanceHandle);
 
 	WrenHandle* getStateManager = wrenMakeCallHandle(vm, "stateManager");
 	WrenInterpretResult result  = wrenCall(vm, getStateManager);
 	wrenReleaseHandle(vm, getStateManager);
-
 	if (result != WREN_RESULT_SUCCESS)
 	{
-		return "Error";
+		return false;
 	}
 
-	// Get currentState from StateManager
-	WrenHandle* getCurrentState = wrenMakeCallHandle(vm, "currentState");
-	result                      = wrenCall(vm, getCurrentState);
-	wrenReleaseHandle(vm, getCurrentState);
+	// wrenCall() truncates the API stack down to whatever the called closure needed, so re-ensure before the
+	// next call - slot 0 still holds the StateManager instance returned above.
+	wrenEnsureSlots(vm, 1);
+	WrenHandle* callMethod = wrenMakeCallHandle(vm, methodSignature);
+	result                 = wrenCall(vm, callMethod);
+	wrenReleaseHandle(vm, callMethod);
 
-	if (result != WREN_RESULT_SUCCESS || wrenGetSlotType(vm, 0) == WREN_TYPE_NULL)
-	{
-		return "None";
-	}
-
-	// Get name property from state
-	WrenHandle* getName = wrenMakeCallHandle(vm, "name");
-	result              = wrenCall(vm, getName);
-	wrenReleaseHandle(vm, getName);
-
-	if (result != WREN_RESULT_SUCCESS)
-	{
-		return "Unknown";
-	}
-
-	const char* name = wrenGetSlotString(vm, 0);
-	return name ? std::string(name) : "Unknown";
+	return result == WREN_RESULT_SUCCESS;
 }
+
+std::string WrenStateManager::GetActiveStateStackJson(GameContext& context)
+{
+	if (!CallOnRootStateManager(context, "activeStateStackJson()"))
+	{
+		return "[]";
+	}
+
+	WrenVM* vm        = context.GetWrenScriptEngine().GetVM();
+	const char* json  = wrenGetSlotString(vm, 0);
+	return json ? std::string(json) : "[]";
+}
+
+std::vector<WrenHandle*> WrenStateManager::GetActiveStateInstances(GameContext& context)
+{
+	std::vector<WrenHandle*> instances;
+
+	if (!CallOnRootStateManager(context, "activeStateInstances()"))
+	{
+		return instances;
+	}
+
+	WrenVM* vm = context.GetWrenScriptEngine().GetVM();
+	wrenEnsureSlots(vm, 2);
+	int count = wrenGetListCount(vm, 0);
+	instances.reserve(count);
+	for (int i = 0; i < count; i++)
+	{
+		wrenGetListElement(vm, 0, i, 1);
+		instances.push_back(wrenGetSlotHandle(vm, 1));
+	}
+
+	return instances;
+}
+
+std::vector<std::string> WrenStateManager::GetRegisteredStateNames(GameContext& context)
+{
+	std::vector<std::string> names;
+
+	if (!CallOnRootStateManager(context, "registeredStateNames()"))
+	{
+		return names;
+	}
+
+	WrenVM* vm = context.GetWrenScriptEngine().GetVM();
+	wrenEnsureSlots(vm, 2);
+	int count = wrenGetListCount(vm, 0);
+	names.reserve(count);
+	for (int i = 0; i < count; i++)
+	{
+		wrenGetListElement(vm, 0, i, 1);
+		const char* name = wrenGetSlotString(vm, 1);
+		names.emplace_back(name ? name : "");
+	}
+
+	return names;
+}
+
+bool WrenStateManager::TriggerStateChange(GameContext& context, const std::string& stateName)
+{
+	if (!m_isInitialised || !m_rootStateInstanceHandle)
+	{
+		return false;
+	}
+
+	WrenScriptEngine& scriptEngine = context.GetWrenScriptEngine();
+	WrenVM* vm                     = scriptEngine.GetVM();
+	if (!vm)
+	{
+		return false;
+	}
+
+	wrenEnsureSlots(vm, 1);
+	wrenSetSlotHandle(vm, 0, m_rootStateInstanceHandle);
+
+	WrenHandle* getStateManager = wrenMakeCallHandle(vm, "stateManager");
+	WrenInterpretResult result  = wrenCall(vm, getStateManager);
+	wrenReleaseHandle(vm, getStateManager);
+	if (result != WREN_RESULT_SUCCESS)
+	{
+		return false;
+	}
+
+	// slot 0 still holds the StateManager instance - add the state-name argument in slot 1 before the
+	// changeState(_) call (the 1-arg overload, i.e. empty params - see TriggerStateChange's own header comment).
+	wrenEnsureSlots(vm, 2);
+	wrenSetSlotString(vm, 1, stateName.c_str());
+
+	WrenHandle* changeState = wrenMakeCallHandle(vm, "changeState(_)");
+	result                  = wrenCall(vm, changeState);
+	wrenReleaseHandle(vm, changeState);
+
+	if (result != WREN_RESULT_SUCCESS)
+	{
+		DEBUG_ERROR("[WrenStateManager] TriggerStateChange('%s') failed", stateName.c_str());
+		return false;
+	}
+
+	return true;
+}
+
+#ifdef DEBUG
+const std::vector<Struktur::Wren::WrenExportedField>& WrenStateManager::GetStateExportedFields(
+    GameContext& context, WrenHandle* stateInstanceHandle)
+{
+	static const std::vector<WrenExportedField> kEmpty;
+
+	WrenScriptEngine& scriptEngine = context.GetWrenScriptEngine();
+	WrenVM* vm                     = scriptEngine.GetVM();
+	if (!vm || !stateInstanceHandle)
+	{
+		return kEmpty;
+	}
+
+	// Resolve the instance's own class (not the state's `name` field - that's just app-level data that
+	// happens to match by convention, not a structural guarantee) via the stock Wren `.type` primitive, then
+	// its name via `.name` on the resulting class, to use as the cache key.
+	wrenEnsureSlots(vm, 1);
+	wrenSetSlotHandle(vm, 0, stateInstanceHandle);
+	WrenHandle* getType = wrenMakeCallHandle(vm, "type");
+	if (wrenCall(vm, getType) != WREN_RESULT_SUCCESS)
+	{
+		wrenReleaseHandle(vm, getType);
+		return kEmpty;
+	}
+	wrenReleaseHandle(vm, getType);
+	WrenHandle* classHandle = wrenGetSlotHandle(vm, 0);
+
+	wrenEnsureSlots(vm, 1);
+	wrenSetSlotHandle(vm, 0, classHandle);
+	WrenHandle* getName = wrenMakeCallHandle(vm, "name");
+	if (wrenCall(vm, getName) != WREN_RESULT_SUCCESS)
+	{
+		wrenReleaseHandle(vm, getName);
+		wrenReleaseHandle(vm, classHandle);
+		return kEmpty;
+	}
+	wrenReleaseHandle(vm, getName);
+	const char* classNameRaw = wrenGetSlotString(vm, 0);
+	std::string className    = classNameRaw ? classNameRaw : "Unknown";
+
+	auto it = m_stateExportedFieldsCache.find(className);
+	if (it != m_stateExportedFieldsCache.end())
+	{
+		wrenReleaseHandle(vm, classHandle);
+		return it->second;
+	}
+
+	std::vector<WrenExportedField> fields = ExportedFields::DiscoverExportedFields(context, classHandle, className);
+	wrenReleaseHandle(vm, classHandle);
+
+	auto [insertedIt, inserted] = m_stateExportedFieldsCache.emplace(className, std::move(fields));
+	return insertedIt->second;
+}
+
+bool WrenStateManager::GetStateFieldValue(GameContext& context, WrenHandle* stateInstanceHandle,
+                                          const std::string& fieldName, WrenItem& out_value)
+{
+	const std::vector<WrenExportedField>& fields = GetStateExportedFields(context, stateInstanceHandle);
+	for (const WrenExportedField& field : fields)
+	{
+		if (field.name == fieldName)
+		{
+			WrenVM* vm = context.GetWrenScriptEngine().GetVM();
+			return ExportedFields::GetValue(vm, stateInstanceHandle, field, out_value);
+		}
+	}
+	return false;
+}
+
+bool WrenStateManager::SetStateFieldValue(GameContext& context, WrenHandle* stateInstanceHandle,
+                                          const std::string& fieldName, const WrenItem& value)
+{
+	const std::vector<WrenExportedField>& fields = GetStateExportedFields(context, stateInstanceHandle);
+	for (const WrenExportedField& field : fields)
+	{
+		if (field.name == fieldName)
+		{
+			WrenVM* vm = context.GetWrenScriptEngine().GetVM();
+			return ExportedFields::SetValue(vm, stateInstanceHandle, field, value);
+		}
+	}
+	return false;
+}
+#endif
 
 }  // namespace Struktur::Wren

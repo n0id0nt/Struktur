@@ -80,4 +80,8 @@ class Game {
         // C++ binding could handle this
         // For now, just log
     }
+
+    // Lets C++ reach the root StateManager (see WrenStateManager::GetActiveStateStackJson/
+    // GetRegisteredStateNames/TriggerStateChange) for the state-debug editor window.
+    stateManager { _stateManager }
 }

@@ -36,4 +36,9 @@ class BaseState {
     // Getters
     name { _name }
     name=(value) { _name = value }
+
+    // Override in a state that owns its own nested StateManager for sub-states (see GameWorldState) - returning
+    // it here is how a state opts into being visible in the state-debug window's stack view. null (default)
+    // means "leaf state, nothing nested beneath it".
+    subStateManager { null }
 }

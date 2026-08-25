@@ -366,6 +366,7 @@ if(EDITOR)
         src/Engine/ECS/System/DebugSystem.h         src/Engine/ECS/System/DebugSystem.cpp
 
         src/Debug/Editor/Editor.h                   src/Debug/Editor/Editor.cpp
+        src/Debug/Editor/ExportedFieldRenderer.h    src/Debug/Editor/ExportedFieldRenderer.cpp
         src/Debug/Editor/EditorLayoutManager.h      src/Debug/Editor/EditorLayoutManager.cpp
         src/Debug/Editor/EditorSettings.h           src/Debug/Editor/EditorSettings.cpp
         src/Debug/Editor/EditorTheme.h              src/Debug/Editor/EditorTheme.cpp
@@ -390,6 +391,7 @@ if(EDITOR)
         src/Debug/Editor/Windows/DialogueEditorWindow.h src/Debug/Editor/Windows/DialogueEditorWindow.cpp
         src/Debug/Editor/Windows/ResourceManagerWindow.h src/Debug/Editor/Windows/ResourceManagerWindow.cpp
         src/Debug/Editor/Windows/LocalizationWindow.h src/Debug/Editor/Windows/LocalizationWindow.cpp
+        src/Debug/Editor/Windows/StateWindow.h      src/Debug/Editor/Windows/StateWindow.cpp
 
         src/Debug/Editor/PreviewRenderers/PreviewRenderer.h
         src/Debug/Editor/PreviewRenderers/TexturePreviewRenderer.h src/Debug/Editor/PreviewRenderers/TexturePreviewRenderer.cpp
@@ -542,6 +544,7 @@ set(SOURCES
     src/Engine/Scripting/WrenBindingRegistry.h  src/Engine/Scripting/WrenBindingRegistry.cpp
     src/Engine/Scripting/WrenStateManager.h     src/Engine/Scripting/WrenStateManager.cpp
     src/Engine/Scripting/WrenScriptComponentRegistry.h src/Engine/Scripting/WrenScriptComponentRegistry.cpp
+    src/Engine/Scripting/WrenExportedFields.h   src/Engine/Scripting/WrenExportedFields.cpp
     src/Engine/Scripting/WrenUtil.h             src/Engine/Scripting/WrenUtil.cpp
     src/Engine/Scripting/WrenValueWrapper.h
 

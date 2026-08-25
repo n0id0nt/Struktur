@@ -205,11 +205,24 @@ class SettingsState is BaseState {
     }
 
     cycleVolume() {
-        _volumeIndex = (_volumeIndex + 1) % VOLUME_LEVELS.count
+        applyVolumeIndex((_volumeIndex + 1) % VOLUME_LEVELS.count)
+    }
+
+    // Applies a new stepper index the same way cycleVolume() always has (master volume + on-screen label) -
+    // shared with the #!export volumeIndex setter below so editing it from the state-debug window has the
+    // exact same live effect as clicking the row in-game, not just a silent field write.
+    applyVolumeIndex(index) {
+        _volumeIndex = index
         Audio.setMasterVolume(VOLUME_LEVELS[_volumeIndex])
         _volumeLabel.setText(volumeText())
         _volumeLabel.setBoundingBoxToText()
     }
+
+    // Demonstrates the exported-field convention (see BaseState/the state-debug window) on a real, observable
+    // field - editing this from the editor immediately changes the master volume and the on-screen label.
+    #!export
+    volumeIndex { _volumeIndex }
+    volumeIndex=(value) { applyVolumeIndex(value) }
 
     // Snaps the mixer's current volume (which may not land exactly on a stepper value) to the closest preset,
     // so the row's displayed value/cycle order stays sensible regardless of how the volume was last set.

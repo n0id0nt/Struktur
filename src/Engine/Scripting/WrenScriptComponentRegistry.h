@@ -4,6 +4,8 @@
 #include <unordered_map>
 #include <vector>
 #include <wren.hpp>
+
+#include "Engine/Scripting/WrenExportedFields.h"
 #ifdef DEBUG
 	#include <entt/entt.hpp>
 #endif
@@ -21,19 +23,6 @@ struct WrenScript;
 
 namespace Wren
 {
-#ifdef DEBUG
-// A getter (and optionally matching setter) tagged #!export on a script class - see
-// WrenScriptComponentRegistry::ResolveExportedFields for how these are discovered. Editor-only:
-// the inspector uses these to show/edit a script's exported variables, similar to Godot's @export.
-struct WrenExportedField
-{
-	std::string name;
-	bool hasSetter           = false;
-	WrenHandle* getterHandle = nullptr;
-	WrenHandle* setterHandle = nullptr;
-};
-#endif
-
 struct WrenScriptComponent
 {
 	std::string module;
@@ -76,15 +65,9 @@ public:
 private:
 	time_t GetFileModificationTime(const std::string& path);
 	void ResolveExportedFields(GameContext& context, WrenScriptComponent& scriptComponent);
-	void EnsureExportReflectionBootstrap(GameContext& context);
 
 	// Track which scripts have been loaded
 	std::unordered_map<std::string, time_t> m_fileModificationTimes;
-
-	// Handles for the small Wren-side helper module that walks a class's Attributes to find
-	// #!export-tagged getters (see WrenScriptComponentRegistry.cpp) - loaded once, lazily.
-	WrenHandle* m_exportReflectionClassHandle = nullptr;
-	WrenHandle* m_exportReflectionCallHandle  = nullptr;
 #endif
 	std::unordered_map<std::string, WrenScriptComponent> m_scriptComponents;
 };

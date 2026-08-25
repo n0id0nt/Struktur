@@ -7,6 +7,7 @@
 #define GLM_ENABLE_EXPERIMENTAL
 #include <glm/gtx/quaternion.hpp>
 
+#include "Debug/Editor/ExportedFieldRenderer.h"
 #include "Debug/Editor/PreviewRenderers/PreviewHelpers.h"
 #include "Debug/Editor/Windows/HierarchyWindow.h"
 #include "Debug/Editor/Windows/PreviewWindow.h"
@@ -1563,55 +1564,11 @@ void InspectorWindow::RenderWrenScriptComponent(GameContext& context, Component:
 			continue;
 		}
 
-		ImGui::BeginDisabled(!field.hasSetter);
-
-		switch (value.type)
+		Wren::WrenItem newValue;
+		if (RenderExportedField(field.name, value, field.hasSetter, newValue))
 		{
-			case WREN_TYPE_NUM:
-			{
-				float numValue = static_cast<float>(std::any_cast<double>(value.value));
-				if (ImGui::DragFloat(field.name.c_str(), &numValue, 0.1f))
-				{
-					Wren::WrenItem newValue;
-					newValue.type  = WREN_TYPE_NUM;
-					newValue.value = static_cast<double>(numValue);
-					scriptSystem.SetExportedFieldValue(context, script, field.name, newValue);
-				}
-				break;
-			}
-			case WREN_TYPE_BOOL:
-			{
-				bool boolValue = std::any_cast<bool>(value.value);
-				if (ImGui::Checkbox(field.name.c_str(), &boolValue))
-				{
-					Wren::WrenItem newValue;
-					newValue.type  = WREN_TYPE_BOOL;
-					newValue.value = boolValue;
-					scriptSystem.SetExportedFieldValue(context, script, field.name, newValue);
-				}
-				break;
-			}
-			case WREN_TYPE_STRING:
-			{
-				std::string strValue = std::any_cast<std::string>(value.value);
-				char buffer[256];
-				strncpy(buffer, strValue.c_str(), sizeof(buffer) - 1);
-				buffer[sizeof(buffer) - 1] = '\0';
-				if (ImGui::InputText(field.name.c_str(), buffer, sizeof(buffer)))
-				{
-					Wren::WrenItem newValue;
-					newValue.type  = WREN_TYPE_STRING;
-					newValue.value = std::string(buffer);
-					scriptSystem.SetExportedFieldValue(context, script, field.name, newValue);
-				}
-				break;
-			}
-			default:
-				ImGui::Text("%s: <unsupported type>", field.name.c_str());
-				break;
+			scriptSystem.SetExportedFieldValue(context, script, field.name, newValue);
 		}
-
-		ImGui::EndDisabled();
 
 		if (!field.hasSetter)
 		{

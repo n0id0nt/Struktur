@@ -20,6 +20,7 @@
 #include "Debug/Editor/Windows/ProfilerWindow.h"
 #include "Debug/Editor/Windows/ResourceManagerWindow.h"
 #include "Debug/Editor/Windows/SettingsWindow.h"
+#include "Debug/Editor/Windows/StateWindow.h"
 #include "Debug/Editor/Windows/ToolbarWindow.h"
 #include "Debug/Editor/Windows/UIHierarchyWindow.h"
 
@@ -77,6 +78,9 @@ void Editor::Initialise(GameContext& context)
 
 	// Localization audit window (key x language table)
 	CreateWindow<LocalizationWindow>();
+
+	// State system debug window (active state stack, exported fields, force-transition)
+	CreateWindow<StateWindow>();
 
 	// Route ImGui's own ini autosave/autoload through a single canonical file (also used by the explicit
 	// Save/Load Layout menu actions), so docking state persists automatically across launches.

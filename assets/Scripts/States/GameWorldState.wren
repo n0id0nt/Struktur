@@ -226,5 +226,5 @@ class GameWorldState is BaseState {
     
     // Getters
     worldEntity { _worldEntity }
-    gameplayStateManager { _stateManager }
+    subStateManager { _stateManager }
 }

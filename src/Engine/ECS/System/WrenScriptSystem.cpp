@@ -5,6 +5,7 @@
 
 #include "Engine/Callback/CallbackHelperFunctions.h"
 #include "Engine/GameContext.h"
+#include "Engine/Scripting/WrenExportedFields.h"
 #include "Engine/Scripting/WrenUtil.h"
 
 namespace Struktur::System
@@ -318,29 +319,13 @@ bool WrenScriptSystem::GetExportedFieldValue(GameContext& context, Component::Wr
 	}
 
 	const Wren::WrenExportedField* field = FindExportedField(*script.scriptComponent, fieldName);
-	if (!field || !field->getterHandle)
+	if (!field)
 	{
 		return false;
 	}
 
-	Wren::WrenScriptEngine& scriptEngine = context.GetWrenScriptEngine();
-	WrenVM* vm                           = scriptEngine.GetVM();
-	if (!vm)
-	{
-		return false;
-	}
-
-	wrenEnsureSlots(vm, 1);
-	wrenSetSlotHandle(vm, 0, script.instanceHandle);
-
-	if (wrenCall(vm, field->getterHandle) != WREN_RESULT_SUCCESS)
-	{
-		DEBUG_ERROR("Error reading exported field '%s' on script: %s", fieldName.c_str(), script.className.c_str());
-		return false;
-	}
-
-	out_value = Wren::Util::GetWrenItemFromSlot(vm, 0);
-	return true;
+	WrenVM* vm = context.GetWrenScriptEngine().GetVM();
+	return Wren::ExportedFields::GetValue(vm, script.instanceHandle, *field, out_value);
 }
 
 bool WrenScriptSystem::SetExportedFieldValue(GameContext& context, Component::WrenScript& script,
@@ -352,29 +337,13 @@ bool WrenScriptSystem::SetExportedFieldValue(GameContext& context, Component::Wr
 	}
 
 	const Wren::WrenExportedField* field = FindExportedField(*script.scriptComponent, fieldName);
-	if (!field || !field->setterHandle)
+	if (!field)
 	{
 		return false;
 	}
 
-	Wren::WrenScriptEngine& scriptEngine = context.GetWrenScriptEngine();
-	WrenVM* vm                           = scriptEngine.GetVM();
-	if (!vm)
-	{
-		return false;
-	}
-
-	wrenEnsureSlots(vm, 2);
-	wrenSetSlotHandle(vm, 0, script.instanceHandle);
-	Wren::Util::SetSlotFromWrenItem(vm, 1, value);
-
-	if (wrenCall(vm, field->setterHandle) != WREN_RESULT_SUCCESS)
-	{
-		DEBUG_ERROR("Error writing exported field '%s' on script: %s", fieldName.c_str(), script.className.c_str());
-		return false;
-	}
-
-	return true;
+	WrenVM* vm = context.GetWrenScriptEngine().GetVM();
+	return Wren::ExportedFields::SetValue(vm, script.instanceHandle, *field, value);
 }
 #endif
 
