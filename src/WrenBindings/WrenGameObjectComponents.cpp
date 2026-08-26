@@ -1554,6 +1554,14 @@ void wren_WorldTransformSetPosition(WrenVM* vm)
 	transformSystem.SetWorldTransform(*context, transform->entity, vec->value,
 	                                  transformSystem.GetWorldScale(*context, transform->entity),
 	                                  transformSystem.GetWorldRotation(*context, transform->entity));
+
+	// SetWorldTransform only marks this entity (and, via CascadeDirty, every descendant - e.g. a level's
+	// Collision tilemap body parented several levels down under a room wrapper) dirty; PhysicsSystem's own
+	// per-frame Update() would eventually consume that and push it into Box2D, but only once its turn in the
+	// system order comes around again, and not at all for a descendant currently Inactive. A script moving an
+	// entity should see physics reflect it immediately, not on some later frame - so sync right here instead of
+	// waiting.
+	systemManager.GetSystem<Struktur::System::PhysicsSystem>().SyncTransformsToPhysics(*context);
 }
 
 // WorldTransform.setPosition(entity, vec3)
@@ -1580,11 +1588,17 @@ void wren_WorldTransformStaticSetPosition(WrenVM* vm)
 		// should always be a world transform so create one here
 		transformSystem.SetWorldTransform(*context, entity, vec->value, glm::vec3(1.0f),
 		                                  glm::quat(1.0f, 0.0f, 0.0f, 0.0f));
+		systemManager.GetSystem<Struktur::System::PhysicsSystem>().SyncTransformsToPhysics(*context);
 		return;
 	}
 
 	transformSystem.SetWorldTransform(*context, entity, vec->value, transformSystem.GetWorldScale(*context, entity),
 	                                  transformSystem.GetWorldRotation(*context, entity));
+
+	// See the single-arg WorldTransform.setPosition overload's own comment - same reasoning, this entity's
+	// descendants (e.g. a room's level/tilemap collision, several parent hops down) need physics to reflect the
+	// move immediately, not on whatever later frame PhysicsSystem's own per-frame sync next gets to it.
+	systemManager.GetSystem<Struktur::System::PhysicsSystem>().SyncTransformsToPhysics(*context);
 }
 
 // WorldTransform.getScale() -> vec3 or null
