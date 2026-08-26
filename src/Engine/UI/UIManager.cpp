@@ -154,19 +154,23 @@ void Struktur::UI::UIManager::HandleInput(GameContext& context)
 		}
 	}
 
-	// Handle pointer click - focuses the hovered element immediately (via FocusNavigator::SetFocus directly,
-	// not the deferred UIManager::SetFocus path Update() applies next tick) so the "Handle activation" block
-	// below, later in this same call, activates the just-clicked element rather than whatever was focused
-	// before the click - matching how clicking a button in any UI toolkit both focuses and activates it in one
-	// motion, not over two frames. Checked against the pointer button directly (not the generic "UIAccept"
-	// binding it's also part of - see InputConfig.json), so this only fires for an actual click/tap, and on
-	// release (not press) to match UIAccept's own release-triggered activation below, letting a press-then-
-	// drag-off cancel a click the same way it already does for keyboard/gamepad.
-	if (m_hoveredElement && m_hoveredElement->IsFocusable() &&
-	    input.IsPointerButtonJustReleased(Input::Input::PointerButton::Primary))
+	// Handle pointer click - focuses AND activates the hovered element right here, in one motion, rather than
+	// relying on the "Handle activation" block below: UIAccept's bindings include the pointer's primary button
+	// (see InputConfig.json/Input::RegisterDefaultUIBindings) precisely so a click activates the same way
+	// Space/Enter/GamepadA does, but that block only knows about *focus*, not hover - it has no way to tell a
+	// legitimate click on the focused element apart from a click anywhere else on screen (empty space, or a
+	// completely different, unfocused button) releasing the same physical mouse button. Activating here,
+	// gated by m_hoveredElement (bounds-checked against the actual pointer position via GetElementAt above),
+	// is the only place that distinction is actually known. `pointerJustReleased` below tells the "Handle
+	// activation" block to skip UIAccept entirely for this frame's pointer release, whether or not anything was
+	// hovered - a click on empty space must not fall through and activate whatever unrelated element still has
+	// focus.
+	bool pointerJustReleased = input.IsPointerButtonJustReleased(Input::Input::PointerButton::Primary);
+	if (pointerJustReleased && m_hoveredElement && m_hoveredElement->IsFocusable())
 	{
 		m_focusedElement = m_hoveredElement;
 		m_focusNavigator->SetFocus(context, m_hoveredElement);
+		m_hoveredElement->OnActivate(context);
 	}
 
 	// Handle keyboard navigation
@@ -210,9 +214,12 @@ void Struktur::UI::UIManager::HandleInput(GameContext& context)
 		}
 	}
 
-	// Handle activation
+	// Handle activation - keyboard/gamepad only. A pointer-driven UIAccept release was already handled above,
+	// gated by hover; skip it here too (pointerJustReleased, regardless of whether anything was hovered) so a
+	// click that lands on empty space - or on a different, unfocused element - can't fall through and activate
+	// whatever unrelated element still happens to have focus.
 	UIElement* currentFocus = m_focusNavigator->GetCurrentFocus();
-	if (currentFocus)
+	if (currentFocus && !pointerJustReleased)
 	{
 		bool accept = input.IsInputJustReleased("UIAccept");
 		if (accept)
