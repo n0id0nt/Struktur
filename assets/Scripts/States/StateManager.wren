@@ -4,12 +4,14 @@
 
 import "debug" for Profile
 import "serialisation" for Json, MapUtil
+import "trace" for Trace
 
 class StateManager {
     construct new() {
         _currentState = null
         _stateFactory = {}
         _currentStateParams = {}
+        _currentStateCallStack = ""
 
         System.print("[StateManager] created")
     }
@@ -23,6 +25,14 @@ class StateManager {
         }
     }
     
+    // Fixed-cadence update, called by Game.fixedUpdate() (see Main.wren) - forwarded to the active state's own
+    // fixedUpdate(stateManager), mirroring update() above.
+    fixedUpdate() {
+        if (_currentState) {
+            _currentState.fixedUpdate(this)
+        }
+    }
+
     // Render active state
     render() {
         if (_currentState) {
@@ -55,11 +65,17 @@ class StateManager {
         _currentState = _stateFactory[stateName]
         if (_currentState) {
             _currentStateParams = StateManager.summariseParams(params)
+            // Captured here, inside changeState() itself, so the top frame is always changeState/its 1-arg
+            // overload and everything below it is the real caller - whatever Wren code (or, for a force-triggered
+            // transition from the state-debug window, just changeState() alone with nothing beneath it, since
+            // that call comes from C++ via wrenCall, not from a Wren caller) actually requested this transition.
+            _currentStateCallStack = Trace.printCallStack()
             Profile.begin("Enter State: " + _currentState.name)
             _currentState.enter(this, params)
             Profile.end()
         } else {
             _currentStateParams = {}
+            _currentStateCallStack = ""
             System.print("[StateManager] No state with name %(stateName) exists.")
         }
     }
@@ -73,6 +89,7 @@ class StateManager {
         }
         _currentState = null
         _currentStateParams = {}
+        _currentStateCallStack = ""
     }
 
     insertState(stateName, stateConstructor) {
@@ -109,7 +126,8 @@ class StateManager {
         while (manager && manager.currentState) {
             stack.add({
                 "name": manager.currentState.name,
-                "params": manager.currentStateParams
+                "params": manager.currentStateParams,
+                "callStack": manager.currentStateCallStack
             })
             manager = manager.currentState.subStateManager
         }
@@ -139,6 +157,7 @@ class StateManager {
     // Getters
     currentState { _currentState }
     currentStateParams { _currentStateParams }
+    currentStateCallStack { _currentStateCallStack }
     stateFactory { _stateFactory }
 
     // Setters

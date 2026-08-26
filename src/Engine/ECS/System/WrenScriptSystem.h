@@ -35,6 +35,12 @@ public:
 	// Update all scripted entities
 	void Update(GameContext& context) override;
 
+	// Fixed-rate update, called via WrenScriptFixedUpdateSystem (see below) at GameData::timeStep cadence
+	// instead of once per render frame. Only calls into entities whose script class actually implements
+	// fixedUpdate() - see WrenScriptComponent::fixedUpdateMethodHandle's own comment for why this one is
+	// existence-checked rather than unconditional like Update() above.
+	void FixedUpdate(GameContext& context);
+
 	// Destroy a script (call OnDestroy and release handles)
 	void DestroyScript(GameContext& context, entt::entity entity, Component::WrenScript& script);
 
@@ -60,6 +66,19 @@ public:
 
 private:
 	std::vector<entt::entity> m_pendingInitialise;
+};
+
+// Registered via SystemManager::AddFixedUpdateSystem - a second dispatch pass over the same, already-constructed
+// WrenScriptSystem instance (reached via SystemManager::GetSystem<WrenScriptSystem>(), not a second instance),
+// running at the fixed cadence instead of once per render frame. Mirrors WrenStateFixedUpdateSystem's shape.
+class WrenScriptFixedUpdateSystem : public ISystem
+{
+public:
+	void Update(GameContext& context) override;
+	std::string Name() const override
+	{
+		return "Wren Script Fixed Update System";
+	}
 };
 }  // namespace System
 }  // namespace Struktur

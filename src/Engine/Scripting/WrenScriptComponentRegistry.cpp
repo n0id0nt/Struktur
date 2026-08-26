@@ -31,6 +31,13 @@ bool Struktur::Wren::WrenScriptComponentRegistry::LoadAllScriptComponents(GameCo
 		return false;
 	}
 
+	// wrenGetVariable() (used below to check fixedUpdate() support via Reflect.hasMethod) only looks up an
+	// already-loaded module's variable table - unlike an `import` statement, it does not itself trigger module
+	// loading. Nothing is guaranteed to have imported "reflect" yet at this point (only Player.wren happens to,
+	// today), so force it to load once here via a real import statement, same mechanism Wren's own `import`
+	// would use (see WrenScriptEngine::OnLoadModule's "reflect" special case).
+	scriptEngine.InterpretString("__ensure_reflect_loaded", "import \"reflect\" for Reflect\n");
+
 	bool successful = true;
 	for (auto& it : m_scriptComponents)
 	{
@@ -71,6 +78,21 @@ bool Struktur::Wren::WrenScriptComponentRegistry::LoadAllScriptComponents(GameCo
 		scriptComponent.updateMethodHandle    = wrenMakeCallHandle(vm, "update()");
 		scriptComponent.onDestroyMethodHandle = wrenMakeCallHandle(vm, "onDestroy()");
 		scriptComponent.onEventMethodHandle   = wrenMakeCallHandle(vm, "onEvent(_,_)");
+
+		// fixedUpdate() is opt-in (see the field's own comment) - only create the handle if the class actually
+		// implements it, via Reflect.hasMethod (the same "reflect" module/Reflect class Player.wren and the
+		// exported-fields bootstrap already use).
+		wrenEnsureSlots(vm, 3);
+		wrenGetVariable(vm, "reflect", "Reflect", 0);
+		wrenSetSlotHandle(vm, 1, scriptComponent.classHandle);
+		wrenSetSlotString(vm, 2, "fixedUpdate()");
+		WrenHandle* hasMethodCall = wrenMakeCallHandle(vm, "hasMethod(_,_)");
+		bool hasFixedUpdate       = wrenCall(vm, hasMethodCall) == WREN_RESULT_SUCCESS && wrenGetSlotBool(vm, 0);
+		wrenReleaseHandle(vm, hasMethodCall);
+		if (hasFixedUpdate)
+		{
+			scriptComponent.fixedUpdateMethodHandle = wrenMakeCallHandle(vm, "fixedUpdate()");
+		}
 #ifdef DEBUG
 		m_fileModificationTimes[module] = GetFileModificationTime(module);
 #endif
@@ -123,6 +145,10 @@ void Struktur::Wren::WrenScriptComponentRegistry::Clear(GameContext& context)
 		{
 			wrenReleaseHandle(vm, scriptComponent.updateMethodHandle);
 		}
+		if (scriptComponent.fixedUpdateMethodHandle)
+		{
+			wrenReleaseHandle(vm, scriptComponent.fixedUpdateMethodHandle);
+		}
 		if (scriptComponent.onDestroyMethodHandle)
 		{
 			wrenReleaseHandle(vm, scriptComponent.onDestroyMethodHandle);
@@ -132,11 +158,12 @@ void Struktur::Wren::WrenScriptComponentRegistry::Clear(GameContext& context)
 			wrenReleaseHandle(vm, scriptComponent.onEventMethodHandle);
 		}
 
-		scriptComponent.classHandle           = nullptr;
-		scriptComponent.startMethodHandle     = nullptr;
-		scriptComponent.updateMethodHandle    = nullptr;
-		scriptComponent.onDestroyMethodHandle = nullptr;
-		scriptComponent.onEventMethodHandle   = nullptr;
+		scriptComponent.classHandle              = nullptr;
+		scriptComponent.startMethodHandle        = nullptr;
+		scriptComponent.updateMethodHandle       = nullptr;
+		scriptComponent.fixedUpdateMethodHandle  = nullptr;
+		scriptComponent.onDestroyMethodHandle    = nullptr;
+		scriptComponent.onEventMethodHandle      = nullptr;
 
 #ifdef DEBUG
 		ExportedFields::ReleaseFields(vm, scriptComponent.exportedFields);

@@ -2,7 +2,9 @@
 
 #include "Debug/Editor/Editor.h"
 #include "Debug/Editor/EditorTheme.h"
+#include "Engine/Core/EngineSettings.h"
 #include "Engine/GameContext.h"
+#include "Engine/Renderer/GraphicsDevice.h"
 
 namespace Struktur::Debug
 {
@@ -277,10 +279,37 @@ void SettingsWindow::RenderPerformanceSettings(GameContext& context)
 
 	ImGui::SeparatorText("Rendering");
 
-	// Frame pacing comes from GraphicsDevice's BGFX_RESET_VSYNC, not a raylib-style SetTargetFPS - there's no
-	// equivalent knob wired up yet without vsync being the only control. Leaving the controls out entirely
-	// rather than showing settings that silently do nothing.
-	ImGui::TextDisabled("VSync/target FPS controls aren't wired up on this platform yet.");
+	// VSync/target-FPS live on GameData (the live, in-memory mirror of Core::EngineSettings - shared with the
+	// non-editor desktop loop, not an editor-only concept) rather than EditorSettings::PerformanceSettings, so
+	// this window is just a view onto them. Saved immediately on change so the choice survives the next launch.
+	Core::GameData& gameData = context.GetGameData();
+
+	if (ImGui::Checkbox("VSync", &gameData.vsyncEnabled))
+	{
+		context.GetGraphicsDevice().SetVSync(gameData.vsyncEnabled);
+		Core::EngineSettings::Save({gameData.vsyncEnabled, gameData.targetFps});
+	}
+	ImGui::SameLine();
+	HelpMarker("Sync frame presentation to the display's refresh rate. Eliminates tearing.");
+
+	bool uncapped = gameData.targetFps <= 0;
+	if (ImGui::Checkbox("Uncapped", &uncapped))
+	{
+		gameData.targetFps = uncapped ? 0 : 60;
+		Core::EngineSettings::Save({gameData.vsyncEnabled, gameData.targetFps});
+	}
+
+	ImGui::BeginDisabled(uncapped);
+	int targetFps = gameData.targetFps > 0 ? gameData.targetFps : 60;
+	if (ImGui::DragInt("Target FPS", &targetFps, 1.0f, 1, 1000))
+	{
+		gameData.targetFps = targetFps;
+		Core::EngineSettings::Save({gameData.vsyncEnabled, gameData.targetFps});
+	}
+	ImGui::EndDisabled();
+	ImGui::SameLine();
+	HelpMarker("Caps the desktop loop to this framerate independent of VSync - useful to reduce power draw/"
+	           "latency below the display's refresh rate.");
 
 	ImGui::Spacing();
 	ImGui::SeparatorText("Monitoring");

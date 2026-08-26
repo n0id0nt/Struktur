@@ -226,6 +226,54 @@ void WrenScriptSystem::Update(GameContext& context)
 	}
 }
 
+void WrenScriptSystem::FixedUpdate(GameContext& context)
+{
+	Wren::WrenScriptEngine& scriptEngine = context.GetWrenScriptEngine();
+	WrenVM* vm                           = scriptEngine.GetVM();
+	if (!vm)
+	{
+		return;
+	}
+
+	auto& registry = context.GetRegistry();
+	auto view       = registry.view<Component::WrenScript>(entt::exclude<Inactive>);
+
+	for (auto entity : view)
+	{
+		auto& script = view.get<Component::WrenScript>(entity);
+
+		if (script.hasError || !script.isInitialised)
+		{
+			continue;
+		}
+
+		// Skip entities whose script class never opted into fixedUpdate() - see
+		// WrenScriptComponent::fixedUpdateMethodHandle's own comment.
+		if (!script.scriptComponent->fixedUpdateMethodHandle)
+		{
+			continue;
+		}
+
+		wrenEnsureSlots(vm, 1);
+		wrenSetSlotHandle(vm, 0, script.instanceHandle);
+
+		WrenInterpretResult result = wrenCall(vm, script.scriptComponent->fixedUpdateMethodHandle);
+
+		if (result != WREN_RESULT_SUCCESS)
+		{
+			DEBUG_ERROR("Error calling FixedUpdate() on entity %d script: %s", static_cast<int>(entity),
+			            script.className.c_str());
+			script.hasError     = true;
+			script.errorMessage = "FixedUpdate() call failed";
+		}
+	}
+}
+
+void WrenScriptFixedUpdateSystem::Update(GameContext& context)
+{
+	context.GetSystemManager().GetSystem<WrenScriptSystem>().FixedUpdate(context);
+}
+
 void WrenScriptSystem::DestroyScript(GameContext& context, entt::entity entity, Component::WrenScript& script)
 {
 	if (!script.isInitialised)

@@ -63,7 +63,8 @@ bool WrenStateManager::Initialise(GameContext& context)
 	wrenEnsureSlots(vm, 1);
 	wrenSetSlotHandle(vm, 0, m_rootStateInstanceHandle);
 
-	m_updateMethodHandle    = wrenMakeCallHandle(vm, "update()");
+	m_updateMethodHandle      = wrenMakeCallHandle(vm, "update()");
+	m_fixedUpdateMethodHandle = wrenMakeCallHandle(vm, "fixedUpdate()");
 	m_renderMethodHandle    = wrenMakeCallHandle(vm, "render()");
 	m_startMethodHandle     = wrenMakeCallHandle(vm, "start()");
 	m_quitMethodHandle      = wrenMakeCallHandle(vm, "quit()");
@@ -122,6 +123,28 @@ void WrenStateManager::Update(GameContext& context)
 	if (result != WREN_RESULT_SUCCESS)
 	{
 		DEBUG_ERROR("[WrenStateManager] Update failed");
+	}
+}
+
+void WrenStateManager::FixedUpdate(GameContext& context)
+{
+	if (!m_isInitialised || !m_rootStateInstanceHandle || !m_fixedUpdateMethodHandle)
+	{
+		return;
+	}
+
+	WrenScriptEngine& scriptEngine = context.GetWrenScriptEngine();
+	WrenVM* vm                     = scriptEngine.GetVM();
+
+	// Call Game.fixedUpdate()
+	wrenEnsureSlots(vm, 1);
+	wrenSetSlotHandle(vm, 0, m_rootStateInstanceHandle);
+
+	WrenInterpretResult result = wrenCall(vm, m_fixedUpdateMethodHandle);
+
+	if (result != WREN_RESULT_SUCCESS)
+	{
+		DEBUG_ERROR("[WrenStateManager] FixedUpdate failed");
 	}
 }
 
@@ -202,6 +225,10 @@ void WrenStateManager::Shutdown(GameContext& context)
 		{
 			wrenReleaseHandle(vm, m_updateMethodHandle);
 		}
+		if (m_fixedUpdateMethodHandle)
+		{
+			wrenReleaseHandle(vm, m_fixedUpdateMethodHandle);
+		}
 		if (m_renderMethodHandle)
 		{
 			wrenReleaseHandle(vm, m_renderMethodHandle);
@@ -222,6 +249,7 @@ void WrenStateManager::Shutdown(GameContext& context)
 
 	m_rootStateInstanceHandle = nullptr;
 	m_updateMethodHandle      = nullptr;
+	m_fixedUpdateMethodHandle = nullptr;
 	m_renderMethodHandle      = nullptr;
 	m_startMethodHandle       = nullptr;
 	m_quitMethodHandle        = nullptr;

@@ -12,22 +12,29 @@
 
 void Struktur::System::PhysicsSystem::Update(GameContext& context)
 {
-	float deltaTime = context.GetTimeSystem().scaledDelta;
-	StepPhysics(context, deltaTime);
+	// Every render frame, NOT fixed-rate - see this method's own declaration comment / PhysicsFixedStepSystem
+	// for why the sync can't be delayed to the fixed cadence the way the actual Step() below is.
+	PROFILE_BEGIN_SCOPE(syncToPhysics, "Sync to Physics");
+	SyncTransformsToPhysics(context);
+	PROFILE_END_SCOPE(syncToPhysics);
+	PROFILE_BEGIN_SCOPE(syncFromPhysics, "Sync from Physics");
+	SyncPhysicsToTransforms(context);
+	PROFILE_END_SCOPE(syncFromPhysics);
 }
 
 void Struktur::System::PhysicsSystem::StepPhysics(GameContext& context, float deltaTime)
 {
+	// Called from PhysicsFixedStepSystem at GameData::timeStep cadence (see GameLoop's accumulator loop in
+	// Game.cpp) - deliberately just the Box2D advance, no sync (see Update() above for why sync stays per-frame).
 	Physics::PhysicsWorld& physicsWorld = context.GetPhysicsWorld();
-	PROFILE_BEGIN_SCOPE(syncToPhysics, "Sync to Physics");
-	SyncTransformsToPhysics(context);
-	PROFILE_END_SCOPE(syncToPhysics);
 	PROFILE_BEGIN_SCOPE(stepPhysics, "Step Physics");
 	physicsWorld.Step(context, deltaTime);
 	PROFILE_END_SCOPE(stepPhysics);
-	PROFILE_BEGIN_SCOPE(syncFromPhysics, "Sync from Physics");
-	SyncPhysicsToTransforms(context);
-	PROFILE_END_SCOPE(syncFromPhysics);
+}
+
+void Struktur::System::PhysicsFixedStepSystem::Update(GameContext& context)
+{
+	context.GetSystemManager().GetSystem<PhysicsSystem>().StepPhysics(context, context.GetGameData().timeStep);
 }
 
 void Struktur::System::PhysicsSystem::SyncPhysicsToTransforms(GameContext& context)

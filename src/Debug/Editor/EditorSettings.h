@@ -67,11 +67,10 @@ public:
 		bool snapToGrid   = false;
 	} grid;
 
-	// Performance settings
+	// Performance settings - VSync/target-FPS live on GameData/Core::EngineSettings instead (see
+	// SettingsWindow::RenderPerformanceSettings), since they need to apply outside the editor too, not just here.
 	struct PerformanceSettings
 	{
-		bool enableVSync            = true;
-		int targetFPS               = 60;
 		bool showPerformanceMetrics = false;
 	} performance;
 

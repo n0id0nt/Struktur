@@ -18,7 +18,7 @@ void Struktur::Renderer::GraphicsDevice::Initialise(void* nativeWindowHandle, in
 	init.type              = bgfx::RendererType::Count;  // auto-select the platform's preferred backend
 	init.resolution.width  = (uint32_t)width;
 	init.resolution.height = (uint32_t)height;
-	init.resolution.reset  = BGFX_RESET_VSYNC;
+	init.resolution.reset  = m_resetFlags;
 	init.platformData      = platformData;
 
 	bool ok = bgfx::init(init);
@@ -81,7 +81,7 @@ void Struktur::Renderer::GraphicsDevice::Resize(int width, int height)
 	// unhandled, World/Debug/UI keep drawing every frame, just now straight to the backbuffer instead of that
 	// framebuffer - which then never receives another draw, so the Game Viewport panel's ImGui::Image freezes
 	// on whatever was last rendered before the resize. Re-apply whichever target was actually active.
-	bgfx::reset((uint32_t)width, (uint32_t)height, BGFX_RESET_VSYNC);
+	bgfx::reset((uint32_t)width, (uint32_t)height, m_resetFlags);
 
 	if (m_worldRenderTargetActive)
 	{
@@ -99,6 +99,27 @@ void Struktur::Renderer::GraphicsDevice::Resize(int width, int height)
 #ifdef EDITOR
 	bgfx::setViewRect(EditorViewId, 0, 0, (uint16_t)width, (uint16_t)height);
 #endif
+}
+
+void Struktur::Renderer::GraphicsDevice::SetVSync(bool enabled)
+{
+	if (enabled)
+	{
+		m_resetFlags |= BGFX_RESET_VSYNC;
+	}
+	else
+	{
+		m_resetFlags &= ~BGFX_RESET_VSYNC;
+	}
+
+	if (m_initialised)
+	{
+		// Reuses Resize's own bgfx::reset + render-target-reapply dance (see its comment above) instead of
+		// calling bgfx::reset directly here - bgfx::reset unconditionally clears every view's frame buffer
+		// binding, which would silently break the editor's Game Viewport redirect the same way an unhandled
+		// window resize would.
+		Resize(m_width, m_height);
+	}
 }
 
 void Struktur::Renderer::GraphicsDevice::SetWorldRenderTarget(bgfx::FrameBufferHandle frameBuffer, uint16_t width,

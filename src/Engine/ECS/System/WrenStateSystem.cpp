@@ -13,3 +13,9 @@ void Struktur::System::WrenStateRenderSystem::Update(GameContext& context)
 	auto& stateManager = context.GetWrenStateManager();
 	stateManager.Render(context);
 }
+
+void Struktur::System::WrenStateFixedUpdateSystem::Update(GameContext& context)
+{
+	auto& stateManager = context.GetWrenStateManager();
+	stateManager.FixedUpdate(context);
+}

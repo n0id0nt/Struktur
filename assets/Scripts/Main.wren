@@ -61,10 +61,17 @@ class Game {
     }
     
     // Called by C++ every frame
-    update() {      
+    update() {
         _stateManager.update()
     }
-    
+
+    // Called by C++ at a fixed cadence (GameData::timeStep, see GameLoop's accumulator loop in Game.cpp),
+    // independent of render framerate - use this instead of update() for gameplay logic that should stay in
+    // step with physics.
+    fixedUpdate() {
+        _stateManager.fixedUpdate()
+    }
+
     // Called by C++ for rendering
     render() {
         _stateManager.render()

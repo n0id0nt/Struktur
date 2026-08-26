@@ -26,6 +26,7 @@ public:
 	WrenStateManager()
 	    : m_rootStateInstanceHandle(nullptr),
 	      m_updateMethodHandle(nullptr),
+	      m_fixedUpdateMethodHandle(nullptr),
 	      m_renderMethodHandle(nullptr),
 	      m_startMethodHandle(nullptr),
 	      m_quitMethodHandle(nullptr),
@@ -47,6 +48,10 @@ public:
 
 	// Update the game state (calls Game.update(dt) in Wren)
 	void Update(GameContext& context);
+
+	// Fixed-rate update, called from SystemManager::FixedUpdate at GameData::timeStep cadence (calls
+	// Game.fixedUpdate() in Wren, which forwards to StateManager.fixedUpdate() -> BaseState.fixedUpdate(this)).
+	void FixedUpdate(GameContext& context);
 
 	// Optional: Render (calls Game.render() in Wren)
 	void Render(GameContext& context);
@@ -106,9 +111,10 @@ private:
 	// called at the end. Returns false (slot 0 left in whatever wrenCall left it in) if either hop fails.
 	bool CallOnRootStateManager(GameContext& context, const char* methodSignature);
 
-	WrenHandle* m_rootStateInstanceHandle;  // Handle to Wren Game object
-	WrenHandle* m_updateMethodHandle;       // Cached Game.update() method
-	WrenHandle* m_renderMethodHandle;       // Cached Game.render() method
+	WrenHandle* m_rootStateInstanceHandle;   // Handle to Wren Game object
+	WrenHandle* m_updateMethodHandle;        // Cached Game.update() method
+	WrenHandle* m_fixedUpdateMethodHandle;   // Cached Game.fixedUpdate() method
+	WrenHandle* m_renderMethodHandle;        // Cached Game.render() method
 	WrenHandle* m_startMethodHandle;        // Cached Game.start() method
 	WrenHandle* m_quitMethodHandle;         // Cached Game.quit() method
 	WrenHandle* m_sendEventMethodHandle;    // Cached Game.sendEvent() method

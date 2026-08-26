@@ -107,6 +107,15 @@ class GameWorldState is BaseState {
         System.print("Game world loaded")
     }
     
+    // Mirrors update(stateManager)'s own substate delegation below - GameWorldState is the one real
+    // nested-subStateManager case today, so this doubles as the proof that fixed-update delegation works through
+    // a substate, not just at the leaf level.
+    fixedUpdate(stateManager) {
+        if (_stateManager.currentState) {
+            _stateManager.fixedUpdate()
+        }
+    }
+
     update(stateManager) {
         // if substate return out here
         if (_stateManager.currentState) {

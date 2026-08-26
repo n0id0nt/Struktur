@@ -22,3 +22,13 @@ void Struktur::System::SystemManager::Render(GameContext& context)
 		system->Update(context);
 	}
 }
+
+void Struktur::System::SystemManager::FixedUpdate(GameContext& context)
+{
+	for (auto& systemId : m_fixedUpdateSystems)
+	{
+		auto* system = m_systemMap[systemId].get();
+		PROFILE_SCOPE(system->Name());
+		system->Update(context);
+	}
+}

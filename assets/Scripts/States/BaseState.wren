@@ -22,7 +22,15 @@ class BaseState {
     update(stateManager) {
         // Override in derived states
     }
-    
+
+    // Called at a fixed cadence while active (see StateManager.fixedUpdate()) - independent of render framerate.
+    // Override in derived states that need physics-synced gameplay logic; a state that owns its own nested
+    // subStateManager (see below) should mirror update(stateManager)'s own delegation here too (see
+    // GameWorldState).
+    fixedUpdate(stateManager) {
+        // Override in derived states
+    }
+
     // Optional: Called for rendering (if separate from update)
     render() {
         // Override in derived states

@@ -30,6 +30,11 @@ struct WrenScriptComponent
 	WrenHandle* classHandle           = nullptr;
 	WrenHandle* startMethodHandle     = nullptr;
 	WrenHandle* updateMethodHandle    = nullptr;
+	// Unlike updateMethodHandle (unconditional - every script class defines update()), this is only non-null if
+	// the class actually implements fixedUpdate() - script classes have no shared base to fall back to a default
+	// no-op the way BaseState.wren does for states, so calling an unconditionally-created handle would error on
+	// every class that hasn't opted in. See WrenScriptComponentRegistry::LoadAllScriptComponents.
+	WrenHandle* fixedUpdateMethodHandle = nullptr;
 	WrenHandle* onDestroyMethodHandle = nullptr;
 	WrenHandle* onEventMethodHandle   = nullptr;
 	bool isInitialised                = false;

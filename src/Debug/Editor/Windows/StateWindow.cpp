@@ -131,6 +131,19 @@ void StateWindow::Render(GameContext& context)
 		{
 			ImGui::Indent();
 
+			// Captured once, inside StateManager.changeState() itself, the moment this level's current state was
+			// entered (see StateManager.wren) - whatever Wren call chain (or, for a force-triggered transition
+			// via the toolbar above, just changeState() alone, since that call comes from C++) requested it.
+			std::string callStack = level.value("callStack", "");
+			if (!callStack.empty())
+			{
+				if (ImGui::TreeNode("##callStack", "Call Stack (transition trigger)"))
+				{
+					ImGui::TextWrapped("%s", callStack.c_str());
+					ImGui::TreePop();
+				}
+			}
+
 			if (depth < instances.size() && instances[depth])
 			{
 				const std::vector<Wren::WrenExportedField>& fields =

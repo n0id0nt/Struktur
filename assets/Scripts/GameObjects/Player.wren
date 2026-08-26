@@ -18,7 +18,8 @@ class Player {
         _initialized = false
         _facing = Vec2.new(0, 1)
         _speed = 5
-        
+        _fixedUpdateCount = 0
+
         System.print("Player constructed for: %(_name)")
     }
     
@@ -65,7 +66,17 @@ class Player {
     update() {
 
     }
-    
+
+    // Demonstrates the opt-in fixed-update convention (see BaseState/WrenScriptComponentRegistry) on a real,
+    // observable effect - a running count of fixed ticks, independent of render framerate, printed occasionally
+    // so it's visible without spamming the log every tick.
+    fixedUpdate() {
+        _fixedUpdateCount = _fixedUpdateCount + 1
+        if (_fixedUpdateCount % 60 == 0) {
+            System.print("Player fixedUpdate ticks: %(_fixedUpdateCount)")
+        }
+    }
+
     onDestroy() {
         System.print("NPCBehavior.OnDestroy() called for: %(_name)")
     }

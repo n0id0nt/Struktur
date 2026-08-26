@@ -56,6 +56,14 @@ public:
 
 	void Resize(int width, int height);
 
+	// Toggles BGFX_RESET_VSYNC and re-applies it immediately via bgfx::reset if already initialised (bgfx allows
+	// re-resetting outside of a resize) - see Core::EngineSettings for the persisted setting this backs.
+	void SetVSync(bool enabled);
+	bool IsVSyncEnabled() const
+	{
+		return (m_resetFlags & BGFX_RESET_VSYNC) != 0;
+	}
+
 	// Redirects WorldViewId into an offscreen framebuffer (the editor's game-viewport panel) instead of the
 	// real backbuffer - a one-time sticky redirect, not a per-frame push/pop like raylib's BeginTextureMode.
 	// width/height are the framebuffer's own (fixed, game-resolution) size, cached so Resize() can keep the
@@ -81,6 +89,9 @@ public:
 private:
 	int m_width  = 0;
 	int m_height = 0;
+	// Passed to both bgfx::init (Initialise) and bgfx::reset (Resize/SetVSync) - stored so SetVSync can flip just
+	// the VSync bit and re-apply without needing a resize to trigger it.
+	uint32_t m_resetFlags = BGFX_RESET_VSYNC;
 	// Cached for RestoreWorldRenderTarget - ResetWorldRenderTarget intentionally leaves these untouched.
 	bgfx::FrameBufferHandle m_worldFrameBuffer = BGFX_INVALID_HANDLE;
 	uint16_t m_worldFrameBufferWidth           = 0;

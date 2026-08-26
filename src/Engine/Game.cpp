@@ -11,6 +11,7 @@
 
 #include "Debug/Assertions.h"
 #include "Debug/Profiling/Profiler.h"
+#include "Engine/Core/EngineSettings.h"
 #include "Engine/Core/FileSystem.h"
 #include "Engine/ECS/Component/Camera.h"
 #include "Engine/ECS/Component/PhysicsBody.h"
@@ -45,6 +46,8 @@
 #ifdef DEBUG
 	#include "Engine/Scripting/WrenCodeGenerator.h"
 #endif
+
+#include <SDL3/SDL.h>
 
 #include "Engine/Platform/Window.h"
 #include "Engine/Renderer/GraphicsDevice.h"
@@ -151,6 +154,15 @@ void Struktur::InitialiseGame(GameContext& context)
 	FileSystem::Mount(saveDir, "/", false);
 	// Audio setup now happens in GameContext's constructor via SDL3_mixer, so it's already available here.
 
+	// GraphicsDevice::Initialise (above) already ran with the hardcoded VSync-on default, since it happens
+	// before the save-directory mount above even exists to read a persisted choice from - applying the real
+	// value here (a bgfx::reset, via SetVSync) is still before the first frame is ever presented, so this is
+	// imperceptible.
+	Core::EngineSettings engineSettings = Core::EngineSettings::Load();
+	context.GetGraphicsDevice().SetVSync(engineSettings.vsync);
+	gameData.vsyncEnabled = engineSettings.vsync;
+	gameData.targetFps    = engineSettings.targetFps;
+
 #ifdef DEBUG
 	Wren::CodeGenerator::GenerateBindingFiles(wrenScriptEngine.GetRegistry(),
 	                                          FileSystem::GetWorkingDirectory() + "/../src/WrenBindings/Bindings");
@@ -166,6 +178,12 @@ void Struktur::InitialiseGame(GameContext& context)
 	systemManager.AddHelperSystem<System::TransformSystem>();
 	systemManager.AddHelperSystem<System::ShaderSystem>();
 	systemManager.AddUpdateSystem<System::WrenStateSystem>();
+	systemManager.AddFixedUpdateSystem<System::WrenStateFixedUpdateSystem>();
+	systemManager.AddFixedUpdateSystem<System::WrenScriptFixedUpdateSystem>();
+	// Fixed-cadence Box2D step only - kept separate from PhysicsSystem's own per-frame Update (registered below,
+	// right before CameraSystem, same relative slot it always had) which handles the Transform<->physics sync.
+	// See PhysicsFixedStepSystem's own comment for why these two can't both move to fixed-rate together.
+	systemManager.AddFixedUpdateSystem<System::PhysicsFixedStepSystem>();
 	systemManager.AddUpdateSystem<System::WrenScriptSystem>();
 	systemManager.AddUpdateSystem<System::EventSystem>();
 	systemManager.AddUpdateSystem<System::PhysicsSystem>();
@@ -358,6 +376,23 @@ void Struktur::GameLoop(GameContext& context)
 		if (debugSettings.playingGame && !debugSettings.pausedGame)
 		{
 #endif
+			Core::GameData& gameData = context.GetGameData();
+			gameData.physicsAccumulator += context.GetTimeSystem().scaledDelta;
+			int fixedSteps = 0;
+			while (gameData.physicsAccumulator >= gameData.timeStep && fixedSteps < gameData.maxFixedStepsPerFrame)
+			{
+				systemManager.FixedUpdate(context);
+				gameData.physicsAccumulator -= gameData.timeStep;
+				fixedSteps++;
+			}
+			if (fixedSteps == gameData.maxFixedStepsPerFrame)
+			{
+				// Discard the overflow rather than chase it - running every queued step after a big stall would
+				// itself cost real time, risking the same stall on the next frame too (the spiral-of-death this
+				// cap exists to avoid). Physics simply falls behind briefly instead of freezing.
+				gameData.physicsAccumulator = 0.0f;
+			}
+
 			systemManager.Update(context);
 #ifdef EDITOR
 		}
@@ -449,10 +484,36 @@ void Struktur::Game()
 	// Web platform - use emscripten main loop
 	emscripten_set_main_loop_arg(UpdateLoop, &context, 0, 1);
 #else
-	// Desktop platform - standard game loop (frame pacing comes from GraphicsDevice's BGFX_RESET_VSYNC)
+	// Desktop platform - standard game loop (frame pacing comes from GraphicsDevice's BGFX_RESET_VSYNC and,
+	// when gameData.targetFps > 0, the cap below - see Core::EngineSettings/SettingsWindow)
 	while (gameData.gameState != Core::GameState::QUIT)
 	{
+		uint64_t frameStartTicks = SDL_GetPerformanceCounter();
+
 		UpdateLoop(&context);
+
+		if (gameData.targetFps > 0)
+		{
+			uint64_t frequency        = SDL_GetPerformanceFrequency();
+			double targetFrameSeconds = 1.0 / static_cast<double>(gameData.targetFps);
+			double elapsedSeconds =
+			    static_cast<double>(SDL_GetPerformanceCounter() - frameStartTicks) / static_cast<double>(frequency);
+
+			// Coarse-sleep most of the remaining budget - OS scheduler granularity (~1-15ms on Windows) is too
+			// imprecise to sleep the whole remainder accurately - then spin-wait the last couple of ms for
+			// precision.
+			constexpr double kSpinWaitSeconds = 0.002;
+			while (elapsedSeconds < targetFrameSeconds)
+			{
+				double remainingSeconds = targetFrameSeconds - elapsedSeconds;
+				if (remainingSeconds > kSpinWaitSeconds)
+				{
+					SDL_Delay(static_cast<Uint32>((remainingSeconds - kSpinWaitSeconds) * 1000.0));
+				}
+				elapsedSeconds = static_cast<double>(SDL_GetPerformanceCounter() - frameStartTicks) /
+				                 static_cast<double>(frequency);
+			}
+		}
 	}
 #endif
 
@@ -483,6 +544,9 @@ void Struktur::StopDebugGame(GameContext& context)
 
 void Struktur::ClearGameSystems(GameContext& context)
 {
+	// Reset so a restart doesn't fire a burst of stale catch-up fixed steps carried over from before the reset.
+	context.GetGameData().physicsAccumulator = 0.0f;
+
 	DEBUG_INFO("[Clean Up] FlagManager");
 	Flag::FlagManager& flagManager = context.GetFlagManager();
 	flagManager.Clear();
