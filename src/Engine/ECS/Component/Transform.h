@@ -1,5 +1,7 @@
 #pragma once
 
+#include <cstdint>
+
 #include "entt/entt.hpp"
 #include "glm/glm.hpp"
 #include "glm/gtc/quaternion.hpp."
@@ -37,6 +39,14 @@ struct Transform
 	// ancestor's world). Defaults to true so a freshly created/emplaced transform is resolved on
 	// first read.
 	bool dirty{true};
+
+	// Bumped by TransformSystem::SetLocalTransform (a real change to this entity's own local matrix) and by
+	// CascadeDirty (an ancestor changed, so this entity's effective world position did too) - never touched by
+	// a read. Unlike `dirty`, which any reader can consume as a side effect of caching the world matrix, this
+	// only ever increases, so a consumer (see Component::PhysicsBody::syncedTransformVersion) that remembers
+	// the version it last handled can reliably detect "something changed since I last looked", independent of
+	// whether anything else already read (and cleared) `dirty` first.
+	uint32_t version{0};
 };
 }  // namespace Component
 }  // namespace Struktur

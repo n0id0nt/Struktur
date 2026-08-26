@@ -65,6 +65,16 @@ void Struktur::System::PhysicsSystem::SyncPhysicsToTransforms(GameContext& conte
 			PROFILE_BEGIN_SCOPE(setTransform, "Set Transform");
 			transformSystem.SetWorldTransformDirect(context, entity, worldPos, scale, worldAngle);
 			PROFILE_END_SCOPE(setTransform);
+
+			// SetWorldTransformDirect falls back to the full SetLocalTransform (and so bumps Transform::version)
+			// for any entity with a parent - which includes almost everything here, since GameObjectManager
+			// parents most entities somewhere under a world/level root. Left unmarked, that version bump would
+			// look to SyncTransformsToPhysics exactly like a real external move, and it would push this same
+			// value straight back into the body next call - for a dynamic body like the player, that overwrites
+			// Box2D's own velocity-integrated position with the one-step-stale value just read here, freezing
+			// it in place. This value came FROM physics, so physics is already caught up to it - record that
+			// immediately, the same way SyncTransformsToPhysics does after an actual push.
+			physicsBody.syncedTransformVersion = transform.version;
 		}
 	}
 }
@@ -83,7 +93,9 @@ void Struktur::System::PhysicsSystem::SyncTransformsToPhysics(GameContext& conte
 	PROFILE_SCOPE("Sync All To Physics");
 	for (auto [entity, physicsBody, transform] : view.each())
 	{
-		if (physicsBody.body && transform.dirty)
+		// Compared against Transform::version, not Transform::dirty - see PhysicsBody::syncedTransformVersion's
+		// own comment for why the shared, reader-consumable dirty flag isn't safe to gate this on.
+		if (physicsBody.body && transform.version != physicsBody.syncedTransformVersion)
 		{
 			PROFILE_BEGIN_SCOPE(convertAngle, "Convert Angle");
 			glm::vec3 worldPosition = transformSystem.GetWorldPosition(context, entity);
@@ -95,6 +107,7 @@ void Struktur::System::PhysicsSystem::SyncTransformsToPhysics(GameContext& conte
 			physicsBody.body->SetTransform(b2Vec2(worldPosition.x * metersPerPixel, worldPosition.y * metersPerPixel),
 			                               angleZ);
 			PROFILE_END_SCOPE(uploadToPhysics);
+			physicsBody.syncedTransformVersion = transform.version;
 		}
 	}
 }

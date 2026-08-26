@@ -52,7 +52,9 @@ void Struktur::System::TransformSystem::CascadeDirty(entt::registry& registry, e
 		{
 			if (registry.valid(child))
 			{
-				registry.get<Component::Transform>(child).dirty = true;
+				auto& childTransform = registry.get<Component::Transform>(child);
+				childTransform.dirty = true;
+				childTransform.version++;
 				CascadeDirty(registry, child);
 			}
 		}
@@ -91,6 +93,7 @@ void Struktur::System::TransformSystem::SetLocalTransform(GameContext& context, 
 	transform.localRotation = rotationQuat;
 	transform.localScale    = scaleVec;
 	transform.dirty         = true;
+	transform.version++;
 
 	CascadeDirty(registry, entity);
 }
@@ -108,6 +111,7 @@ void Struktur::System::TransformSystem::SetLocalTransform(GameContext& context, 
 	transform.localRotation = rotation;
 	transform.localScale    = scale;
 	transform.dirty         = true;
+	transform.version++;
 
 	CascadeDirty(registry, entity);
 }
