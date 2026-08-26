@@ -95,17 +95,6 @@ entt::entity Struktur::World::Level::LoadLevelEntities(GameContext& context, con
 					bool isSensor = false;
 					b2BodyDef staticBodyDef;
 					staticBodyDef.type = b2_staticBody;
-
-					// TileMapCollisionBodyGenerator builds its chain-shape vertices purely from tile grid indices
-					// (local to the body's own origin) - the body itself was left at b2BodyDef's default (0,0)
-					// position, disconnected from where the tile sprites actually render (this layerEntity's own
-					// Transform, set above via SetLocalTransform + the level entity's world position), so the
-					// collision always sat at the world origin regardless of the level's placement. Explicitly
-					// position the body at the same world position the tiles render at.
-					glm::vec3 worldPosition = transformSystem.GetWorldPosition(context, layerEntity);
-					float pixelsPerMeter    = context.GetPhysicsWorld().GetPixelsPerMeter();
-					staticBodyDef.position  = b2Vec2(worldPosition.x / pixelsPerMeter, worldPosition.y / pixelsPerMeter);
-
 					Component::PhysicsBody& physicsBody =
 					    physicsSystem.CreatePhysicsBody(context, layerEntity, staticBodyDef);
 					Physics::TileMapCollisionBodyGenerator::CreateTileMapShape(context, tileMap, isSensor, physicsBody);
