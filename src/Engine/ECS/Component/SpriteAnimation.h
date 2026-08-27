@@ -3,27 +3,18 @@
 #include <string>
 #include <unordered_map>
 
+#include "Engine/Animation/SpriteAnimation.h"
+
 namespace Struktur
 {
-    namespace Animation
-    {
-		struct SpriteAnimation
-		{
-			unsigned int startFrame;
-			unsigned int endFrame;
-			float animationTime;
-			bool loop;
-		};
-    }
+namespace Component
+{
+struct SpriteAnimation
+{
+	std::unordered_map<std::string, Animation::SpriteAnimation> animations;
 
-	namespace Component
-	{
-		struct SpriteAnimation
-		{
-			std::unordered_map<std::string, Animation::SpriteAnimation> animations;
-
-			std::string curAnimation;
-			float animationStartTime;
-		};
-    }
-}
+	std::string curAnimation;
+	float animationStartTime;
+};
+}  // namespace Component
+}  // namespace Struktur

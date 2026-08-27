@@ -1,53 +1,95 @@
 #include "UIPanel.h"
 
-Struktur::UI::UIPanel::UIPanel(const glm::vec2& absolutePosition, const glm::vec2& relativePosition, const glm::vec2& absoluteSize, const glm::vec2& relativeSize)
-    : UIElement(absolutePosition, relativePosition, absoluteSize, relativeSize), m_panelColor(LIGHTGRAY), m_hasBackgroundTexture(false)
-{                
-    m_backgroundColor = m_panelColor;
-    m_focusable = false; // Panels typically don't receive focus
+#include "Engine/GameContext.h"
+#include "Engine/Renderer/UIRenderer.h"
+
+Struktur::UI::UIPanel::UIPanel(const glm::vec2& absolutePosition, const glm::vec2& relativePosition,
+                               const glm::vec2& absoluteSize, const glm::vec2& relativeSize)
+    : UIElement(absolutePosition, relativePosition, absoluteSize, relativeSize),
+      m_hasBackgroundTexture(false)
+{
+	m_focusable = false;  // Panels typically don't receive focus
 }
 
-void Struktur::UI::UIPanel::SetBackgroundColor(::Color color)
+void Struktur::UI::UIPanel::SetBackgroundTexture(const Resource::ResourcePtr<Resource::TextureResource>& texture)
 {
-    m_panelColor = color;
-    m_backgroundColor = color;
-}
-
-void Struktur::UI::UIPanel::SetBackgroundTexture(Core::Resource::ResourcePtr<Core::Resource::TextureResource> texture)
-{
-    m_backgroundTexture = std::move(texture);
-    m_hasBackgroundTexture = true;
+	m_backgroundTexture    = texture;
+	m_hasBackgroundTexture = true;
+	m_visualDirty          = true;
 }
 
 void Struktur::UI::UIPanel::ClearBackgroundTexture()
 {
-    m_hasBackgroundTexture = false;
+	m_hasBackgroundTexture = false;
+	m_backgroundTexture    = Resource::ResourcePtr<Resource::TextureResource>();
+	m_visualDirty          = true;
 }
 
-void Struktur::UI::UIPanel::Update(GameContext &context)
+void Struktur::UI::UIPanel::Update(GameContext& context)
 {
-    UpdateChildren(context);
+	UpdateChildren(context);
 }
 
-void Struktur::UI::UIPanel::Render(GameContext &context)
+void Struktur::UI::UIPanel::Render(GameContext& context)
 {
-    // Draw background
-    if (m_hasBackgroundTexture)
-    {
-        // Scale texture to fit panel
-        ::Rectangle srcRect = {0, 0, (float)m_backgroundTexture->GetWidth(), (float)m_backgroundTexture->GetHeight()};
-        ::DrawTexturePro(m_backgroundTexture->texture, srcRect, m_bounds, {0, 0}, 0.0f, WHITE);
-    }
-    else
-    {
-        ::DrawRectangleRec(m_bounds, m_backgroundColor);
-    }
+	if (m_visualDirty)
+	{
+		// GetRequiredQuadCount() can change at runtime (border toggled on/off, or via SetBorderWidth) - grow the
+		// slot first if it no longer fits, same AllocateOrResizeSlot-before-write contract DrawText already
+		// documents for UILabel's variable text length.
+		uint32_t requiredQuads = GetRequiredQuadCount();
+		if (m_batchSlot.quadCapacity < requiredQuads)
+		{
+			m_batchSlot = context.GetUIRenderer().AllocateOrResizeSlot(m_batch, m_batchSlot, requiredQuads);
+		}
 
-    // Draw border
-    if (m_borderWidth > 0)
-    {
-        ::DrawRectangleLinesEx(m_bounds, m_borderWidth, m_borderColor);
-    }
+		// Background occupies the slot's first quad; the border outline (if drawn) occupies the next 4 - must
+		// match GetRequiredQuadCount()'s own layout (1 + optionally 4) exactly, since every DrawX call below
+		// always writes starting at whatever slot it's given, not some running offset. Each write tags its own
+		// quads with its own texture (see UIBatch::quadTextures), so the background's real texture and the
+		// border's white one can safely coexist in the same batch/slot.
+		Renderer::UIBatchSlot backgroundSlot = m_batchSlot;
+		backgroundSlot.quadCapacity          = 1;
 
-    RenderChildren(context);
+		if (m_hasBackgroundTexture)
+		{
+			Resource::TextureResource* texture = m_backgroundTexture.Get();
+			if (!texture->IsGpuReady())
+			{
+				texture->LoadToGpu(context);
+			}
+			context.GetUIRenderer().DrawTexturedRect(m_batch, backgroundSlot, m_bounds, texture->GetHandle(),
+			                                          Util::ColorWhite, GetZIndex());
+		}
+		else
+		{
+			context.GetUIRenderer().DrawRect(m_batch, backgroundSlot, m_bounds, m_backgroundColor, GetZIndex());
+		}
+
+		uint32_t quadsUsed = 1;
+		if (m_borderWidth > 0)
+		{
+			Renderer::UIBatchSlot borderSlot = m_batchSlot;
+			borderSlot.vertexOffset += 4;  // past the background's 1 quad (4 vertices)
+			borderSlot.quadCapacity = 4;
+			context.GetUIRenderer().DrawRectOutline(m_batch, borderSlot, m_bounds, m_borderWidth, m_borderColor,
+			                                         GetZIndex());
+			quadsUsed += 4;
+		}
+
+		// Border can toggle off (SetBorderWidth(0)) after previously being on - without this, its 4 quads would
+		// keep rendering their last real outline forever, since Flush() draws the slot's whole allocated
+		// capacity regardless of whether this frame's writes above actually touched all of it (same reasoning as
+		// UILabel::Render()'s own trailing ClearSlotFrom call for its variable-length text).
+		context.GetUIRenderer().ClearSlotFrom(m_batch, m_batchSlot, quadsUsed);
+
+		m_visualDirty = false;
+	}
+
+	RenderChildren(context);
+}
+
+uint32_t Struktur::UI::UIPanel::GetRequiredQuadCount() const
+{
+	return 1 + (m_borderWidth > 0 ? 4 : 0);
 }

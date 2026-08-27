@@ -1,6 +1,19 @@
+# Visual Studio Code files
+.vscode
+
+# Build Folders
 build-web
 build-windows
 build-windows-debug
-imgui
-.vscode
+build-nogame
+
+# Shaders compiled at build time by CMake's struktur_compile_shader (see CMakeLists.txt)
+assets/Shaders/compiled/
+
+# ImGui
 imgui.ini
+editor_layout.ini
+
+# Editor save data
+saves/
+editor_layout_windows.json

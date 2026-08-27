@@ -1,0 +1,1459 @@
+[
+  {
+    "data": {
+      "targets": [
+        {
+          "node": "love_letter_pickup"
+        }
+      ]
+    },
+    "node": "love_letter"
+  },
+  {
+    "data": {
+      "targets": [
+        {
+          "node": "telescope_pickup"
+        }
+      ]
+    },
+    "node": "telescope"
+  },
+  {
+    "data": {
+      "next": "love_letter_transform",
+      "speaker": "Narrator",
+      "text": "dialogue.item.love_letter_pickup"
+    },
+    "node": "love_letter_pickup"
+  },
+  {
+    "data": {
+      "commands": [
+        {
+          "parameters": [
+            {
+              "type": "item",
+              "value": "Telescope"
+            }
+          ],
+          "type": "giveItem"
+        },
+        {
+          "parameters": [
+            {
+              "type": "name",
+              "value": "Telescope"
+            }
+          ],
+          "type": "pickupEntity"
+        }
+      ],
+      "speaker": "Narrator",
+      "text": "dialogue.item.telescope_obtain"
+    },
+    "node": "telescope_obtain"
+  },
+  {
+    "data": {
+      "next": "love_letter_return_transform",
+      "speaker": "Narrator",
+      "text": "dialogue.item.love_letter_return_place"
+    },
+    "node": "love_letter_return_place"
+  },
+  {
+    "data": {
+      "commands": [
+        {
+          "parameters": [],
+          "type": "cameraShake"
+        }
+      ],
+      "next": "love_letter_obtain",
+      "speaker": "Narrator",
+      "text": "dialogue.item.love_letter_transform"
+    },
+    "node": "love_letter_transform"
+  },
+  {
+    "data": {
+      "commands": [
+        {
+          "parameters": [
+            {
+              "type": "item",
+              "value": "Love Letter"
+            }
+          ],
+          "type": "giveItem"
+        },
+        {
+          "parameters": [
+            {
+              "type": "name",
+              "value": "Love Letter"
+            }
+          ],
+          "type": "pickupEntity"
+        }
+      ],
+      "speaker": "Narrator",
+      "text": "dialogue.item.love_letter_obtain"
+    },
+    "node": "love_letter_obtain"
+  },
+  {
+    "data": {
+      "targets": [
+        {
+          "conditions": [
+            {
+              "parameters": [
+                {
+                  "type": "item",
+                  "value": "Love Letter"
+                }
+              ],
+              "type": "hasItem"
+            }
+          ],
+          "node": "love_letter_return_place"
+        }
+      ]
+    },
+    "node": "love_letter_return"
+  },
+  {
+    "data": {
+      "commands": [
+        {
+          "parameters": [],
+          "type": "cameraShake"
+        }
+      ],
+      "next": "love_letter_return_putback",
+      "speaker": "Narrator",
+      "text": "dialogue.item.love_letter_return_transform"
+    },
+    "node": "love_letter_return_transform"
+  },
+  {
+    "data": {
+      "commands": [
+        {
+          "parameters": [
+            {
+              "type": "item",
+              "value": "Love Letter"
+            }
+          ],
+          "type": "removeItem"
+        },
+        {
+          "parameters": [
+            {
+              "type": "name",
+              "value": "Love Letter"
+            }
+          ],
+          "type": "putdownEntity"
+        }
+      ],
+      "speaker": "Narrator",
+      "text": "dialogue.item.love_letter_return_putback"
+    },
+    "node": "love_letter_return_putback"
+  },
+  {
+    "data": {
+      "targets": [
+        {
+          "node": "hammer_pickup"
+        }
+      ]
+    },
+    "node": "hammer"
+  },
+  {
+    "data": {
+      "commands": [
+        {
+          "parameters": [
+            {
+              "type": "item",
+              "value": "Tool Box"
+            }
+          ],
+          "type": "giveItem"
+        },
+        {
+          "parameters": [
+            {
+              "type": "name",
+              "value": "Tool Box"
+            }
+          ],
+          "type": "pickupEntity"
+        }
+      ],
+      "speaker": "Narrator",
+      "text": "dialogue.item.tool_box_obtain"
+    },
+    "node": "tool_box_obtain"
+  },
+  {
+    "data": {
+      "next": "hammer_transform",
+      "speaker": "Narrator",
+      "text": "dialogue.item.hammer_pickup"
+    },
+    "node": "hammer_pickup"
+  },
+  {
+    "data": {
+      "commands": [
+        {
+          "parameters": [],
+          "type": "cameraShake"
+        }
+      ],
+      "next": "hammer_obtain",
+      "speaker": "Narrator",
+      "text": "dialogue.item.hammer_transform"
+    },
+    "node": "hammer_transform"
+  },
+  {
+    "data": {
+      "commands": [
+        {
+          "parameters": [
+            {
+              "type": "item",
+              "value": "Hammer"
+            }
+          ],
+          "type": "giveItem"
+        },
+        {
+          "parameters": [
+            {
+              "type": "name",
+              "value": "Hammer"
+            }
+          ],
+          "type": "pickupEntity"
+        }
+      ],
+      "speaker": "Narrator",
+      "text": "dialogue.item.hammer_obtain"
+    },
+    "node": "hammer_obtain"
+  },
+  {
+    "data": {
+      "targets": [
+        {
+          "conditions": [
+            {
+              "parameters": [
+                {
+                  "type": "item",
+                  "value": "Ornate Key"
+                }
+              ],
+              "type": "hasItem"
+            }
+          ],
+          "node": "ornate_key_return_place"
+        }
+      ]
+    },
+    "node": "ornate_key_return"
+  },
+  {
+    "data": {
+      "targets": [
+        {
+          "node": "ancient_seal_pickup"
+        }
+      ]
+    },
+    "node": "ancient_seal"
+  },
+  {
+    "data": {
+      "speaker": "Narrator",
+      "text": "dialogue.item.red_pedestal_inactive"
+    },
+    "node": "red_pedestal_inactive"
+  },
+  {
+    "data": {
+      "targets": [
+        {
+          "conditions": [
+            {
+              "parameters": [
+                {
+                  "type": "item",
+                  "value": "Hammer"
+                }
+              ],
+              "type": "hasItem"
+            }
+          ],
+          "node": "hammer_return_place"
+        }
+      ]
+    },
+    "node": "hammer_return"
+  },
+  {
+    "data": {
+      "next": "tool_box_obtain",
+      "speaker": "Narrator",
+      "text": "dialogue.item.tool_box_pickup"
+    },
+    "node": "tool_box_pickup"
+  },
+  {
+    "data": {
+      "next": "hammer_return_transform",
+      "speaker": "Narrator",
+      "text": "dialogue.item.hammer_return_place"
+    },
+    "node": "hammer_return_place"
+  },
+  {
+    "data": {
+      "commands": [
+        {
+          "parameters": [],
+          "type": "cameraShake"
+        }
+      ],
+      "next": "ornate_key_return_putback",
+      "speaker": "Narrator",
+      "text": "dialogue.item.ornate_key_return_transform"
+    },
+    "node": "ornate_key_return_transform"
+  },
+  {
+    "data": {
+      "commands": [
+        {
+          "parameters": [],
+          "type": "cameraShake"
+        }
+      ],
+      "next": "hammer_return_putback",
+      "speaker": "Narrator",
+      "text": "dialogue.item.hammer_return_transform"
+    },
+    "node": "hammer_return_transform"
+  },
+  {
+    "data": {
+      "commands": [
+        {
+          "parameters": [
+            {
+              "type": "item",
+              "value": "Hammer"
+            }
+          ],
+          "type": "removeItem"
+        },
+        {
+          "parameters": [
+            {
+              "type": "name",
+              "value": "Hammer"
+            }
+          ],
+          "type": "putdownEntity"
+        }
+      ],
+      "speaker": "Narrator",
+      "text": "dialogue.item.hammer_return_putback"
+    },
+    "node": "hammer_return_putback"
+  },
+  {
+    "data": {
+      "next": "star_chart_transform",
+      "speaker": "Narrator",
+      "text": "dialogue.item.star_chart_pickup"
+    },
+    "node": "star_chart_pickup"
+  },
+  {
+    "data": {
+      "targets": [
+        {
+          "node": "star_chart_pickup"
+        }
+      ]
+    },
+    "node": "star_chart"
+  },
+  {
+    "data": {
+      "commands": [
+        {
+          "parameters": [],
+          "type": "cameraShake"
+        }
+      ],
+      "next": "star_chart_obtain",
+      "speaker": "Narrator",
+      "text": "dialogue.item.star_chart_transform"
+    },
+    "node": "star_chart_transform"
+  },
+  {
+    "data": {
+      "commands": [
+        {
+          "parameters": [
+            {
+              "type": "item",
+              "value": "Star Chart"
+            }
+          ],
+          "type": "giveItem"
+        },
+        {
+          "parameters": [
+            {
+              "type": "name",
+              "value": "Star Chart"
+            }
+          ],
+          "type": "pickupEntity"
+        }
+      ],
+      "speaker": "Narrator",
+      "text": "dialogue.item.star_chart_obtain"
+    },
+    "node": "star_chart_obtain"
+  },
+  {
+    "data": {
+      "targets": [
+        {
+          "conditions": [
+            {
+              "parameters": [
+                {
+                  "type": "item",
+                  "value": "Star Chart"
+                }
+              ],
+              "type": "hasItem"
+            }
+          ],
+          "node": "star_chart_return_place"
+        }
+      ]
+    },
+    "node": "star_chart_return"
+  },
+  {
+    "data": {
+      "next": "star_chart_return_transform",
+      "speaker": "Narrator",
+      "text": "dialogue.item.star_chart_return_place"
+    },
+    "node": "star_chart_return_place"
+  },
+  {
+    "data": {
+      "commands": [
+        {
+          "parameters": [
+            {
+              "type": "item",
+              "value": "Yellow Crystal Key"
+            }
+          ],
+          "type": "removeItem"
+        },
+        {
+          "parameters": [
+            {
+              "type": "flag",
+              "value": "yellow_pedestal_active"
+            },
+            {
+              "type": "value",
+              "value": true
+            }
+          ],
+          "type": "setFlag"
+        }
+      ],
+      "speaker": "Narrator",
+      "text": "dialogue.item.yellow_pedestal_active_3"
+    },
+    "node": "yellow_pedestal_active_3"
+  },
+  {
+    "data": {
+      "commands": [
+        {
+          "parameters": [],
+          "type": "cameraShake"
+        }
+      ],
+      "next": "star_chart_return_putback",
+      "speaker": "Narrator",
+      "text": "dialogue.item.star_chart_return_transform"
+    },
+    "node": "star_chart_return_transform"
+  },
+  {
+    "data": {
+      "commands": [
+        {
+          "parameters": [
+            {
+              "type": "item",
+              "value": "Star Chart"
+            }
+          ],
+          "type": "removeItem"
+        },
+        {
+          "parameters": [
+            {
+              "type": "name",
+              "value": "Star Chart"
+            }
+          ],
+          "type": "putdownEntity"
+        }
+      ],
+      "speaker": "Narrator",
+      "text": "dialogue.item.star_chart_return_putback"
+    },
+    "node": "star_chart_return_putback"
+  },
+  {
+    "data": {
+      "next": "telescope_obtain",
+      "speaker": "Narrator",
+      "text": "dialogue.item.telescope_pickup"
+    },
+    "node": "telescope_pickup"
+  },
+  {
+    "data": {
+      "targets": [
+        {
+          "node": "ornate_key_pickup"
+        }
+      ]
+    },
+    "node": "ornate_key"
+  },
+  {
+    "data": {
+      "next": "ornate_key_transform",
+      "speaker": "Narrator",
+      "text": "dialogue.item.ornate_key_pickup"
+    },
+    "node": "ornate_key_pickup"
+  },
+  {
+    "data": {
+      "next": "yellow_pedestal_active_2",
+      "speaker": "Narrator",
+      "text": "dialogue.item.yellow_pedestal_active"
+    },
+    "node": "yellow_pedestal_active"
+  },
+  {
+    "data": {
+      "commands": [
+        {
+          "parameters": [],
+          "type": "cameraShake"
+        }
+      ],
+      "next": "ornate_key_obtain",
+      "speaker": "Narrator",
+      "text": "dialogue.item.ornate_key_transform"
+    },
+    "node": "ornate_key_transform"
+  },
+  {
+    "data": {
+      "next": "ornate_key_return_transform",
+      "speaker": "Narrator",
+      "text": "dialogue.item.ornate_key_return_place"
+    },
+    "node": "ornate_key_return_place"
+  },
+  {
+    "data": {
+      "commands": [
+        {
+          "parameters": [
+            {
+              "type": "item",
+              "value": "Ornate Key"
+            }
+          ],
+          "type": "giveItem"
+        },
+        {
+          "parameters": [
+            {
+              "type": "name",
+              "value": "Ornate Key"
+            }
+          ],
+          "type": "pickupEntity"
+        }
+      ],
+      "speaker": "Narrator",
+      "text": "dialogue.item.ornate_key_obtain"
+    },
+    "node": "ornate_key_obtain"
+  },
+  {
+    "data": {
+      "next": "green_pedestal_active_2",
+      "speaker": "Narrator",
+      "text": "dialogue.item.green_pedestal_active"
+    },
+    "node": "green_pedestal_active"
+  },
+  {
+    "data": {
+      "commands": [
+        {
+          "parameters": [
+            {
+              "type": "item",
+              "value": "Ornate Key"
+            }
+          ],
+          "type": "removeItem"
+        },
+        {
+          "parameters": [
+            {
+              "type": "name",
+              "value": "Ornate Key"
+            }
+          ],
+          "type": "putdownEntity"
+        }
+      ],
+      "speaker": "Narrator",
+      "text": "dialogue.item.ornate_key_return_putback"
+    },
+    "node": "ornate_key_return_putback"
+  },
+  {
+    "data": {
+      "targets": [
+        {
+          "node": "rose_pickup"
+        }
+      ]
+    },
+    "node": "rose"
+  },
+  {
+    "data": {
+      "next": "ancient_seal_obtain",
+      "speaker": "Narrator",
+      "text": "dialogue.item.ancient_seal_pickup"
+    },
+    "node": "ancient_seal_pickup"
+  },
+  {
+    "data": {
+      "next": "rose_obtain",
+      "speaker": "Narrator",
+      "text": "dialogue.item.rose_pickup"
+    },
+    "node": "rose_pickup"
+  },
+  {
+    "data": {
+      "commands": [
+        {
+          "parameters": [
+            {
+              "type": "item",
+              "value": "Rose"
+            }
+          ],
+          "type": "giveItem"
+        },
+        {
+          "parameters": [
+            {
+              "type": "name",
+              "value": "Rose"
+            }
+          ],
+          "type": "pickupEntity"
+        }
+      ],
+      "speaker": "Narrator",
+      "text": "dialogue.item.rose_obtain"
+    },
+    "node": "rose_obtain"
+  },
+  {
+    "data": {
+      "next": "red_pedestal_active_2",
+      "speaker": "Narrator",
+      "text": "dialogue.item.red_pedestal_active"
+    },
+    "node": "red_pedestal_active"
+  },
+  {
+    "data": {
+      "next": "yellow_pedestal_active_3",
+      "speaker": "Narrator",
+      "text": "dialogue.item.yellow_pedestal_active_2"
+    },
+    "node": "yellow_pedestal_active_2"
+  },
+  {
+    "data": {
+      "targets": [
+        {
+          "node": "tool_box_pickup"
+        }
+      ]
+    },
+    "node": "tool_box"
+  },
+  {
+    "data": {
+      "commands": [
+        {
+          "parameters": [
+            {
+              "type": "item",
+              "value": "Blue Crystal Key"
+            }
+          ],
+          "type": "removeItem"
+        },
+        {
+          "parameters": [
+            {
+              "type": "flag",
+              "value": "blue_pedestal_active"
+            },
+            {
+              "type": "value",
+              "value": true
+            }
+          ],
+          "type": "setFlag"
+        }
+      ],
+      "speaker": "Narrator",
+      "text": "dialogue.item.blue_pedestal_active_3"
+    },
+    "node": "blue_pedestal_active_3"
+  },
+  {
+    "data": {
+      "next": "entrance_door_3",
+      "speaker": "Narrator",
+      "text": "dialogue.item.entrance_door_2"
+    },
+    "node": "entrance_door_2"
+  },
+  {
+    "data": {
+      "commands": [
+        {
+          "parameters": [
+            {
+              "type": "item",
+              "value": "Ancient Seal"
+            }
+          ],
+          "type": "giveItem"
+        },
+        {
+          "parameters": [
+            {
+              "type": "name",
+              "value": "Ancient Seal"
+            }
+          ],
+          "type": "pickupEntity"
+        }
+      ],
+      "speaker": "Narrator",
+      "text": "dialogue.item.ancient_seal_obtain"
+    },
+    "node": "ancient_seal_obtain"
+  },
+  {
+    "data": {
+      "next": "red_pedestal_active_3",
+      "speaker": "Narrator",
+      "text": "dialogue.item.red_pedestal_active_2"
+    },
+    "node": "red_pedestal_active_2"
+  },
+  {
+    "data": {
+      "speaker": "Narrator",
+      "text": "dialogue.item.safe"
+    },
+    "node": "safe"
+  },
+  {
+    "data": {
+      "commands": [
+        {
+          "parameters": [
+            {
+              "type": "item",
+              "value": "Red Crystal Key"
+            }
+          ],
+          "type": "removeItem"
+        },
+        {
+          "parameters": [
+            {
+              "type": "flag",
+              "value": "red_pedestal_active"
+            },
+            {
+              "type": "value",
+              "value": true
+            }
+          ],
+          "type": "setFlag"
+        }
+      ],
+      "speaker": "Narrator",
+      "text": "dialogue.item.red_pedestal_active_3"
+    },
+    "node": "red_pedestal_active_3"
+  },
+  {
+    "data": {
+      "speaker": "Narrator",
+      "text": "dialogue.item.green_pedestal_inactive"
+    },
+    "node": "green_pedestal_inactive"
+  },
+  {
+    "data": {
+      "next": "green_pedestal_active_3",
+      "speaker": "Narrator",
+      "text": "dialogue.item.green_pedestal_active_2"
+    },
+    "node": "green_pedestal_active_2"
+  },
+  {
+    "data": {
+      "commands": [
+        {
+          "parameters": [
+            {
+              "type": "item",
+              "value": "Green Crystal Key"
+            }
+          ],
+          "type": "removeItem"
+        },
+        {
+          "parameters": [
+            {
+              "type": "flag",
+              "value": "green_pedestal_active"
+            },
+            {
+              "type": "value",
+              "value": true
+            }
+          ],
+          "type": "setFlag"
+        }
+      ],
+      "speaker": "Narrator",
+      "text": "dialogue.item.green_pedestal_active_3"
+    },
+    "node": "green_pedestal_active_3"
+  },
+  {
+    "data": {
+      "next": "entrance_door_2",
+      "speaker": "Narrator",
+      "text": "dialogue.item.entrance_door"
+    },
+    "node": "entrance_door"
+  },
+  {
+    "data": {
+      "speaker": "Narrator",
+      "text": "dialogue.item.yellow_pedestal_inactive"
+    },
+    "node": "yellow_pedestal_inactive"
+  },
+  {
+    "data": {
+      "speaker": "Narrator",
+      "text": "dialogue.item.blue_pedestal_inactive"
+    },
+    "node": "blue_pedestal_inactive"
+  },
+  {
+    "data": {
+      "next": "blue_pedestal_active_2",
+      "speaker": "Narrator",
+      "text": "dialogue.item.blue_pedestal_active"
+    },
+    "node": "blue_pedestal_active"
+  },
+  {
+    "data": {
+      "next": "blue_pedestal_active_3",
+      "speaker": "Narrator",
+      "text": "dialogue.item.blue_pedestal_active_2"
+    },
+    "node": "blue_pedestal_active_2"
+  },
+  {
+    "data": {
+      "speaker": "Narrator",
+      "text": "dialogue.item.entrance_door_3"
+    },
+    "node": "entrance_door_3"
+  },
+  {
+    "data": {
+      "targets": [
+        {
+          "node": "journal_page_pickup"
+        }
+      ]
+    },
+    "node": "journal_page"
+  },
+  {
+    "data": {
+      "next": "journal_page_obtain",
+      "speaker": "Narrator",
+      "text": "dialogue.item.journal_page_pickup"
+    },
+    "node": "journal_page_pickup"
+  },
+  {
+    "data": {
+      "commands": [
+        {
+          "parameters": [
+            {
+              "type": "item",
+              "value": "Journal Page"
+            }
+          ],
+          "type": "giveItem"
+        },
+        {
+          "parameters": [
+            {
+              "type": "name",
+              "value": "Journal Page"
+            }
+          ],
+          "type": "pickupEntity"
+        }
+      ],
+      "speaker": "Narrator",
+      "text": "dialogue.item.journal_page_obtain"
+    },
+    "node": "journal_page_obtain"
+  },
+  {
+    "data": {
+      "targets": [
+        {
+          "node": "cabinet_key_pickup"
+        }
+      ]
+    },
+    "node": "cabinet_key"
+  },
+  {
+    "data": {
+      "next": "cabinet_key_obtain",
+      "speaker": "Narrator",
+      "text": "dialogue.item.cabinet_key_pickup"
+    },
+    "node": "cabinet_key_pickup"
+  },
+  {
+    "data": {
+      "commands": [
+        {
+          "parameters": [
+            {
+              "type": "item",
+              "value": "Cabinet Key"
+            }
+          ],
+          "type": "giveItem"
+        },
+        {
+          "parameters": [
+            {
+              "type": "name",
+              "value": "Cabinet Key"
+            }
+          ],
+          "type": "pickupEntity"
+        }
+      ],
+      "speaker": "Narrator",
+      "text": "dialogue.item.cabinet_key_obtain"
+    },
+    "node": "cabinet_key_obtain"
+  },
+  {
+    "data": {
+      "targets": [
+        {
+          "node": "rose_pickup"
+        }
+      ]
+    },
+    "node": "rose"
+  },
+  {
+    "data": {
+      "next": "rose_obtain",
+      "speaker": "Narrator",
+      "text": "dialogue.item.rose_pickup"
+    },
+    "node": "rose_pickup"
+  },
+  {
+    "data": {
+      "commands": [
+        {
+          "parameters": [
+            {
+              "type": "item",
+              "value": "Rose"
+            }
+          ],
+          "type": "giveItem"
+        },
+        {
+          "parameters": [
+            {
+              "type": "name",
+              "value": "Rose"
+            }
+          ],
+          "type": "pickupEntity"
+        }
+      ],
+      "speaker": "Narrator",
+      "text": "dialogue.item.rose_obtain"
+    },
+    "node": "rose_obtain"
+  },
+  {
+    "data": {
+      "targets": [
+        {
+          "node": "toolbox_handle_pickup"
+        }
+      ]
+    },
+    "node": "toolbox_handle"
+  },
+  {
+    "data": {
+      "next": "toolbox_handle_obtain",
+      "speaker": "Narrator",
+      "text": "dialogue.item.toolbox_handle_pickup"
+    },
+    "node": "toolbox_handle_pickup"
+  },
+  {
+    "data": {
+      "commands": [
+        {
+          "parameters": [
+            {
+              "type": "item",
+              "value": "Toolbox Handle"
+            }
+          ],
+          "type": "giveItem"
+        },
+        {
+          "parameters": [
+            {
+              "type": "name",
+              "value": "Toolbox Handle"
+            }
+          ],
+          "type": "pickupEntity"
+        }
+      ],
+      "speaker": "Narrator",
+      "text": "dialogue.item.toolbox_handle_obtain"
+    },
+    "node": "toolbox_handle_obtain"
+  },
+  {
+    "data": {
+      "targets": [
+        {
+          "node": "toolbox_body_pickup"
+        }
+      ]
+    },
+    "node": "toolbox_body"
+  },
+  {
+    "data": {
+      "next": "toolbox_body_obtain",
+      "speaker": "Narrator",
+      "text": "dialogue.item.toolbox_body_pickup"
+    },
+    "node": "toolbox_body_pickup"
+  },
+  {
+    "data": {
+      "commands": [
+        {
+          "parameters": [
+            {
+              "type": "item",
+              "value": "Toolbox Body"
+            }
+          ],
+          "type": "giveItem"
+        },
+        {
+          "parameters": [
+            {
+              "type": "name",
+              "value": "Toolbox Body"
+            }
+          ],
+          "type": "pickupEntity"
+        }
+      ],
+      "speaker": "Narrator",
+      "text": "dialogue.item.toolbox_body_obtain"
+    },
+    "node": "toolbox_body_obtain"
+  },
+  {
+    "data": {
+      "targets": [
+        {
+          "node": "toolbox_assembled_obtain"
+        }
+      ]
+    },
+    "node": "toolbox_assembled"
+  },
+  {
+    "data": {
+      "commands": [
+        {
+          "parameters": [
+            {
+              "type": "item",
+              "value": "Toolbox Handle"
+            }
+          ],
+          "type": "removeItem"
+        },
+        {
+          "parameters": [
+            {
+              "type": "item",
+              "value": "Toolbox Body"
+            }
+          ],
+          "type": "removeItem"
+        },
+        {
+          "parameters": [
+            {
+              "type": "item",
+              "value": "Tool Box"
+            }
+          ],
+          "type": "giveItem"
+        }
+      ],
+      "speaker": "Narrator",
+      "text": "dialogue.item.toolbox_assembled_obtain"
+    },
+    "node": "toolbox_assembled_obtain"
+  },
+  {
+    "data": {
+      "targets": [
+        {
+          "node": "flour_sack_pickup"
+        }
+      ]
+    },
+    "node": "flour_sack"
+  },
+  {
+    "data": {
+      "next": "flour_sack_obtain",
+      "speaker": "Narrator",
+      "text": "dialogue.item.flour_sack_pickup"
+    },
+    "node": "flour_sack_pickup"
+  },
+  {
+    "data": {
+      "commands": [
+        {
+          "parameters": [
+            {
+              "type": "item",
+              "value": "Flour Sack"
+            }
+          ],
+          "type": "giveItem"
+        },
+        {
+          "parameters": [
+            {
+              "type": "name",
+              "value": "Flour Sack"
+            }
+          ],
+          "type": "pickupEntity"
+        }
+      ],
+      "speaker": "Narrator",
+      "text": "dialogue.item.flour_sack_obtain"
+    },
+    "node": "flour_sack_obtain"
+  },
+  {
+    "data": {
+      "targets": [
+        {
+          "node": "jar_of_honey_pickup"
+        }
+      ]
+    },
+    "node": "jar_of_honey"
+  },
+  {
+    "data": {
+      "next": "jar_of_honey_obtain",
+      "speaker": "Narrator",
+      "text": "dialogue.item.jar_of_honey_pickup"
+    },
+    "node": "jar_of_honey_pickup"
+  },
+  {
+    "data": {
+      "commands": [
+        {
+          "parameters": [
+            {
+              "type": "item",
+              "value": "Jar of Honey"
+            }
+          ],
+          "type": "giveItem"
+        },
+        {
+          "parameters": [
+            {
+              "type": "name",
+              "value": "Jar of Honey"
+            }
+          ],
+          "type": "pickupEntity"
+        }
+      ],
+      "speaker": "Narrator",
+      "text": "dialogue.item.jar_of_honey_obtain"
+    },
+    "node": "jar_of_honey_obtain"
+  },
+  {
+    "data": {
+      "targets": [
+        {
+          "node": "dried_herbs_pickup"
+        }
+      ]
+    },
+    "node": "dried_herbs"
+  },
+  {
+    "data": {
+      "next": "dried_herbs_obtain",
+      "speaker": "Narrator",
+      "text": "dialogue.item.dried_herbs_pickup"
+    },
+    "node": "dried_herbs_pickup"
+  },
+  {
+    "data": {
+      "commands": [
+        {
+          "parameters": [
+            {
+              "type": "item",
+              "value": "Dried Herbs"
+            }
+          ],
+          "type": "giveItem"
+        },
+        {
+          "parameters": [
+            {
+              "type": "name",
+              "value": "Dried Herbs"
+            }
+          ],
+          "type": "pickupEntity"
+        }
+      ],
+      "speaker": "Narrator",
+      "text": "dialogue.item.dried_herbs_obtain"
+    },
+    "node": "dried_herbs_obtain"
+  },
+  {
+    "data": {
+      "targets": [
+        {
+          "node": "merchant_ledger_pickup"
+        }
+      ]
+    },
+    "node": "merchant_ledger"
+  },
+  {
+    "data": {
+      "next": "merchant_ledger_obtain",
+      "speaker": "Narrator",
+      "text": "dialogue.item.merchant_ledger_pickup"
+    },
+    "node": "merchant_ledger_pickup"
+  },
+  {
+    "data": {
+      "commands": [
+        {
+          "parameters": [
+            {
+              "type": "item",
+              "value": "Merchant Ledger"
+            }
+          ],
+          "type": "giveItem"
+        },
+        {
+          "parameters": [
+            {
+              "type": "name",
+              "value": "Merchant Ledger"
+            }
+          ],
+          "type": "pickupEntity"
+        }
+      ],
+      "speaker": "Narrator",
+      "text": "dialogue.item.merchant_ledger_obtain"
+    },
+    "node": "merchant_ledger_obtain"
+  },
+  {
+    "data": {
+      "targets": [
+        {
+          "node": "merchant_voucher_pickup"
+        }
+      ]
+    },
+    "node": "merchant_voucher"
+  },
+  {
+    "data": {
+      "next": "merchant_voucher_obtain",
+      "speaker": "Narrator",
+      "text": "dialogue.item.merchant_voucher_pickup"
+    },
+    "node": "merchant_voucher_pickup"
+  },
+  {
+    "data": {
+      "commands": [
+        {
+          "parameters": [
+            {
+              "type": "item",
+              "value": "Merchant Voucher"
+            }
+          ],
+          "type": "giveItem"
+        }
+      ],
+      "speaker": "Narrator",
+      "text": "dialogue.item.merchant_voucher_obtain"
+    },
+    "node": "merchant_voucher_obtain"
+  },
+  {
+    "data": {
+      "targets": [
+        {
+          "node": "feast_loaf_obtain"
+        }
+      ]
+    },
+    "node": "feast_loaf"
+  },
+  {
+    "data": {
+      "commands": [
+        {
+          "parameters": [
+            {
+              "type": "item",
+              "value": "Feast Loaf"
+            }
+          ],
+          "type": "giveItem"
+        }
+      ],
+      "speaker": "Narrator",
+      "text": "dialogue.item.feast_loaf_obtain"
+    },
+    "node": "feast_loaf_obtain"
+  }
+]

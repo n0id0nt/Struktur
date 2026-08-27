@@ -1,0 +1,230 @@
+[
+  {
+    "data": {
+      "speaker": "Scholar",
+      "text": "My Ancient Tome is still missing - it contains all my research into forgotten lore."
+    },
+    "node": "scholar_needs_book"
+  },
+  {
+    "data": {
+      "speaker": "Scholar",
+      "text": "Ah, my precious Ancient Tome! Years of research finally returned to me.\nThis knowledge belongs in my library, where it can illuminate minds for eternity."
+    },
+    "node": "scholar_complete"
+  },
+  {
+    "data": {
+      "speaker": "Scholar",
+      "text": "Happy reading!"
+    },
+    "node": "scholar_goodbye"
+  },
+  {
+    "data": {
+      "targets": [
+        {
+          "conditions": [
+            {
+              "parameters": [
+                {
+                  "type": "flag",
+                  "value": "scholar_quest_state"
+                },
+                {
+                  "type": "op",
+                  "value": "=="
+                },
+                {
+                  "type": "value",
+                  "value": 3.0
+                }
+              ],
+              "type": "hasIntFlag"
+            }
+          ],
+          "node": "scholar_complete"
+        },
+        {
+          "conditions": [
+            {
+              "parameters": [
+                {
+                  "type": "flag",
+                  "value": "scholar_quest_state"
+                },
+                {
+                  "type": "op",
+                  "value": "=="
+                },
+                {
+                  "type": "value",
+                  "value": 1.0
+                }
+              ],
+              "type": "hasIntFlag"
+            },
+            {
+              "parameters": [
+                {
+                  "type": "item",
+                  "value": "ancient_book"
+                }
+              ],
+              "type": "hasItem"
+            }
+          ],
+          "node": "scholar_has_book_1"
+        },
+        {
+          "conditions": [
+            {
+              "parameters": [
+                {
+                  "type": "flag",
+                  "value": "scholar_quest_state"
+                },
+                {
+                  "type": "op",
+                  "value": "=="
+                },
+                {
+                  "type": "value",
+                  "value": 1.0
+                }
+              ],
+              "type": "hasIntFlag"
+            }
+          ],
+          "node": "scholar_needs_book"
+        },
+        {
+          "node": "scholar_first_1"
+        }
+      ]
+    },
+    "node": "scholar"
+  },
+  {
+    "data": {
+      "next": "scholar_has_book_2",
+      "speaker": "Scholar",
+      "text": "Perfect! My lost research tome! This contains decades of study into ancient mysteries."
+    },
+    "node": "scholar_has_book_1"
+  },
+  {
+    "data": {
+      "commands": [
+        {
+          "parameters": [
+            {
+              "type": "item",
+              "value": "rare_gem"
+            }
+          ],
+          "type": "giveItem"
+        },
+        {
+          "parameters": [
+            {
+              "type": "item",
+              "value": "ancient_book"
+            }
+          ],
+          "type": "removeItem"
+        },
+        {
+          "parameters": [
+            {
+              "type": "flag",
+              "value": "scholar_quest_state"
+            },
+            {
+              "type": "value",
+              "value": 3.0
+            }
+          ],
+          "type": "sethasIntFlag"
+        }
+      ],
+      "next": "scholar_has_book_3",
+      "speaker": "Scholar",
+      "text": "In exchange for returning my life's work, I offer you this rare gem.\nMay it serve you well in your travels."
+    },
+    "node": "scholar_has_book_2"
+  },
+  {
+    "data": {
+      "next": "scholar_first_2",
+      "speaker": "Scholar",
+      "text": "Welcome, fellow seeker of knowledge.\nI'm a collector of rare books and ancient texts."
+    },
+    "node": "scholar_first_1"
+  },
+  {
+    "data": {
+      "commands": [
+        {
+          "parameters": [
+            {
+              "type": "flag",
+              "value": "scholar_quest_state"
+            },
+            {
+              "type": "value",
+              "value": 1.0
+            }
+          ],
+          "type": "setIntFlag"
+        }
+      ],
+      "speaker": "Scholar",
+      "text": "I had an Ancient Tome - a very special book - but I seem to have misplaced it.\nIf you could find it, I would gladly trade you something valuable."
+    },
+    "node": "scholar_quest"
+  },
+  {
+    "data": {
+      "speaker": "Scholar",
+      "text": "Obtained Rare Gem"
+    },
+    "node": "scholar_has_book_3"
+  },
+  {
+    "data": {
+      "choices": [
+        {
+          "target": "scholar_legends_1",
+          "text": "Tell me about local legends"
+        },
+        {
+          "target": "scholar_quest",
+          "text": "You look agitated, what is the issue?"
+        },
+        {
+          "target": "scholar_goodbye",
+          "text": "I'll browse"
+        }
+      ],
+      "speaker": "Scholar",
+      "text": "Welcome, fellow seeker of knowledge.\nI'm a collector of rare books and ancient texts."
+    },
+    "node": "scholar_first_2"
+  },
+  {
+    "data": {
+      "next": "scholar_legends_2",
+      "speaker": "Scholar",
+      "text": "There are stories of an old monastery that burned down long ago. They say monks collected rare texts there."
+    },
+    "node": "scholar_legends_1"
+  },
+  {
+    "data": {
+      "speaker": "Scholar",
+      "text": "There are stories of an old monastery that burned down long ago. They say monks collected rare texts there."
+    },
+    "node": "scholar_legends_2"
+  }
+]

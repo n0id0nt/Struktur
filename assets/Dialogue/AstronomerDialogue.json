@@ -1,0 +1,326 @@
+[
+  {
+    "data": {
+      "targets": [
+        {
+          "conditions": [
+            {
+              "parameters": [
+                {
+                  "type": "flag",
+                  "value": "astronomer_quest_state"
+                },
+                {
+                  "type": "op",
+                  "value": "=="
+                },
+                {
+                  "type": "value",
+                  "value": 5.0
+                }
+              ],
+              "type": "hasIntFlag"
+            }
+          ],
+          "node": "astronomer_complete"
+        },
+        {
+          "conditions": [
+            {
+              "parameters": [
+                {
+                  "type": "flag",
+                  "value": "astronomer_quest_state"
+                },
+                {
+                  "type": "op",
+                  "value": "=="
+                },
+                {
+                  "type": "value",
+                  "value": 2.0
+                }
+              ],
+              "type": "hasIntFlag"
+            },
+            {
+              "parameters": [
+                {
+                  "type": "item",
+                  "value": "Telescope"
+                }
+              ],
+              "type": "hasItem"
+            },
+            {
+              "parameters": [
+                {
+                  "type": "item",
+                  "value": "Star Chart"
+                }
+              ],
+              "type": "hasItem"
+            }
+          ],
+          "node": "astronomer_has_both_1"
+        },
+        {
+          "conditions": [
+            {
+              "parameters": [
+                {
+                  "type": "flag",
+                  "value": "astronomer_quest_state"
+                },
+                {
+                  "type": "op",
+                  "value": "=="
+                },
+                {
+                  "type": "value",
+                  "value": 2.0
+                }
+              ],
+              "type": "hasIntFlag"
+            },
+            {
+              "parameters": [
+                {
+                  "type": "item",
+                  "value": "Telescope"
+                }
+              ],
+              "type": "hasItem"
+            }
+          ],
+          "node": "astronomer_has_telescope_only"
+        },
+        {
+          "conditions": [
+            {
+              "parameters": [
+                {
+                  "type": "flag",
+                  "value": "astronomer_quest_state"
+                },
+                {
+                  "type": "op",
+                  "value": "=="
+                },
+                {
+                  "type": "value",
+                  "value": 2.0
+                }
+              ],
+              "type": "hasIntFlag"
+            },
+            {
+              "parameters": [
+                {
+                  "type": "item",
+                  "value": "Star Chart"
+                }
+              ],
+              "type": "hasItem"
+            }
+          ],
+          "node": "astronomer_has_chart_only"
+        },
+        {
+          "conditions": [
+            {
+              "parameters": [
+                {
+                  "type": "flag",
+                  "value": "astronomer_quest_state"
+                },
+                {
+                  "type": "op",
+                  "value": "=="
+                },
+                {
+                  "type": "value",
+                  "value": 2.0
+                }
+              ],
+              "type": "hasIntFlag"
+            }
+          ],
+          "node": "astronomer_needs_both"
+        },
+        {
+          "node": "astronomer_first_1"
+        }
+      ]
+    },
+    "node": "astronomer"
+  },
+  {
+    "data": {
+      "next": "astronomer_first_2",
+      "speaker": "Astronomer",
+      "text": "dialogue.astronomer.astronomer_first_1"
+    },
+    "node": "astronomer_first_1"
+  },
+  {
+    "data": {
+      "choices": [
+        {
+          "target": "astronomer_ask_diary",
+          "text": "dialogue.astronomer.astronomer_first_2.choice1"
+        },
+        {
+          "target": "astronomer_ask_isabelle",
+          "text": "dialogue.astronomer.astronomer_first_2.choice2"
+        },
+        {
+          "target": "astronomer_ask_research",
+          "text": "dialogue.astronomer.astronomer_first_2.choice3"
+        }
+      ],
+      "speaker": "Astronomer",
+      "text": "dialogue.astronomer.astronomer_first_2"
+    },
+    "node": "astronomer_first_2"
+  },
+  {
+    "data": {
+      "next": "astronomer_the_deal",
+      "speaker": "Astronomer",
+      "text": "dialogue.astronomer.astronomer_ask_diary"
+    },
+    "node": "astronomer_ask_diary"
+  },
+  {
+    "data": {
+      "next": "astronomer_the_deal",
+      "speaker": "Astronomer",
+      "text": "dialogue.astronomer.astronomer_ask_isabelle"
+    },
+    "node": "astronomer_ask_isabelle"
+  },
+  {
+    "data": {
+      "next": "astronomer_the_deal",
+      "speaker": "Astronomer",
+      "text": "dialogue.astronomer.astronomer_ask_research"
+    },
+    "node": "astronomer_ask_research"
+  },
+  {
+    "data": {
+      "commands": [
+        {
+          "parameters": [
+            {
+              "type": "flag",
+              "value": "astronomer_quest_state"
+            },
+            {
+              "type": "value",
+              "value": 2.0
+            }
+          ],
+          "type": "setIntFlag"
+        }
+      ],
+      "speaker": "Astronomer",
+      "text": "dialogue.astronomer.astronomer_the_deal"
+    },
+    "node": "astronomer_the_deal"
+  },
+  {
+    "data": {
+      "speaker": "Astronomer",
+      "text": "dialogue.astronomer.astronomer_needs_both"
+    },
+    "node": "astronomer_needs_both"
+  },
+  {
+    "data": {
+      "speaker": "Astronomer",
+      "text": "dialogue.astronomer.astronomer_has_telescope_only"
+    },
+    "node": "astronomer_has_telescope_only"
+  },
+  {
+    "data": {
+      "speaker": "Astronomer",
+      "text": "dialogue.astronomer.astronomer_has_chart_only"
+    },
+    "node": "astronomer_has_chart_only"
+  },
+  {
+    "data": {
+      "next": "astronomer_has_both_2",
+      "speaker": "Astronomer",
+      "text": "dialogue.astronomer.astronomer_has_both_1"
+    },
+    "node": "astronomer_has_both_1"
+  },
+  {
+    "data": {
+      "commands": [
+        {
+          "parameters": [
+            {
+              "type": "item",
+              "value": "Personal Diary"
+            }
+          ],
+          "type": "giveItem"
+        },
+        {
+          "parameters": [
+            {
+              "type": "item",
+              "value": "Telescope"
+            }
+          ],
+          "type": "removeItem"
+        },
+        {
+          "parameters": [
+            {
+              "type": "item",
+              "value": "Star Chart"
+            }
+          ],
+          "type": "removeItem"
+        },
+        {
+          "parameters": [
+            {
+              "type": "flag",
+              "value": "astronomer_quest_state"
+            },
+            {
+              "type": "value",
+              "value": 5.0
+            }
+          ],
+          "type": "setIntFlag"
+        }
+      ],
+      "next": "astronomer_has_both_3",
+      "speaker": "Astronomer",
+      "text": "dialogue.astronomer.astronomer_has_both_2"
+    },
+    "node": "astronomer_has_both_2"
+  },
+  {
+    "data": {
+      "speaker": "Astronomer",
+      "text": "dialogue.astronomer.astronomer_has_both_3"
+    },
+    "node": "astronomer_has_both_3"
+  },
+  {
+    "data": {
+      "speaker": "Astronomer",
+      "text": "dialogue.astronomer.astronomer_complete"
+    },
+    "node": "astronomer_complete"
+  }
+]

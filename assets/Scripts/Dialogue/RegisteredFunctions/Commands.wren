@@ -1,0 +1,81 @@
+import "dialogue" for DialogueRegistry
+import "flags" for FlagManager
+import "Inventory" for Inventory
+import "debug" for Debug
+import "gameObjectComponents" for Camera, Script
+import "gameObject" for GameObject
+import "events" for Event
+
+class Commands {
+    static registerFunctions() {
+        DialogueRegistry.registerCommand("giveItem") { |params|
+            var item = params["item"]
+            Inventory.addItem(item)
+            Inventory.save("inventory.sav")
+            Debug.info("[Dialogue Command] Added item to inventory %(item)")
+            Event.addEvent("giveItem", [["__type", "map"], ["item", item]])
+        }
+        DialogueRegistry.registerCommand("removeItem") { |params|
+            var item = params["item"]
+            Inventory.removeItem(item)
+            Inventory.save("inventory.sav")
+            Debug.info("[Dialogue Command] Removed item from inventory %(item)")
+            Event.addEvent("removeItem", [["__type", "map"], ["item", item]])
+        }
+        DialogueRegistry.registerCommand("setIntFlag") { |params|
+            var flag = params["flag"]
+            var value = params["value"]
+            FlagManager.setIntFlag(flag, value)
+            FlagManager.save("flags.sav")
+            Debug.info("[Dialogue Command] Set Int Flag for %(flag): %(value)")
+            //Event.addEvent("setIntFlag", params)
+        }
+        DialogueRegistry.registerCommand("setFlag") { |params|
+            var flag = params["flag"]
+            var value = params["value"]
+            FlagManager.setFlag(flag, value)
+            FlagManager.save("flags.sav")
+            Debug.info("[Dialogue Command] Set Bool Flag for %(flag): %(value)")
+            //Event.addEvent("setFlag", params)
+        }
+        DialogueRegistry.registerCommand("cameraShake") { |params|
+            var cameras = GameObject.getAllWithComponent("Camera")
+            for (cameraId in cameras) {
+                Camera.addCameraTrauma(cameraId, 0.4)
+            }
+            //Event.addEvent("cameraShake", params)
+        }
+        DialogueRegistry.registerCommand("pickupEntity") { |params|
+            var entityName = params["name"]
+            var itemEntities = GameObject.getAllWithIdentifier("Item")
+
+            for (itemEntity in itemEntities) {
+                var item = Script.getInstance(itemEntity)
+                if (item && item.name == entityName) {
+                    if (item.returnable) {
+                        item.setIsShadow(true)
+                    } else {
+                        FlagManager.setFlag(entityName, true)
+                        FlagManager.save("flags.sav")
+                        GameObject.destroy(itemEntity)
+                    }
+                    Debug.info("[Dialogue Command] Picked up Item %(name): %(itemEntity)")
+                }
+            }
+            Event.addEvent("pickupEntity", [["__type", "map"], ["name", entityName]])
+        }
+        DialogueRegistry.registerCommand("putdownEntity") { |params|
+            var entityName = params["name"]
+            var itemEntities = GameObject.getAllWithIdentifier("Item")
+
+            for (itemEntity in itemEntities) {
+                var item = Script.getInstance(itemEntity)
+                if (item && item.name == entityName) {
+                    item.setIsShadow(false)
+                    Debug.info("[Dialogue Command] Put down Item %(name): %(itemEntity)")
+                }
+            }
+            Event.addEvent("putdownEntity", [["__type", "map"], ["name", entityName]])
+        }
+    }
+}

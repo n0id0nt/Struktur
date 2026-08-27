@@ -4,11 +4,11 @@
 
 namespace Struktur
 {
-	namespace Component
-	{
-		struct Identifier
-		{
-			std::string type;
-		};
-	}
-}
+namespace Component
+{
+struct Identifier
+{
+	std::string type;
+};
+}  // namespace Component
+}  // namespace Struktur

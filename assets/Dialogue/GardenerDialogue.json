@@ -1,0 +1,284 @@
+[
+  {
+    "data": {
+      "targets": [
+        {
+          "conditions": [
+            {
+              "parameters": [
+                {
+                  "type": "flag",
+                  "value": "gardener_quest_state"
+                },
+                {
+                  "type": "op",
+                  "value": "=="
+                },
+                {
+                  "type": "value",
+                  "value": 5.0
+                }
+              ],
+              "type": "hasIntFlag"
+            }
+          ],
+          "node": "gardener_complete"
+        },
+        {
+          "conditions": [
+            {
+              "parameters": [
+                {
+                  "type": "flag",
+                  "value": "gardener_quest_state"
+                },
+                {
+                  "type": "op",
+                  "value": "=="
+                },
+                {
+                  "type": "value",
+                  "value": 2.0
+                }
+              ],
+              "type": "hasIntFlag"
+            },
+            {
+              "parameters": [
+                {
+                  "type": "item",
+                  "value": "Rose"
+                },
+                {
+                  "type": "quantity",
+                  "value": 3.0
+                }
+              ],
+              "type": "hasItem"
+            }
+          ],
+          "node": "gardener_has_roses_1"
+        },
+        {
+          "conditions": [
+            {
+              "parameters": [
+                {
+                  "type": "flag",
+                  "value": "gardener_quest_state"
+                },
+                {
+                  "type": "op",
+                  "value": "=="
+                },
+                {
+                  "type": "value",
+                  "value": 2.0
+                }
+              ],
+              "type": "hasIntFlag"
+            }
+          ],
+          "node": "gardener_needs_roses"
+        },
+        {
+          "conditions": [
+            {
+              "parameters": [
+                {
+                  "type": "flag",
+                  "value": "gardener_quest_state"
+                },
+                {
+                  "type": "op",
+                  "value": "=="
+                },
+                {
+                  "type": "value",
+                  "value": 1.0
+                }
+              ],
+              "type": "hasIntFlag"
+            }
+          ],
+          "node": "gardener_sent_by_scholar"
+        },
+        {
+          "node": "gardener_first_1"
+        }
+      ]
+    },
+    "node": "gardener"
+  },
+  {
+    "data": {
+      "next": "gardener_first_2",
+      "speaker": "Gardener",
+      "text": "dialogue.gardener.gardener_first_1"
+    },
+    "node": "gardener_first_1"
+  },
+  {
+    "data": {
+      "choices": [
+        {
+          "target": "gardener_ask_garden",
+          "text": "dialogue.gardener.gardener_first_2.choice1"
+        },
+        {
+          "target": "gardener_ask_cabinet",
+          "text": "dialogue.gardener.gardener_first_2.choice2"
+        },
+        {
+          "target": "gardener_ask_scholar",
+          "text": "dialogue.gardener.gardener_first_2.choice3"
+        }
+      ],
+      "speaker": "Gardener",
+      "text": "dialogue.gardener.gardener_first_2"
+    },
+    "node": "gardener_first_2"
+  },
+  {
+    "data": {
+      "next": "gardener_ask_cabinet",
+      "speaker": "Gardener",
+      "text": "dialogue.gardener.gardener_ask_garden"
+    },
+    "node": "gardener_ask_garden"
+  },
+  {
+    "data": {
+      "next": "gardener_rose_request",
+      "speaker": "Gardener",
+      "text": "dialogue.gardener.gardener_ask_cabinet"
+    },
+    "node": "gardener_ask_cabinet"
+  },
+  {
+    "data": {
+      "next": "gardener_rose_request",
+      "speaker": "Gardener",
+      "text": "dialogue.gardener.gardener_ask_scholar"
+    },
+    "node": "gardener_ask_scholar"
+  },
+  {
+    "data": {
+      "commands": [
+        {
+          "parameters": [
+            {
+              "type": "flag",
+              "value": "gardener_quest_state"
+            },
+            {
+              "type": "value",
+              "value": 2.0
+            }
+          ],
+          "type": "setIntFlag"
+        }
+      ],
+      "speaker": "Gardener",
+      "text": "dialogue.gardener.gardener_rose_request"
+    },
+    "node": "gardener_rose_request"
+  },
+  {
+    "data": {
+      "commands": [
+        {
+          "parameters": [
+            {
+              "type": "flag",
+              "value": "gardener_quest_state"
+            },
+            {
+              "type": "value",
+              "value": 2.0
+            }
+          ],
+          "type": "setIntFlag"
+        }
+      ],
+      "speaker": "Gardener",
+      "text": "dialogue.gardener.gardener_sent_by_scholar"
+    },
+    "node": "gardener_sent_by_scholar"
+  },
+  {
+    "data": {
+      "speaker": "Gardener",
+      "text": "dialogue.gardener.gardener_needs_roses"
+    },
+    "node": "gardener_needs_roses"
+  },
+  {
+    "data": {
+      "next": "gardener_has_roses_2",
+      "speaker": "Gardener",
+      "text": "dialogue.gardener.gardener_has_roses_1"
+    },
+    "node": "gardener_has_roses_1"
+  },
+  {
+    "data": {
+      "commands": [
+        {
+          "parameters": [
+            {
+              "type": "item",
+              "value": "Cabinet Key"
+            }
+          ],
+          "type": "giveItem"
+        },
+        {
+          "parameters": [
+            {
+              "type": "item",
+              "value": "Rose"
+            },
+            {
+              "type": "quantity",
+              "value": 3.0
+            }
+          ],
+          "type": "removeItem"
+        },
+        {
+          "parameters": [
+            {
+              "type": "flag",
+              "value": "gardener_quest_state"
+            },
+            {
+              "type": "value",
+              "value": 5.0
+            }
+          ],
+          "type": "setIntFlag"
+        }
+      ],
+      "next": "gardener_has_roses_3",
+      "speaker": "Gardener",
+      "text": "dialogue.gardener.gardener_has_roses_2"
+    },
+    "node": "gardener_has_roses_2"
+  },
+  {
+    "data": {
+      "speaker": "Gardener",
+      "text": "dialogue.gardener.gardener_has_roses_3"
+    },
+    "node": "gardener_has_roses_3"
+  },
+  {
+    "data": {
+      "speaker": "Gardener",
+      "text": "dialogue.gardener.gardener_complete"
+    },
+    "node": "gardener_complete"
+  }
+]

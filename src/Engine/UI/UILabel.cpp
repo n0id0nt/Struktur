@@ -1,70 +1,267 @@
 #include "UILabel.h"
 
 #include "Engine/GameContext.h"
+#include "Engine/Renderer/UIRenderer.h"
 
-Struktur::UI::UILabel::UILabel(GameContext& context, const glm::vec2& absolutePosition, const glm::vec2& relativePosition, const std::string& labelText, float fontSz)
-    : UIElement(absolutePosition, relativePosition, {0, 0}, {0, 0}), m_text(labelText), m_textColor(BLACK),
-    m_alignment(TextAlignment::LEFT), m_wordWrap(false), m_fontSize(fontSz)
+Struktur::UI::UILabel::UILabel(GameContext& context, const glm::vec2& absolutePosition,
+                               const glm::vec2& relativePosition, const std::string& labelText, float fontSz)
+    : UIElement(absolutePosition, relativePosition, {0, 0}, {0, 0}),
+      m_text(labelText),
+      m_textColor(Util::ColorBlack),
+      m_alignment(TextAlignment::LEFT),
+      m_wrapping(TextWrapping::NONE),
+      m_fontSize(fontSz)
 {
-    m_font = context.GetResourceManager().GetFontResource("default");
-    
-    // Auto-size based on text
-    ::Vector2 textSize = ::MeasureTextEx(m_font->font, m_text.c_str(), m_fontSize, 1.0f);
-    SetSize({textSize.x + 10, textSize.y + 5}, {0, 0}); // Add some padding
-    
-    // Labels are typically not focusable
-    m_focusable = false;
-    m_backgroundColor = BLANK; // Transparent by default
-    m_borderWidth = 0.0f;
+	m_font = context.GetResourceManager().GetFont(context, "default", 32);
+
+	// Auto-size based on text
+	// glm::vec2 textSize = Text::MeasureTextEx(m_font->font, m_text, m_fontSize, 1.0f);
+	// SetSize({textSize.x + 10, textSize.y + 5}, {0, 0}); // Add some padding
+
+	// Labels are typically not focusable
+	m_focusable = false;
 }
 
 void Struktur::UI::UILabel::SetText(const std::string& newText)
 {
-    m_text = newText;
-    // Recalculate size
-    ::Vector2 textSize = ::MeasureTextEx(m_font->font, m_text.c_str(), m_fontSize, 1.0f);
-    SetSize({textSize.x + 10, textSize.y + 5}, {0, 0});
+	m_text        = newText;
+	m_visualDirty = true;
+	// Recalculate size
+	// SetBoundingBoxToText();
+}
+
+void Struktur::UI::UILabel::SetBoundingBoxToText()
+{
+	glm::vec2 size = GetFormattedTextSize();
+
+	SetSize({size.x, size.y}, {0, 0});
 }
 
 void Struktur::UI::UILabel::Update(GameContext& context)
 {
-    UpdateChildren(context);
+	UpdateChildren(context);
 }
 
 void Struktur::UI::UILabel::Render(GameContext& context)
 {
-    // Draw background if not transparent
-    if (m_backgroundColor.a > 0)
-    {
-        ::DrawRectangleRec(m_bounds, m_backgroundColor);
-    }
+	if (m_visualDirty)
+	{
+		// GetRequiredQuadCount() can change at runtime (text edited) - grow the slot first if it no longer fits,
+		// per DrawText's own AllocateOrResizeSlot-before-write contract. Pure text now (no background/border -
+		// wrap in a UIPanel, or add a UIColor/UIBorder sibling, if you need either), so text always starts at
+		// quad 0, no offset bookkeeping needed.
+		uint32_t requiredQuads = GetRequiredQuadCount();
+		if (m_batchSlot.quadCapacity < requiredQuads)
+		{
+			m_batchSlot = context.GetUIRenderer().AllocateOrResizeSlot(m_batch, m_batchSlot, requiredQuads);
+		}
 
-    // Draw border if needed
-    if (m_borderWidth > 0)
-    {
-        ::DrawRectangleLinesEx(m_bounds, m_borderWidth, m_borderColor);
-    }
+		float lineHeight       = GetLineHeight();
+		glm::vec2 startPos     = {m_bounds.x + 5, m_bounds.y + 2.5f};
+		uint32_t textQuadsUsed = RenderTextLines(context, m_text, startPos, lineHeight, 0);
 
-    // Calculate text position based on alignment
-    ::Vector2 textPos = {m_bounds.x + 5, m_bounds.y + 2.5f};
-    ::Vector2 textSize = ::MeasureTextEx(m_font->font, m_text.c_str(), m_fontSize, 1.0f);
+		// Text is variable-length, so a shorter string than last time can leave real, already-written glyph
+		// quads sitting unused past what was just written - Flush() draws a batch's whole allocated region
+		// regardless, so without this those stale glyphs would keep rendering as leftover ghost text.
+		context.GetUIRenderer().ClearSlotFrom(m_batch, m_batchSlot, textQuadsUsed);
 
-    switch (m_alignment)
-    {
-        case TextAlignment::CENTER:
-            textPos.x = m_bounds.x + (m_bounds.width - textSize.x) / 2.0f;
-            break;
-        case TextAlignment::RIGHT:
-            textPos.x = m_bounds.x + m_bounds.width - textSize.x - 5;
-            break;
-        case TextAlignment::LEFT:
-        default:
-            // Already set above
-            break;
-    }
+		m_visualDirty = false;
+	}
 
-    // Draw text
-    ::DrawTextEx(m_font->font, m_text.c_str(), textPos, m_fontSize, 1.0f, m_textColor);
+	RenderChildren(context);
+}
 
-    RenderChildren(context);
+uint32_t Struktur::UI::UILabel::GetRequiredQuadCount() const
+{
+	uint32_t quads = 0;
+
+	// One quad per non-space/tab/newline codepoint - matches UIRenderer::DrawText's own space/tab skip, plus
+	// '\n' since GetTextLines() strips newlines out before any per-character drawing ever sees them.
+	int index = 0;
+	int size  = (int)m_text.size();
+	while (index < size)
+	{
+		int codepointByteCount = 0;
+		int codepoint          = Text::GetCodepointNext(&m_text[index], &codepointByteCount);
+		index += codepointByteCount;
+		if (codepoint != ' ' && codepoint != '\t' && codepoint != '\n')
+		{
+			++quads;
+		}
+	}
+	return quads;
+}
+
+glm::vec2 Struktur::UI::UILabel::MeasureText(const Text::Font& font, const std::string& text, float fontSize)
+{
+	// GPU-independent on both platforms - see FontResource for why this is safe on desktop too.
+	return Text::MeasureTextEx(font, text, fontSize, 1.0f);
+}
+
+std::vector<std::string> Struktur::UI::UILabel::GetTextLines(const std::string& text) const
+{
+	if (m_wrapping != TextWrapping::NONE)
+	{
+		float maxWidth = m_bounds.width - 10;  // 5px padding on each side
+		return WrapText(text, maxWidth);
+	}
+
+	std::vector<std::string> lines;
+
+	// Split text by newlines
+	size_t start = 0;
+	size_t end   = 0;
+
+	while (end != std::string::npos)
+	{
+		end = text.find('\n', start);
+
+		// Get the substring for this line
+		std::string line = (end == std::string::npos) ? text.substr(start) : text.substr(start, end - start);
+
+		lines.push_back(line);
+		start = end + 1;
+	}
+
+	return lines;
+}
+
+std::vector<std::string> Struktur::UI::UILabel::WrapText(const std::string& text, float maxWidth) const
+{
+	// Algorithm itself lives in TextLayout::WrapText (shared with any future multi-font caller) - this just
+	// supplies the single-font measurement UILabel has always used as the callback.
+	return TextLayout::WrapText(text, maxWidth, m_wrapping,
+	                            [this](const std::string& candidate)
+	                            { return MeasureText(m_font->font, candidate, m_fontSize).x; });
+}
+
+Struktur::Util::Math::Rect Struktur::UI::UILabel::GetFormattedTextBounds() const
+{
+	glm::vec2 size = GetFormattedTextSize();
+
+	// The bounds start at the label's position
+	return {m_bounds.x, m_bounds.y, size.x, size.y};
+}
+
+glm::vec2 Struktur::UI::UILabel::GetFormattedTextSize() const
+{
+	if (m_text.empty())
+	{
+		return {0, 0};
+	}
+
+	std::vector<std::string> lines = GetTextLines(m_text);
+
+	float lineHeight = GetLineHeight();
+	std::vector<float> lineWidths;
+	lineWidths.reserve(lines.size());
+	for (size_t i = 0; i < lines.size(); ++i)
+	{
+		// For justified text, use the full available width (except last line)
+		if (m_alignment == TextAlignment::JUSTIFY && i != lines.size() - 1)
+		{
+			lineWidths.push_back(m_bounds.width - 10);
+		}
+		else
+		{
+			lineWidths.push_back(MeasureText(m_font->font, lines[i], m_fontSize).x);
+		}
+	}
+	std::vector<float> lineHeights(lines.size(), lineHeight);
+
+	// 5px padding each side horizontally, 2.5px top+bottom vertically.
+	return TextLayout::SumLineBounds(lineWidths, lineHeights, 10.0f, 5.0f);
+}
+
+float Struktur::UI::UILabel::GetLineHeight() const
+{
+	return m_fontSize * 1.5f;  // 1.5x line spacing for readability
+}
+
+uint32_t Struktur::UI::UILabel::RenderGlyphs(GameContext& context, const std::string& text, glm::vec2 pos,
+                                             uint32_t quadOffset)
+{
+	// Bgfx texture upload deferred until first actually needed here, same lazy-GPU-upload pattern
+	// SpriteRenderSystem/UIPanel use for TextureResource.
+	if (!m_font->IsGpuReady())
+	{
+		m_font->LoadToGpu(context);
+	}
+
+	Renderer::UIBatchSlot subSlot = m_batchSlot;
+	subSlot.vertexOffset += quadOffset * 4;
+	subSlot.quadCapacity -= quadOffset;
+	return context.GetUIRenderer().DrawText(m_batch, subSlot, m_font->font, text, pos, m_fontSize, m_textColor,
+	                                        GetZIndex());
+}
+
+uint32_t Struktur::UI::UILabel::RenderJustifiedLine(GameContext& context, const std::string& line, glm::vec2 pos,
+                                                    float targetWidth, bool isLastLine, uint32_t quadOffset)
+{
+	// Don't justify last line or lines with only one word
+	if (isLastLine || line.find(' ') == std::string::npos)
+	{
+		return RenderGlyphs(context, line, pos, quadOffset);
+	}
+
+	std::vector<std::string> words = TextLayout::SplitWords(line);
+
+	if (words.size() <= 1)
+	{
+		return RenderGlyphs(context, line, pos, quadOffset);
+	}
+
+	float totalWordWidth = 0;
+	for (const auto& word : words)
+	{
+		glm::vec2 wordSize = MeasureText(m_font->font, word, m_fontSize);
+		totalWordWidth += wordSize.x;
+	}
+
+	float spaceWidth = TextLayout::ComputeJustifySpaceWidth(targetWidth, totalWordWidth, words.size());
+
+	float currentX        = pos.x;
+	uint32_t quadsWritten = 0;
+	for (const auto& word : words)
+	{
+		glm::vec2 wordPos = {currentX, pos.y};
+		quadsWritten += RenderGlyphs(context, word, wordPos, quadOffset + quadsWritten);
+
+		glm::vec2 wordSize = MeasureText(m_font->font, word, m_fontSize);
+		currentX += wordSize.x + spaceWidth;
+	}
+	return quadsWritten;
+}
+
+uint32_t Struktur::UI::UILabel::RenderTextLines(GameContext& context, const std::string& text, glm::vec2 startPos,
+                                                float lineHeight, uint32_t quadOffset)
+{
+	std::vector<std::string> lines = GetTextLines(text);
+
+	float currentY             = startPos.y;
+	uint32_t totalQuadsWritten = 0;
+
+	for (size_t i = 0; i < lines.size(); ++i)
+	{
+		const std::string& line = lines[i];
+		glm::vec2 textSize      = MeasureText(m_font->font, line, m_fontSize);
+		glm::vec2 textPos       = {startPos.x, currentY};
+
+		if (m_alignment == TextAlignment::JUSTIFY)
+		{
+			textPos.x       = TextLayout::ComputeAlignedStartX(m_alignment, m_bounds.x, m_bounds.width, textSize.x, 5.0f);
+			bool isLastLine = (i == lines.size() - 1);
+			totalQuadsWritten += RenderJustifiedLine(context, line, textPos, m_bounds.x - 10.0f, isLastLine,
+			                                         quadOffset + totalQuadsWritten);
+		}
+		else
+		{
+			textPos.x = TextLayout::ComputeAlignedStartX(m_alignment, m_bounds.x, m_bounds.width, textSize.x, 5.0f);
+			totalQuadsWritten += RenderGlyphs(context, line, textPos, quadOffset + totalQuadsWritten);
+		}
+
+		currentY += lineHeight;
+	}
+
+	return totalQuadsWritten;
 }

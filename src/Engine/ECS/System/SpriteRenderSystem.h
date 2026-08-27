@@ -1,26 +1,28 @@
 #pragma once
 
 #include "Engine/ECS/SystemManager.h"
+#include "entt/entt.hpp"
 
 namespace Struktur
 {
-    class GameContext;
+class GameContext;
 
-	namespace System
+namespace Component
+{
+struct Sprite;
+struct Transform;
+}  // namespace Component
+
+namespace System
+{
+class SpriteRenderSystem : public ISystem
+{
+public:
+	void Update(GameContext& context) override;
+	std::string Name() const override
 	{
-        class SpriteRenderSystem : public ISystem
-        {
-        public:
-            void Update(GameContext& context) override;
-
-        private:
-            struct spriteDraw {
-                Texture2D texture;
-                Rectangle sourceRect;
-                Rectangle destRect;
-                Vector2 offset;
-                float angle;
-            };
-        };
-    }
-}
+		return "Sprite Render System";
+	}
+};
+}  // namespace System
+}  // namespace Struktur

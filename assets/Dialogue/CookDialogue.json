@@ -1,0 +1,297 @@
+[
+  {
+    "data": {
+      "targets": [
+        {
+          "conditions": [
+            {
+              "parameters": [
+                {
+                  "type": "flag",
+                  "value": "cook_quest_state"
+                },
+                {
+                  "type": "op",
+                  "value": "=="
+                },
+                {
+                  "type": "value",
+                  "value": 5.0
+                }
+              ],
+              "type": "hasIntFlag"
+            }
+          ],
+          "node": "cook_complete"
+        },
+        {
+          "conditions": [
+            {
+              "parameters": [
+                {
+                  "type": "flag",
+                  "value": "cook_quest_state"
+                },
+                {
+                  "type": "op",
+                  "value": "=="
+                },
+                {
+                  "type": "value",
+                  "value": 2.0
+                }
+              ],
+              "type": "hasIntFlag"
+            },
+            {
+              "parameters": [
+                {
+                  "type": "item",
+                  "value": "Flour Sack"
+                }
+              ],
+              "type": "hasItem"
+            },
+            {
+              "parameters": [
+                {
+                  "type": "item",
+                  "value": "Jar of Honey"
+                }
+              ],
+              "type": "hasItem"
+            },
+            {
+              "parameters": [
+                {
+                  "type": "item",
+                  "value": "Dried Herbs"
+                }
+              ],
+              "type": "hasItem"
+            }
+          ],
+          "node": "cook_has_all_1"
+        },
+        {
+          "conditions": [
+            {
+              "parameters": [
+                {
+                  "type": "flag",
+                  "value": "cook_quest_state"
+                },
+                {
+                  "type": "op",
+                  "value": "=="
+                },
+                {
+                  "type": "value",
+                  "value": 2.0
+                }
+              ],
+              "type": "hasIntFlag"
+            }
+          ],
+          "node": "cook_needs_ingredients"
+        },
+        {
+          "conditions": [
+            {
+              "parameters": [
+                {
+                  "type": "flag",
+                  "value": "cook_quest_state"
+                },
+                {
+                  "type": "op",
+                  "value": "=="
+                },
+                {
+                  "type": "value",
+                  "value": 1.0
+                }
+              ],
+              "type": "hasIntFlag"
+            }
+          ],
+          "node": "cook_waiting_for_pantry"
+        },
+        {
+          "node": "cook_first_1"
+        }
+      ]
+    },
+    "node": "cook"
+  },
+  {
+    "data": {
+      "next": "cook_first_2",
+      "speaker": "Cook",
+      "text": "dialogue.cook.cook_first_1"
+    },
+    "node": "cook_first_1"
+  },
+  {
+    "data": {
+      "choices": [
+        {
+          "target": "cook_ask_family",
+          "text": "dialogue.cook.cook_first_2.choice1"
+        },
+        {
+          "target": "cook_ask_pantry",
+          "text": "dialogue.cook.cook_first_2.choice2"
+        },
+        {
+          "target": "cook_ask_help",
+          "text": "dialogue.cook.cook_first_2.choice3"
+        }
+      ],
+      "speaker": "Cook",
+      "text": "dialogue.cook.cook_first_2"
+    },
+    "node": "cook_first_2"
+  },
+  {
+    "data": {
+      "next": "cook_ingredients_ask",
+      "speaker": "Cook",
+      "text": "dialogue.cook.cook_ask_family"
+    },
+    "node": "cook_ask_family"
+  },
+  {
+    "data": {
+      "next": "cook_ingredients_ask",
+      "speaker": "Cook",
+      "text": "dialogue.cook.cook_ask_pantry"
+    },
+    "node": "cook_ask_pantry"
+  },
+  {
+    "data": {
+      "next": "cook_ingredients_ask",
+      "speaker": "Cook",
+      "text": "dialogue.cook.cook_ask_help"
+    },
+    "node": "cook_ask_help"
+  },
+  {
+    "data": {
+      "commands": [
+        {
+          "parameters": [
+            {
+              "type": "flag",
+              "value": "cook_quest_state"
+            },
+            {
+              "type": "value",
+              "value": 1.0
+            }
+          ],
+          "type": "setIntFlag"
+        }
+      ],
+      "speaker": "Cook",
+      "text": "dialogue.cook.cook_ingredients_ask"
+    },
+    "node": "cook_ingredients_ask"
+  },
+  {
+    "data": {
+      "speaker": "Cook",
+      "text": "dialogue.cook.cook_waiting_for_pantry"
+    },
+    "node": "cook_waiting_for_pantry"
+  },
+  {
+    "data": {
+      "speaker": "Cook",
+      "text": "dialogue.cook.cook_needs_ingredients"
+    },
+    "node": "cook_needs_ingredients"
+  },
+  {
+    "data": {
+      "next": "cook_has_all_2",
+      "speaker": "Cook",
+      "text": "dialogue.cook.cook_has_all_1"
+    },
+    "node": "cook_has_all_1"
+  },
+  {
+    "data": {
+      "commands": [
+        {
+          "parameters": [
+            {
+              "type": "item",
+              "value": "Green Crystal Key"
+            }
+          ],
+          "type": "giveItem"
+        },
+        {
+          "parameters": [
+            {
+              "type": "item",
+              "value": "Flour Sack"
+            }
+          ],
+          "type": "removeItem"
+        },
+        {
+          "parameters": [
+            {
+              "type": "item",
+              "value": "Jar of Honey"
+            }
+          ],
+          "type": "removeItem"
+        },
+        {
+          "parameters": [
+            {
+              "type": "item",
+              "value": "Dried Herbs"
+            }
+          ],
+          "type": "removeItem"
+        },
+        {
+          "parameters": [
+            {
+              "type": "flag",
+              "value": "cook_quest_state"
+            },
+            {
+              "type": "value",
+              "value": 5.0
+            }
+          ],
+          "type": "setIntFlag"
+        }
+      ],
+      "next": "cook_has_all_3",
+      "speaker": "Cook",
+      "text": "dialogue.cook.cook_has_all_2"
+    },
+    "node": "cook_has_all_2"
+  },
+  {
+    "data": {
+      "speaker": "Cook",
+      "text": "dialogue.cook.cook_has_all_3"
+    },
+    "node": "cook_has_all_3"
+  },
+  {
+    "data": {
+      "speaker": "Cook",
+      "text": "dialogue.cook.cook_complete"
+    },
+    "node": "cook_complete"
+  }
+]

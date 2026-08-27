@@ -1,0 +1,502 @@
+[
+  {
+    "data": {
+      "targets": [
+        {
+          "conditions": [
+            {
+              "parameters": [
+                {
+                  "type": "item",
+                  "value": "Red Pedestal Active"
+                }
+              ],
+              "type": "hasItem"
+            },
+            {
+              "parameters": [
+                {
+                  "type": "item",
+                  "value": "Green Pedestal Active"
+                }
+              ],
+              "type": "hasItem"
+            },
+            {
+              "parameters": [
+                {
+                  "type": "item",
+                  "value": "Yellow Pedestal Active"
+                }
+              ],
+              "type": "hasItem"
+            },
+            {
+              "parameters": [
+                {
+                  "type": "item",
+                  "value": "Blue Pedestal Active"
+                }
+              ],
+              "type": "hasItem"
+            }
+          ],
+          "node": "cordelia_complete"
+        },
+        {
+          "conditions": [
+            {
+              "parameters": [
+                {
+                  "type": "flag",
+                  "value": "cordelia_met"
+                },
+                {
+                  "type": "op",
+                  "value": "=="
+                },
+                {
+                  "type": "value",
+                  "value": 1.0
+                }
+              ],
+              "type": "hasIntFlag"
+            }
+          ],
+          "node": "cordelia_progress"
+        },
+        {
+          "node": "cordelia_intro_1"
+        }
+      ]
+    },
+    "node": "cordelia"
+  },
+  {
+    "data": {
+      "next": "cordelia_intro_2",
+      "speaker": "Cordelia",
+      "text": "dialogue.cordelia.cordelia_intro_1"
+    },
+    "node": "cordelia_intro_1"
+  },
+  {
+    "data": {
+      "next": "cordelia_intro_curse",
+      "speaker": "Cordelia",
+      "text": "dialogue.cordelia.cordelia_intro_2"
+    },
+    "node": "cordelia_intro_2"
+  },
+  {
+    "data": {
+      "choices": [
+        {
+          "target": "cordelia_ask_theodore_intro",
+          "text": "dialogue.cordelia.cordelia_intro_curse.choice1"
+        },
+        {
+          "target": "cordelia_ask_others_intro",
+          "text": "dialogue.cordelia.cordelia_intro_curse.choice2"
+        },
+        {
+          "target": "cordelia_ask_whatnow",
+          "text": "dialogue.cordelia.cordelia_intro_curse.choice3"
+        }
+      ],
+      "speaker": "Cordelia",
+      "text": "dialogue.cordelia.cordelia_intro_curse"
+    },
+    "node": "cordelia_intro_curse"
+  },
+  {
+    "data": {
+      "next": "cordelia_intro_solution",
+      "speaker": "Cordelia",
+      "text": "dialogue.cordelia.cordelia_ask_theodore_intro"
+    },
+    "node": "cordelia_ask_theodore_intro"
+  },
+  {
+    "data": {
+      "next": "cordelia_intro_solution",
+      "speaker": "Cordelia",
+      "text": "dialogue.cordelia.cordelia_ask_others_intro"
+    },
+    "node": "cordelia_ask_others_intro"
+  },
+  {
+    "data": {
+      "next": "cordelia_intro_solution",
+      "speaker": "Cordelia",
+      "text": "dialogue.cordelia.cordelia_ask_whatnow"
+    },
+    "node": "cordelia_ask_whatnow"
+  },
+  {
+    "data": {
+      "commands": [
+        {
+          "parameters": [
+            {
+              "type": "flag",
+              "value": "cordelia_met"
+            },
+            {
+              "type": "value",
+              "value": 1.0
+            }
+          ],
+          "type": "setIntFlag"
+        }
+      ],
+      "speaker": "Cordelia",
+      "text": "dialogue.cordelia.cordelia_intro_solution"
+    },
+    "node": "cordelia_intro_solution"
+  },
+  {
+    "data": {
+      "targets": [
+        {
+          "conditions": [
+            {
+              "parameters": [
+                {
+                  "type": "flag",
+                  "value": "keys_collected"
+                },
+                {
+                  "type": "op",
+                  "value": ">="
+                },
+                {
+                  "type": "value",
+                  "value": 3.0
+                }
+              ],
+              "type": "hasIntFlag"
+            }
+          ],
+          "node": "cordelia_progress_3keys"
+        },
+        {
+          "conditions": [
+            {
+              "parameters": [
+                {
+                  "type": "flag",
+                  "value": "keys_collected"
+                },
+                {
+                  "type": "op",
+                  "value": ">="
+                },
+                {
+                  "type": "value",
+                  "value": 2.0
+                }
+              ],
+              "type": "hasIntFlag"
+            }
+          ],
+          "node": "cordelia_progress_2keys"
+        },
+        {
+          "conditions": [
+            {
+              "parameters": [
+                {
+                  "type": "flag",
+                  "value": "keys_collected"
+                },
+                {
+                  "type": "op",
+                  "value": ">="
+                },
+                {
+                  "type": "value",
+                  "value": 1.0
+                }
+              ],
+              "type": "hasIntFlag"
+            }
+          ],
+          "node": "cordelia_progress_1key"
+        },
+        {
+          "node": "cordelia_progress_0keys"
+        }
+      ]
+    },
+    "node": "cordelia_progress"
+  },
+  {
+    "data": {
+      "choices": [
+        {
+          "target": "cordelia_0keys_ask_hints",
+          "text": "dialogue.cordelia.cordelia_progress_0keys.choice1"
+        },
+        {
+          "target": "cordelia_0keys_ask_curse",
+          "text": "dialogue.cordelia.cordelia_progress_0keys.choice2"
+        },
+        {
+          "target": "cordelia_0keys_ask_cordelia",
+          "text": "dialogue.cordelia.cordelia_progress_0keys.choice3"
+        }
+      ],
+      "speaker": "Cordelia",
+      "text": "dialogue.cordelia.cordelia_progress_0keys"
+    },
+    "node": "cordelia_progress_0keys"
+  },
+  {
+    "data": {
+      "speaker": "Cordelia",
+      "text": "dialogue.cordelia.cordelia_0keys_ask_hints"
+    },
+    "node": "cordelia_0keys_ask_hints"
+  },
+  {
+    "data": {
+      "speaker": "Cordelia",
+      "text": "dialogue.cordelia.cordelia_0keys_ask_curse"
+    },
+    "node": "cordelia_0keys_ask_curse"
+  },
+  {
+    "data": {
+      "speaker": "Cordelia",
+      "text": "dialogue.cordelia.cordelia_0keys_ask_cordelia"
+    },
+    "node": "cordelia_0keys_ask_cordelia"
+  },
+  {
+    "data": {
+      "choices": [
+        {
+          "target": "cordelia_1key_ask_who",
+          "text": "dialogue.cordelia.cordelia_progress_1key.choice1"
+        },
+        {
+          "target": "cordelia_1key_ask_keys",
+          "text": "dialogue.cordelia.cordelia_progress_1key.choice2"
+        },
+        {
+          "target": "cordelia_1key_ask_them",
+          "text": "dialogue.cordelia.cordelia_progress_1key.choice3"
+        }
+      ],
+      "speaker": "Cordelia",
+      "text": "dialogue.cordelia.cordelia_progress_1key"
+    },
+    "node": "cordelia_progress_1key"
+  },
+  {
+    "data": {
+      "speaker": "Cordelia",
+      "text": "dialogue.cordelia.cordelia_1key_ask_who"
+    },
+    "node": "cordelia_1key_ask_who"
+  },
+  {
+    "data": {
+      "speaker": "Cordelia",
+      "text": "dialogue.cordelia.cordelia_1key_ask_keys"
+    },
+    "node": "cordelia_1key_ask_keys"
+  },
+  {
+    "data": {
+      "speaker": "Cordelia",
+      "text": "dialogue.cordelia.cordelia_1key_ask_them"
+    },
+    "node": "cordelia_1key_ask_them"
+  },
+  {
+    "data": {
+      "choices": [
+        {
+          "target": "cordelia_2keys_ask_who",
+          "text": "dialogue.cordelia.cordelia_progress_2keys.choice1"
+        },
+        {
+          "target": "cordelia_2keys_ask_theodore",
+          "text": "dialogue.cordelia.cordelia_progress_2keys.choice2"
+        },
+        {
+          "target": "cordelia_2keys_ask_outside",
+          "text": "dialogue.cordelia.cordelia_progress_2keys.choice3"
+        }
+      ],
+      "speaker": "Cordelia",
+      "text": "dialogue.cordelia.cordelia_progress_2keys"
+    },
+    "node": "cordelia_progress_2keys"
+  },
+  {
+    "data": {
+      "speaker": "Cordelia",
+      "text": "dialogue.cordelia.cordelia_2keys_ask_who"
+    },
+    "node": "cordelia_2keys_ask_who"
+  },
+  {
+    "data": {
+      "speaker": "Cordelia",
+      "text": "dialogue.cordelia.cordelia_2keys_ask_theodore"
+    },
+    "node": "cordelia_2keys_ask_theodore"
+  },
+  {
+    "data": {
+      "speaker": "Cordelia",
+      "text": "dialogue.cordelia.cordelia_2keys_ask_outside"
+    },
+    "node": "cordelia_2keys_ask_outside"
+  },
+  {
+    "data": {
+      "choices": [
+        {
+          "target": "cordelia_3keys_ask_last",
+          "text": "dialogue.cordelia.cordelia_progress_3keys.choice1"
+        },
+        {
+          "target": "cordelia_3keys_ask_after",
+          "text": "dialogue.cordelia.cordelia_progress_3keys.choice2"
+        },
+        {
+          "target": "cordelia_3keys_ask_ready",
+          "text": "dialogue.cordelia.cordelia_progress_3keys.choice3"
+        }
+      ],
+      "speaker": "Cordelia",
+      "text": "dialogue.cordelia.cordelia_progress_3keys"
+    },
+    "node": "cordelia_progress_3keys"
+  },
+  {
+    "data": {
+      "speaker": "Cordelia",
+      "text": "dialogue.cordelia.cordelia_3keys_ask_last"
+    },
+    "node": "cordelia_3keys_ask_last"
+  },
+  {
+    "data": {
+      "speaker": "Cordelia",
+      "text": "dialogue.cordelia.cordelia_3keys_ask_after"
+    },
+    "node": "cordelia_3keys_ask_after"
+  },
+  {
+    "data": {
+      "speaker": "Cordelia",
+      "text": "dialogue.cordelia.cordelia_3keys_ask_ready"
+    },
+    "node": "cordelia_3keys_ask_ready"
+  },
+  {
+    "data": {
+      "targets": [
+        {
+          "conditions": [
+            {
+              "parameters": [
+                {
+                  "type": "flag",
+                  "value": "scholar_persuaded"
+                },
+                {
+                  "type": "op",
+                  "value": "=="
+                },
+                {
+                  "type": "value",
+                  "value": 1.0
+                }
+              ],
+              "type": "hasIntFlag"
+            }
+          ],
+          "node": "cordelia_complete_scholar_persuaded"
+        },
+        {
+          "node": "cordelia_complete_standard"
+        }
+      ]
+    },
+    "node": "cordelia_complete"
+  },
+  {
+    "data": {
+      "next": "cordelia_complete_choice",
+      "speaker": "Cordelia",
+      "text": "dialogue.cordelia.cordelia_complete_standard"
+    },
+    "node": "cordelia_complete_standard"
+  },
+  {
+    "data": {
+      "next": "cordelia_complete_choice",
+      "speaker": "Cordelia",
+      "text": "dialogue.cordelia.cordelia_complete_scholar_persuaded"
+    },
+    "node": "cordelia_complete_scholar_persuaded"
+  },
+  {
+    "data": {
+      "choices": [
+        {
+          "target": "cordelia_end_ask_free",
+          "text": "dialogue.cordelia.cordelia_complete_choice.choice1"
+        },
+        {
+          "target": "cordelia_end_ask_theodore",
+          "text": "dialogue.cordelia.cordelia_complete_choice.choice2"
+        },
+        {
+          "target": "cordelia_end_goodbye",
+          "text": "dialogue.cordelia.cordelia_complete_choice.choice3"
+        }
+      ],
+      "speaker": "Cordelia",
+      "text": "dialogue.cordelia.cordelia_complete_choice"
+    },
+    "node": "cordelia_complete_choice"
+  },
+  {
+    "data": {
+      "next": "cordelia_end_portal",
+      "speaker": "Cordelia",
+      "text": "dialogue.cordelia.cordelia_end_ask_free"
+    },
+    "node": "cordelia_end_ask_free"
+  },
+  {
+    "data": {
+      "next": "cordelia_end_portal",
+      "speaker": "Cordelia",
+      "text": "dialogue.cordelia.cordelia_end_ask_theodore"
+    },
+    "node": "cordelia_end_ask_theodore"
+  },
+  {
+    "data": {
+      "next": "cordelia_end_portal",
+      "speaker": "Cordelia",
+      "text": "dialogue.cordelia.cordelia_end_goodbye"
+    },
+    "node": "cordelia_end_goodbye"
+  },
+  {
+    "data": {
+      "speaker": "Cordelia",
+      "text": "dialogue.cordelia.cordelia_end_portal"
+    },
+    "node": "cordelia_end_portal"
+  }
+]

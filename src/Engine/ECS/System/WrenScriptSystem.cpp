@@ -1,0 +1,398 @@
+#include "WrenScriptSystem.h"
+
+#include <fstream>
+#include <sstream>
+
+#include "Engine/Callback/CallbackHelperFunctions.h"
+#include "Engine/GameContext.h"
+#include "Engine/Scripting/WrenExportedFields.h"
+#include "Engine/Scripting/WrenUtil.h"
+
+namespace Struktur::System
+{
+
+bool WrenScriptSystem::InitialiseScript(GameContext& context, entt::entity entity, Component::WrenScript& script)
+{
+	Wren::WrenScriptEngine& scriptEngine = context.GetWrenScriptEngine();
+	WrenVM* vm                           = scriptEngine.GetVM();
+	if (!vm)
+	{
+		DEBUG_ERROR("Wren VM not initialised");
+		script.hasError     = true;
+		script.errorMessage = "Wren VM not initialised";
+		return false;
+	}
+
+	Wren::WrenScriptComponentRegistry& scriptComponentRegistry = context.GetWrenScriptComponentRegistry();
+	Wren::WrenScriptComponent* scriptComponent = scriptComponentRegistry.TryGetScriptComponent(script.className);
+	if (!scriptComponent)
+	{
+		DEBUG_ERROR("Script Component %s not initialised", script.className.c_str());
+		script.hasError     = true;
+		script.errorMessage = "Wren VM not initialised";
+		return false;
+	}
+
+	script.scriptComponent = scriptComponent;
+
+	wrenEnsureSlots(vm, 2);
+	wrenSetSlotDouble(vm, 1, static_cast<double>(entity));
+	// Call constructor: new(entity) or new(entity, args)
+	WrenHandle* constructMethod;
+	if (!script.constructorArgs.empty())
+	{
+		wrenEnsureSlots(vm, 5);
+		// If constructor args exist, create signature with 2 params
+		wrenSetSlotNewMap(vm, 2);
+		for (const auto& arg : script.constructorArgs)
+		{
+			wrenSetSlotString(vm, 3, arg.identifier.c_str());
+			switch (arg.type)
+			{
+				case WrenType::WREN_TYPE_NUM:
+					wrenSetSlotDouble(vm, 4, std::any_cast<double>(arg.value));
+					break;
+
+				case WrenType::WREN_TYPE_BOOL:
+					wrenSetSlotBool(vm, 4, std::any_cast<bool>(arg.value));
+					break;
+
+				case WrenType::WREN_TYPE_STRING:
+					wrenSetSlotString(vm, 4, std::any_cast<std::string>(arg.value).c_str());
+					break;
+
+				default:
+					wrenSetSlotNull(vm, 4);
+					break;
+			}
+
+			// Append to the list
+			wrenSetMapValue(vm, 2, 3, 4);
+		}
+		constructMethod = wrenMakeCallHandle(vm, "new(_,_)");
+	}
+	else
+	{
+		constructMethod = wrenMakeCallHandle(vm, "new(_)");
+	}
+
+	wrenSetSlotHandle(vm, 0, scriptComponent->classHandle);
+	WrenInterpretResult callResult = wrenCall(vm, constructMethod);
+	wrenReleaseHandle(vm, constructMethod);
+
+	if (callResult != WREN_RESULT_SUCCESS)
+	{
+		DEBUG_ERROR("Failed to instantiate Wren class: %s", script.className.c_str());
+		script.hasError     = true;
+		script.errorMessage = "Instantiation failed";
+		return false;
+	}
+
+	// Store instance handle (it's in slot 0 after constructor call)
+	script.instanceHandle = wrenGetSlotHandle(vm, 0);
+
+	script.isInitialised = true;
+
+	return true;
+}
+
+bool WrenScriptSystem::CallStart(GameContext& context, Component::WrenScript& script)
+{
+	if (!script.isInitialised || script.hasError)
+	{
+		return false;
+	}
+
+	auto* startMethodHandle = script.scriptComponent->startMethodHandle;
+	if (!startMethodHandle)
+	{
+		DEBUG_WARNING("Script %s does not have a Start method", script.className.c_str());
+		return true;  // Not an error, just doesn't have the method
+	}
+
+	Wren::WrenScriptEngine& scriptEngine = context.GetWrenScriptEngine();
+	WrenVM* vm                           = scriptEngine.GetVM();
+
+	wrenEnsureSlots(vm, 1);
+	wrenSetSlotHandle(vm, 0, script.instanceHandle);
+
+	WrenInterpretResult result = wrenCall(vm, startMethodHandle);
+
+	if (result != WREN_RESULT_SUCCESS)
+	{
+		DEBUG_ERROR("Error calling Start() on script: %s", script.className.c_str());
+		script.hasError     = true;
+		script.errorMessage = "Start() call failed";
+		return false;
+	}
+
+	return true;
+}
+
+void WrenScriptSystem::QueuePendingInitialise(entt::entity entity)
+{
+	m_pendingInitialise.push_back(entity);
+}
+
+void WrenScriptSystem::Update(GameContext& context)
+{
+	Wren::WrenScriptEngine& scriptEngine = context.GetWrenScriptEngine();
+	WrenVM* vm                           = scriptEngine.GetVM();
+	if (!vm)
+	{
+		return;
+	}
+
+	auto& registry = context.GetRegistry();
+
+	// Construct + Start every script queued since the last Update() - the only safe place to do so, see
+	// QueuePendingInitialise().
+	if (!m_pendingInitialise.empty())
+	{
+		std::vector<entt::entity> toStart;
+		toStart.reserve(m_pendingInitialise.size());
+
+		// Index-based since InitialiseScript() may queue more entries (nested Script.createArg) that should run this
+		// same pass.
+		for (int i = 0; i < m_pendingInitialise.size(); ++i)
+		{
+			entt::entity entity = m_pendingInitialise[i];
+			if (!registry.valid(entity) || !registry.all_of<Component::WrenScript>(entity))
+			{
+				continue;
+			}
+
+			auto& script = registry.get<Component::WrenScript>(entity);
+			if (InitialiseScript(context, entity, script))
+			{
+				toStart.push_back(entity);
+			}
+		}
+		m_pendingInitialise.clear();
+
+		// Every script queued this pass is now constructed, so Start() can safely reach across to any of them.
+		for (entt::entity entity : toStart)
+		{
+			if (!registry.valid(entity) || !registry.all_of<Component::WrenScript>(entity))
+			{
+				continue;
+			}
+
+			auto& script = registry.get<Component::WrenScript>(entity);
+			if (script.isInitialised && !script.hasError)
+			{
+				CallStart(context, script);
+			}
+		}
+	}
+
+	auto view = registry.view<Component::WrenScript>(entt::exclude<Inactive>);
+
+	for (auto entity : view)
+	{
+		auto& script = view.get<Component::WrenScript>(entity);
+
+		// Skip if not initialised or has error
+		if (script.hasError)
+		{
+			continue;
+		}
+
+		if (!script.isInitialised)
+		{
+			DEBUG_ERROR("Script %s is being updated before it was initialised", script.className.c_str());
+			continue;
+		}
+
+		// Skip if no update method
+		if (!script.scriptComponent->updateMethodHandle)
+		{
+			continue;
+		}
+
+		// Call Update()
+		wrenEnsureSlots(vm, 1);
+		wrenSetSlotHandle(vm, 0, script.instanceHandle);
+
+		WrenInterpretResult result = wrenCall(vm, script.scriptComponent->updateMethodHandle);
+
+		if (result != WREN_RESULT_SUCCESS)
+		{
+			DEBUG_ERROR("Error calling Update() on entity %d script: %s", static_cast<int>(entity),
+			            script.className.c_str());
+			script.hasError     = true;
+			script.errorMessage = "Update() call failed";
+		}
+	}
+}
+
+void WrenScriptSystem::FixedUpdate(GameContext& context)
+{
+	Wren::WrenScriptEngine& scriptEngine = context.GetWrenScriptEngine();
+	WrenVM* vm                           = scriptEngine.GetVM();
+	if (!vm)
+	{
+		return;
+	}
+
+	auto& registry = context.GetRegistry();
+	auto view       = registry.view<Component::WrenScript>(entt::exclude<Inactive>);
+
+	for (auto entity : view)
+	{
+		auto& script = view.get<Component::WrenScript>(entity);
+
+		if (script.hasError || !script.isInitialised)
+		{
+			continue;
+		}
+
+		// Skip entities whose script class never opted into fixedUpdate() - see
+		// WrenScriptComponent::fixedUpdateMethodHandle's own comment.
+		if (!script.scriptComponent->fixedUpdateMethodHandle)
+		{
+			continue;
+		}
+
+		wrenEnsureSlots(vm, 1);
+		wrenSetSlotHandle(vm, 0, script.instanceHandle);
+
+		WrenInterpretResult result = wrenCall(vm, script.scriptComponent->fixedUpdateMethodHandle);
+
+		if (result != WREN_RESULT_SUCCESS)
+		{
+			DEBUG_ERROR("Error calling FixedUpdate() on entity %d script: %s", static_cast<int>(entity),
+			            script.className.c_str());
+			script.hasError     = true;
+			script.errorMessage = "FixedUpdate() call failed";
+		}
+	}
+}
+
+void WrenScriptFixedUpdateSystem::Update(GameContext& context)
+{
+	context.GetSystemManager().GetSystem<WrenScriptSystem>().FixedUpdate(context);
+}
+
+void WrenScriptSystem::DestroyScript(GameContext& context, entt::entity entity, Component::WrenScript& script)
+{
+	if (!script.isInitialised)
+	{
+		return;
+	}
+
+	Wren::WrenScriptEngine& scriptEngine = context.GetWrenScriptEngine();
+	WrenVM* vm                           = scriptEngine.GetVM();
+	if (!vm)
+	{
+		return;
+	}
+
+	// Call OnDestroy if it exists
+	if (script.scriptComponent->onDestroyMethodHandle && script.instanceHandle)
+	{
+		wrenEnsureSlots(vm, 1);
+		wrenSetSlotHandle(vm, 0, script.instanceHandle);
+
+		WrenInterpretResult result = wrenCall(vm, script.scriptComponent->onDestroyMethodHandle);
+
+		if (result != WREN_RESULT_SUCCESS)
+		{
+			DEBUG_WARNING("Error calling OnDestroy() on script: %s", script.className.c_str());
+		}
+	}
+
+	// Release all handles
+	if (script.instanceHandle)
+	{
+		wrenReleaseHandle(vm, script.instanceHandle);
+	}
+
+	script.instanceHandle  = nullptr;
+	script.scriptComponent = nullptr;
+	script.isInitialised   = false;
+}
+
+void WrenScriptSystem::SendEvent(GameContext& context, entt::entity entity, Component::WrenScript& script,
+                                 const Event::Event& event)
+{
+	if (!script.isInitialised || script.hasError || !script.scriptComponent->onEventMethodHandle)
+	{
+		return;
+	}
+
+	Wren::WrenScriptEngine& scriptEngine = context.GetWrenScriptEngine();
+	WrenVM* vm                           = scriptEngine.GetVM();
+
+	// Create event map in Wren
+	wrenEnsureSlots(vm, 3);
+	wrenSetSlotHandle(vm, 0, script.instanceHandle);
+
+	// Add event data
+	wrenSetSlotString(vm, 1, event.type.c_str());
+	Callback::HelperFunctions::VariantToWrenSlot(vm, 2, event.data);
+
+	// Call OnEvent(eventMap)
+	WrenInterpretResult result = wrenCall(vm, script.scriptComponent->onEventMethodHandle);
+
+	if (result != WREN_RESULT_SUCCESS)
+	{
+		DEBUG_ERROR("Error calling onEvent() on script: %s", script.className.c_str());
+	}
+}
+
+#ifdef DEBUG
+namespace
+{
+const Wren::WrenExportedField* FindExportedField(const Wren::WrenScriptComponent& scriptComponent,
+                                                 const std::string& fieldName)
+{
+	for (const Wren::WrenExportedField& field : scriptComponent.exportedFields)
+	{
+		if (field.name == fieldName)
+		{
+			return &field;
+		}
+	}
+	return nullptr;
+}
+}  // namespace
+
+bool WrenScriptSystem::GetExportedFieldValue(GameContext& context, Component::WrenScript& script,
+                                             const std::string& fieldName, Wren::WrenItem& out_value)
+{
+	if (!script.isInitialised || script.hasError || !script.scriptComponent || !script.instanceHandle)
+	{
+		return false;
+	}
+
+	const Wren::WrenExportedField* field = FindExportedField(*script.scriptComponent, fieldName);
+	if (!field)
+	{
+		return false;
+	}
+
+	WrenVM* vm = context.GetWrenScriptEngine().GetVM();
+	return Wren::ExportedFields::GetValue(vm, script.instanceHandle, *field, out_value);
+}
+
+bool WrenScriptSystem::SetExportedFieldValue(GameContext& context, Component::WrenScript& script,
+                                             const std::string& fieldName, const Wren::WrenItem& value)
+{
+	if (!script.isInitialised || script.hasError || !script.scriptComponent || !script.instanceHandle)
+	{
+		return false;
+	}
+
+	const Wren::WrenExportedField* field = FindExportedField(*script.scriptComponent, fieldName);
+	if (!field)
+	{
+		return false;
+	}
+
+	WrenVM* vm = context.GetWrenScriptEngine().GetVM();
+	return Wren::ExportedFields::SetValue(vm, script.instanceHandle, *field, value);
+}
+#endif
+
+}  // namespace Struktur::System

@@ -1,0 +1,178 @@
+{
+  "controllerSettings": {
+    "deadzone": 0.2
+  },
+  "inputs": [
+    {
+      "name": "Interact",
+      "type": "button",
+      "bindings": [
+        { "type": "keycode", "value": "e" },
+        { "type": "keycode", "value": "enter" },
+        { "type": "controllerButton", "value": "a" },
+        { "type": "controllerButton", "value": "b" }
+      ]
+    },
+    {
+      "name": "Inventory",
+      "type": "button",
+      "bindings": [
+        { "type": "keycode", "value": "i" },
+        { "type": "controllerButton", "value": "start" }
+      ]
+    },
+    {
+      "name": "Jump",
+      "type": "button",
+      "bindings": [
+        { "type": "keycode", "value": "space" },
+        { "type": "controllerButton", "value": "a" }
+      ]
+    },
+    {
+      "name": "Accelerate",
+      "type": "variable",
+      "bindings": [
+        { "type": "keycode", "value": "w" },
+        { "type": "controllerButton", "value": "rtrigger" },
+        { "type": "controllerAxis", "value": "righttrigger", "axis": "negativeToPositive" }
+      ]
+    },
+    {
+      "name": "Brake",
+      "type": "variable",
+      "bindings": [
+        { "type": "keycode", "value": "s" },
+        { "type": "controllerButton", "value": "ltrigger" },
+        { "type": "controllerAxis", "value": "lefttrigger", "axis": "negativeToPositive" }
+      ]
+    },
+    {
+      "name": "Aim",
+      "type": "variable",
+      "bindings": [
+        { "type": "keycode", "value": "leftshift" },
+        { "type": "controllerButton", "value": "ltrigger" },
+        { "type": "controllerAxis", "value": "lefttrigger", "axis": "negativeToPositive" }
+      ]
+    },
+    {
+      "name": "Horizontal",
+      "type": "axis",
+      "bindings": [
+        { "type": "controllerButton", "value": "left", "component": "negative" },
+        { "type": "keycode", "value": "left", "component": "negative" },
+        { "type": "keycode", "value": "a", "component": "negative" },
+        { "type": "controllerButton", "value": "right", "component": "positive" },
+        { "type": "keycode", "value": "right", "component": "positive" },
+        { "type": "keycode", "value": "d", "component": "positive" },
+        { "type": "controllerAxis", "value": "leftx" }
+      ]
+    },
+    {
+      "name": "Vertical",
+      "type": "axis",
+      "bindings": [
+        { "type": "controllerButton", "value": "down", "component": "positive" },
+        { "type": "keycode", "value": "down", "component": "positive" },
+        { "type": "keycode", "value": "s", "component": "positive" },
+        { "type": "controllerButton", "value": "up", "component": "negative" },
+        { "type": "keycode", "value": "up", "component": "negative" },
+        { "type": "keycode", "value": "w", "component": "negative" },
+        { "type": "controllerAxis", "value": "lefty" }
+      ]
+    },
+    {
+      "name": "CameraHorizontal",
+      "type": "axis",
+      "bindings": [
+        { "type": "keycode", "value": "q", "component": "negative" },
+        { "type": "keycode", "value": "e", "component": "positive" },
+        { "type": "controllerAxis", "value": "rightx" }
+      ]
+    },
+    {
+      "name": "CameraVertical",
+      "type": "axis",
+      "bindings": [
+        { "type": "keycode", "value": "r", "component": "positive" },
+        { "type": "keycode", "value": "f", "component": "negative" },
+        { "type": "controllerAxis", "value": "righty" }
+      ]
+    },
+    {
+      "name": "Move",
+      "type": "axis2",
+      "bindings": [
+        { "type": "controllerButton", "value": "up", "component": "up" },
+        { "type": "keycode", "value": "up", "component": "up" },
+        { "type": "keycode", "value": "w", "component": "up" },
+        { "type": "controllerButton", "value": "down", "component": "down" },
+        { "type": "keycode", "value": "down", "component": "down" },
+        { "type": "keycode", "value": "s", "component": "down" },
+        { "type": "controllerAxis", "value": "lefty", "component": "y" },
+        { "type": "controllerButton", "value": "left", "component": "left" },
+        { "type": "keycode", "value": "left", "component": "left" },
+        { "type": "keycode", "value": "a", "component": "left" },
+        { "type": "controllerButton", "value": "right", "component": "right" },
+        { "type": "keycode", "value": "right", "component": "right" },
+        { "type": "keycode", "value": "d", "component": "right" },
+        { "type": "controllerAxis", "value": "leftx", "component": "x" }
+      ]
+    },
+    {
+      "name": "Look",
+      "type": "axis2",
+      "bindings": [
+        { "type": "controllerAxis", "value": "rightx", "component": "x" },
+        { "type": "controllerAxis", "value": "righty", "component": "y" }
+      ]
+    },
+    {
+      "name": "UIDir",
+      "type": "axis2",
+      "bindings": [
+        { "type": "controllerButton", "value": "up", "component": "up" },
+        { "type": "keycode", "value": "up", "component": "up" },
+        { "type": "keycode", "value": "w", "component": "up" },
+        { "type": "controllerButton", "value": "down", "component": "down" },
+        { "type": "keycode", "value": "down", "component": "down" },
+        { "type": "keycode", "value": "s", "component": "down" },
+        { "type": "controllerButton", "value": "left", "component": "left" },
+        { "type": "keycode", "value": "left", "component": "left" },
+        { "type": "keycode", "value": "a", "component": "left" },
+        { "type": "controllerButton", "value": "right", "component": "right" },
+        { "type": "keycode", "value": "right", "component": "right" },
+        { "type": "keycode", "value": "d", "component": "right" }
+      ]
+    },
+    {
+      "name": "UITab",
+      "type": "axis",
+      "bindings": [
+        { "type": "controllerButton", "value": "lbumper", "component": "negative" },
+        { "type": "keycode", "value": "q", "component": "negative" },
+        { "type": "controllerButton", "value": "rbumper", "component": "positive" },
+        { "type": "keycode", "value": "e", "component": "positive" }
+      ]
+    },
+    {
+      "name": "UIAccept",
+      "type": "button",
+      "bindings": [
+        { "type": "keycode", "value": "space" },
+        { "type": "keycode", "value": "enter" },
+        { "type": "controllerButton", "value": "a" },
+        { "type": "pointerButton", "value": "primary" }
+      ]
+    },
+    {
+      "name": "UICancel",
+      "type": "button",
+      "bindings": [
+        { "type": "keycode", "value": "escape" },
+        { "type": "controllerButton", "value": "b" }
+      ]
+    }
+  ]
+}

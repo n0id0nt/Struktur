@@ -1,0 +1,347 @@
+[
+  {
+    "data": {
+      "targets": [
+        {
+          "conditions": [
+            {
+              "parameters": [
+                {
+                  "type": "flag",
+                  "value": "dreamer_quest_state"
+                },
+                {
+                  "type": "op",
+                  "value": "=="
+                },
+                {
+                  "type": "value",
+                  "value": 5.0
+                }
+              ],
+              "type": "hasIntFlag"
+            }
+          ],
+          "node": "dreamer_complete"
+        },
+        {
+          "conditions": [
+            {
+              "parameters": [
+                {
+                  "type": "flag",
+                  "value": "dreamer_quest_state"
+                },
+                {
+                  "type": "op",
+                  "value": "=="
+                },
+                {
+                  "type": "value",
+                  "value": 3.0
+                }
+              ],
+              "type": "hasIntFlag"
+            },
+            {
+              "parameters": [
+                {
+                  "type": "item",
+                  "value": "Personal Diary"
+                }
+              ],
+              "type": "hasItem"
+            }
+          ],
+          "node": "dreamer_has_diary_1"
+        },
+        {
+          "conditions": [
+            {
+              "parameters": [
+                {
+                  "type": "flag",
+                  "value": "dreamer_quest_state"
+                },
+                {
+                  "type": "op",
+                  "value": "=="
+                },
+                {
+                  "type": "value",
+                  "value": 3.0
+                }
+              ],
+              "type": "hasIntFlag"
+            }
+          ],
+          "node": "dreamer_needs_diary"
+        },
+        {
+          "conditions": [
+            {
+              "parameters": [
+                {
+                  "type": "flag",
+                  "value": "dreamer_quest_state"
+                },
+                {
+                  "type": "op",
+                  "value": "=="
+                },
+                {
+                  "type": "value",
+                  "value": 1.0
+                }
+              ],
+              "type": "hasIntFlag"
+            },
+            {
+              "parameters": [
+                {
+                  "type": "item",
+                  "value": "Love Letter"
+                }
+              ],
+              "type": "hasItem"
+            }
+          ],
+          "node": "dreamer_has_letter_1"
+        },
+        {
+          "conditions": [
+            {
+              "parameters": [
+                {
+                  "type": "flag",
+                  "value": "dreamer_quest_state"
+                },
+                {
+                  "type": "op",
+                  "value": "=="
+                },
+                {
+                  "type": "value",
+                  "value": 1.0
+                }
+              ],
+              "type": "hasIntFlag"
+            }
+          ],
+          "node": "dreamer_needs_letter"
+        },
+        {
+          "node": "dreamer_first_1"
+        }
+      ]
+    },
+    "node": "dreamer"
+  },
+  {
+    "data": {
+      "next": "dreamer_first_2",
+      "speaker": "Dreamer",
+      "text": "dialogue.dreamer.dreamer_first_1"
+    },
+    "node": "dreamer_first_1"
+  },
+  {
+    "data": {
+      "choices": [
+        {
+          "target": "dreamer_ask_visions",
+          "text": "dialogue.dreamer.dreamer_first_2.choice1"
+        },
+        {
+          "target": "dreamer_ask_diary",
+          "text": "dialogue.dreamer.dreamer_first_2.choice2"
+        },
+        {
+          "target": "dreamer_ask_key",
+          "text": "dialogue.dreamer.dreamer_first_2.choice3"
+        }
+      ],
+      "speaker": "Dreamer",
+      "text": "dialogue.dreamer.dreamer_first_2"
+    },
+    "node": "dreamer_first_2"
+  },
+  {
+    "data": {
+      "next": "dreamer_letter_hint",
+      "speaker": "Dreamer",
+      "text": "dialogue.dreamer.dreamer_ask_visions"
+    },
+    "node": "dreamer_ask_visions"
+  },
+  {
+    "data": {
+      "next": "dreamer_letter_hint",
+      "speaker": "Dreamer",
+      "text": "dialogue.dreamer.dreamer_ask_diary"
+    },
+    "node": "dreamer_ask_diary"
+  },
+  {
+    "data": {
+      "next": "dreamer_letter_hint",
+      "speaker": "Dreamer",
+      "text": "dialogue.dreamer.dreamer_ask_key"
+    },
+    "node": "dreamer_ask_key"
+  },
+  {
+    "data": {
+      "commands": [
+        {
+          "parameters": [
+            {
+              "type": "flag",
+              "value": "dreamer_quest_state"
+            },
+            {
+              "type": "value",
+              "value": 1.0
+            }
+          ],
+          "type": "setIntFlag"
+        }
+      ],
+      "speaker": "Dreamer",
+      "text": "dialogue.dreamer.dreamer_letter_hint"
+    },
+    "node": "dreamer_letter_hint"
+  },
+  {
+    "data": {
+      "speaker": "Dreamer",
+      "text": "dialogue.dreamer.dreamer_needs_letter"
+    },
+    "node": "dreamer_needs_letter"
+  },
+  {
+    "data": {
+      "next": "dreamer_remembers",
+      "speaker": "Dreamer",
+      "text": "dialogue.dreamer.dreamer_has_letter_1"
+    },
+    "node": "dreamer_has_letter_1"
+  },
+  {
+    "data": {
+      "choices": [
+        {
+          "target": "dreamer_ask_who_wrote",
+          "text": "dialogue.dreamer.dreamer_remembers.choice1"
+        },
+        {
+          "target": "dreamer_ask_diary_now",
+          "text": "dialogue.dreamer.dreamer_remembers.choice2"
+        }
+      ],
+      "commands": [
+        {
+          "parameters": [
+            {
+              "type": "flag",
+              "value": "dreamer_quest_state"
+            },
+            {
+              "type": "value",
+              "value": 3.0
+            }
+          ],
+          "type": "setIntFlag"
+        }
+      ],
+      "speaker": "Dreamer",
+      "text": "dialogue.dreamer.dreamer_remembers"
+    },
+    "node": "dreamer_remembers"
+  },
+  {
+    "data": {
+      "next": "dreamer_ask_diary_now",
+      "speaker": "Dreamer",
+      "text": "dialogue.dreamer.dreamer_ask_who_wrote"
+    },
+    "node": "dreamer_ask_who_wrote"
+  },
+  {
+    "data": {
+      "speaker": "Dreamer",
+      "text": "dialogue.dreamer.dreamer_ask_diary_now"
+    },
+    "node": "dreamer_ask_diary_now"
+  },
+  {
+    "data": {
+      "speaker": "Dreamer",
+      "text": "dialogue.dreamer.dreamer_needs_diary"
+    },
+    "node": "dreamer_needs_diary"
+  },
+  {
+    "data": {
+      "next": "dreamer_has_diary_2",
+      "speaker": "Dreamer",
+      "text": "dialogue.dreamer.dreamer_has_diary_1"
+    },
+    "node": "dreamer_has_diary_1"
+  },
+  {
+    "data": {
+      "commands": [
+        {
+          "parameters": [
+            {
+              "type": "item",
+              "value": "Yellow Crystal Key"
+            }
+          ],
+          "type": "giveItem"
+        },
+        {
+          "parameters": [
+            {
+              "type": "item",
+              "value": "Personal Diary"
+            }
+          ],
+          "type": "removeItem"
+        },
+        {
+          "parameters": [
+            {
+              "type": "flag",
+              "value": "dreamer_quest_state"
+            },
+            {
+              "type": "value",
+              "value": 5.0
+            }
+          ],
+          "type": "setIntFlag"
+        }
+      ],
+      "next": "dreamer_has_diary_3",
+      "speaker": "Dreamer",
+      "text": "dialogue.dreamer.dreamer_has_diary_2"
+    },
+    "node": "dreamer_has_diary_2"
+  },
+  {
+    "data": {
+      "speaker": "Dreamer",
+      "text": "dialogue.dreamer.dreamer_has_diary_3"
+    },
+    "node": "dreamer_has_diary_3"
+  },
+  {
+    "data": {
+      "speaker": "Dreamer",
+      "text": "dialogue.dreamer.dreamer_complete"
+    },
+    "node": "dreamer_complete"
+  }
+]

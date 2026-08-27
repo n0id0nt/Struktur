@@ -1,0 +1,57 @@
+
+#include "DebugInfoWindow.h"
+
+#include "Engine/Core/GameData.h"
+#include "Engine/GameContext.h"
+#include "GameViewportWindow.h"
+
+namespace Struktur::Debug
+{
+void DebugInfoWindow::Render(GameContext& context)
+{
+	if (!m_isVisible)
+	{
+		return;
+	}
+
+	ImGui::Begin(m_name.c_str(), &m_isOpen);
+
+	Core::GameData& gameData = context.GetGameData();
+
+	ImGui::Text("Game Resolution: %dx%d", gameData.gameWidth, gameData.gameHeight);
+	ImGui::Text("Application Resolution: %dx%d", gameData.applicationWidth, gameData.applicationHeight);
+	ImGui::Separator();
+
+	if (m_viewportWindow)
+	{
+		ImGui::Text("Viewport Focused: %s", m_viewportWindow->IsViewportFocused() ? "Yes" : "No");
+		ImGui::Text("Viewport Hovered: %s", m_viewportWindow->IsViewportHovered() ? "Yes" : "No");
+		ImGui::Separator();
+
+		glm::vec2 gameMousePos = m_viewportWindow->GetGameMousePosition(context);
+		if (gameMousePos.x >= 0 && gameMousePos.y >= 0)
+		{
+			ImGui::Text("Mouse in Game: (%.1f, %.1f)", gameMousePos.x, gameMousePos.y);
+		}
+		else
+		{
+			ImGui::Text("Mouse in Game: Outside");
+		}
+	}
+
+	ImGui::Separator();
+	// Own TimeSystem instead of raylib's GetFPS()/GetFrameTime() - raylib's core state (that those read) is
+	// never initialised on desktop, and every other frame-timing consumer in the engine already uses this.
+	Core::TimeSystem& timeSystem = context.GetTimeSystem();
+	ImGui::Text("FPS: %.0f", timeSystem.unscaledDelta > 0.0f ? 1.0f / timeSystem.unscaledDelta : 0.0f);
+	ImGui::Text("Frame Time: %.3f ms", timeSystem.unscaledDelta * 1000.0f);
+	ImGui::Separator();
+
+	if (ImGui::Button("Reset"))
+	{
+		// Handle reset
+	}
+
+	ImGui::End();
+}
+}  // namespace Struktur::Debug

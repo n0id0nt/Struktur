@@ -1,0 +1,37 @@
+cd /d "%~dp0.."
+
+# Core libs
+git submodule add https://github.com/skypjack/entt.git           third_party/entt
+git submodule add https://github.com/g-truc/glm.git              third_party/glm
+git submodule add https://github.com/nlohmann/json.git           third_party/json
+git submodule add https://github.com/erincatto/box2d.git         third_party/box2d
+git submodule add https://github.com/wren-lang/wren.git          third_party/wren
+git submodule add https://github.com/icculus/physfs.git          third_party/physfs
+git submodule add https://github.com/libsdl-org/SDL.git          third_party/SDL
+git submodule add https://github.com/libsdl-org/SDL_mixer.git    third_party/SDL_mixer
+git submodule add https://github.com/bkaradzic/bgfx.cmake.git    third_party/bgfx.cmake
+
+# Editor-only
+git submodule add https://github.com/ocornut/imgui.git           third_party/imgui
+git submodule add https://github.com/native-toolkit/tinyfiledialogs.git third_party/tinyfiledialogs
+
+# Pin each to the same version you were using
+cd third_party/entt        && git checkout v3.12.2          && cd ../..
+cd third_party/glm         && git checkout 1.0.1            && cd ../..
+cd third_party/json        && git checkout v3.11.3          && cd ../..
+cd third_party/box2d       && git checkout v2.4.1           && cd ../..
+cd third_party/wren        && git checkout 0.4.0            && cd ../..
+cd third_party/physfs      && git checkout release-3.2.0    && cd ../..
+cd third_party/imgui       && git checkout v1.91.8-docking  && cd ../..
+
+git add third_party/box2d
+git add third_party/entt
+git add third_party/glm
+git add third_party/json
+git add third_party/wren
+git add third_party/physfs
+git add third_party/SDL
+git add third_party/SDL_mixer
+git add third_party/bgfx.cmake
+git add third_party/imgui
+git add third_party/tinyfiledialogs

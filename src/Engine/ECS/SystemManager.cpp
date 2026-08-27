@@ -1,21 +1,34 @@
-#include "raylib.h"
 #include "SystemManager.h"
+
+#include "Debug/Profiling/Profiler.h"
 #include "Engine/GameContext.h"
 
-void Struktur::System::SystemManager::Update(GameContext &context)
+void Struktur::System::SystemManager::Update(GameContext& context)
 {
-    for (auto& system : m_updateSystems)
-    {
-        m_systemMap[system]->Update(context);
-    }
+	for (auto& systemId : m_updateSystems)
+	{
+		auto* system = m_systemMap[systemId].get();
+		PROFILE_SCOPE(system->Name());
+		system->Update(context);
+	}
+}
 
-    ::BeginDrawing();
-    ::ClearBackground(BLACK);
+void Struktur::System::SystemManager::Render(GameContext& context)
+{
+	for (auto& systemId : m_renderSystems)
+	{
+		auto* system = m_systemMap[systemId].get();
+		PROFILE_SCOPE(system->Name());
+		system->Update(context);
+	}
+}
 
-    for (auto& system : m_renderSystems)
-    {
-        m_systemMap[system]->Update(context);
-    }
-
-    ::EndDrawing();
+void Struktur::System::SystemManager::FixedUpdate(GameContext& context)
+{
+	for (auto& systemId : m_fixedUpdateSystems)
+	{
+		auto* system = m_systemMap[systemId].get();
+		PROFILE_SCOPE(system->Name());
+		system->Update(context);
+	}
 }

@@ -1,0 +1,236 @@
+[
+  {
+    "data": {
+      "targets": [
+        {
+          "conditions": [
+            {
+              "parameters": [
+                {
+                  "type": "flag",
+                  "value": "inventor_quest_state"
+                },
+                {
+                  "type": "op",
+                  "value": "=="
+                },
+                {
+                  "type": "value",
+                  "value": 5.0
+                }
+              ],
+              "type": "hasIntFlag"
+            }
+          ],
+          "node": "inventor_complete"
+        },
+        {
+          "conditions": [
+            {
+              "parameters": [
+                {
+                  "type": "flag",
+                  "value": "inventor_quest_state"
+                },
+                {
+                  "type": "op",
+                  "value": "=="
+                },
+                {
+                  "type": "value",
+                  "value": 3.0
+                }
+              ],
+              "type": "hasIntFlag"
+            },
+            {
+              "parameters": [
+                {
+                  "type": "item",
+                  "value": "Tool Box"
+                }
+              ],
+              "type": "hasItem"
+            }
+          ],
+          "node": "inventor_has_toolbox_1"
+        },
+        {
+          "conditions": [
+            {
+              "parameters": [
+                {
+                  "type": "flag",
+                  "value": "inventor_quest_state"
+                },
+                {
+                  "type": "op",
+                  "value": "=="
+                },
+                {
+                  "type": "value",
+                  "value": 3.0
+                }
+              ],
+              "type": "hasIntFlag"
+            }
+          ],
+          "node": "inventor_needs_toolbox"
+        },
+        {
+          "node": "inventor_first_1"
+        }
+      ]
+    },
+    "node": "inventor"
+  },
+  {
+    "data": {
+      "next": "inventor_first_2",
+      "speaker": "Inventor",
+      "text": "dialogue.inventor.inventor_first_1"
+    },
+    "node": "inventor_first_1"
+  },
+  {
+    "data": {
+      "choices": [
+        {
+          "target": "inventor_ask_split",
+          "text": "dialogue.inventor.inventor_first_2.choice1"
+        },
+        {
+          "target": "inventor_ask_cook",
+          "text": "dialogue.inventor.inventor_first_2.choice2"
+        },
+        {
+          "target": "inventor_ask_help",
+          "text": "dialogue.inventor.inventor_first_2.choice3"
+        }
+      ],
+      "speaker": "Inventor",
+      "text": "dialogue.inventor.inventor_first_2"
+    },
+    "node": "inventor_first_2"
+  },
+  {
+    "data": {
+      "next": "inventor_the_task",
+      "speaker": "Inventor",
+      "text": "dialogue.inventor.inventor_ask_split"
+    },
+    "node": "inventor_ask_split"
+  },
+  {
+    "data": {
+      "next": "inventor_the_task",
+      "speaker": "Inventor",
+      "text": "dialogue.inventor.inventor_ask_cook"
+    },
+    "node": "inventor_ask_cook"
+  },
+  {
+    "data": {
+      "next": "inventor_the_task",
+      "speaker": "Inventor",
+      "text": "dialogue.inventor.inventor_ask_help"
+    },
+    "node": "inventor_ask_help"
+  },
+  {
+    "data": {
+      "commands": [
+        {
+          "parameters": [
+            {
+              "type": "flag",
+              "value": "inventor_quest_state"
+            },
+            {
+              "type": "value",
+              "value": 3.0
+            }
+          ],
+          "type": "setIntFlag"
+        }
+      ],
+      "speaker": "Inventor",
+      "text": "dialogue.inventor.inventor_the_task"
+    },
+    "node": "inventor_the_task"
+  },
+  {
+    "data": {
+      "speaker": "Inventor",
+      "text": "dialogue.inventor.inventor_needs_toolbox"
+    },
+    "node": "inventor_needs_toolbox"
+  },
+  {
+    "data": {
+      "next": "inventor_has_toolbox_2",
+      "speaker": "Inventor",
+      "text": "dialogue.inventor.inventor_has_toolbox_1"
+    },
+    "node": "inventor_has_toolbox_1"
+  },
+  {
+    "data": {
+      "commands": [
+        {
+          "parameters": [
+            {
+              "type": "flag",
+              "value": "inventor_quest_state"
+            },
+            {
+              "type": "value",
+              "value": 5.0
+            }
+          ],
+          "type": "setIntFlag"
+        },
+        {
+          "parameters": [
+            {
+              "type": "item",
+              "value": "Tool Box"
+            }
+          ],
+          "type": "removeItem"
+        },
+        {
+          "parameters": [
+            {
+              "type": "flag",
+              "value": "pantry_unlocked"
+            },
+            {
+              "type": "value",
+              "value": true
+            }
+          ],
+          "type": "setFlag"
+        }
+      ],
+      "next": "inventor_has_toolbox_3",
+      "speaker": "Inventor",
+      "text": "dialogue.inventor.inventor_has_toolbox_2"
+    },
+    "node": "inventor_has_toolbox_2"
+  },
+  {
+    "data": {
+      "speaker": "Inventor",
+      "text": "dialogue.inventor.inventor_has_toolbox_3"
+    },
+    "node": "inventor_has_toolbox_3"
+  },
+  {
+    "data": {
+      "speaker": "Inventor",
+      "text": "dialogue.inventor.inventor_complete"
+    },
+    "node": "inventor_complete"
+  }
+]

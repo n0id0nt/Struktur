@@ -1,26 +1,45 @@
 #pragma once
 
-#include "raylib.h"
-#include "box2d/box2d.h"
-
+#include "Debug/Box2DBgfxDebugDraw.h"
 #include "Engine/ECS/SystemManager.h"
-#include "Debug/Box2DDebugRenderer.h"
+#include "Engine/Renderer/DebugRenderer.h"
+#include "box2d/box2d.h"
 
 namespace Struktur
 {
-    class GameContext;
+class GameContext;
 
-	namespace System
+namespace System
+{
+class DebugSystem : public ISystem
+{
+public:
+	DebugSystem();
+
+	void Update(GameContext &context) override;
+
+	void RenderEntityGizmos(GameContext &context);
+	void RenderSelectedEntityHighlight(GameContext &context);
+	void RenderGrid(GameContext &context);
+	void RenderLevelBounds(GameContext &context);
+	void RenderPhysicsShapes(GameContext &context);
+
+	// Lets other editor code (e.g. Debug::UIHierarchyWindow, highlighting a selected UIElement's bounds via
+	// DebugRenderer::SetupUIView) reach the same DebugRenderer instance this system already owns, rather than
+	// each needing its own white texture/sampler pair.
+	Renderer::DebugRenderer &GetDebugRenderer()
 	{
-        class DebugSystem : public ISystem
-        {
-        public:
-			DebugSystem();
+		return m_debugRenderer;
+	}
 
-            void Update(GameContext& context) override;
+	std::string Name() const override
+	{
+		return "Debug System";
+	}
 
-		private:
-			Debug::Box2DDebugRenderer m_box2dRenderer;
-        };
-    }
-}
+private:
+	Renderer::DebugRenderer m_debugRenderer;
+	Debug::Box2DBgfxDebugDraw m_box2dBgfxDebugDraw{m_debugRenderer};
+};
+}  // namespace System
+}  // namespace Struktur
