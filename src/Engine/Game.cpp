@@ -216,12 +216,6 @@ void Struktur::InitialiseGame(GameContext& context)
 
 void Struktur::ExitGame(GameContext& context)
 {
-#ifdef EDITOR
-	DEBUG_INFO("[Clean Up] Editor");
-	Debug::Editor& editor = context.GetEditor();
-	editor.Shutdown(context);
-#endif
-
 	DEBUG_INFO("[Clean Up] Wren State Manager");
 	Wren::WrenStateManager& wrenStateManager = context.GetWrenStateManager();
 	wrenStateManager.Shutdown(context);
@@ -261,6 +255,12 @@ void Struktur::ExitGame(GameContext& context)
 	DEBUG_INFO("[Clean Up] Resource Manager");
 	Resource::ResourceManager& resourceManager = context.GetResourceManager();
 	resourceManager.Clear();
+
+#ifdef EDITOR
+	DEBUG_INFO("[Clean Up] Editor");
+	Debug::Editor& editor = context.GetEditor();
+	editor.Shutdown(context);
+#endif
 
 	FileSystem::Shutdown();
 }
