@@ -32,8 +32,8 @@ class Player {
     // Called after C++ has created base components
     // Script configures/initializes component values
     start() {
-        var texture = Texture.load("Tiles/playerSpriteV2.png")
-        Sprite.create(_entity, texture, WHITE, Vec2.new(16, 16), 7, 4, false, 0, RenderLayer.ENTITIES, 0)
+        var texture = Texture.load("Sprites/player.png")
+        Sprite.create(_entity, texture, WHITE, Vec2.new(19, 17), 10, 10, false, 0, RenderLayer.ENTITIES, 0)
         texture.unload()
         var camera = Camera.create(_entity)
         camera.zoom = 5
@@ -46,19 +46,36 @@ class Player {
 
         var spriteAnimation = SpriteAnimation.create(_entity)
 
-        var downIdleAnimation = SpriteAnimationDefinition.new(0, 2, 1, true)
-        var upIdleAnimation = SpriteAnimationDefinition.new(7, 9, 1, true)
-        var sideIdleAnimation = SpriteAnimationDefinition.new(14, 16, 1, true)
-        var downRunAnimation = SpriteAnimationDefinition.new(2, 6, 0.7, true)
-        var upRunAnimation = SpriteAnimationDefinition.new(9, 13, 0.7, true)
-        var sideRunAnimation = SpriteAnimationDefinition.new(16, 20, 0.7, true)
+        // Define Idle Animations
+        var downIdleAnimation = SpriteAnimationDefinition.new(0, 1, 1, true)
+        var upIdleAnimation = SpriteAnimationDefinition.new(1, 2, 1, true)
+        var leftIdleAnimation = SpriteAnimationDefinition.new(2, 3, 1, true)
+        var rightIdleAnimation = SpriteAnimationDefinition.new(3, 4, 1, true)
 
-        spriteAnimation.addAnimation("upIdleAnimation", upIdleAnimation)
+        // Define Run Animations
+        var downRunAnimation = SpriteAnimationDefinition.new(4, 12, 0.7, true)
+        var upRunAnimation = SpriteAnimationDefinition.new(12, 17, 0.7, true)
+        var leftRunAnimation = SpriteAnimationDefinition.new(18, 26, 0.7, true)
+        var rightRunAnimation = SpriteAnimationDefinition.new(26, 34, 0.7, true)
+
+        // Define Attack Animations
+        var downAttackAnimation = SpriteAnimationDefinition.new(34, 42, 0.7, true)
+        var upAttackAnimation = SpriteAnimationDefinition.new(42, 50, 0.7, true)
+        var leftAttackAnimation = SpriteAnimationDefinition.new(50, 58, 0.7, true)
+        var rightAttackAnimation = SpriteAnimationDefinition.new(58, 65, 0.7, true)
+
         spriteAnimation.addAnimation("downIdleAnimation", downIdleAnimation)
-        spriteAnimation.addAnimation("sideIdleAnimation", sideIdleAnimation)
-        spriteAnimation.addAnimation("upRunAnimation", upRunAnimation)
+        spriteAnimation.addAnimation("upIdleAnimation", upIdleAnimation)
+        spriteAnimation.addAnimation("leftIdleAnimation", leftIdleAnimation)
+        spriteAnimation.addAnimation("rightIdleAnimation", rightIdleAnimation)
         spriteAnimation.addAnimation("downRunAnimation", downRunAnimation)
-        spriteAnimation.addAnimation("sideRunAnimation", sideRunAnimation)
+        spriteAnimation.addAnimation("upRunAnimation", upRunAnimation)
+        spriteAnimation.addAnimation("leftRunAnimation", leftRunAnimation)
+        spriteAnimation.addAnimation("rightRunAnimation", rightRunAnimation)
+        spriteAnimation.addAnimation("downAttackAnimation", downAttackAnimation)
+        spriteAnimation.addAnimation("upAttackAnimation", upAttackAnimation)
+        spriteAnimation.addAnimation("leftAttackAnimation", leftAttackAnimation)
+        spriteAnimation.addAnimation("rightAttackAnimation", rightAttackAnimation)
 
         SpriteAnimation.setCurrentAnimation(_entity, "downIdleAnimation")
     }
@@ -91,8 +108,11 @@ class Player {
     }
 
     getPlayerAnimation(animationType) {
-        if (_facing.x > 0.01 || _facing.x < -0.01) {
-            return "side%(animationType)Animation"
+        if (_facing.x > 0.01) {
+            return "right%(animationType)Animation"
+        }
+        if (_facing.x < -0.01) {
+            return "left%(animationType)Animation"
         }
         if (_facing.y < 0.01) {
             return "up%(animationType)Animation"
@@ -121,11 +141,11 @@ class Player {
             var animation = getPlayerAnimation("Run")
             SpriteAnimation.setCurrentAnimation(_entity, animation)
 
-            if (dir.x > 0) {
-                Sprite.setFlipped(_entity, false)
-            } else if (dir.x < 0) {
-                Sprite.setFlipped(_entity, true)
-            }
+            //if (dir.x > 0) {
+            //    Sprite.setFlipped(_entity, false)
+            //} else if (dir.x < 0) {
+            //    Sprite.setFlipped(_entity, true)
+            //}
         } else {
             var animation = getPlayerAnimation("Idle")
             SpriteAnimation.setCurrentAnimation(_entity, animation)
