@@ -381,6 +381,15 @@ void Struktur::GameLoop(GameContext& context)
 			int fixedSteps = 0;
 			while (gameData.physicsAccumulator >= gameData.timeStep && fixedSteps < gameData.maxFixedStepsPerFrame)
 			{
+				if (fixedSteps == 0)
+				{
+					// Once per frame, only when a step is actually about to run - captures wherever bodies
+					// settled at the end of the last stepped frame as this frame's blend-from point (see
+					// PhysicsSystem::SyncPhysicsToTransforms). A frame with zero steps must NOT call this - it
+					// would collapse previous == current and freeze the blend instead of continuing to smoothly
+					// approach the still-unchanged "current" as the accumulator keeps growing toward the next step.
+					systemManager.GetSystem<System::PhysicsSystem>().SnapshotPreviousTransforms(context);
+				}
 				systemManager.FixedUpdate(context);
 				gameData.physicsAccumulator -= gameData.timeStep;
 				fixedSteps++;

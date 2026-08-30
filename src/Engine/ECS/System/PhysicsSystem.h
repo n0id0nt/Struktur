@@ -25,8 +25,17 @@ public:
 	// The actual Box2D simulation advance - deliberately NOT called from Update() above. Called instead via
 	// PhysicsFixedStepSystem (AddFixedUpdateSystem) at GameData::timeStep cadence, independent of render rate.
 	void StepPhysics(GameContext& context, float deltaTime);
+	// Blends each body's PhysicsBody::previousPositionMeters/previousAngleRadians toward its current (post-step)
+	// state using GameData::physicsAccumulator/timeStep as the blend factor, and writes the *blended* result into
+	// Transform - see this method's own comment in the .cpp for why (render-frame smoothing between fixed steps).
 	void SyncPhysicsToTransforms(GameContext& context);
 	void SyncTransformsToPhysics(GameContext& context);
+
+	// Captures every physics body's current position/angle as its new "previous" for this frame's render-time
+	// blend (see SyncPhysicsToTransforms) - called once per frame, only when at least one fixed step is about to
+	// run (see GameLoop's accumulator loop in Game.cpp), so a frame with zero steps keeps blending toward
+	// whatever bracket the last stepped frame set up instead of collapsing previous==current and freezing.
+	void SnapshotPreviousTransforms(GameContext& context);
 
 	Component::PhysicsBody& CreatePhysicsBody(GameContext& context, entt::entity entity, const b2BodyDef& bodyDef,
 	                                          const b2Shape& shape);

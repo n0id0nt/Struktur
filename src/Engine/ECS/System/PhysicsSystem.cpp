@@ -8,6 +8,7 @@
 #include "Engine/Physics/PhysicsWorld.h"
 #include "Engine/Util/MathUtil.h"
 #include "Engine/World/TileMap.h"
+#include "glm/common.hpp"
 #include "glm/gtc/quaternion.hpp."
 
 void Struktur::System::PhysicsSystem::Update(GameContext& context)
@@ -42,10 +43,19 @@ void Struktur::System::PhysicsSystem::SyncPhysicsToTransforms(GameContext& conte
 	entt::registry& registry            = context.GetRegistry();
 	Physics::PhysicsWorld& physicsWorld = context.GetPhysicsWorld();
 	TransformSystem& transformSystem    = context.GetSystemManager().GetSystem<TransformSystem>();
+	Core::GameData& gameData            = context.GetGameData();
 
 	auto view = registry.view<Component::PhysicsBody, Component::Transform>(entt::exclude<Inactive>);
 
 	const float ppm = physicsWorld.GetPixelsPerMeter();
+
+	// How far into the fixed step that HASN'T run yet this render frame currently sits, e.g. 0.4 = 40% of the
+	// way toward a step that's still 60% of a timeStep away. Blending previous->current by this fraction (rather
+	// than just showing "current", the body's position as of its last completed step) is what actually smooths
+	// motion between fixed steps - see PhysicsBody::previousPositionMeters's own comment for why that gap exists
+	// at all. Clamped defensively; by the accumulator loop's own invariant this is already in [0,1).
+	float alpha = gameData.timeStep > 0.0f ? gameData.physicsAccumulator / gameData.timeStep : 0.0f;
+	alpha       = glm::clamp(alpha, 0.0f, 1.0f);
 
 	PROFILE_SCOPE("Sync All From Physics");
 	for (auto [entity, physicsBody, transform] : view.each())
@@ -54,8 +64,10 @@ void Struktur::System::PhysicsSystem::SyncPhysicsToTransforms(GameContext& conte
 		{
 			// Get world position from physics
 			PROFILE_BEGIN_SCOPE(physicsPosition, "Get Phyics Position");
-			b2Vec2 position = physicsBody.body->GetPosition();
-			float angle     = physicsBody.body->GetAngle();
+			b2Vec2 currentPosition = physicsBody.body->GetPosition();
+			b2Vec2 position(glm::mix(physicsBody.previousPositionMeters.x, currentPosition.x, alpha),
+			                glm::mix(physicsBody.previousPositionMeters.y, currentPosition.y, alpha));
+			float angle     = glm::mix(physicsBody.previousAngleRadians, physicsBody.body->GetAngle(), alpha);
 
 			glm::vec3 scale = transformSystem.GetWorldScale(context, entity);
 
@@ -104,10 +116,33 @@ void Struktur::System::PhysicsSystem::SyncTransformsToPhysics(GameContext& conte
 			PROFILE_END_SCOPE(convertAngle);
 			// create helper functions to convert to and from b2vec to glm::vec2 using hte physics scale
 			PROFILE_BEGIN_SCOPE(uploadToPhysics, "Upload To Physics");
-			physicsBody.body->SetTransform(b2Vec2(worldPosition.x * metersPerPixel, worldPosition.y * metersPerPixel),
-			                               angleZ);
+			b2Vec2 pushedPosition(worldPosition.x * metersPerPixel, worldPosition.y * metersPerPixel);
+			physicsBody.body->SetTransform(pushedPosition, angleZ);
 			PROFILE_END_SCOPE(uploadToPhysics);
 			physicsBody.syncedTransformVersion = transform.version;
+
+			// An external move (a script teleporting this entity) should read as an instant snap, not a glide -
+			// without this, the next SyncPhysicsToTransforms would blend from wherever this body was as of the
+			// last fixed step all the way to the teleported position, smearing the jump across a render frame.
+			physicsBody.previousPositionMeters = pushedPosition;
+			physicsBody.previousAngleRadians   = angleZ;
+		}
+	}
+}
+
+void Struktur::System::PhysicsSystem::SnapshotPreviousTransforms(GameContext& context)
+{
+	entt::registry& registry = context.GetRegistry();
+
+	auto view = registry.view<Component::PhysicsBody>(entt::exclude<Inactive>);
+
+	PROFILE_SCOPE("Snapshot Previous Physics Transforms");
+	for (auto [entity, physicsBody] : view.each())
+	{
+		if (physicsBody.body)
+		{
+			physicsBody.previousPositionMeters = physicsBody.body->GetPosition();
+			physicsBody.previousAngleRadians   = physicsBody.body->GetAngle();
 		}
 	}
 }
@@ -134,6 +169,12 @@ Struktur::Component::PhysicsBody& Struktur::System::PhysicsSystem::CreatePhysics
 	Component::PhysicsBody& physicsBody =
 	    registry.emplace<Component::PhysicsBody>(entity, body, bodyDef.type == b2_kinematicBody);
 
+	// Starts previous == current (its spawn position) so its first render-time blend (see
+	// SyncPhysicsToTransforms) has nothing to interpolate away from - without this it would default to (0,0)
+	// and visibly flash at the origin for the one frame before SnapshotPreviousTransforms next runs.
+	physicsBody.previousPositionMeters = body->GetPosition();
+	physicsBody.previousAngleRadians   = body->GetAngle();
+
 	return physicsBody;
 }
 
@@ -149,6 +190,10 @@ Struktur::Component::PhysicsBody& Struktur::System::PhysicsSystem::CreatePhysics
 
 	Component::PhysicsBody& physicsBody =
 	    registry.emplace<Component::PhysicsBody>(entity, body, bodyDef.type == b2_kinematicBody);
+
+	// See the shape-taking overload's own comment above for why.
+	physicsBody.previousPositionMeters = body->GetPosition();
+	physicsBody.previousAngleRadians   = body->GetAngle();
 
 	return physicsBody;
 }

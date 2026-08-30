@@ -24,6 +24,16 @@ struct PhysicsBody
 	// ever increments on a real change, never on a read - can't be stolen this way. Starts mismatched against a
 	// fresh Transform's version (0) so a newly created body always syncs once on its first opportunity.
 	uint32_t syncedTransformVersion = 0xFFFFFFFFu;
+
+	// The body's position/angle as of the start of this frame's fixed-step batch (see
+	// PhysicsSystem::SnapshotPreviousTransforms) - the "from" side of the render-time blend
+	// PhysicsSystem::SyncPhysicsToTransforms does between this and the body's current (post-step) position, so a
+	// render frame that lands between two fixed steps shows smooth motion instead of the body's position visibly
+	// holding still then jumping (fixed steps don't run every render frame - see GameLoop's accumulator loop).
+	// Reset to match the current position whenever SyncTransformsToPhysics pushes an external move (a script
+	// teleporting something) so that snap is instant rather than smeared across the next render frame too.
+	b2Vec2 previousPositionMeters = b2Vec2(0.0f, 0.0f);
+	float previousAngleRadians    = 0.0f;
 };
 }  // namespace Component
 }  // namespace Struktur
