@@ -171,7 +171,9 @@ foreign class World {
     // Creates a level in the game and all its corresponding objects and entities.
     foreign loadLevelEntities(arg0)
     // Get the index of an Level in the world.
-    foreign static getLevelIndex(arg0)
+    foreign getLevelIndex(arg0)
+    // Gets the number of levels in the world.
+    foreign getLevelsCount()
     // Gets a world component.
     foreign static get(arg0)
     // Creates a level in the game and all its corresponding objects and entities.
@@ -180,6 +182,8 @@ foreign class World {
     foreign static createWorldEntity(arg0)
     // Get the index of an Level in the world.
     foreign static getLevelIndex(arg0,arg1)
+    // Gets the number of levels in the world.
+    foreign static getLevelsCount(arg0)
 }
 
 // Shader class wraps Shader component

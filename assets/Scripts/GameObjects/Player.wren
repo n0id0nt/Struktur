@@ -4,6 +4,7 @@ import "math" for Vec2, Vec3, Vec4, Math
 import "resourceManager" for Texture
 import "animation" for SpriteAnimationDefinition
 import "physics" for BodyDefinition, PhysicsCircleShape, BodyType
+import "input" for Input
 
 import "reflect" for Reflect
 import "Colors" for WHITE
@@ -17,7 +18,7 @@ class Player {
         _timeAccumulator = 0
         _initialized = false
         _facing = Vec2.new(0, 1)
-        _speed = 5
+        _speed = 2
         _fixedUpdateCount = 0
 
         System.print("Player constructed for: %(_name)")
@@ -84,14 +85,11 @@ class Player {
 
     }
 
-    // Demonstrates the opt-in fixed-update convention (see BaseState/WrenScriptComponentRegistry) on a real,
-    // observable effect - a running count of fixed ticks, independent of render framerate, printed occasionally
-    // so it's visible without spamming the log every tick.
     fixedUpdate() {
-        _fixedUpdateCount = _fixedUpdateCount + 1
-        if (_fixedUpdateCount % 60 == 0) {
-            System.print("Player fixedUpdate ticks: %(_fixedUpdateCount)")
-        }
+        var inputDir = Input.getInputAxis2("Move")
+        inputDir.y = inputDir.y * -1
+
+        playerControl(inputDir)
     }
 
     onDestroy() {
@@ -140,12 +138,6 @@ class Player {
         if (dir.length() > 0.001) {
             var animation = getPlayerAnimation("Run")
             SpriteAnimation.setCurrentAnimation(_entity, animation)
-
-            //if (dir.x > 0) {
-            //    Sprite.setFlipped(_entity, false)
-            //} else if (dir.x < 0) {
-            //    Sprite.setFlipped(_entity, true)
-            //}
         } else {
             var animation = getPlayerAnimation("Idle")
             SpriteAnimation.setCurrentAnimation(_entity, animation)

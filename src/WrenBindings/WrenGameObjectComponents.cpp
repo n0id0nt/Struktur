@@ -269,6 +269,44 @@ void wren_WorldCreateWorldEntity(WrenVM* vm)
 	wrenSetSlotDouble(vm, 0, entityId);
 }
 
+// World.getLevelsCount() -> number
+void wren_WorldGetLevelsCount(WrenVM* vm)
+{
+	Struktur::GameContext* context = static_cast<Struktur::GameContext*>(wrenGetUserData(vm));
+
+	WrenWorld* world      = (WrenWorld*)wrenGetSlotForeign(vm, 0);
+
+	Struktur::FileLoading::LevelParser::World& worldMap = world->component->worldMap;
+
+	double doubleNumber = static_cast<double>(worldMap.levels.size());
+
+	wrenSetSlotDouble(vm, 0, doubleNumber);
+}
+
+// World.getLevelsCount(entity) -> number
+void wren_WorldStaticGetLevelsCount(WrenVM* vm)
+{
+	Struktur::GameContext* context = static_cast<Struktur::GameContext*>(wrenGetUserData(vm));
+	entt::registry& registry       = context->GetRegistry();
+
+	double entityId       = wrenGetSlotDouble(vm, 1);
+	entt::entity entity   = static_cast<entt::entity>(entityId);
+
+	auto* worldComponent = registry.try_get<Struktur::Component::World>(entity);
+
+	if (!worldComponent)
+	{
+		wrenSetSlotNull(vm, 0);
+		return;
+	}
+
+	Struktur::FileLoading::LevelParser::World& worldMap = worldComponent->worldMap;
+
+	double doubleNumber = static_cast<double>(worldMap.levels.size());
+
+	wrenSetSlotDouble(vm, 0, doubleNumber);
+}
+
 // World.getLevelIndex(levelName) -> number
 void wren_WorldGetLevelIndex(WrenVM* vm)
 {
@@ -2143,8 +2181,10 @@ WREN_BINDING_MODULE(GameObjectComponent)
 	// Register methods
 	WREN_CLASS_METHOD(registry, "gameObjectComponents", "World", "loadLevelEntities(_)", wren_WorldLoadLevelEntities,
 	                  "Creates a level in the game and all its corresponding objects and entities.");
-	WREN_CLASS_STATIC(registry, "gameObjectComponents", "World", "getLevelIndex(_)", wren_WorldGetLevelIndex,
+	WREN_CLASS_METHOD(registry, "gameObjectComponents", "World", "getLevelIndex(_)", wren_WorldGetLevelIndex,
 	                  "Get the index of an Level in the world.");
+	WREN_CLASS_METHOD(registry, "gameObjectComponents", "World", "getLevelsCount()", wren_WorldGetLevelsCount,
+	                  "Gets the number of levels in the world.");
 
 	// Register static methods
 	WREN_CLASS_STATIC(registry, "gameObjectComponents", "World", "get(_)", wren_WorldGet, "Gets a world component.");
@@ -2155,6 +2195,8 @@ WREN_BINDING_MODULE(GameObjectComponent)
 	                  "Loads in a LDTK world file and creates the world game object and corresponding components.");
 	WREN_CLASS_STATIC(registry, "gameObjectComponents", "World", "getLevelIndex(_,_)", wren_WorldStaticGetLevelIndex,
 	                  "Get the index of an Level in the world.");
+	WREN_CLASS_STATIC(registry, "gameObjectComponents", "World", "getLevelsCount(_)", wren_WorldStaticGetLevelsCount,
+	                  "Gets the number of levels in the world.");
 
 	// Register BodyDefinition foreign class
 	WREN_FOREIGN_CLASS(registry, "gameObjectComponents", "PhysicsBody", wren_PhysicsBodyAllocate,

@@ -12,6 +12,7 @@ import "States/StateManager" for StateManager
 import "States/GameWorldState" for GameWorldState
 import "States/MainMenuState" for MainMenuState
 import "States/SettingsState" for SettingsState
+import "States/ExperimentState" for ExperimentState
 import "Inventory" for Inventory
 import "Dialogue/DialogueLoader" for DialogueLoader
 
@@ -56,8 +57,9 @@ class Game {
         _stateManager.insertState("GameWorld", GameWorldState)
         _stateManager.insertState("MainMenu", MainMenuState)
         _stateManager.insertState("Settings", SettingsState)
+        _stateManager.insertState("Experiment", ExperimentState)
 
-        _stateManager.changeState("MainMenu")
+        _stateManager.changeState("Experiment")
     }
     
     // Called by C++ every frame

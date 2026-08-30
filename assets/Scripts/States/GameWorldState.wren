@@ -125,8 +125,7 @@ class GameWorldState is BaseState {
         if (_gameMusic && !_gameMusic.isPlaying()) {
             _gameMusic.play()
         }
-        var inputDir = Input.getInputAxis2("Move")
-        inputDir.y = inputDir.y * -1
+
         var inputInteract = Input.isInputJustReleased("Interact")
         var inventoryInteract = Input.isInputJustReleased("Inventory")
 
@@ -152,8 +151,6 @@ class GameWorldState is BaseState {
             if (!script) {
                 continue
             }
-            script.playerControl(inputDir)
-
             var interactEntity = script.getInteractEntity()
 
             if (interactEntity) {
