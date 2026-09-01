@@ -41,6 +41,17 @@ struct GameData
 	// in-memory mirror of Core::EngineSettings, loaded once at boot and written back whenever changed.
 	bool vsyncEnabled = true;
 	int targetFps     = 0;  // 0 = uncapped
+
+#if defined(EDITOR)
+	// Editor-only frame-pacing override, driven by the Profiler window - lets you preview how the game behaves at
+	// a different framerate or under load without touching the persisted VSync/targetFps settings. Never saved.
+	// While enabled the desktop loop paces to overrideFps (<=0 = don't cap) plus artificialLagMs of constant
+	// delay every frame; oneOffHitchMs is consumed once by the loop (the "inject spike" button) then reset.
+	bool frameRateOverrideEnabled = false;
+	int overrideFps               = 60;
+	float artificialLagMs         = 0.0f;
+	float oneOffHitchMs           = 0.0f;
+#endif
 };
 }  // namespace Core
 }  // namespace Struktur

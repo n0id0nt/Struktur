@@ -366,11 +366,11 @@ void Struktur::SplashScreenLoop(GameContext& context)
 
 void Struktur::GameLoop(GameContext& context)
 {
-	PROFILE_BEGIN_SCOPE(gameLoop, "GAME LOOP");
+	PROFILE_BEGIN_SCOPE(gameLoop, "Game Loop");
 	System::SystemManager& systemManager         = context.GetSystemManager();
 	System::GameObjectManager& gameObjectManager = context.GetGameObjectManager();
 	{
-		PROFILE_SCOPE("UPDATE PROCESSING");
+		PROFILE_SCOPE("Update Processing");
 #ifdef EDITOR
 		auto& debugSettings = context.GetEditor().GetSettings().debugRender;
 		if (debugSettings.playingGame && !debugSettings.pausedGame)
@@ -378,37 +378,51 @@ void Struktur::GameLoop(GameContext& context)
 #endif
 			Core::GameData& gameData = context.GetGameData();
 			gameData.physicsAccumulator += context.GetTimeSystem().scaledDelta;
-			int fixedSteps = 0;
-			while (gameData.physicsAccumulator >= gameData.timeStep && fixedSteps < gameData.maxFixedStepsPerFrame)
 			{
-				if (fixedSteps == 0)
+				// Kept as its own scope (always entered, even on a zero-step frame) so the profiler shows the
+				// fixed-rate simulation as a distinct sibling of "Update" / "Render" - call count on this node
+				// is how many Box2D steps this frame ran.
+				PROFILE_SCOPE("Fixed Update");
+				int fixedSteps = 0;
+				while (gameData.physicsAccumulator >= gameData.timeStep && fixedSteps < gameData.maxFixedStepsPerFrame)
 				{
-					// Once per frame, only when a step is actually about to run - captures wherever bodies
-					// settled at the end of the last stepped frame as this frame's blend-from point (see
-					// PhysicsSystem::SyncPhysicsToTransforms). A frame with zero steps must NOT call this - it
-					// would collapse previous == current and freeze the blend instead of continuing to smoothly
-					// approach the still-unchanged "current" as the accumulator keeps growing toward the next step.
-					systemManager.GetSystem<System::PhysicsSystem>().SnapshotPreviousTransforms(context);
+					if (fixedSteps == 0)
+					{
+						// Once per frame, only when a step is actually about to run - captures wherever bodies
+						// settled at the end of the last stepped frame as this frame's blend-from point (see
+						// PhysicsSystem::SyncPhysicsToTransforms). A frame with zero steps must NOT call this - it
+						// would collapse previous == current and freeze the blend instead of continuing to
+						// smoothly approach the still-unchanged "current" as the accumulator keeps growing toward
+						// the next step.
+						systemManager.GetSystem<System::PhysicsSystem>().SnapshotPreviousTransforms(context);
+					}
+					systemManager.FixedUpdate(context);
+					gameData.physicsAccumulator -= gameData.timeStep;
+					fixedSteps++;
 				}
-				systemManager.FixedUpdate(context);
-				gameData.physicsAccumulator -= gameData.timeStep;
-				fixedSteps++;
-			}
-			if (fixedSteps == gameData.maxFixedStepsPerFrame)
-			{
-				// Discard the overflow rather than chase it - running every queued step after a big stall would
-				// itself cost real time, risking the same stall on the next frame too (the spiral-of-death this
-				// cap exists to avoid). Physics simply falls behind briefly instead of freezing.
-				gameData.physicsAccumulator = 0.0f;
+				if (fixedSteps == gameData.maxFixedStepsPerFrame)
+				{
+					// Discard the overflow rather than chase it - running every queued step after a big stall
+					// would itself cost real time, risking the same stall on the next frame too (the
+					// spiral-of-death this cap exists to avoid). Physics simply falls behind briefly instead of
+					// freezing.
+					gameData.physicsAccumulator = 0.0f;
+				}
 			}
 
-			systemManager.Update(context);
+			{
+				PROFILE_SCOPE("Update");
+				systemManager.Update(context);
+			}
 #ifdef EDITOR
 		}
 #endif
-		// flush queues
-		gameObjectManager.UpdateGameObjectsActiveStateQueue(context);
-		gameObjectManager.DeleteGameObjectsInSafeToDeleteQueue(context);
+		{
+			// flush queues
+			PROFILE_SCOPE("Queue Flush");
+			gameObjectManager.UpdateGameObjectsActiveStateQueue(context);
+			gameObjectManager.DeleteGameObjectsInSafeToDeleteQueue(context);
+		}
 	}
 
 	context.GetGraphicsDevice().BeginFrame();
@@ -418,7 +432,7 @@ void Struktur::GameLoop(GameContext& context)
 	Debug::Editor& editor = context.GetEditor();
 #endif
 	{
-		PROFILE_SCOPE("RENDER PROCESSING");
+		PROFILE_SCOPE("Render");
 		systemManager.Render(context);
 	}
 	PROFILE_END_SCOPE(gameLoop);
@@ -501,10 +515,31 @@ void Struktur::Game()
 
 		UpdateLoop(&context);
 
-		if (gameData.targetFps > 0)
+		// Effective frame budget: normally just the persisted targetFps cap, but the editor's Profiler window can
+		// override it (preview a different framerate) and/or add a constant slice of artificial lag per frame.
+		int effectiveTargetFps   = gameData.targetFps;
+		double extraDelaySeconds = 0.0;
+#if defined(EDITOR)
+		if (gameData.frameRateOverrideEnabled)
 		{
-			uint64_t frequency        = SDL_GetPerformanceFrequency();
-			double targetFrameSeconds = 1.0 / static_cast<double>(gameData.targetFps);
+			effectiveTargetFps = gameData.overrideFps;
+			extraDelaySeconds  = static_cast<double>(gameData.artificialLagMs) / 1000.0;
+		}
+		if (gameData.oneOffHitchMs > 0.0f)
+		{
+			// "Inject spike" button - one big hitch, then clear. Measured into the next frame's delta by
+			// TimeSystem, so the game sees a real stall to recover from.
+			SDL_Delay(static_cast<Uint32>(gameData.oneOffHitchMs));
+			gameData.oneOffHitchMs = 0.0f;
+		}
+#endif
+
+		double targetFrameSeconds = effectiveTargetFps > 0 ? 1.0 / static_cast<double>(effectiveTargetFps) : 0.0;
+		targetFrameSeconds += extraDelaySeconds;
+
+		if (targetFrameSeconds > 0.0)
+		{
+			uint64_t frequency = SDL_GetPerformanceFrequency();
 			double elapsedSeconds =
 			    static_cast<double>(SDL_GetPerformanceCounter() - frameStartTicks) / static_cast<double>(frequency);
 

@@ -137,9 +137,15 @@ private:
 
 // Macros
 #ifdef DEBUG
+	// Two-level indirection so __LINE__ is expanded to its value before the ## paste (a bare
+	// profiler_##__LINE__ produces the literal token "profiler___LINE__" and collides when two scopes
+	// share a block).
+	#define PROFILE_CONCAT_(a, b) a##b
+	#define PROFILE_CONCAT(a, b)  PROFILE_CONCAT_(a, b)
 	#define PROFILE_FUNCTION() \
-		Struktur::Debug::ScopedProfile profiler_##__LINE__(&(context.GetProfiler()), __FUNCTION__)
-	#define PROFILE_SCOPE(name) Struktur::Debug::ScopedProfile profiler_##__LINE__(&(context.GetProfiler()), name)
+		Struktur::Debug::ScopedProfile PROFILE_CONCAT(profiler_, __LINE__)(&(context.GetProfiler()), __FUNCTION__)
+	#define PROFILE_SCOPE(name) \
+		Struktur::Debug::ScopedProfile PROFILE_CONCAT(profiler_, __LINE__)(&(context.GetProfiler()), name)
 	#define PROFILE_BEGIN_SCOPE(variable, name) \
 		Struktur::Debug::ScopedProfile profiler_##variable(&(context.GetProfiler()), name);
 	#define PROFILE_END_SCOPE(variable) profiler_##variable.EndProfile()
