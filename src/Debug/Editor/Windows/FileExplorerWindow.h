@@ -1,13 +1,29 @@
 #pragma once
 
+#include <cstddef>
 #include <string>
+#include <unordered_map>
 #include <vector>
 
 #include "EditorWindow.h"
+#include "Engine/Resource/Pointers/ResourcePtr.h"
+#include "Engine/Resource/TextureResource.h"
 
 namespace Struktur::Debug
 {
 class PreviewWindow;
+
+enum class FileCategory
+{
+	Folder,
+	Image,
+	Text,
+	Audio,
+	Font,
+	Data,
+	Aseprite,
+	Other
+};
 
 struct FileEntry
 {
@@ -15,7 +31,8 @@ struct FileEntry
 	std::string path;
 	bool isDirectory;
 	size_t fileSize;
-	std::string extension;
+	std::string extension;  // lower-cased, includes the leading '.'
+	FileCategory category;
 };
 
 class FileExplorerWindow : public EditorWindow
@@ -43,17 +60,35 @@ public:
 
 private:
 	void RefreshFileList();
-	void RenderFileList(GameContext& context);
-	void RenderFileGrid(GameContext& context);
+	void RenderToolbar();
+	void RenderGrid(GameContext& context);
+	void RenderStatusBar();
 	void OnFileSelected(const FileEntry& file, GameContext& context);
-	std::string GetFileExtension(const std::string& filename);
+
+	void NavigateTo(const std::string& path);
+	void NavigateUp();
+
+	bool PassesFilter(const FileEntry& file) const;
+
+	// Bounded LRU cache of GPU-resident thumbnails keyed by virtual path. Holding the ResourcePtr is what keeps
+	// the texture alive (see the splash-screen Pin comment in Game.cpp for the same eviction hazard); the cap
+	// stops a big asset folder from pinning every image the user scrolls past into VRAM at once.
+	Resource::ResourcePtr<Resource::TextureResource> GetThumbnail(GameContext& context, const std::string& path);
+
 	std::string FormatFileSize(size_t bytes);
-	ImVec4 GetFileTypeColor(const std::string& extension);
 
 	PreviewWindow* m_previewWindow;
 	std::string m_assetsPath;
 	std::string m_currentPath;
 	std::vector<FileEntry> m_files;
 	std::string m_selectedFile;
+
+	char m_searchBuffer[128] = {};
+	float m_iconSize         = 64.0f;
+	bool m_showThumbnails    = true;
+
+	static constexpr size_t kMaxThumbnails = 96;
+	std::unordered_map<std::string, Resource::ResourcePtr<Resource::TextureResource>> m_thumbnailCache;
+	std::vector<std::string> m_thumbnailOrder;
 };
 }  // namespace Struktur::Debug
