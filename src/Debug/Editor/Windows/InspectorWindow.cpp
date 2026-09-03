@@ -1139,6 +1139,99 @@ void InspectorWindow::RenderPhysicsBodyComponent(GameContext& context, Component
 
 	ImGui::Spacing();
 
+	// --- Collision filter -------------------------------------------------------
+	// b2Filter on the body's fixtures - a body can have more than one fixture, and they normally
+	// share a single filter (PhysicsSystem::SetCollisionFilter, which the Wren binding calls, sets
+	// them all), so a change here is applied to every fixture too. categoryBits = which layers this
+	// body IS; maskBits = which layers it collides with. Two fixtures collide only when each one's
+	// category bit appears in the other's mask. Layer names come from the CollisionLayers registry
+	// (Engine/Physics/CollisionLayers.h; populated from script via physics.CollisionLayers).
+	if (b2Fixture* firstFixture = body->GetFixtureList())
+	{
+		Physics::CollisionLayers& collisionLayers = context.GetCollisionLayers();
+		b2Filter filter                           = firstFixture->GetFilterData();
+		bool filterChanged                        = false;
+
+		ImGui::SeparatorText("Collision Filter");
+
+		bool hasNamedLayers = false;
+		for (uint16_t bit = 0x0001; bit != 0; bit = static_cast<uint16_t>(bit << 1))
+		{
+			if (!collisionLayers.GetLayerName(bit).empty())
+			{
+				hasNamedLayers = true;
+				break;
+			}
+		}
+
+		if (hasNamedLayers)
+		{
+			auto renderLayerToggles = [&](const char* title, uint16& bits)
+			{
+				ImGui::TextDisabled("%s", title);
+				ImGui::Indent();
+				for (uint16_t bit = 0x0001; bit != 0; bit = static_cast<uint16_t>(bit << 1))
+				{
+					const std::string& layerName = collisionLayers.GetLayerName(bit);
+					if (layerName.empty())
+					{
+						continue;
+					}
+					bool on = (bits & bit) != 0;
+					if (ImGui::Checkbox(layerName.c_str(), &on))
+					{
+						bits = on ? static_cast<uint16>(bits | bit) : static_cast<uint16>(bits & ~bit);
+						filterChanged = true;
+					}
+				}
+				ImGui::Unindent();
+			};
+
+			ImGui::PushID("category");
+			renderLayerToggles("Category (layers this body belongs to)", filter.categoryBits);
+			ImGui::PopID();
+			ImGui::PushID("mask");
+			renderLayerToggles("Mask (layers this body collides with)", filter.maskBits);
+			ImGui::PopID();
+		}
+		else
+		{
+			ImGui::TextDisabled("No named collision layers registered");
+		}
+
+		// Raw bitmask access - always available, so an unnamed bit or a body with no registered layers
+		// can still be edited. Entered/shown as hex.
+		auto renderRawBits = [&](const char* label, uint16& bits)
+		{
+			ImU16 value = bits;
+			if (ImGui::InputScalar(label, ImGuiDataType_U16, &value, nullptr, nullptr, "%04X",
+			                       ImGuiInputTextFlags_CharsHexadecimal))
+			{
+				bits          = value;
+				filterChanged = true;
+			}
+		};
+		renderRawBits("categoryBits", filter.categoryBits);
+		renderRawBits("maskBits", filter.maskBits);
+
+		int groupIndex = filter.groupIndex;
+		if (ImGui::InputInt("groupIndex", &groupIndex))
+		{
+			filter.groupIndex = static_cast<int16>(groupIndex);
+			filterChanged     = true;
+		}
+
+		if (filterChanged)
+		{
+			for (b2Fixture* fixture = body->GetFixtureList(); fixture; fixture = fixture->GetNext())
+			{
+				fixture->SetFilterData(filter);
+			}
+		}
+	}
+
+	ImGui::Spacing();
+
 	if (ImGui::TreeNode("Mass Data"))
 	{
 		ImGui::Text("Mass: %.3f kg", body->GetMass());
