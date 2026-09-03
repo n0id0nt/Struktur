@@ -16,7 +16,7 @@ import "gameObjectComponents" for Sprite, PhysicsBody, SpriteAnimation, RenderLa
 import "math" for Vec2, Vec3
 import "resourceManager" for Texture
 import "animation" for SpriteAnimationDefinition
-import "physics" for BodyDefinition, PhysicsCircleShape, BodyType
+import "physics" for BodyDefinition, PhysicsCircleShape, BodyType, CollisionLayers
 import "app" for Time
 import "random" for Random
 import "Colors" for WHITE
@@ -59,6 +59,8 @@ class Chinlin {
         var body = PhysicsBody.create(_entity, BodyDefinition.new(BodyType.DYNAMIC_BODY),
                                       PhysicsCircleShape.new(0.18))
         body.fixedRotation = true
+        // Collide with the level (Wall bit), pass through the player and other critters (see Main.start()).
+        body.setCollisionFilter(CollisionLayers.getLayer("Actor"), CollisionLayers.getLayer("Wall"))
 
         var anim = SpriteAnimation.create(_entity)
         anim.addAnimation("StandFront", SpriteAnimationDefinition.new(0, 2, 0.8, true))

@@ -14,7 +14,7 @@ import "gameObjectComponents" for Sprite, PhysicsBody, SpriteAnimation, RenderLa
 import "math" for Vec2
 import "resourceManager" for Texture
 import "animation" for SpriteAnimationDefinition
-import "physics" for BodyDefinition, PhysicsCircleShape, BodyType
+import "physics" for BodyDefinition, PhysicsCircleShape, BodyType, CollisionLayers
 import "app" for Time
 import "random" for Random
 import "Colors" for WHITE
@@ -55,6 +55,8 @@ class Chicken {
         var body = PhysicsBody.create(_entity, BodyDefinition.new(BodyType.DYNAMIC_BODY),
                                       PhysicsCircleShape.new(0.12))
         body.fixedRotation = true
+        // Collide with the level (Wall bit), pass through the player and other critters (see Main.start()).
+        body.setCollisionFilter(CollisionLayers.getLayer("Actor"), CollisionLayers.getLayer("Wall"))
 
         var anim = SpriteAnimation.create(_entity)
         // endFrame is exclusive - SpriteAnimationDefinition.new(start, end, seconds, loop).

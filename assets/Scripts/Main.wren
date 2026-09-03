@@ -7,6 +7,7 @@ import "input" for Input
 import "localization" for Localization
 import "flags" for FlagManager
 import "fileSystem" for FileSystem
+import "physics" for CollisionLayers
 
 import "States/StateManager" for StateManager
 import "States/GameWorldState" for GameWorldState
@@ -55,6 +56,16 @@ class Game {
         Inventory.load("inventory.sav")
 
         DialogueLoader.loadAllDialogue()
+
+        // Collision layers. "Wall" is registered first so it takes bit 0x0001, which is the category
+        // the tilemap collision bodies are already built with (TileMapCollisionBodyGenerator uses a
+        // default b2Filter). "Actor" is the player + critters: they set their category to Actor and
+        // their mask to Wall only, so they still hit level geometry (and doors/NPCs, which share the
+        // wall bit) but pass straight through each other. Registration is idempotent, so re-running
+        // start() on a debug restart is harmless.
+        CollisionLayers.registerLayer("Wall")
+        CollisionLayers.registerLayer("Actor")
+
         // Initial states
         _stateManager.insertState("GameWorld", GameWorldState)
         _stateManager.insertState("MainMenu", MainMenuState)
