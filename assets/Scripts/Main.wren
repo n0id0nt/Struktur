@@ -28,6 +28,8 @@ class Game {
         //Application.setIsFullScreen(true)
 
         var gameObjectsScripts = [
+            "Chicken",
+            "Chinlin",
             "Door",
             "Item",
             "NPC",
