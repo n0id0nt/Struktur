@@ -386,16 +386,16 @@ void Struktur::GameLoop(GameContext& context)
 				int fixedSteps = 0;
 				while (gameData.physicsAccumulator >= gameData.timeStep && fixedSteps < gameData.maxFixedStepsPerFrame)
 				{
-					if (fixedSteps == 0)
-					{
-						// Once per frame, only when a step is actually about to run - captures wherever bodies
-						// settled at the end of the last stepped frame as this frame's blend-from point (see
-						// PhysicsSystem::SyncPhysicsToTransforms). A frame with zero steps must NOT call this - it
-						// would collapse previous == current and freeze the blend instead of continuing to
-						// smoothly approach the still-unchanged "current" as the accumulator keeps growing toward
-						// the next step.
-						systemManager.GetSystem<System::PhysicsSystem>().SnapshotPreviousTransforms(context);
-					}
+					// Once per STEP, right before it runs - captures where bodies sit now as the blend-from point
+					// for the step about to advance them (see PhysicsSystem::SyncPhysicsToTransforms). This has to
+					// be per-step, not once per frame: the render-time blend only ever spans a single timeStep
+					// (alpha = accumulator / timeStep), so previous must always sit exactly one step behind current.
+					// Snapshotting only before the first step of a multi-step frame leaves previous N-1 steps stale,
+					// and the motion of every step but the last then lands instantly and uninterpolated at the top
+					// of the frame - visible jitter whenever the frame rate drops below the fixed rate. A zero-step
+					// frame still never calls this (the loop body doesn't run), so the blend keeps smoothly
+					// approaching an unchanged "current" as the accumulator grows toward the next step.
+					systemManager.GetSystem<System::PhysicsSystem>().SnapshotPreviousTransforms(context);
 					systemManager.FixedUpdate(context);
 					gameData.physicsAccumulator -= gameData.timeStep;
 					fixedSteps++;
