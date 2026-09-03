@@ -35,6 +35,22 @@ private:
 	FontPool m_fontPool;
 	ShaderPool m_shaderPool;
 
+#ifdef EDITOR
+	// Editor-only resource pools. Anything the editor itself needs to keep resident across a game
+	// reset (file-explorer thumbnails, preview-window textures, ...) is fetched through GetEditor*()
+	// below and lives here instead of in the game pools above. Two consequences:
+	//   - ClearGameResources() (called on every game reset/restart) wipes only the game pools, so
+	//     editor-held ResourcePtrs stay valid across the reset.
+	//   - The "every game ResourcePtr was released" assert in ClearGameSystems() only inspects the
+	//     game pools, so editor-held resources never trip it.
+	// Only Clear() (full engine teardown) empties these.
+	TexturePool m_editorTexturePool;
+	SoundPool m_editorSoundPool;
+	MusicPool m_editorMusicPool;
+	FontPool m_editorFontPool;
+	ShaderPool m_editorShaderPool;
+#endif
+
 public:
 	ResourcePtr<TextureResource> GetTexture(GameContext& context, const std::string& filePath);
 	ResourcePtr<SoundResource> GetSound(GameContext& context, const std::string& filePath);
@@ -42,6 +58,18 @@ public:
 	ResourcePtr<FontResource> GetFont(GameContext& context, const std::string& filePath, int size);
 	ResourcePtr<ShaderResource> GetShader(GameContext& context, const std::string& vsFilePath,
 	                                      const std::string& fsFilePath);
+
+#ifdef EDITOR
+	// Editor-only counterparts of the getters above - resources fetched here are held in the editor
+	// pools and are exempt from the game-reset clear/assert (see the m_editor*Pool comment above).
+	// Use these from editor windows/preview renderers; never from gameplay/script code.
+	ResourcePtr<TextureResource> GetEditorTexture(GameContext& context, const std::string& filePath);
+	ResourcePtr<SoundResource> GetEditorSound(GameContext& context, const std::string& filePath);
+	ResourcePtr<MusicResource> GetEditorMusic(GameContext& context, const std::string& filePath);
+	ResourcePtr<FontResource> GetEditorFont(GameContext& context, const std::string& filePath, int size);
+	ResourcePtr<ShaderResource> GetEditorShader(GameContext& context, const std::string& vsFilePath,
+	                                            const std::string& fsFilePath);
+#endif
 
 	const TexturePool& GetTexturePool()
 	{
@@ -64,6 +92,35 @@ public:
 		return m_shaderPool;
 	}
 
+#ifdef EDITOR
+	const TexturePool& GetEditorTexturePool()
+	{
+		return m_editorTexturePool;
+	}
+	const SoundPool& GetEditorSoundPool()
+	{
+		return m_editorSoundPool;
+	}
+	const MusicPool& GetEditorMusicPool()
+	{
+		return m_editorMusicPool;
+	}
+	const FontPool& GetEditorFontPool()
+	{
+		return m_editorFontPool;
+	}
+	const ShaderPool& GetEditorShaderPool()
+	{
+		return m_editorShaderPool;
+	}
+#endif
+
+	// Clears only the game resource pools. Called on every game reset/restart (ClearGameSystems) -
+	// the editor pools, if present, are deliberately left untouched so editor-held ResourcePtrs
+	// survive the reset.
+	void ClearGameResources();
+
+	// Clears every pool, game and (in editor builds) editor. Full engine teardown only.
 	void Clear();
 
 	// GPU-specific operations (only affect GPU resources)

@@ -635,10 +635,12 @@ void Struktur::ClearGameSystems(GameContext& context)
 	Resource::ResourceManager& resourceManager = context.GetResourceManager();
 
 	// Everything above (UI Manager, Wren VM shutdown's finalizers, etc.) should have already released every
-	// ResourcePtr it was holding by this point - if a pool still shows resources loaded
+	// ResourcePtr it was holding by this point - if a game pool still shows resources loaded
 	// here, something is leaking a reference instead of letting it go out of scope/be explicitly unloaded. Assert
-	// now, while it's still attributable to a specific pool, rather than letting Clear() below silently force-free
-	// it out from under whatever's still holding it.
+	// now, while it's still attributable to a specific pool, rather than letting ClearGameResources() below
+	// silently force-free it out from under whatever's still holding it. Only the game pools are checked/cleared:
+	// the editor holds its own ResourcePtrs (thumbnails, previews) in the separate editor pools via
+	// ResourceManager::GetEditor*(), and those are meant to survive a game reset untouched.
 	ASSERT_MSG(resourceManager.GetTexturePool().GetLoadedCount() == 0,
 	           "Texture pool still has %zu resource(s) loaded before Clear() - something is leaking a ResourcePtr",
 	           resourceManager.GetTexturePool().GetLoadedCount());
@@ -655,7 +657,7 @@ void Struktur::ClearGameSystems(GameContext& context)
 	           "Shader pool still has %zu resource(s) loaded before Clear() - something is leaking a ResourcePtr",
 	           resourceManager.GetShaderPool().GetLoadedCount());
 
-	resourceManager.Clear();
+	resourceManager.ClearGameResources();
 }
 
 void Struktur::StartGameSystems(GameContext& context)

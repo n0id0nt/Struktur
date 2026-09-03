@@ -340,7 +340,8 @@ Resource::ResourcePtr<Resource::TextureResource> FileExplorerWindow::GetThumbnai
 		return it->second;
 	}
 
-	Resource::ResourcePtr<Resource::TextureResource> texture = context.GetResourceManager().GetTexture(context, path);
+	Resource::ResourcePtr<Resource::TextureResource> texture =
+	    context.GetResourceManager().GetEditorTexture(context, path);
 	if (texture.IsValid())
 	{
 		texture.EnsureReady(context);
@@ -596,7 +597,7 @@ void FileExplorerWindow::OnFileSelected(const FileEntry& file, GameContext& cont
 
 	if (IsImageExtension(ext))
 	{
-		auto texture = context.GetResourceManager().GetTexture(context, file.path);
+		auto texture = context.GetResourceManager().GetEditorTexture(context, file.path);
 		PreviewTexture(m_previewWindow, texture, file.name);
 	}
 	else if (IsTextExtension(ext))

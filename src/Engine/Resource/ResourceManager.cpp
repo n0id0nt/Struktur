@@ -30,13 +30,58 @@ Struktur::Resource::ResourcePtr<Struktur::Resource::ShaderResource> Struktur::Re
 	return m_shaderPool.GetResource(context, ShaderKey{vsFilePath, fsFilePath});
 }
 
-void Struktur::Resource::ResourceManager::Clear()
+#ifdef EDITOR
+Struktur::Resource::ResourcePtr<Struktur::Resource::TextureResource>
+Struktur::Resource::ResourceManager::GetEditorTexture(GameContext& context, const std::string& filePath)
+{
+	return m_editorTexturePool.GetResource(context, filePath);
+}
+
+Struktur::Resource::ResourcePtr<Struktur::Resource::SoundResource>
+Struktur::Resource::ResourceManager::GetEditorSound(GameContext& context, const std::string& filePath)
+{
+	return m_editorSoundPool.GetResource(context, filePath);
+}
+
+Struktur::Resource::ResourcePtr<Struktur::Resource::MusicResource>
+Struktur::Resource::ResourceManager::GetEditorMusic(GameContext& context, const std::string& filePath)
+{
+	return m_editorMusicPool.GetResource(context, filePath);
+}
+
+Struktur::Resource::ResourcePtr<Struktur::Resource::FontResource>
+Struktur::Resource::ResourceManager::GetEditorFont(GameContext& context, const std::string& filePath, int size)
+{
+	return m_editorFontPool.GetResource(context, FontKey{filePath, size});
+}
+
+Struktur::Resource::ResourcePtr<Struktur::Resource::ShaderResource>
+Struktur::Resource::ResourceManager::GetEditorShader(GameContext& context, const std::string& vsFilePath,
+                                                     const std::string& fsFilePath)
+{
+	return m_editorShaderPool.GetResource(context, ShaderKey{vsFilePath, fsFilePath});
+}
+#endif
+
+void Struktur::Resource::ResourceManager::ClearGameResources()
 {
 	m_texturePool.Clear();
 	m_soundPool.Clear();
 	m_musicPool.Clear();
 	m_fontPool.Clear();
 	m_shaderPool.Clear();
+}
+
+void Struktur::Resource::ResourceManager::Clear()
+{
+	ClearGameResources();
+#ifdef EDITOR
+	m_editorTexturePool.Clear();
+	m_editorSoundPool.Clear();
+	m_editorMusicPool.Clear();
+	m_editorFontPool.Clear();
+	m_editorShaderPool.Clear();
+#endif
 }
 
 void Struktur::Resource::ResourceManager::HandleGpuContextLost()

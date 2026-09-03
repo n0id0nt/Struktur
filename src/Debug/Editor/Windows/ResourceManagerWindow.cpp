@@ -332,7 +332,7 @@ void ResourceManagerWindow::RenderTable(GameContext& context, const std::vector<
 		{
 			if (ImGui::Selectable(row.name.c_str(), false, ImGuiSelectableFlags_SpanAllColumns))
 			{
-				auto texturePtr = context.GetResourceManager().GetTexture(context, row.name);
+				auto texturePtr = context.GetResourceManager().GetEditorTexture(context, row.name);
 				PreviewTexture(m_previewWindow, texturePtr, row.name);
 			}
 			if (ImGui::IsItemHovered())
