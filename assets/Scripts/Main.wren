@@ -2,7 +2,7 @@
 // Owns the state manager and provides game-wide services
 // Updated every frame by C++
 
-import "app" for Application
+import "app" for Application, Time
 import "input" for Input
 import "localization" for Localization
 import "flags" for FlagManager
@@ -47,8 +47,12 @@ class Game {
         Inventory.init()
     }
 
-    // Called after the all the systems are initialised 
+    // Called after the all the systems are initialised
     start() {
+        // Safety net: CombatState freezes the field with Time.setTimeScale(0), and a debug restart
+        // (editor Stop/Play) mid-fight would otherwise carry a 0 timescale into the next run.
+        Time.setTimeScale(1)
+
         FileSystem.seedFromDefaults("Settings/InputBindings/InputConfig.json", "InputConfig.json")
         Input.loadInputBindings("Settings/InputBindings/InputConfig.json")
         Localization.loadManifest("Localization/languages.json")

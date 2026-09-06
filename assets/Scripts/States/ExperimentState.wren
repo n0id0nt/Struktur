@@ -9,6 +9,7 @@ import "resourceManager" for Font, Texture, Music
 import "ui" for UIManager, UILabel
 import "input" for Input
 import "flags" for FlagManager
+import "app" for Time
 
 import "States/BaseState" for BaseState
 import "States/StateManager" for StateManager
@@ -16,10 +17,18 @@ import "States/PlayState" for PlayState
 import "States/InventoryState" for InventoryState
 import "States/InteractState" for InteractState
 import "States/GameOverState" for GameOverState
+import "States/CombatState" for CombatState
+
+import "GameObjects/Critter" for Critter
 
 import "Colors" for WHITE
 
 var WORLD_FILE_PATH = "Levels/SevenGods.ldtk"
+// World-pixel distance at which an aggressive critter (Chinlin) forces combat outright, rather than
+// merely offering it via the interact prompt (see Player.INTERACTABLE_DISTANCE, 64px, for the
+// passive-critter equivalent). Small and roughly "touching" - a bit past the sum of the player's and
+// a critter's own physics-body radii - since this is meant to feel like being caught, not spotted.
+var FORCE_COMBAT_DISTANCE = 40.0
 
 class ExperimentState is BaseState {
     construct new() {
@@ -34,7 +43,14 @@ class ExperimentState is BaseState {
         _stateManager.insertState("InventoryState", InventoryState)
         _stateManager.insertState("InteractState", InteractState)
         _stateManager.insertState("GameOverState", GameOverState)
+        _stateManager.insertState("CombatState", CombatState)
         _gameMusic = null
+        _interactLabel = null
+        // Grace window after a fight ends (see update()) - long enough to run clear of an aggressive
+        // critter before its proximity check can re-trigger combat. Covers every outcome: after a
+        // loss or a flee the enemy is still alive and still next to you, and without this you'd be
+        // stuck re-fighting it in place.
+        _combatCooldownEndTime = 0
     }
 
     enter(stateManager, params) {
@@ -59,6 +75,18 @@ class ExperimentState is BaseState {
         var playerEntity = GameObject.create("Player", worldEntity)
         Script.createArg(playerEntity, "Player", {"Name": "Player"})
         WorldTransform.setPosition(playerEntity, Vec3.new(600.0, 300.0, 0.0))
+
+        // "Fight" prompt for non-aggressive critters - same UILabel-above-target pattern
+        // GameWorldState uses for its own "Interact" prompt.
+        var font = Font.load("Fonts/medieval_sharp/MedievalSharp-Bold.ttf", 60)
+        _interactLabel = UILabel.new(Vec2.new(0, 0), Vec2.new(0, 0), "Fight!", 16.0)
+        _interactLabel.setVisible(false)
+        _interactLabel.setFont(font)
+        _interactLabel.setTextColor(WHITE)
+        _interactLabel.setAnchorPoint(Vec2.new(0.5, 0.5))
+        _interactLabel.setBoundingBoxToText()
+        UIManager.addUIElement(_interactLabel)
+        font.unload()
 
         spawnParticleDemo(worldEntity)
 
@@ -130,14 +158,78 @@ class ExperimentState is BaseState {
     update(stateManager) {
         // if substate return out here
         if (_stateManager.currentState) {
+            var wasCombat = _stateManager.currentState.name == "CombatState"
             _stateManager.update()
+            if (wasCombat && !_stateManager.currentState) {
+                _combatCooldownEndTime = Time.scaledTime + 2.0
+            }
             return
         }
         if (_gameMusic && !_gameMusic.isPlaying()) {
             _gameMusic.play()
         }
+
+        if (Time.scaledTime >= _combatCooldownEndTime) {
+            checkCombatTriggers()
+        }
     }
-    
+
+    // Aggressive critters (Chinlin) force the player straight into CombatState once they close the
+    // distance - no prompt, no choice. Non-aggressive critters (Chicken) just become another
+    // interactable, reusing the exact scan/prompt every Item/NPC/Door already uses
+    // (Player.getInteractEntity(), see GameWorldState for the original of this pattern) - the player
+    // has to press Interact to start that fight.
+    checkCombatTriggers() {
+        var playerEntities = GameObject.getAllWithIdentifier("Player")
+        for (playerEntity in playerEntities) {
+            var playerScript = Script.getInstance(playerEntity)
+            if (!playerScript) {
+                continue
+            }
+            var playerPosition = WorldTransform.getPosition(playerEntity)
+
+            for (critter in Critter.all) {
+                if (!critter.aggressive) {
+                    continue
+                }
+                var critterPosition = critter.position
+                if (critterPosition && Vec3.distance(playerPosition, critterPosition) <= FORCE_COMBAT_DISTANCE) {
+                    _interactLabel.setVisible(false)
+                    enterCombat(critter.entity)
+                    return
+                }
+            }
+
+            var interactEntity = playerScript.getInteractEntity()
+            if (interactEntity && Script.getInstance(interactEntity) is Critter) {
+                _interactLabel.setVisible(true)
+                var interactWorldPosition = WorldTransform.getPosition(interactEntity)
+                var screenInteractPosition = Camera.worldPosToScreenPos(interactWorldPosition) + Vec2.new(0, -32)
+                _interactLabel.setPosition(screenInteractPosition, Vec2.new(0, 0))
+                if (Input.isInputJustReleased("Interact")) {
+                    _interactLabel.setVisible(false)
+                    enterCombat(interactEntity)
+                    return
+                }
+            } else {
+                _interactLabel.setVisible(false)
+            }
+        }
+    }
+
+    enterCombat(opponentEntity) {
+        for (entity in GameObject.getAllWithIdentifier("Player")) {
+            var script = Script.getInstance(entity)
+            if (script) {
+                script.playerForceStop()
+            }
+        }
+        if (_gameMusic) {
+            _gameMusic.stop()
+        }
+        _stateManager.changeState("CombatState", {"opponent": opponentEntity})
+    }
+
     render() {
         // Delegate to gameplay sub-state
         if (_stateManager.currentState) {
