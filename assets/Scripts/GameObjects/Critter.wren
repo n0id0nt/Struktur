@@ -59,10 +59,11 @@ class Critter {
     aggressive { false }
 
     // Combat stats used when a fight starts (see Combat/CombatState.wren). Defaults are chicken-tier
-    // - a pushover; tougher species override these. Phase 1 of the roadmap: flat HP + a flat attack,
-    // nothing else yet.
+    // - a pushover; tougher species override these. combatMoveCost is how many time units this
+    // critter's one attack takes to charge on the Timeline (Phase 2 of the roadmap).
     combatMaxHp { 12 }
     combatAttack { 3 }
+    combatMoveCost { 3 }
 
     facing { _facing }
     facing=(value) { _facing = value }

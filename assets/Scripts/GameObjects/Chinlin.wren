@@ -32,9 +32,11 @@ class Chinlin is Critter {
     // distance to make that happen.
     aggressive { true }
 
-    // Tougher than a chicken - a real (still winnable) fight for the Phase 1 player (30 HP, 6 atk).
+    // Tougher than a chicken - a real (still winnable) fight. Slower attack (5u charge) than a
+    // chicken's (3u), so it acts less often but hits harder.
     combatMaxHp { 20 }
     combatAttack { 5 }
+    combatMoveCost { 5 }
 
     start() {
         var texture = Texture.load("Sprites/chinlin.png")

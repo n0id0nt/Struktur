@@ -1,14 +1,14 @@
 // states/CombatState.wren
-// Phase 1 of the Interrupt Combat Roadmap - "a complete, boring, winnable fight". Strictly
-// alternating turns, one "Attack" action, flat damage, no timing. Entered from ExperimentState when
-// the player engages a critter (forced by an aggressive one, chosen via the prompt for a passive
-// one - see ExperimentState.checkCombatTriggers()).
+// Phase 2 of the Interrupt Combat Roadmap - Visible Timelines. Turn order comes from charge, not
+// seat order: every combatant charges toward a committed Move, and whoever's bar fills first acts.
+// Still linear - no interrupts yet (Phase 3). The player picks from a short move list with different
+// charge costs, so ordering actually varies with their choices; the enemy has a single move.
 //
-// Presentation is a full-screen dim overlay over the frozen overworld: the field is paused with
-// Time.setTimeScale(0) on enter and restored on exit (this state's own pacing runs off
-// Time.unscaledTime so it keeps ticking through that freeze). Everything downstream in the roadmap -
-// the visible timeline, the interrupt formula, stamina - replaces the turn loop in this file; the
-// Combatant/Stats/HealthBar pieces it leans on are meant to survive.
+// Entered from ExperimentState when the player engages a critter (forced by an aggressive one,
+// chosen via the prompt for a passive one - see ExperimentState.checkCombatTriggers()).
+// Presentation is a full-screen dim overlay over the frozen field (Time.setTimeScale(0)); this
+// state's own pacing and the Timeline run off Time.unscaledDelta / unscaledTime, so they keep
+// ticking through that freeze.
 import "States/BaseState" for BaseState
 import "input" for Input
 import "app" for Application, Time
@@ -20,15 +20,16 @@ import "gameObjectComponents" for Script
 import "Colors" for WHITE, BLACK, BLANK, LIGHTGRAY
 
 import "Combat/Combatant" for Combatant
+import "Combat/Move" for Move
+import "Combat/Timeline" for Timeline
 import "Combat/HealthBar" for HealthBar
+import "Combat/ChargeBar" for ChargeBar
 
-var INTRO_TIME   = 0.8   // seconds the "you face off..." beat holds before the menu arms (also lets
-                         // the Interact keypress that started the fight fully release first)
-var MESSAGE_TIME = 0.9   // seconds each battle-log line holds before the turn advances
-var OVER_TIME    = 1.6   // seconds the final result holds before returning to the overworld
+var INTRO_TIME   = 0.8   // beat before the menu arms (also lets the Interact keypress fully release)
+var MESSAGE_TIME = 0.9   // each battle-log line holds this long before the turn advances
+var OVER_TIME    = 1.6   // final result holds this long before returning to the overworld
 
-var PLAYER_MAX_HP  = 30
-var PLAYER_ATTACK  = 6
+var PLAYER_MAX_HP = 30
 
 class CombatState is BaseState {
     construct new() {
@@ -38,6 +39,18 @@ class CombatState is BaseState {
         _phase = "intro"
         _timerEnd = 0
         _nextStep = null
+        _timeline = null
+    }
+
+    // The player's move list. Slower moves are more damage per time unit, but you eat more enemy
+    // hits while you charge them - that trade sharpens in Phase 3 when charge time also sets how
+    // hard you can be interrupted.
+    playerMoves() {
+        return [
+            Move.new("Jab", 2, 3),
+            Move.new("Strike", 4, 7),
+            Move.new("Heavy Blow", 6, 13)
+        ]
     }
 
     enter(stateManager, params) {
@@ -46,14 +59,18 @@ class CombatState is BaseState {
         _opponentEntity = params["opponent"]
         var enemyScript = Script.getInstance(_opponentEntity)
         if (!enemyScript) {
-            // The critter vanished between engaging and this frame - nothing to fight.
             System.print("[CombatState] opponent %(_opponentEntity) has no script, aborting")
             stateManager.clearCurrentState()
             return
         }
 
-        _player = Combatant.new("You", PLAYER_MAX_HP, PLAYER_ATTACK, null)
-        _enemy = Combatant.new(enemyScript.name, enemyScript.combatMaxHp, enemyScript.combatAttack, _opponentEntity)
+        _player = Combatant.new("You", PLAYER_MAX_HP, playerMoves(), null)
+        var enemyMove = Move.new("Attack", enemyScript.combatMoveCost, enemyScript.combatAttack)
+        _enemy = Combatant.new(enemyScript.name, enemyScript.combatMaxHp, [enemyMove], _opponentEntity)
+
+        _timeline = Timeline.new()
+        _timeline.add(_player)
+        _timeline.add(_enemy)
 
         buildUI()
 
@@ -61,9 +78,8 @@ class CombatState is BaseState {
         _timerEnd = Time.unscaledTime + INTRO_TIME
         setMessage("You face off against the %(_enemy.name)!")
         refreshBars()
+        refreshTimeline()
 
-        // Freeze the overworld last, once everything above has succeeded - an error while building
-        // the UI then can't strand the game paused.
         Time.setTimeScale(0)
     }
 
@@ -75,65 +91,86 @@ class CombatState is BaseState {
         _root = UIPanel.new(Vec2.new(0, 0), Vec2.new(0, 0), Vec2.new(gw, gh), Vec2.new(0, 0))
         _root.setBackgroundColor(Vec4.new(0, 0, 0, 165))
         _root.setBorderColor(BLANK)
-        _root.setZIndex(-1)   // over anything the overworld left on screen
+        _root.setZIndex(-1)
         UIManager.addUIElement(_root)
 
-        // Enemy: name + bar, top centre.
-        var enemyName = UILabel.new(Vec2.new(0, 46), Vec2.new(0.5, 0), _enemy.name, 34.0)
-        enemyName.setFont(font)
-        enemyName.setTextColor(WHITE)
+        // Enemy: name, HP bar, charge bar + committed-move readout, top centre.
+        var ex = (gw / 2) - 170
+        var enemyName = simpleLabel(_enemy.name, Vec2.new(0, 42), Vec2.new(0.5, 0), 34.0, font)
         enemyName.setAlignment(TextAlignment.CENTER)
-        enemyName.setBoundingBoxToText()
         enemyName.setAnchorPoint(Vec2.new(0.5, 0))
         _root.addChild(enemyName)
-        _enemyBar = HealthBar.new(_root, (gw / 2) - 170, 92, 340, 22)
+        _enemyHpBar = HealthBar.new(_root, ex, 90, 340, 20)
+        _enemyChargeBar = ChargeBar.new(_root, ex, 114, 340, 10)
+        _enemyMoveLabel = simpleLabel("", Vec2.new(ex + 350, 106), Vec2.new(0, 0), 18.0, font)
+        _root.addChild(_enemyMoveLabel)
 
-        // Player: name + bar, bottom left.
-        var playerName = UILabel.new(Vec2.new(48, gh - 168), Vec2.new(0, 0), _player.name, 28.0)
-        playerName.setFont(font)
-        playerName.setTextColor(WHITE)
-        playerName.setBoundingBoxToText()
-        playerName.setAnchorPoint(Vec2.new(0, 0))
+        // Player: name, HP bar, charge bar + committed-move readout, bottom left.
+        var px = 48
+        var py = gh - 150
+        var playerName = simpleLabel(_player.name, Vec2.new(px, py - 34), Vec2.new(0, 0), 28.0, font)
         _root.addChild(playerName)
-        _playerBar = HealthBar.new(_root, 48, gh - 134, 280, 20)
+        _playerHpBar = HealthBar.new(_root, px, py, 280, 18)
+        _playerChargeBar = ChargeBar.new(_root, px, py + 22, 280, 10)
+        _playerMoveLabel = simpleLabel("", Vec2.new(px + 290, py + 14), Vec2.new(0, 0), 18.0, font)
+        _root.addChild(_playerMoveLabel)
 
         // Battle log / prompt, centre.
-        _messageLabel = UILabel.new(Vec2.new(0, 0), Vec2.new(0.5, 0.36), "", 30.0)
-        _messageLabel.setFont(font)
-        _messageLabel.setTextColor(WHITE)
+        _messageLabel = simpleLabel("", Vec2.new(0, 0), Vec2.new(0.5, 0.34), 30.0, font)
         _messageLabel.setAlignment(TextAlignment.CENTER)
         _messageLabel.setAnchorPoint(Vec2.new(0.5, 0.5))
         _root.addChild(_messageLabel)
 
-        // Actions, bottom right. Not focused until the intro beat ends (see update()).
-        _attackButton = makeButton("Attack", 0, font)
-        _attackButton.setOnClick { |sender, mousePos|
-            if (_phase == "choosing") {
-                playerAttack()
+        // Move menu, bottom right - one container so it can be shown/hidden wholesale.
+        _menu = UIPanel.new(Vec2.new(-32, -32), Vec2.new(1, 1), Vec2.new(280, 244), Vec2.new(0, 0))
+        _menu.setAnchorPoint(Vec2.new(1, 1))
+        _menu.setBackgroundColor(BLANK)
+        _menu.setBorderColor(BLANK)
+        _root.addChild(_menu)
+
+        _moveButtons = []
+        var i = 0
+        for (move in _player.moves) {
+            var chosen = move
+            var btn = makeButton(chosen.menuLabel, i, font)
+            btn.setOnClick { |sender, mousePos|
+                if (_phase == "choosing") {
+                    commitPlayerMove(chosen)
+                }
             }
+            _moveButtons.add(btn)
+            i = i + 1
         }
-        _fleeButton = makeButton("Flee", 1, font)
+        _fleeButton = makeButton("Flee", i, font)
         _fleeButton.setOnClick { |sender, mousePos|
             if (_phase == "choosing") {
                 flee()
             }
         }
+        _menu.setVisible(false)   // hidden through the intro beat; shown in beginChoosing()
 
         font.unload()
     }
 
-    // Panel + centred label, focusable, with a focus highlight - the same shape MainMenuState builds
-    // its menu buttons from. index 0 sits above index 1, anchored to the screen's bottom-right.
+    simpleLabel(text, absPos, relPos, size, font) {
+        var lbl = UILabel.new(absPos, relPos, text, size)
+        lbl.setFont(font)
+        lbl.setTextColor(WHITE)
+        lbl.setBoundingBoxToText()
+        return lbl
+    }
+
+    // Button `index` counts from the top of the menu stack; buttons are parented under _menu.
     makeButton(text, index, font) {
-        var button = UIPanel.new(Vec2.new(-40, -150 + index * 66), Vec2.new(1, 1), Vec2.new(200, 54), Vec2.new(0, 0))
-        button.setAnchorPoint(Vec2.new(1, 1))
+        var h = 46
+        var button = UIPanel.new(Vec2.new(0, index * (h + 8)), Vec2.new(0, 0), Vec2.new(260, h), Vec2.new(0, 0))
         button.setBackgroundColor(LIGHTGRAY)
         button.setBorderColor(WHITE)
         button.setBorderWidth(2)
         button.setFocusable(true)
-        _root.addChild(button)
+        _menu.addChild(button)
 
-        var label = UILabel.new(Vec2.new(0, 0), Vec2.new(0.5, 0.5), text, 24.0)
+        var label = UILabel.new(Vec2.new(0, 0), Vec2.new(0.5, 0.5), text, 22.0)
         label.setFont(font)
         label.setTextColor(BLACK)
         label.setAlignment(TextAlignment.CENTER)
@@ -152,16 +189,18 @@ class CombatState is BaseState {
             if (Time.unscaledTime >= _timerEnd) {
                 beginChoosing()
             }
+        } else if (_phase == "charging") {
+            _timeline.tick(Time.unscaledDelta)
+            refreshChargeBars()
+            var ready = _timeline.nextReady()
+            if (ready != null) {
+                resolveMove(ready)
+            }
         } else if (_phase == "message") {
             if (Time.unscaledTime >= _timerEnd) {
                 var step = _nextStep
                 _nextStep = null
                 step.call()
-            }
-        } else if (_phase == "choosing") {
-            // UICancel is a shortcut for the Flee button.
-            if (Input.isInputJustReleased("UICancel")) {
-                flee()
             }
         } else if (_phase == "over") {
             if (Time.unscaledTime >= _timerEnd) {
@@ -170,32 +209,54 @@ class CombatState is BaseState {
         }
     }
 
+    // Player needs to pick - menu open, Timeline paused (planning time). The enemy commits here too
+    // so both start charging together the moment the player chooses.
     beginChoosing() {
         _phase = "choosing"
-        setMessage("What will you do?")
-        UIManager.setFocus(_attackButton)
+        setMessage("Choose your move.")
+        _menu.setVisible(true)
+        UIManager.setFocus(_moveButtons[0])
+        if (_timeline.needsMove(_enemy)) {
+            _timeline.commit(_enemy, _enemy.moves[0])
+        }
+        refreshTimeline()
     }
 
-    playerAttack() {
-        var dealt = _player.attack(_enemy)
+    commitPlayerMove(move) {
+        _timeline.commit(_player, move)
+        _menu.setVisible(false)
+        _phase = "charging"
+        setMessage("")
+        refreshTimeline()
+    }
+
+    resolveMove(actor) {
+        var move = _timeline.committedMove(actor)
+        var isPlayer = actor == _player
+        var target = isPlayer ? _enemy : _player
+        var dealt = actor.use(move, target)
+        _timeline.clear(actor)
         refreshBars()
-        showLog("You hit %(_enemy.name) for %(dealt)!", Fn.new {
+        refreshTimeline()
+
+        var line = "%(_enemy.name) lands %(move.name) - %(dealt) damage!"
+        if (isPlayer) {
+            line = "You land %(move.name) - %(dealt) damage!"
+        }
+        showLog(line, Fn.new {
             if (!_enemy.alive) {
                 win()
-            } else {
-                enemyTurn()
-            }
-        })
-    }
-
-    enemyTurn() {
-        var dealt = _enemy.attack(_player)
-        refreshBars()
-        showLog("%(_enemy.name) hits you for %(dealt)!", Fn.new {
-            if (!_player.alive) {
+            } else if (!_player.alive) {
                 lose()
-            } else {
+            } else if (isPlayer) {
                 beginChoosing()
+            } else {
+                // Enemy re-commits its one move and both resume charging (the player's own charge
+                // was untouched - they didn't act).
+                _timeline.commit(_enemy, _enemy.moves[0])
+                _phase = "charging"
+                setMessage("")
+                refreshTimeline()
             }
         })
     }
@@ -215,10 +276,7 @@ class CombatState is BaseState {
         endFight("You slipped away.")
     }
 
-    // Show a line, then run `next` (a Fn) once it has held for MESSAGE_TIME. The Attack/Flee buttons
-    // stay focused (and lit) through the message, but their handlers no-op unless _phase ==
-    // "choosing", so a stray press does nothing - cheaper and safer than deregistering them
-    // (clearFocusElements() would wipe the whole focus registry, not just re-arm).
+    // Show a line, then run `next` (a Fn) once it has held for MESSAGE_TIME.
     showLog(text, next) {
         setMessage(text)
         _phase = "message"
@@ -230,6 +288,7 @@ class CombatState is BaseState {
         setMessage(text)
         _phase = "over"
         _timerEnd = Time.unscaledTime + OVER_TIME
+        _menu.setVisible(false)
     }
 
     setMessage(text) {
@@ -238,8 +297,30 @@ class CombatState is BaseState {
     }
 
     refreshBars() {
-        _playerBar.setFraction(_player.stats.fraction)
-        _enemyBar.setFraction(_enemy.stats.fraction)
+        _playerHpBar.setFraction(_player.stats.fraction)
+        _enemyHpBar.setFraction(_enemy.stats.fraction)
+    }
+
+    // Bars only - cheap, called every frame while charging.
+    refreshChargeBars() {
+        _playerChargeBar.setFraction(_timeline.fraction(_player))
+        _enemyChargeBar.setFraction(_timeline.fraction(_enemy))
+    }
+
+    // Bars + the committed-move readouts - called only when a move is committed or cleared.
+    refreshTimeline() {
+        refreshChargeBars()
+        setLabel(_playerMoveLabel, moveReadout(_timeline.committedMove(_player)))
+        setLabel(_enemyMoveLabel, moveReadout(_timeline.committedMove(_enemy)))
+    }
+
+    setLabel(label, text) {
+        label.setText(text)
+        label.setBoundingBoxToText()
+    }
+
+    moveReadout(move) {
+        return move == null ? "" : move.name
     }
 
     exit() {
@@ -248,14 +329,13 @@ class CombatState is BaseState {
         super.exit()
 
         if (_root) {
-            // Recurses the whole subtree, disposing each node - that unregisters the buttons from
-            // the focus navigator and clears any focus/hover pointing at them (UIManager::RemoveElement).
             UIManager.removeUIElement(_root)
             _root = null
         }
         _opponentEntity = null
         _player = null
         _enemy = null
+        _timeline = null
         _nextStep = null
     }
 
