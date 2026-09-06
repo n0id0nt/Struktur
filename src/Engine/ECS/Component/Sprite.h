@@ -4,6 +4,7 @@
 
 #include "Engine/Resource/TextureResource.h"
 #include "Engine/Util/Color.h"
+#include "Engine/Renderer/FlipBit.h"
 #include "Engine/World/RenderLayer.h"
 #include "glm/glm.hpp"
 
@@ -19,7 +20,7 @@ struct Sprite
 
 	// TODO also store a cached version of the source rec here so it doesn't need to be recalculated
 	int columns, rows;
-	bool flipped;  // TODO change this to an enum
+	Struktur::Renderer::FlipBit flipped = Struktur::Renderer::FlipBit::NONE;
 	int index;
 	Struktur::World::RenderLayer layer;
 	// Manual sort bias within layer. For RenderLayer::Entities the render system adds world Y to this,

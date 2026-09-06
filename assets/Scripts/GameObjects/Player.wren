@@ -1,5 +1,6 @@
 import "gameObject" for GameObject
 import "gameObjectComponents" for WorldTransform, Script, Sprite, Camera, PhysicsBody, SpriteAnimation, RenderLayer
+import "renderer" for FlipBit
 import "math" for Vec2, Vec3, Vec4, Math
 import "resourceManager" for Texture
 import "animation" for SpriteAnimationDefinition
@@ -34,7 +35,7 @@ class Player {
     // Script configures/initializes component values
     start() {
         var texture = Texture.load("Sprites/player.png")
-        Sprite.create(_entity, texture, WHITE, Vec2.new(19, 17), 10, 10, false, 0, RenderLayer.ENTITIES, 0)
+        Sprite.create(_entity, texture, WHITE, Vec2.new(19, 17), 10, 10, FlipBit.NONE, 0, RenderLayer.ENTITIES, 0)
         texture.unload()
         var camera = Camera.create(_entity)
         camera.zoom = 5

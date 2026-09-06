@@ -10,6 +10,7 @@
 // No "left" strip - left-facing reuses the right strip mirrored (see Critter.playAnimation).
 
 import "gameObjectComponents" for Sprite, PhysicsBody, SpriteAnimation, RenderLayer
+import "renderer" for FlipBit
 import "math" for Vec2
 import "resourceManager" for Texture
 import "animation" for SpriteAnimationDefinition
@@ -37,7 +38,7 @@ class Chinlin is Critter {
 
     start() {
         var texture = Texture.load("Sprites/chinlin.png")
-        Sprite.create(entity, texture, WHITE, Vec2.new(12, 16), 4, 4, false, 0, RenderLayer.ENTITIES, 0)
+        Sprite.create(entity, texture, WHITE, Vec2.new(12, 16), 4, 4, FlipBit.NONE, 0, RenderLayer.ENTITIES, 0)
         texture.unload()
 
         var body = PhysicsBody.create(entity, BodyDefinition.new(BodyType.DYNAMIC_BODY),

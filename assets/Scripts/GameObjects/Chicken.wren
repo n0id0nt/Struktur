@@ -11,6 +11,7 @@
 // There is no "left" strip - left-facing reuses the right strip mirrored (see Critter.playAnimation).
 
 import "gameObjectComponents" for Sprite, PhysicsBody, SpriteAnimation, RenderLayer
+import "renderer" for FlipBit
 import "math" for Vec2
 import "resourceManager" for Texture
 import "animation" for SpriteAnimationDefinition
@@ -29,7 +30,7 @@ class Chicken is Critter {
     // Called by C++ once the base components exist - configure them here.
     start() {
         var texture = Texture.load("Sprites/chicken.png")
-        Sprite.create(entity, texture, WHITE, Vec2.new(8, 8), 7, 6, false, 0, RenderLayer.ENTITIES, 0)
+        Sprite.create(entity, texture, WHITE, Vec2.new(8, 8), 7, 6, FlipBit.NONE, 0, RenderLayer.ENTITIES, 0)
         texture.unload()
 
         var body = PhysicsBody.create(entity, BodyDefinition.new(BodyType.DYNAMIC_BODY),

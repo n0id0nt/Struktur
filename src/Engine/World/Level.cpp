@@ -79,7 +79,7 @@ entt::entity Struktur::World::Level::LoadLevelEntities(GameContext& context, con
 				grid.reserve(layer.autoLayerTiles.size());
 				for (auto& gridTile : layer.autoLayerTiles)
 				{
-					TileMap::GridTile newGridTile{gridTile.px, gridTile.src, (TileMap::FlipBit)gridTile.f};
+					TileMap::GridTile newGridTile{gridTile.px, gridTile.src, (Renderer::FlipBit)gridTile.f};
 					grid.push_back(newGridTile);
 				}
 

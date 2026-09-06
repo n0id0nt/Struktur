@@ -1521,7 +1521,7 @@ void InspectorWindow::RenderTileMapComponent(GameContext& context, Component::Ti
 			World::TileMap::GridTile newTile;
 			newTile.position       = glm::vec2(selectedCol * tileMap.tileSize, selectedRow * tileMap.tileSize);
 			newTile.sourcePosition = glm::vec2(0.0f, 0.0f);
-			newTile.flipBit        = World::TileMap::FlipBit::NONE;
+			newTile.flipBit        = Renderer::FlipBit::NONE;
 			tileMap.gridTiles.push_back(newTile);
 			tileMap.chunksBuilt = false;
 		}
@@ -1550,7 +1550,7 @@ void InspectorWindow::RenderTileMapComponent(GameContext& context, Component::Ti
 	int flipIndex                    = static_cast<int>(tile.flipBit);
 	if (ImGui::Combo("Flip", &flipIndex, k_flipNames, IM_ARRAYSIZE(k_flipNames)))
 	{
-		tile.flipBit = static_cast<World::TileMap::FlipBit>(flipIndex);
+		tile.flipBit = static_cast<Renderer::FlipBit>(flipIndex);
 		changed      = true;
 	}
 
@@ -1786,7 +1786,12 @@ void InspectorWindow::RenderSpriteComponent(GameContext& context, Component::Spr
 	ImGui::Spacing();
 
 	// Flipped
-	ImGui::Checkbox("Flipped", &sprite.flipped);
+	static const char* k_spriteFlipNames[] = {"None", "Horizontal", "Vertical", "Both"};
+	int spriteFlipIndex                    = static_cast<int>(sprite.flipped);
+	if (ImGui::Combo("Flipped", &spriteFlipIndex, k_spriteFlipNames, IM_ARRAYSIZE(k_spriteFlipNames)))
+	{
+		sprite.flipped = static_cast<Renderer::FlipBit>(spriteFlipIndex);
+	}
 
 	// Render layer + order
 	static const char* k_renderLayerNames[] = {"Background Far",     "Background Mid", "Entities",

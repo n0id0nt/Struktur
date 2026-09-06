@@ -19,6 +19,7 @@
 // `_entity`/`_facing`/etc. directly from Chicken/Chinlin or from a mixin/behaviour.
 import "math" for Vec2
 import "gameObjectComponents" for Sprite, SpriteAnimation, PhysicsBody, WorldTransform
+import "renderer" for FlipBit
 import "GameObjects/StateMachine" for StateMachine
 
 class Critter {
@@ -118,7 +119,7 @@ class Critter {
         var suffix = "Front"
         if (sideways) {
             suffix = "Side"
-            Sprite.setFlipped(_entity, _facing.x < 0)
+            Sprite.setFlipped(_entity, _facing.x < 0 ? FlipBit.HORIZONTAL : FlipBit.NONE)
         } else if (_facing.y < 0) {
             suffix = "Back"
         }

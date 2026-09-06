@@ -408,6 +408,7 @@ set(WREN_BINDING_SOURCES
     src/WrenBindings/ComponentListXMacro.h
     src/WrenBindings/WrenAnimation.h            src/WrenBindings/WrenAnimation.cpp
     src/WrenBindings/WrenGameObjectComponents.h src/WrenBindings/WrenGameObjectComponents.cpp
+                                                src/WrenBindings/WrenRenderer.cpp
     src/WrenBindings/WrenMath.h                 src/WrenBindings/WrenMath.cpp
     src/WrenBindings/WrenPhysics.h              src/WrenBindings/WrenPhysics.cpp
                                                 src/WrenBindings/WrenCollisionLayers.cpp
@@ -540,6 +541,7 @@ set(SOURCES
     src/Engine/World/RenderLayer.h
 
     src/Engine/Renderer/WorldRenderer.h         src/Engine/Renderer/WorldRenderer.cpp
+    src/Engine/Renderer/FlipBit.h
 
     src/Engine/Scripting/WrenScriptEngine.h     src/Engine/Scripting/WrenScriptEngine.cpp
     src/Engine/Scripting/WrenBindingRegistry.h  src/Engine/Scripting/WrenBindingRegistry.cpp

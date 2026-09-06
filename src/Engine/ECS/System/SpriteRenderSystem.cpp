@@ -102,17 +102,31 @@ void Struktur::System::SpriteRenderSystem::Update(GameContext& context)
 				int y          = std::floor(index / sprite.columns) * size.y;
 
 				Util::Math::Rect sourceRec{(float)x, (float)y, size.x, size.y};
-				if (sprite.flipped)
-				{
-					sourceRec.width *= -1;
-				}
 
 				// This stops a little of the next sprite in the sprite sheet from showing due to rounding error in
-				// the GPU
+				// the GPU - applied before the flip below (while width/height are still guaranteed positive) so
+				// it always insets both edges inward, regardless of flip direction.
 				sourceRec.x += 0.0001f;
 				sourceRec.y += 0.0001f;
 				sourceRec.width -= 0.0002f;
 				sourceRec.height -= 0.0002f;
+
+				// Flip in place, not just negate width/height: the source rect's extent must stay [x, x+width]
+				// (same frame), just sampled in reverse - negating width alone shifts the whole extent one
+				// frame-width to the side instead (u1 = x+width becomes x-width), so what actually renders is
+				// the NEXT/PREVIOUS frame in the sheet, mirrored, rather than the selected frame mirrored in
+				// place. Shifting x by width first keeps the covered extent identical. Mirrors
+				// TileChunkBuilder's identical fix for tile flipping.
+				if (sprite.flipped == Renderer::FlipBit::HORIZONTAL || sprite.flipped == Renderer::FlipBit::BOTH)
+				{
+					sourceRec.x += sourceRec.width;
+					sourceRec.width = -sourceRec.width;
+				}
+				if (sprite.flipped == Renderer::FlipBit::VERTICAL || sprite.flipped == Renderer::FlipBit::BOTH)
+				{
+					sourceRec.y += sourceRec.height;
+					sourceRec.height = -sourceRec.height;
+				}
 
 				Util::Math::Rect destRec{::round(worldPosition.x * 2) / 2, ::round(worldPosition.y * 2) / 2,
 				                         size.x * worldScale.x, size.y * worldScale.x};

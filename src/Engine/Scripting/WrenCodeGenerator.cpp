@@ -44,13 +44,25 @@ void CodeGenerator::GenerateBindingFiles(const BindingRegistry& registry, const 
 		importsByModule[import.moduleName].push_back(&import);
 	}
 
-	for (const auto& [moduleName, methods] : methodsByModule)
+	// A module can be made up entirely of enums/constants/etc with no methods at all (e.g. "renderer" - just a
+	// FlipBit enum) - iterating methodsByModule alone would silently skip generating a file for it, so collect
+	// the union of every module name that appears in ANY of the binding kinds instead.
+	std::unordered_set<std::string> allModuleNames;
+	for (const auto& [moduleName, methods] : methodsByModule) allModuleNames.insert(moduleName);
+	for (const auto& [moduleName, classes] : classesByModule) allModuleNames.insert(moduleName);
+	for (const auto& [moduleName, enums] : enumsByModule) allModuleNames.insert(moduleName);
+	for (const auto& [moduleName, constants] : constantsByModule) allModuleNames.insert(moduleName);
+	for (const auto& [moduleName, wrenImpls] : wrenImplsByModule) allModuleNames.insert(moduleName);
+	for (const auto& [moduleName, imports] : importsByModule) allModuleNames.insert(moduleName);
+
+	for (const auto& moduleName : allModuleNames)
 	{
-		GenerateModuleFile(outputDir, moduleName, methods, classesByModule[moduleName], enumsByModule[moduleName],
-		                   constantsByModule[moduleName], wrenImplsByModule[moduleName], importsByModule[moduleName]);
+		GenerateModuleFile(outputDir, moduleName, methodsByModule[moduleName], classesByModule[moduleName],
+		                   enumsByModule[moduleName], constantsByModule[moduleName], wrenImplsByModule[moduleName],
+		                   importsByModule[moduleName]);
 	}
 
-	DEBUG_INFO("Generated %zu Wren binding file(s) in: %s", methodsByModule.size(), outputDir.c_str());
+	DEBUG_INFO("Generated %zu Wren binding file(s) in: %s", allModuleNames.size(), outputDir.c_str());
 
 	std::string headerOutputDir = outputDir + "/Generated";
 	GenerateAllHeaders(outputDir, headerOutputDir);

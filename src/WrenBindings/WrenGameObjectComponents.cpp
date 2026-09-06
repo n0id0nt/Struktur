@@ -10,6 +10,7 @@
 #include "Engine/GameContext.h"
 #include "Engine/Scripting/WrenBindingRegistry.h"
 #include "Engine/Scripting/WrenUtil.h"
+#include "Engine/Renderer/FlipBit.h"
 #include "Engine/Util/Color.h"
 #include "Engine/World/Level.h"
 #include "Engine/World/RenderLayer.h"
@@ -996,7 +997,7 @@ void wren_SpriteCreate(WrenVM* vm)
 	WrenVec2* offset           = static_cast<WrenVec2*>(wrenGetSlotForeign(vm, 4));
 	int columns                = static_cast<int>(wrenGetSlotDouble(vm, 5));
 	int rows                   = static_cast<int>(wrenGetSlotDouble(vm, 6));
-	bool flipped               = wrenGetSlotBool(vm, 7);
+	auto flipped               = static_cast<Struktur::Renderer::FlipBit>(static_cast<int>(wrenGetSlotDouble(vm, 7)));
 	int index                  = static_cast<int>(wrenGetSlotDouble(vm, 8));
 	auto layer                 = static_cast<Struktur::World::RenderLayer>(static_cast<int>(wrenGetSlotDouble(vm, 9)));
 	float orderInLayer         = static_cast<float>(wrenGetSlotDouble(vm, 10));
@@ -1136,14 +1137,13 @@ void wren_SpriteGetFlipped(WrenVM* vm)
 {
 	WrenSprite* sprite = (WrenSprite*)wrenGetSlotForeign(vm, 0);
 	wrenGetVariable(vm, "gameObjectComponents", "Sprite", 1);  // Get class into slot 1
-	bool flipped = sprite->component->flipped;
-	wrenSetSlotBool(vm, 0, flipped);
+	wrenSetSlotDouble(vm, 0, static_cast<double>(sprite->component->flipped));
 }
 
 void wren_SpriteSetFlipped(WrenVM* vm)
 {
-	WrenSprite* sprite         = (WrenSprite*)wrenGetSlotForeign(vm, 0);
-	bool flipped               = wrenGetSlotBool(vm, 1);
+	WrenSprite* sprite = (WrenSprite*)wrenGetSlotForeign(vm, 0);
+	auto flipped        = static_cast<Struktur::Renderer::FlipBit>(static_cast<int>(wrenGetSlotDouble(vm, 1)));
 	sprite->component->flipped = flipped;
 }
 
@@ -1194,7 +1194,7 @@ void wren_SpriteStaticSetFlipped(WrenVM* vm)
 	auto& registry                 = context->GetRegistry();
 
 	double entityId     = wrenGetSlotDouble(vm, 1);
-	bool flipped        = wrenGetSlotBool(vm, 2);
+	auto flipped        = static_cast<Struktur::Renderer::FlipBit>(static_cast<int>(wrenGetSlotDouble(vm, 2)));
 	entt::entity entity = static_cast<entt::entity>(entityId);
 
 	auto* sprite = registry.try_get<Struktur::Component::Sprite>(entity);

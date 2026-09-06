@@ -4,11 +4,12 @@
 #include <cmath>
 #include <unordered_map>
 
+#include "Engine/Renderer/FlipBit.h"
 #include "Engine/Renderer/QuadVertex.h"
 
 namespace
 {
-using Struktur::World::TileMap::FlipBit;
+using Struktur::Renderer::FlipBit;
 using Struktur::World::TileMap::GridTile;
 
 constexpr int kChunkTiles = 16;
@@ -49,28 +50,35 @@ std::vector<Struktur::Renderer::TileChunk> Struktur::Renderer::BuildTileChunks(
 		{
 			const GridTile& tile = *tilePtr;
 
-			// Mirrors SpriteRenderSystem's per-tile source-rect math exactly (flip via negative width/height,
-			// epsilon inset to avoid sampling a sliver of the neighbouring tile in the atlas).
+			// Mirrors SpriteRenderSystem's per-tile source-rect math exactly (flip in place by shifting x/y then
+			// negating width/height - see its own comment for why negating alone would sample the wrong tile
+			// entirely rather than mirroring the selected one - plus an epsilon inset, applied first while
+			// width/height are still positive, to avoid sampling a sliver of the neighbouring tile in the atlas).
 			Util::Math::Rect sourceRec{tile.sourcePosition.x, tile.sourcePosition.y, (float)tileSize, (float)tileSize};
-			switch (tile.flipBit)
-			{
-				case FlipBit::BOTH:
-					sourceRec.width *= -1;
-					sourceRec.height *= -1;
-					break;
-				case FlipBit::HORIZONTAL:
-					sourceRec.width *= -1;
-					break;
-				case FlipBit::VERTIAL:
-					sourceRec.height *= -1;
-					break;
-				default:
-					break;
-			}
 			sourceRec.x += 0.0001f;
 			sourceRec.y += 0.0001f;
 			sourceRec.width -= 0.0002f;
 			sourceRec.height -= 0.0002f;
+
+			switch (tile.flipBit)
+			{
+				case FlipBit::BOTH:
+					sourceRec.x += sourceRec.width;
+					sourceRec.width = -sourceRec.width;
+					sourceRec.y += sourceRec.height;
+					sourceRec.height = -sourceRec.height;
+					break;
+				case FlipBit::HORIZONTAL:
+					sourceRec.x += sourceRec.width;
+					sourceRec.width = -sourceRec.width;
+					break;
+				case FlipBit::VERTICAL:
+					sourceRec.y += sourceRec.height;
+					sourceRec.height = -sourceRec.height;
+					break;
+				default:
+					break;
+			}
 
 			float destX = tile.position.x + worldOffset.x;
 			float destY = tile.position.y + worldOffset.y;

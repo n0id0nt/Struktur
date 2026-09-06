@@ -97,8 +97,22 @@ void Struktur::Debug::SpritePreviewRenderer::RenderSingleFrame(GameContext& cont
 
 	float srcX = col * frameWidth;
 	float srcY = row * frameHeight;
-	float srcW = m_sprite->flipped ? -frameWidth : frameWidth;
+	float srcW = frameWidth;
 	float srcH = frameHeight;
+
+	// Flip in place (shift then negate), not just negate width/height - see SpriteRenderSystem's own comment for
+	// why negating alone would preview the wrong frame entirely (shifted a full frame-width to the side) rather
+	// than the selected frame mirrored in place.
+	if (m_sprite->flipped == Renderer::FlipBit::HORIZONTAL || m_sprite->flipped == Renderer::FlipBit::BOTH)
+	{
+		srcX += srcW;
+		srcW = -srcW;
+	}
+	if (m_sprite->flipped == Renderer::FlipBit::VERTICAL || m_sprite->flipped == Renderer::FlipBit::BOTH)
+	{
+		srcY += srcH;
+		srcH = -srcH;
+	}
 
 	float aspect = frameWidth / frameHeight;
 	ImVec2 displaySize;

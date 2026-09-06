@@ -4,6 +4,7 @@
 #include <fstream>
 #include <sstream>
 #include <unordered_map>
+#include <unordered_set>
 
 #include "Debug/Assertions.h"
 #include "WrenBindingRegistry.h"

@@ -1,4 +1,5 @@
 import "gameObjectComponents" for Sprite, PhysicsBody, Shader as ShaderComponent, RenderLayer
+import "renderer" for FlipBit
 import "math" for Vec2, Vec3, Vec4
 import "resourceManager" for Texture, Shader as ShaderResource
 import "physics" for BodyDefinition, PhysicsCircleShape, BodyType
@@ -49,7 +50,7 @@ class NPC {
 
         var texture = Texture.load("Tiles/NPCs.png")
         // RenderLayer.ENTITIES already y-sorts by world position, so no manual offset is needed here.
-        Sprite.create(_entity, texture, WHITE, npcData.getOffset(), 9, 1, false, npcData.getSpriteIndex(), RenderLayer.ENTITIES, 0)
+        Sprite.create(_entity, texture, WHITE, npcData.getOffset(), 9, 1, FlipBit.NONE, npcData.getSpriteIndex(), RenderLayer.ENTITIES, 0)
         texture.unload()
         
         var bodyDef = BodyDefinition.new(BodyType.STATIC_BODY)

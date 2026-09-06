@@ -1457,6 +1457,24 @@ inline const char* wrenphysicsSource()
     "";
 }
 
+// Module: renderer
+inline const char* wrenrendererSource()
+{
+    return "// AUTO-GENERATED FILE - DO NOT EDIT\n"
+    "// Generated from C++ bindings\n"
+    "// Module: renderer\n"
+    "\n"
+    "// Sprite/tile source-rect mirroring - shared with TileMap\n"
+    "class FlipBit {\n"
+    "    static NONE { 0 }\n"
+    "    static HORIZONTAL { 1 }\n"
+    "    static VERTICAL { 2 }\n"
+    "    static BOTH { 3 }\n"
+    "}\n"
+    "\n"
+    "";
+}
+
 // Module: resourceManager
 inline const char* wrenresourceManagerSource()
 {
@@ -2495,6 +2513,7 @@ inline const std::unordered_map<std::string, const char*(*)()>& GetWrenBindingSo
         { "localization", wrenlocalizationSource },
         { "math", wrenmathSource },
         { "physics", wrenphysicsSource },
+        { "renderer", wrenrendererSource },
         { "resourceManager", wrenresourceManagerSource },
         { "serialisation", wrenserialisationSource },
         { "ui", wrenuiSource },

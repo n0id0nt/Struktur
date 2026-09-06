@@ -7,6 +7,7 @@ void RegisterAllBindings(BindingRegistry& registry)
 	RegisterAnimationBindings(registry);
 	RegisterGameObjectBindings(registry);
 	RegisterGameObjectComponentBindings(registry);
+	RegisterRendererBindings(registry);
 	RegisterMathBindings(registry);
 	RegisterPhysicsBindings(registry);
 	RegisterCollisionLayersBindings(registry);
