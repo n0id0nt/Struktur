@@ -60,10 +60,13 @@ class Critter {
 
     // Combat stats used when a fight starts (see Combat/CombatState.wren). Defaults are chicken-tier
     // - a pushover; tougher species override these. combatMoveCost is how many time units this
-    // critter's one attack takes to charge on the Timeline (Phase 2 of the roadmap).
-    combatMaxHp { 12 }
-    combatAttack { 3 }
+    // critter's one attack takes to charge; combatBaseDelay is its raw interrupt weight (2-6, scaled
+    // by the Disruption formula). Damage sits on the design doc's ~15-100 scale so damage/50 in that
+    // formula actually varies.
+    combatMaxHp { 55 }
+    combatAttack { 15 }
     combatMoveCost { 3 }
+    combatBaseDelay { 2 }
 
     facing { _facing }
     facing=(value) { _facing = value }

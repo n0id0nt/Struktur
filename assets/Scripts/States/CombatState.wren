@@ -1,14 +1,14 @@
 // states/CombatState.wren
-// Phase 2 of the Interrupt Combat Roadmap - Visible Timelines. Turn order comes from charge, not
-// seat order: every combatant charges toward a committed Move, and whoever's bar fills first acts.
-// Still linear - no interrupts yet (Phase 3). The player picks from a short move list with different
-// charge costs, so ordering actually varies with their choices; the enemy has a single move.
+// Phase 3 of the Interrupt Combat Roadmap - The Interrupt Core, the vertical slice the whole design
+// is built to protect. Turn order still comes from charge (Phase 2), but now landing a hit on
+// someone who's mid-charge shoves their bar backward by the Disruption formula
+// (Combat/Disruption.wren): hit them at the start of their wind-up and they're knocked way back;
+// hit them near the end and they barely flinch. It's symmetric - the player eats it too if they
+// commit to a slow move against a faster enemy.
 //
-// Entered from ExperimentState when the player engages a critter (forced by an aggressive one,
-// chosen via the prompt for a passive one - see ExperimentState.checkCombatTriggers()).
-// Presentation is a full-screen dim overlay over the frozen field (Time.setTimeScale(0)); this
-// state's own pacing and the Timeline run off Time.unscaledDelta / unscaledTime, so they keep
-// ticking through that freeze.
+// Entered from ExperimentState when the player engages a critter. Presentation is a full-screen dim
+// overlay over the frozen field (Time.setTimeScale(0)); this state's pacing and the Timeline run
+// off Time.unscaledDelta / unscaledTime so they keep ticking through that freeze.
 import "States/BaseState" for BaseState
 import "input" for Input
 import "app" for Application, Time
@@ -22,6 +22,7 @@ import "Colors" for WHITE, BLACK, BLANK, LIGHTGRAY
 import "Combat/Combatant" for Combatant
 import "Combat/Move" for Move
 import "Combat/Timeline" for Timeline
+import "Combat/Disruption" for Disruption
 import "Combat/HealthBar" for HealthBar
 import "Combat/ChargeBar" for ChargeBar
 
@@ -29,7 +30,7 @@ var INTRO_TIME   = 0.8   // beat before the menu arms (also lets the Interact ke
 var MESSAGE_TIME = 0.9   // each battle-log line holds this long before the turn advances
 var OVER_TIME    = 1.6   // final result holds this long before returning to the overworld
 
-var PLAYER_MAX_HP = 30
+var PLAYER_MAX_HP = 120
 
 class CombatState is BaseState {
     construct new() {
@@ -40,16 +41,18 @@ class CombatState is BaseState {
         _timerEnd = 0
         _nextStep = null
         _timeline = null
+        _playerStaggered = false
+        _enemyStaggered = false
     }
 
-    // The player's move list. Slower moves are more damage per time unit, but you eat more enemy
-    // hits while you charge them - that trade sharpens in Phase 3 when charge time also sets how
-    // hard you can be interrupted.
+    // The player's move list. name, charge cost (u), damage, base interrupt delay (u). Faster moves
+    // reliably land first and interrupt; slower ones hit far harder and disrupt far harder, but a
+    // faster enemy will get its hit (and its own interrupt) in while you wind up.
     playerMoves() {
         return [
-            Move.new("Jab", 2, 3),
-            Move.new("Strike", 4, 7),
-            Move.new("Heavy Blow", 6, 13)
+            Move.new("Jab", 2, 20, 2),
+            Move.new("Strike", 4, 42, 3),
+            Move.new("Heavy Blow", 6, 75, 5)
         ]
     }
 
@@ -65,7 +68,8 @@ class CombatState is BaseState {
         }
 
         _player = Combatant.new("You", PLAYER_MAX_HP, playerMoves(), null)
-        var enemyMove = Move.new("Attack", enemyScript.combatMoveCost, enemyScript.combatAttack)
+        var enemyMove = Move.new("Attack", enemyScript.combatMoveCost, enemyScript.combatAttack,
+                                 enemyScript.combatBaseDelay)
         _enemy = Combatant.new(enemyScript.name, enemyScript.combatMaxHp, [enemyMove], _opponentEntity)
 
         _timeline = Timeline.new()
@@ -210,9 +214,11 @@ class CombatState is BaseState {
     }
 
     // Player needs to pick - menu open, Timeline paused (planning time). The enemy commits here too
-    // so both start charging together the moment the player chooses.
+    // so both start charging together the moment the player chooses. An interrupted enemy keeps its
+    // (pushed-back) charge - only a fired move gets re-committed.
     beginChoosing() {
         _phase = "choosing"
+        clearStagger()
         setMessage("Choose your move.")
         _menu.setVisible(true)
         UIManager.setFocus(_moveButtons[0])
@@ -226,6 +232,17 @@ class CombatState is BaseState {
         _timeline.commit(_player, move)
         _menu.setVisible(false)
         _phase = "charging"
+        clearStagger()
+        setMessage("")
+        refreshTimeline()
+    }
+
+    // Enemy fired without dying anyone - re-commit its one move and resume charging. The player's
+    // own charge is untouched here (whatever it was, interrupted or not).
+    resumeCharging() {
+        _timeline.commit(_enemy, _enemy.moves[0])
+        _phase = "charging"
+        clearStagger()
         setMessage("")
         refreshTimeline()
     }
@@ -235,15 +252,25 @@ class CombatState is BaseState {
         var isPlayer = actor == _player
         var target = isPlayer ? _enemy : _player
         var dealt = actor.use(move, target)
+
+        // Interrupt: if the target was still winding up, shove their charge backward by the
+        // Disruption formula (smaller the closer they were to firing).
+        var staggerUnits = 0
+        if (_timeline.isCharging(target)) {
+            staggerUnits = Disruption.delay(move, _timeline.fraction(target))
+            _timeline.interrupt(target, staggerUnits)
+            if (isPlayer) {
+                _enemyStaggered = true
+            } else {
+                _playerStaggered = true
+            }
+        }
+
         _timeline.clear(actor)
         refreshBars()
         refreshTimeline()
 
-        var line = "%(_enemy.name) lands %(move.name) - %(dealt) damage!"
-        if (isPlayer) {
-            line = "You land %(move.name) - %(dealt) damage!"
-        }
-        showLog(line, Fn.new {
+        showLog(resolveLine(isPlayer, move, dealt, staggerUnits), Fn.new {
             if (!_enemy.alive) {
                 win()
             } else if (!_player.alive) {
@@ -251,14 +278,19 @@ class CombatState is BaseState {
             } else if (isPlayer) {
                 beginChoosing()
             } else {
-                // Enemy re-commits its one move and both resume charging (the player's own charge
-                // was untouched - they didn't act).
-                _timeline.commit(_enemy, _enemy.moves[0])
-                _phase = "charging"
-                setMessage("")
-                refreshTimeline()
+                resumeCharging()
             }
         })
+    }
+
+    resolveLine(isPlayer, move, dealt, staggerUnits) {
+        var attacker = isPlayer ? "You land" : "%(_enemy.name) lands"
+        var line = "%(attacker) %(move.name) - %(dealt) dmg."
+        if (staggerUnits > 0) {
+            var victim = isPlayer ? "%(_enemy.name) is" : "You're"
+            line = "%(line)  %(victim) staggered (-%(staggerUnits.floor))!"
+        }
+        return line
     }
 
     win() {
@@ -296,18 +328,26 @@ class CombatState is BaseState {
         _messageLabel.setBoundingBoxToText()
     }
 
+    clearStagger() {
+        _playerStaggered = false
+        _enemyStaggered = false
+    }
+
     refreshBars() {
         _playerHpBar.setFraction(_player.stats.fraction)
         _enemyHpBar.setFraction(_enemy.stats.fraction)
     }
 
-    // Bars only - cheap, called every frame while charging.
+    // Charge bars only - cheap, called every frame while charging.
     refreshChargeBars() {
         _playerChargeBar.setFraction(_timeline.fraction(_player))
+        _playerChargeBar.setStaggered(_playerStaggered)
         _enemyChargeBar.setFraction(_timeline.fraction(_enemy))
+        _enemyChargeBar.setStaggered(_enemyStaggered)
     }
 
-    // Bars + the committed-move readouts - called only when a move is committed or cleared.
+    // Charge bars + the committed-move readouts - called only when a move is committed, cleared, or
+    // interrupted.
     refreshTimeline() {
         refreshChargeBars()
         setLabel(_playerMoveLabel, moveReadout(_timeline.committedMove(_player)))

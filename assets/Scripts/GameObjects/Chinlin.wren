@@ -33,10 +33,12 @@ class Chinlin is Critter {
     aggressive { true }
 
     // Tougher than a chicken - a real (still winnable) fight. Slower attack (5u charge) than a
-    // chicken's (3u), so it acts less often but hits harder.
-    combatMaxHp { 20 }
-    combatAttack { 5 }
+    // chicken's (3u), so it acts less often but hits harder; its 5u wind-up beats the player's 6u
+    // Heavy Blow, so leading with that means eating a hit first - a real gamble.
+    combatMaxHp { 90 }
+    combatAttack { 30 }
     combatMoveCost { 5 }
+    combatBaseDelay { 3 }
 
     start() {
         var texture = Texture.load("Sprites/chinlin.png")
