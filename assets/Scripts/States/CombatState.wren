@@ -1,14 +1,13 @@
 // states/CombatState.wren
-// Phase 3 of the Interrupt Combat Roadmap - The Interrupt Core, the vertical slice the whole design
-// is built to protect. Turn order still comes from charge (Phase 2), but now landing a hit on
-// someone who's mid-charge shoves their bar backward by the Disruption formula
-// (Combat/Disruption.wren): hit them at the start of their wind-up and they're knocked way back;
-// hit them near the end and they barely flinch. It's symmetric - the player eats it too if they
-// commit to a slow move against a faster enemy.
+// Phase 4 of the Interrupt Combat Roadmap - Stamina & Move Tiers. On top of Phase 2's charge-order
+// turns and Phase 3's interrupts: every move now costs stamina, stamina trickles back while you
+// wind up, and dropping below 20% adds a time unit to everything you commit (exhaustion). Guard
+// buys stamina back at the cost of a turn. So the move list is a real economy, not just a timing
+// gamble - spam your Tier-3 hammer and you tire out and slow down; pace yourself and you don't.
 //
 // Entered from ExperimentState when the player engages a critter. Presentation is a full-screen dim
-// overlay over the frozen field (Time.setTimeScale(0)); this state's pacing and the Timeline run
-// off Time.unscaledDelta / unscaledTime so they keep ticking through that freeze.
+// overlay over the frozen field (Time.setTimeScale(0)); this state's pacing, the Timeline, and
+// stamina regen all run off Time.unscaledDelta / unscaledTime so they tick through that freeze.
 import "States/BaseState" for BaseState
 import "input" for Input
 import "app" for Application, Time
@@ -20,17 +19,20 @@ import "gameObjectComponents" for Script
 import "Colors" for WHITE, BLACK, BLANK, LIGHTGRAY
 
 import "Combat/Combatant" for Combatant
-import "Combat/Move" for Move
+import "Combat/Moves" for Moves
 import "Combat/Timeline" for Timeline
 import "Combat/Disruption" for Disruption
 import "Combat/HealthBar" for HealthBar
 import "Combat/ChargeBar" for ChargeBar
+import "Combat/StaminaBar" for StaminaBar
 
 var INTRO_TIME   = 0.8   // beat before the menu arms (also lets the Interact keypress fully release)
 var MESSAGE_TIME = 0.9   // each battle-log line holds this long before the turn advances
 var OVER_TIME    = 1.6   // final result holds this long before returning to the overworld
 
-var PLAYER_MAX_HP = 120
+var PLAYER_MAX_HP      = 120
+var PLAYER_MAX_STAMINA = 70
+var STAMINA_REGEN      = 2   // stamina per time unit, applied to both combatants while charging
 
 class CombatState is BaseState {
     construct new() {
@@ -45,17 +47,6 @@ class CombatState is BaseState {
         _enemyStaggered = false
     }
 
-    // The player's move list. name, charge cost (u), damage, base interrupt delay (u). Faster moves
-    // reliably land first and interrupt; slower ones hit far harder and disrupt far harder, but a
-    // faster enemy will get its hit (and its own interrupt) in while you wind up.
-    playerMoves() {
-        return [
-            Move.new("Jab", 2, 20, 2),
-            Move.new("Strike", 4, 42, 3),
-            Move.new("Heavy Blow", 6, 75, 5)
-        ]
-    }
-
     enter(stateManager, params) {
         super.enter(stateManager, params)
 
@@ -67,10 +58,9 @@ class CombatState is BaseState {
             return
         }
 
-        _player = Combatant.new("You", PLAYER_MAX_HP, playerMoves(), null)
-        var enemyMove = Move.new("Attack", enemyScript.combatMoveCost, enemyScript.combatAttack,
-                                 enemyScript.combatBaseDelay)
-        _enemy = Combatant.new(enemyScript.name, enemyScript.combatMaxHp, [enemyMove], _opponentEntity)
+        _player = Combatant.new("You", PLAYER_MAX_HP, PLAYER_MAX_STAMINA, Moves.playerKit, null)
+        _enemy = Combatant.new(enemyScript.name, enemyScript.combatMaxHp, enemyScript.combatStamina,
+                               [Moves.critterAttack(enemyScript)], _opponentEntity)
 
         _timeline = Timeline.new()
         _timeline.add(_player)
@@ -81,7 +71,7 @@ class CombatState is BaseState {
         _phase = "intro"
         _timerEnd = Time.unscaledTime + INTRO_TIME
         setMessage("You face off against the %(_enemy.name)!")
-        refreshBars()
+        refreshVitals()
         refreshTimeline()
 
         Time.setTimeScale(0)
@@ -98,35 +88,37 @@ class CombatState is BaseState {
         _root.setZIndex(-1)
         UIManager.addUIElement(_root)
 
-        // Enemy: name, HP bar, charge bar + committed-move readout, top centre.
+        // Enemy: name, HP / charge / stamina bars, committed-move readout - top centre.
         var ex = (gw / 2) - 170
-        var enemyName = simpleLabel(_enemy.name, Vec2.new(0, 42), Vec2.new(0.5, 0), 34.0, font)
+        var enemyName = simpleLabel(_enemy.name, Vec2.new(0, 40), Vec2.new(0.5, 0), 34.0, font)
         enemyName.setAlignment(TextAlignment.CENTER)
         enemyName.setAnchorPoint(Vec2.new(0.5, 0))
         _root.addChild(enemyName)
-        _enemyHpBar = HealthBar.new(_root, ex, 90, 340, 20)
-        _enemyChargeBar = ChargeBar.new(_root, ex, 114, 340, 10)
-        _enemyMoveLabel = simpleLabel("", Vec2.new(ex + 350, 106), Vec2.new(0, 0), 18.0, font)
+        _enemyHpBar = HealthBar.new(_root, ex, 88, 340, 18)
+        _enemyChargeBar = ChargeBar.new(_root, ex, 110, 340, 9)
+        _enemyStaminaBar = StaminaBar.new(_root, ex, 123, 340, 6)
+        _enemyMoveLabel = simpleLabel("", Vec2.new(ex + 350, 100), Vec2.new(0, 0), 18.0, font)
         _root.addChild(_enemyMoveLabel)
 
-        // Player: name, HP bar, charge bar + committed-move readout, bottom left.
+        // Player: name, HP / charge / stamina bars, committed-move readout - bottom left.
         var px = 48
-        var py = gh - 150
+        var py = gh - 158
         var playerName = simpleLabel(_player.name, Vec2.new(px, py - 34), Vec2.new(0, 0), 28.0, font)
         _root.addChild(playerName)
-        _playerHpBar = HealthBar.new(_root, px, py, 280, 18)
-        _playerChargeBar = ChargeBar.new(_root, px, py + 22, 280, 10)
-        _playerMoveLabel = simpleLabel("", Vec2.new(px + 290, py + 14), Vec2.new(0, 0), 18.0, font)
+        _playerHpBar = HealthBar.new(_root, px, py, 300, 18)
+        _playerChargeBar = ChargeBar.new(_root, px, py + 22, 300, 9)
+        _playerStaminaBar = StaminaBar.new(_root, px, py + 35, 300, 7)
+        _playerMoveLabel = simpleLabel("", Vec2.new(px + 312, py + 12), Vec2.new(0, 0), 18.0, font)
         _root.addChild(_playerMoveLabel)
 
         // Battle log / prompt, centre.
-        _messageLabel = simpleLabel("", Vec2.new(0, 0), Vec2.new(0.5, 0.34), 30.0, font)
+        _messageLabel = simpleLabel("", Vec2.new(0, 0), Vec2.new(0.5, 0.32), 30.0, font)
         _messageLabel.setAlignment(TextAlignment.CENTER)
         _messageLabel.setAnchorPoint(Vec2.new(0.5, 0.5))
         _root.addChild(_messageLabel)
 
         // Move menu, bottom right - one container so it can be shown/hidden wholesale.
-        _menu = UIPanel.new(Vec2.new(-32, -32), Vec2.new(1, 1), Vec2.new(280, 244), Vec2.new(0, 0))
+        _menu = UIPanel.new(Vec2.new(-30, -30), Vec2.new(1, 1), Vec2.new(304, 288), Vec2.new(0, 0))
         _menu.setAnchorPoint(Vec2.new(1, 1))
         _menu.setBackgroundColor(BLANK)
         _menu.setBorderColor(BLANK)
@@ -166,15 +158,15 @@ class CombatState is BaseState {
 
     // Button `index` counts from the top of the menu stack; buttons are parented under _menu.
     makeButton(text, index, font) {
-        var h = 46
-        var button = UIPanel.new(Vec2.new(0, index * (h + 8)), Vec2.new(0, 0), Vec2.new(260, h), Vec2.new(0, 0))
+        var h = 44
+        var button = UIPanel.new(Vec2.new(0, index * (h + 8)), Vec2.new(0, 0), Vec2.new(288, h), Vec2.new(0, 0))
         button.setBackgroundColor(LIGHTGRAY)
         button.setBorderColor(WHITE)
         button.setBorderWidth(2)
         button.setFocusable(true)
         _menu.addChild(button)
 
-        var label = UILabel.new(Vec2.new(0, 0), Vec2.new(0.5, 0.5), text, 22.0)
+        var label = UILabel.new(Vec2.new(0, 0), Vec2.new(0.5, 0.5), text, 20.0)
         label.setFont(font)
         label.setTextColor(BLACK)
         label.setAlignment(TextAlignment.CENTER)
@@ -194,8 +186,10 @@ class CombatState is BaseState {
                 beginChoosing()
             }
         } else if (_phase == "charging") {
-            _timeline.tick(Time.unscaledDelta)
+            var units = _timeline.tick(Time.unscaledDelta)
+            regenStamina(units)
             refreshChargeBars()
+            refreshVitals()
             var ready = _timeline.nextReady()
             if (ready != null) {
                 resolveMove(ready)
@@ -213,9 +207,14 @@ class CombatState is BaseState {
         }
     }
 
+    regenStamina(units) {
+        _player.stats.gainStamina(units * STAMINA_REGEN)
+        _enemy.stats.gainStamina(units * STAMINA_REGEN)
+    }
+
     // Player needs to pick - menu open, Timeline paused (planning time). The enemy commits here too
-    // so both start charging together the moment the player chooses. An interrupted enemy keeps its
-    // (pushed-back) charge - only a fired move gets re-committed.
+    // (Timeline.commit bakes in an exhaustion penalty if it's tired). An interrupted enemy keeps its
+    // pushed-back charge - only a fired move gets re-committed.
     beginChoosing() {
         _phase = "choosing"
         clearStagger()
@@ -237,8 +236,6 @@ class CombatState is BaseState {
         refreshTimeline()
     }
 
-    // Enemy fired without dying anyone - re-commit its one move and resume charging. The player's
-    // own charge is untouched here (whatever it was, interrupted or not).
     resumeCharging() {
         _timeline.commit(_enemy, _enemy.moves[0])
         _phase = "charging"
@@ -253,10 +250,9 @@ class CombatState is BaseState {
         var target = isPlayer ? _enemy : _player
         var dealt = actor.use(move, target)
 
-        // Interrupt: if the target was still winding up, shove their charge backward by the
-        // Disruption formula (smaller the closer they were to firing).
+        // Interrupt: an offensive hit landing on a still-winding-up target shoves their charge back.
         var staggerUnits = 0
-        if (_timeline.isCharging(target)) {
+        if (move.damage > 0 && _timeline.isCharging(target)) {
             staggerUnits = Disruption.delay(move, _timeline.fraction(target))
             _timeline.interrupt(target, staggerUnits)
             if (isPlayer) {
@@ -267,7 +263,7 @@ class CombatState is BaseState {
         }
 
         _timeline.clear(actor)
-        refreshBars()
+        refreshVitals()
         refreshTimeline()
 
         showLog(resolveLine(isPlayer, move, dealt, staggerUnits), Fn.new {
@@ -284,6 +280,9 @@ class CombatState is BaseState {
     }
 
     resolveLine(isPlayer, move, dealt, staggerUnits) {
+        if (move.damage == 0) {
+            return "You brace yourself. (+%(move.staminaRestore) stamina)"
+        }
         var attacker = isPlayer ? "You land" : "%(_enemy.name) lands"
         var line = "%(attacker) %(move.name) - %(dealt) dmg."
         if (staggerUnits > 0) {
@@ -308,7 +307,6 @@ class CombatState is BaseState {
         endFight("You slipped away.")
     }
 
-    // Show a line, then run `next` (a Fn) once it has held for MESSAGE_TIME.
     showLog(text, next) {
         setMessage(text)
         _phase = "message"
@@ -333,12 +331,16 @@ class CombatState is BaseState {
         _enemyStaggered = false
     }
 
-    refreshBars() {
+    // HP + stamina bars - called after any damage / stamina change, and every frame while charging
+    // (stamina regenerates continuously).
+    refreshVitals() {
         _playerHpBar.setFraction(_player.stats.fraction)
         _enemyHpBar.setFraction(_enemy.stats.fraction)
+        _playerStaminaBar.setFraction(_player.stats.staminaFraction)
+        _enemyStaminaBar.setFraction(_enemy.stats.staminaFraction)
     }
 
-    // Charge bars only - cheap, called every frame while charging.
+    // Charge bars + stagger flashes - called every frame while charging.
     refreshChargeBars() {
         _playerChargeBar.setFraction(_timeline.fraction(_player))
         _playerChargeBar.setStaggered(_playerStaggered)
@@ -346,21 +348,25 @@ class CombatState is BaseState {
         _enemyChargeBar.setStaggered(_enemyStaggered)
     }
 
-    // Charge bars + the committed-move readouts - called only when a move is committed, cleared, or
+    // Charge bars + the committed-move readouts - called when a move is committed, cleared, or
     // interrupted.
     refreshTimeline() {
         refreshChargeBars()
-        setLabel(_playerMoveLabel, moveReadout(_timeline.committedMove(_player)))
-        setLabel(_enemyMoveLabel, moveReadout(_timeline.committedMove(_enemy)))
+        setLabel(_playerMoveLabel, readout(_player))
+        setLabel(_enemyMoveLabel, readout(_enemy))
+    }
+
+    readout(combatant) {
+        var move = _timeline.committedMove(combatant)
+        if (move == null) {
+            return ""
+        }
+        return combatant.stats.exhausted ? "%(move.name)  (exhausted)" : move.name
     }
 
     setLabel(label, text) {
         label.setText(text)
         label.setBoundingBoxToText()
-    }
-
-    moveReadout(move) {
-        return move == null ? "" : move.name
     }
 
     exit() {
