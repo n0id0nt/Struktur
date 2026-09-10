@@ -233,7 +233,8 @@ class ExperimentState is BaseState {
         }
         _stateManager.changeState("CombatState", {
             "opponents": combatGroup(primaryEntity, playerEntity),
-            "player": playerEntity
+            "player": playerEntity,
+            "world": _worldEntity
         })
     }
 

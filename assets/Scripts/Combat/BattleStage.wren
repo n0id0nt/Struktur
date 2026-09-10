@@ -1,52 +1,65 @@
 // Combat/BattleStage.wren
 // The *physical* side of a fight - everything you can see in the world while CombatState runs the
 // turn logic on top. When the player is dragged into combat we don't fight in place (a corridor
-// gives no room for a 1-vs-3 line); instead we cut to a dedicated arena the designer authored in
-// the ldtk world and stage a Battler (Combat/Battler.wren) per combatant there.
+// gives no room for a 1-vs-3 line); instead the camera cuts to a separate arena and a Battler
+// (Combat/Battler.wren) is staged per combatant there.
 //
-// ---------------------------------------------------------------------------------------------
-// LEVEL CONTRACT - author this in assets/Levels/SevenGods.ldtk:
-//   * one extra level, placed anywhere in the world grid (ideally not touching Level_0..3 so the
-//     intro camera sweep doesn't clip through them). Give it ground / collision tiles as you like.
-//   * one entity in it with identifier  BattleAnchor  near the middle. The whole formation is
-//     built as fixed offsets from this point and the battle camera frames it - move the anchor (or
-//     redraw the room around it) to reframe, no code change.
-// With no BattleAnchor entity present, CombatState falls back to the old fight-in-place dim
-// overlay, so this is safe to ship before the level exists.
-// ---------------------------------------------------------------------------------------------
+// The arena is a fixed patch of world well clear of every level (DEFAULT_ARENA below), with a plain
+// backdrop drawn behind the battlers so it reads as its own space. If the ldtk world contains an
+// entity with identifier "BattleAnchor" its position is used instead - drop one into an authored
+// arena room to fight there and frame it however that room is built.
 import "gameObject" for GameObject
-import "gameObjectComponents" for WorldTransform, Camera
+import "gameObjectComponents" for WorldTransform, Sprite, Camera, RenderLayer
 import "math" for Vec2, Vec3
+import "resourceManager" for Texture
+import "renderer" for FlipBit
+import "Colors" for DARKGRAY
 import "Combat/Battler" for Battler
 import "Combat/BattlePlayer" for BattlePlayer
 
-// Formation, as world-pixel offsets from the BattleAnchor. +y is down. Player holds stage left
-// facing right; opponents fan out stage right facing left. Camera frames a point between them.
-var PLAYER_STATION = Vec2.new(-150, 24)
-var ENEMY_ORIGIN   = Vec2.new(120, 0)
-var ENEMY_STEP     = Vec2.new(12, 74)   // each further opponent is down-and-slightly-right
-var CAMERA_FOCUS   = Vec2.new(-12, 0)
-var CAMERA_ZOOM    = 4.5
-var SLIDE_DISTANCE = 90                  // how far off its mark each battler starts the slide-in
+// Where the fight happens when there's no authored BattleAnchor - far above the level grid (levels
+// occupy roughly x 0..2432, y 0..1600), so the battle camera never sees overworld geometry.
+var DEFAULT_ARENA = Vec3.new(1200, -1500, 0)
+
+// Formation, as world-pixel offsets from the arena centre. +y is down. Player holds stage left
+// facing right; opponents fan out stage right facing left. Sized to sit inside the battle camera's
+// view (~256x144 world px at CAMERA_ZOOM 5 on a 1280x720 game).
+var PLAYER_STATION = Vec2.new(-108, 18)
+var ENEMY_ORIGIN   = Vec2.new(92, 0)
+var ENEMY_STEP     = Vec2.new(9, 58)     // each further opponent is down-and-slightly-right
+var CAMERA_FOCUS   = Vec2.new(-6, 4)
+var CAMERA_ZOOM    = 5
+var CAMERA_DROP    = 90                   // camera eases down this far onto the formation during the intro
+var SLIDE_DISTANCE = 110                  // how far off its mark each battler starts the slide-in
+var BACKDROP_SCALE = Vec3.new(44, 26, 1)  // background.png is 16x16 -> ~704x416 world px
 
 class BattleStage {
-    // anchorEntity: the BattleAnchor marker in the arena level. cameraStartPos: Vec3, where the
-    // camera begins the sweep (the player's overworld position). playerEntity: the real overworld
-    // player (hidden for the fight). playerCombatant: Player.combatant (persistent). enemyDefs /
-    // enemyCombatants: parallel lists, one BattleCritter + its Combatant per opponent.
-    construct new(anchorEntity, cameraStartPos, playerEntity, playerCombatant, enemyDefs, enemyCombatants) {
-        _anchor = WorldTransform.getPosition(anchorEntity)
+    // anchorEntity: an authored "BattleAnchor" marker, or null to use DEFAULT_ARENA.
+    // playerEntity: the real overworld player (hidden for the fight).
+    // worldParent: entity to parent every spawned battle entity under (the world root).
+    // playerCombatant: Player.combatant (persistent). enemyDefs / enemyCombatants: parallel lists,
+    // one BattleCritter + its Combatant per opponent.
+    construct new(anchorEntity, playerEntity, worldParent, playerCombatant, enemyDefs, enemyCombatants) {
+        _anchor = anchorEntity == null ? DEFAULT_ARENA : WorldTransform.getPosition(anchorEntity)
         _playerEntity = playerEntity
+        _n = enemyDefs.count
+        _focus = worldOf_(CAMERA_FOCUS)
 
         // Hide the overworld player. Its Camera drops out of the active set with it (the camera
         // system excludes Inactive entities), leaving _camEntity below as the only camera - so we
         // don't need the camera-priority control script doesn't have yet.
         GameObject.setInactive(_playerEntity)
 
-        _n = enemyDefs.count
+        // Backdrop - a plain dark rect behind the battlers so the camera isn't staring into the void.
+        _backdrop = GameObject.create("BattleBackdrop", worldParent)
+        var bg = Texture.load("Tiles/Background/background.png")
+        Sprite.create(_backdrop, bg, DARKGRAY, Vec2.new(8, 8), 1, 1, FlipBit.NONE, 0, RenderLayer.BACKGROUND_FAR, 0)
+        bg.unload()
+        WorldTransform.setPosition(_backdrop, _focus)
+        WorldTransform.setScale(_backdrop, BACKDROP_SCALE)
 
         // Battlers: player stage left, opponents stacked stage right centred on the anchor line.
-        _player = Battler.new(BattlePlayer, playerCombatant, anchorEntity)
+        _player = Battler.new(BattlePlayer, playerCombatant, worldParent)
         _playerHome = worldOf_(PLAYER_STATION)
         _player.face(1)
 
@@ -54,27 +67,26 @@ class BattleStage {
         _enemyHomes = []
         var yShift = (_n - 1) * ENEMY_STEP.y / 2
         for (i in 0..._n) {
-            var b = Battler.new(enemyDefs[i], enemyCombatants[i], anchorEntity)
+            var b = Battler.new(enemyDefs[i], enemyCombatants[i], worldParent)
             b.face(-1)
             _enemies.add(b)
             _enemyHomes.add(worldOf_(Vec2.new(ENEMY_ORIGIN.x + i * ENEMY_STEP.x,
                                               ENEMY_ORIGIN.y + i * ENEMY_STEP.y - yShift)))
         }
 
-        // Battle camera - its own entity, framed on CAMERA_FOCUS, starts where the player stood.
-        _focus = worldOf_(CAMERA_FOCUS)
-        _camStart = cameraStartPos
-        _camEntity = GameObject.create("BattleCamera", anchorEntity)
-        WorldTransform.setPosition(_camEntity, cameraStartPos)
+        // Battle camera - its own entity. Starts a little high and eases down onto the formation.
+        _camStart = Vec3.new(_focus.x, _focus.y - CAMERA_DROP, 0)
+        _camEntity = GameObject.create("BattleCamera", worldParent)
+        WorldTransform.setPosition(_camEntity, _camStart)
         _camera = Camera.create(_camEntity)
         _camera.zoom = CAMERA_ZOOM
 
         intro(0)   // drop everything onto its slide-in start mark
     }
 
-    // t: 0..1 progress through the entrance. Eases the camera from where the player stood to the
-    // formation and slides every battler in from its wing. Safe to call every frame while the field
-    // is frozen - it only writes transforms and forces the camera (which ignores timescale).
+    // t: 0..1 progress through the entrance. Eases the camera down onto the formation and slides
+    // every battler in from its wing. Safe to call every frame while the field is frozen - it only
+    // writes transforms and forces the camera (which ignores timescale).
     intro(t) {
         var e = smooth_(t)
 
@@ -108,12 +120,15 @@ class BattleStage {
         }
     }
 
-    // Fold the arena away: destroy every battler + the camera, bring the real player back. The
-    // overworld critter entities were never moved (CombatState.win() destroys the defeated ones).
+    // Fold the arena away: destroy every battler + the backdrop + the camera, bring the real player
+    // back. The overworld critter entities were never moved (CombatState.win() destroys the beaten ones).
     teardown() {
         _player.teardown()
         for (b in _enemies) {
             b.teardown()
+        }
+        if (GameObject.isValid(_backdrop)) {
+            GameObject.destroy(_backdrop)
         }
         if (GameObject.isValid(_camEntity)) {
             GameObject.destroy(_camEntity)

@@ -21,7 +21,7 @@ import "math" for Vec2, Vec4
 import "ui" for UIManager, UILabel, UIPanel, TextAlignment
 import "resourceManager" for Font
 import "gameObject" for GameObject
-import "gameObjectComponents" for Script, WorldTransform
+import "gameObjectComponents" for Script
 import "random" for Random
 import "Colors" for WHITE, BLACK, BLANK, LIGHTGRAY
 
@@ -117,12 +117,12 @@ class CombatState is BaseState {
         setMessage("You're set upon by %(foe)!")
         refreshViews()
 
-        // Stage the fight in the authored arena if it exists (see Combat/BattleStage.wren's level
-        // contract); otherwise fall back to fighting in place under the dim overlay.
-        var anchor = firstEntity_("BattleAnchor")
-        if (anchor != null) {
-            var camStart = WorldTransform.getPosition(params["player"])
-            _stage = BattleStage.new(anchor, camStart, params["player"], _player, _enemyDefs, _enemies)
+        // Cut to the battle arena (Combat/BattleStage.wren) - a fixed offscreen patch of world, or
+        // an authored "BattleAnchor" room if one exists. Needs the world root to parent battle
+        // entities under; without it (an unexpected caller) fall back to fighting in place.
+        if (params["world"] != null) {
+            _stage = BattleStage.new(firstEntity_("BattleAnchor"), params["player"], params["world"],
+                                     _player, _enemyDefs, _enemies)
             _root.setVisible(false)
             _phase = "entering"
             _timerEnd = Time.unscaledTime + ENTER_TIME
