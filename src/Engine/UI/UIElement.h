@@ -73,6 +73,14 @@ public:
 	virtual void Update(GameContext& context) = 0;
 	virtual void Render(GameContext& context) = 0;
 
+	// What the render walk (UIManager::Render / RenderChildren) calls instead of Render() for a
+	// subtree it's skipping because this element - or an ancestor - is not visible. Flush() redraws
+	// every batch's whole allocated region every frame regardless of whether Render() ran, so a
+	// just-hidden element's last-drawn quads keep showing until its slot is explicitly zeroed. This
+	// does that once (guarded by m_visualDirty, which SetVisible sets across the whole subtree) via
+	// ClearRender(), then recurses so the entire hidden subtree clears.
+	void RenderHidden(GameContext& context);
+
 	// Virtual methods with default implementations
 	void OnClick(GameContext& context, const glm::vec2& mousePos);
 	void OnHover(GameContext& context, const glm::vec2& mousePos);
@@ -147,11 +155,10 @@ public:
 	bool IsPointInside(const glm::vec2& point) const;
 
 	// Visibility and state
-	void SetVisible(bool vis)
-	{
-		m_visible = vis;
-		m_visualDirty = true;
-	}
+	// Non-inline: a flip has to mark this element AND its whole subtree visually dirty, so the next
+	// render walk redraws it (shown) or zeroes its batch slots (hidden - see RenderHidden). A child
+	// never gets its own SetVisible when only an ancestor toggled, hence the subtree reach.
+	void SetVisible(bool vis);
 	void SetEnabled(bool en)
 	{
 		m_enabled = en;
@@ -287,6 +294,15 @@ public:
 protected:
 	void UpdateChildren(GameContext& context);
 	void RenderChildren(GameContext& context);
+
+	// Zero this element's own drawable output so Flush() stops drawing it (called by RenderHidden
+	// once after the element is hidden). Base implementation clears m_batchSlot; a subclass that
+	// draws through anything else - e.g. UIRichLabel's separate animated-batch handles - overrides
+	// to release that too, then chains to this.
+	virtual void ClearRender(GameContext& context);
+
+	// Sets m_visualDirty on this element and every descendant. See SetVisible.
+	void MarkSubtreeVisualDirty();
 
 	void UpdateBounds();
 

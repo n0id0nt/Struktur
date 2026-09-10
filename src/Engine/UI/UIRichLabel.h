@@ -248,6 +248,14 @@ public:
 	// m_ownBatch/m_batch, not this class's separate animated-batch handle space.
 	void Dispose(GameContext& context) override;
 
+protected:
+	// When hidden, the base slot clear (static glyphs) isn't enough - the animated runs live in
+	// m_animBatches, a separate handle space Flush() also submits. Release them here; a later reveal
+	// rebuilds them wholesale on the dirty pass, same as any other Render().
+	void ClearRender(GameContext& context) override;
+
+public:
+
 	// One quad per non-space/tab codepoint across every NON-ANIMATED text run's text, plus one per icon run
 	// that actually resolves against the current IconAtlas, summed over every line - purely for sizing
 	// m_batchSlot (see AssignBatches). Animated runs are deliberately excluded: their quads go into

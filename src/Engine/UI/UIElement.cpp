@@ -409,7 +409,52 @@ void Struktur::UI::UIElement::RenderChildren(GameContext& context)
 		{
 			child->Render(context);
 		}
+		else
+		{
+			// Not just "skip it" - its last-drawn quads are still in its slot and Flush() would keep
+			// drawing them. RenderHidden zeroes the hidden subtree's slots (once, on the dirty pass).
+			child->RenderHidden(context);
+		}
 	}
+}
+
+void Struktur::UI::UIElement::SetVisible(bool vis)
+{
+	if (m_visible == vis)
+	{
+		return;
+	}
+	m_visible = vis;
+	MarkSubtreeVisualDirty();
+}
+
+void Struktur::UI::UIElement::MarkSubtreeVisualDirty()
+{
+	m_visualDirty = true;
+	for (auto& child : m_children)
+	{
+		child->MarkSubtreeVisualDirty();
+	}
+}
+
+void Struktur::UI::UIElement::RenderHidden(GameContext& context)
+{
+	if (m_visualDirty)
+	{
+		ClearRender(context);
+		m_visualDirty = false;
+	}
+	for (auto& child : m_children)
+	{
+		child->RenderHidden(context);
+	}
+}
+
+void Struktur::UI::UIElement::ClearRender(GameContext& context)
+{
+	// fromQuad 0 -> the whole slot goes to degenerate zero-area quads (see UIRenderer::ClearSlotFrom).
+	// Safe before AssignBatches has ever run: an invalid m_batch / zero-capacity slot is a no-op there.
+	context.GetUIRenderer().ClearSlotFrom(m_batch, m_batchSlot, 0);
 }
 
 void Struktur::UI::UIElement::UpdateBounds()

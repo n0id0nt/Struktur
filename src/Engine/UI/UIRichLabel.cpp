@@ -279,6 +279,20 @@ void Struktur::UI::UIRichLabel::Dispose(GameContext& context)
 	UIElement::Dispose(context);
 }
 
+void Struktur::UI::UIRichLabel::ClearRender(GameContext& context)
+{
+	UIElement::ClearRender(context);  // zero the static-glyph slot
+
+	// Animated runs render from their own batches, which Flush() submits independently of this
+	// element's slot - drop them so a hidden label's wave/shake text stops too. Render() rebuilds
+	// m_animBatches from scratch on its next dirty pass, so a later reveal restores them.
+	for (Renderer::AnimatedBatchHandle handle : m_animBatches)
+	{
+		context.GetUIRenderer().DestroyAnimatedBatch(handle);
+	}
+	m_animBatches.clear();
+}
+
 namespace
 {
 // Shared counting core for GetRequiredQuadCount (includeAnimated=false - m_batchSlot never holds animated

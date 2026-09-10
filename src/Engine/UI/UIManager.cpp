@@ -118,6 +118,12 @@ void Struktur::UI::UIManager::Render(GameContext& context)
 		{
 			element->Render(context);
 		}
+		else
+		{
+			// A hidden root's quads stay in its batch and Flush() keeps drawing them - RenderHidden
+			// zeroes the hidden subtree's slots (once, on the dirty pass SetVisible triggers).
+			element->RenderHidden(context);
+		}
 	}
 }
 
