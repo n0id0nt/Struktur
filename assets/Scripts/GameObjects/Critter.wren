@@ -58,18 +58,9 @@ class Critter {
     // per-instance state (see ExperimentState.checkCombatTriggers() for where this is read).
     aggressive { false }
 
-    // Combat stats used when a fight starts (see Combat/CombatState.wren). Defaults are chicken-tier
-    // - a pushover; tougher species override these. combatMoveCost is how many time units this
-    // critter's one attack takes to charge; combatBaseDelay is its raw interrupt weight (2-6, scaled
-    // by the Disruption formula); combatStamina/combatStaminaCost let a critter tire out and slow
-    // down under sustained pressure (Phase 4). Damage sits on the design doc's ~15-100 scale so
-    // damage/50 in the Disruption formula actually varies.
-    combatMaxHp { 50 }
-    combatAttack { 15 }
-    combatMoveCost { 3 }
-    combatBaseDelay { 2 }
-    combatStamina { 40 }
-    combatStaminaCost { 12 }
+    // A critter's battle profile (move set, stats, arena sprite + animations) lives in
+    // Combat/BattleCritter.wren, looked up by this critter's name when an encounter starts - not
+    // here, so overworld behaviour and battle presentation stay separable.
 
     facing { _facing }
     facing=(value) { _facing = value }

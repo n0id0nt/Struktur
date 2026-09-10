@@ -9,7 +9,7 @@ import "resourceManager" for Font, Texture, Music
 import "ui" for UIManager, UILabel
 import "input" for Input
 import "flags" for FlagManager
-import "app" for Time
+import "app" for Time, Application
 
 import "States/BaseState" for BaseState
 import "States/StateManager" for StateManager
@@ -24,11 +24,14 @@ import "GameObjects/Critter" for Critter
 import "Colors" for WHITE
 
 var WORLD_FILE_PATH = "Levels/SevenGods.ldtk"
-// World-pixel distance at which an aggressive critter (Chinlin) forces combat outright, rather than
-// merely offering it via the interact prompt (see Player.INTERACTABLE_DISTANCE, 64px, for the
-// passive-critter equivalent). Small and roughly "touching" - a bit past the sum of the player's and
-// a critter's own physics-body radii - since this is meant to feel like being caught, not spotted.
-var FORCE_COMBAT_DISTANCE = 40.0
+// Combat proximity ranges, in metres (converted to world pixels at use via Application.pixelsPerMeter,
+// default 64). An aggressive critter (Chinlin) within FORCE range forces combat outright rather than
+// just offering it via the interact prompt - meant to feel like being caught, not spotted. When a
+// fight starts, every other critter within GROUP range OF THE PLAYER is dragged in too, nearest
+// first, up to MAX_COMBAT_GROUP total (the closest 3 when more than that are in range).
+var FORCE_COMBAT_METERS = 1.0
+var GROUP_COMBAT_METERS = 3.0
+var MAX_COMBAT_GROUP = 3
 
 class ExperimentState is BaseState {
     construct new() {
@@ -187,15 +190,16 @@ class ExperimentState is BaseState {
                 continue
             }
             var playerPosition = WorldTransform.getPosition(playerEntity)
+            var forceRange = FORCE_COMBAT_METERS * Application.pixelsPerMeter
 
             for (critter in Critter.all) {
                 if (!critter.aggressive) {
                     continue
                 }
                 var critterPosition = critter.position
-                if (critterPosition && Vec3.distance(playerPosition, critterPosition) <= FORCE_COMBAT_DISTANCE) {
+                if (critterPosition && Vec3.distance(playerPosition, critterPosition) <= forceRange) {
                     _interactLabel.setVisible(false)
-                    enterCombat(critter.entity)
+                    enterCombat(critter.entity, playerEntity)
                     return
                 }
             }
@@ -208,7 +212,7 @@ class ExperimentState is BaseState {
                 _interactLabel.setPosition(screenInteractPosition, Vec2.new(0, 0))
                 if (Input.isInputJustReleased("Interact")) {
                     _interactLabel.setVisible(false)
-                    enterCombat(interactEntity)
+                    enterCombat(interactEntity, playerEntity)
                     return
                 }
             } else {
@@ -217,7 +221,7 @@ class ExperimentState is BaseState {
         }
     }
 
-    enterCombat(opponentEntity) {
+    enterCombat(primaryEntity, playerEntity) {
         for (entity in GameObject.getAllWithIdentifier("Player")) {
             var script = Script.getInstance(entity)
             if (script) {
@@ -227,7 +231,47 @@ class ExperimentState is BaseState {
         if (_gameMusic) {
             _gameMusic.stop()
         }
-        _stateManager.changeState("CombatState", {"opponent": opponentEntity})
+        _stateManager.changeState("CombatState", {
+            "opponents": combatGroup(primaryEntity, playerEntity),
+            "player": playerEntity
+        })
+    }
+
+    // The critter you engaged, plus every other critter within GROUP_COMBAT_METERS of the player -
+    // nearest first, capped at MAX_COMBAT_GROUP (so when more than that are in range you fight the
+    // closest ones). primaryEntity is always in, even if it's somehow outside the group range.
+    combatGroup(primaryEntity, playerEntity) {
+        var group = [primaryEntity]
+        var playerPosition = WorldTransform.getPosition(playerEntity)
+        if (playerPosition == null) {
+            return group
+        }
+        var groupRange = GROUP_COMBAT_METERS * Application.pixelsPerMeter
+
+        // Gather candidates as [distance, entity], then sort by distance so the cap keeps the closest.
+        var candidates = []
+        for (critter in Critter.all) {
+            if (critter.entity == primaryEntity) {
+                continue
+            }
+            var p = critter.position
+            if (p == null) {
+                continue
+            }
+            var d = Vec3.distance(playerPosition, p)
+            if (d <= groupRange) {
+                candidates.add([d, critter.entity])
+            }
+        }
+        candidates.sort { |a, b| a[0] < b[0] }
+
+        for (candidate in candidates) {
+            if (group.count >= MAX_COMBAT_GROUP) {
+                break
+            }
+            group.add(candidate[1])
+        }
+        return group
     }
 
     render() {

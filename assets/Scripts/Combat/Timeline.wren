@@ -22,6 +22,16 @@ class Timeline {
         _entries.add({ "combatant": combatant, "move": null, "progress": 0, "cost": 0 })
     }
 
+    // Every combatant on the timeline, in add order (player then enemies) - for CombatState's
+    // per-frame view refresh.
+    combatants {
+        var out = []
+        for (e in _entries) {
+            out.add(e["combatant"])
+        }
+        return out
+    }
+
     entryFor(combatant) {
         for (e in _entries) {
             if (e["combatant"] == combatant) {

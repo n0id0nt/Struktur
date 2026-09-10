@@ -10,6 +10,8 @@ import "input" for Input
 import "reflect" for Reflect
 import "Colors" for WHITE
 
+import "Combat/BattlePlayer" for BattlePlayer
+
 var INTERACTABLE_DISTANCE = 64.0
 
 class Player {
@@ -19,17 +21,31 @@ class Player {
         _timeAccumulator = 0
         _initialized = false
         _facing = Vec2.new(0, 1)
-        _speed = 2
+        _speed = 3
         _fixedUpdateCount = 0
+        _combatant = null
 
         System.print("Player constructed for: %(_name)")
     }
-    
+
     name { _name }
 
     #!export
     speed { _speed }
     speed=(value) { _speed = value }
+
+    // The player's persistent battle Combatant. Its numbers, move kit and arena look are defined in
+    // Combat/BattlePlayer.wren (the same shape as one Combat/BattleCritter.wren entry); it's minted
+    // once and kept here, so damage and fatigue from one fight carry into the next. A full reset
+    // only happens on death/respawn, when ExperimentState rebuilds the player entity and this script
+    // with it. entity is null: a defeated player goes to GameOverState, the field entity is never
+    // destroyed out from under the fight the way a beaten critter's is.
+    combatant {
+        if (_combatant == null) {
+            _combatant = BattlePlayer.makeCombatant(null)
+        }
+        return _combatant
+    }
 
     // Called after C++ has created base components
     // Script configures/initializes component values

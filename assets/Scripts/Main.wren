@@ -27,7 +27,7 @@ class Game {
         Application.setWindowSize(windowWidth, windowHeight)
         Application.setApplicationName("Memory Palace")
         //Application.setIsFullScreen(true)
-
+        Application.setPixelsPerMeter(32)
         var gameObjectsScripts = [
             "Chicken",
             "Chinlin",

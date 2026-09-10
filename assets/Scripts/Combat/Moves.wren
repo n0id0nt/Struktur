@@ -1,25 +1,34 @@
 // Combat/Moves.wren
-// The move catalog - Phase 4 of the roadmap ("move definitions become data, not one-off methods").
-// One flat table for now; Phase 5 slices it into per-archetype kits, Phase 6 has combos reference
-// entries here. Each getter mints a fresh Move (they're immutable value objects), so a caller builds
-// its combatant's list once and reuses those instances.
+// The move catalog - Phase 5 slices it into per-archetype kits (see Combat/Archetype.wren). Each
+// getter mints a fresh Move (immutable value objects), so a caller builds its list once and reuses
+// those instances.
 //
-// Move.new(name, timeCost, damage, baseDelay, staminaCost, staminaRestore)
+// Move.new(name, timeCost, damage, baseDelay, staminaCost, staminaRestore, healAmount)
+//
+// The triangle these kits are tuned to hold (roadmap "expect churn" - these numbers will move):
+//   Speed  > Power    - 2u moves interrupt-lock a Power wind-up, and stay cheap enough to sustain it
+//   Power  > Control   - one Crush/Onslaught that lands is >half a mage's HP; Control burns stamina
+//                        holding the lock and gets caught exhausted
+//   Control > Speed    - Slow wrecks Speed's rhythm and Mend out-heals its chip damage
 import "Combat/Move" for Move
 
 class Moves {
-    // --- Player kit -----------------------------------------------------------
-    static jab       { Move.new("Jab", 2, 20, 2, 14, 0) }        // Tier 1: cheap, fast, reliable interrupt
-    static strike    { Move.new("Strike", 4, 42, 3, 26, 0) }     // Tier 2: bread and butter
-    static heavyBlow { Move.new("Heavy Blow", 6, 55, 5, 40, 0) } // Tier 3: big hit + big stagger, big cost
-    static guard     { Move.new("Guard", 3, 0, 0, 0, 30) }       // recover stamina; never interrupts
+    // --- Speed / Rogue: fast, cheap, glassy -------------------------------------
+    static slash  { Move.new("Slash", 2, 15, 2, 9, 0, 0) }
+    static flurry { Move.new("Flurry", 3, 24, 2, 15, 0, 0) }
+    static dodge  { Move.new("Dodge", 2, 0, 0, 0, 22, 0) }   // slip back, catch breath
 
-    static playerKit { [Moves.jab, Moves.strike, Moves.heavyBlow, Moves.guard] }
+    // --- Power / Warrior: slow, devastating, stamina-hungry -------------------
+    static cleave    { Move.new("Cleave", 4, 36, 3, 22, 0, 0) }
+    static crush     { Move.new("Crush", 6, 68, 5, 38, 0, 0) }
+    static onslaught { Move.new("Onslaught", 8, 105, 6, 52, 0, 0) }
 
-    // --- Enemy moves -------------------------------------------------------
-    // A critter's single attack, built from its own combat* getters (see GameObjects/Critter.wren).
-    static critterAttack(script) {
-        return Move.new("Attack", script.combatMoveCost, script.combatAttack, script.combatBaseDelay,
-                        script.combatStaminaCost, 0)
-    }
+    // --- Control / Mage: mid, tricky, disruptive -----------------------------
+    static bolt { Move.new("Bolt", 3, 28, 2, 16, 0, 0) }
+    static slow { Move.new("Slow", 3, 8, 7, 22, 0, 0) }      // tiny hit, huge stagger
+    static mend { Move.new("Mend", 4, 0, 0, 24, 0, 42) }     // heal self
+
+    static speedKit   { [Moves.slash, Moves.flurry, Moves.dodge] }
+    static powerKit    { [Moves.cleave, Moves.crush, Moves.onslaught] }
+    static controlKit  { [Moves.bolt, Moves.slow, Moves.mend] }
 }

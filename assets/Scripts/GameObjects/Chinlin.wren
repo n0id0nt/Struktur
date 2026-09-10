@@ -32,15 +32,8 @@ class Chinlin is Critter {
     // distance to make that happen.
     aggressive { true }
 
-    // Tougher than a chicken - a real (still winnable) fight, long enough that stamina management
-    // starts to bite. Slower attack (5u charge) than a chicken's (3u): acts less often, hits harder;
-    // its 5u wind-up beats the player's 6u Heavy Blow, so leading with that means eating a hit first.
-    combatMaxHp { 130 }
-    combatAttack { 28 }
-    combatMoveCost { 5 }
-    combatBaseDelay { 3 }
-    combatStamina { 50 }
-    combatStaminaCost { 20 }
+    // Battle profile (Power-style - slow, telegraphed, big HP) is defined in
+    // Combat/BattleCritter.wren under "Chinlin".
 
     start() {
         var texture = Texture.load("Sprites/chinlin.png")
@@ -62,9 +55,8 @@ class Chinlin is Critter {
         anim.addAnimation("RunSide", SpriteAnimationDefinition.new(12, 15, 0.45, true))
 
         // Kept so fixedUpdate() can run its proximity check every tick - see ChaseMixin's own comment
-        // on why entering/leaving chase can't just be another timed state like wander/idle. Speed
-        // 1.9 is a hair under Player._speed (2), so a running player can break away.
-        _chase = ChaseMixin.new(1.9, "Run", 90, 160, "wander")
+        // on why entering/leaving chase can't just be another timed state like wander/idle.
+        _chase = ChaseMixin.new(2, "Run", 90, 160, "wander")
 
         addState("wander", WanderMixin.new(1.1, "Run", 1.0, 5.0, "idle"))
         addState("idle", IdleMixin.new("Stand", 1.0, 3.0, "wander"))

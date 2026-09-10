@@ -1,13 +1,19 @@
 // states/CombatState.wren
-// Phase 4 of the Interrupt Combat Roadmap - Stamina & Move Tiers. On top of Phase 2's charge-order
-// turns and Phase 3's interrupts: every move now costs stamina, stamina trickles back while you
-// wind up, and dropping below 20% adds a time unit to everything you commit (exhaustion). Guard
-// buys stamina back at the cost of a turn. So the move list is a real economy, not just a timing
-// gamble - spam your Tier-3 hammer and you tire out and slow down; pace yourself and you don't.
+// Phase 5 of the Interrupt Combat Roadmap - Archetypes & the RPS Triangle. The player takes on the
+// pack of critters they walked into - 1 vs up to 3, each side carrying an archetype
+// (Combat/Archetype.wren) that supplies its move set. The player's battle profile is in
+// Combat/BattlePlayer.wren (and its Combatant persists on the Player script, so HP / stamina carry
+// between fights); each enemy's is in Combat/BattleCritter.wren, looked up by species name. Every
+// body charges its own timeline at once, so turn order is a genuine scramble, and offensive moves
+// pick a target. Everything Phases 2-4 established (charge order, interrupts, stamina) carries through.
 //
-// Entered from ExperimentState when the player engages a critter. Presentation is a full-screen dim
-// overlay over the frozen field (Time.setTimeScale(0)); this state's pacing, the Timeline, and
-// stamina regen all run off Time.unscaledDelta / unscaledTime so they tick through that freeze.
+// The triangle these numbers are tuned toward (see Combat/Moves.wren - "expect churn"):
+//   Speed beats Power (cheap 2u moves interrupt-lock a wind-up and sustain the lock)
+//   Power beats Control (one landed Crush is >half a mage's HP; Control burns out holding the lock)
+//   Control beats Speed (Slow wrecks the rhythm, Mend out-heals the chip)
+//
+// Presentation is a dim overlay over the frozen field (Time.setTimeScale(0)); pacing / Timeline /
+// regen all run off Time.unscaled* so they tick through the freeze.
 import "States/BaseState" for BaseState
 import "input" for Input
 import "app" for Application, Time
@@ -15,24 +21,24 @@ import "math" for Vec2, Vec4
 import "ui" for UIManager, UILabel, UIPanel, TextAlignment
 import "resourceManager" for Font
 import "gameObject" for GameObject
-import "gameObjectComponents" for Script
+import "gameObjectComponents" for Script, WorldTransform
+import "random" for Random
 import "Colors" for WHITE, BLACK, BLANK, LIGHTGRAY
 
-import "Combat/Combatant" for Combatant
-import "Combat/Moves" for Moves
+import "Combat/BattleCritter" for BattleCritter
 import "Combat/Timeline" for Timeline
 import "Combat/Disruption" for Disruption
-import "Combat/HealthBar" for HealthBar
-import "Combat/ChargeBar" for ChargeBar
-import "Combat/StaminaBar" for StaminaBar
+import "Combat/CombatantView" for CombatantView
+import "Combat/BattleStage" for BattleStage
 
-var INTRO_TIME   = 0.8   // beat before the menu arms (also lets the Interact keypress fully release)
-var MESSAGE_TIME = 0.9   // each battle-log line holds this long before the turn advances
-var OVER_TIME    = 1.6   // final result holds this long before returning to the overworld
+var INTRO_TIME   = 0.9   // fallback (fight-in-place) beat before the menu arms
+var ENTER_TIME   = 0.65  // arena sweep + battler slide-in
+var MESSAGE_TIME = 0.9
+var OVER_TIME    = 1.7
+var NAV_ARM_TIME = 0.14   // input lockout after a menu transition, so the prior keypress can't bleed
+var STAMINA_REGEN = 2     // stamina per time unit, every combatant, while charging
 
-var PLAYER_MAX_HP      = 120
-var PLAYER_MAX_STAMINA = 70
-var STAMINA_REGEN      = 2   // stamina per time unit, applied to both combatants while charging
+var RNG = Random.new()
 
 class CombatState is BaseState {
     construct new() {
@@ -41,40 +47,96 @@ class CombatState is BaseState {
         _root = null
         _phase = "intro"
         _timerEnd = 0
+        _navArmedAt = 0
         _nextStep = null
         _timeline = null
-        _playerStaggered = false
-        _enemyStaggered = false
+        _enemies = []
+        _staggered = []
+        _pendingMove = null
+        _targetIndex = 0
+        _targetAxisHeld = false
+        _playerTarget = null
+        // UI handles - rebuilt in buildUI() each fight, but this state is a reused singleton (see
+        // StateManager.insertState), so they must start null and be nulled again on exit():
+        // removeUIElement(_root) disposes the foreign objects these wrap, and a stale
+        // _playerView.refresh() on the next fight's enter() is a use-after-free.
+        // _player is NOT owned here - it's Player.combatant, which persists on the Player script.
+        _player = null
+        _playerView = null
+        _enemyViews = []
+        _enemyDefs = []   // BattleCritter per enemy, parallel to _enemies - visuals + numbers
+        _moveMenu = null
+        _moveButtons = []
+        _messageLabel = null
+        _stage = null   // BattleStage while an authored arena is in use; null = fight in place
     }
 
     enter(stateManager, params) {
         super.enter(stateManager, params)
 
-        _opponentEntity = params["opponent"]
-        var enemyScript = Script.getInstance(_opponentEntity)
-        if (!enemyScript) {
-            System.print("[CombatState] opponent %(_opponentEntity) has no script, aborting")
+        // Drop last fight's UI wrappers before building this one's - their foreign objects were
+        // disposed with the old _root in exit(); touching them again (refreshViews at the end of
+        // this method walks _playerView) reads freed memory. _player is re-fetched below.
+        _player = null
+        _playerView = null
+        _enemyViews = []
+
+        _enemies = []
+        _enemyDefs = []
+        for (entity in params["opponents"]) {
+            var s = Script.getInstance(entity)
+            if (s == null) {
+                continue
+            }
+            var def = BattleCritter.forName(s.name)
+            _enemyDefs.add(def)
+            _enemies.add(def.makeCombatant(entity))
+        }
+
+        // The player's Combatant lives on the Player script (persistent HP / stamina across fights).
+        var playerScript = params["player"] == null ? null : Script.getInstance(params["player"])
+        if (playerScript == null || _enemies.count == 0) {
+            System.print("[CombatState] no player or no valid opponents, aborting")
             stateManager.clearCurrentState()
             return
         }
-
-        _player = Combatant.new("You", PLAYER_MAX_HP, PLAYER_MAX_STAMINA, Moves.playerKit, null)
-        _enemy = Combatant.new(enemyScript.name, enemyScript.combatMaxHp, enemyScript.combatStamina,
-                               [Moves.critterAttack(enemyScript)], _opponentEntity)
+        _player = playerScript.combatant
 
         _timeline = Timeline.new()
+        for (e in _enemies) {
+            _timeline.add(e)
+        }
         _timeline.add(_player)
-        _timeline.add(_enemy)
+
+        var roster = _enemies.map { |e| "%(e.name)(%(e.stats.hp))" }.join(", ")
+        System.print("[CombatState] You(%(_player.stats.hp)/%(_player.stats.maxHp)) vs %(roster)")
 
         buildUI()
 
-        _phase = "intro"
-        _timerEnd = Time.unscaledTime + INTRO_TIME
-        setMessage("You face off against the %(_enemy.name)!")
-        refreshVitals()
-        refreshTimeline()
+        var foe = _enemies.count == 1 ? "the %(_enemies[0].name)" : "%(_enemies.count) foes"
+        setMessage("You're set upon by %(foe)!")
+        refreshViews()
+
+        // Stage the fight in the authored arena if it exists (see Combat/BattleStage.wren's level
+        // contract); otherwise fall back to fighting in place under the dim overlay.
+        var anchor = firstEntity_("BattleAnchor")
+        if (anchor != null) {
+            var camStart = WorldTransform.getPosition(params["player"])
+            _stage = BattleStage.new(anchor, camStart, params["player"], _player, _enemyDefs, _enemies)
+            _root.setVisible(false)
+            _phase = "entering"
+            _timerEnd = Time.unscaledTime + ENTER_TIME
+        } else {
+            _phase = "intro"
+            _timerEnd = Time.unscaledTime + INTRO_TIME
+        }
 
         Time.setTimeScale(0)
+    }
+
+    firstEntity_(identifier) {
+        var list = GameObject.getAllWithIdentifier(identifier)
+        return list.count > 0 ? list[0] : null
     }
 
     buildUI() {
@@ -83,69 +145,64 @@ class CombatState is BaseState {
         var font = Font.load("Fonts/medieval_sharp/MedievalSharp-Bold.ttf", 60)
 
         _root = UIPanel.new(Vec2.new(0, 0), Vec2.new(0, 0), Vec2.new(gw, gh), Vec2.new(0, 0))
-        _root.setBackgroundColor(Vec4.new(0, 0, 0, 165))
+        _root.setBackgroundColor(Vec4.new(0, 0, 0, 175))
         _root.setBorderColor(BLANK)
         _root.setZIndex(-1)
         UIManager.addUIElement(_root)
 
-        // Enemy: name, HP / charge / stamina bars, committed-move readout - top centre.
-        var ex = (gw / 2) - 170
-        var enemyName = simpleLabel(_enemy.name, Vec2.new(0, 40), Vec2.new(0.5, 0), 34.0, font)
-        enemyName.setAlignment(TextAlignment.CENTER)
-        enemyName.setAnchorPoint(Vec2.new(0.5, 0))
-        _root.addChild(enemyName)
-        _enemyHpBar = HealthBar.new(_root, ex, 88, 340, 18)
-        _enemyChargeBar = ChargeBar.new(_root, ex, 110, 340, 9)
-        _enemyStaminaBar = StaminaBar.new(_root, ex, 123, 340, 6)
-        _enemyMoveLabel = simpleLabel("", Vec2.new(ex + 350, 100), Vec2.new(0, 0), 18.0, font)
-        _root.addChild(_enemyMoveLabel)
-
-        // Player: name, HP / charge / stamina bars, committed-move readout - bottom left.
-        var px = 48
-        var py = gh - 158
-        var playerName = simpleLabel(_player.name, Vec2.new(px, py - 34), Vec2.new(0, 0), 28.0, font)
-        _root.addChild(playerName)
-        _playerHpBar = HealthBar.new(_root, px, py, 300, 18)
-        _playerChargeBar = ChargeBar.new(_root, px, py + 22, 300, 9)
-        _playerStaminaBar = StaminaBar.new(_root, px, py + 35, 300, 7)
-        _playerMoveLabel = simpleLabel("", Vec2.new(px + 312, py + 12), Vec2.new(0, 0), 18.0, font)
-        _root.addChild(_playerMoveLabel)
+        // Enemy stacks across the top.
+        _enemyViews = []
+        var n = _enemies.count
+        var slotW = 300
+        var gap = 44
+        var startX = (gw - (n * slotW + (n - 1) * gap)) / 2
+        for (i in 0...n) {
+            var x = startX + i * (slotW + gap)
+            _enemyViews.add(CombatantView.new(_root, _enemies[i], x, 40, slotW, true, font))
+        }
 
         // Battle log / prompt, centre.
-        _messageLabel = simpleLabel("", Vec2.new(0, 0), Vec2.new(0.5, 0.32), 30.0, font)
+        _messageLabel = simpleLabel("", Vec2.new(0, 0), Vec2.new(0.5, 0.4), 30.0, font)
         _messageLabel.setAlignment(TextAlignment.CENTER)
         _messageLabel.setAnchorPoint(Vec2.new(0.5, 0.5))
         _root.addChild(_messageLabel)
 
-        // Move menu, bottom right - one container so it can be shown/hidden wholesale.
-        _menu = UIPanel.new(Vec2.new(-30, -30), Vec2.new(1, 1), Vec2.new(304, 288), Vec2.new(0, 0))
-        _menu.setAnchorPoint(Vec2.new(1, 1))
-        _menu.setBackgroundColor(BLANK)
-        _menu.setBorderColor(BLANK)
-        _root.addChild(_menu)
+        // Player stack, bottom-left.
+        _playerView = CombatantView.new(_root, _player, 56, gh - 150, 320, true, font)
 
+        // Move menu, bottom-right - one button per move in the player's kit, plus Flee.
+        _moveMenu = menuPanel(Vec2.new(320, 300))
         _moveButtons = []
         var i = 0
         for (move in _player.moves) {
             var chosen = move
-            var btn = makeButton(chosen.menuLabel, i, font)
-            btn.setOnClick { |sender, mousePos|
-                if (_phase == "choosing") {
+            var b = makeButton(_moveMenu, chosen.menuLabel, i, font)
+            b.setOnClick { |s, m|
+                if (_phase == "choosing" && armed()) {
                     commitPlayerMove(chosen)
                 }
             }
-            _moveButtons.add(btn)
+            _moveButtons.add(b)
             i = i + 1
         }
-        _fleeButton = makeButton("Flee", i, font)
-        _fleeButton.setOnClick { |sender, mousePos|
-            if (_phase == "choosing") {
+        var fleeBtn = makeButton(_moveMenu, "Flee", i, font)
+        fleeBtn.setOnClick { |s, m|
+            if (_phase == "choosing" && armed()) {
                 flee()
             }
         }
-        _menu.setVisible(false)   // hidden through the intro beat; shown in beginChoosing()
+        _moveMenu.setVisible(false)
 
         font.unload()
+    }
+
+    menuPanel(size) {
+        var p = UIPanel.new(Vec2.new(-30, -30), Vec2.new(1, 1), size, Vec2.new(0, 0))
+        p.setAnchorPoint(Vec2.new(1, 1))
+        p.setBackgroundColor(BLANK)
+        p.setBorderColor(BLANK)
+        _root.addChild(p)
+        return p
     }
 
     simpleLabel(text, absPos, relPos, size, font) {
@@ -156,17 +213,16 @@ class CombatState is BaseState {
         return lbl
     }
 
-    // Button `index` counts from the top of the menu stack; buttons are parented under _menu.
-    makeButton(text, index, font) {
+    makeButton(menu, text, index, font) {
         var h = 44
-        var button = UIPanel.new(Vec2.new(0, index * (h + 8)), Vec2.new(0, 0), Vec2.new(288, h), Vec2.new(0, 0))
+        var button = UIPanel.new(Vec2.new(0, index * (h + 8)), Vec2.new(0, 0), Vec2.new(304, h), Vec2.new(0, 0))
         button.setBackgroundColor(LIGHTGRAY)
         button.setBorderColor(WHITE)
         button.setBorderWidth(2)
         button.setFocusable(true)
-        _menu.addChild(button)
+        menu.addChild(button)
 
-        var label = UILabel.new(Vec2.new(0, 0), Vec2.new(0.5, 0.5), text, 20.0)
+        var label = UILabel.new(Vec2.new(0, 0), Vec2.new(0.5, 0.5), text, 19.0)
         label.setFont(font)
         label.setTextColor(BLACK)
         label.setAlignment(TextAlignment.CENTER)
@@ -175,21 +231,33 @@ class CombatState is BaseState {
         label.setZIndex(10)
         button.addChild(label)
 
-        button.setOnFocus { |sender| button.setBackgroundColor(WHITE) }
-        button.setOnLoseFocus { |sender| button.setBackgroundColor(LIGHTGRAY) }
+        button.setOnFocus { |s| button.setBackgroundColor(WHITE) }
+        button.setOnLoseFocus { |s| button.setBackgroundColor(LIGHTGRAY) }
         return button
     }
 
     update(stateManager) {
-        if (_phase == "intro") {
+        if (_phase == "entering") {
+            _stage.intro((Time.unscaledTime - (_timerEnd - ENTER_TIME)) / ENTER_TIME)
+            if (Time.unscaledTime >= _timerEnd) {
+                _stage.settle()
+                _root.setVisible(true)
+                beginChoosing()
+            }
+        } else if (_phase == "intro") {
             if (Time.unscaledTime >= _timerEnd) {
                 beginChoosing()
             }
+        } else if (_phase == "choosing") {
+            if (armed() && Input.isInputJustReleased("UICancel")) {
+                flee()
+            }
+        } else if (_phase == "targeting") {
+            updateTargeting()
         } else if (_phase == "charging") {
             var units = _timeline.tick(Time.unscaledDelta)
             regenStamina(units)
-            refreshChargeBars()
-            refreshVitals()
+            refreshViews()
             var ready = _timeline.nextReady()
             if (ready != null) {
                 resolveMove(ready)
@@ -207,100 +275,180 @@ class CombatState is BaseState {
         }
     }
 
-    regenStamina(units) {
-        _player.stats.gainStamina(units * STAMINA_REGEN)
-        _enemy.stats.gainStamina(units * STAMINA_REGEN)
+    updateTargeting() {
+        if (!armed()) {
+            return
+        }
+        var ax = Input.getInputAxis2("UIDir").x
+        if (ax.abs < 0.3) {
+            _targetAxisHeld = false
+        } else if (!_targetAxisHeld) {
+            _targetAxisHeld = true
+            _targetIndex = stepTarget(_targetIndex, ax > 0 ? 1 : -1)
+            refreshViews()
+        }
+        if (Input.isInputJustReleased("UIAccept")) {
+            commitPlayerMoveOn(_pendingMove, _enemies[_targetIndex])
+        } else if (Input.isInputJustReleased("UICancel")) {
+            _pendingMove = null
+            _phase = "choosing"
+            arm()
+            _moveMenu.setVisible(true)
+            UIManager.setFocus(_moveButtons[0])
+            refreshViews()
+        }
     }
 
-    // Player needs to pick - menu open, Timeline paused (planning time). The enemy commits here too
-    // (Timeline.commit bakes in an exhaustion penalty if it's tired). An interrupted enemy keeps its
-    // pushed-back charge - only a fired move gets re-committed.
+    // --- turn flow -------------------------------------------------------------
+
     beginChoosing() {
         _phase = "choosing"
-        clearStagger()
+        arm()
+        clearFlashes()
+        commitEnemyMoves()
         setMessage("Choose your move.")
-        _menu.setVisible(true)
+        _moveMenu.setVisible(true)
         UIManager.setFocus(_moveButtons[0])
-        if (_timeline.needsMove(_enemy)) {
-            _timeline.commit(_enemy, _enemy.moves[0])
-        }
-        refreshTimeline()
+        refreshViews()
     }
 
     commitPlayerMove(move) {
-        _timeline.commit(_player, move)
-        _menu.setVisible(false)
-        _phase = "charging"
-        clearStagger()
-        setMessage("")
-        refreshTimeline()
+        if (move.offensive && livingEnemies().count > 1) {
+            _pendingMove = move
+            _targetIndex = firstLivingEnemy()
+            _phase = "targeting"
+            arm()
+            _moveMenu.setVisible(false)
+            setMessage("Choose a target.  <  >")
+            refreshViews()
+            return
+        }
+        var target = move.offensive ? _enemies[firstLivingEnemy()] : _player
+        commitPlayerMoveOn(move, target)
     }
 
-    resumeCharging() {
-        _timeline.commit(_enemy, _enemy.moves[0])
+    commitPlayerMoveOn(move, target) {
+        _playerTarget = target
+        _pendingMove = null
+        _timeline.commit(_player, move)
+        _moveMenu.setVisible(false)
         _phase = "charging"
-        clearStagger()
+        clearFlashes()
         setMessage("")
-        refreshTimeline()
+        refreshViews()
+    }
+
+    // Every enemy that still needs a move picks one (target is always the player).
+    commitEnemyMoves() {
+        for (e in _enemies) {
+            if (e.alive && _timeline.needsMove(e)) {
+                _timeline.commit(e, enemyPickMove(e))
+            }
+        }
+    }
+
+    // Simple AI: heal when hurt, otherwise a random offensive move biased toward the cheaper ones
+    // (pick two, keep the shorter).
+    enemyPickMove(enemy) {
+        if (enemy.stats.fraction < 0.4) {
+            for (m in enemy.moves) {
+                if (m.healAmount > 0) {
+                    return m
+                }
+            }
+        }
+        var offensive = []
+        for (m in enemy.moves) {
+            if (m.offensive) {
+                offensive.add(m)
+            }
+        }
+        if (offensive.count == 0) {
+            return enemy.moves[0]
+        }
+        var a = offensive[RNG.int(offensive.count)]
+        var b = offensive[RNG.int(offensive.count)]
+        return a.timeCost <= b.timeCost ? a : b
     }
 
     resolveMove(actor) {
         var move = _timeline.committedMove(actor)
         var isPlayer = actor == _player
-        var target = isPlayer ? _enemy : _player
-        var dealt = actor.use(move, target)
+        var target = isPlayer ? _playerTarget : _player
+        if (target == null || !target.alive) {
+            target = isPlayer ? firstLivingEnemyCombatant() : _player
+        }
 
-        // Interrupt: an offensive hit landing on a still-winding-up target shoves their charge back.
+        var dealt = 0
         var staggerUnits = 0
-        if (move.damage > 0 && _timeline.isCharging(target)) {
-            staggerUnits = Disruption.delay(move, _timeline.fraction(target))
-            _timeline.interrupt(target, staggerUnits)
-            if (isPlayer) {
-                _enemyStaggered = true
-            } else {
-                _playerStaggered = true
+        if (target != null) {
+            dealt = actor.use(move, target)
+            if (move.offensive && _timeline.isCharging(target)) {
+                staggerUnits = Disruption.delay(move, _timeline.fraction(target))
+                _timeline.interrupt(target, staggerUnits)
+                _staggered.add(target)
             }
+        } else {
+            actor.use(move, actor)   // heal / self-buff with nothing to hit
         }
 
         _timeline.clear(actor)
-        refreshVitals()
-        refreshTimeline()
+        refreshViews()
 
-        showLog(resolveLine(isPlayer, move, dealt, staggerUnits), Fn.new {
-            if (!_enemy.alive) {
+        if (_stage != null) {
+            _stage.strike(actor, move.offensive ? target : null)
+        }
+
+        showLog(resolveLine(isPlayer, actor, move, dealt, target, staggerUnits), Fn.new {
+            if (_stage != null) {
+                _stage.rest()
+            }
+            if (livingEnemies().count == 0) {
                 win()
             } else if (!_player.alive) {
                 lose()
             } else if (isPlayer) {
                 beginChoosing()
             } else {
-                resumeCharging()
+                commitEnemyMoves()
+                _phase = "charging"
+                clearFlashes()
+                setMessage("")
+                refreshViews()
             }
         })
     }
 
-    resolveLine(isPlayer, move, dealt, staggerUnits) {
-        if (move.damage == 0) {
-            return "You brace yourself. (+%(move.staminaRestore) stamina)"
+    resolveLine(isPlayer, actor, move, dealt, target, staggerUnits) {
+        var who = isPlayer ? "You" : actor.name
+        if (move.healAmount > 0) {
+            return "%(who) mends. (+%(move.healAmount) HP)"
         }
-        var attacker = isPlayer ? "You land" : "%(_enemy.name) lands"
-        var line = "%(attacker) %(move.name) - %(dealt) dmg."
+        if (move.staminaRestore > 0 && move.damage == 0) {
+            return "%(who) recovers. (+%(move.staminaRestore) stamina)"
+        }
+        var whom = "?"
+        if (target != null) {
+            whom = (target == _player) ? "you" : target.name
+        }
+        var line = "%(who) hit%(isPlayer ? "" : "s") %(whom) with %(move.name) - %(dealt) dmg."
         if (staggerUnits > 0) {
-            var victim = isPlayer ? "%(_enemy.name) is" : "You're"
-            line = "%(line)  %(victim) staggered (-%(staggerUnits.floor))!"
+            line = "%(line)  Staggered (-%(staggerUnits.floor))!"
         }
         return line
     }
 
     win() {
-        if (_enemy.entity) {
-            GameObject.destroy(_enemy.entity)
+        for (e in _enemies) {
+            if (e.entity) {
+                GameObject.destroy(e.entity)
+            }
         }
-        endFight("You defeated the %(_enemy.name)!")
+        endFight(_enemies.count == 1 ? "You defeated the %(_enemies[0].name)!" : "The pack is beaten!")
     }
 
     lose() {
-        endFight("The %(_enemy.name) got the better of you...")
+        endFight("You were overwhelmed...")
     }
 
     flee() {
@@ -318,7 +466,63 @@ class CombatState is BaseState {
         setMessage(text)
         _phase = "over"
         _timerEnd = Time.unscaledTime + OVER_TIME
-        _menu.setVisible(false)
+        _moveMenu.setVisible(false)
+    }
+
+    // --- helpers -------------------------------------------------------------
+
+    regenStamina(units) {
+        for (c in _timeline.combatants) {
+            c.stats.gainStamina(units * STAMINA_REGEN)
+        }
+    }
+
+    clearFlashes() {
+        _staggered = []
+    }
+
+    arm() {
+        _navArmedAt = Time.unscaledTime + NAV_ARM_TIME
+    }
+
+    armed() {
+        return Time.unscaledTime >= _navArmedAt
+    }
+
+    livingEnemies() {
+        var out = []
+        for (e in _enemies) {
+            if (e.alive) {
+                out.add(e)
+            }
+        }
+        return out
+    }
+
+    firstLivingEnemy() {
+        for (i in 0..._enemies.count) {
+            if (_enemies[i].alive) {
+                return i
+            }
+        }
+        return 0
+    }
+
+    firstLivingEnemyCombatant() {
+        var living = livingEnemies()
+        return living.count == 0 ? null : living[0]
+    }
+
+    stepTarget(from, dir) {
+        var n = _enemies.count
+        var i = from
+        for (step in 1..n) {
+            i = (i + dir + n) % n
+            if (_enemies[i].alive) {
+                return i
+            }
+        }
+        return from
     }
 
     setMessage(text) {
@@ -326,65 +530,58 @@ class CombatState is BaseState {
         _messageLabel.setBoundingBoxToText()
     }
 
-    clearStagger() {
-        _playerStaggered = false
-        _enemyStaggered = false
-    }
-
-    // HP + stamina bars - called after any damage / stamina change, and every frame while charging
-    // (stamina regenerates continuously).
-    refreshVitals() {
-        _playerHpBar.setFraction(_player.stats.fraction)
-        _enemyHpBar.setFraction(_enemy.stats.fraction)
-        _playerStaminaBar.setFraction(_player.stats.staminaFraction)
-        _enemyStaminaBar.setFraction(_enemy.stats.staminaFraction)
-    }
-
-    // Charge bars + stagger flashes - called every frame while charging.
-    refreshChargeBars() {
-        _playerChargeBar.setFraction(_timeline.fraction(_player))
-        _playerChargeBar.setStaggered(_playerStaggered)
-        _enemyChargeBar.setFraction(_timeline.fraction(_enemy))
-        _enemyChargeBar.setStaggered(_enemyStaggered)
-    }
-
-    // Charge bars + the committed-move readouts - called when a move is committed, cleared, or
-    // interrupted.
-    refreshTimeline() {
-        refreshChargeBars()
-        setLabel(_playerMoveLabel, readout(_player))
-        setLabel(_enemyMoveLabel, readout(_enemy))
-    }
-
     readout(combatant) {
-        var move = _timeline.committedMove(combatant)
-        if (move == null) {
+        var m = _timeline.committedMove(combatant)
+        if (m == null) {
             return ""
         }
-        return combatant.stats.exhausted ? "%(move.name)  (exhausted)" : move.name
+        return combatant.stats.exhausted ? "%(m.name)  (slow)" : m.name
     }
 
-    setLabel(label, text) {
-        label.setText(text)
-        label.setBoundingBoxToText()
+    refreshViews() {
+        if (_root == null) {
+            return
+        }
+        if (_playerView != null) {
+            _playerView.refresh(_timeline.fraction(_player), readout(_player), _staggered.contains(_player))
+        }
+        var i = 0
+        for (v in _enemyViews) {
+            var c = _enemies[i]
+            v.refresh(_timeline.fraction(c), readout(c), _staggered.contains(c))
+            v.selected = (_phase == "targeting" && i == _targetIndex)
+            i = i + 1
+        }
     }
 
     exit() {
-        // Restore first, unconditionally - a half-built UI must never leave the field frozen.
         Time.setTimeScale(1)
         super.exit()
-
+        // Fold the arena away first (reactivates the overworld player, puts survivors back) so the
+        // world is coherent again before the UI teardown.
+        if (_stage != null) {
+            _stage.teardown()
+            _stage = null
+        }
         if (_root) {
             UIManager.removeUIElement(_root)
             _root = null
         }
-        _opponentEntity = null
-        _player = null
-        _enemy = null
+        // _root's subtree is gone now - drop every wrapper that pointed into it so nothing touches a
+        // disposed foreign object before the next fight rebuilds them.
+        _playerView = null
+        _enemyViews = []
+        _moveMenu = null
+        _moveButtons = []
+        _messageLabel = null
         _timeline = null
+        _player = null   // just the reference - the Combatant itself lives on the Player script
+        _enemies = []
+        _enemyDefs = []
         _nextStep = null
+        _pendingMove = null
+        _playerTarget = null
     }
 
-    // Getter
-    opponent { _opponentEntity }
+    opponents { _enemies }
 }
