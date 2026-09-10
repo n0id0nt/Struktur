@@ -150,6 +150,7 @@ public:
 	void SetVisible(bool vis)
 	{
 		m_visible = vis;
+		m_visualDirty = true;
 	}
 	void SetEnabled(bool en)
 	{
