@@ -107,6 +107,12 @@ struct Layer
 	float orderInLayer;
 };
 
+struct Neighbour
+{
+	std::string levelIid;
+	std::string dir;
+};
+
 struct Level
 {
 	std::string identifier;
@@ -116,7 +122,8 @@ struct Level
 	int worldY;
 	int pxWid;
 	int pxHei;
-	std::vector<std::string> neighbours;
+	std::vector<Neighbour> neighbours;
+	std::vector<std::string> tags;
 };
 
 struct World
@@ -149,6 +156,10 @@ glm::vec2 LoadJsonVector2(const nlohmann::json& json);
 World LoadWorldMap(GameContext& context, const std::string& filePath);
 void LoadDefinitions(World& world, Definitions& definitions, const nlohmann::json& json);
 void LoadLevels(World& world, const nlohmann::json& json);
+void LoadNeighbours(Level& level, const nlohmann::json& json);
+void LoadLevelTags(Level& level, const nlohmann::json& fieldInstancesJson);
+int FindLevelIndexByIdentifier(const World& world, const std::string& identifier);
+int FindLevelIndexByIid(const World& world, const std::string& iid);
 void LoadLayers(World& world, Level& level, const nlohmann::json& json);
 void LoadEntities(Layer& entityLayer, const nlohmann::json& json);
 void LoadFieldInstances(Entity& entity, const nlohmann::json& json);

@@ -21,7 +21,7 @@ import "math" for Vec2, Vec4
 import "ui" for UIManager, UILabel, UIPanel, TextAlignment
 import "resourceManager" for Font
 import "gameObject" for GameObject
-import "gameObjectComponents" for Script
+import "gameObjectComponents" for Script, World
 import "random" for Random
 import "Colors" for WHITE, BLACK, BLANK, LIGHTGRAY
 
@@ -117,12 +117,27 @@ class CombatState is BaseState {
         setMessage("You're set upon by %(foe)!")
         refreshViews()
 
-        // Cut to the battle arena (Combat/BattleStage.wren) - a fixed offscreen patch of world, or
-        // an authored "BattleAnchor" room if one exists. Needs the world root to parent battle
-        // entities under; without it (an unexpected caller) fall back to fighting in place.
+        // Cut to the battle arena (Combat/BattleStage.wren) - a level tagged "battle" + the current
+        // biome if one was found (ExperimentState.pickBattleLevelIndex_), otherwise a fixed offscreen
+        // patch of world, or an authored "BattleAnchor" room if one exists. Needs the world root to
+        // parent battle entities under; without it (an unexpected caller) fall back to fighting in place.
         if (params["world"] != null) {
-            _stage = BattleStage.new(firstEntity_("BattleAnchor"), params["player"], params["world"],
-                                     _player, _enemyDefs, _enemies)
+            var battleLevelIndex = params["battleLevelIndex"]
+            var battleLevelEntity = null
+            var anchorEntity = null
+            if (battleLevelIndex != null) {
+                battleLevelEntity = World.getLoadedLevelEntity(params["world"], battleLevelIndex)
+                if (battleLevelEntity == null) {
+                    battleLevelEntity = World.loadLevelEntities(params["world"], battleLevelIndex)
+                }
+                GameObject.setActive(battleLevelEntity)
+                anchorEntity = battleLevelEntity
+            }
+            if (anchorEntity == null) {
+                anchorEntity = firstEntity_("BattleAnchor")
+            }
+            _stage = BattleStage.new(anchorEntity, params["player"], params["world"],
+                                     _player, _enemyDefs, _enemies, battleLevelEntity)
             _root.setVisible(false)
             _phase = "entering"
             _timerEnd = Time.unscaledTime + ENTER_TIME

@@ -2,6 +2,7 @@
 
 #include <filesystem>
 #include <fstream>
+#include <sstream>
 
 #include "Debug/Assertions.h"
 #include "Engine/Core/FileSystem.h"
@@ -78,9 +79,87 @@ void Struktur::FileLoading::LevelParser::LoadLevels(World& world, const nlohmann
 		level.worldY     = levelJson["worldY"];
 		level.pxWid      = levelJson["pxWid"];
 		level.pxHei      = levelJson["pxHei"];
+		LoadNeighbours(level, levelJson["__neighbours"]);
+		LoadLevelTags(level, levelJson["fieldInstances"]);
 		LoadLayers(world, level, levelJson["layerInstances"]);
 		world.levels.push_back(level);
 	}
+}
+
+void Struktur::FileLoading::LevelParser::LoadNeighbours(Level& level, const nlohmann::json& json)
+{
+	for (auto& neighbourJson : json)
+	{
+		Neighbour neighbour;
+		neighbour.levelIid = neighbourJson["levelIid"];
+		neighbour.dir      = neighbourJson["dir"];
+		level.neighbours.push_back(neighbour);
+	}
+}
+
+namespace
+{
+std::vector<std::string> SplitAndTrim(const std::string& value, char delimiter)
+{
+	std::vector<std::string> result;
+	std::stringstream stream(value);
+	std::string piece;
+	while (std::getline(stream, piece, delimiter))
+	{
+		size_t start = piece.find_first_not_of(" \t");
+		size_t end   = piece.find_last_not_of(" \t");
+		if (start == std::string::npos)
+		{
+			continue;
+		}
+		result.push_back(piece.substr(start, end - start + 1));
+	}
+	return result;
+}
+}  // namespace
+
+void Struktur::FileLoading::LevelParser::LoadLevelTags(Level& level, const nlohmann::json& fieldInstancesJson)
+{
+	for (auto& fieldJson : fieldInstancesJson)
+	{
+		std::string fieldName = fieldJson["__identifier"];
+		if (fieldName != "Tags")
+		{
+			continue;
+		}
+
+		if (fieldJson["__value"].is_null())
+		{
+			continue;
+		}
+
+		std::string value = fieldJson["__value"];
+		level.tags         = SplitAndTrim(value, ',');
+	}
+}
+
+int Struktur::FileLoading::LevelParser::FindLevelIndexByIdentifier(const World& world, const std::string& identifier)
+{
+	for (int i = 0; i < static_cast<int>(world.levels.size()); i++)
+	{
+		if (world.levels[i].identifier == identifier)
+		{
+			return i;
+		}
+	}
+	return -1;
+}
+
+int Struktur::FileLoading::LevelParser::FindLevelIndexByIid(const World& world, const std::string& iid)
+{
+	for (int i = 0; i < static_cast<int>(world.levels.size()); i++)
+	{
+		if (world.levels[i].Iid == iid)
+		{
+			return i;
+		}
+	}
+	return -1;
 }
 
 namespace

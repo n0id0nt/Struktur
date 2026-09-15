@@ -34,14 +34,19 @@ var SLIDE_DISTANCE = 110                  // how far off its mark each battler s
 var BACKDROP_SCALE = Vec3.new(44, 26, 1)  // background.png is 16x16 -> ~704x416 world px
 
 class BattleStage {
-    // anchorEntity: an authored "BattleAnchor" marker, or null to use DEFAULT_ARENA.
+    // anchorEntity: a loaded battle-tagged level, an authored "BattleAnchor" marker, or null to use
+    // DEFAULT_ARENA.
     // playerEntity: the real overworld player (hidden for the fight).
     // worldParent: entity to parent every spawned battle entity under (the world root).
     // playerCombatant: Player.combatant (persistent). enemyDefs / enemyCombatants: parallel lists,
     // one BattleCritter + its Combatant per opponent.
-    construct new(anchorEntity, playerEntity, worldParent, playerCombatant, enemyDefs, enemyCombatants) {
+    // battleLevelEntity: the level entity CombatState loaded for this fight (via a "battle"+biome
+    // tag match), or null when fighting in place - kept so teardown() knows to deactivate it again.
+    construct new(anchorEntity, playerEntity, worldParent, playerCombatant, enemyDefs, enemyCombatants,
+                 battleLevelEntity) {
         _anchor = anchorEntity == null ? DEFAULT_ARENA : WorldTransform.getPosition(anchorEntity)
         _playerEntity = playerEntity
+        _battleLevelEntity = battleLevelEntity
         _n = enemyDefs.count
         _focus = worldOf_(CAMERA_FOCUS)
 
@@ -134,6 +139,12 @@ class BattleStage {
             GameObject.destroy(_camEntity)
         }
         GameObject.setActive(_playerEntity)
+
+        // Deactivate (not unload) the battle level so the next fight in the same biome doesn't pay a
+        // reload cost - swap to World.unloadLevelEntities(...) instead if memory turns out to matter.
+        if (_battleLevelEntity != null && GameObject.isValid(_battleLevelEntity)) {
+            GameObject.setInactive(_battleLevelEntity)
+        }
     }
 
     // --- helpers ------------------------------------------------------------

@@ -1386,9 +1386,23 @@ void InspectorWindow::RenderWorldComponent(GameContext& context, Component::Worl
 			{
 				for (const auto& neighbour : level.neighbours)
 				{
-					ImGui::BulletText("%s", neighbour.c_str());
+					ImGui::BulletText("%s (%s)", neighbour.levelIid.c_str(), neighbour.dir.c_str());
 				}
 				ImGui::TreePop();
+			}
+
+			if (!level.tags.empty())
+			{
+				std::string tagsText;
+				for (size_t t = 0; t < level.tags.size(); t++)
+				{
+					if (t > 0)
+					{
+						tagsText += ", ";
+					}
+					tagsText += level.tags[t];
+				}
+				ImGui::Text("Tags: %s", tagsText.c_str());
 			}
 
 			if (!level.layers.empty() && ImGui::TreeNode("Layers"))

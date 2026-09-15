@@ -1,5 +1,7 @@
 #include "wrenGameObjectComponents.h"
 
+#include <algorithm>
+
 #include "ComponentListXMacro.h"
 #include "Engine/ECS/System/AnimationSystem.h"
 #include "Engine/ECS/System/CameraSystem.h"
@@ -209,6 +211,26 @@ void wren_LevelGetHeight(WrenVM* vm)
 	wrenSetSlotDouble(vm, 0, level->component->height);
 }
 
+void wren_LevelGetIdentifier(WrenVM* vm)
+{
+	WrenLevel* level = (WrenLevel*)wrenGetSlotForeign(vm, 0);
+	wrenSetSlotString(vm, 0, level->component->identifier.c_str());
+}
+
+void wren_LevelGetTags(WrenVM* vm)
+{
+	WrenLevel* level = (WrenLevel*)wrenGetSlotForeign(vm, 0);
+
+	wrenSetSlotNewList(vm, 0);
+	wrenEnsureSlots(vm, 3);
+	const auto& tags = level->component->tags;
+	for (int i = 0; i < static_cast<int>(tags.size()); i++)
+	{
+		wrenSetSlotString(vm, 2, tags[i].c_str());
+		wrenInsertInList(vm, 0, i, 2);
+	}
+}
+
 // ============================================================================
 // WORLD BINDINGS
 // ============================================================================
@@ -318,15 +340,7 @@ void wren_WorldGetLevelIndex(WrenVM* vm)
 
 	Struktur::FileLoading::LevelParser::World& worldMap = world->component->worldMap;
 
-	int index = -1;
-	for (int i = 0; i < worldMap.levels.size(); i++)
-	{
-		if (worldMap.levels[i].identifier == levelName)
-		{
-			index = i;
-			break;
-		}
-	}
+	int index = Struktur::FileLoading::LevelParser::FindLevelIndexByIdentifier(worldMap, levelName);
 
 	if (index == -1)
 	{
@@ -359,15 +373,7 @@ void wren_WorldStaticGetLevelIndex(WrenVM* vm)
 
 	Struktur::FileLoading::LevelParser::World& worldMap = worldComponent->worldMap;
 
-	int index = -1;
-	for (int i = 0; i < worldMap.levels.size(); i++)
-	{
-		if (worldMap.levels[i].identifier == levelName)
-		{
-			index = i;
-			break;
-		}
-	}
+	int index = Struktur::FileLoading::LevelParser::FindLevelIndexByIdentifier(worldMap, levelName);
 
 	if (index == -1)
 	{
@@ -378,6 +384,264 @@ void wren_WorldStaticGetLevelIndex(WrenVM* vm)
 	double doubleNumber = static_cast<double>(index);
 
 	wrenSetSlotDouble(vm, 0, doubleNumber);
+}
+
+// Builds a Wren list of [index, dir] pairs (2-element lists, not maps - see note in the plan about
+// avoiding map literals) in slot 0 for levelIndex's neighbours, resolving each neighbour's Iid to an
+// index via FindLevelIndexByIid and silently skipping any that don't resolve.
+void PushLevelNeighboursList(WrenVM* vm, const Struktur::FileLoading::LevelParser::World& worldMap, int levelIndex)
+{
+	wrenSetSlotNewList(vm, 0);
+	wrenEnsureSlots(vm, 4);
+
+	const auto& neighbours = worldMap.levels[levelIndex].neighbours;
+	int outIndex           = 0;
+	for (const auto& neighbour : neighbours)
+	{
+		int neighbourIndex = Struktur::FileLoading::LevelParser::FindLevelIndexByIid(worldMap, neighbour.levelIid);
+		if (neighbourIndex == -1)
+		{
+			continue;
+		}
+
+		wrenSetSlotNewList(vm, 2);
+		wrenSetSlotDouble(vm, 3, static_cast<double>(neighbourIndex));
+		wrenInsertInList(vm, 2, 0, 3);
+		wrenSetSlotString(vm, 3, neighbour.dir.c_str());
+		wrenInsertInList(vm, 2, 1, 3);
+
+		wrenInsertInList(vm, 0, outIndex, 2);
+		outIndex++;
+	}
+}
+
+// Builds a Wren list of strings in slot 0 for levelIndex's tags.
+void PushLevelTagsList(WrenVM* vm, const Struktur::FileLoading::LevelParser::World& worldMap, int levelIndex)
+{
+	wrenSetSlotNewList(vm, 0);
+	wrenEnsureSlots(vm, 3);
+
+	const auto& tags = worldMap.levels[levelIndex].tags;
+	for (int i = 0; i < static_cast<int>(tags.size()); i++)
+	{
+		wrenSetSlotString(vm, 2, tags[i].c_str());
+		wrenInsertInList(vm, 0, i, 2);
+	}
+}
+
+// Reads a Wren list of strings out of the given slot.
+std::vector<std::string> ReadStringList(WrenVM* vm, int listSlot, int scratchSlot)
+{
+	int count = wrenGetListCount(vm, listSlot);
+	std::vector<std::string> result;
+	result.reserve(count);
+	for (int i = 0; i < count; i++)
+	{
+		wrenGetListElement(vm, listSlot, i, scratchSlot);
+		result.push_back(wrenGetSlotString(vm, scratchSlot));
+	}
+	return result;
+}
+
+// First level whose tags contain every tag in requiredTags, or -1 if none match.
+int FindLevelIndexWithAllTags(const Struktur::FileLoading::LevelParser::World& worldMap,
+                              const std::vector<std::string>& requiredTags)
+{
+	for (int i = 0; i < static_cast<int>(worldMap.levels.size()); i++)
+	{
+		const auto& levelTags = worldMap.levels[i].tags;
+		bool hasAll           = true;
+		for (const auto& required : requiredTags)
+		{
+			if (std::find(levelTags.begin(), levelTags.end(), required) == levelTags.end())
+			{
+				hasAll = false;
+				break;
+			}
+		}
+		if (hasAll)
+		{
+			return i;
+		}
+	}
+	return -1;
+}
+
+// World.getLevelNeighbours(levelIndex) -> list of [index, dir]
+void wren_WorldGetLevelNeighbours(WrenVM* vm)
+{
+	WrenWorld* world    = (WrenWorld*)wrenGetSlotForeign(vm, 0);
+	double levelDouble  = wrenGetSlotDouble(vm, 1);
+	int levelIndex      = static_cast<int>(levelDouble);
+
+	PushLevelNeighboursList(vm, world->component->worldMap, levelIndex);
+}
+
+// World.getLevelNeighbours(entity, levelIndex) -> list of [index, dir]
+void wren_WorldStaticGetLevelNeighbours(WrenVM* vm)
+{
+	Struktur::GameContext* context = static_cast<Struktur::GameContext*>(wrenGetUserData(vm));
+	entt::registry& registry       = context->GetRegistry();
+
+	double entityId     = wrenGetSlotDouble(vm, 1);
+	entt::entity entity = static_cast<entt::entity>(entityId);
+	double levelDouble  = wrenGetSlotDouble(vm, 2);
+	int levelIndex      = static_cast<int>(levelDouble);
+
+	auto* worldComponent = registry.try_get<Struktur::Component::World>(entity);
+	if (!worldComponent)
+	{
+		wrenSetSlotNewList(vm, 0);
+		return;
+	}
+
+	PushLevelNeighboursList(vm, worldComponent->worldMap, levelIndex);
+}
+
+// World.getLevelTags(levelIndex) -> list of string
+void wren_WorldGetLevelTags(WrenVM* vm)
+{
+	WrenWorld* world   = (WrenWorld*)wrenGetSlotForeign(vm, 0);
+	double levelDouble = wrenGetSlotDouble(vm, 1);
+	int levelIndex     = static_cast<int>(levelDouble);
+
+	PushLevelTagsList(vm, world->component->worldMap, levelIndex);
+}
+
+// World.getLevelTags(entity, levelIndex) -> list of string
+void wren_WorldStaticGetLevelTags(WrenVM* vm)
+{
+	Struktur::GameContext* context = static_cast<Struktur::GameContext*>(wrenGetUserData(vm));
+	entt::registry& registry       = context->GetRegistry();
+
+	double entityId     = wrenGetSlotDouble(vm, 1);
+	entt::entity entity = static_cast<entt::entity>(entityId);
+	double levelDouble  = wrenGetSlotDouble(vm, 2);
+	int levelIndex      = static_cast<int>(levelDouble);
+
+	auto* worldComponent = registry.try_get<Struktur::Component::World>(entity);
+	if (!worldComponent)
+	{
+		wrenSetSlotNewList(vm, 0);
+		return;
+	}
+
+	PushLevelTagsList(vm, worldComponent->worldMap, levelIndex);
+}
+
+// World.findLevelIndexWithTags(tagsList) -> number
+void wren_WorldFindLevelIndexWithTags(WrenVM* vm)
+{
+	WrenWorld* world = (WrenWorld*)wrenGetSlotForeign(vm, 0);
+
+	wrenEnsureSlots(vm, 3);
+	std::vector<std::string> tags = ReadStringList(vm, 1, 2);
+
+	int index = FindLevelIndexWithAllTags(world->component->worldMap, tags);
+	if (index == -1)
+	{
+		wrenSetSlotNull(vm, 0);
+		return;
+	}
+	wrenSetSlotDouble(vm, 0, static_cast<double>(index));
+}
+
+// World.findLevelIndexWithTags(entity, tagsList) -> number
+void wren_WorldStaticFindLevelIndexWithTags(WrenVM* vm)
+{
+	Struktur::GameContext* context = static_cast<Struktur::GameContext*>(wrenGetUserData(vm));
+	entt::registry& registry       = context->GetRegistry();
+
+	double entityId     = wrenGetSlotDouble(vm, 1);
+	entt::entity entity = static_cast<entt::entity>(entityId);
+
+	auto* worldComponent = registry.try_get<Struktur::Component::World>(entity);
+	if (!worldComponent)
+	{
+		wrenSetSlotNull(vm, 0);
+		return;
+	}
+
+	wrenEnsureSlots(vm, 4);
+	std::vector<std::string> tags = ReadStringList(vm, 2, 3);
+
+	int index = FindLevelIndexWithAllTags(worldComponent->worldMap, tags);
+	if (index == -1)
+	{
+		wrenSetSlotNull(vm, 0);
+		return;
+	}
+	wrenSetSlotDouble(vm, 0, static_cast<double>(index));
+}
+
+// World.getLoadedLevelEntity(levelIndex) -> number
+void wren_WorldGetLoadedLevelEntity(WrenVM* vm)
+{
+	WrenWorld* world   = (WrenWorld*)wrenGetSlotForeign(vm, 0);
+	double levelDouble = wrenGetSlotDouble(vm, 1);
+	int levelIndex     = static_cast<int>(levelDouble);
+
+	auto it = world->component->loadedLevels.find(levelIndex);
+	if (it == world->component->loadedLevels.end())
+	{
+		wrenSetSlotNull(vm, 0);
+		return;
+	}
+
+	wrenSetSlotDouble(vm, 0, static_cast<double>(it->second));
+}
+
+// World.getLoadedLevelEntity(entity, levelIndex) -> number
+void wren_WorldStaticGetLoadedLevelEntity(WrenVM* vm)
+{
+	Struktur::GameContext* context = static_cast<Struktur::GameContext*>(wrenGetUserData(vm));
+	entt::registry& registry       = context->GetRegistry();
+
+	double entityId     = wrenGetSlotDouble(vm, 1);
+	entt::entity entity = static_cast<entt::entity>(entityId);
+	double levelDouble   = wrenGetSlotDouble(vm, 2);
+	int levelIndex       = static_cast<int>(levelDouble);
+
+	auto* worldComponent = registry.try_get<Struktur::Component::World>(entity);
+	if (!worldComponent)
+	{
+		wrenSetSlotNull(vm, 0);
+		return;
+	}
+
+	auto it = worldComponent->loadedLevels.find(levelIndex);
+	if (it == worldComponent->loadedLevels.end())
+	{
+		wrenSetSlotNull(vm, 0);
+		return;
+	}
+
+	wrenSetSlotDouble(vm, 0, static_cast<double>(it->second));
+}
+
+// World.unloadLevelEntities(levelIndex)
+void wren_WorldUnloadLevelEntities(WrenVM* vm)
+{
+	Struktur::GameContext* context = static_cast<Struktur::GameContext*>(wrenGetUserData(vm));
+	WrenWorld* world                = (WrenWorld*)wrenGetSlotForeign(vm, 0);
+
+	double levelDouble = wrenGetSlotDouble(vm, 1);
+	int levelIndex     = static_cast<int>(levelDouble);
+
+	Struktur::World::Level::UnloadLevelEntities(*context, world->entity, levelIndex);
+}
+
+// World.unloadLevelEntities(entity, levelIndex)
+void wren_WorldStaticUnloadLevelEntities(WrenVM* vm)
+{
+	Struktur::GameContext* context = static_cast<Struktur::GameContext*>(wrenGetUserData(vm));
+
+	double entityId          = wrenGetSlotDouble(vm, 1);
+	entt::entity worldEntity = static_cast<entt::entity>(entityId);
+	double levelDouble        = wrenGetSlotDouble(vm, 2);
+	int levelIndex            = static_cast<int>(levelDouble);
+
+	Struktur::World::Level::UnloadLevelEntities(*context, worldEntity, levelIndex);
 }
 
 // ============================================================================
@@ -2170,6 +2434,10 @@ WREN_BINDING_MODULE(GameObjectComponent)
 	WREN_CLASS_METHOD(registry, "gameObjectComponents", "Level", "index", wren_LevelGetIndex, "Get the level index");
 	WREN_CLASS_METHOD(registry, "gameObjectComponents", "Level", "width", wren_LevelGetWidth, "Get the level width");
 	WREN_CLASS_METHOD(registry, "gameObjectComponents", "Level", "height", wren_LevelGetHeight, "Get the level height");
+	WREN_CLASS_METHOD(registry, "gameObjectComponents", "Level", "identifier", wren_LevelGetIdentifier,
+	                  "Get the level's identifier (name).");
+	WREN_CLASS_METHOD(registry, "gameObjectComponents", "Level", "tags", wren_LevelGetTags,
+	                  "Get the level's tags as a list of strings.");
 
 	// Register static methods
 	WREN_CLASS_STATIC(registry, "gameObjectComponents", "Level", "get(_)", wren_LevelGet, "Gets a level component.");
@@ -2185,6 +2453,18 @@ WREN_BINDING_MODULE(GameObjectComponent)
 	                  "Get the index of an Level in the world.");
 	WREN_CLASS_METHOD(registry, "gameObjectComponents", "World", "getLevelsCount()", wren_WorldGetLevelsCount,
 	                  "Gets the number of levels in the world.");
+	WREN_CLASS_METHOD(registry, "gameObjectComponents", "World", "getLevelNeighbours(_)",
+	                  wren_WorldGetLevelNeighbours,
+	                  "Get a level's neighbours as a list of [index, dir], resolved from the LDtk world file.");
+	WREN_CLASS_METHOD(registry, "gameObjectComponents", "World", "getLevelTags(_)", wren_WorldGetLevelTags,
+	                  "Get a level's tags as a list of strings.");
+	WREN_CLASS_METHOD(registry, "gameObjectComponents", "World", "findLevelIndexWithTags(_)",
+	                  wren_WorldFindLevelIndexWithTags,
+	                  "Get the index of the first level whose tags contain every tag in the given list.");
+	WREN_CLASS_METHOD(registry, "gameObjectComponents", "World", "getLoadedLevelEntity(_)",
+	                  wren_WorldGetLoadedLevelEntity, "Get the entity for a level index if it's currently loaded.");
+	WREN_CLASS_METHOD(registry, "gameObjectComponents", "World", "unloadLevelEntities(_)",
+	                  wren_WorldUnloadLevelEntities, "Destroys a loaded level's entities and frees it.");
 
 	// Register static methods
 	WREN_CLASS_STATIC(registry, "gameObjectComponents", "World", "get(_)", wren_WorldGet, "Gets a world component.");
@@ -2197,6 +2477,19 @@ WREN_BINDING_MODULE(GameObjectComponent)
 	                  "Get the index of an Level in the world.");
 	WREN_CLASS_STATIC(registry, "gameObjectComponents", "World", "getLevelsCount(_)", wren_WorldStaticGetLevelsCount,
 	                  "Gets the number of levels in the world.");
+	WREN_CLASS_STATIC(registry, "gameObjectComponents", "World", "getLevelNeighbours(_,_)",
+	                  wren_WorldStaticGetLevelNeighbours,
+	                  "Get a level's neighbours as a list of [index, dir], resolved from the LDtk world file.");
+	WREN_CLASS_STATIC(registry, "gameObjectComponents", "World", "getLevelTags(_,_)", wren_WorldStaticGetLevelTags,
+	                  "Get a level's tags as a list of strings.");
+	WREN_CLASS_STATIC(registry, "gameObjectComponents", "World", "findLevelIndexWithTags(_,_)",
+	                  wren_WorldStaticFindLevelIndexWithTags,
+	                  "Get the index of the first level whose tags contain every tag in the given list.");
+	WREN_CLASS_STATIC(registry, "gameObjectComponents", "World", "getLoadedLevelEntity(_,_)",
+	                  wren_WorldStaticGetLoadedLevelEntity,
+	                  "Get the entity for a level index if it's currently loaded.");
+	WREN_CLASS_STATIC(registry, "gameObjectComponents", "World", "unloadLevelEntities(_,_)",
+	                  wren_WorldStaticUnloadLevelEntities, "Destroys a loaded level's entities and frees it.");
 
 	// Register BodyDefinition foreign class
 	WREN_FOREIGN_CLASS(registry, "gameObjectComponents", "PhysicsBody", wren_PhysicsBodyAllocate,

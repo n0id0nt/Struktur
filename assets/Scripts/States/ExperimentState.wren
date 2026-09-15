@@ -234,8 +234,49 @@ class ExperimentState is BaseState {
         _stateManager.changeState("CombatState", {
             "opponents": combatGroup(primaryEntity, playerEntity),
             "player": playerEntity,
-            "world": _worldEntity
+            "world": _worldEntity,
+            "battleLevelIndex": pickBattleLevelIndex_(_worldEntity, playerEntity)
         })
+    }
+
+    // The index of the level the player is currently standing in, found by bounds-checking their
+    // position against every *loaded* level's world position + size. Returns null if none match
+    // (shouldn't normally happen since every level is loaded up front - see enter()).
+    currentLevelIndex_(worldEntity, playerEntity) {
+        var pos = WorldTransform.getPosition(playerEntity)
+        for (i in 0...World.getLevelsCount(worldEntity)) {
+            var levelEntity = World.getLoadedLevelEntity(worldEntity, i)
+            if (levelEntity == null) {
+                continue
+            }
+            var levelPos = WorldTransform.getPosition(levelEntity)
+            var level = Level.get(levelEntity)
+            if (pos.x >= levelPos.x && pos.x <= levelPos.x + level.width &&
+                pos.y >= levelPos.y && pos.y <= levelPos.y + level.height) {
+                return i
+            }
+        }
+        return null
+    }
+
+    // Looks at the current level's tags and finds a level tagged both "battle" and one of them -
+    // e.g. standing in a level tagged "grass" finds the level tagged "battle,grass" to fight in.
+    // Returns null (fight in place, the existing behaviour) if no current level or no match is found.
+    pickBattleLevelIndex_(worldEntity, playerEntity) {
+        var levelIndex = currentLevelIndex_(worldEntity, playerEntity)
+        if (levelIndex == null) {
+            return null
+        }
+        for (tag in World.getLevelTags(worldEntity, levelIndex)) {
+            if (tag == "battle") {
+                continue
+            }
+            var candidate = World.findLevelIndexWithTags(worldEntity, ["battle", tag])
+            if (candidate != null) {
+                return candidate
+            }
+        }
+        return null
     }
 
     // The critter you engaged, plus every other critter within GROUP_COMBAT_METERS of the player -

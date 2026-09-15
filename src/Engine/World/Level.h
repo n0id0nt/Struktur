@@ -14,6 +14,7 @@ namespace Level
 {
 entt::entity CreateWorldEntity(GameContext& context, const std::string& filePath);
 entt::entity LoadLevelEntities(GameContext& context, const entt::entity worldEntity, int levelIndex);
+void UnloadLevelEntities(GameContext& context, const entt::entity worldEntity, int levelIndex);
 }  // namespace Level
 }  // namespace World
 }  // namespace Struktur

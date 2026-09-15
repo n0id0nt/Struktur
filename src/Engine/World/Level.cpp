@@ -52,10 +52,20 @@ entt::entity Struktur::World::Level::LoadLevelEntities(GameContext& context, con
 		return entt::null;
 	}
 
+	// Loading an already-loaded level is a no-op that returns the existing entity, so adjacency-driven
+	// callers can call this repeatedly without tracking load state themselves.
+	auto existingIt = worldComponent->loadedLevels.find(levelIndex);
+	if (existingIt != worldComponent->loadedLevels.end())
+	{
+		return existingIt->second;
+	}
+
 	FileLoading::LevelParser::Level levelToLoad = worldComponent->worldMap.levels[levelIndex];
 
 	entt::entity levelEntity = gameObjectManager.CreateGameObject(context, levelToLoad.identifier, worldEntity);
-	registry.emplace<Component::Level>(levelEntity, levelIndex, levelToLoad.Iid, levelToLoad.pxWid, levelToLoad.pxHei);
+	registry.emplace<Component::Level>(levelEntity, levelIndex, levelToLoad.Iid, levelToLoad.identifier,
+	                                   levelToLoad.pxWid, levelToLoad.pxHei, levelToLoad.tags);
+	worldComponent->loadedLevels[levelIndex] = levelEntity;
 	transformSystem.SetWorldTransform(context, levelEntity, glm::vec3(levelToLoad.worldX, levelToLoad.worldY, 0.0f),
 	                                  glm::vec3(1.0f), glm::quat(1.0f, 0.0f, 0.0f, 0.0f));
 
@@ -195,4 +205,26 @@ entt::entity Struktur::World::Level::LoadLevelEntities(GameContext& context, con
 	}
 
 	return levelEntity;
+}
+
+void Struktur::World::Level::UnloadLevelEntities(GameContext& context, const entt::entity worldEntity, int levelIndex)
+{
+	entt::registry& registry                     = context.GetRegistry();
+	System::GameObjectManager& gameObjectManager = context.GetGameObjectManager();
+
+	auto* worldComponent = registry.try_get<Component::World>(worldEntity);
+	if (!worldComponent)
+	{
+		BREAK_MSG("Entity provided does not contain a World Component");
+		return;
+	}
+
+	auto it = worldComponent->loadedLevels.find(levelIndex);
+	if (it == worldComponent->loadedLevels.end())
+	{
+		return;
+	}
+
+	gameObjectManager.SafeDeleteGameObject(context, it->second);
+	worldComponent->loadedLevels.erase(it);
 }
