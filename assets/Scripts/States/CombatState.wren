@@ -12,16 +12,17 @@
 //   Power beats Control (one landed Crush is >half a mage's HP; Control burns out holding the lock)
 //   Control beats Speed (Slow wrecks the rhythm, Mend out-heals the chip)
 //
-// Presentation is a dim overlay over the frozen field (Time.setTimeScale(0)); pacing / Timeline /
-// regen all run off Time.unscaled* so they tick through the freeze.
+// Presentation cuts to the Battle_Arena level (see Combat/BattleStage.wren) over a frozen field
+// (Time.setTimeScale(0)); pacing / Timeline / regen all run off Time.unscaled* so they tick through
+// the freeze.
 import "States/BaseState" for BaseState
 import "input" for Input
 import "app" for Application, Time
-import "math" for Vec2, Vec4
+import "math" for Vec2, Vec3
 import "ui" for UIManager, UILabel, UIPanel, TextAlignment
 import "resourceManager" for Font
 import "gameObject" for GameObject
-import "gameObjectComponents" for Script, World
+import "gameObjectComponents" for Script, World, WorldTransform, Level
 import "random" for Random
 import "Colors" for WHITE, BLACK, BLANK, LIGHTGRAY
 
@@ -117,26 +118,33 @@ class CombatState is BaseState {
         setMessage("You're set upon by %(foe)!")
         refreshViews()
 
-        // Cut to the battle arena (Combat/BattleStage.wren) - a level tagged "battle" + the current
-        // biome if one was found (ExperimentState.pickBattleLevelIndex_), otherwise a fixed offscreen
-        // patch of world, or an authored "BattleAnchor" room if one exists. Needs the world root to
-        // parent battle entities under; without it (an unexpected caller) fall back to fighting in place.
+        // Cut to the battle arena (Combat/BattleStage.wren) - the authored battle level
+        // (ExperimentState.BATTLE_ARENA_LEVEL_NAME) if one was found, centred on its bounds rather
+        // than its top-left corner (that's where World/LDtk places a level's WorldTransform);
+        // otherwise a fixed offscreen patch of world, or an authored "BattleAnchor" room if one
+        // exists. Needs the world root to parent battle entities under; without it (an unexpected
+        // caller) fall back to fighting in place.
         if (params["world"] != null) {
             var battleLevelIndex = params["battleLevelIndex"]
             var battleLevelEntity = null
-            var anchorEntity = null
+            var anchorPosition = null
             if (battleLevelIndex != null) {
                 battleLevelEntity = World.getLoadedLevelEntity(params["world"], battleLevelIndex)
                 if (battleLevelEntity == null) {
                     battleLevelEntity = World.loadLevelEntities(params["world"], battleLevelIndex)
                 }
                 GameObject.setActive(battleLevelEntity)
-                anchorEntity = battleLevelEntity
+                var levelPos = WorldTransform.getPosition(battleLevelEntity)
+                var level = Level.get(battleLevelEntity)
+                anchorPosition = Vec3.new(levelPos.x + level.width / 2, levelPos.y + level.height / 2, 0)
             }
-            if (anchorEntity == null) {
-                anchorEntity = firstEntity_("BattleAnchor")
+            if (anchorPosition == null) {
+                var anchorEntity = firstEntity_("BattleAnchor")
+                if (anchorEntity != null) {
+                    anchorPosition = WorldTransform.getPosition(anchorEntity)
+                }
             }
-            _stage = BattleStage.new(anchorEntity, params["player"], params["world"],
+            _stage = BattleStage.new(anchorPosition, params["player"], params["world"],
                                      _player, _enemyDefs, _enemies, battleLevelEntity)
             _root.setVisible(false)
             _phase = "entering"
@@ -159,8 +167,10 @@ class CombatState is BaseState {
         var gh = Application.gameHeight
         var font = Font.load("Fonts/medieval_sharp/MedievalSharp-Bold.ttf", 60)
 
+        // Just a full-screen layout container for the views/menu below now that Battle_Arena (see
+        // BattleStage.wren) reads as its own space - no dimming overlay needed on top of it.
         _root = UIPanel.new(Vec2.new(0, 0), Vec2.new(0, 0), Vec2.new(gw, gh), Vec2.new(0, 0))
-        _root.setBackgroundColor(Vec4.new(0, 0, 0, 175))
+        _root.setBackgroundColor(BLANK)
         _root.setBorderColor(BLANK)
         _root.setZIndex(-1)
         UIManager.addUIElement(_root)

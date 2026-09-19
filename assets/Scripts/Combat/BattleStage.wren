@@ -4,21 +4,20 @@
 // gives no room for a 1-vs-3 line); instead the camera cuts to a separate arena and a Battler
 // (Combat/Battler.wren) is staged per combatant there.
 //
-// The arena is a fixed patch of world well clear of every level (DEFAULT_ARENA below), with a plain
-// backdrop drawn behind the battlers so it reads as its own space. If the ldtk world contains an
-// entity with identifier "BattleAnchor" its position is used instead - drop one into an authored
-// arena room to fight there and frame it however that room is built.
+// The arena is the authored "Battle_Arena" level (ExperimentState.BATTLE_ARENA_LEVEL_NAME), loaded
+// and activated by CombatState with every other loaded level deactivated for the duration - see
+// setOtherLevelsActive_ below - so its own tiles read as the battle's backdrop with nothing
+// bleeding through from the overworld. Falls back to a fixed patch of world (DEFAULT_ARENA) or an
+// authored "BattleAnchor" marker entity if Battle_Arena can't be found.
 import "gameObject" for GameObject
-import "gameObjectComponents" for WorldTransform, Sprite, Camera, RenderLayer
+import "gameObjectComponents" for WorldTransform, Camera, World
 import "math" for Vec2, Vec3
-import "resourceManager" for Texture
-import "renderer" for FlipBit
-import "Colors" for DARKGRAY
 import "Combat/Battler" for Battler
 import "Combat/BattlePlayer" for BattlePlayer
 
-// Where the fight happens when there's no authored BattleAnchor - far above the level grid (levels
-// occupy roughly x 0..2432, y 0..1600), so the battle camera never sees overworld geometry.
+// Where the fight happens when there's no Battle_Arena or authored BattleAnchor - far above the
+// level grid (levels occupy roughly x 0..2432, y 0..1600), so the battle camera never sees
+// overworld geometry.
 var DEFAULT_ARENA = Vec3.new(1200, -1500, 0)
 
 // Formation, as world-pixel offsets from the arena centre. +y is down. Player holds stage left
@@ -31,21 +30,23 @@ var CAMERA_FOCUS   = Vec2.new(-6, 4)
 var CAMERA_ZOOM    = 5
 var CAMERA_DROP    = 90                   // camera eases down this far onto the formation during the intro
 var SLIDE_DISTANCE = 110                  // how far off its mark each battler starts the slide-in
-var BACKDROP_SCALE = Vec3.new(44, 26, 1)  // background.png is 16x16 -> ~704x416 world px
 
 class BattleStage {
-    // anchorEntity: a loaded battle-tagged level, an authored "BattleAnchor" marker, or null to use
-    // DEFAULT_ARENA.
+    // anchorPosition: a world-space Vec3 - the centre of the authored battle level, an authored
+    // "BattleAnchor" marker's position, or null to use DEFAULT_ARENA. CombatState resolves this
+    // (rather than handing over an entity) so it can centre a battle level's bounds instead of
+    // anchoring on its top-left corner, which is where World/LDtk places a level's WorldTransform.
     // playerEntity: the real overworld player (hidden for the fight).
     // worldParent: entity to parent every spawned battle entity under (the world root).
     // playerCombatant: Player.combatant (persistent). enemyDefs / enemyCombatants: parallel lists,
     // one BattleCritter + its Combatant per opponent.
-    // battleLevelEntity: the level entity CombatState loaded for this fight (via a "battle"+biome
-    // tag match), or null when fighting in place - kept so teardown() knows to deactivate it again.
-    construct new(anchorEntity, playerEntity, worldParent, playerCombatant, enemyDefs, enemyCombatants,
+    // battleLevelEntity: the level entity CombatState loaded for this fight, or null when fighting
+    // in place - kept so teardown() knows to deactivate it again.
+    construct new(anchorPosition, playerEntity, worldParent, playerCombatant, enemyDefs, enemyCombatants,
                  battleLevelEntity) {
-        _anchor = anchorEntity == null ? DEFAULT_ARENA : WorldTransform.getPosition(anchorEntity)
+        _anchor = anchorPosition == null ? DEFAULT_ARENA : anchorPosition
         _playerEntity = playerEntity
+        _worldParent = worldParent
         _battleLevelEntity = battleLevelEntity
         _n = enemyDefs.count
         _focus = worldOf_(CAMERA_FOCUS)
@@ -55,13 +56,13 @@ class BattleStage {
         // don't need the camera-priority control script doesn't have yet.
         GameObject.setInactive(_playerEntity)
 
-        // Backdrop - a plain dark rect behind the battlers so the camera isn't staring into the void.
-        _backdrop = GameObject.create("BattleBackdrop", worldParent)
-        var bg = Texture.load("Tiles/Background/background.png")
-        Sprite.create(_backdrop, bg, DARKGRAY, Vec2.new(8, 8), 1, 1, FlipBit.NONE, 0, RenderLayer.BACKGROUND_FAR, 0)
-        bg.unload()
-        WorldTransform.setPosition(_backdrop, _focus)
-        WorldTransform.setScale(_backdrop, BACKDROP_SCALE)
+        // Battle_Arena is standing in for the backdrop now, so every other loaded level gets
+        // deactivated for the duration - nothing else should be visible or simulating behind it.
+        // Skipped entirely in the fallback (no battle level resolved) case, since then we're
+        // fighting in place on top of the overworld geometry that's still needed.
+        if (_battleLevelEntity != null) {
+            setOtherLevelsActive_(false)
+        }
 
         // Battlers: player stage left, opponents stacked stage right centred on the anchor line.
         _player = Battler.new(BattlePlayer, playerCombatant, worldParent)
@@ -125,29 +126,59 @@ class BattleStage {
         }
     }
 
-    // Fold the arena away: destroy every battler + the backdrop + the camera, bring the real player
-    // back. The overworld critter entities were never moved (CombatState.win() destroys the beaten ones).
+    // Fold the arena away: destroy every battler + the camera, bring the real player and every
+    // other level back. The overworld critter entities were never moved (CombatState.win() destroys
+    // the beaten ones).
     teardown() {
         _player.teardown()
         for (b in _enemies) {
             b.teardown()
-        }
-        if (GameObject.isValid(_backdrop)) {
-            GameObject.destroy(_backdrop)
         }
         if (GameObject.isValid(_camEntity)) {
             GameObject.destroy(_camEntity)
         }
         GameObject.setActive(_playerEntity)
 
-        // Deactivate (not unload) the battle level so the next fight in the same biome doesn't pay a
-        // reload cost - swap to World.unloadLevelEntities(...) instead if memory turns out to matter.
-        if (_battleLevelEntity != null && GameObject.isValid(_battleLevelEntity)) {
-            GameObject.setInactive(_battleLevelEntity)
+        // The player's own camera hasn't moved (the player is frozen for the whole fight), but the
+        // shared camera reference is left wherever the battle camera last drew - reactivating it
+        // straight into CameraSystem's damped follow (Player.wren's camera.damping) would visibly
+        // lerp it back in from the arena over several frames. forcePosition is a one-shot flag -
+        // CameraSystem clears it again after this one frame - so this just snaps the return, it
+        // doesn't disable normal following afterwards.
+        var playerCamera = Camera.get(_playerEntity)
+        if (playerCamera != null) {
+            playerCamera.forcePosition = true
+        }
+
+        if (_battleLevelEntity != null) {
+            setOtherLevelsActive_(true)
+
+            // Deactivate (not unload) the battle level itself so the next fight in the same arena
+            // doesn't pay a reload cost - swap to World.unloadLevelEntities(...) instead if memory
+            // turns out to matter.
+            if (GameObject.isValid(_battleLevelEntity)) {
+                GameObject.setInactive(_battleLevelEntity)
+            }
         }
     }
 
     // --- helpers ------------------------------------------------------------
+
+    // Sets every *other* currently-loaded level (i.e. not _battleLevelEntity) active/inactive -
+    // used to hide the overworld behind the battle arena and bring it back afterwards.
+    setOtherLevelsActive_(active) {
+        for (i in 0...World.getLevelsCount(_worldParent)) {
+            var levelEntity = World.getLoadedLevelEntity(_worldParent, i)
+            if (levelEntity == null || levelEntity == _battleLevelEntity) {
+                continue
+            }
+            if (active) {
+                GameObject.setActive(levelEntity)
+            } else {
+                GameObject.setInactive(levelEntity)
+            }
+        }
+    }
 
     battlerFor_(combatant) {
         if (combatant == null) {

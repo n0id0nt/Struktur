@@ -162,6 +162,10 @@ foreign class Level {
     foreign width
     // Get the level height
     foreign height
+    // Get the level's identifier (name).
+    foreign identifier
+    // Get the level's tags as a list of strings.
+    foreign tags
     // Gets a level component.
     foreign static get(arg0)
 }
@@ -174,6 +178,18 @@ foreign class World {
     foreign getLevelIndex(arg0)
     // Gets the number of levels in the world.
     foreign getLevelsCount()
+    // Get a level's neighbours as a list of [index, dir], resolved from the LDtk world file.
+    foreign getLevelNeighbours(arg0)
+    // Get a level's tags as a list of strings.
+    foreign getLevelTags(arg0)
+    // Get a level's [worldX, worldY, pxWid, pxHei] from the parsed LDtk metadata, even if unloaded.
+    foreign getLevelBounds(arg0)
+    // Get the index of the first level whose tags contain every tag in the given list.
+    foreign findLevelIndexWithTags(arg0)
+    // Get the entity for a level index if it's currently loaded.
+    foreign getLoadedLevelEntity(arg0)
+    // Destroys a loaded level's entities and frees it.
+    foreign unloadLevelEntities(arg0)
     // Gets a world component.
     foreign static get(arg0)
     // Creates a level in the game and all its corresponding objects and entities.
@@ -184,6 +200,18 @@ foreign class World {
     foreign static getLevelIndex(arg0,arg1)
     // Gets the number of levels in the world.
     foreign static getLevelsCount(arg0)
+    // Get a level's neighbours as a list of [index, dir], resolved from the LDtk world file.
+    foreign static getLevelNeighbours(arg0,arg1)
+    // Get a level's tags as a list of strings.
+    foreign static getLevelTags(arg0,arg1)
+    // Get a level's [worldX, worldY, pxWid, pxHei] from the parsed LDtk metadata, even if unloaded.
+    foreign static getLevelBounds(arg0,arg1)
+    // Get the index of the first level whose tags contain every tag in the given list.
+    foreign static findLevelIndexWithTags(arg0,arg1)
+    // Get the entity for a level index if it's currently loaded.
+    foreign static getLoadedLevelEntity(arg0,arg1)
+    // Destroys a loaded level's entities and frees it.
+    foreign static unloadLevelEntities(arg0,arg1)
 }
 
 // Shader class wraps Shader component

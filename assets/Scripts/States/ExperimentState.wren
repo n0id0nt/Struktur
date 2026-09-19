@@ -3,7 +3,7 @@
 // This state owns the game world and delegates to sub-states for different gameplay modes
 
 import "gameObject" for GameObject
-import "gameObjectComponents" for LocalTransform, WorldTransform, World, Level, Script, Sprite, Camera, ParticleEmitter
+import "gameObjectComponents" for LocalTransform, WorldTransform, World, Script, Sprite, Camera, ParticleEmitter
 import "math" for Vec2, Vec3, Vec4
 import "resourceManager" for Font, Texture, Music
 import "ui" for UIManager, UILabel
@@ -24,6 +24,10 @@ import "GameObjects/Critter" for Critter
 import "Colors" for WHITE
 
 var WORLD_FILE_PATH = "Levels/SevenGods.ldtk"
+// Authored arena level (see Combat/BattleStage.wren) - every fight loads this level and stages the
+// battle there instead of fighting in place. World.getLevelIndex returns null if it's ever renamed
+// or removed, and CombatState falls back to the BattleAnchor/DEFAULT_ARENA behaviour in that case.
+var BATTLE_ARENA_LEVEL_NAME = "Battle_Arena"
 // Combat proximity ranges, in metres (converted to world pixels at use via Application.pixelsPerMeter,
 // default 64). An aggressive critter (Chinlin) within FORCE range forces combat outright rather than
 // just offering it via the interact prompt - meant to feel like being caught, not spotted. When a
@@ -40,6 +44,10 @@ class ExperimentState is BaseState {
         
         _worldEntity = null //TODO Create an entity constant for invalid entity or null entity
         _particleEntity = null
+        _playerEntity = null
+        // The level the player was last found in, per updateLevelStreaming_() - starts null so the
+        // very first streaming pass always runs (see the == check there).
+        _currentLevelIndex = null
         _stateManager = StateManager.new()
 
         _stateManager.insertState("PlayState", PlayState)
@@ -70,14 +78,14 @@ class ExperimentState is BaseState {
         var worldEntity = World.createWorldEntity(WORLD_FILE_PATH)
         _worldEntity = worldEntity
 
-        for (i in 0...World.getLevelsCount(worldEntity)) {
-            var level = World.loadLevelEntities(worldEntity, i)
-            GameObject.setParent(level, worldEntity)
-        }
-
         var playerEntity = GameObject.create("Player", worldEntity)
         Script.createArg(playerEntity, "Player", {"Name": "Player"})
         WorldTransform.setPosition(playerEntity, Vec3.new(600.0, 300.0, 0.0))
+        _playerEntity = playerEntity
+
+        // Streams in the level the player spawned in (plus its neighbours) instead of loading every
+        // level in the world up front - see updateLevelStreaming_().
+        updateLevelStreaming_()
 
         // "Fight" prompt for non-aggressive critters - same UILabel-above-target pattern
         // GameWorldState uses for its own "Interact" prompt.
@@ -172,9 +180,66 @@ class ExperimentState is BaseState {
             _gameMusic.play()
         }
 
+        updateLevelStreaming_()
+
         if (Time.scaledTime >= _combatCooldownEndTime) {
             checkCombatTriggers()
         }
+    }
+
+    // Keeps only the level the player is currently standing in, plus its immediate LDtk neighbours,
+    // loaded - everything else gets unloaded to free its tiles/collision/entities. Cheap to call every
+    // frame: the streaming work only runs when the player's current level actually changes, and
+    // levelIndexAtPosition_ checks world bounds straight from the parsed LDtk metadata rather than
+    // needing every level loaded to know where they are.
+    updateLevelStreaming_() {
+        var levelIndex = levelIndexAtPosition_(WorldTransform.getPosition(_playerEntity))
+        if (levelIndex == null || levelIndex == _currentLevelIndex) {
+            return
+        }
+        _currentLevelIndex = levelIndex
+
+        var wanted = [levelIndex]
+        for (neighbour in World.getLevelNeighbours(_worldEntity, levelIndex)) {
+            wanted.add(neighbour[0])
+        }
+
+        // The battle arena isn't part of the walkable world and never shows up in `wanted`, but
+        // CombatState deliberately leaves it loaded-but-inactive between fights to skip the reload -
+        // don't undo that here.
+        var battleArenaIndex = World.getLevelIndex(_worldEntity, BATTLE_ARENA_LEVEL_NAME)
+
+        for (i in 0...World.getLevelsCount(_worldEntity)) {
+            if (wanted.contains(i) || i == battleArenaIndex) {
+                continue
+            }
+            if (World.getLoadedLevelEntity(_worldEntity, i) != null) {
+                World.unloadLevelEntities(_worldEntity, i)
+            }
+        }
+
+        for (i in wanted) {
+            var levelEntity = World.getLoadedLevelEntity(_worldEntity, i)
+            if (levelEntity == null) {
+                levelEntity = World.loadLevelEntities(_worldEntity, i)
+                GameObject.setParent(levelEntity, _worldEntity)
+            }
+            GameObject.setActive(levelEntity)
+        }
+    }
+
+    // The index of the level whose world-space bounds contain position, or null if none match.
+    // Checked directly against World.getLevelBounds (the parsed LDtk metadata), so it works even
+    // before that level has ever been loaded.
+    levelIndexAtPosition_(position) {
+        for (i in 0...World.getLevelsCount(_worldEntity)) {
+            var bounds = World.getLevelBounds(_worldEntity, i)
+            if (position.x >= bounds[0] && position.x <= bounds[0] + bounds[2] &&
+                position.y >= bounds[1] && position.y <= bounds[1] + bounds[3]) {
+                return i
+            }
+        }
+        return null
     }
 
     // Aggressive critters (Chinlin) force the player straight into CombatState once they close the
@@ -235,48 +300,8 @@ class ExperimentState is BaseState {
             "opponents": combatGroup(primaryEntity, playerEntity),
             "player": playerEntity,
             "world": _worldEntity,
-            "battleLevelIndex": pickBattleLevelIndex_(_worldEntity, playerEntity)
+            "battleLevelIndex": World.getLevelIndex(_worldEntity, BATTLE_ARENA_LEVEL_NAME)
         })
-    }
-
-    // The index of the level the player is currently standing in, found by bounds-checking their
-    // position against every *loaded* level's world position + size. Returns null if none match
-    // (shouldn't normally happen since every level is loaded up front - see enter()).
-    currentLevelIndex_(worldEntity, playerEntity) {
-        var pos = WorldTransform.getPosition(playerEntity)
-        for (i in 0...World.getLevelsCount(worldEntity)) {
-            var levelEntity = World.getLoadedLevelEntity(worldEntity, i)
-            if (levelEntity == null) {
-                continue
-            }
-            var levelPos = WorldTransform.getPosition(levelEntity)
-            var level = Level.get(levelEntity)
-            if (pos.x >= levelPos.x && pos.x <= levelPos.x + level.width &&
-                pos.y >= levelPos.y && pos.y <= levelPos.y + level.height) {
-                return i
-            }
-        }
-        return null
-    }
-
-    // Looks at the current level's tags and finds a level tagged both "battle" and one of them -
-    // e.g. standing in a level tagged "grass" finds the level tagged "battle,grass" to fight in.
-    // Returns null (fight in place, the existing behaviour) if no current level or no match is found.
-    pickBattleLevelIndex_(worldEntity, playerEntity) {
-        var levelIndex = currentLevelIndex_(worldEntity, playerEntity)
-        if (levelIndex == null) {
-            return null
-        }
-        for (tag in World.getLevelTags(worldEntity, levelIndex)) {
-            if (tag == "battle") {
-                continue
-            }
-            var candidate = World.findLevelIndexWithTags(worldEntity, ["battle", tag])
-            if (candidate != null) {
-                return candidate
-            }
-        }
-        return null
     }
 
     // The critter you engaged, plus every other critter within GROUP_COMBAT_METERS of the player -

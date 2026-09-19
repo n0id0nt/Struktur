@@ -429,6 +429,24 @@ void PushLevelTagsList(WrenVM* vm, const Struktur::FileLoading::LevelParser::Wor
 	}
 }
 
+// Builds a Wren list [worldX, worldY, pxWid, pxHei] in slot 0 for levelIndex - read straight from the
+// parsed LDtk metadata, so it works for a level that isn't loaded yet (used to figure out which level
+// a position falls in before deciding what to stream in).
+void PushLevelBoundsList(WrenVM* vm, const Struktur::FileLoading::LevelParser::World& worldMap, int levelIndex)
+{
+	wrenSetSlotNewList(vm, 0);
+	wrenEnsureSlots(vm, 3);
+
+	const auto& level          = worldMap.levels[levelIndex];
+	double values[4]           = {static_cast<double>(level.worldX), static_cast<double>(level.worldY),
+                                  static_cast<double>(level.pxWid), static_cast<double>(level.pxHei)};
+	for (int i = 0; i < 4; i++)
+	{
+		wrenSetSlotDouble(vm, 2, values[i]);
+		wrenInsertInList(vm, 0, i, 2);
+	}
+}
+
 // Reads a Wren list of strings out of the given slot.
 std::vector<std::string> ReadStringList(WrenVM* vm, int listSlot, int scratchSlot)
 {
@@ -527,6 +545,37 @@ void wren_WorldStaticGetLevelTags(WrenVM* vm)
 	}
 
 	PushLevelTagsList(vm, worldComponent->worldMap, levelIndex);
+}
+
+// World.getLevelBounds(levelIndex) -> list [worldX, worldY, pxWid, pxHei]
+void wren_WorldGetLevelBounds(WrenVM* vm)
+{
+	WrenWorld* world   = (WrenWorld*)wrenGetSlotForeign(vm, 0);
+	double levelDouble = wrenGetSlotDouble(vm, 1);
+	int levelIndex     = static_cast<int>(levelDouble);
+
+	PushLevelBoundsList(vm, world->component->worldMap, levelIndex);
+}
+
+// World.getLevelBounds(entity, levelIndex) -> list [worldX, worldY, pxWid, pxHei]
+void wren_WorldStaticGetLevelBounds(WrenVM* vm)
+{
+	Struktur::GameContext* context = static_cast<Struktur::GameContext*>(wrenGetUserData(vm));
+	entt::registry& registry       = context->GetRegistry();
+
+	double entityId     = wrenGetSlotDouble(vm, 1);
+	entt::entity entity = static_cast<entt::entity>(entityId);
+	double levelDouble  = wrenGetSlotDouble(vm, 2);
+	int levelIndex      = static_cast<int>(levelDouble);
+
+	auto* worldComponent = registry.try_get<Struktur::Component::World>(entity);
+	if (!worldComponent)
+	{
+		wrenSetSlotNewList(vm, 0);
+		return;
+	}
+
+	PushLevelBoundsList(vm, worldComponent->worldMap, levelIndex);
 }
 
 // World.findLevelIndexWithTags(tagsList) -> number
@@ -2458,6 +2507,8 @@ WREN_BINDING_MODULE(GameObjectComponent)
 	                  "Get a level's neighbours as a list of [index, dir], resolved from the LDtk world file.");
 	WREN_CLASS_METHOD(registry, "gameObjectComponents", "World", "getLevelTags(_)", wren_WorldGetLevelTags,
 	                  "Get a level's tags as a list of strings.");
+	WREN_CLASS_METHOD(registry, "gameObjectComponents", "World", "getLevelBounds(_)", wren_WorldGetLevelBounds,
+	                  "Get a level's [worldX, worldY, pxWid, pxHei] from the parsed LDtk metadata, even if unloaded.");
 	WREN_CLASS_METHOD(registry, "gameObjectComponents", "World", "findLevelIndexWithTags(_)",
 	                  wren_WorldFindLevelIndexWithTags,
 	                  "Get the index of the first level whose tags contain every tag in the given list.");
@@ -2482,6 +2533,8 @@ WREN_BINDING_MODULE(GameObjectComponent)
 	                  "Get a level's neighbours as a list of [index, dir], resolved from the LDtk world file.");
 	WREN_CLASS_STATIC(registry, "gameObjectComponents", "World", "getLevelTags(_,_)", wren_WorldStaticGetLevelTags,
 	                  "Get a level's tags as a list of strings.");
+	WREN_CLASS_STATIC(registry, "gameObjectComponents", "World", "getLevelBounds(_,_)", wren_WorldStaticGetLevelBounds,
+	                  "Get a level's [worldX, worldY, pxWid, pxHei] from the parsed LDtk metadata, even if unloaded.");
 	WREN_CLASS_STATIC(registry, "gameObjectComponents", "World", "findLevelIndexWithTags(_,_)",
 	                  wren_WorldStaticFindLevelIndexWithTags,
 	                  "Get the index of the first level whose tags contain every tag in the given list.");
