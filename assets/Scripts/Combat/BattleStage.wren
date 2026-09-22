@@ -12,8 +12,11 @@
 import "gameObject" for GameObject
 import "gameObjectComponents" for WorldTransform, Camera, World
 import "math" for Vec2, Vec3
+import "app" for Time
 import "Combat/Battler" for Battler
 import "Combat/BattlePlayer" for BattlePlayer
+import "Combat/MoveCurves" for MoveCurves
+import "Combat/MoveParticles" for MoveParticles
 
 // Where the fight happens when there's no Battle_Arena or authored BattleAnchor - far above the
 // level grid (levels occupy roughly x 0..2432, y 0..1600), so the battle camera never sees
@@ -30,6 +33,15 @@ var CAMERA_FOCUS   = Vec2.new(-6, 4)
 var CAMERA_ZOOM    = 5
 var CAMERA_DROP    = 90                   // camera eases down this far onto the formation during the intro
 var SLIDE_DISTANCE = 110                  // how far off its mark each battler starts the slide-in
+
+// Strike animation (updateStrike/updateReturn, driven by CombatState's "attacking"/"returning"
+// phases). ATTACK_REACH: how far from home toward the target's home the attacker lunges, as a
+// fraction of that distance - close enough to read as a hit without fully overlapping the target's
+// sprite. IMPACT_T: the point in the forward swing (0..1) where the hit actually lands - the target
+// plays its "hurt" clip and the move's particle burst fires - regardless of curve shape, since
+// every curve's nominal endpoint is t=1.
+var ATTACK_REACH = 0.6
+var IMPACT_T      = 0.75
 
 class BattleStage {
     // anchorPosition: a world-space Vec3 - the centre of the authored battle level, an authored
@@ -67,6 +79,7 @@ class BattleStage {
         // Battlers: player stage left, opponents stacked stage right centred on the anchor line.
         _player = Battler.new(BattlePlayer, playerCombatant, worldParent)
         _playerHome = worldOf_(PLAYER_STATION)
+        _player.home = _playerHome
         _player.face(1)
 
         _enemies = []
@@ -75,10 +88,16 @@ class BattleStage {
         for (i in 0..._n) {
             var b = Battler.new(enemyDefs[i], enemyCombatants[i], worldParent)
             b.face(-1)
+            var home = worldOf_(Vec2.new(ENEMY_ORIGIN.x + i * ENEMY_STEP.x,
+                                         ENEMY_ORIGIN.y + i * ENEMY_STEP.y - yShift))
+            b.home = home
             _enemies.add(b)
-            _enemyHomes.add(worldOf_(Vec2.new(ENEMY_ORIGIN.x + i * ENEMY_STEP.x,
-                                              ENEMY_ORIGIN.y + i * ENEMY_STEP.y - yShift)))
+            _enemyHomes.add(home)
         }
+
+        // Impact-effect entities (particle bursts spawned by updateStrike) that are still within
+        // their lifetime - see spawnImpact_/pruneEffects_.
+        _activeEffects = []
 
         // Battle camera - its own entity. Starts a little high and eases down onto the formation.
         _camStart = Vec3.new(_focus.x, _focus.y - CAMERA_DROP, 0)
@@ -107,7 +126,9 @@ class BattleStage {
 
     settle() { intro(1) }
 
-    // The acting battler swings, the struck one recoils; call rest() once the log clears.
+    // The acting battler swings, the struck one recoils; call rest() once the log clears. Used only
+    // for non-offensive / no-target moves (self-heals, buffs) - see CombatState.resolveMove.
+    // Offensive moves against a live target use beginStrike/updateStrike/updateReturn instead.
     strike(actorCombatant, targetCombatant) {
         var a = battlerFor_(actorCombatant)
         if (a != null) {
@@ -117,6 +138,45 @@ class BattleStage {
         if (d != null) {
             d.play("hurt")
         }
+    }
+
+    // Kicks off the curve-driven lunge toward targetCombatant, using move's curveId/particleId
+    // (Combat/MoveCurves.wren / Combat/MoveParticles.wren). Called once when the move resolves;
+    // CombatState then drives updateStrike(t) every frame while t ramps 0..1.
+    beginStrike(actorCombatant, targetCombatant, move) {
+        pruneEffects_()
+
+        _strikeBattler = battlerFor_(actorCombatant)
+        _strikeTargetBattler = battlerFor_(targetCombatant)
+        _strikeCurve = MoveCurves.get(move.curveId)
+        _strikeParticleId = move.particleId
+        _strikeImpactDone = false
+
+        var targetHome = _strikeTargetBattler != null ? _strikeTargetBattler.home : _strikeBattler.home
+        _strikeApproach = lerp3_(_strikeBattler.home, targetHome, ATTACK_REACH)
+
+        _strikeBattler.play("attack")
+    }
+
+    // t: 0..1 progress through the forward lunge. Moves _strikeBattler along the move's curve from
+    // home toward _strikeApproach; once t first crosses IMPACT_T, plays the target's "hurt" clip
+    // and spawns its impact particle burst (both fire exactly once per strike).
+    updateStrike(t) {
+        _strikeBattler.slide(_strikeBattler.home, _strikeApproach, _strikeCurve.evaluate(t))
+
+        if (!_strikeImpactDone && t >= IMPACT_T) {
+            _strikeImpactDone = true
+            if (_strikeTargetBattler != null) {
+                _strikeTargetBattler.play("hurt")
+            }
+            spawnImpact_(_strikeTargetBattler, _strikeParticleId)
+        }
+    }
+
+    // t: 0..1 progress easing _strikeBattler back from _strikeApproach to home. Plain smooth_ ease
+    // (not move-specific) - only the approach leg needs per-move personality.
+    updateReturn(t) {
+        _strikeBattler.slide(_strikeApproach, _strikeBattler.home, smooth_(t))
     }
 
     rest() {
@@ -138,6 +198,14 @@ class BattleStage {
             GameObject.destroy(_camEntity)
         }
         GameObject.setActive(_playerEntity)
+
+        // Fight's over - don't wait out any remaining impact-effect timers, just clear them now.
+        for (effect in _activeEffects) {
+            if (GameObject.isValid(effect[0])) {
+                GameObject.destroy(effect[0])
+            }
+        }
+        _activeEffects = []
 
         // The player's own camera hasn't moved (the player is frozen for the whole fight), but the
         // shared camera reference is left wherever the battle camera last drew - reactivating it
@@ -178,6 +246,33 @@ class BattleStage {
                 GameObject.setInactive(levelEntity)
             }
         }
+    }
+
+    // Spawns a one-shot particle burst at targetBattler's position (or the arena focus if there's
+    // no target battler) and tracks it in _activeEffects until its particles have finished.
+    spawnImpact_(targetBattler, particleId) {
+        var pos = targetBattler != null ? WorldTransform.getPosition(targetBattler.entity) : _focus
+        var entity = GameObject.create("Impact_%(particleId)", _worldParent)
+        WorldTransform.setPosition(entity, pos)
+        var lifetime = MoveParticles.spawn(entity, particleId)
+        _activeEffects.add([entity, Time.unscaledTime + lifetime])
+    }
+
+    // Destroys and drops any _activeEffects entries whose lifetime has elapsed. Called at the start
+    // of every beginStrike, so cleanup is bounded to at most one fight's worth of delay - teardown()
+    // force-clears whatever's left regardless of its timer.
+    pruneEffects_() {
+        var stillAlive = []
+        for (effect in _activeEffects) {
+            if (Time.unscaledTime >= effect[1]) {
+                if (GameObject.isValid(effect[0])) {
+                    GameObject.destroy(effect[0])
+                }
+            } else {
+                stillAlive.add(effect)
+            }
+        }
+        _activeEffects = stillAlive
     }
 
     battlerFor_(combatant) {

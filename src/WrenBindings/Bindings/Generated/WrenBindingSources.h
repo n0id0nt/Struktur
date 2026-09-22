@@ -1380,6 +1380,20 @@ inline const char* wrenmathSource()
     "    foreign static lerp(arg0,arg1,arg2)\n"
     "}\n"
     "\n"
+    "// Keyframe animation curve (Unity AnimationCurve-style), wrapping Util::Curve\n"
+    "foreign class Curve {\n"
+    "    // Create a curve, starting as the default linear 0->1 curve\n"
+    "    foreign construct new()\n"
+    "    // Add a keyframe (time, value), defaulting to Smooth interpolation\n"
+    "    foreign addKeyframe(arg0,arg1)\n"
+    "    // Add a keyframe (time, value, interpolation), interpolation one of \"Linear\"/\"Smooth\"/\"Step\"/\"Bezier\"\n"
+    "    foreign addKeyframe(arg0,arg1,arg2)\n"
+    "    // Sample the curve's value at the given time\n"
+    "    foreign evaluate(arg0)\n"
+    "    // Get the number of keyframes on the curve\n"
+    "    foreign keyframeCount\n"
+    "}\n"
+    "\n"
     "";
 }
 

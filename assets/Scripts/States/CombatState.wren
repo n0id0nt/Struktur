@@ -34,6 +34,8 @@ import "Combat/BattleStage" for BattleStage
 
 var INTRO_TIME   = 0.9   // fallback (fight-in-place) beat before the menu arms
 var ENTER_TIME   = 0.65  // arena sweep + battler slide-in
+var STRIKE_TIME  = 0.35  // curve-driven lunge toward the target (BattleStage.updateStrike)
+var RETURN_TIME  = 0.25  // ease back to home afterwards (BattleStage.updateReturn)
 var MESSAGE_TIME = 0.9
 var OVER_TIME    = 1.7
 var NAV_ARM_TIME = 0.14   // input lockout after a menu transition, so the prior keypress can't bleed
@@ -54,6 +56,10 @@ class CombatState is BaseState {
         _enemies = []
         _staggered = []
         _pendingMove = null
+        // Log text + continuation stashed while the "attacking"/"returning" animation phases play
+        // out, then handed to showLog() once they finish - see resolveMove/update().
+        _pendingLogText = null
+        _pendingLogNext = null
         _targetIndex = 0
         _targetAxisHeld = false
         _playerTarget = null
@@ -287,6 +293,27 @@ class CombatState is BaseState {
             if (ready != null) {
                 resolveMove(ready)
             }
+        } else if (_phase == "attacking") {
+            var t = (Time.unscaledTime - (_timerEnd - STRIKE_TIME)) / STRIKE_TIME
+            if (t > 1) {
+                t = 1
+            }
+            _stage.updateStrike(t)
+            if (Time.unscaledTime >= _timerEnd) {
+                _phase = "returning"
+                _timerEnd = Time.unscaledTime + RETURN_TIME
+            }
+        } else if (_phase == "returning") {
+            var t = (Time.unscaledTime - (_timerEnd - RETURN_TIME)) / RETURN_TIME
+            if (t > 1) {
+                t = 1
+            }
+            _stage.updateReturn(t)
+            if (Time.unscaledTime >= _timerEnd) {
+                showLog(_pendingLogText, _pendingLogNext)
+                _pendingLogText = null
+                _pendingLogNext = null
+            }
         } else if (_phase == "message") {
             if (Time.unscaledTime >= _timerEnd) {
                 var step = _nextStep
@@ -420,11 +447,8 @@ class CombatState is BaseState {
         _timeline.clear(actor)
         refreshViews()
 
-        if (_stage != null) {
-            _stage.strike(actor, move.offensive ? target : null)
-        }
-
-        showLog(resolveLine(isPlayer, actor, move, dealt, target, staggerUnits), Fn.new {
+        var logText = resolveLine(isPlayer, actor, move, dealt, target, staggerUnits)
+        var afterLog = Fn.new {
             if (_stage != null) {
                 _stage.rest()
             }
@@ -441,7 +465,23 @@ class CombatState is BaseState {
                 setMessage("")
                 refreshViews()
             }
-        })
+        }
+
+        // Offensive moves against a live target get the curve-driven lunge + impact particle
+        // (Combat/BattleStage.wren); everything else (heals/buffs/no-target) keeps the old instant
+        // animation-switch and goes straight to the message beat.
+        if (_stage != null && move.offensive && target != null) {
+            _stage.beginStrike(actor, target, move)
+            _pendingLogText = logText
+            _pendingLogNext = afterLog
+            _phase = "attacking"
+            _timerEnd = Time.unscaledTime + STRIKE_TIME
+        } else {
+            if (_stage != null) {
+                _stage.strike(actor, null)
+            }
+            showLog(logText, afterLog)
+        }
     }
 
     resolveLine(isPlayer, actor, move, dealt, target, staggerUnits) {
@@ -605,6 +645,8 @@ class CombatState is BaseState {
         _enemyDefs = []
         _nextStep = null
         _pendingMove = null
+        _pendingLogText = null
+        _pendingLogNext = null
         _playerTarget = null
     }
 

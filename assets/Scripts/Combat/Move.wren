@@ -6,7 +6,11 @@
 class Move {
     // baseDelay: 2-6 time units (0 for non-offensive moves - they never interrupt).
     // staminaCost / staminaRestore / healAmount: paid / gained / healed when the move resolves.
-    construct new(name, timeCost, damage, baseDelay, staminaCost, staminaRestore, healAmount) {
+    // curveId / particleId: keys into Combat/MoveCurves.wren and Combat/MoveParticles.wren for the
+    // strike-animation shape and impact effect - null for non-offensive moves, which never pick an
+    // enemy target and so never animate a strike (see CombatState.resolveMove).
+    construct new(name, timeCost, damage, baseDelay, staminaCost, staminaRestore, healAmount, curveId,
+                 particleId) {
         _name = name
         _timeCost = timeCost
         _damage = damage
@@ -14,6 +18,8 @@ class Move {
         _staminaCost = staminaCost
         _staminaRestore = staminaRestore
         _healAmount = healAmount
+        _curveId = curveId
+        _particleId = particleId
     }
 
     name { _name }
@@ -23,6 +29,8 @@ class Move {
     staminaCost { _staminaCost }
     staminaRestore { _staminaRestore }
     healAmount { _healAmount }
+    curveId { _curveId }
+    particleId { _particleId }
 
     // True for anything that picks an enemy target (vs. a self-buff / heal).
     offensive { _damage > 0 }

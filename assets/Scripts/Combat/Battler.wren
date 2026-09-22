@@ -35,6 +35,11 @@ class Battler {
     entity { _entity }
     combatant { _combatant }
 
+    // Formation slot position - set once by BattleStage right after construction, read back by its
+    // strike-animation code (beginStrike/updateStrike/updateReturn) as the start/end of the lunge.
+    home { _home }
+    home=(pos) { _home = pos }
+
     place(pos) { WorldTransform.setPosition(_entity, pos) }
 
     // Slide from fromPos toward toPos, t in 0..1.

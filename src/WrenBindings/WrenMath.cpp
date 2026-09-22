@@ -4,6 +4,7 @@
 #define _USE_MATH_DEFINES
 #include <math.h>
 
+#include <cstring>
 #include <format>
 #include <glm/gtc/type_ptr.hpp>
 #include <iomanip>
@@ -11,6 +12,7 @@
 
 #include "Debug/Assertions.h"
 #include "Engine/Scripting/WrenBindingRegistry.h"
+#include "Engine/Util/Curve.h"
 
 // ============================================================================
 // Math utialaty functions
@@ -1753,6 +1755,83 @@ void wren_RectSetHeight(WrenVM* vm)
 }
 
 // ============================================================================
+// Curve - wraps Struktur::Util::Curve (keyframe/AnimationCurve-style easing)
+// ============================================================================
+
+namespace
+{
+Struktur::Util::CurveInterpolation ParseCurveInterpolation(const char* name)
+{
+	if (strcmp(name, "Linear") == 0)
+	{
+		return Struktur::Util::CurveInterpolation::Linear;
+	}
+	if (strcmp(name, "Step") == 0)
+	{
+		return Struktur::Util::CurveInterpolation::Step;
+	}
+	if (strcmp(name, "Bezier") == 0)
+	{
+		return Struktur::Util::CurveInterpolation::Bezier;
+	}
+	return Struktur::Util::CurveInterpolation::Smooth;
+}
+}  // namespace
+
+void wren_CurveAllocate(WrenVM* vm)
+{
+	wrenSetSlotNewForeign(vm, 0, 0, sizeof(Struktur::Util::Curve));
+}
+
+void wren_CurveFinalize(void* data)
+{
+	Struktur::Util::Curve* curve = (Struktur::Util::Curve*)data;
+	curve->~Curve();
+}
+
+// Curve.new() - starts as the default linear 0->1 curve (see Util::Curve's own constructor)
+void wren_CurveNew(WrenVM* vm)
+{
+	Struktur::Util::Curve* curve = (Struktur::Util::Curve*)wrenGetSlotForeign(vm, 0);
+	new (curve) Struktur::Util::Curve();
+}
+
+// curve.addKeyframe(time, value) - defaults to Smooth interpolation, matching Curve::AddKeyframe
+void wren_CurveAddKeyframe2(WrenVM* vm)
+{
+	Struktur::Util::Curve* curve = (Struktur::Util::Curve*)wrenGetSlotForeign(vm, 0);
+	float time                  = (float)wrenGetSlotDouble(vm, 1);
+	float value                  = (float)wrenGetSlotDouble(vm, 2);
+	curve->AddKeyframe(time, value);
+}
+
+// curve.addKeyframe(time, value, interpolation) - interpolation is one of
+// "Linear"/"Smooth"/"Step"/"Bezier"; anything else falls back to "Smooth".
+void wren_CurveAddKeyframe3(WrenVM* vm)
+{
+	Struktur::Util::Curve* curve = (Struktur::Util::Curve*)wrenGetSlotForeign(vm, 0);
+	float time                  = (float)wrenGetSlotDouble(vm, 1);
+	float value                  = (float)wrenGetSlotDouble(vm, 2);
+	const char* interpolation     = wrenGetSlotString(vm, 3);
+	curve->AddKeyframe(time, value, ParseCurveInterpolation(interpolation));
+}
+
+// curve.evaluate(time) -> number
+void wren_CurveEvaluate(WrenVM* vm)
+{
+	Struktur::Util::Curve* curve = (Struktur::Util::Curve*)wrenGetSlotForeign(vm, 0);
+	float time                  = (float)wrenGetSlotDouble(vm, 1);
+	wrenSetSlotDouble(vm, 0, curve->Evaluate(time));
+}
+
+// curve.keyframeCount -> number
+void wren_CurveGetKeyframeCount(WrenVM* vm)
+{
+	Struktur::Util::Curve* curve = (Struktur::Util::Curve*)wrenGetSlotForeign(vm, 0);
+	wrenSetSlotDouble(vm, 0, (double)curve->GetKeyframeCount());
+}
+
+// ============================================================================
 // BINDING REGISTRATION
 // ============================================================================
 WREN_BINDING_MODULE(Math)
@@ -2015,4 +2094,23 @@ WREN_BINDING_MODULE(Math)
 	WREN_CLASS_METHOD(registry, "math", "Rect", "y=(_)", wren_RectSetY, "Set Y component");
 	WREN_CLASS_METHOD(registry, "math", "Rect", "width=(_)", wren_RectSetWidth, "Set Width component");
 	WREN_CLASS_METHOD(registry, "math", "Rect", "height=(_)", wren_RectSetHeight, "Set Height component");
+
+	// Register Curve foreign class
+	WREN_FOREIGN_CLASS(registry, "math", "Curve", wren_CurveAllocate, wren_CurveFinalize,
+	                   "Keyframe animation curve (Unity AnimationCurve-style), wrapping Util::Curve");
+
+	// Register constructors
+	WREN_CONSTRUCTOR(registry, "math", "Curve", "new()", wren_CurveNew,
+	                 "Create a curve, starting as the default linear 0->1 curve");
+
+	// Register instance methods
+	WREN_CLASS_METHOD(registry, "math", "Curve", "addKeyframe(_,_)", wren_CurveAddKeyframe2,
+	                  "Add a keyframe (time, value), defaulting to Smooth interpolation");
+	WREN_CLASS_METHOD(registry, "math", "Curve", "addKeyframe(_,_,_)", wren_CurveAddKeyframe3,
+	                  "Add a keyframe (time, value, interpolation), interpolation one of "
+	                  "\"Linear\"/\"Smooth\"/\"Step\"/\"Bezier\"");
+	WREN_CLASS_METHOD(registry, "math", "Curve", "evaluate(_)", wren_CurveEvaluate,
+	                  "Sample the curve's value at the given time");
+	WREN_CLASS_METHOD(registry, "math", "Curve", "keyframeCount", wren_CurveGetKeyframeCount,
+	                  "Get the number of keyframes on the curve");
 }

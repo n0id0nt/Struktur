@@ -385,3 +385,17 @@ foreign class Quat {
     foreign static lerp(arg0,arg1,arg2)
 }
 
+// Keyframe animation curve (Unity AnimationCurve-style), wrapping Util::Curve
+foreign class Curve {
+    // Create a curve, starting as the default linear 0->1 curve
+    foreign construct new()
+    // Add a keyframe (time, value), defaulting to Smooth interpolation
+    foreign addKeyframe(arg0,arg1)
+    // Add a keyframe (time, value, interpolation), interpolation one of "Linear"/"Smooth"/"Step"/"Bezier"
+    foreign addKeyframe(arg0,arg1,arg2)
+    // Sample the curve's value at the given time
+    foreign evaluate(arg0)
+    // Get the number of keyframes on the curve
+    foreign keyframeCount
+}
+
