@@ -12,11 +12,9 @@
 import "gameObject" for GameObject
 import "gameObjectComponents" for WorldTransform, Camera, World
 import "math" for Vec2, Vec3
-import "app" for Time
 import "Combat/Battler" for Battler
-import "Combat/BattlePlayer" for BattlePlayer
-import "Combat/MoveCurves" for MoveCurves
-import "Combat/MoveParticles" for MoveParticles
+import "Combat/Config/BattlePlayer" for BattlePlayer
+import "Combat/Config/MoveCurves" for MoveCurves
 
 // Where the fight happens when there's no Battle_Arena or authored BattleAnchor - far above the
 // level grid (levels occupy roughly x 0..2432, y 0..1600), so the battle camera never sees
@@ -95,10 +93,6 @@ class BattleStage {
             _enemyHomes.add(home)
         }
 
-        // Impact-effect entities (particle bursts spawned by updateStrike) that are still within
-        // their lifetime - see spawnImpact_/pruneEffects_.
-        _activeEffects = []
-
         // Battle camera - its own entity. Starts a little high and eases down onto the formation.
         _camStart = Vec3.new(_focus.x, _focus.y - CAMERA_DROP, 0)
         _camEntity = GameObject.create("BattleCamera", worldParent)
@@ -141,11 +135,10 @@ class BattleStage {
     }
 
     // Kicks off the curve-driven lunge toward targetCombatant, using move's curveId/particleId
-    // (Combat/MoveCurves.wren / Combat/MoveParticles.wren). Called once when the move resolves;
-    // CombatState then drives updateStrike(t) every frame while t ramps 0..1.
+    // (Combat/Config/MoveCurves.wren / Combat/Config/MoveParticles.wren, the latter via the target
+    // Battler's own persistent particle emitter - see Battler.playImpact). Called once when the
+    // move resolves; CombatState then drives updateStrike(t) every frame while t ramps 0..1.
     beginStrike(actorCombatant, targetCombatant, move) {
-        pruneEffects_()
-
         _strikeBattler = battlerFor_(actorCombatant)
         _strikeTargetBattler = battlerFor_(targetCombatant)
         _strikeCurve = MoveCurves.get(move.curveId)
@@ -160,7 +153,8 @@ class BattleStage {
 
     // t: 0..1 progress through the forward lunge. Moves _strikeBattler along the move's curve from
     // home toward _strikeApproach; once t first crosses IMPACT_T, plays the target's "hurt" clip
-    // and spawns its impact particle burst (both fire exactly once per strike).
+    // and fires its (persistent, reused-every-hit) particle emitter (both fire exactly once per
+    // strike).
     updateStrike(t) {
         _strikeBattler.slide(_strikeBattler.home, _strikeApproach, _strikeCurve.evaluate(t))
 
@@ -168,8 +162,8 @@ class BattleStage {
             _strikeImpactDone = true
             if (_strikeTargetBattler != null) {
                 _strikeTargetBattler.play("hurt")
+                _strikeTargetBattler.playImpact(_strikeParticleId)
             }
-            spawnImpact_(_strikeTargetBattler, _strikeParticleId)
         }
     }
 
@@ -198,14 +192,6 @@ class BattleStage {
             GameObject.destroy(_camEntity)
         }
         GameObject.setActive(_playerEntity)
-
-        // Fight's over - don't wait out any remaining impact-effect timers, just clear them now.
-        for (effect in _activeEffects) {
-            if (GameObject.isValid(effect[0])) {
-                GameObject.destroy(effect[0])
-            }
-        }
-        _activeEffects = []
 
         // The player's own camera hasn't moved (the player is frozen for the whole fight), but the
         // shared camera reference is left wherever the battle camera last drew - reactivating it
@@ -246,33 +232,6 @@ class BattleStage {
                 GameObject.setInactive(levelEntity)
             }
         }
-    }
-
-    // Spawns a one-shot particle burst at targetBattler's position (or the arena focus if there's
-    // no target battler) and tracks it in _activeEffects until its particles have finished.
-    spawnImpact_(targetBattler, particleId) {
-        var pos = targetBattler != null ? WorldTransform.getPosition(targetBattler.entity) : _focus
-        var entity = GameObject.create("Impact_%(particleId)", _worldParent)
-        WorldTransform.setPosition(entity, pos)
-        var lifetime = MoveParticles.spawn(entity, particleId)
-        _activeEffects.add([entity, Time.unscaledTime + lifetime])
-    }
-
-    // Destroys and drops any _activeEffects entries whose lifetime has elapsed. Called at the start
-    // of every beginStrike, so cleanup is bounded to at most one fight's worth of delay - teardown()
-    // force-clears whatever's left regardless of its timer.
-    pruneEffects_() {
-        var stillAlive = []
-        for (effect in _activeEffects) {
-            if (Time.unscaledTime >= effect[1]) {
-                if (GameObject.isValid(effect[0])) {
-                    GameObject.destroy(effect[0])
-                }
-            } else {
-                stillAlive.add(effect)
-            }
-        }
-        _activeEffects = stillAlive
     }
 
     battlerFor_(combatant) {

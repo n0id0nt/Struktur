@@ -1,5 +1,5 @@
-// Combat/BattlePlayer.wren
-// The battle-side definition of the player - the same shape as one Combat/BattleCritter.wren entry
+// Combat/Config/BattlePlayer.wren
+// The battle-side definition of the player - the same shape as one Combat/Config/BattleCritter.wren entry
 // (name, fighting style -> move set, HP / stamina pool, sprite sheet + pivot + grid, animation
 // frame ranges), so Combat/Battler.wren can build a live battler from either without caring which.
 //
@@ -9,7 +9,7 @@
 // (required), "attack", "hurt".
 import "math" for Vec2
 import "Combat/Combatant" for Combatant
-import "Combat/Archetype" for Archetype
+import "Combat/Config/Archetype" for Archetype
 
 class BattlePlayer {
     static name { "You" }

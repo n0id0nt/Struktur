@@ -1,5 +1,5 @@
-// Combat/Moves.wren
-// The move catalog - Phase 5 slices it into per-archetype kits (see Combat/Archetype.wren). Each
+// Combat/Config/Moves.wren
+// The move catalog - Phase 5 slices it into per-archetype kits (see Combat/Config/Archetype.wren). Each
 // getter mints a fresh Move (immutable value objects), so a caller builds its list once and reuses
 // those instances.
 //

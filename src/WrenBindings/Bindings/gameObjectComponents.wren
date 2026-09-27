@@ -104,6 +104,8 @@ foreign class ParticleEmitter {
     foreign looping=(arg0)
     // Get the current live particle count
     foreign aliveCount
+    // (Re-)arm the one-shot burst, clearing any still-alive particles first
+    foreign emit()
     // Creates a particle emitter component with the given texture.
     foreign static create(arg0,arg1)
     // Gets a particle emitter component.

@@ -1,13 +1,13 @@
-// Combat/Archetype.wren
+// Combat/Config/Archetype.wren
 // Phase 5 of the Interrupt Combat Roadmap - the three fighting styles the Rock-Paper-Scissors
 // triangle is built on. An archetype is just a display name + HP/stamina profile + move kit
-// (Combat/Moves.wren); a Combatant is built from one. The player picks one at the start of a fight;
+// (Combat/Config/Moves.wren); a Combatant is built from one. The player picks one at the start of a fight;
 // a critter carries one (see GameObjects/Critter.combatArchetype).
 //
 //   Speed / Rogue    - 2u moves, low damage, high stamina efficiency. Interrupt specialist.
 //   Power / Warrior  - 4-8u moves, devastating damage + huge stagger, stamina-hungry, big HP pool.
 //   Control / Mage   - 3-4u moves, a heal and a heavy timeline debuff. Support / disruptor.
-import "Combat/Moves" for Moves
+import "Combat/Config/Moves" for Moves
 
 class Archetype {
     construct new(name, maxHp, maxStamina, kit) {

@@ -1,14 +1,16 @@
 // Combat/Battler.wren
 // One combatant as it exists in the arena: a spawned entity wearing a def's sprite + animations
-// (Combat/BattleCritter.wren for enemies, Combat/BattlePlayer.wren for the player), plus the
-// Combatant it fights as. Built and owned by Combat/BattleStage.wren, torn down with the fight.
+// (Combat/Config/BattleCritter.wren for enemies, Combat/Config/BattlePlayer.wren for the player),
+// plus the Combatant it fights as. Built and owned by Combat/BattleStage.wren, torn down with the
+// fight.
 import "gameObject" for GameObject
-import "gameObjectComponents" for WorldTransform, Sprite, SpriteAnimation, RenderLayer
+import "gameObjectComponents" for WorldTransform, Sprite, SpriteAnimation, ParticleEmitter, RenderLayer
 import "math" for Vec3
 import "resourceManager" for Texture
 import "animation" for SpriteAnimationDefinition
 import "renderer" for FlipBit
 import "Colors" for WHITE
+import "Combat/Config/MoveParticles" for MoveParticles
 
 class Battler {
     // def: a BattleCritter instance or the BattlePlayer class - same getters either way
@@ -30,6 +32,16 @@ class Battler {
             anim.addAnimation(key, SpriteAnimationDefinition.new(a[0], a[1], a[2], true))
         }
         play("idle")
+
+        // One persistent particle emitter, reused for every move's impact effect that lands on this
+        // battler (playImpact) instead of creating/destroying an emitter per hit - see
+        // Combat/Config/MoveParticles.wren. The initial texture is just a placeholder; playImpact
+        // swaps it (and everything else) before ever emitting, and ParticleEmitter.create requires
+        // some valid texture up front.
+        var particleTex = Texture.load("Sprites/magic.png")
+        _emitter = ParticleEmitter.create(_entity, particleTex)
+        particleTex.unload()
+        _emitter.looping = false
     }
 
     entity { _entity }
@@ -57,6 +69,12 @@ class Battler {
     // Play a named animation ("idle" / "attack" / "hurt"); unknown keys fall back to idle.
     play(key) {
         SpriteAnimation.setCurrentAnimation(_entity, _def.anims.containsKey(key) ? key : "idle")
+    }
+
+    // Reconfigures this battler's persistent particle emitter for particleId (Move.particleId) and
+    // fires it - called on the target battler at the moment a strike lands (BattleStage.updateStrike).
+    playImpact(particleId) {
+        MoveParticles.trigger(_emitter, particleId)
     }
 
     teardown() {

@@ -1267,6 +1267,21 @@ void wren_ParticleEmitterGetLooping(WrenVM* vm)
 	wrenSetSlotBool(vm, 0, emitter->component->looping);
 }
 
+// ParticleEmitter.emit() - (re-)arms the one-shot burst so the next System::ParticleSystem::Update
+// spawns burstCount particles fresh, clearing any particles still alive from a previous burst first
+// so a rapid re-trigger doesn't blend two bursts together. Lets one persistent emitter (e.g. one per
+// battler in combat) be reused for repeated effects instead of creating/destroying an emitter per hit.
+void wren_ParticleEmitterEmit(WrenVM* vm)
+{
+	WrenParticleEmitter* emitter = (WrenParticleEmitter*)wrenGetSlotForeign(vm, 0);
+	for (auto& particle : emitter->component->particles)
+	{
+		particle.alive = false;
+	}
+	emitter->component->spawnAccumulator = 0.0f;
+	emitter->component->hasBurst          = false;
+}
+
 // ParticleEmitter.aliveCount -> Num - current live particle count, mostly useful for a script deciding when a
 // finished (looping=false, burst spent, no particles left alive) one-shot effect's entity can be torn down.
 void wren_ParticleEmitterGetAliveCount(WrenVM* vm)
@@ -2439,6 +2454,8 @@ WREN_BINDING_MODULE(GameObjectComponent)
 	                  "Set whether the emitter continuously spawns particles at emissionRate");
 	WREN_CLASS_METHOD(registry, "gameObjectComponents", "ParticleEmitter", "aliveCount",
 	                  wren_ParticleEmitterGetAliveCount, "Get the current live particle count");
+	WREN_CLASS_METHOD(registry, "gameObjectComponents", "ParticleEmitter", "emit()", wren_ParticleEmitterEmit,
+	                  "(Re-)arm the one-shot burst, clearing any still-alive particles first");
 
 	WREN_CLASS_STATIC(registry, "gameObjectComponents", "ParticleEmitter", "create(_,_)", wren_ParticleEmitterCreate,
 	                  "Creates a particle emitter component with the given texture.");

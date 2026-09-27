@@ -26,7 +26,7 @@ import "gameObjectComponents" for Script, World, WorldTransform, Level
 import "random" for Random
 import "Colors" for WHITE, BLACK, BLANK, LIGHTGRAY
 
-import "Combat/BattleCritter" for BattleCritter
+import "Combat/Config/BattleCritter" for BattleCritter
 import "Combat/Timeline" for Timeline
 import "Combat/Disruption" for Disruption
 import "Combat/CombatantView" for CombatantView

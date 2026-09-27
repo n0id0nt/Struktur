@@ -1,7 +1,7 @@
-// Combat/BattleCritter.wren
-// The battle-side definition of one enemy type - the enemy counterpart to Combat/BattlePlayer.wren.
+// Combat/Config/BattleCritter.wren
+// The battle-side definition of one enemy type - the enemy counterpart to Combat/Config/BattlePlayer.wren.
 // Everything a critter is in a fight lives here in one place: its fighting style (which supplies
-// the move set - see Combat/Archetype.wren), its HP / stamina pool, and how it looks and animates
+// the move set - see Combat/Config/Archetype.wren), its HP / stamina pool, and how it looks and animates
 // in the arena. Combat/Battler.wren turns one of these into a live entity + Combatant; CombatState
 // looks a def up by species name when an encounter starts.
 //
@@ -11,7 +11,7 @@
 // "attack", "hurt".
 import "math" for Vec2
 import "Combat/Combatant" for Combatant
-import "Combat/Archetype" for Archetype
+import "Combat/Config/Archetype" for Archetype
 
 class BattleCritter {
     // anims: { key: [startFrame, endFrameExclusive, seconds] }. facing: 1 = art faces right, -1 = left.

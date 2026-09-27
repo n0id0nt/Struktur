@@ -1,10 +1,10 @@
-// Combat/MoveCurves.wren
+// Combat/Config/MoveCurves.wren
 // Per-move strike-approach shapes (Combat/BattleStage.wren's updateStrike). Each curve is a
 // "progress" curve fed into Battler.slide(home, approach, curve.evaluate(t)) - values above 1
 // overshoot past the approach point (a lunge), values below 0 pull back before committing (a
 // wind-up); slide's plain lerp extrapolates fine either way since it's just from + (to-from)*t.
 // get(id) mints a fresh Curve every call, same "getters build a new instance" convention
-// Combat/Moves.wren already documents for Move itself - curves are cheap to build and this is a
+// Combat/Config/Moves.wren already documents for Move itself - curves are cheap to build and this is a
 // turn-based game, so there's no need to cache/memoize them.
 import "math" for Curve
 

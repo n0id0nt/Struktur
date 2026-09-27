@@ -10,7 +10,7 @@ import "input" for Input
 import "reflect" for Reflect
 import "Colors" for WHITE
 
-import "Combat/BattlePlayer" for BattlePlayer
+import "Combat/Config/BattlePlayer" for BattlePlayer
 
 var INTERACTABLE_DISTANCE = 64.0
 
