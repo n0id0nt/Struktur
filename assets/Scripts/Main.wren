@@ -49,8 +49,8 @@ class Game {
 
     // Called after the all the systems are initialised
     start() {
-        // Safety net: CombatState freezes the field with Time.setTimeScale(0), and a debug restart
-        // (editor Stop/Play) mid-fight would otherwise carry a 0 timescale into the next run.
+        // Safety net: ensures a fresh run always starts at normal time scale, regardless of whatever
+        // a debug restart (editor Stop/Play) might have left it at.
         Time.setTimeScale(1)
 
         FileSystem.seedFromDefaults("Settings/InputBindings/InputConfig.json", "InputConfig.json")

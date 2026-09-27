@@ -1,14 +1,13 @@
 // states/ExperimentState.wren
-// Main gameplay state - loads level, creates entities, manages gameplay sub-states
-// This state owns the game world and delegates to sub-states for different gameplay modes
-
+// Main gameplay state - loads level, creates entities, manages gameplay sub-states. This is the
+// live gameplay path (Main.wren starts this, not GameWorldState). Owns the world/level streaming,
+// critter spawning, combat-trigger detection, the nested sub-StateManager (PlayState/
+// InventoryState/InteractState/GameOverState/CombatState), and the UI/Gameplay/FightPromptUI view.
 import "gameObject" for GameObject
-import "gameObjectComponents" for LocalTransform, WorldTransform, World, Script, Sprite, Camera, ParticleEmitter
+import "gameObjectComponents" for WorldTransform, World, Script, ParticleEmitter
 import "math" for Vec2, Vec3, Vec4
-import "resourceManager" for Font, Texture, Music
-import "ui" for UIManager, UILabel
+import "resourceManager" for Texture, Music
 import "input" for Input
-import "flags" for FlagManager
 import "app" for Time, Application
 
 import "States/BaseState" for BaseState
@@ -18,10 +17,9 @@ import "States/InventoryState" for InventoryState
 import "States/InteractState" for InteractState
 import "States/GameOverState" for GameOverState
 import "States/CombatState" for CombatState
+import "UI/Gameplay/FightPromptUI" for FightPromptUI
 
 import "GameObjects/Critter" for Critter
-
-import "Colors" for WHITE
 
 var WORLD_FILE_PATH = "Levels/SevenGods.ldtk"
 // Authored arena level (see Combat/BattleStage.wren) - every fight loads this level and stages the
@@ -41,7 +39,8 @@ class ExperimentState is BaseState {
     construct new() {
         super()
         name = "ExperimentState"
-        
+
+        _view = null
         _worldEntity = null //TODO Create an entity constant for invalid entity or null entity
         _particleEntity = null
         _playerEntity = null
@@ -56,7 +55,6 @@ class ExperimentState is BaseState {
         _stateManager.insertState("GameOverState", GameOverState)
         _stateManager.insertState("CombatState", CombatState)
         _gameMusic = null
-        _interactLabel = null
         // Grace window after a fight ends (see update()) - long enough to run clear of an aggressive
         // critter before its proximity check can re-trigger combat. Covers every outcome: after a
         // loss or a flee the enemy is still alive and still next to you, and without this you'd be
@@ -66,7 +64,7 @@ class ExperimentState is BaseState {
 
     enter(stateManager, params) {
         super.enter(stateManager, params)
-        
+
         System.print("Loading game world...")
 
         _gameMusic = Music.load("Sounds/gameMusic.wav")
@@ -88,16 +86,8 @@ class ExperimentState is BaseState {
         updateLevelStreaming_()
 
         // "Fight" prompt for non-aggressive critters - same UILabel-above-target pattern
-        // GameWorldState uses for its own "Interact" prompt.
-        var font = Font.load("Fonts/medieval_sharp/MedievalSharp-Bold.ttf", 60)
-        _interactLabel = UILabel.new(Vec2.new(0, 0), Vec2.new(0, 0), "Fight!", 16.0)
-        _interactLabel.setVisible(false)
-        _interactLabel.setFont(font)
-        _interactLabel.setTextColor(WHITE)
-        _interactLabel.setAnchorPoint(Vec2.new(0.5, 0.5))
-        _interactLabel.setBoundingBoxToText()
-        UIManager.addUIElement(_interactLabel)
-        font.unload()
+        // UI/Gameplay/InteractPromptUI.wren (GameWorldState's "Interact" prompt) uses.
+        _view = FightPromptUI.new("Fight!")
 
         spawnParticleDemo(worldEntity)
 
@@ -156,7 +146,7 @@ class ExperimentState is BaseState {
         // One-shot puff on spawn, on top of the continuous stream, so the fountain "pops" into life.
         emitter.burstCount   = 40
     }
-    
+
     // Mirrors update(stateManager)'s own substate delegation below - GameWorldState is the one real
     // nested-subStateManager case today, so this doubles as the proof that fixed-update delegation works through
     // a substate, not just at the leaf level.
@@ -263,7 +253,7 @@ class ExperimentState is BaseState {
                 }
                 var critterPosition = critter.position
                 if (critterPosition && Vec3.distance(playerPosition, critterPosition) <= forceRange) {
-                    _interactLabel.setVisible(false)
+                    _view.hide()
                     enterCombat(critter.entity, playerEntity)
                     return
                 }
@@ -271,17 +261,14 @@ class ExperimentState is BaseState {
 
             var interactEntity = playerScript.getInteractEntity()
             if (interactEntity && Script.getInstance(interactEntity) is Critter) {
-                _interactLabel.setVisible(true)
-                var interactWorldPosition = WorldTransform.getPosition(interactEntity)
-                var screenInteractPosition = Camera.worldPosToScreenPos(interactWorldPosition) + Vec2.new(0, -32)
-                _interactLabel.setPosition(screenInteractPosition, Vec2.new(0, 0))
+                _view.showAbove(WorldTransform.getPosition(interactEntity))
                 if (Input.isInputJustReleased("Interact")) {
-                    _interactLabel.setVisible(false)
+                    _view.hide()
                     enterCombat(interactEntity, playerEntity)
                     return
                 }
             } else {
-                _interactLabel.setVisible(false)
+                _view.hide()
             }
         }
     }
@@ -347,37 +334,39 @@ class ExperimentState is BaseState {
             _stateManager.render()
         }
     }
-    
+
     exit() {
         super.exit()
-        
+
         System.print("Unloading game world...")
-        
+
         // Exit sub-state manager
         if (_stateManager && _stateManager.currentState) {
             _stateManager.currentState.exit()
         }
-        
+
         // Child of _worldEntity, so destroying the world tears the emitter down with it.
         _particleEntity = null
         GameObject.destroy(_worldEntity)
 
-        UIManager.removeUIElement(_interactLabel)
-        _interactLabel = null
+        if (_view != null) {
+            _view.teardown()
+            _view = null
+        }
         _gameMusic.stop()
         _gameMusic.unload()
         _gameMusic = null
 
         System.print("Game world unloaded")
     }
-    
+
     onEvent(type, data) {
         super.onEvent(type, data)
         if (_stateManager && _stateManager.currentState) {
             _stateManager.currentState.onEvent(type, data)
         }
     }
-    
+
     // Getters
     worldEntity { _worldEntity }
     subStateManager { _stateManager }

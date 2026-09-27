@@ -1,5 +1,5 @@
-// Combat/ChargeBar.wren
-// The design doc's ASCII "Enemy Move Timeline" made real. Same two-rect build as HealthBar, but it
+// UI/Combat/ChargeBarUI.wren
+// The design doc's ASCII "Enemy Move Timeline" made real. Same two-rect build as HealthBarUI, but it
 // fills toward the right as a combatant charges its committed move, brightens to a "ready" colour
 // the moment the bar is full, and flashes an alarm colour while the combatant is staggered by an
 // interrupt (Phase 3).
@@ -11,7 +11,7 @@ var FILL_COLOR     = Vec4.new(85, 165, 205, 235)
 var READY_COLOR    = Vec4.new(150, 235, 255, 255)
 var STAGGER_COLOR  = Vec4.new(230, 120, 60, 255)
 
-class ChargeBar {
+class ChargeBarUI {
     construct new(parent, x, y, width, height) {
         _width = width
         _height = height

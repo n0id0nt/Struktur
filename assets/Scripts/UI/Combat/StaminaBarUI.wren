@@ -1,17 +1,15 @@
-// Combat/HealthBar.wren
-// The generic filled-bar widget Phase 0 of the roadmap calls for - a dark track with a coloured
-// fill on top, both plain UIColor rects. Parented into a caller-supplied UIElement and positioned in
-// absolute pixels by the caller. The fill is left-anchored so it drains rightward, and shifts
-// green -> amber -> red as it empties.
+// UI/Combat/StaminaBarUI.wren
+// Phase 4's resource readout. Same two-rect build as HealthBarUI/ChargeBarUI; a gold fill that drops
+// to an alarm red below the exhaustion threshold (20%), where every move costs an extra time unit.
 import "ui" for UIColor
 import "math" for Vec2, Vec4
 
-var TRACK_COLOR   = Vec4.new(18, 14, 12, 220)
-var FILL_HEALTHY  = Vec4.new(90, 190, 90, 255)
-var FILL_HURT     = Vec4.new(220, 185, 60, 255)
-var FILL_CRITICAL = Vec4.new(210, 70, 55, 255)
+var TRACK_COLOR     = Vec4.new(24, 20, 10, 220)
+var FILL_COLOR      = Vec4.new(215, 175, 70, 235)
+var EXHAUSTED_COLOR = Vec4.new(210, 80, 55, 245)
+var EXHAUSTED_BELOW = 0.2
 
-class HealthBar {
+class StaminaBarUI {
     construct new(parent, x, y, width, height) {
         _width = width
         _height = height
@@ -24,7 +22,7 @@ class HealthBar {
 
         _fill = UIColor.new(Vec2.new(x, y), Vec2.new(0, 0), Vec2.new(width, height), Vec2.new(0, 0))
         _fill.setAnchorPoint(Vec2.new(0, 0))
-        _fill.setColor(FILL_HEALTHY)
+        _fill.setColor(FILL_COLOR)
         _fill.setZIndex(1)
         parent.addChild(_fill)
     }
@@ -39,12 +37,6 @@ class HealthBar {
             f = 1
         }
         _fill.setSize(Vec2.new(_width * f, _height), Vec2.new(0, 0))
-        if (f > 0.5) {
-            _fill.setColor(FILL_HEALTHY)
-        } else if (f > 0.25) {
-            _fill.setColor(FILL_HURT)
-        } else {
-            _fill.setColor(FILL_CRITICAL)
-        }
+        _fill.setColor(f < EXHAUSTED_BELOW ? EXHAUSTED_COLOR : FILL_COLOR)
     }
 }

@@ -1,12 +1,15 @@
 // states/GameWorldState.wren
-// Main gameplay state - loads level, creates entities, manages gameplay sub-states
-// This state owns the game world and delegates to sub-states for different gameplay modes
-
+// Main gameplay state - loads level, creates entities, manages gameplay sub-states. This state owns
+// the game world and delegates to sub-states for different gameplay modes. Owns the world/room
+// setup, the nested sub-StateManager (PlayState/InventoryState/InteractState/GameOverState), the
+// win-condition check, and the UI/Gameplay/InteractPromptUI view.
+//
+// Note: this state is not on the live gameplay path today - Main.wren starts "Experiment"
+// (States/ExperimentState.wren) instead - but is kept consistent with the rest of the reorg.
 import "gameObject" for GameObject
-import "gameObjectComponents" for LocalTransform, WorldTransform, World, Level, Script, Sprite, Camera
-import "math" for Vec2, Vec3, Vec4
-import "resourceManager" for Font, Texture, Music
-import "ui" for UIManager, UILabel
+import "gameObjectComponents" for WorldTransform, World, Script
+import "math" for Vec3
+import "resourceManager" for Music
 import "input" for Input
 import "flags" for FlagManager
 
@@ -16,8 +19,7 @@ import "States/PlayState" for PlayState
 import "States/InventoryState" for InventoryState
 import "States/InteractState" for InteractState
 import "States/GameOverState" for GameOverState
-
-import "Colors" for WHITE
+import "UI/Gameplay/InteractPromptUI" for InteractPromptUI
 
 var WORLD_FILE_PATH = "Levels/MemoryPalace.ldtk"
 
@@ -25,9 +27,8 @@ class GameWorldState is BaseState {
     construct new() {
         super()
         name = "GameWorldState"
-        
-        _interactLabel = null
-        _loopCountLabel = null
+
+        _view = null
         _worldEntity = null //TODO Create an entity constant for invalid entity or null entity
         _stateManager = StateManager.new()
 
@@ -40,7 +41,7 @@ class GameWorldState is BaseState {
 
     createRoom(worldEntity, roomName, regularRoomName, transformedRoomName, transformItem) {
         var roomEntity = GameObject.create(roomName, worldEntity)
-        
+
         var regularRoomIndex = World.getLevelIndex(worldEntity, regularRoomName)
         var transformedRoomIndex = World.getLevelIndex(worldEntity, transformedRoomName)
         var regularRoom = World.loadLevelEntities(worldEntity, regularRoomIndex)
@@ -50,14 +51,15 @@ class GameWorldState is BaseState {
         GameObject.setParent(regularRoom, roomEntity)
         GameObject.setParent(transformedRoom, roomEntity)
 
-        Script.createArg(roomEntity, "Room", {"Name": roomName, "TransformItem": transformItem, "RegularRoom": regularRoom, "TransformedRoom": transformedRoom})
-        
+        Script.createArg(roomEntity, "Room", {"Name": roomName, "TransformItem": transformItem,
+            "RegularRoom": regularRoom, "TransformedRoom": transformedRoom})
+
         return roomEntity
     }
-    
+
     enter(stateManager, params) {
         super.enter(stateManager, params)
-        
+
         System.print("Loading game world...")
 
         _gameMusic = Music.load("Sounds/gameMusic.wav")
@@ -65,8 +67,6 @@ class GameWorldState is BaseState {
             _gameMusic.setLooping(true)
             _gameMusic.play()
         }
-
-        var font = Font.load("Fonts/medieval_sharp/MedievalSharp-Bold.ttf", 60)
 
         var worldEntity = World.createWorldEntity(WORLD_FILE_PATH)
         _worldEntity = worldEntity
@@ -90,23 +90,15 @@ class GameWorldState is BaseState {
         var playerEntity = GameObject.create("Player", worldEntity)
         Script.createArg(playerEntity, "Player", {"Name": "Player"})
         WorldTransform.setPosition(playerEntity, Vec3.new(600.0, 50.0, 0.0))
-        
-        // Create the UI for the level.
-        _interactLabel = UILabel.new(Vec2.new(0, 0), Vec2.new(0, 0), "Interact", 16.0)
-        _interactLabel.setVisible(false)
-        _interactLabel.setFont(font)
-        _interactLabel.setTextColor(WHITE) // Change this when the background is created.
-        _interactLabel.setAnchorPoint(Vec2.new(0.5, 0.5))
-        _interactLabel.setBoundingBoxToText()
-        UIManager.addUIElement(_interactLabel)
-        
-        font.unload()
+
+        _view = InteractPromptUI.new("Interact")
+
         //_stateManager.changeState("PlayState")
         _stateManager.changeState("InventoryState")
 
         System.print("Game world loaded")
     }
-    
+
     // Mirrors update(stateManager)'s own substate delegation below - GameWorldState is the one real
     // nested-subStateManager case today, so this doubles as the proof that fixed-update delegation works through
     // a substate, not just at the leaf level.
@@ -132,7 +124,7 @@ class GameWorldState is BaseState {
         // TODO this should be an event.
         var playerEntities = GameObject.getAllWithIdentifier("Player")
         if (inventoryInteract) {
-            _interactLabel.setVisible(false)
+            _view.hide()
             //TODO also pause the game time to pause the players animation
             // just forcing player to idle for now
             for (entity in playerEntities) {
@@ -154,14 +146,9 @@ class GameWorldState is BaseState {
             var interactEntity = script.getInteractEntity()
 
             if (interactEntity) {
-                //System.print("Interact Entity")
-                _interactLabel.setVisible(true)
-                
-                var interactWorldPosition = WorldTransform.getPosition(interactEntity)
-                var screenInteractPosition = Camera.worldPosToScreenPos(interactWorldPosition) + Vec2.new(0, -32)
-                _interactLabel.setPosition(screenInteractPosition, Vec2.new(0, 0))
+                _view.showAbove(WorldTransform.getPosition(interactEntity))
                 if (inputInteract) {
-                    _interactLabel.setVisible(false)
+                    _view.hide()
                     script.playerForceStop()
                     // Change state to interact state
                     _stateManager.changeState("InteractState", {"interactingEntity": interactEntity})
@@ -171,65 +158,66 @@ class GameWorldState is BaseState {
                     return
                 }
             } else {
-                _interactLabel.setVisible(false)
+                _view.hide()
             }
 
             // check player at bottom of screen
             var playerPosition = WorldTransform.getPosition(entity)
             if (playerPosition.y > 1755.0) {
-                if (FlagManager.getFlag("red_pedestal_active") && FlagManager.getFlag("green_pedestal_active") && FlagManager.getFlag("yellow_pedestal_active") && FlagManager.getFlag("blue_pedestal_active")) {
+                if (FlagManager.getFlag("red_pedestal_active") && FlagManager.getFlag("green_pedestal_active") &&
+                    FlagManager.getFlag("yellow_pedestal_active") && FlagManager.getFlag("blue_pedestal_active")) {
                     script.playerForceStop()
                     _stateManager.changeState("GameOverState")
                     if (_gameMusic) {
                         _gameMusic.stop()
                     }
                     return
-                } 
+                }
 
                 // reset the current state
                 stateManager.changeState("GameWorld")
                 return
             }
-
-            //Sprite.setRenderPriority(entity, playerPosition.y)
         }
     }
-    
+
     render() {
         // Delegate to gameplay sub-state
         if (_stateManager.currentState) {
             _stateManager.render()
         }
     }
-    
+
     exit() {
         super.exit()
-        
+
         System.print("Unloading game world...")
-        
+
         // Exit sub-state manager
         if (_stateManager && _stateManager.currentState) {
             _stateManager.currentState.exit()
         }
-        
+
         GameObject.destroy(_worldEntity)
-        
-        UIManager.removeUIElement(_interactLabel)
-        _interactLabel = null
+
+        if (_view != null) {
+            _view.teardown()
+            _view = null
+        }
         _gameMusic.stop()
         _gameMusic.unload()
         _gameMusic = null
 
         System.print("Game world unloaded")
     }
-    
+
     onEvent(type, data) {
         super.onEvent(type, data)
         if (_stateManager && _stateManager.currentState) {
             _stateManager.currentState.onEvent(type, data)
         }
     }
-    
+
     // Getters
     worldEntity { _worldEntity }
     subStateManager { _stateManager }
