@@ -5,6 +5,9 @@
 //
 // Move.new(name, timeCost, damage, baseDelay, staminaCost, staminaRestore, healAmount, curveId,
 //          particleId)
+// Move.new(..., particleId, parryPromptTime) - offensive moves only; seconds the target has to
+//          answer States/CombatState.wren's "parryPrompt" ("attempt a parry?") before it auto-answers
+//          "no". Placeholder numbers, tuned by feel like every other constant below.
 //
 // The triangle these kits are tuned to hold (roadmap "expect churn" - these numbers will move):
 //   Speed  > Power    - 2u moves interrupt-lock a Power wind-up, and stay cheap enough to sustain it
@@ -13,21 +16,31 @@
 //   Control > Speed    - Slow wrecks Speed's rhythm and Mend out-heals its chip damage
 import "Combat/Move" for Move
 
+// Time units an attacker sits doing nothing after a parry actually lands on their attack (Combat/
+// Config/Moves.stalled, committed by States/CombatState.wren instead of letting them pick again
+// immediately) - ~1.2s of real time via Combat/Timeline.SECONDS_PER_TIME_UNIT.
+var STALL_TIME_COST = 3
+
 class Moves {
     // --- Speed / Rogue: fast, cheap, glassy -------------------------------------
-    static slash  { Move.new("Slash", 2, 15, 2, 9, 0, 0, "quickSlash", "slashSpark") }
-    static flurry { Move.new("Flurry", 3, 24, 2, 15, 0, 0, "flurryJab", "flurrySparks") }
+    static slash  { Move.new("Slash", 2, 15, 2, 9, 0, 0, "quickSlash", "slashSpark", 1.0) }
+    static flurry { Move.new("Flurry", 3, 24, 2, 15, 0, 0, "flurryJab", "flurrySparks", 1.0) }
     static dodge  { Move.new("Dodge", 2, 0, 0, 0, 22, 0, null, null) }   // slip back, catch breath
 
     // --- Power / Warrior: slow, devastating, stamina-hungry -------------------
-    static cleave    { Move.new("Cleave", 4, 36, 3, 22, 0, 0, "heavySwing", "cleaveBurst") }
-    static crush     { Move.new("Crush", 6, 68, 5, 38, 0, 0, "heavySlam", "crushShock") }
-    static onslaught { Move.new("Onslaught", 8, 105, 6, 52, 0, 0, "onslaughtCharge", "onslaughtBlast") }
+    static cleave    { Move.new("Cleave", 4, 36, 3, 22, 0, 0, "heavySwing", "cleaveBurst", 1.6) }
+    static crush     { Move.new("Crush", 6, 68, 5, 38, 0, 0, "heavySlam", "crushShock", 2.0) }
+    static onslaught { Move.new("Onslaught", 8, 105, 6, 52, 0, 0, "onslaughtCharge", "onslaughtBlast", 2.4) }
 
     // --- Control / Mage: mid, tricky, disruptive -----------------------------
-    static bolt { Move.new("Bolt", 3, 28, 2, 16, 0, 0, "boltDart", "boltSpark") }
-    static slow { Move.new("Slow", 3, 8, 7, 22, 0, 0, "slowPulse", "slowMist") }      // tiny hit, huge stagger
+    static bolt { Move.new("Bolt", 3, 28, 2, 16, 0, 0, "boltDart", "boltSpark", 1.3) }
+    static slow { Move.new("Slow", 3, 8, 7, 22, 0, 0, "slowPulse", "slowMist", 1.3) }      // tiny hit, huge stagger
     static mend { Move.new("Mend", 4, 0, 0, 24, 0, 42, null, null) }     // heal self
+
+    // A do-nothing move: forced onto an attacker's timeline slot after their target chooses to parry
+    // (States/CombatState.wren's "parryPrompt" phase), so they sit out a beat instead of acting again
+    // immediately. Never offensive, never parryable itself.
+    static stalled { Move.new("Stalled", STALL_TIME_COST, 0, 0, 0, 0, 0, null, null) }
 
     static speedKit   { [Moves.slash, Moves.flurry, Moves.dodge] }
     static powerKit    { [Moves.cleave, Moves.crush, Moves.onslaught] }

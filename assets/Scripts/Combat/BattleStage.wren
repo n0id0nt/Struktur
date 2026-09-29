@@ -134,6 +134,27 @@ class BattleStage {
         }
     }
 
+    // Plays the attacker's wind-up while the target answers States/CombatState.wren's "parryPrompt"
+    // phase (attempt a parry or not?) before beginStrike/updateStrike's actual lunge fires. Reuses the
+    // same "attack" clip beginStrike plays; calling play() again once the lunge itself starts just
+    // restarts the loop, which reads fine as "wind up, then swing."
+    beginTelegraph(actorCombatant) {
+        var a = battlerFor_(actorCombatant)
+        if (a != null) {
+            a.play("attack")
+        }
+    }
+
+    // A lightweight "reeling" tell for Combat/Config/Moves.stalled - the do-nothing beat an attacker
+    // is forced through after a parry actually lands on them. Plays "hurt" on the attacker itself
+    // (there's no target to animate), not the usual actor/target split beginStrike/strike use.
+    showStalled(actorCombatant) {
+        var a = battlerFor_(actorCombatant)
+        if (a != null) {
+            a.play("hurt")
+        }
+    }
+
     // Kicks off the curve-driven lunge toward targetCombatant, using move's curveId/particleId
     // (Combat/Config/MoveCurves.wren / Combat/Config/MoveParticles.wren, the latter via the target
     // Battler's own persistent particle emitter - see Battler.playImpact). Called once when the

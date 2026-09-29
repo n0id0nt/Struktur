@@ -1,6 +1,7 @@
 // UI/Combat/CombatUI.wren
-// The combat screen's view: root panel, enemy/player CombatantUI stacks, battle-log message, and the
-// move menu (via UI/Shared/ButtonUI). Pure construction + refresh - it never reads a Combatant or
+// The combat screen's view: root panel, enemy/player CombatantUI stacks, battle-log message, the
+// move menu (via UI/Shared/ButtonUI), and a ParryPromptUI shown only during the "parryPrompt" phase.
+// Pure construction + refresh - it never reads a Combatant or
 // Timeline itself and never calls back into game logic (unlike the old inline buildUI(), whose
 // button click handlers called straight into CombatState's turn-flow methods). States/
 // CombatState.wren wires every button's setOnClick and feeds every refresh() call primitives it
@@ -11,6 +12,7 @@ import "app" for Application
 import "resourceManager" for Font
 import "Colors" for WHITE, BLANK
 import "UI/Combat/CombatantUI" for CombatantUI
+import "UI/Combat/ParryPromptUI" for ParryPromptUI
 import "UI/Shared/ButtonUI" for ButtonUI
 
 class CombatUI {
@@ -51,6 +53,10 @@ class CombatUI {
 
         // Player stack, bottom-left.
         _playerView = CombatantUI.new(_root, playerName, 56, gh - 150, 320, true, font)
+
+        // Parry decision prompt - hidden until CombatState's "parryPrompt" phase shows it, centred
+        // just below the battle-log message.
+        _parryPrompt = ParryPromptUI.new(_root, gw / 2, gh * 0.4 + 70, font)
 
         // Move menu, bottom-right - one button per move in the player's kit, plus Flee.
         _moveMenu = UIPanel.new(Vec2.new(-30, -30), Vec2.new(1, 1), Vec2.new(320, 300), Vec2.new(0, 0))
@@ -95,6 +101,9 @@ class CombatUI {
         v.refresh(alive, hpFraction, chargeFraction, staminaFraction, moveText, staggered)
         v.selected = selected
     }
+
+    showParryPrompt(onYes, onNo) { _parryPrompt.show(onYes, onNo) }
+    hideParryPrompt() { _parryPrompt.hide() }
 
     teardown() {
         if (_root != null) {

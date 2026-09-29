@@ -29,6 +29,7 @@ import "math" for Vec3
 import "random" for Random
 
 import "Combat/Config/BattleCritter" for BattleCritter
+import "Combat/Config/Moves" for Moves
 import "Combat/Timeline" for Timeline
 import "Combat/Disruption" for Disruption
 import "Combat/BattleStage" for BattleStage
@@ -42,6 +43,9 @@ var MESSAGE_TIME = 0.9
 var OVER_TIME    = 1.7
 var NAV_ARM_TIME = 0.14   // input lockout after a menu transition, so the prior keypress can't bleed
 var STAMINA_REGEN = 2     // stamina per time unit, every combatant, while charging
+// Chance an AI-controlled defender answers "yes" to its own parry prompt (see resolveMove) - a
+// plain coin flip for now, tunable like every other combat constant.
+var ENEMY_PARRY_CHANCE = 0.5
 
 var RNG = Random.new()
 
@@ -69,6 +73,13 @@ class CombatState is BaseState {
         _player = null
         _enemyDefs = []   // BattleCritter per enemy, parallel to _enemies - visuals + numbers
         _stage = null     // BattleStage while an authored arena is in use; null = fight in place
+        // "parryPrompt" phase state (a parryable move about to land on a human defender - see
+        // resolveMove/finishResolve_) - who's attacking whom with what, and when the prompt appeared
+        // (so it can time out - see update()).
+        _parryActor = null
+        _parryTarget = null
+        _parryMove = null
+        _parryPromptStart = 0
     }
 
     enter(stateManager, params) {
@@ -195,6 +206,12 @@ class CombatState is BaseState {
             var ready = _timeline.nextReady()
             if (ready != null) {
                 resolveMove(ready)
+            }
+        } else if (_phase == "parryPrompt") {
+            // The prompt itself (UI/Combat/ParryPromptUI.wren, wired in resolveMove) answers via
+            // onParryAnswer_ - this just enforces the reply deadline if the player never clicks.
+            if (Time.unscaledTime - _parryPromptStart >= _parryMove.parryPromptTime) {
+                onParryAnswer_(false)
             }
         } else if (_phase == "attacking") {
             var t = (Time.unscaledTime - (_timerEnd - STRIKE_TIME)) / STRIKE_TIME
@@ -326,6 +343,10 @@ class CombatState is BaseState {
         return a.timeCost <= b.timeCost ? a : b
     }
 
+    // Looks up the acting combatant's move/target and, for anything parryable landing on a living
+    // target, offers that target a parry decision before resolving: a UI prompt for the player
+    // (the "parryPrompt" phase - see onParryAnswer_), or an instant random yes/no for an AI-controlled
+    // enemy. Everything else (non-offensive moves, no live target) resolves immediately as before.
     resolveMove(actor) {
         var move = _timeline.committedMove(actor)
         var isPlayer = actor == _player
@@ -334,23 +355,79 @@ class CombatState is BaseState {
             target = isPlayer ? firstLivingEnemyCombatant() : _player
         }
 
-        var dealt = 0
-        var staggerUnits = 0
-        if (target != null) {
-            dealt = actor.use(move, target)
-            if (move.offensive && _timeline.isCharging(target)) {
-                staggerUnits = Disruption.delay(move, _timeline.fraction(target))
-                _timeline.interrupt(target, staggerUnits)
-                _staggered.add(target)
+        if (move.offensive && move.parryable && target != null && target.alive) {
+            if (target == _player) {
+                _parryActor = actor
+                _parryTarget = target
+                _parryMove = move
+                _parryPromptStart = Time.unscaledTime
+                if (_stage != null) {
+                    _stage.beginTelegraph(actor)
+                }
+                _view.showParryPrompt(Fn.new { onParryAnswer_(true) }, Fn.new { onParryAnswer_(false) })
+                _phase = "parryPrompt"
+                return
             }
-        } else {
-            actor.use(move, actor)   // heal / self-buff with nothing to hit
+            // AI-controlled defender - no UI, just an instant coin flip.
+            finishResolve_(actor, move, target, isPlayer, RNG.float() < ENEMY_PARRY_CHANCE)
+            return
         }
 
+        finishResolve_(actor, move, target, isPlayer, false)
+    }
+
+    // UI/Combat/ParryPromptUI.wren's Yes/No callbacks (wired in resolveMove) and update()'s
+    // "parryPrompt" timeout all funnel through here. Guarded against the phase already having moved
+    // on, in case a button click and the timeout land the same frame.
+    onParryAnswer_(chosen) {
+        if (_phase != "parryPrompt") {
+            return
+        }
+        _view.hideParryPrompt()
+        finishResolve_(_parryActor, _parryMove, _parryTarget, false, chosen)
+    }
+
+    // The actual resolution (damage, stagger/parry-cancel, log, strike animation) - either called
+    // straight from resolveMove (nothing to decide, or an AI's instant decision) or from
+    // onParryAnswer_ once the player's prompt is answered/times out. parryChosen: true cancels all of
+    // the move's damage (Combat/Combatant.wren) and costs the attacker a Combat/Config/Moves.stalled
+    // beat; the defender's own in-flight move is also cancelled regardless of side, since choosing to
+    // parry is a deliberate reaction to make.
+    finishResolve_(actor, move, target, isPlayer, parryChosen) {
+        var cancelFraction = parryChosen ? 1 : 0
+
         _timeline.clear(actor)
+
+        var dealt = 0
+        var staggerUnits = 0
+        var defenderMoveCancelled = false
+        if (target != null) {
+            dealt = actor.use(move, target, cancelFraction)
+            if (move.offensive && _timeline.isCharging(target)) {
+                if (parryChosen) {
+                    // Choosing to parry costs the defender their own in-flight move; they have to
+                    // pick again instead of the usual partial stagger.
+                    _timeline.clear(target)
+                    defenderMoveCancelled = true
+                } else {
+                    staggerUnits = Disruption.delay(move, _timeline.fraction(target))
+                    _timeline.interrupt(target, staggerUnits)
+                    _staggered.add(target)
+                }
+            }
+            if (parryChosen) {
+                // A landed parry also punishes the attacker: instead of letting them pick a real move
+                // again immediately, they sit out Combat/Config/Moves.stalled first.
+                _timeline.commit(actor, Moves.stalled)
+            }
+        } else {
+            actor.use(move, actor, 0)   // heal / self-buff with nothing to hit
+        }
+
         refreshViews()
 
-        var logText = resolveLine(isPlayer, actor, move, dealt, target, staggerUnits)
+        var logText = resolveLine(isPlayer, actor, move, dealt, target, staggerUnits, cancelFraction,
+                                  defenderMoveCancelled)
         var afterLog = Fn.new {
             if (_stage != null) {
                 _stage.rest()
@@ -359,7 +436,10 @@ class CombatState is BaseState {
                 win()
             } else if (!_player.alive) {
                 lose()
-            } else if (isPlayer) {
+            } else if (_timeline.needsMove(_player)) {
+                // The player has no move in flight - either their own move just resolved cleanly, or
+                // a parry (theirs or one landed on them) just cleared it - either way they choose
+                // again. Covers every case without needing to special-case who just acted.
                 beginChoosing()
             } else {
                 commitEnemyMoves()
@@ -370,10 +450,15 @@ class CombatState is BaseState {
             }
         }
 
-        // Offensive moves against a live target get the curve-driven lunge + impact particle
-        // (Combat/BattleStage.wren); everything else (heals/buffs/no-target) keeps the old instant
-        // animation-switch and goes straight to the message beat.
-        if (_stage != null && move.offensive && target != null) {
+        if (move.name == "Stalled") {
+            if (_stage != null) {
+                _stage.showStalled(actor)
+            }
+            showLog(logText, afterLog)
+        } else if (_stage != null && move.offensive && target != null) {
+            // Offensive moves against a live target get the curve-driven lunge + impact particle
+            // (Combat/BattleStage.wren); everything else (heals/buffs/no-target) keeps the old instant
+            // animation-switch and goes straight to the message beat.
             _stage.beginStrike(actor, target, move)
             _pendingLogText = logText
             _pendingLogNext = afterLog
@@ -387,8 +472,11 @@ class CombatState is BaseState {
         }
     }
 
-    resolveLine(isPlayer, actor, move, dealt, target, staggerUnits) {
+    resolveLine(isPlayer, actor, move, dealt, target, staggerUnits, cancelFraction, defenderMoveCancelled) {
         var who = isPlayer ? "You" : actor.name
+        if (move.name == "Stalled") {
+            return "%(who) %(isPlayer ? "recover" : "recovers") from being parried."
+        }
         if (move.healAmount > 0) {
             return "%(who) mends. (+%(move.healAmount) HP)"
         }
@@ -400,6 +488,13 @@ class CombatState is BaseState {
             whom = (target == _player) ? "you" : target.name
         }
         var line = "%(who) hit%(isPlayer ? "" : "s") %(whom) with %(move.name) - %(dealt) dmg."
+        if (cancelFraction > 0) {
+            line = "%(line)  Parried! No damage got through."
+        }
+        if (defenderMoveCancelled) {
+            var whoDefended = target == _player ? "Your" : "%(target.name)'s"
+            line = "%(line)  %(whoDefended) own move was cancelled!"
+        }
         if (staggerUnits > 0) {
             line = "%(line)  Staggered (-%(staggerUnits.floor))!"
         }
@@ -536,6 +631,9 @@ class CombatState is BaseState {
         _pendingLogText = null
         _pendingLogNext = null
         _playerTarget = null
+        _parryActor = null
+        _parryTarget = null
+        _parryMove = null
     }
 
     opponents { _enemies }

@@ -18,17 +18,21 @@ class Combatant {
     alive { _stats.alive }
 
     // Resolve a move: damage the target, pay/gain stamina, heal self. Returns damage dealt for the
-    // battle log. No timing bonus or mitigation here - the charge already happened on the Timeline,
-    // and the interrupt (Combat/Disruption.wren) is handled by CombatState.
-    use(move, target) {
+    // battle log. cancelFraction is 0 or 1 - 1 when the target chose to parry (States/
+    // CombatState.wren's "parryPrompt" phase), 0 otherwise (including anything not parryable at all).
+    // The charge itself already happened on the Timeline, and the interrupt (Combat/Disruption.wren)
+    // is handled by CombatState.
+    use(move, target, cancelFraction) {
+        var dealt = 0
         if (move.damage > 0) {
-            target.stats.takeDamage(move.damage)
+            dealt = (move.damage * (1 - cancelFraction)).round
+            target.stats.takeDamage(dealt)
         }
         _stats.spendStamina(move.staminaCost)
         _stats.gainStamina(move.staminaRestore)
         if (move.healAmount > 0) {
             _stats.heal(move.healAmount)
         }
-        return move.damage
+        return dealt
     }
 }
