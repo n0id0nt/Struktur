@@ -57,6 +57,7 @@ class CombatSession {
         _pendingMove = null
         _targetIndex = 0
         _navArmedAt = 0
+        _parryAttacker = null
         _resolver = CombatResolver.new(this)
     }
 
@@ -78,6 +79,11 @@ class CombatSession {
     // Index into enemies of the TargetingState cursor.
     targetIndex { _targetIndex }
     targetIndex=(value) { _targetIndex = value }
+
+    // The attacker whose move ParryPromptState is asking the player about (null otherwise) - its stack in the
+    // combat UI is flagged with the ">>" marker so the player can see whose attack they are about to parry.
+    parryAttacker { _parryAttacker }
+    parryAttacker=(value) { _parryAttacker = value }
 
     // --- transitions -------------------------------------------------------------
 
@@ -354,7 +360,8 @@ class CombatSession {
         var i = 0
         for (c in _enemies) {
             _view.refreshEnemy(i, c.alive, c.stats.fraction, _timeline.fraction(c), c.stats.staminaFraction,
-                               readout(c), _staggered.contains(c), isIn("TargetingState") && i == _targetIndex)
+                               readout(c), _staggered.contains(c),
+                               (isIn("TargetingState") && i == _targetIndex) || c == _parryAttacker)
             i = i + 1
         }
     }

@@ -56,7 +56,7 @@ class CombatUI {
 
         // Parry decision prompt - hidden until States/Combat/ParryPromptState.wren shows it, centred
         // just below the battle-log message.
-        _parryPrompt = ParryPromptUI.new(_root, gw / 2, gh * 0.4 + 70, font)
+        _parryPrompt = ParryPromptUI.new(_root, gw / 2, gh * 0.4 + 110, font)
 
         // Move menu, bottom-right - one button per move in the player's kit, plus Flee.
         _moveMenu = UIPanel.new(Vec2.new(-30, -30), Vec2.new(1, 1), Vec2.new(320, 300), Vec2.new(0, 0))
@@ -102,7 +102,8 @@ class CombatUI {
         v.selected = selected
     }
 
-    showParryPrompt(onYes, onNo) { _parryPrompt.show(onYes, onNo) }
+    showParryPrompt(attackerName, moveName, onYes, onNo) { _parryPrompt.show(attackerName, moveName, onYes, onNo) }
+    setParryRemaining(fraction) { _parryPrompt.setRemaining(fraction) }
     hideParryPrompt() { _parryPrompt.hide() }
 
     teardown() {
