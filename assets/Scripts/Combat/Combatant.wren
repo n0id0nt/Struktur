@@ -18,10 +18,10 @@ class Combatant {
     alive { _stats.alive }
 
     // Resolve a move: damage the target, pay/gain stamina, heal self. Returns damage dealt for the
-    // battle log. cancelFraction is 0 or 1 - 1 when the target chose to parry (States/
-    // CombatState.wren's "parryPrompt" phase), 0 otherwise (including anything not parryable at all).
+    // battle log. cancelFraction is 0 or 1 - 1 when the target chose to parry (see States/Combat/
+    // ParryPromptState.wren), 0 otherwise (including anything not parryable at all).
     // The charge itself already happened on the Timeline, and the interrupt (Combat/Disruption.wren)
-    // is handled by CombatState.
+    // is handled by States/Combat/CombatResolver.wren.
     use(move, target, cancelFraction) {
         var dealt = 0
         if (move.damage > 0) {

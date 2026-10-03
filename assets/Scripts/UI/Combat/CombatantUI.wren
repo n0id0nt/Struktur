@@ -1,7 +1,7 @@
 // UI/Combat/CombatantUI.wren
 // The per-combatant UI stack: name + HP bar + charge bar + (optional) stamina bar + a committed-move
 // readout, plus a target-select marker. Pure view - refresh() takes only primitives (alive/fraction
-// numbers/strings/bools) that States/CombatState.wren has already read off the Combatant/Timeline
+// numbers/strings/bools) that States/Combat/CombatSession.wren has already read off the Combatant/Timeline
 // model; no domain object crosses into this file.
 import "ui" for UILabel
 import "math" for Vec2, Vec4

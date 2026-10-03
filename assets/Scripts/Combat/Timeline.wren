@@ -22,7 +22,7 @@ class Timeline {
         _entries.add({ "combatant": combatant, "move": null, "progress": 0, "cost": 0 })
     }
 
-    // Every combatant on the timeline, in add order (player then enemies) - for CombatState's
+    // Every combatant on the timeline, in add order (player then enemies) - for States/Combat/CombatSession.wren
     // per-frame view refresh.
     combatants {
         var out = []

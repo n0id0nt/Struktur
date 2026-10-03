@@ -32,7 +32,7 @@ var CAMERA_ZOOM    = 5
 var CAMERA_DROP    = 90                   // camera eases down this far onto the formation during the intro
 var SLIDE_DISTANCE = 110                  // how far off its mark each battler starts the slide-in
 
-// Strike animation (updateStrike/updateReturn, driven by CombatState's "attacking"/"returning"
+// Strike animation (updateStrike/updateReturn, driven by States/Combat/AttackingState.wren / ReturningState.wren
 // phases). ATTACK_REACH: how far from home toward the target's home the attacker lunges, as a
 // fraction of that distance - close enough to read as a hit without fully overlapping the target's
 // sprite. IMPACT_T: the point in the forward swing (0..1) where the hit actually lands - the target
@@ -121,7 +121,7 @@ class BattleStage {
     settle() { intro(1) }
 
     // The acting battler swings, the struck one recoils; call rest() once the log clears. Used only
-    // for non-offensive / no-target moves (self-heals, buffs) - see CombatState.resolveMove.
+    // for non-offensive / no-target moves (self-heals, buffs) - see States/Combat/CombatResolver.wren finishResolve.
     // Offensive moves against a live target use beginStrike/updateStrike/updateReturn instead.
     strike(actorCombatant, targetCombatant) {
         var a = battlerFor_(actorCombatant)
@@ -134,7 +134,7 @@ class BattleStage {
         }
     }
 
-    // Plays the attacker's wind-up while the target answers States/CombatState.wren's "parryPrompt"
+    // Plays the attacker's wind-up while the target answers States/Combat/ParryPromptState.wren
     // phase (attempt a parry or not?) before beginStrike/updateStrike's actual lunge fires. Reuses the
     // same "attack" clip beginStrike plays; calling play() again once the lunge itself starts just
     // restarts the loop, which reads fine as "wind up, then swing."
@@ -158,7 +158,7 @@ class BattleStage {
     // Kicks off the curve-driven lunge toward targetCombatant, using move's curveId/particleId
     // (Combat/Config/MoveCurves.wren / Combat/Config/MoveParticles.wren, the latter via the target
     // Battler's own persistent particle emitter - see Battler.playImpact). Called once when the
-    // move resolves; CombatState then drives updateStrike(t) every frame while t ramps 0..1.
+    // move resolves; AttackingState then drives updateStrike(t) every frame while t ramps 0..1.
     beginStrike(actorCombatant, targetCombatant, move) {
         _strikeBattler = battlerFor_(actorCombatant)
         _strikeTargetBattler = battlerFor_(targetCombatant)
@@ -202,7 +202,7 @@ class BattleStage {
     }
 
     // Fold the arena away: destroy every battler + the camera, bring the real player and every
-    // other level back. The overworld critter entities were never moved (CombatState.win() destroys
+    // other level back. The overworld critter entities were never moved (CombatResolver.win() destroys
     // the beaten ones).
     teardown() {
         _player.teardown()

@@ -1,8 +1,8 @@
 // UI/Combat/ParryPromptUI.wren
-// The parry decision prompt shown while States/CombatState.wren is in its "parryPrompt" phase: an
+// The parry decision prompt shown while States/Combat/ParryPromptState.wren is active: an
 // offensive move is about to land and the target gets one discrete choice, attempt a parry or not.
 // Built from two UI/Shared/ButtonUI buttons, so the usual UIAccept/UIDir/UICancel navigation just
-// works - no dedicated input binding needed. Pure view: CombatState supplies the callbacks and
+// works - no dedicated input binding needed. Pure view: ParryPromptState supplies the callbacks and
 // decides when to show/hide it.
 import "ui" for UIManager, UILabel
 import "math" for Vec2

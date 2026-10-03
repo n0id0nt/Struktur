@@ -54,7 +54,7 @@ class MoveParticles {
                       Vec4.new(150, 110, 200, 220), Vec4.new(150, 110, 200, 0), true)
         } else {
             // Unrecognised / null id (non-offensive moves never call this - see
-            // CombatState.resolveMove) - no effect.
+            // States/Combat/CombatResolver.wren) - no effect.
             return
         }
         emitter.emit()

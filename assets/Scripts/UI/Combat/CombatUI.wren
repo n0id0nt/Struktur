@@ -54,7 +54,7 @@ class CombatUI {
         // Player stack, bottom-left.
         _playerView = CombatantUI.new(_root, playerName, 56, gh - 150, 320, true, font)
 
-        // Parry decision prompt - hidden until CombatState's "parryPrompt" phase shows it, centred
+        // Parry decision prompt - hidden until States/Combat/ParryPromptState.wren shows it, centred
         // just below the battle-log message.
         _parryPrompt = ParryPromptUI.new(_root, gw / 2, gh * 0.4 + 70, font)
 

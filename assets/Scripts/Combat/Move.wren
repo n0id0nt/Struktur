@@ -8,7 +8,7 @@ class Move {
     // staminaCost / staminaRestore / healAmount: paid / gained / healed when the move resolves.
     // curveId / particleId: keys into Combat/MoveCurves.wren and Combat/MoveParticles.wren for the
     // strike-animation shape and impact effect - null for non-offensive moves, which never pick an
-    // enemy target and so never animate a strike (see CombatState.resolveMove).
+    // enemy target and so never animate a strike (see States/Combat/CombatResolver.wren).
     // No parry prompt - non-offensive moves are never a parry target (see `offensive`/`parryable`).
     construct new(name, timeCost, damage, baseDelay, staminaCost, staminaRestore, healAmount, curveId,
                  particleId) {
@@ -16,7 +16,7 @@ class Move {
              particleId, null)
     }
 
-    // parryPromptTime: seconds the target has to answer States/CombatState.wren's "parryPrompt"
+    // parryPromptTime: seconds the target has to answer States/Combat/ParryPromptState.wren
     // ("attempt a parry?") before it auto-answers "no" - only offensive moves need this; everything
     // else uses the 9-arg constructor above.
     construct new(name, timeCost, damage, baseDelay, staminaCost, staminaRestore, healAmount, curveId,
@@ -53,7 +53,7 @@ class Move {
     // True for anything that picks an enemy target (vs. a self-buff / heal).
     offensive { _damage > 0 }
 
-    // True for a move that offers the target a parry prompt (States/CombatState.wren) - always false
+    // True for a move that offers the target a parry prompt (States/Combat/CombatResolver.wren) - always false
     // for non-offensive moves, which are built with the 9-arg constructor above.
     parryable { _parryPromptTime != null }
 

@@ -6,7 +6,7 @@
 // Move.new(name, timeCost, damage, baseDelay, staminaCost, staminaRestore, healAmount, curveId,
 //          particleId)
 // Move.new(..., particleId, parryPromptTime) - offensive moves only; seconds the target has to
-//          answer States/CombatState.wren's "parryPrompt" ("attempt a parry?") before it auto-answers
+//          answer States/Combat/ParryPromptState.wren ("attempt a parry?") before it auto-answers
 //          "no". Placeholder numbers, tuned by feel like every other constant below.
 //
 // The triangle these kits are tuned to hold (roadmap "expect churn" - these numbers will move):
@@ -17,7 +17,7 @@
 import "Combat/Move" for Move
 
 // Time units an attacker sits doing nothing after a parry actually lands on their attack (Combat/
-// Config/Moves.stalled, committed by States/CombatState.wren instead of letting them pick again
+// Config/Moves.stalled, committed by States/Combat/CombatResolver.wren instead of letting them pick again
 // immediately) - ~1.2s of real time via Combat/Timeline.SECONDS_PER_TIME_UNIT.
 var STALL_TIME_COST = 3
 
@@ -38,7 +38,7 @@ class Moves {
     static mend { Move.new("Mend", 4, 0, 0, 24, 0, 42, null, null) }     // heal self
 
     // A do-nothing move: forced onto an attacker's timeline slot after their target chooses to parry
-    // (States/CombatState.wren's "parryPrompt" phase), so they sit out a beat instead of acting again
+    // (States/Combat/ParryPromptState.wren), so they sit out a beat instead of acting again
     // immediately. Never offensive, never parryable itself.
     static stalled { Move.new("Stalled", STALL_TIME_COST, 0, 0, 0, 0, 0, null, null) }
 
