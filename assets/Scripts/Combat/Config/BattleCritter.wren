@@ -8,7 +8,7 @@
 // "images and animations" reuse the overworld critter sheets for now - the frame ranges below
 // mirror GameObjects/Chicken.wren / Chinlin.wren. Swap in battle-specific art (poses, hit/defeat
 // frames) here and nothing else changes. `anims` keys Battler understands: "idle" (required),
-// "attack", "hurt".
+// "attack", "hurt", "run" (see Combat/Config/ActionAnimations.wren for how they are used).
 import "math" for Vec2
 import "Combat/Combatant" for Combatant
 import "Combat/Config/Archetype" for Archetype
@@ -56,13 +56,13 @@ class BattleCritter {
     // anims: idle = wander_right, attack = peck_right, hurt = run_right (stand-in).
     static chicken {
         return BattleCritter.new("Chicken", "Speed", 45, 60, "Sprites/chicken.png", 7, 6, Vec2.new(8, 8), 1,
-                                 {"idle": [6, 9, 0.5], "attack": [32, 39, 1.0], "hurt": [15, 18, 0.35]})
+                                 {"idle": [6, 9, 0.5], "attack": [32, 39, 1.0], "hurt": [15, 18, 0.35], "run": [15, 18, 0.35]})
     }
 
     // Sprites/chinlin.png - 4x4 grid, 24px cells, pivot (12,16). See GameObjects/Chinlin.wren.
     // anims: idle = stand_right, attack / hurt = run_right (stand-in).
     static chinlin {
         return BattleCritter.new("Chinlin", "Power", 150, 55, "Sprites/chinlin.png", 4, 4, Vec2.new(12, 16), 1,
-                                 {"idle": [4, 6, 0.8], "attack": [12, 15, 0.45], "hurt": [12, 15, 0.45]})
+                                 {"idle": [4, 6, 0.8], "attack": [12, 15, 0.45], "hurt": [12, 15, 0.45], "run": [12, 15, 0.45]})
     }
 }

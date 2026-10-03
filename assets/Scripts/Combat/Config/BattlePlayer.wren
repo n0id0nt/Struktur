@@ -6,7 +6,7 @@
 // The player's *persistent* Combatant still lives on the Player script (HP carries between fights -
 // see GameObjects/Player.combatant); this is where its numbers and its arena look are declared.
 // Reused overworld sprite for now: Sprites/player.png. `anims` keys Battler understands: "idle"
-// (required), "attack", "hurt".
+// (required), "attack", "hurt", "run" (see Combat/Config/ActionAnimations.wren for how they are used).
 import "math" for Vec2
 import "Combat/Combatant" for Combatant
 import "Combat/Config/Archetype" for Archetype
@@ -25,7 +25,7 @@ class BattlePlayer {
     static pivot { Vec2.new(19, 17) }
     static facing { 1 }
     // idle = right idle strip, attack = right attack strip, hurt = left idle (stand-in).
-    static anims { ({"idle": [3, 4, 1.0], "attack": [58, 65, 0.7], "hurt": [2, 3, 1.0]}) }
+    static anims { ({"idle": [3, 4, 1.0], "attack": [58, 65, 0.7], "hurt": [2, 3, 1.0], "run": [26, 34, 0.7]}) }
 
     // A fresh Combatant - GameObjects/Player.combatant calls this once to mint the persistent one.
     static makeCombatant(entity) {

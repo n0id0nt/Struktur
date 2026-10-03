@@ -52,6 +52,18 @@ class MoveParticles {
                       8, 0.5, 0.7, 10,
                       Vec2.new(-30, -30), Vec2.new(30, 30), 0.5, 0.2,
                       Vec4.new(150, 110, 200, 220), Vec4.new(150, 110, 200, 0), true)
+        } else if (id == "parrySpark") {
+            // Bright burst where a parry meets the incoming blow (Combat/BattleStage.playImpact).
+            configure_(emitter, "Sprites/sword_slash.png", SLASH_SHEET_COLUMNS, SLASH_SHEET_ROWS,
+                      16, 0.2, 0.35, 5,
+                      Vec2.new(-200, -200), Vec2.new(200, 200), 0.4, 0.05,
+                      Vec4.new(255, 255, 255, 255), Vec4.new(120, 200, 255, 0), true)
+        } else if (id == "healGlow") {
+            // Soft green motes drifting up off whoever just mended.
+            configure_(emitter, "Sprites/magic.png", 1, 1,
+                      12, 0.6, 0.9, 12,
+                      Vec2.new(-25, -90), Vec2.new(25, -40), 0.45, 0.1,
+                      Vec4.new(120, 255, 140, 255), Vec4.new(120, 255, 140, 0), true)
         } else {
             // Unrecognised / null id (non-offensive moves never call this - see
             // States/Combat/CombatResolver.wren) - no effect.

@@ -9,12 +9,16 @@
 // setOtherLevelsActive_ below - so its own tiles read as the battle's backdrop with nothing
 // bleeding through from the overworld. Falls back to a fixed patch of world (DEFAULT_ARENA) or an
 // authored "BattleAnchor" marker entity if Battle_Arena can't be found.
+//
+// Animation is data driven (Combat/Config/ActionAnimations.wren) and played by each Battler; this
+// class is the thin layer the fight's phases talk to: it finds the right battler for a Combatant and
+// forwards beginCharge / drive / react / playImpact / recover to it, and owns the formation, the camera
+// and the arena entrance.
 import "gameObject" for GameObject
 import "gameObjectComponents" for WorldTransform, Camera, World
 import "math" for Vec2, Vec3
 import "Combat/Battler" for Battler
 import "Combat/Config/BattlePlayer" for BattlePlayer
-import "Combat/Config/MoveCurves" for MoveCurves
 
 // Where the fight happens when there's no Battle_Arena or authored BattleAnchor - far above the
 // level grid (levels occupy roughly x 0..2432, y 0..1600), so the battle camera never sees
@@ -31,15 +35,6 @@ var CAMERA_FOCUS   = Vec2.new(-6, 4)
 var CAMERA_ZOOM    = 5
 var CAMERA_DROP    = 90                   // camera eases down this far onto the formation during the intro
 var SLIDE_DISTANCE = 110                  // how far off its mark each battler starts the slide-in
-
-// Strike animation (updateStrike/updateReturn, driven by States/Combat/AttackingState.wren / ReturningState.wren
-// phases). ATTACK_REACH: how far from home toward the target's home the attacker lunges, as a
-// fraction of that distance - close enough to read as a hit without fully overlapping the target's
-// sprite. IMPACT_T: the point in the forward swing (0..1) where the hit actually lands - the target
-// plays its "hurt" clip and the move's particle burst fires - regardless of curve shape, since
-// every curve's nominal endpoint is t=1.
-var ATTACK_REACH = 0.6
-var IMPACT_T      = 0.75
 
 class BattleStage {
     // anchorPosition: a world-space Vec3 - the centre of the authored battle level, an authored
@@ -78,6 +73,7 @@ class BattleStage {
         _player = Battler.new(BattlePlayer, playerCombatant, worldParent)
         _playerHome = worldOf_(PLAYER_STATION)
         _player.home = _playerHome
+        _player.awaySign = -1
         _player.face(1)
 
         _enemies = []
@@ -85,6 +81,7 @@ class BattleStage {
         var yShift = (_n - 1) * ENEMY_STEP.y / 2
         for (i in 0..._n) {
             var b = Battler.new(enemyDefs[i], enemyCombatants[i], worldParent)
+            b.awaySign = 1
             b.face(-1)
             var home = worldOf_(Vec2.new(ENEMY_ORIGIN.x + i * ENEMY_STEP.x,
                                          ENEMY_ORIGIN.y + i * ENEMY_STEP.y - yShift))
@@ -104,8 +101,8 @@ class BattleStage {
     }
 
     // t: 0..1 progress through the entrance. Eases the camera down onto the formation and slides
-    // every battler in from its wing. Safe to call every frame while the field is frozen - it only
-    // writes transforms and forces the camera (which ignores timescale).
+    // every battler in from its wing. Safe to call every frame - it only writes transforms and forces
+    // the camera.
     intro(t) {
         var e = smooth_(t)
 
@@ -118,86 +115,109 @@ class BattleStage {
         }
     }
 
-    settle() { intro(1) }
-
-    // The acting battler swings, the struck one recoils; call rest() once the log clears. Used only
-    // for non-offensive / no-target moves (self-heals, buffs) - see States/Combat/CombatResolver.wren finishResolve.
-    // Offensive moves against a live target use beginStrike/updateStrike/updateReturn instead.
-    strike(actorCombatant, targetCombatant) {
-        var a = battlerFor_(actorCombatant)
-        if (a != null) {
-            a.play("attack")
-        }
-        var d = battlerFor_(targetCombatant)
-        if (d != null) {
-            d.play("hurt")
-        }
-    }
-
-    // Plays the attacker's wind-up while the target answers States/Combat/ParryPromptState.wren
-    // phase (attempt a parry or not?) before beginStrike/updateStrike's actual lunge fires. Reuses the
-    // same "attack" clip beginStrike plays; calling play() again once the lunge itself starts just
-    // restarts the loop, which reads fine as "wind up, then swing."
-    beginTelegraph(actorCombatant) {
-        var a = battlerFor_(actorCombatant)
-        if (a != null) {
-            a.play("attack")
-        }
-    }
-
-    // A lightweight "reeling" tell for Combat/Config/Moves.stalled - the do-nothing beat an attacker
-    // is forced through after a parry actually lands on them. Plays "hurt" on the attacker itself
-    // (there's no target to animate), not the usual actor/target split beginStrike/strike use.
-    showStalled(actorCombatant) {
-        var a = battlerFor_(actorCombatant)
-        if (a != null) {
-            a.play("hurt")
-        }
-    }
-
-    // Kicks off the curve-driven lunge toward targetCombatant, using move's curveId/particleId
-    // (Combat/Config/MoveCurves.wren / Combat/Config/MoveParticles.wren, the latter via the target
-    // Battler's own persistent particle emitter - see Battler.playImpact). Called once when the
-    // move resolves; AttackingState then drives updateStrike(t) every frame while t ramps 0..1.
-    beginStrike(actorCombatant, targetCombatant, move) {
-        _strikeBattler = battlerFor_(actorCombatant)
-        _strikeTargetBattler = battlerFor_(targetCombatant)
-        _strikeCurve = MoveCurves.get(move.curveId)
-        _strikeParticleId = move.particleId
-        _strikeImpactDone = false
-
-        var targetHome = _strikeTargetBattler != null ? _strikeTargetBattler.home : _strikeBattler.home
-        _strikeApproach = lerp3_(_strikeBattler.home, targetHome, ATTACK_REACH)
-
-        _strikeBattler.play("attack")
-    }
-
-    // t: 0..1 progress through the forward lunge. Moves _strikeBattler along the move's curve from
-    // home toward _strikeApproach; once t first crosses IMPACT_T, plays the target's "hurt" clip
-    // and fires its (persistent, reused-every-hit) particle emitter (both fire exactly once per
-    // strike).
-    updateStrike(t) {
-        _strikeBattler.slide(_strikeBattler.home, _strikeApproach, _strikeCurve.evaluate(t))
-
-        if (!_strikeImpactDone && t >= IMPACT_T) {
-            _strikeImpactDone = true
-            if (_strikeTargetBattler != null) {
-                _strikeTargetBattler.play("hurt")
-                _strikeTargetBattler.playImpact(_strikeParticleId)
-            }
-        }
-    }
-
-    // t: 0..1 progress easing _strikeBattler back from _strikeApproach to home. Plain smooth_ ease
-    // (not move-specific) - only the approach leg needs per-move personality.
-    updateReturn(t) {
-        _strikeBattler.slide(_strikeApproach, _strikeBattler.home, smooth_(t))
-    }
-
-    rest() {
-        _player.play("idle")
+    // Everyone runs in place while the entrance slides them onto their marks.
+    playEntrance() {
+        _player.playEntrance()
         for (b in _enemies) {
-            b.play("idle")
+            b.playEntrance()
+        }
+    }
+
+    // The entrance is over: everyone is on their mark and stops running (CombatSession's per-frame
+    // drive takes over from here - committed combatants pick their move's clip back up).
+    settle() {
+        intro(1)
+        _player.playIdle()
+        for (b in _enemies) {
+            b.playIdle()
+        }
+    }
+
+    // --- animation: forwarded to the combatant's Battler -------------------------------
+
+    // A move was committed: the combatant starts playing its clip (cost = effective time units).
+    beginCharge(combatant, move, cost) {
+        var b = battlerFor_(combatant)
+        if (b != null) {
+            b.beginCharge(move, cost)
+        }
+    }
+
+    // The move is gone (resolved or cancelled): back to idle.
+    endCharge(combatant) {
+        var b = battlerFor_(combatant)
+        if (b != null) {
+            b.endCharge()
+        }
+    }
+
+    // Every frame, for every combatant: sync its clip + lunge to the Timeline fraction of its move.
+    // targetCombatant: who the move is aimed at (null = nobody).
+    drive(combatant, fraction, targetCombatant) {
+        var b = battlerFor_(combatant)
+        if (b == null) {
+            return
+        }
+        var t = battlerFor_(targetCombatant)
+        b.update(fraction, t == null ? null : t.home)
+    }
+
+    // Plays one of ActionAnimations.reaction(id) on the combatant ("hurt" "parry" "recoil" "defeat" "flee").
+    react(combatant, id) {
+        var b = battlerFor_(combatant)
+        if (b != null) {
+            b.react(id)
+        }
+    }
+
+    // The moment a move lands (called right after its damage/heal is applied): the target's hurt / defeat reaction
+    // - or, if the hit pushed back a move it was charging (staggered), the stagger, which fumbles it back to its
+    // mark - and the move's impact particles; or, when the target parried, sparks on them and a recoil on the
+    // attacker; or the heal glow for a Mend.
+    playImpact(actorCombatant, targetCombatant, move, parried, staggered) {
+        var a = battlerFor_(actorCombatant)
+        var d = battlerFor_(targetCombatant)
+        if (move.offensive && d != null) {
+            if (parried) {
+                d.playImpact("parrySpark")
+                if (a != null) {
+                    a.react("recoil")
+                }
+            } else {
+                d.react(!targetCombatant.alive ? "defeat" : (staggered ? "stagger" : "hurt"))
+                d.playImpact(move.particleId)
+            }
+        } else if (move.healAmount > 0 && a != null) {
+            a.playImpact("healGlow")
+        }
+    }
+
+    // After a move lands the attacker eases back to its mark: needsRecover says whether it has anywhere
+    // to go, beginRecover notes where it is, recover(t) (t: 0..1) moves it.
+    needsRecover(combatant) {
+        var b = battlerFor_(combatant)
+        return b != null && b.needsRecover
+    }
+
+    beginRecover(combatant) {
+        var b = battlerFor_(combatant)
+        if (b != null) {
+            b.beginRecover()
+        }
+    }
+
+    recover(combatant, t) {
+        var b = battlerFor_(combatant)
+        if (b != null) {
+            b.recover(t)
+        }
+    }
+
+    // t: 0..1 progress of the combatant running off-stage (the flee animation).
+    runOff(combatant, t) {
+        var b = battlerFor_(combatant)
+        if (b != null) {
+            b.runOff(t)
         }
     }
 

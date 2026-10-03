@@ -1,5 +1,5 @@
 // States/Combat/TargetingState.wren
-// The player picked an offensive move with more than one enemy standing: left/right (UIDir) steps
+// The player picked an offensive move with more than one enemy standing (game time stays paused): left/right (UIDir) steps
 // the target cursor between living enemies, UIAccept commits the move on the highlighted one,
 // UICancel backs out to ChoosingState. The move being targeted is CombatSession.pendingMove.
 import "input" for Input
@@ -15,6 +15,7 @@ class TargetingState is CombatSubState {
     begin(params) {
         var s = session
         _axisHeld = false
+        s.pauseTime()
         s.arm()
         s.view.showMoveMenu(false)
         s.view.setMessage("Choose a target.  <  >")

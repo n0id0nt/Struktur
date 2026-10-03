@@ -1,8 +1,9 @@
 // Combat/Config/MoveCurves.wren
-// Per-move strike-approach shapes (Combat/BattleStage.wren's updateStrike). Each curve is a
-// "progress" curve fed into Battler.slide(home, approach, curve.evaluate(t)) - values above 1
-// overshoot past the approach point (a lunge), values below 0 pull back before committing (a
-// wind-up); slide's plain lerp extrapolates fine either way since it's just from + (to-from)*t.
+// Per-move lunge shapes (Combat/Battler.wren chargePos_). Each curve is a "progress" curve evaluated over the
+// lunge segment of a move's charge (ActionAnimations.lungeStart .. impact) and fed into a lerp from home to the
+// approach point - values above 1 overshoot past it (a lunge), values below 0 pull back before committing (a
+// wind-up); the lerp extrapolates fine either way. Every curve ends at 1, so the attacker is at the approach
+// point exactly when the hit lands.
 // get(id) mints a fresh Curve every call, same "getters build a new instance" convention
 // Combat/Config/Moves.wren already documents for Move itself - curves are cheap to build and this is a
 // turn-based game, so there's no need to cache/memoize them.

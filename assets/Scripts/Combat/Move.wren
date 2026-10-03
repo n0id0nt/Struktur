@@ -16,9 +16,9 @@ class Move {
              particleId, null)
     }
 
-    // parryPromptTime: seconds the target has to answer States/Combat/ParryPromptState.wren
-    // ("attempt a parry?") before it auto-answers "no" - only offensive moves need this; everything
-    // else uses the 9-arg constructor above.
+    // parryPromptTime: game seconds before the attack lands at which the target is asked "attempt a parry?"
+    // (States/Combat/ParryPromptState.wren; it auto-answers "no" if the attack lands first) - only offensive
+    // moves need this; everything else uses the 9-arg constructor above.
     construct new(name, timeCost, damage, baseDelay, staminaCost, staminaRestore, healAmount, curveId,
                  particleId, parryPromptTime) {
         init_(name, timeCost, damage, baseDelay, staminaCost, staminaRestore, healAmount, curveId,

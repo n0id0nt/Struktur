@@ -25,8 +25,14 @@ void Struktur::System::AnimationSystem::Update(GameContext& context)
 			animationTime = curAnimation.animationTime;
 		}
 
-		int frame    = curAnimation.startFrame + (int)std::floor((curAnimation.endFrame - curAnimation.startFrame) *
-		                                                         animationTime / curAnimation.animationTime);
+		int frame = curAnimation.startFrame + (int)std::floor((curAnimation.endFrame - curAnimation.startFrame) *
+		                                                      animationTime / curAnimation.animationTime);
+		// endFrame is exclusive. A looping clip never reaches animationTime == animationTime (fmod above), but
+		// a finished non-looping clip is clamped to exactly that, which would land one frame past the clip.
+		if (curAnimation.endFrame > curAnimation.startFrame && frame >= (int)curAnimation.endFrame)
+		{
+			frame = (int)curAnimation.endFrame - 1;
+		}
 		sprite.index = frame;
 	}
 }
@@ -60,6 +66,22 @@ void Struktur::System::AnimationSystem::PlayAnimation(GameContext& context, entt
 
 	animationComponent.curAnimation       = animationName;
 	animationComponent.animationStartTime = gameTime;
+}
+
+void Struktur::System::AnimationSystem::PlayAnimationAt(GameContext& context, entt::entity entity,
+                                                        const std::string& animationName, float normalizedTime)
+{
+	entt::registry& registry = context.GetRegistry();
+	auto& animationComponent = registry.get<Component::SpriteAnimation>(entity);
+
+	auto it = animationComponent.animations.find(animationName);
+	ASSERT_MSG(it != animationComponent.animations.end(), "animation does not exist");
+
+	Core::TimeSystem& timeSystem = context.GetTimeSystem();
+	double gameTime              = timeSystem.scaledTime;
+
+	animationComponent.curAnimation       = animationName;
+	animationComponent.animationStartTime = gameTime - normalizedTime * it->second.animationTime;
 }
 
 bool Struktur::System::AnimationSystem::IsAnimationPlaying(GameContext& context, entt::entity entity,

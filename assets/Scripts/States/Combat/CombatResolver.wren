@@ -1,64 +1,40 @@
 // States/Combat/CombatResolver.wren
-// The rules for what happens when a combatant's charge fills: pick the move's target, offer that
-// target a parry (a prompt for the player via ParryPromptState, an instant coin flip for an AI
-// enemy), apply damage / stagger / parry-cancel / stall, then hand off to the animation phases
-// (AttackingState -> ReturningState -> MessageState) and finally decide what comes after the log
-// (win / lose / back to the move menu / back to charging). Owned by CombatSession; the phases
-// themselves only call into it from their own update()/answer handlers.
+// The rules for what happens at the moment a combatant's charge (and so its attack animation) finishes:
+// apply the move using the parry decision already made during the wind-up (CombatSession.nextParryOffer /
+// ParryPromptState), including damage / stagger / parry-cancel / stall, play the impact reactions, then hand
+// off to the recovery animation and message (ReturningState -> MessageState) and finally decide what comes
+// after the log (win / lose / back to the move menu / back to charging). Owned by CombatSession; the phases
+// themselves only call into it from their own update().
 import "gameObject" for GameObject
-import "random" for Random
 import "Combat/Config/Moves" for Moves
 import "Combat/Disruption" for Disruption
-
-// Chance an AI-controlled defender answers "yes" to its own parry prompt (see resolveMove) - a
-// plain coin flip for now, tunable like every other combat constant.
-var ENEMY_PARRY_CHANCE = 0.5
-
-var RNG = Random.new()
 
 class CombatResolver {
     construct new(session) {
         _session = session
     }
 
-    // Looks up the acting combatant's move/target and, for anything parryable landing on a living
-    // target, offers that target a parry decision before resolving: a UI prompt for the player
-    // (ParryPromptState, which calls finishResolve with the answer), or an instant random yes/no for
-    // an AI-controlled enemy. Everything else (non-offensive moves, no live target) resolves
-    // immediately.
+    // The attack on screen has landed: look up the move's target and whether that target parried (the
+    // decision was made - by the player's prompt or an AI coin flip - when the attack's parry window opened),
+    // then resolve it.
     resolveMove(actor) {
         var s = _session
         var move = s.timeline.committedMove(actor)
         var isPlayer = actor == s.player
-        var target = isPlayer ? s.playerTarget : s.player
-        if (target == null || !target.alive) {
-            target = isPlayer ? s.firstLivingEnemyCombatant() : s.player
-        }
-
-        if (move.offensive && move.parryable && target != null && target.alive) {
-            if (target == s.player) {
-                s.goTo("ParryPromptState", {"actor": actor, "target": target, "move": move})
-                return
-            }
-            // AI-controlled defender - no UI, just an instant coin flip.
-            finishResolve(actor, move, target, isPlayer, RNG.float() < ENEMY_PARRY_CHANCE)
-            return
-        }
-
-        finishResolve(actor, move, target, isPlayer, false)
+        var target = s.targetOf(actor)
+        var parried = move.offensive && move.parryable && target != null && target.alive && s.parryDecision(actor)
+        finishResolve(actor, move, target, isPlayer, parried)
     }
 
-    // The actual resolution (damage, stagger/parry-cancel, log, strike animation) - called from
-    // resolveMove (nothing to decide, or an AI's instant decision) or from ParryPromptState once
-    // the player's prompt is answered/times out. parryChosen: true cancels all of the move's damage
-    // (Combat/Combatant.wren) and costs the attacker a Combat/Config/Moves.stalled beat; the
-    // defender's own in-flight move is also cancelled regardless of side, since choosing to parry is
-    // a deliberate reaction to make. Ends by handing off to the next phase.
+    // The actual resolution (damage, stagger/parry-cancel, impact reactions, log). parryChosen: true
+    // cancels all of the move's damage (Combat/Combatant.wren) and costs the attacker a
+    // Combat/Config/Moves.stalled beat; the defender's own in-flight move is also cancelled regardless of
+    // side, since choosing to parry is a deliberate reaction to make. Ends by handing off to the next phase.
     finishResolve(actor, move, target, isPlayer, parryChosen) {
         var s = _session
         var cancelFraction = parryChosen ? 1 : 0
 
-        s.timeline.clear(actor)
+        s.clearMove(actor)
 
         var dealt = 0
         var staggerUnits = 0
@@ -69,18 +45,21 @@ class CombatResolver {
                 if (parryChosen) {
                     // Choosing to parry costs the defender their own in-flight move; they have to
                     // pick again instead of the usual partial stagger.
-                    s.timeline.clear(target)
+                    s.clearMove(target)
                     defenderMoveCancelled = true
                 } else {
                     staggerUnits = Disruption.delay(move, s.timeline.fraction(target))
-                    s.timeline.interrupt(target, staggerUnits)
+                    s.interruptMove(target, staggerUnits)
                     s.markStaggered(target)
                 }
             }
             if (parryChosen) {
                 // A landed parry also punishes the attacker: instead of letting them pick a real move
                 // again immediately, they sit out Combat/Config/Moves.stalled first.
-                s.timeline.commit(actor, Moves.stalled)
+                s.commitMove(actor, Moves.stalled)
+            }
+            if (s.stage != null) {
+                s.stage.playImpact(actor, target, move, parryChosen, staggerUnits > 0)
             }
         } else {
             actor.use(move, actor, 0)   // heal / self-buff with nothing to hit
@@ -91,32 +70,19 @@ class CombatResolver {
         var logText = resolveLine(isPlayer, actor, move, dealt, target, staggerUnits, cancelFraction,
                                   defenderMoveCancelled)
 
-        if (move.name == "Stalled") {
-            if (s.stage != null) {
-                s.stage.showStalled(actor)
-            }
-            s.goTo("MessageState", {"text": logText})
-        } else if (s.stage != null && move.offensive && target != null) {
-            // Offensive moves against a live target get the curve-driven lunge + impact particle
-            // (Combat/BattleStage.wren, driven by AttackingState/ReturningState); everything else
-            // (heals/buffs/no-target) keeps the old instant animation-switch and goes straight to the
-            // message beat.
-            s.goTo("AttackingState", {"actor": actor, "target": target, "move": move, "text": logText})
+        // With an arena the attacker eases back to its mark first (ReturningState); a stalled combatant
+        // never moved, and a fight in place has no animation to wait for.
+        if (s.stage != null && move.name != "Stalled") {
+            s.goTo("ReturningState", {"actor": actor, "text": logText})
         } else {
-            if (s.stage != null) {
-                s.stage.strike(actor, null)
-            }
             s.goTo("MessageState", {"text": logText})
         }
     }
 
-    // What follows once a move's log line has been on screen long enough (MessageState): end the
-    // fight if it's decided, otherwise back to whichever phase the player is owed.
+    // What follows once a move's log line has been on screen long enough (MessageState): end the fight if
+    // it's decided, otherwise back to whichever phase the player is owed.
     afterMove() {
         var s = _session
-        if (s.stage != null) {
-            s.stage.rest()
-        }
         if (s.livingEnemies().count == 0) {
             win()
         } else if (!s.player.alive) {
@@ -178,8 +144,14 @@ class CombatResolver {
         endFight("You were overwhelmed...")
     }
 
+    // The player runs for it: with an arena they get a run-off animation first (FleeState), which ends
+    // the fight itself.
     flee() {
-        endFight("You slipped away.")
+        if (_session.stage != null) {
+            _session.goTo("FleeState")
+        } else {
+            endFight("You slipped away.")
+        }
     }
 
     endFight(text) {

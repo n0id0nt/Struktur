@@ -941,6 +941,21 @@ void wren_SpriteAnimationPlayAnimation(WrenVM* vm)
 	animationSystem.PlayAnimation(*context, entity, animationName);
 }
 
+// SpriteAnimation.playAnimationAt(entity, animationName, fraction)
+void wren_SpriteAnimationPlayAnimationAt(WrenVM* vm)
+{
+	Struktur::GameContext* context                 = static_cast<Struktur::GameContext*>(wrenGetUserData(vm));
+	Struktur::System::SystemManager& systemManager = context->GetSystemManager();
+	auto& animationSystem                          = systemManager.GetSystem<Struktur::System::AnimationSystem>();
+
+	double entityId           = wrenGetSlotDouble(vm, 1);
+	const char* animationName = wrenGetSlotString(vm, 2);
+	double fraction           = wrenGetSlotDouble(vm, 3);
+	entt::entity entity       = static_cast<entt::entity>(entityId);
+
+	animationSystem.PlayAnimationAt(*context, entity, animationName, static_cast<float>(fraction));
+}
+
 // SpriteAnimation.isAnimationPlaying(entity, animationName) -> bool
 void wren_SpriteAnimationIsAnimationPlaying(WrenVM* vm)
 {
@@ -2625,6 +2640,10 @@ WREN_BINDING_MODULE(GameObjectComponent)
 	WREN_CLASS_STATIC(registry, "gameObjectComponents", "SpriteAnimation", "forcePlayAnimation(_,_)",
 	                  wren_SpriteAnimationPlayAnimation,
 	                  "Will play a sprite animation, and if playering animation will forcibly restart it.");
+	WREN_CLASS_STATIC(registry, "gameObjectComponents", "SpriteAnimation", "playAnimationAt(_,_,_)",
+	                  wren_SpriteAnimationPlayAnimationAt,
+	                  "Will play a sprite animation as if it had already played for the given fraction (0..1) of "
+	                  "its duration, restarting it if it is already playing.");
 	WREN_CLASS_STATIC(registry, "gameObjectComponents", "SpriteAnimation", "isAnimationPlaying(_,_)",
 	                  wren_SpriteAnimationIsAnimationPlaying, "Checks if a cirtain animation is playing.");
 

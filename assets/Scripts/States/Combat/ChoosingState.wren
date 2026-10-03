@@ -1,9 +1,9 @@
 // States/Combat/ChoosingState.wren
-// The player's move menu is up and nothing is charging: the player picks a move (the menu buttons,
-// wired once per fight in States/CombatState.wren, call CombatSession.commitPlayerMove) or flees
-// with UICancel. Entering this phase also lets every enemy that needs one pick its next move.
-// Leads to TargetingState (offensive move against a group) or ChargingState; fleeing ends the
-// fight via CombatResolver.flee.
+// The player's move menu is up and nothing is charging: game time is PAUSED (every committed enemy holds its
+// wind-up pose) while the player picks a move (the menu buttons, wired once per fight in States/CombatState.wren,
+// call CombatSession.commitPlayerMove) or flees with UICancel. Entering this phase also lets every enemy that
+// needs one pick its next move. Leads to TargetingState (offensive move against a group) or ChargingState;
+// fleeing ends the fight via CombatResolver.flee.
 import "input" for Input
 import "States/Combat/CombatSubState" for CombatSubState
 
@@ -15,6 +15,7 @@ class ChoosingState is CombatSubState {
 
     begin(params) {
         var s = session
+        s.pauseTime()
         s.arm()
         s.clearFlashes()
         s.commitEnemyMoves()

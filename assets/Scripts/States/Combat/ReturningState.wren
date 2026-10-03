@@ -1,35 +1,48 @@
 // States/Combat/ReturningState.wren
-// The back half of a strike: the attacker eases back from the target to its home mark
-// (Combat/BattleStage.updateReturn). Entered with params text (the log line to show next); hands off
-// to MessageState.
+// After a move lands, the attacker eases back from where its lunge/retreat left it to its mark (Combat/
+// Battler.recover) while the hit's reactions play out. Entered with params actor and text (the log line to show
+// next); a combatant that never left its mark passes straight through. Hands off to MessageState.
 import "app" for Time
+import "Combat/Config/ActionAnimations" for RECOVER_TIME
 import "States/Combat/CombatSubState" for CombatSubState
-
-var RETURN_TIME = 0.25   // ease back to home afterwards (BattleStage.updateReturn)
 
 class ReturningState is CombatSubState {
     construct new() {
         super()
         name = "ReturningState"
+        _actor = null
         _text = null
         _startTime = 0
+        _duration = 0
     }
 
     begin(params) {
+        var s = session
+        s.resumeTime()
+        _actor = params["actor"]
         _text = params["text"]
-        _startTime = Time.unscaledTime
+        _startTime = Time.scaledTime
+        _duration = 0
+        if (s.stage != null && s.stage.needsRecover(_actor)) {
+            _duration = RECOVER_TIME
+            s.stage.beginRecover(_actor)
+        }
     }
 
     update(stateManager) {
         var s = session
-        var elapsed = Time.unscaledTime - _startTime
-        var t = elapsed / RETURN_TIME
-        if (t > 1) {
-            t = 1
+        var elapsed = Time.scaledTime - _startTime
+        if (_duration > 0) {
+            var t = elapsed / _duration
+            s.stage.recover(_actor, t > 1 ? 1 : t)
         }
-        s.stage.updateReturn(t)
-        if (elapsed >= RETURN_TIME) {
+        if (elapsed >= _duration) {
             s.goTo("MessageState", {"text": _text})
         }
+    }
+
+    exit() {
+        super.exit()
+        _actor = null
     }
 }

@@ -4,7 +4,7 @@
 import "app" for Time
 import "States/Combat/CombatSubState" for CombatSubState
 
-var INTRO_TIME = 0.9   // fallback (fight-in-place) beat before the menu arms
+var INTRO_TIME = 0.9   // fallback (fight-in-place) beat before the menu arms (game seconds)
 
 class IntroState is CombatSubState {
     construct new() {
@@ -14,11 +14,12 @@ class IntroState is CombatSubState {
     }
 
     begin(params) {
-        _startTime = Time.unscaledTime
+        session.resumeTime()
+        _startTime = Time.scaledTime
     }
 
     update(stateManager) {
-        if (Time.unscaledTime - _startTime >= INTRO_TIME) {
+        if (Time.scaledTime - _startTime >= INTRO_TIME) {
             session.goTo("ChoosingState")
         }
     }

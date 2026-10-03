@@ -248,6 +248,8 @@ foreign class SpriteAnimation {
     foreign static setCurrentAnimation(arg0,arg1)
     // Will play a sprite animation, and if playering animation will forcibly restart it.
     foreign static forcePlayAnimation(arg0,arg1)
+    // Will play a sprite animation as if it had already played for the given fraction (0..1) of its duration, restarting it if it is already playing.
+    foreign static playAnimationAt(arg0,arg1,arg2)
     // Checks if a cirtain animation is playing.
     foreign static isAnimationPlaying(arg0,arg1)
 }

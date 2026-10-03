@@ -17,21 +17,24 @@
 // CombatSession, and runs a nested StateManager over one sub-state per phase of the fight, each its
 // own class under States/Combat/:
 //   EnteringState  - arena entrance animation (or IntroState, the fight-in-place fallback beat)
-//   ChoosingState  - player's move menu           TargetingState  - pick which enemy to hit
-//   ChargingState  - timelines fill               ParryPromptState - "Parry?" before a hit lands
-//   AttackingState / ReturningState - the strike animation
-//   MessageState   - battle-log line              OverState       - closing line, then done
+//   ChoosingState  - player's move menu (time PAUSED)     TargetingState - pick which enemy to hit (PAUSED)
+//   ChargingState  - timelines fill, attack animations play, hits land
+//   ParryPromptState - "Parry?" while an attack crawls to impact (time SLOWED)
+//   ReturningState - attacker eases home   MessageState - battle-log line
+//   FleeState      - the player runs off    OverState    - closing line, then done
 // Phases hand off to each other through CombatSession.goTo(); the move-resolution rules live in
 // States/Combat/CombatResolver.wren.
 //
+// Battles are animation driven (Combat/Config/ActionAnimations.wren): a move's attack animation is its charge,
+// and everything runs on game time - menus pause it and the parry prompt slows it with Time.setTimeScale, which
+// pauses/slows every animation, the Timeline and the particles together. exit() always restores normal time.
+//
 // Presentation cuts to the Battle_Arena level (see Combat/BattleStage.wren), which deactivates the
-// overworld player and every other loaded level entity for the duration (GameObject.setInactive) -
-// that already stops their simulation (physics bodies are disabled too, see
-// GameObjectManager::UpdateActiveStates), so nothing here needs to freeze the global time scale.
-// Phase timing runs off Time.unscaled* (a convention kept from before this stopped freezing time -
-// harmless now, since scaled and unscaled agree).
+// overworld player and every other loaded level entity for the duration (GameObject.setInactive), so
+// the paused/slowed time scale only ever affects the fight itself.
 import "States/BaseState" for BaseState
 import "States/StateManager" for StateManager
+import "app" for Time
 import "gameObject" for GameObject
 import "gameObjectComponents" for Script, World, WorldTransform, Level
 import "math" for Vec3
@@ -46,7 +49,7 @@ import "States/Combat/ChoosingState" for ChoosingState
 import "States/Combat/TargetingState" for TargetingState
 import "States/Combat/ChargingState" for ChargingState
 import "States/Combat/ParryPromptState" for ParryPromptState
-import "States/Combat/AttackingState" for AttackingState
+import "States/Combat/FleeState" for FleeState
 import "States/Combat/ReturningState" for ReturningState
 import "States/Combat/MessageState" for MessageState
 import "States/Combat/OverState" for OverState
@@ -66,7 +69,7 @@ class CombatState is BaseState {
         _manager.insertState("TargetingState", TargetingState)
         _manager.insertState("ChargingState", ChargingState)
         _manager.insertState("ParryPromptState", ParryPromptState)
-        _manager.insertState("AttackingState", AttackingState)
+        _manager.insertState("FleeState", FleeState)
         _manager.insertState("ReturningState", ReturningState)
         _manager.insertState("MessageState", MessageState)
         _manager.insertState("OverState", OverState)
@@ -169,6 +172,11 @@ class CombatState is BaseState {
 
     update(stateManager) {
         _manager.update()
+        // Every frame, whatever the phase: anchor each battler's animation to the Timeline (see
+        // CombatSession.animateBattlers). _session is null if the phase just ended the whole fight.
+        if (_session != null) {
+            _session.animateBattlers()
+        }
     }
 
     fixedUpdate(stateManager) {
@@ -189,6 +197,9 @@ class CombatState is BaseState {
         // Let the active phase exit first, then fold the arena away (reactivates the overworld
         // player, puts survivors back) so the world is coherent again before the UI teardown.
         _manager.clearCurrentState()
+        // Menus pause time and the parry prompt slows it - whatever phase the fight ended in, the world
+        // gets normal time back.
+        Time.setTimeScale(1)
         if (_stage != null) {
             _stage.teardown()
             _stage = null

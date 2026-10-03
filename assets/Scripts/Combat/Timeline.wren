@@ -19,7 +19,7 @@ class Timeline {
     }
 
     add(combatant) {
-        _entries.add({ "combatant": combatant, "move": null, "progress": 0, "cost": 0 })
+        _entries.add({ "combatant": combatant, "move": null, "progress": 0, "cost": 0, "parryOffered": false, "parryDecision": false })
     }
 
     // Every combatant on the timeline, in add order (player then enemies) - for States/Combat/CombatSession.wren
@@ -58,6 +58,8 @@ class Timeline {
             e["move"] = move
             e["progress"] = 0
             e["cost"] = move.timeCost + (combatant.stats.exhausted ? EXHAUSTION_TIME_PENALTY : 0)
+            e["parryOffered"] = false
+            e["parryDecision"] = false
         }
     }
 
@@ -68,6 +70,8 @@ class Timeline {
             e["move"] = null
             e["progress"] = 0
             e["cost"] = 0
+            e["parryOffered"] = false
+            e["parryDecision"] = false
         }
     }
 
@@ -95,6 +99,40 @@ class Timeline {
             return 0
         }
         return f > 1 ? 1 : f
+    }
+
+    // Parry bookkeeping for the committed move (reset by commit/clear): whether its parry window has opened
+    // (so the target is only asked once) and whether the target chose to parry. See CombatSession.
+    parryOffered(combatant) {
+        var e = entryFor(combatant)
+        return e != null && e["parryOffered"]
+    }
+
+    markParryOffered(combatant) {
+        var e = entryFor(combatant)
+        if (e != null) {
+            e["parryOffered"] = true
+        }
+    }
+
+    parryDecision(combatant) {
+        var e = entryFor(combatant)
+        return e != null && e["parryDecision"]
+    }
+
+    setParryDecision(combatant, chosen) {
+        var e = entryFor(combatant)
+        if (e != null) {
+            e["parryDecision"] = chosen
+        }
+    }
+
+    // Effective cost in time units of this combatant's committed move (incl. the exhaustion penalty
+    // locked in at commit), or 0 with no move - also the move's animation length in time units
+    // (see Combat/Config/ActionAnimations.wren: charge time and animation time are the same thing).
+    costOf(combatant) {
+        var e = entryFor(combatant)
+        return (e == null || e["move"] == null) ? 0 : e["cost"]
     }
 
     // Raw progress in time units (can be negative after an interrupt), or 0 with no move.

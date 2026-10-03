@@ -768,6 +768,8 @@ inline const char* wrengameObjectComponentsSource()
     "    foreign static setCurrentAnimation(arg0,arg1)\n"
     "    // Will play a sprite animation, and if playering animation will forcibly restart it.\n"
     "    foreign static forcePlayAnimation(arg0,arg1)\n"
+    "    // Will play a sprite animation as if it had already played for the given fraction (0..1) of its duration, restarting it if it is already playing.\n"
+    "    foreign static playAnimationAt(arg0,arg1,arg2)\n"
     "    // Checks if a cirtain animation is playing.\n"
     "    foreign static isAnimationPlaying(arg0,arg1)\n"
     "}\n"
