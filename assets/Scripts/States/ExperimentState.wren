@@ -78,7 +78,7 @@ class ExperimentState is BaseState {
 
         var playerEntity = GameObject.create("Player", worldEntity)
         Script.createArg(playerEntity, "Player", {"Name": "Player"})
-        WorldTransform.setPosition(playerEntity, Vec3.new(600.0, 300.0, 0.0))
+        WorldTransform.setPosition(playerEntity, Vec3.new(208.0, 208.0, 0.0))
         _playerEntity = playerEntity
 
         // Streams in the level the player spawned in (plus its neighbours) instead of loading every
@@ -90,20 +90,6 @@ class ExperimentState is BaseState {
         _view = FightPromptUI.new("Fight!")
 
         spawnParticleDemo(worldEntity)
-
-        // A few wandering critters to show off the per-entity FSMs. The chinlin also chases the
-        // player when it gets close - see GameObjects/Chicken.wren and GameObjects/Chinlin.wren.
-        spawnCritter("Chicken", Vec3.new(520.0, 400.0, 0.0), worldEntity)
-        spawnCritter("Chicken", Vec3.new(690.0, 300.0, 0.0), worldEntity)
-        spawnCritter("Chinlin", Vec3.new(600.0, 450.0, 0.0), worldEntity)
-    }
-
-    // name doubles as the class name (both scripts are registered under their own name in Main.wren)
-    // and as the entity identifier.
-    spawnCritter(className, position, worldEntity) {
-        var entity = GameObject.create(className, worldEntity)
-        Script.createArg(entity, className, {"Name": className})
-        WorldTransform.setPosition(entity, position)
     }
 
     // Demonstrates Component::ParticleEmitter: a looping "magic fountain" that sprays glowing motes
