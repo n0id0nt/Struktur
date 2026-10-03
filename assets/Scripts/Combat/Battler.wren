@@ -9,7 +9,7 @@
 //     re-anchored to the Timeline fraction every frame (update) - so the clip, the lunge and the charge
 //     bar are one thing, and slowing/pausing game time (Time.setTimeScale) slows/pauses all of it.
 //   - With no move committed (the player while choosing) it idles.
-//   - Reactions (hurt / parry / recoil / defeat / flee) are timed overlays that interrupt either, then fall
+//   - Reactions (hurt / parry / fumble / defeat / flee) are timed overlays that interrupt either, then fall
 //     back to whichever applies.
 import "gameObject" for GameObject
 import "gameObjectComponents" for WorldTransform, Sprite, SpriteAnimation, ParticleEmitter, RenderLayer
@@ -167,7 +167,7 @@ class Battler {
         }
 
         if (_reaction != null && _reaction.fumble && !_defeated) {
-            // A stagger overrides the move's path: stumble from wherever the lunge got to back to the mark.
+            // A fumble (the parried attacker) overrides the move's path: stumble from wherever the lunge got to back to the mark.
             _base = fumblePos_(now)
         } else if (_move != null && !_defeated) {
             if (_reaction == null) {
@@ -182,7 +182,7 @@ class Battler {
         place_(now)
     }
 
-    // The stagger's path: eased from where the reaction began (mid-lunge, say) back to the home mark, with
+    // The fumble's path: eased from where the reaction began (mid-lunge, say) back to the home mark, with
     // a sway that dies away as it settles - a stumble rather than a slide. Ends exactly on the mark.
     fumblePos_(now) {
         var t = (now - _reactionStart) / _reaction.duration
@@ -256,7 +256,11 @@ class Battler {
     // --- recovering after a move lands ------------------------------------------------
 
     // True when the last move left this battler away from its mark (a lunge / retreat).
+    // A battler mid-fumble is already on its way home by itself, so it never needs a recover.
     needsRecover {
+        if (_reaction != null && _reaction.fumble) {
+            return false
+        }
         return _base != null && _home != null && ((_base.x - _home.x).abs + (_base.y - _home.y).abs) > 0.5
     }
 

@@ -162,7 +162,7 @@ class BattleStage {
         b.update(fraction, t == null ? null : t.home)
     }
 
-    // Plays one of ActionAnimations.reaction(id) on the combatant ("hurt" "parry" "recoil" "defeat" "flee").
+    // Plays one of ActionAnimations.reaction(id) on the combatant ("hurt" "parry" "fumble" "defeat" "flee").
     react(combatant, id) {
         var b = battlerFor_(combatant)
         if (b != null) {
@@ -171,20 +171,20 @@ class BattleStage {
     }
 
     // The moment a move lands (called right after its damage/heal is applied): the target's hurt / defeat reaction
-    // - or, if the hit pushed back a move it was charging (staggered), the stagger, which fumbles it back to its
-    // mark - and the move's impact particles; or, when the target parried, sparks on them and a recoil on the
-    // attacker; or the heal glow for a Mend.
-    playImpact(actorCombatant, targetCombatant, move, parried, staggered) {
+    // and the move's impact particles - or, when the target parried, sparks on them and a fumble on the attacker
+    // (it stumbles back from its lunge to its mark while it is stalled) - or the heal glow for a Mend. A
+    // staggered target needs nothing extra: its clip is anchored to the pushed-back charge and rewinds with it.
+    playImpact(actorCombatant, targetCombatant, move, parried) {
         var a = battlerFor_(actorCombatant)
         var d = battlerFor_(targetCombatant)
         if (move.offensive && d != null) {
             if (parried) {
                 d.playImpact("parrySpark")
                 if (a != null) {
-                    a.react("recoil")
+                    a.react("fumble")
                 }
             } else {
-                d.react(!targetCombatant.alive ? "defeat" : (staggered ? "stagger" : "hurt"))
+                d.react(targetCombatant.alive ? "hurt" : "defeat")
                 d.playImpact(move.particleId)
             }
         } else if (move.healAmount > 0 && a != null) {

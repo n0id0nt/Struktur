@@ -59,7 +59,7 @@ class CombatResolver {
                 s.commitMove(actor, Moves.stalled)
             }
             if (s.stage != null) {
-                s.stage.playImpact(actor, target, move, parryChosen, staggerUnits > 0)
+                s.stage.playImpact(actor, target, move, parryChosen)
             }
         } else {
             actor.use(move, actor, 0)   // heal / self-buff with nothing to hit

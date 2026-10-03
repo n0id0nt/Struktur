@@ -2,7 +2,7 @@
 // The catalog of what every action in a fight looks like - one ActionAnimation record per action id.
 // Battles are animation driven: a charged move's animation IS its charge (the clip is retimed to the
 // move's effective cost x Combat/Timeline.SECONDS_PER_TIME_UNIT and the hit lands on its last frame, the
-// moment the bar fills), and every reaction (hurt, parry, recoil, defeat, flee...) is a short timed
+// moment the bar fills), and every reaction (hurt, parry, fumble, defeat, flee...) is a short timed
 // overlay. Combat/Battler.wren plays these; nothing else in a fight owns an animation duration.
 //
 // There is no battle-specific art yet, so `role` names a clip of the actor's own sheet (the `anims` table
@@ -32,7 +32,7 @@ class ActionAnimation {
     }
 
     // fumble: the reaction takes over the battler's position - it stumbles from wherever it was (mid-lunge)
-    // back to its home mark, swaying as it goes (the stagger), instead of staying on the move's path.
+    // back to its home mark, swaying as it goes (the stalled attacker), instead of staying on the move's path.
     construct new(role, duration, loop, motion, lungeStart, curveId, particleId, tint, hop, fade, fumble) {
         init_(role, duration, loop, motion, lungeStart, curveId, particleId, tint, hop, fade, fumble)
     }
@@ -99,9 +99,10 @@ class ActionAnimations {
     static reaction(id) {
         if (id == "hurt")     return ActionAnimation.new("hurt", 0.35, false, "none", 0, null, null, HURT_TINT, 10, false)
         // Interrupted mid-charge: reels and fumbles back to its mark, overriding the move's lunge path.
-        if (id == "stagger")  return ActionAnimation.new("hurt", 0.7, false, "none", 0, null, null, HURT_TINT, 12, false, true)
         if (id == "parry")    return ActionAnimation.new("attack", 0.35, false, "none", 0, null, null, null, 0, false)
-        if (id == "recoil")   return ActionAnimation.new("hurt", 0.35, false, "none", 0, null, null, null, 14, false)
+        // Stalled by a parry: the attacker reels and fumbles back from where its lunge stopped to its mark,
+        // overriding the move path (its Stalled look - tinted, looping hurt clip - takes over once it is home).
+        if (id == "fumble")   return ActionAnimation.new("hurt", 0.7, false, "none", 0, null, null, null, 12, false, true)
         if (id == "defeat")   return ActionAnimation.new("hurt", 0.6, false, "none", 0, null, null, HURT_TINT, 18, true)
         if (id == "flee")     return ActionAnimation.new("run", 0.7, false, "none", 0, null, null, null, 0, false)
         if (id == "entrance") return ActionAnimation.new("run", null, true, "none", 0, null, null, null, 0, false)
