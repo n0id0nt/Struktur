@@ -1,7 +1,9 @@
 // States/Combat/ChoosingState.wren
-// The player's move menu is up and nothing is charging: game time is PAUSED (every committed enemy holds its
-// wind-up pose) while the player picks a move (the menu buttons, wired once per fight in States/CombatState.wren,
-// call CombatSession.commitPlayerMove) or flees with UICancel. Entering this phase also lets every enemy that
+// The move menu is up for the party member whose turn it is (CombatSession.chooser - every party member is human
+// controlled, so the human picks for each in turn): game time is PAUSED (every committed combatant holds its
+// wind-up pose) while they pick a move (the menu buttons, wired once per fight in States/CombatState.wren, call
+// CombatSession.commitChoice) or flee with UICancel. Committing a move comes back here for the next member who
+// needs one. Entering this phase also lets every enemy that
 // needs one pick its next move. Leads to TargetingState (offensive move against a group) or ChargingState;
 // fleeing ends the fight via CombatResolver.flee.
 import "input" for Input
@@ -15,11 +17,23 @@ class ChoosingState is CombatSubState {
 
     begin(params) {
         var s = session
+        var member = s.chooser
+        if (member == null) {
+            // Everyone already has a move (the whole party was committed by an earlier pass).
+            s.goTo("ChargingState")
+            return
+        }
         s.pauseTime()
         s.arm()
         s.clearFlashes()
         s.commitEnemyMoves()
-        s.view.setMessage("Choose your move.")
+
+        var labels = []
+        for (move in member.moves) {
+            labels.add(move.menuLabel)
+        }
+        s.view.setMoveLabels(labels)
+        s.view.setMessage(member == s.player ? "Choose your move." : "Choose %(member.name)'s move.")
         s.view.showMoveMenu(true)
         s.view.focusFirstMoveButton()
         s.refreshViews()

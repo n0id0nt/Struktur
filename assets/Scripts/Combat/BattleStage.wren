@@ -18,7 +18,6 @@ import "gameObject" for GameObject
 import "gameObjectComponents" for WorldTransform, Camera, World
 import "math" for Vec2, Vec3
 import "Combat/Battler" for Battler
-import "Combat/Config/BattlePlayer" for BattlePlayer
 
 // Where the fight happens when there's no Battle_Arena or authored BattleAnchor - far above the
 // level grid (levels occupy roughly x 0..2432, y 0..1600), so the battle camera never sees
@@ -29,6 +28,7 @@ var DEFAULT_ARENA = Vec3.new(1200, -1500, 0)
 // facing right; opponents fan out stage right facing left. Sized to sit inside the battle camera's
 // view (~256x144 world px at CAMERA_ZOOM 5 on a 1280x720 game).
 var PLAYER_STATION = Vec2.new(-108, 18)
+var PARTY_STEP     = Vec2.new(-9, 52)    // each further party member is down-and-slightly-left
 var ENEMY_ORIGIN   = Vec2.new(92, 0)
 var ENEMY_STEP     = Vec2.new(9, 58)     // each further opponent is down-and-slightly-right
 var CAMERA_FOCUS   = Vec2.new(-6, 4)
@@ -43,11 +43,12 @@ class BattleStage {
     // anchoring on its top-left corner, which is where World/LDtk places a level's WorldTransform.
     // playerEntity: the real overworld player (hidden for the fight).
     // worldParent: entity to parent every spawned battle entity under (the world root).
-    // playerCombatant: Player.combatant (persistent). enemyDefs / enemyCombatants: parallel lists,
-    // one BattleCritter + its Combatant per opponent.
+    // partyCombatants / partyDefs: parallel lists for the human-controlled side, leader first - each member's
+    // persistent Combatant and its look (Combat/Config/BattlePlayer for a player, a BattleCritter for an NPC).
+    // enemyDefs / enemyCombatants: parallel lists, one BattleCritter + its Combatant per opponent.
     // battleLevelEntity: the level entity CombatState loaded for this fight, or null when fighting
     // in place - kept so teardown() knows to deactivate it again.
-    construct new(anchorPosition, playerEntity, worldParent, playerCombatant, enemyDefs, enemyCombatants,
+    construct new(anchorPosition, playerEntity, worldParent, partyCombatants, partyDefs, enemyDefs, enemyCombatants,
                  battleLevelEntity) {
         _anchor = anchorPosition == null ? DEFAULT_ARENA : anchorPosition
         _playerEntity = playerEntity
@@ -69,12 +70,21 @@ class BattleStage {
             setOtherLevelsActive_(false)
         }
 
-        // Battlers: player stage left, opponents stacked stage right centred on the anchor line.
-        _player = Battler.new(BattlePlayer, playerCombatant, worldParent)
-        _playerHome = worldOf_(PLAYER_STATION)
-        _player.home = _playerHome
-        _player.awaySign = -1
-        _player.face(1)
+        // Battlers: the party stage left (leader first, fanning down and slightly left like the opponents fan
+        // down and slightly right), opponents stacked stage right centred on the anchor line.
+        _party = []
+        _partyHomes = []
+        var partyShift = (partyCombatants.count - 1) * PARTY_STEP.y / 2
+        for (i in 0...partyCombatants.count) {
+            var member = Battler.new(partyDefs[i], partyCombatants[i], worldParent)
+            member.awaySign = -1
+            member.face(1)
+            var memberHome = worldOf_(Vec2.new(PLAYER_STATION.x + i * PARTY_STEP.x,
+                                               PLAYER_STATION.y + i * PARTY_STEP.y - partyShift))
+            member.home = memberHome
+            _party.add(member)
+            _partyHomes.add(memberHome)
+        }
 
         _enemies = []
         _enemyHomes = []
@@ -109,7 +119,9 @@ class BattleStage {
         WorldTransform.setPosition(_camEntity, lerp3_(_camStart, _focus, e))
         _camera.forcePosition = true
 
-        _player.slide(offBy_(_playerHome, -SLIDE_DISTANCE), _playerHome, e)
+        for (i in 0..._party.count) {
+            _party[i].slide(offBy_(_partyHomes[i], -SLIDE_DISTANCE), _partyHomes[i], e)
+        }
         for (i in 0..._n) {
             _enemies[i].slide(offBy_(_enemyHomes[i], SLIDE_DISTANCE), _enemyHomes[i], e)
         }
@@ -117,7 +129,9 @@ class BattleStage {
 
     // Everyone runs in place while the entrance slides them onto their marks.
     playEntrance() {
-        _player.playEntrance()
+        for (b in _party) {
+            b.playEntrance()
+        }
         for (b in _enemies) {
             b.playEntrance()
         }
@@ -127,7 +141,9 @@ class BattleStage {
     // drive takes over from here - committed combatants pick their move's clip back up).
     settle() {
         intro(1)
-        _player.playIdle()
+        for (b in _party) {
+            b.playIdle()
+        }
         for (b in _enemies) {
             b.playIdle()
         }
@@ -225,7 +241,9 @@ class BattleStage {
     // other level back. The overworld critter entities were never moved (CombatResolver.win() destroys
     // the beaten ones).
     teardown() {
-        _player.teardown()
+        for (b in _party) {
+            b.teardown()
+        }
         for (b in _enemies) {
             b.teardown()
         }
@@ -279,8 +297,10 @@ class BattleStage {
         if (combatant == null) {
             return null
         }
-        if (_player.combatant == combatant) {
-            return _player
+        for (b in _party) {
+            if (b.combatant == combatant) {
+                return b
+            }
         }
         for (b in _enemies) {
             if (b.combatant == combatant) {

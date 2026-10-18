@@ -17,7 +17,14 @@ class DialogueEntryPoints {
         if (interactableName == "Cordelia")   return "cordelia"
         if (interactableName == "Dreamer")    return "dreamer"
         if (interactableName == "Guardian")   return "guardian"
+        if (interactableName == "Villager")   return "villager"
+        if (interactableName == "Traveler")   return "traveler"
+        if (interactableName == "Duelist")    return "duelist"
         if (interactableName == "Inventor")   return "inventor"
+
+        // Signposts (GameObjects/Sign.wren)
+        if (interactableName == "Welcome Sign") return "sign_welcome"
+        if (interactableName == "Warning Sign") return "sign_warning"
 
         // Immovable interactables
         if (interactableName == "Safe")                    return "safe"
@@ -36,6 +43,10 @@ class DialogueEntryPoints {
         if (interactableName == "Tool Box")     return "tool_box"
         if (interactableName == "Telescope")    return "telescope"
         if (interactableName == "Ancient Seal") return "ancient_seal"
+
+        // Overworld pickups (Dialogue/OverworldDialogue.json)
+        if (interactableName == "Lost Locket")  return "lost_locket"
+        if (interactableName == "Lucky Coin")   return "lucky_coin"
 
         // Returnable items — use "_return" entry if already in inventory
         var suffix = Inventory.contains(interactableName) ? "_return" : ""

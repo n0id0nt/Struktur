@@ -2,12 +2,13 @@
 // Main gameplay state - loads level, creates entities, manages gameplay sub-states. This is the
 // live gameplay path (Main.wren starts this, not GameWorldState). Owns the world/level streaming,
 // critter spawning, combat-trigger detection, the nested sub-StateManager (PlayState/
-// InventoryState/InteractState/GameOverState/CombatState), and the UI/Gameplay/FightPromptUI view.
+// InventoryState/InteractState/GameOverState/CombatState), and the UI/Gameplay Fight!/Interact prompts.
 import "gameObject" for GameObject
 import "gameObjectComponents" for WorldTransform, World, Script, ParticleEmitter
 import "math" for Vec2, Vec3, Vec4
 import "resourceManager" for Texture, Music
 import "input" for Input
+import "flags" for FlagManager
 import "app" for Time, Application
 
 import "States/BaseState" for BaseState
@@ -18,8 +19,11 @@ import "States/InteractState" for InteractState
 import "States/GameOverState" for GameOverState
 import "States/CombatState" for CombatState
 import "UI/Gameplay/FightPromptUI" for FightPromptUI
+import "UI/Gameplay/InteractPromptUI" for InteractPromptUI
 
 import "GameObjects/Critter" for Critter
+import "Party" for Party
+import "Party/DuelRequest" for DuelRequest
 
 var WORLD_FILE_PATH = "Levels/SevenGods.ldtk"
 // Authored arena level (see Combat/BattleStage.wren) - every fight loads this level and stages the
@@ -34,6 +38,9 @@ var BATTLE_ARENA_LEVEL_NAME = "Battle_Arena"
 var FORCE_COMBAT_METERS = 1.0
 var GROUP_COMBAT_METERS = 3.0
 var MAX_COMBAT_GROUP = 3
+// Int flag (Dialogue/OverworldDialogue.json) tracking the villager's fetch quest: 0 = not asked, 1 = looking for
+// the Lost Locket, 2 = done (the villager has joined the party).
+var VILLAGER_QUEST_FLAG = "villager_quest_state"
 
 class ExperimentState is BaseState {
     construct new() {
@@ -41,6 +48,7 @@ class ExperimentState is BaseState {
         name = "ExperimentState"
 
         _view = null
+        _talkView = null   // "Interact" prompt for NPCs / signposts (_view is the "Fight!" prompt for critters)
         _worldEntity = null //TODO Create an entity constant for invalid entity or null entity
         _particleEntity = null
         _playerEntity = null
@@ -80,6 +88,8 @@ class ExperimentState is BaseState {
         Script.createArg(playerEntity, "Player", {"Name": "Player"})
         WorldTransform.setPosition(playerEntity, Vec3.new(208.0, 208.0, 0.0))
         _playerEntity = playerEntity
+        // The player leads the party - NPCs who join follow the member ahead of them (see Party.wren).
+        Party.registerPlayer(playerEntity, "Player")
 
         // Streams in the level the player spawned in (plus its neighbours) instead of loading every
         // level in the world up front - see updateLevelStreaming_().
@@ -88,8 +98,90 @@ class ExperimentState is BaseState {
         // "Fight" prompt for non-aggressive critters - same UILabel-above-target pattern
         // UI/Gameplay/InteractPromptUI.wren (GameWorldState's "Interact" prompt) uses.
         _view = FightPromptUI.new("Fight!")
+        _talkView = InteractPromptUI.new("Interact")
 
         spawnParticleDemo(worldEntity)
+
+        // Two villagers and two signposts ~100px from where the player spawns (placeholder sprites; their
+        // dialogue is Dialogue/OverworldDialogue.json). Walk up to one and press Interact - see
+        // checkCombatTriggers().
+        // The villager's fetch quest (Lost Locket) ends with them joining the party - if that's already
+        // happened (saved flag) they're in the party (Party.load restored it; the join is a no-op safety net),
+        // not standing here. The Duelist only stands here until you beat them and they join.
+        if (FlagManager.getIntFlag(VILLAGER_QUEST_FLAG) == 2) {
+            Party.join("Villager")
+        }
+        if (!Party.contains("Villager")) {
+            spawnNpc("Villager", Vec3.new(108.0, 208.0, 0.0), worldEntity)
+        }
+        if (!Party.contains("Duelist")) {
+            spawnNpc("Duelist", Vec3.new(308.0, 108.0, 0.0), worldEntity)
+        }
+        spawnNpc("Traveler", Vec3.new(308.0, 208.0, 0.0), worldEntity)
+        spawnSign("Welcome Sign", Vec3.new(208.0, 108.0, 0.0), worldEntity)
+        spawnSign("Warning Sign", Vec3.new(208.0, 308.0, 0.0), worldEntity)
+
+        // Pickups: walk up and press Interact to add them to the inventory (the Inventory key opens it).
+        // The Lost Locket is the quest item; an item already picked up (saved flag) disables itself.
+        spawnItem("Lost Locket", Vec3.new(300.0, 300.0, 0.0), worldEntity)
+        spawnItem("Lucky Coin", Vec3.new(120.0, 300.0, 0.0), worldEntity)
+    }
+
+    // name is both the NPC's id (GameObjects/NPC.wren's sprite table, the dialogue entry point and speaker
+    // name) and the entity identifier.
+    spawnNpc(npcName, position, worldEntity) {
+        var entity = GameObject.create(npcName, worldEntity)
+        Script.createArg(entity, "NPC", {"Name": npcName})
+        WorldTransform.setPosition(entity, position)
+    }
+
+    // Keeps the world in step with Party.members: every NPC in the party gets a follower entity
+    // (GameObjects/PartyMember.wren), spawned where they joined (or just behind whoever they trail) - so
+    // recruiting someone is just Party.join(), wherever it happens (dialogue, a won duel, a loaded save).
+    // Cheap enough to run every frame.
+    syncPartyFollowers() {
+        for (member in Party.members) {
+            if (member.isPlayer) {
+                continue
+            }
+            if (member.entity != null && GameObject.isValid(member.entity)) {
+                continue
+            }
+            spawnFollower_(member)
+        }
+    }
+
+    spawnFollower_(member) {
+        var position = member.spawnPosition
+        if (position == null) {
+            var ahead = Party.ahead(member)
+            var aheadPosition = ahead == null ? null : Party.positionOf(ahead)
+            if (aheadPosition == null) {
+                aheadPosition = WorldTransform.getPosition(_playerEntity)
+            }
+            position = Vec3.new(aheadPosition.x - 24.0, aheadPosition.y, 0.0)
+        }
+        var entity = GameObject.create("PartyMember", _worldEntity)
+        Script.createArg(entity, "PartyMember", {"Name": member.name})
+        WorldTransform.setPosition(entity, position)
+        member.entity = entity
+        member.spawnPosition = null
+        member.trail.clear()
+    }
+
+    // A pickup (GameObjects/Item.wren): every item entity shares the "Item" identifier - that is what the
+    // dialogue system's pickupEntity command searches by - and itemName picks its sprite and dialogue.
+    spawnItem(itemName, position, worldEntity) {
+        var entity = GameObject.create("Item", worldEntity)
+        Script.createArg(entity, "Item", {"Name": itemName, "Returnable": false})
+        WorldTransform.setPosition(entity, position)
+    }
+
+    // Same idea for a signpost (GameObjects/Sign.wren) - name is its dialogue entry point key.
+    spawnSign(signName, position, worldEntity) {
+        var entity = GameObject.create(signName, worldEntity)
+        Script.createArg(entity, "Sign", {"Name": signName})
+        WorldTransform.setPosition(entity, position)
     }
 
     // Demonstrates Component::ParticleEmitter: a looping "magic fountain" that sprays glowing motes
@@ -139,6 +231,10 @@ class ExperimentState is BaseState {
     fixedUpdate(stateManager) {
         if (_stateManager.currentState) {
             _stateManager.fixedUpdate()
+        } else {
+            // Out in the world: record where every party member walks this step, so followers (whose own
+            // fixedUpdate runs right after this) can retrace their leader's route.
+            Party.tick()
         }
     }
 
@@ -146,9 +242,17 @@ class ExperimentState is BaseState {
         // if substate return out here
         if (_stateManager.currentState) {
             var wasCombat = _stateManager.currentState.name == "CombatState"
+            var wasInteract = _stateManager.currentState.name == "InteractState"
             _stateManager.update()
             if (wasCombat && !_stateManager.currentState) {
                 _combatCooldownEndTime = Time.scaledTime + 2.0
+            }
+            if (wasInteract && !_stateManager.currentState) {
+                // A dialogue ended - if it was a challenge ("startDuel" command), the fight starts now.
+                var challenger = DuelRequest.take()
+                if (challenger != null) {
+                    startDuel(challenger)
+                }
             }
             return
         }
@@ -156,11 +260,35 @@ class ExperimentState is BaseState {
             _gameMusic.play()
         }
 
+        syncPartyFollowers()
         updateLevelStreaming_()
+
+        if (Input.isInputJustReleased("Inventory")) {
+            openInventory()
+            return
+        }
 
         if (Time.scaledTime >= _combatCooldownEndTime) {
             checkCombatTriggers()
         }
+    }
+
+    // The Inventory key (States/InventoryState.wren shows what the player has picked up and closes itself
+    // on the same key, handing control back here). The player is stopped and the game music paused for
+    // the duration, like for dialogue.
+    openInventory() {
+        _view.hide()
+        _talkView.hide()
+        for (entity in GameObject.getAllWithIdentifier("Player")) {
+            var script = Script.getInstance(entity)
+            if (script) {
+                script.playerForceStop()
+            }
+        }
+        if (_gameMusic) {
+            _gameMusic.stop()
+        }
+        _stateManager.changeState("InventoryState")
     }
 
     // Keeps only the level the player is currently standing in, plus its immediate LDtk neighbours,
@@ -223,6 +351,7 @@ class ExperimentState is BaseState {
     // interactable, reusing the exact scan/prompt every Item/NPC/Door already uses
     // (Player.getInteractEntity(), see GameWorldState for the original of this pattern) - the player
     // has to press Interact to start that fight.
+    // NPCs and signposts get the "Interact" prompt instead and open dialogue (startDialogue).
     checkCombatTriggers() {
         var playerEntities = GameObject.getAllWithIdentifier("Player")
         for (playerEntity in playerEntities) {
@@ -246,20 +375,59 @@ class ExperimentState is BaseState {
             }
 
             var interactEntity = playerScript.getInteractEntity()
-            if (interactEntity && Script.getInstance(interactEntity) is Critter) {
+            var interactScript = interactEntity ? Script.getInstance(interactEntity) : null
+            if (interactScript is Critter) {
+                _talkView.hide()
                 _view.showAbove(WorldTransform.getPosition(interactEntity))
                 if (Input.isInputJustReleased("Interact")) {
                     _view.hide()
                     enterCombat(interactEntity, playerEntity)
                     return
                 }
+            } else if (interactScript != null) {
+                // Any other interactable (NPC, signpost, item): talk / read / pick up. Not an `is NPC` check -
+                // registered scripts live in their own module instance, so `is` only works for shared base
+                // classes like Critter. Player.getInteractEntity() already only returns real interactables.
+                _view.hide()
+                _talkView.showAbove(WorldTransform.getPosition(interactEntity))
+                if (Input.isInputJustReleased("Interact")) {
+                    _talkView.hide()
+                    startDialogue(interactEntity, playerScript)
+                    return
+                }
             } else {
                 _view.hide()
+                _talkView.hide()
             }
         }
     }
 
+    // Talks to an NPC / reads a signpost / picks up an item: InteractState (shared with GameWorldState) runs the dialogue for
+    // the interactable's name (Dialogue/DialogueEntryPoints.wren) and clears itself when it ends, handing
+    // control back here. The game music stops for the duration, as it does for a fight.
+    startDialogue(interactEntity, playerScript) {
+        playerScript.playerForceStop()
+        if (_gameMusic) {
+            _gameMusic.stop()
+        }
+        _stateManager.changeState("InteractState", {"interactingEntity": interactEntity})
+    }
+
     enterCombat(primaryEntity, playerEntity) {
+        beginCombat_(combatGroup(primaryEntity, playerEntity), playerEntity)
+    }
+
+    // A duel: just the challenger (an NPC - see Dialogue/OverworldDialogue.json's "startDuel"), no critters
+    // dragged in. Beating a recruitable NPC adds them to the party (States/Combat/CombatResolver.win).
+    startDuel(npcName) {
+        var challengers = GameObject.getAllWithIdentifier(npcName)
+        if (challengers.count > 0) {
+            beginCombat_([challengers[0]], _playerEntity)
+        }
+    }
+
+    beginCombat_(opponents, playerEntity) {
+        _talkView.hide()
         for (entity in GameObject.getAllWithIdentifier("Player")) {
             var script = Script.getInstance(entity)
             if (script) {
@@ -270,7 +438,7 @@ class ExperimentState is BaseState {
             _gameMusic.stop()
         }
         _stateManager.changeState("CombatState", {
-            "opponents": combatGroup(primaryEntity, playerEntity),
+            "opponents": opponents,
             "player": playerEntity,
             "world": _worldEntity,
             "battleLevelIndex": World.getLevelIndex(_worldEntity, BATTLE_ARENA_LEVEL_NAME)
@@ -331,6 +499,10 @@ class ExperimentState is BaseState {
             _stateManager.currentState.exit()
         }
 
+        // The player slot goes with the world; the NPCs stay in the party (their follower entities are
+        // destroyed with the world, so they respawn next time - see syncPartyFollowers).
+        Party.unregisterPlayers()
+
         // Child of _worldEntity, so destroying the world tears the emitter down with it.
         _particleEntity = null
         GameObject.destroy(_worldEntity)
@@ -338,6 +510,10 @@ class ExperimentState is BaseState {
         if (_view != null) {
             _view.teardown()
             _view = null
+        }
+        if (_talkView != null) {
+            _talkView.teardown()
+            _talkView = null
         }
         _gameMusic.stop()
         _gameMusic.unload()

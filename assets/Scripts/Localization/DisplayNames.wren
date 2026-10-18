@@ -13,12 +13,15 @@ class DisplayNames {
             "Cook": "npc.cook",
             "Cordelia": "npc.cordelia",
             "Dreamer": "npc.dreamer",
+            "Duelist": "npc.duelist",
             "Gardener": "npc.gardener",
             "Guardian": "npc.guardian",
             "Inventor": "npc.inventor",
             "Merchant": "npc.merchant",
             "Narrator": "npc.narrator",
-            "Scholar": "npc.scholar"
+            "Scholar": "npc.scholar",
+            "Traveler": "npc.traveler",
+            "Villager": "npc.villager"
         }
         return keys.containsKey(npcId) ? keys[npcId] : null
     }
@@ -36,6 +39,8 @@ class DisplayNames {
             "Personal Diary": "item.personal_diary",
             "Telescope": "item.telescope",
             "Gold Coins": "item.gold_coins",
+            "Lost Locket": "item.lost_locket",
+            "Lucky Coin": "item.lucky_coin",
             "Ancient Seal": "item.ancient_seal",
             "Red Pedestal": "item.red_pedestal",
             "Green Pedestal": "item.green_pedestal",

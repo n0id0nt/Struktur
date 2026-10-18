@@ -20,14 +20,11 @@ class NPCData {
     getSpriteIndex() {
         return _spriteIndex
     }
-}
 
-class NPC {
-
-    construct new(entity, args) {
-        _entity = entity
-        _name = args["Name"]
-        _spriteDataMap = {
+    // The sheet frame + pivot for the NPC called `name` (Tiles/NPCs.png - one single-frame figure each), or null.
+    // Shared by the standing NPC (this file) and its party follower (GameObjects/PartyMember.wren).
+    static forName(name) {
+        var table = {
             "Scholar": NPCData.new(0, 48, 64),
             "Gardener": NPCData.new(6, 48, 64),
             "Cook": NPCData.new(4, 48, 64),
@@ -37,15 +34,32 @@ class NPC {
             "Merchant": NPCData.new(1, 48, 64),
             "Guardian": NPCData.new(7, 48, 64),
             "Cordelia": NPCData.new(3, 48, 64),
+            // Placeholder sprites (borrowed from the sheet) for the overworld NPCs - Dialogue/OverworldDialogue.json.
+            "Villager": NPCData.new(1, 48, 64),
+            "Traveler": NPCData.new(7, 48, 64),
+            "Duelist": NPCData.new(2, 48, 64)
         }
+        return table.containsKey(name) ? table[name] : null
     }
-    
+}
+
+class NPC {
+
+    construct new(entity, args) {
+        _entity = entity
+        _name = args["Name"]
+    }
+
     name { _name }
+
+    // Whether beating this NPC in a duel recruits them into the party (see CombatResolver.win + Party.wren).
+    // A method rather than a getter so callers can duck-type it with Reflect.hasMethod(script, "joinsPartyOnDefeat()").
+    joinsPartyOnDefeat() { _name == "Duelist" }
     
     // Called after C++ has created base components
     // Script configures/initializes component values
     start() {
-        var npcData = _spriteDataMap[_name]
+        var npcData = NPCData.forName(_name)
         Debug.assertMsg(npcData != null, "No Data for NPC %(_name)")
 
         var texture = Texture.load("Tiles/NPCs.png")

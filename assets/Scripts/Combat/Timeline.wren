@@ -19,7 +19,7 @@ class Timeline {
     }
 
     add(combatant) {
-        _entries.add({ "combatant": combatant, "move": null, "progress": 0, "cost": 0, "parryOffered": false, "parryDecision": false })
+        _entries.add({ "combatant": combatant, "move": null, "progress": 0, "cost": 0, "parryOffered": false, "parryDecision": false, "target": null })
     }
 
     // Every combatant on the timeline, in add order (player then enemies) - for States/Combat/CombatSession.wren
@@ -60,6 +60,7 @@ class Timeline {
             e["cost"] = move.timeCost + (combatant.stats.exhausted ? EXHAUSTION_TIME_PENALTY : 0)
             e["parryOffered"] = false
             e["parryDecision"] = false
+            e["target"] = null
         }
     }
 
@@ -72,6 +73,7 @@ class Timeline {
             e["cost"] = 0
             e["parryOffered"] = false
             e["parryDecision"] = false
+            e["target"] = null
         }
     }
 
@@ -99,6 +101,19 @@ class Timeline {
             return 0
         }
         return f > 1 ? 1 : f
+    }
+
+    // Who the committed move is aimed at (set right after commit by CombatSession.commitMove; reset by commit/clear).
+    target(combatant) {
+        var e = entryFor(combatant)
+        return e == null ? null : e["target"]
+    }
+
+    setTarget(combatant, target) {
+        var e = entryFor(combatant)
+        if (e != null) {
+            e["target"] = target
+        }
     }
 
     // Parry bookkeeping for the committed move (reset by commit/clear): whether its parry window has opened

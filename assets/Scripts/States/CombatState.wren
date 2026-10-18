@@ -12,16 +12,17 @@
 //   Power beats Control (one landed Crush is >half a mage's HP; Control burns out holding the lock)
 //   Control beats Speed (Slow wrecks the rhythm, Mend out-heals the chip)
 //
-// This class is just the shell around a fight: it builds the Combatants, the UI/Combat/CombatUI
+// This class is just the shell around a fight: it builds the party side (every member of Party.wren, all
+// human controlled) and the opponents, the UI/Combat/CombatUI
 // view and (when an arena exists) the Combat/BattleStage, bundles them into a States/Combat/
 // CombatSession, and runs a nested StateManager over one sub-state per phase of the fight, each its
 // own class under States/Combat/:
 //   EnteringState  - arena entrance animation (or IntroState, the fight-in-place fallback beat)
-//   ChoosingState  - player's move menu (time PAUSED)     TargetingState - pick which enemy to hit (PAUSED)
+//   ChoosingState  - move menu for each party member in turn (time PAUSED)   TargetingState - pick an enemy (PAUSED)
 //   ChargingState  - timelines fill, attack animations play, hits land
 //   ParryPromptState - "Parry?" while an attack crawls to impact (time SLOWED)
 //   ReturningState - attacker eases home   MessageState - battle-log line
-//   FleeState      - the player runs off    OverState    - closing line, then done
+//   FleeState      - the whole party runs off    OverState    - closing line, then done
 // Phases hand off to each other through CombatSession.goTo(); the move-resolution rules live in
 // States/Combat/CombatResolver.wren.
 //
@@ -40,6 +41,8 @@ import "gameObjectComponents" for Script, World, WorldTransform, Level
 import "math" for Vec3
 
 import "Combat/Config/BattleCritter" for BattleCritter
+import "Combat/Config/BattlePlayer" for BattlePlayer
+import "Party" for Party
 import "Combat/BattleStage" for BattleStage
 import "UI/Combat/CombatUI" for CombatUI
 import "States/Combat/CombatSession" for CombatSession
@@ -90,21 +93,38 @@ class CombatState is BaseState {
             enemies.add(def.makeCombatant(entity))
         }
 
-        // The player's Combatant lives on the Player script (persistent HP / stamina across fights).
-        var playerScript = params["player"] == null ? null : Script.getInstance(params["player"])
-        if (playerScript == null || enemies.count == 0) {
-            System.print("[CombatState] no player or no valid opponents, aborting")
+        // The human-controlled side is the whole party (Party.wren), leader first: each member's persistent
+        // Combatant (a player's lives on its Player script, an NPC's on its party record - HP / stamina carry
+        // across fights) plus the battle look to stage it with.
+        var party = []
+        var partyDefs = []
+        for (member in Party.members) {
+            var combatant = Party.combatantOf(member)
+            if (combatant == null) {
+                continue
+            }
+            party.add(combatant)
+            partyDefs.add(member.isPlayer ? BattlePlayer : BattleCritter.forName(member.name))
+        }
+        if (party.count == 0 || enemies.count == 0) {
+            System.print("[CombatState] no party or no valid opponents, aborting")
             stateManager.clearCurrentState()
             return
         }
-        var player = playerScript.combatant
 
         var roster = enemies.map { |e| "%(e.name)(%(e.stats.hp))" }.join(", ")
-        System.print("[CombatState] You(%(player.stats.hp)/%(player.stats.maxHp)) vs %(roster)")
+        var partyRoster = party.map { |c| "%(c.name)(%(c.stats.hp)/%(c.stats.maxHp))" }.join(", ")
+        System.print("[CombatState] %(partyRoster) vs %(roster)")
 
         var enemyNames = enemies.map { |e| e.name }.toList
-        var moveLabels = player.moves.map { |m| m.menuLabel }.toList
-        _view = CombatUI.new(enemyNames, player.name, moveLabels)
+        var partyNames = party.map { |c| c.name }.toList
+        var moveButtonCount = 0
+        for (c in party) {
+            if (c.moves.count > moveButtonCount) {
+                moveButtonCount = c.moves.count
+            }
+        }
+        _view = CombatUI.new(enemyNames, partyNames, moveButtonCount)
 
         // Cut to the battle arena (Combat/BattleStage.wren) - the authored battle level
         // (ExperimentState.BATTLE_ARENA_LEVEL_NAME) if one was found, centred on its bounds rather
@@ -134,20 +154,20 @@ class CombatState is BaseState {
                 }
             }
             _stage = BattleStage.new(anchorPosition, params["player"], params["world"],
-                                     player, enemyDefs, enemies, battleLevelEntity)
+                                     party, partyDefs, enemyDefs, enemies, battleLevelEntity)
         }
 
-        var session = CombatSession.new(stateManager, _manager, player, enemies, enemyDefs, _view, _stage)
+        var session = CombatSession.new(stateManager, _manager, party, enemies, enemyDefs, _view, _stage)
         _session = session
 
         // The move-menu buttons are wired once per fight (a button's click handler can't be
         // replaced), so each click re-checks it landed in the right phase.
         var i = 0
         for (button in _view.moveButtons) {
-            var chosen = player.moves[i]
+            var index = i
             button.setOnClick { |s, m|
                 if (session.isIn("ChoosingState") && session.armed()) {
-                    session.commitPlayerMove(chosen)
+                    session.commitChoice(index)
                 }
             }
             i = i + 1

@@ -1,8 +1,10 @@
 import "dialogue" for DialogueRegistry
 import "flags" for FlagManager
 import "Inventory" for Inventory
+import "Party" for Party
 import "debug" for Debug
-import "gameObjectComponents" for Camera, Script
+import "gameObjectComponents" for Camera, Script, WorldTransform
+import "Party/DuelRequest" for DuelRequest
 import "gameObject" for GameObject
 import "events" for Event
 
@@ -63,6 +65,25 @@ class Commands {
                 }
             }
             Event.addEvent("pickupEntity", [["__type", "map"], ["name", entityName]])
+        }
+        // The named NPC joins the party: the standing NPC steps out of the overworld, and their follower appears
+        // where they stood (States/ExperimentState.syncPartyFollowers does the spawning).
+        DialogueRegistry.registerCommand("joinParty") { |params|
+            var npcName = params["name"]
+            var spawnPosition = null
+            for (npcEntity in GameObject.getAllWithIdentifier(npcName)) {
+                spawnPosition = WorldTransform.getPosition(npcEntity)
+                GameObject.destroy(npcEntity)
+            }
+            Party.join(npcName, spawnPosition)
+            Debug.info("[Dialogue Command] Party joined by %(npcName)")
+            Event.addEvent("joinParty", [["__type", "map"], ["name", npcName]])
+        }
+        // Challenges the named NPC to a duel: the fight starts once this dialogue has ended (the world picks the
+        // request up - see Party/DuelRequest.wren).
+        DialogueRegistry.registerCommand("startDuel") { |params|
+            DuelRequest.request(params["name"])
+            Debug.info("[Dialogue Command] Duel requested against %(params["name"])")
         }
         DialogueRegistry.registerCommand("putdownEntity") { |params|
             var entityName = params["name"]

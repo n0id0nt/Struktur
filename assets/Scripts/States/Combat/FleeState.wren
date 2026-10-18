@@ -1,5 +1,5 @@
 // States/Combat/FleeState.wren
-// The player bolts: they play the "flee" reaction (a run clip) and slide off-stage (Combat/Battler.runOff), then the
+// The party bolts: everyone plays the "flee" reaction (a run clip) and slides off-stage (Combat/Battler.runOff), then the
 // fight ends via CombatResolver.endFight. Only used with an arena - a fight in place just ends (see
 // CombatResolver.flee).
 import "app" for Time
@@ -19,7 +19,9 @@ class FleeState is CombatSubState {
         s.resumeTime()
         s.view.showMoveMenu(false)
         s.view.setMessage("")
-        s.stage.react(s.player, "flee")
+        for (member in s.party) {
+            s.stage.react(member, "flee")
+        }
         _startTime = Time.scaledTime
     }
 
@@ -27,7 +29,9 @@ class FleeState is CombatSubState {
         var s = session
         var elapsed = Time.scaledTime - _startTime
         var t = elapsed / FLEE_TIME
-        s.stage.runOff(s.player, t > 1 ? 1 : t)
+        for (member in s.party) {
+            s.stage.runOff(member, t > 1 ? 1 : t)
+        }
         if (elapsed >= FLEE_TIME) {
             s.resolver.endFight("You slipped away.")
         }

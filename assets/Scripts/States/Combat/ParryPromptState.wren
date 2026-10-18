@@ -1,5 +1,5 @@
 // States/Combat/ParryPromptState.wren
-// An attack aimed at the player has reached its parry window (CombatSession.nextParryOffer): game time SLOWS
+// An attack aimed at a party member has reached its parry window (CombatSession.nextParryOffer): game time SLOWS
 // (CombatSession.slowTime) so every battler crawls toward the impact while UI/Combat/ParryPromptUI asks
 // "Parry?" - naming the attacker and its move, with a timing bar draining toward the moment the attack lands,
 // and the attacker's stack flagged in the combat UI (CombatSession.parryAttacker). The window closes when the
@@ -36,8 +36,11 @@ class ParryPromptState is CombatSubState {
         s.slowTime()
         s.parryAttacker = _actor
         s.refreshViews()
-        s.view.showParryPrompt(_actor.name, s.timeline.committedMove(_actor).name,
-                               Fn.new { answer_(true) }, Fn.new { answer_(false) })
+        // Names the move - and the defender, when it isn't the party leader the log calls "you".
+        var move = s.timeline.committedMove(_actor)
+        var target = s.targetOf(_actor)
+        var moveText = (target == null || target == s.player) ? move.name : "%(move.name) on %(target.name)"
+        s.view.showParryPrompt(_actor.name, moveText, Fn.new { answer_(true) }, Fn.new { answer_(false) })
     }
 
     // Game seconds until the attacker's move lands (0 once it has).

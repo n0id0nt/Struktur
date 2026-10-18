@@ -49,6 +49,12 @@ class BattleCritter {
         if (name == "Chinlin") {
             return BattleCritter.chinlin
         }
+        if (name == "Villager") {
+            return BattleCritter.villager
+        }
+        if (name == "Duelist") {
+            return BattleCritter.duelist
+        }
         return BattleCritter.chicken
     }
 
@@ -64,5 +70,22 @@ class BattleCritter {
     static chinlin {
         return BattleCritter.new("Chinlin", "Power", 150, 55, "Sprites/chinlin.png", 4, 4, Vec2.new(12, 16), 1,
                                  {"idle": [4, 6, 0.8], "attack": [12, 15, 0.45], "hurt": [12, 15, 0.45], "run": [12, 15, 0.45]})
+    }
+
+    // --- NPC fighters (Tiles/NPCs.png: 9 single-frame figures, one row, pivot (48,64) - see GameObjects/NPC.wren) ---
+    // Placeholder art: the NPC sheet has one frame per character, so every anim role is that one frame and the
+    // fight reads through the lunge / hop / tint effects instead (Combat/Config/ActionAnimations.wren). They fight
+    // as party members (Party.wren - human controlled) or, for the Duelist, as the opponent you have to beat.
+
+    // The Villager (sheet frame 1) - a Control-style support fighter who joins the party after the locket quest.
+    static villager {
+        return BattleCritter.new("Villager", "Control", 80, 70, "Tiles/NPCs.png", 9, 1, Vec2.new(48, 64), 1,
+                                 {"idle": [1, 2, 1.0], "attack": [1, 2, 0.7], "hurt": [1, 2, 0.35], "run": [1, 2, 0.5]})
+    }
+
+    // The Duelist (sheet frame 2) - a Speed-style fighter you must defeat in a duel to recruit.
+    static duelist {
+        return BattleCritter.new("Duelist", "Speed", 100, 90, "Tiles/NPCs.png", 9, 1, Vec2.new(48, 64), 1,
+                                 {"idle": [2, 3, 1.0], "attack": [2, 3, 0.7], "hurt": [2, 3, 0.35], "run": [2, 3, 0.5]})
     }
 }

@@ -23,7 +23,8 @@ class DialogueLoader {
             "Dialogue/GuardianDialogue.json",
             "Dialogue/InventorDialogue.json",
             "Dialogue/MerchantDialogue.json",
-            "Dialogue/ItemDialogue.json"
+            "Dialogue/ItemDialogue.json",
+            "Dialogue/OverworldDialogue.json"
         ]
 
         for (filePath in dialogueFiles) {

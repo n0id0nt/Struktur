@@ -2,6 +2,7 @@ import "dialogue" for DialogueRegistry
 import "flags" for FlagManager
 import "Dialogue/RegisteredFunctions/Operators" for OperatorFunctions
 import "Inventory" for Inventory
+import "Party" for Party
 import "debug" for Debug
 
 class Conditions {
@@ -22,6 +23,14 @@ class Conditions {
             var result = Inventory.contains(item)
             Debug.info("[Dialogue Condition] Checking condition inventory has %(item) = %(result)")
             return result
+        }
+        DialogueRegistry.registerCondition("inParty") { |params|
+            var result = Party.contains(params["name"])
+            Debug.info("[Dialogue Condition] Checking party contains %(params["name"]) = %(result)")
+            return result
+        }
+        DialogueRegistry.registerCondition("notInParty") { |params|
+            return !Party.contains(params["name"])
         }
         DialogueRegistry.registerCondition("notHasItem") { |params|
             var item = params["item"]

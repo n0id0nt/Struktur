@@ -15,6 +15,7 @@ import "States/MainMenuState" for MainMenuState
 import "States/SettingsState" for SettingsState
 import "States/ExperimentState" for ExperimentState
 import "Inventory" for Inventory
+import "Party" for Party
 import "Dialogue/DialogueLoader" for DialogueLoader
 
 class Game {
@@ -34,6 +35,8 @@ class Game {
             "Door",
             "Item",
             "NPC",
+            "PartyMember",
+            "Sign",
             "Player",
             "Room",
         ]
@@ -45,6 +48,7 @@ class Game {
         // Create state manager
         _stateManager = StateManager.new()
         Inventory.init()
+        Party.init()
     }
 
     // Called after the all the systems are initialised
@@ -58,6 +62,7 @@ class Game {
         Localization.loadManifest("Localization/languages.json")
         FlagManager.load("flags.sav")
         Inventory.load("inventory.sav")
+        Party.load("party.sav")
 
         DialogueLoader.loadAllDialogue()
 

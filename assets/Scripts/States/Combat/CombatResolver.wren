@@ -6,6 +6,9 @@
 // after the log (win / lose / back to the move menu / back to charging). Owned by CombatSession; the phases
 // themselves only call into it from their own update().
 import "gameObject" for GameObject
+import "gameObjectComponents" for Script, WorldTransform
+import "reflect" for Reflect
+import "Party" for Party
 import "Combat/Config/Moves" for Moves
 import "Combat/Disruption" for Disruption
 
@@ -85,12 +88,12 @@ class CombatResolver {
         var s = _session
         if (s.livingEnemies().count == 0) {
             win()
-        } else if (!s.player.alive) {
+        } else if (s.livingParty().count == 0) {
             lose()
-        } else if (s.timeline.needsMove(s.player)) {
-            // The player has no move in flight - either their own move just resolved cleanly, or a
-            // parry (theirs or one landed on them) just cleared it - either way they choose again.
-            // Covers every case without needing to special-case who just acted.
+        } else if (s.chooser != null) {
+            // Some living party member has no move in flight - their own move just resolved, or a parry
+            // (theirs or one landed on them) cleared it - so the human picks again. Covers every case
+            // without needing to special-case who just acted.
             s.goTo("ChoosingState")
         } else {
             s.commitEnemyMoves()
@@ -130,14 +133,29 @@ class CombatResolver {
 
     // --- endings -----------------------------------------------------------------------
 
+    // Every opponent is down: beaten overworld entities are removed - and any who "join the party when
+    // defeated" (a recruitable NPC, like the Duelist - see GameObjects/NPC.joinsPartyOnDefeat) are added to the
+    // party instead of just vanishing; their follower appears where they stood.
     win() {
         var s = _session
+        var recruited = []
         for (e in s.enemies) {
             if (e.entity) {
+                var script = Script.getInstance(e.entity)
+                // Duck-typed (not `is NPC`): registered scripts live in their own module instance, so only shared
+                // base classes like Critter pass an `is` check.
+                if (script != null && Reflect.hasMethod(script, "joinsPartyOnDefeat()") && script.joinsPartyOnDefeat()) {
+                    Party.join(script.name, WorldTransform.getPosition(e.entity))
+                    recruited.add(script.name)
+                }
                 GameObject.destroy(e.entity)
             }
         }
-        endFight(s.enemies.count == 1 ? "You defeated the %(s.enemies[0].name)!" : "The pack is beaten!")
+        var line = s.enemies.count == 1 ? "You defeated the %(s.enemies[0].name)!" : "The pack is beaten!"
+        if (recruited.count > 0) {
+            line = "%(line)  %(recruited.join(", ")) joins your party!"
+        }
+        endFight(line)
     }
 
     lose() {

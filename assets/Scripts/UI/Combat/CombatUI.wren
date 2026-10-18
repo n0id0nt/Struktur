@@ -1,5 +1,5 @@
 // UI/Combat/CombatUI.wren
-// The combat screen's view: root panel, enemy/player CombatantUI stacks, battle-log message, the
+// The combat screen's view: root panel, enemy/party CombatantUI stacks, battle-log message, the
 // move menu (via UI/Shared/ButtonUI), and a ParryPromptUI shown only during the "parryPrompt" phase.
 // Pure construction + refresh - it never reads a Combatant or
 // Timeline itself and never calls back into game logic (unlike the old inline buildUI(), whose
@@ -16,9 +16,11 @@ import "UI/Combat/ParryPromptUI" for ParryPromptUI
 import "UI/Shared/ButtonUI" for ButtonUI
 
 class CombatUI {
-    // enemyNames/playerName: fixed for the fight, used once to label each CombatantUI stack.
-    // moveLabels: the player's move-menu button text, one per move; a Flee button is always added.
-    construct new(enemyNames, playerName, moveLabels) {
+    // enemyNames/partyNames: fixed for the fight, used once to label each CombatantUI stack (the party's stacks
+    // run up the bottom-left, leader at the bottom). moveButtonCount: how many move buttons the menu needs - the
+    // most moves any party member has; setMoveLabels() relabels (and hides the unused ones) for whoever is
+    // choosing. A Flee button is always added.
+    construct new(enemyNames, partyNames, moveButtonCount) {
         var gw = Application.gameWidth
         var gh = Application.gameHeight
         var font = Font.load("Fonts/medieval_sharp/MedievalSharp-Bold.ttf", 60)
@@ -51,8 +53,11 @@ class CombatUI {
         _messageLabel.setAnchorPoint(Vec2.new(0.5, 0.5))
         _root.addChild(_messageLabel)
 
-        // Player stack, bottom-left.
-        _playerView = CombatantUI.new(_root, playerName, 56, gh - 150, 320, true, font)
+        // Party stacks, bottom-left: the leader at the bottom, each further member 80px above.
+        _partyViews = []
+        for (k in 0...partyNames.count) {
+            _partyViews.add(CombatantUI.new(_root, partyNames[k], 56, gh - 150 - k * 80, 320, true, font))
+        }
 
         // Parry decision prompt - hidden until States/Combat/ParryPromptState.wren shows it, centred
         // just below the battle-log message.
@@ -68,8 +73,8 @@ class CombatUI {
         _moveButtons = []
         var h = 44
         var i = 0
-        for (label in moveLabels) {
-            _moveButtons.add(ButtonUI.new(_moveMenu, label, Vec2.new(0, i * (h + 8)), Vec2.new(0, 0),
+        while (i < moveButtonCount) {
+            _moveButtons.add(ButtonUI.new(_moveMenu, "", Vec2.new(0, i * (h + 8)), Vec2.new(0, 0),
                                           Vec2.new(304, h), font))
             i = i + 1
         }
@@ -87,13 +92,27 @@ class CombatUI {
     showMoveMenu(visible) { _moveMenu.setVisible(visible) }
     focusFirstMoveButton() { UIManager.setFocus(_moveButtons[0].panel) }
 
+    // Labels the move buttons for whoever is choosing - one label per move; buttons beyond that are hidden.
+    setMoveLabels(labels) {
+        for (i in 0..._moveButtons.count) {
+            var used = i < labels.count
+            _moveButtons[i].panel.setVisible(used)
+            if (used) {
+                _moveButtons[i].setText(labels[i])
+            }
+        }
+    }
+
     setMessage(text) {
         _messageLabel.setText(text)
         _messageLabel.setBoundingBoxToText()
     }
 
-    refreshPlayer(alive, hpFraction, chargeFraction, staminaFraction, moveText, staggered) {
-        _playerView.refresh(alive, hpFraction, chargeFraction, staminaFraction, moveText, staggered)
+    // Refreshes party member `index`'s stack; selected flags it with the ">>" marker (whose move is being picked).
+    refreshParty(index, alive, hpFraction, chargeFraction, staminaFraction, moveText, staggered, selected) {
+        var v = _partyViews[index]
+        v.refresh(alive, hpFraction, chargeFraction, staminaFraction, moveText, staggered)
+        v.selected = selected
     }
 
     refreshEnemy(index, alive, hpFraction, chargeFraction, staminaFraction, moveText, staggered, selected) {

@@ -1,0 +1,383 @@
+[
+  {
+    "data": {
+      "text": "dialogue.sign.sign_welcome"
+    },
+    "node": "sign_welcome"
+  },
+  {
+    "data": {
+      "next": "sign_warning_2",
+      "text": "dialogue.sign.sign_warning_1"
+    },
+    "node": "sign_warning"
+  },
+  {
+    "data": {
+      "text": "dialogue.sign.sign_warning_2"
+    },
+    "node": "sign_warning_2"
+  },
+  {
+    "data": {
+      "targets": [
+        {
+          "conditions": [
+            {
+              "parameters": [
+                { "type": "flag", "value": "villager_quest_state" },
+                { "type": "op", "value": "==" },
+                { "type": "value", "value": 2.0 }
+              ],
+              "type": "hasIntFlag"
+            }
+          ],
+          "node": "villager_joined"
+        },
+        {
+          "conditions": [
+            {
+              "parameters": [
+                { "type": "flag", "value": "villager_quest_state" },
+                { "type": "op", "value": "==" },
+                { "type": "value", "value": 1.0 }
+              ],
+              "type": "hasIntFlag"
+            },
+            {
+              "parameters": [
+                { "type": "item", "value": "Lost Locket" }
+              ],
+              "type": "hasItem"
+            }
+          ],
+          "node": "villager_quest_done_1"
+        },
+        {
+          "conditions": [
+            {
+              "parameters": [
+                { "type": "flag", "value": "villager_quest_state" },
+                { "type": "op", "value": "==" },
+                { "type": "value", "value": 1.0 }
+              ],
+              "type": "hasIntFlag"
+            }
+          ],
+          "node": "villager_quest_reminder"
+        },
+        {
+          "node": "villager_1"
+        }
+      ]
+    },
+    "node": "villager"
+  },
+  {
+    "data": {
+      "next": "villager_menu",
+      "speaker": "Villager",
+      "text": "dialogue.villager.villager_1"
+    },
+    "node": "villager_1"
+  },
+  {
+    "data": {
+      "choices": [
+        {
+          "target": "villager_who",
+          "text": "dialogue.villager.villager_menu.choice1"
+        },
+        {
+          "target": "villager_advice",
+          "text": "dialogue.villager.villager_menu.choice2"
+        },
+        {
+          "target": "villager_quest_ask",
+          "text": "dialogue.villager.villager_menu.choice3"
+        },
+        {
+          "target": "villager_bye",
+          "text": "dialogue.villager.villager_menu.choice4"
+        }
+      ],
+      "speaker": "Villager",
+      "text": "dialogue.villager.villager_menu"
+    },
+    "node": "villager_menu"
+  },
+  {
+    "data": {
+      "speaker": "Villager",
+      "text": "dialogue.villager.villager_who"
+    },
+    "node": "villager_who"
+  },
+  {
+    "data": {
+      "speaker": "Villager",
+      "text": "dialogue.villager.villager_advice"
+    },
+    "node": "villager_advice"
+  },
+  {
+    "data": {
+      "speaker": "Villager",
+      "text": "dialogue.villager.villager_bye"
+    },
+    "node": "villager_bye"
+  },
+  {
+    "data": {
+      "commands": [
+        {
+          "parameters": [
+            { "type": "flag", "value": "villager_quest_state" },
+            { "type": "value", "value": 1.0 }
+          ],
+          "type": "setIntFlag"
+        }
+      ],
+      "speaker": "Villager",
+      "text": "dialogue.villager.villager_quest_ask"
+    },
+    "node": "villager_quest_ask"
+  },
+  {
+    "data": {
+      "speaker": "Villager",
+      "text": "dialogue.villager.villager_quest_reminder"
+    },
+    "node": "villager_quest_reminder"
+  },
+  {
+    "data": {
+      "commands": [
+        {
+          "parameters": [
+            { "type": "item", "value": "Lost Locket" }
+          ],
+          "type": "removeItem"
+        },
+        {
+          "parameters": [
+            { "type": "flag", "value": "villager_quest_state" },
+            { "type": "value", "value": 2.0 }
+          ],
+          "type": "setIntFlag"
+        }
+      ],
+      "next": "villager_join_2",
+      "speaker": "Villager",
+      "text": "dialogue.villager.villager_quest_done_1"
+    },
+    "node": "villager_quest_done_1"
+  },
+  {
+    "data": {
+      "commands": [
+        {
+          "parameters": [
+            { "type": "name", "value": "Villager" }
+          ],
+          "type": "joinParty"
+        }
+      ],
+      "speaker": "Villager",
+      "text": "dialogue.villager.villager_join_2"
+    },
+    "node": "villager_join_2"
+  },
+  {
+    "data": {
+      "speaker": "Villager",
+      "text": "dialogue.villager.villager_joined"
+    },
+    "node": "villager_joined"
+  },
+  {
+    "data": {
+      "targets": [
+        {
+          "conditions": [
+            {
+              "parameters": [
+                { "type": "name", "value": "Villager" }
+              ],
+              "type": "inParty"
+            }
+          ],
+          "node": "traveler_villager_1"
+        },
+        {
+          "node": "traveler_1"
+        }
+      ]
+    },
+    "node": "traveler"
+  },
+  {
+    "data": {
+      "next": "traveler_villager_2",
+      "speaker": "Traveler",
+      "text": "dialogue.traveler.traveler_villager_1"
+    },
+    "node": "traveler_villager_1"
+  },
+  {
+    "data": {
+      "next": "traveler_2",
+      "speaker": "Villager",
+      "text": "dialogue.traveler.traveler_villager_2"
+    },
+    "node": "traveler_villager_2"
+  },
+  {
+    "data": {
+      "next": "traveler_2",
+      "speaker": "Traveler",
+      "text": "dialogue.traveler.traveler_1"
+    },
+    "node": "traveler_1"
+  },
+  {
+    "data": {
+      "speaker": "Traveler",
+      "text": "dialogue.traveler.traveler_2"
+    },
+    "node": "traveler_2"
+  },
+  {
+    "data": {
+      "next": "lost_locket_obtain",
+      "speaker": "Narrator",
+      "text": "dialogue.item.lost_locket_pickup"
+    },
+    "node": "lost_locket"
+  },
+  {
+    "data": {
+      "commands": [
+        {
+          "parameters": [
+            { "type": "item", "value": "Lost Locket" }
+          ],
+          "type": "giveItem"
+        },
+        {
+          "parameters": [
+            { "type": "name", "value": "Lost Locket" }
+          ],
+          "type": "pickupEntity"
+        }
+      ],
+      "speaker": "Narrator",
+      "text": "dialogue.item.lost_locket_obtain"
+    },
+    "node": "lost_locket_obtain"
+  },
+  {
+    "data": {
+      "next": "lucky_coin_obtain",
+      "speaker": "Narrator",
+      "text": "dialogue.item.lucky_coin_pickup"
+    },
+    "node": "lucky_coin"
+  },
+  {
+    "data": {
+      "commands": [
+        {
+          "parameters": [
+            { "type": "item", "value": "Lucky Coin" }
+          ],
+          "type": "giveItem"
+        },
+        {
+          "parameters": [
+            { "type": "name", "value": "Lucky Coin" }
+          ],
+          "type": "pickupEntity"
+        }
+      ],
+      "speaker": "Narrator",
+      "text": "dialogue.item.lucky_coin_obtain"
+    },
+    "node": "lucky_coin_obtain"
+  },
+  {
+    "data": {
+      "targets": [
+        {
+          "conditions": [
+            {
+              "parameters": [
+                { "type": "name", "value": "Duelist" }
+              ],
+              "type": "inParty"
+            }
+          ],
+          "node": "duelist_joined"
+        },
+        {
+          "node": "duelist_1"
+        }
+      ]
+    },
+    "node": "duelist"
+  },
+  {
+    "data": {
+      "next": "duelist_menu",
+      "speaker": "Duelist",
+      "text": "dialogue.duelist.duelist_1"
+    },
+    "node": "duelist_1"
+  },
+  {
+    "data": {
+      "choices": [
+        {
+          "target": "duelist_fight",
+          "text": "dialogue.duelist.duelist_menu.choice1"
+        },
+        {
+          "target": "duelist_bye",
+          "text": "dialogue.duelist.duelist_menu.choice2"
+        }
+      ],
+      "speaker": "Duelist",
+      "text": "dialogue.duelist.duelist_menu"
+    },
+    "node": "duelist_menu"
+  },
+  {
+    "data": {
+      "commands": [
+        {
+          "parameters": [
+            { "type": "name", "value": "Duelist" }
+          ],
+          "type": "startDuel"
+        }
+      ],
+      "speaker": "Duelist",
+      "text": "dialogue.duelist.duelist_fight"
+    },
+    "node": "duelist_fight"
+  },
+  {
+    "data": {
+      "speaker": "Duelist",
+      "text": "dialogue.duelist.duelist_bye"
+    },
+    "node": "duelist_bye"
+  },
+  {
+    "data": {
+      "speaker": "Duelist",
+      "text": "dialogue.duelist.duelist_joined"
+    },
+    "node": "duelist_joined"
+  }
+]

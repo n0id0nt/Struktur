@@ -34,13 +34,14 @@ var RNG = Random.new()
 
 class CombatSession {
     // outer: the StateManager CombatState itself lives in (OverState clears it to end the fight).
-    // manager: CombatState's nested StateManager holding the phases. player: Player.combatant (it
-    // persists on the Player script). enemies / enemyDefs: parallel lists, one Combatant + one
-    // BattleCritter per opponent.
-    construct new(outer, manager, player, enemies, enemyDefs, view, stage) {
+    // manager: CombatState's nested StateManager holding the phases. party: the human-controlled side - every
+    // party member's persistent Combatant, leader (the first player) first (see Party.wren). enemies /
+    // enemyDefs: parallel lists, one Combatant + one BattleCritter per opponent.
+    construct new(outer, manager, party, enemies, enemyDefs, view, stage) {
         _outer = outer
         _manager = manager
-        _player = player
+        _party = party
+        _player = party[0]
         _enemies = enemies
         _enemyDefs = enemyDefs
         _view = view
@@ -50,10 +51,11 @@ class CombatSession {
         for (e in _enemies) {
             _timeline.add(e)
         }
-        _timeline.add(_player)
+        for (member in _party) {
+            _timeline.add(member)
+        }
 
         _staggered = []
-        _playerTarget = null
         _pendingMove = null
         _targetIndex = 0
         _navArmedAt = 0
@@ -62,16 +64,18 @@ class CombatSession {
     }
 
     outer { _outer }
+
+    // The party leader (the first player) - the one the log calls "you".
     player { _player }
+
+    // Everyone on the human-controlled side, leader first.
+    party { _party }
     enemies { _enemies }
     enemyDefs { _enemyDefs }
     view { _view }
     stage { _stage }
     timeline { _timeline }
     resolver { _resolver }
-
-    // The enemy the player's committed move is aimed at (set when they commit).
-    playerTarget { _playerTarget }
 
     // The move waiting on a target pick while TargetingState is up.
     pendingMove { _pendingMove }
@@ -136,8 +140,12 @@ class CombatSession {
     // The Timeline's commit/clear plus the matching animation change: a committed combatant plays its
     // move's clip (retimed to the move's charge), a cleared one goes back to idle. Everything in a fight
     // that changes a combatant's move goes through these two.
-    commitMove(combatant, move) {
+    commitMove(combatant, move) { commitMove(combatant, move, null) }
+
+    // target: who the move is aimed at (a Combatant), or null for a move with no target (a stall).
+    commitMove(combatant, move, target) {
         _timeline.commit(combatant, move)
+        _timeline.setTarget(combatant, target)
         if (_stage != null) {
             _stage.beginCharge(combatant, move, _timeline.costOf(combatant))
         }
@@ -156,7 +164,18 @@ class CombatSession {
         _timeline.interrupt(combatant, units)
     }
 
-    // The player picked `move` from the menu - offensive moves against a group first need a target
+    // The party member whose turn it is to pick a move: the first living member with nothing committed (null
+    // when everyone has a move). The human-controlled side picks for each member in turn through the same menu.
+    chooser {
+        for (member in _party) {
+            if (member.alive && _timeline.needsMove(member)) {
+                return member
+            }
+        }
+        return null
+    }
+
+    // The human picked `move` for the current chooser - offensive moves against a group first need a target
     // (TargetingState), everything else commits straight away.
     commitPlayerMove(move) {
         if (move.offensive && livingEnemies().count > 1) {
@@ -165,15 +184,25 @@ class CombatSession {
             goTo("TargetingState")
             return
         }
-        var target = move.offensive ? _enemies[firstLivingEnemy()] : _player
+        var target = move.offensive ? _enemies[firstLivingEnemy()] : chooser
         commitPlayerMoveOn(move, target)
     }
 
+    // Menu button `index` was chosen for the current chooser (the buttons are wired once per fight, so they
+    // call in here with their index and this looks the move up).
+    commitChoice(index) {
+        var member = chooser
+        if (member != null && index < member.moves.count) {
+            commitPlayerMove(member.moves[index])
+        }
+    }
+
+    // Commits `move` on `target` for the current chooser, then on to the next member who needs a move - or,
+    // once everyone has one, back to charging.
     commitPlayerMoveOn(move, target) {
-        _playerTarget = target
+        commitMove(chooser, move, target)
         _pendingMove = null
-        commitMove(_player, move)
-        goTo("ChargingState")
+        goTo(chooser != null ? "ChoosingState" : "ChargingState")
     }
 
     // TargetingState was cancelled - drop the half-chosen move.
@@ -181,13 +210,33 @@ class CombatSession {
         _pendingMove = null
     }
 
-    // Every enemy that still needs a move picks one (target is always the player).
+    // Every enemy that still needs a move picks one, aimed at a random living party member (healing moves
+    // target the enemy itself).
     commitEnemyMoves() {
         for (e in _enemies) {
             if (e.alive && _timeline.needsMove(e)) {
-                commitMove(e, enemyPickMove(e))
+                var move = enemyPickMove(e)
+                commitMove(e, move, move.offensive ? randomLivingParty() : e)
             }
         }
+    }
+
+    randomLivingParty() {
+        var living = livingParty()
+        return living.count == 0 ? null : living[RNG.int(living.count)]
+    }
+
+    // True for a combatant on the human-controlled side.
+    isParty(combatant) { _party.contains(combatant) }
+
+    livingParty() {
+        var out = []
+        for (member in _party) {
+            if (member.alive) {
+                out.add(member)
+            }
+        }
+        return out
     }
 
     // Simple AI: heal when hurt, otherwise a random offensive move biased toward the cheaper ones
@@ -214,15 +263,19 @@ class CombatSession {
         return a.timeCost <= b.timeCost ? a : b
     }
 
-    // Who `actor`'s committed move is aimed at: the player's chosen enemy (or the first one still
-    // standing if it fell), or the player for any enemy. null when there's nobody left to hit.
+    // Who `actor`'s committed move is aimed at (stored on the Timeline when it was committed). If that target
+    // has fallen since, the first living combatant on the other side takes its place; null when there is
+    // nobody left to hit.
     targetOf(actor) {
-        var isPlayer = actor == _player
-        var target = isPlayer ? _playerTarget : _player
-        if (target == null || !target.alive) {
-            target = isPlayer ? firstLivingEnemyCombatant() : _player
+        var target = _timeline.target(actor)
+        if (target != null && target.alive) {
+            return target
         }
-        return target
+        if (isParty(actor)) {
+            return firstLivingEnemyCombatant()
+        }
+        var living = livingParty()
+        return living.count == 0 ? null : living[0]
     }
 
     // --- parrying ---------------------------------------------------------------------
@@ -252,7 +305,7 @@ class CombatSession {
             if (target == null || !target.alive) {
                 continue
             }
-            if (target == _player) {
+            if (isParty(target)) {
                 return c
             }
             answerParry(c, RNG.float() < ENEMY_PARRY_CHANCE)
@@ -355,8 +408,15 @@ class CombatSession {
     }
 
     refreshViews() {
-        _view.refreshPlayer(_player.alive, _player.stats.fraction, _timeline.fraction(_player),
-                            _player.stats.staminaFraction, readout(_player), _staggered.contains(_player))
+        // The party member whose move is being picked is flagged with the ">>" marker.
+        var turnOf = (isIn("ChoosingState") || isIn("TargetingState")) ? chooser : null
+        var p = 0
+        for (member in _party) {
+            _view.refreshParty(p, member.alive, member.stats.fraction, _timeline.fraction(member),
+                               member.stats.staminaFraction, readout(member), _staggered.contains(member),
+                               member == turnOf)
+            p = p + 1
+        }
         var i = 0
         for (c in _enemies) {
             _view.refreshEnemy(i, c.alive, c.stats.fraction, _timeline.fraction(c), c.stats.staminaFraction,
