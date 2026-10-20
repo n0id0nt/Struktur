@@ -91,6 +91,19 @@ class Battler {
 
     // dir: 1 to face right, -1 to face left. Flips the sheet when that's opposite the art's facing.
     face(dir) {
+        _faceDir = dir
+        flip_(dir)
+    }
+
+    // Turns the sprite away from the opponents (true) or back toward them (false) without changing the
+    // remembered facing - so a retreat or a flee runs/rolls the way it moves instead of moonwalking.
+    turnAway_(away) {
+        if (_faceDir != null) {
+            flip_(away ? -_faceDir : _faceDir)
+        }
+    }
+
+    flip_(dir) {
         Sprite.setFlipped(_entity, dir == _def.facing ? FlipBit.NONE : FlipBit.HORIZONTAL)
     }
 
@@ -103,10 +116,16 @@ class Battler {
     // --- clips ---------------------------------------------------------------------
 
     // The key of the clip for `role` at `duration` seconds (null = the def's own length), registering
-    // it on first use. Frame ranges come from the def's anims table; a role the def lacks falls back to
-    // idle. loop=false clips hold their last frame.
+    // it on first use. Frame ranges come from the def's anims table; a role the def lacks falls back to its
+    // generic role (ActionAnimations.fallbackRole - "crush" -> "attack"), then to idle. loop=false clips
+    // hold their last frame.
     clip_(role, duration, loop) {
-        var frames = _def.anims.containsKey(role) ? _def.anims[role] : _def.anims["idle"]
+        var anims = _def.anims
+        if (!anims.containsKey(role)) {
+            var generic = ActionAnimations.fallbackRole(role)
+            role = (generic != null && anims.containsKey(generic)) ? generic : "idle"
+        }
+        var frames = anims[role]
         var seconds = duration == null ? frames[2] : duration
         var key = "%(role)|%(seconds)|%(loop)"
         if (!_registered.containsKey(key)) {
@@ -138,12 +157,16 @@ class Battler {
         } else {
             _chargeClip = clip_(_action.role, cost * SECONDS_PER_TIME_UNIT, false)
         }
+        turnAway_(_action.motion == "retreat")
         refreshTint_()
     }
 
     // The move is gone (resolved, cancelled): back to idle. Position stays where the move left it until
     // recover() eases it home.
     endCharge() {
+        if (_action != null && _action.motion == "retreat") {
+            turnAway_(false)
+        }
         _move = null
         _action = null
         _curve = null
@@ -229,6 +252,9 @@ class Battler {
         SpriteAnimation.forcePlayAnimation(_entity, clip_(a.role, a.duration, false))
         if (id == "defeat") {
             _defeated = true
+        }
+        if (id == "flee") {
+            turnAway_(true)   // stays turned: the flee ends the fight
         }
         refreshTint_()
     }

@@ -5,10 +5,11 @@
 // moment the bar fills), and every reaction (hurt, parry, fumble, defeat, flee...) is a short timed
 // overlay. Combat/Battler.wren plays these; nothing else in a fight owns an animation duration.
 //
-// There is no battle-specific art yet, so `role` names a clip of the actor's own sheet (the `anims` table
-// of Combat/Config/BattlePlayer.wren / BattleCritter.wren: "idle" "attack" "hurt" "run") and the rest of
-// the look comes from code-driven extras (a lunge/retreat motion, a tint, a knock-back hop, a particle
-// burst). Swap in real clips by pointing `role` at new anims entries - nothing else changes.
+// `role` names a clip of the actor's own sheet (the `anims` table of Combat/Config/BattlePlayer.wren /
+// BattleCritter.wren). Moves use a role per move ("slash", "crush"...) and some reactions their own
+// ("parry", "defeat"); a sheet that lacks one falls back to the generic "idle" "attack" "hurt" "run"
+// (fallbackRole), so critters with only those four still work. The rest of the look comes from
+// code-driven extras (a lunge/retreat motion, a tint, a knock-back hop, a particle burst).
 import "math" for Vec4
 
 // How long the attacker takes to ease back to its mark after a move lands (Combat/Battler.recover).
@@ -66,19 +67,40 @@ class ActionAnimation {
 
 class ActionAnimations {
     // The animation a combatant plays for as long as `move` is committed (its whole charge).
+    // Each move plays its own role, named after it ("slash", "crush", "mend"...), so a sheet with
+    // battle-specific art maps that role to a clip in its anims table (Combat/Config/BattlePlayer.wren);
+    // a sheet without it falls back to the generic role (fallbackRole: "attack" / "run").
     static forMove(move) {
         var n = move.name
+        var role = ActionAnimations.roleFor_(n)
         if (n == "Stalled") {
             return ActionAnimation.new("hurt", null, true, "none", 0, null, null, STALL_TINT, 0, false)
         }
         if (n == "Dodge") {
-            return ActionAnimation.new("run", null, false, "retreat", 0.5, null, null, null, 0, false)
+            return ActionAnimation.new(role, null, false, "retreat", 0.5, null, null, null, 0, false)
         }
         if (n == "Mend") {
-            return ActionAnimation.new("attack", null, false, "none", 0, null, "healGlow", null, 0, false)
+            return ActionAnimation.new(role, null, false, "none", 0, null, "healGlow", null, 0, false)
         }
-        return ActionAnimation.new("attack", null, false, "lunge", ActionAnimations.lungeStart_(n),
+        return ActionAnimation.new(role, null, false, "lunge", ActionAnimations.lungeStart_(n),
                                    move.curveId, move.particleId, null, 0, false)
+    }
+
+    // "Onslaught" -> "onslaught".
+    static roleFor_(name) {
+        if (name.count < 2) return name
+        var first = name.bytes[0]
+        if (first < 65 || first > 90) return name
+        return String.fromByte(first + 32) + name[1..-1]
+    }
+
+    // The generic role a move- or reaction-specific role stands in for, for sheets (critters) that only
+    // have "idle" "attack" "hurt" "run". null = no fallback (Battler then uses idle).
+    static fallbackRole(role) {
+        if (role == "dodge") return "run"
+        if (role == "defeat" || role == "fumble") return "hurt"
+        if (role == "idle" || role == "attack" || role == "hurt" || role == "run") return null
+        return "attack"
     }
 
     // Fraction of a charge at which the attacker starts moving - slow heavy moves start earlier so the
@@ -99,11 +121,12 @@ class ActionAnimations {
     static reaction(id) {
         if (id == "hurt")     return ActionAnimation.new("hurt", 0.35, false, "none", 0, null, null, HURT_TINT, 10, false)
         // Interrupted mid-charge: reels and fumbles back to its mark, overriding the move's lunge path.
-        if (id == "parry")    return ActionAnimation.new("attack", 0.35, false, "none", 0, null, null, null, 0, false)
+        if (id == "parry")    return ActionAnimation.new("parry", 0.35, false, "none", 0, null, null, null, 0, false)
         // Stalled by a parry: the attacker reels and fumbles back from where its lunge stopped to its mark,
         // overriding the move path (its Stalled look - tinted, looping hurt clip - takes over once it is home).
         if (id == "fumble")   return ActionAnimation.new("hurt", 0.7, false, "none", 0, null, null, null, 12, false, true)
-        if (id == "defeat")   return ActionAnimation.new("hurt", 0.6, false, "none", 0, null, null, HURT_TINT, 18, true)
+        // Long enough for a sheet's own "defeat" (death) clip to read before the fade finishes.
+        if (id == "defeat")   return ActionAnimation.new("defeat", 1.0, false, "none", 0, null, null, HURT_TINT, 18, true)
         if (id == "flee")     return ActionAnimation.new("run", 0.7, false, "none", 0, null, null, null, 0, false)
         if (id == "entrance") return ActionAnimation.new("run", null, true, "none", 0, null, null, null, 0, false)
         return ActionAnimation.new("idle", null, true, "none", 0, null, null, null, 0, false)
