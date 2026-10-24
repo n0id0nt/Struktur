@@ -8,10 +8,9 @@ import "reflect" for Reflect
 
 import "Combat/Config/BattlePlayer" for BattlePlayer
 import "Sprites/ExplorerSprite" for ExplorerSprite
+import "Sprites/SpriteSheet" for SpriteSheet
 
 var INTERACTABLE_DISTANCE = 64.0
-// Animation direction prefixes by octant of atan2(y, x) - +x is right, +y is down the screen.
-var FACING_NAMES = ["right", "downRight", "down", "downLeft", "left", "upLeft", "up", "upRight"]
 
 class Player {
     construct new(entity, args) {
@@ -89,11 +88,7 @@ class Player {
     }
 
     // Snaps _facing to the nearest of the 8 sheet directions (+y is down the screen).
-    getPlayerAnimation(animationType) {
-        var octant = (_facing.y.atan(_facing.x) / (Num.pi / 4)).round % 8
-        if (octant < 0) octant = octant + 8
-        return "%(FACING_NAMES[octant])%(animationType)Animation"
-    }
+    getPlayerAnimation(animationType) { SpriteSheet.clipName(_facing, animationType) }
 
     playerForceStop() {
         var velocity = Vec2.new()

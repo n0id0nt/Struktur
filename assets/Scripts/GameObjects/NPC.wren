@@ -1,43 +1,50 @@
-import "gameObjectComponents" for Sprite, PhysicsBody, Shader as ShaderComponent, RenderLayer
-import "renderer" for FlipBit
+import "gameObjectComponents" for PhysicsBody, Shader as ShaderComponent
 import "math" for Vec2, Vec3, Vec4
-import "resourceManager" for Texture, Shader as ShaderResource
+import "resourceManager" for Shader as ShaderResource
 import "physics" for BodyDefinition, PhysicsCircleShape, BodyType
-import "Colors" for WHITE
 import "debug" for Debug
+import "Sprites/ClaireSprite" for ClaireSprite
+import "Sprites/GoblinVikingSprite" for GoblinVikingSprite
+import "Sprites/PeasantGirlSprite" for PeasantGirlSprite
+import "Sprites/PinkHairGirlSprite" for PinkHairGirlSprite
+import "Sprites/WrestlerSprite" for WrestlerSprite
+import "Sprites/YellowPantsGirlSprite" for YellowPantsGirlSprite
 
 class NPCData {
-    construct new(spriteIndex, xOffset, yOffset) {
-        _spriteIndex = spriteIndex
-        _xOffset = xOffset
-        _yOffset = yOffset
+    // sprite: the generated Sprites/<Name>Sprite class this NPC wears (made by 3dModelsToSprites/build_sprites.bat).
+    construct new(sprite) {
+        _sprite = sprite
     }
 
-    getOffset() {
-        return Vec2.new(_xOffset, _yOffset)
-    }
+    sprite { _sprite }
 
-    getSpriteIndex() {
-        return _spriteIndex
-    }
+    // Adds the NPC's sprite and every <direction><Animation>Animation clip to `entity`, idling facing down.
+    createSprite(entity) { _sprite.create(entity) }
 
-    // The sheet frame + pivot for the NPC called `name` (Tiles/NPCs.png - one single-frame figure each), or null.
-    // Shared by the standing NPC (this file) and its party follower (GameObjects/PartyMember.wren).
+    // Atlas size in pixels - the soul shader's offsets are in texture UVs, so NPC.start scales them by this to
+    // keep them a fixed number of pixels on any sheet.
+    textureWidth { _sprite.data["columns"] * _sprite.data["cellSize"][0] }
+    rows { _sprite.data["rows"] }
+
+    // The sprite for the NPC called `name`, or null. Six models cover the twelve NPCs, so some share a look.
+    // Shared by the standing NPC (this file), its party follower (GameObjects/PartyMember.wren) and its battle
+    // look (Combat/Config/BattleCritter.wren).
     static forName(name) {
         var table = {
-            "Scholar": NPCData.new(0, 48, 64),
-            "Gardener": NPCData.new(6, 48, 64),
-            "Cook": NPCData.new(4, 48, 64),
-            "Inventor": NPCData.new(2, 48, 64),
-            "Dreamer": NPCData.new(5, 60, 48),
-            "Astronomer": NPCData.new(8, 48, 64),
-            "Merchant": NPCData.new(1, 48, 64),
-            "Guardian": NPCData.new(7, 48, 64),
-            "Cordelia": NPCData.new(3, 48, 64),
-            // Placeholder sprites (borrowed from the sheet) for the overworld NPCs - Dialogue/OverworldDialogue.json.
-            "Villager": NPCData.new(1, 48, 64),
-            "Traveler": NPCData.new(7, 48, 64),
-            "Duelist": NPCData.new(2, 48, 64)
+            // Overworld NPCs (States/ExperimentState.wren spawns them; Dialogue/OverworldDialogue.json).
+            "Villager": NPCData.new(PeasantGirlSprite),
+            "Traveler": NPCData.new(ClaireSprite),
+            "Duelist": NPCData.new(YellowPantsGirlSprite),
+            // Memory Palace NPCs (Levels/MemoryPalace.ldtk).
+            "Scholar": NPCData.new(ClaireSprite),
+            "Gardener": NPCData.new(YellowPantsGirlSprite),
+            "Cook": NPCData.new(PeasantGirlSprite),
+            "Inventor": NPCData.new(YellowPantsGirlSprite),
+            "Dreamer": NPCData.new(PinkHairGirlSprite),
+            "Astronomer": NPCData.new(PinkHairGirlSprite),
+            "Merchant": NPCData.new(WrestlerSprite),
+            "Guardian": NPCData.new(GoblinVikingSprite),
+            "Cordelia": NPCData.new(PinkHairGirlSprite)
         }
         return table.containsKey(name) ? table[name] : null
     }
@@ -62,10 +69,8 @@ class NPC {
         var npcData = NPCData.forName(_name)
         Debug.assertMsg(npcData != null, "No Data for NPC %(_name)")
 
-        var texture = Texture.load("Tiles/NPCs.png")
         // RenderLayer.ENTITIES already y-sorts by world position, so no manual offset is needed here.
-        Sprite.create(_entity, texture, WHITE, npcData.getOffset(), 9, 1, FlipBit.NONE, npcData.getSpriteIndex(), RenderLayer.ENTITIES, 0)
-        texture.unload()
+        npcData.createSprite(_entity)
         
         var bodyDef = BodyDefinition.new(BodyType.STATIC_BODY)
         var playerShape = PhysicsCircleShape.new(0.25)
@@ -82,9 +87,10 @@ class NPC {
         shaderComponent.setFloatUniform("waveSpeed", 3.0)
         shaderComponent.setVec3Uniform("waveDirection", Vec2.new(1.0, 0.3))
         shaderComponent.setFloatUniform("scanlineIntensity", 0.1)
-        shaderComponent.setFloatUniform("chromaticAberration", 0.005)
+        // ~1.5px colour split and one holographic band per figure, whatever the atlas size.
+        shaderComponent.setFloatUniform("chromaticAberration", 1.5 / npcData.textureWidth)
         shaderComponent.setFloatUniform("glitchFrequency", 0.05)
-        shaderComponent.setFloatUniform("holographicShift", 10.0)
+        shaderComponent.setFloatUniform("holographicShift", 10.0 * npcData.rows)
     }
     
     update() {

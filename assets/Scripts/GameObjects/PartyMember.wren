@@ -11,21 +11,19 @@
 //                                                  the place to plug in path search (e.g. around a moving door)
 // See each file for the protocol it expects.
 //
-// Placeholder art: the NPC's single frame from Tiles/NPCs.png (GameObjects/NPC.wren's NPCData), so it glides
-// rather than walks; it just mirrors to face the way it is going.
-import "gameObjectComponents" for Sprite, PhysicsBody, RenderLayer, WorldTransform, Script
-import "renderer" for FlipBit
+// Art: the NPC's generated sheet (GameObjects/NPC.wren's NPCData) - it walks / runs facing the way it moves (8
+// directions) and idles facing that way when it stops.
+import "gameObjectComponents" for PhysicsBody, SpriteAnimation, WorldTransform, Script
 import "math" for Vec2, Vec3
-import "resourceManager" for Texture
 import "physics" for BodyDefinition, PhysicsCircleShape, BodyType, CollisionLayers
 import "app" for Time
 import "debug" for Debug
-import "Colors" for WHITE
 import "Party" for Party
 import "Party/TrailFollow" for TrailFollow
 import "Party/PartySeparation" for PartySeparation
 import "Party/WarpRecovery" for WarpRecovery
 import "GameObjects/NPC" for NPCData
+import "Sprites/SpriteSheet" for SpriteSheet
 
 // --- tuning (pixels unless noted; speeds in m/s like Player.speed) ---
 var DEFAULT_SPEED     = 3.0    // used when no player is around to match
@@ -42,6 +40,8 @@ var STUCK_CHECK_TIME  = 1.2    // seconds between "did we actually move?" checks
 var STUCK_MIN_MOVE    = 6      // px that must be covered per check, or the follower counts as stuck
 var MAX_SEPARATION    = 420    // farther than this from the member ahead counts as separated
 var RECOVERY_BEHIND   = 40     // px behind the leader (along their trail) a recovery warp puts the follower
+var MOVING_SPEED      = 0.3    // m/s - slower than this plays the idle clip
+var RUN_SPEED         = 1.8    // m/s - faster than this runs, otherwise walks
 
 class PartyMember {
     construct new(entity, args) {
@@ -52,6 +52,7 @@ class PartyMember {
         _steering = [PartySeparation.new(SEPARATION_RADIUS, SEPARATION_PUSH, LEADER_RADIUS, LEADER_PUSH)]
         _checkTime = null
         _checkPosition = null
+        _facing = Vec2.new(0, 1)
     }
 
     name { _name }
@@ -85,9 +86,7 @@ class PartyMember {
         var data = NPCData.forName(_name)
         Debug.assertMsg(data != null, "No sprite data for party member %(_name)")
 
-        var texture = Texture.load("Tiles/NPCs.png")
-        Sprite.create(_entity, texture, WHITE, data.getOffset(), 9, 1, FlipBit.NONE, data.getSpriteIndex(), RenderLayer.ENTITIES, 0)
-        texture.unload()
+        data.createSprite(_entity)
 
         var body = PhysicsBody.create(_entity, BodyDefinition.new(BodyType.DYNAMIC_BODY), PhysicsCircleShape.new(0.2))
         body.fixedRotation = true
@@ -101,6 +100,7 @@ class PartyMember {
         var here = position
         if (leader == null || here == null) {
             PhysicsBody.setLinearVelocity(_entity, Vec2.new(0, 0))
+            animate_(Vec2.new(0, 0))
             return
         }
 
@@ -110,9 +110,7 @@ class PartyMember {
         }
         PhysicsBody.setLinearVelocity(_entity, velocity)
 
-        if (velocity.x.abs > 0.3) {
-            Sprite.setFlipped(_entity, velocity.x < 0 ? FlipBit.HORIZONTAL : FlipBit.NONE)
-        }
+        animate_(velocity)
 
         if (isStuckOrSeparated_(here, leader)) {
             Debug.info("[Party] %(_name) is stuck/separated - recovering")
@@ -120,6 +118,17 @@ class PartyMember {
             _strategy.reset(this)
             _checkTime = null
         }
+    }
+
+    // Walk / run toward where it is heading, or idle facing the last way it went.
+    animate_(velocity) {
+        var speed = velocity.length()
+        var clip = "Idle"
+        if (speed > MOVING_SPEED) {
+            _facing = velocity
+            clip = speed > RUN_SPEED ? "Run" : "Walk"
+        }
+        SpriteAnimation.setCurrentAnimation(_entity, SpriteSheet.clipName(_facing, clip))
     }
 
     // True when the follower keeps trying to move but isn't getting anywhere (wedged on level geometry,

@@ -8,6 +8,9 @@ import "resourceManager" for Texture
 import "animation" for SpriteAnimationDefinition
 import "Colors" for WHITE
 
+// Direction prefixes of the generated clips by octant of atan2(y, x) - +x is right, +y is down the screen.
+var FACING_NAMES = ["right", "downRight", "down", "downLeft", "left", "upLeft", "up", "upRight"]
+
 class SpriteSheet {
     // Adds the sprite and its animations to an entity, on the entities layer.
     static create(entity, data) { SpriteSheet.create(entity, data, RenderLayer.ENTITIES) }
@@ -30,4 +33,15 @@ class SpriteSheet {
 
     // Names of every animation in the data, for menus or debugging.
     static animationNames(data) { data["animations"].map {|anim| anim[0] }.toList }
+
+    // The generated clip name for `animation` ("Idle", "Run"...) facing `dir` (a Vec2, +y down the screen),
+    // snapped to the nearest of the 8 sheet directions - e.g. "downLeftRunAnimation".
+    static clipName(dir, animation) { "%(SpriteSheet.facingName(dir))%(animation)Animation" }
+
+    // "right", "downRight", "down"... for the octant of atan2(y, x) that `dir` points into.
+    static facingName(dir) {
+        var octant = (dir.y.atan(dir.x) / (Num.pi / 4)).round % 8
+        if (octant < 0) octant = octant + 8
+        return FACING_NAMES[octant]
+    }
 }
