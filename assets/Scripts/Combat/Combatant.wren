@@ -1,12 +1,13 @@
 // Combat/Combatant.wren
-// One participant in a battle. Wraps a Stats bag (HP + stamina), a display name, the move kit it
-// commits to on the Timeline, and the overworld entity it came from (null for the player).
+// One participant in a battle. Wraps a Stats bag (HP + stamina + attributes), a display name, the move kit
+// it commits to on the Timeline, and the overworld entity it came from (null for the player).
 import "Combat/Stats" for Stats
 
 class Combatant {
-    construct new(name, maxHp, maxStamina, moves, entity) {
+    // attributes: the full attribute block (see Combat/Stats.wren) - defs build it with Archetype.attributesWith.
+    construct new(name, maxHp, maxStamina, attributes, moves, entity) {
         _name = name
-        _stats = Stats.new(maxHp, maxStamina)
+        _stats = Stats.new(maxHp, maxStamina, attributes)
         _moves = moves
         _entity = entity
     }
@@ -18,8 +19,8 @@ class Combatant {
     alive { _stats.alive }
 
     // Resolve a move: damage the target, pay/gain stamina, heal self. Returns damage dealt for the
-    // battle log. cancelFraction is 0 or 1 - 1 when the target chose to parry (see States/Combat/
-    // ParryPromptState.wren), 0 otherwise (including anything not parryable at all).
+    // battle log. cancelFraction is 0..1, the share of the damage the target's parry blocked (1 - the tier's
+    // damageThrough - see Combat/Arbiter.wren ParryResult), 0 with no parry (including anything not parryable).
     // The charge itself already happened on the Timeline, and the interrupt (Combat/Disruption.wren)
     // is handled by States/Combat/CombatResolver.wren.
     use(move, target, cancelFraction) {

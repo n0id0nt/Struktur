@@ -19,7 +19,7 @@ class Timeline {
     }
 
     add(combatant) {
-        _entries.add({ "combatant": combatant, "move": null, "progress": 0, "cost": 0, "parryOffered": false, "parryDecision": false, "target": null })
+        _entries.add({ "combatant": combatant, "move": null, "progress": 0, "cost": 0, "parryOffered": false, "parryResult": null, "target": null })
     }
 
     // Every combatant on the timeline, in add order (player then enemies) - for States/Combat/CombatSession.wren
@@ -59,7 +59,7 @@ class Timeline {
             e["progress"] = 0
             e["cost"] = move.timeCost + (combatant.stats.exhausted ? EXHAUSTION_TIME_PENALTY : 0)
             e["parryOffered"] = false
-            e["parryDecision"] = false
+            e["parryResult"] = null
             e["target"] = null
         }
     }
@@ -72,7 +72,7 @@ class Timeline {
             e["progress"] = 0
             e["cost"] = 0
             e["parryOffered"] = false
-            e["parryDecision"] = false
+            e["parryResult"] = null
             e["target"] = null
         }
     }
@@ -117,7 +117,8 @@ class Timeline {
     }
 
     // Parry bookkeeping for the committed move (reset by commit/clear): whether its parry window has opened
-    // (so the target is only asked once) and whether the target chose to parry. See CombatSession.
+    // (so the target is only asked once) and, if the target tried to parry, how well it went (a
+    // Combat/Arbiter.wren ParryResult; null = no parry attempt). See CombatSession.
     parryOffered(combatant) {
         var e = entryFor(combatant)
         return e != null && e["parryOffered"]
@@ -130,15 +131,15 @@ class Timeline {
         }
     }
 
-    parryDecision(combatant) {
+    parryResult(combatant) {
         var e = entryFor(combatant)
-        return e != null && e["parryDecision"]
+        return e == null ? null : e["parryResult"]
     }
 
-    setParryDecision(combatant, chosen) {
+    setParryResult(combatant, result) {
         var e = entryFor(combatant)
         if (e != null) {
-            e["parryDecision"] = chosen
+            e["parryResult"] = result
         }
     }
 

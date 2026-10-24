@@ -11,6 +11,7 @@
 // slows the whole fight. Only input arming stays on real time so menus still respond while paused.
 import "app" for Time
 import "random" for Random
+import "Combat/Arbiter" for Arbiter
 import "Combat/Timeline" for Timeline, SECONDS_PER_TIME_UNIT
 import "States/Combat/CombatResolver" for CombatResolver
 
@@ -26,8 +27,8 @@ var PARRY_MIN_WINDOW = 0.3
 // Fraction of an attack's duration the parry window can never exceed (so a long window setting can't open
 // the prompt before the attack has visibly started).
 var PARRY_MAX_LEAD = 0.8
-// Chance an AI-controlled defender parries an incoming attack - a plain coin flip for now, tunable like
-// every other combat constant.
+// Chance an AI-controlled defender attempts to parry an incoming attack - a plain coin flip for now; how well
+// the attempt goes is Combat/Arbiter.parry's call, same as the player's.
 var ENEMY_PARRY_CHANCE = 0.5
 
 var RNG = Random.new()
@@ -284,7 +285,7 @@ class CombatSession {
     // it can't open before the attack has visibly started). Returns the first attacker whose window has
     // just opened and who is aimed at the player - ChargingState then opens ParryPromptState for it - or
     // null. Attacks aimed at an AI-controlled enemy are settled right here instead: the defender flips its
-    // coin and, if it parries, plays its parry reaction at once.
+    // coin and, if it tries to parry, the attempt is arbitrated with an AI timing and its parry pose plays.
     nextParryOffer() {
         for (c in _timeline.combatants) {
             var move = _timeline.committedMove(c)
@@ -308,22 +309,33 @@ class CombatSession {
             if (isParty(target)) {
                 return c
             }
-            answerParry(c, RNG.float() < ENEMY_PARRY_CHANCE)
+            if (RNG.float() < ENEMY_PARRY_CHANCE) {
+                answerParry(c, true, Arbiter.aiParryTiming())
+            } else {
+                answerParry(c, false, 0)
+            }
         }
         return null
     }
 
-    // The defender of `attacker`'s move answered (or an AI decided): remember it for the moment the
-    // move lands, and if they chose to parry show it now.
-    answerParry(attacker, chosen) {
-        _timeline.setParryDecision(attacker, chosen)
-        if (chosen && _stage != null) {
-            _stage.react(targetOf(attacker), "parry")
+    // The defender of `attacker`'s move answered (or an AI decided). A parry attempt is arbitrated now
+    // (Combat/Arbiter.parry - timing: 0..1 through the window) so the parry pose plays at once; the result is
+    // kept for the moment the move lands (CombatResolver applies it).
+    answerParry(attacker, chosen, timing) {
+        var defender = targetOf(attacker)
+        if (!chosen || defender == null) {
+            _timeline.setParryResult(attacker, null)
+            return
+        }
+        _timeline.setParryResult(attacker, Arbiter.parry(defender, attacker, timing))
+        if (_stage != null) {
+            _stage.react(defender, "parry")
         }
     }
 
-    parryDecision(attacker) {
-        return _timeline.parryDecision(attacker)
+    // The ParryResult for `attacker`'s committed move, or null if its target didn't try to parry.
+    parryResult(attacker) {
+        return _timeline.parryResult(attacker)
     }
 
     // --- helpers ---------------------------------------------------------------------

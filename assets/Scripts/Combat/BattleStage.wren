@@ -187,21 +187,24 @@ class BattleStage {
     }
 
     // The moment a move lands (called right after its damage/heal is applied): the target's hurt / defeat reaction
-    // and the move's impact particles - or, when the target parried, sparks on them and a fumble on the attacker
-    // (it stumbles back from its lunge to its mark while it is stalled) - or the heal glow for a Mend. A
-    // staggered target needs nothing extra: its clip is anchored to the pushed-back charge and rewinds with it.
-    playImpact(actorCombatant, targetCombatant, move, parried) {
+    // and the move's impact particles - or, when the target's parry deflected some of it (parry: a Combat/Arbiter.wren
+    // ParryResult, null with no parry), sparks on them, still a hurt if any damage got through, and a fumble on a
+    // stalled attacker (it stumbles back from its lunge to its mark) - or the heal glow for a Mend. A staggered
+    // target needs nothing extra: its clip is anchored to the pushed-back charge and rewinds with it.
+    playImpact(actorCombatant, targetCombatant, move, parry) {
         var a = battlerFor_(actorCombatant)
         var d = battlerFor_(targetCombatant)
         if (move.offensive && d != null) {
-            if (parried) {
+            if (parry != null && parry.deflected) {
                 d.playImpact("parrySpark")
-                if (a != null) {
-                    a.react("fumble")
-                }
             } else {
-                d.react(targetCombatant.alive ? "hurt" : "defeat")
                 d.playImpact(move.particleId)
+            }
+            if (parry == null || parry.damageThrough > 0) {
+                d.react(targetCombatant.alive ? "hurt" : "defeat")
+            }
+            if (parry != null && parry.stallsAttacker && a != null) {
+                a.react("fumble")
             }
         } else if (move.healAmount > 0 && a != null) {
             a.playImpact("healGlow")

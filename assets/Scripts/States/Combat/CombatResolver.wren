@@ -17,25 +17,29 @@ class CombatResolver {
         _session = session
     }
 
-    // The attack on screen has landed: look up the move's target and whether that target parried (the
-    // decision was made - by the player's prompt or an AI coin flip - when the attack's parry window opened),
-    // then resolve it.
+    // The attack on screen has landed: look up the move's target and how that target's parry went (it was
+    // attempted - from the player's prompt or an AI coin flip - and arbitrated by Combat/Arbiter.parry when
+    // the attack's parry window opened), then resolve it.
     resolveMove(actor) {
         var s = _session
         var move = s.timeline.committedMove(actor)
         var isPlayer = actor == s.player
         var target = s.targetOf(actor)
-        var parried = move.offensive && move.parryable && target != null && target.alive && s.parryDecision(actor)
-        finishResolve(actor, move, target, isPlayer, parried)
+        var parry = null
+        if (move.offensive && move.parryable && target != null && target.alive) {
+            parry = s.parryResult(actor)
+        }
+        finishResolve(actor, move, target, isPlayer, parry)
     }
 
-    // The actual resolution (damage, stagger/parry-cancel, impact reactions, log). parryChosen: true
-    // cancels all of the move's damage (Combat/Combatant.wren) and costs the attacker a
-    // Combat/Config/Moves.stalled beat; the defender's own in-flight move is also cancelled regardless of
-    // side, since choosing to parry is a deliberate reaction to make. Ends by handing off to the next phase.
-    finishResolve(actor, move, target, isPlayer, parryChosen) {
+    // The actual resolution (damage, stagger/parry, impact reactions, log). parry: the Combat/Arbiter.wren
+    // ParryResult, or null with no parry attempt. Its tier decides how much damage gets through
+    // (Combat/Combatant.use), whether the attacker sits out a Combat/Config/Moves.stalled beat, and whether
+    // the defender keeps its own in-flight move (only a perfect parry does - otherwise it was dropped to
+    // guard, in place of the usual stagger). Ends by handing off to the next phase.
+    finishResolve(actor, move, target, isPlayer, parry) {
         var s = _session
-        var cancelFraction = parryChosen ? 1 : 0
+        var cancelFraction = parry == null ? 0 : 1 - parry.damageThrough
 
         s.clearMove(actor)
 
@@ -45,24 +49,26 @@ class CombatResolver {
         if (target != null) {
             dealt = actor.use(move, target, cancelFraction)
             if (move.offensive && s.timeline.isCharging(target)) {
-                if (parryChosen) {
-                    // Choosing to parry costs the defender their own in-flight move; they have to
-                    // pick again instead of the usual partial stagger.
-                    s.clearMove(target)
-                    defenderMoveCancelled = true
+                if (parry != null) {
+                    // Trying to parry costs the defender their own in-flight move (they pick again instead
+                    // of the usual partial stagger) - unless the parry was perfect.
+                    if (!parry.defenderKeepsMove) {
+                        s.clearMove(target)
+                        defenderMoveCancelled = true
+                    }
                 } else {
                     staggerUnits = Disruption.delay(move, s.timeline.fraction(target))
                     s.interruptMove(target, staggerUnits)
                     s.markStaggered(target)
                 }
             }
-            if (parryChosen) {
-                // A landed parry also punishes the attacker: instead of letting them pick a real move
+            if (parry != null && parry.stallsAttacker) {
+                // A perfect parry also punishes the attacker: instead of letting them pick a real move
                 // again immediately, they sit out Combat/Config/Moves.stalled first.
                 s.commitMove(actor, Moves.stalled)
             }
             if (s.stage != null) {
-                s.stage.playImpact(actor, target, move, parryChosen)
+                s.stage.playImpact(actor, target, move, parry)
             }
         } else {
             actor.use(move, actor, 0)   // heal / self-buff with nothing to hit
@@ -70,7 +76,7 @@ class CombatResolver {
 
         s.refreshViews()
 
-        var logText = resolveLine(isPlayer, actor, move, dealt, target, staggerUnits, cancelFraction,
+        var logText = resolveLine(isPlayer, actor, move, dealt, target, staggerUnits, parry,
                                   defenderMoveCancelled)
 
         // With an arena the attacker eases back to its mark first (ReturningState); a stalled combatant
@@ -101,7 +107,7 @@ class CombatResolver {
         }
     }
 
-    resolveLine(isPlayer, actor, move, dealt, target, staggerUnits, cancelFraction, defenderMoveCancelled) {
+    resolveLine(isPlayer, actor, move, dealt, target, staggerUnits, parry, defenderMoveCancelled) {
         var s = _session
         var who = isPlayer ? "You" : actor.name
         if (move.name == "Stalled") {
@@ -118,8 +124,14 @@ class CombatResolver {
             whom = (target == s.player) ? "you" : target.name
         }
         var line = "%(who) hit%(isPlayer ? "" : "s") %(whom) with %(move.name) - %(dealt) dmg."
-        if (cancelFraction > 0) {
-            line = "%(line)  Parried! No damage got through."
+        if (parry != null) {
+            if (parry.tier == "perfect") {
+                line = "%(line)  Perfect parry! No damage got through."
+            } else if (parry.tier == "partial") {
+                line = "%(line)  Partly parried - some damage got through."
+            } else {
+                line = "%(line)  The parry failed!"
+            }
         }
         if (defenderMoveCancelled) {
             var whoDefended = target == s.player ? "Your" : "%(target.name)'s"
