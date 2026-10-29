@@ -42,6 +42,17 @@ class Moves {
     // immediately. Never offensive, never parryable itself.
     static stalled { Move.new("Stalled", STALL_TIME_COST, 0, 0, 0, 0, 0, null, null) }
 
+    // Stand there and take it - the Training Dummy's whole kit (Combat/Config/BattleCritter.trainingDummy), and a
+    // "skip a beat" option in the battle test. Never offensive, never parryable.
+    static brace { Move.new("Brace", 4, 0, 0, 0, 0, 0, null, null) }
+
+    // Every move a fighter can be given, in menu order - the battle test's move pickers (States/BattleTestState.wren)
+    // cycle through this.
+    static catalog {
+        return [Moves.slash, Moves.flurry, Moves.dodge, Moves.cleave, Moves.crush, Moves.onslaught, Moves.bolt,
+                Moves.slow, Moves.mend, Moves.brace]
+    }
+
     static speedKit   { [Moves.slash, Moves.flurry, Moves.dodge] }
     static powerKit    { [Moves.cleave, Moves.crush, Moves.onslaught] }
     static controlKit  { [Moves.bolt, Moves.slow, Moves.mend] }

@@ -79,11 +79,34 @@ class CombatState is BaseState {
         _manager.insertState("OverState", OverState)
     }
 
+    // params: "opponents" (overworld entities to fight) and the Party, as ExperimentState sends - or, from the battle
+    // test (States/BattleTestState.wren), explicit sides: "partyCombatants" / "partyDefs" / "enemyCombatants" /
+    // "enemyDefs" (parallel lists, ready-made Combatants + their battle defs), with "player" null.
     enter(stateManager, params) {
         super.enter(stateManager, params)
 
         var enemies = []
         var enemyDefs = []
+        var party = []
+        var partyDefs = []
+        if (params["partyCombatants"] != null) {
+            party = params["partyCombatants"]
+            partyDefs = params["partyDefs"]
+            enemies = params["enemyCombatants"]
+            enemyDefs = params["enemyDefs"]
+        } else {
+            gatherSides_(params, party, partyDefs, enemies, enemyDefs)
+        }
+        if (party.count == 0 || enemies.count == 0) {
+            System.print("[CombatState] no party or no valid opponents, aborting")
+            stateManager.clearCurrentState()
+            return
+        }
+        begin_(stateManager, params, party, partyDefs, enemies, enemyDefs)
+    }
+
+    // The overworld fight: the opponents' entities and the whole (standing) party.
+    gatherSides_(params, party, partyDefs, enemies, enemyDefs) {
         for (entity in params["opponents"]) {
             var s = Script.getInstance(entity)
             if (s == null) {
@@ -97,8 +120,6 @@ class CombatState is BaseState {
         // The human-controlled side is the whole party (Party.wren), leader first: each member's persistent
         // Combatant (a player's lives on its Player script, an NPC's on its party record - HP / stamina carry
         // across fights) plus the battle look to stage it with.
-        var party = []
-        var partyDefs = []
         for (member in Party.members) {
             var combatant = Party.combatantOf(member)
             // A downed NPC member (knocked out earlier, not rested since) sits the fight out entirely.
@@ -108,12 +129,10 @@ class CombatState is BaseState {
             party.add(combatant)
             partyDefs.add(member.isPlayer ? BattlePlayer : BattleCritter.forName(member.name))
         }
-        if (party.count == 0 || enemies.count == 0) {
-            System.print("[CombatState] no party or no valid opponents, aborting")
-            stateManager.clearCurrentState()
-            return
-        }
+    }
 
+    // Stages and starts the fight between the two sides.
+    begin_(stateManager, params, party, partyDefs, enemies, enemyDefs) {
         var roster = enemies.map { |e| "%(e.name)(%(e.stats.hp))" }.join(", ")
         var partyRoster = party.map { |c| "%(c.name)(%(c.stats.hp)/%(c.stats.maxHp))" }.join(", ")
         System.print("[CombatState] %(partyRoster) vs %(roster)")
@@ -249,6 +268,10 @@ class CombatState is BaseState {
         }
         _session = null
     }
+
+    // The running fight's CombatSession (null between fights) - the battle test's live readout reads the Timeline
+    // through it (States/BattleTestState.wren).
+    session { _session }
 
     // Visible to the state-debug window's stack view (and StateManager's own traversal) - the active
     // phase of the fight.

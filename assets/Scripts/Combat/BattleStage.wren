@@ -41,7 +41,7 @@ class BattleStage {
     // "BattleAnchor" marker's position, or null to use DEFAULT_ARENA. CombatState resolves this
     // (rather than handing over an entity) so it can centre a battle level's bounds instead of
     // anchoring on its top-left corner, which is where World/LDtk places a level's WorldTransform.
-    // playerEntity: the real overworld player (hidden for the fight).
+    // playerEntity: the real overworld player (hidden for the fight) - null when there is none (the battle test).
     // worldParent: entity to parent every spawned battle entity under (the world root).
     // partyCombatants / partyDefs: parallel lists for the human-controlled side, leader first - each member's
     // persistent Combatant and its look (Combat/Config/BattlePlayer for a player, a BattleCritter for an NPC).
@@ -60,7 +60,9 @@ class BattleStage {
         // Hide the overworld player. Its Camera drops out of the active set with it (the camera
         // system excludes Inactive entities), leaving _camEntity below as the only camera - so we
         // don't need the camera-priority control script doesn't have yet.
-        GameObject.setInactive(_playerEntity)
+        if (_playerEntity != null) {
+            GameObject.setInactive(_playerEntity)
+        }
 
         // Battle_Arena is standing in for the backdrop now, so every other loaded level gets
         // deactivated for the duration - nothing else should be visible or simulating behind it.
@@ -255,6 +257,15 @@ class BattleStage {
         }
         if (GameObject.isValid(_camEntity)) {
             GameObject.destroy(_camEntity)
+        }
+        if (_playerEntity == null) {
+            if (_battleLevelEntity != null) {
+                setOtherLevelsActive_(true)
+                if (GameObject.isValid(_battleLevelEntity)) {
+                    GameObject.setInactive(_battleLevelEntity)
+                }
+            }
+            return
         }
         GameObject.setActive(_playerEntity)
 

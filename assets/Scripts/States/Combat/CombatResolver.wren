@@ -133,6 +133,9 @@ class CombatResolver {
         if (move.staminaRestore > 0 && move.damage == 0) {
             return "%(who) recovers. (+%(move.staminaRestore) stamina)"
         }
+        if (!move.offensive) {
+            return "%(who) %(isPlayer ? "brace" : "braces")."
+        }
         var whom = "?"
         if (target != null) {
             whom = (target == s.player) ? "you" : target.name

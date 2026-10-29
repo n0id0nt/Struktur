@@ -129,6 +129,8 @@ var FLEE_CHANCE_MAX         = 0.95
 
 // Set true to print every roll's breakdown to the console while tuning.
 var LOG_ROLLS = true
+// How many short roll lines recentRolls keeps (the battle test's on-screen readout shows them).
+var RECENT_ROLLS_KEPT = 8
 
 var RNG = Random.new()
 
@@ -188,9 +190,8 @@ class Arbiter {
         } else {
             result = ParryResult.fail(score)
         }
-        if (LOG_ROLLS) {
-            System.print("[Arbiter] parry %(defender.name) vs %(attacker.name): timing %(Arbiter.fmt_(timing)) edge %(Arbiter.fmt_(edge)) roll %(Arbiter.fmt_(roll)) exhausted -%(Arbiter.fmt_(penalty)) = %(Arbiter.fmt_(score)) -> %(result.tier)")
-        }
+        Arbiter.record_("Parry  %(defender.name) vs %(attacker.name): t%(Arbiter.fmt_(timing)) edge %(Arbiter.fmt_(edge)) roll %(Arbiter.fmt_(roll)) = %(Arbiter.fmt_(score)) %(result.tier)",
+                        "parry %(defender.name) vs %(attacker.name): timing %(Arbiter.fmt_(timing)) edge %(Arbiter.fmt_(edge)) roll %(Arbiter.fmt_(roll)) exhausted -%(Arbiter.fmt_(penalty)) = %(Arbiter.fmt_(score)) -> %(result.tier)")
         return result
     }
 
@@ -204,9 +205,8 @@ class Arbiter {
         if (amount < 1) {
             amount = 1
         }
-        if (LOG_ROLLS) {
-            System.print("[Arbiter] hit %(attacker.name) -> %(defender.name) %(move.name): base %(move.damage) stat x%(Arbiter.fmt_(statMult)) var x%(Arbiter.fmt_(variance)) crit %(crit) (%(Arbiter.fmt_(critChance))) = %(amount)")
-        }
+        Arbiter.record_("Hit  %(attacker.name) > %(defender.name) %(move.name): %(move.damage) x%(Arbiter.fmt_(statMult)) x%(Arbiter.fmt_(variance))%(crit ? " CRIT" : "") = %(amount)",
+                        "hit %(attacker.name) -> %(defender.name) %(move.name): base %(move.damage) stat x%(Arbiter.fmt_(statMult)) var x%(Arbiter.fmt_(variance)) crit %(crit) (%(Arbiter.fmt_(critChance))) = %(amount)")
         return HitResult.new(amount, crit)
     }
 
@@ -240,9 +240,8 @@ class Arbiter {
     static evade(attacker, defender, defenderMove) {
         var chance = Arbiter.evadeChance(attacker, defender, defenderMove)
         var evaded = RNG.float() < chance
-        if (LOG_ROLLS) {
-            System.print("[Arbiter] evade %(defender.name) vs %(attacker.name): chance %(Arbiter.fmt_(chance)) -> %(evaded)")
-        }
+        Arbiter.record_("Evade  %(defender.name): %((chance * 100).round)pct %(evaded ? "EVADED" : "- hit")",
+                        "evade %(defender.name) vs %(attacker.name): chance %(Arbiter.fmt_(chance)) -> %(evaded)")
         return evaded
     }
 
@@ -263,9 +262,8 @@ class Arbiter {
         var statMult = Math.clamp(1 + (attacker.stats.might - defender.stats.poise) * STAGGER_STAT_WEIGHT,
                                   STAGGER_MULT_MIN, STAGGER_MULT_MAX)
         var units = Disruption.delay(move, dealt, targetFraction, statMult)
-        if (LOG_ROLLS) {
-            System.print("[Arbiter] stagger %(attacker.name) -> %(defender.name): dealt %(dealt) charged %(Arbiter.fmt_(targetFraction)) stat x%(Arbiter.fmt_(statMult)) = %(Arbiter.fmt_(units))u")
-        }
+        Arbiter.record_("Stagger  %(defender.name): %(dealt) dmg x%(Arbiter.fmt_(statMult)) = -%(Arbiter.fmt_(units))u",
+                        "stagger %(attacker.name) -> %(defender.name): dealt %(dealt) charged %(Arbiter.fmt_(targetFraction)) stat x%(Arbiter.fmt_(statMult)) = %(Arbiter.fmt_(units))u")
         return units
     }
 
@@ -296,9 +294,8 @@ class Arbiter {
         if (units < INITIATIVE_MIN) {
             units = INITIATIVE_MIN
         }
-        if (LOG_ROLLS) {
-            System.print("[Arbiter] initiative %(combatant.name): %(Arbiter.fmt_(units))u")
-        }
+        Arbiter.record_("Initiative  %(combatant.name): %(Arbiter.fmt_(units))u",
+                        "initiative %(combatant.name): %(Arbiter.fmt_(units))u")
         return units
     }
 
@@ -345,15 +342,38 @@ class Arbiter {
     static flee(party, enemies) {
         var chance = Arbiter.fleeChance(party, enemies)
         var escaped = RNG.float() < chance
-        if (LOG_ROLLS) {
-            System.print("[Arbiter] flee: chance %(Arbiter.fmt_(chance)) -> %(escaped)")
-        }
+        Arbiter.record_("Flee: %((chance * 100).round)pct %(escaped ? "escaped" : "failed")",
+                        "flee: chance %(Arbiter.fmt_(chance)) -> %(escaped)")
         return escaped
     }
 
     // An AI defender's stand-in for the player's press timing.
     static aiParryTiming() {
         return AI_TIMING_MIN + RNG.float() * (AI_TIMING_MAX - AI_TIMING_MIN)
+    }
+
+    // --- roll log -------------------------------------------------------------------------
+
+    // Every roll lands here: its full breakdown to the console (when LOG_ROLLS is on) and a short line into
+    // recentRolls - what the battle test (States/BattleTestState.wren) shows on screen.
+    static record_(short, long) {
+        if (LOG_ROLLS) {
+            System.print("[Arbiter] %(long)")
+        }
+        if (__recent == null) {
+            __recent = []
+        }
+        __recent.add(short)
+        if (__recent.count > RECENT_ROLLS_KEPT) {
+            __recent.removeAt(0)
+        }
+    }
+
+    // The last RECENT_ROLLS_KEPT rolls, oldest first, as short one-line summaries.
+    static recentRolls { __recent == null ? [] : __recent }
+
+    static clearRolls() {
+        __recent = []
     }
 
     // Two-decimal string for the roll log.

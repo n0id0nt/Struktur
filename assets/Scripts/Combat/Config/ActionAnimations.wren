@@ -79,6 +79,10 @@ class ActionAnimations {
         if (n == "Dodge") {
             return ActionAnimation.new(role, null, false, "retreat", 0.5, null, null, null, 0, false)
         }
+        if (n == "Brace") {
+            // Just stands its ground (looping idle) - no lunge, nothing to aim at.
+            return ActionAnimation.new("idle", null, true, "none", 0, null, null, null, 0, false)
+        }
         if (n == "Mend") {
             return ActionAnimation.new(role, null, false, "none", 0, null, "healGlow", null, 0, false)
         }

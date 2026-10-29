@@ -15,6 +15,8 @@ import "Combat/Combatant" for Combatant
 import "Combat/Config/Archetype" for Archetype
 import "Combat/Config/SheetAnims" for SheetAnims
 import "GameObjects/NPC" for NPCData
+import "Combat/Config/Moves" for Moves
+import "Sprites/GoblinVikingSprite" for GoblinVikingSprite
 
 class BattleCritter {
     // anims: { key: [startFrame, endFrameExclusive, seconds] }. facing: 1 = art faces right, -1 = left.
@@ -30,7 +32,18 @@ class BattleCritter {
         _pivot = pivot
         _facing = facing
         _anims = anims
+        _kit = null
     }
+
+    // Overrides the move set the archetype would give (e.g. the Training Dummy's lone Brace). Returns this, so a
+    // def can be built and given its kit in one expression.
+    withKit(moves) {
+        _kit = moves
+        return this
+    }
+
+    // The moves this fighter knows by default: its own kit if it has one, otherwise its archetype's.
+    kit { _kit != null ? _kit : Archetype.byName(_archetypeName).kit }
 
     name { _name }
     archetypeName { _archetypeName }
@@ -48,7 +61,7 @@ class BattleCritter {
     // overworld critter it came from (kept so a defeated one can be removed from the field).
     makeCombatant(entity) {
         var archetype = Archetype.byName(_archetypeName)
-        return Combatant.new(_name, _maxHp, _maxStamina, archetype.attributesWith(_attributes), archetype.kit, entity)
+        return Combatant.new(_name, _maxHp, _maxStamina, archetype.attributesWith(_attributes), kit, entity)
     }
 
     static forName(name) {
@@ -57,6 +70,9 @@ class BattleCritter {
         }
         if (name == "Villager") {
             return BattleCritter.villager
+        }
+        if (name == "Training Dummy") {
+            return BattleCritter.trainingDummy
         }
         if (name == "Duelist") {
             return BattleCritter.duelist
@@ -90,6 +106,20 @@ class BattleCritter {
     // turns aside attacks better than the player, is harder to parry back, and fights smart (focus - EnemyAI).
     static duelist {
         return BattleCritter.fromNpc("Duelist", "Speed", 100, 90, {"reflex": 16, "precision": 14, "focus": 13})
+    }
+
+    // --- test fighters -----------------------------------------------------------------
+
+    // The Training Dummy (States/BattleTestState.wren): a punching bag for trying moves and stats. Effectively endless
+    // HP, only ever Braces, and can't evade (agility 1) or parry (EnemyAI never parries for a fighter with no
+    // attacks). Average guard and poise, so the damage and stagger it shows are a neutral baseline. Wears the
+    // Guardian's generated sheet as placeholder art.
+    static trainingDummy {
+        var data = GoblinVikingSprite.data
+        var origin = data["origin"]
+        return BattleCritter.new("Training Dummy", "Power", 9999, 999, {"agility": 1, "reflex": 1, "guard": 10, "poise": 10},
+                                 data["texture"], data["columns"], data["rows"], Vec2.new(origin[0], origin[1]), 1,
+                                 SheetAnims.forSheet(data, "GoblinVikingSprite")).withKit([Moves.brace])
     }
 
     // A def wearing the generated sheet of the NPC called `name`, facing right like the player.

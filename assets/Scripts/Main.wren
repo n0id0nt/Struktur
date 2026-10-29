@@ -14,6 +14,7 @@ import "States/GameWorldState" for GameWorldState
 import "States/MainMenuState" for MainMenuState
 import "States/SettingsState" for SettingsState
 import "States/ExperimentState" for ExperimentState
+import "States/BattleTestState" for BattleTestState
 import "Inventory" for Inventory
 import "Party" for Party
 import "Defeated" for Defeated
@@ -83,6 +84,8 @@ class Game {
         _stateManager.insertState("MainMenu", MainMenuState)
         _stateManager.insertState("Settings", SettingsState)
         _stateManager.insertState("Experiment", ExperimentState)
+        // The battle sandbox - F6 from the overworld (ExperimentState) opens it.
+        _stateManager.insertState("BattleTest", BattleTestState)
 
         _stateManager.changeState("Experiment")
     }

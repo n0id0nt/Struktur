@@ -37,10 +37,13 @@ class BattlePlayer {
         return __anims
     }
 
+    // The moves the player knows by default - the archetype's kit (same shape as BattleCritter.kit).
+    static kit { Archetype.byName(BattlePlayer.archetypeName).kit }
+
     // A fresh Combatant - GameObjects/Player.combatant calls this once to mint the persistent one.
     static makeCombatant(entity) {
         var archetype = Archetype.byName(BattlePlayer.archetypeName)
         return Combatant.new(BattlePlayer.name, BattlePlayer.maxHp, BattlePlayer.maxStamina,
-                             archetype.attributesWith(BattlePlayer.attributes), archetype.kit, entity)
+                             archetype.attributesWith(BattlePlayer.attributes), BattlePlayer.kit, entity)
     }
 }

@@ -95,6 +95,10 @@ class EnemyAI {
 
     // defender: the AI combatant being attacked; attacker / move: the incoming attack. Rolls the attempt.
     static wantsParry(defender, attacker, move, timeline) {
+        // Something with no attacks of its own (the Training Dummy) just stands there and takes it.
+        if (!defender.moves.any { |m| m.offensive }) {
+            return false
+        }
         var chance = AI_PARRY_BASE + (defender.stats.reflex - attacker.stats.precision) * AI_PARRY_PER_POINT
         var hp = defender.stats.hp > 0 ? defender.stats.hp : 1
         var threat = Arbiter.expectedHit(attacker, defender, move, timeline.committedMove(defender)) / hp
