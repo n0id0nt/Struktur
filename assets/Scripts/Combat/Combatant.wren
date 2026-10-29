@@ -18,22 +18,17 @@ class Combatant {
     entity { _entity }
     alive { _stats.alive }
 
-    // Resolve a move: damage the target, pay/gain stamina, heal self. Returns damage dealt for the
-    // battle log. cancelFraction is 0..1, the share of the damage the target's parry blocked (1 - the tier's
-    // damageThrough - see Combat/Arbiter.wren ParryResult), 0 with no parry (including anything not parryable).
-    // The charge itself already happened on the Timeline, and the interrupt (Combat/Disruption.wren)
-    // is handled by States/Combat/CombatResolver.wren.
-    use(move, target, cancelFraction) {
-        var dealt = 0
-        if (move.damage > 0) {
-            dealt = (move.damage * (1 - cancelFraction)).round
+    // Apply a resolved move: damage the target, pay/gain stamina, heal self. `dealt` and `healed` are already
+    // arbitrated (Combat/Arbiter.hit / heal, scaled by any parry - see States/Combat/CombatResolver.wren, which
+    // also handles the charge's stagger); this only applies them.
+    use(move, target, dealt, healed) {
+        if (dealt > 0) {
             target.stats.takeDamage(dealt)
         }
         _stats.spendStamina(move.staminaCost)
         _stats.gainStamina(move.staminaRestore)
-        if (move.healAmount > 0) {
-            _stats.heal(move.healAmount)
+        if (healed > 0) {
+            _stats.heal(healed)
         }
-        return dealt
     }
 }

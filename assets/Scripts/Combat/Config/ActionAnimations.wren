@@ -127,6 +127,8 @@ class ActionAnimations {
         if (id == "fumble")   return ActionAnimation.new("hurt", 0.7, false, "none", 0, null, null, null, 12, false, true)
         // Long enough for a sheet's own "defeat" (death) clip to read before the fade finishes.
         if (id == "defeat")   return ActionAnimation.new("defeat", 1.0, false, "none", 0, null, null, HURT_TINT, 18, true)
+        // Slipped an attack: a quick hop away and back on the "dodge" clip (falls back to "run").
+        if (id == "evade")    return ActionAnimation.new("dodge", 0.35, false, "none", 0, null, null, null, 14, false)
         if (id == "flee")     return ActionAnimation.new("run", 0.7, false, "none", 0, null, null, null, 0, false)
         if (id == "entrance") return ActionAnimation.new("run", null, true, "none", 0, null, null, null, 0, false)
         return ActionAnimation.new("idle", null, true, "none", 0, null, null, null, 0, false)

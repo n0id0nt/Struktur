@@ -56,9 +56,10 @@ class Archetype {
         return Archetype.new("Rogue", 95, 95, Moves.speedKit, {"might": 8, "guard": 7, "poise": 7, "agility": 14, "reflex": 14, "precision": 12, "endurance": 11, "focus": 8})
     }
 
-    // Heavy: hits and absorbs hard, but slow to react - a poor parrier whose blows are easy to read.
+    // Heavy: hits and absorbs hard, but slow to react - a poor parrier whose blows are easy to read. Poise stays
+    // average on purpose: being interrupt-locked by quick hits is how Speed beats Power (Combat/Config/Moves.wren).
     static power {
-        return Archetype.new("Warrior", 170, 55, Moves.powerKit, {"might": 15, "guard": 13, "poise": 15, "agility": 7, "reflex": 8, "precision": 9, "endurance": 9, "focus": 7})
+        return Archetype.new("Warrior", 170, 55, Moves.powerKit, {"might": 15, "guard": 13, "poise": 9, "agility": 7, "reflex": 8, "precision": 9, "endurance": 9, "focus": 7})
     }
 
     // Measured: precise (hard to parry) and the strongest healer.

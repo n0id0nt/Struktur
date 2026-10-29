@@ -87,9 +87,9 @@ class BattleCritter {
     static villager { BattleCritter.fromNpc("Villager", "Control", 80, 70, null) }
 
     // The Duelist - a Speed-style fighter you must defeat in a duel to recruit. A trained fencer: reads and
-    // turns aside attacks better than the player, and is harder to parry back.
+    // turns aside attacks better than the player, is harder to parry back, and fights smart (focus - EnemyAI).
     static duelist {
-        return BattleCritter.fromNpc("Duelist", "Speed", 100, 90, {"reflex": 16, "precision": 14})
+        return BattleCritter.fromNpc("Duelist", "Speed", 100, 90, {"reflex": 16, "precision": 14, "focus": 13})
     }
 
     // A def wearing the generated sheet of the NPC called `name`, facing right like the player.

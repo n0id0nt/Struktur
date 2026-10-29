@@ -10,13 +10,12 @@
 // the Timeline, so pausing (menus) or slowing (the parry prompt) time via Time.setTimeScale stops or
 // slows the whole fight. Only input arming stays on real time so menus still respond while paused.
 import "app" for Time
-import "random" for Random
 import "Combat/Arbiter" for Arbiter
+import "Combat/EnemyAI" for EnemyAI
 import "Combat/Timeline" for Timeline, SECONDS_PER_TIME_UNIT
 import "States/Combat/CombatResolver" for CombatResolver
 
 var NAV_ARM_TIME  = 0.14   // input lockout after a menu transition, so the prior keypress can't bleed
-var STAMINA_REGEN = 2      // stamina per time unit, every combatant, while charging
 
 // Game-time scale while the parry prompt is up - the attack keeps crawling toward impact so the player
 // has to decide quickly. Menus pause time outright (scale 0).
@@ -27,11 +26,6 @@ var PARRY_MIN_WINDOW = 0.3
 // Fraction of an attack's duration the parry window can never exceed (so a long window setting can't open
 // the prompt before the attack has visibly started).
 var PARRY_MAX_LEAD = 0.8
-// Chance an AI-controlled defender attempts to parry an incoming attack - a plain coin flip for now; how well
-// the attempt goes is Combat/Arbiter.parry's call, same as the player's.
-var ENEMY_PARRY_CHANCE = 0.5
-
-var RNG = Random.new()
 
 class CombatSession {
     // outer: the StateManager CombatState itself lives in (OverState clears it to end the fight).
@@ -211,20 +205,15 @@ class CombatSession {
         _pendingMove = null
     }
 
-    // Every enemy that still needs a move picks one, aimed at a random living party member (healing moves
-    // target the enemy itself).
+    // Every enemy that still needs a move picks one and a target (Combat/EnemyAI.wren - self-targeted for a
+    // heal / stamina move).
     commitEnemyMoves() {
         for (e in _enemies) {
             if (e.alive && _timeline.needsMove(e)) {
-                var move = enemyPickMove(e)
-                commitMove(e, move, move.offensive ? randomLivingParty() : e)
+                var choice = EnemyAI.choose(e, livingParty(), _timeline)
+                commitMove(e, choice[0], choice[1])
             }
         }
-    }
-
-    randomLivingParty() {
-        var living = livingParty()
-        return living.count == 0 ? null : living[RNG.int(living.count)]
     }
 
     // True for a combatant on the human-controlled side.
@@ -238,30 +227,6 @@ class CombatSession {
             }
         }
         return out
-    }
-
-    // Simple AI: heal when hurt, otherwise a random offensive move biased toward the cheaper ones
-    // (pick two, keep the shorter).
-    enemyPickMove(enemy) {
-        if (enemy.stats.fraction < 0.4) {
-            for (m in enemy.moves) {
-                if (m.healAmount > 0) {
-                    return m
-                }
-            }
-        }
-        var offensive = []
-        for (m in enemy.moves) {
-            if (m.offensive) {
-                offensive.add(m)
-            }
-        }
-        if (offensive.count == 0) {
-            return enemy.moves[0]
-        }
-        var a = offensive[RNG.int(offensive.count)]
-        var b = offensive[RNG.int(offensive.count)]
-        return a.timeCost <= b.timeCost ? a : b
     }
 
     // Who `actor`'s committed move is aimed at (stored on the Timeline when it was committed). If that target
@@ -285,7 +250,8 @@ class CombatSession {
     // it can't open before the attack has visibly started). Returns the first attacker whose window has
     // just opened and who is aimed at the player - ChargingState then opens ParryPromptState for it - or
     // null. Attacks aimed at an AI-controlled enemy are settled right here instead: the defender flips its
-    // coin and, if it tries to parry, the attempt is arbitrated with an AI timing and its parry pose plays.
+    // EnemyAI decides whether it tries to parry and, if so, the attempt is arbitrated with an AI timing and its
+    // parry pose plays.
     nextParryOffer() {
         for (c in _timeline.combatants) {
             var move = _timeline.committedMove(c)
@@ -309,7 +275,7 @@ class CombatSession {
             if (isParty(target)) {
                 return c
             }
-            if (RNG.float() < ENEMY_PARRY_CHANCE) {
+            if (EnemyAI.wantsParry(target, c, move, _timeline)) {
                 answerParry(c, true, Arbiter.aiParryTiming())
             } else {
                 answerParry(c, false, 0)
@@ -363,7 +329,7 @@ class CombatSession {
 
     regenStamina(units) {
         for (c in _timeline.combatants) {
-            c.stats.gainStamina(units * STAMINA_REGEN)
+            c.stats.gainStamina(Arbiter.staminaRegen(c, units))
         }
     }
 

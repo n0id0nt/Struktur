@@ -10,7 +10,7 @@ import "gameObjectComponents" for Script, WorldTransform
 import "reflect" for Reflect
 import "Party" for Party
 import "Combat/Config/Moves" for Moves
-import "Combat/Disruption" for Disruption
+import "Combat/Arbiter" for Arbiter
 
 class CombatResolver {
     construct new(session) {
@@ -32,23 +32,34 @@ class CombatResolver {
         finishResolve(actor, move, target, isPlayer, parry)
     }
 
-    // The actual resolution (damage, stagger/parry, impact reactions, log). parry: the Combat/Arbiter.wren
-    // ParryResult, or null with no parry attempt. Its tier decides how much damage gets through
-    // (Combat/Combatant.use), whether the attacker sits out a Combat/Config/Moves.stalled beat, and whether
-    // the defender keeps its own in-flight move (only a perfect parry does - otherwise it was dropped to
-    // guard, in place of the usual stagger). Ends by handing off to the next phase.
+    // The actual resolution (damage, stagger/parry, impact reactions, log). Evasion, damage, stagger and
+    // healing are rolled by Combat/Arbiter.wren (evade / hit / stagger / heal) - an unparried attack can miss. parry: the Arbiter's ParryResult, or null with no
+    // parry attempt. Its tier decides how much of the hit gets through, whether the attacker sits out a
+    // Combat/Config/Moves.stalled beat, and whether the defender keeps its own in-flight move (only a perfect
+    // parry does - otherwise it was dropped to guard, in place of the usual stagger). Ends by handing off to the next phase.
     finishResolve(actor, move, target, isPlayer, parry) {
         var s = _session
-        var cancelFraction = parry == null ? 0 : 1 - parry.damageThrough
 
         s.clearMove(actor)
 
         var dealt = 0
+        var crit = false
+        var evaded = false
+        var healed = Arbiter.heal(actor, move)
         var staggerUnits = 0
         var defenderMoveCancelled = false
         if (target != null) {
-            dealt = actor.use(move, target, cancelFraction)
-            if (move.offensive && s.timeline.isCharging(target)) {
+            if (move.offensive) {
+                // Only an unparried attack can be evaded - a parrying defender is standing its ground.
+                evaded = parry == null && Arbiter.evade(actor, target, s.timeline.committedMove(target))
+                if (!evaded) {
+                    var hit = Arbiter.hit(actor, target, move)
+                    dealt = parry == null ? hit.amount : (hit.amount * parry.damageThrough).round
+                    crit = hit.crit && dealt > 0
+                }
+            }
+            actor.use(move, target, dealt, healed)
+            if (move.offensive && !evaded && s.timeline.isCharging(target)) {
                 if (parry != null) {
                     // Trying to parry costs the defender their own in-flight move (they pick again instead
                     // of the usual partial stagger) - unless the parry was perfect.
@@ -57,7 +68,7 @@ class CombatResolver {
                         defenderMoveCancelled = true
                     }
                 } else {
-                    staggerUnits = Disruption.delay(move, s.timeline.fraction(target))
+                    staggerUnits = Arbiter.stagger(actor, target, move, dealt, s.timeline.fraction(target))
                     s.interruptMove(target, staggerUnits)
                     s.markStaggered(target)
                 }
@@ -68,15 +79,15 @@ class CombatResolver {
                 s.commitMove(actor, Moves.stalled)
             }
             if (s.stage != null) {
-                s.stage.playImpact(actor, target, move, parry)
+                s.stage.playImpact(actor, target, move, parry, evaded)
             }
         } else {
-            actor.use(move, actor, 0)   // heal / self-buff with nothing to hit
+            actor.use(move, actor, 0, healed)   // heal / self-buff with nothing to hit
         }
 
         s.refreshViews()
 
-        var logText = resolveLine(isPlayer, actor, move, dealt, target, staggerUnits, parry,
+        var logText = resolveLine(isPlayer, actor, move, dealt, crit, evaded, healed, target, staggerUnits, parry,
                                   defenderMoveCancelled)
 
         // With an arena the attacker eases back to its mark first (ReturningState); a stalled combatant
@@ -107,14 +118,14 @@ class CombatResolver {
         }
     }
 
-    resolveLine(isPlayer, actor, move, dealt, target, staggerUnits, parry, defenderMoveCancelled) {
+    resolveLine(isPlayer, actor, move, dealt, crit, evaded, healed, target, staggerUnits, parry, defenderMoveCancelled) {
         var s = _session
         var who = isPlayer ? "You" : actor.name
         if (move.name == "Stalled") {
-            return "%(who) %(isPlayer ? "recover" : "recovers") from being parried."
+            return "%(who) %(isPlayer ? "regain your" : "regains their") footing."
         }
         if (move.healAmount > 0) {
-            return "%(who) mends. (+%(move.healAmount) HP)"
+            return "%(who) mends. (+%(healed) HP)"
         }
         if (move.staminaRestore > 0 && move.damage == 0) {
             return "%(who) recovers. (+%(move.staminaRestore) stamina)"
@@ -123,7 +134,13 @@ class CombatResolver {
         if (target != null) {
             whom = (target == s.player) ? "you" : target.name
         }
+        if (evaded) {
+            return "%(who) %(isPlayer ? "swing" : "swings") at %(whom) with %(move.name) - evaded!"
+        }
         var line = "%(who) hit%(isPlayer ? "" : "s") %(whom) with %(move.name) - %(dealt) dmg."
+        if (crit) {
+            line = "%(line)  Critical hit!"
+        }
         if (parry != null) {
             if (parry.tier == "perfect") {
                 line = "%(line)  Perfect parry! No damage got through."
@@ -174,9 +191,21 @@ class CombatResolver {
         endFight("You were overwhelmed...")
     }
 
-    // The player runs for it: with an arena they get a run-off animation first (FleeState), which ends
-    // the fight itself.
+    // The player runs for it - if Combat/Arbiter.flee lets them (party agility vs the fastest enemy). Getting
+    // away: with an arena they get a run-off animation first (FleeState), which ends the fight itself. Failing:
+    // every party member still waiting on a move loses this turn to a Combat/Config/Moves.stalled beat.
     flee() {
+        var s = _session
+        if (!Arbiter.flee(s.livingParty(), s.livingEnemies())) {
+            s.view.showMoveMenu(false)
+            for (member in s.party) {
+                if (member.alive && s.timeline.needsMove(member)) {
+                    s.commitMove(member, Moves.stalled)
+                }
+            }
+            s.goTo("MessageState", {"text": "You couldn't get away!"})
+            return
+        }
         if (_session.stage != null) {
             _session.goTo("FleeState")
         } else {

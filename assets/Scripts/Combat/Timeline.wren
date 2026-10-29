@@ -2,7 +2,8 @@
 // Turn ordering by charge, not by seat - Phases 2-4 of the Interrupt Combat Roadmap. Every combatant
 // charges toward the Move they've committed to; whoever's bar fills first acts first, and a faster
 // move means acting again sooner. Landing a hit on someone mid-charge shoves their bar backward
-// (interrupt(), Phase 3); committing a move while exhausted adds a time unit to its cost (Phase 4).
+// (interrupt(), Phase 3); a move's effective cost (agility, +1 time unit when exhausted - Phase 4) and each
+// combatant's opening head start (initiative) come from Combat/Arbiter.wren.
 // Supports any number of combatants (roadmap open decision #3 - N from day one).
 //
 // SECONDS_PER_TIME_UNIT is THE combat time scale (roadmap "Decide first" note): every move cost,
@@ -10,16 +11,19 @@
 // units", and this is what one unit is worth in real seconds. Change it here and the entire system
 // re-times together.
 var SECONDS_PER_TIME_UNIT = 0.4
-var EXHAUSTION_TIME_PENALTY = 1   // extra time units on a move committed while exhausted
+
+import "Combat/Arbiter" for Arbiter
 
 class Timeline {
     construct new() {
-        // [{ combatant, move: Move|null, progress: Num, cost: Num (effective, incl. exhaustion) }]
+        // [{ combatant, move: Move|null, progress: Num, cost: Num (effective - Arbiter.moveCost),
+        //    headStart: Num (initiative, spent by the first commit) }]
         _entries = []
     }
 
+    // Joins the fight; the combatant's initiative is rolled now and spent on its first charge.
     add(combatant) {
-        _entries.add({ "combatant": combatant, "move": null, "progress": 0, "cost": 0, "parryOffered": false, "parryResult": null, "target": null })
+        _entries.add({ "combatant": combatant, "move": null, "progress": 0, "cost": 0, "parryOffered": false, "parryResult": null, "target": null, "headStart": Arbiter.initiative(combatant) })
     }
 
     // Every combatant on the timeline, in add order (player then enemies) - for States/Combat/CombatSession.wren
@@ -51,13 +55,15 @@ class Timeline {
     }
 
     // Start (or restart) this combatant's charge toward `move`. The effective cost is locked in here,
-    // so an exhaustion penalty applies to a move you START while tired, not retroactively.
+    // so an exhaustion penalty applies to a move you START while tired, not retroactively. The first commit
+    // of the fight starts from the initiative head start instead of 0.
     commit(combatant, move) {
         var e = entryFor(combatant)
         if (e != null) {
             e["move"] = move
-            e["progress"] = 0
-            e["cost"] = move.timeCost + (combatant.stats.exhausted ? EXHAUSTION_TIME_PENALTY : 0)
+            e["cost"] = Arbiter.moveCost(combatant, move)
+            e["progress"] = Arbiter.capInitiative(e["headStart"], e["cost"])
+            e["headStart"] = 0
             e["parryOffered"] = false
             e["parryResult"] = null
             e["target"] = null
@@ -143,8 +149,8 @@ class Timeline {
         }
     }
 
-    // Effective cost in time units of this combatant's committed move (incl. the exhaustion penalty
-    // locked in at commit), or 0 with no move - also the move's animation length in time units
+    // Effective cost in time units of this combatant's committed move (Arbiter.moveCost, locked in at
+    // commit), or 0 with no move - also the move's animation length in time units
     // (see Combat/Config/ActionAnimations.wren: charge time and animation time are the same thing).
     costOf(combatant) {
         var e = entryFor(combatant)

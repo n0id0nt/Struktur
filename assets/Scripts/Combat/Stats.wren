@@ -3,15 +3,14 @@
 // Roadmap), plus the attribute block every contest in Combat/Arbiter.wren reads. Later phases hang
 // resistances and status timers off this same bag, so systems that only care about "how hurt / how
 // tired / how quick is this thing" never need to know about Combatant, moves, or the timeline.
-var EXHAUSTION_THRESHOLD = 0.2   // below this fraction of max stamina, moves take +1 time unit
+import "Combat/Arbiter" for Arbiter
 
 // The attribute block. 10 is "average"; the archetype supplies a baseline and a def overrides single
-// entries (Combat/Config/Archetype.attributesWith). Which ones the Arbiter actually reads so far:
-//   reflex    - parry quality (vs the attacker's precision)
-//   precision - beating the defender's parry
-// Declared for the upcoming checks (see Combat/Arbiter.wren header): might (damage / stagger dealt),
-// guard (damage taken), poise (stagger taken), agility (charge rate / initiative / flee), endurance
-// (stamina regen / exhaustion), focus (heal strength).
+// entries (Combat/Config/Archetype.attributesWith). What the Arbiter reads each one for:
+//   might     - damage and stagger dealt          guard     - damage taken
+//   poise     - stagger taken                     agility   - move charge cost, initiative
+//   reflex    - parry quality                     precision - beating parries, crit chance
+//   endurance - stamina regen, exhaustion line    focus     - heal strength
 var ATTRIBUTE_NAMES = ["might", "guard", "poise", "agility", "reflex", "precision", "endurance", "focus"]
 var DEFAULT_ATTRIBUTE = 10
 
@@ -53,8 +52,8 @@ class Stats {
     stamina { _stamina }
     maxStamina { _maxStamina }
     staminaFraction { _maxStamina > 0 ? _stamina / _maxStamina : 0 }
-    // The Disruption/Timeline exhaustion penalty gate (see Timeline.commit).
-    exhausted { staminaFraction < EXHAUSTION_THRESHOLD }
+    // The exhaustion penalty gate (Combat/Arbiter.moveCost / parry) - the line itself moves with endurance.
+    exhausted { staminaFraction < Arbiter.exhaustionThreshold(this) }
 
     takeDamage(amount) {
         _hp = _hp - amount

@@ -190,11 +190,14 @@ class BattleStage {
     // and the move's impact particles - or, when the target's parry deflected some of it (parry: a Combat/Arbiter.wren
     // ParryResult, null with no parry), sparks on them, still a hurt if any damage got through, and a fumble on a
     // stalled attacker (it stumbles back from its lunge to its mark) - or the heal glow for a Mend. A staggered
-    // target needs nothing extra: its clip is anchored to the pushed-back charge and rewinds with it.
-    playImpact(actorCombatant, targetCombatant, move, parry) {
+    // target needs nothing extra: its clip is anchored to the pushed-back charge and rewinds with it. evaded: the
+    // attack missed outright (Combat/Arbiter.evade) - the target just hops aside.
+    playImpact(actorCombatant, targetCombatant, move, parry, evaded) {
         var a = battlerFor_(actorCombatant)
         var d = battlerFor_(targetCombatant)
-        if (move.offensive && d != null) {
+        if (move.offensive && d != null && evaded) {
+            d.react("evade")
+        } else if (move.offensive && d != null) {
             if (parry != null && parry.deflected) {
                 d.playImpact("parrySpark")
             } else {
