@@ -24,6 +24,15 @@ import "UI/Gameplay/InteractPromptUI" for InteractPromptUI
 import "GameObjects/Critter" for Critter
 import "Party" for Party
 import "Party/DuelRequest" for DuelRequest
+import "Combat/CombatOutcome" for CombatOutcome
+
+// Placeholder art for the rest spot (Tiles/Items.png frame 2 - the bread loaf) until there is campfire art.
+var REST_SPOT_SPRITE_INDEX = 2
+
+// Where the player starts - and where they wake up after the party is wiped (respawn_).
+var SPAWN_POSITION = Vec3.new(208.0, 208.0, 0.0)
+// Gap between followers lined up behind the player on a respawn.
+var RESPAWN_FOLLOWER_SPACING = 24.0
 
 var WORLD_FILE_PATH = "Levels/SevenGods.ldtk"
 // Authored arena level (see Combat/BattleStage.wren) - every fight loads this level and stages the
@@ -86,7 +95,7 @@ class ExperimentState is BaseState {
 
         var playerEntity = GameObject.create("Player", worldEntity)
         Script.createArg(playerEntity, "Player", {"Name": "Player"})
-        WorldTransform.setPosition(playerEntity, Vec3.new(208.0, 208.0, 0.0))
+        WorldTransform.setPosition(playerEntity, SPAWN_POSITION)
         _playerEntity = playerEntity
         // The player leads the party - NPCs who join follow the member ahead of them (see Party.wren).
         Party.registerPlayer(playerEntity, "Player")
@@ -120,6 +129,9 @@ class ExperimentState is BaseState {
         spawnNpc("Traveler", Vec3.new(308.0, 208.0, 0.0), worldEntity)
         spawnSign("Welcome Sign", Vec3.new(208.0, 108.0, 0.0), worldEntity)
         spawnSign("Warning Sign", Vec3.new(208.0, 308.0, 0.0), worldEntity)
+        // A rest spot: interacting runs its dialogue's "restParty" command - the party is healed and anyone downed
+        // gets back up (Party.restAll).
+        spawnSign("Rest Spot", Vec3.new(120.0, 108.0, 0.0), worldEntity, REST_SPOT_SPRITE_INDEX)
 
         // Pickups: walk up and press Interact to add them to the inventory (the Inventory key opens it).
         // The Lost Locket is the quest item; an item already picked up (saved flag) disables itself.
@@ -178,9 +190,16 @@ class ExperimentState is BaseState {
     }
 
     // Same idea for a signpost (GameObjects/Sign.wren) - name is its dialogue entry point key.
-    spawnSign(signName, position, worldEntity) {
+    spawnSign(signName, position, worldEntity) { spawnSign(signName, position, worldEntity, null) }
+
+    // spriteIndex: a Tiles/Items.png frame to use instead of the sign's default (null keeps it).
+    spawnSign(signName, position, worldEntity, spriteIndex) {
         var entity = GameObject.create(signName, worldEntity)
-        Script.createArg(entity, "Sign", {"Name": signName})
+        var args = {"Name": signName}
+        if (spriteIndex != null) {
+            args["SpriteIndex"] = spriteIndex
+        }
+        Script.createArg(entity, "Sign", args)
         WorldTransform.setPosition(entity, position)
     }
 
@@ -246,6 +265,7 @@ class ExperimentState is BaseState {
             _stateManager.update()
             if (wasCombat && !_stateManager.currentState) {
                 _combatCooldownEndTime = Time.scaledTime + 2.0
+                onCombatEnded_(CombatOutcome.take())
             }
             if (wasInteract && !_stateManager.currentState) {
                 // A dialogue ended - if it was a challenge ("startDuel" command), the fight starts now.
@@ -414,7 +434,7 @@ class ExperimentState is BaseState {
     }
 
     enterCombat(primaryEntity, playerEntity) {
-        beginCombat_(combatGroup(primaryEntity, playerEntity), playerEntity)
+        beginCombat_(combatGroup(primaryEntity, playerEntity), playerEntity, false)
     }
 
     // A duel: just the challenger (an NPC - see Dialogue/OverworldDialogue.json's "startDuel"), no critters
@@ -422,11 +442,80 @@ class ExperimentState is BaseState {
     startDuel(npcName) {
         var challengers = GameObject.getAllWithIdentifier(npcName)
         if (challengers.count > 0) {
-            beginCombat_([challengers[0]], _playerEntity)
+            beginCombat_([challengers[0]], _playerEntity, true)
         }
     }
 
-    beginCombat_(opponents, playerEntity) {
+    // A fight has closed. outcome: the Combat/CombatOutcome it left (null if it was aborted before starting).
+    // The fallen are already gone from the world (CombatResolver.removeFallen); what a loss means - game over,
+    // or nothing for a duel - hooks in here.
+    onCombatEnded_(outcome) {
+        if (outcome == null) {
+            return
+        }
+        System.print("[ExperimentState] combat ended: %(outcome)")
+        if (outcome.duel) {
+            // Duels are non-lethal: anyone knocked out (you or an NPC) is back up on 1 HP, win or lose, and a lost
+            // duel just ends - the challenger is still standing there to be challenged again.
+            Party.reviveAllFallen()
+        } else if (!outcome.lost) {
+            Party.reviveLeaders()
+        }
+        // Wounds (and anyone downed) carry across a restart.
+        Party.save("party.sav")
+        if (outcome.lost && !outcome.duel) {
+            gameOver_()
+        }
+    }
+
+    // The whole party fell in a real fight: the "You fell" screen (States/GameOverState.wren, game time paused);
+    // its Continue button respawns.
+    gameOver_() {
+        _view.hide()
+        _talkView.hide()
+        if (_gameMusic) {
+            _gameMusic.stop()
+        }
+        _stateManager.changeState("GameOverState", {
+            "title": "You fell",
+            "continueText": "Continue",
+            "onContinue": Fn.new { respawn_() }
+        })
+    }
+
+    // Back on your feet at the start point: the whole party fully healed (downed members too - Party.restAll),
+    // followers lined up behind you, their trails wiped so nobody walks back to where you fell. Defeated
+    // enemies stay gone (Defeated.wren); survivors keep their wounds until their level unloads, and streaming
+    // swaps levels as normal on the next update. The usual post-fight cooldown applies.
+    respawn_() {
+        Party.restAll()
+        WorldTransform.setPosition(_playerEntity, SPAWN_POSITION)
+        var player = Script.getInstance(_playerEntity)
+        if (player != null) {
+            player.playerForceStop()
+        }
+        var behind = 0
+        for (member in Party.members) {
+            member.trail.clear()
+            if (!member.isPlayer && member.entity != null && GameObject.isValid(member.entity)) {
+                behind = behind + 1
+                WorldTransform.setPosition(member.entity,
+                    Vec3.new(SPAWN_POSITION.x - RESPAWN_FOLLOWER_SPACING * behind, SPAWN_POSITION.y, 0.0))
+            }
+        }
+        _combatCooldownEndTime = Time.scaledTime + 2.0
+        System.print("[ExperimentState] respawned at the start point")
+    }
+
+    // duel: true for a challenge fight (startDuel) - carried through to the fight's CombatOutcome.
+    beginCombat_(opponents, playerEntity, duel) {
+        // Nobody left standing (everyone downed, nobody rested): no fight - and a cooldown, so an aggressive
+        // critter doesn't retry every frame.
+        if (!Party.anyoneStanding) {
+            System.print("[ExperimentState] nobody in the party can fight - not starting combat")
+            _combatCooldownEndTime = Time.scaledTime + 2.0
+            return
+        }
         _talkView.hide()
         for (entity in GameObject.getAllWithIdentifier("Player")) {
             var script = Script.getInstance(entity)
@@ -440,6 +529,7 @@ class ExperimentState is BaseState {
         _stateManager.changeState("CombatState", {
             "opponents": opponents,
             "player": playerEntity,
+            "duel": duel,
             "world": _worldEntity,
             "battleLevelIndex": World.getLevelIndex(_worldEntity, BATTLE_ARENA_LEVEL_NAME)
         })

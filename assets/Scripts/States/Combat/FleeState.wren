@@ -33,7 +33,7 @@ class FleeState is CombatSubState {
             s.stage.runOff(member, t > 1 ? 1 : t)
         }
         if (elapsed >= FLEE_TIME) {
-            s.resolver.endFight("You slipped away.")
+            s.resolver.endFight("You slipped away.", "fled", [])
         }
     }
 }

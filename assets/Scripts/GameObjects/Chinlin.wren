@@ -36,6 +36,9 @@ class Chinlin is Critter {
     // Combat/BattleCritter.wren under "Chinlin".
 
     start() {
+        if (removed) {
+            return
+        }
         var texture = Texture.load("Sprites/chinlin.png")
         Sprite.create(entity, texture, WHITE, Vec2.new(12, 16), 4, 4, FlipBit.NONE, 0, RenderLayer.ENTITIES, 0)
         texture.unload()
@@ -69,6 +72,9 @@ class Chinlin is Critter {
     }
 
     fixedUpdate() {
+        if (removed) {
+            return
+        }
         _chase.checkProximity(this, "chase")
         tickStates()
     }

@@ -25,6 +25,7 @@ class DialogueEntryPoints {
         // Signposts (GameObjects/Sign.wren)
         if (interactableName == "Welcome Sign") return "sign_welcome"
         if (interactableName == "Warning Sign") return "sign_warning"
+        if (interactableName == "Rest Spot")    return "rest_spot"
 
         // Immovable interactables
         if (interactableName == "Safe")                    return "safe"

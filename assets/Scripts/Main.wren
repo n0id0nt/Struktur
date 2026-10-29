@@ -16,6 +16,7 @@ import "States/SettingsState" for SettingsState
 import "States/ExperimentState" for ExperimentState
 import "Inventory" for Inventory
 import "Party" for Party
+import "Defeated" for Defeated
 import "Dialogue/DialogueLoader" for DialogueLoader
 
 class Game {
@@ -49,6 +50,7 @@ class Game {
         _stateManager = StateManager.new()
         Inventory.init()
         Party.init()
+        Defeated.init()
     }
 
     // Called after the all the systems are initialised
@@ -63,6 +65,7 @@ class Game {
         FlagManager.load("flags.sav")
         Inventory.load("inventory.sav")
         Party.load("party.sav")
+        Defeated.load("defeated.sav")
 
         DialogueLoader.loadAllDialogue()
 

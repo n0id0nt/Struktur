@@ -43,6 +43,7 @@ import "math" for Vec3
 import "Combat/Config/BattleCritter" for BattleCritter
 import "Combat/Config/BattlePlayer" for BattlePlayer
 import "Party" for Party
+import "GameObjects/Critter" for Critter
 import "Combat/BattleStage" for BattleStage
 import "UI/Combat/CombatUI" for CombatUI
 import "States/Combat/CombatSession" for CombatSession
@@ -90,7 +91,7 @@ class CombatState is BaseState {
             }
             var def = BattleCritter.forName(s.name)
             enemyDefs.add(def)
-            enemies.add(def.makeCombatant(entity))
+            enemies.add(enemyCombatant_(s, def, entity))
         }
 
         // The human-controlled side is the whole party (Party.wren), leader first: each member's persistent
@@ -100,7 +101,8 @@ class CombatState is BaseState {
         var partyDefs = []
         for (member in Party.members) {
             var combatant = Party.combatantOf(member)
-            if (combatant == null) {
+            // A downed NPC member (knocked out earlier, not rested since) sits the fight out entirely.
+            if (combatant == null || member.downed) {
                 continue
             }
             party.add(combatant)
@@ -158,6 +160,7 @@ class CombatState is BaseState {
         }
 
         var session = CombatSession.new(stateManager, _manager, party, enemies, enemyDefs, _view, _stage)
+        session.duel = params["duel"] == true
         _session = session
 
         // The move-menu buttons are wired once per fight (a button's click handler can't be
@@ -188,6 +191,22 @@ class CombatState is BaseState {
     firstEntity_(identifier) {
         var list = GameObject.getAllWithIdentifier(identifier)
         return list.count > 0 ? list[0] : null
+    }
+
+    // The Combatant an overworld opponent fights as. A critter keeps its own across fights (Critter.combatant), so
+    // the HP it lost in a fight you fled or lost is still missing next time - until its level unloads and re-creates
+    // it. Its stamina is topped up: it has had time to catch its breath. Anything else (an NPC duel challenger)
+    // fights fresh every time - a duel is a fair fight.
+    enemyCombatant_(script, def, entity) {
+        if (!(script is Critter)) {
+            return def.makeCombatant(entity)
+        }
+        if (script.combatant == null) {
+            script.combatant = def.makeCombatant(entity)
+        }
+        var combatant = script.combatant
+        combatant.stats.gainStamina(combatant.stats.maxStamina)
+        return combatant
     }
 
     update(stateManager) {

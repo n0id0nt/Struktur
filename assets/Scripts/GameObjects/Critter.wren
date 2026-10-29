@@ -18,9 +18,11 @@
 // or a subclass needs lives here, reached only through the methods below - never through
 // `_entity`/`_facing`/etc. directly from Chicken/Chinlin or from a mixin/behaviour.
 import "math" for Vec2
+import "gameObject" for GameObject
 import "gameObjectComponents" for Sprite, SpriteAnimation, PhysicsBody, WorldTransform
 import "renderer" for FlipBit
 import "GameObjects/StateMachine" for StateMachine
+import "Defeated" for Defeated
 
 class Critter {
     // Every live critter, across every species - lazily created since Wren has no static-field
@@ -37,16 +39,31 @@ class Critter {
     construct new(entity, args) {
         _entity = entity
         _name = args["Name"]
+        _iid = args["Iid"]
         _fsm = StateMachine.new()
         _facing = Vec2.new(0, 1)     // start facing the camera ("front")
         _moveDir = Vec2.new(0, 0)
         _velocity = Vec2.new(0, 0)
         _steeringBehaviours = []
-        Critter.all.add(this)
+        _combatant = null
+        // Killed for good in an earlier fight (Defeated.wren): the level re-created it, so it removes itself
+        // (GameObject.destroy is queued, so it's gone by the end of the frame) and never joins the registry -
+        // nothing can see it or fight it in the meantime. Subclasses skip their start()/fixedUpdate() while
+        // `removed` is set.
+        _removed = Defeated.contains(_iid)
+        if (_removed) {
+            GameObject.destroy(entity)
+        } else {
+            Critter.all.add(this)
+        }
     }
 
     entity { _entity }
     name { _name }
+    // The LDtk instance id (null for a critter spawned from script) - what Defeated.wren records a kill by.
+    iid { _iid }
+    // True for a critter that was already defeated and is removing itself (see the constructor).
+    removed { _removed }
     // World position, for steering behaviours that need to measure distance between critters -
     // null if this entity somehow has no Transform (shouldn't happen; GameObject.create always adds
     // one), guarded the same way WorldTransform.getPosition itself guards it.
@@ -61,6 +78,12 @@ class Critter {
     // A critter's battle profile (move set, stats, arena sprite + animations) lives in
     // Combat/BattleCritter.wren, looked up by this critter's name when an encounter starts - not
     // here, so overworld behaviour and battle presentation stay separable.
+
+    // This critter's battle Combatant once it has fought (null until then) - minted from its BattleCritter
+    // def by States/CombatState.wren and kept here, so wounds from a fled or lost fight carry into the next
+    // one. It lives as long as this entity: when the level unloads and re-creates the critter, it's fresh.
+    combatant { _combatant }
+    combatant=(value) { _combatant = value }
 
     facing { _facing }
     facing=(value) { _facing = value }

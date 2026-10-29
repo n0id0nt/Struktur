@@ -79,6 +79,11 @@ class Commands {
             Debug.info("[Dialogue Command] Party joined by %(npcName)")
             Event.addEvent("joinParty", [["__type", "map"], ["name", npcName]])
         }
+        // A rest spot: the whole party back to full HP / stamina, downed members included (Party.restAll).
+        DialogueRegistry.registerCommand("restParty") { |params|
+            Party.restAll()
+            Debug.info("[Dialogue Command] Party rested")
+        }
         // Challenges the named NPC to a duel: the fight starts once this dialogue has ended (the world picks the
         // request up - see Party/DuelRequest.wren).
         DialogueRegistry.registerCommand("startDuel") { |params|

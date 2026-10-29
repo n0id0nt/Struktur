@@ -55,6 +55,7 @@ class CombatSession {
         _targetIndex = 0
         _navArmedAt = 0
         _parryAttacker = null
+        _duel = false
         _resolver = CombatResolver.new(this)
     }
 
@@ -71,6 +72,11 @@ class CombatSession {
     stage { _stage }
     timeline { _timeline }
     resolver { _resolver }
+
+    // True for a challenge fight (States/ExperimentState.startDuel) - recorded in Combat/CombatOutcome so a lost
+    // duel isn't treated as a death. Set by States/CombatState.wren from params["duel"].
+    duel { _duel }
+    duel=(value) { _duel = value }
 
     // The move waiting on a target pick while TargetingState is up.
     pendingMove { _pendingMove }

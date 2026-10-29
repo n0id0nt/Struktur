@@ -11,6 +11,9 @@ import "reflect" for Reflect
 import "Party" for Party
 import "Combat/Config/Moves" for Moves
 import "Combat/Arbiter" for Arbiter
+import "Combat/CombatOutcome" for CombatOutcome
+import "Defeated" for Defeated
+import "GameObjects/Critter" for Critter
 
 class CombatResolver {
     construct new(session) {
@@ -162,14 +165,14 @@ class CombatResolver {
 
     // --- endings -----------------------------------------------------------------------
 
-    // Every opponent is down: beaten overworld entities are removed - and any who "join the party when
-    // defeated" (a recruitable NPC, like the Duelist - see GameObjects/NPC.joinsPartyOnDefeat) are added to the
-    // party instead of just vanishing; their follower appears where they stood.
+    // Every opponent is down: any who "join the party when defeated" (a recruitable NPC, like the Duelist - see
+    // GameObjects/NPC.joinsPartyOnDefeat) are added to the party instead of just vanishing; their follower
+    // appears where they stood. (endFight removes every beaten overworld entity.)
     win() {
         var s = _session
         var recruited = []
         for (e in s.enemies) {
-            if (e.entity) {
+            if (e.entity != null && GameObject.isValid(e.entity)) {
                 var script = Script.getInstance(e.entity)
                 // Duck-typed (not `is NPC`): registered scripts live in their own module instance, so only shared
                 // base classes like Critter pass an `is` check.
@@ -177,18 +180,18 @@ class CombatResolver {
                     Party.join(script.name, WorldTransform.getPosition(e.entity))
                     recruited.add(script.name)
                 }
-                GameObject.destroy(e.entity)
             }
         }
         var line = s.enemies.count == 1 ? "You defeated the %(s.enemies[0].name)!" : "The pack is beaten!"
         if (recruited.count > 0) {
             line = "%(line)  %(recruited.join(", ")) joins your party!"
         }
-        endFight(line)
+        endFight(line, "won", recruited)
     }
 
     lose() {
-        endFight("You were overwhelmed...")
+        // A duel is non-lethal (States/ExperimentState.onCombatEnded_ gets everyone back up) - so it's a yield.
+        endFight(_session.duel ? "You yield - the duel is lost." : "You were overwhelmed...", "lost", [])
     }
 
     // The player runs for it - if Combat/Arbiter.flee lets them (party agility vs the fastest enemy). Getting
@@ -209,11 +212,43 @@ class CombatResolver {
         if (_session.stage != null) {
             _session.goTo("FleeState")
         } else {
-            endFight("You slipped away.")
+            endFight("You slipped away.", "fled", [])
         }
     }
 
-    endFight(text) {
+    // Every ending funnels through here. result: "won" / "lost" / "fled"; recruited: names of the opponents who
+    // joined the party. Removes the fallen from the overworld, leaves the outcome for the world
+    // (Combat/CombatOutcome.wren - States/ExperimentState.wren takes it once the fight has closed), then the
+    // closing line.
+    endFight(text, result, recruited) {
+        var fallen = removeFallen(recruited)
+        var outcome = CombatOutcome.new(result, _session.duel, fallen, recruited)
+        System.print("[CombatResolver] fight over: %(outcome)")
+        CombatOutcome.record(outcome)
         _session.goTo("OverState", {"text": text})
+    }
+
+    // Whatever the ending - a win, a loss or a flee - every opponent who died in this fight is removed from the
+    // overworld, so killing one and then running doesn't bring it back, and a level-placed one is recorded in
+    // Defeated.wren (by its LDtk iid) so the level doesn't re-create it either. Returns the names of the fallen (a
+    // recruited opponent's entity goes too - its party follower replaces it - but it isn't counted as fallen).
+    removeFallen(recruited) {
+        var fallen = []
+        for (e in _session.enemies) {
+            if (e.alive) {
+                continue
+            }
+            if (!recruited.contains(e.name)) {
+                fallen.add(e.name)
+            }
+            if (e.entity != null && GameObject.isValid(e.entity)) {
+                var script = Script.getInstance(e.entity)
+                if (!recruited.contains(e.name) && script is Critter) {
+                    Defeated.add(script.iid)
+                }
+                GameObject.destroy(e.entity)
+            }
+        }
+        return fallen
     }
 }

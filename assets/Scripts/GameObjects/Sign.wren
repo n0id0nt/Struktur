@@ -13,9 +13,11 @@ import "Colors" for WHITE
 var PLACEHOLDER_SPRITE_INDEX = 13
 
 class Sign {
+    // args: "Name" (also the dialogue key), optional "SpriteIndex" (a Tiles/Items.png frame - e.g. the rest spot).
     construct new(entity, args) {
         _entity = entity
         _name = args["Name"]
+        _spriteIndex = args["SpriteIndex"] != null ? args["SpriteIndex"] : PLACEHOLDER_SPRITE_INDEX
     }
 
     // Also the key DialogueEntryPoints.get() looks the sign's dialogue up by.
@@ -24,7 +26,7 @@ class Sign {
     // Called after C++ has created base components.
     start() {
         var texture = Texture.load("Tiles/Items.png")
-        Sprite.create(_entity, texture, WHITE, Vec2.new(32, 48), 9, 2, FlipBit.NONE, PLACEHOLDER_SPRITE_INDEX, RenderLayer.ENTITIES, 0)
+        Sprite.create(_entity, texture, WHITE, Vec2.new(32, 48), 9, 2, FlipBit.NONE, _spriteIndex, RenderLayer.ENTITIES, 0)
         texture.unload()
 
         // Solid, so the player walks around it rather than through it.

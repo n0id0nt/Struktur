@@ -20,6 +20,18 @@
   },
   {
     "data": {
+      "commands": [
+        {
+          "parameters": [],
+          "type": "restParty"
+        }
+      ],
+      "text": "dialogue.sign.rest_spot"
+    },
+    "node": "rest_spot"
+  },
+  {
+    "data": {
       "targets": [
         {
           "conditions": [

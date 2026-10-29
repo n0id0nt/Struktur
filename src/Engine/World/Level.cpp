@@ -194,6 +194,9 @@ entt::entity Struktur::World::Level::LoadLevelEntities(GameContext& context, con
 						}
 						wrenArgMap.emplace_back(item);
 					}
+					// The LDtk instance id - stable across level reloads and sessions, so scripts can remember
+					// per-instance state (e.g. a defeated critter staying gone - see assets/Scripts/Defeated.wren).
+					wrenArgMap.emplace_back(Wren::WrenItem{"Iid", entityInstance.Iid, WrenType::WREN_TYPE_STRING});
 					Component::WrenScript& scriptComponent =
 					    registry.emplace<Component::WrenScript>(layerInstaceEntity, identifier, wrenArgMap);
 				}

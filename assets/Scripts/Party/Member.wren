@@ -22,6 +22,8 @@ class Member {
         _entity = entity
         _ownerPlayer = ownerPlayer
         _combatant = null
+        _savedHp = null
+        _savedStamina = null
         _spawnPosition = null
         _trail = PartyTrail.new(TRAIL_MIN_STEP, TRAIL_MAX_LENGTH)
     }
@@ -43,12 +45,40 @@ class Member {
     // This member's recent path - what the member behind them follows.
     trail { _trail }
 
-    // An NPC member's persistent battle Combatant (HP / stamina carry between fights within a run), minted once
-    // from its battle profile. (A player member's lives on its Player script instead - see Party.combatantOf.)
+    // An NPC member's persistent battle Combatant (HP / stamina carry between fights, and across runs via
+    // party.sav - see restore), minted once from its battle profile. (A player member's lives on its Player script
+    // instead - see Party.combatantOf.)
     npcCombatant {
         if (_combatant == null) {
             _combatant = BattleCritter.forName(_name).makeCombatant(null)
+            applySaved_()
         }
         return _combatant
+    }
+
+    // True for an NPC member knocked out in a fight and not healed since (0 HP): they sit out every fight
+    // (States/CombatState.wren) and their follower is greyed out (GameObjects/PartyMember.wren) until a rest spot
+    // (Party.restAll) gets them back up. Players are never "downed" - see Party.reviveLeaders.
+    downed { !isPlayer && !npcCombatant.alive }
+
+    // HP / stamina from party.sav (Party.load), applied to the Combatant now or whenever it's first minted.
+    restore(hp, stamina) {
+        _savedHp = hp
+        _savedStamina = stamina
+        if (_combatant != null) {
+            applySaved_()
+        }
+    }
+
+    applySaved_() {
+        var s = _combatant.stats
+        if (_savedHp != null && _savedHp < s.maxHp) {
+            s.takeDamage(s.maxHp - _savedHp)
+        }
+        if (_savedStamina != null && _savedStamina < s.maxStamina) {
+            s.spendStamina(s.maxStamina - _savedStamina)
+        }
+        _savedHp = null
+        _savedStamina = null
     }
 }

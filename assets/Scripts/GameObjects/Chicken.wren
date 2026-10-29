@@ -29,6 +29,9 @@ class Chicken is Critter {
 
     // Called by C++ once the base components exist - configure them here.
     start() {
+        if (removed) {
+            return
+        }
         var texture = Texture.load("Sprites/chicken.png")
         Sprite.create(entity, texture, WHITE, Vec2.new(8, 8), 7, 6, FlipBit.NONE, 0, RenderLayer.ENTITIES, 0)
         texture.unload()
@@ -60,6 +63,9 @@ class Chicken is Critter {
     }
 
     fixedUpdate() {
+        if (removed) {
+            return
+        }
         tickStates()
     }
 

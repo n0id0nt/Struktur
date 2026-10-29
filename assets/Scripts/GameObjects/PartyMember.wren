@@ -13,8 +13,8 @@
 //
 // Art: the NPC's generated sheet (GameObjects/NPC.wren's NPCData) - it walks / runs facing the way it moves (8
 // directions) and idles facing that way when it stops.
-import "gameObjectComponents" for PhysicsBody, SpriteAnimation, WorldTransform, Script
-import "math" for Vec2, Vec3
+import "gameObjectComponents" for PhysicsBody, Sprite, SpriteAnimation, WorldTransform, Script
+import "math" for Vec2, Vec3, Vec4
 import "physics" for BodyDefinition, PhysicsCircleShape, BodyType, CollisionLayers
 import "app" for Time
 import "debug" for Debug
@@ -42,6 +42,8 @@ var MAX_SEPARATION    = 420    // farther than this from the member ahead counts
 var RECOVERY_BEHIND   = 40     // px behind the leader (along their trail) a recovery warp puts the follower
 var MOVING_SPEED      = 0.3    // m/s - slower than this plays the idle clip
 var RUN_SPEED         = 1.8    // m/s - faster than this runs, otherwise walks
+var DOWNED_TINT       = Vec4.new(120, 120, 130, 255)   // a downed member (Member.downed) - greyed out until rested
+var NORMAL_TINT       = Vec4.new(255, 255, 255, 255)
 
 class PartyMember {
     construct new(entity, args) {
@@ -53,6 +55,7 @@ class PartyMember {
         _checkTime = null
         _checkPosition = null
         _facing = Vec2.new(0, 1)
+        _tintedDowned = false
     }
 
     name { _name }
@@ -96,6 +99,7 @@ class PartyMember {
 
     fixedUpdate() {
         var me = member
+        refreshTint_(me)
         var leader = me == null ? null : Party.ahead(me)
         var here = position
         if (leader == null || here == null) {
@@ -117,6 +121,19 @@ class PartyMember {
             _recovery.recover(this, leader)
             _strategy.reset(this)
             _checkTime = null
+        }
+    }
+
+    // Greys the follower out while its member is downed, and back to normal once rested - only on a change.
+    refreshTint_(me) {
+        var downed = me != null && me.downed
+        if (downed == _tintedDowned) {
+            return
+        }
+        var sprite = Sprite.get(_entity)
+        if (sprite != null) {
+            sprite.color = downed ? DOWNED_TINT : NORMAL_TINT
+            _tintedDowned = downed
         }
     }
 
