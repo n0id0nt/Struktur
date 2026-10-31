@@ -1,7 +1,7 @@
 // UI/BattleTest/BattleReadoutUI.wren
 // The battle test's live overlay while a test battle runs (States/BattleTestState.wren): a "Fighters" panel top-left
-// with each fighter's exact HP / stamina and what it's charging, and a "Rolls" panel top-right with the Arbiter's
-// most recent rolls (Combat/Arbiter.recentRolls). Both sit in the gaps CombatUI leaves - under the enemy stacks,
+// with each fighter's exact HP / stamina and what it's charging, and a "Checks" panel top-right with the Arbiter's
+// most recent checks (Combat/Arbiter.recentRolls). Both sit in the gaps CombatUI leaves - under the enemy stacks,
 // above the party stacks and the move menu. Pure view: the state pushes the text every frame.
 import "math" for Vec2, Vec4
 import "resourceManager" for Font
@@ -29,7 +29,7 @@ class BattleReadoutUI {
 
         _fighterLabels = panel_(font, "Fighters", Vec2.new(16, PANEL_TOP), Vec2.new(0, 0), Vec2.new(0, 0), FIGHTERS_W,
                                 fighterLines)
-        _rollLabels = panel_(font, "Rolls (newest last)", Vec2.new(-16, PANEL_TOP), Vec2.new(1, 0), Vec2.new(1, 0),
+        _rollLabels = panel_(font, "Checks (newest last)", Vec2.new(-16, PANEL_TOP), Vec2.new(1, 0), Vec2.new(1, 0),
                              ROLLS_W, rollLines)
         font.unload()
         _shown = {}   // label key -> text currently on it, so unchanged lines aren't re-laid-out every frame

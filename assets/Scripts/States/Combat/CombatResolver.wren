@@ -21,7 +21,7 @@ class CombatResolver {
     }
 
     // The attack on screen has landed: look up the move's target and how that target's parry went (it was
-    // attempted - from the player's prompt or an AI coin flip - and arbitrated by Combat/Arbiter.parry when
+    // attempted - from the player's prompt or EnemyAI's decision - and arbitrated by Combat/Arbiter.parry when
     // the attack's parry window opened), then resolve it.
     resolveMove(actor) {
         var s = _session
@@ -36,8 +36,8 @@ class CombatResolver {
     }
 
     // The actual resolution (damage, stagger/parry, impact reactions, log). Evasion, damage, stagger and
-    // healing are rolled by Combat/Arbiter.wren (evade / hit / stagger / heal) - an unparried attack can miss. parry: the Arbiter's ParryResult, or null with no
-    // parry attempt. Its tier decides how much of the hit gets through, whether the attacker sits out a
+    // healing are decided by Combat/Arbiter.wren (evade / hit / stagger / heal) - an unparried attack on a Dodging
+    // target can miss. parry: the Arbiter's ParryResult, or null with no parry attempt. Its tier decides how much of the hit gets through, whether the attacker sits out a
     // Combat/Config/Moves.stalled beat, and whether the defender keeps its own in-flight move (only a perfect
     // parry does - otherwise it was dropped to guard, in place of the usual stagger). Ends by handing off to the next phase.
     finishResolve(actor, move, target, isPlayer, parry) {
@@ -202,7 +202,7 @@ class CombatResolver {
     // every party member still waiting on a move loses this turn to a Combat/Config/Moves.stalled beat.
     flee() {
         var s = _session
-        if (!Arbiter.flee(s.livingParty(), s.livingEnemies())) {
+        if (!Arbiter.flee(s.livingParty(), s.livingEnemies(), s.nextFleeAttempt())) {
             s.view.showMoveMenu(false)
             for (member in s.party) {
                 if (member.alive && s.timeline.needsMove(member)) {

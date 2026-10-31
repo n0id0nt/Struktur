@@ -19,7 +19,9 @@ class Player {
         _timeAccumulator = 0
         _initialized = false
         _facing = Vec2.new(0, 1)
-        _speed = 3
+        _walkSpeed = 1.5
+        _runSpeed = 3
+        _running = false
         _fixedUpdateCount = 0
         _combatant = null
 
@@ -28,9 +30,18 @@ class Player {
 
     name { _name }
 
+    // Movement speeds in m/s: walking is the default, holding the "Run" input runs.
     #!export
-    speed { _speed }
-    speed=(value) { _speed = value }
+    walkSpeed { _walkSpeed }
+    walkSpeed=(value) { _walkSpeed = value }
+
+    #!export
+    runSpeed { _runSpeed }
+    runSpeed=(value) { _runSpeed = value }
+
+    // The speed the player is moving at right now - party followers (GameObjects/PartyMember.wren) match it,
+    // so they walk when the player walks and run when the player runs.
+    speed { _running ? _runSpeed : _walkSpeed }
 
     // The player's persistent battle Combatant. Its numbers, move kit and arena look are defined in
     // Combat/BattlePlayer.wren (the same shape as one Combat/BattleCritter.wren entry); it's minted
@@ -104,11 +115,12 @@ class Player {
             _facing = dir
         }
 
-        var velocity = dir * _speed
+        _running = Input.isInputDown("Run")
+        var velocity = dir * speed
         PhysicsBody.setLinearVelocity(_entity, velocity)
 
         if (dir.length() > 0.001) {
-            var animation = getPlayerAnimation("Run")
+            var animation = getPlayerAnimation(_running ? "Run" : "Walk")
             SpriteAnimation.setCurrentAnimation(_entity, animation)
         } else {
             var animation = getPlayerAnimation("Idle")

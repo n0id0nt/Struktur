@@ -5,7 +5,7 @@
 // with those sides, then comes back here with the result. You command your side exactly as in the game; the other
 // side is the normal EnemyAI. Every fighter starts fresh at full health, nothing is saved, and the overworld isn't
 // touched. While a battle runs, a live readout (UI/BattleTest/BattleReadoutUI.wren) shows every fighter's exact HP /
-// stamina / charge and the Arbiter's latest rolls (the console's [Arbiter] lines have the full breakdowns).
+// stamina / charge and the Arbiter's latest checks (the console's [Arbiter] lines have the full breakdowns).
 // Opened with F6 from the overworld (States/ExperimentState.wren); Back returns to the game.
 import "app" for Time
 import "gameObject" for GameObject

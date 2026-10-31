@@ -8,8 +8,8 @@ import "Combat/Arbiter" for Arbiter
 // The attribute block. 10 is "average"; the archetype supplies a baseline and a def overrides single
 // entries (Combat/Config/Archetype.attributesWith). What the Arbiter reads each one for:
 //   might     - damage and stagger dealt          guard     - damage taken
-//   poise     - stagger taken                     agility   - move charge cost, initiative
-//   reflex    - parry quality                     precision - beating parries, crit chance
+//   poise     - stagger taken                     agility   - move charge cost, initiative, Dodge, flee
+//   reflex    - parry quality and AI timing       precision - beating parries, getting past a Dodge
 //   endurance - stamina regen, exhaustion line    focus     - heal strength
 var ATTRIBUTE_NAMES = ["might", "guard", "poise", "agility", "reflex", "precision", "endurance", "focus"]
 var DEFAULT_ATTRIBUTE = 10

@@ -1,14 +1,17 @@
 // Combat/Arbiter.wren
-// The one place a contest between two combatants is decided - every roll and stat comparison in a fight
-// routes through here, so tuning the whole battle model means editing this file (and the attribute blocks
-// in Combat/Stats.wren / Combat/Config/Archetype.wren). Combat/Disruption.wren stays the raw stagger
-// formula; stagger() here feeds it the damage actually dealt and the might-vs-poise multiplier.
+// The one place a contest between two combatants is decided - every stat comparison in a fight routes through
+// here, so tuning the whole battle model means editing this file (and the attribute blocks in Combat/Stats.wren /
+// Combat/Config/Archetype.wren). Combat/Disruption.wren stays the raw stagger formula; stagger() here feeds it the
+// damage actually dealt and the might-vs-poise multiplier.
+//
+// Fully deterministic: there is no chance anywhere in battle. The same fighters, moves and timing always produce
+// the same result, so every outcome can be read off the numbers (and predicted by Combat/EnemyAI.wren).
 //
 // Decided here so far (CombatResolver.finishResolve asks, Combatant.use applies):
 //   parry   - how well a parry attempt worked: perfect / partial / fail (ParryResult below)
-//   evade   - whether an unparried attack misses outright: defender agility vs attacker precision
-//   hit     - an attack's damage before any parry: might vs guard, a variance spread and a crit roll
-//             off precision (HitResult below)
+//   evade   - whether an unparried attack misses outright: only while Dodging, agility vs precision
+//   hit     - an attack's damage before any parry: might vs guard, x CRIT_MULTIPLIER on an exhausted target
+//             (HitResult below)
 //   stagger - how far a landed hit shoves the target's charge back: dealt damage + might vs poise
 //   heal    - how much a heal restores: focus
 // Tempo (Combat/Timeline.wren, Combat/Stats.wren and CombatSession ask):
@@ -17,32 +20,32 @@
 //   staminaRegen   - stamina regained per stretch of charging: endurance
 //   exhaustion     - the stamina fraction below which a combatant counts as exhausted: endurance
 // Escape (CombatResolver.flee asks):
-//   flee           - whether the party gets away: party agility vs the fastest enemy's
-// Estimates for decision-making (Combat/EnemyAI.wren - the AI's choices live there, the rules here):
-//   expectedHit    - average damage an attack would deal, crits and evasion folded in, no rolls
+//   flee           - whether this attempt gets the party away: party agility vs the fastest enemy's
+// Predictions for decision-making (Combat/EnemyAI.wren - the AI's choices live there, the rules here):
+//   expectedHit    - exactly what an attack would deal (crit / evade included), before any parry
+//   previewParry   - the tier a parry would get, without recording anything
 //
 // --- Parry -------------------------------------------------------------------------------------------
 //   score = timing + clamp((defender reflex - attacker precision) x PARRY_STAT_WEIGHT, +-PARRY_STAT_EDGE_MAX)
-//           + roll(+-PARRY_ROLL_SPREAD/2) - (defender exhausted ? PARRY_EXHAUSTED_PENALTY : 0)
+//           - (defender exhausted ? PARRY_EXHAUSTED_PENALTY : 0)
 //     timing - 0..1, how far through the parry window the defender committed (0 = the instant the prompt
 //              opened, 1 = at impact). Waiting longer reads the attack better - but if the window runs out
-//              there is no parry at all (ParryPromptState). AI defenders draw it from AI_TIMING_MIN..MAX.
+//              there is no parry at all (ParryPromptState). AI defenders time it by reflex (aiParryTiming).
 //   score >= PARRY_PERFECT_SCORE -> perfect: no damage, attacker stalled, defender keeps its own move
 //   score >= PARRY_PARTIAL_SCORE -> partial: PARTIAL_DAMAGE_THROUGH of the damage, defender's move lost
 //   otherwise                    -> fail:    full damage, defender's move lost (it dropped it to guard)
-// The roll happens when the defender commits (so the parry pose plays at once) and is applied at impact
+// Decided when the defender commits (so the parry pose plays at once) and applied at impact
 // (CombatResolver.finishResolve).
 //
 // --- Evade -------------------------------------------------------------------------------------------
-//   chance = clamp(EVADE_BASE_CHANCE + (defender agility - attacker precision) x EVADE_PER_POINT, 0, EVADE_CHANCE_MAX)
-//            + DODGE_EVADE_BONUS while the defender is charging Dodge, x EVADE_EXHAUSTED_MULT when exhausted.
-//   Rolled only when the defender didn't try to parry (a parry is the defender standing its ground). An evaded
-//   attack deals nothing and staggers nothing.
+//   An unparried attack misses outright when the defender is charging Dodge, isn't exhausted, and its agility
+//   is at least the attacker's precision. Nothing else ever misses. An evaded attack deals nothing and
+//   staggers nothing.
 //
 // --- Hit ---------------------------------------------------------------------------------------------
 //   amount = max(1, round(move damage x clamp(1 + (might - guard) x DAMAGE_STAT_WEIGHT, DAMAGE_MULT_MIN..MAX)
-//                          x variance(1 +-DAMAGE_VARIANCE/2) x (crit ? CRIT_MULTIPLIER : 1)))
-//   crit chance = clamp(CRIT_BASE_CHANCE + (precision - 10) x CRIT_CHANCE_PER_POINT, 0, CRIT_CHANCE_MAX)
+//                          x (crit ? CRIT_MULTIPLIER : 1)))
+//   crit: the target is exhausted (below its exhaustion line) - an opening, not luck.
 //   A parry then scales `amount` by its damageThrough.
 //
 // --- Stagger -----------------------------------------------------------------------------------------
@@ -57,42 +60,34 @@
 //                + (exhausted ? EXHAUSTION_TIME_PENALTY : 0)            (a Stalled beat is never scaled)
 //     Locked in at commit (Timeline.commit), so the parry window, the clip length and the bar all follow
 //     the same effective cost.
-//   initiative = clamp((agility - 10) x INITIATIVE_PER_POINT + roll(0..INITIATIVE_ROLL), INITIATIVE_MIN, ..)
-//                time units, capped at INITIATIVE_MAX_SHARE of the first move's cost - negative = a late start.
+//   initiative = max((agility - 10) x INITIATIVE_PER_POINT, INITIATIVE_MIN) time units, capped at
+//                INITIATIVE_MAX_SHARE of the first move's cost - negative = a late start.
 //   regen      = units x STAMINA_REGEN x clamp(1 + (endurance - 10) x REGEN_STAT_WEIGHT, REGEN_MULT_MIN..MAX)
 //   exhaustion = clamp(EXHAUSTION_THRESHOLD - (endurance - 10) x EXHAUSTION_PER_POINT, EXHAUSTION_MIN..MAX)
 //
 // --- Flee --------------------------------------------------------------------------------------------
-//   chance = clamp(FLEE_BASE_CHANCE + (average living party agility - fastest living enemy agility)
-//                  x FLEE_PER_POINT, FLEE_CHANCE_MIN..MAX)
+//   attempts needed = 1 + ceil(max(0, fastest living enemy agility - average living party agility)
+//                              / FLEE_AGILITY_PER_ATTEMPT)
+//   An as-fast party gets away first time; a slower one has to fail (and lose the turn to a stall) once per
+//   FLEE_AGILITY_PER_ATTEMPT points it's behind - but always gets away in the end.
 import "math" for Math
-import "random" for Random
 import "Combat/Disruption" for Disruption
 
 var PARRY_STAT_WEIGHT       = 0.03   // score per point of reflex over the attacker's precision
 var PARRY_STAT_EDGE_MAX     = 0.3    // cap on the stat edge either way, so timing always matters
-var PARRY_ROLL_SPREAD       = 0.2    // total width of the random nudge (+-0.1)
 var PARRY_EXHAUSTED_PENALTY = 0.15   // a defender below Stats' exhaustion threshold parries worse
 var PARRY_PERFECT_SCORE     = 0.8
 var PARRY_PARTIAL_SCORE     = 0.45
 var PARTIAL_DAMAGE_THROUGH  = 0.5    // share of the attack's damage a partial parry lets through
-var AI_TIMING_MIN           = 0.2    // AI defenders have no prompt to time - they draw a timing in this range
-var AI_TIMING_MAX           = 0.9
-
-var EVADE_BASE_CHANCE       = 0.05   // at even agility vs precision
-var EVADE_PER_POINT         = 0.015  // + per point of defender agility over attacker precision
-var EVADE_CHANCE_MAX        = 0.25   // from stats alone (Dodge adds on top)
-var DODGE_EVADE_BONUS       = 0.3    // while the defender is charging Dodge - 0 turns it off
-var EVADE_EXHAUSTED_MULT    = 0.5
+var AI_TIMING_BASE          = 0.3    // an AI defender's parry timing at reflex 10 ...
+var AI_TIMING_PER_POINT     = 0.05   // ... + this per point of reflex over 10
+var AI_TIMING_MIN           = 0.1
+var AI_TIMING_MAX           = 0.95
 
 var DAMAGE_STAT_WEIGHT      = 0.03   // damage multiplier per point of attacker might over defender guard
 var DAMAGE_MULT_MIN         = 0.6
 var DAMAGE_MULT_MAX         = 1.5
-var DAMAGE_VARIANCE         = 0.15   // total width of the damage spread (+-7.5%)
-var CRIT_BASE_CHANCE        = 0.05   // crit chance at precision 10
-var CRIT_CHANCE_PER_POINT   = 0.01   // + per point of precision over 10 (- per point under)
-var CRIT_CHANCE_MAX         = 0.3
-var CRIT_MULTIPLIER         = 1.5
+var CRIT_MULTIPLIER         = 1.5    // a hit on an exhausted target
 
 var STAGGER_STAT_WEIGHT     = 0.04   // stagger multiplier per point of attacker might over defender poise
 var STAGGER_MULT_MIN        = 0.5
@@ -108,7 +103,6 @@ var CHARGE_MULT_MAX         = 1.2
 var EXHAUSTION_TIME_PENALTY = 1      // extra time units on a move committed while exhausted
 
 var INITIATIVE_PER_POINT    = 0.1    // time units of head start per point of agility over 10
-var INITIATIVE_ROLL         = 0.4    // plus a random 0..this
 var INITIATIVE_MIN          = -0.6   // the slowest start (a negative head start = charging from behind)
 var INITIATIVE_MAX_SHARE    = 0.5    // never more than this share of the first move's cost
 
@@ -122,17 +116,12 @@ var EXHAUSTION_PER_POINT    = 0.01   // the threshold drops this much per point 
 var EXHAUSTION_MIN          = 0.1
 var EXHAUSTION_MAX          = 0.3
 
-var FLEE_BASE_CHANCE        = 0.6
-var FLEE_PER_POINT          = 0.05   // per point of the party's average agility over the fastest enemy's
-var FLEE_CHANCE_MIN         = 0.2
-var FLEE_CHANCE_MAX         = 0.95
+var FLEE_AGILITY_PER_ATTEMPT = 4     // each this many points the party is slower costs one extra flee attempt
 
-// Set true to print every roll's breakdown to the console while tuning.
+// Set true to print every check's breakdown to the console while tuning.
 var LOG_ROLLS = true
-// How many short roll lines recentRolls keeps (the battle test's on-screen readout shows them).
+// How many short check lines recentRolls keeps (the battle test's on-screen readout shows them).
 var RECENT_ROLLS_KEPT = 8
-
-var RNG = Random.new()
 
 // The outcome of one parry attempt - stored on the attacker's Timeline entry until the attack lands.
 class ParryResult {
@@ -159,9 +148,19 @@ class ParryResult {
     static perfect(score) { ParryResult.new("perfect", 0, true, true, score) }
     static partial(score) { ParryResult.new("partial", PARTIAL_DAMAGE_THROUGH, false, false, score) }
     static fail(score) { ParryResult.new("fail", 1, false, false, score) }
+
+    static forScore(score) {
+        if (score >= PARRY_PERFECT_SCORE) {
+            return ParryResult.perfect(score)
+        }
+        if (score >= PARRY_PARTIAL_SCORE) {
+            return ParryResult.partial(score)
+        }
+        return ParryResult.fail(score)
+    }
 }
 
-// The outcome of one attack's damage roll, before any parry scales it.
+// The outcome of one attack's damage check, before any parry scales it.
 class HitResult {
     construct new(amount, crit) {
         _amount = amount
@@ -174,87 +173,87 @@ class HitResult {
 }
 
 class Arbiter {
+    // --- parry ------------------------------------------------------------------------------
+
     // defender / attacker: Combatants. timing: 0..1 through the parry window (see header). Returns a ParryResult.
     static parry(defender, attacker, timing) {
-        var edge = Math.clamp((defender.stats.reflex - attacker.stats.precision) * PARRY_STAT_WEIGHT,
-                              -PARRY_STAT_EDGE_MAX, PARRY_STAT_EDGE_MAX)
-        var roll = (RNG.float() - 0.5) * PARRY_ROLL_SPREAD
+        var edge = Arbiter.parryEdge_(defender, attacker)
         var penalty = defender.stats.exhausted ? PARRY_EXHAUSTED_PENALTY : 0
-        var score = Math.clamp(timing, 0, 1) + edge + roll - penalty
-
-        var result = null
-        if (score >= PARRY_PERFECT_SCORE) {
-            result = ParryResult.perfect(score)
-        } else if (score >= PARRY_PARTIAL_SCORE) {
-            result = ParryResult.partial(score)
-        } else {
-            result = ParryResult.fail(score)
-        }
-        Arbiter.record_("Parry  %(defender.name) vs %(attacker.name): t%(Arbiter.fmt_(timing)) edge %(Arbiter.fmt_(edge)) roll %(Arbiter.fmt_(roll)) = %(Arbiter.fmt_(score)) %(result.tier)",
-                        "parry %(defender.name) vs %(attacker.name): timing %(Arbiter.fmt_(timing)) edge %(Arbiter.fmt_(edge)) roll %(Arbiter.fmt_(roll)) exhausted -%(Arbiter.fmt_(penalty)) = %(Arbiter.fmt_(score)) -> %(result.tier)")
+        var result = Arbiter.previewParry(defender, attacker, timing)
+        Arbiter.record_("Parry  %(defender.name) vs %(attacker.name): t%(Arbiter.fmt_(timing)) edge %(Arbiter.fmt_(edge)) exh -%(Arbiter.fmt_(penalty)) = %(Arbiter.fmt_(result.score)) %(result.tier)",
+                        "parry %(defender.name) vs %(attacker.name): timing %(Arbiter.fmt_(timing)) edge %(Arbiter.fmt_(edge)) exhausted -%(Arbiter.fmt_(penalty)) = %(Arbiter.fmt_(result.score)) -> %(result.tier)")
         return result
     }
+
+    // The ParryResult a parry at `timing` would get - nothing recorded (EnemyAI uses this to decide).
+    static previewParry(defender, attacker, timing) {
+        var penalty = defender.stats.exhausted ? PARRY_EXHAUSTED_PENALTY : 0
+        return ParryResult.forScore(Math.clamp(timing, 0, 1) + Arbiter.parryEdge_(defender, attacker) - penalty)
+    }
+
+    // An AI defender's stand-in for the player's press timing: quicker reflexes read the attack later and better.
+    static aiParryTiming(defender) {
+        return Math.clamp(AI_TIMING_BASE + (defender.stats.reflex - 10) * AI_TIMING_PER_POINT, AI_TIMING_MIN, AI_TIMING_MAX)
+    }
+
+    static parryEdge_(defender, attacker) {
+        return Math.clamp((defender.stats.reflex - attacker.stats.precision) * PARRY_STAT_WEIGHT,
+                          -PARRY_STAT_EDGE_MAX, PARRY_STAT_EDGE_MAX)
+    }
+
+    // --- hit --------------------------------------------------------------------------------
 
     // attacker / defender: Combatants, move: the offensive Move landing. Returns a HitResult.
     static hit(attacker, defender, move) {
         var statMult = Arbiter.damageMult_(attacker, defender)
-        var variance = 1 + (RNG.float() - 0.5) * DAMAGE_VARIANCE
-        var critChance = Arbiter.critChance(attacker)
-        var crit = RNG.float() < critChance
-        var amount = (move.damage * statMult * variance * (crit ? CRIT_MULTIPLIER : 1)).round
-        if (amount < 1) {
-            amount = 1
-        }
-        Arbiter.record_("Hit  %(attacker.name) > %(defender.name) %(move.name): %(move.damage) x%(Arbiter.fmt_(statMult)) x%(Arbiter.fmt_(variance))%(crit ? " CRIT" : "") = %(amount)",
-                        "hit %(attacker.name) -> %(defender.name) %(move.name): base %(move.damage) stat x%(Arbiter.fmt_(statMult)) var x%(Arbiter.fmt_(variance)) crit %(crit) (%(Arbiter.fmt_(critChance))) = %(amount)")
+        var crit = Arbiter.crits(defender)
+        var amount = Arbiter.amount_(attacker, defender, move)
+        Arbiter.record_("Hit  %(attacker.name) > %(defender.name) %(move.name): %(move.damage) x%(Arbiter.fmt_(statMult))%(crit ? " CRIT" : "") = %(amount)",
+                        "hit %(attacker.name) -> %(defender.name) %(move.name): base %(move.damage) stat x%(Arbiter.fmt_(statMult)) crit %(crit) (target exhausted) = %(amount)")
         return HitResult.new(amount, crit)
     }
 
-    // Chance `attacker` lands a critical hit.
-    static critChance(attacker) {
-        return Math.clamp(CRIT_BASE_CHANCE + (attacker.stats.precision - 10) * CRIT_CHANCE_PER_POINT, 0, CRIT_CHANCE_MAX)
-    }
+    // True when a hit on `defender` lands as a crit - it's exhausted, so it can't brace for the blow.
+    static crits(defender) { defender.stats.exhausted }
 
     static damageMult_(attacker, defender) {
         return Math.clamp(1 + (attacker.stats.might - defender.stats.guard) * DAMAGE_STAT_WEIGHT,
                           DAMAGE_MULT_MIN, DAMAGE_MULT_MAX)
     }
 
-    // --- evade ------------------------------------------------------------------------------
-
-    // Chance `defender` slips `attacker`'s unparried attack. defenderMove: the Move the defender is charging
-    // (null if none) - Dodge adds DODGE_EVADE_BONUS.
-    static evadeChance(attacker, defender, defenderMove) {
-        var chance = Math.clamp(EVADE_BASE_CHANCE + (defender.stats.agility - attacker.stats.precision) * EVADE_PER_POINT,
-                                0, EVADE_CHANCE_MAX)
-        if (defenderMove != null && defenderMove.name == "Dodge") {
-            chance = chance + DODGE_EVADE_BONUS
-        }
-        if (defender.stats.exhausted) {
-            chance = chance * EVADE_EXHAUSTED_MULT
-        }
-        return chance
+    static amount_(attacker, defender, move) {
+        var amount = (move.damage * Arbiter.damageMult_(attacker, defender) * (Arbiter.crits(defender) ? CRIT_MULTIPLIER : 1)).round
+        return amount < 1 ? 1 : amount
     }
 
-    // Rolls it: true when the attack misses.
+    // --- evade ------------------------------------------------------------------------------
+
+    // True when `defender` slips `attacker`'s unparried attack. defenderMove: the Move the defender is charging
+    // (null if none) - only Dodge evades, and only with agility to match the attacker's precision.
+    static evades(attacker, defender, defenderMove) {
+        return defenderMove != null && defenderMove.name == "Dodge" && !defender.stats.exhausted &&
+               defender.stats.agility >= attacker.stats.precision
+    }
+
+    // Checks it and records the result: true when the attack misses.
     static evade(attacker, defender, defenderMove) {
-        var chance = Arbiter.evadeChance(attacker, defender, defenderMove)
-        var evaded = RNG.float() < chance
-        Arbiter.record_("Evade  %(defender.name): %((chance * 100).round)pct %(evaded ? "EVADED" : "- hit")",
-                        "evade %(defender.name) vs %(attacker.name): chance %(Arbiter.fmt_(chance)) -> %(evaded)")
+        var evaded = Arbiter.evades(attacker, defender, defenderMove)
+        var dodging = defenderMove != null && defenderMove.name == "Dodge"
+        Arbiter.record_("Evade  %(defender.name): %(evaded ? "EVADED" : (dodging ? "dodge too slow - hit" : "not dodging - hit"))",
+                        "evade %(defender.name) vs %(attacker.name): dodging %(dodging) agility %(defender.stats.agility) vs precision %(attacker.stats.precision) exhausted %(defender.stats.exhausted) -> %(evaded)")
         return evaded
     }
 
-    // Average damage `attacker`'s `move` would deal `defender` (crits and evasion folded in; no parry, no
-    // rolls) - for Combat/EnemyAI.wren to weigh options with.
+    // Exactly what `attacker`'s `move` would deal `defender` right now, before any parry (0 if it would be
+    // evaded) - for Combat/EnemyAI.wren to weigh options with.
     static expectedHit(attacker, defender, move, defenderMove) {
-        if (!move.offensive) {
+        if (!move.offensive || Arbiter.evades(attacker, defender, defenderMove)) {
             return 0
         }
-        var critFactor = 1 + Arbiter.critChance(attacker) * (CRIT_MULTIPLIER - 1)
-        var hitFactor = 1 - Arbiter.evadeChance(attacker, defender, defenderMove)
-        return move.damage * Arbiter.damageMult_(attacker, defender) * critFactor * hitFactor
+        return Arbiter.amount_(attacker, defender, move)
     }
+
+    // --- stagger / heal ---------------------------------------------------------------------
 
     // Time units a landed hit pushes the target's charge back. dealt: damage that actually got through;
     // targetFraction: 0..1, how charged the target's own move was.
@@ -287,19 +286,19 @@ class Arbiter {
         return move.timeCost * mult + (combatant.stats.exhausted ? EXHAUSTION_TIME_PENALTY : 0)
     }
 
-    // Time units of head start (negative = a late start) for `combatant`'s first charge of a fight - rolled
+    // Time units of head start (negative = a late start) for `combatant`'s first charge of a fight - worked out
     // once when the fight is set up (Timeline.add); Timeline.commit caps it against the first move's cost.
     static initiative(combatant) {
-        var units = (combatant.stats.agility - 10) * INITIATIVE_PER_POINT + RNG.float() * INITIATIVE_ROLL
+        var units = (combatant.stats.agility - 10) * INITIATIVE_PER_POINT
         if (units < INITIATIVE_MIN) {
             units = INITIATIVE_MIN
         }
         Arbiter.record_("Initiative  %(combatant.name): %(Arbiter.fmt_(units))u",
-                        "initiative %(combatant.name): %(Arbiter.fmt_(units))u")
+                        "initiative %(combatant.name): agility %(combatant.stats.agility) = %(Arbiter.fmt_(units))u")
         return units
     }
 
-    // Caps a rolled head start to INITIATIVE_MAX_SHARE of the first move's effective cost.
+    // Caps a head start to INITIATIVE_MAX_SHARE of the first move's effective cost.
     static capInitiative(units, cost) {
         var cap = cost * INITIATIVE_MAX_SHARE
         return units > cap ? cap : units
@@ -319,8 +318,8 @@ class Arbiter {
 
     // --- flee -------------------------------------------------------------------------------
 
-    // party / enemies: the living Combatants on each side.
-    static fleeChance(party, enemies) {
+    // How many attempts the party needs to get away (see header). party / enemies: the living Combatants.
+    static fleeAttemptsNeeded(party, enemies) {
         if (party.count == 0 || enemies.count == 0) {
             return 1
         }
@@ -335,26 +334,23 @@ class Arbiter {
                 fastest = c.stats.agility
             }
         }
-        return Math.clamp(FLEE_BASE_CHANCE + (partyAgility - fastest) * FLEE_PER_POINT, FLEE_CHANCE_MIN, FLEE_CHANCE_MAX)
+        var behind = fastest - partyAgility
+        return behind <= 0 ? 1 : 1 + (behind / FLEE_AGILITY_PER_ATTEMPT).ceil
     }
 
-    // Rolls it: true when the party gets away.
-    static flee(party, enemies) {
-        var chance = Arbiter.fleeChance(party, enemies)
-        var escaped = RNG.float() < chance
-        Arbiter.record_("Flee: %((chance * 100).round)pct %(escaped ? "escaped" : "failed")",
-                        "flee: chance %(Arbiter.fmt_(chance)) -> %(escaped)")
+    // True when this attempt gets away. attempt: 1 for the first try this fight, 2 for the next... (CombatSession
+    // counts them).
+    static flee(party, enemies, attempt) {
+        var needed = Arbiter.fleeAttemptsNeeded(party, enemies)
+        var escaped = attempt >= needed
+        Arbiter.record_("Flee: try %(attempt) of %(needed) %(escaped ? "escaped" : "failed")",
+                        "flee: attempt %(attempt), needs %(needed) -> %(escaped)")
         return escaped
     }
 
-    // An AI defender's stand-in for the player's press timing.
-    static aiParryTiming() {
-        return AI_TIMING_MIN + RNG.float() * (AI_TIMING_MAX - AI_TIMING_MIN)
-    }
+    // --- check log ------------------------------------------------------------------------
 
-    // --- roll log -------------------------------------------------------------------------
-
-    // Every roll lands here: its full breakdown to the console (when LOG_ROLLS is on) and a short line into
+    // Every check lands here: its full breakdown to the console (when LOG_ROLLS is on) and a short line into
     // recentRolls - what the battle test (States/BattleTestState.wren) shows on screen.
     static record_(short, long) {
         if (LOG_ROLLS) {
@@ -369,13 +365,13 @@ class Arbiter {
         }
     }
 
-    // The last RECENT_ROLLS_KEPT rolls, oldest first, as short one-line summaries.
+    // The last RECENT_ROLLS_KEPT checks, oldest first, as short one-line summaries.
     static recentRolls { __recent == null ? [] : __recent }
 
     static clearRolls() {
         __recent = []
     }
 
-    // Two-decimal string for the roll log.
+    // Two-decimal string for the check log.
     static fmt_(n) { ((n * 100).round / 100).toString }
 }

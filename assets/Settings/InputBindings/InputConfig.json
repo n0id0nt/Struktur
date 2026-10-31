@@ -14,6 +14,15 @@
       ]
     },
     {
+      "name": "Run",
+      "type": "button",
+      "bindings": [
+        { "type": "keycode", "value": "leftshift" },
+        { "type": "keycode", "value": "rightshift" },
+        { "type": "controllerButton", "value": "x" }
+      ]
+    },
+    {
       "name": "Inventory",
       "type": "button",
       "bindings": [

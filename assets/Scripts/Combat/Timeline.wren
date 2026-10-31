@@ -21,7 +21,7 @@ class Timeline {
         _entries = []
     }
 
-    // Joins the fight; the combatant's initiative is rolled now and spent on its first charge.
+    // Joins the fight; the combatant's initiative is worked out now and spent on its first charge.
     add(combatant) {
         _entries.add({ "combatant": combatant, "move": null, "progress": 0, "cost": 0, "parryOffered": false, "parryResult": null, "target": null, "headStart": Arbiter.initiative(combatant) })
     }

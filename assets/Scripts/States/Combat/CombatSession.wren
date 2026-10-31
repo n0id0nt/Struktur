@@ -56,6 +56,7 @@ class CombatSession {
         _navArmedAt = 0
         _parryAttacker = null
         _duel = false
+        _fleeAttempts = 0
         _resolver = CombatResolver.new(this)
     }
 
@@ -77,6 +78,12 @@ class CombatSession {
     // duel isn't treated as a death. Set by States/CombatState.wren from params["duel"].
     duel { _duel }
     duel=(value) { _duel = value }
+
+    // Counts this fight's flee attempts - Combat/Arbiter.flee lets a slower party away after enough tries.
+    nextFleeAttempt() {
+        _fleeAttempts = _fleeAttempts + 1
+        return _fleeAttempts
+    }
 
     // The move waiting on a target pick while TargetingState is up.
     pendingMove { _pendingMove }
@@ -255,9 +262,9 @@ class CombatSession {
     // The parry window of an attack opens `move.parryPromptTime` game seconds before it lands (capped so
     // it can't open before the attack has visibly started). Returns the first attacker whose window has
     // just opened and who is aimed at the player - ChargingState then opens ParryPromptState for it - or
-    // null. Attacks aimed at an AI-controlled enemy are settled right here instead: the defender flips its
-    // EnemyAI decides whether it tries to parry and, if so, the attempt is arbitrated with an AI timing and its
-    // parry pose plays.
+    // null. Attacks aimed at an AI-controlled enemy are settled right here instead: Combat/EnemyAI decides whether
+    // the defender tries to parry and, if so, the attempt is arbitrated at its reflex-based timing and its parry
+    // pose plays.
     nextParryOffer() {
         for (c in _timeline.combatants) {
             var move = _timeline.committedMove(c)
@@ -282,7 +289,7 @@ class CombatSession {
                 return c
             }
             if (EnemyAI.wantsParry(target, c, move, _timeline)) {
-                answerParry(c, true, Arbiter.aiParryTiming())
+                answerParry(c, true, Arbiter.aiParryTiming(target))
             } else {
                 answerParry(c, false, 0)
             }
