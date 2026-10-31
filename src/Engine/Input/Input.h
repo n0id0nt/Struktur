@@ -85,6 +85,8 @@ private:
 		Binding positive;
 		Binding negative;
 		std::set<SDL_GamepadAxis> controllerAxis;
+		// Subtracted rather than added - see CreateAxis2Binding(SDL_GamepadAxis)'s Y case.
+		std::set<SDL_GamepadAxis> invertedControllerAxis;
 	};
 
 	struct GamepadVariable
@@ -243,8 +245,15 @@ private:
 	// Gamepad state
 	float m_deadzone;
 	std::string m_gamepadId;
+	// Preferred pad (SDL list index) when nothing has been pressed yet - see RefreshGamepads().
 	int m_gamepadIndex;
+	// The pad every controller query reads from - whichever connected pad was used most recently.
 	SDL_Gamepad* m_sdlGamepad = nullptr;
+	// Every connected pad, kept open so any of them can become m_sdlGamepad.
+	std::unordered_map<SDL_JoystickID, SDL_Gamepad*> m_openGamepads;
+	void RefreshGamepads();
+	void SetActiveGamepad(SDL_Gamepad* gamepad);
+	static bool HasGamepadActivity(SDL_Gamepad* gamepad);
 	// Two snapshots (this frame vs last frame) so IsKeyJustPressed/Released can edge-detect - SDL's own
 	// SDL_GetKeyboardState() is a live array with no history.
 	std::array<bool, SDL_SCANCODE_COUNT> m_currKeyboardState{};

@@ -29,8 +29,9 @@ import "Combat/CombatOutcome" for CombatOutcome
 // Placeholder art for the rest spot (Tiles/Items.png frame 2 - the bread loaf) until there is campfire art.
 var REST_SPOT_SPRITE_INDEX = 2
 
-// Debug key that opens the battle test sandbox (States/BattleTestState.wren) from the overworld.
-var BATTLE_TEST_KEY = "f6"
+// Debug input (F6 / controller Select, see InputConfig.json) that opens the battle test sandbox
+// (States/BattleTestState.wren) from the overworld.
+var BATTLE_TEST_INPUT = "DebugBattleTest"
 
 // Where the player starts - and where they wake up after the party is wiped (respawn_).
 var SPAWN_POSITION = Vec3.new(208.0, 208.0, 0.0)
@@ -291,8 +292,8 @@ class ExperimentState is BaseState {
             return
         }
 
-        // Debug: F6 opens the battle test sandbox (States/BattleTestState.wren); its Back button returns here.
-        if (Input.isKeyJustPressed(BATTLE_TEST_KEY)) {
+        // Debug: F6 / Select opens the battle test sandbox (States/BattleTestState.wren); its Back button returns here.
+        if (Input.isInputJustPressed(BATTLE_TEST_INPUT)) {
             stateManager.changeState("BattleTest")
             return
         }

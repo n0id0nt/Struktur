@@ -14,6 +14,14 @@
       ]
     },
     {
+      "name": "DebugBattleTest",
+      "type": "button",
+      "bindings": [
+        { "type": "keycode", "value": "f6" },
+        { "type": "controllerButton", "value": "select" }
+      ]
+    },
+    {
       "name": "Run",
       "type": "button",
       "bindings": [
@@ -43,8 +51,7 @@
       "type": "variable",
       "bindings": [
         { "type": "keycode", "value": "w" },
-        { "type": "controllerButton", "value": "rtrigger" },
-        { "type": "controllerAxis", "value": "righttrigger", "axis": "negativeToPositive" }
+        { "type": "controllerAxis", "value": "righttrigger", "axis": "positive" }
       ]
     },
     {
@@ -52,8 +59,7 @@
       "type": "variable",
       "bindings": [
         { "type": "keycode", "value": "s" },
-        { "type": "controllerButton", "value": "ltrigger" },
-        { "type": "controllerAxis", "value": "lefttrigger", "axis": "negativeToPositive" }
+        { "type": "controllerAxis", "value": "lefttrigger", "axis": "positive" }
       ]
     },
     {
@@ -61,8 +67,7 @@
       "type": "variable",
       "bindings": [
         { "type": "keycode", "value": "leftshift" },
-        { "type": "controllerButton", "value": "ltrigger" },
-        { "type": "controllerAxis", "value": "lefttrigger", "axis": "negativeToPositive" }
+        { "type": "controllerAxis", "value": "lefttrigger", "axis": "positive" }
       ]
     },
     {
@@ -152,7 +157,9 @@
         { "type": "keycode", "value": "a", "component": "left" },
         { "type": "controllerButton", "value": "right", "component": "right" },
         { "type": "keycode", "value": "right", "component": "right" },
-        { "type": "keycode", "value": "d", "component": "right" }
+        { "type": "keycode", "value": "d", "component": "right" },
+        { "type": "controllerAxis", "value": "leftx", "component": "x" },
+        { "type": "controllerAxis", "value": "lefty", "component": "y" }
       ]
     },
     {

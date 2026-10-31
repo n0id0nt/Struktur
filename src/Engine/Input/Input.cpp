@@ -40,16 +40,18 @@ Input::Input(int gamepadIndex)
     : m_deadzone(0.0f),
       m_gamepadIndex(gamepadIndex)
 {
-	SDL_JoystickID instanceId = GetGamepadInstanceIdAtIndex(m_gamepadIndex);
-	if (instanceId != 0)
+	// SDL3 only auto-initializes the video subsystem (from SDL_CreateWindow) - nothing else in the engine calls
+	// SDL_Init, so without this SDL_GetGamepads() always reports zero devices and no controller ever connects.
+	// Ref-counted by SDL, so balancing it with SDL_QuitSubSystem in the destructor is safe.
+	if (!::SDL_InitSubSystem(SDL_INIT_GAMEPAD))
 	{
-		m_sdlGamepad = ::SDL_OpenGamepad(instanceId);
-		m_gamepadId  = m_sdlGamepad ? ::SDL_GetGamepadName(m_sdlGamepad) : "";
-		DEBUG_INFO("Gamepad %d '%s' successfully connected.", m_gamepadIndex, m_gamepadId);
+		DEBUG_ERROR("Failed to initialize SDL gamepad subsystem: %s", ::SDL_GetError());
 	}
-	else
+
+	RefreshGamepads();
+	if (!m_sdlGamepad)
 	{
-		DEBUG_WARNING("Gamepad %d is not connected.", m_gamepadIndex);
+		DEBUG_WARNING("No gamepad connected.");
 	}
 
 	RegisterDefaultUIBindings();
@@ -60,10 +62,9 @@ void Input::RegisterDefaultUIBindings()
 	// Mirrors InputConfig.json's own UIDir/UITab/UIAccept/UICancel bindings (assets/Settings/InputBindings/
 	// InputConfig.json) - a successfully-loaded config's own entries for these names simply overwrite these
 	// afterward. Deliberately real SDL enum constants directly rather than routing through InputMaps' string
-	// parsing (that layer exists for the JSON loader's benefit, not needed for a fixed C++-side default set) -
-	// and deliberately SDL_GAMEPAD_BUTTON_LEFT/RIGHT_SHOULDER rather than mirroring the JSON's own "lbumper"/
-	// "rbumper" strings for UITab, which InputMaps has no mapping for (resolves to SDL_GAMEPAD_BUTTON_INVALID,
-	// a pre-existing no-op in the JSON config, not something worth reproducing here).
+	// parsing (that layer exists for the JSON loader's benefit, not needed for a fixed C++-side default set).
+	CreateAxis2Binding("UIDir", SDL_GAMEPAD_AXIS_LEFTX, Axis2Direction::X);
+	CreateAxis2Binding("UIDir", SDL_GAMEPAD_AXIS_LEFTY, Axis2Direction::Y);
 	CreateAxis2Binding("UIDir", SDL_SCANCODE_UP, Axis2Component::Up);
 	CreateAxis2Binding("UIDir", SDL_SCANCODE_W, Axis2Component::Up);
 	CreateAxis2Binding("UIDir", SDL_GAMEPAD_BUTTON_DPAD_UP, Axis2Component::Up);
@@ -97,44 +98,18 @@ void Input::RegisterDefaultUIBindings()
 Input::~Input()
 {
 	Clear();
-	if (m_sdlGamepad)
+	for (auto& [id, gamepad] : m_openGamepads)
 	{
-		::SDL_CloseGamepad(m_sdlGamepad);
-		m_sdlGamepad = nullptr;
+		::SDL_CloseGamepad(gamepad);
 	}
+	m_openGamepads.clear();
+	m_sdlGamepad = nullptr;
+	::SDL_QuitSubSystem(SDL_INIT_GAMEPAD);
 }
 
 void Input::Update()
 {
-	SDL_JoystickID instanceId = GetGamepadInstanceIdAtIndex(m_gamepadIndex);
-	if (instanceId != 0)
-	{
-		if (!m_sdlGamepad || ::SDL_GetGamepadID(m_sdlGamepad) != instanceId)
-		{
-			if (m_sdlGamepad)
-			{
-				::SDL_CloseGamepad(m_sdlGamepad);
-			}
-			m_sdlGamepad          = ::SDL_OpenGamepad(instanceId);
-			std::string currentId = m_sdlGamepad ? ::SDL_GetGamepadName(m_sdlGamepad) : "";
-			if (currentId != m_gamepadId)
-			{
-				m_gamepadId = currentId;
-				DEBUG_INFO("Gamepad %d changed to '%s'", m_gamepadIndex, m_gamepadId);
-			}
-		}
-	}
-	else if (!m_gamepadId.empty())
-	{
-		// Gamepad was connected but is now disconnected
-		DEBUG_WARNING("Gamepad %d '%s' disconnected", m_gamepadIndex, m_gamepadId);
-		m_gamepadId.clear();
-		if (m_sdlGamepad)
-		{
-			::SDL_CloseGamepad(m_sdlGamepad);
-			m_sdlGamepad = nullptr;
-		}
-	}
+	RefreshGamepads();
 
 	// Rotate snapshots so IsKeyJustPressed/IsKeyJustReleased can diff "this frame" against "last frame".
 	m_prevKeyboardState       = m_currKeyboardState;
@@ -216,22 +191,105 @@ void Input::LoadInputBindings(const std::string& file)
 void Input::SetGamepadIndex(int index)
 {
 	m_gamepadIndex = index;
-	if (m_sdlGamepad)
+	auto it        = m_openGamepads.find(GetGamepadInstanceIdAtIndex(m_gamepadIndex));
+	SetActiveGamepad(it != m_openGamepads.end() ? it->second : nullptr);
+}
+
+void Input::RefreshGamepads()
+{
+	int count                = 0;
+	SDL_JoystickID* gamepads = ::SDL_GetGamepads(&count);
+	std::set<SDL_JoystickID> connected(gamepads, gamepads ? gamepads + count : gamepads);
+	if (gamepads)
 	{
-		::SDL_CloseGamepad(m_sdlGamepad);
-		m_sdlGamepad = nullptr;
+		::SDL_free(gamepads);
 	}
-	SDL_JoystickID instanceId = GetGamepadInstanceIdAtIndex(m_gamepadIndex);
-	if (instanceId != 0)
+
+	// Drop pads that were unplugged.
+	for (auto it = m_openGamepads.begin(); it != m_openGamepads.end();)
 	{
-		m_sdlGamepad = ::SDL_OpenGamepad(instanceId);
-		m_gamepadId  = m_sdlGamepad ? ::SDL_GetGamepadName(m_sdlGamepad) : "";
-		DEBUG_INFO("Switched to gamepad %d '%s'", m_gamepadIndex, m_gamepadId);
+		if (connected.count(it->first))
+		{
+			++it;
+			continue;
+		}
+		if (it->second == m_sdlGamepad)
+		{
+			DEBUG_WARNING("Gamepad '%s' disconnected", m_gamepadId);
+			SetActiveGamepad(nullptr);
+		}
+		::SDL_CloseGamepad(it->second);
+		it = m_openGamepads.erase(it);
 	}
-	else
+
+	// Open newly plugged pads - every connected pad stays open so any of them can take over below.
+	for (SDL_JoystickID id : connected)
 	{
-		m_gamepadId.clear();
+		if (!m_openGamepads.count(id))
+		{
+			if (SDL_Gamepad* gamepad = ::SDL_OpenGamepad(id))
+			{
+				m_openGamepads[id] = gamepad;
+				DEBUG_INFO("Gamepad '%s' connected", ::SDL_GetGamepadName(gamepad));
+			}
+		}
 	}
+
+	// Follow whichever pad the player last touched, so a phantom/virtual device (e.g. Windows' own "Xbox Gaming
+	// Device") or a second controller sitting at SDL's index 0 can't swallow the real one. With nothing active
+	// yet, fall back to the preferred index, then to any connected pad.
+	for (auto& [id, gamepad] : m_openGamepads)
+	{
+		if (gamepad != m_sdlGamepad && HasGamepadActivity(gamepad))
+		{
+			SetActiveGamepad(gamepad);
+			break;
+		}
+	}
+	if (!m_sdlGamepad && !m_openGamepads.empty())
+	{
+		auto it = m_openGamepads.find(GetGamepadInstanceIdAtIndex(m_gamepadIndex));
+		SetActiveGamepad(it != m_openGamepads.end() ? it->second : m_openGamepads.begin()->second);
+	}
+}
+
+void Input::SetActiveGamepad(SDL_Gamepad* gamepad)
+{
+	if (gamepad == m_sdlGamepad)
+	{
+		return;
+	}
+	m_sdlGamepad = gamepad;
+	m_gamepadId  = gamepad ? ::SDL_GetGamepadName(gamepad) : "";
+	// The button snapshot belongs to the old pad - left alone, a button held on it as it was unplugged (or as
+	// the player picked up another pad) reads as released on the new pad next frame, and most game actions
+	// fire on release (isInputJustReleased). Starting from all-up means only real presses on the new pad count.
+	m_currControllerButtons.clear();
+	if (gamepad)
+	{
+		DEBUG_INFO("Active gamepad is now '%s'", m_gamepadId);
+	}
+}
+
+bool Input::HasGamepadActivity(SDL_Gamepad* gamepad)
+{
+	for (int button = 0; button < SDL_GAMEPAD_BUTTON_COUNT; ++button)
+	{
+		if (::SDL_GetGamepadButton(gamepad, (SDL_GamepadButton)button))
+		{
+			return true;
+		}
+	}
+	// Well past any sane deadzone, so resting-stick drift on an idle pad never steals focus.
+	constexpr Sint16 kActivityThreshold = 16384;
+	for (int axis = 0; axis < SDL_GAMEPAD_AXIS_COUNT; ++axis)
+	{
+		if (std::abs((int)::SDL_GetGamepadAxis(gamepad, (SDL_GamepadAxis)axis)) > kActivityThreshold)
+		{
+			return true;
+		}
+	}
+	return false;
 }
 
 bool Input::IsGamepadConnected() const
@@ -676,7 +734,9 @@ void Input::CreateAxis2Binding(const std::string& input, SDL_GamepadAxis code, A
 			m_axis2Bindings[input].xAxis.controllerAxis.insert(code);
 			break;
 		case Axis2Direction::Y:
-			m_axis2Bindings[input].yAxis.controllerAxis.insert(code);
+			// Axis2's Y is up-positive (Axis2Component::Up -> yAxis.positive), but SDL's stick Y axes report up as
+			// negative - invert so a stick pushed up reads the same as the Up keys/D-pad rather than the opposite.
+			m_axis2Bindings[input].yAxis.invertedControllerAxis.insert(code);
 			break;
 		default:
 			ASSERT(false);
@@ -773,6 +833,10 @@ float Input::CalculateAxisValue(const AxisBinding& binding)
 	for (auto controllerAxis : binding.controllerAxis)
 	{
 		value += GetControllerAxisValue(controllerAxis);
+	}
+	for (auto controllerAxis : binding.invertedControllerAxis)
+	{
+		value -= GetControllerAxisValue(controllerAxis);
 	}
 
 	// Clamp between -1 and 1

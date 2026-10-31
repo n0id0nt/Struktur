@@ -134,14 +134,13 @@ const std::unordered_map<std::string, SDL_GamepadButton> kControllerButtonMap = 
     {"start", SDL_GAMEPAD_BUTTON_START},
     {"ljoystick", SDL_GAMEPAD_BUTTON_LEFT_STICK},
     {"rjoystick", SDL_GAMEPAD_BUTTON_RIGHT_STICK},
+    {"lbumper", SDL_GAMEPAD_BUTTON_LEFT_SHOULDER},
+    {"rbumper", SDL_GAMEPAD_BUTTON_RIGHT_SHOULDER},
+    // The analog triggers have no SDL_GamepadButton - SDL3 models them as axes only (see kControllerAxisMap's
+    // "lefttrigger"/"righttrigger", bound with "axis": "positive"). "ltrigger"/"rtrigger" are legacy aliases for
+    // the shoulder buttons, kept so an older config binding them doesn't hard-fail; prefer "lbumper"/"rbumper".
     {"ltrigger", SDL_GAMEPAD_BUTTON_LEFT_SHOULDER},
     {"rtrigger", SDL_GAMEPAD_BUTTON_RIGHT_SHOULDER},
-    // "lbumper"/"rbumper" have no SDL_GamepadButton equivalent - SDL3 models the analog triggers as axes only
-    // (SDL_GAMEPAD_AXIS_LEFT/RIGHT_TRIGGER, see kControllerAxisMap's "lefttrigger"/"righttrigger"), so these
-    // were already silently non-functional before this file stopped going through raylib-style button codes -
-    // kept mapped to INVALID rather than removed, so an existing config binding these doesn't hard-fail.
-    {"lbumper", SDL_GAMEPAD_BUTTON_INVALID},
-    {"rbumper", SDL_GAMEPAD_BUTTON_INVALID},
     {"up", SDL_GAMEPAD_BUTTON_DPAD_UP},
     {"down", SDL_GAMEPAD_BUTTON_DPAD_DOWN},
     {"left", SDL_GAMEPAD_BUTTON_DPAD_LEFT},
