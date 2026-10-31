@@ -101,7 +101,7 @@ class ActionAnimations {
     // The generic role a move- or reaction-specific role stands in for, for sheets (critters) that only
     // have "idle" "attack" "hurt" "run". null = no fallback (Battler then uses idle).
     static fallbackRole(role) {
-        if (role == "dodge") return "run"
+        if (role == "dodge" || role == "flee" || role == "entrance") return "run"
         if (role == "defeat" || role == "fumble") return "hurt"
         if (role == "idle" || role == "attack" || role == "hurt" || role == "run") return null
         return "attack"
@@ -133,8 +133,9 @@ class ActionAnimations {
         if (id == "defeat")   return ActionAnimation.new("defeat", 1.0, false, "none", 0, null, null, HURT_TINT, 18, true)
         // Slipped an attack: a quick hop away and back on the "dodge" clip (falls back to "run").
         if (id == "evade")    return ActionAnimation.new("dodge", 0.35, false, "none", 0, null, null, null, 14, false)
-        if (id == "flee")     return ActionAnimation.new("run", 0.7, false, "none", 0, null, null, null, 0, false)
-        if (id == "entrance") return ActionAnimation.new("run", null, true, "none", 0, null, null, null, 0, false)
+        // Own roles (not "run") so a sheet without a run clip can pick something else - see Combat/Config/SheetAnims.wren.
+        if (id == "flee")     return ActionAnimation.new("flee", 0.7, false, "none", 0, null, null, null, 0, false)
+        if (id == "entrance") return ActionAnimation.new("entrance", null, true, "none", 0, null, null, null, 0, false)
         return ActionAnimation.new("idle", null, true, "none", 0, null, null, null, 0, false)
     }
 }

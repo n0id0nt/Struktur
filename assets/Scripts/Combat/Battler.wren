@@ -89,10 +89,14 @@ class Battler {
 
     awaySign=(sign) { _awaySign = sign }
 
-    // dir: 1 to face right, -1 to face left. Flips the sheet when that's opposite the art's facing.
+    // dir: 1 to face right, -1 to face left. A def with left-facing art (animsLeft) switches to those clips;
+    // one without flips the sheet when that's opposite the art's facing.
     face(dir) {
         _faceDir = dir
         flip_(dir)
+        if (_move == null && _reaction == null && !_defeated) {
+            playIdle()   // re-pick the idle for the new side (the constructor started it facing right)
+        }
     }
 
     // Turns the sprite away from the opponents (true) or back toward them (false) without changing the
@@ -104,8 +108,17 @@ class Battler {
     }
 
     flip_(dir) {
-        Sprite.setFlipped(_entity, dir == _def.facing ? FlipBit.NONE : FlipBit.HORIZONTAL)
+        _side = dir
+        if (_def.animsLeft != null) {
+            Sprite.setFlipped(_entity, FlipBit.NONE)
+        } else {
+            Sprite.setFlipped(_entity, dir == _def.facing ? FlipBit.NONE : FlipBit.HORIZONTAL)
+        }
     }
+
+    // The anims table for the side the battler shows now: the def's left-facing table when it has one and
+    // the battler faces left, otherwise its own (flipped by flip_ as needed).
+    anims_ { (_side == -1 && _def.animsLeft != null) ? _def.animsLeft : _def.anims }
 
     // Slide from fromPos toward toPos, t in 0..1 (the arena entrance - see BattleStage.intro).
     slide(fromPos, toPos, t) {
@@ -120,14 +133,15 @@ class Battler {
     // generic role (ActionAnimations.fallbackRole - "crush" -> "attack"), then to idle. loop=false clips
     // hold their last frame.
     clip_(role, duration, loop) {
-        var anims = _def.anims
+        var anims = anims_
         if (!anims.containsKey(role)) {
             var generic = ActionAnimations.fallbackRole(role)
             role = (generic != null && anims.containsKey(generic)) ? generic : "idle"
         }
         var frames = anims[role]
         var seconds = duration == null ? frames[2] : duration
-        var key = "%(role)|%(seconds)|%(loop)"
+        var side = (_side == -1 && _def.animsLeft != null) ? "left" : "right"
+        var key = "%(role)|%(seconds)|%(loop)|%(side)"
         if (!_registered.containsKey(key)) {
             _anim.addAnimation(key, SpriteAnimationDefinition.new(frames[0], frames[1], seconds, loop))
             _registered[key] = true
@@ -139,9 +153,10 @@ class Battler {
         SpriteAnimation.setCurrentAnimation(_entity, clip_("idle", null, true))
     }
 
-    // The arena entrance: run in place while BattleStage.intro slides everyone onto their marks.
+    // The arena entrance: plays the "entrance" clip (a run - see
+    // Combat/Config/SheetAnims.wren) while BattleStage.intro slides everyone onto their marks.
     playEntrance() {
-        SpriteAnimation.forcePlayAnimation(_entity, clip_("run", null, true))
+        SpriteAnimation.forcePlayAnimation(_entity, clip_(ActionAnimations.reaction("entrance").role, null, true))
     }
 
     // --- charging a move -------------------------------------------------------------
@@ -152,12 +167,12 @@ class Battler {
         _move = move
         _action = ActionAnimations.forMove(move)
         _curve = _action.motion == "lunge" ? MoveCurves.get(_action.curveId) : null
+        turnAway_(_action.motion == "retreat")
         if (_action.loop) {
             _chargeClip = clip_(_action.role, null, true)
         } else {
             _chargeClip = clip_(_action.role, cost * SECONDS_PER_TIME_UNIT, false)
         }
-        turnAway_(_action.motion == "retreat")
         refreshTint_()
     }
 
@@ -249,12 +264,12 @@ class Battler {
         _reactionStart = Time.scaledTime
         _reactionFrom = _base
         _reactionEnd = _reactionStart + a.duration
+        if (id == "flee") {
+            turnAway_(true)   // stays turned: the flee ends the fight
+        }
         SpriteAnimation.forcePlayAnimation(_entity, clip_(a.role, a.duration, false))
         if (id == "defeat") {
             _defeated = true
-        }
-        if (id == "flee") {
-            turnAway_(true)   // stays turned: the flee ends the fight
         }
         refreshTint_()
     }

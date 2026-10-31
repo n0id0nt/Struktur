@@ -1,50 +1,53 @@
-import "gameObjectComponents" for PhysicsBody, Shader as ShaderComponent
-import "math" for Vec2, Vec3, Vec4
-import "resourceManager" for Shader as ShaderResource
+import "gameObjectComponents" for PhysicsBody
 import "physics" for BodyDefinition, PhysicsCircleShape, BodyType
 import "debug" for Debug
 import "Sprites/ClaireSprite" for ClaireSprite
+import "Sprites/ClaireBattleSprite" for ClaireBattleSprite
 import "Sprites/GoblinVikingSprite" for GoblinVikingSprite
+import "Sprites/GoblinVikingBattleSprite" for GoblinVikingBattleSprite
 import "Sprites/PeasantGirlSprite" for PeasantGirlSprite
+import "Sprites/PeasantGirlBattleSprite" for PeasantGirlBattleSprite
 import "Sprites/PinkHairGirlSprite" for PinkHairGirlSprite
+import "Sprites/PinkHairGirlBattleSprite" for PinkHairGirlBattleSprite
 import "Sprites/WrestlerSprite" for WrestlerSprite
+import "Sprites/WrestlerBattleSprite" for WrestlerBattleSprite
 import "Sprites/YellowPantsGirlSprite" for YellowPantsGirlSprite
+import "Sprites/YellowPantsGirlBattleSprite" for YellowPantsGirlBattleSprite
 
 class NPCData {
-    // sprite: the generated Sprites/<Name>Sprite class this NPC wears (made by 3dModelsToSprites/build_sprites.bat).
-    construct new(sprite) {
+    // The generated sheets this NPC wears (made by 3dModelsToSprites/build_sprites.bat):
+    // sprite - Sprites/<Name>Sprite, the overworld movement sheet (idle / walk / run, 8 directions);
+    // battleSprite - Sprites/<Name>BattleSprite, the fight sheet (left / right) - Combat/Config/BattleCritter.fromNpc.
+    construct new(sprite, battleSprite) {
         _sprite = sprite
+        _battleSprite = battleSprite
     }
 
     sprite { _sprite }
+    battleSprite { _battleSprite }
 
     // Adds the NPC's sprite and every <direction><Animation>Animation clip to `entity`, idling facing down.
     createSprite(entity) { _sprite.create(entity) }
 
-    // Atlas size in pixels - the soul shader's offsets are in texture UVs, so NPC.start scales them by this to
-    // keep them a fixed number of pixels on any sheet.
-    textureWidth { _sprite.data["columns"] * _sprite.data["cellSize"][0] }
-    rows { _sprite.data["rows"] }
-
     // The sprite for the NPC called `name`, or null. Six models cover the twelve NPCs, so some share a look.
     // Shared by the standing NPC (this file), its party follower (GameObjects/PartyMember.wren) and its battle
-    // look (Combat/Config/BattleCritter.wren).
+    // look (Combat/Config/BattleCritter.wren, which uses battleSprite).
     static forName(name) {
         var table = {
             // Overworld NPCs (States/ExperimentState.wren spawns them; Dialogue/OverworldDialogue.json).
-            "Villager": NPCData.new(PeasantGirlSprite),
-            "Traveler": NPCData.new(ClaireSprite),
-            "Duelist": NPCData.new(YellowPantsGirlSprite),
+            "Villager": NPCData.new(PeasantGirlSprite, PeasantGirlBattleSprite),
+            "Traveler": NPCData.new(ClaireSprite, ClaireBattleSprite),
+            "Duelist": NPCData.new(YellowPantsGirlSprite, YellowPantsGirlBattleSprite),
             // Memory Palace NPCs (Levels/MemoryPalace.ldtk).
-            "Scholar": NPCData.new(ClaireSprite),
-            "Gardener": NPCData.new(YellowPantsGirlSprite),
-            "Cook": NPCData.new(PeasantGirlSprite),
-            "Inventor": NPCData.new(YellowPantsGirlSprite),
-            "Dreamer": NPCData.new(PinkHairGirlSprite),
-            "Astronomer": NPCData.new(PinkHairGirlSprite),
-            "Merchant": NPCData.new(WrestlerSprite),
-            "Guardian": NPCData.new(GoblinVikingSprite),
-            "Cordelia": NPCData.new(PinkHairGirlSprite)
+            "Scholar": NPCData.new(ClaireSprite, ClaireBattleSprite),
+            "Gardener": NPCData.new(YellowPantsGirlSprite, YellowPantsGirlBattleSprite),
+            "Cook": NPCData.new(PeasantGirlSprite, PeasantGirlBattleSprite),
+            "Inventor": NPCData.new(YellowPantsGirlSprite, YellowPantsGirlBattleSprite),
+            "Dreamer": NPCData.new(PinkHairGirlSprite, PinkHairGirlBattleSprite),
+            "Astronomer": NPCData.new(PinkHairGirlSprite, PinkHairGirlBattleSprite),
+            "Merchant": NPCData.new(WrestlerSprite, WrestlerBattleSprite),
+            "Guardian": NPCData.new(GoblinVikingSprite, GoblinVikingBattleSprite),
+            "Cordelia": NPCData.new(PinkHairGirlSprite, PinkHairGirlBattleSprite)
         }
         return table.containsKey(name) ? table[name] : null
     }
@@ -74,23 +77,7 @@ class NPC {
         
         var bodyDef = BodyDefinition.new(BodyType.STATIC_BODY)
         var playerShape = PhysicsCircleShape.new(0.25)
-        var physicsBody = PhysicsBody.create(_entity, bodyDef, playerShape)
-        var shader = ShaderResource.load(null, "Shaders/SoulEffect_100.fs")
-        var shaderComponent = ShaderComponent.create(_entity, shader)
-        shader.unload()
-        shaderComponent.setVec3Uniform("soulColor", Vec3.new(0.3, 0.7, 1.0))
-        shaderComponent.setFloatUniform("glowIntensity", 0.05)
-        shaderComponent.setFloatUniform("rippleSpeed", 1.0)
-        shaderComponent.setFloatUniform("rippleFrequency", 15.0)
-        shaderComponent.setFloatUniform("waveAmplitude", 0.05)
-        shaderComponent.setFloatUniform("waveFrequency", 8.0)
-        shaderComponent.setFloatUniform("waveSpeed", 3.0)
-        shaderComponent.setVec3Uniform("waveDirection", Vec2.new(1.0, 0.3))
-        shaderComponent.setFloatUniform("scanlineIntensity", 0.1)
-        // ~1.5px colour split and one holographic band per figure, whatever the atlas size.
-        shaderComponent.setFloatUniform("chromaticAberration", 1.5 / npcData.textureWidth)
-        shaderComponent.setFloatUniform("glitchFrequency", 0.05)
-        shaderComponent.setFloatUniform("holographicShift", 10.0 * npcData.rows)
+        PhysicsBody.create(_entity, bodyDef, playerShape)
     }
     
     update() {

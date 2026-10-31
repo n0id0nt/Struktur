@@ -5,13 +5,13 @@
 //
 // The player's *persistent* Combatant still lives on the Player script (HP carries between fights -
 // see GameObjects/Player.combatant); this is where its numbers and its arena look are declared.
-// Uses the overworld sheet generated from the 3D model (Sprites/explorer.png). `anims` maps every battle
-// role to one of its clips - see Combat/Config/SheetAnims.wren and ActionAnimations.wren.
+// Uses the battle sheet generated from the 3D model (Sprites/explorer_battle.png - left and right facing clips).
+// `anims` / `animsLeft` map every battle role to one of its clips - see Combat/Config/SheetAnims.wren.
 import "math" for Vec2
 import "Combat/Combatant" for Combatant
 import "Combat/Config/Archetype" for Archetype
 import "Combat/Config/SheetAnims" for SheetAnims
-import "Sprites/ExplorerSprite" for ExplorerSprite
+import "Sprites/ExplorerBattleSprite" for ExplorerBattleSprite
 
 class BattlePlayer {
     static name { "You" }
@@ -21,20 +21,27 @@ class BattlePlayer {
     // Overrides on top of the archetype's attribute baseline (Combat/Config/Archetype.wren) - null keeps it as is.
     static attributes { null }
 
-    // The overworld sheet, Sprites/explorer.png (generated - see Sprites/ExplorerSprite.wren). Battle plays
-    // its right-facing clips; Battler flips them for the other side.
-    static texturePath { ExplorerSprite.data["texture"] }
-    static cols { ExplorerSprite.data["columns"] }
-    static rows { ExplorerSprite.data["rows"] }
-    static pivot { Vec2.new(ExplorerSprite.data["origin"][0], ExplorerSprite.data["origin"][1]) }
+    // The battle sheet, Sprites/explorer_battle.png (generated - see Sprites/ExplorerBattleSprite.wren).
+    static texturePath { ExplorerBattleSprite.data["texture"] }
+    static cols { ExplorerBattleSprite.data["columns"] }
+    static rows { ExplorerBattleSprite.data["rows"] }
+    static pivot { Vec2.new(ExplorerBattleSprite.data["origin"][0], ExplorerBattleSprite.data["origin"][1]) }
     static facing { 1 }
 
     // role -> [startFrame, endFrameExclusive, seconds] - see Combat/Config/SheetAnims.wren for which clip plays what.
     static anims {
         if (__anims == null) {
-            __anims = SheetAnims.forSheet(ExplorerSprite.data, "ExplorerSprite")
+            __anims = SheetAnims.forSheet(ExplorerBattleSprite.data, "right", "ExplorerBattleSprite")
         }
         return __anims
+    }
+
+    // The same roles facing left (Battler plays these instead of flipping when the player faces left).
+    static animsLeft {
+        if (__animsLeft == null) {
+            __animsLeft = SheetAnims.forSheet(ExplorerBattleSprite.data, "left", "ExplorerBattleSprite")
+        }
+        return __animsLeft
     }
 
     // The moves the player knows by default - the archetype's kit (same shape as BattleCritter.kit).
