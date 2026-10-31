@@ -35,6 +35,7 @@ class InteractState is BaseState {
         _currentDialogueStartTime = 0
         _currentResult            = null
         _waitingForChoice         = false
+        _pendingChoiceTexts       = null   // the current node's choices, held back until its line finishes scrolling
 
         _menuMusic       = null
         _textScrollSound = null
@@ -86,11 +87,9 @@ class InteractState is BaseState {
         if (_dialogueScrolling) {
             var charCount = ((Time.scaledTime - _currentDialogueStartTime) / TEXT_SCROLL_SPEED).floor
             if (charCount >= _currentGlyphCount) {
-                charCount = _currentGlyphCount
-                _dialogueScrolling = false
-                if (!_waitingForChoice) {
-                    _view.showContinuePrompt(true)
-                }
+                finishScroll_()
+                // The line (and any choices) only just appeared - a press this same frame mustn't also act on them.
+                return
             }
             _view.revealGlyphs(charCount)
         }
@@ -98,12 +97,8 @@ class InteractState is BaseState {
         // Confirm / advance
         if (inputInteract) {
             if (_dialogueScrolling) {
-                // Skip to end of scroll
-                _dialogueScrolling = false
-                _view.revealGlyphs(_currentGlyphCount)
-                if (!_waitingForChoice) {
-                    _view.showContinuePrompt(true)
-                }
+                // Skip to end of scroll - which also brings up the choices, if this line has any
+                finishScroll_()
             } else if (_waitingForChoice) {
                 confirmChoice(stateManager)
             } else {
@@ -118,6 +113,7 @@ class InteractState is BaseState {
         holdPlayers_(false)
 
         DialogueInterpreter.endDialogue()
+        _pendingChoiceTexts = null
 
         if (_choiceList != null) {
             _choiceList.teardown()
@@ -136,6 +132,30 @@ class InteractState is BaseState {
         _textScrollSound = null
 
         Debug.info("InteractState unloaded")
+    }
+
+    // The current line is fully shown (it finished scrolling, or the player skipped it): show the continue prompt,
+    // or - for a line that asks a question - its choices, which are held back until now (processDialogueResult).
+    finishScroll_() {
+        _dialogueScrolling = false
+        _view.revealGlyphs(_currentGlyphCount)
+        if (!_waitingForChoice) {
+            _view.showContinuePrompt(true)
+        } else if (_pendingChoiceTexts != null) {
+            showChoices_(_pendingChoiceTexts)
+            _pendingChoiceTexts = null
+        }
+    }
+
+    // Replaces whatever choice list is up (e.g. the collapsed record of the last pick) with these choices.
+    showChoices_(choiceTexts) {
+        if (_choiceList != null) {
+            _choiceList.teardown()
+            _choiceList = null
+        }
+        _choiceList = ChoiceListUI.new(_view.screenPanel, choiceTexts, _view.font, Fn.new { |index|
+            _textScrollSound.play()
+        })
     }
 
     // --- dialogue flow -----------------------------------------------------
@@ -167,15 +187,16 @@ class InteractState is BaseState {
         _waitingForChoice = false
 
         // After a pick the list stays up collapsed to that one option (confirmChoice) as a record of it - until the
-        // next set of choices replaces it, a node clears it ("closeChoice" command - Dialogue/ChoiceRecord.wren),
-        // or the conversation ends (exit).
+        // next set of choices replaces it (once their question has finished scrolling - finishScroll_), a node clears
+        // it ("closeChoice" command - Dialogue/ChoiceRecord.wren), or the conversation ends (exit).
         var choices = result.choices
         var hasChoices = choices && choices.count > 0
         var closeRequested = ChoiceRecord.takeCloseRequest()
-        if (_choiceList != null && (hasChoices || closeRequested || !_choiceList.collapsed)) {
+        if (_choiceList != null && (closeRequested || !_choiceList.collapsed)) {
             _choiceList.teardown()
             _choiceList = null
         }
+        _pendingChoiceTexts = null
 
         if (hasChoices) {
             _waitingForChoice = true
@@ -186,9 +207,8 @@ class InteractState is BaseState {
                 choiceTexts.add("%(i + 1).  %(Localization.get(choice))")
                 i = i + 1
             }
-            _choiceList = ChoiceListUI.new(_view.screenPanel, choiceTexts, _view.font, Fn.new { |index|
-                _textScrollSound.play()
-            })
+            // Shown once the question has finished scrolling (finishScroll_), not while it's still being "spoken".
+            _pendingChoiceTexts = choiceTexts
         }
     }
 
@@ -205,7 +225,7 @@ class InteractState is BaseState {
     }
 
     confirmChoice(stateManager) {
-        if (!_waitingForChoice) return
+        if (!_waitingForChoice || _choiceList == null || _choiceList.collapsed) return
 
         var index = _choiceList.focusedIndex
         Debug.info("Confirming choice %(index)")
