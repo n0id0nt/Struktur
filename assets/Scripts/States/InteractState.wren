@@ -1,10 +1,13 @@
 // states/InteractState.wren
 // Interact state - handles NPC and item interactions using the dialogue system. Drives the
 // Dialogue/DialogueInterpreter model (advance/choice) and the glyph-reveal timing, and owns the
-// UI/Dialogue/DialogueBoxUI + (while a node offers choices) UI/Dialogue/ChoiceListUI views.
+// UI/Dialogue/DialogueBoxUI + (while a node offers choices) UI/Dialogue/ChoiceListUI views. The world keeps running
+// while a conversation is open; only the player is held - every Player is put into its interacting mode (no input,
+// stands idle - GameObjects/Player.setInteracting) for the duration, so only the dialogue reads input.
 import "resourceManager" for Music, Sound
 import "app" for Time
 import "input" for Input
+import "gameObject" for GameObject
 import "gameObjectComponents" for Script
 import "debug" for Debug
 import "localization" for Localization
@@ -12,6 +15,7 @@ import "localization" for Localization
 import "States/BaseState" for BaseState
 import "Dialogue/DialogueInterpreter" for DialogueInterpreter
 import "Dialogue/DialogueEntryPoints" for DialogueEntryPoints
+import "Dialogue/ChoiceRecord" for ChoiceRecord
 import "Localization/DisplayNames" for DisplayNames
 import "UI/Dialogue/DialogueBoxUI" for DialogueBoxUI
 import "UI/Dialogue/ChoiceListUI" for ChoiceListUI
@@ -38,6 +42,7 @@ class InteractState is BaseState {
 
     enter(stateManager, params) {
         super.enter(stateManager, params)
+        holdPlayers_(true)
 
         _interactingEntity = params["interactingEntity"]
 
@@ -60,6 +65,16 @@ class InteractState is BaseState {
         Debug.info("Starting dialogue for %(interactable.name) at node %(entryNodeId)")
         _currentResult = DialogueInterpreter.startDialogue(entryNodeId)
         processDialogueResult(_currentResult)
+    }
+
+    // Puts every player into (or back out of) its interacting mode - see the header.
+    holdPlayers_(held) {
+        for (entity in GameObject.getAllWithIdentifier("Player")) {
+            var player = Script.getInstance(entity)
+            if (player != null) {
+                player.setInteracting(held)
+            }
+        }
     }
 
     update(stateManager) {
@@ -100,6 +115,7 @@ class InteractState is BaseState {
     exit() {
         super.exit()
         Debug.info("Unloading InteractState...")
+        holdPlayers_(false)
 
         DialogueInterpreter.endDialogue()
 
@@ -150,13 +166,18 @@ class InteractState is BaseState {
         _view.showContinuePrompt(false)
         _waitingForChoice = false
 
-        if (_choiceList != null) {
+        // After a pick the list stays up collapsed to that one option (confirmChoice) as a record of it - until the
+        // next set of choices replaces it, a node clears it ("closeChoice" command - Dialogue/ChoiceRecord.wren),
+        // or the conversation ends (exit).
+        var choices = result.choices
+        var hasChoices = choices && choices.count > 0
+        var closeRequested = ChoiceRecord.takeCloseRequest()
+        if (_choiceList != null && (hasChoices || closeRequested || !_choiceList.collapsed)) {
             _choiceList.teardown()
             _choiceList = null
         }
 
-        var choices = result.choices
-        if (choices && choices.count > 0) {
+        if (hasChoices) {
             _waitingForChoice = true
 
             var choiceTexts = []
@@ -186,8 +207,10 @@ class InteractState is BaseState {
     confirmChoice(stateManager) {
         if (!_waitingForChoice) return
 
-        Debug.info("Confirming choice %(_choiceList.focusedIndex)")
-        _currentResult = DialogueInterpreter.makeChoice(_choiceList.focusedIndex)
+        var index = _choiceList.focusedIndex
+        Debug.info("Confirming choice %(index)")
+        _choiceList.collapseTo(index)
+        _currentResult = DialogueInterpreter.makeChoice(index)
         processDialogueResult(_currentResult)
     }
 }

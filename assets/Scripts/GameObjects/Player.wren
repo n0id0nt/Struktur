@@ -24,6 +24,7 @@ class Player {
         _running = false
         _fixedUpdateCount = 0
         _combatant = null
+        _interacting = false
 
         System.print("Player constructed for: %(_name)")
     }
@@ -38,6 +39,18 @@ class Player {
     #!export
     runSpeed { _runSpeed }
     runSpeed=(value) { _runSpeed = value }
+
+    // True during an interact / dialogue sequence (States/InteractState.wren): the player ignores every input and
+    // just stands idle, while the world - NPCs, critters, animations - carries on around them.
+    interacting { _interacting }
+
+    setInteracting(value) {
+        _interacting = value
+        if (value) {
+            _running = false
+            playerForceStop()
+        }
+    }
 
     // The speed the player is moving at right now - party followers (GameObjects/PartyMember.wren) match it,
     // so they walk when the player walks and run when the player runs.
@@ -79,6 +92,10 @@ class Player {
     }
 
     fixedUpdate() {
+        if (_interacting) {
+            playerForceStop()
+            return
+        }
         var inputDir = Input.getInputAxis2("Move")
         inputDir.y = inputDir.y * -1
 

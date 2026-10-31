@@ -5,6 +5,7 @@ import "Party" for Party
 import "debug" for Debug
 import "gameObjectComponents" for Camera, Script, WorldTransform
 import "Party/DuelRequest" for DuelRequest
+import "Dialogue/ChoiceRecord" for ChoiceRecord
 import "gameObject" for GameObject
 import "events" for Event
 
@@ -83,6 +84,11 @@ class Commands {
         DialogueRegistry.registerCommand("restParty") { |params|
             Party.restAll()
             Debug.info("[Dialogue Command] Party rested")
+        }
+        // Clears the collapsed record of the last choice made (States/InteractState.wren keeps it up after a pick
+        // until the next set of choices, this, or the end of the conversation).
+        DialogueRegistry.registerCommand("closeChoice") { |params|
+            ChoiceRecord.requestClose()
         }
         // Challenges the named NPC to a duel: the fight starts once this dialogue has ended (the world picks the
         // request up - see Party/DuelRequest.wren).

@@ -1,7 +1,8 @@
 // states/InventoryState.wren
 // The inventory screen. Fetches the item list from the Inventory model, owns the menu music/focus
 // sound, and reacts to the "close inventory" input. UI/Inventory/InventoryUI.wren is the pure view
-// this owns and refreshes.
+// this owns and refreshes. Game time is paused while it's open - the world freezes behind the screen.
+import "app" for Time
 import "resourceManager" for Music, Sound
 import "input" for Input
 import "States/BaseState" for BaseState
@@ -20,6 +21,7 @@ class InventoryState is BaseState {
     enter(stateManager, params) {
         super.enter(stateManager, params)
         System.print("Entering Inventory")
+        Time.setTimeScale(0)
 
         _menuMusic = Music.load("Sounds/menuMusic.wav")
         _menuMusic.setLooping(true)
@@ -39,6 +41,7 @@ class InventoryState is BaseState {
     exit() {
         super.exit()
         System.print("Unloading Inventory...")
+        Time.setTimeScale(1)
 
         if (_view != null) {
             _view.teardown()

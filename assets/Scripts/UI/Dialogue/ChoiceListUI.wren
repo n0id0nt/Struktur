@@ -3,7 +3,8 @@
 // dialogue text box - rebuilt fresh every time a node offers choices (see
 // States/InteractState.wren.processDialogueResult). Owns its own focus-highlight bookkeeping;
 // onFocus is called only so the State can react to a focus change (playing a sound) without this
-// view needing to know about audio.
+// view needing to know about audio. Once a choice is made, collapseTo(index) shrinks the list to just that
+// row as a record of what was picked (until InteractState replaces or clears it).
 //
 // Layout (all children of the parent panel handed to the constructor):
 //   ┌┐  ← the choice container
@@ -26,6 +27,8 @@ var CHOICE_BG_DEFAULT     = Vec4.new(20,  16,  12,  200)
 var CHOICE_BG_FOCUSED     = Vec4.new(180, 140, 60,  230)
 var CHOICE_BORDER_DEFAULT = Vec4.new(80,  65,  45,  200)
 var CHOICE_BORDER_FOCUSED = Vec4.new(220, 180, 80,  255)
+var CHOICE_BG_CHOSEN      = Vec4.new(70,  55,  30,  220)   // the collapsed record of the option picked
+var CHOICE_BORDER_CHOSEN  = Vec4.new(150, 120, 60,  230)
 
 class ChoiceListUI {
     // parent: DialogueBoxUI.screenPanel. choiceTexts: already-numbered+localized display strings
@@ -35,6 +38,7 @@ class ChoiceListUI {
         _choicePanels = []
         _choiceLabels = []
         _focusedIndex = 0
+        _collapsed = false
 
         var totalH = choiceTexts.count * ROW_H + (choiceTexts.count - 1) * GAP + PADDING * 2
         var marginB = TEXT_BOX_H + 20   // 20px gap between the container and the text box
@@ -60,8 +64,10 @@ class ChoiceListUI {
 
             var capturedIndex = i
             panel.setOnFocus { |sender|
-                setFocused_(capturedIndex)
-                onFocus.call(capturedIndex)
+                if (!_collapsed) {
+                    setFocused_(capturedIndex)
+                    onFocus.call(capturedIndex)
+                }
             }
 
             _containerPanel.addChild(panel)
@@ -87,6 +93,29 @@ class ChoiceListUI {
 
     // Which row is currently highlighted - read by the Controller when the player confirms.
     focusedIndex { _focusedIndex }
+
+    // True once collapseTo has turned the list into a record of the pick.
+    collapsed { _collapsed }
+
+    // The choice at `index` was made: every other row goes, the container shrinks to that one row (still
+    // anchored just above the text box) and it takes the muted "chosen" look - no longer focusable or selectable.
+    collapseTo(index) {
+        _collapsed = true
+        _focusedIndex = index
+        for (i in 0..._choicePanels.count) {
+            var panel = _choicePanels[i]
+            panel.setFocusable(false)
+            if (i != index) {
+                panel.setVisible(false)
+            }
+        }
+        var chosen = _choicePanels[index]
+        chosen.setPosition(Vec2.new(PADDING, PADDING), Vec2.new(0, 0))
+        chosen.setBackgroundColor(CHOICE_BG_CHOSEN)
+        chosen.setBorderColor(CHOICE_BORDER_CHOSEN)
+        _choiceLabels[index].setTextColor(WHITE)
+        _containerPanel.setSize(Vec2.new(PANEL_W, ROW_H + PADDING * 2), Vec2.new(0, 0))
+    }
 
     // Updates the visual state of every row to reflect which is focused.
     setFocused_(index) {

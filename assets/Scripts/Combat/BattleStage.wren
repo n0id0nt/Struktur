@@ -26,13 +26,14 @@ var DEFAULT_ARENA = Vec3.new(1200, -1500, 0)
 
 // Formation, as world-pixel offsets from the arena centre. +y is down. Player holds stage left
 // facing right; opponents fan out stage right facing left. Sized to sit inside the battle camera's
-// view (~256x144 world px at CAMERA_ZOOM 5 on a 1280x720 game).
-var PLAYER_STATION = Vec2.new(-108, 18)
-var PARTY_STEP     = Vec2.new(-9, 52)    // each further party member is down-and-slightly-left
-var ENEMY_ORIGIN   = Vec2.new(92, 0)
-var ENEMY_STEP     = Vec2.new(9, 58)     // each further opponent is down-and-slightly-right
-var CAMERA_FOCUS   = Vec2.new(-6, 4)
-var CAMERA_ZOOM    = 5
+// view (~320x180 world px at CAMERA_ZOOM 4 on a 1280x720 game) with the battle sheets' fighters at about
+// 64px tall (twice the overworld size - 3dModelsToSprites job.battle.json height_px). Positions are feet.
+var PLAYER_STATION = Vec2.new(-118, 34)
+var PARTY_STEP     = Vec2.new(-12, 50)   // each further party member is down-and-slightly-left
+var ENEMY_ORIGIN   = Vec2.new(104, 20)
+var ENEMY_STEP     = Vec2.new(12, 50)    // each further opponent is down-and-slightly-right
+var CAMERA_FOCUS   = Vec2.new(10, 4)     // keeps the zoom-4 view inside the 336px-wide Battle_Arena backdrop
+var CAMERA_ZOOM    = 4
 var CAMERA_DROP    = 90                   // camera eases down this far onto the formation during the intro
 var SLIDE_DISTANCE = 110                  // how far off its mark each battler starts the slide-in
 
