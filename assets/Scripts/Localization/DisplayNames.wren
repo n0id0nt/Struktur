@@ -41,6 +41,7 @@ class DisplayNames {
             "Gold Coins": "item.gold_coins",
             "Lost Locket": "item.lost_locket",
             "Lucky Coin": "item.lucky_coin",
+            "Iron Key": "item.iron_key",
             "Ancient Seal": "item.ancient_seal",
             "Red Pedestal": "item.red_pedestal",
             "Green Pedestal": "item.green_pedestal",

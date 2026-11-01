@@ -48,6 +48,12 @@ class DialogueEntryPoints {
         // Overworld pickups (Dialogue/OverworldDialogue.json)
         if (interactableName == "Lost Locket")  return "lost_locket"
         if (interactableName == "Lucky Coin")   return "lucky_coin"
+        if (interactableName == "Iron Key")     return "iron_key"
+
+        // Doors (GameObjects/Door.wren)
+        if (interactableName == "Stone Door")   return "stone_door"
+        if (interactableName == "Iron Gate")    return "iron_gate"
+        if (interactableName == "Wooden Door")  return "wooden_door"
 
         // Returnable items — use "_return" entry if already in inventory
         var suffix = Inventory.contains(interactableName) ? "_return" : ""

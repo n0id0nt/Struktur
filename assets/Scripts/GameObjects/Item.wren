@@ -39,6 +39,7 @@ class Item {
             // Placeholder sprites (borrowed from the sheet) for the overworld pickups - Dialogue/OverworldDialogue.json.
             "Lost Locket": ItemData.new(10),
             "Lucky Coin": ItemData.new(3),
+            "Iron Key": ItemData.new(11),
             "Ancient Seal": ItemData.new(0),
             "Red Pedestal": ItemData.new(6),
             "Green Pedestal": ItemData.new(7),

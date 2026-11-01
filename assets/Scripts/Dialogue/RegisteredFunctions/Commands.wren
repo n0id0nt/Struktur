@@ -103,6 +103,18 @@ class Commands {
             DuelRequest.request(params["name"])
             Debug.info("[Dialogue Command] Duel requested against %(params["name"])")
         }
+        // Opens every door with this name - its entity identifier (both halves of a double door - GameObjects/Door.wren)
+        // for good; the door saves that it's open.
+        DialogueRegistry.registerCommand("openDoor") { |params|
+            var doorName = params["name"]
+            for (doorEntity in GameObject.getAllWithIdentifier(doorName)) {
+                var door = Script.getInstance(doorEntity)
+                if (door && door.name == doorName) {
+                    door.openNow()
+                }
+            }
+            Debug.info("[Dialogue Command] Opened door %(doorName)")
+        }
         DialogueRegistry.registerCommand("putdownEntity") { |params|
             var entityName = params["name"]
             var itemEntities = GameObject.getAllWithIdentifier("Item")

@@ -158,8 +158,16 @@ class ExperimentState is BaseState {
         spawnPressurePlate("Spawn Plate South", "spawnPlateSouth", Vec3.new(240.0, 240.0, 0.0), worldEntity)
         var doorChannels = "spawnPlateNorth,spawnPlateSouth"
         var doorMessage = "dialogue.impact.spawn_door_open"
-        spawnDoor("Spawn Door Top", doorChannels, doorMessage, Vec3.new(304.0, 144.0, 0.0), worldEntity)
-        spawnDoor("Spawn Door Bottom", doorChannels, doorMessage, Vec3.new(304.0, 176.0, 0.0), worldEntity)
+        spawnDoor("Stone Door", doorChannels, doorMessage, Vec3.new(304.0, 144.0, 0.0), worldEntity)
+        spawnDoor("Stone Door", doorChannels, doorMessage, Vec3.new(304.0, 176.0, 0.0), worldEntity)
+
+        // The second room (Level_1)'s way down into Level_2 is a locked gate: its dialogue takes the Iron Key, lying
+        // nearby, and opens it. The way on from Level_2 into Level_3 is a plain door that opens when talked to.
+        spawnItem("Iron Key", Vec3.new(560.0, 240.0, 0.0), worldEntity)
+        spawnDoor("Iron Gate", Vec3.new(464.0, 304.0, 0.0), worldEntity)
+        spawnDoor("Iron Gate", Vec3.new(496.0, 304.0, 0.0), worldEntity)
+        spawnDoor("Wooden Door", Vec3.new(464.0, 624.0, 0.0), worldEntity)
+        spawnDoor("Wooden Door", Vec3.new(496.0, 624.0, 0.0), worldEntity)
     }
 
     // name is both the NPC's id (GameObjects/NPC.wren's sprite table, the dialogue entry point and speaker
@@ -219,8 +227,12 @@ class ExperimentState is BaseState {
         WorldTransform.setPosition(entity, position)
     }
 
-    // A door (GameObjects/Door.wren) that opens for good once every channel in channels (comma-separated) is on,
-    // captioned by openMessage (a Localization key, or null).
+    // A door (GameObjects/Door.wren): its dialogue (by name) says what talking to it does - open it, ask for a key.
+    // Two with the same name are the halves of one double door.
+    spawnDoor(name, position, worldEntity) { spawnDoor(name, null, null, position, worldEntity) }
+
+    // One that also opens by itself once every channel in channels (comma-separated) is on, captioned by
+    // openMessage (a Localization key, or null).
     spawnDoor(name, channels, openMessage, position, worldEntity) {
         var entity = GameObject.create(name, worldEntity)
         Script.createArg(entity, "Door", {"Name": name, "Channels": channels, "OpenMessage": openMessage})

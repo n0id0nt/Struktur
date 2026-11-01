@@ -559,5 +559,101 @@
       "text": "dialogue.duelist.duelist_party_follow_no"
     },
     "node": "duelist_party_follow_no"
+  },
+  {
+    "data": {
+      "next": "iron_key_obtain",
+      "speaker": "Narrator",
+      "text": "dialogue.item.iron_key_pickup"
+    },
+    "node": "iron_key"
+  },
+  {
+    "data": {
+      "commands": [
+        {
+          "parameters": [
+            { "type": "item", "value": "Iron Key" }
+          ],
+          "type": "giveItem"
+        },
+        {
+          "parameters": [
+            { "type": "name", "value": "Iron Key" }
+          ],
+          "type": "pickupEntity"
+        }
+      ],
+      "speaker": "Narrator",
+      "text": "dialogue.item.iron_key_obtain"
+    },
+    "node": "iron_key_obtain"
+  },
+  {
+    "data": {
+      "targets": [
+        {
+          "conditions": [
+            {
+              "parameters": [
+                { "type": "item", "value": "Iron Key" }
+              ],
+              "type": "hasItem"
+            }
+          ],
+          "node": "iron_gate_unlock"
+        },
+        {
+          "node": "iron_gate_locked"
+        }
+      ]
+    },
+    "node": "iron_gate"
+  },
+  {
+    "data": {
+      "text": "dialogue.door.iron_gate_locked"
+    },
+    "node": "iron_gate_locked"
+  },
+  {
+    "data": {
+      "commands": [
+        {
+          "parameters": [
+            { "type": "item", "value": "Iron Key" }
+          ],
+          "type": "removeItem"
+        },
+        {
+          "parameters": [
+            { "type": "name", "value": "Iron Gate" }
+          ],
+          "type": "openDoor"
+        }
+      ],
+      "text": "dialogue.door.iron_gate_unlock"
+    },
+    "node": "iron_gate_unlock"
+  },
+  {
+    "data": {
+      "commands": [
+        {
+          "parameters": [
+            { "type": "name", "value": "Wooden Door" }
+          ],
+          "type": "openDoor"
+        }
+      ],
+      "text": "dialogue.door.wooden_door_open"
+    },
+    "node": "wooden_door"
+  },
+  {
+    "data": {
+      "text": "dialogue.door.stone_door_closed"
+    },
+    "node": "stone_door"
   }
 ]
