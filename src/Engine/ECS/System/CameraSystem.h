@@ -30,6 +30,8 @@ public:
 	glm::vec2 TargetPosition(float gameTime, float deltaTime, int screenWidth, int screenHeight,
 	                         Component::Camera* cameraComponent, const glm::vec2& cameraComponentPos,
 	                         World::Camera& camera);
+	glm::vec2 ConfineToBounds(const glm::vec2& position, int screenWidth, int screenHeight,
+	                          Component::Camera* cameraComponent);
 	void CalculateCameraShake(float gameTime, float deltaTime, int screenWidth, int screenHeight,
 	                          Component::Camera* cameraComponent, World::Camera& camera);
 

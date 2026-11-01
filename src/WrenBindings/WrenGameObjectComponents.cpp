@@ -125,6 +125,7 @@ void wren_CameraGetDamping(WrenVM* vm)
 {
 	WrenCamera* camera = (WrenCamera*)wrenGetSlotForeign(vm, 0);
 
+	wrenEnsureSlots(vm, 2);
 	wrenGetVariable(vm, "math", "Vec2", 1);  // Get class into slot 1
 	WrenVec2* vec2 = (WrenVec2*)wrenSetSlotNewForeign(vm, 0, 1, sizeof(WrenVec2));
 	new (vec2) WrenVec2(camera->component->damping);
@@ -135,6 +136,45 @@ void wren_CameraSetDamping(WrenVM* vm)
 	WrenCamera* camera         = (WrenCamera*)wrenGetSlotForeign(vm, 0);
 	WrenVec2* damping          = (WrenVec2*)wrenGetSlotForeign(vm, 1);
 	camera->component->damping = damping->value;
+}
+
+void wren_CameraGetConfineToBounds(WrenVM* vm)
+{
+	WrenCamera* camera = (WrenCamera*)wrenGetSlotForeign(vm, 0);
+	wrenSetSlotBool(vm, 0, camera->component->confineToBounds);
+}
+
+void wren_CameraSetConfineToBounds(WrenVM* vm)
+{
+	WrenCamera* camera                 = (WrenCamera*)wrenGetSlotForeign(vm, 0);
+	camera->component->confineToBounds = wrenGetSlotBool(vm, 1);
+}
+
+void wren_CameraGetBounds(WrenVM* vm)
+{
+	WrenCamera* camera = (WrenCamera*)wrenGetSlotForeign(vm, 0);
+
+	wrenEnsureSlots(vm, 2);
+	wrenGetVariable(vm, "math", "Vec4", 1);  // Get class into slot 1
+	WrenVec4* vec4 = (WrenVec4*)wrenSetSlotNewForeign(vm, 0, 1, sizeof(WrenVec4));
+	new (vec4) WrenVec4(camera->component->bounds);
+}
+
+void wren_CameraSetBounds(WrenVM* vm)
+{
+	WrenCamera* camera        = (WrenCamera*)wrenGetSlotForeign(vm, 0);
+	WrenVec4* bounds          = (WrenVec4*)wrenGetSlotForeign(vm, 1);
+	camera->component->bounds = bounds->value;
+}
+
+void wren_CameraGetViewCenter(WrenVM* vm)
+{
+	WrenCamera* camera = (WrenCamera*)wrenGetSlotForeign(vm, 0);
+
+	wrenEnsureSlots(vm, 2);
+	wrenGetVariable(vm, "math", "Vec2", 1);  // Get class into slot 1
+	WrenVec2* vec2 = (WrenVec2*)wrenSetSlotNewForeign(vm, 0, 1, sizeof(WrenVec2));
+	new (vec2) WrenVec2(camera->component->viewCenter);
 }
 
 // Camera.worldPosToScreenPos(worldPos) -> Vec2
@@ -2491,6 +2531,16 @@ WREN_BINDING_MODULE(GameObjectComponent)
 	WREN_CLASS_METHOD(registry, "gameObjectComponents", "Camera", "damping", wren_CameraGetDamping, "Get the damping");
 	WREN_CLASS_METHOD(registry, "gameObjectComponents", "Camera", "damping=(_)", wren_CameraSetDamping,
 	                  "Set the damping");
+	WREN_CLASS_METHOD(registry, "gameObjectComponents", "Camera", "confineToBounds", wren_CameraGetConfineToBounds,
+	                  "Get whether the view is kept inside bounds");
+	WREN_CLASS_METHOD(registry, "gameObjectComponents", "Camera", "confineToBounds=(_)",
+	                  wren_CameraSetConfineToBounds, "Set whether the view is kept inside bounds");
+	WREN_CLASS_METHOD(registry, "gameObjectComponents", "Camera", "bounds", wren_CameraGetBounds,
+	                  "Get the bounds as a Vec4 (world x, y, width, height) the view is kept inside when confineToBounds is set");
+	WREN_CLASS_METHOD(registry, "gameObjectComponents", "Camera", "bounds=(_)", wren_CameraSetBounds,
+	                  "Set the bounds as a Vec4 (world x, y, width, height) the view is kept inside when confineToBounds is set");
+	WREN_CLASS_METHOD(registry, "gameObjectComponents", "Camera", "viewCenter", wren_CameraGetViewCenter,
+	                  "Get the world point at the centre of the view as of the last camera update (before shake)");
 	WREN_CLASS_METHOD(registry, "gameObjectComponents", "Camera", "addCameraTrauma(_)", wren_CameraAddCameraTrauma,
 	                  "Add Trauma to camera for screen shake");
 

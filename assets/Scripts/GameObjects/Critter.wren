@@ -17,12 +17,25 @@
 // for the language behaviour this is working around). So every field a mixin, a steering behaviour,
 // or a subclass needs lives here, reached only through the methods below - never through
 // `_entity`/`_facing`/etc. directly from Chicken/Chinlin or from a mixin/behaviour.
+//
+// Every critter belongs to a home room - the LDtk level it was placed in (Rooms.wren). It never moves out of it
+// (tickStates() cancels any movement past the room's edge), wanders only to spots inside it (randomPointInHome),
+// and only chases a player who is inside it (inHomeRoom - see GameObjects/States/ChaseMixin.wren).
 import "math" for Vec2
+import "random" for Random
 import "gameObject" for GameObject
 import "gameObjectComponents" for Sprite, SpriteAnimation, PhysicsBody, WorldTransform
 import "renderer" for FlipBit
 import "GameObjects/StateMachine" for StateMachine
 import "Defeated" for Defeated
+import "Rooms" for Rooms
+
+// px in from the home room's edges that a critter is stopped at (tickStates)...
+var ROOM_EDGE_MARGIN = 8
+// ...and that wander spots are picked inside (randomPointInHome), so a wander never ends pressed against an edge.
+var WANDER_MARGIN = 24
+// Shared by every critter - see GameObjects/States/WanderMixin.wren on why one generator, not one each.
+var RNG = Random.new()
 
 class Critter {
     // Every live critter, across every species - lazily created since Wren has no static-field
@@ -46,6 +59,7 @@ class Critter {
         _velocity = Vec2.new(0, 0)
         _steeringBehaviours = []
         _combatant = null
+        _homeRoom = null             // found on first use - see homeRoom
         // Killed for good in an earlier fight (Defeated.wren): the level re-created it, so it removes itself
         // (GameObject.destroy is queued, so it's gone by the end of the frame) and never joins the registry -
         // nothing can see it or fight it in the meantime. Subclasses skip their start()/fixedUpdate() while
@@ -68,6 +82,48 @@ class Critter {
     // null if this entity somehow has no Transform (shouldn't happen; GameObject.create always adds
     // one), guarded the same way WorldTransform.getPosition itself guards it.
     position { WorldTransform.getPosition(_entity) }
+
+    // The room (level index - Rooms.wren) this critter belongs to: the one it is in when first asked, which is
+    // where its level placed it. null when there's no world to look rooms up in.
+    homeRoom {
+        if (_homeRoom == null) {
+            _homeRoom = Rooms.indexAt(position)
+        }
+        return _homeRoom
+    }
+
+    // True if position (Vec2/Vec3) is inside this critter's home room - or if it has no home room, so a critter
+    // outside any known room behaves as it always did.
+    inHomeRoom(position) {
+        var room = homeRoom
+        return room == null || Rooms.contains(room, position, 0)
+    }
+
+    // A random spot (Vec2) inside the home room, WANDER_MARGIN in from its edges. With maxDistance (px) it is
+    // also within that distance of where the critter is now, so ordinary wandering stays local; null for
+    // anywhere in the room. Returns null if the critter has no home room.
+    randomPointInHome(maxDistance) {
+        var b = Rooms.bounds(homeRoom)
+        var here = position
+        if (b == null || here == null) {
+            return null
+        }
+        var minX = b[0] + WANDER_MARGIN
+        var maxX = b[0] + b[2] - WANDER_MARGIN
+        var minY = b[1] + WANDER_MARGIN
+        var maxY = b[1] + b[3] - WANDER_MARGIN
+        if (maxDistance != null) {
+            minX = minX.max(here.x - maxDistance)
+            maxX = maxX.min(here.x + maxDistance)
+            minY = minY.max(here.y - maxDistance)
+            maxY = maxY.min(here.y + maxDistance)
+        }
+        // Outside its room (or a room too small for the margin): head for the room's middle instead.
+        if (minX > maxX || minY > maxY) {
+            return Vec2.new(b[0] + b[2] / 2, b[1] + b[3] / 2)
+        }
+        return Vec2.new(RNG.float(minX, maxX), RNG.float(minY, maxY))
+    }
 
     // Whether this species forces the player into combat by proximity alone (see Chinlin) rather
     // than merely offering it via the interact prompt (see Chicken.isInteractable()). False by
@@ -129,7 +185,26 @@ class Critter {
         for (behaviour in _steeringBehaviours) {
             steering = steering + behaviour.steer(this)
         }
-        PhysicsBody.setLinearVelocity(_entity, _velocity + steering)
+        PhysicsBody.setLinearVelocity(_entity, keepInHomeRoom_(_velocity + steering))
+    }
+
+    // Cancels whatever part of velocity would carry the critter past an edge of its home room (within
+    // ROOM_EDGE_MARGIN of it) - whichever state or steering push asked for it. Moving back inwards is left alone.
+    keepInHomeRoom_(velocity) {
+        var b = Rooms.bounds(homeRoom)
+        var here = position
+        if (b == null || here == null) {
+            return velocity
+        }
+        var x = velocity.x
+        var y = velocity.y
+        if ((x < 0 && here.x <= b[0] + ROOM_EDGE_MARGIN) || (x > 0 && here.x >= b[0] + b[2] - ROOM_EDGE_MARGIN)) {
+            x = 0
+        }
+        if ((y < 0 && here.y <= b[1] + ROOM_EDGE_MARGIN) || (y > 0 && here.y >= b[1] + b[3] - ROOM_EDGE_MARGIN)) {
+            y = 0
+        }
+        return Vec2.new(x, y)
     }
 
     // Picks "<action>Front/Back/Side" from the current facing and mirrors the side strip when facing

@@ -11,6 +11,9 @@ import "Sprites/ExplorerSprite" for ExplorerSprite
 import "Sprites/SpriteSheet" for SpriteSheet
 
 var INTERACTABLE_DISTANCE = 64.0
+// Interactables that ask for it (requiresFacing() - NPCs, signs) only count when they're within this many degrees
+// of the way the player is facing.
+var INTERACT_FACING_DEGREES = 90
 
 class Player {
     construct new(entity, args) {
@@ -163,6 +166,10 @@ class Player {
                 continue
             }
             var interactableWorldPosition = WorldTransform.getPosition(entity)
+            if (Reflect.hasMethod(script, "requiresFacing()") && script.requiresFacing() &&
+                !isFacing_(playerWorldPosition, interactableWorldPosition)) {
+                continue
+            }
             var distance = Vec3.distance(interactableWorldPosition, playerWorldPosition)
             if (distance < closestDistance) {
                 //System.print(("Test the distance %(distance) for entity %(entity)"))
@@ -175,5 +182,15 @@ class Player {
             return closestEntity
         }
         return null
+    }
+
+    // True when `target` lies within INTERACT_FACING_DEGREES of the way the player faces (or right on top of them).
+    isFacing_(from, target) {
+        var toTarget = Vec2.new(target.x - from.x, target.y - from.y)
+        if (toTarget.length() < 0.001) {
+            return true
+        }
+        var cosLimit = (INTERACT_FACING_DEGREES * Num.pi / 180).cos
+        return Vec2.dot(toTarget.normalize(), _facing.normalize()) >= cosLimit - 0.0001
     }
 }

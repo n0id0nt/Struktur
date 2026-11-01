@@ -1,7 +1,8 @@
 // GameObjects/Chinlin.wren
 // A wandering critter that chases the player when it gets close, built from Critter + the shared
-// state mixins in GameObjects/States/. Three states: wander <-> idle, plus chase - entered/left by
-// proximity rather than a timer (see ChaseMixin.checkProximity).
+// state mixins in GameObjects/States/. Four states: wander <-> idle, plus chase - entered/left by
+// proximity rather than a timer (see ChaseMixin.checkProximity) - and "giveUp", which walks off to a random
+// spot in its room once the chase is lost (the player got away, or left the room).
 //
 // Sprite sheet: Sprites/chinlin.png - 96x96, 4x4 grid, 24x24 cells, pivot (12,16).
 //   frames  anim
@@ -59,11 +60,12 @@ class Chinlin is Critter {
 
         // Kept so fixedUpdate() can run its proximity check every tick - see ChaseMixin's own comment
         // on why entering/leaving chase can't just be another timed state like wander/idle.
-        _chase = ChaseMixin.new(2, "Run", 90, 160, "wander")
+        _chase = ChaseMixin.new(2, "Run", 90, 160, "giveUp")
 
         addState("wander", WanderMixin.new(1.1, "Run", 1.0, 5.0, "idle"))
         addState("idle", IdleMixin.new("Stand", 1.0, 3.0, "wander"))
         addState("chase", _chase)
+        addState("giveUp", WanderMixin.anywhere(1.1, "Run", 6.0, "idle"))
         // Boid-style separation so chinlins (and chickens - same registry, see Critter.all) visually
         // avoid overlapping - see Separation's own comment for why this is a steering nudge rather
         // than turning physical collision back on.

@@ -142,6 +142,16 @@ foreign class Camera {
     foreign damping
     // Set the damping
     foreign damping=(arg0)
+    // Get whether the view is kept inside bounds
+    foreign confineToBounds
+    // Set whether the view is kept inside bounds
+    foreign confineToBounds=(arg0)
+    // Get the bounds as a Vec4 (world x, y, width, height) the view is kept inside when confineToBounds is set
+    foreign bounds
+    // Set the bounds as a Vec4 (world x, y, width, height) the view is kept inside when confineToBounds is set
+    foreign bounds=(arg0)
+    // Get the world point at the centre of the view as of the last camera update (before shake)
+    foreign viewCenter
     // Add Trauma to camera for screen shake
     foreign addCameraTrauma(arg0)
     // Creates a camera component.

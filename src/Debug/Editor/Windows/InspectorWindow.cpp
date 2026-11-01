@@ -1016,6 +1016,9 @@ void InspectorWindow::RenderCameraComponent(GameContext& context, Component::Cam
 	RenderVec2("Dead Zone", camera.deadZone);
 	RenderVec2("Damping", camera.damping);
 	ImGui::Checkbox("Force Position", &camera.forcePosition);
+	ImGui::Checkbox("Confine To Bounds", &camera.confineToBounds);
+	ImGui::DragFloat4("Bounds (x, y, w, h)", &camera.bounds.x, 1.0f);
+	ImGui::TextDisabled("View Center: X %.1f Y %.1f", camera.viewCenter.x, camera.viewCenter.y);
 
 	ImGui::Spacing();
 

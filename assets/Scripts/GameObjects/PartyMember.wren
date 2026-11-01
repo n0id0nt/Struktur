@@ -27,21 +27,30 @@ import "Sprites/SpriteSheet" for SpriteSheet
 
 // --- tuning (pixels unless noted; speeds in m/s like Player.speed) ---
 var DEFAULT_SPEED     = 3.0    // used when no player is around to match
-var FOLLOW_DISTANCE   = 30     // path distance kept behind the member ahead
+// Path distance kept behind the member ahead, by pace:
+var RUN_DISTANCE      = 30     // while running (the pace matched is faster than RUN_SPEED)
+var WALK_DISTANCE     = 22     // while walking
+var REST_DISTANCE     = 18     // once they've stopped...
+var REST_DELAY        = 0.3    // ...for this many seconds
 var ARRIVE_RADIUS     = 14     // eases off and stops inside this of the goal
 var WAYPOINT_RADIUS   = 8      // how close counts as "reached" while walking the trail
 var CATCH_UP          = 1.5    // speed multiplier when far behind
-var CATCH_UP_GAP      = 120    // gap at which the full catch-up boost applies
+var CATCH_UP_GAP      = 40     // px behind the goal at which the full catch-up boost applies
 var SEPARATION_RADIUS = 20     // keep-out around any other party member
 var SEPARATION_PUSH   = 1.4
-var LEADER_RADIUS     = 24     // keep-out around the member being followed
+var LEADER_RADIUS     = 16     // keep-out around the member being followed (inside REST_DISTANCE, or it pushes back)
 var LEADER_PUSH       = 2.4
 var STUCK_CHECK_TIME  = 1.2    // seconds between "did we actually move?" checks while trying to move
 var STUCK_MIN_MOVE    = 6      // px that must be covered per check, or the follower counts as stuck
 var MAX_SEPARATION    = 420    // farther than this from the member ahead counts as separated
 var RECOVERY_BEHIND   = 40     // px behind the leader (along their trail) a recovery warp puts the follower
-var MOVING_SPEED      = 0.3    // m/s - slower than this plays the idle clip
-var RUN_SPEED         = 1.8    // m/s - faster than this runs, otherwise walks
+var VELOCITY_BLEND    = 0.25   // fraction of the way to the wanted velocity covered each fixed step (smooths turns)
+var STOP_SPEED        = 0.05   // m/s - a smoothed velocity this slow, with nothing wanted, snaps to a stop
+var MOVING_SPEED      = 0.3    // m/s - faster than this starts the walk/run clip...
+var IDLE_SPEED        = 0.15   // m/s - ...and only slower than this goes back to idle
+var RUN_SPEED         = 1.8    // m/s - runs when the pace it matches is faster than this (the player is running)
+var CATCH_UP_RUN      = 2.6    // m/s - or when catching up this fast
+var FACING_TURN       = 0.9    // cos of the angle the heading must swing past before the facing changes (~25 deg)
 var DOWNED_TINT       = Vec4.new(120, 120, 130, 255)   // a downed member (Member.downed) - greyed out until rested
 var NORMAL_TINT       = Vec4.new(255, 255, 255, 255)
 
@@ -49,12 +58,15 @@ class PartyMember {
     construct new(entity, args) {
         _entity = entity
         _name = args["Name"]
-        _strategy = TrailFollow.new(FOLLOW_DISTANCE, ARRIVE_RADIUS, WAYPOINT_RADIUS, CATCH_UP, CATCH_UP_GAP)
+        _strategy = TrailFollow.new(RUN_DISTANCE, WALK_DISTANCE, REST_DISTANCE, REST_DELAY, RUN_SPEED,
+                                    ARRIVE_RADIUS, WAYPOINT_RADIUS, CATCH_UP, CATCH_UP_GAP)
         _recovery = WarpRecovery.new(RECOVERY_BEHIND)
         _steering = [PartySeparation.new(SEPARATION_RADIUS, SEPARATION_PUSH, LEADER_RADIUS, LEADER_PUSH)]
         _checkTime = null
         _checkPosition = null
         _facing = Vec2.new(0, 1)
+        _velocity = Vec2.new(0, 0)   // smoothed velocity actually applied to the body
+        _moving = false              // walk/run clip showing (vs idle) - see animate_
         _tintedDowned = false
     }
 
@@ -103,18 +115,25 @@ class PartyMember {
         var leader = me == null ? null : Party.ahead(me)
         var here = position
         if (leader == null || here == null) {
-            PhysicsBody.setLinearVelocity(_entity, Vec2.new(0, 0))
-            animate_(Vec2.new(0, 0))
+            _velocity = Vec2.new(0, 0)
+            PhysicsBody.setLinearVelocity(_entity, _velocity)
+            animate_(_velocity)
             return
         }
 
-        var velocity = _strategy.desiredVelocity(this, leader)
+        var wanted = _strategy.desiredVelocity(this, leader)
         for (behaviour in _steering) {
-            velocity = velocity + behaviour.steer(this)
+            wanted = wanted + behaviour.steer(this)
         }
-        PhysicsBody.setLinearVelocity(_entity, velocity)
+        // Ease toward the wanted velocity rather than jumping to it, so the follow pull and the separation push
+        // (and each new trail waypoint) blend instead of flipping the direction from one step to the next.
+        _velocity = _velocity + (wanted - _velocity) * VELOCITY_BLEND
+        if (wanted.length() < 0.001 && _velocity.length() < STOP_SPEED) {
+            _velocity = Vec2.new(0, 0)
+        }
+        PhysicsBody.setLinearVelocity(_entity, _velocity)
 
-        animate_(velocity)
+        animate_(_velocity)
 
         if (isStuckOrSeparated_(here, leader)) {
             Debug.info("[Party] %(_name) is stuck/separated - recovering")
@@ -137,13 +156,20 @@ class PartyMember {
         }
     }
 
-    // Walk / run toward where it is heading, or idle facing the last way it went.
+    // Walk / run toward where it is heading, or idle facing the last way it went. Each choice has some slack so a
+    // speed or heading hovering on a threshold doesn't flicker the clip: idle/moving has separate start and stop
+    // speeds, walk vs run follows the pace being matched (not the catch-up boost or arrival easing), and the
+    // facing only turns once the heading has swung clearly away from it.
     animate_(velocity) {
         var speed = velocity.length()
+        _moving = _moving ? speed > IDLE_SPEED : speed > MOVING_SPEED
         var clip = "Idle"
-        if (speed > MOVING_SPEED) {
-            _facing = velocity
-            clip = speed > RUN_SPEED ? "Run" : "Walk"
+        if (_moving) {
+            var heading = velocity.normalize()
+            if (Vec2.dot(heading, _facing.normalize()) < FACING_TURN) {
+                _facing = heading
+            }
+            clip = this.speed > RUN_SPEED || speed > CATCH_UP_RUN ? "Run" : "Walk"
         }
         SpriteAnimation.setCurrentAnimation(_entity, SpriteSheet.clipName(_facing, clip))
     }

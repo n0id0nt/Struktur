@@ -47,7 +47,12 @@ void Struktur::System::CameraSystem::Update(GameContext& context)
 		                                                             focusedWorldPosition, out_camera)
 		                                            : CalculateSmoothedPosition(gameTime, deltaTime, screenWidth, screenHeight,
 		                                                                        focusedCameraComponent, focusedWorldPosition, out_camera);
+		if (focusedCameraComponent->confineToBounds)
+		{
+			newPos = ConfineToBounds(newPos, screenWidth, screenHeight, focusedCameraComponent);
+		}
 		focusedCameraComponent->forcePosition = false;
+		focusedCameraComponent->viewCenter    = newPos;
 		out_camera.target                     = newPos;
 		out_camera.offset                     = glm::vec2{screenWidth / 2.f + focusedCameraComponent->offset.x,
                                       screenHeight / 2.f + focusedCameraComponent->offset.x};
@@ -112,6 +117,25 @@ glm::vec2 Struktur::System::CameraSystem::TargetPosition(float gameTime, float d
                                                          const glm::vec2& cameraComponentPos, World::Camera& camera)
 {
 	return cameraComponentPos;
+}
+
+glm::vec2 Struktur::System::CameraSystem::ConfineToBounds(const glm::vec2& position, int screenWidth, int screenHeight,
+                                                          Struktur::Component::Camera* cameraComponent)
+{
+	// The camera target is the world point at the centre of the screen, so keep it half a view in from each edge.
+	float zoom = cameraComponent->zoom > 0.f ? cameraComponent->zoom : 1.f;
+	glm::vec2 halfView{screenWidth / (2.f * zoom), screenHeight / (2.f * zoom)};
+	glm::vec2 boundsMin{cameraComponent->bounds.x, cameraComponent->bounds.y};
+	glm::vec2 boundsSize{cameraComponent->bounds.z, cameraComponent->bounds.w};
+
+	glm::vec2 confined = position;
+	for (int axis = 0; axis < 2; ++axis)
+	{
+		float low  = boundsMin[axis] + halfView[axis];
+		float high = boundsMin[axis] + boundsSize[axis] - halfView[axis];
+		confined[axis] = low > high ? boundsMin[axis] + boundsSize[axis] / 2.f : glm::clamp(position[axis], low, high);
+	}
+	return confined;
 }
 
 void Struktur::System::CameraSystem::CalculateCameraShake(float gameTime, float deltaTime, int screenWidth,

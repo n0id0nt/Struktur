@@ -2,11 +2,13 @@
 // Reusable "chase" state: run straight at the player. Unlike Idle/Wander, entering/leaving chase
 // isn't driven by a timer - checkProximity() is a *global* check the owner calls every fixedUpdate,
 // regardless of its current state, to force a transition in once the player gets close and back out
-// once they're far enough away again.
+// once they're far enough away again - or the moment they leave the owner's home room, since a critter never
+// follows anyone out of its room (GameObjects/Critter.wren).
 //
 // Not tied to Critter specifically - works with any owner exposing this small protocol (see
 // GameObjects/Critter.wren for the concrete implementation Chinlin uses):
 //   owner.position                  - Vec3 world position
+//   owner.inHomeRoom(position)      - whether a position is inside the owner's home room
 //   owner.moveDir=(vec2)            - current movement direction
 //   owner.facing=(vec2)             - current facing (used to pick front/back/side animations)
 //   owner.velocity=(vec2)           - velocity this state wants (Critter commits it, plus any
@@ -23,7 +25,7 @@ class ChaseMixin {
     // animationAction - passed to owner.playAnimation(action), e.g. "Run".
     // chaseRange/loseRange - world-pixel distances; loseRange > chaseRange gives some hysteresis so
     // the chase doesn't flicker on/off right at the boundary.
-    // giveUpState - state to fall back to once the player is lost (out of range, or gone entirely).
+    // giveUpState - state to fall back to once the player is lost (out of range, out of the room, or gone).
     construct new(speed, animationAction, chaseRange, loseRange, giveUpState) {
         _speed = speed
         _animationAction = animationAction
@@ -40,9 +42,10 @@ class ChaseMixin {
         if (distance == null) {
             return
         }
-        if (owner.currentStateName != stateName && distance <= _chaseRange) {
+        var inRoom = owner.inHomeRoom(playerPosition())
+        if (owner.currentStateName != stateName && distance <= _chaseRange && inRoom) {
             owner.changeState(stateName)
-        } else if (owner.currentStateName == stateName && distance > _loseRange) {
+        } else if (owner.currentStateName == stateName && (distance > _loseRange || !inRoom)) {
             owner.changeState(_giveUpState)
         }
     }

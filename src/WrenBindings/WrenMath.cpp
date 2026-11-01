@@ -837,10 +837,10 @@ void wren_Vec4New(WrenVM* vm)
 	// Initialise with constructor parameters if provided
 	if (wrenGetSlotCount(vm) >= 5)
 	{
-		float x = static_cast<int>(wrenGetSlotDouble(vm, 1));
-		float y = static_cast<int>(wrenGetSlotDouble(vm, 2));
-		float z = static_cast<int>(wrenGetSlotDouble(vm, 3));
-		float w = static_cast<int>(wrenGetSlotDouble(vm, 4));
+		float x = static_cast<float>(wrenGetSlotDouble(vm, 1));
+		float y = static_cast<float>(wrenGetSlotDouble(vm, 2));
+		float z = static_cast<float>(wrenGetSlotDouble(vm, 3));
+		float w = static_cast<float>(wrenGetSlotDouble(vm, 4));
 		new (vec) WrenVec4(x, y, z, w);
 	}
 	else

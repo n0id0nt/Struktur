@@ -25,6 +25,8 @@ import "GameObjects/Critter" for Critter
 import "Party" for Party
 import "Party/DuelRequest" for DuelRequest
 import "Combat/CombatOutcome" for CombatOutcome
+import "Camera/RoomCamera" for RoomCamera
+import "Rooms" for Rooms
 
 // Placeholder art for the rest spot (Tiles/Items.png frame 2 - the bread loaf) until there is campfire art.
 var REST_SPOT_SPRITE_INDEX = 2
@@ -68,6 +70,7 @@ class ExperimentState is BaseState {
         // The level the player was last found in, per updateLevelStreaming_() - starts null so the
         // very first streaming pass always runs (see the == check there).
         _currentLevelIndex = null
+        _roomCamera = null   // keeps the player's camera inside _currentLevelIndex (Camera/RoomCamera.wren)
         _stateManager = StateManager.new()
 
         _stateManager.insertState("PlayState", PlayState)
@@ -96,6 +99,7 @@ class ExperimentState is BaseState {
 
         var worldEntity = World.createWorldEntity(WORLD_FILE_PATH)
         _worldEntity = worldEntity
+        Rooms.world = worldEntity
 
         var playerEntity = GameObject.create("Player", worldEntity)
         Script.createArg(playerEntity, "Player", {"Name": "Player"})
@@ -103,6 +107,7 @@ class ExperimentState is BaseState {
         _playerEntity = playerEntity
         // The player leads the party - NPCs who join follow the member ahead of them (see Party.wren).
         Party.registerPlayer(playerEntity, "Player")
+        _roomCamera = RoomCamera.new(playerEntity)
 
         // Streams in the level the player spawned in (plus its neighbours) instead of loading every
         // level in the world up front - see updateLevelStreaming_().
@@ -262,6 +267,9 @@ class ExperimentState is BaseState {
     }
 
     update(stateManager) {
+        // Before the substate check, so a room slide finishes even if a dialogue or menu opens partway through.
+        _roomCamera.update()
+
         // if substate return out here
         if (_stateManager.currentState) {
             var wasCombat = _stateManager.currentState.name == "CombatState"
@@ -324,14 +332,16 @@ class ExperimentState is BaseState {
     // Keeps only the level the player is currently standing in, plus its immediate LDtk neighbours,
     // loaded - everything else gets unloaded to free its tiles/collision/entities. Cheap to call every
     // frame: the streaming work only runs when the player's current level actually changes, and
-    // levelIndexAtPosition_ checks world bounds straight from the parsed LDtk metadata rather than
+    // Rooms.indexAt checks world bounds straight from the parsed LDtk metadata rather than
     // needing every level loaded to know where they are.
     updateLevelStreaming_() {
-        var levelIndex = levelIndexAtPosition_(WorldTransform.getPosition(_playerEntity))
+        var levelIndex = Rooms.indexAt(WorldTransform.getPosition(_playerEntity))
         if (levelIndex == null || levelIndex == _currentLevelIndex) {
             return
         }
         _currentLevelIndex = levelIndex
+        // The first room (spawn) is snapped to; every room after that is slid to.
+        _roomCamera.moveTo(levelIndex)
 
         var wanted = [levelIndex]
         for (neighbour in World.getLevelNeighbours(_worldEntity, levelIndex)) {
@@ -362,20 +372,6 @@ class ExperimentState is BaseState {
         }
     }
 
-    // The index of the level whose world-space bounds contain position, or null if none match.
-    // Checked directly against World.getLevelBounds (the parsed LDtk metadata), so it works even
-    // before that level has ever been loaded.
-    levelIndexAtPosition_(position) {
-        for (i in 0...World.getLevelsCount(_worldEntity)) {
-            var bounds = World.getLevelBounds(_worldEntity, i)
-            if (position.x >= bounds[0] && position.x <= bounds[0] + bounds[2] &&
-                position.y >= bounds[1] && position.y <= bounds[1] + bounds[3]) {
-                return i
-            }
-        }
-        return null
-    }
-
     // Aggressive critters (Chinlin) force the player straight into CombatState once they close the
     // distance - no prompt, no choice. Non-aggressive critters (Chicken) just become another
     // interactable, reusing the exact scan/prompt every Item/NPC/Door already uses
@@ -391,9 +387,11 @@ class ExperimentState is BaseState {
             }
             var playerPosition = WorldTransform.getPosition(playerEntity)
             var forceRange = FORCE_COMBAT_METERS * Application.pixelsPerMeter
+            var playerRoom = Rooms.indexAt(playerPosition)
 
             for (critter in Critter.all) {
-                if (!critter.aggressive) {
+                // Only critters of the room the player is in - not one on the far side of a wall in the next room.
+                if (!critter.aggressive || !sharesRoom_(critter, playerRoom)) {
                     continue
                 }
                 var critterPosition = critter.position
@@ -500,6 +498,8 @@ class ExperimentState is BaseState {
     respawn_() {
         Party.restAll()
         WorldTransform.setPosition(_playerEntity, SPAWN_POSITION)
+        // A teleport, not a walk - land in the spawn room's view rather than sliding across the map to it.
+        _roomCamera.snapTo(Rooms.indexAt(SPAWN_POSITION))
         var player = Script.getInstance(_playerEntity)
         if (player != null) {
             player.playerForceStop()
@@ -545,9 +545,9 @@ class ExperimentState is BaseState {
         })
     }
 
-    // The critter you engaged, plus every other critter within GROUP_COMBAT_METERS of the player -
-    // nearest first, capped at MAX_COMBAT_GROUP (so when more than that are in range you fight the
-    // closest ones). primaryEntity is always in, even if it's somehow outside the group range.
+    // The critter you engaged, plus every other critter of the player's room within GROUP_COMBAT_METERS
+    // of the player - nearest first, capped at MAX_COMBAT_GROUP (so when more than that are in range you
+    // fight the closest ones). primaryEntity is always in, even if it's somehow outside the group range.
     combatGroup(primaryEntity, playerEntity) {
         var group = [primaryEntity]
         var playerPosition = WorldTransform.getPosition(playerEntity)
@@ -555,11 +555,12 @@ class ExperimentState is BaseState {
             return group
         }
         var groupRange = GROUP_COMBAT_METERS * Application.pixelsPerMeter
+        var playerRoom = Rooms.indexAt(playerPosition)
 
         // Gather candidates as [distance, entity], then sort by distance so the cap keeps the closest.
         var candidates = []
         for (critter in Critter.all) {
-            if (critter.entity == primaryEntity) {
+            if (critter.entity == primaryEntity || !sharesRoom_(critter, playerRoom)) {
                 continue
             }
             var p = critter.position
@@ -580,6 +581,12 @@ class ExperimentState is BaseState {
             group.add(candidate[1])
         }
         return group
+    }
+
+    // True if the critter belongs to (Critter.homeRoom) the room the player is in. With no room known for either,
+    // anything counts, as before rooms mattered.
+    sharesRoom_(critter, playerRoom) {
+        return playerRoom == null || critter.homeRoom == null || critter.homeRoom == playerRoom
     }
 
     render() {
@@ -606,6 +613,10 @@ class ExperimentState is BaseState {
         // Child of _worldEntity, so destroying the world tears the emitter down with it.
         _particleEntity = null
         GameObject.destroy(_worldEntity)
+        // So the next enter() streams its spawn room in and snaps the new camera to it.
+        _currentLevelIndex = null
+        _roomCamera = null
+        Rooms.world = null
 
         if (_view != null) {
             _view.teardown()

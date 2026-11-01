@@ -95,6 +95,9 @@ class NPC {
         return true
     }
 
+    // Only talked to / read when the player is facing it (Player.getInteractEntity).
+    requiresFacing() { true }
+
     getEntity() {
         return _entity
     }
