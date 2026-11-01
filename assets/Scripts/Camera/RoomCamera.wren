@@ -10,6 +10,10 @@
 // add a second, competing motion. Once the pan ends the bounds go back to the room and the follow carries on from
 // the same spot.
 //
+// The same pinned pan can also look away from the player: focusOn() pans to a fixed world point (centred on it
+// exactly, even past the room's edge) and holds there; returnToPlayer() pans back to where the follow wants the
+// view and lets go. States/ImpactState.wren uses these for its "look at the door opening" moment.
+//
 // Owned by the gameplay state (States/ExperimentState.wren): it calls moveTo() whenever the player's room
 // changes, snapTo() after a teleport (respawn), and update() every frame to drive the pan.
 import "gameObjectComponents" for Camera, WorldTransform
@@ -29,14 +33,20 @@ class RoomCamera {
         _bounds = null       // bounds of _roomIndex
         _start = null        // view centre the current pan started from
         _point = null        // view centre the pan has reached
+        _target = null       // fixed point a focus pan heads for (null: the player, clamped to the room)
         _startTime = 0
-        _transitioning = false
+        _duration = TRANSITION_TIME
+        _mode = null         // null: following the player in the room; "pan": panning to the player, then letting
+                             // go; "focus": panning to _target and holding there
         _snapPending = false
     }
 
     // The level index the camera is confined to (or panning to), null before the first room.
     roomIndex { _roomIndex }
-    transitioning { _transitioning }
+    // True while the view is pinned by a pan or a focus rather than following the player.
+    transitioning { _mode != null }
+    // True once a focus pan has reached its point (and is holding there).
+    focused { _mode == "focus" && progress_ >= 1 }
 
     // Confines to this room straight away, without a pan - for spawning or teleporting in.
     snapTo(levelIndex) {
@@ -45,7 +55,7 @@ class RoomCamera {
         }
         _roomIndex = levelIndex
         _bounds = boundsOf_(levelIndex)
-        _transitioning = false
+        _mode = null
         // Applied by update(): on spawn this runs before the player's script has created its Camera.
         _snapPending = true
         update()
@@ -61,18 +71,44 @@ class RoomCamera {
             snapTo(levelIndex)
             return
         }
-        var camera = Camera.get(_cameraEntity)
-        if (camera == null) {
+        if (Camera.get(_cameraEntity) == null) {
             snapTo(levelIndex)
             return
         }
-        _start = _transitioning ? _point : camera.viewCenter
-        _point = _start
         _roomIndex = levelIndex
         _bounds = boundsOf_(levelIndex)
-        _startTime = Time.scaledTime
-        _transitioning = true
+        beginPan_("pan", null, TRANSITION_TIME)
     }
+
+    // Pans over duration seconds to centre the view on point (a Vec2/Vec3 in world px) and holds it there until
+    // returnToPlayer().
+    focusOn(point, duration) {
+        if (_bounds == null || Camera.get(_cameraEntity) == null) {
+            return
+        }
+        beginPan_("focus", Vec2.new(point.x, point.y), duration)
+    }
+
+    // Pans back over duration seconds to where the follow wants the view, then lets the follow take over again.
+    returnToPlayer(duration) {
+        if (_mode == null) {
+            return
+        }
+        beginPan_("pan", null, duration)
+    }
+
+    // Starts a pan from wherever the view is now - partway through another pan included, so nothing jumps.
+    beginPan_(mode, target, duration) {
+        _start = _mode != null ? _point : Camera.get(_cameraEntity).viewCenter
+        _point = _start
+        _target = target
+        _startTime = Time.scaledTime
+        _duration = duration > 0 ? duration : 0.001
+        _mode = mode
+    }
+
+    // 0 at the start of the current pan, 1 once it has arrived.
+    progress_ { ((Time.scaledTime - _startTime) / _duration).clamp(0, 1) }
 
     update() {
         if (_bounds == null) {
@@ -86,7 +122,7 @@ class RoomCamera {
             return
         }
         camera.confineToBounds = true
-        if (!_transitioning) {
+        if (_mode == null) {
             camera.bounds = _bounds
             if (_snapPending) {
                 camera.forcePosition = true
@@ -95,15 +131,15 @@ class RoomCamera {
             return
         }
 
-        var t = ((Time.scaledTime - _startTime) / TRANSITION_TIME).clamp(0, 1)
-        if (t >= 1) {
-            _transitioning = false
+        var t = progress_
+        if (_mode == "pan" && t >= 1) {
+            _mode = null
             camera.bounds = _bounds
             return
         }
 
         var halfView = halfView_(camera)
-        var end = clampToRoom_(WorldTransform.getPosition(_cameraEntity), halfView)
+        var end = _target != null ? _target : clampToRoom_(WorldTransform.getPosition(_cameraEntity), halfView)
         t = t * t * (3 - 2 * t)   // smoothstep: one ease in, one ease out
         _point = Vec2.new(lerp_(_start.x, end.x, t), lerp_(_start.y, end.y, t))
         camera.bounds = Vec4.new(_point.x - halfView.x, _point.y - halfView.y, halfView.x * 2, halfView.y * 2)

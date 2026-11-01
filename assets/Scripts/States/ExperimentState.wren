@@ -18,6 +18,7 @@ import "States/InventoryState" for InventoryState
 import "States/InteractState" for InteractState
 import "States/GameOverState" for GameOverState
 import "States/CombatState" for CombatState
+import "States/ImpactState" for ImpactState
 import "UI/Gameplay/FightPromptUI" for FightPromptUI
 import "UI/Gameplay/InteractPromptUI" for InteractPromptUI
 
@@ -27,6 +28,9 @@ import "Party/DuelRequest" for DuelRequest
 import "Combat/CombatOutcome" for CombatOutcome
 import "Camera/RoomCamera" for RoomCamera
 import "Rooms" for Rooms
+import "Signals" for Signals
+import "PressurePlates" for PressurePlates
+import "ImpactEvents" for ImpactEvents
 
 // Placeholder art for the rest spot (Tiles/Items.png frame 2 - the bread loaf) until there is campfire art.
 var REST_SPOT_SPRITE_INDEX = 2
@@ -78,6 +82,7 @@ class ExperimentState is BaseState {
         _stateManager.insertState("InteractState", InteractState)
         _stateManager.insertState("GameOverState", GameOverState)
         _stateManager.insertState("CombatState", CombatState)
+        _stateManager.insertState("ImpactState", ImpactState)
         _gameMusic = null
         // Grace window after a fight ends (see update()) - long enough to run clear of an aggressive
         // critter before its proximity check can re-trigger combat. Covers every outcome: after a
@@ -146,6 +151,15 @@ class ExperimentState is BaseState {
         // The Lost Locket is the quest item; an item already picked up (saved flag) disables itself.
         spawnItem("Lost Locket", Vec3.new(300.0, 300.0, 0.0), worldEntity)
         spawnItem("Lucky Coin", Vec3.new(120.0, 300.0, 0.0), worldEntity)
+
+        // Test puzzle: the two doors filling the doorway from the spawn room (Level_0) into Level_1 open only while
+        // both plates are pressed - by the player and a party member asked to stay on one (GameObjects/PartyMember).
+        spawnPressurePlate("Spawn Plate North", "spawnPlateNorth", Vec3.new(240.0, 112.0, 0.0), worldEntity)
+        spawnPressurePlate("Spawn Plate South", "spawnPlateSouth", Vec3.new(240.0, 240.0, 0.0), worldEntity)
+        var doorChannels = "spawnPlateNorth,spawnPlateSouth"
+        var doorMessage = "dialogue.impact.spawn_door_open"
+        spawnDoor("Spawn Door Top", doorChannels, doorMessage, Vec3.new(304.0, 144.0, 0.0), worldEntity)
+        spawnDoor("Spawn Door Bottom", doorChannels, doorMessage, Vec3.new(304.0, 176.0, 0.0), worldEntity)
     }
 
     // name is both the NPC's id (GameObjects/NPC.wren's sprite table, the dialogue entry point and speaker
@@ -195,6 +209,21 @@ class ExperimentState is BaseState {
     spawnItem(itemName, position, worldEntity) {
         var entity = GameObject.create("Item", worldEntity)
         Script.createArg(entity, "Item", {"Name": itemName, "Returnable": false})
+        WorldTransform.setPosition(entity, position)
+    }
+
+    // A floor plate (GameObjects/PressurePlate.wren) that turns channel on (Signals.wren) while stood on.
+    spawnPressurePlate(name, channel, position, worldEntity) {
+        var entity = GameObject.create(name, worldEntity)
+        Script.createArg(entity, "PressurePlate", {"Name": name, "Channel": channel})
+        WorldTransform.setPosition(entity, position)
+    }
+
+    // A door (GameObjects/Door.wren) that opens for good once every channel in channels (comma-separated) is on,
+    // captioned by openMessage (a Localization key, or null).
+    spawnDoor(name, channels, openMessage, position, worldEntity) {
+        var entity = GameObject.create(name, worldEntity)
+        Script.createArg(entity, "Door", {"Name": name, "Channels": channels, "OpenMessage": openMessage})
         WorldTransform.setPosition(entity, position)
     }
 
@@ -294,6 +323,14 @@ class ExperimentState is BaseState {
 
         syncPartyFollowers()
         updateLevelStreaming_()
+
+        // Something in the world wants its moment (a door opening - see ImpactEvents.wren): play it now, while
+        // nothing else (dialogue, a fight, a menu) is running.
+        var impact = ImpactEvents.take()
+        if (impact != null) {
+            playImpact_(impact)
+            return
+        }
 
         if (Input.isInputJustReleased("Inventory")) {
             openInventory()
@@ -439,6 +476,18 @@ class ExperimentState is BaseState {
             _gameMusic.stop()
         }
         _stateManager.changeState("InteractState", {"interactingEntity": interactEntity})
+    }
+
+    // Pans the camera to the event, plays it with a shake and pans back, with the players held still
+    // (States/ImpactState.wren).
+    playImpact_(event) {
+        _view.hide()
+        _talkView.hide()
+        _stateManager.changeState("ImpactState", {
+            "event": event,
+            "roomCamera": _roomCamera,
+            "cameraEntity": _playerEntity
+        })
     }
 
     enterCombat(primaryEntity, playerEntity) {
@@ -617,6 +666,9 @@ class ExperimentState is BaseState {
         _currentLevelIndex = null
         _roomCamera = null
         Rooms.world = null
+        Signals.clear()
+        PressurePlates.clear()
+        ImpactEvents.clear()
 
         if (_view != null) {
             _view.teardown()

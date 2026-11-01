@@ -45,6 +45,11 @@ public:
 	// have more than one fixture, though today's CreatePhysicsBody only ever creates one.
 	void SetCollisionFilter(Component::PhysicsBody& physicsBody, uint16_t categoryBits, uint16_t maskBits);
 
+	// Turns every fixture on this body into a sensor (or back): a sensor still reports collisionEnter/Exit but
+	// never pushes anything - e.g. pressure plates. Its collision filter still decides what it reports.
+	void SetSensor(Component::PhysicsBody& physicsBody, bool isSensor);
+	bool IsSensor(const Component::PhysicsBody& physicsBody) const;
+
 	std::string Name() const override
 	{
 		return "Physics System";

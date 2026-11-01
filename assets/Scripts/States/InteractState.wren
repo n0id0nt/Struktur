@@ -15,6 +15,7 @@ import "localization" for Localization
 import "States/BaseState" for BaseState
 import "Dialogue/DialogueInterpreter" for DialogueInterpreter
 import "Dialogue/DialogueEntryPoints" for DialogueEntryPoints
+import "reflect" for Reflect
 import "Dialogue/ChoiceRecord" for ChoiceRecord
 import "Localization/DisplayNames" for DisplayNames
 import "UI/Dialogue/DialogueBoxUI" for DialogueBoxUI
@@ -55,7 +56,13 @@ class InteractState is BaseState {
         _view = DialogueBoxUI.new()
 
         var interactable = Script.getInstance(_interactingEntity)
-        var entryNodeId = DialogueEntryPoints.get(interactable.name)
+        // A script can pick its own conversation (a party member asking whether to stay - GameObjects/PartyMember).
+        var entryNodeId = null
+        if (Reflect.hasMethod(interactable, "dialogueEntryPoint()")) {
+            entryNodeId = interactable.dialogueEntryPoint()
+        } else {
+            entryNodeId = DialogueEntryPoints.get(interactable.name)
+        }
 
         if (entryNodeId == null) {
             Debug.warning("No dialogue entry point for %(interactable.name)")

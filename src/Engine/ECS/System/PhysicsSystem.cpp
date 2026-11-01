@@ -118,6 +118,12 @@ void Struktur::System::PhysicsSystem::SyncTransformsToPhysics(GameContext& conte
 			PROFILE_BEGIN_SCOPE(uploadToPhysics, "Upload To Physics");
 			b2Vec2 pushedPosition(worldPosition.x * metersPerPixel, worldPosition.y * metersPerPixel);
 			physicsBody.body->SetTransform(pushedPosition, angleZ);
+			// SetTransform doesn't wake a sleeping body, and Box2D skips contacts where neither body is awake - so
+			// a resting player teleported onto a sensor (pressure plate) or into a wall would register nothing.
+			if (physicsBody.body->GetType() != b2_staticBody)
+			{
+				physicsBody.body->SetAwake(true);
+			}
 			PROFILE_END_SCOPE(uploadToPhysics);
 			physicsBody.syncedTransformVersion = transform.version;
 
@@ -214,4 +220,52 @@ void Struktur::System::PhysicsSystem::SetCollisionFilter(Component::PhysicsBody&
 	{
 		fixture->SetFilterData(filter);
 	}
+
+	// Box2D skips contacts where neither body is awake, so a filter change that makes this body start colliding
+	// (a door closing) would leave a resting body inside it. Wake everything overlapping so it gets pushed out.
+	struct WakeOverlapping : b2QueryCallback
+	{
+		bool ReportFixture(b2Fixture* fixture) override
+		{
+			if (fixture->GetBody()->GetType() != b2_staticBody)
+			{
+				fixture->GetBody()->SetAwake(true);
+			}
+			return true;
+		}
+	} wakeOverlapping;
+
+	for (b2Fixture* fixture = physicsBody.body->GetFixtureList(); fixture; fixture = fixture->GetNext())
+	{
+		for (int child = 0; child < fixture->GetShape()->GetChildCount(); ++child)
+		{
+			physicsBody.body->GetWorld()->QueryAABB(&wakeOverlapping, fixture->GetAABB(child));
+		}
+	}
+	if (physicsBody.body->GetType() != b2_staticBody)
+	{
+		physicsBody.body->SetAwake(true);
+	}
+}
+
+void Struktur::System::PhysicsSystem::SetSensor(Component::PhysicsBody& physicsBody, bool isSensor)
+{
+	if (!physicsBody.body)
+	{
+		return;
+	}
+
+	for (b2Fixture* fixture = physicsBody.body->GetFixtureList(); fixture; fixture = fixture->GetNext())
+	{
+		fixture->SetSensor(isSensor);
+	}
+}
+
+bool Struktur::System::PhysicsSystem::IsSensor(const Component::PhysicsBody& physicsBody) const
+{
+	if (!physicsBody.body || !physicsBody.body->GetFixtureList())
+	{
+		return false;
+	}
+	return physicsBody.body->GetFixtureList()->IsSensor();
 }

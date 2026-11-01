@@ -120,6 +120,10 @@ foreign class PhysicsBody {
     foreign linearVelocity
     // Sets which collision layer this body belongs to (categoryBits) and which layers it collides with (maskBits) - see physics.CollisionLayers for allocating layer bits by name.
     foreign setCollisionFilter(arg0,arg1)
+    // Gets whether this body is a sensor (reports collisionEnter/Exit but pushes nothing)
+    foreign isSensor
+    // Sets whether this body is a sensor (reports collisionEnter/Exit but pushes nothing)
+    foreign isSensor=(arg0)
     // Create a physics body
     foreign static create(arg0,arg1,arg2)
     // Gets a physics body

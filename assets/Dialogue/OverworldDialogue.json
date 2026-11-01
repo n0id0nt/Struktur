@@ -391,5 +391,173 @@
       "text": "dialogue.duelist.duelist_joined"
     },
     "node": "duelist_joined"
+  },
+  {
+    "data": {
+      "choices": [
+        {
+          "target": "villager_party_stay_yes",
+          "text": "dialogue.villager.villager_party_stay.choice1"
+        },
+        {
+          "target": "villager_party_stay_no",
+          "text": "dialogue.villager.villager_party_stay.choice2"
+        }
+      ],
+      "speaker": "Villager",
+      "text": "dialogue.villager.villager_party_stay"
+    },
+    "node": "villager_party_stay"
+  },
+  {
+    "data": {
+      "commands": [
+        {
+          "parameters": [
+            {
+              "type": "name",
+              "value": "Villager"
+            }
+          ],
+          "type": "partyStay"
+        }
+      ],
+      "speaker": "Villager",
+      "text": "dialogue.villager.villager_party_stay_yes"
+    },
+    "node": "villager_party_stay_yes"
+  },
+  {
+    "data": {
+      "speaker": "Villager",
+      "text": "dialogue.villager.villager_party_stay_no"
+    },
+    "node": "villager_party_stay_no"
+  },
+  {
+    "data": {
+      "choices": [
+        {
+          "target": "villager_party_follow_yes",
+          "text": "dialogue.villager.villager_party_follow.choice1"
+        },
+        {
+          "target": "villager_party_follow_no",
+          "text": "dialogue.villager.villager_party_follow.choice2"
+        }
+      ],
+      "speaker": "Villager",
+      "text": "dialogue.villager.villager_party_follow"
+    },
+    "node": "villager_party_follow"
+  },
+  {
+    "data": {
+      "commands": [
+        {
+          "parameters": [
+            {
+              "type": "name",
+              "value": "Villager"
+            }
+          ],
+          "type": "partyFollow"
+        }
+      ],
+      "speaker": "Villager",
+      "text": "dialogue.villager.villager_party_follow_yes"
+    },
+    "node": "villager_party_follow_yes"
+  },
+  {
+    "data": {
+      "speaker": "Villager",
+      "text": "dialogue.villager.villager_party_follow_no"
+    },
+    "node": "villager_party_follow_no"
+  },
+  {
+    "data": {
+      "choices": [
+        {
+          "target": "duelist_party_stay_yes",
+          "text": "dialogue.duelist.duelist_party_stay.choice1"
+        },
+        {
+          "target": "duelist_party_stay_no",
+          "text": "dialogue.duelist.duelist_party_stay.choice2"
+        }
+      ],
+      "speaker": "Duelist",
+      "text": "dialogue.duelist.duelist_party_stay"
+    },
+    "node": "duelist_party_stay"
+  },
+  {
+    "data": {
+      "commands": [
+        {
+          "parameters": [
+            {
+              "type": "name",
+              "value": "Duelist"
+            }
+          ],
+          "type": "partyStay"
+        }
+      ],
+      "speaker": "Duelist",
+      "text": "dialogue.duelist.duelist_party_stay_yes"
+    },
+    "node": "duelist_party_stay_yes"
+  },
+  {
+    "data": {
+      "speaker": "Duelist",
+      "text": "dialogue.duelist.duelist_party_stay_no"
+    },
+    "node": "duelist_party_stay_no"
+  },
+  {
+    "data": {
+      "choices": [
+        {
+          "target": "duelist_party_follow_yes",
+          "text": "dialogue.duelist.duelist_party_follow.choice1"
+        },
+        {
+          "target": "duelist_party_follow_no",
+          "text": "dialogue.duelist.duelist_party_follow.choice2"
+        }
+      ],
+      "speaker": "Duelist",
+      "text": "dialogue.duelist.duelist_party_follow"
+    },
+    "node": "duelist_party_follow"
+  },
+  {
+    "data": {
+      "commands": [
+        {
+          "parameters": [
+            {
+              "type": "name",
+              "value": "Duelist"
+            }
+          ],
+          "type": "partyFollow"
+        }
+      ],
+      "speaker": "Duelist",
+      "text": "dialogue.duelist.duelist_party_follow_yes"
+    },
+    "node": "duelist_party_follow_yes"
+  },
+  {
+    "data": {
+      "speaker": "Duelist",
+      "text": "dialogue.duelist.duelist_party_follow_no"
+    },
+    "node": "duelist_party_follow_no"
   }
 ]

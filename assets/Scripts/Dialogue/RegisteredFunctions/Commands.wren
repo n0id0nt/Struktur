@@ -85,6 +85,13 @@ class Commands {
             Party.restAll()
             Debug.info("[Dialogue Command] Party rested")
         }
+        // The named party member waits where they stand (holding a pressure plate down, say) / follows again.
+        DialogueRegistry.registerCommand("partyStay") { |params|
+            Party.setStaying(params["name"], true)
+        }
+        DialogueRegistry.registerCommand("partyFollow") { |params|
+            Party.setStaying(params["name"], false)
+        }
         // Clears the collapsed record of the last choice made (States/InteractState.wren keeps it up after a pick
         // until the next set of choices, this, or the end of the conversation).
         DialogueRegistry.registerCommand("closeChoice") { |params|

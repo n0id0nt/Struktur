@@ -815,6 +815,26 @@ void wren_PhysicsBodySetCollisionFilter(WrenVM* vm)
 	physicsSystem.SetCollisionFilter(*physicsBody->component, categoryBits, maskBits);
 }
 
+void wren_PhysicsBodyGetIsSensor(WrenVM* vm)
+{
+	Struktur::GameContext* context                 = static_cast<Struktur::GameContext*>(wrenGetUserData(vm));
+	Struktur::System::SystemManager& systemManager = context->GetSystemManager();
+	auto& physicsSystem                            = systemManager.GetSystem<Struktur::System::PhysicsSystem>();
+
+	WrenPhysicsBody* physicsBody = (WrenPhysicsBody*)wrenGetSlotForeign(vm, 0);
+	wrenSetSlotBool(vm, 0, physicsSystem.IsSensor(*physicsBody->component));
+}
+
+void wren_PhysicsBodySetIsSensor(WrenVM* vm)
+{
+	Struktur::GameContext* context                 = static_cast<Struktur::GameContext*>(wrenGetUserData(vm));
+	Struktur::System::SystemManager& systemManager = context->GetSystemManager();
+	auto& physicsSystem                            = systemManager.GetSystem<Struktur::System::PhysicsSystem>();
+
+	WrenPhysicsBody* physicsBody = (WrenPhysicsBody*)wrenGetSlotForeign(vm, 0);
+	physicsSystem.SetSensor(*physicsBody->component, wrenGetSlotBool(vm, 1));
+}
+
 // ============================================================================
 // SHADER BINDINGS
 // ============================================================================
@@ -1395,7 +1415,8 @@ void wren_SpriteCreate(WrenVM* vm)
 void wren_SpriteGetTexture(WrenVM* vm)
 {
 	WrenSprite* sprite = (WrenSprite*)wrenGetSlotForeign(vm, 0);
-	wrenGetVariable(vm, "gameObjectComponents", "Sprite", 1);  // Get class into slot 1
+	wrenEnsureSlots(vm, 2);
+	wrenGetVariable(vm, "resourceManager", "Texture", 1);  // Get class into slot 1
 	WrenTextureHandle* texture = (WrenTextureHandle*)wrenSetSlotNewForeign(vm, 0, 1, sizeof(WrenTextureHandle));
 	new (texture) WrenTextureHandle(sprite->component->texture);
 }
@@ -1410,7 +1431,8 @@ void wren_SpriteSetTexture(WrenVM* vm)
 void wren_SpriteGetColor(WrenVM* vm)
 {
 	WrenSprite* sprite = (WrenSprite*)wrenGetSlotForeign(vm, 0);
-	wrenGetVariable(vm, "gameObjectComponents", "Sprite", 1);  // Get class into slot 1
+	wrenEnsureSlots(vm, 2);
+	wrenGetVariable(vm, "math", "Vec4", 1);  // Get class into slot 1
 	WrenVec4* color = (WrenVec4*)wrenSetSlotNewForeign(vm, 0, 1, sizeof(WrenVec4));
 	glm::vec4 glmColor((float)sprite->component->color.r, (float)sprite->component->color.g,
 	                   (float)sprite->component->color.b, (float)sprite->component->color.a);
@@ -1429,7 +1451,8 @@ void wren_SpriteSetColor(WrenVM* vm)
 void wren_SpriteGetOffset(WrenVM* vm)
 {
 	WrenSprite* sprite = (WrenSprite*)wrenGetSlotForeign(vm, 0);
-	wrenGetVariable(vm, "gameObjectComponents", "Sprite", 1);  // Get class into slot 1
+	wrenEnsureSlots(vm, 2);
+	wrenGetVariable(vm, "math", "Vec2", 1);  // Get class into slot 1
 	WrenVec2* offset = (WrenVec2*)wrenSetSlotNewForeign(vm, 0, 1, sizeof(WrenVec2));
 	new (offset) WrenVec2(sprite->component->offset);
 }
@@ -1444,7 +1467,6 @@ void wren_SpriteSetOffset(WrenVM* vm)
 void wren_SpriteGetColumns(WrenVM* vm)
 {
 	WrenSprite* sprite = (WrenSprite*)wrenGetSlotForeign(vm, 0);
-	wrenGetVariable(vm, "gameObjectComponents", "Sprite", 1);  // Get class into slot 1
 	double columns = static_cast<double>(sprite->component->columns);
 	wrenSetSlotDouble(vm, 0, columns);
 }
@@ -1459,7 +1481,6 @@ void wren_SpriteSetColumns(WrenVM* vm)
 void wren_SpriteGetRows(WrenVM* vm)
 {
 	WrenSprite* sprite = (WrenSprite*)wrenGetSlotForeign(vm, 0);
-	wrenGetVariable(vm, "gameObjectComponents", "Sprite", 1);  // Get class into slot 1
 	double rows = static_cast<double>(sprite->component->rows);
 	wrenSetSlotDouble(vm, 0, rows);
 }
@@ -1474,7 +1495,6 @@ void wren_SpriteSetRows(WrenVM* vm)
 void wren_SpriteGetIndex(WrenVM* vm)
 {
 	WrenSprite* sprite = (WrenSprite*)wrenGetSlotForeign(vm, 0);
-	wrenGetVariable(vm, "gameObjectComponents", "Sprite", 1);  // Get class into slot 1
 	double index = static_cast<double>(sprite->component->index);
 	wrenSetSlotDouble(vm, 0, index);
 }
@@ -1489,7 +1509,6 @@ void wren_SpriteSetIndex(WrenVM* vm)
 void wren_SpriteGetLayer(WrenVM* vm)
 {
 	WrenSprite* sprite = (WrenSprite*)wrenGetSlotForeign(vm, 0);
-	wrenGetVariable(vm, "gameObjectComponents", "Sprite", 1);  // Get class into slot 1
 	double layer = static_cast<double>(sprite->component->layer);
 	wrenSetSlotDouble(vm, 0, layer);
 }
@@ -1504,7 +1523,6 @@ void wren_SpriteSetLayer(WrenVM* vm)
 void wren_SpriteGetOrderInLayer(WrenVM* vm)
 {
 	WrenSprite* sprite = (WrenSprite*)wrenGetSlotForeign(vm, 0);
-	wrenGetVariable(vm, "gameObjectComponents", "Sprite", 1);  // Get class into slot 1
 	double orderInLayer = static_cast<double>(sprite->component->orderInLayer);
 	wrenSetSlotDouble(vm, 0, orderInLayer);
 }
@@ -1519,7 +1537,6 @@ void wren_SpriteSetOrderInLayer(WrenVM* vm)
 void wren_SpriteGetFlipped(WrenVM* vm)
 {
 	WrenSprite* sprite = (WrenSprite*)wrenGetSlotForeign(vm, 0);
-	wrenGetVariable(vm, "gameObjectComponents", "Sprite", 1);  // Get class into slot 1
 	wrenSetSlotDouble(vm, 0, static_cast<double>(sprite->component->flipped));
 }
 
@@ -2639,6 +2656,10 @@ WREN_BINDING_MODULE(GameObjectComponent)
 	                  wren_PhysicsBodySetCollisionFilter,
 	                  "Sets which collision layer this body belongs to (categoryBits) and which layers it "
 	                  "collides with (maskBits) - see physics.CollisionLayers for allocating layer bits by name.");
+	WREN_CLASS_METHOD(registry, "gameObjectComponents", "PhysicsBody", "isSensor", wren_PhysicsBodyGetIsSensor,
+	                  "Gets whether this body is a sensor (reports collisionEnter/Exit but pushes nothing)");
+	WREN_CLASS_METHOD(registry, "gameObjectComponents", "PhysicsBody", "isSensor=(_)", wren_PhysicsBodySetIsSensor,
+	                  "Sets whether this body is a sensor (reports collisionEnter/Exit but pushes nothing)");
 
 	// Register static methods
 	WREN_CLASS_STATIC(registry, "gameObjectComponents", "PhysicsBody", "create(_,_,_)", wren_PhysicsBodyCreate,

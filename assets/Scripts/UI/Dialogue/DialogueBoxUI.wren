@@ -1,6 +1,7 @@
 // UI/Dialogue/DialogueBoxUI.wren
 // The dialogue box: full-screen transparent root, a rich-text label in a bottom-centre text box, and
-// a "Continue" prompt. Pure view - reveal timing is computed by States/InteractState.wren (same
+// a "Continue" prompt. top() puts a shorter box at the top-centre instead - a caption for something happening in
+// the world (States/ImpactState.wren). Pure view - reveal timing is computed by States/InteractState.wren (same
 // precedent as Combat's strike animation / Main Menu's rich-text reveal) and handed in via
 // revealGlyphs(count); this view never touches Time itself.
 import "resourceManager" for Font, Texture
@@ -12,6 +13,15 @@ import "Colors" for BLANK, BLACK, DARKGRAY
 
 class DialogueBoxUI {
     construct new() {
+        init_(false)
+    }
+
+    // A shorter box at the top of the screen.
+    construct top() {
+        init_(true)
+    }
+
+    init_(atTop) {
         var font = Font.load("Fonts/medieval_sharp/MedievalSharp-Bold.ttf", 30)
         // Rich-text font variants for the dialogue label itself - same medieval_sharp family/sizing
         // convention Main Menu's showcaseRichText() uses, just at the dialogue box's existing size (20).
@@ -28,10 +38,15 @@ class DialogueBoxUI {
         _screenPanel.setBorderColor(BLANK)
         UIManager.addUIElement(_screenPanel)
 
-        // Dialogue text box - bottom-centre. Anchored at (0.5, 1) so the bottom edge sits at 95% of
-        // screen height.
-        _textBackgroundPanel = UIPanel.new(Vec2.new(0, -30), Vec2.new(0.5, 1), Vec2.new(800, 200), Vec2.new(0, 0))
-        _textBackgroundPanel.setAnchorPoint(Vec2.new(0.5, 1))
+        // Dialogue text box - bottom-centre, its bottom edge 30px above the screen's (anchored at (0.5, 1)); or, at
+        // the top, a shorter box with its top edge 30px below the screen's (anchored at (0.5, 0)).
+        if (atTop) {
+            _textBackgroundPanel = UIPanel.new(Vec2.new(0, 30), Vec2.new(0.5, 0), Vec2.new(800, 120), Vec2.new(0, 0))
+            _textBackgroundPanel.setAnchorPoint(Vec2.new(0.5, 0))
+        } else {
+            _textBackgroundPanel = UIPanel.new(Vec2.new(0, -30), Vec2.new(0.5, 1), Vec2.new(800, 200), Vec2.new(0, 0))
+            _textBackgroundPanel.setAnchorPoint(Vec2.new(0.5, 1))
+        }
         _textBackgroundPanel.setBorderColor(BLANK)
         _textBackgroundPanel.setBackgroundColor(DARKGRAY)
         _textBackgroundPanel.setBackgroundTexture(dialoguePanelTexture)

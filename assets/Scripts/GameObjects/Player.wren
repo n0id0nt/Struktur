@@ -87,7 +87,8 @@ class Player {
         var physicsBody = PhysicsBody.create(_entity, bodyDef, playerShape)
         physicsBody.fixedRotation = true
         // Collide with the level (Wall bit), pass through other actors (see Main.start()).
-        physicsBody.setCollisionFilter(CollisionLayers.getLayer("Actor"), CollisionLayers.getLayer("Wall"))
+        physicsBody.setCollisionFilter(CollisionLayers.getLayer("Actor"),
+                                       CollisionLayers.getLayer("Wall") | CollisionLayers.getLayer("Trigger"))
     }
     
     update() {

@@ -11,6 +11,11 @@
 //                                                  the place to plug in path search (e.g. around a moving door)
 // See each file for the protocol it expects.
 //
+// Staying put: while standing on a pressure plate a follower can be talked to and asked to stay there (holding the
+// plate down); talked to again, it follows once more (Member.staying, set by the "partyStay"/"partyFollow" dialogue
+// commands - nodes "<npc>_party_stay" / "<npc>_party_follow"). Anyone behind it in the party follows the member
+// ahead of it meanwhile (Party.ahead).
+//
 // Art: the NPC's generated sheet (GameObjects/NPC.wren's NPCData) - it walks / runs facing the way it moves (8
 // directions) and idles facing that way when it stops.
 import "gameObjectComponents" for PhysicsBody, Sprite, SpriteAnimation, WorldTransform, Script
@@ -23,6 +28,8 @@ import "Party/TrailFollow" for TrailFollow
 import "Party/PartySeparation" for PartySeparation
 import "Party/WarpRecovery" for WarpRecovery
 import "GameObjects/NPC" for NPCData
+import "Dialogue/DialogueEntryPoints" for DialogueEntryPoints
+import "PressurePlates" for PressurePlates
 import "Sprites/SpriteSheet" for SpriteSheet
 
 // --- tuning (pixels unless noted; speeds in m/s like Player.speed) ---
@@ -68,6 +75,7 @@ class PartyMember {
         _velocity = Vec2.new(0, 0)   // smoothed velocity actually applied to the body
         _moving = false              // walk/run clip showing (vs idle) - see animate_
         _tintedDowned = false
+        _leader = null               // who it followed last step - a change restarts the follow strategy
     }
 
     name { _name }
@@ -106,13 +114,22 @@ class PartyMember {
         var body = PhysicsBody.create(_entity, BodyDefinition.new(BodyType.DYNAMIC_BODY), PhysicsCircleShape.new(0.2))
         body.fixedRotation = true
         // Collide with the level (Wall bit), pass through other actors - separation is steering (see Main.start()).
-        body.setCollisionFilter(CollisionLayers.getLayer("Actor"), CollisionLayers.getLayer("Wall"))
+        // Trigger: stands on pressure plates like the player does.
+        body.setCollisionFilter(CollisionLayers.getLayer("Actor"),
+                                CollisionLayers.getLayer("Wall") | CollisionLayers.getLayer("Trigger"))
     }
 
     fixedUpdate() {
         var me = member
         refreshTint_(me)
-        var leader = me == null ? null : Party.ahead(me)
+        var leader = me == null || me.staying ? null : Party.ahead(me)
+        if (leader != _leader) {
+            // Told to stay or to follow again, or the member ahead started/stopped staying: walk the new
+            // leader's trail from scratch.
+            _leader = leader
+            _strategy.reset(this)
+            _checkTime = null
+        }
         var here = position
         if (leader == null || here == null) {
             _velocity = Vec2.new(0, 0)
@@ -203,4 +220,25 @@ class PartyMember {
     update() {}
     onDestroy() {}
     onEvent(type, data) {}
+
+    // Only talkable while on a pressure plate (to ask them to stay) or while staying (to ask them to follow) -
+    // otherwise a follower right behind the player would keep taking the interact prompt.
+    isInteractable() {
+        var me = member
+        return me != null && (me.staying || PressurePlates.isStoodOn(_entity))
+    }
+
+    requiresFacing() { true }
+
+    getEntity() { _entity }
+
+    // Used by States/InteractState.wren in place of the NPC's usual conversation.
+    dialogueEntryPoint() {
+        var base = DialogueEntryPoints.get(_name)
+        if (base == null) {
+            return null
+        }
+        var me = member
+        return base + (me != null && me.staying ? "_party_follow" : "_party_stay")
+    }
 }

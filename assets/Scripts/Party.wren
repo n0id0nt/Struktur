@@ -43,6 +43,16 @@ class Party {
         return null
     }
 
+    // The member whose world entity this is (a player or a follower), or null.
+    static memberForEntity(entity) {
+        for (m in __members) {
+            if (m.entity == entity) {
+                return m
+            }
+        }
+        return null
+    }
+
     static indexOf(member) {
         for (i in 0...__members.count) {
             if (__members[i] == member) {
@@ -52,10 +62,25 @@ class Party {
         return -1
     }
 
-    // The member directly in front of `member` in the party list (who it follows), null for the leader.
+    // The member `member` follows: the nearest one in front of it in the party list that isn't staying put
+    // (Member.staying), so whoever was behind a member left holding a plate trails the one ahead of them instead.
+    // Null for the leader.
     static ahead(member) {
-        var i = Party.indexOf(member)
-        return i > 0 ? __members[i - 1] : null
+        var i = Party.indexOf(member) - 1
+        while (i >= 0 && __members[i].staying) {
+            i = i - 1
+        }
+        return i >= 0 ? __members[i] : null
+    }
+
+    // Tells the named NPC member to wait where they are (true) or follow again (false). Players can't stay.
+    static setStaying(name, staying) {
+        var member = Party.member(name)
+        if (member == null || member.isPlayer) {
+            return
+        }
+        member.staying = staying
+        Debug.info("[Party] %(name) %(staying ? "stays put" : "follows again")")
     }
 
     // --- players ---------------------------------------------------------------------

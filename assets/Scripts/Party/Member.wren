@@ -25,6 +25,7 @@ class Member {
         _savedHp = null
         _savedStamina = null
         _spawnPosition = null
+        _staying = false
         _trail = PartyTrail.new(TRAIL_MIN_STEP, TRAIL_MAX_LENGTH)
     }
 
@@ -41,6 +42,11 @@ class Member {
     // they joined) - null means "right behind the member ahead". Cleared once used.
     spawnPosition { _spawnPosition }
     spawnPosition=(value) { _spawnPosition = value }
+
+    // Told to wait where they are (e.g. holding a pressure plate down) instead of following - see
+    // Party.setStaying. Not saved: everyone follows again after a reload.
+    staying { _staying }
+    staying=(value) { _staying = value }
 
     // This member's recent path - what the member behind them follows.
     trail { _trail }

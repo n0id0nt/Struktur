@@ -38,6 +38,7 @@ class Game {
             "Item",
             "NPC",
             "PartyMember",
+            "PressurePlate",
             "Sign",
             "Player",
             "Room",
@@ -78,6 +79,9 @@ class Game {
         // start() on a debug restart is harmless.
         CollisionLayers.registerLayer("Wall")
         CollisionLayers.registerLayer("Actor")
+        // Sensors (pressure plates) sit on Trigger and look for Actor; only the player and party members add
+        // Trigger to their own mask, so critters never press them.
+        CollisionLayers.registerLayer("Trigger")
 
         // Initial states
         _stateManager.insertState("GameWorld", GameWorldState)
