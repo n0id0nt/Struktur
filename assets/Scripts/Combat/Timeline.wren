@@ -13,6 +13,7 @@
 var SECONDS_PER_TIME_UNIT = 0.4
 
 import "Combat/Arbiter" for Arbiter
+import "math" for Math
 
 class Timeline {
     construct new() {
@@ -102,11 +103,7 @@ class Timeline {
         if (e == null || e["move"] == null) {
             return 0
         }
-        var f = e["progress"] / e["cost"]
-        if (f < 0) {
-            return 0
-        }
-        return f > 1 ? 1 : f
+        return Math.clamp01(e["progress"] / e["cost"])
     }
 
     // Who the committed move is aimed at (set right after commit by CombatSession.commitMove; reset by commit/clear).

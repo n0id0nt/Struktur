@@ -5,6 +5,8 @@
 // and every point stores its cumulative path distance, so a position can be looked up by "how far along the
 // path" (`pointAt`) rather than by index. That distance coordinate only ever grows, which is what lets a
 // follower hold a stable "I am heading for path distance s" while old points are trimmed off the tail.
+import "math" for Math
+
 class PartyTrail {
     // minStep: pixels the member must move before a new point is recorded.
     // maxLength: pixels of path kept behind the head (anything older is dropped).
@@ -40,7 +42,7 @@ class PartyTrail {
         var head = _points[_points.count - 1]
         var dx = x - head[0]
         var dy = y - head[1]
-        var step = (dx * dx + dy * dy).sqrt
+        var step = Math.hypot(dx, dy)
         if (step < _minStep) {
             return
         }

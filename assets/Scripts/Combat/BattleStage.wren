@@ -16,7 +16,7 @@
 // and the arena entrance.
 import "gameObject" for GameObject
 import "gameObjectComponents" for WorldTransform, Camera, World
-import "math" for Vec2, Vec3
+import "math" for Math, Vec2, Vec3
 import "Combat/Battler" for Battler
 
 // Where the fight happens when there's no Battle_Arena or authored BattleAnchor - far above the
@@ -117,9 +117,9 @@ class BattleStage {
     // every battler in from its wing. Safe to call every frame - it only writes transforms and forces
     // the camera.
     intro(t) {
-        var e = smooth_(t)
+        var e = Math.smoothstep(t)
 
-        WorldTransform.setPosition(_camEntity, lerp3_(_camStart, _focus, e))
+        WorldTransform.setPosition(_camEntity, Vec3.lerp(_camStart, _focus, e))
         _camera.forcePosition = true
 
         for (i in 0..._party.count) {
@@ -331,11 +331,4 @@ class BattleStage {
     worldOf_(offset) { Vec3.new(_anchor.x + offset.x, _anchor.y + offset.y, 0) }
 
     offBy_(pos, dx) { Vec3.new(pos.x + dx, pos.y, 0) }
-
-    lerp3_(a, b, t) { Vec3.new(a.x + (b.x - a.x) * t, a.y + (b.y - a.y) * t, 0) }
-
-    smooth_(t) {
-        var x = t < 0 ? 0 : (t > 1 ? 1 : t)
-        return x * x * (3 - 2 * x)
-    }
 }

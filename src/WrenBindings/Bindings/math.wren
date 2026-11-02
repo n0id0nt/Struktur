@@ -85,6 +85,34 @@ class Math {
     foreign static radians(arg0)
     // Convert radians to degrees
     foreign static degrees(arg0)
+    // Clamp value between 0 and 1
+    foreign static clamp01(arg0)
+    // Where value sits between a and b (0 at a, 1 at b)
+    foreign static inverseLerp(arg0,arg1,arg2)
+    // Map value from the range inMin..inMax onto outMin..outMax
+    foreign static remap(arg0,arg1,arg2,arg3,arg4)
+    // Ease in and out over 0..1
+    foreign static smoothstep(arg0)
+    // 0 at edge0, 1 at edge1, eased in and out in between
+    foreign static smoothstep(arg0,arg1,arg2)
+    // Step current toward target by at most maxStep, never past it
+    foreign static moveTowards(arg0,arg1,arg2)
+    // Frame-rate independent ease from a toward b (a, b, rate, dt)
+    foreign static damp(arg0,arg1,arg2,arg3)
+    // Cubic ease in over 0..1
+    foreign static easeIn(arg0)
+    // Cubic ease out over 0..1
+    foreign static easeOut(arg0)
+    // Cubic ease in and out over 0..1
+    foreign static easeInOut(arg0)
+    // Ease out over 0..1, overshooting a little before settling
+    foreign static easeOutBack(arg0)
+    // True if a and b are within 1e-5
+    foreign static approximately(arg0,arg1)
+    // True if a and b are within epsilon
+    foreign static approximately(arg0,arg1,arg2)
+    // Length of (x, y)
+    foreign static hypot(arg0,arg1)
 }
 
 // 2D vector class wrapping glm::vec2
@@ -121,6 +149,8 @@ foreign class Vec2 {
     foreign static distance(arg0,arg1)
     // Squared distance
     foreign static distanceSquared(arg0,arg1)
+    // Manhattan distance - the sum of the absolute differences
+    foreign static manhattan(arg0,arg1)
     // Linear interpolation
     foreign static lerp(arg0,arg1,arg2)
     // Dot product (static)
@@ -185,6 +215,8 @@ foreign class Vec3 {
     foreign static distance(arg0,arg1)
     // Squared distance
     foreign static distanceSquared(arg0,arg1)
+    // Manhattan distance - the sum of the absolute differences
+    foreign static manhattan(arg0,arg1)
     // Linear interpolation
     foreign static lerp(arg0,arg1,arg2)
     // Dot product (static)

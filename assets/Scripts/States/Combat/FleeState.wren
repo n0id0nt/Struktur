@@ -3,6 +3,7 @@
 // fight ends via CombatResolver.endFight. Only used with an arena - a fight in place just ends (see
 // CombatResolver.flee).
 import "app" for Time
+import "math" for Math
 import "States/Combat/CombatSubState" for CombatSubState
 
 var FLEE_TIME = 0.7   // game seconds - matches the "flee" reaction's duration in Combat/Config/ActionAnimations.wren
@@ -30,7 +31,7 @@ class FleeState is CombatSubState {
         var elapsed = Time.scaledTime - _startTime
         var t = elapsed / FLEE_TIME
         for (member in s.party) {
-            s.stage.runOff(member, t > 1 ? 1 : t)
+            s.stage.runOff(member, Math.min(t, 1))
         }
         if (elapsed >= FLEE_TIME) {
             s.resolver.endFight("You slipped away.", "fled", [])

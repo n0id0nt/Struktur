@@ -239,6 +239,130 @@ void wren_MathDegrees(WrenVM* vm)
 	wrenSetSlotDouble(vm, 0, radians * 180.0 / M_PI);
 }
 
+// --- interpolation and easing -------------------------------------------------
+// t is clamped to 0..1 by everything below except inverseLerp and remap, which extrapolate like lerp.
+
+static double Clamp01(double t)
+{
+	return t < 0.0 ? 0.0 : (t > 1.0 ? 1.0 : t);
+}
+
+// Math.clamp01(n) -> Num
+void wren_MathClamp01(WrenVM* vm)
+{
+	wrenSetSlotDouble(vm, 0, Clamp01(wrenGetSlotDouble(vm, 1)));
+}
+
+// Math.inverseLerp(a, b, value) -> Num: where value sits between a and b (0 at a, 1 at b); 0 when a == b
+void wren_MathInverseLerp(WrenVM* vm)
+{
+	double a     = wrenGetSlotDouble(vm, 1);
+	double b     = wrenGetSlotDouble(vm, 2);
+	double value = wrenGetSlotDouble(vm, 3);
+	wrenSetSlotDouble(vm, 0, a == b ? 0.0 : (value - a) / (b - a));
+}
+
+// Math.remap(value, inMin, inMax, outMin, outMax) -> Num
+void wren_MathRemap(WrenVM* vm)
+{
+	double value  = wrenGetSlotDouble(vm, 1);
+	double inMin  = wrenGetSlotDouble(vm, 2);
+	double inMax  = wrenGetSlotDouble(vm, 3);
+	double outMin = wrenGetSlotDouble(vm, 4);
+	double outMax = wrenGetSlotDouble(vm, 5);
+	double t      = inMin == inMax ? 0.0 : (value - inMin) / (inMax - inMin);
+	wrenSetSlotDouble(vm, 0, outMin + (outMax - outMin) * t);
+}
+
+// Math.smoothstep(t) -> Num: eases in and out over 0..1
+void wren_MathSmoothstep1(WrenVM* vm)
+{
+	double t = Clamp01(wrenGetSlotDouble(vm, 1));
+	wrenSetSlotDouble(vm, 0, t * t * (3.0 - 2.0 * t));
+}
+
+// Math.smoothstep(edge0, edge1, x) -> Num: 0 at edge0, 1 at edge1, eased in between
+void wren_MathSmoothstep3(WrenVM* vm)
+{
+	double edge0 = wrenGetSlotDouble(vm, 1);
+	double edge1 = wrenGetSlotDouble(vm, 2);
+	double x     = wrenGetSlotDouble(vm, 3);
+	double t     = edge0 == edge1 ? (x < edge0 ? 0.0 : 1.0) : Clamp01((x - edge0) / (edge1 - edge0));
+	wrenSetSlotDouble(vm, 0, t * t * (3.0 - 2.0 * t));
+}
+
+// Math.moveTowards(current, target, maxStep) -> Num: steps toward target by at most maxStep, never past it
+void wren_MathMoveTowards(WrenVM* vm)
+{
+	double current = wrenGetSlotDouble(vm, 1);
+	double target  = wrenGetSlotDouble(vm, 2);
+	double maxStep = wrenGetSlotDouble(vm, 3);
+	double delta   = target - current;
+	wrenSetSlotDouble(vm, 0, std::abs(delta) <= maxStep ? target : current + (delta > 0 ? maxStep : -maxStep));
+}
+
+// Math.damp(a, b, rate, dt) -> Num: frame-rate independent ease from a toward b (rate: how fast, per second)
+void wren_MathDamp(WrenVM* vm)
+{
+	double a    = wrenGetSlotDouble(vm, 1);
+	double b    = wrenGetSlotDouble(vm, 2);
+	double rate = wrenGetSlotDouble(vm, 3);
+	double dt   = wrenGetSlotDouble(vm, 4);
+	wrenSetSlotDouble(vm, 0, a + (b - a) * (1.0 - std::exp(-rate * dt)));
+}
+
+// Math.easeIn(t) -> Num (cubic)
+void wren_MathEaseIn(WrenVM* vm)
+{
+	double t = Clamp01(wrenGetSlotDouble(vm, 1));
+	wrenSetSlotDouble(vm, 0, t * t * t);
+}
+
+// Math.easeOut(t) -> Num (cubic)
+void wren_MathEaseOut(WrenVM* vm)
+{
+	double u = 1.0 - Clamp01(wrenGetSlotDouble(vm, 1));
+	wrenSetSlotDouble(vm, 0, 1.0 - u * u * u);
+}
+
+// Math.easeInOut(t) -> Num (cubic)
+void wren_MathEaseInOut(WrenVM* vm)
+{
+	double t = Clamp01(wrenGetSlotDouble(vm, 1));
+	double u = -2.0 * t + 2.0;
+	wrenSetSlotDouble(vm, 0, t < 0.5 ? 4.0 * t * t * t : 1.0 - u * u * u / 2.0);
+}
+
+// Math.easeOutBack(t) -> Num: overshoots past 1 a little before settling
+void wren_MathEaseOutBack(WrenVM* vm)
+{
+	const double c1 = 1.70158;
+	const double c3 = c1 + 1.0;
+	double u        = Clamp01(wrenGetSlotDouble(vm, 1)) - 1.0;
+	wrenSetSlotDouble(vm, 0, 1.0 + c3 * u * u * u + c1 * u * u);
+}
+
+// --- comparison and distance -----------------------------------------------------
+
+// Math.approximately(a, b) -> Bool, within 1e-5
+void wren_MathApproximately2(WrenVM* vm)
+{
+	wrenSetSlotBool(vm, 0, std::abs(wrenGetSlotDouble(vm, 1) - wrenGetSlotDouble(vm, 2)) <= 1e-5);
+}
+
+// Math.approximately(a, b, epsilon) -> Bool
+void wren_MathApproximately3(WrenVM* vm)
+{
+	double epsilon = wrenGetSlotDouble(vm, 3);
+	wrenSetSlotBool(vm, 0, std::abs(wrenGetSlotDouble(vm, 1) - wrenGetSlotDouble(vm, 2)) <= epsilon);
+}
+
+// Math.hypot(x, y) -> Num: length of (x, y), sqrt(x * x + y * y)
+void wren_MathHypot(WrenVM* vm)
+{
+	wrenSetSlotDouble(vm, 0, std::hypot(wrenGetSlotDouble(vm, 1), wrenGetSlotDouble(vm, 2)));
+}
+
 // ============================================================================
 // Vec2 - Foreign class wrapping glm::vec2
 // ============================================================================
@@ -389,6 +513,15 @@ void wren_Vec2DistanceSquared(WrenVM* vm)
 	WrenVec2* b = static_cast<WrenVec2*>(wrenGetSlotForeign(vm, 2));
 
 	wrenSetSlotDouble(vm, 0, glm::distance2(a->value, b->value));
+}
+
+// Vec2.manhattan(a, b) -> Num: |dx| + |dy|
+void wren_Vec2Manhattan(WrenVM* vm)
+{
+	WrenVec2* a = static_cast<WrenVec2*>(wrenGetSlotForeign(vm, 1));
+	WrenVec2* b = static_cast<WrenVec2*>(wrenGetSlotForeign(vm, 2));
+
+	wrenSetSlotDouble(vm, 0, std::abs(a->value.x - b->value.x) + std::abs(a->value.y - b->value.y));
 }
 
 // Vec2.lerp(a, b, t) -> Vec2
@@ -659,6 +792,16 @@ void wren_Vec3DistanceSquared(WrenVM* vm)
 	WrenVec3* b = (WrenVec3*)wrenGetSlotForeign(vm, 2);
 
 	wrenSetSlotDouble(vm, 0, glm::distance2(a->value, b->value));
+}
+
+// Vec3.manhattan(a, b) -> Num: |dx| + |dy| + |dz|
+void wren_Vec3Manhattan(WrenVM* vm)
+{
+	WrenVec3* a = static_cast<WrenVec3*>(wrenGetSlotForeign(vm, 1));
+	WrenVec3* b = static_cast<WrenVec3*>(wrenGetSlotForeign(vm, 2));
+
+	wrenSetSlotDouble(vm, 0, std::abs(a->value.x - b->value.x) + std::abs(a->value.y - b->value.y) +
+	                             std::abs(a->value.z - b->value.z));
 }
 
 // Vec3.lerp(a, b, t) -> Vec3
@@ -1876,6 +2019,32 @@ WREN_BINDING_MODULE(Math)
 	WREN_CLASS_STATIC(registry, "math", "Math", "radians(_)", wren_MathRadians, "Convert degrees to radians");
 	WREN_CLASS_STATIC(registry, "math", "Math", "degrees(_)", wren_MathDegrees, "Convert radians to degrees");
 
+	// Interpolation and easing
+	WREN_CLASS_STATIC(registry, "math", "Math", "clamp01(_)", wren_MathClamp01, "Clamp value between 0 and 1");
+	WREN_CLASS_STATIC(registry, "math", "Math", "inverseLerp(_,_,_)", wren_MathInverseLerp,
+	                  "Where value sits between a and b (0 at a, 1 at b)");
+	WREN_CLASS_STATIC(registry, "math", "Math", "remap(_,_,_,_,_)", wren_MathRemap,
+	                  "Map value from the range inMin..inMax onto outMin..outMax");
+	WREN_CLASS_STATIC(registry, "math", "Math", "smoothstep(_)", wren_MathSmoothstep1, "Ease in and out over 0..1");
+	WREN_CLASS_STATIC(registry, "math", "Math", "smoothstep(_,_,_)", wren_MathSmoothstep3,
+	                  "0 at edge0, 1 at edge1, eased in and out in between");
+	WREN_CLASS_STATIC(registry, "math", "Math", "moveTowards(_,_,_)", wren_MathMoveTowards,
+	                  "Step current toward target by at most maxStep, never past it");
+	WREN_CLASS_STATIC(registry, "math", "Math", "damp(_,_,_,_)", wren_MathDamp,
+	                  "Frame-rate independent ease from a toward b (a, b, rate, dt)");
+	WREN_CLASS_STATIC(registry, "math", "Math", "easeIn(_)", wren_MathEaseIn, "Cubic ease in over 0..1");
+	WREN_CLASS_STATIC(registry, "math", "Math", "easeOut(_)", wren_MathEaseOut, "Cubic ease out over 0..1");
+	WREN_CLASS_STATIC(registry, "math", "Math", "easeInOut(_)", wren_MathEaseInOut, "Cubic ease in and out over 0..1");
+	WREN_CLASS_STATIC(registry, "math", "Math", "easeOutBack(_)", wren_MathEaseOutBack,
+	                  "Ease out over 0..1, overshooting a little before settling");
+
+	// Comparison and distance
+	WREN_CLASS_STATIC(registry, "math", "Math", "approximately(_,_)", wren_MathApproximately2,
+	                  "True if a and b are within 1e-5");
+	WREN_CLASS_STATIC(registry, "math", "Math", "approximately(_,_,_)", wren_MathApproximately3,
+	                  "True if a and b are within epsilon");
+	WREN_CLASS_STATIC(registry, "math", "Math", "hypot(_,_)", wren_MathHypot, "Length of (x, y)");
+
 	// Register Vec2 foreign class
 	WREN_FOREIGN_CLASS(registry, "math", "Vec2", wren_Vec2Allocate, wren_Vec2Finalize,
 	                   "2D vector class wrapping glm::vec2");
@@ -1901,6 +2070,8 @@ WREN_BINDING_MODULE(Math)
 	// Static methods
 	WREN_CLASS_STATIC(registry, "math", "Vec2", "distance(_,_)", wren_Vec2Distance, "Distance between two vectors");
 	WREN_CLASS_STATIC(registry, "math", "Vec2", "distanceSquared(_,_)", wren_Vec2DistanceSquared, "Squared distance");
+	WREN_CLASS_STATIC(registry, "math", "Vec2", "manhattan(_,_)", wren_Vec2Manhattan,
+	                  "Manhattan distance - the sum of the absolute differences");
 	WREN_CLASS_STATIC(registry, "math", "Vec2", "lerp(_,_,_)", wren_Vec2Lerp, "Linear interpolation");
 	WREN_CLASS_STATIC(registry, "math", "Vec2", "dot(_,_)", wren_Vec2DotStatic, "Dot product (static)");
 	WREN_CLASS_STATIC(registry, "math", "Vec2", "reflect(_,_)", wren_Vec2Reflect, "Reflect vector");
@@ -1941,6 +2112,8 @@ WREN_BINDING_MODULE(Math)
 	// Static methods
 	WREN_CLASS_STATIC(registry, "math", "Vec3", "distance(_,_)", wren_Vec3Distance, "Distance between two vectors");
 	WREN_CLASS_STATIC(registry, "math", "Vec3", "distanceSquared(_,_)", wren_Vec3DistanceSquared, "Squared distance");
+	WREN_CLASS_STATIC(registry, "math", "Vec3", "manhattan(_,_)", wren_Vec3Manhattan,
+	                  "Manhattan distance - the sum of the absolute differences");
 	WREN_CLASS_STATIC(registry, "math", "Vec3", "lerp(_,_,_)", wren_Vec3Lerp, "Linear interpolation");
 	WREN_CLASS_STATIC(registry, "math", "Vec3", "dot(_,_)", wren_Vec3DotStatic, "Dot product (static)");
 	WREN_CLASS_STATIC(registry, "math", "Vec3", "cross(_,_)", wren_Vec3CrossStatic, "Cross product (static)");

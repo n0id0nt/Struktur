@@ -13,7 +13,7 @@
 //     back to whichever applies.
 import "gameObject" for GameObject
 import "gameObjectComponents" for WorldTransform, Sprite, SpriteAnimation, ParticleEmitter, RenderLayer
-import "math" for Vec3, Vec4
+import "math" for Math, Vec3, Vec4
 import "resourceManager" for Texture
 import "animation" for SpriteAnimationDefinition
 import "renderer" for FlipBit
@@ -122,7 +122,7 @@ class Battler {
 
     // Slide from fromPos toward toPos, t in 0..1 (the arena entrance - see BattleStage.intro).
     slide(fromPos, toPos, t) {
-        _base = lerp3_(fromPos, toPos, t)
+        _base = Vec3.lerp(fromPos, toPos, t)
         WorldTransform.setPosition(_entity, _base)
     }
 
@@ -223,13 +223,10 @@ class Battler {
     // The fumble's path: eased from where the reaction began (mid-lunge, say) back to the home mark, with
     // a sway that dies away as it settles - a stumble rather than a slide. Ends exactly on the mark.
     fumblePos_(now) {
-        var t = (now - _reactionStart) / _reaction.duration
-        if (t > 1) {
-            t = 1
-        }
-        var p = smooth_(t)
-        var x = _reactionFrom.x + (_home.x - _reactionFrom.x) * p + _awaySign * 5 * (t * Num.pi * 3).sin * (1 - t)
-        var y = _reactionFrom.y + (_home.y - _reactionFrom.y) * p + 3 * (t * Num.pi * 5).sin * (1 - t)
+        var t = Math.min((now - _reactionStart) / _reaction.duration, 1)
+        var p = Math.smoothstep(t)
+        var x = Math.lerp(_reactionFrom.x, _home.x, p) + _awaySign * 5 * Math.sin(t * Math.pi * 3) * (1 - t)
+        var y = Math.lerp(_reactionFrom.y, _home.y, p) + 3 * Math.sin(t * Math.pi * 5) * (1 - t)
         return Vec3.new(x, y, 0)
     }
 
@@ -245,10 +242,10 @@ class Battler {
         }
         var t = (fraction - _action.lungeStart) / (1 - _action.lungeStart)
         if (_action.motion == "lunge") {
-            var approach = lerp3_(_home, targetHome, ATTACK_REACH)
-            return lerp3_(_home, approach, _curve.evaluate(t))
+            var approach = Vec3.lerp(_home, targetHome, ATTACK_REACH)
+            return Vec3.lerp(_home, approach, _curve.evaluate(t))
         }
-        return Vec3.new(_home.x + _awaySign * RETREAT_DISTANCE * smooth_(t), _home.y, 0)
+        return Vec3.new(_home.x + _awaySign * RETREAT_DISTANCE * Math.smoothstep(t), _home.y, 0)
     }
 
     // --- reactions ---------------------------------------------------------------------
@@ -279,12 +276,9 @@ class Battler {
     place_(now) {
         var offset = 0
         if (_reaction != null) {
-            var t = _reaction.duration > 0 ? (now - _reactionStart) / _reaction.duration : 1
-            if (t > 1) {
-                t = 1
-            }
+            var t = _reaction.duration > 0 ? Math.min((now - _reactionStart) / _reaction.duration, 1) : 1
             if (_reaction.hop != 0) {
-                offset = _awaySign * _reaction.hop * (_defeated ? smooth_(t) : (t * Num.pi).sin)
+                offset = _awaySign * _reaction.hop * (_defeated ? Math.smoothstep(t) : Math.sin(t * Math.pi))
             }
             if (_defeated && _reaction.fade) {
                 var c = _reaction.tint
@@ -302,7 +296,7 @@ class Battler {
         if (_reaction != null && _reaction.fumble) {
             return false
         }
-        return _base != null && _home != null && ((_base.x - _home.x).abs + (_base.y - _home.y).abs) > 0.5
+        return _base != null && _home != null && Vec3.manhattan(_base, _home) > 0.5
     }
 
     beginRecover() {
@@ -311,13 +305,13 @@ class Battler {
 
     // t: 0..1 progress easing the battler from where the move left it back to its mark.
     recover(t) {
-        _base = lerp3_(_recoverFrom, _home, smooth_(t))
+        _base = Vec3.lerp(_recoverFrom, _home, Math.smoothstep(t))
         place_(Time.scaledTime)
     }
 
     // t: 0..1 progress sliding the battler off-stage, away from the opponents (the "flee" run-off).
     runOff(t) {
-        _base = Vec3.new(_home.x + _awaySign * RUN_OFF_DISTANCE * smooth_(t), _home.y, 0)
+        _base = Vec3.new(_home.x + _awaySign * RUN_OFF_DISTANCE * Math.smoothstep(t), _home.y, 0)
         place_(Time.scaledTime)
     }
 
@@ -358,12 +352,5 @@ class Battler {
         if (GameObject.isValid(_entity)) {
             GameObject.destroy(_entity)
         }
-    }
-
-    lerp3_(a, b, t) { Vec3.new(a.x + (b.x - a.x) * t, a.y + (b.y - a.y) * t, 0) }
-
-    smooth_(t) {
-        var x = t < 0 ? 0 : (t > 1 ? 1 : t)
-        return x * x * (3 - 2 * x)
     }
 }

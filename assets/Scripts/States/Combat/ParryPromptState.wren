@@ -10,6 +10,7 @@
 // play returns to ChargingState, where the attack still lands at its natural frame and CombatResolver
 // applies the result. Entered with params actor (the attacker).
 import "app" for Time
+import "math" for Math
 import "Combat/Timeline" for SECONDS_PER_TIME_UNIT
 import "States/Combat/CombatSubState" for CombatSubState
 
@@ -88,7 +89,7 @@ class ParryPromptState is CombatSubState {
         s.view.hideParryPrompt()
         s.parryAttacker = null
         var timing = 1 - remaining_() / _total
-        s.answerParry(_actor, chosen, timing < 0 ? 0 : (timing > 1 ? 1 : timing))
+        s.answerParry(_actor, chosen, Math.clamp01(timing))
         s.goTo("ChargingState")
     }
 

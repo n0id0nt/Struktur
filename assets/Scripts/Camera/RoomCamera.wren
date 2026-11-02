@@ -17,7 +17,7 @@
 // Owned by the gameplay state (States/ExperimentState.wren): it calls moveTo() whenever the player's room
 // changes, snapTo() after a teleport (respawn), and update() every frame to drive the pan.
 import "gameObjectComponents" for Camera, WorldTransform
-import "math" for Vec2, Vec4
+import "math" for Math, Vec2, Vec4
 import "app" for Time, Application
 import "World/Rooms" for Rooms
 
@@ -108,7 +108,7 @@ class RoomCamera {
     }
 
     // 0 at the start of the current pan, 1 once it has arrived.
-    progress_ { ((Time.scaledTime - _startTime) / _duration).clamp(0, 1) }
+    progress_ { Math.clamp01((Time.scaledTime - _startTime) / _duration) }
 
     update() {
         if (_bounds == null) {
@@ -140,8 +140,8 @@ class RoomCamera {
 
         var halfView = halfView_(camera)
         var end = _target != null ? _target : clampToRoom_(WorldTransform.getPosition(_cameraEntity), halfView)
-        t = t * t * (3 - 2 * t)   // smoothstep: one ease in, one ease out
-        _point = Vec2.new(lerp_(_start.x, end.x, t), lerp_(_start.y, end.y, t))
+        t = Math.smoothstep(t)   // one ease in, one ease out
+        _point = Vec2.lerp(_start, end, t)
         camera.bounds = Vec4.new(_point.x - halfView.x, _point.y - halfView.y, halfView.x * 2, halfView.y * 2)
     }
 
@@ -161,10 +161,8 @@ class RoomCamera {
     clampAxis_(value, min, size, half) {
         var low = min + half
         var high = min + size - half
-        return low > high ? min + size / 2 : value.clamp(low, high)
+        return low > high ? min + size / 2 : Math.clamp(value, low, high)
     }
-
-    lerp_(a, b, t) { a + (b - a) * t }
 
     // The level's world-space rect as a Vec4 (x, y, width, height).
     boundsOf_(levelIndex) {

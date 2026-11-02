@@ -33,7 +33,7 @@
 //     along smoothly instead of hopping a trail step at a time (which a follower keeping pace would overshoot).
 //   - The arrive slow-down and the stop only apply once the leader has stopped - near a goal that's still moving
 //     the follower just keeps pace.
-import "math" for Vec2
+import "math" for Math, Vec2
 import "app" for Time
 import "Party/Party" for Party
 
@@ -122,11 +122,8 @@ class TrailFollow {
         if (s <= trail.total || _liveGap < 0.001) {
             return trail.pointAt(s)
         }
-        var t = (s - trail.total) / _liveGap
-        if (t > 1) {
-            t = 1
-        }
-        return [trail.headX + (_live.x - trail.headX) * t, trail.headY + (_live.y - trail.headY) * t]
+        var t = Math.min((s - trail.total) / _liveGap, 1)
+        return [Math.lerp(trail.headX, _live.x, t), Math.lerp(trail.headY, _live.y, t)]
     }
 
     desiredVelocity(follower, leader) {
@@ -145,7 +142,7 @@ class TrailFollow {
         if (_live != null) {
             var hx = _live.x - trail.headX
             var hy = _live.y - trail.headY
-            _liveGap = (hx * hx + hy * hy).sqrt
+            _liveGap = Math.hypot(hx, hy)
         }
         var headS = trail.total + _liveGap
 
@@ -172,16 +169,13 @@ class TrailFollow {
         var waypoint = pointAt_(trail, _s)
         var dx = waypoint[0] - here.x
         var dy = waypoint[1] - here.y
-        var distance = (dx * dx + dy * dy).sqrt
+        var distance = Math.hypot(dx, dy)
         if (_s < goalS && distance <= _waypointRadius) {
-            _s = _s + _waypointRadius
-            if (_s > goalS) {
-                _s = goalS
-            }
+            _s = Math.moveTowards(_s, goalS, _waypointRadius)
             waypoint = pointAt_(trail, _s)
             dx = waypoint[0] - here.x
             dy = waypoint[1] - here.y
-            distance = (dx * dx + dy * dy).sqrt
+            distance = Math.hypot(dx, dy)
         }
         _target = waypoint
 
@@ -189,7 +183,7 @@ class TrailFollow {
         var goal = pointAt_(trail, goalS)
         var gx = goal[0] - here.x
         var gy = goal[1] - here.y
-        var goalDistance = (gx * gx + gy * gy).sqrt
+        var goalDistance = Math.hypot(gx, gy)
         if (_restGoal != null) {
             var moved = (goal[0] - _restGoal[0]).abs + (goal[1] - _restGoal[1]).abs
             if (moved < 0.5 && goalDistance <= _arriveRadius) {
@@ -213,7 +207,7 @@ class TrailFollow {
             speed = speed * OPEN_RATE
         }
         var gap = goalS - _s + goalDistance
-        var boost = 1 + (_catchUp - 1) * (gap / _catchUpGap > 1 ? 1 : gap / _catchUpGap)
+        var boost = Math.lerp(1, _catchUp, Math.min(gap / _catchUpGap, 1))
         speed = speed * boost
         if (!leaderMoving_ && _s >= goalS && goalDistance < _arriveRadius) {
             speed = speed * (goalDistance / _arriveRadius)

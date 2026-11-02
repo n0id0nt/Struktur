@@ -192,7 +192,7 @@ class Player {
         if (toTarget.length() < 0.001) {
             return true
         }
-        var cosLimit = (INTERACT_FACING_DEGREES * Num.pi / 180).cos
+        var cosLimit = Math.cos(Math.radians(INTERACT_FACING_DEGREES))
         return Vec2.dot(toTarget.normalize(), _facing.normalize()) >= cosLimit - 0.0001
     }
 }

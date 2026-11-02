@@ -3,6 +3,7 @@
 // Battler.recover) while the hit's reactions play out. Entered with params actor and text (the log line to show
 // next); a combatant that never left its mark passes straight through. Hands off to MessageState.
 import "app" for Time
+import "math" for Math
 import "Combat/Config/ActionAnimations" for RECOVER_TIME
 import "States/Combat/CombatSubState" for CombatSubState
 
@@ -34,7 +35,7 @@ class ReturningState is CombatSubState {
         var elapsed = Time.scaledTime - _startTime
         if (_duration > 0) {
             var t = elapsed / _duration
-            s.stage.recover(_actor, t > 1 ? 1 : t)
+            s.stage.recover(_actor, Math.min(t, 1))
         }
         if (elapsed >= _duration) {
             s.goTo("MessageState", {"text": _text})
