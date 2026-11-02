@@ -15,10 +15,11 @@ import "States/MainMenuState" for MainMenuState
 import "States/SettingsState" for SettingsState
 import "States/ExperimentState" for ExperimentState
 import "States/BattleTestState" for BattleTestState
-import "Inventory" for Inventory
-import "Party" for Party
-import "Defeated" for Defeated
+import "Inventory/Inventory" for Inventory
+import "Party/Party" for Party
+import "Combat/Defeated" for Defeated
 import "Dialogue/DialogueLoader" for DialogueLoader
+import "debug" for Debug
 
 class Game {
     // Called before the game window is created and will initialise the project settings.
@@ -117,7 +118,7 @@ class Game {
     }
     
     quit() {
-        System.print("Quit requested")
+        Debug.info("Quit requested")
         // C++ binding could handle this
         // For now, just log
     }

@@ -1,4 +1,4 @@
-// Signals.wren
+// World/Signals.wren
 // Wires senders (GameObjects/PressurePlate.wren) to receivers (GameObjects/Door.wren) by a shared channel name.
 // A channel is on while at least one sender on it is on, so two plates on one channel act as an OR; a receiver
 // listening to several channels (allOn) needs every one of them, so plates on separate channels act as an AND.

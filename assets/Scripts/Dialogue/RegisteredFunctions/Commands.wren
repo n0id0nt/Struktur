@@ -1,7 +1,7 @@
 import "dialogue" for DialogueRegistry
 import "flags" for FlagManager
-import "Inventory" for Inventory
-import "Party" for Party
+import "Inventory/Inventory" for Inventory
+import "Party/Party" for Party
 import "debug" for Debug
 import "gameObjectComponents" for Camera, Script, WorldTransform
 import "Party/DuelRequest" for DuelRequest

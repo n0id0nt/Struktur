@@ -6,8 +6,9 @@ import "app" for Time
 import "resourceManager" for Music, Sound
 import "input" for Input
 import "States/BaseState" for BaseState
-import "Inventory" for Inventory
+import "Inventory/Inventory" for Inventory
 import "UI/Inventory/InventoryUI" for InventoryUI
+import "debug" for Debug
 
 class InventoryState is BaseState {
     construct new() {
@@ -20,7 +21,7 @@ class InventoryState is BaseState {
 
     enter(stateManager, params) {
         super.enter(stateManager, params)
-        System.print("Entering Inventory")
+        Debug.info("Entering Inventory")
         Time.setTimeScale(0)
 
         _menuMusic = Music.load("Sounds/menuMusic.wav")
@@ -40,7 +41,7 @@ class InventoryState is BaseState {
 
     exit() {
         super.exit()
-        System.print("Unloading Inventory...")
+        Debug.info("Unloading Inventory...")
         Time.setTimeScale(1)
 
         if (_view != null) {
@@ -53,6 +54,6 @@ class InventoryState is BaseState {
         _menuMusic = null
         _itemFocusSound.unload()
         _itemFocusSound = null
-        System.print("Inventory unloaded")
+        Debug.info("Inventory unloaded")
     }
 }

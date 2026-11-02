@@ -2,6 +2,7 @@
 // Base class for all game states
 // Provides default implementations and common interface
 // All states should inherit from this
+import "debug" for Debug
 
 class BaseState {
     construct new() {
@@ -10,12 +11,12 @@ class BaseState {
     
     // Called when state becomes active
     enter(stateManager, params) {
-        System.print("%(name) entered")
+        Debug.info("%(name) entered")
     }
     
     // Called when state becomes inactive
     exit() {
-        System.print("%(name) exited")
+        Debug.info("%(name) exited")
     }
     
     // Called every frame while active

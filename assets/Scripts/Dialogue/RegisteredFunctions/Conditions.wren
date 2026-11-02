@@ -1,8 +1,8 @@
 import "dialogue" for DialogueRegistry
 import "flags" for FlagManager
 import "Dialogue/RegisteredFunctions/Operators" for OperatorFunctions
-import "Inventory" for Inventory
-import "Party" for Party
+import "Inventory/Inventory" for Inventory
+import "Party/Party" for Party
 import "debug" for Debug
 
 class Conditions {

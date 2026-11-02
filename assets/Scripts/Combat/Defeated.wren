@@ -1,4 +1,4 @@
-// Defeated.wren
+// Combat/Defeated.wren
 // Every world opponent that has been killed for good, by its LDtk instance id (the "Iid" arg the engine hands
 // every level entity's script - see src/Engine/World/Level.cpp). Level streaming re-creates a level's entities
 // each time it loads, so without this a killed critter would be back the next time you walked into its level;

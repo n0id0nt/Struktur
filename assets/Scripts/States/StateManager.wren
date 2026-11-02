@@ -2,7 +2,7 @@
 // Manages state stack and transitions
 // Delegates update to active state
 
-import "debug" for Profile
+import "debug" for Profile, Debug
 import "serialisation" for Json, MapUtil
 import "trace" for Trace
 
@@ -13,7 +13,7 @@ class StateManager {
         _currentStateParams = {}
         _currentStateCallStack = ""
 
-        System.print("[StateManager] created")
+        Debug.info("[StateManager] created")
     }
     
     // Update active state
@@ -76,7 +76,7 @@ class StateManager {
         } else {
             _currentStateParams = {}
             _currentStateCallStack = ""
-            System.print("[StateManager] No state with name %(stateName) exists.")
+            Debug.info("[StateManager] No state with name %(stateName) exists.")
         }
     }
 
@@ -133,7 +133,7 @@ class StateManager {
         }
         // Json.stringify can't serialise a raw Map (it errors) - MapUtil.mapToPairs converts every Map in the
         // structure (including the nested "params" map per level) to the sentinel-tagged pairs form Json.
-        // stringify actually understands, matching the same pattern Inventory.wren's own serialise() uses.
+        // stringify actually understands, matching the same pattern Inventory/Inventory.wren's own serialise() uses.
         return Json.stringify(MapUtil.mapToPairs(stack))
     }
 

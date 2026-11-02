@@ -294,8 +294,7 @@
     "dialogue.item.iron_key_pickup": "A heavy iron key lies in the grass, flecked with rust.",
     "dialogue.item.iron_key_obtain": "Obtained Iron Key",
     "dialogue.door.iron_gate_locked": "A heavy iron gate. It's locked tight - there must be a key somewhere.",
-    "dialogue.door.iron_gate_unlock": "You turn the Iron Key in the lock. With a groan, the gate swings open.
-[i]The key stays stuck in the lock.[/i]",
+    "dialogue.door.iron_gate_unlock": "You turn the Iron Key in the lock. With a groan, the gate swings open.\n[i]The key stays stuck in the lock.[/i]",
     "dialogue.door.stone_door_closed": "Heavy stone doors, shut fast. Two pressure plates sit in the floor nearby.",
     "dialogue.door.wooden_door_open": "You push the wooden door. It creaks open.",
     "dialogue.villager.villager_join_2": "You've been so kind. I'd like to come along, if you'll have me. Two pairs of eyes are better than one.\n[i]The Villager joins your party![/i]",

@@ -1,6 +1,6 @@
 // GameObjects/PartyMember.wren
 // The world-side body of an NPC who has joined the party: a dynamic Actor-layer body that follows the member
-// ahead of it in the party list (Party.wren) and otherwise stands about. Spawned/removed by
+// ahead of it in the party list (Party/Party.wren) and otherwise stands about. Spawned/removed by
 // States/ExperimentState.syncPartyFollowers() whenever the party changes - recruiting an NPC only edits the
 // party list.
 //
@@ -23,13 +23,13 @@ import "math" for Vec2, Vec3, Vec4
 import "physics" for BodyDefinition, PhysicsCircleShape, BodyType, CollisionLayers
 import "app" for Time
 import "debug" for Debug
-import "Party" for Party
+import "Party/Party" for Party
 import "Party/TrailFollow" for TrailFollow
 import "Party/PartySeparation" for PartySeparation
 import "Party/WarpRecovery" for WarpRecovery
 import "GameObjects/NPC" for NPCData
 import "Dialogue/DialogueEntryPoints" for DialogueEntryPoints
-import "PressurePlates" for PressurePlates
+import "World/PressurePlates" for PressurePlates
 import "Sprites/SpriteSheet" for SpriteSheet
 
 // --- tuning (pixels unless noted; speeds in m/s like Player.speed) ---

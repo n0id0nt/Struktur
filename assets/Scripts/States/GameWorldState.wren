@@ -20,6 +20,7 @@ import "States/InventoryState" for InventoryState
 import "States/InteractState" for InteractState
 import "States/GameOverState" for GameOverState
 import "UI/Gameplay/InteractPromptUI" for InteractPromptUI
+import "debug" for Debug
 
 var WORLD_FILE_PATH = "Levels/MemoryPalace.ldtk"
 
@@ -60,7 +61,7 @@ class GameWorldState is BaseState {
     enter(stateManager, params) {
         super.enter(stateManager, params)
 
-        System.print("Loading game world...")
+        Debug.info("Loading game world...")
 
         _gameMusic = Music.load("Sounds/gameMusic.wav")
         if (_gameMusic) {
@@ -96,7 +97,7 @@ class GameWorldState is BaseState {
         //_stateManager.changeState("PlayState")
         _stateManager.changeState("InventoryState")
 
-        System.print("Game world loaded")
+        Debug.info("Game world loaded")
     }
 
     // Mirrors update(stateManager)'s own substate delegation below - GameWorldState is the one real
@@ -191,7 +192,7 @@ class GameWorldState is BaseState {
     exit() {
         super.exit()
 
-        System.print("Unloading game world...")
+        Debug.info("Unloading game world...")
 
         // Exit sub-state manager
         if (_stateManager && _stateManager.currentState) {
@@ -208,7 +209,7 @@ class GameWorldState is BaseState {
         _gameMusic.unload()
         _gameMusic = null
 
-        System.print("Game world unloaded")
+        Debug.info("Game world unloaded")
     }
 
     onEvent(type, data) {

@@ -53,18 +53,18 @@ class Archetype {
 
     // Quick hands: parries well, lands precise cuts, light on guard and poise.
     static speed {
-        return Archetype.new("Rogue", 95, 95, Moves.speedKit, {"might": 8, "guard": 7, "poise": 7, "agility": 14, "reflex": 14, "precision": 12, "endurance": 11, "focus": 8})
+        return Archetype.new("Rogue", 95, 95, [Moves.slash, Moves.flurry, Moves.dodge], {"might": 8, "guard": 7, "poise": 7, "agility": 14, "reflex": 14, "precision": 12, "endurance": 11, "focus": 8})
     }
 
     // Heavy: hits and absorbs hard, but slow to react - a poor parrier whose blows are easy to read. Poise stays
     // average on purpose: being interrupt-locked by quick hits is how Speed beats Power (Combat/Config/Moves.wren).
     static power {
-        return Archetype.new("Warrior", 170, 55, Moves.powerKit, {"might": 15, "guard": 13, "poise": 9, "agility": 7, "reflex": 8, "precision": 9, "endurance": 9, "focus": 7})
+        return Archetype.new("Warrior", 170, 55, [Moves.cleave, Moves.crush, Moves.onslaught], {"might": 15, "guard": 13, "poise": 9, "agility": 7, "reflex": 8, "precision": 9, "endurance": 9, "focus": 7})
     }
 
     // Measured: precise (hard to parry) and the strongest healer.
     static control {
-        return Archetype.new("Mage", 115, 80, Moves.controlKit, {"might": 9, "guard": 9, "poise": 9, "agility": 10, "reflex": 11, "precision": 14, "endurance": 10, "focus": 15})
+        return Archetype.new("Mage", 115, 80, [Moves.bolt, Moves.slow, Moves.mend], {"might": 9, "guard": 9, "poise": 9, "agility": 10, "reflex": 11, "precision": 14, "endurance": 10, "focus": 15})
     }
 
     static list { [Archetype.speed, Archetype.power, Archetype.control] }

@@ -10,7 +10,7 @@
 // remaining fraction, and decides when to show/hide it.
 import "ui" for UIManager, UILabel, UIColor
 import "math" for Vec2, Vec4
-import "Colors" for WHITE
+import "Util/Colors" for WHITE
 import "UI/Shared/ButtonUI" for ButtonUI
 
 var BUTTON_WIDTH  = 140

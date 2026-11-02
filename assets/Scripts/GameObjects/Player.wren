@@ -9,6 +9,7 @@ import "reflect" for Reflect
 import "Combat/Config/BattlePlayer" for BattlePlayer
 import "Sprites/ExplorerSprite" for ExplorerSprite
 import "Sprites/SpriteSheet" for SpriteSheet
+import "debug" for Debug
 
 var INTERACTABLE_DISTANCE = 64.0
 // Interactables that ask for it (requiresFacing() - NPCs, signs) only count when they're within this many degrees
@@ -29,7 +30,7 @@ class Player {
         _combatant = null
         _interacting = false
 
-        System.print("Player constructed for: %(_name)")
+        Debug.info("Player constructed for: %(_name)")
     }
 
     name { _name }
@@ -107,15 +108,15 @@ class Player {
     }
 
     onDestroy() {
-        System.print("NPCBehavior.OnDestroy() called for: %(_name)")
+        Debug.info("NPCBehavior.OnDestroy() called for: %(_name)")
     }
     
     onEvent(type, data) {        
         if (type == "CollisionBegin") {
             var other = event["otherEntity"]
-            System.print("NPC %(_name) collided with entity: %(other)")
+            Debug.info("NPC %(_name) collided with entity: %(other)")
         } else if (type == "MessageReceived") {
-            System.print("NPC %(_name) received message")
+            Debug.info("NPC %(_name) received message")
         }
     }
 
@@ -173,12 +174,12 @@ class Player {
             }
             var distance = Vec3.distance(interactableWorldPosition, playerWorldPosition)
             if (distance < closestDistance) {
-                //System.print(("Test the distance %(distance) for entity %(entity)"))
+                //Debug.info(("Test the distance %(distance) for entity %(entity)"))
                 closestDistance = distance
                 closestEntity = entity
             }
         }
-        //System.print(("Test for %(closestEntity) with %(closestDistance) < %(INTERACTABLE_DISTANCE)"))
+        //Debug.info(("Test for %(closestEntity) with %(closestDistance) < %(INTERACTABLE_DISTANCE)"))
         if (closestDistance < INTERACTABLE_DISTANCE) {
             return closestEntity
         }

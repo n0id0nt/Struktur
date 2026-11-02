@@ -12,7 +12,7 @@
 //   Power beats Control (one landed Crush is >half a mage's HP; Control burns out holding the lock)
 //   Control beats Speed (Slow wrecks the rhythm, Mend out-heals the chip)
 //
-// This class is just the shell around a fight: it builds the party side (every member of Party.wren, all
+// This class is just the shell around a fight: it builds the party side (every member of Party/Party.wren, all
 // human controlled) and the opponents, the UI/Combat/CombatUI
 // view and (when an arena exists) the Combat/BattleStage, bundles them into a States/Combat/
 // CombatSession, and runs a nested StateManager over one sub-state per phase of the fight, each its
@@ -42,7 +42,7 @@ import "math" for Vec3
 
 import "Combat/Config/BattleCritter" for BattleCritter
 import "Combat/Config/BattlePlayer" for BattlePlayer
-import "Party" for Party
+import "Party/Party" for Party
 import "GameObjects/Critter" for Critter
 import "Combat/BattleStage" for BattleStage
 import "UI/Combat/CombatUI" for CombatUI
@@ -57,6 +57,7 @@ import "States/Combat/FleeState" for FleeState
 import "States/Combat/ReturningState" for ReturningState
 import "States/Combat/MessageState" for MessageState
 import "States/Combat/OverState" for OverState
+import "debug" for Debug
 
 class CombatState is BaseState {
     construct new() {
@@ -98,7 +99,7 @@ class CombatState is BaseState {
             gatherSides_(params, party, partyDefs, enemies, enemyDefs)
         }
         if (party.count == 0 || enemies.count == 0) {
-            System.print("[CombatState] no party or no valid opponents, aborting")
+            Debug.info("[CombatState] no party or no valid opponents, aborting")
             stateManager.clearCurrentState()
             return
         }
@@ -117,7 +118,7 @@ class CombatState is BaseState {
             enemies.add(enemyCombatant_(s, def, entity))
         }
 
-        // The human-controlled side is the whole party (Party.wren), leader first: each member's persistent
+        // The human-controlled side is the whole party (Party/Party.wren), leader first: each member's persistent
         // Combatant (a player's lives on its Player script, an NPC's on its party record - HP / stamina carry
         // across fights) plus the battle look to stage it with.
         for (member in Party.members) {
@@ -135,7 +136,7 @@ class CombatState is BaseState {
     begin_(stateManager, params, party, partyDefs, enemies, enemyDefs) {
         var roster = enemies.map { |e| "%(e.name)(%(e.stats.hp))" }.join(", ")
         var partyRoster = party.map { |c| "%(c.name)(%(c.stats.hp)/%(c.stats.maxHp))" }.join(", ")
-        System.print("[CombatState] %(partyRoster) vs %(roster)")
+        Debug.info("[CombatState] %(partyRoster) vs %(roster)")
 
         var enemyNames = enemies.map { |e| e.name }.toList
         var partyNames = party.map { |c| c.name }.toList

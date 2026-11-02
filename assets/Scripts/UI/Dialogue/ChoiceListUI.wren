@@ -14,7 +14,7 @@
 //   └┘
 import "ui" for UIManager, UILabel, UIPanel
 import "math" for Vec2, Vec4
-import "Colors" for WHITE, BLACK
+import "Util/Colors" for WHITE, BLACK
 
 var PANEL_W    = 380
 var ROW_H      = 44

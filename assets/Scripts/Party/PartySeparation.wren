@@ -8,7 +8,7 @@
 // Same protocol as every steering behaviour: steer(owner) -> Vec2 nudge (m/s) added to the owner's velocity.
 // `owner` exposes position (Vec3, px) and member (its Party Member).
 import "math" for Vec2
-import "Party" for Party
+import "Party/Party" for Party
 
 class PartySeparation {
     // radius/strength: the push on anyone closer than `radius` px (full `strength` m/s when overlapping, fading to

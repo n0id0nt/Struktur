@@ -9,7 +9,7 @@ import "ui" for UIManager, UILabel, UIRichLabel, UIPanel, TextWrapping
 import "app" for Application
 import "math" for Vec2
 import "localization" for Localization
-import "Colors" for BLANK, BLACK, DARKGRAY
+import "Util/Colors" for BLANK, BLACK, DARKGRAY
 
 class DialogueBoxUI {
     construct new() {

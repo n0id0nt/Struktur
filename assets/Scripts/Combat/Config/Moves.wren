@@ -1,5 +1,5 @@
 // Combat/Config/Moves.wren
-// The move catalog - Phase 5 slices it into per-archetype kits (see Combat/Config/Archetype.wren). Each
+// The move catalog - each archetype picks its kit from it (Combat/Config/Archetype.wren). Each
 // getter mints a fresh Move (immutable value objects), so a caller builds its list once and reuses
 // those instances.
 //
@@ -9,7 +9,7 @@
 //          which the target gets the parry prompt (States/Combat/ParryPromptState.wren, time slowed while it is
 //          up). Capped to 80% of the attack's length (CombatSession.nextParryOffer). Placeholder numbers.
 //
-// The triangle these kits are tuned to hold (roadmap "expect churn" - these numbers will move):
+// The triangle the archetype kits are tuned to hold (roadmap "expect churn" - these numbers will move):
 //   Speed  > Power    - 2u moves interrupt-lock a Power wind-up, and stay cheap enough to sustain it
 //   Power  > Control   - one Crush/Onslaught that lands is >half a mage's HP; Control burns stamina
 //                        holding the lock and gets caught exhausted
@@ -52,8 +52,4 @@ class Moves {
         return [Moves.slash, Moves.flurry, Moves.dodge, Moves.cleave, Moves.crush, Moves.onslaught, Moves.bolt,
                 Moves.slow, Moves.mend, Moves.brace]
     }
-
-    static speedKit   { [Moves.slash, Moves.flurry, Moves.dodge] }
-    static powerKit    { [Moves.cleave, Moves.crush, Moves.onslaught] }
-    static controlKit  { [Moves.bolt, Moves.slow, Moves.mend] }
 }

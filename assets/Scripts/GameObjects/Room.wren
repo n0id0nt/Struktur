@@ -1,6 +1,7 @@
 import "gameObject" for GameObject
 
-import "Inventory" for Inventory
+import "Inventory/Inventory" for Inventory
+import "debug" for Debug
 
 class Room {
     construct new(entity, args) {
@@ -10,7 +11,7 @@ class Room {
         _regularRoom = args["RegularRoom"]
         _transformedRoom = args["TransformedRoom"]
         
-        System.print("Player constructed for: %(_name)")
+        Debug.info("Player constructed for: %(_name)")
     }
     
     name { _name }

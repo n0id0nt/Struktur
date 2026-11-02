@@ -8,7 +8,7 @@ import "renderer" for FlipBit
 import "math" for Vec2
 import "resourceManager" for Texture
 import "physics" for BodyDefinition, PhysicsCircleShape, BodyType
-import "Colors" for WHITE
+import "Util/Colors" for WHITE
 
 var PLACEHOLDER_SPRITE_INDEX = 13
 

@@ -35,7 +35,7 @@
 //     the follower just keeps pace.
 import "math" for Vec2
 import "app" for Time
-import "Party" for Party
+import "Party/Party" for Party
 
 var MOVING_WINDOW = 0.15
 var OPEN_RATE     = 0.5    // breaking into a run from a walk, the gap opens at this fraction of the leader's pace

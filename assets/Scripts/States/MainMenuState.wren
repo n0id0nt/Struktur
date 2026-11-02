@@ -5,6 +5,7 @@
 import "app" for Time
 import "States/BaseState" for BaseState
 import "UI/MainMenu/MainMenuUI" for MainMenuUI
+import "debug" for Debug
 
 // Reveal speed for the rich-text showcase (seconds per glyph) - matches InteractState's own dialogue
 // scroll pacing convention (Time.scaledTime driving a glyph count), just via
@@ -24,7 +25,7 @@ class MainMenuState is BaseState {
     enter(stateManager, params) {
         super.enter(stateManager, params)
         _stateManager = stateManager
-        System.print("Entering Main Menu")
+        Debug.info("Entering Main Menu")
 
         _view = MainMenuUI.new()
         _view.startButton.setOnClick { |sender, mousePos| startGame() }
@@ -50,7 +51,7 @@ class MainMenuState is BaseState {
 
     exit() {
         super.exit()
-        System.print("Exiting Main Menu")
+        Debug.info("Exiting Main Menu")
         if (_view != null) {
             _view.teardown()
             _view = null
@@ -58,7 +59,7 @@ class MainMenuState is BaseState {
     }
 
     startGame() {
-        System.print("Starting game...")
+        Debug.info("Starting game...")
         _stateManager.changeState("GameWorld")
     }
 
@@ -67,6 +68,6 @@ class MainMenuState is BaseState {
     }
 
     quit() {
-        System.print("Quit requested (not yet wired to the application)")
+        Debug.info("Quit requested (not yet wired to the application)")
     }
 }

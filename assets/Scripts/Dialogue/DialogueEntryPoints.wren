@@ -2,7 +2,7 @@
 // NPC/item-name -> dialogue-node-id lookup. Extracted from what used to be States/InteractState.
 // wren's embedded getEntryPoint method - pure data/logic, zero UI dependency.
 import "debug" for Debug
-import "Inventory" for Inventory
+import "Inventory/Inventory" for Inventory
 
 class DialogueEntryPoints {
     static get(interactableName) {

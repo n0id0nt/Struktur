@@ -19,14 +19,14 @@
 import "gameObjectComponents" for Camera, WorldTransform
 import "math" for Vec2, Vec4
 import "app" for Time, Application
-import "Rooms" for Rooms
+import "World/Rooms" for Rooms
 
 // Seconds the pan from one room to the next takes.
 var TRANSITION_TIME = 0.6
 
 class RoomCamera {
     // cameraEntity: the entity carrying the Camera component (the player's), and the one the view follows. Room
-    // bounds come from Rooms.wren.
+    // bounds come from World/Rooms.wren.
     construct new(cameraEntity) {
         _cameraEntity = cameraEntity
         _roomIndex = null

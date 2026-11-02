@@ -1,5 +1,5 @@
 // States/ImpactState.wren
-// A short "look at that" moment (an ImpactEvent from ImpactEvents.wren - e.g. a door opening once its pressure
+// A short "look at that" moment (an ImpactEvent from World/ImpactEvents.wren - e.g. a door opening once its pressure
 // plates are all down): the camera pans slowly over to the event, it happens there with a little screen shake,
 // the camera holds on it a moment, then pans back to the player. Players are held still for the duration the same
 // way dialogue holds them (Player.setInteracting) - their animations keep running, they just take no input.

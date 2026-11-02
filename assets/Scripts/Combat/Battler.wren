@@ -18,15 +18,15 @@ import "resourceManager" for Texture
 import "animation" for SpriteAnimationDefinition
 import "renderer" for FlipBit
 import "app" for Time
-import "Colors" for WHITE
+import "Util/Colors" for WHITE
 import "Combat/Timeline" for SECONDS_PER_TIME_UNIT
 import "Combat/Config/ActionAnimations" for ActionAnimations
 import "Combat/Config/MoveCurves" for MoveCurves
 import "Combat/Config/MoveParticles" for MoveParticles
 
 // ATTACK_REACH: how far from home toward the target's home an attacker lunges, as a fraction of that
-// distance - close enough to read as a hit without fully overlapping the target's sprite.
-var ATTACK_REACH     = 0.6
+// distance - halfway, meeting the target in the middle, since the target is often lunging back at the same time.
+var ATTACK_REACH     = 0.5
 var RETREAT_DISTANCE = 28   // px a "retreat" move (Dodge) slips back by
 var RUN_OFF_DISTANCE = 220  // px the fleeing player slides off-stage by
 

@@ -7,7 +7,7 @@ import "math" for Vec2, Vec4
 import "resourceManager" for Font
 import "ui" for UIManager, UILabel, UIPanel
 import "app" for Application
-import "Colors" for BLANK, WHITE, LIGHTGRAY
+import "Util/Colors" for BLANK, WHITE, LIGHTGRAY
 
 var PANEL_TOP    = 140
 var LINE_HEIGHT  = 18

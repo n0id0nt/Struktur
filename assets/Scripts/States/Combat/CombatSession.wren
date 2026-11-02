@@ -30,7 +30,7 @@ var PARRY_MAX_LEAD = 0.8
 class CombatSession {
     // outer: the StateManager CombatState itself lives in (OverState clears it to end the fight).
     // manager: CombatState's nested StateManager holding the phases. party: the human-controlled side - every
-    // party member's persistent Combatant, leader (the first player) first (see Party.wren). enemies /
+    // party member's persistent Combatant, leader (the first player) first (see Party/Party.wren). enemies /
     // enemyDefs: parallel lists, one Combatant + one BattleCritter per opponent.
     construct new(outer, manager, party, enemies, enemyDefs, view, stage) {
         _outer = outer

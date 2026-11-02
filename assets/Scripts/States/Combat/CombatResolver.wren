@@ -8,12 +8,13 @@
 import "gameObject" for GameObject
 import "gameObjectComponents" for Script, WorldTransform
 import "reflect" for Reflect
-import "Party" for Party
+import "Party/Party" for Party
 import "Combat/Config/Moves" for Moves
 import "Combat/Arbiter" for Arbiter
 import "Combat/CombatOutcome" for CombatOutcome
-import "Defeated" for Defeated
+import "Combat/Defeated" for Defeated
 import "GameObjects/Critter" for Critter
+import "debug" for Debug
 
 class CombatResolver {
     construct new(session) {
@@ -226,15 +227,16 @@ class CombatResolver {
     endFight(text, result, recruited) {
         var fallen = removeFallen(recruited)
         var outcome = CombatOutcome.new(result, _session.duel, fallen, recruited)
-        System.print("[CombatResolver] fight over: %(outcome)")
+        Debug.info("[CombatResolver] fight over: %(outcome)")
         CombatOutcome.record(outcome)
         _session.goTo("OverState", {"text": text})
     }
 
     // Whatever the ending - a win, a loss or a flee - every opponent who died in this fight is removed from the
     // overworld, so killing one and then running doesn't bring it back, and a level-placed one is recorded in
-    // Defeated.wren (by its LDtk iid) so the level doesn't re-create it either. Returns the names of the fallen (a
-    // recruited opponent's entity goes too - its party follower replaces it - but it isn't counted as fallen).
+    // Combat/Defeated.wren (by its LDtk iid) so the level doesn't re-create it either. Returns the names of the
+    // fallen (a recruited opponent's entity goes too - its party follower replaces it - but it isn't counted as
+    // fallen).
     removeFallen(recruited) {
         var fallen = []
         for (e in _session.enemies) {

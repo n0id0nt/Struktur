@@ -72,6 +72,7 @@
 //   FLEE_AGILITY_PER_ATTEMPT points it's behind - but always gets away in the end.
 import "math" for Math
 import "Combat/Disruption" for Disruption
+import "debug" for Debug
 
 var PARRY_STAT_WEIGHT       = 0.03   // score per point of reflex over the attacker's precision
 var PARRY_STAT_EDGE_MAX     = 0.3    // cap on the stat edge either way, so timing always matters
@@ -354,7 +355,7 @@ class Arbiter {
     // recentRolls - what the battle test (States/BattleTestState.wren) shows on screen.
     static record_(short, long) {
         if (LOG_ROLLS) {
-            System.print("[Arbiter] %(long)")
+            Debug.info("[Arbiter] %(long)")
         }
         if (__recent == null) {
             __recent = []

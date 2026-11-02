@@ -1,9 +1,9 @@
-// ImpactEvents.wren
+// World/ImpactEvents.wren
 // A queue of "impact" moments for the gameplay state to play out (States/ImpactState.wren): the camera pans to a
 // spot in the world, something happens there (the actions run) with a little screen shake, and the camera pans
 // back. Requested by world objects - a Door whose pressure plates are all down (GameObjects/Door.wren) - and
 // taken by States/ExperimentState.wren once nothing else (dialogue, a fight) is running. A plain module so every
-// script shares one queue, like Signals.wren.
+// script shares one queue, like World/Signals.wren.
 import "math" for Vec2
 
 class ImpactEvent {

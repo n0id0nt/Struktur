@@ -6,7 +6,7 @@ import "renderer" for FlipBit
 import "math" for Vec2
 import "resourceManager" for Texture
 import "animation" for SpriteAnimationDefinition
-import "Colors" for WHITE
+import "Util/Colors" for WHITE
 
 // Direction prefixes of the generated clips by octant of atan2(y, x) - +x is right, +y is down the screen.
 var FACING_NAMES = ["right", "downRight", "down", "downLeft", "left", "upLeft", "up", "upRight"]

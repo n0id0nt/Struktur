@@ -10,7 +10,7 @@ import "ui" for UIManager, UILabel, UIPanel, TextAlignment
 import "math" for Vec2
 import "app" for Application
 import "resourceManager" for Font
-import "Colors" for WHITE, BLANK
+import "Util/Colors" for WHITE, BLANK
 import "UI/Combat/CombatantUI" for CombatantUI
 import "UI/Combat/ParryPromptUI" for ParryPromptUI
 import "UI/Shared/ButtonUI" for ButtonUI

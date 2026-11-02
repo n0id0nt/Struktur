@@ -11,7 +11,7 @@ import "debug" for Debug
 
 class DialogueLoader {
     static loadAllDialogue() {
-        System.print("Loading all dialogue...")
+        Debug.info("Loading all dialogue...")
         
         var dialogueFiles = [
             "Dialogue/GardenerDialogue.json",

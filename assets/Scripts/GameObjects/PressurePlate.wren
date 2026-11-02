@@ -1,6 +1,7 @@
 // GameObjects/PressurePlate.wren
 // A floor plate that's pressed while the player or a party member stands on it, turning its Signals channel on
-// (see Signals.wren - a Door wired to that channel opens), and reporting who stands on it to PressurePlates.wren.
+// (see World/Signals.wren - a Door wired to that channel opens), and reporting who stands on it to
+// World/PressurePlates.wren.
 // Detection is a physics sensor: its body is on the "Trigger" layer, which only the player and party members
 // include in their collision mask (Player.wren, PartyMember.wren), so critters walk over it without pressing it.
 // The sprite is the first tile of Tiles/Floors/Floors.png when up and the second when pressed.
@@ -12,10 +13,10 @@ import "renderer" for FlipBit
 import "math" for Vec2, Vec4
 import "resourceManager" for Texture
 import "physics" for BodyDefinition, PhysicsBoxShape, BodyType, CollisionLayers
-import "Colors" for WHITE
-import "Signals" for Signals
-import "PressurePlates" for PressurePlates
-import "Party" for Party
+import "Util/Colors" for WHITE
+import "World/Signals" for Signals
+import "World/PressurePlates" for PressurePlates
+import "Party/Party" for Party
 
 var UP_SPRITE_INDEX = 0
 var PRESSED_SPRITE_INDEX = 1

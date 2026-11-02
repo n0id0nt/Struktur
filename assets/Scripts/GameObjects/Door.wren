@@ -8,7 +8,7 @@
 // a key and, if the player has it, takes the key and opens it - both with the "openDoor" dialogue command
 // (Dialogue/RegisteredFunctions/Commands.wren). A door wired to pressure plates just hints at them.
 // A door with Signals channels also opens by itself once they are all on at once (e.g. every PressurePlate wired to
-// it is pressed - see Signals.wren). That opening plays as an impact moment (ImpactEvents.wren /
+// it is pressed - see World/Signals.wren). That opening plays as an impact moment (World/ImpactEvents.wren /
 // States/ImpactState.wren): the camera pans over, the door opens with a little shake, and the camera pans back.
 // Art: Tiles/Wall Decor/DoorsOpening.png - one row of OPEN_FRAMES frames, closed first, fully open last.
 // Spawned by States/ExperimentState.wren.
@@ -19,9 +19,9 @@ import "renderer" for FlipBit
 import "math" for Vec2
 import "resourceManager" for Texture
 import "physics" for BodyDefinition, PhysicsBoxShape, BodyType, CollisionLayers
-import "Colors" for WHITE
-import "Signals" for Signals
-import "ImpactEvents" for ImpactEvents
+import "Util/Colors" for WHITE
+import "World/Signals" for Signals
+import "World/ImpactEvents" for ImpactEvents
 
 // Half the door's size in metres (32 px at 32 px/m).
 var HALF_SIZE = 0.5

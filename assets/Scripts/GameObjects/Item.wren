@@ -2,9 +2,10 @@ import "gameObjectComponents" for Sprite, RenderLayer
 import "renderer" for FlipBit
 import "math" for Vec2, Vec3, Vec4
 import "resourceManager" for Texture
-import "Colors" for BLACK, WHITE, BLANK
-import "Inventory" for Inventory
+import "Util/Colors" for BLACK, WHITE, BLANK
+import "Inventory/Inventory" for Inventory
 import "flags" for FlagManager
+import "debug" for Debug
 
 var SHADOW_COLOR = Vec4.copy(BLACK)
 SHADOW_COLOR.w = 100
@@ -126,7 +127,7 @@ class Item {
         if (_isShadow) {
             color = SHADOW_COLOR
         }
-        System.print("adding item %(_entity) to inventory")
+        Debug.info("adding item %(_entity) to inventory")
         var sprite = Sprite.get(_entity)
         if (sprite) {
             sprite.color = color

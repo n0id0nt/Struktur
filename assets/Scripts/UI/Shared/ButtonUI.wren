@@ -7,7 +7,7 @@
 // wiring by the caller.
 import "ui" for UIPanel, UILabel, TextAlignment
 import "math" for Vec2
-import "Colors" for WHITE, BLACK, LIGHTGRAY
+import "Util/Colors" for WHITE, BLACK, LIGHTGRAY
 
 class ButtonUI {
     // absPos/relPos/size/relSize: same 4-arg shape as UIPanel's own constructor - relSize lets a row

@@ -16,7 +16,7 @@ import "math" for Vec2
 import "resourceManager" for Texture
 import "animation" for SpriteAnimationDefinition
 import "physics" for BodyDefinition, PhysicsCircleShape, BodyType, CollisionLayers
-import "Colors" for WHITE
+import "Util/Colors" for WHITE
 import "GameObjects/Critter" for Critter
 import "GameObjects/States/IdleMixin" for IdleMixin
 import "GameObjects/States/WanderMixin" for WanderMixin

@@ -1,4 +1,4 @@
-// Party.wren
+// Party/Party.wren
 // The player's party: an ordered list of Members (Party/Member.wren). Order is the follow chain - every NPC
 // follows the member directly AHEAD of it in the list (see GameObjects/PartyMember.wren), players never follow.
 // With several players in the party (`[P1, N1, P2, N2]`) the same rule just works: N1 trails P1, N2 trails P2.

@@ -23,14 +23,15 @@ import "UI/Gameplay/FightPromptUI" for FightPromptUI
 import "UI/Gameplay/InteractPromptUI" for InteractPromptUI
 
 import "GameObjects/Critter" for Critter
-import "Party" for Party
+import "Party/Party" for Party
 import "Party/DuelRequest" for DuelRequest
 import "Combat/CombatOutcome" for CombatOutcome
 import "Camera/RoomCamera" for RoomCamera
-import "Rooms" for Rooms
-import "Signals" for Signals
-import "PressurePlates" for PressurePlates
-import "ImpactEvents" for ImpactEvents
+import "World/Rooms" for Rooms
+import "World/Signals" for Signals
+import "World/PressurePlates" for PressurePlates
+import "World/ImpactEvents" for ImpactEvents
+import "debug" for Debug
 
 // Placeholder art for the rest spot (Tiles/Items.png frame 2 - the bread loaf) until there is campfire art.
 var REST_SPOT_SPRITE_INDEX = 2
@@ -94,7 +95,7 @@ class ExperimentState is BaseState {
     enter(stateManager, params) {
         super.enter(stateManager, params)
 
-        System.print("Loading game world...")
+        Debug.info("Loading game world...")
 
         _gameMusic = Music.load("Sounds/gameMusic.wav")
         if (_gameMusic) {
@@ -110,7 +111,7 @@ class ExperimentState is BaseState {
         Script.createArg(playerEntity, "Player", {"Name": "Player"})
         WorldTransform.setPosition(playerEntity, SPAWN_POSITION)
         _playerEntity = playerEntity
-        // The player leads the party - NPCs who join follow the member ahead of them (see Party.wren).
+        // The player leads the party - NPCs who join follow the member ahead of them (see Party/Party.wren).
         Party.registerPlayer(playerEntity, "Player")
         _roomCamera = RoomCamera.new(playerEntity)
 
@@ -220,7 +221,7 @@ class ExperimentState is BaseState {
         WorldTransform.setPosition(entity, position)
     }
 
-    // A floor plate (GameObjects/PressurePlate.wren) that turns channel on (Signals.wren) while stood on.
+    // A floor plate (GameObjects/PressurePlate.wren) that turns channel on (World/Signals.wren) while stood on.
     spawnPressurePlate(name, channel, position, worldEntity) {
         var entity = GameObject.create(name, worldEntity)
         Script.createArg(entity, "PressurePlate", {"Name": name, "Channel": channel})
@@ -336,7 +337,7 @@ class ExperimentState is BaseState {
         syncPartyFollowers()
         updateLevelStreaming_()
 
-        // Something in the world wants its moment (a door opening - see ImpactEvents.wren): play it now, while
+        // Something in the world wants its moment (a door opening - see World/ImpactEvents.wren): play it now, while
         // nothing else (dialogue, a fight, a menu) is running.
         var impact = ImpactEvents.take()
         if (impact != null) {
@@ -522,7 +523,7 @@ class ExperimentState is BaseState {
         if (outcome == null) {
             return
         }
-        System.print("[ExperimentState] combat ended: %(outcome)")
+        Debug.info("[ExperimentState] combat ended: %(outcome)")
         if (outcome.duel) {
             // Duels are non-lethal: anyone knocked out (you or an NPC) is back up on 1 HP, win or lose, and a lost
             // duel just ends - the challenger is still standing there to be challenged again.
@@ -554,7 +555,7 @@ class ExperimentState is BaseState {
 
     // Back on your feet at the start point: the whole party fully healed (downed members too - Party.restAll),
     // followers lined up behind you, their trails wiped so nobody walks back to where you fell. Defeated
-    // enemies stay gone (Defeated.wren); survivors keep their wounds until their level unloads, and streaming
+    // enemies stay gone (Combat/Defeated.wren); survivors keep their wounds until their level unloads, and streaming
     // swaps levels as normal on the next update. The usual post-fight cooldown applies.
     respawn_() {
         Party.restAll()
@@ -575,7 +576,7 @@ class ExperimentState is BaseState {
             }
         }
         _combatCooldownEndTime = Time.scaledTime + 2.0
-        System.print("[ExperimentState] respawned at the start point")
+        Debug.info("[ExperimentState] respawned at the start point")
     }
 
     // duel: true for a challenge fight (startDuel) - carried through to the fight's CombatOutcome.
@@ -583,7 +584,7 @@ class ExperimentState is BaseState {
         // Nobody left standing (everyone downed, nobody rested): no fight - and a cooldown, so an aggressive
         // critter doesn't retry every frame.
         if (!Party.anyoneStanding) {
-            System.print("[ExperimentState] nobody in the party can fight - not starting combat")
+            Debug.info("[ExperimentState] nobody in the party can fight - not starting combat")
             _combatCooldownEndTime = Time.scaledTime + 2.0
             return
         }
@@ -660,7 +661,7 @@ class ExperimentState is BaseState {
     exit() {
         super.exit()
 
-        System.print("Unloading game world...")
+        Debug.info("Unloading game world...")
 
         // Exit sub-state manager
         if (_stateManager && _stateManager.currentState) {
@@ -694,7 +695,7 @@ class ExperimentState is BaseState {
         _gameMusic.unload()
         _gameMusic = null
 
-        System.print("Game world unloaded")
+        Debug.info("Game world unloaded")
     }
 
     onEvent(type, data) {

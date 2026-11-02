@@ -62,7 +62,7 @@ class NPC {
 
     name { _name }
 
-    // Whether beating this NPC in a duel recruits them into the party (see CombatResolver.win + Party.wren).
+    // Whether beating this NPC in a duel recruits them into the party (see CombatResolver.win + Party/Party.wren).
     // A method rather than a getter so callers can duck-type it with Reflect.hasMethod(script, "joinsPartyOnDefeat()").
     joinsPartyOnDefeat() { _name == "Duelist" }
     

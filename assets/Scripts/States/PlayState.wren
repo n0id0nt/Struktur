@@ -3,6 +3,7 @@
 // This is the default state when playing the game
 
 import "States/BaseState" for BaseState
+import "debug" for Debug
 
 class PlayState is BaseState {
     construct new() {
@@ -13,7 +14,7 @@ class PlayState is BaseState {
     enter(stateManager, params) {
         super.enter(stateManager, params)
         
-        System.print("Entering play mode")
+        Debug.info("Entering play mode")
     }
     
     update(stateManager) {
@@ -23,6 +24,6 @@ class PlayState is BaseState {
     exit() {
         super.exit()
         
-        System.print("Exiting play mode")
+        Debug.info("Exiting play mode")
     }
 }

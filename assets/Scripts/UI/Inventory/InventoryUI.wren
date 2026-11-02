@@ -8,7 +8,7 @@ import "resourceManager" for Font, Texture
 import "ui" for UIManager, UILabel, UIPanel
 import "app" for Application
 import "math" for Vec2, Vec4
-import "Colors" for BLANK, WHITE
+import "Util/Colors" for BLANK, WHITE
 import "Localization/DisplayNames" for DisplayNames
 
 class InventoryUI {

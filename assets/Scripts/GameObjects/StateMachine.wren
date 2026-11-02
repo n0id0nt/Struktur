@@ -12,6 +12,8 @@
 //
 // Timing (e.g. "wander for 1-5 seconds") is left to the owner - drive it off Time.scaledTime rather
 // than an accumulated delta, since fixedUpdate() can run more than once per rendered frame.
+import "debug" for Debug
+
 class StateMachine {
     construct new() {
         _states = {}
@@ -29,7 +31,7 @@ class StateMachine {
 
     change(name) {
         if (!_states.containsKey(name)) {
-            System.print("[StateMachine] no state named '%(name)'")
+            Debug.info("[StateMachine] no state named '%(name)'")
             return
         }
         if (_current && _current["exit"]) { _current["exit"].call() }

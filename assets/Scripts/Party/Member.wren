@@ -1,5 +1,5 @@
 // Party/Member.wren
-// One slot in the party (see Party.wren): who they are, what they look like in the world, and the persistent
+// One slot in the party (see Party/Party.wren): who they are, what they look like in the world, and the persistent
 // battle Combatant they fight as.
 //
 //   kind "player" - a human-controlled Player entity (never follows anyone).

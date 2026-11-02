@@ -9,7 +9,7 @@ import "math" for Vec2
 import "resourceManager" for Font, Texture
 import "ui" for UIManager, UILabel, UIPanel, UIRichLabel, IconAtlas, TextAlignment, TextWrapping
 import "localization" for Localization
-import "Colors" for WHITE, BLACK, BLANK, DARKGRAY, LIGHTGRAY
+import "Util/Colors" for WHITE, BLACK, BLANK, DARKGRAY, LIGHTGRAY
 import "UI/Shared/ButtonUI" for ButtonUI
 
 class MainMenuUI {

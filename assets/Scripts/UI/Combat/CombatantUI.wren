@@ -8,7 +8,7 @@ import "math" for Vec2, Vec4
 import "UI/Combat/HealthBarUI" for HealthBarUI
 import "UI/Combat/ChargeBarUI" for ChargeBarUI
 import "UI/Combat/StaminaBarUI" for StaminaBarUI
-import "Colors" for WHITE
+import "Util/Colors" for WHITE
 
 var DIM_COLOR    = Vec4.new(140, 140, 140, 255)
 var MARKER_COLOR = Vec4.new(255, 216, 96, 255)

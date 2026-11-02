@@ -1,4 +1,4 @@
-// PressurePlates.wren
+// World/PressurePlates.wren
 // Who is standing on a pressure plate right now, across every plate (GameObjects/PressurePlate.wren reports
 // steps on and off). Kept in a plain module rather than as statics on the plate script, since registered
 // game-object scripts run in their own module instance - this is the copy everyone shares. Party members use it

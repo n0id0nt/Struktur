@@ -18,7 +18,7 @@
 // or a subclass needs lives here, reached only through the methods below - never through
 // `_entity`/`_facing`/etc. directly from Chicken/Chinlin or from a mixin/behaviour.
 //
-// Every critter belongs to a home room - the LDtk level it was placed in (Rooms.wren). It never moves out of it
+// Every critter belongs to a home room - the LDtk level it was placed in (World/Rooms.wren). It never moves out of it
 // (tickStates() cancels any movement past the room's edge), wanders only to spots inside it (randomPointInHome),
 // and only chases a player who is inside it (inHomeRoom - see GameObjects/States/ChaseMixin.wren).
 import "math" for Vec2
@@ -27,8 +27,8 @@ import "gameObject" for GameObject
 import "gameObjectComponents" for Sprite, SpriteAnimation, PhysicsBody, WorldTransform
 import "renderer" for FlipBit
 import "GameObjects/StateMachine" for StateMachine
-import "Defeated" for Defeated
-import "Rooms" for Rooms
+import "Combat/Defeated" for Defeated
+import "World/Rooms" for Rooms
 
 // px in from the home room's edges that a critter is stopped at (tickStates)...
 var ROOM_EDGE_MARGIN = 8
@@ -60,7 +60,7 @@ class Critter {
         _steeringBehaviours = []
         _combatant = null
         _homeRoom = null             // found on first use - see homeRoom
-        // Killed for good in an earlier fight (Defeated.wren): the level re-created it, so it removes itself
+        // Killed for good in an earlier fight (Combat/Defeated.wren): the level re-created it, so it removes itself
         // (GameObject.destroy is queued, so it's gone by the end of the frame) and never joins the registry -
         // nothing can see it or fight it in the meantime. Subclasses skip their start()/fixedUpdate() while
         // `removed` is set.
@@ -74,7 +74,7 @@ class Critter {
 
     entity { _entity }
     name { _name }
-    // The LDtk instance id (null for a critter spawned from script) - what Defeated.wren records a kill by.
+    // The LDtk instance id (null for a critter spawned from script) - what Combat/Defeated.wren records a kill by.
     iid { _iid }
     // True for a critter that was already defeated and is removing itself (see the constructor).
     removed { _removed }
@@ -83,7 +83,7 @@ class Critter {
     // one), guarded the same way WorldTransform.getPosition itself guards it.
     position { WorldTransform.getPosition(_entity) }
 
-    // The room (level index - Rooms.wren) this critter belongs to: the one it is in when first asked, which is
+    // The room (level index - World/Rooms.wren) this critter belongs to: the one it is in when first asked, which is
     // where its level placed it. null when there's no world to look rooms up in.
     homeRoom {
         if (_homeRoom == null) {

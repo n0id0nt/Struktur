@@ -8,7 +8,7 @@ import "ui" for UIManager, UILabel
 import "math" for Vec2
 import "resourceManager" for Font
 import "gameObjectComponents" for Camera
-import "Colors" for WHITE
+import "Util/Colors" for WHITE
 
 class FightPromptUI {
     construct new(text) {
