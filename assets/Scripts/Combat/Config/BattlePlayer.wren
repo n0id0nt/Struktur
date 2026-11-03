@@ -12,6 +12,7 @@ import "Combat/Combatant" for Combatant
 import "Combat/Config/Archetype" for Archetype
 import "Combat/Config/SheetAnims" for SheetAnims
 import "Sprites/ExplorerBattleSprite" for ExplorerBattleSprite
+import "Combat/MoveBook" for MoveBook
 
 class BattlePlayer {
     static name { "You" }
@@ -25,6 +26,8 @@ class BattlePlayer {
     static texturePath { ExplorerBattleSprite.data["texture"] }
     static cols { ExplorerBattleSprite.data["columns"] }
     static rows { ExplorerBattleSprite.data["rows"] }
+    // One frame's size in pixels.
+    static cellSize { Vec2.new(ExplorerBattleSprite.data["cellSize"][0], ExplorerBattleSprite.data["cellSize"][1]) }
     static pivot { Vec2.new(ExplorerBattleSprite.data["origin"][0], ExplorerBattleSprite.data["origin"][1]) }
     static facing { 1 }
 
@@ -44,8 +47,11 @@ class BattlePlayer {
         return __animsLeft
     }
 
-    // The moves the player knows by default - the archetype's kit (same shape as BattleCritter.kit).
-    static kit { Archetype.byName(BattlePlayer.archetypeName).kit }
+    // The moves a new game starts with unlocked and equipped - the archetype's kit (Combat/MoveBook.wren).
+    static starterKit { Archetype.byName(BattlePlayer.archetypeName).kit }
+
+    // The moves the player fights with - their equipped loadout (same shape as BattleCritter.kit).
+    static kit { MoveBook.equippedMoves }
 
     // A fresh Combatant - GameObjects/Player.combatant calls this once to mint the persistent one.
     static makeCombatant(entity) {

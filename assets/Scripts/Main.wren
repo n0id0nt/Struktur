@@ -17,6 +17,8 @@ import "States/ExperimentState" for ExperimentState
 import "States/BattleTestState" for BattleTestState
 import "Inventory/Inventory" for Inventory
 import "Party/Party" for Party
+import "Combat/MoveBook" for MoveBook
+import "Combat/Config/BattlePlayer" for BattlePlayer
 import "Combat/Defeated" for Defeated
 import "Dialogue/DialogueLoader" for DialogueLoader
 import "debug" for Debug
@@ -52,6 +54,7 @@ class Game {
         // Create state manager
         _stateManager = StateManager.new()
         Inventory.init()
+        MoveBook.init(BattlePlayer.starterKit)
         Party.init()
         Defeated.init()
     }
@@ -67,6 +70,7 @@ class Game {
         Localization.loadManifest("Localization/languages.json")
         FlagManager.load("flags.sav")
         Inventory.load("inventory.sav")
+        MoveBook.load("moves.sav")
         Party.load("party.sav")
         Defeated.load("defeated.sav")
 

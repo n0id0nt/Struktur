@@ -18,6 +18,10 @@ class UITexture : public UIElement
 private:
 	Resource::ResourcePtr<Resource::TextureResource> m_texture;
 	Util::Color m_tint = Util::ColorWhite;
+	// Pixel-space sub-rect of m_texture to draw instead of the whole thing (one frame of a sprite sheet) -
+	// only used while m_hasSourceRect.
+	Util::Math::Rect m_sourceRect{};
+	bool m_hasSourceRect = false;
 
 public:
 	UITexture(const glm::vec2& absolutePosition, const glm::vec2& relativePosition, const glm::vec2& absoluteSize,
@@ -36,6 +40,20 @@ public:
 	Util::Color GetTint() const
 	{
 		return m_tint;
+	}
+	// Draw only this pixel-space region of the texture (e.g. one sprite-sheet frame), stretched to the element's
+	// bounds. Cheap to call every frame - it just marks the quad dirty.
+	void SetSourceRect(const Util::Math::Rect& sourceRect)
+	{
+		m_sourceRect    = sourceRect;
+		m_hasSourceRect = true;
+		m_visualDirty   = true;
+	}
+	// Back to drawing the whole texture.
+	void ClearSourceRect()
+	{
+		m_hasSourceRect = false;
+		m_visualDirty   = true;
 	}
 	bool HasTexture() const
 	{

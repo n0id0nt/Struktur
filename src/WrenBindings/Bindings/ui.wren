@@ -33,6 +33,10 @@ foreign class UITexture {
     foreign setTexture(arg0)
     // Sets the UITexture's tint color
     foreign setTint(arg0)
+    // Draws only this pixel-space region (x, y, width, height) of the texture, e.g. one sprite-sheet frame
+    foreign setSourceRect(arg0,arg1,arg2,arg3)
+    // Draws the whole texture again
+    foreign clearSourceRect()
     // Sets UI Element to be visible
     foreign isVisible=(arg0)
     // Sets UI Element to be visible

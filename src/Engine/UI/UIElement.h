@@ -171,10 +171,14 @@ public:
 	{
 		return m_enabled;
 	}
-	// IsVisible() plus a bounds-overlap check against the nearest clipping ancestor's current viewport (see
-	// ClipsChildren) - an element scrolled/clipped out of view is IsVisible()==true (nothing toggled it off) but
-	// not effectively visible. No clipping ancestor -> identical to IsVisible(). Used by FocusNavigator so
-	// navigation skips elements the player can't actually see (see FocusNavigator.cpp).
+	// IsVisible() on this element and every ancestor - false inside a hidden subtree (e.g. an inactive tab page),
+	// even though nothing toggled this element itself off. Ignores clipping.
+	bool IsVisibleInHierarchy() const;
+
+	// IsVisibleInHierarchy() plus a bounds-overlap check against the nearest clipping ancestor's current viewport
+	// (see ClipsChildren) - an element scrolled/clipped out of view is IsVisible()==true (nothing toggled it off)
+	// but not effectively visible. No clipping ancestor -> identical to IsVisibleInHierarchy(). Used by
+	// FocusNavigator so navigation skips elements the player can't actually see (see FocusNavigator.cpp).
 	bool IsEffectivelyVisible() const;
 
 	// True for elements that mask their children to their own current bounds (see UIClip) - checked by

@@ -1,6 +1,7 @@
 import "dialogue" for DialogueRegistry
 import "flags" for FlagManager
 import "Inventory/Inventory" for Inventory
+import "Combat/MoveBook" for MoveBook
 import "Party/Party" for Party
 import "debug" for Debug
 import "gameObjectComponents" for Camera, Script, WorldTransform
@@ -38,6 +39,14 @@ class Commands {
             if (Inventory.spendGold(params["amount"])) {
                 Inventory.save("inventory.sav")
                 Debug.info("[Dialogue Command] Took %(params["amount"]) gold")
+            }
+        }
+        // Teaches the player a move (a Combat/Config/Moves.wren name, e.g. "Cleave") - it then shows in the
+        // inventory's Moves tab, ready to equip.
+        DialogueRegistry.registerCommand("unlockMove") { |params|
+            if (MoveBook.unlock(params["name"])) {
+                MoveBook.save("moves.sav")
+                Debug.info("[Dialogue Command] Unlocked move %(params["name"])")
             }
         }
         DialogueRegistry.registerCommand("setIntFlag") { |params|

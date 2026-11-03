@@ -34,6 +34,9 @@ class ItemGridPage {
             InventoryTheme.panelBg, InventoryTheme.panelBorder, 2, 3)
         var scroll = UIScroll.new(Vec2.new(20, 20), Vec2.new(0, 0), Vec2.new(524, 440), Vec2.new(0, 0))
         scroll.setHorizontalScrollEnabled(false)
+        // Rows only scroll once the focused one is past the five that fit, a row at a time (172 = the fifth row's
+        // centre below the viewport's centre), instead of re-centring on every move.
+        scroll.setFocusDeadzone(Vec2.new(0, 172))
         scroll.setZIndex(4)
         gridFrame.addChild(scroll)
 

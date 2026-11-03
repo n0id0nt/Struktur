@@ -1,31 +1,33 @@
 // UI/Inventory/InventoryUI.wren
-// The inventory screen's view: a window with a tab bar (Items / Weapons / Armor / Party / Levels), the party's gold
-// in the top right, the open tab's page below and a controls hint along the bottom. Each tab's page is its own
-// view - UI/Inventory/ItemGridPage.wren, PartyPage.wren, LevelsPage.wren - all built up front, only the open one
-// visible (hidden ones drop out of focus navigation by themselves).
+// The inventory screen's view: a window with a tab bar (Items / Weapons / Armor / Moves / Party / Levels), the
+// party's gold in the top right, the open tab's page below and a controls hint along the bottom. Each tab's page is
+// its own view - UI/Inventory/ItemGridPage.wren, MovesPage.wren, PartyPage.wren, LevelsPage.wren - all built up
+// front, only the open one visible (hidden ones drop out of focus navigation by themselves).
 //
 // Tabs switch with cycleTab (States/InventoryState.wren drives it from the UITab input - Q / E, the bumpers), or by
 // moving focus up onto the tab bar and along it. Pure view: `model` is everything to show, prepared by the State:
-//   { "tabs": [tab names], "itemPages": [[entries, emptyText] x3], "party": [...], "partyLabels": {...},
-//     "levels": [...], "levelLabels": {...}, "gold": Num, "hint": String }
-// onFocusMoved is called with no arguments whenever focus lands on something new (the screen's focus sound).
+//   { "tabs": [tab names], "itemPages": [[entries, emptyText] x3], "moves": {...}, "party": [...],
+//     "partyLabels": {...}, "levels": [...], "levelLabels": {...}, "gold": Num, "hint": String }
+// onFocusMoved is called with no arguments whenever focus lands on something new (the screen's focus sound);
+// onEquip(slot, moveId) changes the player's loadout and returns the new one (see MovesPage).
 import "app" for Application
 import "math" for Vec2
 import "resourceManager" for Texture
 import "ui" for UIManager, UITexture, NavigationDirection
 import "UI/Inventory/InventoryTheme" for InventoryTheme
 import "UI/Inventory/ItemGridPage" for ItemGridPage
+import "UI/Inventory/MovesPage" for MovesPage
 import "UI/Inventory/PartyPage" for PartyPage
 import "UI/Inventory/LevelsPage" for LevelsPage
 
 var WINDOW_SIZE = Vec2.new(1120, 620)
-var TAB_WIDTH = 140
-var TAB_STRIDE = 148
+var TAB_WIDTH = 128
+var TAB_STRIDE = 136
 var TAB_X = 64
 var GOLD_ICON_PATH = "Tiles/Items/Gold Coins.png"
 
 class InventoryUI {
-    construct new(model, onFocusMoved) {
+    construct new(model, onFocusMoved, onEquip) {
         _boldFont = InventoryTheme.loadBoldFont()
         _bookFont = InventoryTheme.loadBookFont()
         _onFocusMoved = onFocusMoved
@@ -54,6 +56,8 @@ class InventoryUI {
             _itemPages.add(view)
             _pages.add(view)
         }
+        _movesPage = MovesPage.new(body, model["moves"], _boldFont, _bookFont, onFocus, onEquip)
+        _pages.add(_movesPage)
         _partyPage = PartyPage.new(body, model["party"], model["partyLabels"], _boldFont, _bookFont, onFocus)
         _pages.add(_partyPage)
         _levelsPage = LevelsPage.new(body, model["levels"], model["levelLabels"], _boldFont, _bookFont, onFocus)
@@ -82,6 +86,18 @@ class InventoryUI {
             return
         }
         selectTab_((_current + direction + _tabs.count) % _tabs.count, true)
+    }
+
+    // Per-frame: animates the Moves tab's preview while it is open. `now` is unscaled time.
+    update(now) {
+        if (_screenPanel != null && _pages[_current] == _movesPage) {
+            _movesPage.tick(now)
+        }
+    }
+
+    // Esc: true when the open page used it (backing out of a half-made move swap) - otherwise the screen closes.
+    cancel() {
+        return _screenPanel != null && _pages[_current] == _movesPage && _movesPage.cancel()
     }
 
     buildTabBar_(window, names) {
@@ -127,6 +143,12 @@ class InventoryUI {
     }
 
     selectTab_(index, moveFocus) {
+        if (_current != index) {
+            _movesPage.cancel()
+        }
+        if (_pages[index] == _partyPage) {
+            _partyPage.refresh()
+        }
         _current = index
         for (i in 0..._pages.count) {
             _pages[i].setVisible(i == index)
@@ -154,6 +176,7 @@ class InventoryUI {
         for (page in _itemPages) {
             page.unloadTextures()
         }
+        _movesPage.release()
         _partyPage.release()
         _levelsPage.release()
         _itemPages = []

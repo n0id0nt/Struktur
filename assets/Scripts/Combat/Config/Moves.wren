@@ -52,4 +52,15 @@ class Moves {
         return [Moves.slash, Moves.flurry, Moves.dodge, Moves.cleave, Moves.crush, Moves.onslaught, Moves.bolt,
                 Moves.slow, Moves.mend, Moves.brace]
     }
+
+    // The catalog move with this name (a fresh one), or null - how saved move names (Combat/MoveBook.wren) come
+    // back as Moves.
+    static byName(name) {
+        for (move in Moves.catalog) {
+            if (move.name == name) {
+                return move
+            }
+        }
+        return null
+    }
 }

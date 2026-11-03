@@ -1,7 +1,7 @@
 // UI/Inventory/LevelsPage.wren
-// The inventory's Levels tab: a row per party member with their level and progress to the next. There are no
-// levels or experience in the game yet - States/InventoryState.wren fills every row with placeholder numbers and
-// this page says so at the top. Pure view: `members` are { "name", "level", "xp", "xpToNext" }.
+// The inventory's Levels tab: a row per player (NPC party members don't level) with their level and progress to the
+// next. There are no levels or experience in the game yet - States/InventoryState.wren fills every row with
+// placeholder numbers and this page says so at the top. Pure view: `members` are { "name", "level", "xp", "xpToNext" }.
 import "math" for Vec2
 import "ui" for UIScroll, NavigationDirection
 import "UI/Inventory/InventoryTheme" for InventoryTheme

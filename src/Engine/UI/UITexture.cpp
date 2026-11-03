@@ -26,8 +26,16 @@ void Struktur::UI::UITexture::Render(GameContext& context)
 			{
 				texture->LoadToGpu(context);
 			}
-			context.GetUIRenderer().DrawTexturedRect(m_batch, m_batchSlot, m_bounds, texture->GetHandle(), m_tint,
-			                                         GetZIndex());
+			if (m_hasSourceRect)
+			{
+				context.GetUIRenderer().DrawTexturedRectRegion(m_batch, m_batchSlot, m_bounds, texture->GetHandle(),
+				                                               m_sourceRect, m_tint, GetZIndex());
+			}
+			else
+			{
+				context.GetUIRenderer().DrawTexturedRect(m_batch, m_batchSlot, m_bounds, texture->GetHandle(), m_tint,
+				                                         GetZIndex());
+			}
 		}
 		m_visualDirty = false;
 	}

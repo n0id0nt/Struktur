@@ -153,9 +153,21 @@ bool Struktur::UI::UIElement::IsPointInside(const glm::vec2& point) const
 	       point.y <= m_bounds.y + m_bounds.height;
 }
 
+bool Struktur::UI::UIElement::IsVisibleInHierarchy() const
+{
+	for (const UIElement* element = this; element != nullptr; element = element->m_parent)
+	{
+		if (!element->m_visible)
+		{
+			return false;
+		}
+	}
+	return true;
+}
+
 bool Struktur::UI::UIElement::IsEffectivelyVisible() const
 {
-	if (!m_visible)
+	if (!IsVisibleInHierarchy())
 	{
 		return false;
 	}

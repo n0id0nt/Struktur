@@ -921,6 +921,36 @@ void wren_UITextureSetTint(WrenVM* vm)
 	uiTexture->SetTint(rayColor);
 }
 
+// UITexture.setSourceRect(x, y, width, height)
+void wren_UITextureSetSourceRect(WrenVM* vm)
+{
+	WrenUIElement* uiElement = static_cast<WrenUIElement*>(wrenGetSlotForeign(vm, 0));
+	if (!uiElement->element)
+	{
+		DEBUG_ERROR("UITexture.setSourceRect: element is Null");
+		return;
+	}
+	float x                            = (float)wrenGetSlotDouble(vm, 1);
+	float y                            = (float)wrenGetSlotDouble(vm, 2);
+	float width                        = (float)wrenGetSlotDouble(vm, 3);
+	float height                       = (float)wrenGetSlotDouble(vm, 4);
+	Struktur::UI::UITexture* uiTexture = dynamic_cast<Struktur::UI::UITexture*>(uiElement->element);
+	uiTexture->SetSourceRect(Struktur::Util::Math::Rect{x, y, width, height});
+}
+
+// UITexture.clearSourceRect()
+void wren_UITextureClearSourceRect(WrenVM* vm)
+{
+	WrenUIElement* uiElement = static_cast<WrenUIElement*>(wrenGetSlotForeign(vm, 0));
+	if (!uiElement->element)
+	{
+		DEBUG_ERROR("UITexture.clearSourceRect: element is Null");
+		return;
+	}
+	Struktur::UI::UITexture* uiTexture = dynamic_cast<Struktur::UI::UITexture*>(uiElement->element);
+	uiTexture->ClearSourceRect();
+}
+
 // ============================================================================
 // UININESLICE BINDINGS
 // ============================================================================
@@ -1691,6 +1721,10 @@ WREN_BINDING_MODULE(UI)
 	                  "Sets the UITexture's texture");
 	WREN_CLASS_METHOD(registry, "ui", "UITexture", "setTint(_)", wren_UITextureSetTint,
 	                  "Sets the UITexture's tint color");
+	WREN_CLASS_METHOD(registry, "ui", "UITexture", "setSourceRect(_,_,_,_)", wren_UITextureSetSourceRect,
+	                  "Draws only this pixel-space region (x, y, width, height) of the texture, e.g. one sprite-sheet frame");
+	WREN_CLASS_METHOD(registry, "ui", "UITexture", "clearSourceRect()", wren_UITextureClearSourceRect,
+	                  "Draws the whole texture again");
 
 	// Register UINineSlice foreign class - a texture drawn as a nine-slice/9-patch (see UINineSlice.h): corners
 	// keep their native pixel size, edges/center stretch to fill the rest.

@@ -15,6 +15,8 @@ class Combatant {
     name { _name }
     stats { _stats }
     moves { _moves }
+    // A new kit for the next fight - the player's, when their loadout changes (Combat/MoveBook.wren).
+    moves=(value) { _moves = value }
     entity { _entity }
     alive { _stats.alive }
 

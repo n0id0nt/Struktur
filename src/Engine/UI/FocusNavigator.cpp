@@ -182,9 +182,11 @@ Struktur::UI::UIElement* Struktur::UI::FocusNavigator::FindNextElement(Navigatio
 		return nullptr;
 	}
 
-	// First check manual navigation neighbors
+	// First check manual navigation neighbors. A deliberately linked neighbour only has to be in a shown subtree,
+	// not on screen - it may be scrolled out of view inside a UIScroll, whose focus-follow brings it in once it
+	// has focus (the spatial fallback below still skips anything off screen).
 	UIElement* neighbor = m_currentFocus->GetNavigationNeighbor(direction);
-	if (neighbor && neighbor->IsEffectivelyVisible() && neighbor->IsEnabled() && neighbor->IsFocusable())
+	if (neighbor && neighbor->IsVisibleInHierarchy() && neighbor->IsEnabled() && neighbor->IsFocusable())
 	{
 		return neighbor;
 	}

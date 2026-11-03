@@ -93,7 +93,9 @@ void Struktur::UI::UIScroll::UpdateFocusFollow(GameContext& context)
 		return;
 	}
 
-	float deltaTime = context.GetTimeSystem().scaledDelta;
+	// Unscaled, like FocusNavigator's cooldown - menus often pause game time (the inventory sets the time scale to
+	// 0), and a scaled delta would freeze the scroll in place there.
+	float deltaTime = context.GetTimeSystem().unscaledDelta;
 
 	glm::vec2 viewportCenter = GetPosition() + GetSize() * 0.5f;
 	glm::vec2 focusedCenter  = focused->GetPosition() + focused->GetSize() * 0.5f;
