@@ -55,7 +55,7 @@ void Struktur::System::CameraSystem::Update(GameContext& context)
 		focusedCameraComponent->viewCenter    = newPos;
 		out_camera.target                     = newPos;
 		out_camera.offset                     = glm::vec2{screenWidth / 2.f + focusedCameraComponent->offset.x,
-                                      screenHeight / 2.f + focusedCameraComponent->offset.x};
+                                      screenHeight / 2.f + focusedCameraComponent->offset.y};
 		out_camera.zoom                       = focusedCameraComponent->zoom;
 		out_camera.rotation                   = focusedCameraComponent->angle;
 		out_camera.previousCameraPosition     = newPos;

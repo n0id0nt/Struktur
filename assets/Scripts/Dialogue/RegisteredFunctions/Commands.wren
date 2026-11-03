@@ -11,19 +11,34 @@ import "events" for Event
 
 class Commands {
     static registerFunctions() {
+        // "count" is optional (default 1) - stackable items add to their stack, gear adds that many separate pieces.
         DialogueRegistry.registerCommand("giveItem") { |params|
             var item = params["item"]
-            Inventory.addItem(item)
+            var count = params["count"] != null ? params["count"] : 1
+            Inventory.addItem(item, count)
             Inventory.save("inventory.sav")
             Debug.info("[Dialogue Command] Added item to inventory %(item)")
             Event.addEvent("giveItem", [["__type", "map"], ["item", item]])
         }
         DialogueRegistry.registerCommand("removeItem") { |params|
             var item = params["item"]
-            Inventory.removeItem(item)
+            var count = params["count"] != null ? params["count"] : 1
+            Inventory.removeItem(item, count)
             Inventory.save("inventory.sav")
             Debug.info("[Dialogue Command] Removed item from inventory %(item)")
             Event.addEvent("removeItem", [["__type", "map"], ["item", item]])
+        }
+        DialogueRegistry.registerCommand("giveGold") { |params|
+            Inventory.addGold(params["amount"])
+            Inventory.save("inventory.sav")
+            Debug.info("[Dialogue Command] Gave %(params["amount"]) gold")
+        }
+        // Takes the gold only if there is enough - pair it with the "hasGold" condition to branch on that.
+        DialogueRegistry.registerCommand("takeGold") { |params|
+            if (Inventory.spendGold(params["amount"])) {
+                Inventory.save("inventory.sav")
+                Debug.info("[Dialogue Command] Took %(params["amount"]) gold")
+            }
         }
         DialogueRegistry.registerCommand("setIntFlag") { |params|
             var flag = params["flag"]

@@ -60,7 +60,11 @@ class DisplayNames {
             "Merchant Ledger": "item.merchant_ledger",
             "Merchant Voucher": "item.merchant_voucher",
             "Toolbox Body": "item.toolbox_body",
-            "Toolbox Handle": "item.toolbox_handle"
+            "Toolbox Handle": "item.toolbox_handle",
+            "Iron Sword": "item.iron_sword",
+            "Oak Staff": "item.oak_staff",
+            "Leather Vest": "item.leather_vest",
+            "Iron Helm": "item.iron_helm"
         }
         return keys.containsKey(itemId) ? keys[itemId] : null
     }

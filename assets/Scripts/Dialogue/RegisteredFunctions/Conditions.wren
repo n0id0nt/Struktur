@@ -24,6 +24,11 @@ class Conditions {
             Debug.info("[Dialogue Condition] Checking condition inventory has %(item) = %(result)")
             return result
         }
+        DialogueRegistry.registerCondition("hasGold") { |params|
+            var result = Inventory.gold >= params["amount"]
+            Debug.info("[Dialogue Condition] Checking condition gold >= %(params["amount"]) = %(result)")
+            return result
+        }
         DialogueRegistry.registerCondition("inParty") { |params|
             var result = Party.contains(params["name"])
             Debug.info("[Dialogue Condition] Checking party contains %(params["name"]) = %(result)")
