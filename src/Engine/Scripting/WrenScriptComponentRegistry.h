@@ -37,6 +37,9 @@ struct WrenScriptComponent
 	WrenHandle* fixedUpdateMethodHandle = nullptr;
 	WrenHandle* onDestroyMethodHandle = nullptr;
 	WrenHandle* onEventMethodHandle   = nullptr;
+	// Opt-in like fixedUpdateMethodHandle: only non-null if the class defines `static preview(entity, args)`, the
+	// visual-only hook the editor's level viewer calls instead of new()/start(). Called on classHandle.
+	WrenHandle* previewMethodHandle = nullptr;
 	bool isInitialised                = false;
 #ifdef DEBUG
 	std::vector<WrenExportedField> exportedFields;

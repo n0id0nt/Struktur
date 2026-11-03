@@ -1,5 +1,9 @@
 #pragma once
 
+#include <string>
+
+#include "glm/glm.hpp"
+
 namespace Struktur
 {
 namespace Core
@@ -52,6 +56,12 @@ struct GameData
 	float artificialLagMs         = 0.0f;
 	float oneOffHitchMs           = 0.0f;
 #endif
+
+	// "Play from here" (the editor's level viewer, Debug::LevelViewer::PlayFrom): a game state that loads this world
+	// file at its LDtk positions starts the player at debugSpawnPosition (world px) instead of its usual spawn - read
+	// from Wren as Application.debugSpawn. Empty = no override; the toolbar's plain Play clears it.
+	std::string debugSpawnWorldFile;
+	glm::vec2 debugSpawnPosition{0.f};
 };
 }  // namespace Core
 }  // namespace Struktur

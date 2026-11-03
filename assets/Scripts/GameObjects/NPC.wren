@@ -80,6 +80,14 @@ class NPC {
         PhysicsBody.create(_entity, bodyDef, playerShape)
     }
     
+    // Level viewer (editor): just the sprite, no body. An unknown name gets none, so the viewer shows a placeholder.
+    static preview(entity, args) {
+        var npcData = NPCData.forName(args["Name"])
+        if (npcData != null) {
+            npcData.createSprite(entity)
+        }
+    }
+
     update() {
 
     }

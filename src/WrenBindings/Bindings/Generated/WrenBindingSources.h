@@ -70,6 +70,8 @@ inline const char* wrenappSource()
     "    foreign static isFullScreen\n"
     "    // Set the if the application is funning in full screen.\n"
     "    foreign static setIsFullScreen(arg0)\n"
+    "    // The level viewer Play from here spot as [worldFile, x, y] (px), or null.\n"
+    "    foreign static debugSpawn\n"
     "}\n"
     "\n"
     "class Time {\n"

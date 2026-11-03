@@ -167,6 +167,9 @@ public:
 	// once per visible row every frame (see the resource manager editor window's inspector table). Fails for
 	// keys that aren't real mounted files (e.g. ShaderPool's "vs,fs" combined cache key).
 	static FileResult<uint64_t> GetFileSize(const std::string& path);
+	// Last-modified time (seconds since the epoch) via PHYSFS_stat - cheap enough to poll, e.g. the level viewer
+	// watching its .ldtk for saves from LDtk.
+	static FileResult<int64_t> GetModificationTime(const std::string& path);
 
 	// Immediate children (files and directories, names only - no path prefix) of a directory in the mounted
 	// virtual filesystem, via PHYSFS_enumerateFiles - for the File Explorer editor window's directory browsing.

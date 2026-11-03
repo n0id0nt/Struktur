@@ -326,6 +326,17 @@ FileResult<uint64_t> FileSystem::GetFileSize(const std::string& path)
 	return FileResult<uint64_t>::Ok((uint64_t)stat.filesize);
 }
 
+FileResult<int64_t> FileSystem::GetModificationTime(const std::string& path)
+{
+	PHYSFS_Stat stat;
+	if (!PHYSFS_stat(path.c_str(), &stat) || stat.modtime < 0)
+	{
+		auto physfsError = GetLastPhysFSError();
+		return FileResult<int64_t>::Fail(physfsError.error, physfsError.message);
+	}
+	return FileResult<int64_t>::Ok((int64_t)stat.modtime);
+}
+
 std::vector<std::string> FileSystem::ListDirectory(const std::string& path)
 {
 	std::vector<std::string> result;

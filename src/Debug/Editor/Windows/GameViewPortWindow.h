@@ -35,6 +35,12 @@ public:
 	// Get mouse position in game coordinates.
 	glm::vec2 GetGameMousePosition(GameContext& context) const;
 
+	// On-screen size of the rendered game image (ImGui screen pixels), as of the last Render().
+	glm::vec2 GetViewportSize() const
+	{
+		return glm::vec2{m_viewportSize.x, m_viewportSize.y};
+	}
+
 private:
 	// (Re)creates m_frameBuffer at the given size and redirects World/Debug/UI/DebugUI into it (see
 	// GraphicsDevice::SetWorldRenderTarget) - shared by Initialise and ResizeGameViewport so there's one place

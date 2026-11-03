@@ -123,6 +123,27 @@ void wren_ApplicationSetIsFullScreen(WrenVM* vm)
 	context->GetWindow().SetFullscreen(isFullScreen);
 }
 
+// Application.debugSpawn -> [worldFile, x, y] or null
+void wren_ApplicationGetDebugSpawn(WrenVM* vm)
+{
+	Struktur::GameContext* context = static_cast<Struktur::GameContext*>(wrenGetUserData(vm));
+	auto& gameData                 = context->GetGameData();
+	if (gameData.debugSpawnWorldFile.empty())
+	{
+		wrenSetSlotNull(vm, 0);
+		return;
+	}
+
+	wrenEnsureSlots(vm, 2);
+	wrenSetSlotNewList(vm, 0);
+	wrenSetSlotString(vm, 1, gameData.debugSpawnWorldFile.c_str());
+	wrenInsertInList(vm, 0, -1, 1);
+	wrenSetSlotDouble(vm, 1, static_cast<double>(gameData.debugSpawnPosition.x));
+	wrenInsertInList(vm, 0, -1, 1);
+	wrenSetSlotDouble(vm, 1, static_cast<double>(gameData.debugSpawnPosition.y));
+	wrenInsertInList(vm, 0, -1, 1);
+}
+
 // ============================================================================
 // TIME BINDINGS
 // ============================================================================
@@ -200,6 +221,8 @@ WREN_BINDING_MODULE(Application)
 	                  "Get the if the application is funning in full screen.");
 	WREN_CLASS_STATIC(registry, "app", "Application", "setIsFullScreen(_)", wren_ApplicationSetIsFullScreen,
 	                  "Set the if the application is funning in full screen.");
+	WREN_CLASS_STATIC(registry, "app", "Application", "debugSpawn", wren_ApplicationGetDebugSpawn,
+	                  "The level viewer Play from here spot as [worldFile, x, y] (px), or null.");
 
 	WREN_CLASS_STATIC(registry, "app", "Time", "unscaledDelta", wren_TimeGetUnscaledDelta,
 	                  "Gets the unsclaled delta time.");

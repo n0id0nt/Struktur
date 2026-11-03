@@ -32,9 +32,7 @@ class Chicken is Critter {
         if (removed) {
             return
         }
-        var texture = Texture.load("Sprites/chicken.png")
-        Sprite.create(entity, texture, WHITE, Vec2.new(8, 8), 7, 6, FlipBit.NONE, 0, RenderLayer.ENTITIES, 0)
-        texture.unload()
+        Chicken.createSprite(entity)
 
         var body = PhysicsBody.create(entity, BodyDefinition.new(BodyType.DYNAMIC_BODY),
                                       PhysicsCircleShape.new(0.12))
@@ -42,6 +40,30 @@ class Chicken is Critter {
         // Collide with the level (Wall bit), pass through the player and other critters (see Main.start()).
         body.setCollisionFilter(CollisionLayers.getLayer("Actor"), CollisionLayers.getLayer("Wall"))
 
+        Chicken.createAnimations(entity)
+
+        addState("wander", WanderMixin.new(0.8, "Wander", 1.0, 5.0, "idle"))
+        addState("idle", IdleMixin.new("Peck", 1.0, 3.0, "wander"))
+        // Boid-style separation so chickens visually avoid overlapping - see Separation's own
+        // comment for why this is a steering nudge rather than turning physical collision back on.
+        addSteering(Separation.new(20, 1.2))
+        changeState("wander")
+    }
+
+    // Level viewer (editor): the sprite pecking in place - none of start()'s physics or state setup.
+    static preview(entity, args) {
+        Chicken.createSprite(entity)
+        Chicken.createAnimations(entity)
+        SpriteAnimation.setCurrentAnimation(entity, "PeckFront")
+    }
+
+    static createSprite(entity) {
+        var texture = Texture.load("Sprites/chicken.png")
+        Sprite.create(entity, texture, WHITE, Vec2.new(8, 8), 7, 6, FlipBit.NONE, 0, RenderLayer.ENTITIES, 0)
+        texture.unload()
+    }
+
+    static createAnimations(entity) {
         var anim = SpriteAnimation.create(entity)
         // endFrame is exclusive - SpriteAnimationDefinition.new(start, end, seconds, loop).
         anim.addAnimation("WanderFront", SpriteAnimationDefinition.new(0, 3, 0.5, true))
@@ -53,13 +75,6 @@ class Chicken is Critter {
         anim.addAnimation("PeckFront", SpriteAnimationDefinition.new(18, 25, 1.0, true))
         anim.addAnimation("PeckBack", SpriteAnimationDefinition.new(25, 32, 1.0, true))
         anim.addAnimation("PeckSide", SpriteAnimationDefinition.new(32, 39, 1.0, true))
-
-        addState("wander", WanderMixin.new(0.8, "Wander", 1.0, 5.0, "idle"))
-        addState("idle", IdleMixin.new("Peck", 1.0, 3.0, "wander"))
-        // Boid-style separation so chickens visually avoid overlapping - see Separation's own
-        // comment for why this is a steering nudge rather than turning physical collision back on.
-        addSteering(Separation.new(20, 1.2))
-        changeState("wander")
     }
 
     fixedUpdate() {

@@ -93,6 +93,29 @@ bool Struktur::Wren::WrenScriptComponentRegistry::LoadAllScriptComponents(GameCo
 		{
 			scriptComponent.fixedUpdateMethodHandle = wrenMakeCallHandle(vm, "fixedUpdate()");
 		}
+
+		// preview(_,_) is static, so it lives on the metaclass (Class.type) - Reflect.hasMethod only looks at the
+		// methods of the class it is given.
+		wrenSetSlotHandle(vm, 0, scriptComponent.classHandle);
+		WrenHandle* typeCall = wrenMakeCallHandle(vm, "type");
+		bool hasMetaclass    = wrenCall(vm, typeCall) == WREN_RESULT_SUCCESS;
+		wrenReleaseHandle(vm, typeCall);
+		if (hasMetaclass)
+		{
+			WrenHandle* metaclassHandle = wrenGetSlotHandle(vm, 0);
+			wrenEnsureSlots(vm, 3);
+			wrenGetVariable(vm, "reflect", "Reflect", 0);
+			wrenSetSlotHandle(vm, 1, metaclassHandle);
+			wrenSetSlotString(vm, 2, "preview(_,_)");
+			WrenHandle* hasPreviewCall = wrenMakeCallHandle(vm, "hasMethod(_,_)");
+			bool hasPreview = wrenCall(vm, hasPreviewCall) == WREN_RESULT_SUCCESS && wrenGetSlotBool(vm, 0);
+			wrenReleaseHandle(vm, hasPreviewCall);
+			wrenReleaseHandle(vm, metaclassHandle);
+			if (hasPreview)
+			{
+				scriptComponent.previewMethodHandle = wrenMakeCallHandle(vm, "preview(_,_)");
+			}
+		}
 #ifdef DEBUG
 		m_fileModificationTimes[module] = GetFileModificationTime(module);
 #endif
@@ -157,6 +180,10 @@ void Struktur::Wren::WrenScriptComponentRegistry::Clear(GameContext& context)
 		{
 			wrenReleaseHandle(vm, scriptComponent.onEventMethodHandle);
 		}
+		if (scriptComponent.previewMethodHandle)
+		{
+			wrenReleaseHandle(vm, scriptComponent.previewMethodHandle);
+		}
 
 		scriptComponent.classHandle              = nullptr;
 		scriptComponent.startMethodHandle        = nullptr;
@@ -164,6 +191,7 @@ void Struktur::Wren::WrenScriptComponentRegistry::Clear(GameContext& context)
 		scriptComponent.fixedUpdateMethodHandle  = nullptr;
 		scriptComponent.onDestroyMethodHandle    = nullptr;
 		scriptComponent.onEventMethodHandle      = nullptr;
+		scriptComponent.previewMethodHandle      = nullptr;
 
 #ifdef DEBUG
 		ExportedFields::ReleaseFields(vm, scriptComponent.exportedFields);

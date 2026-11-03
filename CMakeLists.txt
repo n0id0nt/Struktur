@@ -392,6 +392,10 @@ if(EDITOR)
         src/Debug/Editor/Windows/ResourceManagerWindow.h src/Debug/Editor/Windows/ResourceManagerWindow.cpp
         src/Debug/Editor/Windows/LocalizationWindow.h src/Debug/Editor/Windows/LocalizationWindow.cpp
         src/Debug/Editor/Windows/StateWindow.h      src/Debug/Editor/Windows/StateWindow.cpp
+        src/Debug/Editor/Windows/LevelViewerWindow.h src/Debug/Editor/Windows/LevelViewerWindow.cpp
+
+        src/Debug/Editor/LevelViewer/LevelViewer.h  src/Debug/Editor/LevelViewer/LevelViewer.cpp
+        src/Debug/Editor/LevelViewer/EditorCamera.h src/Debug/Editor/LevelViewer/EditorCamera.cpp
 
         src/Debug/Editor/PreviewRenderers/PreviewRenderer.h
         src/Debug/Editor/PreviewRenderers/TexturePreviewRenderer.h src/Debug/Editor/PreviewRenderers/TexturePreviewRenderer.cpp
@@ -489,6 +493,7 @@ set(SOURCES
     
     src/Engine/ECS/Component/active.h
     src/Engine/ECS/Component/PhysicsBody.h
+    src/Engine/ECS/Component/LevelEntityInstance.h
     src/Engine/ECS/Component/Sprite.h
     src/Engine/ECS/Component/SpriteAnimation.h
     src/Engine/ECS/Component/Transform.h

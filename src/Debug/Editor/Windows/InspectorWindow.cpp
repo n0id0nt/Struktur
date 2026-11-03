@@ -1,6 +1,7 @@
 #include "InspectorWindow.h"
 
 #include <cmath>
+#include <format>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 #include <unordered_map>
@@ -17,6 +18,7 @@
 #include "Engine/ECS/Component/Camera.h"
 #include "Engine/ECS/Component/Identifier.h"
 #include "Engine/ECS/Component/Level.h"
+#include "Engine/ECS/Component/LevelEntityInstance.h"
 #include "Engine/ECS/Component/ParticleEmitter.h"
 #include "Engine/ECS/Component/PhysicsBody.h"
 #include "Engine/ECS/Component/Shader.h"
@@ -119,10 +121,12 @@ void InspectorWindow::Render(GameContext& context)
 		case InspectorDisplayType::UIElement:
 		{
 			RenderUIElementInspector(context, m_selectedUIElement);
+			break;
 		}
 		case InspectorDisplayType::Entity:
 		{
 			RenderEntityInspector(context, m_selectedEntity);
+			break;
 		}
 		case InspectorDisplayType::None:
 		default:
@@ -285,6 +289,17 @@ void InspectorWindow::RenderComponents(GameContext& context, entt::entity entity
 		{
 			ImGui::PushID("Level");
 			RenderLevelComponent(context, *level, registry, entity);
+			ImGui::PopID();
+		}
+	}
+
+	// Render LDtk Entity if exists
+	if (auto* instance = registry.try_get<Component::LevelEntityInstance>(entity))
+	{
+		if (ImGui::CollapsingHeader("LDtk Entity", ImGuiTreeNodeFlags_DefaultOpen))
+		{
+			ImGui::PushID("LDtk Entity");
+			RenderLevelEntityInstanceComponent(context, *instance, registry, entity);
 			ImGui::PopID();
 		}
 	}
@@ -1355,6 +1370,48 @@ void InspectorWindow::RenderLevelComponent(GameContext& context, Component::Leve
 	ImGui::Text("Index: %d", level.index);
 	ImGui::Text("Iid: %s", level.Iid.c_str());
 	ImGui::Text("Size: %d x %d px", level.width, level.height);
+	ImGui::TextDisabled("Read-only - sourced from the loaded level file");
+}
+
+void InspectorWindow::RenderLevelEntityInstanceComponent(GameContext& context, Component::LevelEntityInstance& instance,
+                                                         entt::registry& registry, entt::entity entity)
+{
+	// Sourced from the level viewer's loaded LDtk file (see World::Level::EntityMode::PREVIEW)
+	ImGui::Text("Identifier: %s", instance.identifier.c_str());
+	ImGui::Text("Size: %.0f x %.0f px", instance.size.x, instance.size.y);
+
+	ImGui::Spacing();
+	ImGui::TextUnformatted("Fields");
+	ImGui::Indent();
+	// Lists (LDtk Colour / Point fields) are shown as their named parts, e.g. "x: 3, y: 4".
+	auto formatValue = [](const Wren::WrenItem& item, auto& self) -> std::string
+	{
+		switch (item.type)
+		{
+			case WrenType::WREN_TYPE_NUM:
+				return std::format("{:.4g}", std::any_cast<double>(item.value));
+			case WrenType::WREN_TYPE_BOOL:
+				return std::any_cast<bool>(item.value) ? "true" : "false";
+			case WrenType::WREN_TYPE_STRING:
+				return "\"" + std::any_cast<std::string>(item.value) + "\"";
+			case WrenType::WREN_TYPE_LIST:
+			{
+				std::string text;
+				for (const auto& part : std::any_cast<std::vector<Wren::WrenItem>>(item.value))
+				{
+					text += (text.empty() ? "" : ", ") + part.identifier + ": " + self(part, self);
+				}
+				return text;
+			}
+			default:
+				return "null";
+		}
+	};
+	for (const Wren::WrenItem& field : instance.fields)
+	{
+		ImGui::TextWrapped("%s: %s", field.identifier.c_str(), formatValue(field, formatValue).c_str());
+	}
+	ImGui::Unindent();
 	ImGui::TextDisabled("Read-only - sourced from the loaded level file");
 }
 

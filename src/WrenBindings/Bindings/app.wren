@@ -25,6 +25,8 @@ class Application {
     foreign static isFullScreen
     // Set the if the application is funning in full screen.
     foreign static setIsFullScreen(arg0)
+    // The level viewer Play from here spot as [worldFile, x, y] (px), or null.
+    foreign static debugSpawn
 }
 
 class Time {

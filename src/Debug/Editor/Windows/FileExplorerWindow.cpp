@@ -414,6 +414,10 @@ void FileExplorerWindow::RenderGrid(GameContext& context)
 				m_selectedFile   = path;
 				previewRequested = true;
 				previewPath      = path;
+				if (doubleClicked && GetExtensionLower(name) == ".ldtk")
+				{
+					context.GetEditor().GetLevelViewer().Open(context, path);
+				}
 			}
 		}
 

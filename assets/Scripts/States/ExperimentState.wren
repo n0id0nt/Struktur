@@ -63,6 +63,16 @@ var MAX_COMBAT_GROUP = 3
 var VILLAGER_QUEST_FLAG = "villager_quest_state"
 
 class ExperimentState is BaseState {
+    // Where a run starts the player: the editor level viewer's "Play from here" spot if it was picked in this world
+    // (Application.debugSpawn), otherwise SPAWN_POSITION.
+    static startPosition {
+        var debugSpawn = Application.debugSpawn
+        if (debugSpawn != null && debugSpawn[0] == WORLD_FILE_PATH) {
+            return Vec3.new(debugSpawn[1], debugSpawn[2], 0.0)
+        }
+        return SPAWN_POSITION
+    }
+
     construct new() {
         super()
         name = "ExperimentState"
@@ -109,7 +119,7 @@ class ExperimentState is BaseState {
 
         var playerEntity = GameObject.create("Player", worldEntity)
         Script.createArg(playerEntity, "Player", {"Name": "Player"})
-        WorldTransform.setPosition(playerEntity, SPAWN_POSITION)
+        WorldTransform.setPosition(playerEntity, ExperimentState.startPosition)
         _playerEntity = playerEntity
         // The player leads the party - NPCs who join follow the member ahead of them (see Party/Party.wren).
         Party.registerPlayer(playerEntity, "Player")

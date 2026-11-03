@@ -2,6 +2,8 @@
 
 #include "Debug/Editor/Windows/HierarchyWindow.h"
 #include "Engine/ECS/Component/Level.h"
+#include "Engine/ECS/Component/LevelEntityInstance.h"
+#include "Engine/ECS/Component/Sprite.h"
 #include "Engine/ECS/Component/PhysicsBody.h"
 #include "Engine/ECS/Component/Transform.h"
 #include "Engine/ECS/System/TransformSystem.h"
@@ -51,6 +53,8 @@ void Struktur::System::DebugSystem::Update(GameContext& context)
 	{
 		RenderLevelBounds(context);
 	}
+	// Not a toggle - these only exist in the level viewer, where they stand in for a missing sprite.
+	RenderLevelEntityPlaceholders(context);
 	if (debugSettings.showEntityGizmos)
 	{
 		RenderEntityGizmos(context);
@@ -278,5 +282,29 @@ void Struktur::System::DebugSystem::RenderLevelBounds(GameContext& context)
 		glm::vec2 min           = {worldPosition.x, worldPosition.y};
 		glm::vec2 max           = {worldPosition.x + level.width, worldPosition.y + level.height};
 		m_debugRenderer.DrawRectOutline(min, max, debugSettings.levelBoundsThickness, Util::ColorOrange);
+	}
+}
+
+void Struktur::System::DebugSystem::RenderLevelEntityPlaceholders(GameContext& context)
+{
+	constexpr uint8_t FILL_ALPHA = 110;
+
+	entt::registry& registry         = context.GetRegistry();
+	TransformSystem& transformSystem = context.GetSystemManager().GetSystem<TransformSystem>();
+
+	// Only the instances whose preview gave them no sprite (no hook, or one that shows nothing - e.g. an Item with
+	// no image).
+	auto view = registry.view<Component::LevelEntityInstance, Component::Transform>(
+	    entt::exclude<Inactive, Component::Sprite>);
+	for (auto [entity, placeholder, transform] : view.each())
+	{
+		glm::vec3 worldPosition = transformSystem.GetWorldPosition(context, entity);
+		glm::vec2 min           = glm::vec2(worldPosition) + placeholder.offset;
+		glm::vec2 max           = min + placeholder.size;
+		glm::vec2 corners[4]    = {min, {max.x, min.y}, max, {min.x, max.y}};
+		Util::Color fill        = placeholder.color;
+		fill.a                  = FILL_ALPHA;
+		m_debugRenderer.DrawSolidPolygon(corners, 4, fill);
+		m_debugRenderer.DrawRectOutline(min, max, 1.0f, placeholder.color);
 	}
 }

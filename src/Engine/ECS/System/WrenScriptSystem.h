@@ -28,6 +28,12 @@ public:
 	// Call Start() on the script
 	bool CallStart(GameContext& context, Component::WrenScript& script);
 
+	// Calls `static preview(entity, args)` on the script class registered as className - the visual-only hook the
+	// editor's level viewer uses instead of new()/start(). False if the class isn't registered, has no preview, or
+	// the call errors.
+	bool CallPreview(GameContext& context, entt::entity entity, const std::string& className,
+	                 const std::vector<Wren::WrenItem>& args);
+
 	// Queue a just-created script to be initialised and started at the top of the next Update() - see
 	// GameObjectManager::OnScriptConstruct.
 	void QueuePendingInitialise(entt::entity entity);

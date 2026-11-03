@@ -7,6 +7,7 @@
 #include "Debug/Assertions.h"
 #include "Engine/Core/FileSystem.h"
 #include "Engine/GameContext.h"
+#include "Engine/Text/RichText.h"
 
 glm::vec2 Struktur::FileLoading::LevelParser::LoadJsonVector2(const nlohmann::json& json)
 {
@@ -281,6 +282,10 @@ void Struktur::FileLoading::LevelParser::LoadEntities(Layer& entityLayer, const 
 		entity.width      = entityJson["width"];
 		entity.height     = entityJson["height"];
 		entity.px         = LoadJsonVector2(entityJson["px"]);
+		if (entityJson.contains("__smartColor"))
+		{
+			Text::TryParseHexColor(entityJson["__smartColor"].get<std::string>(), entity.color);
+		}
 		LoadFieldInstances(entity, entityJson["fieldInstances"]);
 
 		entityLayer.entityInstaces.push_back(entity);

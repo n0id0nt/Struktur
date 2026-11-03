@@ -40,9 +40,7 @@ class Chinlin is Critter {
         if (removed) {
             return
         }
-        var texture = Texture.load("Sprites/chinlin.png")
-        Sprite.create(entity, texture, WHITE, Vec2.new(12, 16), 4, 4, FlipBit.NONE, 0, RenderLayer.ENTITIES, 0)
-        texture.unload()
+        Chinlin.createSprite(entity)
 
         var body = PhysicsBody.create(entity, BodyDefinition.new(BodyType.DYNAMIC_BODY),
                                       PhysicsCircleShape.new(0.18))
@@ -50,13 +48,7 @@ class Chinlin is Critter {
         // Collide with the level (Wall bit), pass through the player and other critters (see Main.start()).
         body.setCollisionFilter(CollisionLayers.getLayer("Actor"), CollisionLayers.getLayer("Wall"))
 
-        var anim = SpriteAnimation.create(entity)
-        anim.addAnimation("StandFront", SpriteAnimationDefinition.new(0, 2, 0.8, true))
-        anim.addAnimation("StandBack", SpriteAnimationDefinition.new(2, 4, 0.8, true))
-        anim.addAnimation("StandSide", SpriteAnimationDefinition.new(4, 6, 0.8, true))
-        anim.addAnimation("RunFront", SpriteAnimationDefinition.new(6, 9, 0.45, true))
-        anim.addAnimation("RunBack", SpriteAnimationDefinition.new(9, 12, 0.45, true))
-        anim.addAnimation("RunSide", SpriteAnimationDefinition.new(12, 15, 0.45, true))
+        Chinlin.createAnimations(entity)
 
         // Kept so fixedUpdate() can run its proximity check every tick - see ChaseMixin's own comment
         // on why entering/leaving chase can't just be another timed state like wander/idle.
@@ -71,6 +63,29 @@ class Chinlin is Critter {
         // than turning physical collision back on.
         addSteering(Separation.new(28, 1.6))
         changeState("wander")
+    }
+
+    // Level viewer (editor): the sprite standing in place - none of start()'s physics or state setup.
+    static preview(entity, args) {
+        Chinlin.createSprite(entity)
+        Chinlin.createAnimations(entity)
+        SpriteAnimation.setCurrentAnimation(entity, "StandFront")
+    }
+
+    static createSprite(entity) {
+        var texture = Texture.load("Sprites/chinlin.png")
+        Sprite.create(entity, texture, WHITE, Vec2.new(12, 16), 4, 4, FlipBit.NONE, 0, RenderLayer.ENTITIES, 0)
+        texture.unload()
+    }
+
+    static createAnimations(entity) {
+        var anim = SpriteAnimation.create(entity)
+        anim.addAnimation("StandFront", SpriteAnimationDefinition.new(0, 2, 0.8, true))
+        anim.addAnimation("StandBack", SpriteAnimationDefinition.new(2, 4, 0.8, true))
+        anim.addAnimation("StandSide", SpriteAnimationDefinition.new(4, 6, 0.8, true))
+        anim.addAnimation("RunFront", SpriteAnimationDefinition.new(6, 9, 0.45, true))
+        anim.addAnimation("RunBack", SpriteAnimationDefinition.new(9, 12, 0.45, true))
+        anim.addAnimation("RunSide", SpriteAnimationDefinition.new(12, 15, 0.45, true))
     }
 
     fixedUpdate() {

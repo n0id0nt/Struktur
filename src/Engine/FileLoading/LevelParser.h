@@ -6,6 +6,7 @@
 #include <unordered_map>
 #include <vector>
 
+#include "Engine/Util/Color.h"
 #include "Engine/World/RenderLayer.h"
 #include "glm/glm.hpp"
 #include "nlohmann/json.hpp"
@@ -53,6 +54,8 @@ struct Entity
 	glm::vec2 px;
 	int worldX;
 	int worldY;
+	// LDtk's display colour for this instance (__smartColor) - used where there is no sprite to show it with.
+	Util::Color color = Util::ColorMagenta;
 	std::vector<FieldInstance> fieldInstances;
 };
 

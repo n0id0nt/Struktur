@@ -28,6 +28,7 @@ struct ParticleEmitter;
 struct PhysicsBody;
 struct SpriteAnimation;
 struct Level;
+struct LevelEntityInstance;
 struct World;
 struct TileMap;
 struct WrenScript;
@@ -148,6 +149,9 @@ private:
 
 	void RenderLevelComponent(GameContext& context, Component::Level& level, entt::registry& registry,
 	                          entt::entity entity);
+
+	void RenderLevelEntityInstanceComponent(GameContext& context, Component::LevelEntityInstance& instance,
+	                                        entt::registry& registry, entt::entity entity);
 
 	void RenderWorldComponent(GameContext& context, Component::World& world, entt::registry& registry,
 	                          entt::entity entity);

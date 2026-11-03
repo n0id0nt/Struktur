@@ -21,44 +21,74 @@ class ItemData {
 }
 
 class Item {
+    // The Tiles/Items.png frame each item shows (13 if it isn't listed).
+    static spriteData {
+        if (__spriteData == null) {
+            __spriteData = {
+                "Love Letter": ItemData.new(10),
+                "Hammer": ItemData.new(9),
+                "Star Chart": ItemData.new(15),
+                "Ornate Key": ItemData.new(11),
+                "Ancient Tome": ItemData.new(1),
+                "Rose": ItemData.new(14),
+                "Fresh Bread": ItemData.new(2),
+                "Tool Box": ItemData.new(16),
+                "Personal Diary": ItemData.new(12),
+                "Telescope": ItemData.new(4),
+                "Gold Coins": ItemData.new(3),
+                // Placeholder sprites (borrowed from the sheet) for the overworld pickups - Dialogue/OverworldDialogue.json.
+                "Lost Locket": ItemData.new(10),
+                "Lucky Coin": ItemData.new(3),
+                "Iron Key": ItemData.new(11),
+                "Ancient Seal": ItemData.new(0),
+                "Red Pedestal": ItemData.new(6),
+                "Green Pedestal": ItemData.new(7),
+                "Blue Pedestal": ItemData.new(8),
+                "Yellow Pedestal": ItemData.new(9),
+            }
+        }
+        return __spriteData
+    }
+
+    // Items the world shows no sprite for.
+    static namesWithNoImage {
+        if (__namesWithNoImage == null) {
+            __namesWithNoImage = [
+                "Yellow Pedestal Inactive",
+                "Blue Pedestal Inactive",
+                "Red Pedestal Inactive",
+                "Green Pedestal Inactive",
+                "Yellow Pedestal Active",
+                "Blue Pedestal Active",
+                "Red Pedestal Active",
+                "Green Pedestal Active",
+                "Safe",
+                "Memory Palace",
+            ]
+        }
+        return __namesWithNoImage
+    }
+
+    static createSprite(entity, name, color) {
+        if (Item.namesWithNoImage.contains(name)) {
+            return
+        }
+        var texture = Texture.load("Tiles/Items.png")
+        var itemData = Item.spriteData[name]
+        Sprite.create(entity, texture, color, Vec2.new(32, 48), 9, 2, FlipBit.NONE, itemData ? itemData.getSpriteIndex() : 13, RenderLayer.ENTITIES, 1)
+        texture.unload()
+    }
+
+    // Level viewer (editor): the sprite as placed, ignoring inventory/flag state. Items with no image get none, so the
+    // viewer shows a placeholder.
+    static preview(entity, args) {
+        Item.createSprite(entity, args["Name"], WHITE)
+    }
+
     construct new(entity, args) {
         _interactable = true
         _entity = entity
         _returnable = args["Returnable"]
-        _spriteDataMap = {
-            "Love Letter": ItemData.new(10),
-            "Hammer": ItemData.new(9),
-            "Star Chart": ItemData.new(15),
-            "Ornate Key": ItemData.new(11),
-            "Ancient Tome": ItemData.new(1),
-            "Rose": ItemData.new(14),
-            "Fresh Bread": ItemData.new(2),
-            "Tool Box": ItemData.new(16),
-            "Personal Diary": ItemData.new(12),
-            "Telescope": ItemData.new(4),
-            "Gold Coins": ItemData.new(3),
-            // Placeholder sprites (borrowed from the sheet) for the overworld pickups - Dialogue/OverworldDialogue.json.
-            "Lost Locket": ItemData.new(10),
-            "Lucky Coin": ItemData.new(3),
-            "Iron Key": ItemData.new(11),
-            "Ancient Seal": ItemData.new(0),
-            "Red Pedestal": ItemData.new(6),
-            "Green Pedestal": ItemData.new(7),
-            "Blue Pedestal": ItemData.new(8),
-            "Yellow Pedestal": ItemData.new(9),
-        }
-        _itemsWithNoImage = [
-            "Yellow Pedestal Inactive",
-            "Blue Pedestal Inactive",
-            "Red Pedestal Inactive",
-            "Green Pedestal Inactive",
-            "Yellow Pedestal Active",
-            "Blue Pedestal Active",
-            "Red Pedestal Active",
-            "Green Pedestal Active",
-            "Safe",
-            "Memory Palace",
-        ]
         _name = args["Name"]
         _isShadow = false
         _disabled = false
@@ -82,17 +112,7 @@ class Item {
     // Called after C++ has created base components
     // Script configures/initializes component values
     start() {
-        var texture = Texture.load("Tiles/Items.png")
-        if (!_itemsWithNoImage.contains(_name)) {
-            var interactionId = _name
-            var color = WHITE
-            if (_isShadow) {
-                color = SHADOW_COLOR
-            }
-            var itemData = _spriteDataMap[interactionId]
-            Sprite.create(_entity, texture, color, Vec2.new(32, 48), 9, 2, FlipBit.NONE, itemData ? itemData.getSpriteIndex() : 13, RenderLayer.ENTITIES, 1)
-        }
-        texture.unload()
+        Item.createSprite(_entity, _name, _isShadow ? SHADOW_COLOR : WHITE)
         if (_disabled) {
             disableItem()
         }

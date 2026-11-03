@@ -10,6 +10,39 @@
 
 namespace Struktur::System
 {
+namespace
+{
+// Puts args into a new map in `slot` (a script's constructor/preview args map). Uses slot + 1 and slot + 2 as
+// scratch, so the caller must have ensured at least slot + 3 slots.
+void SetArgsMapSlot(WrenVM* vm, int slot, const std::vector<Wren::WrenItem>& args)
+{
+	wrenSetSlotNewMap(vm, slot);
+	for (const auto& arg : args)
+	{
+		wrenSetSlotString(vm, slot + 1, arg.identifier.c_str());
+		switch (arg.type)
+		{
+			case WrenType::WREN_TYPE_NUM:
+				wrenSetSlotDouble(vm, slot + 2, std::any_cast<double>(arg.value));
+				break;
+
+			case WrenType::WREN_TYPE_BOOL:
+				wrenSetSlotBool(vm, slot + 2, std::any_cast<bool>(arg.value));
+				break;
+
+			case WrenType::WREN_TYPE_STRING:
+				wrenSetSlotString(vm, slot + 2, std::any_cast<std::string>(arg.value).c_str());
+				break;
+
+			default:
+				wrenSetSlotNull(vm, slot + 2);
+				break;
+		}
+
+		wrenSetMapValue(vm, slot, slot + 1, slot + 2);
+	}
+}
+}  // namespace
 
 bool WrenScriptSystem::InitialiseScript(GameContext& context, entt::entity entity, Component::WrenScript& script)
 {
@@ -43,32 +76,7 @@ bool WrenScriptSystem::InitialiseScript(GameContext& context, entt::entity entit
 	{
 		wrenEnsureSlots(vm, 5);
 		// If constructor args exist, create signature with 2 params
-		wrenSetSlotNewMap(vm, 2);
-		for (const auto& arg : script.constructorArgs)
-		{
-			wrenSetSlotString(vm, 3, arg.identifier.c_str());
-			switch (arg.type)
-			{
-				case WrenType::WREN_TYPE_NUM:
-					wrenSetSlotDouble(vm, 4, std::any_cast<double>(arg.value));
-					break;
-
-				case WrenType::WREN_TYPE_BOOL:
-					wrenSetSlotBool(vm, 4, std::any_cast<bool>(arg.value));
-					break;
-
-				case WrenType::WREN_TYPE_STRING:
-					wrenSetSlotString(vm, 4, std::any_cast<std::string>(arg.value).c_str());
-					break;
-
-				default:
-					wrenSetSlotNull(vm, 4);
-					break;
-			}
-
-			// Append to the list
-			wrenSetMapValue(vm, 2, 3, 4);
-		}
+		SetArgsMapSlot(vm, 2, script.constructorArgs);
 		constructMethod = wrenMakeCallHandle(vm, "new(_,_)");
 	}
 	else
@@ -126,6 +134,30 @@ bool WrenScriptSystem::CallStart(GameContext& context, Component::WrenScript& sc
 		return false;
 	}
 
+	return true;
+}
+
+bool WrenScriptSystem::CallPreview(GameContext& context, entt::entity entity, const std::string& className,
+                                   const std::vector<Wren::WrenItem>& args)
+{
+	WrenVM* vm = context.GetWrenScriptEngine().GetVM();
+	Wren::WrenScriptComponent* scriptComponent =
+	    context.GetWrenScriptComponentRegistry().TryGetScriptComponent(className);
+	if (!vm || !scriptComponent || !scriptComponent->previewMethodHandle)
+	{
+		return false;
+	}
+
+	wrenEnsureSlots(vm, 5);
+	wrenSetSlotHandle(vm, 0, scriptComponent->classHandle);
+	wrenSetSlotDouble(vm, 1, static_cast<double>(entity));
+	SetArgsMapSlot(vm, 2, args);
+
+	if (wrenCall(vm, scriptComponent->previewMethodHandle) != WREN_RESULT_SUCCESS)
+	{
+		DEBUG_ERROR("Error calling preview() on script: %s", className.c_str());
+		return false;
+	}
 	return true;
 }
 

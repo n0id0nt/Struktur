@@ -1,5 +1,6 @@
 #include "ToolbarWindow.h"
 
+#include "Engine/Core/GameData.h"
 #include "Engine/Game.h"
 #include "Engine/GameContext.h"
 
@@ -26,13 +27,18 @@ void ToolbarWindow::Render(GameContext& context)
 		// Handle stop
 		debugSettings.playingGame = !debugSettings.playingGame;
 		debugSettings.pausedGame  = false;
+		LevelViewer& levelViewer = context.GetEditor().GetLevelViewer();
 		if (debugSettings.playingGame)
 		{
+			// Plain Play starts where the game normally does - only the level viewer's "Play from here" sets this.
+			context.GetGameData().debugSpawnWorldFile.clear();
+			levelViewer.OnPlayStarted();
 			StartDebugGame(context);
 		}
 		else
 		{
 			StopDebugGame(context);
+			levelViewer.OnPlayStopped(context);
 		}
 	}
 	ImGui::SameLine();

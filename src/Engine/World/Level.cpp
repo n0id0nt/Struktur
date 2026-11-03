@@ -5,6 +5,7 @@
 #include "Engine/ECS/Component/Camera.h"
 #include "Engine/ECS/Component/Identifier.h"
 #include "Engine/ECS/Component/Level.h"
+#include "Engine/ECS/Component/LevelEntityInstance.h"
 #include "Engine/ECS/Component/PhysicsBody.h"
 #include "Engine/ECS/Component/Sprite.h"
 #include "Engine/ECS/Component/SpriteAnimation.h"
@@ -35,7 +36,7 @@ entt::entity Struktur::World::Level::CreateWorldEntity(GameContext& context, con
 }
 
 entt::entity Struktur::World::Level::LoadLevelEntities(GameContext& context, const entt::entity worldEntity,
-                                                       int levelIndex)
+                                                       int levelIndex, const LevelLoadOptions& options)
 {
 	entt::registry& registry                     = context.GetRegistry();
 	System::GameObjectManager& gameObjectManager = context.GetGameObjectManager();
@@ -44,6 +45,7 @@ entt::entity Struktur::World::Level::LoadLevelEntities(GameContext& context, con
 	auto& transformSystem                        = systemManager.GetSystem<System::TransformSystem>();
 	auto& physicsSystem                          = systemManager.GetSystem<System::PhysicsSystem>();
 	auto& animationSystem                        = systemManager.GetSystem<System::AnimationSystem>();
+	auto& wrenScriptSystem                       = systemManager.GetSystem<System::WrenScriptSystem>();
 
 	auto* worldComponent = registry.try_get<Component::World>(worldEntity);
 	if (!worldComponent)
@@ -100,7 +102,7 @@ entt::entity Struktur::World::Level::LoadLevelEntities(GameContext& context, con
 				                                         layer.gridSize, grid, layer.intGrid, layer.renderLayer,
 				                                         layer.orderInLayer);
 
-				if (layer.identifier == "Collision")
+				if (options.createPhysics && layer.identifier == "Collision")
 				{
 					bool isSensor = false;
 					b2BodyDef staticBodyDef;
@@ -113,6 +115,10 @@ entt::entity Struktur::World::Level::LoadLevelEntities(GameContext& context, con
 			}
 			case FileLoading::LevelParser::LayerType::ENTITIES:
 			{
+				if (options.entityMode == EntityMode::NONE)
+				{
+					break;
+				}
 				for (auto& entityInstance : layer.entityInstaces)
 				{
 					const auto layerInstaceEntity =
@@ -122,83 +128,22 @@ entt::entity Struktur::World::Level::LoadLevelEntities(GameContext& context, con
 					                                            entityInstance.px.y + layer.gridSize / 2.f, 0.0f),
 					                                  glm::vec3(1.0f), glm::quat(1.0f, 0.0f, 0.0f, 0.0f));
 
-					std::string identifier = entityInstance.identifier;
-
-					// convert fieldInstances to wren map
-					std::vector<Wren::WrenItem> wrenArgMap;
-					for (auto field : entityInstance.fieldInstances)
+					std::vector<Wren::WrenItem> wrenArgMap = BuildEntityScriptArgs(entityInstance);
+					if (options.entityMode == EntityMode::SCRIPT)
 					{
-						Wren::WrenItem item{field.identifier};
-						switch (field.type)
-						{
-							case Struktur::FileLoading::LevelParser::FieldInstanceType::INTEGER:
-								item.type  = WrenType::WREN_TYPE_NUM;
-								item.value = static_cast<double>(std::any_cast<int>(field.value));
-								break;
-							case Struktur::FileLoading::LevelParser::FieldInstanceType::FLOAT:
-								item.type  = WrenType::WREN_TYPE_NUM;
-								item.value = static_cast<double>(std::any_cast<float>(field.value));
-								break;
-							case Struktur::FileLoading::LevelParser::FieldInstanceType::BOOLEAN:
-								item.type  = WrenType::WREN_TYPE_BOOL;
-								item.value = field.value;
-								break;
-							case Struktur::FileLoading::LevelParser::FieldInstanceType::STRING:
-							case Struktur::FileLoading::LevelParser::FieldInstanceType::MULTILINE:
-							case Struktur::FileLoading::LevelParser::FieldInstanceType::FILE_PATH:
-							case Struktur::FileLoading::LevelParser::FieldInstanceType::ENUM:
-								item.type  = WrenType::WREN_TYPE_STRING;
-								item.value = field.value;
-								break;
-							case Struktur::FileLoading::LevelParser::FieldInstanceType::COLOUR:
-							{
-								item.type  = WrenType::WREN_TYPE_LIST;
-								auto color = std::any_cast<Util::Color>(field.value);
-								// Create nested list [r, g, b, a]
-								std::vector<Wren::WrenItem> colorList;
-								Wren::WrenItem r{"r", static_cast<double>(color.r), WrenType::WREN_TYPE_NUM};
-								colorList.emplace_back(r);
-								Wren::WrenItem g{"g", static_cast<double>(color.g), WrenType::WREN_TYPE_NUM};
-								colorList.emplace_back(g);
-								Wren::WrenItem b{"b", static_cast<double>(color.b), WrenType::WREN_TYPE_NUM};
-								colorList.emplace_back(b);
-								Wren::WrenItem a{"a", static_cast<double>(color.a), WrenType::WREN_TYPE_NUM};
-								colorList.emplace_back(a);
-
-								item.value = colorList;
-								break;
-							}
-							case Struktur::FileLoading::LevelParser::FieldInstanceType::POINT:
-							{
-								item.type  = WrenType::WREN_TYPE_LIST;
-								auto point = std::any_cast<glm::vec2>(field.value);
-								// Create nested list [x, y]
-								std::vector<Wren::WrenItem> colorList;
-								Wren::WrenItem x{"x", static_cast<double>(point.x), WrenType::WREN_TYPE_NUM};
-								colorList.emplace_back(x);
-								Wren::WrenItem y{"y", static_cast<double>(point.y), WrenType::WREN_TYPE_NUM};
-								colorList.emplace_back(y);
-
-								item.value = colorList;
-								break;
-							}
-							case Struktur::FileLoading::LevelParser::FieldInstanceType::TILE:
-							case Struktur::FileLoading::LevelParser::FieldInstanceType::ENTITY_REF:
-								item.type  = WrenType::WREN_TYPE_STRING;
-								item.value = field.value;
-								break;
-							default:
-								item.type  = WrenType::WREN_TYPE_NULL;
-								item.value = 0;
-								break;
-						}
-						wrenArgMap.emplace_back(item);
+						registry.emplace<Component::WrenScript>(layerInstaceEntity, entityInstance.identifier,
+						                                        wrenArgMap);
 					}
-					// The LDtk instance id - stable across level reloads and sessions, so scripts can remember
-					// per-instance state (e.g. a defeated critter staying gone - see assets/Scripts/Defeated.wren).
-					wrenArgMap.emplace_back(Wren::WrenItem{"Iid", entityInstance.Iid, WrenType::WREN_TYPE_STRING});
-					Component::WrenScript& scriptComponent =
-					    registry.emplace<Component::WrenScript>(layerInstaceEntity, identifier, wrenArgMap);
+					else
+					{
+						// LDtk's px is the instance's pivot point; the entity itself sits at the centre of its cell.
+						glm::vec2 size{entityInstance.width, entityInstance.height};
+						glm::vec2 offset = -glm::vec2(layer.gridSize / 2.f) - entityInstance.pivot * size;
+						registry.emplace<Component::LevelEntityInstance>(layerInstaceEntity, entityInstance.identifier,
+						                                                 entityInstance.Iid, wrenArgMap, offset, size,
+						                                                 entityInstance.color);
+						wrenScriptSystem.CallPreview(context, layerInstaceEntity, entityInstance.identifier, wrenArgMap);
+					}
 				}
 				break;
 			}
@@ -230,4 +175,83 @@ void Struktur::World::Level::UnloadLevelEntities(GameContext& context, const ent
 
 	gameObjectManager.SafeDeleteGameObject(context, it->second);
 	worldComponent->loadedLevels.erase(it);
+}
+
+std::vector<Struktur::Wren::WrenItem> Struktur::World::Level::BuildEntityScriptArgs(
+    const FileLoading::LevelParser::Entity& entityInstance)
+{
+	// Convert fieldInstances to a Wren map.
+	std::vector<Wren::WrenItem> wrenArgMap;
+	for (auto field : entityInstance.fieldInstances)
+	{
+		Wren::WrenItem item{field.identifier};
+		switch (field.type)
+		{
+			case Struktur::FileLoading::LevelParser::FieldInstanceType::INTEGER:
+				item.type  = WrenType::WREN_TYPE_NUM;
+				item.value = static_cast<double>(std::any_cast<int>(field.value));
+				break;
+			case Struktur::FileLoading::LevelParser::FieldInstanceType::FLOAT:
+				item.type  = WrenType::WREN_TYPE_NUM;
+				item.value = static_cast<double>(std::any_cast<float>(field.value));
+				break;
+			case Struktur::FileLoading::LevelParser::FieldInstanceType::BOOLEAN:
+				item.type  = WrenType::WREN_TYPE_BOOL;
+				item.value = field.value;
+				break;
+			case Struktur::FileLoading::LevelParser::FieldInstanceType::STRING:
+			case Struktur::FileLoading::LevelParser::FieldInstanceType::MULTILINE:
+			case Struktur::FileLoading::LevelParser::FieldInstanceType::FILE_PATH:
+			case Struktur::FileLoading::LevelParser::FieldInstanceType::ENUM:
+				item.type  = WrenType::WREN_TYPE_STRING;
+				item.value = field.value;
+				break;
+			case Struktur::FileLoading::LevelParser::FieldInstanceType::COLOUR:
+			{
+				item.type  = WrenType::WREN_TYPE_LIST;
+				auto color = std::any_cast<Util::Color>(field.value);
+				// Create nested list [r, g, b, a]
+				std::vector<Wren::WrenItem> colorList;
+				Wren::WrenItem r{"r", static_cast<double>(color.r), WrenType::WREN_TYPE_NUM};
+				colorList.emplace_back(r);
+				Wren::WrenItem g{"g", static_cast<double>(color.g), WrenType::WREN_TYPE_NUM};
+				colorList.emplace_back(g);
+				Wren::WrenItem b{"b", static_cast<double>(color.b), WrenType::WREN_TYPE_NUM};
+				colorList.emplace_back(b);
+				Wren::WrenItem a{"a", static_cast<double>(color.a), WrenType::WREN_TYPE_NUM};
+				colorList.emplace_back(a);
+
+				item.value = colorList;
+				break;
+			}
+			case Struktur::FileLoading::LevelParser::FieldInstanceType::POINT:
+			{
+				item.type  = WrenType::WREN_TYPE_LIST;
+				auto point = std::any_cast<glm::vec2>(field.value);
+				// Create nested list [x, y]
+				std::vector<Wren::WrenItem> colorList;
+				Wren::WrenItem x{"x", static_cast<double>(point.x), WrenType::WREN_TYPE_NUM};
+				colorList.emplace_back(x);
+				Wren::WrenItem y{"y", static_cast<double>(point.y), WrenType::WREN_TYPE_NUM};
+				colorList.emplace_back(y);
+
+				item.value = colorList;
+				break;
+			}
+			case Struktur::FileLoading::LevelParser::FieldInstanceType::TILE:
+			case Struktur::FileLoading::LevelParser::FieldInstanceType::ENTITY_REF:
+				item.type  = WrenType::WREN_TYPE_STRING;
+				item.value = field.value;
+				break;
+			default:
+				item.type  = WrenType::WREN_TYPE_NULL;
+				item.value = 0;
+				break;
+		}
+		wrenArgMap.emplace_back(item);
+	}
+	// The LDtk instance id - stable across level reloads and sessions, so scripts can remember
+	// per-instance state (e.g. a defeated critter staying gone - see assets/Scripts/Defeated.wren).
+	wrenArgMap.emplace_back(Wren::WrenItem{"Iid", entityInstance.Iid, WrenType::WREN_TYPE_STRING});
+	return wrenArgMap;
 }
