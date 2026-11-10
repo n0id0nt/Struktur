@@ -70,7 +70,7 @@ class Battler {
         // Combat/Config/MoveParticles.wren. The initial texture is just a placeholder; playImpact
         // swaps it (and everything else) before ever emitting, and ParticleEmitter.create requires
         // some valid texture up front.
-        var particleTex = Texture.load("Sprites/magic.png")
+        var particleTex = Texture.load("Actors/magic.png")
         _emitter = ParticleEmitter.create(_entity, particleTex)
         particleTex.unload()
         _emitter.looping = false

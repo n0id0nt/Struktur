@@ -1503,6 +1503,8 @@ inline const char* wrenphysicsSource()
     "    foreign construct new()\n"
     "    // Create physics circle shape with radius\n"
     "    foreign construct new(arg0)\n"
+    "    // Create physics circle shape with radius and center (offset from the body, in metres)\n"
+    "    foreign construct new(arg0,arg1,arg2)\n"
     "    // Get physics circle shape's radius\n"
     "    foreign radius\n"
     "    // Set physics circle shape's radius\n"

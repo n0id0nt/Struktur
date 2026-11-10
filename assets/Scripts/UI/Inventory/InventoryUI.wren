@@ -24,7 +24,7 @@ var WINDOW_SIZE = Vec2.new(1120, 620)
 var TAB_WIDTH = 128
 var TAB_STRIDE = 136
 var TAB_X = 64
-var GOLD_ICON_PATH = "Tiles/Items/Gold Coins.png"
+var GOLD_ICON_PATH = "Items/Treasure/GoldCoin.png"
 
 class InventoryUI {
     construct new(model, onFocusMoved, onEquip) {

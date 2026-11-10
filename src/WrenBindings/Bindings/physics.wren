@@ -49,6 +49,8 @@ foreign class PhysicsCircleShape {
     foreign construct new()
     // Create physics circle shape with radius
     foreign construct new(arg0)
+    // Create physics circle shape with radius and center (offset from the body, in metres)
+    foreign construct new(arg0,arg1,arg2)
     // Get physics circle shape's radius
     foreign radius
     // Set physics circle shape's radius

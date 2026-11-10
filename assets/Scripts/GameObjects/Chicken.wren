@@ -3,7 +3,7 @@
 // states: wander <-> idle. See GameObjects/Critter.wren for the shared FSM/animation plumbing this
 // class relies on.
 //
-// Sprite sheet: Sprites/chicken.png - 112x96, 7x6 grid, 16x16 cells, pivot (8,8).
+// Sprite sheet: Actors/chicken.png - 112x96, 7x6 grid, 16x16 cells, pivot (8,8).
 //   frames  anim
 //   0-2     wander_front   3-5   wander_back    6-8   wander_right
 //   9-11    run_front      12-14 run_back       15-17 run_right
@@ -58,7 +58,7 @@ class Chicken is Critter {
     }
 
     static createSprite(entity) {
-        var texture = Texture.load("Sprites/chicken.png")
+        var texture = Texture.load("Actors/chicken.png")
         Sprite.create(entity, texture, WHITE, Vec2.new(8, 8), 7, 6, FlipBit.NONE, 0, RenderLayer.ENTITIES, 0)
         texture.unload()
     }

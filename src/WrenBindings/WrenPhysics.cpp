@@ -68,12 +68,20 @@ void wren_PhysicsCircleShapeFinalize(void* data)
 	shape->~WrenPhysicsCircleShape();
 }
 
-// PhysicsCircleShape.new(_)
+// PhysicsCircleShape.new(), new(_) or new(_,_,_)
 void wren_PhysicsCircleNew(WrenVM* vm)
 {
 	WrenPhysicsCircleShape* physicsShape = static_cast<WrenPhysicsCircleShape*>(wrenGetSlotForeign(vm, 0));
 
-	if (wrenGetSlotCount(vm) >= 2)
+	if (wrenGetSlotCount(vm) >= 4)
+	{
+		// new(radius, centerX, centerY)
+		float radius  = static_cast<float>(wrenGetSlotDouble(vm, 1));
+		float centerX = static_cast<float>(wrenGetSlotDouble(vm, 2));
+		float centerY = static_cast<float>(wrenGetSlotDouble(vm, 3));
+		new (physicsShape) WrenPhysicsCircleShape(radius, centerX, centerY);
+	}
+	else if (wrenGetSlotCount(vm) >= 2)
 	{
 		float radius = static_cast<float>(wrenGetSlotDouble(vm, 1));
 		new (physicsShape) WrenPhysicsCircleShape(radius);
@@ -407,6 +415,8 @@ WREN_BINDING_MODULE(Physics)
 	                 "Create physics circle shape");
 	WREN_CONSTRUCTOR(registry, "physics", "PhysicsCircleShape", "new(_)", wren_PhysicsCircleNew,
 	                 "Create physics circle shape with radius");
+	WREN_CONSTRUCTOR(registry, "physics", "PhysicsCircleShape", "new(_,_,_)", wren_PhysicsCircleNew,
+	                 "Create physics circle shape with radius and center (offset from the body, in metres)");
 
 	// Register methods
 	WREN_CLASS_METHOD(registry, "physics", "PhysicsCircleShape", "radius", wren_PhysicsCircleShapeGetRadius,

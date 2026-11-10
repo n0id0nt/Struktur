@@ -212,6 +212,15 @@ void Struktur::FileLoading::LevelParser::LoadLayers(World& world, Level& level, 
 			{
 				layer.type = LayerType::INT_GRID;
 				LoadIntGrid(layer, layerJson["intGridCsv"]);
+				// An IntGrid layer can have a tileset (its value icons / auto-rules in LDtk) - use it, and any tiles its
+				// auto-rules produced, instead of the engine's fallback collision texture.
+				if (layerJson.contains("__tilesetRelPath") && layerJson["__tilesetRelPath"].is_string())
+				{
+					std::filesystem::path relativePath = layerJson["__tilesetRelPath"];
+					std::filesystem::path baseFile     = world.filePath;
+					layer.tilesetPath = (baseFile.parent_path() / relativePath).lexically_normal().generic_string();
+					LoadGridTiles(layer, layerJson["autoLayerTiles"]);
+				}
 			}
 			else if (layerType == "AutoLayer")
 			{
@@ -292,6 +301,28 @@ void Struktur::FileLoading::LevelParser::LoadEntities(Layer& entityLayer, const 
 	}
 }
 
+namespace
+{
+// One LDtk field value as the string a script arg carries: enums are their value id, entity refs the referenced
+// instance's iid, numbers/bools their text. Null (an optional field left empty) is an empty string.
+std::string FieldValueToString(const nlohmann::json& value)
+{
+	if (value.is_null())
+	{
+		return "";
+	}
+	if (value.is_string())
+	{
+		return value.get<std::string>();
+	}
+	if (value.is_object() && value.contains("entityIid"))
+	{
+		return value["entityIid"].get<std::string>();
+	}
+	return value.dump();
+}
+}  // namespace
+
 void Struktur::FileLoading::LevelParser::LoadFieldInstances(Entity& entity, const nlohmann::json& json)
 {
 	for (auto& fieldInstanceJson : json)
@@ -299,53 +330,71 @@ void Struktur::FileLoading::LevelParser::LoadFieldInstances(Entity& entity, cons
 		std::string fieldName = fieldInstanceJson["__identifier"];
 		DEBUG_INFO("Loading field instance %s", fieldName);
 
-		FieldInstanceType fieldType = ConvertFieldTypeToEnum(fieldInstanceJson["__type"]);
+		const std::string typeName  = fieldInstanceJson["__type"];
+		const nlohmann::json& value = fieldInstanceJson["__value"];
 
 		FieldInstance field;
 		field.identifier = fieldName;
-		field.type       = fieldType;
-		switch (fieldType)
+
+		// Arrays reach scripts as one comma-separated string (script args only carry numbers, bools and strings) -
+		// e.g. a Door's Keys, the iids of the entities it references. An array of entity refs stays ENTITY_REF so
+		// World::Level can resolve the referenced entities too.
+		if (typeName.starts_with("Array<"))
+		{
+			const std::string elementType = typeName.substr(6, typeName.size() - 7);
+			field.type                    = elementType == "EntityRef" ? FieldInstanceType::ENTITY_REF : FieldInstanceType::STRING;
+			std::string joined;
+			if (value.is_array())
+			{
+				for (auto& element : value)
+				{
+					if (element.is_null())
+					{
+						continue;
+					}
+					if (!joined.empty())
+					{
+						joined += ",";
+					}
+					joined += FieldValueToString(element);
+				}
+			}
+			field.value = joined;
+			entity.fieldInstances.push_back(field);
+			continue;
+		}
+
+		field.type = ConvertFieldTypeToEnum(typeName);
+		// An optional field left empty in LDtk - the script sees null.
+		if (value.is_null())
+		{
+			entity.fieldInstances.push_back(field);
+			continue;
+		}
+
+		switch (field.type)
 		{
 			case Struktur::FileLoading::LevelParser::FieldInstanceType::INTEGER:
-			{
-				int fieldValue = fieldInstanceJson["__value"];
-				field.value    = fieldValue;
+				field.value = value.get<int>();
 				break;
-			}
 			case Struktur::FileLoading::LevelParser::FieldInstanceType::FLOAT:
-			{
-				float fieldValue = fieldInstanceJson["__value"];
-				field.value      = fieldValue;
+				field.value = value.get<float>();
 				break;
-			}
 			case Struktur::FileLoading::LevelParser::FieldInstanceType::BOOLEAN:
-			{
-				bool fieldValue = fieldInstanceJson["__value"];
-				field.value     = fieldValue;
+				field.value = value.get<bool>();
 				break;
-			}
 			case Struktur::FileLoading::LevelParser::FieldInstanceType::STRING:
-			{
-				std::string fieldValue = fieldInstanceJson["__value"];
-				field.value            = fieldValue;
+			case Struktur::FileLoading::LevelParser::FieldInstanceType::MULTILINE:
+			case Struktur::FileLoading::LevelParser::FieldInstanceType::FILE_PATH:
+			case Struktur::FileLoading::LevelParser::FieldInstanceType::ENUM:
+			case Struktur::FileLoading::LevelParser::FieldInstanceType::ENTITY_REF:
+				field.value = FieldValueToString(value);
 				break;
-			}
-			// case Struktur::FileLoading::LevelParser::FieldInstanceType::MULTILINE:
-			//	break;
-			// case Struktur::FileLoading::LevelParser::FieldInstanceType::COLOUR:
-			//	break;
-			// case Struktur::FileLoading::LevelParser::FieldInstanceType::ENUM:
-			//	break;
-			// case Struktur::FileLoading::LevelParser::FieldInstanceType::FILE_PATH:
-			//	break;
-			// case Struktur::FileLoading::LevelParser::FieldInstanceType::TILE:
-			//	break;
-			// case Struktur::FileLoading::LevelParser::FieldInstanceType::ENTITY_REF:
-			//	break;
-			// case Struktur::FileLoading::LevelParser::FieldInstanceType::POINT:
-			//	break;
 			default:
-				assert(false);
+				// Colour / Point / Tile aren't used by any script yet - pass them as null rather than crash.
+				DEBUG_WARNING("Field %s has unsupported type %s - passed to its script as null", fieldName.c_str(),
+				              typeName.c_str());
+				field.value.reset();
 				break;
 		}
 
@@ -399,6 +448,34 @@ Struktur::FileLoading::LevelParser::FieldInstanceType Struktur::FileLoading::Lev
 	{
 		return FieldInstanceType::BOOLEAN;
 	}
-	BREAK_MSG("Need to implement type: %s", fieldInstanceType);
+	if (fieldInstanceType == "Multilines")
+	{
+		return FieldInstanceType::MULTILINE;
+	}
+	if (fieldInstanceType == "FilePath")
+	{
+		return FieldInstanceType::FILE_PATH;
+	}
+	if (fieldInstanceType == "EntityRef")
+	{
+		return FieldInstanceType::ENTITY_REF;
+	}
+	if (fieldInstanceType.starts_with("LocalEnum.") || fieldInstanceType.starts_with("ExternEnum."))
+	{
+		return FieldInstanceType::ENUM;
+	}
+	if (fieldInstanceType == "Color")
+	{
+		return FieldInstanceType::COLOUR;
+	}
+	if (fieldInstanceType == "Point")
+	{
+		return FieldInstanceType::POINT;
+	}
+	if (fieldInstanceType == "Tile")
+	{
+		return FieldInstanceType::TILE;
+	}
+	DEBUG_WARNING("Unknown LDtk field type: %s", fieldInstanceType.c_str());
 	return FieldInstanceType::COUNT;
 }

@@ -52,10 +52,10 @@ class InventoryState is BaseState {
         Debug.info("Entering Inventory")
         Time.setTimeScale(0)
 
-        _menuMusic = Music.load("Sounds/menuMusic.wav")
+        _menuMusic = Music.load("Audio/Musics/5 - Peaceful.ogg")
         _menuMusic.setLooping(true)
         _menuMusic.play()
-        _itemFocusSound = Sound.load("Sounds/scroll.wav")
+        _itemFocusSound = Sound.load("Audio/Sounds/Menu/Move1.wav")
 
         _lastTabStep = tabStep_()
         _view = InventoryUI.new(buildModel_(), Fn.new { _itemFocusSound.play() }, Fn.new { |slot, id| equip_(slot, id) })

@@ -2,6 +2,7 @@ import "gameObject" for GameObject
 import "gameObjectComponents" for WorldTransform, Script, Camera, PhysicsBody, SpriteAnimation
 import "math" for Vec2, Vec3, Vec4, Math
 import "physics" for BodyDefinition, PhysicsCircleShape, BodyType, CollisionLayers
+import "Util/CharacterCollider" for CharacterCollider
 import "input" for Input
 
 import "reflect" for Reflect
@@ -84,7 +85,7 @@ class Player {
         camera.forcePosition = true
         camera.damping = Vec2.new(4, 4)
         var bodyDef = BodyDefinition.new(BodyType.DYNAMIC_BODY)
-        var playerShape = PhysicsCircleShape.new(0.25)
+        var playerShape = CharacterCollider.shape()
         var physicsBody = PhysicsBody.create(_entity, bodyDef, playerShape)
         physicsBody.fixedRotation = true
         // Collide with the level (Wall bit), pass through other actors (see Main.start()).

@@ -17,7 +17,7 @@ class ClaireSprite {
     static data {
         if (__data == null) {
             var d = {}
-            d["texture"] = "Sprites/claire.png"
+            d["texture"] = "Actors/claire.png"
             d["origin"] = [24, 32]
             d["columns"] = 21
             d["rows"] = 22

@@ -39,7 +39,11 @@ entt::entity LoadLevelEntities(GameContext& context, const entt::entity worldEnt
                                const LevelLoadOptions& options = {});
 void UnloadLevelEntities(GameContext& context, const entt::entity worldEntity, int levelIndex);
 // The constructor args map a script receives for an LDtk entity instance: one item per field instance plus "Iid".
-std::vector<Wren::WrenItem> BuildEntityScriptArgs(const FileLoading::LevelParser::Entity& entityInstance);
+// An entity-ref field <Field> (the referenced iids, comma-separated) also gets "<Field>Names": the "Name" field of
+// each referenced entity, looked up anywhere in world - e.g. a Key door's Keys -> the item ids it needs - and
+// "<Field>Levels": the identifier of the level each one is in - e.g. a DoorWorp's Destination -> the room it leads to.
+std::vector<Wren::WrenItem> BuildEntityScriptArgs(const FileLoading::LevelParser::Entity& entityInstance,
+                                                  const FileLoading::LevelParser::World& world);
 }  // namespace Level
 }  // namespace World
 }  // namespace Struktur

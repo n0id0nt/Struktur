@@ -21,6 +21,7 @@
 import "gameObjectComponents" for PhysicsBody, Sprite, SpriteAnimation, WorldTransform, Script
 import "math" for Vec2, Vec3, Vec4
 import "physics" for BodyDefinition, PhysicsCircleShape, BodyType, CollisionLayers
+import "Util/CharacterCollider" for CharacterCollider
 import "app" for Time
 import "debug" for Debug
 import "Party/Party" for Party
@@ -111,7 +112,7 @@ class PartyMember {
 
         data.createSprite(_entity)
 
-        var body = PhysicsBody.create(_entity, BodyDefinition.new(BodyType.DYNAMIC_BODY), PhysicsCircleShape.new(0.2))
+        var body = PhysicsBody.create(_entity, BodyDefinition.new(BodyType.DYNAMIC_BODY), CharacterCollider.shape())
         body.fixedRotation = true
         // Collide with the level (Wall bit), pass through other actors - separation is steering (see Main.start()).
         // Trigger: stands on pressure plates like the player does.

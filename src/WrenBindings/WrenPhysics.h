@@ -38,6 +38,14 @@ struct WrenPhysicsCircleShape
 	{
 		physicsShape.m_radius = radius;
 	}
+	// A circle whose centre is offset from its body's origin (in metres) - e.g. a character's feet below its
+	// sprite pivot.
+	WrenPhysicsCircleShape(float radius, float centerX, float centerY)
+	    : physicsShape()
+	{
+		physicsShape.m_radius = radius;
+		physicsShape.m_p.Set(centerX, centerY);
+	}
 };
 
 // Box/Polygon shape

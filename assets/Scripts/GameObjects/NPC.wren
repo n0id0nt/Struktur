@@ -1,5 +1,6 @@
 import "gameObjectComponents" for PhysicsBody
 import "physics" for BodyDefinition, PhysicsCircleShape, BodyType
+import "Util/CharacterCollider" for CharacterCollider
 import "debug" for Debug
 import "Sprites/ClaireSprite" for ClaireSprite
 import "Sprites/ClaireBattleSprite" for ClaireBattleSprite
@@ -70,14 +71,17 @@ class NPC {
     // Script configures/initializes component values
     start() {
         var npcData = NPCData.forName(_name)
-        Debug.assertMsg(npcData != null, "No Data for NPC %(_name)")
+        // An NPC placed in the level whose Name isn't in the table yet still shows up - as a stand-in villager.
+        if (npcData == null) {
+            Debug.warning("No sprite data for NPC %(_name) - add them to NPCData.forName; using a placeholder")
+            npcData = NPCData.new(PeasantGirlSprite, PeasantGirlBattleSprite)
+        }
 
         // RenderLayer.ENTITIES already y-sorts by world position, so no manual offset is needed here.
         npcData.createSprite(_entity)
         
         var bodyDef = BodyDefinition.new(BodyType.STATIC_BODY)
-        var playerShape = PhysicsCircleShape.new(0.25)
-        PhysicsBody.create(_entity, bodyDef, playerShape)
+        PhysicsBody.create(_entity, bodyDef, CharacterCollider.shape())
     }
     
     // Level viewer (editor): just the sprite, no body. An unknown name gets none, so the viewer shows a placeholder.

@@ -6,48 +6,35 @@ import "Util/Colors" for BLACK, WHITE, BLANK
 import "Inventory/Inventory" for Inventory
 import "flags" for FlagManager
 import "debug" for Debug
+import "Inventory/ItemDatabase" for ItemDatabase
+import "Localization/DisplayNames" for DisplayNames
+import "localization" for Localization
 
 var SHADOW_COLOR = Vec4.copy(BLACK)
 SHADOW_COLOR.w = 100
 
-class ItemData {
-    construct new(spriteIndex) {
-        _spriteIndex = spriteIndex
-    }
-
-    getSpriteIndex() {
-        return _spriteIndex
-    }
-}
+// What a pickup with no icon yet shows.
+var PLACEHOLDER_SPRITE = "Items/Object/Bag.png"
 
 class Item {
-    // The Tiles/Items.png frame each item shows (13 if it isn't listed).
-    static spriteData {
-        if (__spriteData == null) {
-            __spriteData = {
-                "Love Letter": ItemData.new(10),
-                "Hammer": ItemData.new(9),
-                "Star Chart": ItemData.new(15),
-                "Ornate Key": ItemData.new(11),
-                "Ancient Tome": ItemData.new(1),
-                "Rose": ItemData.new(14),
-                "Fresh Bread": ItemData.new(2),
-                "Tool Box": ItemData.new(16),
-                "Personal Diary": ItemData.new(12),
-                "Telescope": ItemData.new(4),
-                "Gold Coins": ItemData.new(3),
-                // Placeholder sprites (borrowed from the sheet) for the overworld pickups - Dialogue/OverworldDialogue.json.
-                "Lost Locket": ItemData.new(10),
-                "Lucky Coin": ItemData.new(3),
-                "Iron Key": ItemData.new(11),
-                "Ancient Seal": ItemData.new(0),
-                "Red Pedestal": ItemData.new(6),
-                "Green Pedestal": ItemData.new(7),
-                "Blue Pedestal": ItemData.new(8),
-                "Yellow Pedestal": ItemData.new(9),
+    // World-only art for the pedestals (they are never inventory items, so they have no ItemDatabase icon).
+    static pedestalArt {
+        if (__pedestalArt == null) {
+            __pedestalArt = {
+                "Red Pedestal": "Items/Resource/GemRed.png",
+                "Green Pedestal": "Items/Resource/GemGreen.png",
+                "Blue Pedestal": "Items/Resource/GemPurple.png",
+                "Yellow Pedestal": "Items/Resource/GemYellow.png",
             }
         }
-        return __spriteData
+        return __pedestalArt
+    }
+
+    // The image a pickup shows in the world: its inventory icon, else a generic bag for items with no art yet.
+    static spritePath(name) {
+        var path = Item.pedestalArt[name]
+        if (path == null) path = ItemDatabase.iconPath(name)
+        return path != null ? path : PLACEHOLDER_SPRITE
     }
 
     // Items the world shows no sprite for.
@@ -73,23 +60,36 @@ class Item {
         if (Item.namesWithNoImage.contains(name)) {
             return
         }
-        var texture = Texture.load("Tiles/Items.png")
-        var itemData = Item.spriteData[name]
-        Sprite.create(entity, texture, color, Vec2.new(32, 48), 9, 2, FlipBit.NONE, itemData ? itemData.getSpriteIndex() : 13, RenderLayer.ENTITIES, 1)
+        var texture = Texture.load(Item.spritePath(name))
+        // One small image per item - pivot at the horizontal centre, three quarters down, so it sits on its tile.
+        Sprite.create(entity, texture, color, Vec2.new(texture.width / 2, texture.height * 3 / 4), 1, 1, FlipBit.NONE, 0, RenderLayer.ENTITIES, 1)
         texture.unload()
     }
 
     // Level viewer (editor): the sprite as placed, ignoring inventory/flag state. Items with no image get none, so the
     // viewer shows a placeholder.
     static preview(entity, args) {
-        Item.createSprite(entity, args["Name"], WHITE)
+        Item.createSprite(entity, Item.nameFrom_(args), WHITE)
     }
 
+    // The item id from its args - "Name" (an ItemDatabase / dialogue item id).
+    static nameFrom_(args) {
+        var name = args["Name"]
+        if (name == null || name == "") {
+            Debug.warning("Item %(args["Iid"]) has no Name - give it one in LDtk")
+            return "Unknown Item"
+        }
+        return name
+    }
+
+    // args: "Name" (the item id), optional "Returnable", and "Iid" when placed in the level (LDtk "Item" entity).
     construct new(entity, args) {
         _interactable = true
         _entity = entity
-        _returnable = args["Returnable"]
-        _name = args["Name"]
+        _returnable = args["Returnable"] == true
+        _name = Item.nameFrom_(args)
+        // A level item remembers being picked up by its own iid, so two pickups of the same item are separate.
+        _pickedFlag = args["Iid"] != null ? "%(args["Iid"]) Picked" : null
         _isShadow = false
         _disabled = false
 
@@ -98,11 +98,27 @@ class Item {
                 _isShadow = true
             }
         } else {
-            if (FlagManager.getFlag(name)) {
+            if (FlagManager.getFlag(name) || (_pickedFlag != null && FlagManager.getFlag(_pickedFlag))) {
                 _disabled = true
             }
         }
 
+    }
+
+    // Picked up with no dialogue of its own (States/InteractState.wren): into the inventory, gone from the world (or,
+    // returnable, left as a shadow to put back). Returns the line to show.
+    interact() {
+        if (_disabled || _isShadow) return null
+        Inventory.addItem(_name)
+        Inventory.save("inventory.sav")
+        if (_returnable) {
+            setIsShadow(true)
+        } else {
+            FlagManager.setFlag(_pickedFlag != null ? _pickedFlag : _name, true)
+            FlagManager.save("flags.sav")
+            disableItem()
+        }
+        return Localization.get("interact.item.picked_up").replace("{item}", DisplayNames.itemDisplay(_name))
     }
     
     name { _name }

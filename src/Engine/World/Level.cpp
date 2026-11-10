@@ -1,6 +1,7 @@
 #include "Level.h"
 
 #include <format>
+#include <sstream>
 
 #include "Engine/ECS/Component/Camera.h"
 #include "Engine/ECS/Component/Identifier.h"
@@ -80,10 +81,14 @@ entt::entity Struktur::World::Level::LoadLevelEntities(GameContext& context, con
 			case FileLoading::LevelParser::LayerType::AUTO_LAYER:
 			case FileLoading::LevelParser::LayerType::TILES:
 			{
-				Resource::ResourcePtr<Resource::TextureResource> texture =
-				    layer.tilesetPath.has_value()
-				        ? resoruceManager.GetTexture(context, layer.tilesetPath.value())
-				        : resoruceManager.GetTexture(context, "Tiles/MemoryPalaceCollisionTiles.png");
+				// A layer with no tileset (an IntGrid layer used only for collision / data) gets no texture: it
+				// still holds its grid (and the "Collision" layer still builds its physics body below), it just
+				// draws nothing - SpriteRenderSystem skips tile maps without a texture.
+				Resource::ResourcePtr<Resource::TextureResource> texture;
+				if (layer.tilesetPath.has_value())
+				{
+					texture = resoruceManager.GetTexture(context, layer.tilesetPath.value());
+				}
 				transformSystem.SetLocalTransform(context, layerEntity,
 				                                  glm::vec3(layer.pxTotalOffsetX, layer.pxTotalOffsetY, 0.0f),
 				                                  glm::vec3(1.0f), glm::quat(1.0f, 0.0f, 0.0f, 0.0f));
@@ -123,12 +128,15 @@ entt::entity Struktur::World::Level::LoadLevelEntities(GameContext& context, con
 				{
 					const auto layerInstaceEntity =
 					    gameObjectManager.CreateGameObject(context, entityInstance.identifier, levelEntity);
-					transformSystem.SetLocalTransform(context, layerInstaceEntity,
-					                                  glm::vec3(entityInstance.px.x + layer.gridSize / 2.f,
-					                                            entityInstance.px.y + layer.gridSize / 2.f, 0.0f),
+					// LDtk's px is the instance's pivot point; the entity sits at the centre of its own rect (so a
+					// 32x32 door is centred on its doorway, not on its top-left cell).
+					glm::vec2 size{entityInstance.width, entityInstance.height};
+					glm::vec2 centre = entityInstance.px - entityInstance.pivot * size + size * 0.5f;
+					transformSystem.SetLocalTransform(context, layerInstaceEntity, glm::vec3(centre.x, centre.y, 0.0f),
 					                                  glm::vec3(1.0f), glm::quat(1.0f, 0.0f, 0.0f, 0.0f));
 
-					std::vector<Wren::WrenItem> wrenArgMap = BuildEntityScriptArgs(entityInstance);
+					std::vector<Wren::WrenItem> wrenArgMap =
+					    BuildEntityScriptArgs(entityInstance, worldComponent->worldMap);
 					if (options.entityMode == EntityMode::SCRIPT)
 					{
 						registry.emplace<Component::WrenScript>(layerInstaceEntity, entityInstance.identifier,
@@ -136,9 +144,8 @@ entt::entity Struktur::World::Level::LoadLevelEntities(GameContext& context, con
 					}
 					else
 					{
-						// LDtk's px is the instance's pivot point; the entity itself sits at the centre of its cell.
-						glm::vec2 size{entityInstance.width, entityInstance.height};
-						glm::vec2 offset = -glm::vec2(layer.gridSize / 2.f) - entityInstance.pivot * size;
+						// From the entity (the rect's centre) to the rect's top-left corner.
+						glm::vec2 offset = -size * 0.5f;
 						registry.emplace<Component::LevelEntityInstance>(layerInstaceEntity, entityInstance.identifier,
 						                                                 entityInstance.Iid, wrenArgMap, offset, size,
 						                                                 entityInstance.color);
@@ -177,14 +184,60 @@ void Struktur::World::Level::UnloadLevelEntities(GameContext& context, const ent
 	worldComponent->loadedLevels.erase(it);
 }
 
+namespace
+{
+struct EntityLookup
+{
+	std::string name;   // its "Name" field, or ""
+	std::string level;  // the identifier of the level it's in, or "" if not found
+};
+
+// The entity with this iid, anywhere in the world.
+EntityLookup FindEntity(const Struktur::FileLoading::LevelParser::World& world, const std::string& iid)
+{
+	for (const auto& level : world.levels)
+	{
+		for (const auto& layer : level.layers)
+		{
+			for (const auto& entity : layer.entityInstaces)
+			{
+				if (entity.Iid != iid)
+				{
+					continue;
+				}
+				EntityLookup found{"", level.identifier};
+				for (const auto& field : entity.fieldInstances)
+				{
+					if (field.identifier == "Name" && field.value.has_value() &&
+					    field.value.type() == typeid(std::string))
+					{
+						found.name = std::any_cast<std::string>(field.value);
+					}
+				}
+				return found;
+			}
+		}
+	}
+	return {};
+}
+}  // namespace
+
 std::vector<Struktur::Wren::WrenItem> Struktur::World::Level::BuildEntityScriptArgs(
-    const FileLoading::LevelParser::Entity& entityInstance)
+    const FileLoading::LevelParser::Entity& entityInstance, const FileLoading::LevelParser::World& world)
 {
 	// Convert fieldInstances to a Wren map.
 	std::vector<Wren::WrenItem> wrenArgMap;
 	for (auto field : entityInstance.fieldInstances)
 	{
 		Wren::WrenItem item{field.identifier};
+		// An optional field left empty in LDtk.
+		if (!field.value.has_value())
+		{
+			item.type  = WrenType::WREN_TYPE_NULL;
+			item.value = 0;
+			wrenArgMap.emplace_back(item);
+			continue;
+		}
 		switch (field.type)
 		{
 			case Struktur::FileLoading::LevelParser::FieldInstanceType::INTEGER:
@@ -238,10 +291,35 @@ std::vector<Struktur::Wren::WrenItem> Struktur::World::Level::BuildEntityScriptA
 				item.value = colorList;
 				break;
 			}
-			case Struktur::FileLoading::LevelParser::FieldInstanceType::TILE:
 			case Struktur::FileLoading::LevelParser::FieldInstanceType::ENTITY_REF:
+			{
 				item.type  = WrenType::WREN_TYPE_STRING;
 				item.value = field.value;
+
+				std::string names;
+				std::string levels;
+				std::stringstream iids(std::any_cast<std::string>(field.value));
+				std::string iid;
+				bool first = true;
+				while (std::getline(iids, iid, ','))
+				{
+					if (!first)
+					{
+						names += ",";
+						levels += ",";
+					}
+					first                = false;
+					EntityLookup found   = FindEntity(world, iid);
+					names               += found.name;
+					levels              += found.level;
+				}
+				wrenArgMap.emplace_back(Wren::WrenItem{field.identifier + "Names", names, WrenType::WREN_TYPE_STRING});
+				wrenArgMap.emplace_back(Wren::WrenItem{field.identifier + "Levels", levels, WrenType::WREN_TYPE_STRING});
+				break;
+			}
+			case Struktur::FileLoading::LevelParser::FieldInstanceType::TILE:
+				item.type  = WrenType::WREN_TYPE_NULL;
+				item.value = 0;
 				break;
 			default:
 				item.type  = WrenType::WREN_TYPE_NULL;
@@ -253,5 +331,10 @@ std::vector<Struktur::Wren::WrenItem> Struktur::World::Level::BuildEntityScriptA
 	// The LDtk instance id - stable across level reloads and sessions, so scripts can remember
 	// per-instance state (e.g. a defeated critter staying gone - see assets/Scripts/Defeated.wren).
 	wrenArgMap.emplace_back(Wren::WrenItem{"Iid", entityInstance.Iid, WrenType::WREN_TYPE_STRING});
+	// Its size as placed in LDtk, in px - e.g. a DoorWorp's trigger covers exactly its rect.
+	wrenArgMap.emplace_back(
+	    Wren::WrenItem{"Width", static_cast<double>(entityInstance.width), WrenType::WREN_TYPE_NUM});
+	wrenArgMap.emplace_back(
+	    Wren::WrenItem{"Height", static_cast<double>(entityInstance.height), WrenType::WREN_TYPE_NUM});
 	return wrenArgMap;
 }

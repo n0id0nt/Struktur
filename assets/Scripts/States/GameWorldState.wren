@@ -63,7 +63,7 @@ class GameWorldState is BaseState {
 
         Debug.info("Loading game world...")
 
-        _gameMusic = Music.load("Sounds/gameMusic.wav")
+        _gameMusic = Music.load("Audio/Musics/33 - Calm Village.ogg")
         if (_gameMusic) {
             _gameMusic.setLooping(true)
             _gameMusic.play()

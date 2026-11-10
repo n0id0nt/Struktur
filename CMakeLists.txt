@@ -137,14 +137,15 @@ if(PLATFORM_DESKTOP OR PLATFORM_WEB)
     # Works around SDL3's target_precompile_headers() conflicting with MSVC's /Zi (C2855); harmless under Emscripten.
     set_target_properties(SDL3-static PROPERTIES DISABLE_PRECOMPILE_HEADERS ON)
 
-    # SDL3_mixer replaces raylib's raudio; only WAVE/AIFF/VOC/AU are needed (all assets are WAV), so disable the rest.
+    # SDL3_mixer replaces raylib's raudio; sound effects are WAV and music is OGG (stb_vorbis, header-only - no
+    # external lib), so everything else is disabled.
     set(SDLMIXER_FLAC OFF CACHE BOOL "" FORCE)
     set(SDLMIXER_GME OFF CACHE BOOL "" FORCE)
     set(SDLMIXER_MOD OFF CACHE BOOL "" FORCE)
     set(SDLMIXER_MP3 OFF CACHE BOOL "" FORCE)
     set(SDLMIXER_MIDI OFF CACHE BOOL "" FORCE)
     set(SDLMIXER_OPUS OFF CACHE BOOL "" FORCE)
-    set(SDLMIXER_VORBIS_STB OFF CACHE BOOL "" FORCE)
+    set(SDLMIXER_VORBIS_STB ON CACHE BOOL "" FORCE)
     set(SDLMIXER_VORBIS_VORBISFILE OFF CACHE BOOL "" FORCE)
     set(SDLMIXER_WAVPACK OFF CACHE BOOL "" FORCE)
 

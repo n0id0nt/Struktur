@@ -131,9 +131,11 @@ class Commands {
         // for good; the door saves that it's open.
         DialogueRegistry.registerCommand("openDoor") { |params|
             var doorName = params["name"]
-            for (doorEntity in GameObject.getAllWithIdentifier(doorName)) {
+            // Script-spawned doors use their name as the entity identifier; doors placed in the level are all "Door".
+            var doorEntities = GameObject.getAllWithIdentifier(doorName) + GameObject.getAllWithIdentifier("Door")
+            for (doorEntity in doorEntities) {
                 var door = Script.getInstance(doorEntity)
-                if (door && door.name == doorName) {
+                if (door && door.name == doorName && !door.open) {
                     door.openNow()
                 }
             }

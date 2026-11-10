@@ -1,7 +1,6 @@
 // GameObjects/Door.wren
-// A one-tile (32 px) door that blocks the way until it opens, then stays open for good: it stops colliding, its
-// leaves swing open (the sheet tools/door_open_sheet.py builds from the closed door), and a saved flag (openedFlag)
-// keeps it open in later sessions. Two doors with the same name fill
+// A one-tile (32 px) door that blocks the way until it opens, then stays open for good: it stops colliding, the
+// block vanishes, and a saved flag (openedFlag) keeps it open in later sessions. Two doors with the same name fill
 // a two-tile doorway and open together.
 // Every door can be talked to while it's closed, like a sign: its dialogue (found by its name -
 // Dialogue/DialogueEntryPoints.wren) decides what happens. A plain door's dialogue opens it; a locked one's checks for
@@ -10,37 +9,63 @@
 // A door with Signals channels also opens by itself once they are all on at once (e.g. every PressurePlate wired to
 // it is pressed - see World/Signals.wren). That opening plays as an impact moment (World/ImpactEvents.wren /
 // States/ImpactState.wren): the camera pans over, the door opens with a little shake, and the camera pans back.
-// Art: Tiles/Wall Decor/DoorsOpening.png - one row of OPEN_FRAMES frames, closed first, fully open last.
-// Spawned by States/ExperimentState.wren.
-import "gameObjectComponents" for Sprite, SpriteAnimation, PhysicsBody, RenderLayer, WorldTransform
-import "animation" for SpriteAnimationDefinition
+// Doors placed in the level (LDtk "Door" entity) say how they open with DoorType instead:
+//   PressurePad - its Keys are the PressurePad entities that must all be held down at once (each plate's channel is
+//                 its own iid), so it opens by itself like the Channels door above;
+//   Key         - its Keys are Item entities; talking to it with every one of those items in the inventory uses
+//                 them up and opens it;
+//   Dialogue    - talking to it opens it (or runs its dialogue, if it has a Name with a DialogueEntryPoints entry).
+// Art: the keyhole block from Backgrounds/Tilesets/TilesetDungeon.png (16 px, drawn at 2x to fill the 32 px doorway).
+// There is no opening animation in the current art - an opened door simply disappears.
+// Placed in the level (LDtk) - World::Level spawns it with its fields as args.
+import "gameObjectComponents" for Sprite, PhysicsBody, RenderLayer, WorldTransform, LocalTransform
 import "flags" for FlagManager
 import "renderer" for FlipBit
-import "math" for Vec2
+import "math" for Vec2, Vec3
 import "resourceManager" for Texture
 import "physics" for BodyDefinition, PhysicsBoxShape, BodyType, CollisionLayers
-import "Util/Colors" for WHITE
+import "Util/Colors" for WHITE, BLANK
 import "World/Signals" for Signals
 import "World/ImpactEvents" for ImpactEvents
+import "Inventory/Inventory" for Inventory
+import "Localization/DisplayNames" for DisplayNames
+import "localization" for Localization
 
 // Half the door's size in metres (32 px at 32 px/m).
 var HALF_SIZE = 0.5
-// Frames in DoorsOpening.png (tools/door_open_sheet.py --frames), and how long the swing takes.
-var OPEN_FRAMES = 8
-var OPEN_TIME = 0.6
+// TilesetDungeon.png is a 12 x 4 grid of 16 px tiles; the closed door is its first tile (the keyhole block).
+var SHEET_COLUMNS = 12
+var SHEET_ROWS = 4
+var CLOSED_SPRITE_INDEX = 0
+// The art is 16 px and the doorway 32 px.
+var ART_SCALE = 2
 
 class Door {
-    // args: "Name"; optional "Channels" - the Signals channels that must all be on to open it, comma-separated in one
-    // string (script args only carry numbers, bools and strings, not lists); optional "OpenMessage" - a Localization
-    // key captioning that opening.
+    // args (all optional): "Name" - its dialogue key and saved-flag name (a level door without one uses its LDtk
+    // "Iid"); "Channels" - the Signals channels that must all be on to open it, comma-separated in one string (script
+    // args only carry numbers, bools and strings, not lists); "OpenMessage" - a Localization key captioning that
+    // opening; "DoorType" / "Keys" / "KeysNames" - a level door's opening rule (see the header): Keys is the
+    // referenced entities' iids and KeysNames their Name fields (World::Level fills that in), both comma-separated.
     construct new(entity, args) {
         _entity = entity
-        _name = args["Name"]
-        _channelKey = args["Channels"]
-        _channels = _channelKey == null ? [] : _channelKey.split(",").map {|c| c.trim() }.toList
+        _name = args["Name"] != null && args["Name"] != "" ? args["Name"] : args["Iid"]
+        _doorType = args["DoorType"]
         _openMessage = args["OpenMessage"]
+        _channelKey = args["Channels"]
+        _requiredItems = []
+        if (_doorType == "PressurePad") {
+            _channelKey = args["Keys"]
+        } else if (_doorType == "Key") {
+            _requiredItems = Door.splitList_(args["KeysNames"])
+        }
+        _channels = Door.splitList_(_channelKey)
         _open = false
         _requested = false   // waiting for its impact moment to play
+    }
+
+    static splitList_(text) {
+        if (text == null || text == "") return []
+        return text.split(",").map {|c| c.trim() }.where {|c| c != "" }.toList
     }
 
     name { _name }
@@ -50,16 +75,11 @@ class Door {
     static openedFlag(name) { "%(name) Opened" }
 
     start() {
-        var texture = Texture.load("Tiles/Wall Decor/DoorsOpening.png")
-        Sprite.create(_entity, texture, WHITE, Vec2.new(16, 16), OPEN_FRAMES, 1, FlipBit.NONE, 0,
-                      RenderLayer.ENTITIES, 0)
+        var texture = Texture.load("Backgrounds/Tilesets/TilesetDungeon.png")
+        Sprite.create(_entity, texture, WHITE, Vec2.new(8, 8), SHEET_COLUMNS, SHEET_ROWS, FlipBit.NONE,
+                      CLOSED_SPRITE_INDEX, RenderLayer.ENTITIES, 0)
         texture.unload()
-        var anim = SpriteAnimation.create(_entity)
-        // endFrame is exclusive - SpriteAnimationDefinition.new(start, end, seconds, loop). A clip that doesn't loop
-        // holds its last frame, so "Open" ends and stays fully open.
-        anim.addAnimation("Closed", SpriteAnimationDefinition.new(0, 1, 1, false))
-        anim.addAnimation("Open", SpriteAnimationDefinition.new(0, OPEN_FRAMES, OPEN_TIME, false))
-        SpriteAnimation.setCurrentAnimation(_entity, "Closed")
+        LocalTransform.setScale(_entity, Vec3.new(ART_SCALE, ART_SCALE, 1))
 
         var body = PhysicsBody.create(_entity, BodyDefinition.new(BodyType.STATIC_BODY),
                                       PhysicsBoxShape.new(HALF_SIZE, HALF_SIZE))
@@ -88,13 +108,13 @@ class Door {
         }
     }
 
-    // swing: play the leaves swinging open, or (false) just show it already open. Free to walk through straight away.
+    // swing: opened just now (true) or already open from an earlier session (false) - both look the same with the
+    // current art, which has no opening animation. Free to walk through straight away.
     open_(swing) {
         _open = true
-        if (swing) {
-            SpriteAnimation.forcePlayAnimation(_entity, "Open")
-        } else {
-            SpriteAnimation.playAnimationAt(_entity, "Open", 1)
+        var sprite = Sprite.get(_entity)
+        if (sprite) {
+            sprite.color = BLANK
         }
         // Looked up each time - component handles can go stale.
         // An empty mask collides with nothing.
@@ -105,6 +125,31 @@ class Door {
         }
         FlagManager.setFlag(Door.openedFlag(_name), true)
         FlagManager.save("flags.sav")
+    }
+
+    // Talked to with no dialogue of its own (States/InteractState.wren): open it if its rule allows. Returns the line
+    // to show, or null.
+    interact() {
+        if (_open) return null
+        if (_doorType == "Key") {
+            var missing = _requiredItems.where {|item| !Inventory.contains(item) }.toList
+            if (missing.count > 0 || _requiredItems.count == 0) {
+                var needed = missing.map {|item| DisplayNames.itemDisplay(item) }.join(", ")
+                if (needed == "") return Localization.get("interact.door.locked")
+                return Localization.get("interact.door.locked_needs").replace("{items}", needed)
+            }
+            for (item in _requiredItems) {
+                Inventory.removeItem(item)
+            }
+            Inventory.save("inventory.sav")
+            open_(true)
+            return Localization.get("interact.door.unlocked")
+        }
+        if (_channels.count > 0) {
+            return Localization.get("interact.door.sealed")
+        }
+        open_(true)
+        return null
     }
 
     onDestroy() {}

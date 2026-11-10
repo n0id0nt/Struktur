@@ -89,17 +89,17 @@ class BattleCritter {
         return BattleCritter.chicken
     }
 
-    // Sprites/chicken.png - 7x6 grid, 16px cells, pivot (8,8). See GameObjects/Chicken.wren.
+    // Actors/chicken.png - 7x6 grid, 16px cells, pivot (8,8). See GameObjects/Chicken.wren.
     // anims: idle = wander_right, attack = peck_right, hurt = run_right (stand-in). Twitchy but feeble.
     static chicken {
-        return BattleCritter.new("Chicken", "Speed", 45, 60, {"might": 6, "guard": 5, "precision": 8}, "Sprites/chicken.png", 7, 6, Vec2.new(8, 8), 1,
+        return BattleCritter.new("Chicken", "Speed", 45, 60, {"might": 6, "guard": 5, "precision": 8}, "Actors/chicken.png", 7, 6, Vec2.new(8, 8), 1,
                                  {"idle": [6, 9, 0.5], "attack": [32, 39, 1.0], "hurt": [15, 18, 0.35], "run": [15, 18, 0.35]})
     }
 
-    // Sprites/chinlin.png - 4x4 grid, 24px cells, pivot (12,16). See GameObjects/Chinlin.wren.
+    // Actors/chinlin.png - 4x4 grid, 24px cells, pivot (12,16). See GameObjects/Chinlin.wren.
     // anims: idle = stand_right, attack / hurt = run_right (stand-in).
     static chinlin {
-        return BattleCritter.new("Chinlin", "Power", 150, 55, null, "Sprites/chinlin.png", 4, 4, Vec2.new(12, 16), 1,
+        return BattleCritter.new("Chinlin", "Power", 150, 55, null, "Actors/chinlin.png", 4, 4, Vec2.new(12, 16), 1,
                                  {"idle": [4, 6, 0.8], "attack": [12, 15, 0.45], "hurt": [12, 15, 0.45], "run": [12, 15, 0.45]})
     }
 

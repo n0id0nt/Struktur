@@ -31,10 +31,11 @@ import "World/Rooms" for Rooms
 import "World/Signals" for Signals
 import "World/PressurePlates" for PressurePlates
 import "World/ImpactEvents" for ImpactEvents
+import "World/Warps" for Warps
 import "debug" for Debug
 
-// Placeholder art for the rest spot (Tiles/Items.png frame 2 - the bread loaf) until there is campfire art.
-var REST_SPOT_SPRITE_INDEX = 2
+// Placeholder art for the rest spot (a heart - it heals the party) until there is campfire art.
+var REST_SPOT_SPRITE = "Items/Potion/Heart.png"
 
 // Debug input (F6 / controller Select, see InputConfig.json) that opens the battle test sandbox
 // (States/BattleTestState.wren) from the overworld.
@@ -44,6 +45,14 @@ var BATTLE_TEST_INPUT = "DebugBattleTest"
 var SPAWN_POSITION = Vec3.new(208.0, 208.0, 0.0)
 // Gap between followers lined up behind the player on a respawn.
 var RESPAWN_FOLLOWER_SPACING = 24.0
+// How far from the DoorWorp you arrive next to (towards the room's centre), so you don't land back on it.
+var WARP_ARRIVAL_OFFSET = 24.0
+// Frames to wait for the target room's DoorWorps to start (their scripts run a frame after the room loads) before
+// giving up on finding the one that leads back and arriving at the room's centre.
+var WARP_MAX_WAIT_FRAMES = 10
+// Seconds after arriving during which stepping on a DoorWorp does nothing - so being nudged out of a wall onto the
+// doorway you came through (or a follower bumping you) doesn't bounce you straight back.
+var WARP_COOLDOWN = 0.75
 
 var WORLD_FILE_PATH = "Levels/SevenGods.ldtk"
 // Authored arena level (see Combat/BattleStage.wren) - every fight loads this level and stages the
@@ -100,6 +109,8 @@ class ExperimentState is BaseState {
         // loss or a flee the enemy is still alive and still next to you, and without this you'd be
         // stuck re-fighting it in place.
         _combatCooldownEndTime = 0
+        _warp = null   // a warp under way - see startWarp_
+        _warpCooldownEndTime = 0
     }
 
     enter(stateManager, params) {
@@ -107,7 +118,7 @@ class ExperimentState is BaseState {
 
         Debug.info("Loading game world...")
 
-        _gameMusic = Music.load("Sounds/gameMusic.wav")
+        _gameMusic = Music.load("Audio/Musics/33 - Calm Village.ogg")
         if (_gameMusic) {
             _gameMusic.setLooping(true)
             _gameMusic.play()
@@ -156,29 +167,9 @@ class ExperimentState is BaseState {
         spawnSign("Warning Sign", Vec3.new(208.0, 308.0, 0.0), worldEntity)
         // A rest spot: interacting runs its dialogue's "restParty" command - the party is healed and anyone downed
         // gets back up (Party.restAll).
-        spawnSign("Rest Spot", Vec3.new(120.0, 108.0, 0.0), worldEntity, REST_SPOT_SPRITE_INDEX)
+        spawnSign("Rest Spot", Vec3.new(120.0, 108.0, 0.0), worldEntity, REST_SPOT_SPRITE)
 
-        // Pickups: walk up and press Interact to add them to the inventory (the Inventory key opens it).
-        // The Lost Locket is the quest item; an item already picked up (saved flag) disables itself.
-        spawnItem("Lost Locket", Vec3.new(300.0, 300.0, 0.0), worldEntity)
-        spawnItem("Lucky Coin", Vec3.new(120.0, 300.0, 0.0), worldEntity)
-
-        // Test puzzle: the two doors filling the doorway from the spawn room (Level_0) into Level_1 open only while
-        // both plates are pressed - by the player and a party member asked to stay on one (GameObjects/PartyMember).
-        spawnPressurePlate("Spawn Plate North", "spawnPlateNorth", Vec3.new(240.0, 112.0, 0.0), worldEntity)
-        spawnPressurePlate("Spawn Plate South", "spawnPlateSouth", Vec3.new(240.0, 240.0, 0.0), worldEntity)
-        var doorChannels = "spawnPlateNorth,spawnPlateSouth"
-        var doorMessage = "dialogue.impact.spawn_door_open"
-        spawnDoor("Stone Door", doorChannels, doorMessage, Vec3.new(304.0, 144.0, 0.0), worldEntity)
-        spawnDoor("Stone Door", doorChannels, doorMessage, Vec3.new(304.0, 176.0, 0.0), worldEntity)
-
-        // The second room (Level_1)'s way down into Level_2 is a locked gate: its dialogue takes the Iron Key, lying
-        // nearby, and opens it. The way on from Level_2 into Level_3 is a plain door that opens when talked to.
-        spawnItem("Iron Key", Vec3.new(560.0, 240.0, 0.0), worldEntity)
-        spawnDoor("Iron Gate", Vec3.new(464.0, 304.0, 0.0), worldEntity)
-        spawnDoor("Iron Gate", Vec3.new(496.0, 304.0, 0.0), worldEntity)
-        spawnDoor("Wooden Door", Vec3.new(464.0, 624.0, 0.0), worldEntity)
-        spawnDoor("Wooden Door", Vec3.new(496.0, 624.0, 0.0), worldEntity)
+        // Doors, pressure plates and items are placed in the level (LDtk) - World::Level spawns them with their scripts.
     }
 
     // name is both the NPC's id (GameObjects/NPC.wren's sprite table, the dialogue entry point and speaker
@@ -223,42 +214,15 @@ class ExperimentState is BaseState {
         member.trail.clear()
     }
 
-    // A pickup (GameObjects/Item.wren): every item entity shares the "Item" identifier - that is what the
-    // dialogue system's pickupEntity command searches by - and itemName picks its sprite and dialogue.
-    spawnItem(itemName, position, worldEntity) {
-        var entity = GameObject.create("Item", worldEntity)
-        Script.createArg(entity, "Item", {"Name": itemName, "Returnable": false})
-        WorldTransform.setPosition(entity, position)
-    }
-
-    // A floor plate (GameObjects/PressurePlate.wren) that turns channel on (World/Signals.wren) while stood on.
-    spawnPressurePlate(name, channel, position, worldEntity) {
-        var entity = GameObject.create(name, worldEntity)
-        Script.createArg(entity, "PressurePlate", {"Name": name, "Channel": channel})
-        WorldTransform.setPosition(entity, position)
-    }
-
-    // A door (GameObjects/Door.wren): its dialogue (by name) says what talking to it does - open it, ask for a key.
-    // Two with the same name are the halves of one double door.
-    spawnDoor(name, position, worldEntity) { spawnDoor(name, null, null, position, worldEntity) }
-
-    // One that also opens by itself once every channel in channels (comma-separated) is on, captioned by
-    // openMessage (a Localization key, or null).
-    spawnDoor(name, channels, openMessage, position, worldEntity) {
-        var entity = GameObject.create(name, worldEntity)
-        Script.createArg(entity, "Door", {"Name": name, "Channels": channels, "OpenMessage": openMessage})
-        WorldTransform.setPosition(entity, position)
-    }
-
-    // Same idea for a signpost (GameObjects/Sign.wren) - name is its dialogue entry point key.
+    // A signpost (GameObjects/Sign.wren) - name is its dialogue entry point key.
     spawnSign(signName, position, worldEntity) { spawnSign(signName, position, worldEntity, null) }
 
-    // spriteIndex: a Tiles/Items.png frame to use instead of the sign's default (null keeps it).
-    spawnSign(signName, position, worldEntity, spriteIndex) {
+    // spritePath: an image to show instead of the sign's default (null keeps it).
+    spawnSign(signName, position, worldEntity, spritePath) {
         var entity = GameObject.create(signName, worldEntity)
         var args = {"Name": signName}
-        if (spriteIndex != null) {
-            args["SpriteIndex"] = spriteIndex
+        if (spritePath != null) {
+            args["Sprite"] = spritePath
         }
         Script.createArg(entity, "Sign", args)
         WorldTransform.setPosition(entity, position)
@@ -272,10 +236,10 @@ class ExperimentState is BaseState {
         _particleEntity = GameObject.create("ParticleDemo", worldEntity)
         WorldTransform.setPosition(_particleEntity, Vec3.new(600.0, 220.0, 0.0))
 
-        // Sprites/magic.png is a single 60x60 frame - leave columns/rows at their 1x1 default so each
+        // Actors/magic.png is a single 60x60 frame - leave columns/rows at their 1x1 default so each
         // particle draws the whole texture. The emitter keeps its own reference to the texture, so the
         // script's handle can be released immediately afterwards (same pattern as Sprite.create).
-        var texture = Texture.load("Sprites/magic.png")
+        var texture = Texture.load("Actors/magic.png")
         var emitter = ParticleEmitter.create(_particleEntity, texture)
         texture.unload()
 
@@ -345,6 +309,16 @@ class ExperimentState is BaseState {
         }
 
         syncPartyFollowers()
+
+        // A DoorWorp the player stepped on (GameObjects/DoorWorp.wren) - load its room, then move the party there.
+        var warp = Warps.take()
+        if (warp != null && _warp == null && Time.scaledTime >= _warpCooldownEndTime) {
+            startWarp_(warp[0], warp[1], warp[2])
+        }
+        if (_warp != null) {
+            updateWarp_()
+        }
+
         updateLevelStreaming_()
 
         // Something in the world wants its moment (a door opening - see World/ImpactEvents.wren): play it now, while
@@ -569,9 +543,16 @@ class ExperimentState is BaseState {
     // swaps levels as normal on the next update. The usual post-fight cooldown applies.
     respawn_() {
         Party.restAll()
-        WorldTransform.setPosition(_playerEntity, SPAWN_POSITION)
-        // A teleport, not a walk - land in the spawn room's view rather than sliding across the map to it.
-        _roomCamera.snapTo(Rooms.indexAt(SPAWN_POSITION))
+        teleportParty_(SPAWN_POSITION)
+        _combatCooldownEndTime = Time.scaledTime + 2.0
+        Debug.info("[ExperimentState] respawned at the start point")
+    }
+
+    // Moves the player to position and lines the followers up behind them, their trails wiped so nobody walks back
+    // to where they were. A teleport, not a walk - the camera lands in the new room's view rather than sliding there.
+    teleportParty_(position) {
+        WorldTransform.setPosition(_playerEntity, position)
+        _roomCamera.snapTo(Rooms.indexAt(position))
         var player = Script.getInstance(_playerEntity)
         if (player != null) {
             player.playerForceStop()
@@ -582,11 +563,75 @@ class ExperimentState is BaseState {
             if (!member.isPlayer && member.entity != null && GameObject.isValid(member.entity)) {
                 behind = behind + 1
                 WorldTransform.setPosition(member.entity,
-                    Vec3.new(SPAWN_POSITION.x - RESPAWN_FOLLOWER_SPACING * behind, SPAWN_POSITION.y, 0.0))
+                    Vec3.new(position.x - RESPAWN_FOLLOWER_SPACING * behind, position.y, 0.0))
             }
         }
-        _combatCooldownEndTime = Time.scaledTime + 2.0
-        Debug.info("[ExperimentState] respawned at the start point")
+    }
+
+    // --- warps (GameObjects/DoorWorp.wren) -----------------------------------
+    // The target room is loaded first so the DoorWorp leading back can be found; the party moves once it has
+    // started (updateWarp_), a frame or two later.
+    startWarp_(targetIndex, fromIndex, destination) {
+        Debug.info("[ExperimentState] warping from room %(fromIndex) to room %(targetIndex)")
+        World.loadLevelEntities(_worldEntity, targetIndex)
+        _warp = {"target": targetIndex, "from": fromIndex, "destination": destination, "frames": 0}
+        var player = Script.getInstance(_playerEntity)
+        if (player != null) {
+            player.playerForceStop()
+        }
+    }
+
+    updateWarp_() {
+        _warp["frames"] = _warp["frames"] + 1
+        var arrival = warpArrival_(_warp["target"], _warp["from"], _warp["destination"],
+                                   _warp["frames"] >= WARP_MAX_WAIT_FRAMES)
+        if (arrival == null) {
+            return
+        }
+        _warp = null
+        teleportParty_(arrival)
+        _warpCooldownEndTime = Time.scaledTime + WARP_COOLDOWN
+        // Stepping out of a doorway shouldn't drop you straight into a fight.
+        _combatCooldownEndTime = Time.scaledTime + 1.0
+    }
+
+    // Where a warp into room target arrives: next to its destination DoorWorp (the one with that iid - or, with no
+    // destination, the one there that leads back to room from): one tile out in that door's direction, or one step
+    // towards the room's centre if it has no direction - else the room's centre. Null while that room's DoorWorps
+    // haven't started yet (unless giveUp).
+    warpArrival_(target, from, destination, giveUp) {
+        var bounds = Rooms.bounds(target)
+        var centre = Vec3.new(bounds[0] + bounds[2] / 2, bounds[1] + bounds[3] / 2, 0.0)
+        var waiting = false
+        for (entity in GameObject.getAllWithIdentifier("DoorWorp")) {
+            var position = WorldTransform.getPosition(entity)
+            if (Rooms.indexAt(position) != target) {
+                continue
+            }
+            var doorWorp = Script.getInstance(entity)
+            if (doorWorp == null) {
+                waiting = true
+                continue
+            }
+            var isDestination = destination != null ? doorWorp.iid == destination : doorWorp.targetIndex == from
+            if (isDestination) {
+                var offset = doorWorp.arrivalOffset
+                if (offset != null) {
+                    return Vec3.new(position.x + offset.x, position.y + offset.y, 0.0)
+                }
+                // No direction set: step one tile off it, along whichever axis points more towards the room's centre.
+                var dx = centre.x - position.x
+                var dy = centre.y - position.y
+                if (dx.abs > dy.abs) {
+                    return Vec3.new(position.x + WARP_ARRIVAL_OFFSET * dx.sign, position.y, 0.0)
+                }
+                return Vec3.new(position.x, position.y + WARP_ARRIVAL_OFFSET * dy.sign, 0.0)
+            }
+        }
+        if (waiting && !giveUp) {
+            return null
+        }
+        return centre
     }
 
     // duel: true for a challenge fight (startDuel) - carried through to the fight's CombatOutcome.
@@ -692,6 +737,8 @@ class ExperimentState is BaseState {
         Signals.clear()
         PressurePlates.clear()
         ImpactEvents.clear()
+        Warps.clear()
+        _warp = null
 
         if (_view != null) {
             _view.teardown()

@@ -23,6 +23,18 @@ import "UI/Dialogue/ChoiceListUI" for ChoiceListUI
 
 var TEXT_SCROLL_SPEED = 0.02
 
+// A single line shown without a dialogue node - what an interactable's interact() returns (see enter()). Shaped
+// like the DialogueResult fields this state reads, already localized, and always the last line.
+class MessageLine {
+    construct new(text) {
+        _text = text
+    }
+    text { _text }
+    speaker { null }
+    choices { null }
+    hasEnded { true }
+}
+
 class InteractState is BaseState {
     construct new() {
         super()
@@ -48,10 +60,10 @@ class InteractState is BaseState {
 
         _interactingEntity = params["interactingEntity"]
 
-        _menuMusic = Music.load("Sounds/menuMusic.wav")
+        _menuMusic = Music.load("Audio/Musics/5 - Peaceful.ogg")
         _menuMusic.setLooping(true)
         _menuMusic.play()
-        _textScrollSound = Sound.load("Sounds/scroll.wav")
+        _textScrollSound = Sound.load("Audio/Sounds/Menu/Move1.wav")
 
         _view = DialogueBoxUI.new()
 
@@ -62,6 +74,19 @@ class InteractState is BaseState {
             entryNodeId = interactable.dialogueEntryPoint()
         } else {
             entryNodeId = DialogueEntryPoints.get(interactable.name)
+        }
+
+        // No conversation for it: an interactable can handle being interacted with itself (a door from the level
+        // opening, an item being picked up...) and hand back a line to show, already localized - or null for none.
+        if (entryNodeId == null && Reflect.hasMethod(interactable, "interact()")) {
+            var message = interactable.interact()
+            if (message == null) {
+                stateManager.clearCurrentState()
+                return
+            }
+            _currentResult = MessageLine.new(message)
+            processDialogueResult(_currentResult)
+            return
         }
 
         if (entryNodeId == null) {
@@ -175,7 +200,7 @@ class InteractState is BaseState {
             // result.text/result.speaker are localization keys/raw npc ids respectively - resolve both to
             // display strings, then run the composed string through the existing {var} substitution pipeline
             // once (not per-frame - rich-text markup shouldn't be re-parsed every frame during reveal).
-            var localizedText = Localization.get(text)
+            var localizedText = (result is MessageLine) ? text : Localization.get(text)
             var composed
             if (speaker && speaker != "") {
                 var speakerDisplay = DisplayNames.npcDisplay(speaker)

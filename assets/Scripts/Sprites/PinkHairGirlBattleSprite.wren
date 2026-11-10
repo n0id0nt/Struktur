@@ -17,7 +17,7 @@ class PinkHairGirlBattleSprite {
     static data {
         if (__data == null) {
             var d = {}
-            d["texture"] = "Sprites/pink_hair_girl_battle.png"
+            d["texture"] = "Actors/pink_hair_girl_battle.png"
             d["origin"] = [62, 69]
             d["columns"] = 12
             d["rows"] = 18

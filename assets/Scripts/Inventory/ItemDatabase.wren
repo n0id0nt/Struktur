@@ -41,6 +41,42 @@ var ITEMS = {
 
 var NO_BONUSES = {}
 
+// id -> its icon (one small image per item, under assets/Items/). Used by the inventory and by the world pickup
+// sprite (GameObjects/Item.wren). Items not listed here have no art yet - the inventory draws a "?" for them.
+var ICONS = {
+    "Gold Coins": "Items/Treasure/GoldCoin.png",
+    "Lucky Coin": "Items/Treasure/SilverCoin.png",
+    "Ornate Key": "Items/Treasure/GoldKey.png",
+    "Iron Key": "Items/Treasure/SilverKey.png",
+    "Cabinet Key": "Items/Treasure/SilverKey.png",
+    "Red Crystal Key": "Items/Resource/GemRed.png",
+    "Green Crystal Key": "Items/Resource/GemGreen.png",
+    "Yellow Crystal Key": "Items/Resource/GemYellow.png",
+    "Blue Crystal Key": "Items/Resource/GemPurple.png",
+    "Love Letter": "Items/Other/Letter.png",
+    "Journal Page": "Items/Other/Letter3.png",
+    "Ancient Tome": "Items/Object/Book.png",
+    "Personal Diary": "Items/Object/Book.png",
+    "Merchant Ledger": "Items/Object/Book.png",
+    "ancient_book": "Items/Object/Book.png",
+    "Star Chart": "Items/Scroll/Scroll.png",
+    "Hammer": "Items/Tool/Hammer.png",
+    "Tool Box": "Items/Object/CrateEmpty.png",
+    "Toolbox Body": "Items/Object/CrateEmpty.png",
+    "Toolbox Handle": "Items/Resource/BarIron.png",
+    "Jar of Honey": "Items/Food/Honey.png",
+    "Dried Herbs": "Items/Food/TeaLeaf.png",
+    "Flour Sack": "Items/Object/Bag.png",
+    "Ancient Seal": "Items/Other/Stamp.png",
+    "Merchant Voucher": "Items/Other/Stamp.png",
+    "rare_gem": "Items/Resource/GemPurple.png",
+    "Iron Sword": "Items/Weapons/Sword/Sprite.png",
+    "Oak Staff": "Items/Weapons/MagicWand/Sprite.png"
+}
+
+// Notes and receipts all share one generic icon.
+var NOTE_ICON = "Items/Other/Letter2.png"
+
 class ItemDatabase {
     static category(id) {
         var def = ITEMS[id]
@@ -58,12 +94,12 @@ class ItemDatabase {
     }
 
     // The icon texture path, or null when the item has no art yet (the inventory draws a "?" instead, rather than
-    // Texture.load failing on a missing file). Notes and receipts share one generic icon.
+    // Texture.load failing on a missing file).
     static iconPath(id) {
         if (id.endsWith(" Note") || id.endsWith(" Recipt")) {
-            return "Tiles/Items/Recipt.png"
+            return NOTE_ICON
         }
-        var path = "Tiles/Items/%(id).png"
-        return FileSystem.exists(path) ? path : null
+        var path = ICONS[id]
+        return (path != null && FileSystem.exists(path)) ? path : null
     }
 }

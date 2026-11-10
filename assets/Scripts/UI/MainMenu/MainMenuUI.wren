@@ -55,8 +55,8 @@ class MainMenuUI {
         var boldItalicFont = Font.load("Fonts/medieval_sharp/MedievalSharp-BoldOblique.ttf", 24)
 
         var iconAtlas = IconAtlas.new()
-        iconAtlas.setTexture(Texture.load("Tiles/Items/Ornate Key.png"))
-        iconAtlas.addIcon("key", 0, 0, 64, 64)
+        iconAtlas.setTexture(Texture.load("Items/Treasure/GoldKey.png"))
+        iconAtlas.addIcon("key", 0, 0, 12, 8)
 
         var showcasePanel = UIPanel.new(Vec2.new(0, 200), Vec2.new(0.5, 0), Vec2.new(820, 380), Vec2.new(0, 0))
         showcasePanel.setAnchorPoint(Vec2.new(0.5, 0))

@@ -17,7 +17,7 @@ class WrestlerSprite {
     static data {
         if (__data == null) {
             var d = {}
-            d["texture"] = "Sprites/wrestler.png"
+            d["texture"] = "Actors/wrestler.png"
             d["origin"] = [27, 31]
             d["columns"] = 20
             d["rows"] = 23

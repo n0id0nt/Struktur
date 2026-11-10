@@ -4,7 +4,7 @@
 // World/PressurePlates.wren.
 // Detection is a physics sensor: its body is on the "Trigger" layer, which only the player and party members
 // include in their collision mask (Player.wren, PartyMember.wren), so critters walk over it without pressing it.
-// The sprite is the first tile of Tiles/Floors/Floors.png when up and the second when pressed.
+// The sprite is the red floor button from Backgrounds/Tilesets/TilesetDungeon.png - raised when up, flat when pressed.
 // Once whatever it opens is open for good (its channel retired - Signals.retire, done by Door.wren) the plate goes
 // inactive: it stays down, greyed out, ignores whoever steps on it, and any party member left holding it down
 // (Member.staying) comes back to follow the party. Spawned by States/ExperimentState.wren.
@@ -18,10 +18,10 @@ import "World/Signals" for Signals
 import "World/PressurePlates" for PressurePlates
 import "Party/Party" for Party
 
-var UP_SPRITE_INDEX = 0
-var PRESSED_SPRITE_INDEX = 1
-// Floors.png is a 3 x 4 grid of 16 px tiles.
-var SHEET_COLUMNS = 3
+// TilesetDungeon.png is a 12 x 4 grid of 16 px tiles; the button is the first two tiles of the second row.
+var UP_SPRITE_INDEX = 12
+var PRESSED_SPRITE_INDEX = 13
+var SHEET_COLUMNS = 12
 var SHEET_ROWS = 4
 // Tint of an inactive plate (its door is open for good) - the pressed tile, greyed out.
 var INACTIVE_TINT = Vec4.new(120, 120, 120, 255)
@@ -30,11 +30,12 @@ var INACTIVE_TINT = Vec4.new(120, 120, 120, 255)
 var SENSOR_HALF_SIZE = 0.2
 
 class PressurePlate {
-    // args: "Name", "Channel" (the Signals channel it drives).
+    // args: "Name", "Channel" (the Signals channel it drives). A plate placed in the level (LDtk "PressurePad",
+    // below) has neither - its channel is its LDtk "Iid", which is what a PressurePad Door's Keys list.
     construct new(entity, args) {
         _entity = entity
-        _name = args["Name"]
-        _channel = args["Channel"]
+        _name = args["Name"] != null ? args["Name"] : "Pressure Plate"
+        _channel = args["Channel"] != null ? args["Channel"] : args["Iid"]
         _occupants = {}   // entity id -> true, for everyone currently standing on it
         _inactive = false
     }
@@ -45,7 +46,7 @@ class PressurePlate {
     inactive { _inactive }
 
     start() {
-        var texture = Texture.load("Tiles/Floors/Floors.png")
+        var texture = Texture.load("Backgrounds/Tilesets/TilesetDungeon.png")
         // On the floor: above the level's ground tiles (orderInLayer <= 0), below every entity.
         Sprite.create(_entity, texture, WHITE, Vec2.new(8, 8), SHEET_COLUMNS, SHEET_ROWS, FlipBit.NONE,
                       UP_SPRITE_INDEX, RenderLayer.BACKGROUND_MID, 1)

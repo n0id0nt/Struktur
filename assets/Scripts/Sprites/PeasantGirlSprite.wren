@@ -17,7 +17,7 @@ class PeasantGirlSprite {
     static data {
         if (__data == null) {
             var d = {}
-            d["texture"] = "Sprites/peasant_girl.png"
+            d["texture"] = "Actors/peasant_girl.png"
             d["origin"] = [29, 33]
             d["columns"] = 20
             d["rows"] = 23

@@ -1,23 +1,27 @@
 // GameObjects/Sign.wren
 // A signpost: a static, interactable prop that shows a short message through the dialogue system
 // (States/InteractState.wren, via Dialogue/DialogueEntryPoints.wren's "<Name>" -> node id table).
-// Placeholder sprite for now - the small paper note from Tiles/Items.png (index 13); swap the texture /
-// index below once there is real signpost art. Spawned by States/ExperimentState.wren.
+// Placeholder sprite for now - the small paper note (Items/Other/Letter.png); swap PLACEHOLDER_SPRITE below
+// once there is real signpost art. Spawned by States/ExperimentState.wren.
 import "gameObjectComponents" for Sprite, PhysicsBody, RenderLayer
 import "renderer" for FlipBit
 import "math" for Vec2
 import "resourceManager" for Texture
 import "physics" for BodyDefinition, PhysicsCircleShape, BodyType
 import "Util/Colors" for WHITE
+import "localization" for Localization
 
-var PLACEHOLDER_SPRITE_INDEX = 13
+var PLACEHOLDER_SPRITE = "Items/Other/Letter.png"
 
 class Sign {
-    // args: "Name" (also the dialogue key), optional "SpriteIndex" (a Tiles/Items.png frame - e.g. the rest spot).
+    // args: "Name" (also the dialogue key), optional "Sprite" (an image path to show instead - e.g. the rest spot).
+    // A sign placed in the level (LDtk "Sign" entity) has "MessageKey" instead: a Localization key (en.json) for the
+    // one line it shows - or, if a DialogueEntryPoints entry has that name, the conversation it starts.
     construct new(entity, args) {
         _entity = entity
-        _name = args["Name"]
-        _spriteIndex = args["SpriteIndex"] != null ? args["SpriteIndex"] : PLACEHOLDER_SPRITE_INDEX
+        _messageKey = args["MessageKey"]
+        _name = args["Name"] != null ? args["Name"] : _messageKey
+        _spritePath = args["Sprite"] != null ? args["Sprite"] : PLACEHOLDER_SPRITE
     }
 
     // Also the key DialogueEntryPoints.get() looks the sign's dialogue up by.
@@ -25,8 +29,9 @@ class Sign {
 
     // Called after C++ has created base components.
     start() {
-        var texture = Texture.load("Tiles/Items.png")
-        Sprite.create(_entity, texture, WHITE, Vec2.new(32, 48), 9, 2, FlipBit.NONE, _spriteIndex, RenderLayer.ENTITIES, 0)
+        var texture = Texture.load(_spritePath)
+        Sprite.create(_entity, texture, WHITE, Vec2.new(texture.width / 2, texture.height * 3 / 4), 1, 1, FlipBit.NONE, 0,
+                      RenderLayer.ENTITIES, 0)
         texture.unload()
 
         // Solid, so the player walks around it rather than through it.
@@ -39,6 +44,12 @@ class Sign {
     onDestroy() {}
 
     onEvent(type, data) {}
+
+    // Read with no dialogue of its own (States/InteractState.wren): its message line.
+    interact() {
+        if (_messageKey == null || _messageKey == "") return null
+        return Localization.get(_messageKey)
+    }
 
     isInteractable() {
         return true

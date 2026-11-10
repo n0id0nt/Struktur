@@ -17,7 +17,7 @@ class GoblinVikingBattleSprite {
     static data {
         if (__data == null) {
             var d = {}
-            d["texture"] = "Sprites/goblin_viking_battle.png"
+            d["texture"] = "Actors/goblin_viking_battle.png"
             d["origin"] = [57, 72]
             d["columns"] = 14
             d["rows"] = 16

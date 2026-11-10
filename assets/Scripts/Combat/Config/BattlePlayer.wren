@@ -5,7 +5,7 @@
 //
 // The player's *persistent* Combatant still lives on the Player script (HP carries between fights -
 // see GameObjects/Player.combatant); this is where its numbers and its arena look are declared.
-// Uses the battle sheet generated from the 3D model (Sprites/explorer_battle.png - left and right facing clips).
+// Uses the battle sheet generated from the 3D model (Actors/explorer_battle.png - left and right facing clips).
 // `anims` / `animsLeft` map every battle role to one of its clips - see Combat/Config/SheetAnims.wren.
 import "math" for Vec2
 import "Combat/Combatant" for Combatant
@@ -22,7 +22,7 @@ class BattlePlayer {
     // Overrides on top of the archetype's attribute baseline (Combat/Config/Archetype.wren) - null keeps it as is.
     static attributes { null }
 
-    // The battle sheet, Sprites/explorer_battle.png (generated - see Sprites/ExplorerBattleSprite.wren).
+    // The battle sheet, Actors/explorer_battle.png (generated - see Sprites/ExplorerBattleSprite.wren).
     static texturePath { ExplorerBattleSprite.data["texture"] }
     static cols { ExplorerBattleSprite.data["columns"] }
     static rows { ExplorerBattleSprite.data["rows"] }

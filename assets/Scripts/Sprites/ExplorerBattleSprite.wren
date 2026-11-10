@@ -17,7 +17,7 @@ class ExplorerBattleSprite {
     static data {
         if (__data == null) {
             var d = {}
-            d["texture"] = "Sprites/explorer_battle.png"
+            d["texture"] = "Actors/explorer_battle.png"
             d["origin"] = [82, 83]
             d["columns"] = 12
             d["rows"] = 18

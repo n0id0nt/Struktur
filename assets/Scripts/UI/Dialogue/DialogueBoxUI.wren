@@ -5,11 +5,11 @@
 // precedent as Combat's strike animation / Main Menu's rich-text reveal) and handed in via
 // revealGlyphs(count); this view never touches Time itself.
 import "resourceManager" for Font, Texture
-import "ui" for UIManager, UILabel, UIRichLabel, UIPanel, TextWrapping
+import "ui" for UIManager, UILabel, UIRichLabel, UIPanel, UINineSlice, TextWrapping
 import "app" for Application
 import "math" for Vec2
 import "localization" for Localization
-import "Util/Colors" for BLANK, BLACK, DARKGRAY
+import "Util/Colors" for BLANK, BLACK
 
 class DialogueBoxUI {
     construct new() {
@@ -29,7 +29,7 @@ class DialogueBoxUI {
         var boldFont       = Font.load("Fonts/medieval_sharp/MedievalSharp-Bold.ttf", 20)
         var italicFont     = Font.load("Fonts/medieval_sharp/MedievalSharp-BookOblique.ttf", 20)
         var boldItalicFont = Font.load("Fonts/medieval_sharp/MedievalSharp-BoldOblique.ttf", 20)
-        var dialoguePanelTexture = Texture.load("Tiles/DialoguePanel.png")
+        var dialoguePanelTexture = Texture.load("Ui/Dialog/DialogueBoxSimple.png")
 
         // Full-screen transparent root - UI/Dialogue/ChoiceListUI.wren parents into this too.
         _screenPanel = UIPanel.new(Vec2.new(0, 0), Vec2.new(0, 0),
@@ -48,10 +48,16 @@ class DialogueBoxUI {
             _textBackgroundPanel.setAnchorPoint(Vec2.new(0.5, 1))
         }
         _textBackgroundPanel.setBorderColor(BLANK)
-        _textBackgroundPanel.setBackgroundColor(DARKGRAY)
-        _textBackgroundPanel.setBackgroundTexture(dialoguePanelTexture)
-        dialoguePanelTexture.unload()
+        _textBackgroundPanel.setBackgroundColor(BLANK)
         _screenPanel.addChild(_textBackgroundPanel)
+
+        // The panel art is small pixel art (316x60), so it is nine-sliced rather than stretched - the rounded
+        // border stays crisp and only the flat interior grows to the box's size. Added first so it draws behind the text.
+        var panelArt = UINineSlice.new(Vec2.new(0, 0), Vec2.new(0, 0), Vec2.new(0, 0), Vec2.new(1, 1))
+        panelArt.setTexture(dialoguePanelTexture)
+        panelArt.setBorder(6, 6, 6, 6)
+        dialoguePanelTexture.unload()
+        _textBackgroundPanel.addChild(panelArt)
 
         _dialogueLabel = UIRichLabel.new(Vec2.new(40, 25), Vec2.new(0, 0), "", 20.0)
         _dialogueLabel.setTextColor(BLACK)

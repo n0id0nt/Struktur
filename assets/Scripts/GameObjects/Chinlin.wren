@@ -4,7 +4,7 @@
 // proximity rather than a timer (see ChaseMixin.checkProximity) - and "giveUp", which walks off to a random
 // spot in its room once the chase is lost (the player got away, or left the room).
 //
-// Sprite sheet: Sprites/chinlin.png - 96x96, 4x4 grid, 24x24 cells, pivot (12,16).
+// Sprite sheet: Actors/chinlin.png - 96x96, 4x4 grid, 24x24 cells, pivot (12,16).
 //   frames  anim
 //   0-1     stand_down    2-3   stand_up    4-5   stand_right
 //   6-8     run_down      9-11  run_up      12-14 run_right
@@ -73,7 +73,7 @@ class Chinlin is Critter {
     }
 
     static createSprite(entity) {
-        var texture = Texture.load("Sprites/chinlin.png")
+        var texture = Texture.load("Actors/chinlin.png")
         Sprite.create(entity, texture, WHITE, Vec2.new(12, 16), 4, 4, FlipBit.NONE, 0, RenderLayer.ENTITIES, 0)
         texture.unload()
     }

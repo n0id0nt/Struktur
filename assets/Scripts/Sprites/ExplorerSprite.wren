@@ -17,7 +17,7 @@ class ExplorerSprite {
     static data {
         if (__data == null) {
             var d = {}
-            d["texture"] = "Sprites/explorer.png"
+            d["texture"] = "Actors/explorer.png"
             d["origin"] = [23, 29]
             d["columns"] = 20
             d["rows"] = 23
