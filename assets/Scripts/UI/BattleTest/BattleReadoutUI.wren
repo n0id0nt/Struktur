@@ -4,10 +4,10 @@
 // most recent checks (Combat/Arbiter.recentRolls). Both sit in the gaps CombatUI leaves - under the enemy stacks,
 // above the party stacks and the move menu. Pure view: the state pushes the text every frame.
 import "math" for Vec2, Vec4
-import "resourceManager" for Font
 import "ui" for UIManager, UILabel, UIPanel
 import "app" for Application
 import "Util/Colors" for BLANK, WHITE, LIGHTGRAY
+import "UI/Theme/UIKit" for UIKit
 
 var PANEL_TOP    = 140
 var LINE_HEIGHT  = 18
@@ -20,7 +20,7 @@ var PANEL_TINT   = Vec4.new(0, 0, 0, 150)
 class BattleReadoutUI {
     // fighterLines / rollLines: how many lines each panel holds.
     construct new(fighterLines, rollLines) {
-        var font = Font.load("Fonts/medieval_sharp/MedievalSharp-Bold.ttf", 60)
+        var font = UIKit.font()
         _root = UIPanel.new(Vec2.new(0, 0), Vec2.new(0, 0),
             Vec2.new(Application.gameWidth, Application.gameHeight), Vec2.new(0, 0))
         _root.setBackgroundColor(BLANK)

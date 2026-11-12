@@ -61,8 +61,8 @@ void Struktur::UI::UILabel::Render(GameContext& context)
 		uint32_t textQuadsUsed = RenderTextLines(context, m_text, startPos, lineHeight, 0);
 
 		// Text is variable-length, so a shorter string than last time can leave real, already-written glyph
-		// quads sitting unused past what was just written - Flush() draws a batch's whole allocated region
-		// regardless, so without this those stale glyphs would keep rendering as leftover ghost text.
+		// quads sitting unused past what was just written - Flush() keeps drawing them until they're cleared, so
+		// without this those stale glyphs would keep rendering as leftover ghost text.
 		context.GetUIRenderer().ClearSlotFrom(m_batch, m_batchSlot, textQuadsUsed);
 
 		m_visualDirty = false;

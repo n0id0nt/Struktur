@@ -26,7 +26,7 @@ void Struktur::UI::UINineSlice::Render(GameContext& context)
 			{
 				texture->LoadToGpu(context);
 			}
-			Renderer::NineSliceBorder border{m_borderLeft, m_borderRight, m_borderTop, m_borderBottom};
+			Renderer::NineSliceBorder border{m_borderLeft, m_borderRight, m_borderTop, m_borderBottom, m_scale};
 			context.GetUIRenderer().DrawNineSlice(m_batch, m_batchSlot, m_bounds, texture->GetHandle(), border,
 			                                      m_tint, GetZIndex());
 		}

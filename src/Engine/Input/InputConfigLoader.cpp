@@ -68,6 +68,7 @@ bool InputConfigLoader::LoadFromFile(Input& input, const std::string& filePath)
 	}
 
 	// Process each input binding
+	std::set<std::string> replacedActions;
 	for (const auto& inputEntry : inputs)
 	{
 		if (!inputEntry.contains("name") || !inputEntry.contains("type") || !inputEntry.contains("bindings"))
@@ -84,6 +85,15 @@ bool InputConfigLoader::LoadFromFile(Input& input, const std::string& filePath)
 		{
 			DEBUG_WARNING("Bindings for '%s' must be an array", name);
 			continue;
+		}
+
+		// The config's own list replaces whatever this action already had - the C++ defaults
+		// RegisterDefaultUIBindings put back in Clear() - so its bindings, and their order (which button hints
+		// follow), are exactly what the file says. Only on the first entry for a name, so a file that splits one
+		// action across two entries still gets both.
+		if (replacedActions.insert(name).second)
+		{
+			input.ClearBinding(name);
 		}
 
 		// Process based on input type

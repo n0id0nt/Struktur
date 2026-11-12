@@ -20,6 +20,7 @@ GameContext::GameContext()
 	m_imGuiRenderer = std::make_unique<Renderer::ImGuiRenderer>();
 #endif
 	m_input               = std::make_unique<Input::Input>(0);
+	m_inputGlyphs         = std::make_unique<UI::InputGlyphs>();
 	m_localizationManager = std::make_unique<Localization::LocalizationManager>();
 	m_mixer               = std::make_unique<Audio::Mixer>();
 	m_physicsWorld = std::make_unique<Physics::PhysicsWorld>();
@@ -61,6 +62,7 @@ void GameContext::Shutdown()
 	m_imGuiRenderer.reset();
 #endif
 	m_input.reset();
+	m_inputGlyphs.reset();  // holds texture ResourcePtrs - must go before m_resourceManager
 	m_localizationManager.reset();
 	m_mixer.reset();
 	m_physicsWorld.reset();
@@ -210,6 +212,12 @@ Core::TimeSystem& GameContext::GetTimeSystem() const
 {
 	ASSERT_MSG(m_timeSystem.get(), "TimeSystem not initialised");
 	return *m_timeSystem;
+}
+
+UI::InputGlyphs& GameContext::GetInputGlyphs() const
+{
+	ASSERT_MSG(m_inputGlyphs.get(), "InputGlyphs not initialised");
+	return *m_inputGlyphs;
 }
 
 UI::UIManager& GameContext::GetUIManager() const

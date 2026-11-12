@@ -6,15 +6,16 @@
 // exposes revealGlyphs(count) and the total glyphCount to clamp against.
 import "app" for Application
 import "math" for Vec2
-import "resourceManager" for Font, Texture
+import "resourceManager" for Texture
 import "ui" for UIManager, UILabel, UIPanel, UIRichLabel, IconAtlas, TextAlignment, TextWrapping
 import "localization" for Localization
 import "Util/Colors" for WHITE, BLACK, BLANK, DARKGRAY, LIGHTGRAY
 import "UI/Shared/ButtonUI" for ButtonUI
+import "UI/Theme/UIKit" for UIKit
 
 class MainMenuUI {
     construct new() {
-        var font = Font.load("Fonts/medieval_sharp/MedievalSharp-Bold.ttf", 60)
+        var font = UIKit.font()
 
         _screenPanel = UIPanel.new(Vec2.new(0, 0), Vec2.new(0, 0),
             Vec2.new(Application.gameWidth, Application.gameHeight), Vec2.new(0, 0))
@@ -42,17 +43,14 @@ class MainMenuUI {
         font.unload()
     }
 
-    // Rich-text showcase - demonstrates every UIRichLabel feature: real bold/italic/bold-italic fonts (the
-    // medieval_sharp family's own Book/Bold/BookOblique/BoldOblique variants - not the synthetic shear
-    // fallback, since real fonts are set for every style here), inline [color=] spans, an [icon=] pulled from
+    // Rich-text showcase - demonstrates every UIRichLabel feature: bold/italic runs (the game font has a single
+    // weight, so only the regular font is set - italics use the synthetic shear fallback and bold renders in the
+    // same weight), inline [color=] spans, an [icon=] pulled from
     // a real item sprite, word wrap, a reveal via setVisibleGlyphCount (driven by the Controller, see
     // revealGlyphs), and Phase 8's shader-driven [wave]/[shake]/[pulse] animated tags, including a layered
     // combination on one span.
     showcaseRichText_() {
-        var regularFont    = Font.load("Fonts/medieval_sharp/MedievalSharp-Book.ttf", 24)
-        var boldFont       = Font.load("Fonts/medieval_sharp/MedievalSharp-Bold.ttf", 24)
-        var italicFont     = Font.load("Fonts/medieval_sharp/MedievalSharp-BookOblique.ttf", 24)
-        var boldItalicFont = Font.load("Fonts/medieval_sharp/MedievalSharp-BoldOblique.ttf", 24)
+        var regularFont    = UIKit.font()
 
         var iconAtlas = IconAtlas.new()
         iconAtlas.setTexture(Texture.load("Items/Treasure/GoldKey.png"))
@@ -78,9 +76,6 @@ class MainMenuUI {
             "v2-v4 add more: [rainbow]this text cycles hue[/rainbow], " +
             "[tornado]this text orbits[/tornado], and [fade]this text fades out toward the end[/fade].", 22.0)
         _richLabel.setFont(regularFont)
-        _richLabel.setBoldFont(boldFont)
-        _richLabel.setItalicFont(italicFont)
-        _richLabel.setBoldItalicFont(boldItalicFont)
         _richLabel.setTextColor(BLACK)
         _richLabel.setWordWrap(TextWrapping.WORD_WRAP)
         _richLabel.setIconAtlas(iconAtlas)
@@ -93,9 +88,6 @@ class MainMenuUI {
         showcasePanel.addChild(_richLabel)
 
         regularFont.unload()
-        boldFont.unload()
-        italicFont.unload()
-        boldItalicFont.unload()
     }
 
     button_(text, index, font) {

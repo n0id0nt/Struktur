@@ -55,7 +55,9 @@ public:
 	ResourcePtr<TextureResource> GetTexture(GameContext& context, const std::string& filePath);
 	ResourcePtr<SoundResource> GetSound(GameContext& context, const std::string& filePath);
 	ResourcePtr<MusicResource> GetMusic(GameContext& context, const std::string& filePath);
-	ResourcePtr<FontResource> GetFont(GameContext& context, const std::string& filePath, int size);
+	// pointSampled: nearest-neighbour atlas sampling, for pixel-art fonts (see FontResource::m_pointSampled).
+	ResourcePtr<FontResource> GetFont(GameContext& context, const std::string& filePath, int size,
+	                                  bool pointSampled = false);
 	ResourcePtr<ShaderResource> GetShader(GameContext& context, const std::string& vsFilePath,
 	                                      const std::string& fsFilePath);
 

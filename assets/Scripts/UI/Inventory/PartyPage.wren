@@ -10,8 +10,10 @@ import "ui" for UIScroll, NavigationDirection
 import "UI/Inventory/InventoryTheme" for InventoryTheme
 import "UI/Inventory/MoveCells" for MoveCells
 
-var CARD_WIDTH = 256
+var CARD_WIDTH = 252
 var CARD_GAP = 16
+var CARD_INSET = 4      // room for the focus ring inside the scroll's clip
+var CARD_HEIGHT = 468
 var CARDS_WIDTH = 528   // two cards
 var MOVES_X = 544
 var MOVES_WIDTH = 528
@@ -19,9 +21,9 @@ var MAX_MOVES = 8
 var MOVE_ROW_Y = 104
 var MOVE_ROW_STRIDE = 42
 // Right edges of the number columns in the moves panel (the move name is left-aligned at 24).
-var TIME_X = 236
-var DAMAGE_X = 326
-var STAMINA_X = 424
+var TIME_X = 220
+var DAMAGE_X = 316
+var STAMINA_X = 420
 var HEAL_X = 504
 var AVERAGE_ATTRIBUTE = 10
 
@@ -48,7 +50,8 @@ class PartyPage {
 
             buildMoves_()
             for (i in 0...members.count) {
-                _cards.add(buildCard_(scroll, Vec2.new(i * (CARD_WIDTH + CARD_GAP), 0), members[i], onFocus))
+                _cards.add(buildCard_(scroll, Vec2.new(CARD_INSET + i * (CARD_WIDTH + CARD_GAP), CARD_INSET), members[i],
+                    onFocus))
             }
             showMoves_(members[0])
             // A row of cards: left / right along it, nothing below.
@@ -81,15 +84,12 @@ class PartyPage {
     }
 
     buildCard_(scroll, position, member, onFocus) {
-        var card = InventoryTheme.panel(scroll, position, Vec2.new(0, 0), Vec2.new(CARD_WIDTH, 476), Vec2.new(0, 0),
-            InventoryTheme.panelBg, InventoryTheme.panelBorder, 2, 4)
-        card.setFocusable(true)
-        card.setOnFocus { |sender|
-            card.setBorderColor(InventoryTheme.accent)
+        var card = InventoryTheme.frame(scroll, "tile", position, Vec2.new(0, 0), Vec2.new(CARD_WIDTH, CARD_HEIGHT),
+            Vec2.new(0, 0), 4)
+        InventoryTheme.focusable(card, Fn.new {
             showMoves_(member)
             onFocus.call()
-        }
-        card.setOnLoseFocus { |sender| card.setBorderColor(InventoryTheme.panelBorder) }
+        }, null)
 
         InventoryTheme.label(card, member["name"], Vec2.new(20, 16), Vec2.new(0, 0), Vec2.new(0, 0), 30.0, _boldFont,
             InventoryTheme.text, 5)
@@ -129,15 +129,15 @@ class PartyPage {
             InventoryTheme.textMuted, 5)
         InventoryTheme.label(card, "%(value) / %(max)", Vec2.new(-20, y), Vec2.new(1, 0), Vec2.new(1, 0), 18.0, _bookFont,
             InventoryTheme.text, 5)
-        InventoryTheme.bar(card, Vec2.new(20, y + 26), CARD_WIDTH - 40, 10, max > 0 ? value / max : 0, fill, 5)
+        InventoryTheme.bar(card, Vec2.new(20, y + 26), CARD_WIDTH - 40, 12, max > 0 ? value / max : 0, fill, 5)
     }
 
     // --- moves panel ----------------------------------------------------------------------
 
     // Built once with MAX_MOVES empty rows; showMoves_ fills in the selected member's.
     buildMoves_() {
-        var panel = InventoryTheme.panel(_root, Vec2.new(MOVES_X, 0), Vec2.new(0, 0), Vec2.new(MOVES_WIDTH, 476),
-            Vec2.new(0, 0), InventoryTheme.panelBg, InventoryTheme.panelBorder, 2, 3)
+        var panel = InventoryTheme.frame(_root, "well", Vec2.new(MOVES_X, 0), Vec2.new(0, 0), Vec2.new(MOVES_WIDTH, 476),
+            Vec2.new(0, 0), 3)
         InventoryTheme.label(panel, _labels["moves.title"], Vec2.new(24, 16), Vec2.new(0, 0), Vec2.new(0, 0), 30.0,
             _boldFont, InventoryTheme.text, 5)
         _movesOwner = InventoryTheme.label(panel, "", Vec2.new(-24, 24), Vec2.new(1, 0), Vec2.new(1, 0), 20.0, _bookFont,
@@ -153,8 +153,8 @@ class PartyPage {
         _moveRows = []
         for (i in 0...MAX_MOVES) {
             var y = MOVE_ROW_Y + i * MOVE_ROW_STRIDE
-            var row = InventoryTheme.panel(panel, Vec2.new(12, y), Vec2.new(0, 0), Vec2.new(MOVES_WIDTH - 24, 36),
-                Vec2.new(0, 0), InventoryTheme.slotEmptyBg, InventoryTheme.panelBorder, 0, 4)
+            var row = InventoryTheme.fill(panel, Vec2.new(12, y), Vec2.new(0, 0), Vec2.new(MOVES_WIDTH - 24, 36),
+                Vec2.new(0, 0), InventoryTheme.rowBand, 4)
             var cells = {}
             cells["row"] = row
             cells["name"] = cell_(row, 12, false, 22.0)

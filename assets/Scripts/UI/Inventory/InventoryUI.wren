@@ -1,19 +1,21 @@
 // UI/Inventory/InventoryUI.wren
-// The inventory screen's view: a window with a tab bar (Items / Weapons / Armor / Moves / Party / Levels), the
-// party's gold in the top right, the open tab's page below and a controls hint along the bottom. Each tab's page is
-// its own view - UI/Inventory/ItemGridPage.wren, MovesPage.wren, PartyPage.wren, LevelsPage.wren - all built up
-// front, only the open one visible (hidden ones drop out of focus navigation by themselves).
+// The inventory screen's view, built from the UI kit (UI/Theme/UIKit.wren): a metal window with a row of tabs
+// (Items / Weapons / Armor / Moves / Party / Levels) between Q / E key prompts, the open tab's page below, and a
+// footer of key prompts with the party's gold on the right. Each tab's page is its own view -
+// UI/Inventory/ItemGridPage.wren, MovesPage.wren, PartyPage.wren, LevelsPage.wren - all built up front, only the
+// open one visible (hidden ones drop out of focus navigation by themselves).
 //
 // Tabs switch with cycleTab (States/InventoryState.wren drives it from the UITab input - Q / E, the bumpers), or by
 // moving focus up onto the tab bar and along it. Pure view: `model` is everything to show, prepared by the State:
 //   { "tabs": [tab names], "itemPages": [[entries, emptyText] x3], "moves": {...}, "party": [...],
-//     "partyLabels": {...}, "levels": [...], "levelLabels": {...}, "gold": Num, "hint": String }
+//     "partyLabels": {...}, "levels": [...], "levelLabels": {...}, "gold": Num,
+//     "hints": { "tabs", "move", "select", "close" } }
 // onFocusMoved is called with no arguments whenever focus lands on something new (the screen's focus sound);
 // onEquip(slot, moveId) changes the player's loadout and returns the new one (see MovesPage).
 import "app" for Application
 import "math" for Vec2
-import "resourceManager" for Texture
-import "ui" for UIManager, UITexture, NavigationDirection
+import "ui" for UIManager, UIColor, NavigationDirection
+import "UI/Theme/UIKit" for UIKit
 import "UI/Inventory/InventoryTheme" for InventoryTheme
 import "UI/Inventory/ItemGridPage" for ItemGridPage
 import "UI/Inventory/MovesPage" for MovesPage
@@ -21,47 +23,50 @@ import "UI/Inventory/PartyPage" for PartyPage
 import "UI/Inventory/LevelsPage" for LevelsPage
 
 var WINDOW_SIZE = Vec2.new(1120, 620)
-var TAB_WIDTH = 128
-var TAB_STRIDE = 136
-var TAB_X = 64
+var CONTENT_X = 24            // inside the window frame's border
+var TAB_Y = 24
+var TAB_HEIGHT = 36           // the kit tab's 12px at 3x
+var TAB_WIDTH = 150
+var TAB_STRIDE = 156
+var TAB_X = 80                // after the previous-tab prompt (room for a pad's LB, which is wider than Q)
+var TAB_LABEL_Y = 10          // the tab art's top border is heavier and its bottom open - this centres the text inside
+var BODY_Y = 72
+var KEY_SCALE = 3             // the previous/next tab prompts by the tabs
+var KEY_GAP = 6               // between those prompts and the tabs
+var FOOTER_SIZE = 18.0
+var FOOTER_Y = -44            // from the window's bottom edge
 var GOLD_ICON_PATH = "Items/Treasure/GoldCoin.png"
 
 class InventoryUI {
     construct new(model, onFocusMoved, onEquip) {
+        UIKit.open()
         _boldFont = InventoryTheme.loadBoldFont()
         _bookFont = InventoryTheme.loadBookFont()
         _onFocusMoved = onFocusMoved
         _current = -1
 
-        _screenPanel = InventoryTheme.panel(null, Vec2.new(0, 0), Vec2.new(0, 0),
-            Vec2.new(Application.gameWidth, Application.gameHeight), Vec2.new(0, 0), InventoryTheme.overlay, null, 0, 0)
+        _screenPanel = InventoryTheme.fill(null, Vec2.new(0, 0), Vec2.new(0, 0),
+            Vec2.new(Application.gameWidth, Application.gameHeight), Vec2.new(0, 0), InventoryTheme.overlay, 0)
         UIManager.addUIElement(_screenPanel)
 
-        var window = InventoryTheme.panel(_screenPanel, Vec2.new(0, 0), Vec2.new(0.5, 0.5), WINDOW_SIZE, Vec2.new(0, 0),
-            InventoryTheme.windowBg, InventoryTheme.accent, 2, 1)
+        var window = InventoryTheme.frame(_screenPanel, "window", Vec2.new(0, 0), Vec2.new(0.5, 0.5), WINDOW_SIZE,
+            Vec2.new(0, 0), 1)
         window.setAnchorPoint(Vec2.new(0.5, 0.5))
 
         buildTabBar_(window, model["tabs"])
-        buildGold_(window, model["gold"])
-        InventoryTheme.divider(window, 72, 24, 2)
-        InventoryTheme.label(window, model["hint"], Vec2.new(24, -38), Vec2.new(0, 1), Vec2.new(0, 0), 18.0, _bookFont,
-            InventoryTheme.textMuted, 2)
+        buildFooter_(window, model["hints"], model["gold"])
 
-        var body = InventoryTheme.group(window, Vec2.new(24, 88), Vec2.new(1072, 476), 2)
+        var body = InventoryTheme.group(window, Vec2.new(CONTENT_X, BODY_Y), Vec2.new(1072, 476), 2)
         var onFocus = Fn.new { _onFocusMoved.call() }
-        _itemPages = []
         _pages = []
         for (page in model["itemPages"]) {
-            var view = ItemGridPage.new(body, page[0], page[1], _boldFont, _bookFont, onFocus)
-            _itemPages.add(view)
-            _pages.add(view)
+            _pages.add(ItemGridPage.new(body, page[0], page[1], _boldFont, _bookFont, onFocus))
         }
         _movesPage = MovesPage.new(body, model["moves"], _boldFont, _bookFont, onFocus, onEquip)
         _pages.add(_movesPage)
         _partyPage = PartyPage.new(body, model["party"], model["partyLabels"], _boldFont, _bookFont, onFocus)
         _pages.add(_partyPage)
-        _levelsPage = LevelsPage.new(body, model["levels"], model["levelLabels"], _boldFont, _bookFont, onFocus)
-        _pages.add(_levelsPage)
+        _pages.add(LevelsPage.new(body, model["levels"], model["levelLabels"], _boldFont, _bookFont, onFocus))
 
         // Along the tab bar left / right (stopping at the ends); down from a tab enters its page, and up from the
         // page's first row comes back to that tab.
@@ -100,18 +105,21 @@ class InventoryUI {
         return _screenPanel != null && _pages[_current] == _movesPage && _movesPage.cancel()
     }
 
+    // The kit's tabs between previous/next-tab prompts (Q / E, or LB / RB on a pad), sitting on a dark rule that runs
+    // the width of the window. The prompts hug the tabs from outside, so a wider pad button grows away from them.
     buildTabBar_(window, names) {
-        InventoryTheme.label(window, "Q", Vec2.new(TAB_X - 22, 26), Vec2.new(0, 0), Vec2.new(0.5, 0), 22.0, _boldFont,
-            InventoryTheme.textMuted, 3)
+        var middle = TAB_Y + TAB_HEIGHT / 2
+        UIKit.hint(window, "UITab:negative", null, Vec2.new(TAB_X - KEY_GAP, middle), Vec2.new(0, 0), Vec2.new(1, 0.5),
+            3).setGlyphScale(KEY_SCALE)
         _tabs = []
         _tabLabels = []
         _tabFocused = []
         for (i in 0...names.count) {
-            var tab = InventoryTheme.panel(window, Vec2.new(TAB_X + i * TAB_STRIDE, 18), Vec2.new(0, 0),
-                Vec2.new(TAB_WIDTH, 40), Vec2.new(0, 0), InventoryTheme.slotBg, InventoryTheme.panelBorder, 2, 2)
+            var tab = InventoryTheme.frame(window, "tab", Vec2.new(TAB_X + i * TAB_STRIDE, TAB_Y), Vec2.new(0, 0),
+                Vec2.new(TAB_WIDTH, TAB_HEIGHT), Vec2.new(0, 0), 2)
             tab.setFocusable(true)
-            var label = InventoryTheme.label(tab, names[i], Vec2.new(0, 4), Vec2.new(0.5, 0.5), Vec2.new(0.5, 0.5), 22.0,
-                _boldFont, InventoryTheme.textMuted, 3)
+            var label = InventoryTheme.label(tab, names[i], Vec2.new(0, TAB_LABEL_Y), Vec2.new(0.5, 0.5),
+                Vec2.new(0.5, 0.5), 22.0, _boldFont, InventoryTheme.text, 3)
             _tabs.add(tab)
             _tabLabels.add(label)
             _tabFocused.add(false)
@@ -127,19 +135,30 @@ class InventoryUI {
                 styleTab_(i)
             }
         }
-        InventoryTheme.label(window, "E", Vec2.new(TAB_X + names.count * TAB_STRIDE + 14, 26), Vec2.new(0, 0),
-            Vec2.new(0.5, 0), 22.0, _boldFont, InventoryTheme.textMuted, 3)
+        UIKit.hint(window, "UITab:positive", null, Vec2.new(TAB_X + names.count * TAB_STRIDE, middle), Vec2.new(0, 0),
+            Vec2.new(0, 0.5), 3).setGlyphScale(KEY_SCALE)
+
+        var rule = UIColor.new(Vec2.new(CONTENT_X, TAB_Y + TAB_HEIGHT), Vec2.new(0, 0), Vec2.new(-2 * CONTENT_X, 3),
+            Vec2.new(1, 0))
+        rule.setColor(InventoryTheme.textDark)
+        rule.setZIndex(3)
+        window.addChild(rule)
     }
 
-    buildGold_(window, gold) {
-        _goldTexture = Texture.load(GOLD_ICON_PATH)
-        var icon = UITexture.new(Vec2.new(-24, 20), Vec2.new(1, 0), Vec2.new(36, 36), Vec2.new(0, 0))
-        icon.setAnchorPoint(Vec2.new(1, 0))
-        icon.setTexture(_goldTexture)
-        icon.setZIndex(3)
-        window.addChild(icon)
-        InventoryTheme.label(window, "%(gold)", Vec2.new(-68, 22), Vec2.new(1, 0), Vec2.new(1, 0), 30.0, _boldFont,
-            InventoryTheme.accent, 3)
+    // "[Q][E] Switch tab   [^][<][v][>] Move   [Space] Select   [I] [Esc] Close" along the bottom (the pad's
+    // buttons when one is in use - one rich-text row, so it reflows as they change), gold on the right.
+    buildFooter_(window, hints, gold) {
+        var gap = "    "
+        var markup = "[input=UITab] %(hints["tabs"])%(gap)[input=UIDir] %(hints["move"])%(gap)" +
+            "[input=UIAccept] %(hints["select"])%(gap)[input=Inventory] [input=UICancel] %(hints["close"])"
+        // -5: the rich label's own left padding, so the first prompt lines up with the content edge.
+        UIKit.richText(window, markup, Vec2.new(CONTENT_X - 1, FOOTER_Y), Vec2.new(0, 1), Vec2.new(0, 0.5),
+            FOOTER_SIZE, InventoryTheme.text, 3)
+
+        var coin = UIKit.image(window, GOLD_ICON_PATH, Vec2.new(-CONTENT_X - 4, FOOTER_Y), Vec2.new(1, 1),
+            Vec2.new(1, 0.5), 4, 3)
+        InventoryTheme.label(window, "%(gold)", Vec2.new(-CONTENT_X - 4 - coin.getSize().x - 10, FOOTER_Y + 2),
+            Vec2.new(1, 1), Vec2.new(1, 0.5), 28.0, _boldFont, InventoryTheme.accent, 3)
     }
 
     selectTab_(index, moveFocus) {
@@ -160,12 +179,13 @@ class InventoryUI {
         }
     }
 
-    // Open tab: gold with dark text. Others: dark with muted text. The tab the cursor is on gets a light border.
+    // The kit's three tab looks: hover while the cursor is on it, selected while its page is open, otherwise the
+    // darker unselected one. The first two have light insides, so their text goes dark.
     styleTab_(i) {
         var open = i == _current
-        _tabs[i].setBackgroundColor(open ? InventoryTheme.accent : InventoryTheme.slotBg)
-        _tabLabels[i].setTextColor(open ? InventoryTheme.textDark : InventoryTheme.textMuted)
-        _tabs[i].setBorderColor(_tabFocused[i] ? InventoryTheme.text : InventoryTheme.panelBorder)
+        var style = _tabFocused[i] ? "tabHover" : (open ? "tabSelected" : "tab")
+        UIKit.applyStyle(_tabs[i], style)
+        _tabLabels[i].setTextColor((open || _tabFocused[i]) ? InventoryTheme.textDark : InventoryTheme.text)
     }
 
     teardown() {
@@ -173,21 +193,16 @@ class InventoryUI {
             UIManager.removeUIElement(_screenPanel)
             _screenPanel = null
         }
-        for (page in _itemPages) {
-            page.unloadTextures()
+        for (page in _pages) {
+            page.release()
         }
-        _movesPage.release()
-        _partyPage.release()
-        _levelsPage.release()
-        _itemPages = []
         _pages = []
+        _movesPage = null
+        _partyPage = null
         _tabs = []
         _tabLabels = []
-        if (_goldTexture != null) {
-            _goldTexture.unload()
-            _goldTexture = null
-        }
         _boldFont.unload()
         _bookFont.unload()
+        UIKit.close()
     }
 }

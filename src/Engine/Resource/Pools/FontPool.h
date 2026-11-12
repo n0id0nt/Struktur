@@ -22,10 +22,13 @@ struct FontKey
 {
 	std::string path;
 	int size;
+	// Nearest-neighbour atlas sampling (see FontResource::m_pointSampled) - part of the key so a pixel font and a
+	// smooth load of the same file/size never share one atlas.
+	bool pointSampled = false;
 
 	bool operator==(const FontKey& other) const
 	{
-		return path == other.path && size == other.size;
+		return path == other.path && size == other.size && pointSampled == other.pointSampled;
 	}
 };
 
@@ -46,7 +49,7 @@ struct hash<Struktur::Resource::FontKey>
 {
 	size_t operator()(const Struktur::Resource::FontKey& key) const
 	{
-		return hash<std::string>()(key.path) ^ (hash<int>()(key.size) << 1);
+		return hash<std::string>()(key.path) ^ (hash<int>()(key.size) << 1) ^ (key.pointSampled ? 0x9e3779b9u : 0u);
 	}
 };
 }  // namespace std

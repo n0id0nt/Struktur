@@ -10,6 +10,7 @@
 #include "Engine/UI/UIBorder.h"
 #include "Engine/UI/UIClip.h"
 #include "Engine/UI/UIColor.h"
+#include "Engine/UI/UIInputHint.h"
 #include "Engine/UI/UILabel.h"
 #include "Engine/UI/UINineSlice.h"
 #include "Engine/UI/UIPanel.h"
@@ -201,6 +202,7 @@ void wren_UIElementGetPosition(WrenVM* vm)
 		DEBUG_ERROR("UILabel.setPosition: uiElement is Null");
 		return;
 	}
+	wrenEnsureSlots(vm, 2);  // zero-arg getter: only slot 0 exists until we ask for slot 1
 	wrenGetVariable(vm, "math", "Vec2", 1);  // Get class into slot 1
 	WrenVec2* vec2 = (WrenVec2*)wrenSetSlotNewForeign(vm, 0, 1, sizeof(WrenVec2));
 	new (vec2) WrenVec2(uiElement->element->GetPosition());
@@ -242,6 +244,7 @@ void wren_UIElementGetSize(WrenVM* vm)
 		DEBUG_ERROR("UILabel.setPosition: uiElement is Null");
 		return;
 	}
+	wrenEnsureSlots(vm, 2);  // zero-arg getter: only slot 0 exists until we ask for slot 1
 	wrenGetVariable(vm, "math", "Vec2", 1);  // Get class into slot 1
 	WrenVec2* vec2 = (WrenVec2*)wrenSetSlotNewForeign(vm, 0, 1, sizeof(WrenVec2));
 	new (vec2) WrenVec2(uiElement->element->GetSize());
@@ -256,6 +259,7 @@ void wren_UIElementGetBounds(WrenVM* vm)
 		DEBUG_ERROR("UILabel.getBounds: uiElement is Null");
 		return;
 	}
+	wrenEnsureSlots(vm, 2);  // zero-arg getter: only slot 0 exists until we ask for slot 1
 	wrenGetVariable(vm, "math", "Vec2", 1);  // Get class into slot 1
 	WrenRect* rect = (WrenRect*)wrenSetSlotNewForeign(vm, 0, 1, sizeof(WrenRect));
 	new (rect) WrenRect(uiElement->element->GetBounds());
@@ -952,6 +956,127 @@ void wren_UITextureClearSourceRect(WrenVM* vm)
 }
 
 // ============================================================================
+// UIInputHint - a button prompt for an action (see UIInputHint.h)
+// ============================================================================
+
+void wren_UIInputHintAllocate(WrenVM* vm)
+{
+	wrenSetSlotNewForeign(vm, 0, 0, sizeof(WrenUIElement));
+}
+
+void wren_UIInputHintFinalize(void* data)
+{
+	static_cast<WrenUIElement*>(data)->~WrenUIElement();
+}
+
+// UIInputHint.new(absolutePosition, relativePosition, action)
+void wren_UIInputHintNew(WrenVM* vm)
+{
+	Struktur::GameContext* context = static_cast<Struktur::GameContext*>(wrenGetUserData(vm));
+	WrenUIElement* uiElement       = static_cast<WrenUIElement*>(wrenGetSlotForeign(vm, 0));
+	WrenVec2* positionPixel        = static_cast<WrenVec2*>(wrenGetSlotForeign(vm, 1));
+	WrenVec2* positionPercentage   = static_cast<WrenVec2*>(wrenGetSlotForeign(vm, 2));
+	const char* action             = wrenGetSlotString(vm, 3);
+	auto* hint = new Struktur::UI::UIInputHint(*context, positionPixel->value, positionPercentage->value, action);
+	new (uiElement) WrenUIElement{hint};
+#ifdef DEBUG
+	char stackBuffer[4096];
+	uiElement->callstack = wrenTraceGetCallStackString(vm, stackBuffer, sizeof(stackBuffer));
+#endif
+}
+
+// Resolves slot 0 to the hint, logging and returning nullptr if it's gone or isn't a UIInputHint.
+static Struktur::UI::UIInputHint* GetInputHint(WrenVM* vm, const char* method)
+{
+	WrenUIElement* uiElement = static_cast<WrenUIElement*>(wrenGetSlotForeign(vm, 0));
+	auto* hint = uiElement->element ? dynamic_cast<Struktur::UI::UIInputHint*>(uiElement->element) : nullptr;
+	if (!hint)
+	{
+		DEBUG_ERROR("UIInputHint.%s: element is Null", method);
+	}
+	return hint;
+}
+
+// UIInputHint.setAction(action)
+void wren_UIInputHintSetAction(WrenVM* vm)
+{
+	Struktur::GameContext* context = static_cast<Struktur::GameContext*>(wrenGetUserData(vm));
+	if (auto* hint = GetInputHint(vm, "setAction"))
+	{
+		hint->SetAction(*context, wrenGetSlotString(vm, 1));
+	}
+}
+
+// UIInputHint.setLabel(text)
+void wren_UIInputHintSetLabel(WrenVM* vm)
+{
+	Struktur::GameContext* context = static_cast<Struktur::GameContext*>(wrenGetUserData(vm));
+	if (auto* hint = GetInputHint(vm, "setLabel"))
+	{
+		hint->SetLabel(*context, wrenGetSlotString(vm, 1));
+	}
+}
+
+// UIInputHint.setFont(font)
+void wren_UIInputHintSetFont(WrenVM* vm)
+{
+	Struktur::GameContext* context = static_cast<Struktur::GameContext*>(wrenGetUserData(vm));
+	if (auto* hint = GetInputHint(vm, "setFont"))
+	{
+		WrenFontHandle* font = static_cast<WrenFontHandle*>(wrenGetSlotForeign(vm, 1));
+		hint->SetFont(*context, font->resource);
+	}
+}
+
+// UIInputHint.setFontSize(size)
+void wren_UIInputHintSetFontSize(WrenVM* vm)
+{
+	Struktur::GameContext* context = static_cast<Struktur::GameContext*>(wrenGetUserData(vm));
+	if (auto* hint = GetInputHint(vm, "setFontSize"))
+	{
+		hint->SetFontSize(*context, (float)wrenGetSlotDouble(vm, 1));
+	}
+}
+
+// UIInputHint.setGlyphScale(scale)
+void wren_UIInputHintSetGlyphScale(WrenVM* vm)
+{
+	Struktur::GameContext* context = static_cast<Struktur::GameContext*>(wrenGetUserData(vm));
+	if (auto* hint = GetInputHint(vm, "setGlyphScale"))
+	{
+		hint->SetGlyphScale(*context, (int)wrenGetSlotDouble(vm, 1));
+	}
+}
+
+// UIInputHint.setSpacing(glyphGap, labelGap)
+void wren_UIInputHintSetSpacing(WrenVM* vm)
+{
+	Struktur::GameContext* context = static_cast<Struktur::GameContext*>(wrenGetUserData(vm));
+	if (auto* hint = GetInputHint(vm, "setSpacing"))
+	{
+		hint->SetSpacing(*context, (float)wrenGetSlotDouble(vm, 1), (float)wrenGetSlotDouble(vm, 2));
+	}
+}
+
+// UIInputHint.setTextColor(color)
+void wren_UIInputHintSetTextColor(WrenVM* vm)
+{
+	if (auto* hint = GetInputHint(vm, "setTextColor"))
+	{
+		WrenVec4* color = static_cast<WrenVec4*>(wrenGetSlotForeign(vm, 1));
+		hint->SetTextColor(Struktur::Util::Color{(unsigned char)color->value.r, (unsigned char)color->value.g,
+		                                         (unsigned char)color->value.b, (unsigned char)color->value.a});
+	}
+}
+
+// InputGlyphs.load(path) - the button-art map hints resolve against (see UI::InputGlyphs).
+void wren_InputGlyphsLoad(WrenVM* vm)
+{
+	Struktur::GameContext* context = static_cast<Struktur::GameContext*>(wrenGetUserData(vm));
+	wrenSetSlotBool(vm, 0, context->GetInputGlyphs().Load(*context, wrenGetSlotString(vm, 1)));
+}
+
+// ============================================================================
 // UININESLICE BINDINGS
 // ============================================================================
 
@@ -1029,6 +1154,20 @@ void wren_UINineSliceSetBorder(WrenVM* vm)
 	float bottom                         = (float)wrenGetSlotDouble(vm, 4);
 	Struktur::UI::UINineSlice* nineSlice = dynamic_cast<Struktur::UI::UINineSlice*>(uiElement->element);
 	nineSlice->SetBorder(left, right, top, bottom);
+}
+
+// UINineSlice.setScale(scale)
+void wren_UINineSliceSetScale(WrenVM* vm)
+{
+	WrenUIElement* uiElement = static_cast<WrenUIElement*>(wrenGetSlotForeign(vm, 0));
+	if (!uiElement->element)
+	{
+		DEBUG_ERROR("UINineSlice.setScale: element is Null");
+		return;
+	}
+	float scale                          = (float)wrenGetSlotDouble(vm, 1);
+	Struktur::UI::UINineSlice* nineSlice = dynamic_cast<Struktur::UI::UINineSlice*>(uiElement->element);
+	nineSlice->SetScale(scale);
 }
 
 // ============================================================================
@@ -1212,6 +1351,7 @@ void wren_UIScrollGetScrollOffset(WrenVM* vm)
 		return;
 	}
 	Struktur::UI::UIScroll* uiScroll = dynamic_cast<Struktur::UI::UIScroll*>(uiElement->element);
+	wrenEnsureSlots(vm, 2);  // zero-arg getter: only slot 0 exists until we ask for slot 1
 	wrenGetVariable(vm, "math", "Vec2", 1);  // Get class into slot 1
 	WrenVec2* vec2 = (WrenVec2*)wrenSetSlotNewForeign(vm, 0, 1, sizeof(WrenVec2));
 	new (vec2) WrenVec2(uiScroll->GetScrollOffset());
@@ -1227,6 +1367,7 @@ void wren_UIScrollGetContentSize(WrenVM* vm)
 		return;
 	}
 	Struktur::UI::UIScroll* uiScroll = dynamic_cast<Struktur::UI::UIScroll*>(uiElement->element);
+	wrenEnsureSlots(vm, 2);  // zero-arg getter: only slot 0 exists until we ask for slot 1
 	wrenGetVariable(vm, "math", "Vec2", 1);  // Get class into slot 1
 	WrenVec2* vec2 = (WrenVec2*)wrenSetSlotNewForeign(vm, 0, 1, sizeof(WrenVec2));
 	new (vec2) WrenVec2(uiScroll->GetContentSize());
@@ -1514,6 +1655,20 @@ void wren_UIRichLabelSetVisibleGlyphCount(WrenVM* vm)
 	richLabel->SetVisibleGlyphCount(count);
 }
 
+// UIRichLabel.getContentHeight() -> Num
+void wren_UIRichLabelGetContentHeight(WrenVM* vm)
+{
+	WrenUIElement* uiElement = static_cast<WrenUIElement*>(wrenGetSlotForeign(vm, 0));
+	auto* label = uiElement->element ? dynamic_cast<Struktur::UI::UIRichLabel*>(uiElement->element) : nullptr;
+	if (!label)
+	{
+		DEBUG_ERROR("UIRichLabel.getContentHeight: element is Null");
+		wrenSetSlotDouble(vm, 0, 0.0);
+		return;
+	}
+	wrenSetSlotDouble(vm, 0, (double)label->GetContentHeight());
+}
+
 // UIRichLabel.getGlyphCount() - total drawable glyph count (see GetRequiredQuadCount), for a Wren-side reveal
 // loop to compare its own elapsed-time-driven count against (matching Godot's own
 // visible_characters/text-length pattern for a typewriter effect).
@@ -1527,6 +1682,19 @@ void wren_UIRichLabelGetGlyphCount(WrenVM* vm)
 	}
 	Struktur::UI::UIRichLabel* richLabel = dynamic_cast<Struktur::UI::UIRichLabel*>(uiElement->element);
 	wrenSetSlotDouble(vm, 0, (double)richLabel->GetTotalGlyphCount());
+}
+
+// UIRichLabel.setAutoSize(enabled)
+void wren_UIRichLabelSetAutoSize(WrenVM* vm)
+{
+	WrenUIElement* uiElement = static_cast<WrenUIElement*>(wrenGetSlotForeign(vm, 0));
+	auto* label = uiElement->element ? dynamic_cast<Struktur::UI::UIRichLabel*>(uiElement->element) : nullptr;
+	if (!label)
+	{
+		DEBUG_ERROR("UIRichLabel.setAutoSize: element is Null");
+		return;
+	}
+	label->SetAutoSize(wrenGetSlotBool(vm, 1));
 }
 
 // UIRichLabel.setUseUnscaledTime(useUnscaled) - see UIRichLabel::SetUseUnscaledTime. Lets e.g. a main-menu
@@ -1726,6 +1894,29 @@ WREN_BINDING_MODULE(UI)
 	WREN_CLASS_METHOD(registry, "ui", "UITexture", "clearSourceRect()", wren_UITextureClearSourceRect,
 	                  "Draws the whole texture again");
 
+	// Register UIInputHint - a button prompt for an action that shows the art for whichever binding the player would
+	// use right now (keyboard/mouse or pad) - see UIInputHint.h.
+	WREN_FOREIGN_CLASS(registry, "ui", "UIInputHint", wren_UIInputHintAllocate, wren_UIInputHintFinalize,
+	                   "UI button prompt for an input action");
+	WREN_CLASS_INHERITANCE(registry, "ui", "UIInputHint", "UIElement");
+	WREN_CONSTRUCTOR(registry, "ui", "UIInputHint", "new(_,_,_)", wren_UIInputHintNew,
+	                 "Create UIInputHint with absolutePosition, relativePosition, action (e.g. \"UIAccept\", \"UITab:negative\")");
+	WREN_CLASS_METHOD(registry, "ui", "UIInputHint", "setAction(_)", wren_UIInputHintSetAction,
+	                  "Sets the action (or \"Action:part\") whose button is shown");
+	WREN_CLASS_METHOD(registry, "ui", "UIInputHint", "setLabel(_)", wren_UIInputHintSetLabel,
+	                  "Sets the text shown after the button");
+	WREN_CLASS_METHOD(registry, "ui", "UIInputHint", "setFont(_)", wren_UIInputHintSetFont, "Sets the label font");
+	WREN_CLASS_METHOD(registry, "ui", "UIInputHint", "setFontSize(_)", wren_UIInputHintSetFontSize,
+	                  "Sets the label font size");
+	WREN_CLASS_METHOD(registry, "ui", "UIInputHint", "setGlyphScale(_)", wren_UIInputHintSetGlyphScale,
+	                  "Sets the whole-number scale the button art is drawn at");
+	WREN_CLASS_METHOD(registry, "ui", "UIInputHint", "setSpacing(_,_)", wren_UIInputHintSetSpacing,
+	                  "Sets the gap between buttons and the gap before the label, in pixels");
+	WREN_CLASS_METHOD(registry, "ui", "UIInputHint", "setTextColor(_)", wren_UIInputHintSetTextColor,
+	                  "Sets the label color");
+	WREN_CLASS_STATIC(registry, "ui", "InputGlyphs", "load(_)", wren_InputGlyphsLoad,
+	                  "Loads the button-art map (JSON) that input hints resolve against");
+
 	// Register UINineSlice foreign class - a texture drawn as a nine-slice/9-patch (see UINineSlice.h): corners
 	// keep their native pixel size, edges/center stretch to fill the rest.
 	WREN_FOREIGN_CLASS(registry, "ui", "UINineSlice", wren_UINineSliceAllocate, wren_UINineSliceFinalize,
@@ -1741,6 +1932,9 @@ WREN_BINDING_MODULE(UI)
 	WREN_CLASS_METHOD(registry, "ui", "UINineSlice", "setBorder(_,_,_,_)", wren_UINineSliceSetBorder,
 	                  "Sets the border insets (left, right, top, bottom), in source-texture pixel space, that stay "
 	                  "fixed-size on screen while the edges/center stretch to fill the rest");
+	WREN_CLASS_METHOD(registry, "ui", "UINineSlice", "setScale(_)", wren_UINineSliceSetScale,
+	                  "Draws the border's corners/edges at this many screen pixels per source pixel (e.g. 4 for "
+	                  "16px pixel art)");
 
 	// Register UIBorder foreign class - minimal border outline (see UIBorder.h), for when you only want a border
 	// without UIPanel's bundled solid-color/texture support.
@@ -1795,8 +1989,12 @@ WREN_BINDING_MODULE(UI)
 	WREN_CLASS_METHOD(registry, "ui", "UIRichLabel", "setVisibleGlyphCount(_)", wren_UIRichLabelSetVisibleGlyphCount,
 	                  "Caps rendering to the first N drawable glyphs, for a typewriter/reveal effect - negative "
 	                  "means show everything");
+	WREN_CLASS_METHOD(registry, "ui", "UIRichLabel", "getContentHeight()", wren_UIRichLabelGetContentHeight,
+	                  "Gets the height the wrapped text needs at the label's current width, for a box that grows to fit");
 	WREN_CLASS_METHOD(registry, "ui", "UIRichLabel", "getGlyphCount()", wren_UIRichLabelGetGlyphCount,
 	                  "Gets the total drawable glyph count, for a reveal loop to compare its progress against");
+	WREN_CLASS_METHOD(registry, "ui", "UIRichLabel", "setAutoSize(_)", wren_UIRichLabelSetAutoSize,
+	                  "Sizes the label to its content (unwrapped labels), so its anchor point keeps it aligned");
 	WREN_CLASS_METHOD(registry, "ui", "UIRichLabel", "setUseUnscaledTime(_)", wren_UIRichLabelSetUseUnscaledTime,
 	                  "Sets whether wave/shake/pulse/etc. animation follows unscaled (real) time instead of "
 	                  "scaled game time - true keeps animating through a pause or slow-mo");

@@ -4,6 +4,7 @@
 
 import "app" for Application, Time
 import "input" for Input
+import "ui" for InputGlyphs
 import "localization" for Localization
 import "flags" for FlagManager
 import "fileSystem" for FileSystem
@@ -31,7 +32,7 @@ class Game {
         var windowWidth = 1280
         var windowHeight = 720
         Application.setWindowSize(windowWidth, windowHeight)
-        Application.setApplicationName("Memory Palace")
+        Application.setApplicationName("Seven Gods")
         //Application.setIsFullScreen(true)
         Application.setPixelsPerMeter(32)
         var gameObjectsScripts = [
@@ -69,6 +70,8 @@ class Game {
 
         FileSystem.seedFromDefaults("Settings/InputBindings/InputConfig.json", "InputConfig.json")
         Input.loadInputBindings("Settings/InputBindings/InputConfig.json")
+        // Button art for input hints (UIInputHint / [input=] rich text) - see UIKit.hint.
+        InputGlyphs.load("Settings/InputBindings/InputGlyphs.json")
         Localization.loadManifest("Localization/languages.json")
         FlagManager.load("flags.sav")
         Inventory.load("inventory.sav")

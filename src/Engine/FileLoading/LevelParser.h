@@ -127,6 +127,9 @@ struct Level
 	int pxHei;
 	std::vector<Neighbour> neighbours;
 	std::vector<std::string> tags;
+	// The level's custom fields (LDtk "Level fields"), as parsed for entities - scripts read them by name
+	// (World.getLevelField), so the parser never needs to know what any of them mean.
+	std::vector<FieldInstance> fieldInstances;
 };
 
 struct World
@@ -165,7 +168,7 @@ int FindLevelIndexByIdentifier(const World& world, const std::string& identifier
 int FindLevelIndexByIid(const World& world, const std::string& iid);
 void LoadLayers(World& world, Level& level, const nlohmann::json& json);
 void LoadEntities(Layer& entityLayer, const nlohmann::json& json);
-void LoadFieldInstances(Entity& entity, const nlohmann::json& json);
+void LoadFieldInstances(std::vector<FieldInstance>& fields, const nlohmann::json& json);
 void LoadIntGrid(Layer& gridLayer, const nlohmann::json& json);
 void LoadGridTiles(Layer& gridLayer, const nlohmann::json& json);
 FieldInstanceType ConvertFieldTypeToEnum(const std::string& fieldInstanceType);

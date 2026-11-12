@@ -25,6 +25,7 @@ private:
 	float m_borderRight = 0.0f;
 	float m_borderTop = 0.0f;
 	float m_borderBottom = 0.0f;
+	float m_scale        = 1.0f;
 
 public:
 	UINineSlice(const glm::vec2& absolutePosition, const glm::vec2& relativePosition, const glm::vec2& absoluteSize,
@@ -48,6 +49,17 @@ public:
 		m_borderTop = top;
 		m_borderBottom = bottom;
 		m_visualDirty = true;
+	}
+	// How many screen pixels each source pixel of the corners/edges takes up (see Renderer::NineSliceBorder::scale) -
+	// 1 draws the border at its native size, 4 draws 16px pixel art as chunky 4x pixels.
+	void SetScale(float scale)
+	{
+		m_scale = scale;
+		m_visualDirty = true;
+	}
+	float GetScale() const
+	{
+		return m_scale;
 	}
 	Util::Color GetTint() const
 	{

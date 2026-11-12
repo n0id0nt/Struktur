@@ -131,7 +131,11 @@ class InventoryState is BaseState {
         }
         model["levelLabels"] = levelLabels
         model["gold"] = Inventory.gold
-        model["hint"] = Localization.get("inventory.hint")
+        var hints = {}
+        for (key in ["tabs", "move", "select", "close"]) {
+            hints[key] = Localization.get("inventory.hint.%(key)")
+        }
+        model["hints"] = hints
         return model
     }
 

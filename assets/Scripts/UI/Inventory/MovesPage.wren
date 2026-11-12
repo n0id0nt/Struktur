@@ -13,9 +13,9 @@
 //   sheet: { "texture", "columns", "cellWidth", "cellHeight", "idle": [firstFrame, endFrame, seconds],
 //            "crop": [x, y, width, height] - the part of each cell around the fighter that the preview shows }
 // onEquip.call(slot, id) makes the change and returns the new equipped ids.
-import "math" for Math, Vec2, Vec4
-import "resourceManager" for Texture
+import "math" for Math, Vec2
 import "ui" for UIManager, UIScroll, UITexture, NavigationDirection
+import "UI/Theme/UIKit" for UIKit
 import "UI/Inventory/InventoryTheme" for InventoryTheme
 import "UI/Inventory/MoveCells" for MoveCells
 
@@ -24,19 +24,19 @@ var SLOT_STRIDE = 180
 var SLOT_HEIGHT = 92
 var LIST_Y = 180
 var LIST_INSET = 10
-var ROW_WIDTH = 508
+var ROW_INSET = 4   // room for the focus ring inside the scroll's clip
+var ROW_WIDTH = 500
 var ROW_HEIGHT = 40
 var ROW_STRIDE = 46
 // Right edges of the list's number columns, within a row.
-var TIME_X = 290
-var DAMAGE_X = 360
-var STAMINA_X = 430
-var HEAL_X = 494
+var TIME_X = 226
+var DAMAGE_X = 318
+var STAMINA_X = 414
+var HEAL_X = 496
 var PREVIEW_X = 544
 var PREVIEW_WIDTH = 528
 var PREVIEW_SCALE = 3   // whole pixels only - the sheet is point-sampled pixel art
 var IDLE_HOLD = 0.8   // seconds of idle between repeats of the previewed move
-var ARMED_BG = Vec4.new(96, 80, 36, 255)
 
 class MovesPage {
     construct new(parent, model, boldFont, bookFont, onFocus, onEquip) {
@@ -52,7 +52,6 @@ class MovesPage {
         _rows = []
         _armedSlot = null
         _armedMove = null
-        _focused = null
         _previewMove = null
         _previewStart = null
         _previewFrame = -1
@@ -114,63 +113,51 @@ class MovesPage {
     // --- building ---------------------------------------------------------------------------
 
     buildLoadout_() {
-        InventoryTheme.label(_root, _labels["loadout"], Vec2.new(0, 0), Vec2.new(0, 0), Vec2.new(0, 0), 24.0, _boldFont,
-            InventoryTheme.text, 3)
+        InventoryTheme.label(_root, _labels["loadout"], Vec2.new(0, 6), Vec2.new(0, 0), Vec2.new(0, 0), 18.0, _boldFont,
+            InventoryTheme.accent, 3)
         for (i in 0..._equipped.count) {
-            var panel = InventoryTheme.panel(_root, Vec2.new(i * SLOT_STRIDE, 36), Vec2.new(0, 0),
-                Vec2.new(SLOT_WIDTH, SLOT_HEIGHT), Vec2.new(0, 0), InventoryTheme.slotBg, InventoryTheme.panelBorder, 2, 3)
-            panel.setFocusable(true)
+            var panel = InventoryTheme.frame(_root, "tile", Vec2.new(i * SLOT_STRIDE, 36), Vec2.new(0, 0),
+                Vec2.new(SLOT_WIDTH, SLOT_HEIGHT), Vec2.new(0, 0), 3)
             InventoryTheme.label(panel, "%(_labels["slot"]) %(i + 1)", Vec2.new(12, 8), Vec2.new(0, 0), Vec2.new(0, 0),
                 16.0, _bookFont, InventoryTheme.textMuted, 4)
             var slot = {}
             slot["panel"] = panel
-            slot["name"] = InventoryTheme.label(panel, "", Vec2.new(12, 28), Vec2.new(0, 0), Vec2.new(0, 0), 26.0,
+            slot["name"] = InventoryTheme.label(panel, "", Vec2.new(12, 40), Vec2.new(0, 0), Vec2.new(0, 0), 26.0,
                 _boldFont, InventoryTheme.text, 4)
-            slot["summary"] = InventoryTheme.label(panel, "", Vec2.new(12, 64), Vec2.new(0, 0), Vec2.new(0, 0), 16.0,
-                _bookFont, InventoryTheme.textMuted, 4)
             _slots.add(slot)
 
-            panel.setOnFocus { |sender|
-                _focused = panel
-                style_()
+            InventoryTheme.focusable(panel, Fn.new {
                 if (_armedMove == null) {
                     preview_(entryFor_(_equipped[i]))
                 }
                 _onFocus.call()
-            }
-            panel.setOnLoseFocus { |sender|
-                if (_focused == panel) {
-                    _focused = null
-                }
-                style_()
-            }
+            }, null)
             panel.setOnClick { |sender, mousePos| slotPressed_(i) }
         }
     }
 
     buildList_() {
-        InventoryTheme.label(_root, _labels["unlocked"], Vec2.new(0, LIST_Y - 36), Vec2.new(0, 0), Vec2.new(0, 0), 24.0,
-            _boldFont, InventoryTheme.text, 3)
+        InventoryTheme.label(_root, _labels["unlocked"], Vec2.new(0, LIST_Y - 26), Vec2.new(0, 0), Vec2.new(0, 0), 18.0,
+            _boldFont, InventoryTheme.accent, 3)
         header_(_labels["time"], TIME_X)
         header_(_labels["damage"], DAMAGE_X)
         header_(_labels["stamina"], STAMINA_X)
         header_(_labels["heal"], HEAL_X)
 
-        var frame = InventoryTheme.panel(_root, Vec2.new(0, LIST_Y), Vec2.new(0, 0), Vec2.new(528, 476 - LIST_Y),
-            Vec2.new(0, 0), InventoryTheme.panelBg, InventoryTheme.panelBorder, 2, 3)
+        var frame = InventoryTheme.frame(_root, "well", Vec2.new(0, LIST_Y), Vec2.new(0, 0), Vec2.new(528, 476 - LIST_Y),
+            Vec2.new(0, 0), 3)
         var scroll = UIScroll.new(Vec2.new(LIST_INSET, LIST_INSET), Vec2.new(0, 0),
-            Vec2.new(ROW_WIDTH, 476 - LIST_Y - 2 * LIST_INSET), Vec2.new(0, 0))
+            Vec2.new(ROW_WIDTH + 2 * ROW_INSET, 476 - LIST_Y - 2 * LIST_INSET), Vec2.new(0, 0))
         scroll.setHorizontalScrollEnabled(false)
-        // Six rows fit; past them, scroll a row at a time (112 = the sixth row's centre below the viewport's).
-        scroll.setFocusDeadzone(Vec2.new(0, 112))
+        // Six rows fit; past them, scroll a row at a time (110 = the sixth row's centre below the viewport's).
+        scroll.setFocusDeadzone(Vec2.new(0, 110))
         scroll.setZIndex(4)
         frame.addChild(scroll)
 
         for (r in 0..._moves.count) {
             var move = _moves[r]
-            var panel = InventoryTheme.panel(scroll, Vec2.new(0, r * ROW_STRIDE), Vec2.new(0, 0),
-                Vec2.new(ROW_WIDTH, ROW_HEIGHT), Vec2.new(0, 0), InventoryTheme.slotBg, InventoryTheme.panelBorder, 2, 5)
-            panel.setFocusable(true)
+            var panel = InventoryTheme.frame(scroll, "tile", Vec2.new(ROW_INSET, ROW_INSET + r * ROW_STRIDE), Vec2.new(0, 0),
+                Vec2.new(ROW_WIDTH, ROW_HEIGHT), Vec2.new(0, 0), 5)
             var row = {}
             row["panel"] = panel
             row["badge"] = InventoryTheme.label(panel, "", Vec2.new(14, 8), Vec2.new(0, 0), Vec2.new(0, 0), 20.0,
@@ -183,26 +170,18 @@ class MovesPage {
             MoveCells.apply(cell_(panel, HEAL_X), MoveCells.heal(move))
             _rows.add(row)
 
-            panel.setOnFocus { |sender|
-                _focused = panel
-                style_()
+            InventoryTheme.focusable(panel, Fn.new {
                 if (_armedMove == null) {
                     preview_(move)
                 }
                 _onFocus.call()
-            }
-            panel.setOnLoseFocus { |sender|
-                if (_focused == panel) {
-                    _focused = null
-                }
-                style_()
-            }
+            }, null)
             panel.setOnClick { |sender, mousePos| rowPressed_(r) }
         }
     }
 
     header_(text, x) {
-        InventoryTheme.label(_root, text, Vec2.new(LIST_INSET + x, LIST_Y - 26), Vec2.new(0, 0), Vec2.new(1, 0), 16.0,
+        InventoryTheme.label(_root, text, Vec2.new(LIST_INSET + ROW_INSET + x, LIST_Y - 26), Vec2.new(0, 0), Vec2.new(1, 0), 16.0,
             _bookFont, InventoryTheme.textMuted, 3)
     }
 
@@ -212,23 +191,25 @@ class MovesPage {
     }
 
     buildPreview_() {
-        var panel = InventoryTheme.panel(_root, Vec2.new(PREVIEW_X, 0), Vec2.new(0, 0), Vec2.new(PREVIEW_WIDTH, 476),
-            Vec2.new(0, 0), InventoryTheme.panelBg, InventoryTheme.panelBorder, 2, 3)
+        var panel = InventoryTheme.frame(_root, "well", Vec2.new(PREVIEW_X, 0), Vec2.new(0, 0), Vec2.new(PREVIEW_WIDTH, 476),
+            Vec2.new(0, 0), 3)
 
         var crop = _sheet["crop"]
         var width = crop[2] * PREVIEW_SCALE
         var height = crop[3] * PREVIEW_SCALE
-        var stage = InventoryTheme.panel(panel, Vec2.new(0, 16), Vec2.new(0.5, 0), Vec2.new(width + 16, height + 16),
-            Vec2.new(0, 0), InventoryTheme.slotEmptyBg, InventoryTheme.panelBorder, 2, 4)
+        // The fighter stands in a kit cell (its border is heavier top-left, so its inside is centred down-right).
+        var pad = UIKit.padding("cell")
+        var stage = InventoryTheme.frame(panel, "cell", Vec2.new(0, 16), Vec2.new(0.5, 0),
+            Vec2.new(width + pad[0] + pad[1], height + pad[2] + pad[3]), Vec2.new(0, 0), 4)
         stage.setAnchorPoint(Vec2.new(0.5, 0))
-        _texture = Texture.load(_sheet["texture"])
-        _sprite = UITexture.new(Vec2.new(0, 0), Vec2.new(0.5, 0.5), Vec2.new(width, height), Vec2.new(0, 0))
+        _sprite = UITexture.new(Vec2.new((pad[0] - pad[1]) / 2, (pad[2] - pad[3]) / 2), Vec2.new(0.5, 0.5),
+            Vec2.new(width, height), Vec2.new(0, 0))
         _sprite.setAnchorPoint(Vec2.new(0.5, 0.5))
-        _sprite.setTexture(_texture)
+        _sprite.setTexture(UIKit.texture(_sheet["texture"]))
         _sprite.setZIndex(5)
         stage.addChild(_sprite)
 
-        var y = 16 + height + 16 + 10
+        var y = 16 + height + pad[2] + pad[3] + 10
         _previewName = InventoryTheme.label(panel, "", Vec2.new(0, y), Vec2.new(0.5, 0), Vec2.new(0.5, 0), 34.0,
             _boldFont, InventoryTheme.text, 4)
 
@@ -245,10 +226,11 @@ class MovesPage {
 
         _status = InventoryTheme.label(panel, "", Vec2.new(0, y + 102), Vec2.new(0.5, 0), Vec2.new(0.5, 0), 20.0,
             _bookFont, InventoryTheme.textMuted, 4)
-        _hint = InventoryTheme.label(panel, "", Vec2.new(0, -52), Vec2.new(0.5, 1), Vec2.new(0.5, 0), 18.0, _bookFont,
+        // Rich text, so the button prompts in the hint strings ([input=UIAccept], [input=UICancel]) draw as art.
+        _hint = UIKit.richText(panel, "", Vec2.new(0, -60), Vec2.new(0.5, 1), Vec2.new(0.5, 0), 18.0,
             InventoryTheme.accent, 4)
-        _hintSub = InventoryTheme.label(panel, _labels["hintCancel"], Vec2.new(0, -28), Vec2.new(0.5, 1),
-            Vec2.new(0.5, 0), 16.0, _bookFont, InventoryTheme.textMuted, 4)
+        _hintSub = UIKit.richText(panel, _labels["hintCancel"], Vec2.new(0, -32), Vec2.new(0.5, 1), Vec2.new(0.5, 0),
+            16.0, InventoryTheme.textMuted, 4)
     }
 
     // Explicit neighbours everywhere (see InventoryTheme.link): the slots in a row, the list as a column, down from
@@ -322,7 +304,6 @@ class MovesPage {
         for (i in 0..._slots.count) {
             var move = entryFor_(_equipped[i])
             setText_(_slots[i]["name"], move["name"])
-            setText_(_slots[i]["summary"], "%(_labels["time"]) %(move["time"])   %(_labels["damage"]) %(MoveCells.damage(move)[0])")
         }
         for (row in _rows) {
             row["badge"].setText("")
@@ -336,11 +317,11 @@ class MovesPage {
         style_()
 
         if (_armedSlot != null) {
-            setText_(_hint, "%(_labels["hintSlot"]) %(_armedSlot + 1)")
+            _hint.setMarkupText("%(_labels["hintSlot"]) %(_armedSlot + 1)")
         } else if (_armedMove != null) {
-            setText_(_hint, "%(_labels["hintMove"]) %(entryFor_(_armedMove)["name"])")
+            _hint.setMarkupText("%(_labels["hintMove"]) %(entryFor_(_armedMove)["name"])")
         } else {
-            setText_(_hint, _labels["hintIdle"])
+            _hint.setMarkupText(_labels["hintIdle"])
         }
         _hintSub.setVisible(_armedSlot != null || _armedMove != null)
         if (_previewMove != null) {
@@ -348,7 +329,7 @@ class MovesPage {
         }
     }
 
-    // Armed (the half of a swap already picked) is gold-brown, focus has a gold border.
+    // The armed tile (the half of a swap already picked) is tinted warm; focus is the kit's ring.
     style_() {
         for (i in 0..._slots.count) {
             styleElement_(_slots[i]["panel"], _armedSlot == i)
@@ -358,16 +339,8 @@ class MovesPage {
         }
     }
 
-    styleElement_(panel, armed) {
-        var focused = panel == _focused
-        var bg = InventoryTheme.slotBg
-        if (armed) {
-            bg = ARMED_BG
-        } else if (focused) {
-            bg = InventoryTheme.slotFocusBg
-        }
-        panel.setBackgroundColor(bg)
-        panel.setBorderColor(focused ? InventoryTheme.accent : InventoryTheme.panelBorder)
+    styleElement_(tile, armed) {
+        tile.setTint(armed ? InventoryTheme.armedTint : InventoryTheme.noTint)
     }
 
     // --- preview ----------------------------------------------------------------------------
@@ -437,14 +410,9 @@ class MovesPage {
 
     // Call after the UI tree is removed.
     release() {
-        if (_texture != null) {
-            _texture.unload()
-            _texture = null
-        }
         _slots = []
         _rows = []
         _previewCells = []
-        _focused = null
         _sprite = null
         _previewName = null
         _status = null

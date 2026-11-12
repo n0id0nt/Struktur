@@ -189,6 +189,63 @@ void wren_InputLoadInputBindings(WrenVM* vm)
 	input.LoadInputBindings(filePath);
 }
 
+// Input.activeDevice -> "keyboard" | "gamepad"
+void wren_InputActiveDevice(WrenVM* vm)
+{
+	Struktur::GameContext* context = static_cast<Struktur::GameContext*>(wrenGetUserData(vm));
+	bool gamepad = context->GetInput().GetActiveDevice() == Struktur::Input::InputDevice::Gamepad;
+	wrenSetSlotString(vm, 0, gamepad ? "gamepad" : "keyboard");
+}
+
+// Input.gamepadFamily -> "lettered" | "positional"
+void wren_InputGamepadFamily(WrenVM* vm)
+{
+	Struktur::GameContext* context = static_cast<Struktur::GameContext*>(wrenGetUserData(vm));
+	bool positional = context->GetInput().GetGamepadFamily() == Struktur::Input::GamepadFamily::Positional;
+	wrenSetSlotString(vm, 0, positional ? "positional" : "lettered");
+}
+
+// Input.hintRevision -> Num
+void wren_InputHintRevision(WrenVM* vm)
+{
+	Struktur::GameContext* context = static_cast<Struktur::GameContext*>(wrenGetUserData(vm));
+	wrenSetSlotDouble(vm, 0, (double)context->GetInput().GetHintRevision());
+}
+
+// Input.debugForceDevice(name) - "keyboard", "gamepad", or anything else (e.g. "none") to stop forcing.
+void wren_InputDebugForceDevice(WrenVM* vm)
+{
+	Struktur::GameContext* context = static_cast<Struktur::GameContext*>(wrenGetUserData(vm));
+	std::string name               = wrenGetSlotType(vm, 1) == WREN_TYPE_STRING ? wrenGetSlotString(vm, 1) : "";
+	std::optional<Struktur::Input::InputDevice> device;
+	if (name == "keyboard")
+	{
+		device = Struktur::Input::InputDevice::KeyboardMouse;
+	}
+	else if (name == "gamepad")
+	{
+		device = Struktur::Input::InputDevice::Gamepad;
+	}
+	context->GetInput().DebugForceDevice(device);
+}
+
+// Input.debugForceGamepadFamily(name) - "lettered", "positional", or anything else to stop forcing.
+void wren_InputDebugForceGamepadFamily(WrenVM* vm)
+{
+	Struktur::GameContext* context = static_cast<Struktur::GameContext*>(wrenGetUserData(vm));
+	std::string name               = wrenGetSlotType(vm, 1) == WREN_TYPE_STRING ? wrenGetSlotString(vm, 1) : "";
+	std::optional<Struktur::Input::GamepadFamily> family;
+	if (name == "lettered")
+	{
+		family = Struktur::Input::GamepadFamily::Lettered;
+	}
+	else if (name == "positional")
+	{
+		family = Struktur::Input::GamepadFamily::Positional;
+	}
+	context->GetInput().DebugForceGamepadFamily(family);
+}
+
 // ============================================================================
 // BINDING REGISTRATION
 // ============================================================================
@@ -223,4 +280,15 @@ WREN_BINDING_MODULE(Input)
 
 	WREN_CLASS_STATIC(registry, "input", "Input", "loadInputBindings(_)", wren_InputLoadInputBindings,
 	                  "Loads the input bindings.");
+
+	WREN_CLASS_STATIC(registry, "input", "Input", "activeDevice", wren_InputActiveDevice,
+	                  "The device used most recently: \"keyboard\" (keyboard or mouse) or \"gamepad\".");
+	WREN_CLASS_STATIC(registry, "input", "Input", "gamepadFamily", wren_InputGamepadFamily,
+	                  "How the active pad's face buttons are pictured: \"lettered\" (Xbox) or \"positional\".");
+	WREN_CLASS_STATIC(registry, "input", "Input", "hintRevision", wren_InputHintRevision,
+	                  "Changes whenever button hints could need redrawing (device, last-used binding, bindings).");
+	WREN_CLASS_STATIC(registry, "input", "Input", "debugForceDevice(_)", wren_InputDebugForceDevice,
+	                  "Pins the active device for testing: \"keyboard\", \"gamepad\", or \"none\" to stop.");
+	WREN_CLASS_STATIC(registry, "input", "Input", "debugForceGamepadFamily(_)", wren_InputDebugForceGamepadFamily,
+	                  "Pins the pad family for testing: \"lettered\", \"positional\", or \"none\" to stop.");
 }

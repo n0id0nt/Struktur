@@ -3,7 +3,7 @@
 Struktur::Resource::FontResource* Struktur::Resource::FontPool::LoadResource(GameContext& context,
                                                                              const FontKey& key)
 {
-	auto* font = new FontResource(key.path, key.size);
+	auto* font = new FontResource(key.path, key.size, key.pointSampled);
 
 	if (!font->LoadFromDisk(context))
 	{

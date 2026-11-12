@@ -388,6 +388,17 @@ std::vector<Struktur::Text::RichLine> Struktur::Text::ParseMarkup(const std::str
 			// v1-v4 scoping note), regardless of any enclosing [wave]/[shake]/[pulse].
 			state.currentLine.runs.push_back(std::move(iconRun));
 		}
+		else if (name == "input" && !arg.empty())
+		{
+			// A button hint - same shape as an icon run (no text, never animates), resolved later by the label.
+			FlushTextRun(state);
+			RichRun inputRun;
+			inputRun.bold      = state.boldDepth > 0;
+			inputRun.italic    = state.italicDepth > 0;
+			inputRun.color     = state.colorStack.back();
+			inputRun.inputSpec = arg;
+			state.currentLine.runs.push_back(std::move(inputRun));
+		}
 		else if (name == "wave")
 		{
 			FlushTextRun(state);

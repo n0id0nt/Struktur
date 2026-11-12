@@ -4,11 +4,20 @@
 // rooms that aren't loaded. The gameplay state (States/ExperimentState.wren) sets the world on enter and clears
 // it on exit; critters use it to stay in their home room (GameObjects/Critter.wren), and the camera and level
 // streaming use it to follow the player between rooms.
+//
+// Rooms also carry their LDtk level fields (World.getLevelField). "Runable" (a Bool) marks rooms where the player may
+// run - turn it off in LDtk for walk-only rooms (tents, interiors) and the Run input does nothing there
+// (GameObjects/Player.wren). A room without the field counts as runnable.
 import "gameObjectComponents" for World
+
+var RUNNABLE_FIELD = "Runable"
 
 class Rooms {
     static world { __world }
-    static world=(value) { __world = value }
+    static world=(value) {
+        __world = value
+        __runnable = null
+    }
 
     // The index of the room whose bounds contain position (a Vec2/Vec3), or null if none does or there's no
     // world. Rooms only meet at their edges, so a position right on an edge counts for the first one listed.
@@ -41,4 +50,22 @@ class Rooms {
         return position.x >= b[0] + inset && position.x <= b[0] + b[2] - inset &&
                position.y >= b[1] + inset && position.y <= b[1] + b[3] - inset
     }
+
+    // True unless the room's "Runable" field is switched off. Read once per room and remembered (the world file
+    // doesn't change while it's loaded); a null index or no world counts as runnable.
+    static runnable(index) {
+        if (__world == null || index == null) {
+            return true
+        }
+        if (__runnable == null) {
+            __runnable = {}
+        }
+        if (!__runnable.containsKey(index)) {
+            __runnable[index] = World.getLevelField(__world, index, RUNNABLE_FIELD) != false
+        }
+        return __runnable[index]
+    }
+
+    // Whether the player may run at position - see runnable.
+    static runnableAt(position) { Rooms.runnable(Rooms.indexAt(position)) }
 }

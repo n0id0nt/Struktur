@@ -36,6 +36,16 @@ struct RichRun
 	bool italic = false;
 	Util::Color color{};
 	std::string iconName;  // non-empty => this run is an icon, `text` is ignored
+	// non-empty => this run is a button hint for an input action ([input=UIAccept], [input=UITab:negative] - see
+	// UI::InputGlyphs::ParseActionSpec); `text` is ignored. Resolved to button art by UIRichLabel at render time,
+	// so it follows the active device.
+	std::string inputSpec;
+
+	// An inline picture rather than text - an icon or a button hint.
+	bool IsGraphic() const
+	{
+		return !iconName.empty() || !inputSpec.empty();
+	}
 
 	// Mirrors Renderer::AnimationUniformValues field-for-field (see UIRichLabel, which copies these straight
 	// across when building an animated draw group) rather than a generic param struct, so each effect type
@@ -72,7 +82,7 @@ struct RichLine
 	std::vector<RichRun> runs;
 };
 
-// Parses BBCode-style markup ([b]...[/b], [i]...[/i], [color=#rrggbb]...[/color], [icon=name],
+// Parses BBCode-style markup ([b]...[/b], [i]...[/i], [color=#rrggbb]...[/color], [icon=name], [input=Action],
 // [wave amp=20 freq=5]...[/wave], [shake rate=20 level=3]...[/shake], [pulse freq=1]...[/pulse],
 // [rainbow freq=1 sat=0.8 val=0.8]...[/rainbow], [tornado radius=10 freq=1]...[/tornado],
 // [fade start=0 length=8]...[/fade]) into a list of lines of styled runs. baseColor seeds the color every run

@@ -6,12 +6,13 @@
 #include "Debug/Assertions.h"
 #include "Engine/Core/FileSystem.h"
 
-Struktur::Resource::FontResource::FontResource(const std::string& filePath, int size)
+Struktur::Resource::FontResource::FontResource(const std::string& filePath, int size, bool pointSampled)
     : GpuResource(filePath),
       m_fontLoaded(false),
       m_fontSize(size),
       m_codepoints(nullptr),
-      m_codepointCount(0)
+      m_codepointCount(0),
+      m_pointSampled(pointSampled)
 {
 	font.baseSize = 0;
 	font.glyphs.clear();
@@ -24,6 +25,7 @@ Struktur::Resource::FontResource::FontResource(FontResource&& other) noexcept
       m_fontSize(other.m_fontSize),
       m_codepoints(other.m_codepoints),
       m_codepointCount(other.m_codepointCount),
+      m_pointSampled(other.m_pointSampled),
       m_atlasTexture(other.m_atlasTexture),
       m_atlasAlpha(std::move(other.m_atlasAlpha)),
       m_atlasWidth(other.m_atlasWidth),
@@ -45,6 +47,7 @@ Struktur::Resource::FontResource& Struktur::Resource::FontResource::operator=(Fo
 		m_fontSize           = other.m_fontSize;
 		m_codepoints         = other.m_codepoints;
 		m_codepointCount     = other.m_codepointCount;
+		m_pointSampled       = other.m_pointSampled;
 		m_atlasTexture       = other.m_atlasTexture;
 		m_atlasAlpha         = std::move(other.m_atlasAlpha);
 		m_atlasWidth         = other.m_atlasWidth;
@@ -101,7 +104,11 @@ bool Struktur::Resource::FontResource::LoadFromDisk(GameContext& context)
 
 	int ascent = 0, descent = 0, lineGap = 0;
 	stbtt_GetFontVMetrics(&fontInfo, &ascent, &descent, &lineGap);
-	float scale        = stbtt_ScaleForPixelHeight(&fontInfo, (float)m_fontSize);
+	// A pixel font's outlines sit on a grid of whole pixels per em, so it is baked with 1 em = m_fontSize pixels
+	// (stb's "point size") - the line-height scaling used for smooth fonts (ascent - descent = m_fontSize) lands
+	// between grid lines and blurs every glyph edge.
+	float scale        = m_pointSampled ? stbtt_ScaleForMappingEmToPixels(&fontInfo, (float)m_fontSize)
+	                                    : stbtt_ScaleForPixelHeight(&fontInfo, (float)m_fontSize);
 	float ascentPixels = (float)ascent * scale;
 	int codepointCount = (m_codepoints != nullptr && m_codepointCount > 0) ? m_codepointCount : 95;
 
@@ -124,7 +131,7 @@ bool Struktur::Resource::FontResource::LoadFromDisk(GameContext& context)
 		stbtt_PackBegin(&packContext, m_atlasAlpha.data(), m_atlasWidth, m_atlasHeight, 0, kAtlasPadding, nullptr);
 
 		stbtt_pack_range range{};
-		range.font_size          = (float)m_fontSize;
+		range.font_size          = m_pointSampled ? STBTT_POINT_SIZE((float)m_fontSize) : (float)m_fontSize;
 		range.num_chars          = codepointCount;
 		range.chardata_for_range = packedChars.data();
 		if (m_codepoints != nullptr && m_codepointCount > 0)
@@ -152,6 +159,7 @@ bool Struktur::Resource::FontResource::LoadFromDisk(GameContext& context)
 	}
 
 	font.baseSize = m_fontSize;
+	font.pixelSnap = m_pointSampled;
 	font.glyphs.assign(codepointCount, Text::Glyph{});
 
 	for (int i = 0; i < codepointCount; ++i)
@@ -167,6 +175,12 @@ bool Struktur::Resource::FontResource::LoadFromDisk(GameContext& context)
 		// glyphs from this atlas line up the same way raylib's own would.
 		glyph.offsetY  = (int)std::round(packedChar.yoff + ascentPixels);
 		glyph.advanceX = (int)std::round(packedChar.xadvance);
+		// Some pixel fonts ship a hairline space (UI/Font/NormalFont.ttf's is 1px on its 9px grid, against 5-8px
+		// letters), which runs words together - give a pixel font's space at least a third of an em.
+		if (m_pointSampled && codepoint == ' ')
+		{
+			glyph.advanceX = std::max(glyph.advanceX, (int)std::round(m_fontSize / 3.0f));
+		}
 		glyph.rec = Util::Math::Rect{(float)packedChar.x0, (float)packedChar.y0, (float)(packedChar.x1 - packedChar.x0),
 		                             (float)(packedChar.y1 - packedChar.y0)};
 	}
@@ -204,8 +218,9 @@ bool Struktur::Resource::FontResource::LoadToGpu(GameContext& context)
 	// whose quads are tagged coverage=true, see UIBatch::quadIsCoverage) broadcasts the sampled .r channel into
 	// rgba and tints via vertex color, in place of fs_sprite.sc's texture.rgba * vertexColor.rgba.
 	const bgfx::Memory* memory = bgfx::copy(m_atlasAlpha.data(), (uint32_t)m_atlasAlpha.size());
+	uint64_t samplerFlags      = m_pointSampled ? (BGFX_SAMPLER_POINT | BGFX_SAMPLER_UVW_CLAMP) : 0;
 	m_atlasTexture             = bgfx::createTexture2D((uint16_t)m_atlasWidth, (uint16_t)m_atlasHeight, false, 1,
-	                                                   bgfx::TextureFormat::R8, 0, memory);
+	                                                   bgfx::TextureFormat::R8, samplerFlags, memory);
 	if (!bgfx::isValid(m_atlasTexture))
 	{
 		return false;

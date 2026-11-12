@@ -94,6 +94,8 @@ foreign class Texture {
 foreign class Font {
     // Load font from path
     foreign static load(arg0,arg1)
+    // Load font from path; pixel = true samples it nearest-neighbour, for pixel-art fonts drawn at whole multiples of their design size
+    foreign static load(arg0,arg1,arg2)
     // Unload font from path. Manually unload reference because even though wren's garbage collector will do it, it will happen at an unknown time.
     foreign unload()
     // Check if font is valid

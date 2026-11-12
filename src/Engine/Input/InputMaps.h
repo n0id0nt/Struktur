@@ -18,6 +18,12 @@ SDL_Scancode GetKeycodeFromString(const std::string& input);
 SDL_GamepadButton GetControllerButtonFromString(const std::string& input);
 SDL_GamepadAxis GetControllerAxisFromString(const std::string& input);
 
+// Same lookups without the unknown-name assert - for data files where a bad name should be warned about and
+// skipped rather than stop the game (see UI::InputGlyphs). Return false and leave `out` untouched if unknown.
+bool TryGetKeycodeFromString(const std::string& input, SDL_Scancode& out);
+bool TryGetControllerButtonFromString(const std::string& input, SDL_GamepadButton& out);
+bool TryGetControllerAxisFromString(const std::string& input, SDL_GamepadAxis& out);
+
 // Code to string conversion (useful for debugging/UI)
 std::string GetStringFromKeycode(SDL_Scancode key);
 std::string GetStringFromControllerButton(SDL_GamepadButton button);

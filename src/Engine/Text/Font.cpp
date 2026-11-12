@@ -1,6 +1,7 @@
 #include "Font.h"
 
 #include <algorithm>
+#include <cmath>
 
 int Struktur::Text::GetCodepointNext(const char* text, int* codepointSize)
 {
@@ -53,6 +54,16 @@ int Struktur::Text::GetGlyphIndex(const Font& font, int codepoint)
 	return 0;
 }
 
+float Struktur::Text::GlyphScale(const Font& font, float fontSize)
+{
+	if (font.baseSize <= 0)
+	{
+		return 1.0f;
+	}
+	float scale = fontSize / (float)font.baseSize;
+	return font.pixelSnap ? std::max(1.0f, std::round(scale)) : scale;
+}
+
 glm::vec2 Struktur::Text::MeasureTextEx(const Font& font, const std::string& text, float fontSize, float spacing)
 {
 	if (font.baseSize <= 0 || font.glyphs.empty())
@@ -60,7 +71,7 @@ glm::vec2 Struktur::Text::MeasureTextEx(const Font& font, const std::string& tex
 		return glm::vec2(0.0f, 0.0f);
 	}
 
-	float scaleFactor   = fontSize / (float)font.baseSize;
+	float scaleFactor   = GlyphScale(font, fontSize);
 	float textWidth     = 0.0f;
 	float tempTextWidth = 0.0f;
 	float textHeight    = (float)font.baseSize;

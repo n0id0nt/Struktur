@@ -4,11 +4,11 @@
 // gives no room for a 1-vs-3 line); instead the camera cuts to a separate arena and a Battler
 // (Combat/Battler.wren) is staged per combatant there.
 //
-// The arena is the authored "Battle_Arena" level (ExperimentState.BATTLE_ARENA_LEVEL_NAME), loaded
+// The arena is the authored "BattleStage" level (ExperimentState.BATTLE_ARENA_LEVEL_NAME), loaded
 // and activated by CombatState with every other loaded level deactivated for the duration - see
 // setOtherLevelsActive_ below - so its own tiles read as the battle's backdrop with nothing
 // bleeding through from the overworld. Falls back to a fixed patch of world (DEFAULT_ARENA) or an
-// authored "BattleAnchor" marker entity if Battle_Arena can't be found.
+// authored "BattleAnchor" marker entity if that level can't be found.
 //
 // Animation is data driven (Combat/Config/ActionAnimations.wren) and played by each Battler; this
 // class is the thin layer the fight's phases talk to: it finds the right battler for a Combatant and
@@ -19,21 +19,23 @@ import "gameObjectComponents" for WorldTransform, Camera, World
 import "math" for Math, Vec2, Vec3
 import "Combat/Battler" for Battler
 
-// Where the fight happens when there's no Battle_Arena or authored BattleAnchor - far above the
+// Where the fight happens when there's no arena level or authored BattleAnchor - far above the
 // level grid (levels occupy roughly x 0..2432, y 0..1600), so the battle camera never sees
 // overworld geometry.
 var DEFAULT_ARENA = Vec3.new(1200, -1500, 0)
 
-// Formation, as world-pixel offsets from the arena centre. +y is down. Player holds stage left
-// facing right; opponents fan out stage right facing left. Sized to sit inside the battle camera's
-// view (~320x180 world px at CAMERA_ZOOM 4 on a 1280x720 game) with the battle sheets' fighters at about
-// 64px tall (twice the overworld size - 3dModelsToSprites job.battle.json height_px). Positions are feet.
-var PLAYER_STATION = Vec2.new(-118, 34)
-var PARTY_STEP     = Vec2.new(-12, 50)   // each further party member is down-and-slightly-left
-var ENEMY_ORIGIN   = Vec2.new(104, 20)
-var ENEMY_STEP     = Vec2.new(12, 50)    // each further opponent is down-and-slightly-right
-var CAMERA_FOCUS   = Vec2.new(10, 4)     // keeps the zoom-4 view inside the 336px-wide Battle_Arena backdrop
-var CAMERA_ZOOM    = 4
+// Formation: each fighter's feet, as world-pixel offsets from the arena centre (+y is down) - the party stage left
+// facing right, opponents mirrored stage right facing left. Laid out for the combat UI's frame
+// (UI/Combat/CombatUI.wren): at CAMERA_ZOOM 3 the camera sees ~427x240 world px, of which the enemy cards across the
+// top and the command bar along the bottom leave a strip about 120 world px tall for the fighters (~45 world px
+// tall in the battle sheets - 3dModelsToSprites job.battle.json). So the line spreads sideways rather than stacking:
+// the leader in front, the second behind and higher, the third further back and lower - nobody stands on anyone,
+// and everyone clears the cards and the bar. More than three carry on further back, alternating high and low.
+var PARTY_SPOTS   = [Vec2.new(-57, 51), Vec2.new(-100, 24), Vec2.new(-137, 61)]
+var ENEMY_SPOTS   = [Vec2.new(57, 51), Vec2.new(100, 24), Vec2.new(137, 61)]
+var EXTRA_STEP    = Vec2.new(38, 0)      // each fighter past the third, a further step back from the centre
+var CAMERA_FOCUS  = Vec2.new(0, 24)      // the arena's centre line, nudged so its grass sits between the cards and the bar
+var CAMERA_ZOOM   = 3
 var CAMERA_DROP    = 90                   // camera eases down this far onto the formation during the intro
 var SLIDE_DISTANCE = 110                  // how far off its mark each battler starts the slide-in
 
@@ -65,7 +67,7 @@ class BattleStage {
             GameObject.setInactive(_playerEntity)
         }
 
-        // Battle_Arena is standing in for the backdrop now, so every other loaded level gets
+        // The arena level is standing in for the backdrop now, so every other loaded level gets
         // deactivated for the duration - nothing else should be visible or simulating behind it.
         // Skipped entirely in the fallback (no battle level resolved) case, since then we're
         // fighting in place on top of the overworld geometry that's still needed.
@@ -77,13 +79,11 @@ class BattleStage {
         // down and slightly right), opponents stacked stage right centred on the anchor line.
         _party = []
         _partyHomes = []
-        var partyShift = (partyCombatants.count - 1) * PARTY_STEP.y / 2
         for (i in 0...partyCombatants.count) {
             var member = Battler.new(partyDefs[i], partyCombatants[i], worldParent)
             member.awaySign = -1
             member.face(1)
-            var memberHome = worldOf_(Vec2.new(PLAYER_STATION.x + i * PARTY_STEP.x,
-                                               PLAYER_STATION.y + i * PARTY_STEP.y - partyShift))
+            var memberHome = worldOf_(BattleStage.spot_(PARTY_SPOTS, i, -1))
             member.home = memberHome
             _party.add(member)
             _partyHomes.add(memberHome)
@@ -91,13 +91,11 @@ class BattleStage {
 
         _enemies = []
         _enemyHomes = []
-        var yShift = (_n - 1) * ENEMY_STEP.y / 2
         for (i in 0..._n) {
             var b = Battler.new(enemyDefs[i], enemyCombatants[i], worldParent)
             b.awaySign = 1
             b.face(-1)
-            var home = worldOf_(Vec2.new(ENEMY_ORIGIN.x + i * ENEMY_STEP.x,
-                                         ENEMY_ORIGIN.y + i * ENEMY_STEP.y - yShift))
+            var home = worldOf_(BattleStage.spot_(ENEMY_SPOTS, i, 1))
             b.home = home
             _enemies.add(b)
             _enemyHomes.add(home)
@@ -111,6 +109,17 @@ class BattleStage {
         _camera.zoom = CAMERA_ZOOM
 
         intro(0)   // drop everything onto its slide-in start mark
+    }
+
+    // The i-th fighter's mark from a side's spots; past the authored ones, each further fighter steps another
+    // EXTRA_STEP back from the centre (side: -1 stage left, 1 stage right), alternating the back pair's heights.
+    static spot_(spots, i, side) {
+        if (i < spots.count) {
+            return spots[i]
+        }
+        var base = spots[spots.count - 2 + (i - spots.count) % 2]
+        var steps = ((i - spots.count) / 2).floor + 1
+        return Vec2.new(base.x + side * EXTRA_STEP.x * steps, base.y)
     }
 
     // t: 0..1 progress through the entrance. Eases the camera down onto the formation and slides

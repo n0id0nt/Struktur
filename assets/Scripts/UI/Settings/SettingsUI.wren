@@ -6,11 +6,11 @@
 // and passes the initial strings in here.
 import "app" for Application
 import "math" for Vec2
-import "resourceManager" for Font
-import "ui" for UIManager, UILabel, UIPanel, UIScroll, TextAlignment
+import "ui" for UIManager, UILabel, UIRichLabel, UIPanel, UIScroll, TextAlignment
 import "localization" for Localization
 import "Util/Colors" for WHITE, BLACK, BLANK, DARKGRAY, LIGHTGRAY
 import "UI/Shared/ButtonUI" for ButtonUI
+import "UI/Theme/UIKit" for UIKit
 
 var ROW_HEIGHT = 44
 var ROW_SPACING = 8
@@ -22,9 +22,9 @@ class SettingsUI {
     // fullscreenText/volumeText: initial row labels - the Controller has already computed these
     // from Application.isFullScreen/Audio.masterVolume before building the view.
     construct new(fullscreenText, volumeText) {
-        var titleFont = Font.load("Fonts/medieval_sharp/MedievalSharp-Bold.ttf", 56)
-        var rowFont = Font.load("Fonts/medieval_sharp/MedievalSharp-Book.ttf", 20)
-        var headerFont = Font.load("Fonts/medieval_sharp/MedievalSharp-Bold.ttf", 20)
+        var titleFont = UIKit.font()
+        var rowFont = UIKit.font()
+        var headerFont = UIKit.font()
 
         _screenPanel = UIPanel.new(Vec2.new(0, 0), Vec2.new(0, 0),
             Vec2.new(Application.gameWidth, Application.gameHeight), Vec2.new(0, 0))
@@ -110,12 +110,12 @@ class SettingsUI {
         return y + HEADER_HEIGHT
     }
 
-    // Non-focusable informational text row (reflects the real bindings in InputConfig.json, not placeholder text).
+    // Non-focusable informational text row. Rich text, so [input=Action] tags show the real bindings from
+    // InputConfig.json for the device in use (see UIKit.hint), not placeholder text.
     addInfoLabel_(text, font, y) {
-        var label = UILabel.new(Vec2.new(12, y), Vec2.new(0, 0), text, 16.0)
+        var label = UIRichLabel.new(Vec2.new(12, y), Vec2.new(0, 0), text, 18.0)
         label.setFont(font)
         label.setTextColor(DARKGRAY)
-        label.setAlignment(TextAlignment.LEFT)
         label.setSize(Vec2.new(-20, INFO_HEIGHT), Vec2.new(1, 0))
         label.setZIndex(1)
         _scroll.addChild(label)

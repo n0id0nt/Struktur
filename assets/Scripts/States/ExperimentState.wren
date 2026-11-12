@@ -58,7 +58,7 @@ var WORLD_FILE_PATH = "Levels/SevenGods.ldtk"
 // Authored arena level (see Combat/BattleStage.wren) - every fight loads this level and stages the
 // battle there instead of fighting in place. World.getLevelIndex returns null if it's ever renamed
 // or removed, and CombatState falls back to the BattleAnchor/DEFAULT_ARENA behaviour in that case.
-var BATTLE_ARENA_LEVEL_NAME = "Battle_Arena"
+var BATTLE_ARENA_LEVEL_NAME = "BattleStage"
 // Combat proximity ranges, in metres (converted to world pixels at use via Application.pixelsPerMeter,
 // default 64). An aggressive critter (Chinlin) within FORCE range forces combat outright rather than
 // just offering it via the interact prompt - meant to feel like being caught, not spotted. When a

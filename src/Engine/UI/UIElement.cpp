@@ -342,6 +342,17 @@ void Struktur::UI::UIElement::Dispose(GameContext& context)
 		context.GetUIRenderer().DestroyBatch(m_ownBatch);
 		m_ownBatch = Renderer::UIBatchHandle{};
 	}
+	else
+	{
+		// A child removed from a live tree (UIElement::RemoveChild) shares its ancestor's batch, which outlives it.
+		// ClearRender lets subclasses drop extra render state (UIRichLabel's animated batches); ReleaseSlot then
+		// stops this element's quads drawing - or its last frame would stay on screen as a ghost - and hands the
+		// space back so the next element added to the batch reuses it instead of growing the batch. (Children were
+		// disposed above, so they have released their own slots already.)
+		ClearRender(context);
+		context.GetUIRenderer().ReleaseSlot(m_batch, m_batchSlot);
+		m_batchSlot = Renderer::UIBatchSlot{};
+	}
 
 	m_disposed = true;
 }

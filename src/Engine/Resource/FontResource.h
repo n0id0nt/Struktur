@@ -28,6 +28,9 @@ private:
 	int m_fontSize;
 	int* m_codepoints;  // Custom codepoints for font loading
 	int m_codepointCount;
+	// Sample the atlas nearest-neighbour instead of bilinear - for pixel-art fonts loaded at their design size (or a
+	// multiple) and drawn at whole multiples of it, where filtering would only blur the pixels.
+	bool m_pointSampled;
 	// The coverage bitmap is kept around until UnloadFromDisk so LoadToGpu can rebuild the bgfx texture after a
 	// GPU-context-lost reload without re-parsing the font file (mirrors TextureResource::m_pixels' lifetime).
 	bgfx::TextureHandle m_atlasTexture = BGFX_INVALID_HANDLE;
@@ -38,7 +41,7 @@ private:
 public:
 	Text::Font font;
 
-	FontResource(const std::string& filePath, int size);
+	FontResource(const std::string& filePath, int size, bool pointSampled = false);
 	FontResource(FontResource&& other) noexcept;
 	FontResource& operator=(FontResource&& other) noexcept;
 	~FontResource();

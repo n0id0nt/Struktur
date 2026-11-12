@@ -33,9 +33,12 @@ namespace Renderer
 // drawn at this native pixel size regardless of the target rect's own size (never scaled), while the four edges
 // stretch along one axis and the center stretches along both to fill whatever's left. Matches the conventional
 // nine-slice/9-patch interpretation (Unity's Image "Sliced" mode, Godot's NinePatchRect, CSS border-image).
+// `scale` multiplies only the ON-SCREEN corner/edge thickness (like Unity's "Pixels Per Unit Multiplier") - pixel
+// art authored at 16px is drawn at a whole-number multiple so its pixels stay square and chunky.
 struct NineSliceBorder
 {
 	float left, right, top, bottom;
+	float scale = 1.0f;
 };
 
 // One contiguous same-texture span within a batch's sortedQuadOrder (see UIBatch::runs) - start is implicit
@@ -51,6 +54,15 @@ struct UIBatchRun
 	// groups strictly by texture identity, and a given bgfx texture handle is always either the font atlas or
 	// not, so coverage-ness never changes mid-run.
 	bool isCoverage;
+};
+
+// A run of quads inside a batch that no slot owns any more (see UIRenderer::ReleaseSlot) - reused first-fit by
+// AllocateOrResizeSlot, so element churn (labels growing, children removed and re-added) recycles space instead of
+// appending to the batch forever.
+struct UIFreeRegion
+{
+	uint32_t firstQuad;
+	uint32_t quadCount;
 };
 
 // One persistent, update-in-place bgfx buffer pair plus its CPU-side vertex mirror. Unlike WorldRenderer's
@@ -78,12 +90,20 @@ struct UIBatch
 	// DrawRect/DrawRectOutline/DrawTexturedRect/DrawText). Used only to order quads sharing this one batch
 	// against each other (see sortedQuadOrder below); ordering BETWEEN batches is drawOrder's job, not this.
 	std::vector<int32_t> quadZIndex;
-	// Index-buffer build order, cached and only recomputed when dirty (see Flush()) - quad indices sorted by
-	// (quadZIndex, quad index itself as the "added to the batch" tiebreak), so quads with equal z-index draw in
-	// the order they were originally written rather than in some sort-unstable arbitrary order. Quad vertex data
-	// never moves from wherever AllocateOrResizeSlot placed it - only the order this list visits quads in changes
-	// what ends up in the index buffer, so a slot's vertexOffset stays a stable, reusable address regardless of
-	// z-index.
+	// One entry per quad, parallel to quadTextures - 1 once a DrawX call has written geometry there, 0 for every
+	// quad nothing is drawing into: slot headroom, the unused tail of a text slot, hidden or disposed elements'
+	// cleared quads, and free regions. Only live quads go into the index buffer (see SubmitBatch), so a batch's
+	// allocated-but-empty capacity costs nothing at draw time.
+	std::vector<uint8_t> quadLive;
+	// Released quad ranges, sorted by firstQuad with neighbours merged (see UIRenderer::ReleaseSlot). A free run
+	// that reaches the end of the batch is trimmed off instead of kept here.
+	std::vector<UIFreeRegion> freeRegions;
+	// Index-buffer build order, cached and only recomputed when dirty (see Flush()) - the LIVE quads' indices
+	// (see quadLive) sorted by (quadZIndex, quad index itself as the "added to the batch" tiebreak), so quads with
+	// equal z-index draw in the order they were originally written rather than in some sort-unstable arbitrary
+	// order. Quad vertex data never moves from wherever AllocateOrResizeSlot placed it - only the order this list
+	// visits quads in changes what ends up in the index buffer, so a slot's vertexOffset stays a stable, reusable
+	// address regardless of z-index.
 	std::vector<uint32_t> sortedQuadOrder;
 	// Cached, dirty-gated draw list (like ImGui's ImDrawList) - contiguous same-texture runs over sortedQuadOrder,
 	// derived once alongside it (see Flush()) instead of every frame. Flush()'s per-frame submit loop just walks
@@ -216,11 +236,18 @@ public:
 	void SetBatchClip(UIBatchHandle handle, const Util::Math::Rect& clipRect);
 	void ClearBatchClip(UIBatchHandle handle);
 	// Ensures batch's cpuVertices can hold quadCount quads, reusing existing's slot in place if it's already
-	// big enough (only quadCount changes), or relocating to a freshly appended region at the end of
-	// cpuVertices sized to ceil(quadCount * 1.5) quads otherwise - growing in place isn't attempted, so the old
-	// region at existing.vertexOffset is simply abandoned. Callers MUST overwrite their stored UIBatchSlot with
-	// the one returned here, since a relocation changes the offset.
+	// big enough (only quadCount changes). Otherwise the old region is released (see ReleaseSlot - its quads are
+	// cleared and its space goes back to the batch's free list) and the slot moves to the first free region that
+	// fits, or to a region appended at the end of cpuVertices. A first allocation (existing.quadCapacity == 0) is
+	// sized exactly; a regrowth gets ceil(quadCount * 1.5) quads of headroom, since content that grew once (text)
+	// tends to grow again. The moved slot starts empty, so callers MUST overwrite their stored UIBatchSlot with
+	// the one returned here and redraw into it.
 	UIBatchSlot AllocateOrResizeSlot(UIBatchHandle batch, UIBatchSlot existing, uint32_t quadCount);
+	// Clears slot's quads and returns its space to batch's free list for a later AllocateOrResizeSlot to reuse.
+	// The caller must drop its copy of slot afterwards (reset it to UIBatchSlot{}) - the region can be handed to
+	// another element immediately. A zero-capacity slot, an invalid handle or an already-destroyed batch is a
+	// no-op, so this is safe to call from any element teardown.
+	void ReleaseSlot(UIBatchHandle batch, const UIBatchSlot& slot);
 	// Uploads any dirty batch's cpuVertices (and its derived index pattern - see Flush()'s own comment) to its
 	// GPU buffers, then submits every active batch in drawOrder - as one or more bgfx draw calls per batch,
 	// split by contiguous same-texture runs of quads (see UIBatch::quadTextures). Wired into the frame loop via
@@ -278,13 +305,13 @@ public:
 	                  const glm::vec2& position, float fontSize, const Util::Color& color, int32_t zIndex,
 	                  float shearAmount = 0.0f);
 
-	// Degenerates (zero-area, so Flush() draws nothing for them) every quad in slot from fromQuad up to
-	// slot.quadCapacity. Flush() draws a batch's whole allocated cpuVertices region regardless of how many quads
-	// a given widget's writes actually touched this frame - so when a variable-quad-count write (DrawText, when
-	// text gets shorter) uses fewer quads than the slot's capacity, whatever real vertex data those trailing
-	// quads held from a previous, longer write would otherwise keep being drawn as stale leftover geometry.
-	// Callers that write a variable number of quads into a fixed-capacity slot (UILabel's text) must call this
-	// after their last write, passing however many quads they actually used.
+	// Marks every quad in slot from fromQuad up to slot.quadCapacity as no longer drawn (see UIBatch::quadLive -
+	// they leave the index buffer on the next Flush) and zeroes their vertex data. A quad stays live, showing
+	// whatever it was last given, until something clears it - so when a variable-quad-count write (DrawText, when
+	// text gets shorter) uses fewer quads than the slot's capacity, the trailing quads from a previous, longer
+	// write would otherwise keep drawing as stale leftover geometry. Callers that write a variable number of quads
+	// into a fixed-capacity slot (UILabel's text) must call this after their last write, passing however many
+	// quads they actually used.
 	void ClearSlotFrom(UIBatchHandle batch, const UIBatchSlot& slot, uint32_t fromQuad);
 
 	// --- Batch assignment - walks a UIElement tree assigning each element to a batch and sizing its slot. ---
@@ -336,12 +363,24 @@ private:
 	bool ValidateSlotCapacity(const UIBatch& batch, const UIBatchSlot& slot, uint32_t quadsNeeded,
 	                          const char* callerName);
 
+	// Free-list plumbing behind AllocateOrResizeSlot/ReleaseSlot. AllocateQuadRange takes the first free region
+	// with room (splitting off the remainder), else appends; FreeQuadRange inserts a released range in order,
+	// merges it with touching neighbours, and trims the batch when the free run reaches its end. Both keep every
+	// per-quad array (cpuVertices and the quad* vectors) the same length via ResizeQuadArrays.
+	uint32_t AllocateQuadRange(UIBatch& batch, uint32_t quadCount);
+	void FreeQuadRange(UIBatch& batch, uint32_t firstQuad, uint32_t quadCount);
+	void ResizeQuadArrays(UIBatch& batch, uint32_t quadTotal);
+
 	bgfx::TextureHandle m_whiteTexture    = BGFX_INVALID_HANDLE;
 	bgfx::UniformHandle m_texColorSampler = BGFX_INVALID_HANDLE;
 
 	// Initial bgfx dynamic buffer size for a freshly created batch, in quads - grown as needed by
 	// AllocateOrResizeSlot (see BGFX_BUFFER_ALLOW_RESIZE on the buffers CreateBatch creates).
 	static constexpr uint32_t kInitialBatchQuadCapacity = 64;
+	// Index buffers are 16-bit and hold absolute vertex indices (quad * 4 + corner), so a batch can address at
+	// most 65536 vertices. SubmitBatch asserts past this and leaves the overflow undrawn rather than wrapping
+	// indices onto other quads' vertices.
+	static constexpr uint32_t kMaxBatchQuads = 65536 / 4;
 
 	// Slots are never erased/shifted (see CreateBatch/DestroyBatch), so a UIBatchHandle from one batch stays
 	// valid across another batch's create/destroy churn - freed indices are recycled via m_freeBatchSlots

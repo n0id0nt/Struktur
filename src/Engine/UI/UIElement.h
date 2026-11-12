@@ -75,8 +75,8 @@ public:
 
 	// What the render walk (UIManager::Render / RenderChildren) calls instead of Render() for a
 	// subtree it's skipping because this element - or an ancestor - is not visible. Flush() redraws
-	// every batch's whole allocated region every frame regardless of whether Render() ran, so a
-	// just-hidden element's last-drawn quads keep showing until its slot is explicitly zeroed. This
+	// every quad a slot was given, every frame, whether or not Render() ran, so a just-hidden
+	// element's last-drawn quads keep showing until its slot is explicitly cleared. This
 	// does that once (guarded by m_visualDirty, which SetVisible sets across the whole subtree) via
 	// ClearRender(), then recurses so the entire hidden subtree clears.
 	void RenderHidden(GameContext& context);

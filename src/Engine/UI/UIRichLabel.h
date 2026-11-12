@@ -1,6 +1,7 @@
 #pragma once
 
 #include <string>
+#include <unordered_map>
 #include <vector>
 
 #include "Engine/Renderer/AnimQuadVertex.h"
@@ -8,6 +9,7 @@
 #include "Engine/Resource/Pointers/ResourcePtr.h"
 #include "Engine/Text/RichText.h"
 #include "Engine/UI/IconAtlas.h"
+#include "Engine/UI/InputGlyphs.h"
 #include "Engine/UI/TextLayout.h"
 #include "Engine/UI/UIElement.h"
 #include "Engine/Util/Color.h"
@@ -63,13 +65,20 @@ struct UIRichLabelAnimGroup
 // currently resolve to the same m_fontSize*1.5/IconSize() height today, since no run yet has its own font
 // size - see ComputeLineHeight - but the per-line-max plumbing is in place for when per-run sizing lands).
 //
-// [icon=name] runs render as a square IconSize() x IconSize() quad sampling a named sub-rect of an
-// IconAtlas (see SetIconAtlas) via UIRenderer::DrawTexturedRectRegion, tinted white so the icon's own source
+// [icon=name] runs render a named sub-rect of an IconAtlas (see SetIconAtlas) at its native aspect ratio and a
+// whole-number scale (the pixel font's own, else one that fits the line - see ImageScale), vertically centred on the
+// text,
+// via UIRenderer::DrawTexturedRectRegion, tinted white so the icon's own source
 // pixels pass through unmodified - unlike text runs, icons keep their own color rather than being tinted by
 // the run's parsed [color=] (icons are typically already-colored art, e.g. a controller button glyph). An
 // icon whose name isn't registered in the current atlas (or when no atlas is set at all) simply isn't drawn -
 // no quad, no pen advance, no error - so a label written against markup that references icons still renders
 // its text correctly before any atlas is wired up.
+//
+// [input=Action] / [input=Action:part] runs are button hints (see UI::InputGlyphs): they draw the art for whichever
+// binding of that action the player would use right now - keyboard/mouse or pad, last used first - sized like
+// icons, and re-lay the label out by themselves when that changes (device switch, rebinding), since the art's
+// width can change (Space vs A). A binding with no art draws as "[Name]" text in the run's own font and colour.
 //
 // A run needing italics that has no dedicated m_italicFont/m_boldItalicFont set gets a synthetic slant
 // instead of silently rendering upright - a horizontal shear applied to its glyph quads (see ResolveFont's
@@ -123,6 +132,13 @@ private:
 	// re-render, same "just redo it all" cost model the static path already pays during a reveal animation
 	// (see SetVisibleGlyphCount), rather than trying to diff/reuse handles across group-count changes.
 	std::vector<Renderer::AnimatedBatchHandle> m_animBatches;
+
+	// [input=] runs resolved to glyphs for the active device, keyed by their spec - refreshed (see
+	// RefreshInputGlyphs) whenever Input::GetHintRevision() moves on, never inside const layout code.
+	std::unordered_map<std::string, std::vector<InputGlyph>> m_inputGlyphs;
+	uint32_t m_inputRevision = 0;  // 0 = not resolved since the last Reparse
+	bool m_hasInputRuns      = false;
+	bool m_autoSize          = false;  // see SetAutoSize
 
 public:
 	UIRichLabel(GameContext& context, const glm::vec2& absolutePosition, const glm::vec2& relativePosition,
@@ -193,6 +209,15 @@ public:
 
 	// See m_useUnscaledTime. Marks dirty so any already-built animated batches pick up the new clock on the
 	// next Render() pass rather than waiting for some unrelated change to trigger a rebuild.
+	// Sizes the label to its content on every dirty Render() (no wrapping only - a wrapped label needs a width to
+	// wrap to): widest line by line count, plus the usual padding. With it, the anchor point works like a UILabel's
+	// setBoundingBoxToText - a centred or right-aligned label stays put as its text, or a button hint's art, changes.
+	void SetAutoSize(bool autoSize)
+	{
+		m_autoSize    = autoSize;
+		m_visualDirty = true;
+	}
+
 	void SetUseUnscaledTime(bool useUnscaled)
 	{
 		m_useUnscaledTime = useUnscaled;
@@ -274,6 +299,11 @@ public:
 	// the true end of the string, silently truncating everything after the last counted glyph.
 	uint32_t GetTotalGlyphCount() const;
 
+	// Height the whole text needs at the label's current width - wrapped lines times line height, plus the padding
+	// Render() adds - so a box can grow to fit its text (see DialogueBoxUI). [input=] runs not yet resolved for the
+	// active device (before the first Update/Render) measure as zero width.
+	float GetContentHeight() const;
+
 private:
 	// tan(~11 degrees) - a typical real italic font's slant angle, applied as a horizontal shear (see
 	// UIRenderer::DrawText's shearAmount / FillQuadVertices) when a run needs italics but no dedicated italic
@@ -282,6 +312,26 @@ private:
 	static constexpr float kSyntheticItalicShear = 0.2f;
 
 	void Reparse();
+
+	// Re-resolves every [input=] run when the hint revision changed (or the markup did), marking the label dirty.
+	void RefreshInputGlyphs(GameContext& context);
+	// Whole-number scale for an inline picture `pixelHeight` tall - never fractional, so pixel art stays crisp. With
+	// a pixel font it is the font's own scale (pictures match the text's pixel size); otherwise the largest scale
+	// that fits the line height (at least 1).
+	int ImageScale(float pixelHeight) const;
+	// Gap between two glyphs of one [input=] run (e.g. the four keys of a direction hint).
+	static constexpr float kInputGlyphGap = 2.0f;
+	// On-screen width of a picture run ([icon=] or [input=]) - 0 when it draws nothing (unregistered icon, action
+	// with no binding on the active device). Wrapping and rendering both use this, so they never disagree.
+	float GraphicRunWidth(const Text::RichRun& run) const;
+	// Quads a picture run writes into m_batchSlot (one per image, or one per text codepoint of a "[Name]" fallback).
+	uint32_t GraphicRunQuads(const Text::RichRun& run) const;
+	// Shared counting core for GetRequiredQuadCount (includeAnimated=false) and GetTotalGlyphCount (true).
+	uint32_t CountGlyphs(const std::vector<Text::RichLine>& lines, bool includeAnimated) const;
+	// Unwrapped on-screen width of one line - what SetAutoSize sizes to.
+	float MeasureLine(const Text::RichLine& line) const;
+	// The glyphs an [input=] run resolved to (empty if none, or not resolved yet).
+	const std::vector<InputGlyph>& InputGlyphsFor(const Text::RichRun& run) const;
 
 	// Picks the best available font for a run's (bold, italic) combination, falling back progressively toward
 	// m_font (always valid) rather than requiring every combination to have been explicitly set - e.g. a
@@ -312,9 +362,8 @@ private:
 	// constant so a future per-run size slots in here without this call site needing to change.
 	float ComputeLineHeight(const Text::RichLine& line) const;
 
-	// Side length of a square icon glyph quad - shared by IconSize()'s own callers (icon-token width during
-	// wrapping, actual icon quad sizing during render) so an icon's measured width and its drawn width can
-	// never disagree. Currently just ComputeLineHeight's own constant - see its comment.
+	// Natural line height - the box inline pictures are scaled to fit (see ImageScale). Currently just
+	// ComputeLineHeight's own constant - see its comment.
 	float IconSize() const
 	{
 		return m_fontSize * 1.5f;

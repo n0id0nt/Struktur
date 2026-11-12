@@ -31,5 +31,15 @@ class Input {
     foreign static getInputAxis2(arg0)
     // Loads the input bindings.
     foreign static loadInputBindings(arg0)
+    // The device used most recently: "keyboard" (keyboard or mouse) or "gamepad".
+    foreign static activeDevice
+    // How the active pad's face buttons are pictured: "lettered" (Xbox) or "positional".
+    foreign static gamepadFamily
+    // Changes whenever button hints could need redrawing (device, last-used binding, bindings).
+    foreign static hintRevision
+    // Pins the active device for testing: "keyboard", "gamepad", or "none" to stop.
+    foreign static debugForceDevice(arg0)
+    // Pins the pad family for testing: "lettered", "positional", or "none" to stop.
+    foreign static debugForceGamepadFamily(arg0)
 }
 

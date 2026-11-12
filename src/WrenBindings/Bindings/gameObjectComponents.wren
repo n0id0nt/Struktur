@@ -198,6 +198,8 @@ foreign class World {
     foreign getLevelNeighbours(arg0)
     // Get a level's tags as a list of strings.
     foreign getLevelTags(arg0)
+    // Get one of a level's custom LDtk fields by name (bool/num/string), or null if it has none.
+    foreign getLevelField(arg0,arg1)
     // Get a level's [worldX, worldY, pxWid, pxHei] from the parsed LDtk metadata, even if unloaded.
     foreign getLevelBounds(arg0)
     // Get the index of the first level whose tags contain every tag in the given list.
@@ -220,6 +222,8 @@ foreign class World {
     foreign static getLevelNeighbours(arg0,arg1)
     // Get a level's tags as a list of strings.
     foreign static getLevelTags(arg0,arg1)
+    // Get one of a level's custom LDtk fields by name (bool/num/string), or null if it has none.
+    foreign static getLevelField(arg0,arg1,arg2)
     // Get a level's [worldX, worldY, pxWid, pxHei] from the parsed LDtk metadata, even if unloaded.
     foreign static getLevelBounds(arg0,arg1)
     // Get the index of the first level whose tags contain every tag in the given list.

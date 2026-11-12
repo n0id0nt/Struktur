@@ -2,6 +2,7 @@
 
 #include <algorithm>
 #include <climits>
+#include <cmath>
 
 #include "Engine/GameContext.h"
 #include "Engine/Renderer/UIRenderer.h"
@@ -109,7 +110,7 @@ float AppendAnimatedGlyphs(Struktur::UI::UIRichLabelAnimGroup& group, const Stru
                           const std::string& text, float startX, float y, float fontSize, uint32_t abgr,
                           int& animCharIndex)
 {
-	float scale       = fontSize / (float)font.baseSize;
+	float scale       = Struktur::Text::GlyphScale(font, fontSize);
 	float atlasWidth  = (float)font.texture.width;
 	float atlasHeight = (float)font.texture.height;
 	float penX        = startX;
@@ -185,17 +186,68 @@ void Struktur::UI::UIRichLabel::SetTextColor(Util::Color color)
 
 void Struktur::UI::UIRichLabel::Reparse()
 {
-	m_parsedLines = Text::ParseMarkup(m_markupText, m_baseColor);
-	m_visualDirty = true;
+	m_parsedLines  = Text::ParseMarkup(m_markupText, m_baseColor);
+	m_visualDirty  = true;
+	m_hasInputRuns = false;
+	for (const Text::RichLine& line : m_parsedLines)
+	{
+		for (const Text::RichRun& run : line.runs)
+		{
+			m_hasInputRuns = m_hasInputRuns || !run.inputSpec.empty();
+		}
+	}
+	m_inputRevision = 0;
+	m_inputGlyphs.clear();
+}
+
+void Struktur::UI::UIRichLabel::RefreshInputGlyphs(GameContext& context)
+{
+	uint32_t revision = context.GetInput().GetHintRevision();
+	if (!m_hasInputRuns || revision == m_inputRevision)
+	{
+		return;
+	}
+	m_inputGlyphs.clear();
+	for (const Text::RichLine& line : m_parsedLines)
+	{
+		for (const Text::RichRun& run : line.runs)
+		{
+			if (!run.inputSpec.empty() && !m_inputGlyphs.count(run.inputSpec))
+			{
+				auto [action, component]     = InputGlyphs::ParseActionSpec(run.inputSpec);
+				m_inputGlyphs[run.inputSpec] = context.GetInputGlyphs().Resolve(context, action, component);
+			}
+		}
+	}
+	m_inputRevision = revision;
+	m_visualDirty   = true;
 }
 
 void Struktur::UI::UIRichLabel::Update(GameContext& context)
 {
+	// A device switch can change a hint's art and width - re-resolve and re-lay out.
+	RefreshInputGlyphs(context);
 	UpdateChildren(context);
 }
 
 void Struktur::UI::UIRichLabel::Render(GameContext& context)
 {
+	RefreshInputGlyphs(context);
+	if (m_visualDirty && m_autoSize && m_wrapping == TextWrapping::NONE)
+	{
+		// Before anything is laid out, so this pass already draws at the new bounds.
+		float width = 0.0f;
+		for (const Text::RichLine& line : m_parsedLines)
+		{
+			width = std::max(width, MeasureLine(line));
+		}
+		// Same padding Render() offsets the text by (5px each side, 2.5px top and bottom).
+		glm::vec2 size = {std::ceil(width + 10.0f), std::ceil(m_parsedLines.size() * IconSize() + 5.0f)};
+		if (size != glm::vec2{m_bounds.width, m_bounds.height})
+		{
+			SetSize(size, {0, 0});
+		}
+	}
 	if (m_visualDirty)
 	{
 		// Same grow-slot-before-write contract as UILabel::Render - GetRequiredQuadCount() can change whenever
@@ -293,53 +345,138 @@ void Struktur::UI::UIRichLabel::ClearRender(GameContext& context)
 	m_animBatches.clear();
 }
 
-namespace
-{
-// Shared counting core for GetRequiredQuadCount (includeAnimated=false - m_batchSlot never holds animated
-// glyphs, see class comment) and GetTotalGlyphCount (includeAnimated=true - RenderLine's reveal budget is spent
-// by every run type uniformly) - factored out so the two can't silently drift apart on icon-resolution/
-// animated-run handling the way they already had before this split existed.
-uint32_t CountGlyphs(const std::vector<Struktur::Text::RichLine>& lines, const Struktur::UI::IconAtlas& iconAtlas,
-                     bool includeAnimated)
+uint32_t Struktur::UI::UIRichLabel::CountGlyphs(const std::vector<Text::RichLine>& lines, bool includeAnimated) const
 {
 	uint32_t count = 0;
-	for (const Struktur::Text::RichLine& line : lines)
+	for (const Text::RichLine& line : lines)
 	{
-		for (const Struktur::Text::RichRun& run : line.runs)
+		for (const Text::RichRun& run : line.runs)
 		{
-			if (!run.iconName.empty())
+			if (run.IsGraphic())
 			{
-				// Only counted if it'll actually resolve against the current atlas - RenderLine silently skips
-				// drawing anything for one that doesn't (see its own comment), so counting it here too would
-				// either waste a slot quad or overstate the reveal total past what could ever be reached.
-				Struktur::Util::Math::Rect unused;
-				if (iconAtlas.HasTexture() && iconAtlas.TryGetIconRect(run.iconName, unused))
-				{
-					++count;
-				}
+				// Only what RenderLine will actually draw - an unregistered icon or an action with nothing bound
+				// draws nothing, so counting it would waste slot quads or overstate the reveal total.
+				count += GraphicRunQuads(run);
 				continue;
 			}
-
 			if (!includeAnimated && run.effectMask != 0)
 			{
 				continue;
 			}
-
 			count += (uint32_t)CountVisibleCodepoints(run.text);
 		}
 	}
 	return count;
 }
-}  // namespace
+
+const std::vector<Struktur::UI::InputGlyph>& Struktur::UI::UIRichLabel::InputGlyphsFor(const Text::RichRun& run) const
+{
+	static const std::vector<InputGlyph> kNone;
+	auto it = m_inputGlyphs.find(run.inputSpec);
+	return it != m_inputGlyphs.end() ? it->second : kNone;
+}
+
+float Struktur::UI::UIRichLabel::MeasureLine(const Text::RichLine& line) const
+{
+	float width = 0.0f;
+	for (const Text::RichRun& run : line.runs)
+	{
+		if (run.IsGraphic())
+		{
+			width += GraphicRunWidth(run);
+			continue;
+		}
+		bool unusedIsRealItalic;
+		const Resource::ResourcePtr<Resource::FontResource>& font = ResolveFont(run.bold, run.italic, unusedIsRealItalic);
+		// spacing=0 to match DrawText's real advance (see BuildRenderLines' measure lambda).
+		width += Text::MeasureTextEx(font->font, run.text, m_fontSize, 0.0f).x;
+	}
+	return width;
+}
+
+int Struktur::UI::UIRichLabel::ImageScale(float pixelHeight) const
+{
+	// Pixel font: the font's own whole-number scale, so every picture shares the text's pixel size - a tall Enter
+	// key, a round pad button and a short Start button stay equally chunky instead of each fitting the line alone.
+	if (m_font && m_font->font.pixelSnap)
+	{
+		return std::max(1, (int)Text::GlyphScale(m_font->font, m_fontSize));
+	}
+	if (pixelHeight <= 0.0f)
+	{
+		return 1;
+	}
+	return std::max(1, (int)std::floor(IconSize() / pixelHeight));
+}
+
+float Struktur::UI::UIRichLabel::GraphicRunWidth(const Text::RichRun& run) const
+{
+	if (!run.iconName.empty())
+	{
+		Util::Math::Rect rect;
+		if (m_iconAtlas.HasTexture() && m_iconAtlas.TryGetIconRect(run.iconName, rect))
+		{
+			return rect.width * (float)ImageScale(rect.height);
+		}
+		return 0.0f;
+	}
+
+	const std::vector<InputGlyph>& glyphs = InputGlyphsFor(run);
+	float width                           = 0.0f;
+	for (size_t i = 0; i < glyphs.size(); ++i)
+	{
+		if (i > 0)
+		{
+			width += kInputGlyphGap;
+		}
+		if (glyphs[i].HasTexture())
+		{
+			width += glyphs[i].pixelSize.x * (float)ImageScale(glyphs[i].pixelSize.y);
+		}
+		else
+		{
+			bool unusedIsRealItalic;
+			const Resource::ResourcePtr<Resource::FontResource>& font =
+			    ResolveFont(run.bold, run.italic, unusedIsRealItalic);
+			width += Text::MeasureTextEx(font->font, "[" + glyphs[i].text + "]", m_fontSize, 0.0f).x;
+		}
+	}
+	return width;
+}
+
+uint32_t Struktur::UI::UIRichLabel::GraphicRunQuads(const Text::RichRun& run) const
+{
+	if (!run.iconName.empty())
+	{
+		Util::Math::Rect unused;
+		return m_iconAtlas.HasTexture() && m_iconAtlas.TryGetIconRect(run.iconName, unused) ? 1 : 0;
+	}
+	uint32_t quads = 0;
+	for (const InputGlyph& glyph : InputGlyphsFor(run))
+	{
+		quads += glyph.HasTexture() ? 1 : (uint32_t)CountVisibleCodepoints("[" + glyph.text + "]");
+	}
+	return quads;
+}
 
 uint32_t Struktur::UI::UIRichLabel::GetRequiredQuadCount() const
 {
-	return CountGlyphs(m_parsedLines, m_iconAtlas, false);
+	return CountGlyphs(m_parsedLines, false);
 }
 
 uint32_t Struktur::UI::UIRichLabel::GetTotalGlyphCount() const
 {
-	return CountGlyphs(m_parsedLines, m_iconAtlas, true);
+	return CountGlyphs(m_parsedLines, true);
+}
+
+float Struktur::UI::UIRichLabel::GetContentHeight() const
+{
+	float height = 0.0f;
+	for (const Text::RichLine& line : BuildRenderLines())
+	{
+		height += ComputeLineHeight(line);
+	}
+	return height + 5.0f;  // Render() starts 2.5px down; the same again below the last line.
 }
 
 const Struktur::Resource::ResourcePtr<Struktur::Resource::FontResource>& Struktur::UI::UIRichLabel::ResolveFont(
@@ -399,15 +536,11 @@ std::vector<Struktur::Text::RichLine> Struktur::UI::UIRichLabel::BuildRenderLine
 		for (int runIndex = 0; runIndex < (int)line.runs.size(); ++runIndex)
 		{
 			const Text::RichRun& run = line.runs[runIndex];
-			if (!run.iconName.empty())
+			if (run.IsGraphic())
 			{
-				// IconSize() if it'll actually be drawn (matches RenderLine's own resolution check exactly -
-				// wrap-width accounting and actual drawn width must never disagree, see IconSize()'s comment),
-				// zero-width otherwise so an unresolved icon reference doesn't eat into wrap space for
-				// something that won't be visible anyway.
-				Util::Math::Rect unused;
-				bool resolved = m_iconAtlas.HasTexture() && m_iconAtlas.TryGetIconRect(run.iconName, unused);
-				tokens.push_back(TextLayout::WrapToken{"", resolved ? IconSize() : 0.0f, runIndex});
+				// One unbreakable token of exactly the width RenderLine will draw (zero when it draws nothing, so
+				// an unresolved icon or unbound action doesn't eat into wrap space).
+				tokens.push_back(TextLayout::WrapToken{"", GraphicRunWidth(run), runIndex});
 				continue;
 			}
 
@@ -436,9 +569,9 @@ std::vector<Struktur::Text::RichLine> Struktur::UI::UIRichLabel::BuildRenderLine
 			for (const TextLayout::WrapToken& token : tokenLine)
 			{
 				const Text::RichRun& sourceRun = line.runs[token.styleId];
-				if (!sourceRun.iconName.empty())
+				if (sourceRun.IsGraphic())
 				{
-					outLine.runs.push_back(sourceRun);  // Icon runs are never merged/split - copy verbatim.
+					outLine.runs.push_back(sourceRun);  // Picture runs are never merged/split - copy verbatim.
 					continue;
 				}
 
@@ -446,7 +579,7 @@ std::vector<Struktur::Text::RichLine> Struktur::UI::UIRichLabel::BuildRenderLine
 				// never actually separated by a style boundary) instead of emitting one RichRun per word -
 				// keeps RenderLine's DrawText-per-run count down to one call per contiguous same-style span,
 				// matching what Text::ParseMarkup already produces for a line that never needed wrapping.
-				if (!outLine.runs.empty() && outLine.runs.back().iconName.empty() &&
+				if (!outLine.runs.empty() && !outLine.runs.back().IsGraphic() &&
 				    outLine.runs.back().bold == sourceRun.bold && outLine.runs.back().italic == sourceRun.italic &&
 				    outLine.runs.back().color == sourceRun.color &&
 				    outLine.runs.back().effectMask == sourceRun.effectMask &&
@@ -507,7 +640,7 @@ uint32_t Struktur::UI::UIRichLabel::RenderLine(GameContext& context, const Text:
 			continue;
 		}
 
-		if (run.effectMask != 0 && run.iconName.empty())
+		if (run.effectMask != 0 && !run.IsGraphic())
 		{
 			// Animated text run - a completely separate path from everything below (see class comment): no
 			// m_batchSlot/quadOffset involvement at all, glyphs go into whichever animGroups entry matches
@@ -533,35 +666,78 @@ uint32_t Struktur::UI::UIRichLabel::RenderLine(GameContext& context, const Text:
 			continue;
 		}
 
-		if (!run.iconName.empty())
+		if (run.IsGraphic())
 		{
-			Util::Math::Rect sourceRect;
-			if (m_iconAtlas.HasTexture() && m_iconAtlas.TryGetIconRect(run.iconName, sourceRect))
+			// Pictures sit on the text's vertical middle (not the taller line box's), at whole pixels.
+			float textMiddle = pos.y + Text::MeasureTextEx(m_font->font, "A", m_fontSize, 0.0f).y * 0.5f;
+			auto drawImage   = [&](Resource::TextureResource* texture, const Util::Math::Rect& sourceRect)
 			{
-				Resource::TextureResource* iconTexture = m_iconAtlas.GetTexture().Get();
-				if (!iconTexture->IsGpuReady())
+				if (!texture->IsGpuReady())
 				{
-					iconTexture->LoadToGpu(context);
+					texture->LoadToGpu(context);
 				}
-
-				float size = IconSize();
+				float scale  = (float)ImageScale(sourceRect.height);
+				float width  = sourceRect.width * scale;
+				float height = sourceRect.height * scale;
+				float x      = std::floor(penX);
+				float y      = std::floor(textMiddle - height * 0.5f);
 
 				Renderer::UIBatchSlot subSlot = m_batchSlot;
 				subSlot.vertexOffset += (quadOffset + quadsWritten) * 4;
 				subSlot.quadCapacity -= (quadOffset + quadsWritten);
-
-				// Tinted white, not run.color - icons keep their own source pixel colors (see class comment),
-				// unlike text runs which are tinted by the parsed [color=].
-				context.GetUIRenderer().DrawTexturedRectRegion(m_batch, subSlot, {penX, pos.y, size, size},
-				                                               iconTexture->GetHandle(), sourceRect,
-				                                               Util::ColorWhite, GetZIndex());
+				// Tinted white, not run.color - pictures keep their own source pixel colours (see class comment).
+				context.GetUIRenderer().DrawTexturedRectRegion(m_batch, subSlot, {x, y, width, height},
+				                                               texture->GetHandle(), sourceRect, Util::ColorWhite,
+				                                               GetZIndex());
 				++quadsWritten;
-				penX += size;
+				penX += width;
 				--remainingVisible;
+			};
+
+			if (!run.iconName.empty())
+			{
+				// Unresolved (no atlas set, or name not registered in it) draws nothing and costs no reveal budget,
+				// matching how a style whose font was never set still just falls back (see ResolveFont).
+				Util::Math::Rect sourceRect;
+				if (m_iconAtlas.HasTexture() && m_iconAtlas.TryGetIconRect(run.iconName, sourceRect))
+				{
+					drawImage(m_iconAtlas.GetTexture().Get(), sourceRect);
+				}
+				continue;
 			}
-			// Unresolved (no atlas set, or name not registered in it) - skip entirely, no quad, no pen
-			// advance, matching how a run with a style whose font was never set still just falls back rather
-			// than erroring (see ResolveFont). Doesn't cost any reveal budget either, for the same reason.
+
+			const std::vector<InputGlyph>& glyphs = InputGlyphsFor(run);
+			for (size_t i = 0; i < glyphs.size() && remainingVisible > 0; ++i)
+			{
+				if (i > 0)
+				{
+					penX += kInputGlyphGap;
+				}
+				const InputGlyph& glyph = glyphs[i];
+				if (glyph.HasTexture())
+				{
+					drawImage(glyph.texture.Get(), {0.0f, 0.0f, glyph.pixelSize.x, glyph.pixelSize.y});
+					continue;
+				}
+				// No art for this binding - its name as text, in the run's own font and colour.
+				bool isRealItalic = false;
+				const Resource::ResourcePtr<Resource::FontResource>& font =
+				    ResolveFont(run.bold, run.italic, isRealItalic);
+				if (!font->IsGpuReady())
+				{
+					font->LoadToGpu(context);
+				}
+				std::string text = "[" + glyph.text + "]";
+				int visible      = CountVisibleCodepoints(text);
+				std::string textToDraw = visible <= remainingVisible ? text : TruncateToVisibleCount(text, remainingVisible);
+				Renderer::UIBatchSlot subSlot = m_batchSlot;
+				subSlot.vertexOffset += (quadOffset + quadsWritten) * 4;
+				subSlot.quadCapacity -= (quadOffset + quadsWritten);
+				quadsWritten += context.GetUIRenderer().DrawText(m_batch, subSlot, font->font, textToDraw,
+				                                                 {penX, pos.y}, m_fontSize, run.color, GetZIndex());
+				remainingVisible -= std::min(visible, remainingVisible);
+				penX += Text::MeasureTextEx(font->font, textToDraw, m_fontSize, 0.0f).x;
+			}
 			continue;
 		}
 

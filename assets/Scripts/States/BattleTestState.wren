@@ -1,7 +1,7 @@
 // States/BattleTestState.wren
 // A sandbox for trying moves and stats in real battles. A setup screen (UI/BattleTest/BattleSetupUI.wren) picks up
 // to three fighters per side from Combat/Config/BattleTestRoster.wren - the Training Dummy included - and the moves
-// each one knows (cycling through Combat/Config/Moves.catalog); Start runs the real CombatState in the Battle_Arena
+// each one knows (cycling through Combat/Config/Moves.catalog); Start runs the real CombatState in the BattleStage
 // with those sides, then comes back here with the result. You command your side exactly as in the game; the other
 // side is the normal EnemyAI. Every fighter starts fresh at full health, nothing is saved, and the overworld isn't
 // touched. While a battle runs, a live readout (UI/BattleTest/BattleReadoutUI.wren) shows every fighter's exact HP /
@@ -21,7 +21,7 @@ import "UI/BattleTest/BattleSetupUI" for BattleSetupUI, SLOTS_PER_SIDE, MOVES_PE
 import "UI/BattleTest/BattleReadoutUI" for BattleReadoutUI
 
 var WORLD_FILE_PATH = "Levels/SevenGods.ldtk"
-var BATTLE_ARENA_LEVEL_NAME = "Battle_Arena"
+var BATTLE_ARENA_LEVEL_NAME = "BattleStage"   // the arena level in SevenGods.ldtk
 var NONE = -1   // an empty fighter slot / move slot
 
 // One row of the setup: which roster fighter (or NONE) and which catalog move fills each move slot (or NONE).

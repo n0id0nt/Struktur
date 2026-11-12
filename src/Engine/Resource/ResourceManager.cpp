@@ -19,9 +19,9 @@ Struktur::Resource::ResourcePtr<Struktur::Resource::MusicResource> Struktur::Res
 }
 
 Struktur::Resource::ResourcePtr<Struktur::Resource::FontResource> Struktur::Resource::ResourceManager::GetFont(
-    GameContext& context, const std::string& filePath, int size)
+    GameContext& context, const std::string& filePath, int size, bool pointSampled)
 {
-	return m_fontPool.GetResource(context, FontKey{filePath, size});
+	return m_fontPool.GetResource(context, FontKey{filePath, size, pointSampled});
 }
 
 Struktur::Resource::ResourcePtr<Struktur::Resource::ShaderResource> Struktur::Resource::ResourceManager::GetShader(

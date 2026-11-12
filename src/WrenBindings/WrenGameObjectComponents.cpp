@@ -455,6 +455,45 @@ void PushLevelNeighboursList(WrenVM* vm, const Struktur::FileLoading::LevelParse
 	}
 }
 
+// Puts levelIndex's custom field `name` in slot 0: a bool, number or string (enums as their value id), or null when
+// the level has no such field, it was left empty, or its type isn't one scripts read (colour, point, tile).
+void PushLevelField(WrenVM* vm, const Struktur::FileLoading::LevelParser::World& worldMap, int levelIndex,
+                    const std::string& name)
+{
+	using Struktur::FileLoading::LevelParser::FieldInstanceType;
+	wrenSetSlotNull(vm, 0);
+	if (levelIndex < 0 || levelIndex >= static_cast<int>(worldMap.levels.size()))
+	{
+		return;
+	}
+	for (const auto& field : worldMap.levels[levelIndex].fieldInstances)
+	{
+		if (field.identifier != name || !field.value.has_value())
+		{
+			continue;
+		}
+		switch (field.type)
+		{
+			case FieldInstanceType::BOOLEAN:
+				wrenSetSlotBool(vm, 0, std::any_cast<bool>(field.value));
+				break;
+			case FieldInstanceType::INTEGER:
+				wrenSetSlotDouble(vm, 0, static_cast<double>(std::any_cast<int>(field.value)));
+				break;
+			case FieldInstanceType::FLOAT:
+				wrenSetSlotDouble(vm, 0, static_cast<double>(std::any_cast<float>(field.value)));
+				break;
+			default:
+				if (field.value.type() == typeid(std::string))
+				{
+					wrenSetSlotString(vm, 0, std::any_cast<std::string>(field.value).c_str());
+				}
+				break;
+		}
+		return;
+	}
+}
+
 // Builds a Wren list of strings in slot 0 for levelIndex's tags.
 void PushLevelTagsList(WrenVM* vm, const Struktur::FileLoading::LevelParser::World& worldMap, int levelIndex)
 {
@@ -585,6 +624,36 @@ void wren_WorldStaticGetLevelTags(WrenVM* vm)
 	}
 
 	PushLevelTagsList(vm, worldComponent->worldMap, levelIndex);
+}
+
+// World.getLevelField(levelIndex, name) -> bool/num/string, or null
+void wren_WorldGetLevelField(WrenVM* vm)
+{
+	WrenWorld* world = (WrenWorld*)wrenGetSlotForeign(vm, 0);
+	int levelIndex   = static_cast<int>(wrenGetSlotDouble(vm, 1));
+	std::string name = wrenGetSlotString(vm, 2);
+
+	PushLevelField(vm, world->component->worldMap, levelIndex, name);
+}
+
+// World.getLevelField(entity, levelIndex, name) -> bool/num/string, or null
+void wren_WorldStaticGetLevelField(WrenVM* vm)
+{
+	Struktur::GameContext* context = static_cast<Struktur::GameContext*>(wrenGetUserData(vm));
+	entt::registry& registry       = context->GetRegistry();
+
+	entt::entity entity = static_cast<entt::entity>(wrenGetSlotDouble(vm, 1));
+	int levelIndex      = static_cast<int>(wrenGetSlotDouble(vm, 2));
+	std::string name    = wrenGetSlotString(vm, 3);
+
+	auto* worldComponent = registry.try_get<Struktur::Component::World>(entity);
+	if (!worldComponent)
+	{
+		wrenSetSlotNull(vm, 0);
+		return;
+	}
+
+	PushLevelField(vm, worldComponent->worldMap, levelIndex, name);
 }
 
 // World.getLevelBounds(levelIndex) -> list [worldX, worldY, pxWid, pxHei]
@@ -2606,6 +2675,8 @@ WREN_BINDING_MODULE(GameObjectComponent)
 	                  "Get a level's neighbours as a list of [index, dir], resolved from the LDtk world file.");
 	WREN_CLASS_METHOD(registry, "gameObjectComponents", "World", "getLevelTags(_)", wren_WorldGetLevelTags,
 	                  "Get a level's tags as a list of strings.");
+	WREN_CLASS_METHOD(registry, "gameObjectComponents", "World", "getLevelField(_,_)", wren_WorldGetLevelField,
+	                  "Get one of a level's custom LDtk fields by name (bool/num/string), or null if it has none.");
 	WREN_CLASS_METHOD(registry, "gameObjectComponents", "World", "getLevelBounds(_)", wren_WorldGetLevelBounds,
 	                  "Get a level's [worldX, worldY, pxWid, pxHei] from the parsed LDtk metadata, even if unloaded.");
 	WREN_CLASS_METHOD(registry, "gameObjectComponents", "World", "findLevelIndexWithTags(_)",
@@ -2632,6 +2703,8 @@ WREN_BINDING_MODULE(GameObjectComponent)
 	                  "Get a level's neighbours as a list of [index, dir], resolved from the LDtk world file.");
 	WREN_CLASS_STATIC(registry, "gameObjectComponents", "World", "getLevelTags(_,_)", wren_WorldStaticGetLevelTags,
 	                  "Get a level's tags as a list of strings.");
+	WREN_CLASS_STATIC(registry, "gameObjectComponents", "World", "getLevelField(_,_,_)", wren_WorldStaticGetLevelField,
+	                  "Get one of a level's custom LDtk fields by name (bool/num/string), or null if it has none.");
 	WREN_CLASS_STATIC(registry, "gameObjectComponents", "World", "getLevelBounds(_,_)", wren_WorldStaticGetLevelBounds,
 	                  "Get a level's [worldX, worldY, pxWid, pxHei] from the parsed LDtk metadata, even if unloaded.");
 	WREN_CLASS_STATIC(registry, "gameObjectComponents", "World", "findLevelIndexWithTags(_,_)",

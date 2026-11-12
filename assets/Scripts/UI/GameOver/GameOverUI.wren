@@ -2,11 +2,11 @@
 // The game-over screen's view: a dim full-screen overlay + centered title, optionally with one button under it
 // (the "You fell" screen's Continue - see States/GameOverState.wren). No logic: the caller wires the button.
 import "math" for Vec2, Vec4
-import "resourceManager" for Font
 import "ui" for UIManager, UILabel, UIPanel
 import "app" for Application
 import "Util/Colors" for BLANK, WHITE
 import "UI/Shared/ButtonUI" for ButtonUI
+import "UI/Theme/UIKit" for UIKit
 
 class GameOverUI {
     // The finished-game screen: "Game Complete", no button.
@@ -20,7 +20,7 @@ class GameOverUI {
     }
 
     init_(title, buttonText) {
-        var font = Font.load("Fonts/medieval_sharp/MedievalSharp-Bold.ttf", 120)
+        var font = UIKit.font()
 
         _screenPanel = UIPanel.new(Vec2.new(0, 0), Vec2.new(0, 0),
             Vec2.new(Application.gameWidth, Application.gameHeight), Vec2.new(0, 0))

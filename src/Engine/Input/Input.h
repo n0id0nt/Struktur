@@ -6,9 +6,11 @@
 #include <algorithm>
 #include <array>
 #include <cstdint>
+#include <optional>
 #include <set>
 #include <string>
 #include <unordered_map>
+#include <vector>
 
 #include "Debug/Assertions.h"
 #include "glm/glm.hpp"
@@ -18,6 +20,68 @@ union SDL_Event;
 namespace Struktur::Input
 {
 class InputConfigLoader;
+
+// Which kind of device the player is using right now - drives which bindings button hints show (see
+// Input::GetActiveDevice). Keyboard and mouse count as one device: using either shows keyboard/mouse bindings.
+enum class InputDevice : uint8_t
+{
+	KeyboardMouse,
+	Gamepad,
+};
+
+// How the active pad's face buttons should be pictured. Lettered = Xbox-style A/B/X/Y art (Xbox, standard and
+// unknown pads); Positional = art that only shows WHICH face button (bottom/right/left/top) - used for PlayStation
+// and Nintendo pads, whose labels differ but whose buttons SDL reports by position, so a positional picture is
+// never wrong.
+enum class GamepadFamily : uint8_t
+{
+	Lettered,
+	Positional,
+};
+
+// The physical thing a binding listens to.
+enum class InputSourceKind : uint8_t
+{
+	Key,            // code = SDL_Scancode
+	PointerButton,  // code = Input::PointerButton
+	GamepadButton,  // code = SDL_GamepadButton
+	GamepadAxis,    // code = SDL_GamepadAxis
+};
+
+// Which part of an action a binding drives. None = the whole action (a button, a variable, or a stick bound to a
+// whole axis); Negative/Positive = one side of an axis; Up/Down/Left/Right = one direction of an axis2; X/Y = a
+// stick axis driving both directions of an axis2's horizontal/vertical.
+enum class InputComponent : uint8_t
+{
+	None,
+	Negative,
+	Positive,
+	Up,
+	Down,
+	Left,
+	Right,
+	X,
+	Y,
+};
+
+// One binding of one action, in the order InputConfig.json lists it (see Input::GetHintSources). Kept alongside
+// the query-side Binding sets rather than replacing them, so the per-frame input queries stay untouched.
+struct InputSource
+{
+	InputSourceKind kind;
+	int code;
+	InputComponent component = InputComponent::None;
+
+	InputDevice Device() const
+	{
+		return kind == InputSourceKind::Key || kind == InputSourceKind::PointerButton ? InputDevice::KeyboardMouse
+		                                                                               : InputDevice::Gamepad;
+	}
+	bool operator==(const InputSource& other) const
+	{
+		return kind == other.kind && code == other.code && component == other.component;
+	}
+};
 
 class Input
 {
@@ -218,6 +282,46 @@ public:
 		return m_gamepadId;
 	}
 
+	// --- Button hints (see UI::InputGlyphs / UIInputHint / UIRichLabel's [input=] tag) ---
+
+	// The device the player used most recently - any key, mouse button or mouse movement means KeyboardMouse; a
+	// pad button press or a stick/trigger pushed past the activity threshold means Gamepad. Starts on
+	// KeyboardMouse, and falls back to it when the active pad is unplugged.
+	InputDevice GetActiveDevice() const
+	{
+		return m_forcedDevice ? *m_forcedDevice : m_activeDevice;
+	}
+	GamepadFamily GetGamepadFamily() const
+	{
+		return m_forcedFamily ? *m_forcedFamily : m_gamepadFamily;
+	}
+	// Goes up whenever anything a button hint shows could have changed - the active device, the pad family, which
+	// binding of an action was used last, or the bindings themselves. Hint elements compare it each frame.
+	uint32_t GetHintRevision() const
+	{
+		return m_hintRevision;
+	}
+	// For other things hints depend on (UI::InputGlyphs reloading its art map) - makes every hint re-resolve.
+	void NotifyHintsChanged()
+	{
+		BumpHintRevision();
+	}
+	// The binding(s) a hint for `action` should picture on the active device, one per component: component None
+	// asks for the whole action (1 for a button/variable, Negative+Positive for an axis, Up+Left+Down+Right for an
+	// axis2); any other component asks for just that part. Within a device, an action shows the binding the player
+	// used last for it (by its rank in config order - so using W for one direction shows W/A/S/D for all four),
+	// defaulting to the first listed. Empty if the action has nothing bound on the active device.
+	std::vector<InputSource> GetHintSources(const std::string& action, InputComponent component) const;
+	static InputComponent ParseInputComponent(const std::string& component);
+
+	// Test/editor override - pins GetActiveDevice()/GetGamepadFamily() until cleared with std::nullopt.
+	void DebugForceDevice(std::optional<InputDevice> device);
+	void DebugForceGamepadFamily(std::optional<GamepadFamily> family);
+
+	// Drops every binding of `input` (all four kinds) - InputConfigLoader calls this before loading an action, so
+	// a config entry replaces that action's C++ defaults (RegisterDefaultUIBindings) instead of adding to them.
+	void ClearBinding(const std::string& input);
+
 	// Deadzone configuration
 	void SetDeadzone(float deadzone)
 	{
@@ -287,6 +391,37 @@ private:
 	// e.g. both a button and an axis somewhere, which would be a real config bug worth surfacing once either way.
 	std::set<std::string> m_warnedMissingBindings;
 	void WarnMissingBindingOnce(const std::string& input);
+
+	// --- Button hint state (see GetActiveDevice/GetHintSources) ---
+	InputDevice m_activeDevice   = InputDevice::KeyboardMouse;
+	GamepadFamily m_gamepadFamily = GamepadFamily::Lettered;
+	std::optional<InputDevice> m_forcedDevice;
+	std::optional<GamepadFamily> m_forcedFamily;
+	uint32_t m_hintRevision = 1;
+	// Every action's bindings in creation (= config) order, de-duplicated.
+	std::unordered_map<std::string, std::vector<InputSource>> m_displaySources;
+	// Per action, per device: the config-order rank of the binding used most recently (see GetHintSources).
+	std::unordered_map<std::string, std::array<uint8_t, 2>> m_lastUsedRank;
+	// Stick/trigger positions this frame and last, -1..1 - for "pushed past the threshold this frame" edges.
+	std::array<float, SDL_GAMEPAD_AXIS_COUNT> m_currAxes{};
+	std::array<float, SDL_GAMEPAD_AXIS_COUNT> m_prevAxes{};
+	glm::vec2 m_prevPointerPosition{0.0f, 0.0f};
+
+	void AddDisplaySource(const std::string& input, InputSource source);
+	void SetActiveDevice(InputDevice device);
+	void BumpHintRevision()
+	{
+		++m_hintRevision;
+	}
+	// Per-frame: which device was used, and which binding of each action fired (see Update()).
+	void TrackDeviceAndLastUsed();
+	bool SourceFiredThisFrame(const InputSource& source) const;
+	bool AxisCrossedThreshold(SDL_GamepadAxis axis) const;
+	// The parts an action is made of, derived from its sources: {None}, {Negative, Positive} or
+	// {Up, Left, Down, Right} - see GetHintSources.
+	static std::vector<InputComponent> ActionComponents(const std::vector<InputSource>& sources);
+	// Whether a source with component `have` drives component `want` (e.g. a Y stick axis drives Up and Down).
+	static bool Covers(const InputSource& source, InputComponent want);
 
 	// Registers C++-side defaults for the reserved UI action names (UIDir/UITab/UIAccept/UICancel), mirroring
 	// InputConfig.json's own bindings for them exactly - called from both the constructor and Clear() (see

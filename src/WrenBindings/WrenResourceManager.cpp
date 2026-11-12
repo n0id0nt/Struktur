@@ -251,17 +251,19 @@ void wren_ResourceFontFinalize(void* data)
 }
 
 // Font.load(path, size) -> FontHandle
+// Font.load(path, size, pixel) -> FontHandle - pixel: sample nearest-neighbour (a pixel-art font)
 void wren_ResourceFontLoad(WrenVM* vm)
 {
 	Struktur::GameContext* context = static_cast<Struktur::GameContext*>(wrenGetUserData(vm));
 	auto& resourceManager          = context->GetResourceManager();
 
-	const char* path = wrenGetSlotString(vm, 1);
-	int size         = static_cast<int>(wrenGetSlotDouble(vm, 2));
+	const char* path  = wrenGetSlotString(vm, 1);
+	int size          = static_cast<int>(wrenGetSlotDouble(vm, 2));
+	bool pointSampled = wrenGetSlotCount(vm) > 3 && wrenGetSlotType(vm, 3) == WREN_TYPE_BOOL && wrenGetSlotBool(vm, 3);
 
 	// Load font through resource manager
 	Struktur::Resource::ResourcePtr<Struktur::Resource::FontResource> font =
-	    resourceManager.GetFont(*context, path, size);
+	    resourceManager.GetFont(*context, path, size, pointSampled);
 
 	if (!font)
 	{
@@ -742,6 +744,9 @@ WREN_BINDING_MODULE(ResourceManager)
 	                   "Font resource handle");
 
 	WREN_CLASS_STATIC(registry, "resourceManager", "Font", "load(_,_)", wren_ResourceFontLoad, "Load font from path");
+	WREN_CLASS_STATIC(registry, "resourceManager", "Font", "load(_,_,_)", wren_ResourceFontLoad,
+	                  "Load font from path; pixel = true samples it nearest-neighbour, for pixel-art fonts drawn at "
+	                  "whole multiples of their design size");
 	WREN_CLASS_METHOD(registry, "resourceManager", "Font", "unload()", wren_ResourceFontUnload,
 	                  "Unload font from path. Manually unload reference because even though wren's garbage collector "
 	                  "will do it, it will happen at an unknown time.");

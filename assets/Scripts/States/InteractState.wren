@@ -49,6 +49,7 @@ class InteractState is BaseState {
         _currentResult            = null
         _waitingForChoice         = false
         _pendingChoiceTexts       = null   // the current node's choices, held back until its line finishes scrolling
+        _choicePressStarted       = false  // Interact went down while the choices were up - see update
 
         _menuMusic       = null
         _textScrollSound = null
@@ -111,7 +112,20 @@ class InteractState is BaseState {
     }
 
     update(stateManager) {
+        // The prompt's bob and the choice cursor's nudge - real time, so they keep moving whatever the time scale.
+        if (_view != null) {
+            _view.tick(Time.unscaledTime)
+        }
+        if (_choiceList != null) {
+            _choiceList.tick(Time.unscaledTime)
+        }
+
         var inputInteract = Input.isInputJustReleased("Interact")
+        // A choice is only picked by a press that started after the choices appeared - otherwise holding the button to
+        // skip a line that finishes on its own mid-press would pick the first choice before it was ever seen.
+        if (_choiceList != null && !_choiceList.collapsed && Input.isInputJustPressed("Interact")) {
+            _choicePressStarted = true
+        }
 
         // Text scroll animation - glyph-count-based (not raw-string slicing) since the dialogue label is a
         // UIRichLabel: getGlyphCount()/setVisibleGlyphCount() count visible codepoints only, skipping markup
@@ -132,7 +146,9 @@ class InteractState is BaseState {
                 // Skip to end of scroll - which also brings up the choices, if this line has any
                 finishScroll_()
             } else if (_waitingForChoice) {
-                confirmChoice(stateManager)
+                if (_choicePressStarted) {
+                    confirmChoice(stateManager)
+                }
             } else {
                 continueDialogue(stateManager)
             }
@@ -185,9 +201,11 @@ class InteractState is BaseState {
             _choiceList.teardown()
             _choiceList = null
         }
-        _choiceList = ChoiceListUI.new(_view.screenPanel, choiceTexts, _view.font, Fn.new { |index|
+        _choiceList = ChoiceListUI.new(_view.textBox, choiceTexts, _view.font, Fn.new { |index|
             _textScrollSound.play()
         })
+        _view.showChoosePrompt(true)
+        _choicePressStarted = false
     }
 
     // --- dialogue flow -----------------------------------------------------
@@ -233,11 +251,10 @@ class InteractState is BaseState {
         if (hasChoices) {
             _waitingForChoice = true
 
+            // Unnumbered - the list marks the highlighted choice with a cursor, and there are no number-key shortcuts.
             var choiceTexts = []
-            var i = 0
             for (choice in choices) {
-                choiceTexts.add("%(i + 1).  %(Localization.get(choice))")
-                i = i + 1
+                choiceTexts.add(Localization.get(choice))
             }
             // Shown once the question has finished scrolling (finishScroll_), not while it's still being "spoken".
             _pendingChoiceTexts = choiceTexts

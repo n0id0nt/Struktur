@@ -1,51 +1,49 @@
 // UI/Inventory/InventoryTheme.wren
-// The colours, fonts and small builders every inventory page (UI/Inventory/*) shares, so the tabs look like one
-// screen. Colours are RGBA 0-255 Vec4s like Util/Colors.wren - shared objects, so don't change them in place.
+// The inventory's look, on top of the shared UI kit (UI/Theme/UIKit.wren - the nine-sliced frames, focus ring and
+// prompt icons): the text colours that read on the kit's olive and dark panels, fonts, and the small builders every
+// inventory page (UI/Inventory/*) shares, so the tabs look like one screen. Colours are RGBA 0-255 Vec4s like
+// Util/Colors.wren - shared objects, so don't change them in place. Most come from the kit art's own palette.
 import "math" for Math, Vec2, Vec4
-import "resourceManager" for Font
 import "ui" for UILabel, UIPanel, UIColor
 import "Util/Colors" for BLANK
+import "UI/Theme/UIKit" for UIKit
 
 var OVERLAY = Vec4.new(0, 0, 0, 170)
-var WINDOW_BG = Vec4.new(28, 25, 36, 250)
-var PANEL_BG = Vec4.new(40, 36, 52, 255)
-var PANEL_BORDER = Vec4.new(74, 66, 92, 255)
-var SLOT_BG = Vec4.new(52, 47, 67, 255)
-var SLOT_EMPTY_BG = Vec4.new(34, 31, 44, 255)
-var SLOT_FOCUS_BG = Vec4.new(74, 66, 95, 255)
-var ACCENT = Vec4.new(230, 192, 98, 255)
-var TEXT = Vec4.new(236, 230, 218, 255)
-var TEXT_DARK = Vec4.new(28, 25, 36, 255)
-var TEXT_MUTED = Vec4.new(150, 142, 162, 255)
-var GOOD = Vec4.new(132, 206, 124, 255)
-var BAD = Vec4.new(224, 112, 102, 255)
-var BAR_BG = Vec4.new(20, 18, 26, 255)
-var HP_FILL = Vec4.new(204, 72, 72, 255)
-var STAMINA_FILL = Vec4.new(224, 184, 72, 255)
-var XP_FILL = Vec4.new(112, 152, 232, 255)
+var TEXT = Vec4.new(245, 240, 228, 255)
+var TEXT_DARK = Vec4.new(19, 27, 27, 255)       // on light surfaces - item cells, the open tab
+var TEXT_MUTED = Vec4.new(171, 181, 156, 255)
+var ACCENT = Vec4.new(255, 173, 85, 255)
+var GOOD = Vec4.new(160, 214, 110, 255)
+var BAD = Vec4.new(240, 110, 95, 255)
+var LINE = Vec4.new(19, 27, 27, 255)
+var ROW_BAND = Vec4.new(19, 27, 27, 70)        // a non-interactive table row's backing
+var HP_FILL = Vec4.new(224, 57, 76, 255)
+var STAMINA_FILL = Vec4.new(255, 200, 87, 255)
+var XP_FILL = Vec4.new(110, 176, 196, 255)
+var EMPTY_TINT = Vec4.new(150, 150, 150, 255)   // an empty item cell, darkened
+var ARMED_TINT = Vec4.new(255, 196, 128, 255)   // a tile picked as the first half of a swap, warmed
+var NO_TINT = Vec4.new(255, 255, 255, 255)
 
 class InventoryTheme {
     static overlay { OVERLAY }
-    static windowBg { WINDOW_BG }
-    static panelBg { PANEL_BG }
-    static panelBorder { PANEL_BORDER }
-    static slotBg { SLOT_BG }
-    static slotEmptyBg { SLOT_EMPTY_BG }
-    static slotFocusBg { SLOT_FOCUS_BG }
-    static accent { ACCENT }
     static text { TEXT }
     static textDark { TEXT_DARK }
     static textMuted { TEXT_MUTED }
+    static accent { ACCENT }
     static good { GOOD }
     static bad { BAD }
-    static barBg { BAR_BG }
+    static rowBand { ROW_BAND }
     static hpFill { HP_FILL }
     static staminaFill { STAMINA_FILL }
     static xpFill { XP_FILL }
+    static emptyTint { EMPTY_TINT }
+    static armedTint { ARMED_TINT }
+    static noTint { NO_TINT }
 
-    // Loaded big and drawn smaller, so every label size stays sharp. Unload both in teardown (InventoryUI does).
-    static loadBoldFont() { Font.load("Fonts/medieval_sharp/MedievalSharp-Bold.ttf", 64) }
-    static loadBookFont() { Font.load("Fonts/medieval_sharp/MedievalSharp-Book.ttf", 48) }
+    // The game font (UIKit.font - a single-weight pixel font, so "bold" and "book" are the same face; the names
+    // just say how each label is meant to read). Unload both in teardown (InventoryUI does).
+    static loadBoldFont() { UIKit.font() }
+    static loadBookFont() { UIKit.font() }
 
     // A label sized to its text. anchor picks which point of the label sits at absPos/relPos - (1, 0) right-aligns
     // it on that point, (0.5, 0) centres it.
@@ -60,14 +58,11 @@ class InventoryTheme {
         return label
     }
 
-    // A solid panel with a border (width 0 = none). parent may be null for a root (add it to UIManager yourself).
-    static panel(parent, absPos, relPos, size, relSize, bg, border, borderWidth, z) {
+    // A flat, borderless panel (null parent = a root to add to UIManager yourself) - the dimmed backdrop.
+    static fill(parent, absPos, relPos, size, relSize, color, z) {
         var panel = UIPanel.new(absPos, relPos, size, relSize)
-        panel.setBackgroundColor(bg)
-        panel.setBorderColor(borderWidth > 0 ? border : BLANK)
-        if (borderWidth > 0) {
-            panel.setBorderWidth(borderWidth)
-        }
+        panel.setBackgroundColor(color)
+        panel.setBorderColor(BLANK)
         panel.setZIndex(z)
         if (parent != null) {
             parent.addChild(panel)
@@ -77,20 +72,54 @@ class InventoryTheme {
 
     // An invisible container - just groups and positions its children.
     static group(parent, absPos, size, z) {
-        return InventoryTheme.panel(parent, absPos, Vec2.new(0, 0), size, Vec2.new(0, 0), BLANK, BLANK, 0, z)
+        return InventoryTheme.fill(parent, absPos, Vec2.new(0, 0), size, Vec2.new(0, 0), BLANK, z)
     }
 
-    // A horizontal bar: dark track plus a fill `fraction` (0..1) of its width. Returns the fill so it can be resized.
+    // A UI kit frame - "window", "well", "tile", "cell"... (UI/Theme/UIKit.wren).
+    static frame(parent, style, absPos, relPos, size, relSize, z) {
+        return UIKit.frame(parent, style, absPos, relPos, size, relSize, z)
+    }
+
+    // Makes `element` focusable with the kit's focus ring over it; onFocus / onLoseFocus (either may be null) run
+    // after the ring is shown / hidden. Returns the ring.
+    static focusable(element, onFocus, onLoseFocus) {
+        element.setFocusable(true)
+        var ring = UIKit.focusRing(element, 20)
+        element.setOnFocus { |sender|
+            ring.setVisible(true)
+            if (onFocus != null) {
+                onFocus.call()
+            }
+        }
+        element.setOnLoseFocus { |sender|
+            ring.setVisible(false)
+            if (onLoseFocus != null) {
+                onLoseFocus.call()
+            }
+        }
+        return ring
+    }
+
+    // A horizontal bar: the kit's bar track with a fill `fraction` (0..1) of the way along its inside.
     static bar(parent, absPos, width, height, fraction, fill, z) {
-        var track = UIColor.new(absPos, Vec2.new(0, 0), Vec2.new(width, height), Vec2.new(0, 0))
-        track.setColor(BAR_BG)
-        track.setZIndex(z)
-        parent.addChild(track)
-        var bar = UIColor.new(Vec2.new(0, 0), Vec2.new(0, 0), Vec2.new(width * Math.clamp01(fraction), height), Vec2.new(0, 0))
+        var track = UIKit.frame(parent, "barTrack", absPos, Vec2.new(0, 0), Vec2.new(width, height), Vec2.new(0, 0), z)
+        var inset = UIKit.padding("barTrack")
+        var inner = width - inset[0] - inset[1]
+        var bar = UIColor.new(Vec2.new(inset[0], inset[2]), Vec2.new(0, 0),
+            Vec2.new(inner * Math.clamp01(fraction), height - inset[2] - inset[3]), Vec2.new(0, 0))
         bar.setColor(fill)
         bar.setZIndex(z + 1)
         track.addChild(bar)
         return bar
+    }
+
+    // A 2px line, stretching across its parent's width minus `inset` either side.
+    static divider(parent, y, inset, z) {
+        var line = UIColor.new(Vec2.new(inset, y), Vec2.new(0, 0), Vec2.new(-2 * inset, 2), Vec2.new(1, 0))
+        line.setColor(LINE)
+        line.setZIndex(z)
+        parent.addChild(line)
+        return line
     }
 
     // Sets where `direction` (a NavigationDirection) moves focus from `element`. A null target blocks that
@@ -98,14 +127,5 @@ class InventoryTheme {
     // corners and so happily jumps from the grid up into the tab bar (the tabs start right of the first column).
     static link(element, direction, target) {
         element.setNavigationNeighbor(direction, target != null ? target : element)
-    }
-
-    // A 1-2px line, stretching across its parent's width minus `inset` either side.
-    static divider(parent, y, inset, z) {
-        var line = UIColor.new(Vec2.new(inset, y), Vec2.new(0, 0), Vec2.new(-2 * inset, 2), Vec2.new(1, 0))
-        line.setColor(PANEL_BORDER)
-        line.setZIndex(z)
-        parent.addChild(line)
-        return line
     }
 }

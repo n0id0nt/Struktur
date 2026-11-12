@@ -37,7 +37,15 @@ struct Font
 	int baseSize = 0;
 	std::vector<Glyph> glyphs;
 	TextureRef texture;
+	// A pixel-art font (loaded with Font.load(path, size, true) - see FontResource::m_pointSampled): it only draws
+	// at whole multiples of baseSize, so its pixels stay square - see GlyphScale.
+	bool pixelSnap = false;
 };
+
+// How much `font`'s atlas glyphs are scaled to draw at fontSize: fontSize / baseSize, except a pixelSnap font rounds
+// that to the nearest whole number (at least 1) - so a 9px pixel font asked for size 20 draws at 18, size 24 at 27.
+// Drawing and measuring both go through this, so laid-out text matches what is drawn.
+float GlyphScale(const Font& font, float fontSize);
 
 // Replaces raylib's ::GetCodepointNext - decodes one UTF-8 codepoint starting at text, writes the number of
 // bytes consumed to *codepointSize. Invalid/truncated sequences decode as U+FFFD and consume 1 byte, matching

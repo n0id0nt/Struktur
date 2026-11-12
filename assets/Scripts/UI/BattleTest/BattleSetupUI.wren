@@ -3,11 +3,11 @@
 // picker, MOVES_PER_FIGHTER move pickers and a stat readout per row - then Start / Back and a line for the last
 // result. Pure view: every button is a click-to-cycle picker the state wires and relabels.
 import "math" for Vec2, Vec4
-import "resourceManager" for Font
 import "ui" for UIManager, UILabel, UIPanel
 import "app" for Application
 import "Util/Colors" for BLANK, WHITE, LIGHTGRAY
 import "UI/Shared/ButtonUI" for ButtonUI
+import "UI/Theme/UIKit" for UIKit
 
 var SLOTS_PER_SIDE    = 3
 var MOVES_PER_FIGHTER = 3
@@ -38,7 +38,7 @@ class SetupRow {
 
 class BattleSetupUI {
     construct new() {
-        var font = Font.load("Fonts/medieval_sharp/MedievalSharp-Bold.ttf", 60)
+        var font = UIKit.font()
         _font = font
 
         _root = UIPanel.new(Vec2.new(0, 0), Vec2.new(0, 0),

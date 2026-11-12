@@ -78,8 +78,8 @@ void Struktur::UI::UIPanel::Render(GameContext& context)
 		}
 
 		// Border can toggle off (SetBorderWidth(0)) after previously being on - without this, its 4 quads would
-		// keep rendering their last real outline forever, since Flush() draws the slot's whole allocated
-		// capacity regardless of whether this frame's writes above actually touched all of it (same reasoning as
+		// keep rendering their last real outline forever, since Flush() keeps drawing every quad a slot was given
+		// until it's cleared, whether or not this frame's writes above touched it again (same reasoning as
 		// UILabel::Render()'s own trailing ClearSlotFrom call for its variable-length text).
 		context.GetUIRenderer().ClearSlotFrom(m_batch, m_batchSlot, quadsUsed);
 

@@ -8,6 +8,7 @@ import "UI/Inventory/InventoryTheme" for InventoryTheme
 
 var ROW_HEIGHT = 84
 var ROW_GAP = 12
+var ROW_INSET = 4   // room for the focus ring inside the scroll's clip
 
 class LevelsPage {
     construct new(parent, members, labels, boldFont, bookFont, onFocus) {
@@ -24,14 +25,9 @@ class LevelsPage {
 
         for (i in 0...members.count) {
             var member = members[i]
-            var row = InventoryTheme.panel(scroll, Vec2.new(0, i * (ROW_HEIGHT + ROW_GAP)), Vec2.new(0, 0),
-                Vec2.new(1072, ROW_HEIGHT), Vec2.new(0, 0), InventoryTheme.panelBg, InventoryTheme.panelBorder, 2, 4)
-            row.setFocusable(true)
-            row.setOnFocus { |sender|
-                row.setBorderColor(InventoryTheme.accent)
-                onFocus.call()
-            }
-            row.setOnLoseFocus { |sender| row.setBorderColor(InventoryTheme.panelBorder) }
+            var row = InventoryTheme.frame(scroll, "tile", Vec2.new(ROW_INSET, ROW_INSET + i * (ROW_HEIGHT + ROW_GAP)),
+                Vec2.new(0, 0), Vec2.new(1072 - 2 * ROW_INSET, ROW_HEIGHT), Vec2.new(0, 0), 4)
+            InventoryTheme.focusable(row, onFocus, null)
             _rows.add(row)
 
             InventoryTheme.label(row, member["name"], Vec2.new(24, 5), Vec2.new(0, 0.5), Vec2.new(0, 0.5), 30.0, boldFont,
@@ -41,7 +37,7 @@ class LevelsPage {
             InventoryTheme.label(row, "%(labels["xp"]) %(member["xp"]) / %(member["xpToNext"])", Vec2.new(-24, 16),
                 Vec2.new(1, 0), Vec2.new(1, 0), 18.0, bookFont, InventoryTheme.textMuted, 5)
             var fraction = member["xpToNext"] > 0 ? member["xp"] / member["xpToNext"] : 0
-            InventoryTheme.bar(row, Vec2.new(300, 54), 1072 - 324, 12, fraction, InventoryTheme.xpFill, 5)
+            InventoryTheme.bar(row, Vec2.new(300, 52), 1072 - 2 * ROW_INSET - 324, 15, fraction, InventoryTheme.xpFill, 5)
         }
 
         // A column of rows: up / down along it, nothing to the sides.

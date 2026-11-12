@@ -27,6 +27,25 @@ SDL_JoystickID GetGamepadInstanceIdAtIndex(int index)
 	}
 	return result;
 }
+
+Struktur::Input::InputComponent ToInputComponent(Struktur::Input::Input::Axis2Component axis)
+{
+	using Axis2Component = Struktur::Input::Input::Axis2Component;
+	using Struktur::Input::InputComponent;
+	switch (axis)
+	{
+		case Axis2Component::Up:
+			return InputComponent::Up;
+		case Axis2Component::Down:
+			return InputComponent::Down;
+		case Axis2Component::Left:
+			return InputComponent::Left;
+		case Axis2Component::Right:
+			return InputComponent::Right;
+		default:
+			return InputComponent::None;
+	}
+}
 }  // namespace
 
 namespace Struktur::Input
@@ -151,6 +170,311 @@ void Input::Update()
 		m_currPointerButtons[(size_t)PointerButton::Secondary] = (buttons & SDL_BUTTON_RMASK) != 0;
 		m_currPointerButtons[(size_t)PointerButton::Middle]    = (buttons & SDL_BUTTON_MMASK) != 0;
 	}
+
+	// Raw stick/trigger positions (no deadzone - the hint threshold is far past any deadzone anyway).
+	m_prevAxes = m_currAxes;
+	for (int axis = 0; axis < SDL_GAMEPAD_AXIS_COUNT; ++axis)
+	{
+		m_currAxes[axis] = m_sdlGamepad ? ::SDL_GetGamepadAxis(m_sdlGamepad, (SDL_GamepadAxis)axis) / 32767.0f : 0.0f;
+	}
+
+	TrackDeviceAndLastUsed();
+	m_prevPointerPosition = m_pointerPosition;
+}
+
+// ============================================================================
+// BUTTON HINTS
+// ============================================================================
+
+namespace
+{
+// A stick/trigger has to travel this far (of its -1..1 range) before it counts as "used" for hints - well past
+// any sane deadzone, so resting-stick drift never flips the shown device. Same idea as HasGamepadActivity's
+// threshold, as an edge rather than a level.
+constexpr float kHintAxisThreshold = 0.5f;
+// Mouse travel in one frame (window pixels) that counts as using the mouse - small jitter is ignored.
+constexpr float kHintPointerTravel = 3.0f;
+}  // namespace
+
+void Input::AddDisplaySource(const std::string& input, InputSource source)
+{
+	std::vector<InputSource>& sources = m_displaySources[input];
+	if (std::find(sources.begin(), sources.end(), source) == sources.end())
+	{
+		sources.push_back(source);
+		BumpHintRevision();
+	}
+}
+
+void Input::ClearBinding(const std::string& input)
+{
+	m_buttonBindings.erase(input);
+	m_variableBindings.erase(input);
+	m_axisBindings.erase(input);
+	m_axis2Bindings.erase(input);
+	m_displaySources.erase(input);
+	m_lastUsedRank.erase(input);
+	BumpHintRevision();
+}
+
+void Input::SetActiveDevice(InputDevice device)
+{
+	if (m_activeDevice != device)
+	{
+		m_activeDevice = device;
+		BumpHintRevision();
+	}
+}
+
+void Input::DebugForceDevice(std::optional<InputDevice> device)
+{
+	m_forcedDevice = device;
+	BumpHintRevision();
+}
+
+void Input::DebugForceGamepadFamily(std::optional<GamepadFamily> family)
+{
+	m_forcedFamily = family;
+	BumpHintRevision();
+}
+
+bool Input::AxisCrossedThreshold(SDL_GamepadAxis axis) const
+{
+	return std::abs(m_currAxes[axis]) > kHintAxisThreshold && std::abs(m_prevAxes[axis]) <= kHintAxisThreshold;
+}
+
+bool Input::SourceFiredThisFrame(const InputSource& source) const
+{
+	switch (source.kind)
+	{
+		case InputSourceKind::Key:
+			return m_currKeyboardState[source.code] && !m_prevKeyboardState[source.code];
+		case InputSourceKind::PointerButton:
+			return m_currPointerButtons[source.code] && !m_prevPointerButtons[source.code];
+		case InputSourceKind::GamepadButton:
+		{
+			auto curr = m_currControllerButtons.find((SDL_GamepadButton)source.code);
+			auto prev = m_prevControllerButtons.find((SDL_GamepadButton)source.code);
+			return curr != m_currControllerButtons.end() && curr->second &&
+			       !(prev != m_prevControllerButtons.end() && prev->second);
+		}
+		case InputSourceKind::GamepadAxis:
+			return AxisCrossedThreshold((SDL_GamepadAxis)source.code);
+	}
+	return false;
+}
+
+void Input::TrackDeviceAndLastUsed()
+{
+	// Which device did something this frame. Keyboard/mouse first: if both happen in one frame, the pad wins below,
+	// which only matters for a single frame either way.
+	bool keyboardMouseUsed = false;
+	for (size_t key = 0; key < m_currKeyboardState.size() && !keyboardMouseUsed; ++key)
+	{
+		keyboardMouseUsed = m_currKeyboardState[key] && !m_prevKeyboardState[key];
+	}
+	for (size_t button = 0; button < m_currPointerButtons.size() && !keyboardMouseUsed; ++button)
+	{
+		keyboardMouseUsed = m_currPointerButtons[button] && !m_prevPointerButtons[button];
+	}
+	if (!keyboardMouseUsed)
+	{
+		glm::vec2 travel  = m_pointerPosition - m_prevPointerPosition;
+		keyboardMouseUsed = std::abs(travel.x) + std::abs(travel.y) > kHintPointerTravel;
+	}
+
+	bool gamepadUsed = false;
+	if (m_sdlGamepad)
+	{
+		for (const auto& [button, down] : m_currControllerButtons)
+		{
+			auto prev = m_prevControllerButtons.find(button);
+			if (down && !(prev != m_prevControllerButtons.end() && prev->second))
+			{
+				gamepadUsed = true;
+				break;
+			}
+		}
+		for (int axis = 0; axis < SDL_GAMEPAD_AXIS_COUNT && !gamepadUsed; ++axis)
+		{
+			gamepadUsed = AxisCrossedThreshold((SDL_GamepadAxis)axis);
+		}
+	}
+
+	if (keyboardMouseUsed)
+	{
+		SetActiveDevice(InputDevice::KeyboardMouse);
+	}
+	if (gamepadUsed)
+	{
+		SetActiveDevice(InputDevice::Gamepad);
+	}
+	if (!keyboardMouseUsed && !gamepadUsed)
+	{
+		return;
+	}
+
+	// Which binding of each action fired - remembered as its rank among that device's bindings for the same part
+	// of the action, so the hint can show the same "set" (W/A/S/D vs the arrows) for every part.
+	for (const auto& [action, sources] : m_displaySources)
+	{
+		for (const InputSource& source : sources)
+		{
+			if (!SourceFiredThisFrame(source))
+			{
+				continue;
+			}
+			InputDevice device = source.Device();
+			// The first part of the action this source drives (a Y stick axis ranks against Up's bindings).
+			InputComponent part = InputComponent::None;
+			for (InputComponent component : ActionComponents(sources))
+			{
+				if (Covers(source, component))
+				{
+					part = component;
+					break;
+				}
+			}
+			uint8_t rank = 0;
+			for (const InputSource& other : sources)
+			{
+				if (other == source)
+				{
+					break;
+				}
+				if (other.Device() == device && Covers(other, part))
+				{
+					++rank;
+				}
+			}
+			auto [it, inserted] = m_lastUsedRank.try_emplace(action, std::array<uint8_t, 2>{0, 0});
+			uint8_t& stored     = it->second[(size_t)device];
+			if (stored != rank)
+			{
+				stored = rank;
+				BumpHintRevision();
+			}
+			break;
+		}
+	}
+}
+
+std::vector<InputComponent> Input::ActionComponents(const std::vector<InputSource>& sources)
+{
+	bool isAxis2 = false;
+	bool isAxis  = false;
+	for (const InputSource& source : sources)
+	{
+		switch (source.component)
+		{
+			case InputComponent::Up:
+			case InputComponent::Down:
+			case InputComponent::Left:
+			case InputComponent::Right:
+			case InputComponent::X:
+			case InputComponent::Y:
+				isAxis2 = true;
+				break;
+			case InputComponent::Negative:
+			case InputComponent::Positive:
+				isAxis = true;
+				break;
+			default:
+				break;
+		}
+	}
+	if (isAxis2)
+	{
+		return {InputComponent::Up, InputComponent::Left, InputComponent::Down, InputComponent::Right};
+	}
+	if (isAxis)
+	{
+		return {InputComponent::Negative, InputComponent::Positive};
+	}
+	return {InputComponent::None};
+}
+
+bool Input::Covers(const InputSource& source, InputComponent want)
+{
+	if (source.component == want)
+	{
+		return true;
+	}
+	switch (want)
+	{
+		case InputComponent::Up:
+		case InputComponent::Down:
+			return source.component == InputComponent::Y;
+		case InputComponent::Left:
+		case InputComponent::Right:
+			return source.component == InputComponent::X;
+		case InputComponent::Negative:
+		case InputComponent::Positive:
+			// A stick bound to a whole 1D axis drives both of its sides.
+			return source.kind == InputSourceKind::GamepadAxis && source.component == InputComponent::None;
+		default:
+			return false;
+	}
+}
+
+std::vector<InputSource> Input::GetHintSources(const std::string& action, InputComponent component) const
+{
+	std::vector<InputSource> result;
+	auto it = m_displaySources.find(action);
+	if (it == m_displaySources.end())
+	{
+		return result;
+	}
+	const std::vector<InputSource>& sources = it->second;
+	InputDevice device                      = GetActiveDevice();
+
+	uint8_t rank = 0;
+	auto rankIt  = m_lastUsedRank.find(action);
+	if (rankIt != m_lastUsedRank.end())
+	{
+		rank = rankIt->second[(size_t)device];
+	}
+
+	std::vector<InputComponent> parts =
+	    component == InputComponent::None ? ActionComponents(sources) : std::vector<InputComponent>{component};
+	for (InputComponent part : parts)
+	{
+		// This device's bindings for the part, in config order; the remembered rank picks one (clamped, since
+		// another part may have fewer bindings).
+		std::vector<const InputSource*> candidates;
+		for (const InputSource& source : sources)
+		{
+			if (source.Device() == device && Covers(source, part))
+			{
+				candidates.push_back(&source);
+			}
+		}
+		if (candidates.empty())
+		{
+			continue;
+		}
+		InputSource chosen = *candidates[std::min<size_t>(rank, candidates.size() - 1)];
+		// Report the part this entry stands for, so a Y stick axis asked for as "Up" reads as Up.
+		if (chosen.component == InputComponent::X || chosen.component == InputComponent::Y ||
+		    chosen.component == InputComponent::None)
+		{
+			chosen.component = part == InputComponent::None ? chosen.component : part;
+		}
+		result.push_back(chosen);
+	}
+	return result;
+}
+
+InputComponent Input::ParseInputComponent(const std::string& component)
+{
+	static const std::unordered_map<std::string, InputComponent> kComponents = {
+	    {"", InputComponent::None},          {"negative", InputComponent::Negative},
+	    {"positive", InputComponent::Positive}, {"up", InputComponent::Up},
+	    {"down", InputComponent::Down},      {"left", InputComponent::Left},
+	    {"right", InputComponent::Right},
+	};
+	auto it = kComponents.find(component);
+	return it != kComponents.end() ? it->second : InputComponent::None;
 }
 
 void Input::Clear()
@@ -159,7 +483,10 @@ void Input::Clear()
 	m_variableBindings.clear();
 	m_axisBindings.clear();
 	m_axis2Bindings.clear();
+	m_displaySources.clear();
+	m_lastUsedRank.clear();
 	m_deadzone = 0.0f;
+	BumpHintRevision();
 
 	// Re-establish the reserved UI action names immediately, not just once at construction -
 	// InputConfigLoader::LoadFromFile calls Clear() right before loading a config file's own bindings
@@ -268,6 +595,36 @@ void Input::SetActiveGamepad(SDL_Gamepad* gamepad)
 	if (gamepad)
 	{
 		DEBUG_INFO("Active gamepad is now '%s'", m_gamepadId);
+	}
+
+	// Button hints: picture this pad's face buttons the right way, and stop showing pad buttons once the last pad
+	// is gone (nothing could press them).
+	GamepadFamily family = GamepadFamily::Lettered;
+	if (gamepad)
+	{
+		switch (::SDL_GetGamepadType(gamepad))
+		{
+			case SDL_GAMEPAD_TYPE_PS3:
+			case SDL_GAMEPAD_TYPE_PS4:
+			case SDL_GAMEPAD_TYPE_PS5:
+			case SDL_GAMEPAD_TYPE_NINTENDO_SWITCH_PRO:
+			case SDL_GAMEPAD_TYPE_NINTENDO_SWITCH_JOYCON_LEFT:
+			case SDL_GAMEPAD_TYPE_NINTENDO_SWITCH_JOYCON_RIGHT:
+			case SDL_GAMEPAD_TYPE_NINTENDO_SWITCH_JOYCON_PAIR:
+				family = GamepadFamily::Positional;
+				break;
+			default:
+				break;
+		}
+	}
+	if (family != m_gamepadFamily)
+	{
+		m_gamepadFamily = family;
+		BumpHintRevision();
+	}
+	if (!gamepad)
+	{
+		SetActiveDevice(InputDevice::KeyboardMouse);
 	}
 }
 
@@ -621,36 +978,44 @@ float Input::GetStringControllerAxisValue(const std::string& input)
 void Input::CreateButtonBinding(const std::string& input, SDL_Scancode code)
 {
 	m_buttonBindings[input].keycodes.insert(code);
+	AddDisplaySource(input, InputSource{InputSourceKind::Key, (int)code, InputComponent::None});
 }
 
 void Input::CreateButtonBinding(const std::string& input, SDL_GamepadButton code)
 {
 	m_buttonBindings[input].controllerButtons.insert(code);
+	AddDisplaySource(input, InputSource{InputSourceKind::GamepadButton, (int)code, InputComponent::None});
 }
 
 void Input::CreateButtonBinding(const std::string& input, PointerButton code)
 {
 	m_buttonBindings[input].pointerButtons.insert(code);
+	AddDisplaySource(input, InputSource{InputSourceKind::PointerButton, (int)code, InputComponent::None});
 }
 
 void Input::CreateVariableBinding(const std::string& input, SDL_Scancode code)
 {
 	m_variableBindings[input].buttonBindings.keycodes.insert(code);
+	AddDisplaySource(input, InputSource{InputSourceKind::Key, (int)code, InputComponent::None});
 }
 
 void Input::CreateVariableBinding(const std::string& input, SDL_GamepadButton code)
 {
 	m_variableBindings[input].buttonBindings.controllerButtons.insert(code);
+	AddDisplaySource(input, InputSource{InputSourceKind::GamepadButton, (int)code, InputComponent::None});
 }
 
 void Input::CreateVariableBinding(const std::string& input, SDL_GamepadAxis code,
                                   VariableBindingAxis variableBindingAxis)
 {
 	m_variableBindings[input].controllerVariables.insert({variableBindingAxis, code});
+	AddDisplaySource(input, InputSource{InputSourceKind::GamepadAxis, (int)code, InputComponent::None});
 }
 
 void Input::CreateAxisBinding(const std::string& input, SDL_Scancode code, AxisComponent axis)
 {
+	AddDisplaySource(input, InputSource{InputSourceKind::Key, (int)code,
+	                                    axis == AxisComponent::Positive ? InputComponent::Positive : InputComponent::Negative});
 	switch (axis)
 	{
 		case AxisComponent::Positive:
@@ -666,6 +1031,8 @@ void Input::CreateAxisBinding(const std::string& input, SDL_Scancode code, AxisC
 
 void Input::CreateAxisBinding(const std::string& input, SDL_GamepadButton code, AxisComponent axis)
 {
+	AddDisplaySource(input, InputSource{InputSourceKind::GamepadButton, (int)code,
+	                                    axis == AxisComponent::Positive ? InputComponent::Positive : InputComponent::Negative});
 	switch (axis)
 	{
 		case AxisComponent::Positive:
@@ -682,10 +1049,12 @@ void Input::CreateAxisBinding(const std::string& input, SDL_GamepadButton code, 
 void Input::CreateAxisBinding(const std::string& input, SDL_GamepadAxis code)
 {
 	m_axisBindings[input].controllerAxis.insert(code);
+	AddDisplaySource(input, InputSource{InputSourceKind::GamepadAxis, (int)code, InputComponent::None});
 }
 
 void Input::CreateAxis2Binding(const std::string& input, SDL_Scancode code, Axis2Component axis)
 {
+	AddDisplaySource(input, InputSource{InputSourceKind::Key, (int)code, ToInputComponent(axis)});
 	switch (axis)
 	{
 		case Axis2Component::Up:
@@ -707,6 +1076,7 @@ void Input::CreateAxis2Binding(const std::string& input, SDL_Scancode code, Axis
 
 void Input::CreateAxis2Binding(const std::string& input, SDL_GamepadButton code, Axis2Component axis)
 {
+	AddDisplaySource(input, InputSource{InputSourceKind::GamepadButton, (int)code, ToInputComponent(axis)});
 	switch (axis)
 	{
 		case Axis2Component::Up:
@@ -728,6 +1098,8 @@ void Input::CreateAxis2Binding(const std::string& input, SDL_GamepadButton code,
 
 void Input::CreateAxis2Binding(const std::string& input, SDL_GamepadAxis code, Axis2Direction axis)
 {
+	AddDisplaySource(input, InputSource{InputSourceKind::GamepadAxis, (int)code,
+	                                    axis == Axis2Direction::X ? InputComponent::X : InputComponent::Y});
 	switch (axis)
 	{
 		case Axis2Direction::X:

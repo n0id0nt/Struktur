@@ -31,6 +31,7 @@
 #include "Engine/Scripting/WrenScriptComponentRegistry.h"
 #include "Engine/Scripting/WrenScriptEngine.h"
 #include "Engine/Scripting/WrenStateManager.h"
+#include "Engine/UI/InputGlyphs.h"
 #include "Engine/UI/UIManager.h"
 #include "entt/entt.hpp"
 #ifdef EDITOR
@@ -65,6 +66,7 @@ public:
 	Renderer::ImGuiRenderer& GetImGuiRenderer() const;
 #endif
 	Input::Input& GetInput() const;
+	UI::InputGlyphs& GetInputGlyphs() const;
 	Localization::LocalizationManager& GetLocalizationManager() const;
 	Audio::Mixer& GetMixer() const;
 	Physics::PhysicsWorld& GetPhysicsWorld() const;
@@ -101,6 +103,7 @@ private:
 	std::unique_ptr<Renderer::ImGuiRenderer> m_imGuiRenderer;
 #endif
 	std::unique_ptr<Input::Input> m_input;
+	std::unique_ptr<UI::InputGlyphs> m_inputGlyphs;
 	std::unique_ptr<Localization::LocalizationManager> m_localizationManager;
 	std::unique_ptr<Audio::Mixer> m_mixer;
 	std::unique_ptr<Physics::PhysicsWorld> m_physicsWorld;

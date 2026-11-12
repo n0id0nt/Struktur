@@ -216,6 +216,33 @@ std::string GetStringFromControllerButton(SDL_GamepadButton button)
 	return "unknown";
 }
 
+template <typename T>
+bool TryFind(const std::unordered_map<std::string, T>& map, const std::string& input, T& out)
+{
+	auto it = map.find(input);
+	if (it == map.end())
+	{
+		return false;
+	}
+	out = it->second;
+	return true;
+}
+
+bool TryGetKeycodeFromString(const std::string& input, SDL_Scancode& out)
+{
+	return TryFind(kKeycodeMap, input, out);
+}
+
+bool TryGetControllerButtonFromString(const std::string& input, SDL_GamepadButton& out)
+{
+	return TryFind(kControllerButtonMap, input, out);
+}
+
+bool TryGetControllerAxisFromString(const std::string& input, SDL_GamepadAxis& out)
+{
+	return TryFind(kControllerAxisMap, input, out);
+}
+
 std::string GetStringFromControllerAxis(SDL_GamepadAxis axis)
 {
 	auto it = kControllerAxisReverseMap.find(axis);

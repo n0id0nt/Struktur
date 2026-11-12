@@ -82,6 +82,7 @@ void Struktur::FileLoading::LevelParser::LoadLevels(World& world, const nlohmann
 		level.pxHei      = levelJson["pxHei"];
 		LoadNeighbours(level, levelJson["__neighbours"]);
 		LoadLevelTags(level, levelJson["fieldInstances"]);
+		LoadFieldInstances(level.fieldInstances, levelJson["fieldInstances"]);
 		LoadLayers(world, level, levelJson["layerInstances"]);
 		world.levels.push_back(level);
 	}
@@ -295,7 +296,7 @@ void Struktur::FileLoading::LevelParser::LoadEntities(Layer& entityLayer, const 
 		{
 			Text::TryParseHexColor(entityJson["__smartColor"].get<std::string>(), entity.color);
 		}
-		LoadFieldInstances(entity, entityJson["fieldInstances"]);
+		LoadFieldInstances(entity.fieldInstances, entityJson["fieldInstances"]);
 
 		entityLayer.entityInstaces.push_back(entity);
 	}
@@ -323,7 +324,8 @@ std::string FieldValueToString(const nlohmann::json& value)
 }
 }  // namespace
 
-void Struktur::FileLoading::LevelParser::LoadFieldInstances(Entity& entity, const nlohmann::json& json)
+void Struktur::FileLoading::LevelParser::LoadFieldInstances(std::vector<FieldInstance>& fields,
+                                                            const nlohmann::json& json)
 {
 	for (auto& fieldInstanceJson : json)
 	{
@@ -360,7 +362,7 @@ void Struktur::FileLoading::LevelParser::LoadFieldInstances(Entity& entity, cons
 				}
 			}
 			field.value = joined;
-			entity.fieldInstances.push_back(field);
+			fields.push_back(field);
 			continue;
 		}
 
@@ -368,7 +370,7 @@ void Struktur::FileLoading::LevelParser::LoadFieldInstances(Entity& entity, cons
 		// An optional field left empty in LDtk - the script sees null.
 		if (value.is_null())
 		{
-			entity.fieldInstances.push_back(field);
+			fields.push_back(field);
 			continue;
 		}
 
@@ -398,7 +400,7 @@ void Struktur::FileLoading::LevelParser::LoadFieldInstances(Entity& entity, cons
 				break;
 		}
 
-		entity.fieldInstances.push_back(field);
+		fields.push_back(field);
 	}
 }
 

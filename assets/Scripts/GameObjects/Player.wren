@@ -7,6 +7,7 @@ import "input" for Input
 
 import "reflect" for Reflect
 
+import "World/Rooms" for Rooms
 import "Combat/Config/BattlePlayer" for BattlePlayer
 import "Sprites/ExplorerSprite" for ExplorerSprite
 import "Sprites/SpriteSheet" for SpriteSheet
@@ -36,7 +37,8 @@ class Player {
 
     name { _name }
 
-    // Movement speeds in m/s: walking is the default, holding the "Run" input runs.
+    // Movement speeds in m/s: walking is the default, holding the "Run" input runs - except in walk-only rooms
+    // (LDtk level field "Runable" off - World/Rooms.wren), where Run does nothing.
     #!export
     walkSpeed { _walkSpeed }
     walkSpeed=(value) { _walkSpeed = value }
@@ -138,7 +140,7 @@ class Player {
             _facing = dir
         }
 
-        _running = Input.isInputDown("Run")
+        _running = Input.isInputDown("Run") && Rooms.runnableAt(WorldTransform.getPosition(_entity))
         var velocity = dir * speed
         PhysicsBody.setLinearVelocity(_entity, velocity)
 

@@ -178,142 +178,6 @@ foreign class UIColor {
     foreign setOnActivate(arg0)
 }
 
-// UI element that masks its children to its own bounds
-foreign class UIClip {
-    // Create UIClip with absolutePosition, relativePosition, absoluteSize, relativeSize components
-    foreign construct new(arg0,arg1,arg2,arg3)
-    // Sets UI Element to be visible
-    foreign isVisible=(arg0)
-    // Sets UI Element to be visible
-    foreign setVisible(arg0)
-    // Gets UI Element to be visible
-    foreign isVisible
-    // Sets UI Element to be enabled
-    foreign IsEnabled=(arg0)
-    // Gets UI Element to be enabled
-    foreign IsEnabled
-    // Sets UI Element to be focusable
-    foreign IsFocusable=(arg0)
-    // Sets UI Element to be focusable
-    foreign setFocusable(arg0)
-    // Gets UI Element to be focusable
-    foreign IsFocusable
-    // Sets the UI Elements position
-    foreign setPosition(arg0,arg1)
-    // Gets the UI Elements position
-    foreign getPosition()
-    // Sets the UI Elements anchor point
-    foreign setAnchorPoint(arg0)
-    // Sets the UI Elements anchor point
-    foreign setSize(arg0,arg1)
-    // Gets the UI Elements size
-    foreign getSize()
-    // Gets the UI Elements bounds
-    foreign getBounds()
-    // Sets the UI Elements tab index
-    foreign setTabIndex(arg0)
-    // Gets the UI Elements tab index
-    foreign getTabIndex()
-    // adds a UI Element as a navigation neighbor
-    foreign setNavigationNeighbor(arg0,arg1)
-    // Gets a UI Element navigation neighbor from a direction
-    foreign getNavigationNeighbor(arg0)
-    // Gets the UI Elements parent
-    foreign getParent()
-    // Sets the UI Elements children
-    foreign getChildren()
-    // Sets the UI Elements Z index
-    foreign setZIndex(arg0)
-    // Sets the UI Elements Z index
-    foreign getZIndex()
-    // Adds a UI Element to elements children
-    foreign addChild(arg0)
-    // Removes a UI Element from the children
-    foreign removeChild(arg0)
-    // Sets the UI Elements on click callback
-    foreign setOnClick(arg0)
-    // Sets the UI Elements on focus callback
-    foreign setOnFocus(arg0)
-    // Sets the UI Elements on lose focus callback
-    foreign setOnLoseFocus(arg0)
-    // Sets the UI Elements on hover callback
-    foreign setOnHover(arg0)
-    // Sets the UI Elements on key pressed callback
-    foreign setOnKeyPressed(arg0)
-    // Sets the UI Elements on activate callback
-    foreign setOnActivate(arg0)
-}
-
-// UI minimal border outline component
-foreign class UIBorder {
-    // Create UIBorder with absolutePosition, relativePosition, absoluteSize, relativeSize components
-    foreign construct new(arg0,arg1,arg2,arg3)
-    // Sets the UIBorder's color
-    foreign setColor(arg0)
-    // Sets the UIBorder's width
-    foreign setWidth(arg0)
-    // Sets UI Element to be visible
-    foreign isVisible=(arg0)
-    // Sets UI Element to be visible
-    foreign setVisible(arg0)
-    // Gets UI Element to be visible
-    foreign isVisible
-    // Sets UI Element to be enabled
-    foreign IsEnabled=(arg0)
-    // Gets UI Element to be enabled
-    foreign IsEnabled
-    // Sets UI Element to be focusable
-    foreign IsFocusable=(arg0)
-    // Sets UI Element to be focusable
-    foreign setFocusable(arg0)
-    // Gets UI Element to be focusable
-    foreign IsFocusable
-    // Sets the UI Elements position
-    foreign setPosition(arg0,arg1)
-    // Gets the UI Elements position
-    foreign getPosition()
-    // Sets the UI Elements anchor point
-    foreign setAnchorPoint(arg0)
-    // Sets the UI Elements anchor point
-    foreign setSize(arg0,arg1)
-    // Gets the UI Elements size
-    foreign getSize()
-    // Gets the UI Elements bounds
-    foreign getBounds()
-    // Sets the UI Elements tab index
-    foreign setTabIndex(arg0)
-    // Gets the UI Elements tab index
-    foreign getTabIndex()
-    // adds a UI Element as a navigation neighbor
-    foreign setNavigationNeighbor(arg0,arg1)
-    // Gets a UI Element navigation neighbor from a direction
-    foreign getNavigationNeighbor(arg0)
-    // Gets the UI Elements parent
-    foreign getParent()
-    // Sets the UI Elements children
-    foreign getChildren()
-    // Sets the UI Elements Z index
-    foreign setZIndex(arg0)
-    // Sets the UI Elements Z index
-    foreign getZIndex()
-    // Adds a UI Element to elements children
-    foreign addChild(arg0)
-    // Removes a UI Element from the children
-    foreign removeChild(arg0)
-    // Sets the UI Elements on click callback
-    foreign setOnClick(arg0)
-    // Sets the UI Elements on focus callback
-    foreign setOnFocus(arg0)
-    // Sets the UI Elements on lose focus callback
-    foreign setOnLoseFocus(arg0)
-    // Sets the UI Elements on hover callback
-    foreign setOnHover(arg0)
-    // Sets the UI Elements on key pressed callback
-    foreign setOnKeyPressed(arg0)
-    // Sets the UI Elements on activate callback
-    foreign setOnActivate(arg0)
-}
-
 // Markup-driven UI Label component supporting inline bold/italic/color/icon formatting
 foreign class UIRichLabel {
     // Create UIRichLabel with absolutePosition, relativePosition, markupText components
@@ -342,8 +206,12 @@ foreign class UIRichLabel {
     foreign setIconAtlas(arg0)
     // Caps rendering to the first N drawable glyphs, for a typewriter/reveal effect - negative means show everything
     foreign setVisibleGlyphCount(arg0)
+    // Gets the height the wrapped text needs at the label's current width, for a box that grows to fit
+    foreign getContentHeight()
     // Gets the total drawable glyph count, for a reveal loop to compare its progress against
     foreign getGlyphCount()
+    // Sizes the label to its content (unwrapped labels), so its anchor point keeps it aligned
+    foreign setAutoSize(arg0)
     // Sets whether wave/shake/pulse/etc. animation follows unscaled (real) time instead of scaled game time - true keeps animating through a pause or slow-mo
     foreign setUseUnscaledTime(arg0)
     // Gets whether this label's animation follows unscaled time
@@ -412,78 +280,6 @@ foreign class UIRichLabel {
 
 // UI Element component
 foreign class UIElement {
-    // Sets UI Element to be visible
-    foreign isVisible=(arg0)
-    // Sets UI Element to be visible
-    foreign setVisible(arg0)
-    // Gets UI Element to be visible
-    foreign isVisible
-    // Sets UI Element to be enabled
-    foreign IsEnabled=(arg0)
-    // Gets UI Element to be enabled
-    foreign IsEnabled
-    // Sets UI Element to be focusable
-    foreign IsFocusable=(arg0)
-    // Sets UI Element to be focusable
-    foreign setFocusable(arg0)
-    // Gets UI Element to be focusable
-    foreign IsFocusable
-    // Sets the UI Elements position
-    foreign setPosition(arg0,arg1)
-    // Gets the UI Elements position
-    foreign getPosition()
-    // Sets the UI Elements anchor point
-    foreign setAnchorPoint(arg0)
-    // Sets the UI Elements anchor point
-    foreign setSize(arg0,arg1)
-    // Gets the UI Elements size
-    foreign getSize()
-    // Gets the UI Elements bounds
-    foreign getBounds()
-    // Sets the UI Elements tab index
-    foreign setTabIndex(arg0)
-    // Gets the UI Elements tab index
-    foreign getTabIndex()
-    // adds a UI Element as a navigation neighbor
-    foreign setNavigationNeighbor(arg0,arg1)
-    // Gets a UI Element navigation neighbor from a direction
-    foreign getNavigationNeighbor(arg0)
-    // Gets the UI Elements parent
-    foreign getParent()
-    // Sets the UI Elements children
-    foreign getChildren()
-    // Sets the UI Elements Z index
-    foreign setZIndex(arg0)
-    // Sets the UI Elements Z index
-    foreign getZIndex()
-    // Adds a UI Element to elements children
-    foreign addChild(arg0)
-    // Removes a UI Element from the children
-    foreign removeChild(arg0)
-    // Sets the UI Elements on click callback
-    foreign setOnClick(arg0)
-    // Sets the UI Elements on focus callback
-    foreign setOnFocus(arg0)
-    // Sets the UI Elements on lose focus callback
-    foreign setOnLoseFocus(arg0)
-    // Sets the UI Elements on hover callback
-    foreign setOnHover(arg0)
-    // Sets the UI Elements on key pressed callback
-    foreign setOnKeyPressed(arg0)
-    // Sets the UI Elements on activate callback
-    foreign setOnActivate(arg0)
-}
-
-// UI nine-slice/9-patch textured rect component
-foreign class UINineSlice {
-    // Create UINineSlice with absolutePosition, relativePosition, absoluteSize, relativeSize components
-    foreign construct new(arg0,arg1,arg2,arg3)
-    // Sets the UINineSlice's texture
-    foreign setTexture(arg0)
-    // Sets the UINineSlice's tint color
-    foreign setTint(arg0)
-    // Sets the border insets (left, right, top, bottom), in source-texture pixel space, that stay fixed-size on screen while the edges/center stretch to fill the rest
-    foreign setBorder(arg0,arg1,arg2,arg3)
     // Sets UI Element to be visible
     foreign isVisible=(arg0)
     // Sets UI Element to be visible
@@ -644,6 +440,301 @@ foreign class UILabel {
     foreign getText()
     // Will change the width and height to match the text
     foreign setBoundingBoxToText()
+    // Sets UI Element to be visible
+    foreign isVisible=(arg0)
+    // Sets UI Element to be visible
+    foreign setVisible(arg0)
+    // Gets UI Element to be visible
+    foreign isVisible
+    // Sets UI Element to be enabled
+    foreign IsEnabled=(arg0)
+    // Gets UI Element to be enabled
+    foreign IsEnabled
+    // Sets UI Element to be focusable
+    foreign IsFocusable=(arg0)
+    // Sets UI Element to be focusable
+    foreign setFocusable(arg0)
+    // Gets UI Element to be focusable
+    foreign IsFocusable
+    // Sets the UI Elements position
+    foreign setPosition(arg0,arg1)
+    // Gets the UI Elements position
+    foreign getPosition()
+    // Sets the UI Elements anchor point
+    foreign setAnchorPoint(arg0)
+    // Sets the UI Elements anchor point
+    foreign setSize(arg0,arg1)
+    // Gets the UI Elements size
+    foreign getSize()
+    // Gets the UI Elements bounds
+    foreign getBounds()
+    // Sets the UI Elements tab index
+    foreign setTabIndex(arg0)
+    // Gets the UI Elements tab index
+    foreign getTabIndex()
+    // adds a UI Element as a navigation neighbor
+    foreign setNavigationNeighbor(arg0,arg1)
+    // Gets a UI Element navigation neighbor from a direction
+    foreign getNavigationNeighbor(arg0)
+    // Gets the UI Elements parent
+    foreign getParent()
+    // Sets the UI Elements children
+    foreign getChildren()
+    // Sets the UI Elements Z index
+    foreign setZIndex(arg0)
+    // Sets the UI Elements Z index
+    foreign getZIndex()
+    // Adds a UI Element to elements children
+    foreign addChild(arg0)
+    // Removes a UI Element from the children
+    foreign removeChild(arg0)
+    // Sets the UI Elements on click callback
+    foreign setOnClick(arg0)
+    // Sets the UI Elements on focus callback
+    foreign setOnFocus(arg0)
+    // Sets the UI Elements on lose focus callback
+    foreign setOnLoseFocus(arg0)
+    // Sets the UI Elements on hover callback
+    foreign setOnHover(arg0)
+    // Sets the UI Elements on key pressed callback
+    foreign setOnKeyPressed(arg0)
+    // Sets the UI Elements on activate callback
+    foreign setOnActivate(arg0)
+}
+
+// UI button prompt for an input action
+foreign class UIInputHint {
+    // Create UIInputHint with absolutePosition, relativePosition, action (e.g. "UIAccept", "UITab:negative")
+    foreign construct new(arg0,arg1,arg2)
+    // Sets the action (or "Action:part") whose button is shown
+    foreign setAction(arg0)
+    // Sets the text shown after the button
+    foreign setLabel(arg0)
+    // Sets the label font
+    foreign setFont(arg0)
+    // Sets the label font size
+    foreign setFontSize(arg0)
+    // Sets the whole-number scale the button art is drawn at
+    foreign setGlyphScale(arg0)
+    // Sets the gap between buttons and the gap before the label, in pixels
+    foreign setSpacing(arg0,arg1)
+    // Sets the label color
+    foreign setTextColor(arg0)
+    // Sets UI Element to be visible
+    foreign isVisible=(arg0)
+    // Sets UI Element to be visible
+    foreign setVisible(arg0)
+    // Gets UI Element to be visible
+    foreign isVisible
+    // Sets UI Element to be enabled
+    foreign IsEnabled=(arg0)
+    // Gets UI Element to be enabled
+    foreign IsEnabled
+    // Sets UI Element to be focusable
+    foreign IsFocusable=(arg0)
+    // Sets UI Element to be focusable
+    foreign setFocusable(arg0)
+    // Gets UI Element to be focusable
+    foreign IsFocusable
+    // Sets the UI Elements position
+    foreign setPosition(arg0,arg1)
+    // Gets the UI Elements position
+    foreign getPosition()
+    // Sets the UI Elements anchor point
+    foreign setAnchorPoint(arg0)
+    // Sets the UI Elements anchor point
+    foreign setSize(arg0,arg1)
+    // Gets the UI Elements size
+    foreign getSize()
+    // Gets the UI Elements bounds
+    foreign getBounds()
+    // Sets the UI Elements tab index
+    foreign setTabIndex(arg0)
+    // Gets the UI Elements tab index
+    foreign getTabIndex()
+    // adds a UI Element as a navigation neighbor
+    foreign setNavigationNeighbor(arg0,arg1)
+    // Gets a UI Element navigation neighbor from a direction
+    foreign getNavigationNeighbor(arg0)
+    // Gets the UI Elements parent
+    foreign getParent()
+    // Sets the UI Elements children
+    foreign getChildren()
+    // Sets the UI Elements Z index
+    foreign setZIndex(arg0)
+    // Sets the UI Elements Z index
+    foreign getZIndex()
+    // Adds a UI Element to elements children
+    foreign addChild(arg0)
+    // Removes a UI Element from the children
+    foreign removeChild(arg0)
+    // Sets the UI Elements on click callback
+    foreign setOnClick(arg0)
+    // Sets the UI Elements on focus callback
+    foreign setOnFocus(arg0)
+    // Sets the UI Elements on lose focus callback
+    foreign setOnLoseFocus(arg0)
+    // Sets the UI Elements on hover callback
+    foreign setOnHover(arg0)
+    // Sets the UI Elements on key pressed callback
+    foreign setOnKeyPressed(arg0)
+    // Sets the UI Elements on activate callback
+    foreign setOnActivate(arg0)
+}
+
+class InputGlyphs {
+    // Loads the button-art map (JSON) that input hints resolve against
+    foreign static load(arg0)
+}
+
+// UI nine-slice/9-patch textured rect component
+foreign class UINineSlice {
+    // Create UINineSlice with absolutePosition, relativePosition, absoluteSize, relativeSize components
+    foreign construct new(arg0,arg1,arg2,arg3)
+    // Sets the UINineSlice's texture
+    foreign setTexture(arg0)
+    // Sets the UINineSlice's tint color
+    foreign setTint(arg0)
+    // Sets the border insets (left, right, top, bottom), in source-texture pixel space, that stay fixed-size on screen while the edges/center stretch to fill the rest
+    foreign setBorder(arg0,arg1,arg2,arg3)
+    // Draws the border's corners/edges at this many screen pixels per source pixel (e.g. 4 for 16px pixel art)
+    foreign setScale(arg0)
+    // Sets UI Element to be visible
+    foreign isVisible=(arg0)
+    // Sets UI Element to be visible
+    foreign setVisible(arg0)
+    // Gets UI Element to be visible
+    foreign isVisible
+    // Sets UI Element to be enabled
+    foreign IsEnabled=(arg0)
+    // Gets UI Element to be enabled
+    foreign IsEnabled
+    // Sets UI Element to be focusable
+    foreign IsFocusable=(arg0)
+    // Sets UI Element to be focusable
+    foreign setFocusable(arg0)
+    // Gets UI Element to be focusable
+    foreign IsFocusable
+    // Sets the UI Elements position
+    foreign setPosition(arg0,arg1)
+    // Gets the UI Elements position
+    foreign getPosition()
+    // Sets the UI Elements anchor point
+    foreign setAnchorPoint(arg0)
+    // Sets the UI Elements anchor point
+    foreign setSize(arg0,arg1)
+    // Gets the UI Elements size
+    foreign getSize()
+    // Gets the UI Elements bounds
+    foreign getBounds()
+    // Sets the UI Elements tab index
+    foreign setTabIndex(arg0)
+    // Gets the UI Elements tab index
+    foreign getTabIndex()
+    // adds a UI Element as a navigation neighbor
+    foreign setNavigationNeighbor(arg0,arg1)
+    // Gets a UI Element navigation neighbor from a direction
+    foreign getNavigationNeighbor(arg0)
+    // Gets the UI Elements parent
+    foreign getParent()
+    // Sets the UI Elements children
+    foreign getChildren()
+    // Sets the UI Elements Z index
+    foreign setZIndex(arg0)
+    // Sets the UI Elements Z index
+    foreign getZIndex()
+    // Adds a UI Element to elements children
+    foreign addChild(arg0)
+    // Removes a UI Element from the children
+    foreign removeChild(arg0)
+    // Sets the UI Elements on click callback
+    foreign setOnClick(arg0)
+    // Sets the UI Elements on focus callback
+    foreign setOnFocus(arg0)
+    // Sets the UI Elements on lose focus callback
+    foreign setOnLoseFocus(arg0)
+    // Sets the UI Elements on hover callback
+    foreign setOnHover(arg0)
+    // Sets the UI Elements on key pressed callback
+    foreign setOnKeyPressed(arg0)
+    // Sets the UI Elements on activate callback
+    foreign setOnActivate(arg0)
+}
+
+// UI element that masks its children to its own bounds
+foreign class UIClip {
+    // Create UIClip with absolutePosition, relativePosition, absoluteSize, relativeSize components
+    foreign construct new(arg0,arg1,arg2,arg3)
+    // Sets UI Element to be visible
+    foreign isVisible=(arg0)
+    // Sets UI Element to be visible
+    foreign setVisible(arg0)
+    // Gets UI Element to be visible
+    foreign isVisible
+    // Sets UI Element to be enabled
+    foreign IsEnabled=(arg0)
+    // Gets UI Element to be enabled
+    foreign IsEnabled
+    // Sets UI Element to be focusable
+    foreign IsFocusable=(arg0)
+    // Sets UI Element to be focusable
+    foreign setFocusable(arg0)
+    // Gets UI Element to be focusable
+    foreign IsFocusable
+    // Sets the UI Elements position
+    foreign setPosition(arg0,arg1)
+    // Gets the UI Elements position
+    foreign getPosition()
+    // Sets the UI Elements anchor point
+    foreign setAnchorPoint(arg0)
+    // Sets the UI Elements anchor point
+    foreign setSize(arg0,arg1)
+    // Gets the UI Elements size
+    foreign getSize()
+    // Gets the UI Elements bounds
+    foreign getBounds()
+    // Sets the UI Elements tab index
+    foreign setTabIndex(arg0)
+    // Gets the UI Elements tab index
+    foreign getTabIndex()
+    // adds a UI Element as a navigation neighbor
+    foreign setNavigationNeighbor(arg0,arg1)
+    // Gets a UI Element navigation neighbor from a direction
+    foreign getNavigationNeighbor(arg0)
+    // Gets the UI Elements parent
+    foreign getParent()
+    // Sets the UI Elements children
+    foreign getChildren()
+    // Sets the UI Elements Z index
+    foreign setZIndex(arg0)
+    // Sets the UI Elements Z index
+    foreign getZIndex()
+    // Adds a UI Element to elements children
+    foreign addChild(arg0)
+    // Removes a UI Element from the children
+    foreign removeChild(arg0)
+    // Sets the UI Elements on click callback
+    foreign setOnClick(arg0)
+    // Sets the UI Elements on focus callback
+    foreign setOnFocus(arg0)
+    // Sets the UI Elements on lose focus callback
+    foreign setOnLoseFocus(arg0)
+    // Sets the UI Elements on hover callback
+    foreign setOnHover(arg0)
+    // Sets the UI Elements on key pressed callback
+    foreign setOnKeyPressed(arg0)
+    // Sets the UI Elements on activate callback
+    foreign setOnActivate(arg0)
+}
+
+// UI minimal border outline component
+foreign class UIBorder {
+    // Create UIBorder with absolutePosition, relativePosition, absoluteSize, relativeSize components
+    foreign construct new(arg0,arg1,arg2,arg3)
+    // Sets the UIBorder's color
+    foreign setColor(arg0)
+    // Sets the UIBorder's width
+    foreign setWidth(arg0)
     // Sets UI Element to be visible
     foreign isVisible=(arg0)
     // Sets UI Element to be visible

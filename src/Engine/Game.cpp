@@ -58,10 +58,16 @@
 
 #ifdef EDITOR
 	#define SPLASHSCREENFONT "Fonts/machine-std/machine-std-regular.ttf"
+	#define SPLASHSCREENFONTSIZE 120
+	#define SPLASHSCREENPIXELFONT false
 	#define SPLASHSCREENTEXT "STRUKTUR"
 #else
-	#define SPLASHSCREENFONT "Fonts/medieval_sharp/MedievalSharp-Bold.ttf"
-	#define SPLASHSCREENTEXT "Memory Palace"
+	// The game's pixel font (assets/Scripts/UI/Theme/UIKit.wren's font) at its 9px design size, sampled
+	// nearest-neighbour - drawn at 120 it snaps to the nearest whole multiple (see Text::GlyphScale).
+	#define SPLASHSCREENFONT "UI/Font/NormalFont.ttf"
+	#define SPLASHSCREENFONTSIZE 9
+	#define SPLASHSCREENPIXELFONT true
+	#define SPLASHSCREENTEXT "Seven Gods"
 #endif
 
 void Struktur::InitialiseGame(GameContext& context)
@@ -300,7 +306,8 @@ void Struktur::SplashScreenLoop(GameContext& context)
 	std::string splashScreenName = SPLASHSCREENTEXT;
 	int fontSize                 = 120;
 
-	Resource::ResourcePtr<Resource::FontResource> font = resourceManager.GetFont(context, SPLASHSCREENFONT, 120);
+	Resource::ResourcePtr<Resource::FontResource> font =
+	    resourceManager.GetFont(context, SPLASHSCREENFONT, SPLASHSCREENFONTSIZE, SPLASHSCREENPIXELFONT);
 	// Pinned once (see ResourcePool<T>::Pin) instead of holding a persistent ResourcePtr somewhere for the whole
 	// splash duration - without this, GetResource()'s cache would evict/reload the font every single frame, since
 	// `font` above is the only reference to it and it goes out of scope at the end of this function. Pinning lets
