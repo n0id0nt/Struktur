@@ -5,7 +5,7 @@
 // emitter.emit(), rather than creating and destroying a one-shot emitter/entity per hit.
 //
 // Melee moves use Actors/sword_slash.png, Control moves Actors/magic.png (the same sprite
-// ExperimentState's particle demo uses) - both are known-good textures.
+// the old overworld particle demo used) - both are known-good textures.
 import "math" for Vec2, Vec4
 import "resourceManager" for Texture
 

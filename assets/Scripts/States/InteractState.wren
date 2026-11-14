@@ -69,6 +69,11 @@ class InteractState is BaseState {
         _view = DialogueBoxUI.new()
 
         var interactable = Script.getInstance(_interactingEntity)
+        // A script can react to being interacted with before its conversation starts (a rest spot becoming the
+        // spawn point - GameObjects/RestSpot.wren).
+        if (Reflect.hasMethod(interactable, "onInteractStarted()")) {
+            interactable.onInteractStarted()
+        }
         // A script can pick its own conversation (a party member asking whether to stay - GameObjects/PartyMember).
         var entryNodeId = null
         if (Reflect.hasMethod(interactable, "dialogueEntryPoint()")) {

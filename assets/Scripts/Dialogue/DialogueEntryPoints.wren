@@ -1,69 +1,64 @@
 // Dialogue/DialogueEntryPoints.wren
-// NPC/item-name -> dialogue-node-id lookup. Extracted from what used to be States/InteractState.
-// wren's embedded getEntryPoint method - pure data/logic, zero UI dependency.
+// Interactable name -> dialogue node id (Dialogue/Arc1Dialogue.json). The names are exactly as they are in the LDtk
+// level (Levels/SevenGods.ldtk): an NPC's "Name" field, an Interactable's "MessageKey" or a Door's "Name". Anything not
+// listed falls back to handling itself (an Item picks itself up, an Interactable shows its MessageKey as a localized
+// line, a door with KeyIds says it's sealed). RestSpots pick their own node (GameObjects/RestSpot.wren).
 import "debug" for Debug
-import "Inventory/Inventory" for Inventory
 
 class DialogueEntryPoints {
     static get(interactableName) {
-        // NPCs
-        if (interactableName == "Scholar")    return "scholar"
-        if (interactableName == "Gardener")   return "gardener"
-        if (interactableName == "Cook")       return "cook"
-        if (interactableName == "Merchant")   return "merchant"
-        if (interactableName == "Guard")      return "guard"
-        if (interactableName == "Librarian")  return "librarian"
-        if (interactableName == "Astronomer") return "astronomer"
-        if (interactableName == "Cordelia")   return "cordelia"
-        if (interactableName == "Dreamer")    return "dreamer"
-        if (interactableName == "Guardian")   return "guardian"
-        if (interactableName == "Villager")   return "villager"
-        if (interactableName == "Traveler")   return "traveler"
-        if (interactableName == "Duelist")    return "duelist"
-        if (interactableName == "Inventor")   return "inventor"
+        if (__entries == null) {
+            __entries = {
+                // --- NPCs (LDtk "NPC" entity, Name field) ---
+                "Finn": "finn",
+                "Elena": "elena",
+                "Garrett": "garrett",
+                "HavenVillageChild": "child",
+                "Kira": "kira",
+                "Thomas": "thomas",
+                "Guide": "guide",
+                // The shrine chamber's three constructs, each guarding its own door.
+                "RunicConstuct1": "construct_1",
+                "RunicConstruct2": "construct_2",
+                "RunicConstruct3": "construct_3",
 
-        // Signposts (GameObjects/Sign.wren)
-        if (interactableName == "Welcome Sign") return "sign_welcome"
-        if (interactableName == "Warning Sign") return "sign_warning"
-        if (interactableName == "Rest Spot")    return "rest_spot"
+                // --- Built into the level (LDtk "Interactable" entity, MessageKey field) ---
+                "Tablet1": "tablet_1",
+                "Tablet2": "tablet_2",
+                "Tablet3": "tablet_3",
+                "Tablet4": "tablet_4",
+                "Tablet5": "tablet_5",
+                "ShrineCrystal": "shrine_crystal",
+                "MemoryMuneral1": "memory_murals",
+                "MemoryMuneral2": "memory_murals",
+                "MemoryMuneral3": "memory_murals",
+                "MemoryMuneral4": "memory_murals",
+                "CentralMural": "central_mural",
+                // All three Wardens - talking to any of them starts the one fight against all three.
+                "Warden": "warden",
+                "MemoryViewer": "memory_viewer",
 
-        // Immovable interactables
-        if (interactableName == "Safe")                    return "safe"
-        if (interactableName == "Red Pedestal Inactive")   return "red_pedestal_inactive"
-        if (interactableName == "Red Pedestal Active")     return "red_pedestal_active"
-        if (interactableName == "Blue Pedestal Inactive")  return "blue_pedestal_inactive"
-        if (interactableName == "Blue Pedestal Active")    return "blue_pedestal_active"
-        if (interactableName == "Green Pedestal Inactive") return "green_pedestal_inactive"
-        if (interactableName == "Green Pedestal Active")   return "green_pedestal_active"
-        if (interactableName == "Yellow Pedestal Inactive") return "yellow_pedestal_inactive"
-        if (interactableName == "Yellow Pedestal Active")  return "yellow_pedestal_active"
-        if (interactableName == "Entrance Door")           return "entrance_door"
+                // --- Doors (LDtk "Door" entity, Name field) ---
+                // Doors with KeyIds (the construct and warden doors) aren't listed: they say they're sealed until
+                // their story events happen, then open by themselves.
+                "WisperWoodsDoor": "wisperwood_door",
+                "WisperWoodsDoor2": "wisperwood_door",
+                "ShrineEntranceDoor": "shrine_door",
 
-        // World items (always pickuppable — no suffix logic)
-        if (interactableName == "Rose")         return "rose"
-        if (interactableName == "Tool Box")     return "tool_box"
-        if (interactableName == "Telescope")    return "telescope"
-        if (interactableName == "Ancient Seal") return "ancient_seal"
-
-        // Overworld pickups (Dialogue/OverworldDialogue.json)
-        if (interactableName == "Lost Locket")  return "lost_locket"
-        if (interactableName == "Lucky Coin")   return "lucky_coin"
-        if (interactableName == "Iron Key")     return "iron_key"
-
-        // Doors (GameObjects/Door.wren)
-        if (interactableName == "Stone Door")   return "stone_door"
-        if (interactableName == "Iron Gate")    return "iron_gate"
-        if (interactableName == "Wooden Door")  return "wooden_door"
-
-        // Returnable items — use "_return" entry if already in inventory
-        var suffix = Inventory.contains(interactableName) ? "_return" : ""
-        if (interactableName == "Ancient Tome") return "ancient_book" + suffix
-        if (interactableName == "Love Letter")  return "love_letter" + suffix
-        if (interactableName == "Hammer")       return "hammer" + suffix
-        if (interactableName == "Star Chart")   return "star_chart" + suffix
-        if (interactableName == "Ornate Key")   return "ornate_key" + suffix
-
-        Debug.warning("No dialogue entry point found for '%(interactableName)'")
-        return null
+                // --- Written but not placed in the level yet: an Interactable with this MessageKey picks it up ---
+                "Village Well": "village_well",
+                "Claw Marks": "claw_marks",
+                "Blue Lights": "blue_lights",
+                "Stone Pillars": "stone_pillars",
+                "Shrine Entry": "shrine_entry_kira",
+                "Shifting Floor": "shifting_floor",
+                "Wounded Thornwolf": "wounded_wolf"
+            }
+        }
+        var entry = __entries[interactableName]
+        if (entry == null) {
+            Debug.info("No dialogue entry point for '%(interactableName)' - it handles itself")
+        }
+        return entry
     }
 }

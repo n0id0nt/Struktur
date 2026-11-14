@@ -3,7 +3,7 @@
 // follows the member directly AHEAD of it in the list (see GameObjects/PartyMember.wren), players never follow.
 // With several players in the party (`[P1, N1, P2, N2]`) the same rule just works: N1 trails P1, N2 trails P2.
 //
-//   - Joining/leaving only changes this list (and saves it); States/ExperimentState.syncPartyFollowers() spawns
+//   - Joining/leaving only changes this list (and saves it); States/GameWorldState.syncPartyFollowers() spawns
 //     and removes the matching world entities.
 //   - Dialogue asks `Party.contains(name)` through the `inParty` condition (Dialogue/RegisteredFunctions/
 //     Conditions.wren).
@@ -199,7 +199,7 @@ class Party {
 
     // --- health -------------------------------------------------------------------------
 
-    // True when at least one member can fight - nobody standing means no fight can start (ExperimentState).
+    // True when at least one member can fight - nobody standing means no fight can start (GameWorldState).
     static anyoneStanding {
         for (m in __members) {
             var c = Party.combatantOf(m)

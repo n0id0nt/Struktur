@@ -15,6 +15,10 @@ SHADOW_COLOR.w = 100
 
 // What a pickup with no icon yet shows.
 var PLACEHOLDER_SPRITE = "Items/Object/Bag.png"
+// LDtk "Item" dropdown values -> item ids (Inventory/ItemDatabase.wren).
+var ENUM_ITEM_IDS = {
+    "HealingHerb": "Healing Herb"
+}
 
 class Item {
     // World-only art for the pedestals (they are never inventory items, so they have no ItemDatabase icon).
@@ -72,11 +76,17 @@ class Item {
         Item.createSprite(entity, Item.nameFrom_(args), WHITE)
     }
 
-    // The item id from its args - "Name" (an ItemDatabase / dialogue item id).
+    // The item id from its args - "Name" (an ItemDatabase / dialogue item id), or a level item's "Item" dropdown (LDtk
+    // enum values can't have spaces, so ENUM_ITEM_IDS maps them to item ids; one with no entry is used as it is).
     static nameFrom_(args) {
         var name = args["Name"]
         if (name == null || name == "") {
-            Debug.warning("Item %(args["Iid"]) has no Name - give it one in LDtk")
+            var enumValue = args["Item"]
+            if (enumValue is String && enumValue != "") {
+                return ENUM_ITEM_IDS.containsKey(enumValue) ? ENUM_ITEM_IDS[enumValue] : enumValue
+            }
+            var iid = args["Iid"]
+            Debug.warning("Item %(iid) has no Name or Item - give it one in LDtk")
             return "Unknown Item"
         }
         return name

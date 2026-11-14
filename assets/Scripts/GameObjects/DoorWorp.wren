@@ -3,7 +3,7 @@
 // to the DoorWorp its "Destination" field links to, arriving one tile from that door's centre in the direction the
 // destination door's direction field gives (North = the tile above it, and so on). A destination with no direction
 // set arrives one step towards its room's centre instead. Invisible - the doorway itself is drawn by the level's
-// tiles. The move is done by States/ExperimentState.wren (via World/Warps.wren). Placed in the level (LDtk
+// tiles. The move is done by States/GameWorldState.wren (via World/Warps.wren). Placed in the level (LDtk
 // "DoorWorp" entity).
 import "gameObjectComponents" for PhysicsBody, WorldTransform, World
 import "physics" for BodyDefinition, PhysicsBoxShape, BodyType, CollisionLayers

@@ -9,6 +9,9 @@ import "Party/DuelRequest" for DuelRequest
 import "Dialogue/ChoiceRecord" for ChoiceRecord
 import "gameObject" for GameObject
 import "events" for Event
+import "World/Npcs" for Npcs
+import "Story/ArcEnd" for ArcEnd
+import "World/StoryEvents" for StoryEvents
 
 class Commands {
     static registerFunctions() {
@@ -92,17 +95,22 @@ class Commands {
             Event.addEvent("pickupEntity", [["__type", "map"], ["name", entityName]])
         }
         // The named NPC joins the party: the standing NPC steps out of the overworld, and their follower appears
-        // where they stood (States/ExperimentState.syncPartyFollowers does the spawning).
+        // where they stood (States/GameWorldState.syncPartyFollowers does the spawning).
         DialogueRegistry.registerCommand("joinParty") { |params|
             var npcName = params["name"]
             var spawnPosition = null
-            for (npcEntity in GameObject.getAllWithIdentifier(npcName)) {
+            for (npcEntity in Npcs.find(npcName)) {
                 spawnPosition = WorldTransform.getPosition(npcEntity)
                 GameObject.destroy(npcEntity)
             }
             Party.join(npcName, spawnPosition)
             Debug.info("[Dialogue Command] Party joined by %(npcName)")
             Event.addEvent("joinParty", [["__type", "map"], ["name", npcName]])
+        }
+        // The arc is over: once this dialogue closes, the gameplay state shows the end-of-arc card (Story/ArcEnd.wren).
+        DialogueRegistry.registerCommand("endArc") { |params|
+            ArcEnd.request()
+            Debug.info("[Dialogue Command] End of arc requested")
         }
         // A rest spot: the whole party back to full HP / stamina, downed members included (Party.restAll).
         DialogueRegistry.registerCommand("restParty") { |params|
@@ -124,8 +132,15 @@ class Commands {
         // Challenges the named NPC to a duel: the fight starts once this dialogue has ended (the world picks the
         // request up - see Party/DuelRequest.wren).
         DialogueRegistry.registerCommand("startDuel") { |params|
-            DuelRequest.request(params["name"])
+            DuelRequest.request(params["name"], false)
             Debug.info("[Dialogue Command] Duel requested against %(params["name"])")
+        }
+        // A story battle against everyone here with this name (the three Wardens): unlike a duel it's lethal - losing
+        // is a game over. Starts once this dialogue has ended, like a duel.
+        DialogueRegistry.registerCommand("startBattle") { |params|
+            var foeName = params["name"]
+            DuelRequest.request(foeName, true)
+            Debug.info("[Dialogue Command] Battle requested against %(foeName)")
         }
         // Opens every door with this name - its entity identifier (both halves of a double door - GameObjects/Door.wren)
         // for good; the door saves that it's open.
@@ -140,6 +155,13 @@ class Commands {
                 }
             }
             Debug.info("[Dialogue Command] Opened door %(doorName)")
+        }
+        // A story event happened (World/StoryEvents.wren) - every level door listing it in KeyIds opens once all of its
+        // events have.
+        DialogueRegistry.registerCommand("triggerEvent") { |params|
+            var eventId = params["event"]
+            StoryEvents.fire(eventId)
+            Debug.info("[Dialogue Command] Story event %(eventId)")
         }
         DialogueRegistry.registerCommand("putdownEntity") { |params|
             var entityName = params["name"]

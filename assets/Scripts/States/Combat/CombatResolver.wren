@@ -194,7 +194,7 @@ class CombatResolver {
     }
 
     lose() {
-        // A duel is non-lethal (States/ExperimentState.onCombatEnded_ gets everyone back up) - so it's a yield.
+        // A duel is non-lethal (States/GameWorldState.onCombatEnded_ gets everyone back up) - so it's a yield.
         endFight(_session.duel ? "You yield - the duel is lost." : "You were overwhelmed...", "lost", [])
     }
 
@@ -222,7 +222,7 @@ class CombatResolver {
 
     // Every ending funnels through here. result: "won" / "lost" / "fled"; recruited: names of the opponents who
     // joined the party. Removes the fallen from the overworld, leaves the outcome for the world
-    // (Combat/CombatOutcome.wren - States/ExperimentState.wren takes it once the fight has closed), then the
+    // (Combat/CombatOutcome.wren - States/GameWorldState.wren takes it once the fight has closed), then the
     // closing line.
     endFight(text, result, recruited) {
         var fallen = removeFallen(recruited)
@@ -248,6 +248,12 @@ class CombatResolver {
             }
             if (e.entity != null && GameObject.isValid(e.entity)) {
                 var script = Script.getInstance(e.entity)
+                // A beaten story character - a duel challenger (Thomas, a construct) or a story battle's foe (the
+                // Wardens) - stays standing in the world so their dialogue can carry on, unless they were recruited,
+                // when their party follower replaces them. Only critters are really removed.
+                if (!(script is Critter) && !recruited.contains(e.name)) {
+                    continue
+                }
                 if (!recruited.contains(e.name) && script is Critter) {
                     Defeated.add(script.iid)
                 }

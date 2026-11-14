@@ -13,18 +13,9 @@ class DialogueLoader {
     static loadAllDialogue() {
         Debug.info("Loading all dialogue...")
         
+        // Arc 1 ("The Awakening") - docs/FirstArcPlan.md. Generated content; one file until it's worth splitting.
         var dialogueFiles = [
-            "Dialogue/GardenerDialogue.json",
-            "Dialogue/ScholarDialogue.json",
-            "Dialogue/AstronomerDialogue.json",
-            "Dialogue/CookDialogue.json",
-            "Dialogue/CordeliaDialogue.json",
-            "Dialogue/DreamerDialogue.json",
-            "Dialogue/GuardianDialogue.json",
-            "Dialogue/InventorDialogue.json",
-            "Dialogue/MerchantDialogue.json",
-            "Dialogue/ItemDialogue.json",
-            "Dialogue/OverworldDialogue.json"
+            "Dialogue/Arc1Dialogue.json"
         ]
 
         for (filePath in dialogueFiles) {

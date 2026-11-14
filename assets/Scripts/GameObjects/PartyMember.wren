@@ -1,7 +1,7 @@
 // GameObjects/PartyMember.wren
 // The world-side body of an NPC who has joined the party: a dynamic Actor-layer body that follows the member
 // ahead of it in the party list (Party/Party.wren) and otherwise stands about. Spawned/removed by
-// States/ExperimentState.syncPartyFollowers() whenever the party changes - recruiting an NPC only edits the
+// States/GameWorldState.syncPartyFollowers() whenever the party changes - recruiting an NPC only edits the
 // party list.
 //
 // Movement is three small pluggable pieces so the AI can grow without rewriting this script:

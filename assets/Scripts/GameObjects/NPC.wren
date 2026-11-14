@@ -2,6 +2,7 @@ import "gameObjectComponents" for PhysicsBody
 import "physics" for BodyDefinition, PhysicsCircleShape, BodyType
 import "Util/CharacterCollider" for CharacterCollider
 import "debug" for Debug
+import "World/StoryGates" for StoryGates
 import "Sprites/ClaireSprite" for ClaireSprite
 import "Sprites/ClaireBattleSprite" for ClaireBattleSprite
 import "Sprites/GoblinVikingSprite" for GoblinVikingSprite
@@ -35,20 +36,26 @@ class NPCData {
     // look (Combat/Config/BattleCritter.wren, which uses battleSprite).
     static forName(name) {
         var table = {
-            // Overworld NPCs (States/ExperimentState.wren spawns them; Dialogue/OverworldDialogue.json).
+            // Arc 1 cast (Levels/SevenGods.ldtk, Dialogue/Arc1Dialogue.json). Placeholder looks - six generated models
+            // cover everyone until the cast gets their own (docs/FirstArcPlan.md).
+            "Finn": NPCData.new(WrestlerSprite, WrestlerBattleSprite),
+            "Elena": NPCData.new(PeasantGirlSprite, PeasantGirlBattleSprite),
+            "Garrett": NPCData.new(WrestlerSprite, WrestlerBattleSprite),
+            "Child": NPCData.new(PinkHairGirlSprite, PinkHairGirlBattleSprite),
+            "Kira": NPCData.new(YellowPantsGirlSprite, YellowPantsGirlBattleSprite),
+            "Thomas": NPCData.new(GoblinVikingSprite, GoblinVikingBattleSprite),
+            "Guide": NPCData.new(ClaireSprite, ClaireBattleSprite),
+            "Runic Construct": NPCData.new(GoblinVikingSprite, GoblinVikingBattleSprite),
+            // Level names (the LDtk NPC Name field) that differ from the character's.
+            "HavenVillageChild": NPCData.new(PinkHairGirlSprite, PinkHairGirlBattleSprite),
+            "RunicConstuct1": NPCData.new(GoblinVikingSprite, GoblinVikingBattleSprite),
+            "RunicConstruct2": NPCData.new(GoblinVikingSprite, GoblinVikingBattleSprite),
+            "RunicConstruct3": NPCData.new(GoblinVikingSprite, GoblinVikingBattleSprite),
+            "Warden": NPCData.new(WrestlerSprite, WrestlerBattleSprite),
+            // Older test fighters (Combat/Config/BattleCritter.wren, the battle test roster).
             "Villager": NPCData.new(PeasantGirlSprite, PeasantGirlBattleSprite),
-            "Traveler": NPCData.new(ClaireSprite, ClaireBattleSprite),
             "Duelist": NPCData.new(YellowPantsGirlSprite, YellowPantsGirlBattleSprite),
-            // Memory Palace NPCs (Levels/MemoryPalace.ldtk).
-            "Scholar": NPCData.new(ClaireSprite, ClaireBattleSprite),
-            "Gardener": NPCData.new(YellowPantsGirlSprite, YellowPantsGirlBattleSprite),
-            "Cook": NPCData.new(PeasantGirlSprite, PeasantGirlBattleSprite),
-            "Inventor": NPCData.new(YellowPantsGirlSprite, YellowPantsGirlBattleSprite),
-            "Dreamer": NPCData.new(PinkHairGirlSprite, PinkHairGirlBattleSprite),
-            "Astronomer": NPCData.new(PinkHairGirlSprite, PinkHairGirlBattleSprite),
-            "Merchant": NPCData.new(WrestlerSprite, WrestlerBattleSprite),
-            "Guardian": NPCData.new(GoblinVikingSprite, GoblinVikingBattleSprite),
-            "Cordelia": NPCData.new(PinkHairGirlSprite, PinkHairGirlBattleSprite)
+            "Guardian": NPCData.new(GoblinVikingSprite, GoblinVikingBattleSprite)
         }
         return table.containsKey(name) ? table[name] : null
     }
@@ -59,6 +66,8 @@ class NPC {
     construct new(entity, args) {
         _entity = entity
         _name = args["Name"]
+        // Optional story window (the Versions LDtk field - the stages it's shown in) - World/StoryGates.wren.
+        _gate = StoryGates.fromArgs(args)
     }
 
     name { _name }
@@ -82,6 +91,8 @@ class NPC {
         
         var bodyDef = BodyDefinition.new(BodyType.STATIC_BODY)
         PhysicsBody.create(_entity, bodyDef, CharacterCollider.shape())
+
+        StoryGates.register(_entity, _gate)
     }
     
     // Level viewer (editor): just the sprite, no body. An unknown name gets none, so the viewer shows a placeholder.
@@ -97,6 +108,7 @@ class NPC {
     }
     
     onDestroy() {
+        StoryGates.unregister(_entity)
     }
     
     onEvent(type, data) {
@@ -104,7 +116,7 @@ class NPC {
     }
     
     isInteractable() {
-        return true
+        return StoryGates.isVisible(_entity)
     }
 
     // Only talked to / read when the player is facing it (Player.getInteractEntity).

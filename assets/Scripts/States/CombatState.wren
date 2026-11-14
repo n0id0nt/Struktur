@@ -80,7 +80,7 @@ class CombatState is BaseState {
         _manager.insertState("OverState", OverState)
     }
 
-    // params: "opponents" (overworld entities to fight) and the Party, as ExperimentState sends - or, from the battle
+    // params: "opponents" (overworld entities to fight) and the Party, as GameWorldState sends - or, from the battle
     // test (States/BattleTestState.wren), explicit sides: "partyCombatants" / "partyDefs" / "enemyCombatants" /
     // "enemyDefs" (parallel lists, ready-made Combatants + their battle defs), with "player" null.
     enter(stateManager, params) {
@@ -149,7 +149,7 @@ class CombatState is BaseState {
         _view = CombatUI.new(enemyNames, partyNames, moveButtonCount)
 
         // Cut to the battle arena (Combat/BattleStage.wren) - the authored battle level
-        // (ExperimentState.BATTLE_ARENA_LEVEL_NAME) if one was found, centred on its bounds rather
+        // (GameWorldState.arenaIndexFor_ - by the level's Terrain) if one was found, centred on its bounds rather
         // than its top-left corner (that's where World/LDtk places a level's WorldTransform);
         // otherwise a fixed offscreen patch of world, or an authored "BattleAnchor" room if one
         // exists. Needs the world root to parent battle entities under; without it (an unexpected

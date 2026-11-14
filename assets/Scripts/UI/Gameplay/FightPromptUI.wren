@@ -1,6 +1,6 @@
 // UI/Gameplay/FightPromptUI.wren
 // A floating label that hovers above a non-aggressive critter the player can challenge -
-// ExperimentState's "Fight!" prompt. Structurally a twin of UI/Gameplay/InteractPromptUI.wren
+// GameWorldState's "Fight!" prompt. Structurally a twin of UI/Gameplay/InteractPromptUI.wren
 // (GameWorldState's "Interact" prompt) - kept as a separate class rather than merged, since the two
 // states pick their target for very different reasons (an interactable vs. a critter in combat
 // range), even though the widget itself is identical.

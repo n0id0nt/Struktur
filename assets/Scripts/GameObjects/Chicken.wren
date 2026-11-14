@@ -86,6 +86,6 @@ class Chicken is Critter {
 
     // Non-aggressive: chickens never chase, so they just join every other interactable (Item, NPC,
     // Door) in Player.getInteractEntity()'s closest-target scan - the player has to walk up and
-    // press Interact to start a fight (see ExperimentState.checkCombatTriggers()).
+    // press Interact to start a fight (see GameWorldState.checkCombatTriggers()).
     isInteractable() { true }
 }

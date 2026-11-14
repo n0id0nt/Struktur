@@ -1,6 +1,6 @@
 // World/Warps.wren
 // A pending warp from one room to another - a DoorWorp (GameObjects/DoorWorp.wren) the player stepped on asks for one
-// here, and the gameplay state (States/ExperimentState.wren) takes it on its next update and moves the party. Kept
+// here, and the gameplay state (States/GameWorldState.wren) takes it on its next update and moves the party. Kept
 // apart from both so the trigger doesn't need the state and the state doesn't poll every warp.
 class Warps {
     // targetIndex: the room to go to; fromIndex: the room the warp is in; destination: the iid of the DoorWorp to

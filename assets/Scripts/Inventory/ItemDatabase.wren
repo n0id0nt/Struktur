@@ -36,7 +36,14 @@ var ITEMS = {
     "Iron Sword": {"category": "weapon", "bonuses": {"might": 2, "precision": 1}},
     "Oak Staff": {"category": "weapon", "bonuses": {"focus": 3}},
     "Leather Vest": {"category": "armor", "bonuses": {"guard": 2}},
-    "Iron Helm": {"category": "armor", "bonuses": {"guard": 1, "poise": 2}}
+    "Iron Helm": {"category": "armor", "bonuses": {"guard": 1, "poise": 2}},
+
+    // Arc 1 (Dialogue/Arc1Dialogue.json). Everything else it hands out (keys, map, fragments...) is a material.
+    "Healing Herb": {"category": "consumable"},
+    "Bread Roll": {"category": "consumable"},
+    "Special Ration": {"category": "consumable"},
+    "Hunter's Bow": {"category": "weapon", "bonuses": {"precision": 2, "agility": 1}},
+    "Leather Armor": {"category": "armor", "bonuses": {"guard": 2}}
 }
 
 var NO_BONUSES = {}
@@ -71,7 +78,20 @@ var ICONS = {
     "Merchant Voucher": "Items/Other/Stamp.png",
     "rare_gem": "Items/Resource/GemPurple.png",
     "Iron Sword": "Items/Weapons/Sword/Sprite.png",
-    "Oak Staff": "Items/Weapons/MagicWand/Sprite.png"
+    "Oak Staff": "Items/Weapons/MagicWand/Sprite.png",
+    // Arc 1
+    "Healing Herb": "Items/Food/TeaLeaf.png",
+    "Bread Roll": "Items/Food/Onigiri.png",
+    "Special Ration": "Items/Food/Meat.png",
+    "Village Key": "Items/Treasure/SilverKey.png",
+    "Hunter's Bow": "Items/Weapons/Bow/Sprite.png",
+    "Old Map": "Items/Scroll/Scroll.png",
+    "Fragment Map": "Items/Scroll/Scroll.png",
+    "Soul Fragment": "Items/Resource/GemPurple.png",
+    "Guardian's Key": "Items/Treasure/GoldKey.png",
+    "Ancient Knowledge Codex": "Items/Object/Book.png",
+    "Ancient Records": "Items/Object/Book.png",
+    "Communication Crystal": "Items/Resource/GemGreen.png"
 }
 
 // Notes and receipts all share one generic icon.

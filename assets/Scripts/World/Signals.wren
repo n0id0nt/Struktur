@@ -4,7 +4,7 @@
 // listening to several channels (allOn) needs every one of them, so plates on separate channels act as an AND.
 // Receivers poll each update rather than being called back, so spawn order doesn't matter.
 // A channel can also be retired once it has done its job (a door that opened for good): its senders go inactive.
-// The gameplay state (States/ExperimentState.wren) clears it on exit.
+// The gameplay state (States/GameWorldState.wren) clears it on exit.
 class Signals {
     // source: anything unique to the sender (its entity id).
     static set(channel, source, on) {

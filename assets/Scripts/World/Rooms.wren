@@ -1,7 +1,7 @@
 // World/Rooms.wren
 // The rooms of the current LDtk world - each level is a room. Answers "which room is this position in?" and
 // "what are this room's bounds?" straight from the parsed LDtk metadata (World.getLevelBounds), so it works for
-// rooms that aren't loaded. The gameplay state (States/ExperimentState.wren) sets the world on enter and clears
+// rooms that aren't loaded. The gameplay state (States/GameWorldState.wren) sets the world on enter and clears
 // it on exit; critters use it to stay in their home room (GameObjects/Critter.wren), and the camera and level
 // streaming use it to follow the player between rooms.
 //

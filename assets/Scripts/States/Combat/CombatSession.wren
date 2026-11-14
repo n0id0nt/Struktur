@@ -74,7 +74,7 @@ class CombatSession {
     timeline { _timeline }
     resolver { _resolver }
 
-    // True for a challenge fight (States/ExperimentState.startDuel) - recorded in Combat/CombatOutcome so a lost
+    // True for a challenge fight (States/GameWorldState.startDuel) - recorded in Combat/CombatOutcome so a lost
     // duel isn't treated as a death. Set by States/CombatState.wren from params["duel"].
     duel { _duel }
     duel=(value) { _duel = value }

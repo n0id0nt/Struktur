@@ -128,7 +128,7 @@ class Critter {
     // Whether this species forces the player into combat by proximity alone (see Chinlin) rather
     // than merely offering it via the interact prompt (see Chicken.isInteractable()). False by
     // default - overridden as a getter, not a constructor flag, since it's a species trait, not
-    // per-instance state (see ExperimentState.checkCombatTriggers() for where this is read).
+    // per-instance state (see GameWorldState.checkCombatTriggers() for where this is read).
     aggressive { false }
 
     // A critter's battle profile (move set, stats, arena sprite + animations) lives in

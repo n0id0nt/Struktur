@@ -1,6 +1,6 @@
 // UI/Gameplay/InteractPromptUI.wren
 // A floating label that hovers above whatever entity the player can currently interact with -
-// GameWorldState's "Interact" prompt (ExperimentState has its own near-identical "Fight!" prompt,
+// GameWorldState's "Interact" prompt (it also has a near-identical "Fight!" prompt,
 // UI/Gameplay/FightPromptUI.wren - kept separate rather than merged, since the two states pick their
 // target for very different reasons). Pure view: showAbove(worldPosition) does the
 // world-to-screen conversion (legitimate view/presentation work) but the Controller decides *when*

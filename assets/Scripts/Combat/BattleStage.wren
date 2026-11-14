@@ -4,7 +4,7 @@
 // gives no room for a 1-vs-3 line); instead the camera cuts to a separate arena and a Battler
 // (Combat/Battler.wren) is staged per combatant there.
 //
-// The arena is the authored "BattleStage" level (ExperimentState.BATTLE_ARENA_LEVEL_NAME), loaded
+// The arena is an authored "<Terrain>BattleStage" level (GameWorldState.arenaIndexFor_), loaded
 // and activated by CombatState with every other loaded level deactivated for the duration - see
 // setOtherLevelsActive_ below - so its own tiles read as the battle's backdrop with nothing
 // bleeding through from the overworld. Falls back to a fixed patch of world (DEFAULT_ARENA) or an

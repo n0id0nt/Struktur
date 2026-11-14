@@ -126,8 +126,10 @@ void Struktur::System::TransformSystem::SetWorldTransform(GameContext& context, 
 	{
 		if (registry.valid(parent->entity) && registry.try_get<Component::Transform>(parent->entity))
 		{
+			// local = parent^-1 * world. (The reverse order, world * parent^-1, only happens to match while
+			// the entity is unscaled; with a scale it shifts the result by (scale - 1) * the parent's offset.)
 			glm::mat4 parentInverse = glm::inverse(EnsureWorldUpToDate(context, parent->entity).worldMatrix);
-			localMatrix *= parentInverse;
+			localMatrix             = parentInverse * matrix;
 		}
 	}
 

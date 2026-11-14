@@ -9,19 +9,22 @@ import "localization" for Localization
 class DisplayNames {
     static npcKey(npcId) {
         var keys = {
-            "Astronomer": "npc.astronomer",
-            "Cook": "npc.cook",
-            "Cordelia": "npc.cordelia",
-            "Dreamer": "npc.dreamer",
+            "Child": "npc.child",
             "Duelist": "npc.duelist",
-            "Gardener": "npc.gardener",
-            "Guardian": "npc.guardian",
-            "Inventor": "npc.inventor",
-            "Merchant": "npc.merchant",
+            "Elena": "npc.elena",
+            "Finn": "npc.finn",
+            "Garrett": "npc.garrett",
+            "Guide": "npc.guide",
+            "Kira": "npc.kira",
             "Narrator": "npc.narrator",
-            "Scholar": "npc.scholar",
-            "Traveler": "npc.traveler",
-            "Villager": "npc.villager"
+            "Runic Construct": "npc.runic_construct",
+            "Thomas": "npc.thomas",
+            "Warden": "npc.warden",
+            // Level names (LDtk) that differ from the character's.
+            "HavenVillageChild": "npc.child",
+            "RunicConstuct1": "npc.runic_construct",
+            "RunicConstruct2": "npc.runic_construct",
+            "RunicConstruct3": "npc.runic_construct"
         }
         return keys.containsKey(npcId) ? keys[npcId] : null
     }
@@ -64,7 +67,22 @@ class DisplayNames {
             "Iron Sword": "item.iron_sword",
             "Oak Staff": "item.oak_staff",
             "Leather Vest": "item.leather_vest",
-            "Iron Helm": "item.iron_helm"
+            "Iron Helm": "item.iron_helm",
+            // Arc 1
+            "Healing Herb": "item.healing_herb",
+            "Bread Roll": "item.bread_roll",
+            "Special Ration": "item.special_ration",
+            "Village Key": "item.village_key",
+            "Hunter's Bow": "item.hunters_bow",
+            "Leather Armor": "item.leather_armor",
+            "Emergency Horn": "item.emergency_horn",
+            "Old Map": "item.old_map",
+            "Soul Fragment": "item.soul_fragment",
+            "Ancient Knowledge Codex": "item.ancient_knowledge_codex",
+            "Guardian's Key": "item.guardians_key",
+            "Fragment Map": "item.fragment_map",
+            "Ancient Records": "item.ancient_records",
+            "Communication Crystal": "item.communication_crystal"
         }
         return keys.containsKey(itemId) ? keys[itemId] : null
     }

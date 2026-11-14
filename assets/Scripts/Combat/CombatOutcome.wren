@@ -1,9 +1,9 @@
 // Combat/CombatOutcome.wren
 // A one-slot mailbox from a finished fight to the world, like Party/DuelRequest.wren: CombatResolver.endFight
-// records how the fight ended, and States/ExperimentState.wren takes it once the CombatState has closed (the
+// records how the fight ended, and States/GameWorldState.wren takes it once the CombatState has closed (the
 // overworld can't be told directly - the fight ends from inside its own nested state machine).
 //   result    - "won" / "lost" / "fled"
-//   duel      - true for a challenge fight (ExperimentState.startDuel) - a lost duel is never a death
+//   duel      - true for a challenge fight (GameWorldState.startDuel) - a lost duel is never a death
 //   fallen    - names of the opponents who died in it (their overworld entities are already removed)
 //   recruited - names of the opponents who joined the party instead (CombatResolver.win)
 class CombatOutcome {

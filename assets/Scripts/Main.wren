@@ -14,7 +14,6 @@ import "States/StateManager" for StateManager
 import "States/GameWorldState" for GameWorldState
 import "States/MainMenuState" for MainMenuState
 import "States/SettingsState" for SettingsState
-import "States/ExperimentState" for ExperimentState
 import "States/BattleTestState" for BattleTestState
 import "Inventory/Inventory" for Inventory
 import "Party/Party" for Party
@@ -48,11 +47,17 @@ class Game {
             "Sign",
             "Player",
             "Room",
+            "Interactable",
+            "RestSpot",
+            "Spawn",
         ]
 
         for (gameObjectsScript in gameObjectsScripts) {
             Application.registerComponentScript("GameObjects/%(gameObjectsScript)", gameObjectsScript)
         }
+        // The LDtk "Critter" entity is a spawner for the creature its Enemy field names - its own folder, since
+        // GameObjects/Critter.wren is the creatures' shared base class (see GameObjects/Level/Critter.wren).
+        Application.registerComponentScript("GameObjects/Level/Critter", "Critter")
 
         // Create state manager
         _stateManager = StateManager.new()
@@ -97,11 +102,11 @@ class Game {
         _stateManager.insertState("GameWorld", GameWorldState)
         _stateManager.insertState("MainMenu", MainMenuState)
         _stateManager.insertState("Settings", SettingsState)
-        _stateManager.insertState("Experiment", ExperimentState)
-        // The battle sandbox - F6 from the overworld (ExperimentState) opens it.
+        // The battle sandbox - F6 from the overworld (GameWorldState) opens it.
         _stateManager.insertState("BattleTest", BattleTestState)
 
-        _stateManager.changeState("Experiment")
+        // The gameplay state (Arc 1 - Levels/SevenGods.ldtk). MainMenu's Start also leads here.
+        _stateManager.changeState("GameWorld")
     }
     
     // Called by C++ every frame

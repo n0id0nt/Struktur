@@ -14,7 +14,7 @@
 // exactly, even past the room's edge) and holds there; returnToPlayer() pans back to where the follow wants the
 // view and lets go. States/ImpactState.wren uses these for its "look at the door opening" moment.
 //
-// Owned by the gameplay state (States/ExperimentState.wren): it calls moveTo() whenever the player's room
+// Owned by the gameplay state (States/GameWorldState.wren): it calls moveTo() whenever the player's room
 // changes, snapTo() after a teleport (respawn), and update() every frame to drive the pan.
 import "gameObjectComponents" for Camera, WorldTransform
 import "math" for Math, Vec2, Vec4

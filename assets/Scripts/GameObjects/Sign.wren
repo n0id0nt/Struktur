@@ -2,7 +2,7 @@
 // A signpost: a static, interactable prop that shows a short message through the dialogue system
 // (States/InteractState.wren, via Dialogue/DialogueEntryPoints.wren's "<Name>" -> node id table).
 // Placeholder sprite for now - the small paper note (Items/Other/Letter.png); swap PLACEHOLDER_SPRITE below
-// once there is real signpost art. Spawned by States/ExperimentState.wren.
+// once there is real signpost art. Placed in the level (LDtk "Sign" entity); an optional "Sprite" field swaps the art.
 import "gameObjectComponents" for Sprite, PhysicsBody, RenderLayer
 import "renderer" for FlipBit
 import "math" for Vec2
@@ -10,6 +10,7 @@ import "resourceManager" for Texture
 import "physics" for BodyDefinition, PhysicsCircleShape, BodyType
 import "Util/Colors" for WHITE
 import "localization" for Localization
+import "World/StoryGates" for StoryGates
 
 var PLACEHOLDER_SPRITE = "Items/Other/Letter.png"
 
@@ -21,7 +22,9 @@ class Sign {
         _entity = entity
         _messageKey = args["MessageKey"]
         _name = args["Name"] != null ? args["Name"] : _messageKey
-        _spritePath = args["Sprite"] != null ? args["Sprite"] : PLACEHOLDER_SPRITE
+        _spritePath = args["Sprite"] != null && args["Sprite"] != "" ? args["Sprite"] : PLACEHOLDER_SPRITE
+        // Optional story window (ShowFromStage / HideFromStage / HideIfFlag LDtk fields) - World/StoryGates.wren.
+        _gate = StoryGates.fromArgs(args)
     }
 
     // Also the key DialogueEntryPoints.get() looks the sign's dialogue up by.
@@ -37,11 +40,15 @@ class Sign {
         // Solid, so the player walks around it rather than through it.
         var bodyDef = BodyDefinition.new(BodyType.STATIC_BODY)
         PhysicsBody.create(_entity, bodyDef, PhysicsCircleShape.new(0.2))
+
+        StoryGates.register(_entity, _gate)
     }
 
     update() {}
 
-    onDestroy() {}
+    onDestroy() {
+        StoryGates.unregister(_entity)
+    }
 
     onEvent(type, data) {}
 
@@ -52,7 +59,7 @@ class Sign {
     }
 
     isInteractable() {
-        return true
+        return StoryGates.isVisible(_entity)
     }
 
     // Only talked to / read when the player is facing it (Player.getInteractEntity).

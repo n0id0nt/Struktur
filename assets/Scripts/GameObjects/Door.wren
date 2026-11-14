@@ -10,11 +10,14 @@
 // it is pressed - see World/Signals.wren). That opening plays as an impact moment (World/ImpactEvents.wren /
 // States/ImpactState.wren): the camera pans over, the door opens with a little shake, and the camera pans back.
 // Doors placed in the level (LDtk "Door" entity) say how they open with DoorType instead:
-//   PressurePad - its Keys are the PressurePad entities that must all be held down at once (each plate's channel is
-//                 its own iid), so it opens by itself like the Channels door above;
-//   Key         - its Keys are Item entities; talking to it with every one of those items in the inventory uses
+//   PressurePad - its KeyRefs are the PressurePad entities that must all be held down at once (each plate's channel
+//                 is its own iid), so it opens by itself like the Channels door above;
+//   Key         - its KeyRefs are Item entities; talking to it with every one of those items in the inventory uses
 //                 them up and opens it;
 //   Dialogue    - talking to it opens it (or runs its dialogue, if it has a Name with a DialogueEntryPoints entry).
+// Any level door can also list story events in KeyIds (World/StoryEvents.wren - e.g. "Defeat RunicConstuct1", fired by
+// the "triggerEvent" dialogue command): it stays sealed until every one has happened (and its plates, if any, are
+// held), then opens by itself. Doors sharing the same KeyIds open together in one moment - a wide doorway.
 // Art: the keyhole block from Backgrounds/Tilesets/TilesetDungeon.png (16 px, drawn at 2x to fill the 32 px doorway).
 // There is no opening animation in the current art - an opened door simply disappears.
 // Placed in the level (LDtk) - World::Level spawns it with its fields as args.
@@ -27,6 +30,7 @@ import "physics" for BodyDefinition, PhysicsBoxShape, BodyType, CollisionLayers
 import "Util/Colors" for WHITE, BLANK
 import "World/Signals" for Signals
 import "World/ImpactEvents" for ImpactEvents
+import "World/StoryEvents" for StoryEvents
 import "Inventory/Inventory" for Inventory
 import "Localization/DisplayNames" for DisplayNames
 import "localization" for Localization
@@ -44,8 +48,9 @@ class Door {
     // args (all optional): "Name" - its dialogue key and saved-flag name (a level door without one uses its LDtk
     // "Iid"); "Channels" - the Signals channels that must all be on to open it, comma-separated in one string (script
     // args only carry numbers, bools and strings, not lists); "OpenMessage" - a Localization key captioning that
-    // opening; "DoorType" / "Keys" / "KeysNames" - a level door's opening rule (see the header): Keys is the
-    // referenced entities' iids and KeysNames their Name fields (World::Level fills that in), both comma-separated.
+    // opening; "DoorType" / "KeyRefs" / "KeyRefsNames" / "KeyIds" - a level door's opening rule (see the header):
+    // KeyRefs is the referenced entities' iids and KeyRefsNames their Name fields (World::Level fills that in), KeyIds
+    // the story events it waits for - all comma-separated. ("Keys" / "KeysNames" - the older name of KeyRefs.)
     construct new(entity, args) {
         _entity = entity
         _name = args["Name"] != null && args["Name"] != "" ? args["Name"] : args["Iid"]
@@ -53,12 +58,17 @@ class Door {
         _openMessage = args["OpenMessage"]
         _channelKey = args["Channels"]
         _requiredItems = []
+        var keyRefs = args["KeyRefs"] != null ? args["KeyRefs"] : args["Keys"]
+        var keyRefNames = args["KeyRefsNames"] != null ? args["KeyRefsNames"] : args["KeysNames"]
         if (_doorType == "PressurePad") {
-            _channelKey = args["Keys"]
+            _channelKey = keyRefs
         } else if (_doorType == "Key") {
-            _requiredItems = Door.splitList_(args["KeysNames"])
+            _requiredItems = Door.splitList_(keyRefNames)
         }
         _channels = Door.splitList_(_channelKey)
+        _events = Door.splitList_(args["KeyIds"])
+        // What the opening moment is keyed by, so both halves of a wide doorway share one.
+        _momentKey = _channels.count > 0 ? _channelKey : _events.join(",")
         _open = false
         _requested = false   // waiting for its impact moment to play
     }
@@ -88,17 +98,28 @@ class Door {
         // Opened in an earlier session (or before its room was streamed back in) - come back open, without the moment.
         if (FlagManager.getFlag(Door.openedFlag(_name))) {
             open_(false)
+        } else if (_channels.count == 0 && _events.count > 0 && StoryEvents.allHappened(_events)) {
+            // Its story events happened while its room wasn't loaded - it's simply open now.
+            open_(false)
         }
     }
 
+    // True once everything it waits for is done: its plates held (if it has any) and its story events happened (if it
+    // lists any). A door that waits for neither never opens by itself.
+    ready_() {
+        if (_channels.count == 0 && _events.count == 0) return false
+        if (_channels.count > 0 && !Signals.allOn(_channels)) return false
+        return StoryEvents.allHappened(_events)
+    }
+
     update() {
-        if (_open || _requested || !Signals.allOn(_channels)) {
+        if (_open || _requested || !ready_()) {
             return
         }
-        // Keyed by its channels, so the other half of a double door joins the same moment.
+        // Keyed by its channels / events, so the other half of a double door joins the same moment.
         _requested = true
         var position = WorldTransform.getPosition(_entity)
-        ImpactEvents.request(_channelKey, Vec2.new(position.x, position.y), Fn.new { open_(true) }, _openMessage)
+        ImpactEvents.request(_momentKey, Vec2.new(position.x, position.y), Fn.new { open_(true) }, _openMessage)
     }
 
     // Opens it for good right now - the "openDoor" dialogue command.
@@ -145,7 +166,7 @@ class Door {
             open_(true)
             return Localization.get("interact.door.unlocked")
         }
-        if (_channels.count > 0) {
+        if (_channels.count > 0 || _events.count > 0) {
             return Localization.get("interact.door.sealed")
         }
         open_(true)

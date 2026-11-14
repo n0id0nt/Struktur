@@ -1,0 +1,3908 @@
+[
+  {
+    "node": "rest_spot",
+    "data": {
+      "text": "dialogue.arc1.rest_spot",
+      "commands": [
+        {
+          "type": "restParty",
+          "parameters": []
+        }
+      ]
+    }
+  },
+  {
+    "node": "rest_bed",
+    "data": {
+      "targets": [
+        {
+          "node": "bed_sign",
+          "conditions": [
+            {
+              "type": "hasIntFlag",
+              "parameters": [
+                {
+                  "type": "flag",
+                  "value": "bed_intro_seen"
+                },
+                {
+                  "type": "op",
+                  "value": "=="
+                },
+                {
+                  "type": "value",
+                  "value": 0.0
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "node": "rest_bed_sleep"
+        }
+      ]
+    }
+  },
+  {
+    "node": "rest_bed_sleep",
+    "data": {
+      "text": "dialogue.arc1.rest_bed_sleep",
+      "commands": [
+        {
+          "type": "restParty",
+          "parameters": []
+        }
+      ]
+    }
+  },
+  {
+    "node": "bed_sign",
+    "data": {
+      "text": "dialogue.arc1.bed_sign",
+      "speaker": "Narrator",
+      "commands": [
+        {
+          "type": "setIntFlag",
+          "parameters": [
+            {
+              "type": "flag",
+              "value": "bed_intro_seen"
+            },
+            {
+              "type": "value",
+              "value": 1.0
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "node": "finn",
+    "data": {
+      "targets": [
+        {
+          "node": "finn_farewell",
+          "conditions": [
+            {
+              "type": "hasIntFlag",
+              "parameters": [
+                {
+                  "type": "flag",
+                  "value": "arc1_stage"
+                },
+                {
+                  "type": "op",
+                  "value": ">="
+                },
+                {
+                  "type": "value",
+                  "value": 11.0
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "node": "finn_reveal_done",
+          "conditions": [
+            {
+              "type": "hasIntFlag",
+              "parameters": [
+                {
+                  "type": "flag",
+                  "value": "arc1_stage"
+                },
+                {
+                  "type": "op",
+                  "value": "=="
+                },
+                {
+                  "type": "value",
+                  "value": 10.0
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "node": "finn_reveal",
+          "conditions": [
+            {
+              "type": "hasIntFlag",
+              "parameters": [
+                {
+                  "type": "flag",
+                  "value": "arc1_stage"
+                },
+                {
+                  "type": "op",
+                  "value": "=="
+                },
+                {
+                  "type": "value",
+                  "value": 9.0
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "node": "finn_away",
+          "conditions": [
+            {
+              "type": "hasIntFlag",
+              "parameters": [
+                {
+                  "type": "flag",
+                  "value": "arc1_stage"
+                },
+                {
+                  "type": "op",
+                  "value": ">="
+                },
+                {
+                  "type": "value",
+                  "value": 4.0
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "node": "finn_map",
+          "conditions": [
+            {
+              "type": "hasIntFlag",
+              "parameters": [
+                {
+                  "type": "flag",
+                  "value": "arc1_stage"
+                },
+                {
+                  "type": "op",
+                  "value": "=="
+                },
+                {
+                  "type": "value",
+                  "value": 3.0
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "node": "finn_reminder",
+          "conditions": [
+            {
+              "type": "hasIntFlag",
+              "parameters": [
+                {
+                  "type": "flag",
+                  "value": "arc1_stage"
+                },
+                {
+                  "type": "op",
+                  "value": ">="
+                },
+                {
+                  "type": "value",
+                  "value": 1.0
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "node": "finn_s1"
+        }
+      ]
+    }
+  },
+  {
+    "node": "finn_s1",
+    "data": {
+      "text": "dialogue.arc1.finn_s1",
+      "speaker": "Finn",
+      "next": "finn_s1_menu"
+    }
+  },
+  {
+    "node": "finn_s1_menu",
+    "data": {
+      "text": "dialogue.arc1.finn_s1_menu",
+      "choices": [
+        {
+          "target": "finn_s1_a1",
+          "text": "dialogue.arc1.finn_s1_menu.choice1"
+        },
+        {
+          "target": "finn_s1_a2",
+          "text": "dialogue.arc1.finn_s1_menu.choice2"
+        },
+        {
+          "target": "finn_s1_a3",
+          "text": "dialogue.arc1.finn_s1_menu.choice3"
+        }
+      ],
+      "speaker": "Finn"
+    }
+  },
+  {
+    "node": "finn_s1_a1",
+    "data": {
+      "text": "dialogue.arc1.finn_s1_a1",
+      "speaker": "Finn",
+      "next": "finn_s1_task"
+    }
+  },
+  {
+    "node": "finn_s1_a2",
+    "data": {
+      "text": "dialogue.arc1.finn_s1_a2",
+      "speaker": "Finn",
+      "next": "finn_s1_task"
+    }
+  },
+  {
+    "node": "finn_s1_a3",
+    "data": {
+      "text": "dialogue.arc1.finn_s1_a3",
+      "speaker": "Finn",
+      "next": "finn_s1_task"
+    }
+  },
+  {
+    "node": "finn_s1_task",
+    "data": {
+      "text": "dialogue.arc1.finn_s1_task",
+      "speaker": "Finn",
+      "next": "finn_s1_task_2"
+    }
+  },
+  {
+    "node": "finn_s1_task_2",
+    "data": {
+      "text": "dialogue.arc1.finn_s1_task_2",
+      "speaker": "Finn",
+      "next": "finn_s1_menu2"
+    }
+  },
+  {
+    "node": "finn_s1_menu2",
+    "data": {
+      "text": "dialogue.arc1.finn_s1_menu2",
+      "choices": [
+        {
+          "target": "finn_s1_b1",
+          "text": "dialogue.arc1.finn_s1_menu2.choice1"
+        },
+        {
+          "target": "finn_s1_b2",
+          "text": "dialogue.arc1.finn_s1_menu2.choice2"
+        },
+        {
+          "target": "finn_s1_b3",
+          "text": "dialogue.arc1.finn_s1_menu2.choice3"
+        }
+      ],
+      "speaker": "Finn"
+    }
+  },
+  {
+    "node": "finn_s1_b1",
+    "data": {
+      "text": "dialogue.arc1.finn_s1_b1",
+      "speaker": "Finn",
+      "next": "finn_s1_end"
+    }
+  },
+  {
+    "node": "finn_s1_b2",
+    "data": {
+      "text": "dialogue.arc1.finn_s1_b2",
+      "speaker": "Finn",
+      "next": "finn_s1_end"
+    }
+  },
+  {
+    "node": "finn_s1_b3",
+    "data": {
+      "text": "dialogue.arc1.finn_s1_b3",
+      "speaker": "Finn",
+      "next": "finn_s1_end"
+    }
+  },
+  {
+    "node": "finn_s1_end",
+    "data": {
+      "text": "dialogue.arc1.finn_s1_end",
+      "speaker": "Finn",
+      "next": "finn_s1_end_2"
+    }
+  },
+  {
+    "node": "finn_s1_end_2",
+    "data": {
+      "text": "dialogue.arc1.finn_s1_end_2",
+      "speaker": "Finn",
+      "commands": [
+        {
+          "type": "giveItem",
+          "parameters": [
+            {
+              "type": "item",
+              "value": "Iron Sword"
+            },
+            {
+              "type": "count",
+              "value": 1.0
+            }
+          ]
+        },
+        {
+          "type": "giveItem",
+          "parameters": [
+            {
+              "type": "item",
+              "value": "Healing Herb"
+            },
+            {
+              "type": "count",
+              "value": 3.0
+            }
+          ]
+        },
+        {
+          "type": "setIntFlag",
+          "parameters": [
+            {
+              "type": "flag",
+              "value": "arc1_stage"
+            },
+            {
+              "type": "value",
+              "value": 1.0
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "node": "finn_reminder",
+    "data": {
+      "text": "dialogue.arc1.finn_reminder",
+      "speaker": "Finn"
+    }
+  },
+  {
+    "node": "elena",
+    "data": {
+      "targets": [
+        {
+          "node": "elena_evening",
+          "conditions": [
+            {
+              "type": "hasIntFlag",
+              "parameters": [
+                {
+                  "type": "flag",
+                  "value": "arc1_stage"
+                },
+                {
+                  "type": "op",
+                  "value": ">="
+                },
+                {
+                  "type": "value",
+                  "value": 9.0
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "node": "elena_rations",
+          "conditions": [
+            {
+              "type": "hasIntFlag",
+              "parameters": [
+                {
+                  "type": "flag",
+                  "value": "arc1_stage"
+                },
+                {
+                  "type": "op",
+                  "value": ">="
+                },
+                {
+                  "type": "value",
+                  "value": 3.0
+                }
+              ]
+            },
+            {
+              "type": "hasIntFlag",
+              "parameters": [
+                {
+                  "type": "flag",
+                  "value": "elena_rations"
+                },
+                {
+                  "type": "op",
+                  "value": "=="
+                },
+                {
+                  "type": "value",
+                  "value": 0.0
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "node": "elena_bread",
+          "conditions": [
+            {
+              "type": "hasIntFlag",
+              "parameters": [
+                {
+                  "type": "flag",
+                  "value": "elena_bread"
+                },
+                {
+                  "type": "op",
+                  "value": "=="
+                },
+                {
+                  "type": "value",
+                  "value": 0.0
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "node": "elena_idle"
+        }
+      ]
+    }
+  },
+  {
+    "node": "elena_bread",
+    "data": {
+      "text": "dialogue.arc1.elena_bread",
+      "speaker": "Elena",
+      "commands": [
+        {
+          "type": "giveItem",
+          "parameters": [
+            {
+              "type": "item",
+              "value": "Bread Roll"
+            },
+            {
+              "type": "count",
+              "value": 5.0
+            }
+          ]
+        },
+        {
+          "type": "setIntFlag",
+          "parameters": [
+            {
+              "type": "flag",
+              "value": "elena_bread"
+            },
+            {
+              "type": "value",
+              "value": 1.0
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "node": "elena_rations",
+    "data": {
+      "text": "dialogue.arc1.elena_rations",
+      "speaker": "Elena",
+      "commands": [
+        {
+          "type": "giveItem",
+          "parameters": [
+            {
+              "type": "item",
+              "value": "Special Ration"
+            },
+            {
+              "type": "count",
+              "value": 3.0
+            }
+          ]
+        },
+        {
+          "type": "setIntFlag",
+          "parameters": [
+            {
+              "type": "flag",
+              "value": "elena_rations"
+            },
+            {
+              "type": "value",
+              "value": 1.0
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "node": "elena_idle",
+    "data": {
+      "text": "dialogue.arc1.elena_idle",
+      "speaker": "Elena"
+    }
+  },
+  {
+    "node": "elena_evening",
+    "data": {
+      "text": "dialogue.arc1.elena_evening",
+      "speaker": "Elena"
+    }
+  },
+  {
+    "node": "garrett",
+    "data": {
+      "targets": [
+        {
+          "node": "garrett_reward",
+          "conditions": [
+            {
+              "type": "hasIntFlag",
+              "parameters": [
+                {
+                  "type": "flag",
+                  "value": "well_fixed"
+                },
+                {
+                  "type": "op",
+                  "value": "=="
+                },
+                {
+                  "type": "value",
+                  "value": 1.0
+                }
+              ]
+            },
+            {
+              "type": "hasIntFlag",
+              "parameters": [
+                {
+                  "type": "flag",
+                  "value": "garrett_key"
+                },
+                {
+                  "type": "op",
+                  "value": "=="
+                },
+                {
+                  "type": "value",
+                  "value": 0.0
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "node": "garrett_idle",
+          "conditions": [
+            {
+              "type": "hasIntFlag",
+              "parameters": [
+                {
+                  "type": "flag",
+                  "value": "well_fixed"
+                },
+                {
+                  "type": "op",
+                  "value": "=="
+                },
+                {
+                  "type": "value",
+                  "value": 1.0
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "node": "garrett_ask"
+        }
+      ]
+    }
+  },
+  {
+    "node": "garrett_ask",
+    "data": {
+      "text": "dialogue.arc1.garrett_ask",
+      "speaker": "Garrett"
+    }
+  },
+  {
+    "node": "garrett_reward",
+    "data": {
+      "text": "dialogue.arc1.garrett_reward",
+      "speaker": "Garrett",
+      "commands": [
+        {
+          "type": "giveItem",
+          "parameters": [
+            {
+              "type": "item",
+              "value": "Village Key"
+            },
+            {
+              "type": "count",
+              "value": 1.0
+            }
+          ]
+        },
+        {
+          "type": "setIntFlag",
+          "parameters": [
+            {
+              "type": "flag",
+              "value": "garrett_key"
+            },
+            {
+              "type": "value",
+              "value": 1.0
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "node": "garrett_idle",
+    "data": {
+      "text": "dialogue.arc1.garrett_idle",
+      "speaker": "Garrett"
+    }
+  },
+  {
+    "node": "village_well",
+    "data": {
+      "targets": [
+        {
+          "node": "well_fixed",
+          "conditions": [
+            {
+              "type": "hasIntFlag",
+              "parameters": [
+                {
+                  "type": "flag",
+                  "value": "well_fixed"
+                },
+                {
+                  "type": "op",
+                  "value": "=="
+                },
+                {
+                  "type": "value",
+                  "value": 1.0
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "node": "well_puzzle"
+        }
+      ]
+    }
+  },
+  {
+    "node": "well_puzzle_fail",
+    "data": {
+      "text": "dialogue.arc1.well_puzzle_fail"
+    }
+  },
+  {
+    "node": "well_puzzle_done",
+    "data": {
+      "text": "dialogue.arc1.well_puzzle_done",
+      "commands": [
+        {
+          "type": "setIntFlag",
+          "parameters": [
+            {
+              "type": "flag",
+              "value": "well_fixed"
+            },
+            {
+              "type": "value",
+              "value": 1.0
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "node": "well_puzzle_step1",
+    "data": {
+      "text": "dialogue.arc1.well_puzzle_step1",
+      "choices": [
+        {
+          "target": "well_puzzle_step2",
+          "text": "dialogue.arc1.well_puzzle_step1.choice1"
+        },
+        {
+          "target": "well_puzzle_fail",
+          "text": "dialogue.arc1.well_puzzle_step1.choice2"
+        },
+        {
+          "target": "well_puzzle_fail",
+          "text": "dialogue.arc1.well_puzzle_step1.choice3"
+        },
+        {
+          "target": "well_puzzle_fail",
+          "text": "dialogue.arc1.well_puzzle_step1.choice4"
+        }
+      ]
+    }
+  },
+  {
+    "node": "well_puzzle_step2",
+    "data": {
+      "text": "dialogue.arc1.well_puzzle_step2",
+      "choices": [
+        {
+          "target": "well_puzzle_fail",
+          "text": "dialogue.arc1.well_puzzle_step2.choice1"
+        },
+        {
+          "target": "well_puzzle_fail",
+          "text": "dialogue.arc1.well_puzzle_step2.choice2"
+        },
+        {
+          "target": "well_puzzle_fail",
+          "text": "dialogue.arc1.well_puzzle_step2.choice3"
+        },
+        {
+          "target": "well_puzzle_step3",
+          "text": "dialogue.arc1.well_puzzle_step2.choice4"
+        }
+      ]
+    }
+  },
+  {
+    "node": "well_puzzle_step3",
+    "data": {
+      "text": "dialogue.arc1.well_puzzle_step3",
+      "choices": [
+        {
+          "target": "well_puzzle_fail",
+          "text": "dialogue.arc1.well_puzzle_step3.choice1"
+        },
+        {
+          "target": "well_puzzle_done",
+          "text": "dialogue.arc1.well_puzzle_step3.choice2"
+        },
+        {
+          "target": "well_puzzle_fail",
+          "text": "dialogue.arc1.well_puzzle_step3.choice3"
+        },
+        {
+          "target": "well_puzzle_fail",
+          "text": "dialogue.arc1.well_puzzle_step3.choice4"
+        }
+      ]
+    }
+  },
+  {
+    "node": "well_puzzle",
+    "data": {
+      "text": "dialogue.arc1.well_puzzle",
+      "next": "well_puzzle_step1"
+    }
+  },
+  {
+    "node": "well_fixed",
+    "data": {
+      "text": "dialogue.arc1.well_fixed"
+    }
+  },
+  {
+    "node": "child",
+    "data": {
+      "targets": [
+        {
+          "node": "child_return",
+          "conditions": [
+            {
+              "type": "hasIntFlag",
+              "parameters": [
+                {
+                  "type": "flag",
+                  "value": "arc1_stage"
+                },
+                {
+                  "type": "op",
+                  "value": ">="
+                },
+                {
+                  "type": "value",
+                  "value": 9.0
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "node": "child_s5",
+          "conditions": [
+            {
+              "type": "hasIntFlag",
+              "parameters": [
+                {
+                  "type": "flag",
+                  "value": "arc1_stage"
+                },
+                {
+                  "type": "op",
+                  "value": ">="
+                },
+                {
+                  "type": "value",
+                  "value": 3.0
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "node": "child_idle"
+        }
+      ]
+    }
+  },
+  {
+    "node": "child_idle",
+    "data": {
+      "text": "dialogue.arc1.child_idle",
+      "speaker": "Child"
+    }
+  },
+  {
+    "node": "child_s5",
+    "data": {
+      "text": "dialogue.arc1.child_s5",
+      "choices": [
+        {
+          "target": "child_s5_end",
+          "text": "dialogue.arc1.child_s5.choice1"
+        },
+        {
+          "target": "child_s5_end",
+          "text": "dialogue.arc1.child_s5.choice2"
+        },
+        {
+          "target": "child_s5_end",
+          "text": "dialogue.arc1.child_s5.choice3"
+        }
+      ],
+      "speaker": "Child"
+    }
+  },
+  {
+    "node": "child_s5_end",
+    "data": {
+      "text": "dialogue.arc1.child_s5_end",
+      "speaker": "Child"
+    }
+  },
+  {
+    "node": "child_return",
+    "data": {
+      "text": "dialogue.arc1.child_return",
+      "choices": [
+        {
+          "target": "child_return_end",
+          "text": "dialogue.arc1.child_return.choice1"
+        },
+        {
+          "target": "child_return_end",
+          "text": "dialogue.arc1.child_return.choice2"
+        },
+        {
+          "target": "child_return_end",
+          "text": "dialogue.arc1.child_return.choice3"
+        }
+      ],
+      "speaker": "Child"
+    }
+  },
+  {
+    "node": "child_return_end",
+    "data": {
+      "text": "dialogue.arc1.child_return_end",
+      "speaker": "Child"
+    }
+  },
+  {
+    "node": "kira",
+    "data": {
+      "targets": [
+        {
+          "node": "kira_s3",
+          "conditions": [
+            {
+              "type": "hasIntFlag",
+              "parameters": [
+                {
+                  "type": "flag",
+                  "value": "arc1_stage"
+                },
+                {
+                  "type": "op",
+                  "value": ">="
+                },
+                {
+                  "type": "value",
+                  "value": 1.0
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "node": "kira_early"
+        }
+      ]
+    }
+  },
+  {
+    "node": "kira_early",
+    "data": {
+      "text": "dialogue.arc1.kira_early",
+      "speaker": "Kira"
+    }
+  },
+  {
+    "node": "kira_s3",
+    "data": {
+      "text": "dialogue.arc1.kira_s3",
+      "speaker": "Kira",
+      "next": "kira_s3_menu"
+    }
+  },
+  {
+    "node": "kira_s3_menu",
+    "data": {
+      "text": "dialogue.arc1.kira_s3_menu",
+      "choices": [
+        {
+          "target": "kira_s3_a1",
+          "text": "dialogue.arc1.kira_s3_menu.choice1"
+        },
+        {
+          "target": "kira_s3_a2",
+          "text": "dialogue.arc1.kira_s3_menu.choice2"
+        },
+        {
+          "target": "kira_s3_a3",
+          "text": "dialogue.arc1.kira_s3_menu.choice3"
+        }
+      ],
+      "speaker": "Kira"
+    }
+  },
+  {
+    "node": "kira_s3_a1",
+    "data": {
+      "text": "dialogue.arc1.kira_s3_a1",
+      "speaker": "Kira",
+      "next": "kira_s3_end"
+    }
+  },
+  {
+    "node": "kira_s3_a2",
+    "data": {
+      "text": "dialogue.arc1.kira_s3_a2",
+      "speaker": "Kira",
+      "next": "kira_s3_end"
+    }
+  },
+  {
+    "node": "kira_s3_a3",
+    "data": {
+      "text": "dialogue.arc1.kira_s3_a3",
+      "speaker": "Kira",
+      "next": "kira_s3_end"
+    }
+  },
+  {
+    "node": "kira_s3_end",
+    "data": {
+      "text": "dialogue.arc1.kira_s3_end",
+      "speaker": "Kira",
+      "next": "kira_s3_end_2"
+    }
+  },
+  {
+    "node": "kira_s3_end_2",
+    "data": {
+      "text": "dialogue.arc1.kira_s3_end_2",
+      "speaker": "Kira",
+      "commands": [
+        {
+          "type": "joinParty",
+          "parameters": [
+            {
+              "type": "name",
+              "value": "Kira"
+            }
+          ]
+        },
+        {
+          "type": "setIntFlag",
+          "parameters": [
+            {
+              "type": "flag",
+              "value": "arc1_stage"
+            },
+            {
+              "type": "value",
+              "value": 2.0
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "node": "kira_party_stay",
+    "data": {
+      "targets": [
+        {
+          "node": "kira_s21",
+          "conditions": [
+            {
+              "type": "hasIntFlag",
+              "parameters": [
+                {
+                  "type": "flag",
+                  "value": "arc1_stage"
+                },
+                {
+                  "type": "op",
+                  "value": "=="
+                },
+                {
+                  "type": "value",
+                  "value": 10.0
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "node": "kira_banter"
+        }
+      ]
+    }
+  },
+  {
+    "node": "kira_party_follow",
+    "data": {
+      "targets": [
+        {
+          "node": "kira_follow_menu"
+        }
+      ]
+    }
+  },
+  {
+    "node": "kira_banter",
+    "data": {
+      "targets": [
+        {
+          "node": "kira_banter_home",
+          "conditions": [
+            {
+              "type": "hasIntFlag",
+              "parameters": [
+                {
+                  "type": "flag",
+                  "value": "arc1_stage"
+                },
+                {
+                  "type": "op",
+                  "value": ">="
+                },
+                {
+                  "type": "value",
+                  "value": 9.0
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "node": "kira_banter_shrine",
+          "conditions": [
+            {
+              "type": "hasIntFlag",
+              "parameters": [
+                {
+                  "type": "flag",
+                  "value": "arc1_stage"
+                },
+                {
+                  "type": "op",
+                  "value": ">="
+                },
+                {
+                  "type": "value",
+                  "value": 7.0
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "node": "kira_banter_forest",
+          "conditions": [
+            {
+              "type": "hasIntFlag",
+              "parameters": [
+                {
+                  "type": "flag",
+                  "value": "arc1_stage"
+                },
+                {
+                  "type": "op",
+                  "value": ">="
+                },
+                {
+                  "type": "value",
+                  "value": 4.0
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "node": "kira_banter_village"
+        }
+      ]
+    }
+  },
+  {
+    "node": "kira_banter_village",
+    "data": {
+      "text": "dialogue.arc1.kira_banter_village",
+      "speaker": "Kira",
+      "next": "kira_stay_menu"
+    }
+  },
+  {
+    "node": "kira_banter_forest",
+    "data": {
+      "text": "dialogue.arc1.kira_banter_forest",
+      "speaker": "Kira",
+      "next": "kira_stay_menu"
+    }
+  },
+  {
+    "node": "kira_banter_shrine",
+    "data": {
+      "text": "dialogue.arc1.kira_banter_shrine",
+      "speaker": "Kira",
+      "next": "kira_stay_menu"
+    }
+  },
+  {
+    "node": "kira_banter_home",
+    "data": {
+      "text": "dialogue.arc1.kira_banter_home",
+      "speaker": "Kira",
+      "next": "kira_stay_menu"
+    }
+  },
+  {
+    "node": "kira_stay_menu",
+    "data": {
+      "text": "dialogue.arc1.kira_stay_menu",
+      "choices": [
+        {
+          "target": "kira_stay_yes",
+          "text": "dialogue.arc1.kira_stay_menu.choice1"
+        },
+        {
+          "target": "kira_stay_no",
+          "text": "dialogue.arc1.kira_stay_menu.choice2"
+        }
+      ],
+      "speaker": "Kira"
+    }
+  },
+  {
+    "node": "kira_stay_yes",
+    "data": {
+      "text": "dialogue.arc1.kira_stay_yes",
+      "speaker": "Kira",
+      "commands": [
+        {
+          "type": "partyStay",
+          "parameters": [
+            {
+              "type": "name",
+              "value": "Kira"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "node": "kira_stay_no",
+    "data": {
+      "text": "dialogue.arc1.kira_stay_no",
+      "speaker": "Kira"
+    }
+  },
+  {
+    "node": "kira_follow_menu",
+    "data": {
+      "text": "dialogue.arc1.kira_follow_menu",
+      "choices": [
+        {
+          "target": "kira_follow_yes",
+          "text": "dialogue.arc1.kira_follow_menu.choice1"
+        },
+        {
+          "target": "kira_follow_no",
+          "text": "dialogue.arc1.kira_follow_menu.choice2"
+        }
+      ],
+      "speaker": "Kira"
+    }
+  },
+  {
+    "node": "kira_follow_yes",
+    "data": {
+      "text": "dialogue.arc1.kira_follow_yes",
+      "speaker": "Kira",
+      "commands": [
+        {
+          "type": "partyFollow",
+          "parameters": [
+            {
+              "type": "name",
+              "value": "Kira"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "node": "kira_follow_no",
+    "data": {
+      "text": "dialogue.arc1.kira_follow_no",
+      "speaker": "Kira"
+    }
+  },
+  {
+    "node": "thomas",
+    "data": {
+      "targets": [
+        {
+          "node": "thomas_violent",
+          "conditions": [
+            {
+              "type": "hasIntFlag",
+              "parameters": [
+                {
+                  "type": "flag",
+                  "value": "arc1_stage"
+                },
+                {
+                  "type": "op",
+                  "value": ">="
+                },
+                {
+                  "type": "value",
+                  "value": 9.0
+                }
+              ]
+            },
+            {
+              "type": "hasIntFlag",
+              "parameters": [
+                {
+                  "type": "flag",
+                  "value": "warden_violent"
+                },
+                {
+                  "type": "op",
+                  "value": "=="
+                },
+                {
+                  "type": "value",
+                  "value": 1.0
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "node": "thomas_idle",
+          "conditions": [
+            {
+              "type": "hasIntFlag",
+              "parameters": [
+                {
+                  "type": "flag",
+                  "value": "arc1_stage"
+                },
+                {
+                  "type": "op",
+                  "value": ">="
+                },
+                {
+                  "type": "value",
+                  "value": 3.0
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "node": "thomas_after",
+          "conditions": [
+            {
+              "type": "hasIntFlag",
+              "parameters": [
+                {
+                  "type": "flag",
+                  "value": "arc1_stage"
+                },
+                {
+                  "type": "op",
+                  "value": "=="
+                },
+                {
+                  "type": "value",
+                  "value": 2.0
+                }
+              ]
+            },
+            {
+              "type": "hasIntFlag",
+              "parameters": [
+                {
+                  "type": "flag",
+                  "value": "duel_won_Thomas"
+                },
+                {
+                  "type": "op",
+                  "value": "=="
+                },
+                {
+                  "type": "value",
+                  "value": 1.0
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "node": "thomas_s4",
+          "conditions": [
+            {
+              "type": "hasIntFlag",
+              "parameters": [
+                {
+                  "type": "flag",
+                  "value": "arc1_stage"
+                },
+                {
+                  "type": "op",
+                  "value": "=="
+                },
+                {
+                  "type": "value",
+                  "value": 2.0
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "node": "thomas_early"
+        }
+      ]
+    }
+  },
+  {
+    "node": "thomas_early",
+    "data": {
+      "text": "dialogue.arc1.thomas_early",
+      "speaker": "Thomas"
+    }
+  },
+  {
+    "node": "thomas_s4",
+    "data": {
+      "text": "dialogue.arc1.thomas_s4",
+      "speaker": "Thomas",
+      "next": "thomas_s4_menu"
+    }
+  },
+  {
+    "node": "thomas_s4_menu",
+    "data": {
+      "text": "dialogue.arc1.thomas_s4_menu",
+      "choices": [
+        {
+          "target": "thomas_s4_a1",
+          "text": "dialogue.arc1.thomas_s4_menu.choice1"
+        },
+        {
+          "target": "thomas_s4_a2",
+          "text": "dialogue.arc1.thomas_s4_menu.choice2"
+        },
+        {
+          "target": "thomas_s4_a3",
+          "text": "dialogue.arc1.thomas_s4_menu.choice3"
+        }
+      ],
+      "speaker": "Thomas"
+    }
+  },
+  {
+    "node": "thomas_s4_a1",
+    "data": {
+      "text": "dialogue.arc1.thomas_s4_a1",
+      "speaker": "Thomas",
+      "next": "thomas_s4_end"
+    }
+  },
+  {
+    "node": "thomas_s4_a2",
+    "data": {
+      "text": "dialogue.arc1.thomas_s4_a2",
+      "speaker": "Thomas",
+      "next": "thomas_s4_end"
+    }
+  },
+  {
+    "node": "thomas_s4_a3",
+    "data": {
+      "text": "dialogue.arc1.thomas_s4_a3",
+      "speaker": "Thomas",
+      "next": "thomas_s4_end"
+    }
+  },
+  {
+    "node": "thomas_s4_end",
+    "data": {
+      "text": "dialogue.arc1.thomas_s4_end",
+      "speaker": "Thomas",
+      "next": "thomas_s4_end_2"
+    }
+  },
+  {
+    "node": "thomas_s4_end_2",
+    "data": {
+      "text": "dialogue.arc1.thomas_s4_end_2",
+      "speaker": "Thomas",
+      "commands": [
+        {
+          "type": "startDuel",
+          "parameters": [
+            {
+              "type": "name",
+              "value": "Thomas"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "node": "thomas_after",
+    "data": {
+      "text": "dialogue.arc1.thomas_after",
+      "speaker": "Thomas",
+      "next": "thomas_after_2"
+    }
+  },
+  {
+    "node": "thomas_after_2",
+    "data": {
+      "text": "dialogue.arc1.thomas_after_2",
+      "speaker": "Thomas",
+      "next": "thomas_after_3"
+    }
+  },
+  {
+    "node": "thomas_after_3",
+    "data": {
+      "text": "dialogue.arc1.thomas_after_3",
+      "speaker": "Thomas",
+      "next": "thomas_after_4"
+    }
+  },
+  {
+    "node": "thomas_after_4",
+    "data": {
+      "text": "dialogue.arc1.thomas_after_4",
+      "speaker": "Thomas",
+      "commands": [
+        {
+          "type": "giveItem",
+          "parameters": [
+            {
+              "type": "item",
+              "value": "Hunter's Bow"
+            },
+            {
+              "type": "count",
+              "value": 1.0
+            }
+          ]
+        },
+        {
+          "type": "giveItem",
+          "parameters": [
+            {
+              "type": "item",
+              "value": "Leather Armor"
+            },
+            {
+              "type": "count",
+              "value": 1.0
+            }
+          ]
+        },
+        {
+          "type": "giveItem",
+          "parameters": [
+            {
+              "type": "item",
+              "value": "Emergency Horn"
+            },
+            {
+              "type": "count",
+              "value": 1.0
+            }
+          ]
+        },
+        {
+          "type": "setIntFlag",
+          "parameters": [
+            {
+              "type": "flag",
+              "value": "arc1_stage"
+            },
+            {
+              "type": "value",
+              "value": 3.0
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "node": "thomas_idle",
+    "data": {
+      "text": "dialogue.arc1.thomas_idle",
+      "speaker": "Thomas"
+    }
+  },
+  {
+    "node": "thomas_violent",
+    "data": {
+      "text": "dialogue.arc1.thomas_violent",
+      "speaker": "Thomas"
+    }
+  },
+  {
+    "node": "finn_map",
+    "data": {
+      "text": "dialogue.arc1.finn_map",
+      "speaker": "Finn",
+      "next": "finn_map_2"
+    }
+  },
+  {
+    "node": "finn_map_2",
+    "data": {
+      "text": "dialogue.arc1.finn_map_2",
+      "speaker": "Kira",
+      "next": "finn_map_3"
+    }
+  },
+  {
+    "node": "finn_map_3",
+    "data": {
+      "text": "dialogue.arc1.finn_map_3",
+      "speaker": "Finn",
+      "commands": [
+        {
+          "type": "giveItem",
+          "parameters": [
+            {
+              "type": "item",
+              "value": "Old Map"
+            },
+            {
+              "type": "count",
+              "value": 1.0
+            }
+          ]
+        },
+        {
+          "type": "setIntFlag",
+          "parameters": [
+            {
+              "type": "flag",
+              "value": "arc1_stage"
+            },
+            {
+              "type": "value",
+              "value": 4.0
+            }
+          ]
+        },
+        {
+          "type": "openDoor",
+          "parameters": [
+            {
+              "type": "name",
+              "value": "WisperWoodsDoor"
+            }
+          ]
+        },
+        {
+          "type": "openDoor",
+          "parameters": [
+            {
+              "type": "name",
+              "value": "WisperWoodsDoor2"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "node": "wisperwood_door",
+    "data": {
+      "text": "dialogue.arc1.wisperwood_door"
+    }
+  },
+  {
+    "node": "finn_away",
+    "data": {
+      "text": "dialogue.arc1.finn_away",
+      "speaker": "Finn"
+    }
+  },
+  {
+    "node": "claw_marks",
+    "data": {
+      "text": "dialogue.arc1.claw_marks",
+      "speaker": "Kira"
+    }
+  },
+  {
+    "node": "blue_lights",
+    "data": {
+      "text": "dialogue.arc1.blue_lights",
+      "speaker": "Kira"
+    }
+  },
+  {
+    "node": "stone_pillars",
+    "data": {
+      "text": "dialogue.arc1.stone_pillars",
+      "next": "stone_pillars_2"
+    }
+  },
+  {
+    "node": "stone_pillars_2",
+    "data": {
+      "text": "dialogue.arc1.stone_pillars_2",
+      "speaker": "Kira"
+    }
+  },
+  {
+    "node": "tablet_1",
+    "data": {
+      "text": "dialogue.arc1.tablet_1"
+    }
+  },
+  {
+    "node": "tablet_2",
+    "data": {
+      "text": "dialogue.arc1.tablet_2"
+    }
+  },
+  {
+    "node": "tablet_3",
+    "data": {
+      "text": "dialogue.arc1.tablet_3"
+    }
+  },
+  {
+    "node": "tablet_4",
+    "data": {
+      "text": "dialogue.arc1.tablet_4"
+    }
+  },
+  {
+    "node": "tablet_5",
+    "data": {
+      "text": "dialogue.arc1.tablet_5"
+    }
+  },
+  {
+    "node": "shrine_door",
+    "data": {
+      "targets": [
+        {
+          "node": "shrine_door_open",
+          "conditions": [
+            {
+              "type": "hasIntFlag",
+              "parameters": [
+                {
+                  "type": "flag",
+                  "value": "arc1_stage"
+                },
+                {
+                  "type": "op",
+                  "value": ">="
+                },
+                {
+                  "type": "value",
+                  "value": 5.0
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "node": "shrine_pedestals"
+        }
+      ]
+    }
+  },
+  {
+    "node": "shrine_pedestals_fail",
+    "data": {
+      "text": "dialogue.arc1.shrine_pedestals_fail"
+    }
+  },
+  {
+    "node": "shrine_pedestals_done",
+    "data": {
+      "text": "dialogue.arc1.shrine_pedestals_done",
+      "commands": [
+        {
+          "type": "openDoor",
+          "parameters": [
+            {
+              "type": "name",
+              "value": "ShrineEntranceDoor"
+            }
+          ]
+        },
+        {
+          "type": "setIntFlag",
+          "parameters": [
+            {
+              "type": "flag",
+              "value": "arc1_stage"
+            },
+            {
+              "type": "value",
+              "value": 5.0
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "node": "shrine_pedestals_step1",
+    "data": {
+      "text": "dialogue.arc1.shrine_pedestals_step1",
+      "choices": [
+        {
+          "target": "shrine_pedestals_step2",
+          "text": "dialogue.arc1.shrine_pedestals_step1.choice1"
+        },
+        {
+          "target": "shrine_pedestals_fail",
+          "text": "dialogue.arc1.shrine_pedestals_step1.choice2"
+        },
+        {
+          "target": "shrine_pedestals_fail",
+          "text": "dialogue.arc1.shrine_pedestals_step1.choice3"
+        },
+        {
+          "target": "shrine_pedestals_fail",
+          "text": "dialogue.arc1.shrine_pedestals_step1.choice4"
+        },
+        {
+          "target": "shrine_pedestals_fail",
+          "text": "dialogue.arc1.shrine_pedestals_step1.choice5"
+        }
+      ]
+    }
+  },
+  {
+    "node": "shrine_pedestals_step2",
+    "data": {
+      "text": "dialogue.arc1.shrine_pedestals_step2",
+      "choices": [
+        {
+          "target": "shrine_pedestals_fail",
+          "text": "dialogue.arc1.shrine_pedestals_step2.choice1"
+        },
+        {
+          "target": "shrine_pedestals_step3",
+          "text": "dialogue.arc1.shrine_pedestals_step2.choice2"
+        },
+        {
+          "target": "shrine_pedestals_fail",
+          "text": "dialogue.arc1.shrine_pedestals_step2.choice3"
+        },
+        {
+          "target": "shrine_pedestals_fail",
+          "text": "dialogue.arc1.shrine_pedestals_step2.choice4"
+        },
+        {
+          "target": "shrine_pedestals_fail",
+          "text": "dialogue.arc1.shrine_pedestals_step2.choice5"
+        }
+      ]
+    }
+  },
+  {
+    "node": "shrine_pedestals_step3",
+    "data": {
+      "text": "dialogue.arc1.shrine_pedestals_step3",
+      "choices": [
+        {
+          "target": "shrine_pedestals_fail",
+          "text": "dialogue.arc1.shrine_pedestals_step3.choice1"
+        },
+        {
+          "target": "shrine_pedestals_fail",
+          "text": "dialogue.arc1.shrine_pedestals_step3.choice2"
+        },
+        {
+          "target": "shrine_pedestals_step4",
+          "text": "dialogue.arc1.shrine_pedestals_step3.choice3"
+        },
+        {
+          "target": "shrine_pedestals_fail",
+          "text": "dialogue.arc1.shrine_pedestals_step3.choice4"
+        },
+        {
+          "target": "shrine_pedestals_fail",
+          "text": "dialogue.arc1.shrine_pedestals_step3.choice5"
+        }
+      ]
+    }
+  },
+  {
+    "node": "shrine_pedestals_step4",
+    "data": {
+      "text": "dialogue.arc1.shrine_pedestals_step4",
+      "choices": [
+        {
+          "target": "shrine_pedestals_fail",
+          "text": "dialogue.arc1.shrine_pedestals_step4.choice1"
+        },
+        {
+          "target": "shrine_pedestals_fail",
+          "text": "dialogue.arc1.shrine_pedestals_step4.choice2"
+        },
+        {
+          "target": "shrine_pedestals_fail",
+          "text": "dialogue.arc1.shrine_pedestals_step4.choice3"
+        },
+        {
+          "target": "shrine_pedestals_step5",
+          "text": "dialogue.arc1.shrine_pedestals_step4.choice4"
+        },
+        {
+          "target": "shrine_pedestals_fail",
+          "text": "dialogue.arc1.shrine_pedestals_step4.choice5"
+        }
+      ]
+    }
+  },
+  {
+    "node": "shrine_pedestals_step5",
+    "data": {
+      "text": "dialogue.arc1.shrine_pedestals_step5",
+      "choices": [
+        {
+          "target": "shrine_pedestals_fail",
+          "text": "dialogue.arc1.shrine_pedestals_step5.choice1"
+        },
+        {
+          "target": "shrine_pedestals_fail",
+          "text": "dialogue.arc1.shrine_pedestals_step5.choice2"
+        },
+        {
+          "target": "shrine_pedestals_fail",
+          "text": "dialogue.arc1.shrine_pedestals_step5.choice3"
+        },
+        {
+          "target": "shrine_pedestals_fail",
+          "text": "dialogue.arc1.shrine_pedestals_step5.choice4"
+        },
+        {
+          "target": "shrine_pedestals_done",
+          "text": "dialogue.arc1.shrine_pedestals_step5.choice5"
+        }
+      ]
+    }
+  },
+  {
+    "node": "shrine_pedestals",
+    "data": {
+      "text": "dialogue.arc1.shrine_pedestals",
+      "next": "shrine_pedestals_step1"
+    }
+  },
+  {
+    "node": "shrine_door_open",
+    "data": {
+      "text": "dialogue.arc1.shrine_door_open"
+    }
+  },
+  {
+    "node": "shrine_entry_kira",
+    "data": {
+      "text": "dialogue.arc1.shrine_entry_kira",
+      "speaker": "Kira",
+      "next": "shrine_entry_kira_2"
+    }
+  },
+  {
+    "node": "shrine_entry_kira_2",
+    "data": {
+      "text": "dialogue.arc1.shrine_entry_kira_2",
+      "speaker": "Kira"
+    }
+  },
+  {
+    "node": "shifting_floor",
+    "data": {
+      "text": "dialogue.arc1.shifting_floor",
+      "speaker": "Kira"
+    }
+  },
+  {
+    "node": "construct_1",
+    "data": {
+      "targets": [
+        {
+          "node": "construct_1_after",
+          "conditions": [
+            {
+              "type": "hasIntFlag",
+              "parameters": [
+                {
+                  "type": "flag",
+                  "value": "duel_won_RunicConstuct1"
+                },
+                {
+                  "type": "op",
+                  "value": "=="
+                },
+                {
+                  "type": "value",
+                  "value": 1.0
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "node": "construct_1_wake"
+        }
+      ]
+    }
+  },
+  {
+    "node": "construct_1_wake",
+    "data": {
+      "text": "dialogue.arc1.construct_1_wake",
+      "commands": [
+        {
+          "type": "startDuel",
+          "parameters": [
+            {
+              "type": "name",
+              "value": "RunicConstuct1"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "node": "construct_1_after",
+    "data": {
+      "text": "dialogue.arc1.construct_1_after",
+      "commands": [
+        {
+          "type": "triggerEvent",
+          "parameters": [
+            {
+              "type": "event",
+              "value": "Defeat RunicConstuct1"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "node": "construct_2",
+    "data": {
+      "targets": [
+        {
+          "node": "construct_2_after",
+          "conditions": [
+            {
+              "type": "hasIntFlag",
+              "parameters": [
+                {
+                  "type": "flag",
+                  "value": "duel_won_RunicConstruct2"
+                },
+                {
+                  "type": "op",
+                  "value": "=="
+                },
+                {
+                  "type": "value",
+                  "value": 1.0
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "node": "construct_2_wake"
+        }
+      ]
+    }
+  },
+  {
+    "node": "construct_2_wake",
+    "data": {
+      "text": "dialogue.arc1.construct_2_wake",
+      "commands": [
+        {
+          "type": "startDuel",
+          "parameters": [
+            {
+              "type": "name",
+              "value": "RunicConstruct2"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "node": "construct_2_after",
+    "data": {
+      "text": "dialogue.arc1.construct_2_after",
+      "commands": [
+        {
+          "type": "triggerEvent",
+          "parameters": [
+            {
+              "type": "event",
+              "value": "Defeat RunicConstuct2"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "node": "construct_3",
+    "data": {
+      "targets": [
+        {
+          "node": "construct_3_after",
+          "conditions": [
+            {
+              "type": "hasIntFlag",
+              "parameters": [
+                {
+                  "type": "flag",
+                  "value": "duel_won_RunicConstruct3"
+                },
+                {
+                  "type": "op",
+                  "value": "=="
+                },
+                {
+                  "type": "value",
+                  "value": 1.0
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "node": "construct_3_wake"
+        }
+      ]
+    }
+  },
+  {
+    "node": "construct_3_wake",
+    "data": {
+      "text": "dialogue.arc1.construct_3_wake",
+      "commands": [
+        {
+          "type": "startDuel",
+          "parameters": [
+            {
+              "type": "name",
+              "value": "RunicConstruct3"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "node": "construct_3_after",
+    "data": {
+      "text": "dialogue.arc1.construct_3_after",
+      "commands": [
+        {
+          "type": "triggerEvent",
+          "parameters": [
+            {
+              "type": "event",
+              "value": "Defeat RunicConstuct3"
+            }
+          ]
+        },
+        {
+          "type": "setIntFlag",
+          "parameters": [
+            {
+              "type": "flag",
+              "value": "arc1_stage"
+            },
+            {
+              "type": "value",
+              "value": 6.0
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "node": "guide",
+    "data": {
+      "targets": [
+        {
+          "node": "guide_s12"
+        }
+      ]
+    }
+  },
+  {
+    "node": "shrine_crystal",
+    "data": {
+      "targets": [
+        {
+          "node": "shrine_crystal_dim",
+          "conditions": [
+            {
+              "type": "hasIntFlag",
+              "parameters": [
+                {
+                  "type": "flag",
+                  "value": "arc1_stage"
+                },
+                {
+                  "type": "op",
+                  "value": ">="
+                },
+                {
+                  "type": "value",
+                  "value": 7.0
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "node": "shrine_crystal_glow"
+        }
+      ]
+    }
+  },
+  {
+    "node": "shrine_crystal_glow",
+    "data": {
+      "text": "dialogue.arc1.shrine_crystal_glow"
+    }
+  },
+  {
+    "node": "shrine_crystal_dim",
+    "data": {
+      "text": "dialogue.arc1.shrine_crystal_dim"
+    }
+  },
+  {
+    "node": "guide_s12",
+    "data": {
+      "text": "dialogue.arc1.guide_s12",
+      "speaker": "Guide",
+      "next": "guide_s12_2"
+    }
+  },
+  {
+    "node": "guide_s12_2",
+    "data": {
+      "text": "dialogue.arc1.guide_s12_2",
+      "speaker": "Guide",
+      "next": "guide_s12_menu"
+    }
+  },
+  {
+    "node": "guide_s12_menu",
+    "data": {
+      "text": "dialogue.arc1.guide_s12_menu",
+      "choices": [
+        {
+          "target": "guide_a1",
+          "text": "dialogue.arc1.guide_s12_menu.choice1"
+        },
+        {
+          "target": "guide_a2",
+          "text": "dialogue.arc1.guide_s12_menu.choice2"
+        },
+        {
+          "target": "guide_a3",
+          "text": "dialogue.arc1.guide_s12_menu.choice3"
+        }
+      ],
+      "speaker": "Guide"
+    }
+  },
+  {
+    "node": "guide_a1",
+    "data": {
+      "text": "dialogue.arc1.guide_a1",
+      "speaker": "Guide",
+      "next": "guide_offer"
+    }
+  },
+  {
+    "node": "guide_a2",
+    "data": {
+      "text": "dialogue.arc1.guide_a2",
+      "speaker": "Guide",
+      "next": "guide_offer"
+    }
+  },
+  {
+    "node": "guide_a3",
+    "data": {
+      "text": "dialogue.arc1.guide_a3",
+      "speaker": "Guide",
+      "next": "guide_offer"
+    }
+  },
+  {
+    "node": "guide_offer",
+    "data": {
+      "text": "dialogue.arc1.guide_offer",
+      "speaker": "Guide",
+      "next": "guide_warn"
+    }
+  },
+  {
+    "node": "guide_warn",
+    "data": {
+      "text": "dialogue.arc1.guide_warn",
+      "speaker": "Guide",
+      "next": "guide_choice"
+    }
+  },
+  {
+    "node": "guide_choice",
+    "data": {
+      "text": "dialogue.arc1.guide_choice",
+      "choices": [
+        {
+          "target": "guide_fuse",
+          "text": "dialogue.arc1.guide_choice.choice1"
+        },
+        {
+          "target": "guide_q_power",
+          "text": "dialogue.arc1.guide_choice.choice2"
+        },
+        {
+          "target": "guide_q_why",
+          "text": "dialogue.arc1.guide_choice.choice3"
+        }
+      ],
+      "speaker": "Guide"
+    }
+  },
+  {
+    "node": "guide_q_power",
+    "data": {
+      "text": "dialogue.arc1.guide_q_power",
+      "speaker": "Guide",
+      "next": "guide_choice"
+    }
+  },
+  {
+    "node": "guide_q_why",
+    "data": {
+      "text": "dialogue.arc1.guide_q_why",
+      "speaker": "Guide",
+      "next": "guide_choice"
+    }
+  },
+  {
+    "node": "guide_fuse",
+    "data": {
+      "text": "dialogue.arc1.guide_fuse",
+      "next": "guide_fuse_2"
+    }
+  },
+  {
+    "node": "guide_fuse_2",
+    "data": {
+      "text": "dialogue.arc1.guide_fuse_2",
+      "commands": [
+        {
+          "type": "giveItem",
+          "parameters": [
+            {
+              "type": "item",
+              "value": "Soul Fragment"
+            },
+            {
+              "type": "count",
+              "value": 1.0
+            }
+          ]
+        },
+        {
+          "type": "setIntFlag",
+          "parameters": [
+            {
+              "type": "flag",
+              "value": "ability_soul_sight"
+            },
+            {
+              "type": "value",
+              "value": 1.0
+            }
+          ]
+        },
+        {
+          "type": "setIntFlag",
+          "parameters": [
+            {
+              "type": "flag",
+              "value": "ability_healing"
+            },
+            {
+              "type": "value",
+              "value": 1.0
+            }
+          ]
+        },
+        {
+          "type": "setIntFlag",
+          "parameters": [
+            {
+              "type": "flag",
+              "value": "ability_truth_sense"
+            },
+            {
+              "type": "value",
+              "value": 1.0
+            }
+          ]
+        },
+        {
+          "type": "setIntFlag",
+          "parameters": [
+            {
+              "type": "flag",
+              "value": "ability_ancient_knowledge"
+            },
+            {
+              "type": "value",
+              "value": 1.0
+            }
+          ]
+        },
+        {
+          "type": "setIntFlag",
+          "parameters": [
+            {
+              "type": "flag",
+              "value": "arc1_stage"
+            },
+            {
+              "type": "value",
+              "value": 7.0
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "node": "memory_murals",
+    "data": {
+      "targets": [
+        {
+          "node": "murals_again",
+          "conditions": [
+            {
+              "type": "hasIntFlag",
+              "parameters": [
+                {
+                  "type": "flag",
+                  "value": "told_kira"
+                },
+                {
+                  "type": "op",
+                  "value": ">="
+                },
+                {
+                  "type": "value",
+                  "value": 1.0
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "node": "murals_s13"
+        }
+      ]
+    }
+  },
+  {
+    "node": "murals_s13",
+    "data": {
+      "text": "dialogue.arc1.murals_s13",
+      "speaker": "Kira",
+      "next": "murals_s13_menu"
+    }
+  },
+  {
+    "node": "murals_s13_menu",
+    "data": {
+      "text": "dialogue.arc1.murals_s13_menu",
+      "choices": [
+        {
+          "target": "murals_told",
+          "text": "dialogue.arc1.murals_s13_menu.choice1"
+        },
+        {
+          "target": "murals_secret",
+          "text": "dialogue.arc1.murals_s13_menu.choice2"
+        }
+      ],
+      "speaker": "Kira"
+    }
+  },
+  {
+    "node": "murals_told",
+    "data": {
+      "text": "dialogue.arc1.murals_told",
+      "speaker": "Kira",
+      "next": "murals_paint",
+      "commands": [
+        {
+          "type": "setIntFlag",
+          "parameters": [
+            {
+              "type": "flag",
+              "value": "told_kira"
+            },
+            {
+              "type": "value",
+              "value": 1.0
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "node": "murals_secret",
+    "data": {
+      "text": "dialogue.arc1.murals_secret",
+      "speaker": "Kira",
+      "next": "murals_paint",
+      "commands": [
+        {
+          "type": "setIntFlag",
+          "parameters": [
+            {
+              "type": "flag",
+              "value": "told_kira"
+            },
+            {
+              "type": "value",
+              "value": 2.0
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "node": "murals_paint",
+    "data": {
+      "text": "dialogue.arc1.murals_paint",
+      "speaker": "Kira",
+      "next": "murals_paint_menu"
+    }
+  },
+  {
+    "node": "murals_paint_menu",
+    "data": {
+      "text": "dialogue.arc1.murals_paint_menu",
+      "choices": [
+        {
+          "target": "murals_end",
+          "text": "dialogue.arc1.murals_paint_menu.choice1"
+        },
+        {
+          "target": "murals_end",
+          "text": "dialogue.arc1.murals_paint_menu.choice2"
+        },
+        {
+          "target": "murals_wrong",
+          "text": "dialogue.arc1.murals_paint_menu.choice3"
+        }
+      ],
+      "speaker": "Kira"
+    }
+  },
+  {
+    "node": "murals_wrong",
+    "data": {
+      "text": "dialogue.arc1.murals_wrong",
+      "speaker": "Kira",
+      "next": "murals_end"
+    }
+  },
+  {
+    "node": "murals_end",
+    "data": {
+      "text": "dialogue.arc1.murals_end",
+      "speaker": "Kira"
+    }
+  },
+  {
+    "node": "murals_again",
+    "data": {
+      "text": "dialogue.arc1.murals_again",
+      "speaker": "Kira"
+    }
+  },
+  {
+    "node": "central_mural",
+    "data": {
+      "targets": [
+        {
+          "node": "central_mural_empty",
+          "conditions": [
+            {
+              "type": "hasIntFlag",
+              "parameters": [
+                {
+                  "type": "flag",
+                  "value": "fragment_2"
+                },
+                {
+                  "type": "op",
+                  "value": "=="
+                },
+                {
+                  "type": "value",
+                  "value": 1.0
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "node": "central_mural_find"
+        }
+      ]
+    }
+  },
+  {
+    "node": "central_mural_find",
+    "data": {
+      "text": "dialogue.arc1.central_mural_find",
+      "next": "central_mural_find_2"
+    }
+  },
+  {
+    "node": "central_mural_find_2",
+    "data": {
+      "text": "dialogue.arc1.central_mural_find_2",
+      "next": "central_mural_find_3"
+    }
+  },
+  {
+    "node": "central_mural_find_3",
+    "data": {
+      "text": "dialogue.arc1.central_mural_find_3",
+      "speaker": "Guide",
+      "commands": [
+        {
+          "type": "giveItem",
+          "parameters": [
+            {
+              "type": "item",
+              "value": "Soul Fragment"
+            },
+            {
+              "type": "count",
+              "value": 1.0
+            }
+          ]
+        },
+        {
+          "type": "setIntFlag",
+          "parameters": [
+            {
+              "type": "flag",
+              "value": "fragment_2"
+            },
+            {
+              "type": "value",
+              "value": 1.0
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "node": "central_mural_empty",
+    "data": {
+      "text": "dialogue.arc1.central_mural_empty"
+    }
+  },
+  {
+    "node": "warden",
+    "data": {
+      "targets": [
+        {
+          "node": "warden_rest",
+          "conditions": [
+            {
+              "type": "hasIntFlag",
+              "parameters": [
+                {
+                  "type": "flag",
+                  "value": "arc1_stage"
+                },
+                {
+                  "type": "op",
+                  "value": ">="
+                },
+                {
+                  "type": "value",
+                  "value": 8.0
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "node": "warden_s16",
+          "conditions": [
+            {
+              "type": "hasIntFlag",
+              "parameters": [
+                {
+                  "type": "flag",
+                  "value": "duel_won_Warden"
+                },
+                {
+                  "type": "op",
+                  "value": "=="
+                },
+                {
+                  "type": "value",
+                  "value": 1.0
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "node": "warden_s14",
+          "conditions": [
+            {
+              "type": "hasIntFlag",
+              "parameters": [
+                {
+                  "type": "flag",
+                  "value": "arc1_stage"
+                },
+                {
+                  "type": "op",
+                  "value": ">="
+                },
+                {
+                  "type": "value",
+                  "value": 7.0
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "node": "warden_dormant"
+        }
+      ]
+    }
+  },
+  {
+    "node": "warden_dormant",
+    "data": {
+      "text": "dialogue.arc1.warden_dormant"
+    }
+  },
+  {
+    "node": "warden_rest",
+    "data": {
+      "text": "dialogue.arc1.warden_rest"
+    }
+  },
+  {
+    "node": "warden_s14",
+    "data": {
+      "text": "dialogue.arc1.warden_s14",
+      "speaker": "Warden",
+      "next": "warden_s14_2"
+    }
+  },
+  {
+    "node": "warden_s14_2",
+    "data": {
+      "text": "dialogue.arc1.warden_s14_2",
+      "speaker": "Kira",
+      "commands": [
+        {
+          "type": "startBattle",
+          "parameters": [
+            {
+              "type": "name",
+              "value": "Warden"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "node": "warden_s16",
+    "data": {
+      "text": "dialogue.arc1.warden_s16",
+      "speaker": "Warden",
+      "next": "warden_s16_2"
+    }
+  },
+  {
+    "node": "warden_s16_2",
+    "data": {
+      "text": "dialogue.arc1.warden_s16_2",
+      "speaker": "Warden",
+      "next": "warden_s16_menu"
+    }
+  },
+  {
+    "node": "warden_s16_menu",
+    "data": {
+      "text": "dialogue.arc1.warden_s16_menu",
+      "choices": [
+        {
+          "target": "warden_p1",
+          "text": "dialogue.arc1.warden_s16_menu.choice1"
+        },
+        {
+          "target": "warden_p2",
+          "text": "dialogue.arc1.warden_s16_menu.choice2"
+        },
+        {
+          "target": "warden_p3",
+          "text": "dialogue.arc1.warden_s16_menu.choice3"
+        },
+        {
+          "target": "warden_violent",
+          "text": "dialogue.arc1.warden_s16_menu.choice4"
+        }
+      ],
+      "speaker": "Warden"
+    }
+  },
+  {
+    "node": "warden_p1",
+    "data": {
+      "text": "dialogue.arc1.warden_p1",
+      "speaker": "Warden",
+      "next": "warden_peace"
+    }
+  },
+  {
+    "node": "warden_p2",
+    "data": {
+      "text": "dialogue.arc1.warden_p2",
+      "speaker": "Warden",
+      "next": "warden_peace"
+    }
+  },
+  {
+    "node": "warden_p3",
+    "data": {
+      "text": "dialogue.arc1.warden_p3",
+      "speaker": "Warden",
+      "next": "warden_peace"
+    }
+  },
+  {
+    "node": "warden_peace",
+    "data": {
+      "text": "dialogue.arc1.warden_peace",
+      "speaker": "Warden",
+      "next": "warden_peace_2"
+    }
+  },
+  {
+    "node": "warden_peace_2",
+    "data": {
+      "text": "dialogue.arc1.warden_peace_2",
+      "speaker": "Warden",
+      "commands": [
+        {
+          "type": "giveItem",
+          "parameters": [
+            {
+              "type": "item",
+              "value": "Soul Fragment"
+            },
+            {
+              "type": "count",
+              "value": 1.0
+            }
+          ]
+        },
+        {
+          "type": "giveItem",
+          "parameters": [
+            {
+              "type": "item",
+              "value": "Ancient Knowledge Codex"
+            },
+            {
+              "type": "count",
+              "value": 1.0
+            }
+          ]
+        },
+        {
+          "type": "giveItem",
+          "parameters": [
+            {
+              "type": "item",
+              "value": "Guardian's Key"
+            },
+            {
+              "type": "count",
+              "value": 1.0
+            }
+          ]
+        },
+        {
+          "type": "setIntFlag",
+          "parameters": [
+            {
+              "type": "flag",
+              "value": "warden_peaceful"
+            },
+            {
+              "type": "value",
+              "value": 1.0
+            }
+          ]
+        },
+        {
+          "type": "setIntFlag",
+          "parameters": [
+            {
+              "type": "flag",
+              "value": "arc1_stage"
+            },
+            {
+              "type": "value",
+              "value": 8.0
+            }
+          ]
+        },
+        {
+          "type": "triggerEvent",
+          "parameters": [
+            {
+              "type": "event",
+              "value": "Defeat Warden"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "node": "warden_violent",
+    "data": {
+      "text": "dialogue.arc1.warden_violent",
+      "next": "warden_violent_2"
+    }
+  },
+  {
+    "node": "warden_violent_2",
+    "data": {
+      "text": "dialogue.arc1.warden_violent_2",
+      "speaker": "Kira",
+      "commands": [
+        {
+          "type": "giveItem",
+          "parameters": [
+            {
+              "type": "item",
+              "value": "Soul Fragment"
+            },
+            {
+              "type": "count",
+              "value": 1.0
+            }
+          ]
+        },
+        {
+          "type": "giveItem",
+          "parameters": [
+            {
+              "type": "item",
+              "value": "Guardian's Key"
+            },
+            {
+              "type": "count",
+              "value": 1.0
+            }
+          ]
+        },
+        {
+          "type": "setIntFlag",
+          "parameters": [
+            {
+              "type": "flag",
+              "value": "warden_violent"
+            },
+            {
+              "type": "value",
+              "value": 1.0
+            }
+          ]
+        },
+        {
+          "type": "setIntFlag",
+          "parameters": [
+            {
+              "type": "flag",
+              "value": "arc1_stage"
+            },
+            {
+              "type": "value",
+              "value": 8.0
+            }
+          ]
+        },
+        {
+          "type": "triggerEvent",
+          "parameters": [
+            {
+              "type": "event",
+              "value": "Defeat Warden"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "node": "memory_viewer",
+    "data": {
+      "targets": [
+        {
+          "node": "viewer_done",
+          "conditions": [
+            {
+              "type": "hasIntFlag",
+              "parameters": [
+                {
+                  "type": "flag",
+                  "value": "arc1_stage"
+                },
+                {
+                  "type": "op",
+                  "value": ">="
+                },
+                {
+                  "type": "value",
+                  "value": 9.0
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "node": "viewer_s17"
+        }
+      ]
+    }
+  },
+  {
+    "node": "viewer_s17",
+    "data": {
+      "text": "dialogue.arc1.viewer_s17",
+      "next": "viewer_s17_2"
+    }
+  },
+  {
+    "node": "viewer_s17_2",
+    "data": {
+      "text": "dialogue.arc1.viewer_s17_2",
+      "next": "viewer_s17_3"
+    }
+  },
+  {
+    "node": "viewer_s17_3",
+    "data": {
+      "text": "dialogue.arc1.viewer_s17_3",
+      "speaker": "Guide",
+      "next": "viewer_s17_4"
+    }
+  },
+  {
+    "node": "viewer_s17_4",
+    "data": {
+      "text": "dialogue.arc1.viewer_s17_4",
+      "speaker": "Kira",
+      "next": "viewer_s17_5"
+    }
+  },
+  {
+    "node": "viewer_s17_5",
+    "data": {
+      "text": "dialogue.arc1.viewer_s17_5",
+      "commands": [
+        {
+          "type": "giveItem",
+          "parameters": [
+            {
+              "type": "item",
+              "value": "Fragment Map"
+            },
+            {
+              "type": "count",
+              "value": 1.0
+            }
+          ]
+        },
+        {
+          "type": "giveItem",
+          "parameters": [
+            {
+              "type": "item",
+              "value": "Ancient Records"
+            },
+            {
+              "type": "count",
+              "value": 1.0
+            }
+          ]
+        },
+        {
+          "type": "setIntFlag",
+          "parameters": [
+            {
+              "type": "flag",
+              "value": "arc1_stage"
+            },
+            {
+              "type": "value",
+              "value": 9.0
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "node": "viewer_done",
+    "data": {
+      "text": "dialogue.arc1.viewer_done"
+    }
+  },
+  {
+    "node": "wounded_wolf",
+    "data": {
+      "text": "dialogue.arc1.wounded_wolf",
+      "choices": [
+        {
+          "target": "wolf_heal",
+          "text": "dialogue.arc1.wounded_wolf.choice1"
+        },
+        {
+          "target": "wolf_leave",
+          "text": "dialogue.arc1.wounded_wolf.choice2"
+        }
+      ]
+    }
+  },
+  {
+    "node": "wolf_heal",
+    "data": {
+      "text": "dialogue.arc1.wolf_heal",
+      "next": "wolf_heal_2"
+    }
+  },
+  {
+    "node": "wolf_heal_2",
+    "data": {
+      "text": "dialogue.arc1.wolf_heal_2",
+      "speaker": "Kira",
+      "commands": [
+        {
+          "type": "setIntFlag",
+          "parameters": [
+            {
+              "type": "flag",
+              "value": "healed_wolf"
+            },
+            {
+              "type": "value",
+              "value": 1.0
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "node": "wolf_leave",
+    "data": {
+      "text": "dialogue.arc1.wolf_leave",
+      "speaker": "Kira"
+    }
+  },
+  {
+    "node": "finn_reveal",
+    "data": {
+      "text": "dialogue.arc1.finn_reveal",
+      "speaker": "Finn",
+      "next": "finn_reveal_2"
+    }
+  },
+  {
+    "node": "finn_reveal_2",
+    "data": {
+      "text": "dialogue.arc1.finn_reveal_2",
+      "speaker": "Finn",
+      "next": "finn_reveal_3"
+    }
+  },
+  {
+    "node": "finn_reveal_3",
+    "data": {
+      "text": "dialogue.arc1.finn_reveal_3",
+      "speaker": "Finn",
+      "next": "finn_reveal_menu"
+    }
+  },
+  {
+    "node": "finn_reveal_menu",
+    "data": {
+      "text": "dialogue.arc1.finn_reveal_menu",
+      "choices": [
+        {
+          "target": "finn_r1",
+          "text": "dialogue.arc1.finn_reveal_menu.choice1"
+        },
+        {
+          "target": "finn_r2",
+          "text": "dialogue.arc1.finn_reveal_menu.choice2"
+        },
+        {
+          "target": "finn_r3",
+          "text": "dialogue.arc1.finn_reveal_menu.choice3"
+        }
+      ],
+      "speaker": "Finn"
+    }
+  },
+  {
+    "node": "finn_r1",
+    "data": {
+      "text": "dialogue.arc1.finn_r1",
+      "speaker": "Finn",
+      "next": "finn_rev_b"
+    }
+  },
+  {
+    "node": "finn_r2",
+    "data": {
+      "text": "dialogue.arc1.finn_r2",
+      "speaker": "Finn",
+      "next": "finn_rev_b"
+    }
+  },
+  {
+    "node": "finn_r3",
+    "data": {
+      "text": "dialogue.arc1.finn_r3",
+      "speaker": "Finn",
+      "next": "finn_rev_b"
+    }
+  },
+  {
+    "node": "finn_rev_b",
+    "data": {
+      "text": "dialogue.arc1.finn_rev_b",
+      "speaker": "Finn",
+      "next": "finn_reveal_menu2"
+    }
+  },
+  {
+    "node": "finn_reveal_menu2",
+    "data": {
+      "text": "dialogue.arc1.finn_reveal_menu2",
+      "choices": [
+        {
+          "target": "finn_q1",
+          "text": "dialogue.arc1.finn_reveal_menu2.choice1"
+        },
+        {
+          "target": "finn_q2",
+          "text": "dialogue.arc1.finn_reveal_menu2.choice2"
+        },
+        {
+          "target": "finn_q3",
+          "text": "dialogue.arc1.finn_reveal_menu2.choice3"
+        }
+      ],
+      "speaker": "Finn"
+    }
+  },
+  {
+    "node": "finn_q1",
+    "data": {
+      "text": "dialogue.arc1.finn_q1",
+      "speaker": "Finn",
+      "next": "finn_rev_c"
+    }
+  },
+  {
+    "node": "finn_q2",
+    "data": {
+      "text": "dialogue.arc1.finn_q2",
+      "speaker": "Finn",
+      "next": "finn_rev_c"
+    }
+  },
+  {
+    "node": "finn_q3",
+    "data": {
+      "text": "dialogue.arc1.finn_q3",
+      "speaker": "Finn",
+      "next": "finn_rev_c"
+    }
+  },
+  {
+    "node": "finn_rev_c",
+    "data": {
+      "text": "dialogue.arc1.finn_rev_c",
+      "speaker": "Kira",
+      "next": "finn_rev_c_2"
+    }
+  },
+  {
+    "node": "finn_rev_c_2",
+    "data": {
+      "text": "dialogue.arc1.finn_rev_c_2",
+      "speaker": "Finn",
+      "next": "finn_rev_c_3"
+    }
+  },
+  {
+    "node": "finn_rev_c_3",
+    "data": {
+      "text": "dialogue.arc1.finn_rev_c_3",
+      "speaker": "Finn",
+      "next": "finn_rev_c_4"
+    }
+  },
+  {
+    "node": "finn_rev_c_4",
+    "data": {
+      "text": "dialogue.arc1.finn_rev_c_4",
+      "speaker": "Finn",
+      "next": "finn_reveal_menu3"
+    }
+  },
+  {
+    "node": "finn_reveal_menu3",
+    "data": {
+      "text": "dialogue.arc1.finn_reveal_menu3",
+      "choices": [
+        {
+          "target": "finn_h1",
+          "text": "dialogue.arc1.finn_reveal_menu3.choice1"
+        },
+        {
+          "target": "finn_h2",
+          "text": "dialogue.arc1.finn_reveal_menu3.choice2"
+        },
+        {
+          "target": "finn_h3",
+          "text": "dialogue.arc1.finn_reveal_menu3.choice3"
+        }
+      ],
+      "speaker": "Finn"
+    }
+  },
+  {
+    "node": "finn_h1",
+    "data": {
+      "text": "dialogue.arc1.finn_h1",
+      "speaker": "Finn",
+      "next": "finn_rev_d"
+    }
+  },
+  {
+    "node": "finn_h2",
+    "data": {
+      "text": "dialogue.arc1.finn_h2",
+      "speaker": "Finn",
+      "next": "finn_rev_d"
+    }
+  },
+  {
+    "node": "finn_h3",
+    "data": {
+      "text": "dialogue.arc1.finn_h3",
+      "speaker": "Finn",
+      "next": "finn_rev_d"
+    }
+  },
+  {
+    "node": "finn_rev_d",
+    "data": {
+      "text": "dialogue.arc1.finn_rev_d",
+      "speaker": "Finn",
+      "next": "finn_rev_d_2"
+    }
+  },
+  {
+    "node": "finn_rev_d_2",
+    "data": {
+      "text": "dialogue.arc1.finn_rev_d_2",
+      "speaker": "Kira",
+      "next": "finn_path"
+    }
+  },
+  {
+    "node": "finn_path",
+    "data": {
+      "text": "dialogue.arc1.finn_path",
+      "choices": [
+        {
+          "target": "finn_p1",
+          "text": "dialogue.arc1.finn_path.choice1"
+        },
+        {
+          "target": "finn_p2",
+          "text": "dialogue.arc1.finn_path.choice2"
+        },
+        {
+          "target": "finn_p3",
+          "text": "dialogue.arc1.finn_path.choice3"
+        }
+      ],
+      "speaker": "Finn"
+    }
+  },
+  {
+    "node": "finn_p1",
+    "data": {
+      "text": "dialogue.arc1.finn_p1",
+      "speaker": "Finn",
+      "next": "finn_reveal_end",
+      "commands": [
+        {
+          "type": "setIntFlag",
+          "parameters": [
+            {
+              "type": "flag",
+              "value": "path_forward"
+            },
+            {
+              "type": "value",
+              "value": 1.0
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "node": "finn_p2",
+    "data": {
+      "text": "dialogue.arc1.finn_p2",
+      "speaker": "Finn",
+      "next": "finn_reveal_end",
+      "commands": [
+        {
+          "type": "setIntFlag",
+          "parameters": [
+            {
+              "type": "flag",
+              "value": "path_forward"
+            },
+            {
+              "type": "value",
+              "value": 2.0
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "node": "finn_p3",
+    "data": {
+      "text": "dialogue.arc1.finn_p3",
+      "speaker": "Finn",
+      "next": "finn_reveal_end",
+      "commands": [
+        {
+          "type": "setIntFlag",
+          "parameters": [
+            {
+              "type": "flag",
+              "value": "path_forward"
+            },
+            {
+              "type": "value",
+              "value": 3.0
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "node": "finn_reveal_end",
+    "data": {
+      "text": "dialogue.arc1.finn_reveal_end",
+      "speaker": "Finn",
+      "commands": [
+        {
+          "type": "setIntFlag",
+          "parameters": [
+            {
+              "type": "flag",
+              "value": "arc1_stage"
+            },
+            {
+              "type": "value",
+              "value": 10.0
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "node": "finn_reveal_done",
+    "data": {
+      "text": "dialogue.arc1.finn_reveal_done",
+      "speaker": "Finn"
+    }
+  },
+  {
+    "node": "kira_s21",
+    "data": {
+      "text": "dialogue.arc1.kira_s21",
+      "speaker": "Kira",
+      "next": "kira_s21_menu"
+    }
+  },
+  {
+    "node": "kira_s21_menu",
+    "data": {
+      "text": "dialogue.arc1.kira_s21_menu",
+      "choices": [
+        {
+          "target": "kira_21a",
+          "text": "dialogue.arc1.kira_s21_menu.choice1"
+        },
+        {
+          "target": "kira_21b",
+          "text": "dialogue.arc1.kira_s21_menu.choice2"
+        },
+        {
+          "target": "kira_21c",
+          "text": "dialogue.arc1.kira_s21_menu.choice3"
+        }
+      ],
+      "speaker": "Kira"
+    }
+  },
+  {
+    "node": "kira_21a",
+    "data": {
+      "text": "dialogue.arc1.kira_21a",
+      "speaker": "Kira",
+      "next": "kira_s21_end"
+    }
+  },
+  {
+    "node": "kira_21b",
+    "data": {
+      "text": "dialogue.arc1.kira_21b",
+      "speaker": "Kira",
+      "next": "kira_s21_end"
+    }
+  },
+  {
+    "node": "kira_21c",
+    "data": {
+      "text": "dialogue.arc1.kira_21c",
+      "speaker": "Kira",
+      "next": "kira_s21_end"
+    }
+  },
+  {
+    "node": "kira_s21_end",
+    "data": {
+      "text": "dialogue.arc1.kira_s21_end",
+      "speaker": "Kira",
+      "commands": [
+        {
+          "type": "setIntFlag",
+          "parameters": [
+            {
+              "type": "flag",
+              "value": "arc1_stage"
+            },
+            {
+              "type": "value",
+              "value": 11.0
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "node": "finn_farewell",
+    "data": {
+      "targets": [
+        {
+          "node": "farewell_violent",
+          "conditions": [
+            {
+              "type": "hasIntFlag",
+              "parameters": [
+                {
+                  "type": "flag",
+                  "value": "warden_violent"
+                },
+                {
+                  "type": "op",
+                  "value": "=="
+                },
+                {
+                  "type": "value",
+                  "value": 1.0
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "node": "farewell_1"
+        }
+      ]
+    }
+  },
+  {
+    "node": "farewell_violent",
+    "data": {
+      "text": "dialogue.arc1.farewell_violent",
+      "speaker": "Finn",
+      "next": "farewell_1"
+    }
+  },
+  {
+    "node": "farewell_1",
+    "data": {
+      "text": "dialogue.arc1.farewell_1",
+      "speaker": "Finn",
+      "next": "farewell_1_2"
+    }
+  },
+  {
+    "node": "farewell_1_2",
+    "data": {
+      "text": "dialogue.arc1.farewell_1_2",
+      "speaker": "Finn",
+      "next": "farewell_menu",
+      "commands": [
+        {
+          "type": "giveItem",
+          "parameters": [
+            {
+              "type": "item",
+              "value": "Communication Crystal"
+            },
+            {
+              "type": "count",
+              "value": 1.0
+            }
+          ]
+        },
+        {
+          "type": "giveItem",
+          "parameters": [
+            {
+              "type": "item",
+              "value": "Healing Herb"
+            },
+            {
+              "type": "count",
+              "value": 3.0
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "node": "farewell_menu",
+    "data": {
+      "text": "dialogue.arc1.farewell_menu",
+      "choices": [
+        {
+          "target": "farewell_2",
+          "text": "dialogue.arc1.farewell_menu.choice1"
+        },
+        {
+          "target": "farewell_2",
+          "text": "dialogue.arc1.farewell_menu.choice2"
+        },
+        {
+          "target": "farewell_2",
+          "text": "dialogue.arc1.farewell_menu.choice3"
+        }
+      ],
+      "speaker": "Finn"
+    }
+  },
+  {
+    "node": "farewell_2",
+    "data": {
+      "text": "dialogue.arc1.farewell_2",
+      "speaker": "Finn",
+      "next": "road_1"
+    }
+  },
+  {
+    "node": "road_1",
+    "data": {
+      "text": "dialogue.arc1.road_1",
+      "speaker": "Kira",
+      "next": "road_choice"
+    }
+  },
+  {
+    "node": "road_choice",
+    "data": {
+      "text": "dialogue.arc1.road_choice",
+      "choices": [
+        {
+          "target": "road_end_1",
+          "text": "dialogue.arc1.road_choice.choice1"
+        },
+        {
+          "target": "road_end_2",
+          "text": "dialogue.arc1.road_choice.choice2"
+        },
+        {
+          "target": "road_end_3",
+          "text": "dialogue.arc1.road_choice.choice3"
+        },
+        {
+          "target": "road_end_4",
+          "text": "dialogue.arc1.road_choice.choice4"
+        }
+      ],
+      "speaker": "Kira"
+    }
+  },
+  {
+    "node": "road_end_1",
+    "data": {
+      "text": "dialogue.arc1.road_end_1",
+      "speaker": "Narrator",
+      "commands": [
+        {
+          "type": "setIntFlag",
+          "parameters": [
+            {
+              "type": "flag",
+              "value": "act2_path"
+            },
+            {
+              "type": "value",
+              "value": 1.0
+            }
+          ]
+        },
+        {
+          "type": "endArc",
+          "parameters": []
+        }
+      ]
+    }
+  },
+  {
+    "node": "road_end_2",
+    "data": {
+      "text": "dialogue.arc1.road_end_2",
+      "speaker": "Narrator",
+      "commands": [
+        {
+          "type": "setIntFlag",
+          "parameters": [
+            {
+              "type": "flag",
+              "value": "act2_path"
+            },
+            {
+              "type": "value",
+              "value": 2.0
+            }
+          ]
+        },
+        {
+          "type": "endArc",
+          "parameters": []
+        }
+      ]
+    }
+  },
+  {
+    "node": "road_end_3",
+    "data": {
+      "text": "dialogue.arc1.road_end_3",
+      "speaker": "Narrator",
+      "commands": [
+        {
+          "type": "setIntFlag",
+          "parameters": [
+            {
+              "type": "flag",
+              "value": "act2_path"
+            },
+            {
+              "type": "value",
+              "value": 3.0
+            }
+          ]
+        },
+        {
+          "type": "endArc",
+          "parameters": []
+        }
+      ]
+    }
+  },
+  {
+    "node": "road_end_4",
+    "data": {
+      "text": "dialogue.arc1.road_end_4",
+      "speaker": "Narrator",
+      "commands": [
+        {
+          "type": "setIntFlag",
+          "parameters": [
+            {
+              "type": "flag",
+              "value": "act2_path"
+            },
+            {
+              "type": "value",
+              "value": 4.0
+            }
+          ]
+        },
+        {
+          "type": "endArc",
+          "parameters": []
+        }
+      ]
+    }
+  }
+]

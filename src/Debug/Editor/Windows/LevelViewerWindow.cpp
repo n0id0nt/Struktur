@@ -125,7 +125,7 @@ void LevelViewerWindow::RenderLevelList(GameContext& context)
 	if (ImGui::IsItemHovered())
 	{
 		ImGui::SetTooltip("Starts the game with the player at the clicked spot - used by a game state that loads\n"
-		                  "this world at its LDtk positions (ExperimentState for SevenGods). Stop comes back here.");
+		                  "this world at its LDtk positions (GameWorldState for SevenGods). Stop comes back here.");
 	}
 
 	LevelViewer::Options& options = m_levelViewer->GetOptions();

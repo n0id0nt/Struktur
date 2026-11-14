@@ -66,7 +66,7 @@ class Player {
     // The player's persistent battle Combatant. Its numbers, move kit and arena look are defined in
     // Combat/BattlePlayer.wren (the same shape as one Combat/BattleCritter.wren entry); it's minted
     // once and kept here, so damage and fatigue from one fight carry into the next. A full reset
-    // only happens on death/respawn, when ExperimentState rebuilds the player entity and this script
+    // only happens on death/respawn, when GameWorldState rebuilds the player entity and this script
     // with it. entity is null: a defeated player goes to GameOverState, the field entity is never
     // destroyed out from under the fight the way a beaten critter's is.
     combatant {

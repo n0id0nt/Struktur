@@ -7,7 +7,7 @@
 // The sprite is the red floor button from Backgrounds/Tilesets/TilesetDungeon.png - raised when up, flat when pressed.
 // Once whatever it opens is open for good (its channel retired - Signals.retire, done by Door.wren) the plate goes
 // inactive: it stays down, greyed out, ignores whoever steps on it, and any party member left holding it down
-// (Member.staying) comes back to follow the party. Spawned by States/ExperimentState.wren.
+// (Member.staying) comes back to follow the party. Spawned by States/GameWorldState.wren.
 import "gameObjectComponents" for Sprite, PhysicsBody, RenderLayer
 import "renderer" for FlipBit
 import "math" for Vec2, Vec4

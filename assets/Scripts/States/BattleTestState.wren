@@ -6,7 +6,7 @@
 // side is the normal EnemyAI. Every fighter starts fresh at full health, nothing is saved, and the overworld isn't
 // touched. While a battle runs, a live readout (UI/BattleTest/BattleReadoutUI.wren) shows every fighter's exact HP /
 // stamina / charge and the Arbiter's latest checks (the console's [Arbiter] lines have the full breakdowns).
-// Opened with F6 from the overworld (States/ExperimentState.wren); Back returns to the game.
+// Opened with F6 from the overworld (States/GameWorldState.wren); Back returns to the game.
 import "app" for Time
 import "gameObject" for GameObject
 import "gameObjectComponents" for World
@@ -21,7 +21,7 @@ import "UI/BattleTest/BattleSetupUI" for BattleSetupUI, SLOTS_PER_SIDE, MOVES_PE
 import "UI/BattleTest/BattleReadoutUI" for BattleReadoutUI
 
 var WORLD_FILE_PATH = "Levels/SevenGods.ldtk"
-var BATTLE_ARENA_LEVEL_NAME = "BattleStage"   // the arena level in SevenGods.ldtk
+var BATTLE_ARENA_LEVEL_NAME = "GrassBattleStage"   // an arena level in SevenGods.ldtk
 var NONE = -1   // an empty fighter slot / move slot
 
 // One row of the setup: which roster fighter (or NONE) and which catalog move fills each move slot (or NONE).
@@ -357,6 +357,6 @@ class BattleTestState is BaseState {
         if (_inBattle) {
             return
         }
-        _stateManager.changeState("Experiment")
+        _stateManager.changeState("GameWorld")
     }
 }

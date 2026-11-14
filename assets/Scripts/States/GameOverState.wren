@@ -2,7 +2,7 @@
 // The game-over screen, two ways:
 //   - no params: the finished-game screen ("Game Complete" - States/GameWorldState.wren), no button.
 //   - params title / continueText / onContinue (a Fn): the "You fell" screen after the party is wiped
-//     (States/ExperimentState.gameOver_). Game time is paused while it's up; the Continue button runs
+//     (States/GameWorldState.gameOver_). Game time is paused while it's up; the Continue button runs
 //     onContinue (the respawn) and closes the screen.
 // It owns the UI/GameOver/GameOverUI view's lifecycle.
 import "app" for Time

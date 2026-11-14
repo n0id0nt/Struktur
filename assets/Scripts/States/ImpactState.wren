@@ -6,7 +6,7 @@
 // If the event has a caption (ImpactEvent.message) it types out in a dialogue box at the top of the screen
 // (UI/Dialogue/DialogueBoxUI.top) as the event happens, and the camera holds until it has had time to be read.
 //
-// A substate of States/ExperimentState.wren, entered with params:
+// A substate of States/GameWorldState.wren, entered with params:
 //   "event"       - the ImpactEvent to play (its target is where the camera looks, trigger() makes it happen)
 //   "roomCamera"  - the gameplay state's Camera/RoomCamera, which does the panning
 //   "cameraEntity"- the entity with the Camera component, for the shake

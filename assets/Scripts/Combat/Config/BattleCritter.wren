@@ -86,6 +86,30 @@ class BattleCritter {
         if (name == "Duelist") {
             return BattleCritter.duelist
         }
+        // Arc 1 (Dialogue/Arc1Dialogue.json).
+        if (name == "Kira") {
+            return BattleCritter.kira
+        }
+        if (name == "Thomas") {
+            return BattleCritter.thomas
+        }
+        if (name == "Runic Construct") {
+            return BattleCritter.runicConstruct
+        }
+        // The shrine chamber's three constructs (LDtk NPC names), each guarding its own door - lighter fights,
+        // a little tougher each time.
+        if (name == "RunicConstuct1") {
+            return BattleCritter.runicConstructLight(55)
+        }
+        if (name == "RunicConstruct2") {
+            return BattleCritter.runicConstructLight(65)
+        }
+        if (name == "RunicConstruct3") {
+            return BattleCritter.runicConstructLight(75)
+        }
+        if (name == "Warden") {
+            return BattleCritter.warden
+        }
         return BattleCritter.chicken
     }
 
@@ -115,6 +139,30 @@ class BattleCritter {
     // turns aside attacks better than the player, is harder to parry back, and fights smart (focus - EnemyAI).
     static duelist {
         return BattleCritter.fromNpc("Duelist", "Speed", 100, 90, {"reflex": 16, "precision": 14, "focus": 13})
+    }
+
+    // --- Arc 1 ------------------------------------------------------------------------
+    // Placeholder stats and looks for the Iteration 1 slice (docs/FirstArcPlan.md) - tune once they get real kits.
+
+    // Kira - the hunter's daughter and first companion. Quick and precise (a stand-in for her archery until she gets
+    // her own ranged moves).
+    static kira { BattleCritter.fromNpc("Kira", "Speed", 85, 90, {"precision": 14, "agility": 13}) }
+
+    // Thomas - Kira's father, the combat tutorial's sparring partner. Strong but slow on his creaky knees.
+    static thomas { BattleCritter.fromNpc("Thomas", "Power", 90, 70, {"agility": 7, "focus": 8}) }
+
+    // Runic Construct - an ancient shrine guardian. Tough and heavy-hitting, but slow.
+    static runicConstruct { BattleCritter.fromNpc("Runic Construct", "Power", 110, 80, {"guard": 13, "agility": 6}) }
+
+    // A lighter Runic Construct - the three in the shrine chamber are fought one at a time. maxHp sets how tough.
+    static runicConstructLight(maxHp) {
+        return BattleCritter.fromNpc("Runic Construct", "Power", maxHp, 60, {"might": 8, "guard": 9, "agility": 5})
+    }
+
+    // The Forgotten Warden - the shrine's boss: three of them (LDtk Interactables) fight together, so each one is
+    // only about a third of a full boss.
+    static warden {
+        return BattleCritter.fromNpc("Warden", "Power", 70, 80, {"might": 9, "guard": 10, "poise": 10, "agility": 5, "focus": 8})
     }
 
     // --- test fighters -----------------------------------------------------------------
