@@ -1564,6 +1564,11 @@ inline const char* wrenphysicsSource()
     "    foreign setOneSided(arg0,arg1,arg2,arg3,arg4,arg5,arg6,arg7)\n"
     "}\n"
     "\n"
+    "class PhysicsQuery {\n"
+    "    // Casts a ray between two world-pixel points (fromX, fromY, toX, toY) against solid fixtures in the given layer mask (sensors are skipped). Returns every hit nearest first, each as [entity, fraction along the ray, body is static].\n"
+    "    foreign static rayCast(arg0,arg1,arg2,arg3,arg4)\n"
+    "}\n"
+    "\n"
     "";
 }
 

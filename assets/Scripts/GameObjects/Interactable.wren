@@ -11,6 +11,8 @@ import "World/StoryGates" for StoryGates
 class Interactable {
     construct new(entity, args) {
         _entity = entity
+        // Its LDtk size - Player.clearLineTo_ ignores hits inside it (it's usually built into solid tiles).
+        _size = [args["Width"] != null ? args["Width"] : 16, args["Height"] != null ? args["Height"] : 16]
         _name = args["MessageKey"]
         _gate = StoryGates.fromArgs(args)
     }
@@ -38,6 +40,9 @@ class Interactable {
     isInteractable() { StoryGates.isVisible(_entity) }
 
     requiresFacing() { true }
+
+    // [width, height] px - see Player.clearLineTo_.
+    interactSize() { _size }
 
     getEntity() { _entity }
 }

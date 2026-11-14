@@ -1,7 +1,7 @@
 import "gameObject" for GameObject
 import "gameObjectComponents" for WorldTransform, Script, Camera, PhysicsBody, SpriteAnimation
 import "math" for Vec2, Vec3, Vec4, Math
-import "physics" for BodyDefinition, PhysicsCircleShape, BodyType, CollisionLayers
+import "physics" for BodyDefinition, PhysicsCircleShape, BodyType, CollisionLayers, PhysicsQuery
 import "Util/CharacterCollider" for CharacterCollider
 import "input" for Input
 
@@ -17,6 +17,12 @@ var INTERACTABLE_DISTANCE = 64.0
 // Interactables that ask for it (requiresFacing() - NPCs, signs) only count when they're within this many degrees
 // of the way the player is facing.
 var INTERACT_FACING_DEGREES = 90
+// An interactable only counts when nothing solid stands between it and the player (clearLineTo_). Things built into the
+// level (a mural, a statue) sit inside solid tiles, so a hit inside the interactable's own footprint doesn't count - its
+// size comes from interactSize() ([width, height] px) if the script has one, else DEFAULT_INTERACT_SIZE. The footprint
+// is grown by FOOTPRINT_SLACK px to absorb hits landing exactly on its edge.
+var DEFAULT_INTERACT_SIZE = [16, 16]
+var FOOTPRINT_SLACK = 2.0
 
 class Player {
     construct new(entity, args) {
@@ -176,6 +182,13 @@ class Player {
                 continue
             }
             var distance = Vec3.distance(interactableWorldPosition, playerWorldPosition)
+            // Only the near ones are ray-cast (the costly check), and only if they'd beat the closest so far.
+            if (distance >= INTERACTABLE_DISTANCE || distance >= closestDistance) {
+                continue
+            }
+            if (!clearLineTo_(playerWorldPosition, interactableWorldPosition, entity, script)) {
+                continue
+            }
             if (distance < closestDistance) {
                 //Debug.info(("Test the distance %(distance) for entity %(entity)"))
                 closestDistance = distance
@@ -187,6 +200,29 @@ class Player {
             return closestEntity
         }
         return null
+    }
+
+    // True when nothing solid is in the way from `from` to `to` (the position of the interactable `target`, whose
+    // script is targetScript): a wall, a level prop, another NPC or door. Only static bodies block - the party following
+    // you and roaming critters don't - and neither do the player or the target's own body. A hit inside the target's
+    // footprint (see DEFAULT_INTERACT_SIZE) doesn't block either.
+    clearLineTo_(from, to, target, targetScript) {
+        var size = Reflect.hasMethod(targetScript, "interactSize()") ? targetScript.interactSize() : DEFAULT_INTERACT_SIZE
+        var halfWidth = size[0] / 2 + FOOTPRINT_SLACK
+        var halfHeight = size[1] / 2 + FOOTPRINT_SLACK
+        for (hit in PhysicsQuery.rayCast(from.x, from.y, to.x, to.y, CollisionLayers.ALL)) {
+            var hitEntity = hit[0]
+            if (!hit[2] || hitEntity == _entity || hitEntity == target) {
+                continue
+            }
+            var hitX = from.x + (to.x - from.x) * hit[1]
+            var hitY = from.y + (to.y - from.y) * hit[1]
+            if ((hitX - to.x).abs <= halfWidth && (hitY - to.y).abs <= halfHeight) {
+                continue
+            }
+            return false
+        }
+        return true
     }
 
     // True when `target` lies within INTERACT_FACING_DEGREES of the way the player faces (or right on top of them).

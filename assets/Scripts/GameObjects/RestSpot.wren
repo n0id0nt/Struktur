@@ -10,6 +10,8 @@ import "debug" for Debug
 class RestSpot {
     construct new(entity, args) {
         _entity = entity
+        // Its LDtk size - Player.clearLineTo_ ignores hits inside it (it's usually built into solid tiles).
+        _size = [args["Width"] != null ? args["Width"] : 16, args["Height"] != null ? args["Height"] : 16]
         _type = args["RestSpotType"]
         // The linked Spawn's iid, and the level it's in (World::Level fills "<field>Levels" in for entity refs).
         _spawnIid = args["SpawnPoint"]
@@ -41,6 +43,9 @@ class RestSpot {
     isInteractable() { true }
 
     requiresFacing() { true }
+
+    // [width, height] px - see Player.clearLineTo_.
+    interactSize() { _size }
 
     getEntity() { _entity }
 }

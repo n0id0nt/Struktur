@@ -96,3 +96,8 @@ foreign class PhysicsEdgeShape {
     foreign setOneSided(arg0,arg1,arg2,arg3,arg4,arg5,arg6,arg7)
 }
 
+class PhysicsQuery {
+    // Casts a ray between two world-pixel points (fromX, fromY, toX, toY) against solid fixtures in the given layer mask (sensors are skipped). Returns every hit nearest first, each as [entity, fraction along the ray, body is static].
+    foreign static rayCast(arg0,arg1,arg2,arg3,arg4)
+}
+

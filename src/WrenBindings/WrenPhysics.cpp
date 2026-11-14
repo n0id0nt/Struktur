@@ -5,6 +5,11 @@
 #include "WrenMath.h"
 #include "wren.hpp"
 
+#include <algorithm>
+#include <vector>
+
+#include "Engine/Physics/PhysicsWorld.h"
+
 // ============================================================================
 // BODY DEFINITION BINDINGS
 // ============================================================================
@@ -386,6 +391,86 @@ void wren_PhysicsChainShapeCreateChain(WrenVM* vm)
 // ============================================================================
 // BINDING REGISTRATION
 // ============================================================================
+// ============================================================================
+// PHYSICS QUERIES
+// ============================================================================
+
+namespace
+{
+// Collects every solid (non-sensor) fixture a ray crosses, nearest first once sorted.
+class SolidRayCastCallback : public b2RayCastCallback
+{
+public:
+	struct Hit
+	{
+		entt::entity entity;
+		float fraction;
+		bool isStatic;
+	};
+
+	explicit SolidRayCastCallback(uint16_t maskBits) : m_maskBits(maskBits) {}
+
+	float ReportFixture(b2Fixture* fixture, const b2Vec2& point, const b2Vec2& normal, float fraction) override
+	{
+		// Sensors (pressure plates, warps) never block; nor does anything outside the requested layers.
+		if (fixture->IsSensor() || (fixture->GetFilterData().categoryBits & m_maskBits) == 0)
+		{
+			return -1.0f;
+		}
+		b2Body* body = fixture->GetBody();
+		m_hits.push_back({static_cast<entt::entity>(body->GetUserData().pointer), fraction,
+		                  body->GetType() == b2_staticBody});
+		return 1.0f;  // keep going - every hit is reported, not just the nearest
+	}
+
+	std::vector<Hit> m_hits;
+
+private:
+	uint16_t m_maskBits;
+};
+}  // namespace
+
+// PhysicsQuery.rayCast(fromX, fromY, toX, toY, maskBits) -> [[entity, fraction, isStatic], ...]
+// Positions in world pixels. Nearest hit first; fraction is how far along the ray (0 = from, 1 = to).
+void wren_PhysicsQueryRayCast(WrenVM* vm)
+{
+	Struktur::GameContext* context           = static_cast<Struktur::GameContext*>(wrenGetUserData(vm));
+	Struktur::Physics::PhysicsWorld& physics = context->GetPhysicsWorld();
+	const float metersPerPixel               = 1.0f / physics.GetPixelsPerMeter();
+
+	b2Vec2 from(static_cast<float>(wrenGetSlotDouble(vm, 1)) * metersPerPixel,
+	            static_cast<float>(wrenGetSlotDouble(vm, 2)) * metersPerPixel);
+	b2Vec2 to(static_cast<float>(wrenGetSlotDouble(vm, 3)) * metersPerPixel,
+	          static_cast<float>(wrenGetSlotDouble(vm, 4)) * metersPerPixel);
+	uint16_t maskBits = static_cast<uint16_t>(wrenGetSlotDouble(vm, 5));
+
+	SolidRayCastCallback callback(maskBits);
+	// Box2D asserts on a zero-length ray.
+	if ((to - from).LengthSquared() > 1e-8f)
+	{
+		physics.GetRawWorld()->RayCast(&callback, from, to);
+	}
+	std::sort(callback.m_hits.begin(), callback.m_hits.end(),
+	          [](const SolidRayCastCallback::Hit& a, const SolidRayCastCallback::Hit& b) {
+		          return a.fraction < b.fraction;
+	          });
+
+	// Slot 0: the result list, 1: one hit's list, 2: a value going into it.
+	wrenEnsureSlots(vm, 3);
+	wrenSetSlotNewList(vm, 0);
+	for (const auto& hit : callback.m_hits)
+	{
+		wrenSetSlotNewList(vm, 1);
+		wrenSetSlotDouble(vm, 2, static_cast<double>(static_cast<uint32_t>(hit.entity)));
+		wrenInsertInList(vm, 1, -1, 2);
+		wrenSetSlotDouble(vm, 2, static_cast<double>(hit.fraction));
+		wrenInsertInList(vm, 1, -1, 2);
+		wrenSetSlotBool(vm, 2, hit.isStatic);
+		wrenInsertInList(vm, 1, -1, 2);
+		wrenInsertInList(vm, 0, -1, 1);
+	}
+}
+
 WREN_BINDING_MODULE(Physics)
 {
 	WREN_ENUM(registry, "physics", BodyType, "Enum of the different phyics body types",
@@ -482,4 +567,9 @@ WREN_BINDING_MODULE(Physics)
 	                  "Create closed loop from list of Vec2");
 	WREN_CLASS_METHOD(registry, "physics", "PhysicsChainShape", "createChain(_)", wren_PhysicsChainShapeCreateChain,
 	                  "Create open chain from list of Vec2");
+
+	WREN_CLASS_STATIC(registry, "physics", "PhysicsQuery", "rayCast(_,_,_,_,_)", wren_PhysicsQueryRayCast,
+	                  "Casts a ray between two world-pixel points (fromX, fromY, toX, toY) against solid fixtures in "
+	                  "the given layer mask (sensors are skipped). Returns every hit nearest first, each as "
+	                  "[entity, fraction along the ray, body is static].");
 }
