@@ -18,6 +18,7 @@ import "serialisation" for Json, MapUtil
 import "fileSystem" for FileSystem
 import "debug" for Debug
 import "Party/Member" for Member
+import "UI/Notifications/Notifications" for Notifications
 
 class Party {
     static init() {
@@ -121,10 +122,12 @@ class Party {
     // --- NPCs ------------------------------------------------------------------------
 
     // Adds an NPC to the end of the party. spawnPosition (a Vec3, or null) is where their follower first
-    // appears - normally where the NPC was standing when they joined. Safe to call twice.
+    // appears - normally where the NPC was standing when they joined. Safe to call twice. A new member gets a
+    // "Joined the party" banner (UI/Notifications); loading party.sav doesn't come through here, so it doesn't.
     static join(name, spawnPosition) {
         if (Party.add_(name, spawnPosition)) {
             Party.save("party.sav")
+            Notifications.partyJoined(name)
         }
     }
 

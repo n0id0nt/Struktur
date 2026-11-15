@@ -1,14 +1,15 @@
 // UI/Inventory/InventoryUI.wren
 // The inventory screen's view, built from the UI kit (UI/Theme/UIKit.wren): a metal window with a row of tabs
-// (Items / Weapons / Armor / Moves / Party / Levels) between Q / E key prompts, the open tab's page below, and a
+// (Items / Weapons / Armor / Moves / Party / Levels / Quests) between Q / E key prompts, the open tab's page below, and a
 // footer of key prompts with the party's gold on the right. Each tab's page is its own view -
-// UI/Inventory/ItemGridPage.wren, MovesPage.wren, PartyPage.wren, LevelsPage.wren - all built up front, only the
+// UI/Inventory/ItemGridPage.wren, MovesPage.wren, PartyPage.wren, LevelsPage.wren, QuestsPage.wren - all built up front, only the
 // open one visible (hidden ones drop out of focus navigation by themselves).
 //
 // Tabs switch with cycleTab (States/InventoryState.wren drives it from the UITab input - Q / E, the bumpers), or by
 // moving focus up onto the tab bar and along it. Pure view: `model` is everything to show, prepared by the State:
 //   { "tabs": [tab names], "itemPages": [[entries, emptyText] x3], "moves": {...}, "party": [...],
-//     "partyLabels": {...}, "levels": [...], "levelLabels": {...}, "gold": Num,
+//     "partyLabels": {...}, "levels": [...], "levelLabels": {...}, "quests": {...},
+//     "questLabels": {...}, "gold": Num,
 //     "hints": { "tabs", "move", "select", "close" } }
 // onFocusMoved is called with no arguments whenever focus lands on something new (the screen's focus sound);
 // onEquip(slot, moveId) changes the player's loadout and returns the new one (see MovesPage).
@@ -21,13 +22,14 @@ import "UI/Inventory/ItemGridPage" for ItemGridPage
 import "UI/Inventory/MovesPage" for MovesPage
 import "UI/Inventory/PartyPage" for PartyPage
 import "UI/Inventory/LevelsPage" for LevelsPage
+import "UI/Inventory/QuestsPage" for QuestsPage
 
 var WINDOW_SIZE = Vec2.new(1120, 620)
 var CONTENT_X = 24            // inside the window frame's border
 var TAB_Y = 24
 var TAB_HEIGHT = 36           // the kit tab's 12px at 3x
-var TAB_WIDTH = 150
-var TAB_STRIDE = 156
+var TAB_WIDTH = 128
+var TAB_STRIDE = 134
 var TAB_X = 80                // after the previous-tab prompt (room for a pad's LB, which is wider than Q)
 var TAB_LABEL_Y = 10          // the tab art's top border is heavier and its bottom open - this centres the text inside
 var BODY_Y = 72
@@ -67,6 +69,7 @@ class InventoryUI {
         _partyPage = PartyPage.new(body, model["party"], model["partyLabels"], _boldFont, _bookFont, onFocus)
         _pages.add(_partyPage)
         _pages.add(LevelsPage.new(body, model["levels"], model["levelLabels"], _boldFont, _bookFont, onFocus))
+        _pages.add(QuestsPage.new(body, model["quests"], model["questLabels"], _boldFont, _bookFont, onFocus))
 
         // Along the tab bar left / right (stopping at the ends); down from a tab enters its page, and up from the
         // page's first row comes back to that tab.

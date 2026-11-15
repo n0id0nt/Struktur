@@ -40,6 +40,8 @@ import "World/Npcs" for Npcs
 import "World/SpawnPoint" for SpawnPoint
 import "World/StageDirector" for StageDirector
 import "World/PathWalkers" for PathWalkers
+import "Story/QuestTracker" for QuestTracker
+import "UI/Notifications/Notifications" for Notifications
 import "Story/ArcEnd" for ArcEnd
 import "localization" for Localization
 import "debug" for Debug
@@ -302,6 +304,10 @@ class GameWorldState is BaseState {
         StageDirector.update()
         // NPCs wandering their Paths - they stop for conversations and scenes on their own.
         PathWalkers.update()
+        // Quest changes become banners; banners show over the world and dialogue, not over the inventory or a fight.
+        QuestTracker.poll()
+        var substate = _stateManager.currentState
+        Notifications.update(substate == null || substate.name == "InteractState")
 
         // if substate return out here
         if (_stateManager.currentState) {
@@ -817,6 +823,8 @@ class GameWorldState is BaseState {
         _openingPending = false
         StageDirector.clear()
         PathWalkers.clear()
+        QuestTracker.reset()
+        Notifications.clear()
 
         if (_view != null) {
             _view.teardown()

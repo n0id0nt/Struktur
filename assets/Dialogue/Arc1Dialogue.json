@@ -906,7 +906,22 @@
     "node": "garrett_ask",
     "data": {
       "text": "dialogue.arc1.garrett_ask",
-      "speaker": "Garrett"
+      "speaker": "Garrett",
+      "commands": [
+        {
+          "type": "setIntFlag",
+          "parameters": [
+            {
+              "type": "flag",
+              "value": "garrett_asked"
+            },
+            {
+              "type": "value",
+              "value": 1.0
+            }
+          ]
+        }
+      ]
     }
   },
   {

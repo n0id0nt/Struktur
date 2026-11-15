@@ -21,6 +21,7 @@ import "Combat/Config/BattleCritter" for BattleCritter
 import "Combat/Config/ActionAnimations" for ActionAnimations
 import "Combat/MoveBook" for MoveBook
 import "Localization/DisplayNames" for DisplayNames
+import "Story/QuestLog" for QuestLog
 import "UI/Inventory/InventoryUI" for InventoryUI
 import "debug" for Debug
 
@@ -104,7 +105,7 @@ class InventoryState is BaseState {
 
     buildModel_() {
         var model = {}
-        model["tabs"] = ["items", "weapons", "armor", "moves", "party", "levels"].map { |t| Localization.get("inventory.tab.%(t)") }.toList
+        model["tabs"] = ["items", "weapons", "armor", "moves", "party", "levels", "quests"].map { |t| Localization.get("inventory.tab.%(t)") }.toList
         model["itemPages"] = [
             [itemEntries_([ItemCategory.CONSUMABLE, ItemCategory.MATERIAL]), Localization.get("inventory.empty.items")],
             [itemEntries_([ItemCategory.WEAPON]), Localization.get("inventory.empty.weapons")],
@@ -130,6 +131,12 @@ class InventoryState is BaseState {
             levelLabels[key] = Localization.get("inventory.levels.%(key)")
         }
         model["levelLabels"] = levelLabels
+        model["quests"] = questsModel_()
+        var questLabels = {}
+        for (key in ["overall", "complete", "empty", "objectives"]) {
+            questLabels[key] = Localization.get("inventory.quests.%(key)")
+        }
+        model["questLabels"] = questLabels
         model["gold"] = Inventory.gold
         var hints = {}
         for (key in ["tabs", "move", "select", "close"]) {
@@ -207,6 +214,46 @@ class InventoryState is BaseState {
             entries.add(entry)
         }
         return entries
+    }
+
+    // The Quests tab (Story/QuestLog.wren): active quests by category, then the finished ones - see
+    // UI/Inventory/QuestsPage.wren for the shape. Quests not started yet aren't listed.
+    questsModel_() {
+        var quests = QuestLog.all
+        var sections = []
+        for (category in QuestLog.categories) {
+            var section = {}
+            section["title"] = Localization.get("quest.category.%(category)")
+            section["quests"] = quests.where { |q| q["category"] == category && q["state"] == QuestLog.active }.map { |q| InventoryState.questEntry_(q) }.toList
+            sections.add(section)
+        }
+        var completed = {}
+        completed["title"] = Localization.get("inventory.quests.completed")
+        completed["quests"] = quests.where { |q| q["state"] == QuestLog.complete }.map { |q| InventoryState.questEntry_(q) }.toList
+        sections.add(completed)
+        var model = {}
+        model["overall"] = QuestLog.overallFraction
+        model["sections"] = sections
+        return model
+    }
+
+    static questEntry_(quest) {
+        var id = quest["id"]
+        var category = quest["category"]
+        var entry = {}
+        entry["title"] = Localization.get("quest.%(id).title")
+        entry["category"] = Localization.get("quest.category.%(category)")
+        entry["summary"] = Localization.get("quest.%(id).summary")
+        entry["fraction"] = quest["fraction"]
+        entry["complete"] = quest["state"] == QuestLog.complete
+        entry["objectives"] = quest["objectives"].map { |o|
+            var objectiveId = o["id"]
+            var line = {}
+            line["text"] = Localization.get("quest.%(id).%(objectiveId)")
+            line["done"] = o["done"]
+            return line
+        }.toList
+        return entry
     }
 
     // The Moves tab: every unlocked move (with the battle-sheet clip it plays), the loadout, and the sheet the

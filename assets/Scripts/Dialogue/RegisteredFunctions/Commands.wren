@@ -13,6 +13,8 @@ import "World/Npcs" for Npcs
 import "Story/ArcEnd" for ArcEnd
 import "World/StoryEvents" for StoryEvents
 import "World/StageDirector" for StageDirector
+import "Story/QuestLog" for QuestLog
+import "UI/Notifications/Notifications" for Notifications
 
 class Commands {
     // A staging command's "wait" parameter: on unless it's 0 / false / "no" (JSON bools are avoided in dialogue
@@ -32,6 +34,7 @@ class Commands {
             var count = params["count"] != null ? params["count"] : 1
             Inventory.addItem(item, count)
             Inventory.save("inventory.sav")
+            Notifications.item(item, count)
             Debug.info("[Dialogue Command] Added item to inventory %(item)")
             Event.addEvent("giveItem", [["__type", "map"], ["item", item]])
         }
@@ -46,6 +49,7 @@ class Commands {
         DialogueRegistry.registerCommand("giveGold") { |params|
             Inventory.addGold(params["amount"])
             Inventory.save("inventory.sav")
+            Notifications.gold(params["amount"])
             Debug.info("[Dialogue Command] Gave %(params["amount"]) gold")
         }
         // Takes the gold only if there is enough - pair it with the "hasGold" condition to branch on that.
@@ -198,6 +202,17 @@ class Commands {
         DialogueRegistry.registerCommand("wait") { |params|
             var seconds = params["seconds"]
             StageDirector.wait(seconds is Num ? seconds : 1)
+        }
+        // --- Quests (Story/QuestLog.wren) ----------------------------------------------------------------------
+        // For quests not already tracked by story flags in their JSON definition.
+        DialogueRegistry.registerCommand("startQuest") { |params|
+            QuestLog.start(params["quest"])
+        }
+        DialogueRegistry.registerCommand("completeObjective") { |params|
+            QuestLog.completeObjective(params["quest"], params["objective"])
+        }
+        DialogueRegistry.registerCommand("completeQuest") { |params|
+            QuestLog.finish(params["quest"])
         }
         // A story event happened (World/StoryEvents.wren) - every level door listing it in KeyIds opens once all of its
         // events have.
