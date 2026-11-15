@@ -191,10 +191,11 @@ class InventoryState is BaseState {
     mapModel_() {
         var model = {}
         model["rooms"] = MapLog.rooms(Rooms.world)
+        model["doors"] = MapLog.doors(Rooms.world)
         model["current"] = MapLog.current
         model["currentName"] = MapLog.displayName(MapLog.current)
         var labels = {}
-        for (key in ["title", "here", "empty"]) {
+        for (key in ["title", "here", "empty", "door"]) {
             labels[key] = Localization.get("inventory.map.%(key)")
         }
         model["labels"] = labels

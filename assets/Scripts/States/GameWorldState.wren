@@ -655,7 +655,9 @@ class GameWorldState is BaseState {
     startWarp_(targetIndex, fromIndex, destination) {
         Debug.info("[GameWorldState] warping from room %(fromIndex) to room %(targetIndex)")
         World.loadLevelEntities(_worldEntity, targetIndex)
-        _warp = {"target": targetIndex, "from": fromIndex, "destination": destination, "frames": 0}
+        // origin: where the player stepped on the warp door - the Map tab's doorway marker (World/MapLog.warped).
+        _warp = {"target": targetIndex, "from": fromIndex, "destination": destination, "frames": 0,
+                 "origin": WorldTransform.getPosition(_playerEntity)}
         var player = Script.getInstance(_playerEntity)
         if (player != null) {
             player.playerForceStop()
@@ -669,6 +671,7 @@ class GameWorldState is BaseState {
         if (arrival == null) {
             return
         }
+        MapLog.warped(_worldEntity, _warp["from"], _warp["target"], _warp["origin"], arrival)
         _warp = null
         teleportParty_(arrival)
         _warpCooldownEndTime = Time.scaledTime + WARP_COOLDOWN

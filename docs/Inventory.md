@@ -65,12 +65,28 @@ var TABS = [
   fit the page.
 - **Colours:** each room is filled with the colour of its **Terrain** level field. The colour is the `BattleArena`
   enum value's colour set in LDtk, so changing a colour there changes it on the map. Rooms with no Terrain are grey.
-- **Where you are:** the room you're in has an orange outline and a marker. Its name is shown top right, made from the
-  level identifier (`FinnsWorkshop` becomes "Finns Workshop").
-- **Legend:** along the bottom, naming each terrain colour on the map. The names come from `terrain.<value>` in
-  `en.json`.
+- **Which levels show:** each level's **Mappable** field in LDtk decides.
+
+  | Mappable | On the map |
+  |---|---|
+  | `Mappable` | Drawn as its own rectangle once visited. This is also what a level without the field gets. |
+  | `WorpPoint` | An interior: never drawn. The warp door the player took to get in shows as a small **doorway** marker in the room outside. |
+  | `No` | Never shown (the battle arenas). |
+
+- **Doorways:** a doorway is logged when the player warps between an interior and a mappable room, in either direction.
+  - Going in, the marker is where they stepped on the door.
+  - Coming out, it's where they arrive outside. That's slightly in front of the door, because arrivals are offset from it.
+
+  So an interior the game starts in, like Finn's Workshop, gets its doorway the first time you leave it.
+- **Where you are:** the room you're in has an orange outline and a marker. Inside an interior, its doorway is
+  highlighted instead. The room's name is shown top right, made from the level identifier (`FinnsWorkshop` becomes
+  "Finns Workshop").
+- **Legend:** along the bottom, naming each terrain colour on the map and the doorway marker. Terrain names come from
+  `terrain.<value>` in `en.json`.
 - **What counts as visited:** a room is logged when the player enters it (`GameWorldState.updateLevelStreaming_` calls
-  `MapLog.visit`). Battle arenas (`*BattleStage`) never count. The log is saved in `map.sav`.
+  `MapLog.visit`). Doorways are logged when a warp finishes (`GameWorldState.updateWarp_` calls `MapLog.warped`). Both
+  are saved in `map.sav`. The Mappable field is checked again when the map is drawn, so changing a level to `No` or
+  `WorpPoint` in LDtk takes it off maps from older saves too.
 - **Older saves:** the log starts empty, so an older save's map fills in from the next room you enter.
 
 **Engine bindings.** The map uses two new `World` functions in `src/WrenBindings/WrenGameObjectComponents.cpp`:

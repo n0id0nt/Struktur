@@ -11,7 +11,7 @@
 	"iid": "41438cf0-bde0-11f1-b533-6fad8cb2a972",
 	"jsonVersion": "1.5.3",
 	"appBuildId": 473703,
-	"nextUid": 795,
+	"nextUid": 797,
 	"identifierStyle": "Capitalize",
 	"toc": [],
 	"worldLayout": "Free",
@@ -11300,6 +11300,11 @@
 			{ "id": "Loop", "tileRect": null, "color": 12470831 },
 			{ "id": "PingPong", "tileRect": null, "color": 14120515 },
 			{ "id": "Random", "tileRect": null, "color": 15389866 }
+		], "iconTilesetUid": null, "externalRelPath": null, "externalFileChecksum": null, "tags": [] },
+		{ "identifier": "Mappable", "uid": 795, "values": [
+			{ "id": "No", "tileRect": null, "color": 12470831 },
+			{ "id": "Mappable", "tileRect": null, "color": 14120515 },
+			{ "id": "WorpPoint", "tileRect": null, "color": 15389866 }
 		], "iconTilesetUid": null, "externalRelPath": null, "externalFileChecksum": null, "tags": [] }
 	], "externalEnums": [], "levelFields": [
 		{
@@ -11378,6 +11383,46 @@
 			"allowedRefsEntityUid": null,
 			"allowedRefTags": [],
 			"tilesetUid": null
+		},
+		{
+			"identifier": "Mappable",
+			"doc": null,
+			"__type": "LocalEnum.Mappable",
+			"uid": 796,
+			"type": "F_Enum(795)",
+			"isArray": false,
+			"canBeNull": false,
+			"arrayMinLength": null,
+			"arrayMaxLength": null,
+			"editorDisplayMode": "Hidden",
+			"editorDisplayScale": 1,
+			"editorDisplayPos": "Above",
+			"editorLinkStyle": "StraightArrow",
+			"editorDisplayColor": null,
+			"editorAlwaysShow": false,
+			"editorShowInWorld": true,
+			"editorCutLongValues": true,
+			"editorTextSuffix": null,
+			"editorTextPrefix": null,
+			"useForSmartColor": false,
+			"exportToToc": false,
+			"searchable": false,
+			"min": null,
+			"max": null,
+			"regex": null,
+			"acceptFileTypes": null,
+			"defaultOverride": {
+				"id": "V_String",
+				"params": ["Mappable"]
+			},
+			"textLanguageMode": null,
+			"symmetricalRef": false,
+			"autoChainRef": true,
+			"allowOutOfLevelRef": true,
+			"allowedRefs": "OnlySame",
+			"allowedRefsEntityUid": null,
+			"allowedRefTags": [],
+			"tilesetUid": null
 		}
 	] },
 	"levels": [
@@ -11405,6 +11450,10 @@
 				{ "__identifier": "Terrain", "__type": "LocalEnum.BattleArena", "__value": "Grass", "__tile": null, "defUid": 782, "realEditorValues": [{
 					"id": "V_String",
 					"params": ["Grass"]
+				}] },
+				{ "__identifier": "Mappable", "__type": "LocalEnum.Mappable", "__value": "No", "__tile": null, "defUid": 796, "realEditorValues": [{
+					"id": "V_String",
+					"params": ["No"]
 				}] }
 			],
 			"layerInstances": [
@@ -12353,6 +12402,10 @@
 				{ "__identifier": "Terrain", "__type": "LocalEnum.BattleArena", "__value": "Woods", "__tile": null, "defUid": 782, "realEditorValues": [{
 					"id": "V_String",
 					"params": ["Woods"]
+				}] },
+				{ "__identifier": "Mappable", "__type": "LocalEnum.Mappable", "__value": "No", "__tile": null, "defUid": 796, "realEditorValues": [{
+					"id": "V_String",
+					"params": ["No"]
 				}] }
 			],
 			"layerInstances": [
@@ -13309,6 +13362,10 @@
 				{ "__identifier": "Terrain", "__type": "LocalEnum.BattleArena", "__value": "Shrine", "__tile": null, "defUid": 782, "realEditorValues": [{
 					"id": "V_String",
 					"params": ["Shrine"]
+				}] },
+				{ "__identifier": "Mappable", "__type": "LocalEnum.Mappable", "__value": "No", "__tile": null, "defUid": 796, "realEditorValues": [{
+					"id": "V_String",
+					"params": ["No"]
 				}] }
 			],
 			"layerInstances": [
@@ -13820,6 +13877,10 @@
 				{ "__identifier": "Terrain", "__type": "LocalEnum.BattleArena", "__value": "IndoorBrick", "__tile": null, "defUid": 782, "realEditorValues": [{
 					"id": "V_String",
 					"params": ["IndoorBrick"]
+				}] },
+				{ "__identifier": "Mappable", "__type": "LocalEnum.Mappable", "__value": "No", "__tile": null, "defUid": 796, "realEditorValues": [{
+					"id": "V_String",
+					"params": ["No"]
 				}] }
 			],
 			"layerInstances": [
@@ -14363,7 +14424,8 @@
 				{ "__identifier": "Terrain", "__type": "LocalEnum.BattleArena", "__value": "Grass", "__tile": null, "defUid": 782, "realEditorValues": [{
 					"id": "V_String",
 					"params": ["Grass"]
-				}] }
+				}] },
+				{ "__identifier": "Mappable", "__type": "LocalEnum.Mappable", "__value": "Mappable", "__tile": null, "defUid": 796, "realEditorValues": [] }
 			],
 			"layerInstances": [
 				{
@@ -17633,7 +17695,8 @@
 				{ "__identifier": "Terrain", "__type": "LocalEnum.BattleArena", "__value": "Grass", "__tile": null, "defUid": 782, "realEditorValues": [{
 					"id": "V_String",
 					"params": ["Grass"]
-				}] }
+				}] },
+				{ "__identifier": "Mappable", "__type": "LocalEnum.Mappable", "__value": "Mappable", "__tile": null, "defUid": 796, "realEditorValues": [] }
 			],
 			"layerInstances": [
 				{
@@ -18735,7 +18798,8 @@
 				{ "__identifier": "Terrain", "__type": "LocalEnum.BattleArena", "__value": "Grass", "__tile": null, "defUid": 782, "realEditorValues": [{
 					"id": "V_String",
 					"params": ["Grass"]
-				}] }
+				}] },
+				{ "__identifier": "Mappable", "__type": "LocalEnum.Mappable", "__value": "Mappable", "__tile": null, "defUid": 796, "realEditorValues": [] }
 			],
 			"layerInstances": [
 				{
@@ -19734,6 +19798,10 @@
 				{ "__identifier": "Terrain", "__type": "LocalEnum.BattleArena", "__value": "IndoorBrick", "__tile": null, "defUid": 782, "realEditorValues": [{
 					"id": "V_String",
 					"params": ["IndoorBrick"]
+				}] },
+				{ "__identifier": "Mappable", "__type": "LocalEnum.Mappable", "__value": "WorpPoint", "__tile": null, "defUid": 796, "realEditorValues": [{
+					"id": "V_String",
+					"params": ["WorpPoint"]
 				}] }
 			],
 			"layerInstances": [
@@ -20336,6 +20404,10 @@
 				{ "__identifier": "Terrain", "__type": "LocalEnum.BattleArena", "__value": "IndoorBrick", "__tile": null, "defUid": 782, "realEditorValues": [{
 					"id": "V_String",
 					"params": ["IndoorBrick"]
+				}] },
+				{ "__identifier": "Mappable", "__type": "LocalEnum.Mappable", "__value": "WorpPoint", "__tile": null, "defUid": 796, "realEditorValues": [{
+					"id": "V_String",
+					"params": ["WorpPoint"]
 				}] }
 			],
 			"layerInstances": [
@@ -20967,6 +21039,10 @@
 				{ "__identifier": "Terrain", "__type": "LocalEnum.BattleArena", "__value": "IndoorBrick", "__tile": null, "defUid": 782, "realEditorValues": [{
 					"id": "V_String",
 					"params": ["IndoorBrick"]
+				}] },
+				{ "__identifier": "Mappable", "__type": "LocalEnum.Mappable", "__value": "WorpPoint", "__tile": null, "defUid": 796, "realEditorValues": [{
+					"id": "V_String",
+					"params": ["WorpPoint"]
 				}] }
 			],
 			"layerInstances": [
@@ -21575,6 +21651,10 @@
 				{ "__identifier": "Terrain", "__type": "LocalEnum.BattleArena", "__value": "IndoorBrick", "__tile": null, "defUid": 782, "realEditorValues": [{
 					"id": "V_String",
 					"params": ["IndoorBrick"]
+				}] },
+				{ "__identifier": "Mappable", "__type": "LocalEnum.Mappable", "__value": "WorpPoint", "__tile": null, "defUid": 796, "realEditorValues": [{
+					"id": "V_String",
+					"params": ["WorpPoint"]
 				}] }
 			],
 			"layerInstances": [
@@ -22221,6 +22301,10 @@
 				{ "__identifier": "Terrain", "__type": "LocalEnum.BattleArena", "__value": "IndoorBrick", "__tile": null, "defUid": 782, "realEditorValues": [{
 					"id": "V_String",
 					"params": ["IndoorBrick"]
+				}] },
+				{ "__identifier": "Mappable", "__type": "LocalEnum.Mappable", "__value": "WorpPoint", "__tile": null, "defUid": 796, "realEditorValues": [{
+					"id": "V_String",
+					"params": ["WorpPoint"]
 				}] }
 			],
 			"layerInstances": [
@@ -23077,7 +23161,8 @@
 				{ "__identifier": "Terrain", "__type": "LocalEnum.BattleArena", "__value": "Woods", "__tile": null, "defUid": 782, "realEditorValues": [{
 					"id": "V_String",
 					"params": ["Woods"]
-				}] }
+				}] },
+				{ "__identifier": "Mappable", "__type": "LocalEnum.Mappable", "__value": "Mappable", "__tile": null, "defUid": 796, "realEditorValues": [] }
 			],
 			"layerInstances": [
 				{
@@ -23776,7 +23861,8 @@
 				{ "__identifier": "Terrain", "__type": "LocalEnum.BattleArena", "__value": "Woods", "__tile": null, "defUid": 782, "realEditorValues": [{
 					"id": "V_String",
 					"params": ["Woods"]
-				}] }
+				}] },
+				{ "__identifier": "Mappable", "__type": "LocalEnum.Mappable", "__value": "Mappable", "__tile": null, "defUid": 796, "realEditorValues": [] }
 			],
 			"layerInstances": [
 				{
@@ -24473,7 +24559,8 @@
 				{ "__identifier": "Terrain", "__type": "LocalEnum.BattleArena", "__value": "Woods", "__tile": null, "defUid": 782, "realEditorValues": [{
 					"id": "V_String",
 					"params": ["Woods"]
-				}] }
+				}] },
+				{ "__identifier": "Mappable", "__type": "LocalEnum.Mappable", "__value": "Mappable", "__tile": null, "defUid": 796, "realEditorValues": [] }
 			],
 			"layerInstances": [
 				{
@@ -25182,7 +25269,8 @@
 				{ "__identifier": "Terrain", "__type": "LocalEnum.BattleArena", "__value": "Woods", "__tile": null, "defUid": 782, "realEditorValues": [{
 					"id": "V_String",
 					"params": ["Woods"]
-				}] }
+				}] },
+				{ "__identifier": "Mappable", "__type": "LocalEnum.Mappable", "__value": "Mappable", "__tile": null, "defUid": 796, "realEditorValues": [] }
 			],
 			"layerInstances": [
 				{
@@ -25865,7 +25953,8 @@
 				{ "__identifier": "Terrain", "__type": "LocalEnum.BattleArena", "__value": "Woods", "__tile": null, "defUid": 782, "realEditorValues": [{
 					"id": "V_String",
 					"params": ["Woods"]
-				}] }
+				}] },
+				{ "__identifier": "Mappable", "__type": "LocalEnum.Mappable", "__value": "Mappable", "__tile": null, "defUid": 796, "realEditorValues": [] }
 			],
 			"layerInstances": [
 				{
@@ -26574,7 +26663,8 @@
 				{ "__identifier": "Terrain", "__type": "LocalEnum.BattleArena", "__value": "Woods", "__tile": null, "defUid": 782, "realEditorValues": [{
 					"id": "V_String",
 					"params": ["Woods"]
-				}] }
+				}] },
+				{ "__identifier": "Mappable", "__type": "LocalEnum.Mappable", "__value": "Mappable", "__tile": null, "defUid": 796, "realEditorValues": [] }
 			],
 			"layerInstances": [
 				{
@@ -27314,7 +27404,8 @@
 				{ "__identifier": "Terrain", "__type": "LocalEnum.BattleArena", "__value": "Woods", "__tile": null, "defUid": 782, "realEditorValues": [{
 					"id": "V_String",
 					"params": ["Woods"]
-				}] }
+				}] },
+				{ "__identifier": "Mappable", "__type": "LocalEnum.Mappable", "__value": "Mappable", "__tile": null, "defUid": 796, "realEditorValues": [] }
 			],
 			"layerInstances": [
 				{
@@ -28226,7 +28317,8 @@
 				{ "__identifier": "Terrain", "__type": "LocalEnum.BattleArena", "__value": "Shrine", "__tile": null, "defUid": 782, "realEditorValues": [{
 					"id": "V_String",
 					"params": ["Shrine"]
-				}] }
+				}] },
+				{ "__identifier": "Mappable", "__type": "LocalEnum.Mappable", "__value": "Mappable", "__tile": null, "defUid": 796, "realEditorValues": [] }
 			],
 			"layerInstances": [
 				{
@@ -28844,7 +28936,8 @@
 				{ "__identifier": "Terrain", "__type": "LocalEnum.BattleArena", "__value": "Shrine", "__tile": null, "defUid": 782, "realEditorValues": [{
 					"id": "V_String",
 					"params": ["Shrine"]
-				}] }
+				}] },
+				{ "__identifier": "Mappable", "__type": "LocalEnum.Mappable", "__value": "Mappable", "__tile": null, "defUid": 796, "realEditorValues": [] }
 			],
 			"layerInstances": [
 				{
@@ -29497,7 +29590,8 @@
 				{ "__identifier": "Terrain", "__type": "LocalEnum.BattleArena", "__value": "Shrine", "__tile": null, "defUid": 782, "realEditorValues": [{
 					"id": "V_String",
 					"params": ["Shrine"]
-				}] }
+				}] },
+				{ "__identifier": "Mappable", "__type": "LocalEnum.Mappable", "__value": "Mappable", "__tile": null, "defUid": 796, "realEditorValues": [] }
 			],
 			"layerInstances": [
 				{
@@ -29973,7 +30067,8 @@
 				{ "__identifier": "Terrain", "__type": "LocalEnum.BattleArena", "__value": "Shrine", "__tile": null, "defUid": 782, "realEditorValues": [{
 					"id": "V_String",
 					"params": ["Shrine"]
-				}] }
+				}] },
+				{ "__identifier": "Mappable", "__type": "LocalEnum.Mappable", "__value": "Mappable", "__tile": null, "defUid": 796, "realEditorValues": [] }
 			],
 			"layerInstances": [
 				{
@@ -30559,7 +30654,8 @@
 				{ "__identifier": "Terrain", "__type": "LocalEnum.BattleArena", "__value": "Shrine", "__tile": null, "defUid": 782, "realEditorValues": [{
 					"id": "V_String",
 					"params": ["Shrine"]
-				}] }
+				}] },
+				{ "__identifier": "Mappable", "__type": "LocalEnum.Mappable", "__value": "Mappable", "__tile": null, "defUid": 796, "realEditorValues": [] }
 			],
 			"layerInstances": [
 				{
@@ -31403,7 +31499,8 @@
 				{ "__identifier": "Terrain", "__type": "LocalEnum.BattleArena", "__value": "Shrine", "__tile": null, "defUid": 782, "realEditorValues": [{
 					"id": "V_String",
 					"params": ["Shrine"]
-				}] }
+				}] },
+				{ "__identifier": "Mappable", "__type": "LocalEnum.Mappable", "__value": "Mappable", "__tile": null, "defUid": 796, "realEditorValues": [] }
 			],
 			"layerInstances": [
 				{

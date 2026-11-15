@@ -486,6 +486,7 @@
     "terrain.Dessert": "Desert",
     "terrain.IndoorBrick": "Indoors",
     "terrain.Shrine": "Shrine",
-    "inventory.open.map": "Select to view the map"
+    "inventory.open.map": "Select to view the map",
+    "inventory.map.door": "Doorway"
   }
 }
