@@ -21,6 +21,7 @@ nearest them. Only rooms that are currently loaded are searched (the player's ro
 | Command | Parameters | What it does |
 |---|---|---|
 | `moveTo` | `who`, `to` (a Path's Name - walked through its WayPoints - or a Marker name), `speed` (`walk` - default, `run`, or px/s), `wait` (1 default / 0), `animation` (optional - a clip to move with instead, e.g. Finn's `StandardWalk`) | Walks there with the walk or run animation, then idles facing the Marker's `Facing` (or the way it walked) |
+| `moveToPlayer` | `who`, `speed`, `wait`, `animation` (as `moveTo`) | Walks to the tile in front of the player (one tile the way the player faces) and turns to face them. `moveTo` with `to='Player'` does the same |
 | `teleport` | `who`, `to` | Puts them on the Path's first WayPoint (or the Marker) at once |
 | `face` | `who`, `towards`: `up` `down` `left` `right` `upLeft` … or `North`/`South`/`East`/`West`, or a character / Marker name | Turns them |
 | `playAnimation` | `who`, `animation` (see below), `wait` (0 default / 1 - hold the conversation until it has played once), `then` (optional - the clip to switch to after, e.g. `GettingUp` then `Idle`) | Plays that clip of their sheet in the way they face, and holds it as a pose |
@@ -49,6 +50,12 @@ A clip a character's sheet doesn't have is skipped with a warning in the log. On
 - A node with no `text` just runs its commands and moves on to its `next` once they've finished. Chain text-less
   nodes to run moves one after another.
 - `moveTo` with `wait` 0 moves the character while the conversation carries on.
+- **Moves queue up.** A `moveTo` / `moveToPlayer` for a character who is already moving starts once the current move
+  ends, even when both are in the same node. So `moveTo FinnToTable` then `moveToPlayer` walks the Path and then over
+  to the player. The spot in front of the player is worked out when that walk starts. `teleport`, `face` and
+  `playAnimation` still stop a move straight away.
+- `moveToPlayer` doesn't check what's on the tile in front of the player. If the player faces a wall or furniture,
+  the character stands on it, so turn the player with `face` first if needed.
 - While moved, the player and party members are in scripted mode, so their own movement stands aside. Characters
   slide straight to the Marker and don't path around walls, so put Markers in clear lines.
 

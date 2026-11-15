@@ -105,14 +105,14 @@ class FinnSprite {
                 ["upLeftWalkAnimation",             760,  768, 0.571, true],
                 ["leftWalkAnimation",               768,  776, 0.571, true],
                 ["downLeftWalkAnimation",           776,  784, 0.571, true],
-                ["downWorkingAnimation",            784,  800, 1.143, true],
-                ["downRightWorkingAnimation",       800,  816, 1.143, true],
-                ["rightWorkingAnimation",           816,  832, 1.143, true],
-                ["upRightWorkingAnimation",         832,  848, 1.143, true],
-                ["upWorkingAnimation",              848,  864, 1.143, true],
-                ["upLeftWorkingAnimation",          864,  880, 1.143, true],
-                ["leftWorkingAnimation",            880,  896, 1.143, true],
-                ["downLeftWorkingAnimation",        896,  912, 1.143, true]
+                ["downWorkingAnimation",            784,  800, 4.571, true],
+                ["downRightWorkingAnimation",       800,  816, 4.571, true],
+                ["rightWorkingAnimation",           816,  832, 4.571, true],
+                ["upRightWorkingAnimation",         832,  848, 4.571, true],
+                ["upWorkingAnimation",              848,  864, 4.571, true],
+                ["upLeftWorkingAnimation",          864,  880, 4.571, true],
+                ["leftWorkingAnimation",            880,  896, 4.571, true],
+                ["downLeftWorkingAnimation",        896,  912, 4.571, true]
             ]
             __data = d
         }

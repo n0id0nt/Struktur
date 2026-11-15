@@ -60,7 +60,7 @@
     "data": {
       "text": "dialogue.arc1.bed_sign",
       "speaker": "Narrator",
-      "next": "bed_wake",
+      "next": "bed_getup",
       "commands": [
         {
           "type": "setIntFlag",
@@ -72,6 +72,32 @@
             {
               "type": "value",
               "value": 1.0
+            }
+          ]
+        },
+        {
+          "type": "teleport",
+          "parameters": [
+            {
+              "type": "who",
+              "value": "Finn"
+            },
+            {
+              "type": "to",
+              "value": "FinnAtAnvil"
+            }
+          ]
+        },
+        {
+          "type": "face",
+          "parameters": [
+            {
+              "type": "who",
+              "value": "Finn"
+            },
+            {
+              "type": "towards",
+              "value": "down"
             }
           ]
         },
@@ -89,6 +115,27 @@
           ]
         }
       ]
+    }
+  },
+  {
+    "node": "bed_getup",
+    "data": {
+      "commands": [
+        {
+          "type": "moveTo",
+          "parameters": [
+            {
+              "type": "who",
+              "value": "Player"
+            },
+            {
+              "type": "to",
+              "value": "PlayerOutOfBed"
+            }
+          ]
+        }
+      ],
+      "next": "bed_wake"
     }
   },
   {
@@ -215,7 +262,7 @@
           ]
         },
         {
-          "node": "finn_map",
+          "node": "finn_map_walk",
           "conditions": [
             {
               "type": "hasIntFlag",
@@ -398,6 +445,86 @@
     "data": {
       "text": "dialogue.arc1.finn_s1_end",
       "speaker": "Finn",
+      "next": "finn_fetch"
+    }
+  },
+  {
+    "node": "finn_fetch",
+    "data": {
+      "commands": [
+        {
+          "type": "moveTo",
+          "parameters": [
+            {
+              "type": "who",
+              "value": "Finn"
+            },
+            {
+              "type": "to",
+              "value": "FinnToWorkBench"
+            }
+          ]
+        }
+      ],
+      "next": "finn_fetch_2"
+    }
+  },
+  {
+    "node": "finn_fetch_2",
+    "data": {
+      "commands": [
+        {
+          "type": "playAnimation",
+          "parameters": [
+            {
+              "type": "who",
+              "value": "Finn"
+            },
+            {
+              "type": "animation",
+              "value": "PickingUp"
+            },
+            {
+              "type": "wait",
+              "value": 1
+            },
+            {
+              "type": "then",
+              "value": "Idle"
+            }
+          ]
+        }
+      ],
+      "next": "finn_fetch_3"
+    }
+  },
+  {
+    "node": "finn_fetch_3",
+    "data": {
+      "commands": [
+        {
+          "type": "moveTo",
+          "parameters": [
+            {
+              "type": "who",
+              "value": "Finn"
+            },
+            {
+              "type": "to",
+              "value": "FinnBackToPlayer"
+            }
+          ]
+        },
+        {
+          "type": "moveToPlayer",
+          "parameters": [
+            {
+              "type": "who",
+              "value": "Finn"
+            }
+          ]
+        }
+      ],
       "next": "finn_s1_end_2"
     }
   },
@@ -406,6 +533,7 @@
     "data": {
       "text": "dialogue.arc1.finn_s1_end_2",
       "speaker": "Finn",
+      "next": "finn_to_anvil",
       "commands": [
         {
           "type": "giveItem",
@@ -450,10 +578,80 @@
     }
   },
   {
+    "node": "finn_to_anvil",
+    "data": {
+      "commands": [
+        {
+          "type": "moveTo",
+          "parameters": [
+            {
+              "type": "who",
+              "value": "Finn"
+            },
+            {
+              "type": "to",
+              "value": "FinnToAnvil"
+            }
+          ]
+        }
+      ],
+      "next": "finn_working"
+    }
+  },
+  {
+    "node": "finn_working",
+    "data": {
+      "commands": [
+        {
+          "type": "face",
+          "parameters": [
+            {
+              "type": "who",
+              "value": "Finn"
+            },
+            {
+              "type": "towards",
+              "value": "down"
+            }
+          ]
+        },
+        {
+          "type": "playAnimation",
+          "parameters": [
+            {
+              "type": "who",
+              "value": "Finn"
+            },
+            {
+              "type": "animation",
+              "value": "Working"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
     "node": "finn_reminder",
     "data": {
       "text": "dialogue.arc1.finn_reminder",
-      "speaker": "Finn"
+      "speaker": "Finn",
+      "next": "finn_working",
+      "commands": [
+        {
+          "type": "face",
+          "parameters": [
+            {
+              "type": "who",
+              "value": "Finn"
+            },
+            {
+              "type": "towards",
+              "value": "Player"
+            }
+          ]
+        }
+      ]
     }
   },
   {
@@ -1019,7 +1217,7 @@
     "data": {
       "targets": [
         {
-          "node": "kira_s3",
+          "node": "kira_s3_walk",
           "conditions": [
             {
               "type": "hasIntFlag",
@@ -1041,16 +1239,73 @@
           ]
         },
         {
-          "node": "kira_early"
+          "node": "kira_early_walk"
         }
       ]
+    }
+  },
+  {
+    "node": "kira_early_walk",
+    "data": {
+      "commands": [
+        {
+          "type": "moveTo",
+          "parameters": [
+            {
+              "type": "who",
+              "value": "Kira"
+            },
+            {
+              "type": "to",
+              "value": "KiraAtTargets"
+            }
+          ]
+        }
+      ],
+      "next": "kira_early"
+    }
+  },
+  {
+    "node": "kira_s3_walk",
+    "data": {
+      "commands": [
+        {
+          "type": "moveTo",
+          "parameters": [
+            {
+              "type": "who",
+              "value": "Kira"
+            },
+            {
+              "type": "to",
+              "value": "KiraAtTargets"
+            }
+          ]
+        }
+      ],
+      "next": "kira_s3"
     }
   },
   {
     "node": "kira_early",
     "data": {
       "text": "dialogue.arc1.kira_early",
-      "speaker": "Kira"
+      "speaker": "Kira",
+      "commands": [
+        {
+          "type": "face",
+          "parameters": [
+            {
+              "type": "who",
+              "value": "Kira"
+            },
+            {
+              "type": "towards",
+              "value": "Player"
+            }
+          ]
+        }
+      ]
     }
   },
   {
@@ -1058,7 +1313,22 @@
     "data": {
       "text": "dialogue.arc1.kira_s3",
       "speaker": "Kira",
-      "next": "kira_s3_menu"
+      "next": "kira_s3_menu",
+      "commands": [
+        {
+          "type": "face",
+          "parameters": [
+            {
+              "type": "who",
+              "value": "Kira"
+            },
+            {
+              "type": "towards",
+              "value": "Player"
+            }
+          ]
+        }
+      ]
     }
   },
   {
@@ -1111,6 +1381,23 @@
     "data": {
       "text": "dialogue.arc1.kira_s3_end",
       "speaker": "Kira",
+      "next": "kira_comes_over"
+    }
+  },
+  {
+    "node": "kira_comes_over",
+    "data": {
+      "commands": [
+        {
+          "type": "moveToPlayer",
+          "parameters": [
+            {
+              "type": "who",
+              "value": "Kira"
+            }
+          ]
+        }
+      ],
       "next": "kira_s3_end_2"
     }
   },
@@ -1602,6 +1889,65 @@
     "data": {
       "text": "dialogue.arc1.thomas_after",
       "speaker": "Thomas",
+      "next": "thomas_rack"
+    }
+  },
+  {
+    "node": "thomas_rack",
+    "data": {
+      "commands": [
+        {
+          "type": "moveTo",
+          "parameters": [
+            {
+              "type": "who",
+              "value": "Thomas"
+            },
+            {
+              "type": "to",
+              "value": "ThomasToRack"
+            }
+          ]
+        }
+      ],
+      "next": "thomas_rack_2"
+    }
+  },
+  {
+    "node": "thomas_rack_2",
+    "data": {
+      "commands": [
+        {
+          "type": "wait",
+          "parameters": [
+            {
+              "type": "seconds",
+              "value": 0.6
+            }
+          ]
+        }
+      ],
+      "next": "thomas_rack_3"
+    }
+  },
+  {
+    "node": "thomas_rack_3",
+    "data": {
+      "commands": [
+        {
+          "type": "moveTo",
+          "parameters": [
+            {
+              "type": "who",
+              "value": "Thomas"
+            },
+            {
+              "type": "to",
+              "value": "ThomasBackToPair"
+            }
+          ]
+        }
+      ],
       "next": "thomas_after_2"
     }
   },
@@ -1610,21 +1956,36 @@
     "data": {
       "text": "dialogue.arc1.thomas_after_2",
       "speaker": "Thomas",
-      "next": "thomas_after_3"
+      "next": "thomas_after_2_2",
+      "commands": [
+        {
+          "type": "face",
+          "parameters": [
+            {
+              "type": "who",
+              "value": "Thomas"
+            },
+            {
+              "type": "towards",
+              "value": "Player"
+            }
+          ]
+        }
+      ]
     }
   },
   {
-    "node": "thomas_after_3",
+    "node": "thomas_after_2_2",
     "data": {
-      "text": "dialogue.arc1.thomas_after_3",
+      "text": "dialogue.arc1.thomas_after_2_2",
       "speaker": "Thomas",
-      "next": "thomas_after_4"
+      "next": "thomas_after_2_3"
     }
   },
   {
-    "node": "thomas_after_4",
+    "node": "thomas_after_2_3",
     "data": {
-      "text": "dialogue.arc1.thomas_after_4",
+      "text": "dialogue.arc1.thomas_after_2_3",
       "speaker": "Thomas",
       "commands": [
         {
@@ -1697,10 +2058,101 @@
     }
   },
   {
+    "node": "finn_map_walk",
+    "data": {
+      "commands": [
+        {
+          "type": "moveTo",
+          "parameters": [
+            {
+              "type": "who",
+              "value": "Player"
+            },
+            {
+              "type": "to",
+              "value": "PartyToGate"
+            }
+          ]
+        }
+      ],
+      "next": "finn_map_walk_2"
+    }
+  },
+  {
+    "node": "finn_map_walk_2",
+    "data": {
+      "commands": [
+        {
+          "type": "moveTo",
+          "parameters": [
+            {
+              "type": "who",
+              "value": "Finn"
+            },
+            {
+              "type": "to",
+              "value": "FinnToParty"
+            }
+          ]
+        }
+      ],
+      "next": "finn_map"
+    }
+  },
+  {
     "node": "finn_map",
     "data": {
       "text": "dialogue.arc1.finn_map",
       "speaker": "Finn",
+      "next": "finn_map_kira",
+      "commands": [
+        {
+          "type": "face",
+          "parameters": [
+            {
+              "type": "who",
+              "value": "Player"
+            },
+            {
+              "type": "towards",
+              "value": "Finn"
+            }
+          ]
+        },
+        {
+          "type": "face",
+          "parameters": [
+            {
+              "type": "who",
+              "value": "Finn"
+            },
+            {
+              "type": "towards",
+              "value": "Player"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "node": "finn_map_kira",
+    "data": {
+      "commands": [
+        {
+          "type": "moveTo",
+          "parameters": [
+            {
+              "type": "who",
+              "value": "Kira"
+            },
+            {
+              "type": "to",
+              "value": "KiraToMap"
+            }
+          ]
+        }
+      ],
       "next": "finn_map_2"
     }
   },
@@ -1709,7 +2161,35 @@
     "data": {
       "text": "dialogue.arc1.finn_map_2",
       "speaker": "Kira",
-      "next": "finn_map_3"
+      "next": "finn_map_3",
+      "commands": [
+        {
+          "type": "face",
+          "parameters": [
+            {
+              "type": "who",
+              "value": "Kira"
+            },
+            {
+              "type": "towards",
+              "value": "Finn"
+            }
+          ]
+        },
+        {
+          "type": "face",
+          "parameters": [
+            {
+              "type": "who",
+              "value": "Finn"
+            },
+            {
+              "type": "towards",
+              "value": "Kira"
+            }
+          ]
+        }
+      ]
     }
   },
   {
@@ -1717,6 +2197,7 @@
     "data": {
       "text": "dialogue.arc1.finn_map_3",
       "speaker": "Finn",
+      "next": "finn_map_doors",
       "commands": [
         {
           "type": "giveItem",
@@ -1732,18 +2213,88 @@
           ]
         },
         {
-          "type": "setIntFlag",
+          "type": "face",
           "parameters": [
             {
-              "type": "flag",
-              "value": "arc1_stage"
+              "type": "who",
+              "value": "Finn"
             },
             {
-              "type": "value",
-              "value": 4.0
+              "type": "towards",
+              "value": "Player"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "node": "finn_map_doors",
+    "data": {
+      "commands": [
+        {
+          "type": "moveTo",
+          "parameters": [
+            {
+              "type": "who",
+              "value": "Finn"
+            },
+            {
+              "type": "to",
+              "value": "FinToDoors"
+            }
+          ]
+        }
+      ],
+      "next": "finn_map_doors_2"
+    }
+  },
+  {
+    "node": "finn_map_doors_2",
+    "data": {
+      "commands": [
+        {
+          "type": "face",
+          "parameters": [
+            {
+              "type": "who",
+              "value": "Finn"
+            },
+            {
+              "type": "towards",
+              "value": "up"
             }
           ]
         },
+        {
+          "type": "playAnimation",
+          "parameters": [
+            {
+              "type": "who",
+              "value": "Finn"
+            },
+            {
+              "type": "animation",
+              "value": "Working"
+            },
+            {
+              "type": "wait",
+              "value": 1
+            },
+            {
+              "type": "then",
+              "value": "Idle"
+            }
+          ]
+        }
+      ],
+      "next": "finn_map_doors_3"
+    }
+  },
+  {
+    "node": "finn_map_doors_3",
+    "data": {
+      "commands": [
         {
           "type": "openDoor",
           "parameters": [
@@ -1761,8 +2312,22 @@
               "value": "WisperWoodsDoor2"
             }
           ]
+        },
+        {
+          "type": "moveTo",
+          "parameters": [
+            {
+              "type": "who",
+              "value": "Finn"
+            },
+            {
+              "type": "to",
+              "value": "FinnStepAside"
+            }
+          ]
         }
-      ]
+      ],
+      "next": "finn_away"
     }
   },
   {
@@ -1775,7 +2340,64 @@
     "node": "finn_away",
     "data": {
       "text": "dialogue.arc1.finn_away",
-      "speaker": "Finn"
+      "speaker": "Finn",
+      "next": "finn_leaves",
+      "commands": [
+        {
+          "type": "face",
+          "parameters": [
+            {
+              "type": "who",
+              "value": "Finn"
+            },
+            {
+              "type": "towards",
+              "value": "Player"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "node": "finn_leaves",
+    "data": {
+      "commands": [
+        {
+          "type": "moveTo",
+          "parameters": [
+            {
+              "type": "who",
+              "value": "Finn"
+            },
+            {
+              "type": "to",
+              "value": "FinnHome"
+            }
+          ]
+        }
+      ],
+      "next": "finn_gone"
+    }
+  },
+  {
+    "node": "finn_gone",
+    "data": {
+      "commands": [
+        {
+          "type": "setIntFlag",
+          "parameters": [
+            {
+              "type": "flag",
+              "value": "arc1_stage"
+            },
+            {
+              "type": "value",
+              "value": 4.0
+            }
+          ]
+        }
+      ]
     }
   },
   {

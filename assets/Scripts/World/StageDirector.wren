@@ -29,6 +29,8 @@ import "Sprites/SpriteSheet" for SpriteSheet
 // Movement speeds in px per second - the player's own walk / run speeds (Player.wren: 1.5 / 3 m/s at 32 px/m).
 var WALK_SPEED = 48.0
 var RUN_SPEED = 96.0
+// One LDtk grid cell, in px - how far in front of the player moveToPlayer stops.
+var TILE = 16
 
 // Direction words a dialogue can use (face / Marker Facing) -> a unit vector, +y down the screen.
 var DIRECTIONS = {
@@ -75,29 +77,27 @@ class StageDirector {
         return false
     }
 
-    // Walks `who` along the Path called `to` (through each of its WayPoints), or to the Marker called `to`.
+    // Walks `who` along the Path called `to` (through each of its WayPoints), or to the Marker called `to`. `to` can also
+    // be "Player": the same as moveToPlayer.
     // speed: "walk" (default), "run", or px per second. animation: the clip to move with instead of Walk / Run (e.g.
     // Finn's "StandardWalk"), or null.
+    // A character already on a move (from an earlier command - even one in the same node) finishes it first: moves
+    // queue up, so `moveTo FinnToTable` then `moveToPlayer` walks the Path and then over to the player.
     static moveTo(who, to, speed, wait, animation) {
+        if (to == "Player") return StageDirector.moveToPlayer(who, speed, wait, animation)
+        StageDirector.queueMove_(who, to, speed, wait, animation)
+    }
+
+    // Walks `who` to the tile in front of the player - one tile (TILE px) the way the player is facing - and turns them
+    // to face the player. Where that is gets worked out when the walk starts, so after a queued Path it's wherever the
+    // player is by then.
+    static moveToPlayer(who, speed, wait, animation) {
+        StageDirector.queueMove_(who, null, speed, wait, animation)
+    }
+
+    static queueMove_(who, to, speed, wait, animation) {
         var entity = StageDirector.actor(who)
         if (entity == null) return
-        var here = WorldTransform.getPosition(entity)
-        var targets = []
-        var facingAfter = null
-        var path = Paths.named(to, here)
-        if (path != null) {
-            targets = path.points.toList
-            if (targets.count == 0) return
-        } else {
-            var marker = StageDirector.marker_(to, here, false)
-            if (marker == null) {
-                Debug.warning("[StageDirector] no Path or Marker named '%(to)' in the loaded rooms")
-                return
-            }
-            var p = WorldTransform.getPosition(marker)
-            targets.add(Vec2.new(p.x, p.y))
-            facingAfter = StageDirector.direction(Script.getInstance(marker).facing)
-        }
         var pxPerSecond = WALK_SPEED
         var clip = "Walk"
         if (speed == "run") {
@@ -108,13 +108,80 @@ class StageDirector {
             clip = speed > (WALK_SPEED + RUN_SPEED) / 2 ? "Run" : "Walk"
         }
         if (animation != null && StageDirector.hasClip_(entity, animation, true)) clip = animation
+        var leg = {"to": to, "speed": pxPerSecond, "clip": clip}
+        var current = StageDirector.moveOf_(entity)
+        if (current != null) {
+            // Queue behind the move it's on; the conversation holds for the lot if any part waits.
+            current["legs"].add(leg)
+            if (wait) current["wait"] = true
+            return
+        }
         StageDirector.cancelFor_(entity)
+        var action = {"kind": "move", "entity": entity, "wait": wait, "legs": [leg]}
+        if (!StageDirector.startLeg_(action)) return
         StageDirector.posed_.remove(entity)
         StageDirector.setScripted_(entity, true)
-        StageDirector.actions_.add({
-            "kind": "move", "entity": entity, "target": targets[0], "queue": targets.skip(1).toList, "speed": pxPerSecond,
-            "clip": clip, "wait": wait, "facingAfter": facingAfter
-        })
+        StageDirector.actions_.add(action)
+    }
+
+    // The move `entity` is on, or null.
+    static moveOf_(entity) {
+        for (action in StageDirector.actions_) {
+            if (action["kind"] == "move" && action["entity"] == entity) return action
+        }
+        return null
+    }
+
+    // Takes the next leg off a move and works out its targets; false if no legs are left that lead anywhere.
+    static startLeg_(action) {
+        var entity = action["entity"]
+        while (action["legs"].count > 0) {
+            var leg = action["legs"].removeAt(0)
+            var here = WorldTransform.getPosition(entity)
+            var targets = null
+            var facingAfter = null
+            var facePlayer = false
+            var to = leg["to"]
+            if (to == null) {
+                targets = StageDirector.frontOfPlayer_(entity)
+                facePlayer = true
+            } else {
+                var path = Paths.named(to, here)
+                if (path != null) {
+                    targets = path.points.toList
+                } else {
+                    var marker = StageDirector.marker_(to, here, false)
+                    if (marker == null) {
+                        Debug.warning("[StageDirector] no Path or Marker named '%(to)' in the loaded rooms")
+                    } else {
+                        var p = WorldTransform.getPosition(marker)
+                        targets = [Vec2.new(p.x, p.y)]
+                        facingAfter = StageDirector.direction(Script.getInstance(marker).facing)
+                    }
+                }
+            }
+            if (targets != null && targets.count > 0) {
+                action["target"] = targets[0]
+                action["queue"] = targets.skip(1).toList
+                action["speed"] = leg["speed"]
+                action["clip"] = leg["clip"]
+                action["facingAfter"] = facingAfter
+                action["facePlayer"] = facePlayer
+                return true
+            }
+        }
+        return false
+    }
+
+    // The spot one tile in front of the player (the way they face, to the nearest of up / down / left / right), as a
+    // one-target list - or null if there's no player, or `entity` is the player.
+    static frontOfPlayer_(entity) {
+        var player = StageDirector.actor("Player")
+        if (player == null || player == entity) return null
+        var p = WorldTransform.getPosition(player)
+        var f = StageDirector.facingOf_(player)
+        var dir = f.x.abs > f.y.abs ? Vec2.new(f.x.sign, 0) : Vec2.new(0, f.y >= 0 ? 1 : -1)
+        return [Vec2.new(p.x + dir.x * TILE, p.y + dir.y * TILE)]
     }
 
     // Puts `who` at the start of the Path called `to` (its first WayPoint), or on the Marker called `to` (facing its
@@ -159,10 +226,8 @@ class StageDirector {
                 Debug.warning("[StageDirector] face: '%(towards)' is neither a direction, a character nor a marker")
                 return
             }
-            var there = WorldTransform.getPosition(other)
-            dir = Vec2.new(there.x - here.x, there.y - here.y)
-            if (dir.length() < 0.001) return
-            dir = dir.normalize()
+            dir = StageDirector.towards_(entity, other)
+            if (dir == null) return
         }
         StageDirector.face_(entity, dir, "Idle")
         StageDirector.pose_(entity, false)
@@ -336,7 +401,13 @@ class StageDirector {
                 return false
             }
             var facing = action["facingAfter"]
+            if (action["facePlayer"]) facing = StageDirector.towards_(entity, StageDirector.actor_("Player", false))
             if (facing == null) facing = distance > 0.001 ? delta.normalize() : StageDirector.facingOf_(entity)
+            // Queued moves: on to the next one.
+            if (StageDirector.startLeg_(action)) {
+                StageDirector.face_(entity, facing, action["clip"])
+                return false
+            }
             StageDirector.face_(entity, facing, "Idle")
             StageDirector.setScripted_(entity, false)
             StageDirector.posed_.remove(entity)
@@ -358,6 +429,16 @@ class StageDirector {
         if (Sprite.get(entity) != null) {
             SpriteAnimation.setCurrentAnimation(entity, SpriteSheet.clipName(dir, clip))
         }
+    }
+
+    // Unit Vec2 from `entity` towards `other`, or null if there's no other / they're on the same spot.
+    static towards_(entity, other) {
+        if (other == null || !GameObject.isValid(other)) return null
+        var a = WorldTransform.getPosition(entity)
+        var b = WorldTransform.getPosition(other)
+        var d = Vec2.new(b.x - a.x, b.y - a.y)
+        if (d.length() < 0.001) return null
+        return d.normalize()
     }
 
     static facingOf_(entity) {

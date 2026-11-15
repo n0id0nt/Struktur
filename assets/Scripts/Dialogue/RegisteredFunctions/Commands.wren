@@ -168,12 +168,17 @@ class Commands {
             Debug.info("[Dialogue Command] Opened door %(doorName)")
         }
         // --- Staging (World/StageDirector.wren) ---------------------------------------------------------------
-        // "who" is "Player", a party member or an NPC / Interactable name; "to" is an LDtk Marker's Name. moveTo and
+        // "who" is "Player", a party member or an NPC / Interactable name; "to" is an LDtk Path's (or Marker's) Name, or "Player". moveTo and
         // wait hold the conversation until they finish (the next line shows after) unless "wait" is 0; a node with no
         // text just plays its commands and carries on.
         DialogueRegistry.registerCommand("moveTo") { |params|
             // "animation" (optional): move with this clip instead of Walk / Run - e.g. Finn's StandardWalk.
             StageDirector.moveTo(params["who"], params["to"], params["speed"], Commands.waitParam_(params), params["animation"])
+        }
+        // Walks "who" to the tile in front of the player and turns them to face the player. After a moveTo of the same
+        // character it waits its turn, so the two chain: walk a Path, then come over to the player.
+        DialogueRegistry.registerCommand("moveToPlayer") { |params|
+            StageDirector.moveToPlayer(params["who"], params["speed"], Commands.waitParam_(params), params["animation"])
         }
         DialogueRegistry.registerCommand("teleport") { |params|
             StageDirector.teleport(params["who"], params["to"])
