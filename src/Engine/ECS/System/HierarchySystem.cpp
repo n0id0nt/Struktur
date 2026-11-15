@@ -1,5 +1,8 @@
 #include "HierarchySystem.h"
 
+#include <algorithm>
+#include <vector>
+
 #include "Engine/ECS/Component/Transform.h"
 #include "Engine/GameContext.h"
 
@@ -41,6 +44,10 @@ void Struktur::System::HierarchySystem::RemoveFromParent(GameContext& context, e
 {
 	entt::registry& registry = context.GetRegistry();
 
+	if (!registry.valid(parent))
+	{
+		return;
+	}
 	if (auto* children = registry.try_get<Component::Children>(parent))
 	{
 		auto it = std::find(children->entities.begin(), children->entities.end(), child);
@@ -55,6 +62,13 @@ void Struktur::System::HierarchySystem::DestroyEntity(GameContext& context, entt
 {
 	entt::registry& registry = context.GetRegistry();
 
+	// Already gone - destroyed with an ancestor earlier, or queued for deletion twice (e.g. a critter killed in a fight
+	// in the same frame its level unloads).
+	if (!registry.valid(entity))
+	{
+		return;
+	}
+
 	// Remove from parent's children list
 	if (auto* parent = registry.try_get<Component::Parent>(entity))
 	{
@@ -64,14 +78,18 @@ void Struktur::System::HierarchySystem::DestroyEntity(GameContext& context, entt
 		}
 	}
 
-	// Recursively destroy children
-	if (auto* children = registry.try_get<Component::Children>(entity))
+	// Recursively destroy children - from a copy of the list. A pointer to this entity's Children component must not
+	// be held across the recursion: destroying a child removes the child's own components, entt's packed storage
+	// moves another entity's Children into the freed slot, and the pointer would dangle (and a script's onDestroy can
+	// also re-parent or destroy things mid-loop).
+	std::vector<entt::entity> children;
+	if (auto* childrenComponent = registry.try_get<Component::Children>(entity))
 	{
-		for (int i = children->entities.size() - 1; i >= 0; --i)
-		{
-			auto child = children->entities[i];
-			DestroyEntity(context, child);
-		}
+		children = childrenComponent->entities;
+	}
+	for (auto it = children.rbegin(); it != children.rend(); ++it)
+	{
+		DestroyEntity(context, *it);
 	}
 
 	registry.destroy(entity);
@@ -102,7 +120,11 @@ void Struktur::System::HierarchySystem::PropagateActiveStateToChildren(GameConte
 	{
 		for (int i = children->entities.size() - 1; i >= 0; --i)
 		{
-			auto child                 = children->entities[i];
+			auto child = children->entities[i];
+			if (!registry.valid(child) || !registry.all_of<Component::Active>(child))
+			{
+				continue;
+			}
 			auto& childActiveComponent = registry.get<Component::Active>(child);
 
 			// A child that was explicitly deactivated stays deactivated regardless of parent state

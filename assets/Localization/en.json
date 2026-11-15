@@ -143,6 +143,7 @@
     "dialogue.arc1.rest_spot": "You rest here for a while. [i]Everyone is back on their feet, fully restored.[/i]",
     "dialogue.arc1.rest_bed_sleep": "You lie down on your bed for a while. [i]Everyone is back on their feet, fully restored.[/i]",
     "dialogue.arc1.bed_sign": "[i]In the village of Haven, nestled high in the Forgotten Peaks, morning comes with the sound of shared work and gentle laughter. Here, the old ways still hold...[/i]",
+    "dialogue.arc1.bed_wake": "[i]You climb out of bed. Across the workshop, Master Finn is already hunched over his anvil, turning a strange metal fragment in the light.[/i]",
     "dialogue.arc1.finn_s1": "[i](looking up, slightly startled)[/i] Ah! Good morning, my young apprentice. Come, come... I have another task for you, though this one's a bit different from our usual errands.",
     "dialogue.arc1.finn_s1_menu": "Well? Out with it.",
     "dialogue.arc1.finn_s1_menu.choice1": "What are those metal pieces?",

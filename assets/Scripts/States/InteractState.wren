@@ -20,6 +20,7 @@ import "Dialogue/ChoiceRecord" for ChoiceRecord
 import "Localization/DisplayNames" for DisplayNames
 import "UI/Dialogue/DialogueBoxUI" for DialogueBoxUI
 import "UI/Dialogue/ChoiceListUI" for ChoiceListUI
+import "World/StageDirector" for StageDirector
 
 var TEXT_SCROLL_SPEED = 0.02
 
@@ -49,6 +50,7 @@ class InteractState is BaseState {
         _currentResult            = null
         _waitingForChoice         = false
         _pendingChoiceTexts       = null   // the current node's choices, held back until its line finishes scrolling
+        _heldResult               = null   // a node waiting for its staging to finish before it's shown (show_)
         _choicePressStarted       = false  // Interact went down while the choices were up - see update
 
         _menuMusic       = null
@@ -57,6 +59,7 @@ class InteractState is BaseState {
 
     enter(stateManager, params) {
         super.enter(stateManager, params)
+        _stateManager = stateManager   // show_ ends the conversation through it
         holdPlayers_(true)
 
         _interactingEntity = params["interactingEntity"]
@@ -67,6 +70,16 @@ class InteractState is BaseState {
         _textScrollSound = Sound.load("Audio/Sounds/Menu/Move1.wav")
 
         _view = DialogueBoxUI.new()
+        _heldResult = null
+
+        // A conversation started straight from a node, with nobody to talk to (the new-game opening -
+        // States/GameWorldState.wren): params["entryNode"].
+        var directNode = params["entryNode"]
+        if (directNode != null) {
+            Debug.info("Starting dialogue at node %(directNode)")
+            show_(DialogueInterpreter.startDialogue(directNode))
+            return
+        }
 
         var interactable = Script.getInstance(_interactingEntity)
         // A script can react to being interacted with before its conversation starts (a rest spot becoming the
@@ -102,8 +115,35 @@ class InteractState is BaseState {
         }
 
         Debug.info("Starting dialogue for %(interactable.name) at node %(entryNodeId)")
-        _currentResult = DialogueInterpreter.startDialogue(entryNodeId)
-        processDialogueResult(_currentResult)
+        show_(DialogueInterpreter.startDialogue(entryNodeId))
+    }
+
+    // True while a node is held back waiting for its staging to finish (show_).
+    holding { _heldResult != null }
+
+    // Shows the node the dialogue has just reached - or, while staging it started (moveTo / wait -
+    // World/StageDirector.wren) is still playing, holds it with the box hidden so the scene can be seen, and shows it
+    // once that's done (update). A node with no line of its own just carries on to the next.
+    show_(result) {
+        _currentResult = result
+        if (StageDirector.blocking) {
+            _heldResult = result
+            _view.screenPanel.setVisible(false)
+            return
+        }
+        _heldResult = null
+        _view.screenPanel.setVisible(true)
+        var text = result.text
+        var hasChoices = result.choices != null && result.choices.count > 0
+        if ((text == null || text == "") && !hasChoices) {
+            if (result.hasEnded) {
+                _stateManager.clearCurrentState()
+            } else {
+                show_(DialogueInterpreter.continueDialogue())
+            }
+            return
+        }
+        processDialogueResult(result)
     }
 
     // Puts every player into (or back out of) its interacting mode - see the header.
@@ -123,6 +163,14 @@ class InteractState is BaseState {
         }
         if (_choiceList != null) {
             _choiceList.tick(Time.unscaledTime)
+        }
+
+        // A node held back for its staging (show_): shown once the scene has played out. Input waits meanwhile.
+        if (_heldResult != null) {
+            if (!StageDirector.blocking) {
+                show_(_heldResult)
+            }
+            return
         }
 
         var inputInteract = Input.isInputJustReleased("Interact")
@@ -164,6 +212,8 @@ class InteractState is BaseState {
         super.exit()
         Debug.info("Unloading InteractState...")
         holdPlayers_(false)
+        // Players / party members held in a pose by the scene go back to their own control (NPCs keep theirs).
+        StageDirector.releasePoses()
 
         DialogueInterpreter.endDialogue()
         _pendingChoiceTexts = null
@@ -274,8 +324,7 @@ class InteractState is BaseState {
             return
         }
 
-        _currentResult = DialogueInterpreter.continueDialogue()
-        processDialogueResult(_currentResult)
+        show_(DialogueInterpreter.continueDialogue())
     }
 
     confirmChoice(stateManager) {
@@ -284,7 +333,6 @@ class InteractState is BaseState {
         var index = _choiceList.focusedIndex
         Debug.info("Confirming choice %(index)")
         _choiceList.collapseTo(index)
-        _currentResult = DialogueInterpreter.makeChoice(index)
-        processDialogueResult(_currentResult)
+        show_(DialogueInterpreter.makeChoice(index))
     }
 }

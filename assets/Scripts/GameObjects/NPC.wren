@@ -3,6 +3,8 @@ import "physics" for BodyDefinition, PhysicsCircleShape, BodyType
 import "Util/CharacterCollider" for CharacterCollider
 import "debug" for Debug
 import "World/StoryGates" for StoryGates
+import "Sprites/FinnSprite" for FinnSprite
+import "Sprites/FinnBattleSprite" for FinnBattleSprite
 import "Sprites/ClaireSprite" for ClaireSprite
 import "Sprites/ClaireBattleSprite" for ClaireBattleSprite
 import "Sprites/GoblinVikingSprite" for GoblinVikingSprite
@@ -36,9 +38,10 @@ class NPCData {
     // look (Combat/Config/BattleCritter.wren, which uses battleSprite).
     static forName(name) {
         var table = {
-            // Arc 1 cast (Levels/SevenGods.ldtk, Dialogue/Arc1Dialogue.json). Placeholder looks - six generated models
-            // cover everyone until the cast gets their own (docs/FirstArcPlan.md).
-            "Finn": NPCData.new(WrestlerSprite, WrestlerBattleSprite),
+            // Arc 1 cast (Levels/SevenGods.ldtk, Dialogue/Arc1Dialogue.json). Finn has his own model (with the cutscene
+            // clips - Working, LayingIdle, GettingUp, PickingUp, StandardWalk); the rest wear placeholder looks until
+            // the cast gets their own (docs/FirstArcPlan.md).
+            "Finn": NPCData.new(FinnSprite, FinnBattleSprite),
             "Elena": NPCData.new(PeasantGirlSprite, PeasantGirlBattleSprite),
             "Garrett": NPCData.new(WrestlerSprite, WrestlerBattleSprite),
             "Child": NPCData.new(PinkHairGirlSprite, PinkHairGirlBattleSprite),
@@ -68,9 +71,12 @@ class NPC {
         _name = args["Name"]
         // Optional story window (the Versions LDtk field - the stages it's shown in) - World/StoryGates.wren.
         _gate = StoryGates.fromArgs(args)
+        // Optional: the iid of the Path it wanders (the Entity_ref LDtk field - World/PathWalkers.wren).
+        _wanderPathIid = args["Entity_ref"]
     }
 
     name { _name }
+    wanderPathIid { _wanderPathIid }
 
     // Whether beating this NPC in a duel recruits them into the party (see CombatResolver.win + Party/Party.wren).
     // A method rather than a getter so callers can duck-type it with Reflect.hasMethod(script, "joinsPartyOnDefeat()").

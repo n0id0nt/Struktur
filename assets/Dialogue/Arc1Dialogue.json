@@ -60,6 +60,7 @@
     "data": {
       "text": "dialogue.arc1.bed_sign",
       "speaker": "Narrator",
+      "next": "bed_wake",
       "commands": [
         {
           "type": "setIntFlag",
@@ -73,6 +74,50 @@
               "value": 1.0
             }
           ]
+        },
+        {
+          "type": "playAnimation",
+          "parameters": [
+            {
+              "type": "who",
+              "value": "Finn"
+            },
+            {
+              "type": "animation",
+              "value": "Working"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "node": "bed_wake",
+    "data": {
+      "text": "dialogue.arc1.bed_wake",
+      "commands": [
+        {
+          "type": "face",
+          "parameters": [
+            {
+              "type": "who",
+              "value": "Player"
+            },
+            {
+              "type": "towards",
+              "value": "Finn"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "node": "opening",
+    "data": {
+      "targets": [
+        {
+          "node": "bed_sign"
         }
       ]
     }
@@ -224,7 +269,22 @@
     "data": {
       "text": "dialogue.arc1.finn_s1",
       "speaker": "Finn",
-      "next": "finn_s1_menu"
+      "next": "finn_s1_menu",
+      "commands": [
+        {
+          "type": "face",
+          "parameters": [
+            {
+              "type": "who",
+              "value": "Finn"
+            },
+            {
+              "type": "towards",
+              "value": "Player"
+            }
+          ]
+        }
+      ]
     }
   },
   {

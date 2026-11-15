@@ -194,6 +194,16 @@ bool Struktur::UI::InputGlyphs::Load(GameContext& context, const std::string& fi
 	return true;
 }
 
+void Struktur::UI::InputGlyphs::Clear()
+{
+	m_paths.clear();
+	m_positionalButtonPaths.clear();
+	m_dpadPath.clear();
+	m_leftStickPath.clear();
+	m_rightStickPath.clear();
+	m_textures.clear();
+}
+
 Struktur::UI::InputGlyph Struktur::UI::InputGlyphs::GlyphForPath(GameContext& context, const std::string& path)
 {
 	auto it = m_textures.find(path);

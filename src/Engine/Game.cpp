@@ -606,6 +606,11 @@ void Struktur::ClearGameSystems(GameContext& context)
 	Input::Input& input = context.GetInput();
 	input.Clear();
 
+	// The button-hint art cache holds ResourcePtrs to game textures (loaded the first time a hint is shown), so it
+	// has to let go of them before the resource pools are checked below.
+	DEBUG_INFO("[Clean Up] Input Glyphs");
+	context.GetInputGlyphs().Clear();
+
 	DEBUG_INFO("[Clean Up] Wren State Manager");
 	Wren::WrenStateManager& wrenStateManager = context.GetWrenStateManager();
 	wrenStateManager.Shutdown(context);

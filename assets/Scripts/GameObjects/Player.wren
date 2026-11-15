@@ -37,6 +37,7 @@ class Player {
         _fixedUpdateCount = 0
         _combatant = null
         _interacting = false
+        _scripted = false   // moved by a dialogue scene (World/StageDirector.wren) - see setScripted
 
         Debug.info("Player constructed for: %(_name)")
     }
@@ -56,6 +57,16 @@ class Player {
     // True during an interact / dialogue sequence (States/InteractState.wren): the player ignores every input and
     // just stands idle, while the world - NPCs, critters, animations - carries on around them.
     interacting { _interacting }
+
+    // Handed to a dialogue scene (World/StageDirector.wren "moveTo"): while scripted, the player's own movement and
+    // the interacting mode's idle pose stand aside so the scene can move and animate them.
+    setScripted(value) {
+        _scripted = value
+    }
+
+    // The way the player faces (+y down the screen) - a dialogue scene can turn them ("face" command).
+    facing { _facing }
+    facing=(value) { _facing = value }
 
     setInteracting(value) {
         _interacting = value
@@ -106,6 +117,9 @@ class Player {
     }
 
     fixedUpdate() {
+        if (_scripted) {
+            return
+        }
         if (_interacting) {
             playerForceStop()
             return

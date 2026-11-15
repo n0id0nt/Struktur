@@ -12,8 +12,19 @@ import "events" for Event
 import "World/Npcs" for Npcs
 import "Story/ArcEnd" for ArcEnd
 import "World/StoryEvents" for StoryEvents
+import "World/StageDirector" for StageDirector
 
 class Commands {
+    // A staging command's "wait" parameter: on unless it's 0 / false / "no" (JSON bools are avoided in dialogue
+    // files, so 0 / 1 is the usual spelling).
+    static waitParam_(params) {
+        var value = params["wait"]
+        if (value == null) return true
+        if (value is Num) return value != 0
+        if (value is Bool) return value
+        return value != "no" && value != "false" && value != "0"
+    }
+
     static registerFunctions() {
         // "count" is optional (default 1) - stackable items add to their stack, gear adds that many separate pieces.
         DialogueRegistry.registerCommand("giveItem") { |params|
@@ -155,6 +166,33 @@ class Commands {
                 }
             }
             Debug.info("[Dialogue Command] Opened door %(doorName)")
+        }
+        // --- Staging (World/StageDirector.wren) ---------------------------------------------------------------
+        // "who" is "Player", a party member or an NPC / Interactable name; "to" is an LDtk Marker's Name. moveTo and
+        // wait hold the conversation until they finish (the next line shows after) unless "wait" is 0; a node with no
+        // text just plays its commands and carries on.
+        DialogueRegistry.registerCommand("moveTo") { |params|
+            // "animation" (optional): move with this clip instead of Walk / Run - e.g. Finn's StandardWalk.
+            StageDirector.moveTo(params["who"], params["to"], params["speed"], Commands.waitParam_(params), params["animation"])
+        }
+        DialogueRegistry.registerCommand("teleport") { |params|
+            StageDirector.teleport(params["who"], params["to"])
+        }
+        // "towards": a direction (up / down / left / right / upLeft... or North / South / East / West), or the name of
+        // a character or Marker to turn to.
+        DialogueRegistry.registerCommand("face") { |params|
+            StageDirector.face(params["who"], params["towards"])
+        }
+        // "animation": a clip of the character's sheet - Idle, Walk, Run, Hurt, Roll, Death (everyone); Finn also has
+        // Working, LayingIdle, GettingUp, PickingUp, StandardWalk. Held as a pose until changed. "wait" (default 0
+        // here): hold the conversation until it has played once. "then" (optional): the clip to switch to after.
+        DialogueRegistry.registerCommand("playAnimation") { |params|
+            var wait = params["wait"] == null ? false : Commands.waitParam_(params)
+            StageDirector.playAnimation(params["who"], params["animation"], wait, params["then"])
+        }
+        DialogueRegistry.registerCommand("wait") { |params|
+            var seconds = params["seconds"]
+            StageDirector.wait(seconds is Num ? seconds : 1)
         }
         // A story event happened (World/StoryEvents.wren) - every level door listing it in KeyIds opens once all of its
         // events have.

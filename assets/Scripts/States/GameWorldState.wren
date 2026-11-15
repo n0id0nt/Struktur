@@ -38,6 +38,8 @@ import "World/Warps" for Warps
 import "World/StoryGates" for StoryGates
 import "World/Npcs" for Npcs
 import "World/SpawnPoint" for SpawnPoint
+import "World/StageDirector" for StageDirector
+import "World/PathWalkers" for PathWalkers
 import "Story/ArcEnd" for ArcEnd
 import "localization" for Localization
 import "debug" for Debug
@@ -53,6 +55,10 @@ var BATTLE_TEST_INPUT = "DebugBattleTest"
 var FALLBACK_SPAWN_POSITION = Vec3.new(208.0, 208.0, 0.0)
 // Frames to wait for the spawn level's Spawn entities to start before giving up and staying at the level's centre.
 var SPAWN_MAX_WAIT_FRAMES = 30
+// A fresh save opens straight into this conversation (Dialogue/Arc1Dialogue.json) once the player has arrived at the
+// spawn point; OPENING_PLAYED_FLAG (saved) makes sure it only ever plays once.
+var OPENING_NODE = "opening"
+var OPENING_PLAYED_FLAG = "opening_played"
 // Gap between followers lined up behind the player on a respawn.
 var RESPAWN_FOLLOWER_SPACING = 24.0
 // How far from the DoorWorp you arrive next to (towards the room's centre), so you don't land back on it.
@@ -132,6 +138,21 @@ class GameWorldState is BaseState {
         }
     }
 
+    // The new-game opening (OPENING_NODE): a conversation with nobody to talk to, started straight from its node.
+    startOpening_() {
+        _openingPending = false
+        FlagManager.setFlag(OPENING_PLAYED_FLAG, true)
+        FlagManager.save("flags.sav")
+        var player = Script.getInstance(_playerEntity)
+        if (player != null) {
+            player.playerForceStop()
+        }
+        if (_gameMusic) {
+            _gameMusic.stop()
+        }
+        _stateManager.changeState("InteractState", {"entryNode": OPENING_NODE})
+    }
+
     // A level's index by its identifier, or null.
     levelIndexOf_(identifier) {
         var index = World.getLevelIndex(_worldEntity, identifier)
@@ -187,6 +208,7 @@ class GameWorldState is BaseState {
         _duelChallenger = null   // name of the NPC in the duel under way (startDuel), for onCombatEnded_
         _returnToMenu = false    // set by the end-of-arc card's button (showArcEnd_)
         _spawnArrival = null     // {"iid", "frames"} while heading for a spawn point - see beginSpawnArrival_
+        _openingPending = false  // a fresh save's opening conversation is waiting for the spawn arrival - see enter
         _arenaIndices = {}       // arena levels used so far (level index -> true) - kept loaded, see updateLevelStreaming_
     }
 
@@ -216,6 +238,9 @@ class GameWorldState is BaseState {
         // Streams in the level the player spawned in (plus its neighbours) instead of loading every
         // level in the world up front - see updateLevelStreaming_().
         updateLevelStreaming_()
+
+        // A fresh save: the opening conversation plays as soon as the player is standing at the spawn point.
+        _openingPending = !FlagManager.getFlag(OPENING_PLAYED_FLAG)
 
         // "Fight" prompt for non-aggressive critters, "Interact" prompt for everything else you can talk to / use.
         _view = FightPromptUI.new("Fight!")
@@ -273,6 +298,10 @@ class GameWorldState is BaseState {
     update(stateManager) {
         // Before the substate check, so a room slide finishes even if a dialogue or menu opens partway through.
         _roomCamera.update()
+        // Dialogue staging (moveTo / wait... - World/StageDirector.wren) plays out whether or not a dialogue is open.
+        StageDirector.update()
+        // NPCs wandering their Paths - they stop for conversations and scenes on their own.
+        PathWalkers.update()
 
         // if substate return out here
         if (_stateManager.currentState) {
@@ -323,6 +352,10 @@ class GameWorldState is BaseState {
         updateLevelStreaming_()
         if (_spawnArrival != null) {
             updateSpawnArrival_()
+        }
+        if (_openingPending && _spawnArrival == null) {
+            startOpening_()
+            return
         }
 
         // Something in the world wants its moment (a door opening - see World/ImpactEvents.wren): play it now, while
@@ -781,6 +814,9 @@ class GameWorldState is BaseState {
         _duelChallenger = null
         _spawnArrival = null
         _arenaIndices = {}
+        _openingPending = false
+        StageDirector.clear()
+        PathWalkers.clear()
 
         if (_view != null) {
             _view.teardown()

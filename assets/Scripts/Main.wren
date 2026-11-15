@@ -50,6 +50,9 @@ class Game {
             "Interactable",
             "RestSpot",
             "Spawn",
+            "Marker",
+            "Path",
+            "WayPoint",
         ]
 
         for (gameObjectsScript in gameObjectsScripts) {

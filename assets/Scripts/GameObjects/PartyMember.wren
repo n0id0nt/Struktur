@@ -77,7 +77,22 @@ class PartyMember {
         _moving = false              // walk/run clip showing (vs idle) - see animate_
         _tintedDowned = false
         _leader = null               // who it followed last step - a change restarts the follow strategy
+        _scripted = false            // moved by a dialogue scene (World/StageDirector.wren) - see setScripted
     }
+
+    // Handed to a dialogue scene (World/StageDirector.wren "moveTo"): while scripted, following stands aside. When the
+    // scene lets go it walks the leader's trail afresh.
+    setScripted(value) {
+        _scripted = value
+        if (!value) {
+            _strategy.reset(this)
+            _checkTime = null
+        }
+    }
+
+    // The way it faces (+y down the screen) - a dialogue scene can turn it ("face" command).
+    facing { _facing }
+    facing=(value) { _facing = value }
 
     name { _name }
     entity { _entity }
@@ -121,6 +136,9 @@ class PartyMember {
     }
 
     fixedUpdate() {
+        if (_scripted) {
+            return
+        }
         var me = member
         refreshTint_(me)
         var leader = me == null || me.staying ? null : Party.ahead(me)

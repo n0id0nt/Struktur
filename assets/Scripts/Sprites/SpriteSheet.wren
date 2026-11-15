@@ -28,7 +28,29 @@ class SpriteSheet {
             spriteAnimation.addAnimation(anim[0], SpriteAnimationDefinition.new(anim[1], anim[2], anim[3], anim[4]))
         }
         SpriteAnimation.setCurrentAnimation(entity, data["defaultAnimation"])
+        SpriteSheet.sheets_[entity] = data
         return spriteAnimation
+    }
+
+    // The sheet data each entity was created with (create) - so a cutscene can ask what clips a character has.
+    static sheets_ {
+        if (__sheets == null) __sheets = {}
+        return __sheets
+    }
+
+    // The clip called `name` (a full name, e.g. "downWorkingAnimation") on the sheet `entity` was created with, as
+    // [first frame, end frame, seconds, loops] - or null if it has no such clip (or wasn't made by create).
+    static clip(entity, name) {
+        var data = SpriteSheet.sheets_[entity]
+        if (data == null) return null
+        if (data["clipIndex"] == null) {
+            var index = {}
+            for (anim in data["animations"]) {
+                index[anim[0]] = [anim[1], anim[2], anim[3], anim[4]]
+            }
+            data["clipIndex"] = index
+        }
+        return data["clipIndex"][name]
     }
 
     // Names of every animation in the data, for menus or debugging.

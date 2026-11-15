@@ -68,11 +68,18 @@ void Struktur::System::GameObjectManager::SafeDeleteGameObject(GameContext& cont
 
 void Struktur::System::GameObjectManager::DeleteGameObjectsInSafeToDeleteQueue(GameContext& context)
 {
-	for (auto& entity : m_queueOfObjectsToSafeDelete)
+	// Destroying runs scripts' onDestroy, which can queue more deletions - so drain a swapped-out copy, repeatedly,
+	// instead of iterating the queue while it may grow (and reallocate) underneath the loop. Entities that are already
+	// gone (queued twice, or destroyed with a parent) are skipped by HierarchySystem::DestroyEntity.
+	while (!m_queueOfObjectsToSafeDelete.empty())
 	{
-		DestroyGameObject(context, entity);
+		std::vector<entt::entity> batch;
+		batch.swap(m_queueOfObjectsToSafeDelete);
+		for (entt::entity entity : batch)
+		{
+			DestroyGameObject(context, entity);
+		}
 	}
-	m_queueOfObjectsToSafeDelete.clear();
 }
 
 void Struktur::System::GameObjectManager::UpdateGameObjectsActiveStateQueue(GameContext& context)

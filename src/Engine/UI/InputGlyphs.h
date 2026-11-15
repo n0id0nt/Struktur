@@ -55,6 +55,10 @@ class InputGlyphs
 public:
 	bool Load(GameContext& context, const std::string& filePath);
 
+	// Forgets the glyph map and releases every cached glyph texture - part of the game teardown (ClearGameSystems),
+	// whose leak check needs the game texture pool empty. The game's scripts Load() it again on the next start.
+	void Clear();
+
 	// The glyphs a hint for `action` shows on the active device, left to right (see Input::GetHintSources for
 	// `component`). Empty when the action has nothing bound on that device.
 	std::vector<InputGlyph> Resolve(GameContext& context, const std::string& action,
@@ -85,7 +89,7 @@ private:
 	std::string m_dpadPath;
 	std::string m_leftStickPath;
 	std::string m_rightStickPath;
-	// Loaded on first use and kept for the game's lifetime - a few dozen tiny textures at most.
+	// Loaded on first use and kept until Clear() (the game's teardown) - a few dozen tiny textures at most.
 	std::unordered_map<std::string, Resource::ResourcePtr<Resource::TextureResource>> m_textures;
 };
 }  // namespace UI
