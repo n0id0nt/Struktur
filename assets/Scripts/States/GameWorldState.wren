@@ -27,6 +27,7 @@ import "UI/Gameplay/InteractPromptUI" for InteractPromptUI
 
 import "GameObjects/Critter" for Critter
 import "Party/Party" for Party
+import "World/MapLog" for MapLog
 import "Party/DuelRequest" for DuelRequest
 import "Combat/CombatOutcome" for CombatOutcome
 import "Camera/RoomCamera" for RoomCamera
@@ -417,6 +418,7 @@ class GameWorldState is BaseState {
             return
         }
         _currentLevelIndex = levelIndex
+        MapLog.visit(_worldEntity, levelIndex)   // the inventory's Map tab (World/MapLog.wren)
         // The first room (spawn) is snapped to; every room after that is slid to.
         _roomCamera.moveTo(levelIndex)
 

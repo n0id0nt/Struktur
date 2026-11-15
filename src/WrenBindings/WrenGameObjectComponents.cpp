@@ -687,6 +687,70 @@ void wren_WorldStaticGetLevelBounds(WrenVM* vm)
 	PushLevelBoundsList(vm, worldComponent->worldMap, levelIndex);
 }
 
+// World.getLevelIdentifier(entity, levelIndex) -> the level's LDtk identifier, or null
+void wren_WorldStaticGetLevelIdentifier(WrenVM* vm)
+{
+	Struktur::GameContext* context = static_cast<Struktur::GameContext*>(wrenGetUserData(vm));
+	entt::registry& registry       = context->GetRegistry();
+
+	entt::entity entity = static_cast<entt::entity>(wrenGetSlotDouble(vm, 1));
+	int levelIndex      = static_cast<int>(wrenGetSlotDouble(vm, 2));
+
+	auto* worldComponent = registry.try_get<Struktur::Component::World>(entity);
+	if (!worldComponent || levelIndex < 0 || levelIndex >= static_cast<int>(worldComponent->worldMap.levels.size()))
+	{
+		wrenSetSlotNull(vm, 0);
+		return;
+	}
+	wrenSetSlotString(vm, 0, worldComponent->worldMap.levels[levelIndex].identifier.c_str());
+}
+
+// World.getLevelFieldColor(entity, levelIndex, name) -> [r, g, b] (0-255): the LDtk colour of the enum value a level's
+// enum field holds (a level's Terrain -> the BattleArena enum's colour for it), or null.
+void wren_WorldStaticGetLevelFieldColor(WrenVM* vm)
+{
+	Struktur::GameContext* context = static_cast<Struktur::GameContext*>(wrenGetUserData(vm));
+	entt::registry& registry       = context->GetRegistry();
+
+	entt::entity entity = static_cast<entt::entity>(wrenGetSlotDouble(vm, 1));
+	int levelIndex      = static_cast<int>(wrenGetSlotDouble(vm, 2));
+	std::string name    = wrenGetSlotString(vm, 3);
+
+	wrenSetSlotNull(vm, 0);
+	auto* worldComponent = registry.try_get<Struktur::Component::World>(entity);
+	if (!worldComponent || levelIndex < 0 || levelIndex >= static_cast<int>(worldComponent->worldMap.levels.size()))
+	{
+		return;
+	}
+	const auto& worldMap = worldComponent->worldMap;
+	for (const auto& field : worldMap.levels[levelIndex].fieldInstances)
+	{
+		if (field.identifier != name || field.type != Struktur::FileLoading::LevelParser::FieldInstanceType::ENUM ||
+		    !field.value.has_value() || field.value.type() != typeid(std::string))
+		{
+			continue;
+		}
+		auto enumIt = worldMap.enumColors.find(field.enumType);
+		if (enumIt == worldMap.enumColors.end())
+		{
+			return;
+		}
+		auto valueIt = enumIt->second.find(std::any_cast<std::string>(field.value));
+		if (valueIt == enumIt->second.end())
+		{
+			return;
+		}
+		wrenSetSlotNewList(vm, 0);
+		wrenEnsureSlots(vm, 2);
+		for (int i = 0; i < 3; i++)
+		{
+			wrenSetSlotDouble(vm, 1, static_cast<double>(valueIt->second[i]));
+			wrenInsertInList(vm, 0, i, 1);
+		}
+		return;
+	}
+}
+
 // World.findLevelIndexWithTags(tagsList) -> number
 void wren_WorldFindLevelIndexWithTags(WrenVM* vm)
 {
@@ -2707,6 +2771,11 @@ WREN_BINDING_MODULE(GameObjectComponent)
 	                  "Get one of a level's custom LDtk fields by name (bool/num/string), or null if it has none.");
 	WREN_CLASS_STATIC(registry, "gameObjectComponents", "World", "getLevelBounds(_,_)", wren_WorldStaticGetLevelBounds,
 	                  "Get a level's [worldX, worldY, pxWid, pxHei] from the parsed LDtk metadata, even if unloaded.");
+	WREN_CLASS_STATIC(registry, "gameObjectComponents", "World", "getLevelIdentifier(_,_)",
+	                  wren_WorldStaticGetLevelIdentifier, "Get a level's LDtk identifier, or null.");
+	WREN_CLASS_STATIC(registry, "gameObjectComponents", "World", "getLevelFieldColor(_,_,_)",
+	                  wren_WorldStaticGetLevelFieldColor,
+	                  "Get the LDtk colour [r, g, b] of the enum value in one of a level's enum fields, or null.");
 	WREN_CLASS_STATIC(registry, "gameObjectComponents", "World", "findLevelIndexWithTags(_,_)",
 	                  wren_WorldStaticFindLevelIndexWithTags,
 	                  "Get the index of the first level whose tags contain every tag in the given list.");

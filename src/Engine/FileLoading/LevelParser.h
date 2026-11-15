@@ -41,6 +41,8 @@ struct FieldInstance
 	std::string identifier;
 	std::any value;
 	FieldInstanceType type;
+	// ENUM fields: the enum's identifier ("BattleArena" for "LocalEnum.BattleArena") - looks up World::enumColors.
+	std::string enumType;
 };
 
 struct Entity
@@ -137,6 +139,8 @@ struct World
 	std::string Iid;
 	std::string filePath;
 	std::vector<Level> levels;
+	// Every enum value's LDtk colour: enumColors[enum identifier][value id] (e.g. ["BattleArena"]["Grass"]).
+	std::unordered_map<std::string, std::unordered_map<std::string, Util::Color>> enumColors;
 };
 
 struct TileSet

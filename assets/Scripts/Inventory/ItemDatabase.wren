@@ -3,20 +3,23 @@
 // Inventory (Inventory/Inventory.wren) only stores ids and counts - anything about an item itself is looked up
 // here. Item ids are the same raw strings dialogue, the world (GameObjects/Item.wren) and the save file use.
 //
-// Categories decide stacking: materials and consumables share one stack with a count, weapons and armour never
-// stack - every one is its own inventory entry.
+// Categories decide stacking: consumables share one stack with a count; key items (quest items - the map, the
+// horn, keys, letters) are one of a kind - carrying one already, getting another changes nothing - unless the item
+// is marked "collect" (Soul Fragments: several are gathered); weapons and armour never stack - every one is its own
+// inventory entry. The inventory's Items tab shows them in four sections in ItemCategory.all's order.
 import "fileSystem" for FileSystem
 
 class ItemCategory {
-    static MATERIAL { "material" }
+    static KEY { "key" }
+    static MATERIAL { "material" }   // old saves / unlisted crafting bits - shown with the key items
     static CONSUMABLE { "consumable" }
     static WEAPON { "weapon" }
     static ARMOR { "armor" }
 
-    // Display order (also the order the Items tab lists consumables before materials).
-    static all { [ItemCategory.CONSUMABLE, ItemCategory.MATERIAL, ItemCategory.WEAPON, ItemCategory.ARMOR] }
+    // Display order - the Items tab's sections.
+    static all { [ItemCategory.KEY, ItemCategory.CONSUMABLE, ItemCategory.WEAPON, ItemCategory.ARMOR] }
 
-    static stacks(category) { category == ItemCategory.MATERIAL || category == ItemCategory.CONSUMABLE }
+    static stacks(category) { category != ItemCategory.WEAPON && category != ItemCategory.ARMOR }
 
     // The localization key for the category's display name (en.json "inventory.category.*").
     static labelKey(category) { "inventory.category.%(category)" }
@@ -24,8 +27,9 @@ class ItemCategory {
 
 // id -> { "category": one of ItemCategory's, "bonuses": { attribute: amount } (weapons / armour only - the
 // Combat/Stats.wren attribute names; shown in the inventory, not applied to anyone until there is equipping) }.
-// Anything not listed is a material - the quest items picked up through dialogue (keys, letters, the toolbox
-// parts...) all land there.
+// Anything not listed is a key item - the quest items picked up through dialogue (keys, letters, the map, the
+// toolbox parts...) all land there. "collect": true lets a key item gather a count instead of being one of a kind.
+// "opensTab": pressing it in the inventory opens that tab (the map item opens the Map tab).
 var ITEMS = {
     "Fresh Bread": {"category": "consumable"},
     "Feast Loaf": {"category": "consumable"},
@@ -38,12 +42,14 @@ var ITEMS = {
     "Leather Vest": {"category": "armor", "bonuses": {"guard": 2}},
     "Iron Helm": {"category": "armor", "bonuses": {"guard": 1, "poise": 2}},
 
-    // Arc 1 (Dialogue/Arc1Dialogue.json). Everything else it hands out (keys, map, fragments...) is a material.
+    // Arc 1 (Dialogue/Arc1Dialogue.json). Everything else it hands out (keys, the horn, records...) is a key item.
     "Healing Herb": {"category": "consumable"},
     "Bread Roll": {"category": "consumable"},
     "Special Ration": {"category": "consumable"},
     "Hunter's Bow": {"category": "weapon", "bonuses": {"precision": 2, "agility": 1}},
-    "Leather Armor": {"category": "armor", "bonuses": {"guard": 2}}
+    "Leather Armor": {"category": "armor", "bonuses": {"guard": 2}},
+    "Old Map": {"category": "key", "opensTab": "map"},
+    "Soul Fragment": {"category": "key", "collect": true}
 }
 
 var NO_BONUSES = {}
@@ -100,10 +106,24 @@ var NOTE_ICON = "Items/Other/Letter2.png"
 class ItemDatabase {
     static category(id) {
         var def = ITEMS[id]
-        return def == null ? ItemCategory.MATERIAL : def["category"]
+        return def == null ? ItemCategory.KEY : def["category"]
     }
 
     static stacks(id) { ItemCategory.stacks(ItemDatabase.category(id)) }
+
+    // A key item you can only hold one of (see "collect").
+    static unique(id) {
+        var category = ItemDatabase.category(id)
+        if (category != ItemCategory.KEY) return false
+        var def = ITEMS[id]
+        return def == null || def["collect"] != true
+    }
+
+    // The inventory tab pressing this item opens ("map"), or null.
+    static opensTab(id) {
+        var def = ITEMS[id]
+        return def == null ? null : def["opensTab"]
+    }
 
     static bonuses(id) {
         var def = ITEMS[id]

@@ -226,6 +226,10 @@ foreign class World {
     foreign static getLevelField(arg0,arg1,arg2)
     // Get a level's [worldX, worldY, pxWid, pxHei] from the parsed LDtk metadata, even if unloaded.
     foreign static getLevelBounds(arg0,arg1)
+    // Get a level's LDtk identifier, or null.
+    foreign static getLevelIdentifier(arg0,arg1)
+    // Get the LDtk colour [r, g, b] of the enum value in one of a level's enum fields, or null.
+    foreign static getLevelFieldColor(arg0,arg1,arg2)
     // Get the index of the first level whose tags contain every tag in the given list.
     foreign static findLevelIndexWithTags(arg0,arg1)
     // Get the entity for a level index if it's currently loaded.

@@ -1,11 +1,15 @@
 // UI/Inventory/ItemGridPage.wren
-// One item tab of the inventory (Items / Weapons / Armor): a scrolling grid of kit cells on the left - each with
-// the item's icon and, bottom right, how many there are - and a detail panel on the right for the focused slot.
-// Icons draw at a whole-number scale of their own size (they are pixel art of different sizes), centred.
-// Pure view: `entries` are already-prepared maps from States/InventoryState.wren:
+// The inventory's Items tab: one scrolling grid on the left split into sections - Key Items, Consumables, Weapons,
+// Armor (Inventory/ItemDatabase.ItemCategory.all) - each a heading over at least MIN_ROWS rows of kit cells (the
+// item's icon and, bottom right, how many there are; unused cells drawn empty), with a scroll bar down its right edge,
+// and a detail panel on the right for the focused slot. Icons draw at a whole-number scale of their own size (they are pixel art of different sizes), centred.
+// Pure view: `sections` are already-prepared by States/InventoryState.wren:
+//   [{ "title", "entries": [entry] }], an entry being
 //   { "name", "icon" (texture path or null), "count", "stackable", "showCount" (the slot's count badge - stacks of
 //     2+), "countText" (the detail panel's "Quantity: n"), "category" (display text),
-//     "bonuses" ([[display text, amount], ...] - gear only) }
+//     "bonuses" ([[display text, amount], ...] - gear only), "opensTab" (a tab id pressing it opens, or null),
+//     "actionText" (what pressing it does - shown in the detail panel, or null) }
+// onOpenTab(tabId) is called when a slot with "opensTab" is pressed (the Old Map opens the Map tab).
 import "math" for Vec2
 import "ui" for UIScroll, NavigationDirection
 import "UI/Theme/UIKit" for UIKit
@@ -14,60 +18,89 @@ import "UI/Inventory/InventoryTheme" for InventoryTheme
 var COLUMNS = 6
 var SLOT_SIZE = 80
 var SLOT_STRIDE = 88
-var SLOT_INSET = 6   // keeps the focus ring of the outer slots inside the scroll's clip
-var MIN_SLOTS = 30   // five full rows, so the grid never looks empty
-var ICON_SIZE = 52   // 16px icons draw at 3x, leaving the cell's bottom-right corner for the count
+var SLOT_INSET = 6        // keeps the focus ring of the outer slots inside the scroll's clip
+var HEADING_HEIGHT = 40   // a section's title, above its first row
+var MIN_ROWS = 2          // every section shows at least this many rows of cells, empty or not
+var GRID_WIDTH = 580      // the grid's well: the scroll (14 + 532) plus the scroll bar
+var BAR_X = 552           // the scroll bar's track, right of the scroll
+var BAR_WIDTH = 12
+var DETAIL_X = 596
+var DETAIL_WIDTH = 476
+var SECTION_GAP = 10
+var ICON_SIZE = 52        // 16px icons draw at 3x, leaving the cell's bottom-right corner for the count
 var DETAIL_CELL = 168
 var DETAIL_ICON_SIZE = 144
 var MAX_BONUS_LINES = 4
 
 class ItemGridPage {
     // parent: the inventory body. onFocus: called with no arguments whenever a slot gains focus (the screen's
-    // focus sound).
-    construct new(parent, entries, emptyText, boldFont, bookFont, onFocus) {
+    // focus sound). emptyText: the detail panel's text when there are no items at all. onOpenTab: see above.
+    construct new(parent, sections, emptyText, boldFont, bookFont, onFocus, onOpenTab) {
         _slots = []
+        _rows = []          // focusable slots, row by row, across every section - for up / down
         _boldFont = boldFont
         _bookFont = bookFont
+        _onOpenTab = onOpenTab
 
         _root = InventoryTheme.group(parent, Vec2.new(0, 0), Vec2.new(1072, 476), 2)
 
-        var gridFrame = InventoryTheme.frame(_root, "well", Vec2.new(0, 0), Vec2.new(0, 0), Vec2.new(560, 476),
+        var gridFrame = InventoryTheme.frame(_root, "well", Vec2.new(0, 0), Vec2.new(0, 0), Vec2.new(GRID_WIDTH, 476),
             Vec2.new(0, 0), 3)
         var scroll = UIScroll.new(Vec2.new(14, 14), Vec2.new(0, 0), Vec2.new(532, 448), Vec2.new(0, 0))
         scroll.setHorizontalScrollEnabled(false)
-        // Rows only scroll once the focused one is past the five that fit, a row at a time (174 = the fifth row's
-        // centre below the viewport's centre), instead of re-centring on every move.
-        scroll.setFocusDeadzone(Vec2.new(0, 174))
+        // Rows only scroll once the focused one nears an edge, instead of re-centring on every move.
+        scroll.setFocusDeadzone(Vec2.new(0, 150))
         scroll.setZIndex(4)
         gridFrame.addChild(scroll)
 
+        // Scroll bar: the engine sizes and moves the thumb to match the scroll (UIScroll.setScrollIndicator).
+        var track = InventoryTheme.fill(gridFrame, Vec2.new(BAR_X, 14), Vec2.new(0, 0), Vec2.new(BAR_WIDTH, 448),
+            Vec2.new(0, 0), InventoryTheme.rowBand, 4)
+        var thumb = InventoryTheme.fill(track, Vec2.new(0, 0), Vec2.new(0, 0), Vec2.new(BAR_WIDTH, 40), Vec2.new(0, 0),
+            InventoryTheme.accent, 5)
+        scroll.setScrollIndicator(thumb)
+
         buildDetail_()
 
-        var slotCount = entries.count
-        if (slotCount % COLUMNS != 0) {
-            slotCount = slotCount + COLUMNS - slotCount % COLUMNS
-        }
-        if (slotCount < MIN_SLOTS) {
-            slotCount = MIN_SLOTS
-        }
-        for (i in 0...slotCount) {
-            var position = Vec2.new(SLOT_INSET + (i % COLUMNS) * SLOT_STRIDE,
-                SLOT_INSET + (i / COLUMNS).floor * SLOT_STRIDE)
-            if (i < entries.count) {
-                _slots.add(buildSlot_(scroll, position, entries[i], onFocus))
-            } else {
-                var empty = InventoryTheme.frame(scroll, "cell", position, Vec2.new(0, 0), Vec2.new(SLOT_SIZE, SLOT_SIZE),
-                    Vec2.new(0, 0), 5)
-                empty.setTint(InventoryTheme.emptyTint)
+        var y = 0
+        var first = null
+        for (section in sections) {
+            InventoryTheme.label(scroll, section["title"], Vec2.new(SLOT_INSET + 2, y + 8), Vec2.new(0, 0),
+                Vec2.new(0, 0), 24.0, _boldFont, InventoryTheme.accent, 5)
+            y = y + HEADING_HEIGHT
+            var entries = section["entries"]
+            if (first == null && entries.count > 0) first = entries[0]
+            var slotCount = entries.count
+            if (slotCount % COLUMNS != 0) {
+                slotCount = slotCount + COLUMNS - slotCount % COLUMNS
             }
+            if (slotCount < MIN_ROWS * COLUMNS) {
+                slotCount = MIN_ROWS * COLUMNS
+            }
+            // Empty cells take focus too, so the arrows walk the whole grid (and scroll it) - they clear the panel.
+            var row = null
+            for (i in 0...slotCount) {
+                var position = Vec2.new(SLOT_INSET + (i % COLUMNS) * SLOT_STRIDE,
+                    y + SLOT_INSET + (i / COLUMNS).floor * SLOT_STRIDE)
+                if (i % COLUMNS == 0) {
+                    row = []
+                    _rows.add(row)
+                }
+                var slot = i < entries.count ? buildSlot_(scroll, position, entries[i], onFocus) :
+                    buildEmptySlot_(scroll, position, onFocus)
+                _slots.add(slot)
+                row.add(slot)
+            }
+            y = y + (slotCount / COLUMNS) * SLOT_STRIDE + SLOT_INSET
+            y = y + SECTION_GAP
         }
 
         linkSlots_()
-        if (entries.count == 0) {
+        if (first == null) {
             showEmpty_(emptyText)
         } else {
             // So the panel isn't blank when the tab is opened from the tab bar, before any slot has focus.
-            showEntry_(entries[0])
+            showEntry_(first)
         }
     }
 
@@ -78,31 +111,29 @@ class ItemGridPage {
 
     // Up from the top row goes back to this page's tab (instead of whichever tab happens to sit above that column).
     linkUpTo(tab) {
-        var top = _slots.count < COLUMNS ? _slots.count : COLUMNS
-        for (i in 0...top) {
-            _slots[i].setNavigationNeighbor(NavigationDirection.UP, tab)
+        if (_rows.count == 0) return
+        for (slot in _rows[0]) {
+            slot.setNavigationNeighbor(NavigationDirection.UP, tab)
         }
     }
 
-    // Arrow keys move one slot at a time and stop at the grid's edges. Down from a column the next row doesn't
-    // reach lands on that row's last item.
+    // Arrow keys move one slot at a time and stop at the grid's ends. Up / down step a row, jumping over section
+    // headings into the next section; a column the next row doesn't reach lands on that row's last item.
     linkSlots_() {
-        var count = _slots.count
-        for (i in 0...count) {
-            var slot = _slots[i]
-            var column = i % COLUMNS
-            InventoryTheme.link(slot, NavigationDirection.LEFT, column > 0 ? _slots[i - 1] : null)
-            InventoryTheme.link(slot, NavigationDirection.RIGHT, (column < COLUMNS - 1 && i + 1 < count) ? _slots[i + 1] : null)
-            InventoryTheme.link(slot, NavigationDirection.UP, i >= COLUMNS ? _slots[i - COLUMNS] : null)
-            var below = null
-            if (i + COLUMNS < count) {
-                below = _slots[i + COLUMNS]
-            } else if ((i / COLUMNS).floor < ((count - 1) / COLUMNS).floor) {
-                below = _slots[count - 1]
+        for (r in 0..._rows.count) {
+            var row = _rows[r]
+            for (c in 0...row.count) {
+                var slot = row[c]
+                InventoryTheme.link(slot, NavigationDirection.LEFT, c > 0 ? row[c - 1] : null)
+                InventoryTheme.link(slot, NavigationDirection.RIGHT, c + 1 < row.count ? row[c + 1] : null)
+                InventoryTheme.link(slot, NavigationDirection.UP, r > 0 ? ItemGridPage.columnOf_(_rows[r - 1], c) : null)
+                InventoryTheme.link(slot, NavigationDirection.DOWN,
+                    r + 1 < _rows.count ? ItemGridPage.columnOf_(_rows[r + 1], c) : null)
             }
-            InventoryTheme.link(slot, NavigationDirection.DOWN, below)
         }
     }
+
+    static columnOf_(row, column) { column < row.count ? row[column] : row[row.count - 1] }
 
     setVisible(visible) { _root.setVisible(visible) }
 
@@ -118,6 +149,22 @@ class ItemGridPage {
 
         InventoryTheme.focusable(slot, Fn.new {
             showEntry_(entry)
+            onFocus.call()
+        }, null)
+        var tab = entry["opensTab"]
+        if (tab != null) {
+            slot.setOnClick { |sender, mousePos| _onOpenTab.call(tab) }
+        }
+        return slot
+    }
+
+    // A darkened, empty cell - focusable, so navigation reaches every row; focusing it clears the detail panel.
+    buildEmptySlot_(scroll, position, onFocus) {
+        var slot = InventoryTheme.frame(scroll, "cell", position, Vec2.new(0, 0), Vec2.new(SLOT_SIZE, SLOT_SIZE),
+            Vec2.new(0, 0), 5)
+        slot.setTint(InventoryTheme.emptyTint)
+        InventoryTheme.focusable(slot, Fn.new {
+            showBlank_()
             onFocus.call()
         }, null)
         return slot
@@ -138,7 +185,7 @@ class ItemGridPage {
     // --- detail panel -------------------------------------------------------------------
 
     buildDetail_() {
-        var detail = InventoryTheme.frame(_root, "well", Vec2.new(576, 0), Vec2.new(0, 0), Vec2.new(496, 476),
+        var detail = InventoryTheme.frame(_root, "well", Vec2.new(DETAIL_X, 0), Vec2.new(0, 0), Vec2.new(DETAIL_WIDTH, 476),
             Vec2.new(0, 0), 3)
         _detail = detail
         _detailCell = null
@@ -156,6 +203,10 @@ class ItemGridPage {
             _bonusLines.add(InventoryTheme.label(detail, "", Vec2.new(0, 350 + i * 28), Vec2.new(0.5, 0),
                 Vec2.new(0.5, 0), 22.0, _bookFont, InventoryTheme.good, 4))
         }
+
+        // "Select to view the map" - items that open a tab (key items carry no bonuses, so it takes their place).
+        _actionLabel = InventoryTheme.label(detail, "", Vec2.new(0, 350), Vec2.new(0.5, 0), Vec2.new(0.5, 0), 22.0,
+            _bookFont, InventoryTheme.accent, 4)
 
         _emptyLabel = InventoryTheme.label(detail, "", Vec2.new(0, 0), Vec2.new(0.5, 0.5), Vec2.new(0.5, 0.5), 24.0,
             _bookFont, InventoryTheme.textMuted, 4)
@@ -176,6 +227,7 @@ class ItemGridPage {
         setText_(_nameLabel, entry["name"])
         setText_(_categoryLabel, entry["category"])
         setText_(_countLabel, entry["stackable"] ? entry["countText"] : "")
+        setText_(_actionLabel, entry["actionText"] != null ? entry["actionText"] : "")
 
         var bonuses = entry["bonuses"]
         _bonusDivider.setVisible(bonuses.count > 0)
@@ -190,10 +242,20 @@ class ItemGridPage {
         }
     }
 
+    // Nothing focused worth describing (an empty cell): the panel goes blank.
+    showBlank_() {
+        if (_detailCell != null) {
+            _detail.removeChild(_detailCell)
+            _detailCell = null
+        }
+        showEmpty_("")
+    }
+
     showEmpty_(text) {
         setText_(_nameLabel, "")
         setText_(_categoryLabel, "")
         setText_(_countLabel, "")
+        setText_(_actionLabel, "")
         _bonusDivider.setVisible(false)
         for (line in _bonusLines) {
             setText_(line, "")
@@ -210,12 +272,15 @@ class ItemGridPage {
     // Call after the UI tree is removed.
     release() {
         _slots = []
+        _rows = []
+        _onOpenTab = null
         _root = null
         _detail = null
         _detailCell = null
         _nameLabel = null
         _categoryLabel = null
         _countLabel = null
+        _actionLabel = null
         _bonusDivider = null
         _bonusLines = []
         _emptyLabel = null

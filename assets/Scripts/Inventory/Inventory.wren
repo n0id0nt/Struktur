@@ -1,6 +1,6 @@
 // Inventory/Inventory.wren
-// What the party is carrying: a list of ItemStacks plus their gold. Materials and consumables share one stack per
-// item with a count; weapons and armour never stack - each one is its own stack of 1 (which category an item is
+// What the party is carrying: a list of ItemStacks plus their gold. Consumables share one stack per item with a
+// count, key items are one of a kind; weapons and armour never stack - each one is its own stack of 1 (which category an item is
 // in comes from Inventory/ItemDatabase.wren). Stacks keep pickup order. Saved to inventory.sav.
 import "serialisation" for Json, MapUtil
 import "fileSystem" for FileSystem
@@ -47,6 +47,11 @@ class Inventory {
     static addItem(id) { Inventory.addItem(id, 1) }
 
     static addItem(id, amount) {
+        // Key items are one of a kind (Inventory/ItemDatabase.wren) - holding one already, another adds nothing.
+        if (ItemDatabase.unique(id)) {
+            if (Inventory.contains(id)) return
+            amount = 1
+        }
         if (ItemDatabase.stacks(id)) {
             for (s in __stacks) {
                 if (s.id == id) {

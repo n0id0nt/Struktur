@@ -5,6 +5,9 @@
 // or UICancel input (UICancel first backs out of a half-made move swap). Changing the move loadout saves it and
 // re-arms the player's Combatant straight away. Game time is paused while it's open - the world freezes behind the
 // screen.
+//
+// Tabs are listed in TABS; one with an unlock rule only shows once that rule holds (the Map tab needs the Old Map).
+// Pass {"tab": id} when changing to this state to open on that tab.
 import "app" for Time
 import "math" for Math
 import "resourceManager" for Music, Sound
@@ -23,6 +26,8 @@ import "Combat/MoveBook" for MoveBook
 import "Localization/DisplayNames" for DisplayNames
 import "Story/QuestLog" for QuestLog
 import "UI/Inventory/InventoryUI" for InventoryUI
+import "World/MapLog" for MapLog
+import "World/Rooms" for Rooms
 import "debug" for Debug
 
 // The Moves tab's preview shows this much of each battle-sheet cell, centred across the fighter's pivot (their
@@ -36,6 +41,17 @@ var PREVIEW_CROP_ABOVE = 67
 var PLACEHOLDER_LEVEL = 1
 var PLACEHOLDER_XP = 0
 var PLACEHOLDER_XP_TO_NEXT = 100
+
+// The tabs in order: [id, unlock rule or null]. A rule is a Fn returning whether the tab shows - see
+// InventoryState.carrying_ (an item that opens the tab, like the Old Map for "map").
+var TABS = [
+    ["items", null],
+    ["moves", null],
+    ["party", null],
+    ["levels", null],
+    ["quests", null],
+    ["map", Fn.new { InventoryState.carrying_("map") }]
+]
 
 class InventoryState is BaseState {
     construct new() {
@@ -59,7 +75,8 @@ class InventoryState is BaseState {
         _itemFocusSound = Sound.load("Audio/Sounds/Menu/Move1.wav")
 
         _lastTabStep = tabStep_()
-        _view = InventoryUI.new(buildModel_(), Fn.new { _itemFocusSound.play() }, Fn.new { |slot, id| equip_(slot, id) })
+        var startTab = (params is Map) ? params["tab"] : null
+        _view = InventoryUI.new(buildModel_(startTab), Fn.new { _itemFocusSound.play() }, Fn.new { |slot, id| equip_(slot, id) })
     }
 
     update(stateManager) {
@@ -103,14 +120,21 @@ class InventoryState is BaseState {
 
     // --- view model ------------------------------------------------------------------
 
-    buildModel_() {
+    buildModel_(startTab) {
         var model = {}
-        model["tabs"] = ["items", "weapons", "armor", "moves", "party", "levels", "quests"].map { |t| Localization.get("inventory.tab.%(t)") }.toList
-        model["itemPages"] = [
-            [itemEntries_([ItemCategory.CONSUMABLE, ItemCategory.MATERIAL]), Localization.get("inventory.empty.items")],
-            [itemEntries_([ItemCategory.WEAPON]), Localization.get("inventory.empty.weapons")],
-            [itemEntries_([ItemCategory.ARMOR]), Localization.get("inventory.empty.armor")]
-        ]
+        var tabs = []
+        for (tab in TABS) {
+            if (tab[1] == null || tab[1].call()) {
+                tabs.add([tab[0], Localization.get("inventory.tab.%(tab[0])")])
+            }
+        }
+        model["tabs"] = tabs
+        model["startTab"] = startTab
+        model["items"] = itemSections_()
+        model["itemsEmpty"] = Localization.get("inventory.empty.items")
+        if (tabs.any { |t| t[0] == "map" }) {
+            model["map"] = mapModel_()
+        }
         model["moves"] = movesModel_()
         _partyEntries = partyEntries_()
         model["party"] = _partyEntries
@@ -146,6 +170,45 @@ class InventoryState is BaseState {
         return model
     }
 
+    // True when an item carried opens this tab (ItemDatabase "opensTab") - the unlock rule for item-backed tabs.
+    static carrying_(tabId) { Inventory.stacks.any { |s| ItemDatabase.opensTab(s.id) == tabId } }
+
+    // The Items tab: a section per category (ItemCategory.all - key items, consumables, weapons, armour). Old
+    // "material" items show with the key items. See UI/Inventory/ItemGridPage.wren for the shape.
+    itemSections_() {
+        var sections = []
+        for (category in ItemCategory.all) {
+            var categories = category == ItemCategory.KEY ? [ItemCategory.KEY, ItemCategory.MATERIAL] : [category]
+            var section = {}
+            section["title"] = Localization.get("inventory.section.%(category)")
+            section["entries"] = itemEntries_(categories)
+            sections.add(section)
+        }
+        return sections
+    }
+
+    // The Map tab: every room visited (World/MapLog.wren) - see UI/Inventory/MapPage.wren for the shape.
+    mapModel_() {
+        var model = {}
+        model["rooms"] = MapLog.rooms(Rooms.world)
+        model["current"] = MapLog.current
+        model["currentName"] = MapLog.displayName(MapLog.current)
+        var labels = {}
+        for (key in ["title", "here", "empty"]) {
+            labels[key] = Localization.get("inventory.map.%(key)")
+        }
+        model["labels"] = labels
+        var names = {}
+        for (room in model["rooms"]) {
+            var terrain = room["terrain"]
+            if (!names.containsKey(terrain)) {
+                names[terrain] = terrain == "" ? Localization.get("inventory.map.unknown") : Localization.get("terrain.%(terrain)")
+            }
+        }
+        model["terrainNames"] = names
+        return model
+    }
+
     // The stacks in these categories, category by category - see UI/Inventory/ItemGridPage.wren for the shape.
     itemEntries_(categories) {
         var entries = []
@@ -168,6 +231,11 @@ class InventoryState is BaseState {
                 entry["countText"] = "%(Localization.get("inventory.quantity")) %(stack.count)"
                 entry["category"] = categoryText
                 entry["bonuses"] = bonuses
+                var opensTab = ItemDatabase.opensTab(stack.id)
+                entry["opensTab"] = opensTab
+                entry["actionText"] = opensTab != null ? Localization.get("inventory.open.%(opensTab)") : null
+                // One-of-a-kind key items don't show "Quantity: 1".
+                if (ItemDatabase.unique(stack.id)) entry["stackable"] = false
                 entries.add(entry)
             }
         }

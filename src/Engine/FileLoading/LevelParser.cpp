@@ -41,7 +41,20 @@ void Struktur::FileLoading::LevelParser::LoadDefinitions(World& world, Definitio
 {
 	// layers
 	// entities
-	// enums
+	// enums - only their values' colours are kept (scripts read them through World.getLevelFieldColor)
+	if (json.contains("enums"))
+	{
+		for (auto& enumJson : json["enums"])
+		{
+			auto& colors = world.enumColors[enumJson["identifier"].get<std::string>()];
+			for (auto& valueJson : enumJson["values"])
+			{
+				int rgb = valueJson.value("color", 0);
+				colors[valueJson["id"].get<std::string>()] =
+				    Util::Color((rgb >> 16) & 0xFF, (rgb >> 8) & 0xFF, rgb & 0xFF, 255);
+			}
+		}
+	}
 	// tilesets
 	for (auto& tilesetJson : json["tilesets"])
 	{
@@ -367,6 +380,10 @@ void Struktur::FileLoading::LevelParser::LoadFieldInstances(std::vector<FieldIns
 		}
 
 		field.type = ConvertFieldTypeToEnum(typeName);
+		if (field.type == FieldInstanceType::ENUM)
+		{
+			field.enumType = typeName.substr(typeName.find('.') + 1);
+		}
 		// An optional field left empty in LDtk - the script sees null.
 		if (value.is_null())
 		{

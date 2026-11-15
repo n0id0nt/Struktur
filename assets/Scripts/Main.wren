@@ -20,6 +20,7 @@ import "Party/Party" for Party
 import "Combat/MoveBook" for MoveBook
 import "Combat/Config/BattlePlayer" for BattlePlayer
 import "Combat/Defeated" for Defeated
+import "World/MapLog" for MapLog
 import "Dialogue/DialogueLoader" for DialogueLoader
 import "debug" for Debug
 
@@ -68,6 +69,7 @@ class Game {
         MoveBook.init(BattlePlayer.starterKit)
         Party.init()
         Defeated.init()
+        MapLog.init()
     }
 
     // Called after the all the systems are initialised
@@ -86,6 +88,7 @@ class Game {
         MoveBook.load("moves.sav")
         Party.load("party.sav")
         Defeated.load("defeated.sav")
+        MapLog.load("map.sav")
 
         DialogueLoader.loadAllDialogue()
 
