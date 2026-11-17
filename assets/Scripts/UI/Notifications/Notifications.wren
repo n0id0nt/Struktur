@@ -1,17 +1,18 @@
 // UI/Notifications/Notifications.wren
-// Banners in the top-right corner for game events: a quest starting, moving on or finishing (Story/QuestTracker.wren),
-// an item or gold received (the giveItem / giveGold dialogue commands, GameObjects/Item.wren pickups), or anything
-// else that calls push(). Each banner slides in from the right edge, holds for HOLD_SECONDS, then slides back out.
+// Banners in the top-right corner for game events (Events/GameEvents.wren): a quest starting, moving on or finishing,
+// an item or gold received, someone joining the party. It only listens - onEvent(type, data) gets every engine event
+// (forwarded by States/GameWorldState.wren) and queues a banner for the ones it knows; whatever caused the event
+// sends it and never calls in here. Each banner slides in from the right edge, holds for HOLD_SECONDS, then slides back out.
 // Several stack downwards, newest at the bottom; when one leaves, the ones below slide up into its place. A burst of
 // events (a dialogue giving three items at once) comes in one after another, SPAWN_INTERVAL apart, and at most
 // MAX_VISIBLE show at a time - the rest wait their turn.
 //
-// A banner is an icon for its category on the left (CATEGORIES - or one passed to push), a small header ("New
-// quest") and the message ("The Stubborn Well").
+// A banner is an icon for its category on the left (CATEGORIES), a small header ("New quest") and the message ("The
+// Stubborn Well").
 //
-// States/GameWorldState.wren drives it: update(showing) every frame - banners animate on game time, and freeze out of
-// sight while the world is covered (the inventory, a fight) - and clear() when gameplay closes. Anything can push() at any time; pushes
-// made while no gameplay is running wait in the queue.
+// States/GameWorldState.wren drives it: onEvent for each engine event, update(showing) every frame - banners animate on
+// game time, and freeze out of sight while the world is covered (the inventory, a fight) - and clear() when gameplay
+// closes.
 import "app" for Application, Time
 import "math" for Vec2, Vec4
 import "ui" for UIManager
@@ -19,6 +20,7 @@ import "localization" for Localization
 import "UI/Theme/UIKit" for UIKit
 import "UI/Inventory/InventoryTheme" for InventoryTheme
 import "Localization/DisplayNames" for DisplayNames
+import "Events/GameEvents" for GameEvents
 
 var WIDTH = 420
 var HEIGHT = 78
@@ -45,29 +47,45 @@ var CATEGORIES = {
 }
 
 class Notifications {
-    // Queues a banner. category: a CATEGORIES key (its icon) - or pass `icon` (an asset path) to override it.
-    static push(category, header, message) { Notifications.push(category, header, message, null) }
+    // Every engine event comes through here; the game events that deserve a banner queue one, the rest are ignored.
+    static onEvent(type, data) {
+        if (type == GameEvents.itemReceivedType) {
+            // "Item received - Healing Herb x3"
+            var name = DisplayNames.itemDisplay(data["item"])
+            var count = data["count"]
+            var text = count != null && count > 1 ? "%(name) x%(count)" : name
+            Notifications.push_("item", Localization.get("notify.item"), text)
+        } else if (type == GameEvents.goldReceivedType) {
+            // "Gold received - +50"
+            var amount = data["amount"]
+            Notifications.push_("gold", Localization.get("notify.gold"), "+%(amount)")
+        } else if (type == GameEvents.partyJoinedType) {
+            // "Joined the party - Kira"
+            Notifications.push_("party", Localization.get("notify.party"), DisplayNames.npcDisplay(data["name"]))
+        } else if (type == GameEvents.questStartedType) {
+            // "New quest - The Stubborn Well"
+            Notifications.push_("quest", Localization.get("notify.quest.started"), Notifications.questTitle_(data))
+        } else if (type == GameEvents.questUpdatedType) {
+            // "Quest updated - <the objective just done>"
+            var quest = data["quest"]
+            var objective = data["objective"]
+            Notifications.push_("quest", Localization.get("notify.quest.updated"),
+                Localization.get("quest.%(quest).%(objective)"))
+        } else if (type == GameEvents.questCompletedType) {
+            // "Quest complete - The Stubborn Well"
+            Notifications.push_("quest", Localization.get("notify.quest.complete"), Notifications.questTitle_(data))
+        }
+    }
 
-    static push(category, header, message, icon) {
-        if (icon == null) icon = CATEGORIES.containsKey(category) ? CATEGORIES[category] : CATEGORIES["info"]
+    static questTitle_(data) {
+        var quest = data["quest"]
+        return Localization.get("quest.%(quest).title")
+    }
+
+    // Queues a banner. category: a CATEGORIES key (its icon).
+    static push_(category, header, message) {
+        var icon = CATEGORIES.containsKey(category) ? CATEGORIES[category] : CATEGORIES["info"]
         Notifications.queue_.add([category, header, message, icon])
-    }
-
-    // "Item received - Healing Herb x3".
-    static item(id, count) {
-        var name = DisplayNames.itemDisplay(id)
-        var text = count != null && count > 1 ? "%(name) x%(count)" : name
-        Notifications.push("item", Localization.get("notify.item"), text)
-    }
-
-    // "Gold received - +50".
-    static gold(amount) {
-        Notifications.push("gold", Localization.get("notify.gold"), "+%(amount)")
-    }
-
-    // "Joined the party - Kira" (Party.join calls it for a new member).
-    static partyJoined(npcId) {
-        Notifications.push("party", Localization.get("notify.party"), DisplayNames.npcDisplay(npcId))
     }
 
     // Adds or replaces a category's icon.

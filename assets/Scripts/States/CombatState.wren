@@ -47,6 +47,7 @@ import "UI/Combat/TimelineUI" for TimelineRow
 import "Inventory/Inventory" for Inventory
 import "Inventory/ItemDatabase" for ItemDatabase, ItemCategory
 import "Localization/DisplayNames" for DisplayNames
+import "localization" for Localization
 import "debug" for Debug
 
 var ENTER_TIME = 0.65       // arena sweep + battler slide-in
@@ -549,6 +550,19 @@ class CombatState is BaseState {
         return out
     }
 
+    // The Items screen's detail for item `id`: what it does in the fight, then its description (en.json
+    // "<item key>.desc") when the grid leaves the detail line room for more than one line.
+    itemDetail_(id) {
+        var effect = BattleItems.describe(id)
+        if (_view.detailLines < 2) return effect
+        var key = DisplayNames.itemKey(id)
+        if (key == null) return effect
+        var descKey = key + ".desc"
+        if (!Localization.hasString(descKey)) return effect
+        var description = Localization.get(descKey)
+        return effect + "\n" + description
+    }
+
     slotClicked_(index) {
         if (_phase != "select" || !armed_ || _builder == null) return
         if (_mode == "moves") {
@@ -614,7 +628,7 @@ class CombatState is BaseState {
         var here = [_builder.lane, _builder.row]
         if (_mode != "moves") {
             if (_mode == "items" && _itemList != null && index < _itemList.count) {
-                _view.setDetail(BattleItems.describe(_itemList[index][0]))
+                _view.setDetail(itemDetail_(_itemList[index][0]))
             }
             return
         }

@@ -525,6 +525,7 @@ class BattleTestState is BaseState {
             "player": null,
             "world": _world,
             "testItems": true,
+            "canFlee": true,   // the sandbox can always be left - story fights decide this in GameWorldState
             "battleLevelIndex": World.getLevelIndex(_world, BATTLE_ARENA_LEVEL_NAME)
         })
     }

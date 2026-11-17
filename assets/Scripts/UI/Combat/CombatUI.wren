@@ -42,6 +42,8 @@ var SLOT_HEIGHT = 32
 var SLOT_GAP_X = 8
 var SLOT_GAP_Y = 4
 var HEADER_HEIGHT = 26
+var DETAIL_SIZE = 18.0
+var DETAIL_LINE = 22          // px per wrapped line of the detail text
 var CHAIN_BAR_WIDTH = 120
 var TIMELINE_ROWS = 8
 var POPUPS = 16
@@ -142,15 +144,41 @@ class CombatUI {
             })
             _slots.add(button)
         }
-        // What the focused slot does, under the grid.
-        var detailY = HEADER_HEIGHT + 4 + 4 * (SLOT_HEIGHT + SLOT_GAP_Y) + 2
-        _detail = UIKit.richText(_command, "", Vec2.new(-5, detailY), Vec2.new(0, 0), Vec2.new(0, 0), 18.0, UIKit.text, 6)
-        // Flee - only in fights that can be fled (setFleeAvailable).
+        // What the focused slot does: right under the last row in use (layoutDetail_), word-wrapped over whatever
+        // height is left - so a short grid (the items) leaves room for a description.
+        _commandHeight = height + 8
+        var detailY = rowTop_(4)
+        _detail = UIRichLabel.new(Vec2.new(-5, detailY), Vec2.new(0, 0), "", DETAIL_SIZE)
+        _detail.setFont(font)
+        _detail.setTextColor(UIKit.text)
+        _detail.setWordWrap(TextWrapping.WORD_WRAP)
+        _detail.setZIndex(6)
+        _command.addChild(_detail)
+        _detailLines = 1
+        // Flee - only in fights that can be fled (setFleeAvailable). Stays on the bottom line whatever the grid holds.
         _fleeButton = KitButton.new(_command, "Flee", Vec2.new(0, detailY - 2), Vec2.new(1, 0), Vec2.new(84, 28), font, 17.0)
         _fleeButton.panel.setAnchorPoint(Vec2.new(1, 0))
         _fleeAvailable = false
         _fleeButton.panel.setVisible(false)
+        layoutDetail_(4)
     }
+
+    // The top of grid row `row` (0-3; 4 = just past the grid, the bottom line).
+    rowTop_(row) { HEADER_HEIGHT + 4 + row * (SLOT_HEIGHT + SLOT_GAP_Y) + 2 }
+
+    // Puts the detail line under `rows` rows of slots, as wide as the panel (short of Flee when it shows) and as
+    // tall as what's left - detailLines says how many lines that is.
+    layoutDetail_(rows) {
+        var top = rowTop_(rows)
+        var width = COMMAND_WIDTH + 5 - (_fleeAvailable ? 96 : 0)
+        var height = _commandHeight - top
+        _detail.setPosition(Vec2.new(-5, top), Vec2.new(0, 0))
+        _detail.setSize(Vec2.new(width, height), Vec2.new(0, 0))
+        _detailLines = (height / DETAIL_LINE).floor.max(1)
+    }
+
+    // How many lines the detail line has room for under the current grid.
+    detailLines { _detailLines }
 
     buildPrompt_(font, gw, gh) {
         _prompt = UIKit.frame(_root, "dialogue", Vec2.new(0, -40), Vec2.new(0.5, 0.5), Vec2.new(PROMPT_WIDTH, PROMPT_HEIGHT),
@@ -229,6 +257,7 @@ class CombatUI {
     setFleeAvailable(available) {
         _fleeAvailable = available
         _fleeButton.panel.setVisible(available)
+        layoutDetail_(((_slotCount + 1) / 2).floor)
     }
 
     // The slot grid. entries: up to SLOT_COUNT of [name, info, enabled]; slots past the list are hidden. Links the
@@ -259,6 +288,7 @@ class CombatUI {
             CombatUI.link_(_fleeButton.panel, NavigationDirection.LEFT, null)
             CombatUI.link_(_fleeButton.panel, NavigationDirection.RIGHT, null)
         }
+        layoutDetail_(((_slotCount + 1) / 2).floor)
         if (focus != null && _slotCount > 0) focusSlot(focus)
     }
 

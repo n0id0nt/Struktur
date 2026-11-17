@@ -12,45 +12,52 @@ received.
 - Banners show over the world and over dialogue. While the inventory or a fight covers the screen, they freeze out of
   sight and carry on afterwards.
 
+Banners are driven by the engine's event system. Whatever causes a notification sends a game event
+(`Event.addEvent`, through the helpers in `GameEvents.wren`) at the moment it happens. `Notifications` only listens: the
+events are delivered after the frame's update, and it queues a banner for each one it knows. Nothing polls for changes.
+
 | File | What it is |
 |---|---|
-| `assets/Scripts/UI/Notifications/Notifications.wren` | The banner stack, and the `push` API |
-| `assets/Scripts/Story/QuestTracker.wren` | Turns quest-log changes into banners |
-| `assets/Scripts/States/GameWorldState.wren` | Calls `QuestTracker.poll()` and `Notifications.update(showing)` every frame, and `clear()` / `reset()` on exit |
+| `assets/Scripts/Events/GameEvents.wren` | The game events and the helpers that send them |
+| `assets/Scripts/UI/Notifications/Notifications.wren` | The banner stack; `onEvent` turns events into banners |
+| `assets/Scripts/States/GameWorldState.wren` | Forwards every event to `Notifications.onEvent`, calls `Notifications.update(showing)` every frame, and `clear()` on exit |
 
 ## What raises one
 
-| Event | Header | Message | Icon (category) |
-|---|---|---|---|
-| A quest starts | New quest | its title | scroll (`quest`) |
-| An objective is done | Quest updated | the objective | scroll (`quest`) |
-| A quest finishes | Quest complete | its title | scroll (`quest`) |
-| `giveItem` dialogue command, or picking an Item up | Item received | name, plus `xN` for more than one | bag (`item`) |
-| `giveGold` dialogue command | Gold received | `+amount` | coin (`gold`) |
-| Someone joins the party (`joinParty` dialogue command, or a won recruiting duel - anything calling `Party.join`) | Joined the party | their display name | helmet (`party`) |
+| Game event | Sent by | Header | Message | Icon (category) |
+|---|---|---|---|---|
+| `questStarted` | `QuestLog.setFlag` | New quest | its title | scroll (`quest`) |
+| `questUpdated` | `QuestLog.setFlag` | Quest updated | the objective | scroll (`quest`) |
+| `questCompleted` | `QuestLog.setFlag` | Quest complete | its title | scroll (`quest`) |
+| `itemReceived` | `giveItem` dialogue command, picking an Item up | Item received | name, plus `xN` for more than one | bag (`item`) |
+| `goldReceived` | `giveGold` dialogue command | Gold received | `+amount` | coin (`gold`) |
+| `partyJoined` | `Party.join` (`joinParty` dialogue command, a won recruiting duel) | Joined the party | their display name | helmet (`party`) |
 
 Loading a save doesn't announce party members already in it (`Party.load` adds them without going through `join`).
 
 **Quest banners**
-- Quest progress comes from flags (see [Quests.md](Quests.md)), so `QuestTracker` compares the quest log against its
-  last look, 4 times a second, instead of every flag-setter reporting in.
-- The first look after gameplay opens only takes note of where things stand, so loading a save doesn't announce every
-  quest already in it.
+- Quest progress comes from int flags (see [Quests.md](Quests.md)). Every int-flag write that can move a quest goes
+  through `QuestLog.setFlag(name, value)`: the `setIntFlag` dialogue command, `startQuest` / `completeObjective` /
+  `completeQuest`, and a won duel. It works out the quest log just before and just after the write, and sends an
+  event for each quest that started, each objective done and each quest completed.
+- Loading a save writes no flags through `setFlag`, so it announces nothing.
+- Write quest flags with `QuestLog.setFlag`, not `FlagManager.setIntFlag`, or the change won't be announced.
 
-## Raising your own
+## Adding a new notification
+
+1. Add the event to `GameEvents.wren`: a type constant, a getter for it, and a helper that sends it with its data.
+2. Call the helper wherever the thing happens.
+3. Handle the type in `Notifications.onEvent`: build the header and message, and pick a category.
 
 ```wren
-import "UI/Notifications/Notifications" for Notifications
+import "Events/GameEvents" for GameEvents
 
-Notifications.push("info", "Door unlocked", "The shrine gate grinds open")
-Notifications.push("quest", "Secret found", "A hidden passage", "Items/Object/Book.png")   // a one-off icon
-Notifications.item("Healing Herb", 3)
-Notifications.gold(50)
-Notifications.setCategoryIcon("ability", "Items/Scroll/ScrollFire.png")   // a new category
+GameEvents.itemReceived("Healing Herb", 3)
+GameEvents.goldReceived(50)
 ```
 
 - Built-in categories and their icons are in `CATEGORIES` at the top of `Notifications.wren`: `quest`, `item`,
-  `gold`, `party` and `info`.
+  `gold`, `party` and `info`. `Notifications.setCategoryIcon` adds or replaces one.
 - Headers come from `en.json`: `notify.quest.started`, `notify.quest.updated`, `notify.quest.complete`, `notify.item`,
   `notify.gold` and `notify.party`.
 - Timing and layout are constants at the top of `Notifications.wren`: `HOLD_SECONDS`, `SLIDE_SECONDS`,

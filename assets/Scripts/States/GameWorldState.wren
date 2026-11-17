@@ -41,7 +41,7 @@ import "World/Npcs" for Npcs
 import "World/SpawnPoint" for SpawnPoint
 import "World/StageDirector" for StageDirector
 import "World/PathWalkers" for PathWalkers
-import "Story/QuestTracker" for QuestTracker
+import "Story/QuestLog" for QuestLog
 import "UI/Notifications/Notifications" for Notifications
 import "Story/ArcEnd" for ArcEnd
 import "localization" for Localization
@@ -305,8 +305,7 @@ class GameWorldState is BaseState {
         StageDirector.update()
         // NPCs wandering their Paths - they stop for conversations and scenes on their own.
         PathWalkers.update()
-        // Quest changes become banners; banners show over the world and dialogue, not over the inventory or a fight.
-        QuestTracker.poll()
+        // Banners (game events become them - onEvent) show over the world and dialogue, not over the inventory or a fight.
         var substate = _stateManager.currentState
         Notifications.update(substate == null || substate.name == "InteractState")
 
@@ -581,8 +580,7 @@ class GameWorldState is BaseState {
         // A won duel or story battle: remember it and let the challenger have their say straight away (their dialogue
         // branches on the flag - Thomas hands over gear, the Wardens start to remember...).
         if (outcome.won && challenger != null) {
-            FlagManager.setIntFlag(DUEL_WON_FLAG_PREFIX + challenger, 1)
-            FlagManager.save("flags.sav")
+            QuestLog.setFlag(DUEL_WON_FLAG_PREFIX + challenger, 1)   // may move a quest on - announced as an event
             var entity = Npcs.first(challenger)
             if (entity != null) {
                 _stateManager.changeState("InteractState", {"interactingEntity": entity})
@@ -835,7 +833,6 @@ class GameWorldState is BaseState {
         _openingPending = false
         StageDirector.clear()
         PathWalkers.clear()
-        QuestTracker.reset()
         Notifications.clear()
 
         if (_view != null) {
@@ -855,6 +852,8 @@ class GameWorldState is BaseState {
 
     onEvent(type, data) {
         super.onEvent(type, data)
+        // Game events (Events/GameEvents.wren) that deserve a banner - a quest moving on, an item received...
+        Notifications.onEvent(type, data)
         if (_stateManager && _stateManager.currentState) {
             _stateManager.currentState.onEvent(type, data)
         }

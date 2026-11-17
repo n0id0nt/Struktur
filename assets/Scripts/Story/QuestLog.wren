@@ -15,12 +15,16 @@
 // set the flags "quest.<id>" (1 started, 2 complete) and "quest.<id>.<objective>" (1 done), for quests that aren't
 // tied to existing story flags.
 //
+// Changes are announced as game events (questStarted / questUpdated / questCompleted - Events/GameEvents.wren) by
+// setFlag, the one way quest-relevant flags are written - so loading a save announces nothing.
+//
 // Display text comes from the localization file: "quest.category.<category>", "quest.<id>.title",
 // "quest.<id>.summary" and "quest.<id>.<objective>".
 import "flags" for FlagManager
 import "fileSystem" for FileSystem
 import "serialisation" for Json
 import "debug" for Debug
+import "Events/GameEvents" for GameEvents
 
 var QUEST_FILES = ["Quests/Arc1Quests.json"]
 
@@ -61,6 +65,40 @@ class QuestLog {
             total = total + quest["total"]
         }
         return total == 0 ? 0 : done / total
+    }
+
+    // --- changing progress ---------------------------------------------------------------
+
+    // Sets the int flag `name` to `value` (and saves the flags), then sends a game event (Events/GameEvents.wren) for
+    // every quest change it caused: a quest starting, an objective done, a quest completing. Every int-flag write
+    // that can move a quest goes through here (the setIntFlag dialogue command, the commands below, a won duel) -
+    // quest conditions only read int flags, so nothing else can change a quest.
+    static setFlag(name, value) {
+        var before = QuestLog.all
+        FlagManager.setIntFlag(name, value)
+        FlagManager.save("flags.sav")
+        QuestLog.announce_(before, QuestLog.all)
+    }
+
+    // Sends the events for what changed between two QuestLog.all snapshots (same order - definition order).
+    static announce_(before, after) {
+        for (i in 0...after.count) {
+            var quest = after[i]
+            var old = before[i]
+            var id = quest["id"]
+            var state = quest["state"]
+            var oldState = old["state"]
+            if (state == HIDDEN || state == oldState && state == COMPLETE) continue
+            if (oldState == HIDDEN) GameEvents.questStarted(id)
+            if (state == COMPLETE) {
+                GameEvents.questCompleted(id)
+                continue
+            }
+            for (j in 0...quest["objectives"].count) {
+                var objective = quest["objectives"][j]
+                if (objective["done"] && !old["objectives"][j]["done"]) GameEvents.questUpdated(id, objective["id"])
+            }
+        }
     }
 
     // --- dialogue commands --------------------------------------------------------------
@@ -198,8 +236,5 @@ class QuestLog {
         return FlagManager.getIntFlag(name)
     }
 
-    static set_(name, value) {
-        FlagManager.setIntFlag(name, value)
-        FlagManager.save("flags.sav")
-    }
+    static set_(name, value) { QuestLog.setFlag(name, value) }
 }

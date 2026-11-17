@@ -1,0 +1,62 @@
+// Events/GameEvents.wren
+// The game events that other systems react to, sent through the engine's event system (the "events" module's
+// Event.addEvent). An event is queued when it's sent and delivered after the frame's update, to Game.onEvent ->
+// the active state's onEvent (and every script component's onEvent) - so whatever caused it never calls the
+// listeners itself. UI/Notifications/Notifications.wren listens for all of these and shows a banner for each.
+//
+// Whatever causes one of these calls the matching method at the moment it happens - nothing watches for changes:
+//   itemReceived    an item lands in the inventory (the giveItem dialogue command, GameObjects/Item.wren pickups)
+//   goldReceived    gold is given (the giveGold dialogue command)
+//   partyJoined     an NPC joins the party (Party/Party.wren join - not loading a save)
+//   questStarted    a quest stops being hidden    } Story/QuestLog.wren setFlag - every quest flag write goes through
+//   questUpdated    one of its objectives is done } it, and it compares the quests before and after the write
+//   questCompleted  a quest is complete           }
+//
+// Each method names the event's type (the constants below) and builds its data as a map.
+import "events" for Event
+
+var ITEM_RECEIVED = "itemReceived"
+var GOLD_RECEIVED = "goldReceived"
+var PARTY_JOINED = "partyJoined"
+var QUEST_STARTED = "questStarted"
+var QUEST_UPDATED = "questUpdated"
+var QUEST_COMPLETED = "questCompleted"
+
+class GameEvents {
+    static itemReceivedType { ITEM_RECEIVED }
+    static goldReceivedType { GOLD_RECEIVED }
+    static partyJoinedType { PARTY_JOINED }
+    static questStartedType { QUEST_STARTED }
+    static questUpdatedType { QUEST_UPDATED }
+    static questCompletedType { QUEST_COMPLETED }
+
+    // data: {"item": id, "count": n}
+    static itemReceived(id, count) {
+        Event.addEvent(ITEM_RECEIVED, [["__type", "map"], ["item", id], ["count", count == null ? 1 : count]])
+    }
+
+    // data: {"amount": n}
+    static goldReceived(amount) {
+        Event.addEvent(GOLD_RECEIVED, [["__type", "map"], ["amount", amount]])
+    }
+
+    // data: {"name": npc id}
+    static partyJoined(npcId) {
+        Event.addEvent(PARTY_JOINED, [["__type", "map"], ["name", npcId]])
+    }
+
+    // data: {"quest": quest id}
+    static questStarted(questId) {
+        Event.addEvent(QUEST_STARTED, [["__type", "map"], ["quest", questId]])
+    }
+
+    // data: {"quest": quest id, "objective": objective id}
+    static questUpdated(questId, objectiveId) {
+        Event.addEvent(QUEST_UPDATED, [["__type", "map"], ["quest", questId], ["objective", objectiveId]])
+    }
+
+    // data: {"quest": quest id}
+    static questCompleted(questId) {
+        Event.addEvent(QUEST_COMPLETED, [["__type", "map"], ["quest", questId]])
+    }
+}

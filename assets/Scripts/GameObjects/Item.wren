@@ -4,7 +4,7 @@ import "math" for Vec2, Vec3, Vec4
 import "resourceManager" for Texture
 import "Util/Colors" for BLACK, WHITE, BLANK
 import "Inventory/Inventory" for Inventory
-import "UI/Notifications/Notifications" for Notifications
+import "Events/GameEvents" for GameEvents
 import "flags" for FlagManager
 import "debug" for Debug
 import "Inventory/ItemDatabase" for ItemDatabase
@@ -122,7 +122,7 @@ class Item {
         if (_disabled || _isShadow) return null
         Inventory.addItem(_name)
         Inventory.save("inventory.sav")
-        Notifications.item(_name, 1)
+        GameEvents.itemReceived(_name, 1)
         if (_returnable) {
             setIsShadow(true)
         } else {
