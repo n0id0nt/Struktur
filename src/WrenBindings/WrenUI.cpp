@@ -75,13 +75,16 @@ void wren_UIManagerSetFocus(WrenVM* vm)
 }
 
 // UIManager.clearFocusElements()
+// Drops the current focus. Deferred like setFocus: UIManager::SetFocus only records the change, and
+// UIManager::Update applies it after input handling - which is where the old element's OnLoseFocus (often a Wren
+// callback) runs. Calling FocusNavigator::Clear here instead would invoke that callback re-entrantly from inside
+// this foreign method (wrenCall while Wren is already running asserts), and would also wipe the navigator's
+// registry of still-alive focusable elements - that's UIManager::Clear's job, right before it disposes them all.
 void wren_UIManagerClearFocusElements(WrenVM* vm)
 {
-	Struktur::GameContext* context               = static_cast<Struktur::GameContext*>(wrenGetUserData(vm));
-	Struktur::UI::UIManager& uiManager           = context->GetUIManager();
-	Struktur::UI::FocusNavigator* focusNavigator = uiManager.GetFocusNavigator();
+	Struktur::GameContext* context     = static_cast<Struktur::GameContext*>(wrenGetUserData(vm));
+	Struktur::UI::UIManager& uiManager = context->GetUIManager();
 	uiManager.SetFocus(nullptr);
-	focusNavigator->Clear(*context);
 }
 
 // ============================================================================
@@ -1754,7 +1757,7 @@ WREN_BINDING_MODULE(UI)
 	WREN_CLASS_STATIC(registry, "ui", "UIManager", "setFocus(_)", wren_UIManagerSetFocus,
 	                  "Will set the focus of the current element.");
 	WREN_CLASS_STATIC(registry, "ui", "UIManager", "clearFocusElements()", wren_UIManagerClearFocusElements,
-	                  "Will set the focus of the current element.");
+	                  "Clears the current focus (applied at the end of the UI update).");
 
 	// Register Sound foreign class
 	WREN_FOREIGN_CLASS(registry, "ui", "UIElement", wren_UIElementAllocate, wren_UIElementFinalize,

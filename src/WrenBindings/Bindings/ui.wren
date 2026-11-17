@@ -106,7 +106,7 @@ class UIManager {
     foreign static removeUIElement(arg0)
     // Will set the focus of the current element.
     foreign static setFocus(arg0)
-    // Will set the focus of the current element.
+    // Clears the current focus (applied at the end of the UI update).
     foreign static clearFocusElements()
 }
 

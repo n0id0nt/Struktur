@@ -1,190 +1,341 @@
 // UI/Combat/CombatUI.wren
-// The combat screen's view, built from the UI kit (UI/Theme/UIKit.wren) as a frame around the arena so nothing sits
-// on the fighters (Combat/BattleStage.wren places them in the strip between):
-//   - enemy CombatantUI cards across the top, centred;
-//   - the battle-log message on a dark banner just under them;
-//   - a full-width command bar along the bottom: the party's cards on the left, and on the right a command area that
-//     holds either the move menu (UI/Theme/KitButton buttons, two columns, with a button hint) or the ParryPromptUI -
-//     the two are never up at once.
-// Pure construction + refresh - it never reads a Combatant or
-// Timeline itself and never calls back into game logic (unlike the old inline buildUI(), whose
-// button click handlers called straight into CombatState's turn-flow methods). States/
-// CombatState.wren wires every button's setOnClick and feeds every refresh() call primitives it
-// already resolved from the model.
-import "ui" for UIManager, UIPanel
-import "math" for Vec2
-import "app" for Application
+// The battle screen, built from the UI kit (UI/Theme/UIKit.wren) as a frame around the arena so nothing sits on the
+// fighters (Combat/BattleStage.wren places the grid in the strip between):
+//   - combatant cards along the top: the party from the left, the opposition from the right (UI/Combat/CombatantUI);
+//   - a message banner just under them: the battle log, call-outs and tips;
+//   - a full-width bar along the bottom: the shared timeline on the left (UI/Combat/TimelineUI - every combatant's
+//     committed moves on one time axis) and the command panel on the right;
+//   - a prompt box over the middle for tutorial lines (speaker + text, Accept to continue);
+//   - floating text over the fighters: damage, "Blocked", "Dodged", reactions.
+//
+// The command panel is where a chain is built. It always shows whose chain it is and how full it is (seconds of the
+// budget, stamina left after it), then one grid of up to eight slot buttons whose meaning the caller sets:
+//   the moves (the six loadout moves, Hold and Item), Hold's lengths, the items, or Start / Undo once it is full -
+// with a detail line for whatever slot has focus and a hint line of button prompts.
+//
+// Pure construction + refresh: it never reads a Combatant or the engine and never calls back into game logic except
+// through the two callbacks States/CombatState.wren sets (onSlotClick / onSlotFocus).
+import "ui" for UIManager, UIPanel, UIColor, UILabel, UIRichLabel, TextWrapping, NavigationDirection
+import "math" for Math, Vec2, Vec4
+import "app" for Application, Time
 import "Util/Colors" for BLANK
 import "UI/Combat/CombatantUI" for CombatantUI
-import "UI/Combat/ParryPromptUI" for ParryPromptUI
+import "UI/Combat/TimelineUI" for TimelineUI
+import "UI/Combat/MoveButtonUI" for MoveButtonUI
+import "UI/Theme/KitBar" for KitBar
 import "UI/Theme/KitButton" for KitButton
 import "UI/Theme/UIKit" for UIKit
 
-var TOP_EDGE = 14             // the enemy cards, down from the screen's top
-var ENEMY_CARD_WIDTH = 260
-var ENEMY_GAP = 20
-var MESSAGE_Y = 162           // the message banner's centre, down from the screen's top
-var MESSAGE_SIZE = 30.0       // the font draws it at 27
-var MESSAGE_PAD_X = 26        // around the message, inside its banner (the well's rim is 2px art at 4x = 8px)
-var MESSAGE_PAD_Y = 14
-var BAR_MIN_HEIGHT = 200      // the command bar along the bottom (taller only if the move grid needs it)
-var BAR_PAD = 28              // inside the bar's window (its rim is 5px art at 4x = 20px)
-var PARTY_CARD_WIDTH = 224
-var PARTY_GAP = 12
-var COMMAND_WIDTH = 464       // the right-hand command area: two 226px button columns and their gap
-var BUTTON_WIDTH = 226
-var BUTTON_HEIGHT = 40
-var BUTTON_GAP_X = 12
-var BUTTON_GAP_Y = 8
-var HINT_GAP = 6              // between the move grid and its button hint
-var HINT_HEIGHT = 32          // one rich-text line at size 18 (27px) plus its padding
+var TOP_EDGE = 12
+var CARD_WIDTH = 196
+var CARD_GAP = 8
+var MESSAGE_Y = 132           // the message banner's centre, down from the screen's top
+var MESSAGE_SIZE = 18.0
+var MESSAGE_PAD_X = 22
+var MESSAGE_PAD_Y = 10
+var BAR_HEIGHT = 252          // the bar along the bottom
+var BAR_PAD = 24              // inside the bar's window (its rim is 5px art at 4x = 20px)
+var COMMAND_WIDTH = 600
+var SLOT_COUNT = 8
+var SLOT_WIDTH = 296
+var SLOT_HEIGHT = 32
+var SLOT_GAP_X = 8
+var SLOT_GAP_Y = 4
+var HEADER_HEIGHT = 26
+var CHAIN_BAR_WIDTH = 120
+var TIMELINE_ROWS = 8
+var POPUPS = 16
+var POPUP_TIME = 0.9
+var PROMPT_WIDTH = 760
+var PROMPT_HEIGHT = 170
 
 class CombatUI {
-    // enemyNames/partyNames: fixed for the fight, used once to label each CombatantUI card. moveButtonCount: how many
-    // move buttons the menu needs - the most moves any party member has; setMoveLabels() relabels (and hides the
-    // unused ones) for whoever is choosing. A Flee button is always added.
-    construct new(enemyNames, partyNames, moveButtonCount) {
+    // partySlots / enemySlots: how many cards each side gets (the opposition's may fill up mid-fight - a boss's
+    // shards).
+    construct new(partySlots, enemySlots) {
         UIKit.open()
         var gw = Application.gameWidth
         var gh = Application.gameHeight
         var font = UIKit.font()
+        _font = font
+        _onSlotClick = null
+        _onSlotFocus = null
+        _slotCount = 0
+        _messageUntil = null
 
-        // Just a full-screen layout container for the views below - the arena level (see Combat/BattleStage.wren)
-        // reads as its own space, no dimming overlay needed on top of it.
         _root = UIPanel.new(Vec2.new(0, 0), Vec2.new(0, 0), Vec2.new(gw, gh), Vec2.new(0, 0))
         _root.setBackgroundColor(BLANK)
         _root.setBorderColor(BLANK)
         _root.setZIndex(-1)
         UIManager.addUIElement(_root)
 
-        // Enemy cards across the top, centred as a group (narrower if there are ever too many to fit).
-        _enemyViews = []
-        var n = enemyNames.count
-        var enemyWidth = ENEMY_CARD_WIDTH.min(((gw - 2 * TOP_EDGE - (n - 1) * ENEMY_GAP) / n.max(1)).floor)
-        var startX = (gw - (n * enemyWidth + (n - 1) * ENEMY_GAP)) / 2
-        for (i in 0...n) {
-            var x = startX + i * (enemyWidth + ENEMY_GAP)
-            _enemyViews.add(CombatantUI.new(_root, enemyNames[i], x, TOP_EDGE, enemyWidth, true, font))
+        // Cards: the party from the left edge, the opposition from the right - narrower if there are too many.
+        var total = partySlots + enemySlots
+        var width = CARD_WIDTH.min(((gw - 2 * TOP_EDGE - 40 - (total - 1) * CARD_GAP) / total.max(1)).floor)
+        _partyCards = []
+        for (i in 0...partySlots) {
+            _partyCards.add(CombatantUI.new(_root, TOP_EDGE + i * (width + CARD_GAP), TOP_EDGE, width, font))
+        }
+        _enemyCards = []
+        for (i in 0...enemySlots) {
+            var x = gw - TOP_EDGE - width - i * (width + CARD_GAP)
+            _enemyCards.add(CombatantUI.new(_root, x, TOP_EDGE, width, font))
         }
 
-        // Battle log / prompt, under the enemy cards, on a dark banner. The message is rich text sized to its content,
-        // and the banner is its child sized relative to it - so the banner always wraps the text exactly, however long
-        // it is (and messages can carry [input=Action] button prompts).
-        _messageLabel = UIKit.richText(_root, "", Vec2.new(0, MESSAGE_Y), Vec2.new(0.5, 0), Vec2.new(0.5, 0.5),
-            MESSAGE_SIZE, UIKit.text, 3)
-        // (5 / 2: the rich label's own padding, already inside its bounds.)
-        UIKit.frame(_messageLabel, "well", Vec2.new(5 - MESSAGE_PAD_X, 2 - MESSAGE_PAD_Y), Vec2.new(0, 0),
-            Vec2.new(2 * (MESSAGE_PAD_X - 5), 2 * (MESSAGE_PAD_Y - 2)), Vec2.new(1, 1), 2)
-        setMessage("")
-
-        // The command bar - tall enough for the move grid (two columns: the moves, then Flee).
-        var rows = ((moveButtonCount + 2) / 2).floor
-        var gridHeight = rows * BUTTON_HEIGHT + (rows - 1) * BUTTON_GAP_Y
-        var commandHeight = gridHeight + HINT_GAP + HINT_HEIGHT
-        var barHeight = BAR_MIN_HEIGHT.max(commandHeight + 2 * BAR_PAD)
-        _bar = UIKit.frame(_root, "window", Vec2.new(0, 0), Vec2.new(0, 1), Vec2.new(gw, barHeight), Vec2.new(0, 0), 0)
+        _bar = UIKit.frame(_root, "window", Vec2.new(0, 0), Vec2.new(0, 1), Vec2.new(gw, BAR_HEIGHT), Vec2.new(0, 0), 0)
         _bar.setAnchorPoint(Vec2.new(0, 1))
 
-        // Party cards, left of the command area, vertically centred in the bar (narrower if there are ever too many).
-        _partyViews = []
         var commandX = gw - BAR_PAD - COMMAND_WIDTH
-        var partyCount = partyNames.count
-        var partyRoom = commandX - BAR_PAD - 16
-        var partyWidth = PARTY_CARD_WIDTH.min(((partyRoom - (partyCount - 1) * PARTY_GAP) / partyCount.max(1)).floor)
-        var cardY = ((barHeight - CombatantUI.height(true)) / 2).floor
-        for (k in 0...partyCount) {
-            _partyViews.add(CombatantUI.new(_bar, partyNames[k], BAR_PAD + k * (partyWidth + PARTY_GAP), cardY,
-                partyWidth, true, font))
-        }
+        var innerHeight = BAR_HEIGHT - 2 * BAR_PAD
+        _timeline = TimelineUI.new(_bar, BAR_PAD, BAR_PAD - 4, commandX - BAR_PAD - 20, TIMELINE_ROWS, font)
+        // The hint line sits under the timeline, bottom left (-5: the rich label's own padding).
+        _hint = UIKit.richText(_bar, "", Vec2.new(BAR_PAD - 5, -BAR_PAD + 16), Vec2.new(0, 1), Vec2.new(0, 1), 18.0,
+            UIKit.textMuted, 6)
 
-        // Move menu - the command area's usual content: one button per move in the chooser's kit, then Flee, in two
-        // columns, the button hint under them. setMoveLabels lays it out for however many moves the chooser has.
-        _moveMenu = UIPanel.new(Vec2.new(commandX, BAR_PAD), Vec2.new(0, 0), Vec2.new(COMMAND_WIDTH, commandHeight),
-            Vec2.new(0, 0))
-        _moveMenu.setBackgroundColor(BLANK)
-        _moveMenu.setBorderColor(BLANK)
-        _bar.addChild(_moveMenu)
-        _moveButtons = []
-        for (i in 0...moveButtonCount) {
-            _moveButtons.add(KitButton.new(_moveMenu, "", Vec2.new(0, 0), Vec2.new(0, 0),
-                                           Vec2.new(BUTTON_WIDTH, BUTTON_HEIGHT), font))
-        }
-        _fleeButton = KitButton.new(_moveMenu, "Flee", Vec2.new(0, 0), Vec2.new(0, 0),
-                                    Vec2.new(BUTTON_WIDTH, BUTTON_HEIGHT), font)
-        _menuHint = UIKit.richText(_moveMenu, "[input=UIAccept] Select", Vec2.new(0, gridHeight + HINT_GAP),
-            Vec2.new(0.5, 0), Vec2.new(0.5, 0), 18.0, UIKit.textMuted, 6)
-        layoutMenu_(moveButtonCount)
-        _moveMenu.setVisible(false)
-
-        // Parry decision prompt - the command area's other content, hidden until States/Combat/ParryPromptState.wren
-        // shows it (the move menu is never up at the same time).
-        _parryPrompt = ParryPromptUI.new(_bar, commandX, BAR_PAD, COMMAND_WIDTH, barHeight - 2 * BAR_PAD, font)
-
-        font.unload()
+        buildCommand_(font, commandX, innerHeight)
+        // Battle log / call-outs: in the command area while the clock runs (the panel is hidden then), on a dark
+        // well, word-wrapped - off the arena, so it never covers a fighter.
+        _messageWell = UIKit.frame(_bar, "well", Vec2.new(commandX, BAR_PAD), Vec2.new(0, 0), Vec2.new(COMMAND_WIDTH, innerHeight),
+            Vec2.new(0, 0), 2)
+        _messageLabel = UIRichLabel.new(Vec2.new(14, 10), Vec2.new(0, 0), "", MESSAGE_SIZE)
+        _messageLabel.setFont(font)
+        _messageLabel.setTextColor(UIKit.text)
+        _messageLabel.setWordWrap(TextWrapping.WORD_WRAP)
+        _messageLabel.setSize(Vec2.new(COMMAND_WIDTH - 28, innerHeight - 20), Vec2.new(0, 0))
+        _messageLabel.setZIndex(3)
+        _messageWell.addChild(_messageLabel)
+        setMessage("")
+        buildPrompt_(font, gw, gh)
+        buildPopups_(font)
+        showCommand(false)
     }
 
-    moveButtons { _moveButtons }
+    static group_(parent, x, y, w, h) {
+        var panel = UIPanel.new(Vec2.new(x, y), Vec2.new(0, 0), Vec2.new(w, h), Vec2.new(0, 0))
+        panel.setBackgroundColor(BLANK)
+        panel.setBorderColor(BLANK)
+        parent.addChild(panel)
+        return panel
+    }
+
+    // --- building ----------------------------------------------------------------------
+
+    buildCommand_(font, x, height) {
+        _command = CombatUI.group_(_bar, x, BAR_PAD - 4, COMMAND_WIDTH, height + 8)
+
+        // Header: whose chain / what is being picked, and how full the chain is.
+        _header = UIKit.richText(_command, "", Vec2.new(-5, 0), Vec2.new(0, 0), Vec2.new(0, 0), 20.0, UIKit.accent, 6)
+        _chainText = UIKit.richText(_command, "", Vec2.new(5, 0), Vec2.new(1, 0), Vec2.new(1, 0), 18.0, UIKit.text, 6)
+        _chainBar = KitBar.new(_command, COMMAND_WIDTH - CHAIN_BAR_WIDTH - 150, 5, CHAIN_BAR_WIDTH, 14, UIKit.accent, 6)
+
+        _slots = []
+        for (i in 0...SLOT_COUNT) {
+            var pos = Vec2.new((i % 2) * (SLOT_WIDTH + SLOT_GAP_X), HEADER_HEIGHT + 4 + (i / 2).floor * (SLOT_HEIGHT + SLOT_GAP_Y))
+            var button = MoveButtonUI.new(_command, pos, Vec2.new(SLOT_WIDTH, SLOT_HEIGHT), font)
+            var index = i
+            button.setOnClick { |s, m|
+                if (_onSlotClick != null) _onSlotClick.call(index)
+            }
+            button.setOnFocused(Fn.new {
+                _focusedSlot = index
+                if (_onSlotFocus != null) _onSlotFocus.call(index)
+            })
+            _slots.add(button)
+        }
+        // What the focused slot does, under the grid.
+        var detailY = HEADER_HEIGHT + 4 + 4 * (SLOT_HEIGHT + SLOT_GAP_Y) + 2
+        _detail = UIKit.richText(_command, "", Vec2.new(-5, detailY), Vec2.new(0, 0), Vec2.new(0, 0), 18.0, UIKit.text, 6)
+        // Flee - only in fights that can be fled (setFleeAvailable).
+        _fleeButton = KitButton.new(_command, "Flee", Vec2.new(0, detailY - 2), Vec2.new(1, 0), Vec2.new(84, 28), font, 17.0)
+        _fleeButton.panel.setAnchorPoint(Vec2.new(1, 0))
+        _fleeAvailable = false
+        _fleeButton.panel.setVisible(false)
+    }
+
+    buildPrompt_(font, gw, gh) {
+        _prompt = UIKit.frame(_root, "dialogue", Vec2.new(0, -40), Vec2.new(0.5, 0.5), Vec2.new(PROMPT_WIDTH, PROMPT_HEIGHT),
+            Vec2.new(0, 0), 20)
+        _prompt.setAnchorPoint(Vec2.new(0.5, 0.5))
+        _promptSpeaker = UIKit.richText(_prompt, "", Vec2.new(26, 20), Vec2.new(0, 0), Vec2.new(0, 0), 22.0, UIKit.accent, 21)
+        _promptText = UIRichLabel.new(Vec2.new(26, 52), Vec2.new(0, 0), "", 20.0)
+        _promptText.setFont(font)
+        _promptText.setTextColor(UIKit.textDark)
+        _promptText.setWordWrap(TextWrapping.WORD_WRAP)
+        _promptText.setSize(Vec2.new(PROMPT_WIDTH - 52, PROMPT_HEIGHT - 86), Vec2.new(0, 0))
+        _promptText.setUseUnscaledTime(true)
+        _promptText.setZIndex(21)
+        _prompt.addChild(_promptText)
+        UIKit.richText(_prompt, "[input=UIAccept] Continue", Vec2.new(-22, -14), Vec2.new(1, 1), Vec2.new(1, 1), 18.0,
+            UIKit.textDark, 21)
+        _prompt.setVisible(false)
+    }
+
+    buildPopups_(font) {
+        _popups = []
+        for (i in 0...POPUPS) {
+            var label = UILabel.new(Vec2.new(0, 0), Vec2.new(0, 0), "", 20.0)
+            label.setFont(font)
+            label.setBoundingBoxToText()
+            label.setAnchorPoint(Vec2.new(0.5, 1))
+            label.setZIndex(12)
+            label.setVisible(false)
+            _root.addChild(label)
+            var popup = {}
+            popup["label"] = label
+            popup["start"] = null
+            _popups.add(popup)
+        }
+    }
+
+    // --- cards, timeline, message --------------------------------------------------------
+
+    partyCards { _partyCards }
+    enemyCards { _enemyCards }
+    timeline { _timeline }
+    slots { _slots }
     fleeButton { _fleeButton }
+    focusedSlot { _focusedSlot }
+
+    onSlotClick=(fn) { _onSlotClick = fn }
+    onSlotFocus=(fn) { _onSlotFocus = fn }
 
     setVisible(visible) { _root.setVisible(visible) }
-    showMoveMenu(visible) { _moveMenu.setVisible(visible) }
-    focusFirstMoveButton() { UIManager.setFocus(_moveButtons[0].panel) }
 
-    // Labels the move buttons for whoever is choosing - one label per move; buttons beyond that are hidden, and Flee
-    // takes the next spot after the last one used.
-    setMoveLabels(labels) {
-        for (i in 0..._moveButtons.count) {
-            var used = i < labels.count
-            _moveButtons[i].panel.setVisible(used)
+    // A line on the banner. seconds: how long it stays (null = until replaced).
+    setMessage(text) { setMessage(text, null) }
+    setMessage(text, seconds) {
+        _messageLabel.setMarkupText(text)
+        _messageUntil = seconds == null ? null : Time.unscaledTime + seconds
+    }
+
+    // --- the command panel -----------------------------------------------------------------
+
+    showCommand(visible) {
+        _command.setVisible(visible)
+        _messageWell.setVisible(!visible)
+        if (!visible) _hint.setMarkupText("")
+    }
+
+    setHeader(text) { _header.setMarkupText(text) }
+    setDetail(text) { _detail.setMarkupText(text) }
+    setHint(markup) { _hint.setMarkupText(markup) }
+
+    // How full the chain is: "2.6 / 4.0s   SP 54".
+    setChain(text, fraction) {
+        _chainText.setMarkupText(text)
+        _chainBar.setFraction(fraction)
+    }
+
+    setFleeAvailable(available) {
+        _fleeAvailable = available
+        _fleeButton.panel.setVisible(available)
+    }
+
+    // The slot grid. entries: up to SLOT_COUNT of [name, info, enabled]; slots past the list are hidden. Links the
+    // grid so the arrows stay on it, and (focus != null) puts focus on that slot.
+    setSlots(entries, focus) {
+        _slotCount = entries.count.min(SLOT_COUNT)
+        for (i in 0...SLOT_COUNT) {
+            var used = i < _slotCount
+            _slots[i].panel.setVisible(used)
             if (used) {
-                _moveButtons[i].setText(labels[i])
+                _slots[i].setTexts(entries[i][0], entries[i][1])
+                _slots[i].setEnabled(entries[i][2])
             }
         }
-        layoutMenu_(labels.count.min(_moveButtons.count))
+        for (i in 0..._slotCount) {
+            var panel = _slots[i].panel
+            var column = i % 2
+            CombatUI.link_(panel, NavigationDirection.LEFT, column == 1 ? _slots[i - 1].panel : null)
+            CombatUI.link_(panel, NavigationDirection.RIGHT, column == 0 && i + 1 < _slotCount ? _slots[i + 1].panel : null)
+            CombatUI.link_(panel, NavigationDirection.UP, i >= 2 ? _slots[i - 2].panel : null)
+            var below = i + 2 < _slotCount ? _slots[i + 2].panel : (_fleeAvailable ? _fleeButton.panel : null)
+            CombatUI.link_(panel, NavigationDirection.DOWN, below)
+        }
+        if (_fleeAvailable && _slotCount > 0) {
+            var last = _slots[_slotCount - 1].panel
+            CombatUI.link_(_fleeButton.panel, NavigationDirection.UP, last)
+            CombatUI.link_(_fleeButton.panel, NavigationDirection.DOWN, null)
+            CombatUI.link_(_fleeButton.panel, NavigationDirection.LEFT, null)
+            CombatUI.link_(_fleeButton.panel, NavigationDirection.RIGHT, null)
+        }
+        if (focus != null && _slotCount > 0) focusSlot(focus)
     }
 
-    setMessage(text) {
-        _messageLabel.setMarkupText(text)
-        _messageLabel.setVisible(text != "")
+    focusSlot(index) {
+        var i = Math.clamp(index, 0, _slotCount - 1)
+        UIManager.setFocus(_slots[i].panel)
     }
 
-    // Refreshes party member `index`'s card; selected rings it (whose move is being picked).
-    refreshParty(index, alive, hpFraction, chargeFraction, staminaFraction, moveText, staggered, selected) {
-        var v = _partyViews[index]
-        v.refresh(alive, hpFraction, chargeFraction, staminaFraction, moveText, staggered)
-        v.selected = selected
+    // Sets where `direction` moves focus from `element`; null blocks it (focus stays put).
+    static link_(element, direction, target) {
+        element.setNavigationNeighbor(direction, target != null ? target : element)
     }
 
-    refreshEnemy(index, alive, hpFraction, chargeFraction, staminaFraction, moveText, staggered, selected) {
-        var v = _enemyViews[index]
-        v.refresh(alive, hpFraction, chargeFraction, staminaFraction, moveText, staggered)
-        v.selected = selected
+    // --- the prompt box ----------------------------------------------------------------------
+
+    showPrompt(speaker, text) {
+        _promptSpeaker.setMarkupText(speaker == null ? "" : speaker)
+        _promptText.setMarkupText(text)
+        _prompt.setVisible(true)
+    }
+    hidePrompt() { _prompt.setVisible(false) }
+
+    // --- floating text -----------------------------------------------------------------------
+
+    // Text that rises from `screenPos` (a Vec2 in screen pixels) and fades. big: the larger size (damage numbers).
+    popup(screenPos, text, color) {
+        var slot = null
+        var oldest = null
+        for (popup in _popups) {
+            if (popup["start"] == null) {
+                slot = popup
+                break
+            }
+            if (oldest == null || popup["start"] < oldest["start"]) oldest = popup
+        }
+        if (slot == null) slot = oldest
+        // A little sideways scatter so two numbers on one fighter don't stack exactly.
+        var jitter = ((Time.unscaledTime * 977) % 21) - 10
+        slot["start"] = Time.unscaledTime
+        slot["x"] = screenPos.x + jitter
+        slot["y"] = screenPos.y
+        slot["color"] = color
+        var label = slot["label"]
+        label.setText(text)
+        label.setBoundingBoxToText()
+        label.setTextColor(color)
+        label.setPosition(Vec2.new(slot["x"], slot["y"]), Vec2.new(0, 0))
+        label.setVisible(true)
     }
 
-    // The prompt takes the move menu's spot - the flow never has both up, and this makes sure it can't.
-    showParryPrompt(attackerName, moveName, onYes, onNo) {
-        _moveMenu.setVisible(false)
-        _parryPrompt.show(attackerName, moveName, onYes, onNo)
+    // Every frame: floats the popups, clears a timed message.
+    update() {
+        var now = Time.unscaledTime
+        for (popup in _popups) {
+            var start = popup["start"]
+            if (start == null) continue
+            var t = (now - start) / POPUP_TIME
+            var label = popup["label"]
+            if (t >= 1) {
+                popup["start"] = null
+                label.setVisible(false)
+                continue
+            }
+            var c = popup["color"]
+            label.setPosition(Vec2.new(popup["x"], popup["y"] - 46 * Math.easeOut(t)), Vec2.new(0, 0))
+            label.setTextColor(Vec4.new(c.x, c.y, c.z, t < 0.6 ? 255 : 255 * (1 - (t - 0.6) / 0.4)))
+        }
+        if (_messageUntil != null && now >= _messageUntil) setMessage("")
     }
-    setParryRemaining(fraction) { _parryPrompt.setRemaining(fraction) }
-    hideParryPrompt() { _parryPrompt.hide() }
 
     teardown() {
         if (_root != null) {
             UIManager.removeUIElement(_root)
             _root = null
+            _font.unload()
+            _font = null
             UIKit.close()
-        }
-    }
-
-    // `moves` move buttons in reading order across two columns, Flee in the next spot.
-    layoutMenu_(moves) {
-        for (i in 0..moves) {
-            var button = i < moves ? _moveButtons[i] : _fleeButton
-            var column = i % 2
-            var row = (i / 2).floor
-            button.panel.setPosition(Vec2.new(column * (BUTTON_WIDTH + BUTTON_GAP_X), row * (BUTTON_HEIGHT + BUTTON_GAP_Y)),
-                Vec2.new(0, 0))
         }
     }
 }

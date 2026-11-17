@@ -1,5 +1,5 @@
 // UI/Inventory/MovesPage.wren
-// The inventory's Moves tab: the player's loadout (Combat/MoveBook.wren - the three moves they fight with) along the
+// The inventory's Moves tab: the player's loadout (Combat/MoveBook.wren - the six moves they fight with) along the
 // top, every move they have unlocked listed below it, and on the right a preview of the selected move - the
 // player's battle sprite playing that move's animation, then a beat of idle, on a loop - with its numbers.
 //
@@ -19,10 +19,12 @@ import "UI/Theme/UIKit" for UIKit
 import "UI/Inventory/InventoryTheme" for InventoryTheme
 import "UI/Inventory/MoveCells" for MoveCells
 
+var SLOT_COLUMNS = 3     // six loadout slots: three across the list's width (528), two rows
 var SLOT_WIDTH = 168
 var SLOT_STRIDE = 180
-var SLOT_HEIGHT = 92
-var LIST_Y = 180
+var SLOT_HEIGHT = 64
+var SLOT_ROW_STRIDE = 70
+var LIST_Y = 206
 var LIST_INSET = 10
 var ROW_INSET = 4   // room for the focus ring inside the scroll's clip
 var ROW_WIDTH = 500
@@ -46,6 +48,7 @@ class MovesPage {
         _sheet = model["sheet"]
         _moves = model["moves"]
         _equipped = model["equipped"]
+        _slotCount = model["slots"] != null ? model["slots"] : _equipped.count
         _onFocus = onFocus
         _onEquip = onEquip
         _slots = []
@@ -63,7 +66,7 @@ class MovesPage {
         link_()
         refresh_()
         if (_equipped.count > 0) {
-            preview_(entryFor_(_equipped[0]))
+            preview_(entryFor_(equippedAt_(0)))
         }
     }
 
@@ -115,20 +118,21 @@ class MovesPage {
     buildLoadout_() {
         InventoryTheme.label(_root, _labels["loadout"], Vec2.new(0, 6), Vec2.new(0, 0), Vec2.new(0, 0), 18.0, _boldFont,
             InventoryTheme.accent, 3)
-        for (i in 0..._equipped.count) {
-            var panel = InventoryTheme.frame(_root, "tile", Vec2.new(i * SLOT_STRIDE, 36), Vec2.new(0, 0),
+        for (i in 0..._slotCount) {
+            var pos = Vec2.new((i % SLOT_COLUMNS) * SLOT_STRIDE, 36 + (i / SLOT_COLUMNS).floor * SLOT_ROW_STRIDE)
+            var panel = InventoryTheme.frame(_root, "tile", pos, Vec2.new(0, 0),
                 Vec2.new(SLOT_WIDTH, SLOT_HEIGHT), Vec2.new(0, 0), 3)
-            InventoryTheme.label(panel, "%(_labels["slot"]) %(i + 1)", Vec2.new(12, 8), Vec2.new(0, 0), Vec2.new(0, 0),
+            InventoryTheme.label(panel, "%(_labels["slot"]) %(i + 1)", Vec2.new(12, 6), Vec2.new(0, 0), Vec2.new(0, 0),
                 16.0, _bookFont, InventoryTheme.textMuted, 4)
             var slot = {}
             slot["panel"] = panel
-            slot["name"] = InventoryTheme.label(panel, "", Vec2.new(12, 40), Vec2.new(0, 0), Vec2.new(0, 0), 26.0,
+            slot["name"] = InventoryTheme.label(panel, "", Vec2.new(12, 30), Vec2.new(0, 0), Vec2.new(0, 0), 20.0,
                 _boldFont, InventoryTheme.text, 4)
             _slots.add(slot)
 
             InventoryTheme.focusable(panel, Fn.new {
                 if (_armedMove == null) {
-                    preview_(entryFor_(_equipped[i]))
+                    preview_(entryFor_(equippedAt_(i)))
                 }
                 _onFocus.call()
             }, null)
@@ -239,10 +243,13 @@ class MovesPage {
         var firstRow = _rows.count > 0 ? _rows[0]["panel"] : null
         for (i in 0..._slots.count) {
             var panel = _slots[i]["panel"]
-            InventoryTheme.link(panel, NavigationDirection.LEFT, i > 0 ? _slots[i - 1]["panel"] : null)
-            InventoryTheme.link(panel, NavigationDirection.RIGHT, i + 1 < _slots.count ? _slots[i + 1]["panel"] : null)
-            InventoryTheme.link(panel, NavigationDirection.UP, null)
-            InventoryTheme.link(panel, NavigationDirection.DOWN, firstRow)
+            var column = i % SLOT_COLUMNS
+            InventoryTheme.link(panel, NavigationDirection.LEFT, column > 0 ? _slots[i - 1]["panel"] : null)
+            InventoryTheme.link(panel, NavigationDirection.RIGHT,
+                column + 1 < SLOT_COLUMNS && i + 1 < _slots.count ? _slots[i + 1]["panel"] : null)
+            InventoryTheme.link(panel, NavigationDirection.UP, i >= SLOT_COLUMNS ? _slots[i - SLOT_COLUMNS]["panel"] : null)
+            InventoryTheme.link(panel, NavigationDirection.DOWN,
+                i + SLOT_COLUMNS < _slots.count ? _slots[i + SLOT_COLUMNS]["panel"] : firstRow)
         }
         for (r in 0..._rows.count) {
             var panel = _rows[r]["panel"]
@@ -264,7 +271,8 @@ class MovesPage {
             // Pick what goes here: jump to the move currently in the slot, in the list.
             _armedSlot = slot
             refresh_()
-            UIManager.setFocus(_rows[rowIndexOf_(_equipped[slot])]["panel"])
+            var r = rowIndexOf_(equippedAt_(slot))
+            if (_rows.count > 0) UIManager.setFocus(_rows[r >= 0 ? r : 0]["panel"])
         }
     }
 
@@ -302,8 +310,8 @@ class MovesPage {
     // Re-reads the loadout into the slots, the list's slot badges, the highlight colours and the hint.
     refresh_() {
         for (i in 0..._slots.count) {
-            var move = entryFor_(_equipped[i])
-            setText_(_slots[i]["name"], move["name"])
+            var move = entryFor_(equippedAt_(i))
+            setText_(_slots[i]["name"], move == null ? "-" : move["name"])
         }
         for (row in _rows) {
             row["badge"].setText("")
@@ -389,7 +397,11 @@ class MovesPage {
 
     // --- helpers ----------------------------------------------------------------------------
 
+    // The move id in loadout slot `i`, or null for an empty slot.
+    equippedAt_(i) { i < _equipped.count ? _equipped[i] : null }
+
     entryFor_(id) {
+        if (id == null) return null
         var r = rowIndexOf_(id)
         return r >= 0 ? _moves[r] : null
     }

@@ -1,41 +1,41 @@
 // Combat/Battler.wren
 // One combatant as it exists in the arena: a spawned entity wearing a def's sprite + animations
-// (Combat/Config/BattleCritter.wren for enemies, Combat/Config/BattlePlayer.wren for the player),
-// plus the Combatant it fights as. Built and owned by Combat/BattleStage.wren, torn down with the
-// fight.
+// (Combat/Config/BattleCritter.wren, or Combat/Config/BattlePlayer.wren for the player), plus the Combatant it shows.
+// Built and owned by Combat/BattleStage.wren, torn down with the fight.
 //
-// Battles are animation driven (see Combat/Config/ActionAnimations.wren for the data):
-//   - While a move is committed the battler plays that move's clip, retimed to the move's charge time and
-//     re-anchored to the Timeline fraction every frame (update) - so the clip, the lunge and the charge
-//     bar are one thing, and slowing/pausing game time (Time.setTimeScale) slows/pauses all of it.
-//   - With no move committed (the player while choosing) it idles.
-//   - Reactions (hurt / parry / fumble / defeat / flee) are timed overlays that interrupt either, then fall
-//     back to whichever applies.
+// Battles are animation driven. Every frame the battler reads its Combatant (Combat/BattleEngine.wren moves it on):
+//   - a move in progress plays that move's clip, retimed to the move's length and anchored to how far into it the
+//     combatant is - so the clip, the hit and the timeline are one thing, and pausing game time freezes all of it;
+//   - a combatant in a damage animation plays its hurt clip; an idle or holding one idles;
+//   - the sprite slides to the combatant's cell whenever that changes, leans into an attack around its impact, and
+//     is tinted by what it is doing: guarding (blue, strongest at the peak), dodging (ghosted), Exposed (gold),
+//     staggered (red), burning / chilled.
+// A def may carry a weapon layer (def.weaponTexturePath): a second sheet with the same grid, drawn over the body
+// frame for frame.
 import "gameObject" for GameObject
 import "gameObjectComponents" for WorldTransform, Sprite, SpriteAnimation, ParticleEmitter, RenderLayer
-import "math" for Math, Vec3, Vec4
+import "math" for Math, Vec2, Vec3, Vec4
 import "resourceManager" for Texture
 import "animation" for SpriteAnimationDefinition
 import "renderer" for FlipBit
 import "app" for Time
 import "Util/Colors" for WHITE
-import "Combat/Timeline" for SECONDS_PER_TIME_UNIT
-import "Combat/Config/ActionAnimations" for ActionAnimations
-import "Combat/Config/MoveCurves" for MoveCurves
+import "Combat/Config/SheetAnims" for SheetAnims
 import "Combat/Config/MoveParticles" for MoveParticles
 
-// ATTACK_REACH: how far from home toward the target's home an attacker lunges, as a fraction of that
-// distance - halfway, meeting the target in the middle, since the target is often lunging back at the same time.
-var ATTACK_REACH     = 0.5
-var RETREAT_DISTANCE = 28   // px a "retreat" move (Dodge) slips back by
-var RUN_OFF_DISTANCE = 220  // px the fleeing player slides off-stage by
+var SLIDE_SPEED = 260        // px per second between cells
+var LEAN = 7                 // px an attack leans toward its target at impact
+var HURT_TINT = Vec4.new(255, 120, 120, 255)
+var GUARD_TINT = Vec4.new(120, 170, 255, 255)
+var EXPOSED_TINT = Vec4.new(255, 225, 110, 255)
+var BURN_TINT = Vec4.new(255, 170, 90, 255)
+var CHILL_TINT = Vec4.new(150, 215, 255, 255)
+var DEFEAT_TIME = 0.9
 
 class Battler {
-    // def: a BattleCritter instance or the BattlePlayer class - same getters either way
-    //   (name / texturePath / cols / rows / pivot / facing / anims).
-    // combatant: the Combatant this battler fights as (the player's is persistent).
-    // parent: entity to parent the spawned battler under (the arena anchor).
-    construct new(def, combatant, parent) {
+    // def: a BattleCritter or the BattlePlayer class - same getters either way. combatant: who it shows.
+    // parent: entity to parent the spawned battler under. position: where it starts (a Vec3).
+    construct new(def, combatant, parent, position) {
         _def = def
         _combatant = combatant
         _entity = GameObject.create("Battler_%(def.name)", parent)
@@ -43,99 +43,88 @@ class Battler {
         var tex = Texture.load(def.texturePath)
         Sprite.create(_entity, tex, WHITE, def.pivot, def.cols, def.rows, FlipBit.NONE, 0, RenderLayer.ENTITIES, 0)
         tex.unload()
-
         _anim = SpriteAnimation.create(_entity)
         _registered = {}   // clip keys already added - SpriteAnimation.addAnimation rejects duplicates
 
-        _home = null
-        _base = null          // where the battler stands this frame, before any reaction hop
-        _awaySign = 1         // +1 / -1: which way "away from the opponent" is along x
-        _recoverFrom = null
+        _pos = position
+        _target = position
+        _side = 1
+        _clip = null
+        _wasStunned = false
+        _defeatedAt = null
+        _gone = false
+        _hop = 0
+        _hopUntil = 0
+        _base = def.tint == null ? WHITE : def.tint
+        _lastMove = null
+        WorldTransform.setPosition(_entity, position)
 
-        _move = null          // committed move being animated (null = idle)
-        _action = null
-        _curve = null
-        _chargeClip = null
+        // The weapon layer: its own sprite on a child entity, kept on the body's frame every update.
+        _weapon = null
+        if (Battler.hasWeaponLayer_(def) && combatant.loadout.main != null) {
+            _weapon = GameObject.create("Weapon_%(def.name)", _entity)
+            var weaponTex = Texture.load(def.weaponTexturePath)
+            Sprite.create(_weapon, weaponTex, WHITE, def.pivot, def.cols, def.rows, FlipBit.NONE, 0, RenderLayer.ENTITIES, 1)
+            weaponTex.unload()
+        }
 
-        _reaction = null
-        _reactionStart = 0
-        _reactionEnd = 0
-        _reactionFrom = null   // where the battler stood when the current reaction began (the fumble's start)
-        _defeated = false
-
-        playIdle()
-
-        // One persistent particle emitter, reused for every move's impact effect that lands on this
-        // battler (playImpact) instead of creating/destroying an emitter per hit - see
-        // Combat/Config/MoveParticles.wren. The initial texture is just a placeholder; playImpact
-        // swaps it (and everything else) before ever emitting, and ParticleEmitter.create requires
-        // some valid texture up front.
+        // One persistent particle emitter, reused for every effect that lands on this battler (playImpact) - see
+        // Combat/Config/MoveParticles.wren. The initial texture is just a placeholder.
         var particleTex = Texture.load("Actors/magic.png")
         _emitter = ParticleEmitter.create(_entity, particleTex)
         particleTex.unload()
         _emitter.looping = false
+
+        face(1)
+        play_("idle", null, true)
+    }
+
+    // Only the player's sheet has a weapon layer so far (Combat/Config/BattlePlayer.weaponTexturePath).
+    static hasWeaponLayer_(def) {
+        return def.name == "You" && def.weaponTexturePath != null
     }
 
     entity { _entity }
     combatant { _combatant }
+    position { _pos }
+    gone { _gone }
 
-    // Formation slot position - set once by BattleStage right after construction; the lunge starts and
-    // ends here.
-    home { _home }
-    home=(pos) {
-        _home = pos
-        _base = pos
+    // Where the battler should stand; it slides there.
+    target=(pos) { _target = pos }
+    // Jumps straight to `pos` (the entrance slide writes the position itself).
+    place(pos) {
+        _pos = pos
+        _target = pos
+        WorldTransform.setPosition(_entity, pos)
     }
 
-    awaySign=(sign) { _awaySign = sign }
+    // Draw order within the arena: battlers in nearer lanes over those behind.
+    order=(value) {
+        Sprite.setOrderInLayer(_entity, value)
+        if (_weapon != null) Sprite.setOrderInLayer(_weapon, value + 1)
+    }
 
-    // dir: 1 to face right, -1 to face left. A def with left-facing art (animsLeft) switches to those clips;
-    // one without flips the sheet when that's opposite the art's facing.
+    // dir: 1 to face right, -1 to face left. A def with left-facing art (animsLeft) switches to those clips; one
+    // without flips the sheet when that's opposite the art's facing.
     face(dir) {
-        _faceDir = dir
-        flip_(dir)
-        if (_move == null && _reaction == null && !_defeated) {
-            playIdle()   // re-pick the idle for the new side (the constructor started it facing right)
-        }
-    }
-
-    // Turns the sprite away from the opponents (true) or back toward them (false) without changing the
-    // remembered facing - so a retreat or a flee runs/rolls the way it moves instead of moonwalking.
-    turnAway_(away) {
-        if (_faceDir != null) {
-            flip_(away ? -_faceDir : _faceDir)
-        }
-    }
-
-    flip_(dir) {
+        if (dir == _side && _faced == true) return
+        _faced = true
         _side = dir
-        if (_def.animsLeft != null) {
-            Sprite.setFlipped(_entity, FlipBit.NONE)
-        } else {
-            Sprite.setFlipped(_entity, dir == _def.facing ? FlipBit.NONE : FlipBit.HORIZONTAL)
-        }
+        var flip = FlipBit.NONE
+        if (_def.animsLeft == null && dir != _def.facing) flip = FlipBit.HORIZONTAL
+        Sprite.setFlipped(_entity, flip)
+        if (_weapon != null) Sprite.setFlipped(_weapon, flip)
+        _clip = null
     }
 
-    // The anims table for the side the battler shows now: the def's left-facing table when it has one and
-    // the battler faces left, otherwise its own (flipped by flip_ as needed).
     anims_ { (_side == -1 && _def.animsLeft != null) ? _def.animsLeft : _def.anims }
 
-    // Slide from fromPos toward toPos, t in 0..1 (the arena entrance - see BattleStage.intro).
-    slide(fromPos, toPos, t) {
-        _base = Vec3.lerp(fromPos, toPos, t)
-        WorldTransform.setPosition(_entity, _base)
-    }
-
-    // --- clips ---------------------------------------------------------------------
-
-    // The key of the clip for `role` at `duration` seconds (null = the def's own length), registering
-    // it on first use. Frame ranges come from the def's anims table; a role the def lacks falls back to its
-    // generic role (ActionAnimations.fallbackRole - "crush" -> "attack"), then to idle. loop=false clips
-    // hold their last frame.
+    // The key of the clip for `role` at `duration` seconds (null = the sheet's own length), registering it on first
+    // use. A role the sheet lacks falls back to its generic role, then to idle.
     clip_(role, duration, loop) {
         var anims = anims_
         if (!anims.containsKey(role)) {
-            var generic = ActionAnimations.fallbackRole(role)
+            var generic = SheetAnims.fallbackRole(role)
             role = (generic != null && anims.containsKey(generic)) ? generic : "idle"
         }
         var frames = anims[role]
@@ -149,203 +138,129 @@ class Battler {
         return key
     }
 
-    playIdle() {
-        SpriteAnimation.setCurrentAnimation(_entity, clip_("idle", null, true))
-    }
-
-    // The arena entrance: plays the "entrance" clip (a run - see
-    // Combat/Config/SheetAnims.wren) while BattleStage.intro slides everyone onto their marks.
-    playEntrance() {
-        SpriteAnimation.forcePlayAnimation(_entity, clip_(ActionAnimations.reaction("entrance").role, null, true))
-    }
-
-    // --- charging a move -------------------------------------------------------------
-
-    // Starts animating `move`: from now until endCharge the battler plays its clip, retimed to `cost`
-    // time units (the move's effective charge time), driven by update().
-    beginCharge(move, cost) {
-        _move = move
-        _action = ActionAnimations.forMove(move)
-        _curve = _action.motion == "lunge" ? MoveCurves.get(_action.curveId) : null
-        turnAway_(_action.motion == "retreat")
-        if (_action.loop) {
-            _chargeClip = clip_(_action.role, null, true)
-        } else {
-            _chargeClip = clip_(_action.role, cost * SECONDS_PER_TIME_UNIT, false)
-        }
-        refreshTint_()
-    }
-
-    // The move is gone (resolved, cancelled): back to idle. Position stays where the move left it until
-    // recover() eases it home.
-    endCharge() {
-        if (_action != null && _action.motion == "retreat") {
-            turnAway_(false)
-        }
-        _move = null
-        _action = null
-        _curve = null
-        _chargeClip = null
-        refreshTint_()
-        if (_reaction == null && !_defeated) {
-            playIdle()
+    // Plays a looping / free-running clip (only restarting it when it changes).
+    play_(role, duration, loop) {
+        var key = clip_(role, duration, loop)
+        if (key != _clip) {
+            _clip = key
+            SpriteAnimation.forcePlayAnimation(_entity, key)
         }
     }
 
-    // Called every frame by BattleStage.drive. fraction: the Timeline's 0..1 charge of this battler's
-    // move. targetHome: where the move's target stands (the lunge heads toward it).
-    update(fraction, targetHome) {
+    // The arena entrance: a run on the spot while BattleStage slides everyone onto their marks.
+    playEntrance() { play_("entrance", null, true) }
+    playIdle() { play_("idle", null, true) }
+
+    // --- every frame ---------------------------------------------------------------------
+
+    // dt: game seconds since the last frame. Reads the Combatant and shows it.
+    update(dt) {
+        var c = _combatant
         var now = Time.scaledTime
-        if (_reaction != null && !_defeated && now >= _reactionEnd) {
-            _reaction = null
-            refreshTint_()
-            if (_move == null) {
-                playIdle()
-            }
-        }
-
-        if (_reaction != null && _reaction.fumble && !_defeated) {
-            // A fumble (the parried attacker) overrides the move's path: stumble from wherever the lunge got to back to the mark.
-            _base = fumblePos_(now)
-        } else if (_move != null && !_defeated) {
-            if (_reaction == null) {
-                if (_action.loop) {
-                    SpriteAnimation.setCurrentAnimation(_entity, _chargeClip)
-                } else {
-                    SpriteAnimation.playAnimationAt(_entity, _chargeClip, fraction)
-                }
-            }
-            _base = chargePos_(fraction, targetHome)
-        }
-        place_(now)
-    }
-
-    // The fumble's path: eased from where the reaction began (mid-lunge, say) back to the home mark, with
-    // a sway that dies away as it settles - a stumble rather than a slide. Ends exactly on the mark.
-    fumblePos_(now) {
-        var t = Math.min((now - _reactionStart) / _reaction.duration, 1)
-        var p = Math.smoothstep(t)
-        var x = Math.lerp(_reactionFrom.x, _home.x, p) + _awaySign * 5 * Math.sin(t * Math.pi * 3) * (1 - t)
-        var y = Math.lerp(_reactionFrom.y, _home.y, p) + 3 * Math.sin(t * Math.pi * 5) * (1 - t)
-        return Vec3.new(x, y, 0)
-    }
-
-    // Where the committed move puts the battler at this fraction of its charge. A move with no motion
-    // (Mend, Stalled) leaves it wherever it is, so a battler still recovering from its last move isn't
-    // snapped home.
-    chargePos_(fraction, targetHome) {
-        if (_action.motion == "none") {
-            return _base
-        }
-        if (targetHome == null || fraction <= _action.lungeStart) {
-            return _home
-        }
-        var t = (fraction - _action.lungeStart) / (1 - _action.lungeStart)
-        if (_action.motion == "lunge") {
-            var approach = Vec3.lerp(_home, targetHome, ATTACK_REACH)
-            return Vec3.lerp(_home, approach, _curve.evaluate(t))
-        }
-        return Vec3.new(_home.x + _awaySign * RETREAT_DISTANCE * Math.smoothstep(t), _home.y, 0)
-    }
-
-    // --- reactions ---------------------------------------------------------------------
-
-    // Plays a timed overlay from ActionAnimations.reaction(id) over whatever the battler was doing.
-    // "defeat" never ends (the battler fades out and stays down).
-    react(id) {
-        if (_defeated) {
+        if (_defeatedAt != null) {
+            var t = Math.min((now - _defeatedAt) / DEFEAT_TIME, 1)
+            setColor_(Vec4.new(HURT_TINT.x, HURT_TINT.y, HURT_TINT.z, 255 * (1 - t)))
+            if (t >= 1) _gone = true
+            syncWeapon_()
             return
         }
-        var a = ActionAnimations.reaction(id)
-        _reaction = a
-        _reactionStart = Time.scaledTime
-        _reactionFrom = _base
-        _reactionEnd = _reactionStart + a.duration
-        if (id == "flee") {
-            turnAway_(true)   // stays turned: the flee ends the fight
-        }
-        SpriteAnimation.forcePlayAnimation(_entity, clip_(a.role, a.duration, false))
-        if (id == "defeat") {
-            _defeated = true
-        }
-        refreshTint_()
-    }
 
-    // The battler's position this frame: its base spot plus any reaction hop (knock-back out and back,
-    // or - for a defeat - out and staying out), and the defeat fade.
-    place_(now) {
-        var offset = 0
-        if (_reaction != null) {
-            var t = _reaction.duration > 0 ? Math.min((now - _reactionStart) / _reaction.duration, 1) : 1
-            if (_reaction.hop != 0) {
-                offset = _awaySign * _reaction.hop * (_defeated ? Math.smoothstep(t) : Math.sin(t * Math.pi))
-            }
-            if (_defeated && _reaction.fade) {
-                var c = _reaction.tint
-                setColor_(Vec4.new(c.x, c.y, c.z, 255 * (1 - t)))
+        face(c.facing)
+
+        // Position: slide toward the cell, lean into an attack around its impact, hop on a dodge.
+        var gap = Vec3.distance(_pos, _target)
+        if (gap > 0.01) {
+            var step = SLIDE_SPEED * dt
+            _pos = gap <= step ? _target : Vec3.lerp(_pos, _target, step / gap)
+        }
+        var lean = 0
+        var move = c.move
+        if (move != null && move.isAttack && move.impact != null && c.stun <= 0) {
+            var d = c.progress - move.impact
+            if (d < 0) {
+                lean = -2 * Math.clamp01(1 + d / 0.25)             // a small draw-back just before the hit
+                if (d > -0.08) lean = LEAN * (1 + d / 0.08)
+            } else {
+                lean = LEAN * Math.clamp01(1 - d / 0.25)
             }
         }
-        WorldTransform.setPosition(_entity, Vec3.new(_base.x + offset, _base.y, 0))
-    }
+        var hop = now < _hopUntil ? -6 * Math.sin((1 - (_hopUntil - now) / 0.3) * Math.pi) : 0
+        WorldTransform.setPosition(_entity, Vec3.new(_pos.x + lean * c.facing, _pos.y + hop, 0))
 
-    // --- recovering after a move lands ------------------------------------------------
-
-    // True when the last move left this battler away from its mark (a lunge / retreat).
-    // A battler mid-fumble is already on its way home by itself, so it never needs a recover.
-    needsRecover {
-        if (_reaction != null && _reaction.fumble) {
-            return false
-        }
-        return _base != null && _home != null && Vec3.manhattan(_base, _home) > 0.5
-    }
-
-    beginRecover() {
-        _recoverFrom = _base
-    }
-
-    // t: 0..1 progress easing the battler from where the move left it back to its mark.
-    recover(t) {
-        _base = Vec3.lerp(_recoverFrom, _home, Math.smoothstep(t))
-        place_(Time.scaledTime)
-    }
-
-    // t: 0..1 progress sliding the battler off-stage, away from the opponents (the "flee" run-off).
-    runOff(t) {
-        _base = Vec3.new(_home.x + _awaySign * RUN_OFF_DISTANCE * Math.smoothstep(t), _home.y, 0)
-        place_(Time.scaledTime)
-    }
-
-    // Reactions or the stalled look may recolour the sprite; this picks the right colour for the current
-    // state (a reaction's tint, else the committed action's, else none).
-    refreshTint_() {
-        if (_defeated) {
-            return
-        }
-        if (_reaction != null && _reaction.tint != null) {
-            setColor_(_reaction.tint)
-        } else if (_action != null && _action.tint != null) {
-            setColor_(_action.tint)
+        // Animation.
+        if (c.stun > 0) {
+            if (!_wasStunned) {
+                _clip = clip_("hurt", 0.35, false)
+                SpriteAnimation.forcePlayAnimation(_entity, _clip)
+            }
+            _wasStunned = true
         } else {
-            setColor_(WHITE)
+            _wasStunned = false
+            if (move == null || move.isHold) {
+                play_(gap > 0.5 ? "step" : "idle", null, true)
+            } else {
+                var key = clip_(move.anim, move.completion, false)
+                _clip = key
+                SpriteAnimation.playAnimationAt(_entity, key, Math.clamp01(c.progress / move.completion))
+            }
         }
+
+        // Tint: what the combatant is doing right now.
+        var color = _base
+        if (c.stun > 0) {
+            color = HURT_TINT
+        } else if (c.guardNow > 0) {
+            color = Battler.mix_(_base, GUARD_TINT, 0.35 + 0.65 * c.guardNow)
+        } else if (c.exposedNow) {
+            color = Battler.mix_(_base, EXPOSED_TINT, 0.6 + 0.4 * Math.sin(now * 14))
+        } else if (c.burn > 0) {
+            color = Battler.mix_(_base, BURN_TINT, 0.5 + 0.3 * Math.sin(now * 9))
+        } else if (c.chill > 0 || c.frozen > 0) {
+            color = Battler.mix_(_base, CHILL_TINT, c.frozen > 0 ? 1 : 0.6)
+        }
+        if (c.dodgingNow) color = Vec4.new(color.x, color.y, color.z, 120)
+        setColor_(color)
+        syncWeapon_()
+    }
+
+    static mix_(a, b, t) {
+        var k = Math.clamp01(t)
+        return Vec4.new(a.x + (b.x - a.x) * k, a.y + (b.y - a.y) * k, a.z + (b.z - a.z) * k, 255)
     }
 
     setColor_(color) {
         var sprite = Sprite.get(_entity)
-        if (sprite != null) {
-            sprite.color = color
+        if (sprite != null) sprite.color = color
+        if (_weapon != null) {
+            var weaponSprite = Sprite.get(_weapon)
+            if (weaponSprite != null) weaponSprite.color = Vec4.new(255, 255, 255, color.w)
         }
     }
 
-    // Reconfigures this battler's persistent particle emitter for particleId and fires it - called at the
-    // moment a hit / parry / heal lands on this battler (BattleStage.playImpact).
-    playImpact(particleId) {
-        MoveParticles.trigger(_emitter, particleId)
+    // The weapon layer shows the same frame as the body.
+    syncWeapon_() {
+        if (_weapon == null) return
+        var body = Sprite.get(_entity)
+        var weaponSprite = Sprite.get(_weapon)
+        if (body != null && weaponSprite != null) weaponSprite.index = body.index
     }
 
-    place(pos) {
-        _base = pos
-        WorldTransform.setPosition(_entity, pos)
+    // --- reactions -------------------------------------------------------------------------
+
+    // A quick hop: the dodge that let a hit pass.
+    hop() { _hopUntil = Time.scaledTime + 0.3 }
+
+    // Falls and fades out; `gone` turns true once it has.
+    defeat() {
+        if (_defeatedAt != null) return
+        _defeatedAt = Time.scaledTime
+        _clip = clip_("defeat", DEFEAT_TIME, false)
+        SpriteAnimation.forcePlayAnimation(_entity, _clip)
+    }
+
+    // Fires one of Combat/Config/MoveParticles.wren's presets on this battler.
+    playImpact(particleId) {
+        MoveParticles.trigger(_emitter, particleId)
     }
 
     teardown() {

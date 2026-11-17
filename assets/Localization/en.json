@@ -80,14 +80,10 @@
     "inventory.party.downed": "Downed",
     "inventory.stat.hp": "HP",
     "inventory.stat.stamina": "Stamina",
-    "inventory.stat.might": "Might",
-    "inventory.stat.guard": "Guard",
-    "inventory.stat.poise": "Poise",
-    "inventory.stat.agility": "Agility",
-    "inventory.stat.reflex": "Reflex",
-    "inventory.stat.precision": "Precision",
-    "inventory.stat.endurance": "Endurance",
-    "inventory.stat.focus": "Focus",
+    "inventory.stat.attack": "Attack",
+    "inventory.stat.mana": "Mana",
+    "inventory.stat.defence": "Defence",
+    "inventory.stat.recovery": "Recovery",
     "inventory.levels.level": "Level",
     "inventory.levels.xp": "XP",
     "inventory.levels.placeholder": "Levels and experience aren't in the game yet - these numbers are placeholders.",
@@ -487,6 +483,13 @@
     "terrain.IndoorBrick": "Indoors",
     "terrain.Shrine": "Shrine",
     "inventory.open.map": "Select to view the map",
-    "inventory.map.door": "Doorway"
+    "inventory.map.door": "Doorway",
+    "item.healing_herb.desc": "A bitter leaf from Haven's herb farm. Chewed, it closes small cuts and steadies the breath.",
+    "item.bread_roll.desc": "Elena's soft roll, still a little warm. Good for a quick bite between fights.",
+    "item.special_ration.desc": "A hearty travel ration packed for the road. Fills you up for the long walk ahead.",
+    "item.fresh_bread.desc": "A crusty loaf straight from the oven.",
+    "item.feast_loaf.desc": "A huge festival loaf, sweet and dense. Enough to share with the whole party.",
+    "item.jar_of_honey.desc": "Golden honey from the village hives. A spoonful lifts tired spirits.",
+    "item.dried_herbs.desc": "A bundle of dried herbs. Brewed into tea, they ease aches."
   }
 }

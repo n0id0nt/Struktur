@@ -1,15 +1,16 @@
 // Combat/MoveBook.wren
-// The player's moves outside a fight: every move they have unlocked, and the LOADOUT_SIZE of those they carry into
-// battle - Combat/Config/BattlePlayer.kit reads the loadout, so a freshly minted player Combatant fights with it
-// (States/InventoryState.wren pushes a changed loadout onto the live one). A new game starts with the starter kit
-// (the archetype's) unlocked and equipped; the "unlockMove" dialogue command unlocks more, and the inventory's
-// Moves tab swaps which are equipped. Moves are stored by name (Combat/Config/Moves.byName). Saved to moves.sav.
+// The player's moves outside a fight: every move they have learned, and the up-to-LOADOUT_SIZE of those they carry
+// into battle (plus Hold and Use Item, which everyone always has) - Combat/Config/BattlePlayer.kit reads the loadout.
+// Moves are learned in the world: a new game starts with the starter kit (Step and Slash - first arc script), the
+// "unlockMove" dialogue command teaches more (a newly learned move goes straight into a free loadout slot), and the
+// inventory's Moves tab swaps which are equipped. Moves are stored by name ("Slash", "Slash II" -
+// Combat/Config/Moves.byName). Saved to moves.sav.
 import "serialisation" for Json, MapUtil
 import "fileSystem" for FileSystem
 import "Combat/Config/Moves" for Moves
 import "debug" for Debug
 
-var LOADOUT_SIZE = 3
+var LOADOUT_SIZE = 6
 
 class MoveBook {
     static loadoutSize { LOADOUT_SIZE }
@@ -46,13 +47,22 @@ class MoveBook {
             return false
         }
         __unlocked.add(name)
+        if (__equipped.count < LOADOUT_SIZE) {
+            __equipped.add(name)
+        }
         return true
     }
 
     // Puts an unlocked move in loadout slot `slot`. If it was already in another slot, the two swap - so the
     // loadout never holds a move twice.
     static equip(slot, name) {
-        if (!MoveBook.isUnlocked(name) || slot < 0 || slot >= __equipped.count) {
+        if (!MoveBook.isUnlocked(name) || slot < 0 || slot >= LOADOUT_SIZE) {
+            return
+        }
+        // An empty slot past the loadout's end: the move joins it (moving out of the slot it was in, if any).
+        if (slot >= __equipped.count) {
+            if (__equipped.contains(name)) __equipped.removeAt(__equipped.indexOf(name))
+            __equipped.add(name)
             return
         }
         var from = __equipped.indexOf(name)
@@ -85,7 +95,13 @@ class MoveBook {
             }
         }
         __unlocked = unlocked
-        if (equipped.count == LOADOUT_SIZE) {
+        // A loadout with room left (an older save, or one whose moves no longer exist) fills up from the learned ones.
+        for (name in unlocked) {
+            if (equipped.count < LOADOUT_SIZE && !equipped.contains(name)) {
+                equipped.add(name)
+            }
+        }
+        if (equipped.count > 0) {
             __equipped = equipped
         }
     }

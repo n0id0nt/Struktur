@@ -37,17 +37,17 @@ var ITEMS = {
     "Dried Herbs": {"category": "consumable"},
 
     // Placeholder gear so the Weapons / Armor tabs have something to show - nothing in the world gives these yet.
-    "Iron Sword": {"category": "weapon", "bonuses": {"might": 2, "precision": 1}},
-    "Oak Staff": {"category": "weapon", "bonuses": {"focus": 3}},
-    "Leather Vest": {"category": "armor", "bonuses": {"guard": 2}},
-    "Iron Helm": {"category": "armor", "bonuses": {"guard": 1, "poise": 2}},
+    "Iron Sword": {"category": "weapon", "bonuses": {"attack": 2}},
+    "Oak Staff": {"category": "weapon", "bonuses": {"mana": 3}},
+    "Leather Vest": {"category": "armor", "bonuses": {"defence": 8}},
+    "Iron Helm": {"category": "armor", "bonuses": {"defence": 2}},
 
     // Arc 1 (Dialogue/Arc1Dialogue.json). Everything else it hands out (keys, the horn, records...) is a key item.
     "Healing Herb": {"category": "consumable"},
     "Bread Roll": {"category": "consumable"},
     "Special Ration": {"category": "consumable"},
-    "Hunter's Bow": {"category": "weapon", "bonuses": {"precision": 2, "agility": 1}},
-    "Leather Armor": {"category": "armor", "bonuses": {"guard": 2}},
+    "Hunter's Bow": {"category": "weapon", "bonuses": {"attack": 2}},
+    "Leather Armor": {"category": "armor", "bonuses": {"defence": 8}},
     "Old Map": {"category": "key", "opensTab": "map"},
     "Soul Fragment": {"category": "key", "collect": true}
 }

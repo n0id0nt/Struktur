@@ -3108,6 +3108,15 @@
       "text": "dialogue.arc1.guide_fuse_2",
       "commands": [
         {
+          "type": "unlockMove",
+          "parameters": [
+            {
+              "type": "name",
+              "value": "Soul Step"
+            }
+          ]
+        },
+        {
           "type": "giveItem",
           "parameters": [
             {

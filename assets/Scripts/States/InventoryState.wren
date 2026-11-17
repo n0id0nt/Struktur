@@ -18,11 +18,11 @@ import "Inventory/Inventory" for Inventory
 import "Inventory/ItemDatabase" for ItemDatabase, ItemCategory
 import "Party/Party" for Party
 import "Combat/Stats" for ATTRIBUTE_NAMES
-import "Combat/Config/Archetype" for Archetype
 import "Combat/Config/BattlePlayer" for BattlePlayer
 import "Combat/Config/BattleCritter" for BattleCritter
-import "Combat/Config/ActionAnimations" for ActionAnimations
+import "Combat/Config/SheetAnims" for SheetAnims
 import "Combat/MoveBook" for MoveBook
+import "Combat/Move" for Move
 import "Localization/DisplayNames" for DisplayNames
 import "Story/QuestLog" for QuestLog
 import "UI/Inventory/InventoryUI" for InventoryUI
@@ -257,7 +257,7 @@ class InventoryState is BaseState {
                 var entry = {}
                 entry["name"] = memberName_(member)
                 entry["isPlayer"] = member.isPlayer
-                entry["className"] = InventoryState.archetypeOf_(member).name
+                entry["className"] = InventoryState.styleOf_(combatant)
                 entry["downed"] = member.downed
                 entry["hp"] = stats.hp
                 entry["maxHp"] = stats.maxHp
@@ -336,6 +336,7 @@ class InventoryState is BaseState {
             return entry
         }.toList
         model["equipped"] = MoveBook.equipped.toList
+        model["slots"] = MoveBook.loadoutSize
 
         var sheet = {}
         sheet["texture"] = BattlePlayer.texturePath
@@ -381,13 +382,13 @@ class InventoryState is BaseState {
     }
 
     // The battle-sheet clip [firstFrame, endFrame, seconds] the player plays for `move` - the same role
-    // Combat/Battler.wren would pick (Combat/Config/ActionAnimations.forMove, falling back to the generic one).
+    // Combat/Battler.wren would pick (the move's `anim`, falling back to a generic one - Combat/Config/SheetAnims.wren).
     static clipFor_(move, anims) {
-        var role = ActionAnimations.forMove(move).role
+        var role = move.anim
         if (anims.containsKey(role)) {
             return anims[role]
         }
-        var fallback = ActionAnimations.fallbackRole(role)
+        var fallback = SheetAnims.fallbackRole(role)
         if (fallback != null && anims.containsKey(fallback)) {
             return anims[fallback]
         }
@@ -399,11 +400,11 @@ class InventoryState is BaseState {
         var entry = {}
         entry["id"] = move.name
         entry["name"] = move.name
-        entry["time"] = move.timeCost
-        entry["damage"] = move.damage
-        entry["staminaCost"] = move.staminaCost
-        entry["staminaRestore"] = move.staminaRestore
-        entry["heal"] = move.healAmount
+        entry["time"] = Move.fmt(move.completion)
+        entry["damage"] = move.isAttack ? move.damage.round : 0
+        entry["staminaCost"] = move.cost
+        entry["staminaRestore"] = 0
+        entry["heal"] = move.isHeal ? move.healAmount.round : 0
         return entry
     }
 
@@ -411,10 +412,9 @@ class InventoryState is BaseState {
         return member.isPlayer ? Localization.get("inventory.party.you") : DisplayNames.npcDisplay(member.name)
     }
 
-    // The fighting style a member's Combatant was built from (the player's from Combat/Config/BattlePlayer.wren,
-    // an NPC's from their Combat/Config/BattleCritter.wren def).
-    static archetypeOf_(member) {
-        var style = member.isPlayer ? BattlePlayer.archetypeName : BattleCritter.forName(member.name).archetypeName
-        return Archetype.byName(style)
+    // What a member fights with, in a word or two: their main-hand weapon (Combat/Gear.wren).
+    static styleOf_(combatant) {
+        var main = combatant.loadout.main
+        return main == null ? "Unarmed" : main.type.name
     }
 }

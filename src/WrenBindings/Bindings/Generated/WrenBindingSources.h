@@ -1925,7 +1925,7 @@ inline const char* wrenuiSource()
     "    foreign static removeUIElement(arg0)\n"
     "    // Will set the focus of the current element.\n"
     "    foreign static setFocus(arg0)\n"
-    "    // Will set the focus of the current element.\n"
+    "    // Clears the current focus (applied at the end of the UI update).\n"
     "    foreign static clearFocusElements()\n"
     "}\n"
     "\n"

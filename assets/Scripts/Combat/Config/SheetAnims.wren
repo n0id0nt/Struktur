@@ -4,29 +4,28 @@
 // facing clips, from each character's job.battle.json). Every battle sheet has the same animation set, so the
 // player and the NPC fighters share ROLE_CLIPS. A def builds one table per side (anims / animsLeft) and Battler
 // plays the one for the way the battler faces.
+//
+// Roles are what a move asks for (Combat/Move.wren `anim`, set in Combat/Config/Moves.wren): a generic one ("idle"
+// "attack" "hurt" "run") or a kind of motion ("slash" "thrust" "heavy" "spin" "step" "roll" "guard" "shoot" "cast"
+// "punch"), plus the reactions ("defeat" "entrance" "flee"). A sheet without a role falls back to a generic one
+// (fallbackRole), so critters with only idle / attack / hurt / run still work.
 
-// Which clip each battle role plays: [role, animation name in the sheet]. Roles are ActionAnimations' - a
-// generic one ("idle" "attack" "hurt" "run"), one per move (the move's name, lower-cased) or a reaction
-// ("parry" "defeat"). A role left out falls back to its generic one (ActionAnimations.fallbackRole).
+// Which clip each battle role plays: [role, animation name in the sheet].
 var ROLE_CLIPS = [
     ["idle", "Idle"],
     ["run", "Run"],
     ["attack", "Attack"],
     ["hurt", "Hurt"],
-    // Speed kit
     ["slash", "Slash2"],         // quick forward cut
-    ["flurry", "Slash"],         // spinning slash
-    ["dodge", "StandRoll"],      // rolls away (Battler turns it to face the way it retreats)
-    // Power kit
-    ["cleave", "Slash"],         // spinning heavy swing
-    ["crush", "Attack"],         // leaping overhead slam
-    ["onslaught", "Flip"],       // flipping charge
-    // Control kit - no casting clips yet, so a thrust for the spells and a stand for the heal
-    ["bolt", "Slash2"],
-    ["slow", "Slash2"],
-    ["mend", "Idle"],
-    // Reactions
-    ["parry", "Slash2"],         // the counter-cut after a parry
+    ["thrust", "Slash2"],
+    ["punch", "Slash2"],
+    ["shoot", "Slash2"],         // no bow or casting clips yet - a thrust stands in
+    ["cast", "Slash2"],
+    ["heavy", "Attack"],         // leaping overhead slam
+    ["spin", "Slash"],           // spinning slash
+    ["step", "Run"],
+    ["roll", "StandRoll"],
+    ["guard", "Idle"],           // Battler tints a guarding battler, so the stance reads without its own clip
     ["entrance", "Run"],         // runs onto its mark while BattleStage slides it in
     ["flee", "Run"],             // turns and runs off-stage
     ["defeat", "Death"]
@@ -48,5 +47,15 @@ class SheetAnims {
             anims[pair[0]] = clips[name]
         }
         return anims
+    }
+
+    // The generic role a move- or reaction-specific role stands in for, for sheets (critters) that only have
+    // "idle" "attack" "hurt" "run". null = no fallback (Battler then uses idle).
+    static fallbackRole(role) {
+        if (role == "step" || role == "roll" || role == "flee" || role == "entrance") return "run"
+        if (role == "defeat") return "hurt"
+        if (role == "guard") return "idle"
+        if (role == "idle" || role == "attack" || role == "hurt" || role == "run") return null
+        return "attack"
     }
 }

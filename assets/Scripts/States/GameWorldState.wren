@@ -474,7 +474,7 @@ class GameWorldState is BaseState {
                 var critterPosition = critter.position
                 if (critterPosition && Vec3.distance(playerPosition, critterPosition) <= forceRange) {
                     _view.hide()
-                    enterCombat(critter.entity, playerEntity)
+                    enterCombat(critter.entity, playerEntity, true)
                     return
                 }
             }
@@ -486,7 +486,7 @@ class GameWorldState is BaseState {
                 _view.showAbove(WorldTransform.getPosition(interactEntity))
                 if (Input.isInputJustReleased("Interact")) {
                     _view.hide()
-                    enterCombat(interactEntity, playerEntity)
+                    enterCombat(interactEntity, playerEntity, false)
                     return
                 }
             } else if (interactScript != null) {
@@ -530,8 +530,10 @@ class GameWorldState is BaseState {
         })
     }
 
-    enterCombat(primaryEntity, playerEntity) {
-        beginCombat_(combatGroup(primaryEntity, playerEntity), playerEntity, false)
+    // forced: an aggressive critter caught the player - the only kind of fight that can be fled. One the player started
+    // (Interact on a critter's Fight! prompt) can't be.
+    enterCombat(primaryEntity, playerEntity, forced) {
+        beginCombat_(combatGroup(primaryEntity, playerEntity), playerEntity, false, forced)
     }
 
     // A fight with a named challenger (the "startDuel" / "startBattle" dialogue commands), no critters dragged in.
@@ -550,7 +552,7 @@ class GameWorldState is BaseState {
             challengers = challengers.take(MAX_COMBAT_GROUP).toList
         }
         _duelChallenger = npcName
-        beginCombat_(challengers, _playerEntity, !lethal)
+        beginCombat_(challengers, _playerEntity, !lethal, false)   // started from dialogue - no running away
     }
 
     // A fight has closed. outcome: the Combat/CombatOutcome it left (null if it was aborted before starting).
@@ -718,8 +720,10 @@ class GameWorldState is BaseState {
         return centre
     }
 
-    // duel: true for a challenge fight (startDuel) - carried through to the fight's CombatOutcome.
-    beginCombat_(opponents, playerEntity, duel) {
+    // duel: true for a challenge fight (startDuel) - carried through to the fight's CombatOutcome. canFlee: whether the
+    // fight offers Flee - only when a critter forced it on the player (enterCombat); never for one started by an
+    // interaction (a critter's Fight! prompt, a duel, a story battle).
+    beginCombat_(opponents, playerEntity, duel, canFlee) {
         // Nobody left standing (everyone downed, nobody rested): no fight - and a cooldown, so an aggressive
         // critter doesn't retry every frame.
         if (!Party.anyoneStanding) {
@@ -741,6 +745,9 @@ class GameWorldState is BaseState {
             "opponents": opponents,
             "player": playerEntity,
             "duel": duel,
+            "canFlee": canFlee,
+            // A fight started from dialogue may have a script (Combat/Encounter.wren - Thomas's lessons, the Warden).
+            "challenger": _duelChallenger,
             "world": _worldEntity,
             "battleLevelIndex": arenaIndexFor_(_currentLevelIndex)
         })

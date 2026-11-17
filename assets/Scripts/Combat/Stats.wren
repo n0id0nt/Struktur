@@ -1,48 +1,47 @@
 // Combat/Stats.wren
-// The numeric core of a battle participant: HP and stamina (Phase 4 of the Interrupt Combat
-// Roadmap), plus the attribute block every contest in Combat/Arbiter.wren reads. Later phases hang
-// resistances and status timers off this same bag, so systems that only care about "how hurt / how
-// tired / how quick is this thing" never need to know about Combatant, moves, or the timeline.
-import "Combat/Arbiter" for Arbiter
-
-// The attribute block. 10 is "average"; the archetype supplies a baseline and a def overrides single
-// entries (Combat/Config/Archetype.attributesWith). What the Arbiter reads each one for:
-//   might     - damage and stagger dealt          guard     - damage taken
-//   poise     - stagger taken                     agility   - move charge cost, initiative, Dodge, flee
-//   reflex    - parry quality and AI timing       precision - beating parries, getting past a Dodge
-//   endurance - stamina regen, exhaustion line    focus     - heal strength
-var ATTRIBUTE_NAMES = ["might", "guard", "poise", "agility", "reflex", "precision", "endurance", "focus"]
-var DEFAULT_ATTRIBUTE = 10
+// The numeric core of a battle participant, per the animation-timed battle system doc:
+//   health / stamina pools      attack   scales physical damage: x (1 + Attack / 100)
+//   mana     scales spell damage and healing the same way      defence  passive mitigation, added to armour defence
+//   recovery stamina per second while in Hold - the only time stamina comes back
+// There is no Speed stat: nothing can scale time. HP persists between fights for the party (the Combatant is kept);
+// stamina is topped up when a fight ends.
+var ATTRIBUTE_NAMES = ["attack", "mana", "defence", "recovery"]
 
 class Stats {
-    // attributes: { name: value } for any of ATTRIBUTE_NAMES (null or missing entries -> DEFAULT_ATTRIBUTE).
-    construct new(maxHp, maxStamina, attributes) {
+    construct new(maxHp, maxStamina, attack, mana, defence, recovery) {
         _maxHp = maxHp
         _hp = maxHp
         _maxStamina = maxStamina
         _stamina = maxStamina
-        _attributes = {}
-        for (name in ATTRIBUTE_NAMES) {
-            _attributes[name] = (attributes != null && attributes.containsKey(name)) ? attributes[name] : DEFAULT_ATTRIBUTE
-        }
+        _attack = attack
+        _mana = mana
+        _defence = defence
+        _recovery = recovery
     }
 
-    // --- attributes ---------------------------------------------------------------------
+    // The early / mid / late combatant tiers of the battle system doc.
+    static tier(tier) {
+        if (tier >= 2) return Stats.new(280, 140, 45, 45, 30, 20)
+        if (tier == 1) return Stats.new(180, 110, 25, 25, 15, 16)
+        return Stats.new(100, 80, 10, 10, 5, 12)
+    }
 
-    attr(name) { _attributes[name] }
-    // For levelling / gear / buffs later - the block persists with the Combatant between fights.
-    setAttr(name, value) { _attributes[name] = value }
+    attack { _attack }
+    mana { _mana }
+    defence { _defence }
+    recovery { _recovery }
+    attack=(v) { _attack = v }
+    mana=(v) { _mana = v }
+    defence=(v) { _defence = v }
+    recovery=(v) { _recovery = v }
 
-    might { _attributes["might"] }
-    guard { _attributes["guard"] }
-    poise { _attributes["poise"] }
-    agility { _attributes["agility"] }
-    reflex { _attributes["reflex"] }
-    precision { _attributes["precision"] }
-    endurance { _attributes["endurance"] }
-    focus { _attributes["focus"] }
-
-    // --- pools -----------------------------------------------------------------------------
+    // By name - the inventory's stat rows (ATTRIBUTE_NAMES).
+    attr(name) {
+        if (name == "attack") return _attack
+        if (name == "mana") return _mana
+        if (name == "defence") return _defence
+        return _recovery
+    }
 
     hp { _hp }
     maxHp { _maxHp }
@@ -52,35 +51,50 @@ class Stats {
     stamina { _stamina }
     maxStamina { _maxStamina }
     staminaFraction { _maxStamina > 0 ? _stamina / _maxStamina : 0 }
-    // The exhaustion penalty gate (Combat/Arbiter.moveCost / parry) - the line itself moves with endurance.
-    exhausted { staminaFraction < Arbiter.exhaustionThreshold(this) }
+
+    setMaxHp(value) {
+        _maxHp = value
+        _hp = value
+    }
+    setMaxStamina(value) {
+        _maxStamina = value
+        _stamina = value
+    }
 
     takeDamage(amount) {
         _hp = _hp - amount
-        if (_hp < 0) {
-            _hp = 0
-        }
+        if (_hp < 0) _hp = 0
     }
 
+    // Returns how much of `amount` was over the maximum (the overheal).
     heal(amount) {
         _hp = _hp + amount
-        if (_hp > _maxHp) {
+        var over = _hp - _maxHp
+        if (over > 0) {
             _hp = _maxHp
+            return over
         }
+        return 0
+    }
+
+    // Brings a saved value back (party.sav).
+    setHp(value) {
+        _hp = value < 0 ? 0 : (value > _maxHp ? _maxHp : value)
     }
 
     spendStamina(amount) {
         _stamina = _stamina - amount
-        if (_stamina < 0) {
-            _stamina = 0
-        }
+        if (_stamina < 0) _stamina = 0
     }
 
-    // Continuous regen (Timeline.tick feeds this) and Guard's one-shot restore both land here.
+    // Returns how much of `amount` was over the maximum.
     gainStamina(amount) {
         _stamina = _stamina + amount
-        if (_stamina > _maxStamina) {
+        var over = _stamina - _maxStamina
+        if (over > 0) {
             _stamina = _maxStamina
+            return over
         }
+        return 0
     }
 }

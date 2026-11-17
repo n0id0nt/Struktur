@@ -33,6 +33,7 @@ class KitButton {
         _panel.setOnFocus { |s|
             UIKit.applyStyle(_panel, "buttonHover")
             _label.setTextColor(UIKit.textDark)
+            if (_onFocused != null) _onFocused.call()
         }
         _panel.setOnLoseFocus { |s|
             UIKit.applyStyle(_panel, "button")
@@ -49,4 +50,8 @@ class KitButton {
     }
 
     setOnClick(fn) { _panel.setOnClick(fn) }
+
+    // Called (no arguments) whenever the button gains focus, after its hover look is applied - the panel's own
+    // setOnFocus is taken by that, so use this instead.
+    setOnFocused(fn) { _onFocused = fn }
 }

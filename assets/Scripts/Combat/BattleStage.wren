@@ -1,311 +1,395 @@
 // Combat/BattleStage.wren
-// The *physical* side of a fight - everything you can see in the world while CombatState runs the
-// turn logic on top. When the player is dragged into combat we don't fight in place (a corridor
-// gives no room for a 1-vs-3 line); instead the camera cuts to a separate arena and a Battler
-// (Combat/Battler.wren) is staged per combatant there.
+// The *physical* side of a fight - everything you can see in the world while States/CombatState.wren runs the
+// battle (Combat/BattleEngine.wren) on top. The camera cuts to a separate arena, where the engine's lanes x rows
+// grid is drawn as cells on the ground and a Battler (Combat/Battler.wren) stands in for each combatant.
 //
-// The arena is an authored "<Terrain>BattleStage" level (GameWorldState.arenaIndexFor_), loaded
-// and activated by CombatState with every other loaded level deactivated for the duration - see
-// setOtherLevelsActive_ below - so its own tiles read as the battle's backdrop with nothing
-// bleeding through from the overworld. Falls back to a fixed patch of world (DEFAULT_ARENA) or an
-// authored "BattleAnchor" marker entity if that level can't be found.
+// The arena is an authored "<Terrain>BattleStage" level (GameWorldState.arenaIndexFor_), loaded and activated by
+// CombatState with every other loaded level deactivated for the duration, so its own tiles read as the battle's
+// backdrop. Falls back to a fixed patch of world (DEFAULT_ARENA) or an authored "BattleAnchor" marker entity.
 //
-// Animation is data driven (Combat/Config/ActionAnimations.wren) and played by each Battler; this
-// class is the thin layer the fight's phases talk to: it finds the right battler for a Combatant and
-// forwards beginCharge / drive / react / playImpact / recover to it, and owns the formation, the camera
-// and the arena entrance.
+// The grid: rows run left to right (the party's back row on the left, the opposition's on the right), lanes top to
+// bottom. Cells are tinted by what matters right now:
+//   - a faint wash for each side's half;
+//   - red where an opponent's move in progress will land (stronger as its impact nears) - and, for slow marked
+//     hits, from the moment the chain is committed (shadow marks);
+//   - during selection: the cells the highlighted move would cover from where the chain leaves you, the cells a
+//     movement move may go to, and the cursor.
+//
+// update() reads the engine every frame: battlers follow their combatants (cell, facing, move, stagger), newcomers
+// (a boss's shards) get a battler, and the engine's events turn into reactions and particles.
 import "gameObject" for GameObject
-import "gameObjectComponents" for WorldTransform, Camera, World
-import "math" for Math, Vec2, Vec3
+import "gameObjectComponents" for WorldTransform, Camera, World, Sprite, RenderLayer
+import "math" for Math, Vec2, Vec3, Vec4
+import "resourceManager" for Texture
+import "renderer" for FlipBit
+import "app" for Time, Application
+import "Util/Colors" for WHITE
 import "Combat/Battler" for Battler
 
-// Where the fight happens when there's no arena level or authored BattleAnchor - far above the
-// level grid (levels occupy roughly x 0..2432, y 0..1600), so the battle camera never sees
-// overworld geometry.
+// Where the fight happens when there's no arena level or authored BattleAnchor - far above the level grid.
 var DEFAULT_ARENA = Vec3.new(1200, -1500, 0)
 
-// Formation: each fighter's feet, as world-pixel offsets from the arena centre (+y is down) - the party stage left
-// facing right, opponents mirrored stage right facing left. Laid out for the combat UI's frame
-// (UI/Combat/CombatUI.wren): at CAMERA_ZOOM 3 the camera sees ~427x240 world px, of which the enemy cards across the
-// top and the command bar along the bottom leave a strip about 120 world px tall for the fighters (~45 world px
-// tall in the battle sheets - 3dModelsToSprites job.battle.json). So the line spreads sideways rather than stacking:
-// the leader in front, the second behind and higher, the third further back and lower - nobody stands on anyone,
-// and everyone clears the cards and the bar. More than three carry on further back, alternating high and low.
-var PARTY_SPOTS   = [Vec2.new(-57, 51), Vec2.new(-100, 24), Vec2.new(-137, 61)]
-var ENEMY_SPOTS   = [Vec2.new(57, 51), Vec2.new(100, 24), Vec2.new(137, 61)]
-var EXTRA_STEP    = Vec2.new(38, 0)      // each fighter past the third, a further step back from the centre
-var CAMERA_FOCUS  = Vec2.new(0, 24)      // the arena's centre line, nudged so its grass sits between the cards and the bar
-var CAMERA_ZOOM   = 3
-var CAMERA_DROP    = 90                   // camera eases down this far onto the formation during the intro
-var SLIDE_DISTANCE = 110                  // how far off its mark each battler starts the slide-in
+// The grid, in world pixels around the camera focus (+y is down). At CAMERA_ZOOM 3 the camera sees ~427x240 world
+// px; the cards across the top and the bar along the bottom (UI/Combat/CombatUI.wren) leave a strip about 120 tall.
+var CELL_WIDTH = 50
+var CELL_HEIGHT = 34
+var GRID_CENTRE_Y = -10          // the middle lane's feet, relative to the camera focus
+var CAMERA_FOCUS = Vec2.new(0, 24)
+var CAMERA_ZOOM = 3
+var CAMERA_DROP = 90             // the camera eases down this far onto the formation during the intro
+var SLIDE_DISTANCE = 110         // how far off its mark each battler starts the slide-in
+
+var CELL_PARTY = Vec4.new(110, 160, 255, 150)
+var CELL_ENEMY = Vec4.new(255, 140, 110, 150)
+var CELL_THREAT = Vec4.new(255, 60, 50, 255)
+var CELL_MARK = Vec4.new(255, 120, 60, 150)
+var CELL_AIM = Vec4.new(255, 235, 120, 230)
+var CELL_GOTO = Vec4.new(120, 255, 160, 210)
+var CELL_HEAL = Vec4.new(140, 255, 170, 220)
+var CURSOR_COLOR = Vec4.new(255, 255, 255, 255)
 
 class BattleStage {
-    // anchorPosition: a world-space Vec3 - the centre of the authored battle level, an authored
-    // "BattleAnchor" marker's position, or null to use DEFAULT_ARENA. CombatState resolves this
-    // (rather than handing over an entity) so it can centre a battle level's bounds instead of
-    // anchoring on its top-left corner, which is where World/LDtk places a level's WorldTransform.
-    // playerEntity: the real overworld player (hidden for the fight) - null when there is none (the battle test).
-    // worldParent: entity to parent every spawned battle entity under (the world root).
-    // partyCombatants / partyDefs: parallel lists for the human-controlled side, leader first - each member's
-    // persistent Combatant and its look (Combat/Config/BattlePlayer for a player, a BattleCritter for an NPC).
-    // enemyDefs / enemyCombatants: parallel lists, one BattleCritter + its Combatant per opponent.
-    // battleLevelEntity: the level entity CombatState loaded for this fight, or null when fighting
-    // in place - kept so teardown() knows to deactivate it again.
-    construct new(anchorPosition, playerEntity, worldParent, partyCombatants, partyDefs, enemyDefs, enemyCombatants,
-                 battleLevelEntity) {
+    // anchorPosition: a world-space Vec3 - the centre of the authored battle level, an authored "BattleAnchor"
+    // marker's position, or null to use DEFAULT_ARENA. playerEntity: the real overworld player (hidden for the
+    // fight) - null when there is none (the battle test). worldParent: entity to parent every spawned battle entity
+    // under (the world root). engine: the battle. defFor: Fn(combatant) -> its battle def. battleLevelEntity: the
+    // level entity CombatState loaded for this fight, or null when fighting in place.
+    construct new(anchorPosition, playerEntity, worldParent, engine, battleLevelEntity) {
         _anchor = anchorPosition == null ? DEFAULT_ARENA : anchorPosition
         _playerEntity = playerEntity
         _worldParent = worldParent
         _battleLevelEntity = battleLevelEntity
-        _n = enemyDefs.count
-        _focus = worldOf_(CAMERA_FOCUS)
+        _engine = engine
+        _focus = Vec3.new(_anchor.x + CAMERA_FOCUS.x, _anchor.y + CAMERA_FOCUS.y, 0)
+        _zoom = (engine.lanes <= 3 && engine.rows <= 4) ? CAMERA_ZOOM : 2
 
-        // Hide the overworld player. Its Camera drops out of the active set with it (the camera
-        // system excludes Inactive entities), leaving _camEntity below as the only camera - so we
-        // don't need the camera-priority control script doesn't have yet.
+        // Hide the overworld player. Its Camera drops out of the active set with it, leaving _camEntity below as
+        // the only camera.
         if (_playerEntity != null) {
             GameObject.setInactive(_playerEntity)
         }
-
-        // The arena level is standing in for the backdrop now, so every other loaded level gets
-        // deactivated for the duration - nothing else should be visible or simulating behind it.
-        // Skipped entirely in the fallback (no battle level resolved) case, since then we're
-        // fighting in place on top of the overworld geometry that's still needed.
+        // The arena level stands in for the backdrop, so every other loaded level is deactivated for the duration.
         if (_battleLevelEntity != null) {
             setOtherLevelsActive_(false)
         }
 
-        // Battlers: the party stage left (leader first, fanning down and slightly left like the opponents fan
-        // down and slightly right), opponents stacked stage right centred on the anchor line.
-        _party = []
-        _partyHomes = []
-        for (i in 0...partyCombatants.count) {
-            var member = Battler.new(partyDefs[i], partyCombatants[i], worldParent)
-            member.awaySign = -1
-            member.face(1)
-            var memberHome = worldOf_(BattleStage.spot_(PARTY_SPOTS, i, -1))
-            member.home = memberHome
-            _party.add(member)
-            _partyHomes.add(memberHome)
+        buildGrid_()
+        _battlers = []
+        for (fighter in engine.fighters) {
+            addBattler_(fighter)
         }
-
-        _enemies = []
-        _enemyHomes = []
-        for (i in 0..._n) {
-            var b = Battler.new(enemyDefs[i], enemyCombatants[i], worldParent)
-            b.awaySign = 1
-            b.face(-1)
-            var home = worldOf_(BattleStage.spot_(ENEMY_SPOTS, i, 1))
-            b.home = home
-            _enemies.add(b)
-            _enemyHomes.add(home)
-        }
+        _highlights = []
+        _cursor = null
 
         // Battle camera - its own entity. Starts a little high and eases down onto the formation.
         _camStart = Vec3.new(_focus.x, _focus.y - CAMERA_DROP, 0)
         _camEntity = GameObject.create("BattleCamera", worldParent)
         WorldTransform.setPosition(_camEntity, _camStart)
         _camera = Camera.create(_camEntity)
-        _camera.zoom = CAMERA_ZOOM
+        _camera.zoom = _zoom
 
-        intro(0)   // drop everything onto its slide-in start mark
+        intro(0)
     }
 
-    // The i-th fighter's mark from a side's spots; past the authored ones, each further fighter steps another
-    // EXTRA_STEP back from the centre (side: -1 stage left, 1 stage right), alternating the back pair's heights.
-    static spot_(spots, i, side) {
-        if (i < spots.count) {
-            return spots[i]
+    engine { _engine }
+    zoom { _zoom }
+
+    // --- the grid --------------------------------------------------------------------------
+
+    // The world position of a cell's centre - where a battler's feet go.
+    cellWorld(lane, row) {
+        var x = _focus.x + (row - (_engine.rows - 1) / 2) * CELL_WIDTH
+        var y = _focus.y + GRID_CENTRE_Y + (lane - (_engine.lanes - 1) / 2) * CELL_HEIGHT
+        return Vec3.new(x, y, 0)
+    }
+
+    // The same in screen pixels (the battle camera is fixed once the entrance is over) - for the UI's floating text.
+    cellScreen(lane, row) {
+        var world = cellWorld(lane, row)
+        return Vec2.new(Application.gameWidth / 2 + (world.x - _focus.x) * _zoom,
+                        Application.gameHeight / 2 + (world.y - _focus.y) * _zoom)
+    }
+
+    buildGrid_() {
+        _cells = []
+        var texture = Texture.load("UI/Battle/cell.png")
+        for (lane in 0..._engine.lanes) {
+            var line = []
+            for (row in 0..._engine.rows) {
+                var entity = GameObject.create("BattleCell", _worldParent)
+                Sprite.create(entity, texture, WHITE, Vec2.new(23, 18), 1, 1, FlipBit.NONE, 0, RenderLayer.ENTITIES, -100)
+                WorldTransform.setPosition(entity, cellWorld(lane, row))
+                line.add(entity)
+            }
+            _cells.add(line)
         }
-        var base = spots[spots.count - 2 + (i - spots.count) % 2]
-        var steps = ((i - spots.count) / 2).floor + 1
-        return Vec2.new(base.x + side * EXTRA_STEP.x * steps, base.y)
+        texture.unload()
+        var cursorTexture = Texture.load("UI/Battle/cursor.png")
+        _cursorEntity = GameObject.create("BattleCursor", _worldParent)
+        Sprite.create(_cursorEntity, cursorTexture, CURSOR_COLOR, Vec2.new(23, 18), 1, 1, FlipBit.NONE, 0, RenderLayer.ENTITIES, -90)
+        cursorTexture.unload()
+        hideCursor_()
     }
 
-    // t: 0..1 progress through the entrance. Eases the camera down onto the formation and slides
-    // every battler in from its wing. Safe to call every frame - it only writes transforms and forces
-    // the camera.
+    hideCursor_() {
+        WorldTransform.setPosition(_cursorEntity, Vec3.new(_focus.x, _focus.y - 4000, 0))
+    }
+
+    // Selection overlays. cells: [[lane, row, kind], ...] with kind "aim" (a move's cells), "goto" (a legal
+    // destination) or "heal". cursor: [lane, row] or null.
+    setHighlights(cells, cursor) {
+        _highlights = cells == null ? [] : cells
+        _cursor = cursor
+    }
+    clearHighlights() { setHighlights(null, null) }
+
+    // Recolours every cell: the half it belongs to, then threats, then the selection overlays.
+    paintGrid_() {
+        var half = (_engine.rows / 2).floor
+        var threat = {}   // "lane,row" -> 0..1
+        var marks = {}
+        for (f in _engine.fighters) {
+            if (!f.active || f.side == 0) continue
+            var move = f.move
+            if (move != null && move.isAttack && !f.impactDone && move.impact != null) {
+                var closeness = Math.clamp01(1 - (move.impact - f.progress) / 2)
+                for (cell in f.cells) {
+                    var key = cell[0] * 100 + cell[1]
+                    var level = 0.35 + 0.65 * closeness
+                    if (!threat.containsKey(key) || threat[key] < level) threat[key] = level
+                }
+            }
+            // Shadow marks: a slow marked hit later in the chain shades its cells from the commit - while nothing
+            // before it moves the attacker (after a move the cells are only known once it lands).
+            var index = f.chainIndex + 1
+            var chain = f.chain
+            var moving = move != null && move.isMovement && !f.moved
+            while (!moving && index < chain.count) {
+                var next = chain[index].move
+                if (next.isMovement) break
+                if (next.heavy && next.isAttack) {
+                    for (cell in _engine.cellsAt(f, next, f.lane, f.row, f.facing)) {
+                        marks[cell[0] * 100 + cell[1]] = true
+                    }
+                }
+                index = index + 1
+            }
+        }
+        var overlay = {}
+        for (h in _highlights) {
+            overlay[h[0] * 100 + h[1]] = h[2]
+        }
+        var pulse = 0.75 + 0.25 * Math.sin(Time.unscaledTime * 7)
+        for (lane in 0..._engine.lanes) {
+            for (row in 0..._engine.rows) {
+                var key = lane * 100 + row
+                var color = row < half ? CELL_PARTY : CELL_ENEMY
+                if (marks.containsKey(key)) color = CELL_MARK
+                if (threat.containsKey(key)) {
+                    color = Vec4.new(CELL_THREAT.x, CELL_THREAT.y, CELL_THREAT.z, 90 + 165 * threat[key])
+                }
+                if (overlay.containsKey(key)) {
+                    var kind = overlay[key]
+                    var base = kind == "goto" ? CELL_GOTO : (kind == "heal" ? CELL_HEAL : CELL_AIM)
+                    color = Vec4.new(base.x, base.y, base.z, base.w * pulse)
+                }
+                var sprite = Sprite.get(_cells[lane][row])
+                if (sprite != null) sprite.color = color
+            }
+        }
+        if (_cursor != null) {
+            var at = cellWorld(_cursor[0], _cursor[1])
+            WorldTransform.setPosition(_cursorEntity, at)
+        } else {
+            hideCursor_()
+        }
+    }
+
+    // --- battlers --------------------------------------------------------------------------
+
+    addBattler_(fighter) {
+        var battler = Battler.new(fighter.def, fighter, _worldParent, cellWorld(fighter.lane, fighter.row))
+        battler.face(fighter.facing)
+        _battlers.add(battler)
+        return battler
+    }
+
+    battlerFor(combatant) {
+        for (b in _battlers) {
+            if (b.combatant == combatant) return b
+        }
+        return null
+    }
+
+    // The board changed wholesale (the next stage of an encounter): battlers for combatants no longer on it go, the
+    // newcomers get one, and everybody stands on their cell.
+    resync() {
+        var kept = []
+        for (b in _battlers) {
+            if (_engine.fighters.contains(b.combatant)) {
+                kept.add(b)
+            } else {
+                b.teardown()
+            }
+        }
+        _battlers = kept
+        for (fighter in _engine.fighters) {
+            var battler = battlerFor(fighter)
+            if (battler == null) battler = addBattler_(fighter)
+            battler.place(cellWorld(fighter.lane, fighter.row))
+            battler.order = fighter.lane * 10
+        }
+    }
+
+    // Where a combatant is on screen right now (its feet) - for floating text.
+    screenOf(combatant) {
+        var b = battlerFor(combatant)
+        if (b == null) return cellScreen(combatant.lane, combatant.row)
+        var p = b.position
+        return Vec2.new(Application.gameWidth / 2 + (p.x - _focus.x) * _zoom,
+                        Application.gameHeight / 2 + (p.y - _focus.y) * _zoom)
+    }
+
+    // --- the entrance ------------------------------------------------------------------------
+
+    // t: 0..1 progress through the entrance. Eases the camera down onto the formation and slides every battler in
+    // from its wing.
     intro(t) {
         var e = Math.smoothstep(t)
-
         WorldTransform.setPosition(_camEntity, Vec3.lerp(_camStart, _focus, e))
         _camera.forcePosition = true
-
-        for (i in 0..._party.count) {
-            _party[i].slide(offBy_(_partyHomes[i], -SLIDE_DISTANCE), _partyHomes[i], e)
+        for (b in _battlers) {
+            var c = b.combatant
+            var home = cellWorld(c.lane, c.row)
+            var off = c.side == 0 ? -SLIDE_DISTANCE : SLIDE_DISTANCE
+            b.place(Vec3.lerp(Vec3.new(home.x + off, home.y, 0), home, e))
+            b.order = c.lane * 10
         }
-        for (i in 0..._n) {
-            _enemies[i].slide(offBy_(_enemyHomes[i], SLIDE_DISTANCE), _enemyHomes[i], e)
-        }
+        paintGrid_()
     }
 
-    // Everyone runs in place while the entrance slides them onto their marks.
     playEntrance() {
-        for (b in _party) {
-            b.playEntrance()
-        }
-        for (b in _enemies) {
+        for (b in _battlers) {
             b.playEntrance()
         }
     }
 
-    // The entrance is over: everyone is on their mark and stops running (CombatSession's per-frame
-    // drive takes over from here - committed combatants pick their move's clip back up).
     settle() {
         intro(1)
-        for (b in _party) {
-            b.playIdle()
-        }
-        for (b in _enemies) {
+        for (b in _battlers) {
             b.playIdle()
         }
     }
 
-    // --- animation: forwarded to the combatant's Battler -------------------------------
+    // --- every frame -------------------------------------------------------------------------
 
-    // A move was committed: the combatant starts playing its clip (cost = effective time units).
-    beginCharge(combatant, move, cost) {
-        var b = battlerFor_(combatant)
-        if (b != null) {
-            b.beginCharge(move, cost)
+    // dt: game seconds. events: what the engine reported since the last frame (BattleEngine.takeEvents).
+    update(dt, events) {
+        for (event in events) {
+            react_(event)
         }
+        for (b in _battlers) {
+            var c = b.combatant
+            if (c.active) {
+                b.target = cellWorld(c.lane, c.row)
+                b.order = c.lane * 10
+            }
+            b.update(dt)
+        }
+        // Battlers that have finished fading out leave the stage.
+        var i = _battlers.count - 1
+        while (i >= 0) {
+            if (_battlers[i].gone) {
+                _battlers[i].teardown()
+                _battlers.removeAt(i)
+            }
+            i = i - 1
+        }
+        paintGrid_()
     }
 
-    // The move is gone (resolved or cancelled): back to idle.
-    endCharge(combatant) {
-        var b = battlerFor_(combatant)
-        if (b != null) {
-            b.endCharge()
-        }
-    }
+    // Keeps the grid overlays (and the selection cursor) fresh while game time is paused for a menu.
+    refresh() { paintGrid_() }
 
-    // Every frame, for every combatant: sync its clip + lunge to the Timeline fraction of its move.
-    // targetCombatant: who the move is aimed at (null = nobody).
-    drive(combatant, fraction, targetCombatant) {
-        var b = battlerFor_(combatant)
-        if (b == null) {
+    react_(event) {
+        var type = event["type"]
+        var who = event["who"]
+        if (type == "spawn") {
+            addBattler_(who).playImpact("crushShock")
             return
         }
-        var t = battlerFor_(targetCombatant)
-        b.update(fraction, t == null ? null : t.home)
-    }
-
-    // Plays one of ActionAnimations.reaction(id) on the combatant ("hurt" "parry" "fumble" "defeat" "flee").
-    react(combatant, id) {
-        var b = battlerFor_(combatant)
-        if (b != null) {
-            b.react(id)
-        }
-    }
-
-    // The moment a move lands (called right after its damage/heal is applied): the target's hurt / defeat reaction
-    // and the move's impact particles - or, when the target's parry deflected some of it (parry: a Combat/Arbiter.wren
-    // ParryResult, null with no parry), sparks on them, still a hurt if any damage got through, and a fumble on a
-    // stalled attacker (it stumbles back from its lunge to its mark) - or the heal glow for a Mend. A staggered
-    // target needs nothing extra: its clip is anchored to the pushed-back charge and rewinds with it. evaded: the
-    // attack missed outright (Combat/Arbiter.evade) - the target just hops aside.
-    playImpact(actorCombatant, targetCombatant, move, parry, evaded) {
-        var a = battlerFor_(actorCombatant)
-        var d = battlerFor_(targetCombatant)
-        if (move.offensive && d != null && evaded) {
-            d.react("evade")
-        } else if (move.offensive && d != null) {
-            if (parry != null && parry.deflected) {
-                d.playImpact("parrySpark")
+        var battler = battlerFor(who)
+        if (battler == null) return
+        if (type == "hit") {
+            var move = event["move"]
+            if (event["blocked"]) {
+                battler.playImpact("parrySpark")
+            } else if (move != null && move.scaling == "mana") {
+                battler.playImpact("boltSpark")
             } else {
-                d.playImpact(move.particleId)
+                battler.playImpact(event["amount"] >= 30 ? "cleaveBurst" : "slashSpark")
             }
-            if (parry == null || parry.damageThrough > 0) {
-                d.react(targetCombatant.alive ? "hurt" : "defeat")
-            }
-            if (parry != null && parry.stallsAttacker && a != null) {
-                a.react("fumble")
-            }
-        } else if (move.healAmount > 0 && a != null) {
-            a.playImpact("healGlow")
+        } else if (type == "dodge") {
+            battler.hop()
+        } else if (type == "heal") {
+            battler.playImpact("healGlow")
+        } else if (type == "defeat" || type == "remove") {
+            battler.defeat()
+        } else if (type == "direct") {
+            battler.playImpact("boltSpark")
         }
     }
 
-    // After a move lands the attacker eases back to its mark: needsRecover says whether it has anywhere
-    // to go, beginRecover notes where it is, recover(t) (t: 0..1) moves it.
-    needsRecover(combatant) {
-        var b = battlerFor_(combatant)
-        return b != null && b.needsRecover
-    }
-
-    beginRecover(combatant) {
-        var b = battlerFor_(combatant)
-        if (b != null) {
-            b.beginRecover()
+    // t: 0..1 progress of the party running off-stage (the flee animation).
+    runOff(t) {
+        for (b in _battlers) {
+            var c = b.combatant
+            if (c.side != 0 || !c.active) continue
+            var home = cellWorld(c.lane, c.row)
+            b.face(-1)
+            b.playEntrance()
+            b.place(Vec3.new(home.x - 220 * Math.smoothstep(t), home.y, 0))
         }
     }
 
-    recover(combatant, t) {
-        var b = battlerFor_(combatant)
-        if (b != null) {
-            b.recover(t)
-        }
-    }
-
-    // t: 0..1 progress of the combatant running off-stage (the flee animation).
-    runOff(combatant, t) {
-        var b = battlerFor_(combatant)
-        if (b != null) {
-            b.runOff(t)
-        }
-    }
-
-    // Fold the arena away: destroy every battler + the camera, bring the real player and every
-    // other level back. The overworld critter entities were never moved (CombatResolver.win() destroys
-    // the beaten ones).
+    // Fold the arena away: destroy every battler, the grid and the camera, bring the real player and every other
+    // level back.
     teardown() {
-        for (b in _party) {
+        for (b in _battlers) {
             b.teardown()
         }
-        for (b in _enemies) {
-            b.teardown()
+        _battlers = []
+        for (line in _cells) {
+            for (entity in line) {
+                if (GameObject.isValid(entity)) GameObject.destroy(entity)
+            }
         }
+        _cells = []
+        if (GameObject.isValid(_cursorEntity)) GameObject.destroy(_cursorEntity)
         if (GameObject.isValid(_camEntity)) {
             GameObject.destroy(_camEntity)
         }
-        if (_playerEntity == null) {
-            if (_battleLevelEntity != null) {
-                setOtherLevelsActive_(true)
-                if (GameObject.isValid(_battleLevelEntity)) {
-                    GameObject.setInactive(_battleLevelEntity)
-                }
+        if (_playerEntity != null) {
+            GameObject.setActive(_playerEntity)
+            // forcePosition is a one-shot flag - this just snaps the return to the player's own camera instead of
+            // letting the damped follow lerp it back in from the arena.
+            var playerCamera = Camera.get(_playerEntity)
+            if (playerCamera != null) {
+                playerCamera.forcePosition = true
             }
-            return
         }
-        GameObject.setActive(_playerEntity)
-
-        // The player's own camera hasn't moved (the player is frozen for the whole fight), but the
-        // shared camera reference is left wherever the battle camera last drew - reactivating it
-        // straight into CameraSystem's damped follow (Player.wren's camera.damping) would visibly
-        // lerp it back in from the arena over several frames. forcePosition is a one-shot flag -
-        // CameraSystem clears it again after this one frame - so this just snaps the return, it
-        // doesn't disable normal following afterwards.
-        var playerCamera = Camera.get(_playerEntity)
-        if (playerCamera != null) {
-            playerCamera.forcePosition = true
-        }
-
         if (_battleLevelEntity != null) {
             setOtherLevelsActive_(true)
-
-            // Deactivate (not unload) the battle level itself so the next fight in the same arena
-            // doesn't pay a reload cost - swap to World.unloadLevelEntities(...) instead if memory
-            // turns out to matter.
+            // Deactivate (not unload) the battle level itself so the next fight in the same arena doesn't pay a
+            // reload cost.
             if (GameObject.isValid(_battleLevelEntity)) {
                 GameObject.setInactive(_battleLevelEntity)
             }
         }
     }
 
-    // --- helpers ------------------------------------------------------------
-
-    // Sets every *other* currently-loaded level (i.e. not _battleLevelEntity) active/inactive -
-    // used to hide the overworld behind the battle arena and bring it back afterwards.
+    // Sets every *other* currently-loaded level (i.e. not _battleLevelEntity) active/inactive - used to hide the
+    // overworld behind the battle arena and bring it back afterwards.
     setOtherLevelsActive_(active) {
         for (i in 0...World.getLevelsCount(_worldParent)) {
             var levelEntity = World.getLoadedLevelEntity(_worldParent, i)
@@ -319,25 +403,4 @@ class BattleStage {
             }
         }
     }
-
-    battlerFor_(combatant) {
-        if (combatant == null) {
-            return null
-        }
-        for (b in _party) {
-            if (b.combatant == combatant) {
-                return b
-            }
-        }
-        for (b in _enemies) {
-            if (b.combatant == combatant) {
-                return b
-            }
-        }
-        return null
-    }
-
-    worldOf_(offset) { Vec3.new(_anchor.x + offset.x, _anchor.y + offset.y, 0) }
-
-    offBy_(pos, dx) { Vec3.new(pos.x + dx, pos.y, 0) }
 }

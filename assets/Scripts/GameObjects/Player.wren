@@ -13,7 +13,7 @@ import "Sprites/ExplorerSprite" for ExplorerSprite
 import "Sprites/SpriteSheet" for SpriteSheet
 import "debug" for Debug
 
-var INTERACTABLE_DISTANCE = 64.0
+var INTERACTABLE_DISTANCE = 32.0
 // Interactables that ask for it (requiresFacing() - NPCs, signs) only count when they're within this many degrees
 // of the way the player is facing.
 var INTERACT_FACING_DEGREES = 90
