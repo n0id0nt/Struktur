@@ -26,7 +26,9 @@ class ItemCategory {
 }
 
 // id -> { "category": one of ItemCategory's, "bonuses": { attribute: amount } (weapons / armour only - the
-// Combat/Stats.wren attribute names; shown in the inventory, not applied to anyone until there is equipping) }.
+// Combat/Stats.wren attribute names; shown in the inventory, not applied to anyone yet),
+// "weaponType": the Combat/Config/GearTypes.wren weapon id it fights as (weapons - what Inventory/Equipment.wren
+// equips, which decides the moves that work) }.
 // Anything not listed is a key item - the quest items picked up through dialogue (keys, letters, the map, the
 // toolbox parts...) all land there. "collect": true lets a key item gather a count instead of being one of a kind.
 // "opensTab": pressing it in the inventory opens that tab (the map item opens the Map tab).
@@ -37,8 +39,8 @@ var ITEMS = {
     "Dried Herbs": {"category": "consumable"},
 
     // Placeholder gear so the Weapons / Armor tabs have something to show - nothing in the world gives these yet.
-    "Iron Sword": {"category": "weapon", "bonuses": {"attack": 2}},
-    "Oak Staff": {"category": "weapon", "bonuses": {"mana": 3}},
+    "Iron Sword": {"category": "weapon", "weaponType": "armingsword", "bonuses": {"attack": 2}},
+    "Oak Staff": {"category": "weapon", "weaponType": "quarterstaff", "bonuses": {"mana": 3}},
     "Leather Vest": {"category": "armor", "bonuses": {"defence": 8}},
     "Iron Helm": {"category": "armor", "bonuses": {"defence": 2}},
 
@@ -46,7 +48,9 @@ var ITEMS = {
     "Healing Herb": {"category": "consumable"},
     "Bread Roll": {"category": "consumable"},
     "Special Ration": {"category": "consumable"},
-    "Hunter's Bow": {"category": "weapon", "bonuses": {"attack": 2}},
+    "Hunter's Bow": {"category": "weapon", "weaponType": "shortbow", "bonuses": {"attack": 2}},
+    // Finn's practice sword: never in the inventory itself - Inventory/Equipment.wren always offers it.
+    "Practice Sword": {"category": "weapon", "weaponType": "armingsword"},
     "Leather Armor": {"category": "armor", "bonuses": {"defence": 8}},
     "Old Map": {"category": "key", "opensTab": "map"},
     "Soul Fragment": {"category": "key", "collect": true}
@@ -84,6 +88,7 @@ var ICONS = {
     "Merchant Voucher": "Items/Other/Stamp.png",
     "rare_gem": "Items/Resource/GemPurple.png",
     "Iron Sword": "Items/Weapons/Sword/Sprite.png",
+    "Practice Sword": "Items/Weapons/Sword/Sprite.png",
     "Oak Staff": "Items/Weapons/MagicWand/Sprite.png",
     // Arc 1
     "Healing Herb": "Items/Food/TeaLeaf.png",
@@ -123,6 +128,12 @@ class ItemDatabase {
     static opensTab(id) {
         var def = ITEMS[id]
         return def == null ? null : def["opensTab"]
+    }
+
+    // The weapon type id (Combat/Config/GearTypes.wren) a weapon item fights as, or null.
+    static weaponType(id) {
+        var def = ITEMS[id]
+        return def == null ? null : def["weaponType"]
     }
 
     static bonuses(id) {

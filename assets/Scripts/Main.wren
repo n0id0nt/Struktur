@@ -18,6 +18,7 @@ import "States/BattleTestState" for BattleTestState
 import "Inventory/Inventory" for Inventory
 import "Party/Party" for Party
 import "Combat/MoveBook" for MoveBook
+import "Inventory/Equipment" for Equipment
 import "Combat/Config/BattlePlayer" for BattlePlayer
 import "Combat/Defeated" for Defeated
 import "World/MapLog" for MapLog
@@ -67,6 +68,7 @@ class Game {
         _stateManager = StateManager.new()
         Inventory.init()
         MoveBook.init(BattlePlayer.starterKit)
+        Equipment.init()
         Party.init()
         Defeated.init()
         MapLog.init()
@@ -85,6 +87,8 @@ class Game {
         Localization.loadManifest("Localization/languages.json")
         FlagManager.load("flags.sav")
         Inventory.load("inventory.sav")
+        // Before the moves: what the weapon allows decides how an old save's empty loadout slots get filled.
+        Equipment.load()
         MoveBook.load("moves.sav")
         Party.load("party.sav")
         Defeated.load("defeated.sav")

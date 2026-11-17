@@ -6,9 +6,11 @@
 // Swapping: Enter (UIAccept) on a loadout slot, then on a move - or the other way round - puts that move in that
 // slot; a move already equipped in another slot swaps places with it. cancel() (Esc - States/InventoryState.wren
 // asks before closing the screen) backs out of a half-made swap.
+// Moves the equipped weapon can't use are listed greyed out and can't be picked; the preview says which weapon they
+// don't work with. A weapon change updates the entries in place and calls refreshGear.
 // Pure view: `model` comes from States/InventoryState.movesModel_:
-//   { "moves": [entry], "equipped": [move ids, slot by slot], "sheet": {...}, "labels": {...} }
-//   entry: { "id", "name", "time", "damage", "staminaCost", "staminaRestore", "heal",
+//   { "moves": [entry], "equipped": [move ids, slot by slot], "weaponName", "sheet": {...}, "labels": {...} }
+//   entry: { "id", "name", "time", "damage", "staminaCost", "staminaRestore", "heal", "compatible" (Bool),
 //            "anim": [firstFrame, endFrame (exclusive), seconds] }
 //   sheet: { "texture", "columns", "cellWidth", "cellHeight", "idle": [firstFrame, endFrame, seconds],
 //            "crop": [x, y, width, height] - the part of each cell around the fighter that the preview shows }
@@ -48,6 +50,7 @@ class MovesPage {
         _sheet = model["sheet"]
         _moves = model["moves"]
         _equipped = model["equipped"]
+        _weaponName = model["weaponName"]
         _slotCount = model["slots"] != null ? model["slots"] : _equipped.count
         _onFocus = onFocus
         _onEquip = onEquip
@@ -80,6 +83,17 @@ class MovesPage {
     }
 
     setVisible(visible) { _root.setVisible(visible) }
+
+    // The equipped weapon changed: `model` has the new loadout and weapon name, and its entries' "compatible" flags
+    // were updated in place. Drops any half-made swap and redraws.
+    refreshGear(model) {
+        _equipped = model["equipped"]
+        _weaponName = model["weaponName"]
+        _armedSlot = null
+        _armedMove = null
+        refresh_()
+        if (_previewMove != null) preview_(_previewMove)
+    }
 
     // Esc while half-way through a swap backs out of it; true when it did (so the screen stays open).
     cancel() {
@@ -166,12 +180,9 @@ class MovesPage {
             row["panel"] = panel
             row["badge"] = InventoryTheme.label(panel, "", Vec2.new(14, 8), Vec2.new(0, 0), Vec2.new(0, 0), 20.0,
                 _boldFont, InventoryTheme.accent, 6)
-            InventoryTheme.label(panel, move["name"], Vec2.new(40, 7), Vec2.new(0, 0), Vec2.new(0, 0), 22.0, _boldFont,
-                InventoryTheme.text, 6)
-            MoveCells.apply(cell_(panel, TIME_X), MoveCells.time(move))
-            MoveCells.apply(cell_(panel, DAMAGE_X), MoveCells.damage(move))
-            MoveCells.apply(cell_(panel, STAMINA_X), MoveCells.stamina(move))
-            MoveCells.apply(cell_(panel, HEAL_X), MoveCells.heal(move))
+            row["name"] = InventoryTheme.label(panel, move["name"], Vec2.new(40, 7), Vec2.new(0, 0), Vec2.new(0, 0), 22.0,
+                _boldFont, InventoryTheme.text, 6)
+            row["cells"] = [cell_(panel, TIME_X), cell_(panel, DAMAGE_X), cell_(panel, STAMINA_X), cell_(panel, HEAL_X)]
             _rows.add(row)
 
             InventoryTheme.focusable(panel, Fn.new {
@@ -277,6 +288,8 @@ class MovesPage {
     }
 
     rowPressed_(r) {
+        // A move the equipped weapon can't use can't go in the loadout (the preview says why).
+        if (_moves[r]["compatible"] == false) return
         var id = _moves[r]["id"]
         if (_armedSlot != null) {
             var slot = _armedSlot
@@ -312,6 +325,7 @@ class MovesPage {
         for (i in 0..._slots.count) {
             var move = entryFor_(equippedAt_(i))
             setText_(_slots[i]["name"], move == null ? "-" : move["name"])
+            _slots[i]["name"].setTextColor(MovesPage.usable_(move) ? InventoryTheme.text : InventoryTheme.textMuted)
         }
         for (row in _rows) {
             row["badge"].setText("")
@@ -337,19 +351,31 @@ class MovesPage {
         }
     }
 
-    // The armed tile (the half of a swap already picked) is tinted warm; focus is the kit's ring.
+    // The armed tile (the half of a swap already picked) is tinted warm; focus is the kit's ring. A move the equipped
+    // weapon can't use is darkened, its text greyed.
     style_() {
         for (i in 0..._slots.count) {
-            styleElement_(_slots[i]["panel"], _armedSlot == i)
+            styleElement_(_slots[i]["panel"], _armedSlot == i, true)
         }
         for (r in 0..._rows.count) {
-            styleElement_(_rows[r]["panel"], _armedMove == _moves[r]["id"])
+            var move = _moves[r]
+            var usable = MovesPage.usable_(move)
+            styleElement_(_rows[r]["panel"], _armedMove == move["id"], usable)
+            var cells = _rows[r]["cells"]
+            var values = [MoveCells.time(move), MoveCells.damage(move), MoveCells.stamina(move), MoveCells.heal(move)]
+            for (c in 0...cells.count) {
+                MoveCells.apply(cells[c], usable ? values[c] : [values[c][0], InventoryTheme.textMuted])
+            }
+            _rows[r]["name"].setTextColor(usable ? InventoryTheme.text : InventoryTheme.textMuted)
         }
     }
 
-    styleElement_(tile, armed) {
-        tile.setTint(armed ? InventoryTheme.armedTint : InventoryTheme.noTint)
+    styleElement_(tile, armed, usable) {
+        tile.setTint(armed ? InventoryTheme.armedTint : (usable ? InventoryTheme.noTint : InventoryTheme.emptyTint))
     }
+
+    // Whether the equipped weapon can use this move entry (an empty slot counts as fine).
+    static usable_(move) { move == null || move["compatible"] != false }
 
     // --- preview ----------------------------------------------------------------------------
 
@@ -372,7 +398,10 @@ class MovesPage {
 
     showStatus_() {
         var slot = _equipped.indexOf(_previewMove["id"])
-        if (slot >= 0) {
+        if (!MovesPage.usable_(_previewMove)) {
+            setText_(_status, _labels["incompatible"].replace("{weapon}", _weaponName))
+            _status.setTextColor(InventoryTheme.bad)
+        } else if (slot >= 0) {
             setText_(_status, "%(_labels["equippedIn"]) %(slot + 1)")
             _status.setTextColor(InventoryTheme.accent)
         } else {

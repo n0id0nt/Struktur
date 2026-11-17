@@ -8,8 +8,11 @@
 //   { "name", "icon" (texture path or null), "count", "stackable", "showCount" (the slot's count badge - stacks of
 //     2+), "countText" (the detail panel's "Quantity: n"), "category" (display text),
 //     "bonuses" ([[display text, amount], ...] - gear only), "opensTab" (a tab id pressing it opens, or null),
-//     "actionText" (what pressing it does - shown in the detail panel, or null) }
-// onOpenTab(tabId) is called when a slot with "opensTab" is pressed (the Old Map opens the Map tab).
+//     "actionText" (what pressing it does - shown in the detail panel, or null),
+//     weapons only: "equipItem" (the item id pressing it equips), "equipped" (Bool - the slot gets an "E" marker),
+//     "warning" ([headline, detail] shown in red under the panel - equipping it changes the moves - or null) }
+// onOpenTab(tabId) is called when a slot with "opensTab" is pressed (the Old Map opens the Map tab); onEquip(itemId)
+// when a weapon is pressed. The State updates the weapon entries in place after a change - refresh() redraws them.
 import "math" for Vec2
 import "ui" for UIScroll, NavigationDirection
 import "UI/Theme/UIKit" for UIKit
@@ -31,16 +34,22 @@ var ICON_SIZE = 52        // 16px icons draw at 3x, leaving the cell's bottom-ri
 var DETAIL_CELL = 168
 var DETAIL_ICON_SIZE = 144
 var MAX_BONUS_LINES = 4
+var BONUS_Y = 350           // the first bonus line in the detail panel
+var BONUS_LINE = 28
 
 class ItemGridPage {
     // parent: the inventory body. onFocus: called with no arguments whenever a slot gains focus (the screen's
     // focus sound). emptyText: the detail panel's text when there are no items at all. onOpenTab: see above.
-    construct new(parent, sections, emptyText, boldFont, bookFont, onFocus, onOpenTab) {
+    construct new(parent, sections, emptyText, boldFont, bookFont, onFocus, onOpenTab, onEquip) {
         _slots = []
         _rows = []          // focusable slots, row by row, across every section - for up / down
         _boldFont = boldFont
         _bookFont = bookFont
         _onOpenTab = onOpenTab
+        _onEquip = onEquip
+        _gear = []          // [entry, "E" marker] for every weapon slot
+        _focused = null
+        _focusedEntry = null
 
         _root = InventoryTheme.group(parent, Vec2.new(0, 0), Vec2.new(1072, 476), 2)
 
@@ -109,6 +118,17 @@ class ItemGridPage {
     // The slot to focus when this tab opens - null when there is nothing in it.
     firstFocusable { _slots.count > 0 ? _slots[0] : null }
 
+    // The slot that last had focus (or the first one).
+    focused { _focused != null ? _focused : firstFocusable }
+
+    // The weapon entries changed (another weapon equipped): moves the "E" marker and redraws the panel.
+    refresh() {
+        for (gear in _gear) {
+            gear[1].setVisible(gear[0]["equipped"] == true)
+        }
+        if (_focusedEntry != null) showEntry_(_focusedEntry)
+    }
+
     // Up from the top row goes back to this page's tab (instead of whichever tab happens to sit above that column).
     linkUpTo(tab) {
         if (_rows.count == 0) return
@@ -148,12 +168,23 @@ class ItemGridPage {
         }
 
         InventoryTheme.focusable(slot, Fn.new {
+            _focused = slot
+            _focusedEntry = entry
             showEntry_(entry)
             onFocus.call()
         }, null)
         var tab = entry["opensTab"]
         if (tab != null) {
             slot.setOnClick { |sender, mousePos| _onOpenTab.call(tab) }
+        }
+        var equipItem = entry["equipItem"]
+        if (equipItem != null) {
+            // "E" in the top-left corner of the weapon in hand.
+            var marker = InventoryTheme.label(slot, "E", Vec2.new(9, 5), Vec2.new(0, 0), Vec2.new(0, 0), 22.0, _boldFont,
+                InventoryTheme.bad, 7)
+            marker.setVisible(entry["equipped"] == true)
+            _gear.add([entry, marker])
+            slot.setOnClick { |sender, mousePos| _onEquip.call(equipItem) }
         }
         return slot
     }
@@ -164,6 +195,8 @@ class ItemGridPage {
             Vec2.new(0, 0), 5)
         slot.setTint(InventoryTheme.emptyTint)
         InventoryTheme.focusable(slot, Fn.new {
+            _focused = slot
+            _focusedEntry = null
             showBlank_()
             onFocus.call()
         }, null)
@@ -200,13 +233,18 @@ class ItemGridPage {
         _bonusDivider = InventoryTheme.divider(detail, 334, 40, 4)
         _bonusLines = []
         for (i in 0...MAX_BONUS_LINES) {
-            _bonusLines.add(InventoryTheme.label(detail, "", Vec2.new(0, 350 + i * 28), Vec2.new(0.5, 0),
+            _bonusLines.add(InventoryTheme.label(detail, "", Vec2.new(0, BONUS_Y + i * BONUS_LINE), Vec2.new(0.5, 0),
                 Vec2.new(0.5, 0), 22.0, _bookFont, InventoryTheme.good, 4))
         }
 
-        // "Select to view the map" - items that open a tab (key items carry no bonuses, so it takes their place).
-        _actionLabel = InventoryTheme.label(detail, "", Vec2.new(0, 350), Vec2.new(0.5, 0), Vec2.new(0.5, 0), 22.0,
+        // What pressing it does - "Select to view the map", "Select to equip" - under the bonuses (placeDetail_).
+        _actionLabel = InventoryTheme.label(detail, "", Vec2.new(0, BONUS_Y), Vec2.new(0.5, 0), Vec2.new(0.5, 0), 22.0,
             _bookFont, InventoryTheme.accent, 4)
+        // A weapon that would take equipped moves out of the loadout says so under that, in red.
+        _warningLabel = InventoryTheme.label(detail, "", Vec2.new(0, BONUS_Y), Vec2.new(0.5, 0), Vec2.new(0.5, 0), 22.0,
+            _boldFont, InventoryTheme.bad, 4)
+        _warningDetail = InventoryTheme.label(detail, "", Vec2.new(0, BONUS_Y), Vec2.new(0.5, 0), Vec2.new(0.5, 0), 20.0,
+            _bookFont, InventoryTheme.bad, 4)
 
         _emptyLabel = InventoryTheme.label(detail, "", Vec2.new(0, 0), Vec2.new(0.5, 0.5), Vec2.new(0.5, 0.5), 24.0,
             _bookFont, InventoryTheme.textMuted, 4)
@@ -228,8 +266,12 @@ class ItemGridPage {
         setText_(_categoryLabel, entry["category"])
         setText_(_countLabel, entry["stackable"] ? entry["countText"] : "")
         setText_(_actionLabel, entry["actionText"] != null ? entry["actionText"] : "")
+        var warning = entry["warning"]
+        setText_(_warningLabel, warning != null ? warning[0] : "")
+        setText_(_warningDetail, warning != null ? warning[1] : "")
 
         var bonuses = entry["bonuses"]
+        placeDetail_(bonuses.count)
         _bonusDivider.setVisible(bonuses.count > 0)
         for (i in 0...MAX_BONUS_LINES) {
             if (i < bonuses.count) {
@@ -240,6 +282,14 @@ class ItemGridPage {
                 setText_(_bonusLines[i], "")
             }
         }
+    }
+
+    // The action line goes under however many bonus lines there are, the warning under that.
+    placeDetail_(bonusCount) {
+        var y = BONUS_Y + bonusCount * BONUS_LINE + (bonusCount > 0 ? 8 : 0)
+        _actionLabel.setPosition(Vec2.new(0, y), Vec2.new(0.5, 0))
+        _warningLabel.setPosition(Vec2.new(0, y + 34), Vec2.new(0.5, 0))
+        _warningDetail.setPosition(Vec2.new(0, y + 62), Vec2.new(0.5, 0))
     }
 
     // Nothing focused worth describing (an empty cell): the panel goes blank.
@@ -256,6 +306,8 @@ class ItemGridPage {
         setText_(_categoryLabel, "")
         setText_(_countLabel, "")
         setText_(_actionLabel, "")
+        setText_(_warningLabel, "")
+        setText_(_warningDetail, "")
         _bonusDivider.setVisible(false)
         for (line in _bonusLines) {
             setText_(line, "")
@@ -273,7 +325,13 @@ class ItemGridPage {
     release() {
         _slots = []
         _rows = []
+        _gear = []
+        _focused = null
+        _focusedEntry = null
         _onOpenTab = null
+        _onEquip = null
+        _warningLabel = null
+        _warningDetail = null
         _root = null
         _detail = null
         _detailCell = null

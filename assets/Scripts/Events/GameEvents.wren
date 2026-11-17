@@ -11,6 +11,8 @@
 //   questStarted    a quest stops being hidden    } Story/QuestLog.wren setFlag - every quest flag write goes through
 //   questUpdated    one of its objectives is done } it, and it compares the quests before and after the write
 //   questCompleted  a quest is complete           }
+//   movesRemoved    equipping a weapon took moves it can't use out of the loadout (Inventory/Equipment.wren) - the
+//                   inventory (States/InventoryState.wren) shows an alert and flags its Moves tab
 //
 // Each method names the event's type (the constants below) and builds its data as a map.
 import "events" for Event
@@ -21,6 +23,7 @@ var PARTY_JOINED = "partyJoined"
 var QUEST_STARTED = "questStarted"
 var QUEST_UPDATED = "questUpdated"
 var QUEST_COMPLETED = "questCompleted"
+var MOVES_REMOVED = "movesRemoved"
 
 class GameEvents {
     static itemReceivedType { ITEM_RECEIVED }
@@ -29,6 +32,7 @@ class GameEvents {
     static questStartedType { QUEST_STARTED }
     static questUpdatedType { QUEST_UPDATED }
     static questCompletedType { QUEST_COMPLETED }
+    static movesRemovedType { MOVES_REMOVED }
 
     // data: {"item": id, "count": n}
     static itemReceived(id, count) {
@@ -58,5 +62,10 @@ class GameEvents {
     // data: {"quest": quest id}
     static questCompleted(questId) {
         Event.addEvent(QUEST_COMPLETED, [["__type", "map"], ["quest", questId]])
+    }
+
+    // data: {"weapon": the weapon item equipped, "moves": [the move names taken out of the loadout]}
+    static movesRemoved(weaponId, moveNames) {
+        Event.addEvent(MOVES_REMOVED, [["__type", "map"], ["weapon", weaponId], ["moves", moveNames]])
     }
 }

@@ -5,6 +5,10 @@
 // "unlockMove" dialogue command teaches more (a newly learned move goes straight into a free loadout slot), and the
 // inventory's Moves tab swaps which are equipped. Moves are stored by name ("Slash", "Slash II" -
 // Combat/Config/Moves.byName). Saved to moves.sav.
+//
+// The equipped weapon decides which moves work (Inventory/Equipment.wren sets equipFilter): MoveBook only fills a
+// slot by itself - a newly learned move, an old save's empty slots - with a move that passes it, and equipping a new
+// weapon unequips the moves it can't use. needsReview stays true from then until the player opens the Moves tab.
 import "serialisation" for Json, MapUtil
 import "fileSystem" for FileSystem
 import "Combat/Config/Moves" for Moves
@@ -25,6 +29,14 @@ class MoveBook {
         __unlocked = __starter.toList
         __equipped = __starter.take(LOADOUT_SIZE).toList
     }
+
+    // Fn(move) -> whether it may go into the loadout by itself (null = anything may) - see the top of the file.
+    static equipFilter=(fn) { __equipFilter = fn }
+    static canAutoEquip_(name) { __equipFilter == null || __equipFilter.call(Moves.byName(name)) }
+
+    // True after moves were taken out of the loadout (a new weapon), until the Moves tab is opened.
+    static needsReview { __needsReview == true }
+    static needsReview=(value) { __needsReview = value }
 
     // Move names, in the order they were unlocked.
     static unlocked { __unlocked }
@@ -47,10 +59,17 @@ class MoveBook {
             return false
         }
         __unlocked.add(name)
-        if (__equipped.count < LOADOUT_SIZE) {
+        if (__equipped.count < LOADOUT_SIZE && MoveBook.canAutoEquip_(name)) {
             __equipped.add(name)
         }
         return true
+    }
+
+    // Takes a move out of the loadout (the slots after it move up); it stays learned.
+    static unequip(name) {
+        var index = __equipped.indexOf(name)
+        if (index >= 0) __equipped.removeAt(index)
+        MoveBook.needsReview = true
     }
 
     // Puts an unlocked move in loadout slot `slot`. If it was already in another slot, the two swap - so the
@@ -97,11 +116,12 @@ class MoveBook {
         __unlocked = unlocked
         // A loadout with room left (an older save, or one whose moves no longer exist) fills up from the learned ones.
         for (name in unlocked) {
-            if (equipped.count < LOADOUT_SIZE && !equipped.contains(name)) {
+            if (equipped.count < LOADOUT_SIZE && !equipped.contains(name) && MoveBook.canAutoEquip_(name)) {
                 equipped.add(name)
             }
         }
-        if (equipped.count > 0) {
+        // A saved loadout is kept even if it's empty (a weapon change can take every move out).
+        if (equipped.count > 0 || data["equipped"] != null) {
             __equipped = equipped
         }
     }

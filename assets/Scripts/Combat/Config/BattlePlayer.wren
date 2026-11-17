@@ -5,8 +5,9 @@
 //
 // The player's *persistent* Combatant still lives on the Player script (HP carries between fights - see
 // GameObjects/Player.combatant); this is where its numbers, its gear and its arena look are declared. Stats are
-// the early tier of the battle system doc. Gear comes from what the player carries: Finn's practice sword always
-// (an arming sword - the baseline weapon), and Thomas's leather vest once it has been handed over.
+// the early tier of the battle system doc. Gear is what the player has equipped (Inventory/Equipment.wren): the weapon
+// picked in the inventory (Finn's practice sword - an arming sword - by default), and Thomas's leather vest once it
+// has been handed over.
 // Uses the battle sheet generated from the 3D model (Actors/explorer_battle.png - left and right facing clips).
 // `anims` / `animsLeft` map every battle role to one of its clips - see Combat/Config/SheetAnims.wren.
 import "math" for Vec2
@@ -19,7 +20,7 @@ import "Combat/EnemyAI" for PlannerBrain
 import "Sprites/ExplorerBattleSprite" for ExplorerBattleSprite
 import "Sprites/ExplorerBattleWeaponSprite" for ExplorerBattleWeaponSprite
 import "Combat/MoveBook" for MoveBook
-import "Inventory/Inventory" for Inventory
+import "Inventory/Equipment" for Equipment
 
 var STARTER_MOVES = ["Step", "Slash"]
 // The weapon layer sheet (see weaponTexturePath): a placeholder cylinder in the right hand, rendered by
@@ -36,11 +37,8 @@ class BattlePlayer {
 
     static newStats { Stats.new(100, 80, 10, 10, 5, 12) }
 
-    // What the player fights with. Leather once they own a vest (Thomas, first arc scene 4); clothes before.
-    static loadout {
-        var vest = Inventory.count("Leather Vest") > 0 || Inventory.count("Leather Armor") > 0
-        return Loadout.new(GearItem.weapon("armingsword"), null, GearItem.armour(vest ? "leather" : "clothes"))
-    }
+    // What the player fights with - their equipped gear (Inventory/Equipment.wren).
+    static loadout { Equipment.loadout }
 
     // The battle sheet, Actors/explorer_battle.png (generated - see Sprites/ExplorerBattleSprite.wren).
     static texturePath { ExplorerBattleSprite.data["texture"] }
@@ -74,8 +72,12 @@ class BattlePlayer {
     // by Thomas, Soul Step comes with the fusion.
     static starterKit { STARTER_MOVES.map { |name| Moves.byName(name) }.toList }
 
-    // The moves the player fights with - their equipped loadout (same shape as BattleCritter.kit).
-    static kit { MoveBook.equippedMoves }
+    // The moves the player fights with - their equipped loadout (same shape as BattleCritter.kit), less any the
+    // equipped weapon can't use (an older save can still have one in a slot).
+    static kit {
+        var loadout = BattlePlayer.loadout
+        return MoveBook.equippedMoves.where { |move| loadout.allows(move) }.toList
+    }
     static kitNames { MoveBook.equipped }
 
     // A fresh Combatant - GameObjects/Player.combatant calls this once to mint the persistent one.

@@ -11,9 +11,16 @@
 //   { "tabs": [[id, name]] (ids: items / moves / party / levels / quests / map), "startTab": id or null,
 //     "items": [sections], "itemsEmpty": text, "moves": {...}, "party": [...], "partyLabels": {...},
 //     "levels": [...], "levelLabels": {...}, "quests": {...}, "questLabels": {...}, "map": {...} (only with a map
-//     tab), "gold": Num, "hints": { "tabs", "move", "select", "close" } }
-// onFocusMoved is called with no arguments whenever focus lands on something new (the screen's focus sound);
-// onEquip(slot, moveId) changes the player's loadout and returns the new one (see MovesPage).
+//     tab), "gold": Num, "hints": { "tabs", "move", "select", "close" }, "tabAlerts": { tab id: Bool } }
+// callbacks (all Fns, from the State):
+//   "focusMoved"   ()          focus landed on something new (the screen's focus sound)
+//   "equipMove"    (slot, id)  change the player's move loadout; returns the new one (see MovesPage)
+//   "equipWeapon"  (itemId)    equip a weapon pressed in the Items tab (see ItemGridPage)
+//   "tabOpened"    (tabId)     a tab's page was opened
+//
+// A tab can carry an alert badge ("!" on its corner - setTabAlert): the Moves tab after a weapon change took moves
+// out of the loadout. showAlert opens a popup over everything - a title, a line of text, a list, a closing line and
+// an OK button - that holds focus until it's dismissed (OK, or closeAlert from the State on Esc / the Inventory key).
 import "app" for Application
 import "math" for Vec2
 import "ui" for UIManager, UIColor, NavigationDirection
@@ -40,14 +47,24 @@ var KEY_GAP = 6               // between those prompts and the tabs
 var FOOTER_SIZE = 18.0
 var FOOTER_Y = -44            // from the window's bottom edge
 var GOLD_ICON_PATH = "Items/Treasure/GoldCoin.png"
+var BADGE_SIZE = 26           // a tab's alert badge
+var ALERT_WIDTH = 560
+var ALERT_PAD = 28
+var ALERT_LINE = 30           // per listed line
+var ALERT_BUTTON = Vec2.new(160, 44)
 
 class InventoryUI {
-    construct new(model, onFocusMoved, onEquip) {
+    construct new(model, callbacks) {
         UIKit.open()
         _boldFont = InventoryTheme.loadBoldFont()
         _bookFont = InventoryTheme.loadBookFont()
-        _onFocusMoved = onFocusMoved
+        _onFocusMoved = callbacks["focusMoved"]
+        _onTabOpened = callbacks["tabOpened"]
+        var onEquip = callbacks["equipMove"]
+        _onEquipWeapon = callbacks["equipWeapon"]
         _current = -1
+        _alert = null
+        _itemsPage = null
 
         _screenPanel = InventoryTheme.fill(null, Vec2.new(0, 0), Vec2.new(0, 0),
             Vec2.new(Application.gameWidth, Application.gameHeight), Vec2.new(0, 0), InventoryTheme.overlay, 0)
@@ -59,6 +76,12 @@ class InventoryUI {
 
         _tabIds = model["tabs"].map { |t| t[0] }.toList
         buildTabBar_(window, model["tabs"].map { |t| t[1] }.toList)
+        var tabAlerts = model["tabAlerts"]
+        if (tabAlerts != null) {
+            for (id in tabAlerts.keys) {
+                setTabAlert(id, tabAlerts[id])
+            }
+        }
         buildFooter_(window, model["hints"], model["gold"])
 
         var body = InventoryTheme.group(window, Vec2.new(CONTENT_X, BODY_Y), Vec2.new(1072, 476), 2)
@@ -91,7 +114,9 @@ class InventoryUI {
     // One tab's page, by tab id.
     buildPage_(id, body, model, onFocus, onEquip, onOpenTab) {
         if (id == "items") {
-            return ItemGridPage.new(body, model["items"], model["itemsEmpty"], _boldFont, _bookFont, onFocus, onOpenTab)
+            _itemsPage = ItemGridPage.new(body, model["items"], model["itemsEmpty"], _boldFont, _bookFont, onFocus, onOpenTab,
+                Fn.new { |itemId| _onEquipWeapon.call(itemId) })
+            return _itemsPage
         }
         if (id == "moves") {
             _movesPage = MovesPage.new(body, model["moves"], _boldFont, _bookFont, onFocus, onEquip)
@@ -130,6 +155,78 @@ class InventoryUI {
         }
     }
 
+    // --- gear, badges and alerts ---------------------------------------------------------
+
+    // The equipped weapon changed (the State already updated the item entries and `movesModel` in place): the Items
+    // tab redraws its weapons, the Moves tab its loadout and which moves are greyed out.
+    refreshGear(movesModel) {
+        if (_screenPanel == null) return
+        if (_itemsPage != null) _itemsPage.refresh()
+        if (_movesPage != null) _movesPage.refreshGear(movesModel)
+    }
+
+    // Shows or hides the "!" badge on the tab with this id (nothing happens if there's no such tab).
+    setTabAlert(id, on) {
+        var index = _tabIds.indexOf(id)
+        if (index >= 0) _tabBadges[index].setVisible(on)
+    }
+
+    alertOpen { _alert != null }
+
+    // A popup over the whole screen: `title`, a line of `body` text, the `lines` listed under it, a `footer` line and
+    // an `ok` button. It keeps focus (and the State holds the tabs) until OK or closeAlert.
+    showAlert(title, body, lines, footer, ok) {
+        if (_screenPanel == null) return
+        closeAlert()
+        _alertReturn = _pages[_current] == _itemsPage ? _itemsPage.focused : _pages[_current].firstFocusable
+
+        var height = ALERT_PAD + 44 + 34 + lines.count * ALERT_LINE + 14 + 34 + 20 + ALERT_BUTTON.y + ALERT_PAD
+        _alert = InventoryTheme.fill(null, Vec2.new(0, 0), Vec2.new(0, 0),
+            Vec2.new(Application.gameWidth, Application.gameHeight), Vec2.new(0, 0), InventoryTheme.overlay, 20)
+        UIManager.addUIElement(_alert)
+        var box = InventoryTheme.frame(_alert, "window", Vec2.new(0, 0), Vec2.new(0.5, 0.5), Vec2.new(ALERT_WIDTH, height),
+            Vec2.new(0, 0), 21)
+        box.setAnchorPoint(Vec2.new(0.5, 0.5))
+
+        var y = ALERT_PAD
+        InventoryTheme.label(box, title, Vec2.new(0, y), Vec2.new(0.5, 0), Vec2.new(0.5, 0), 30.0, _boldFont,
+            InventoryTheme.accent, 22)
+        y = y + 44
+        InventoryTheme.label(box, body, Vec2.new(0, y), Vec2.new(0.5, 0), Vec2.new(0.5, 0), 20.0, _bookFont,
+            InventoryTheme.text, 22)
+        y = y + 34
+        for (line in lines) {
+            InventoryTheme.label(box, line, Vec2.new(0, y), Vec2.new(0.5, 0), Vec2.new(0.5, 0), 24.0, _boldFont,
+                InventoryTheme.bad, 22)
+            y = y + ALERT_LINE
+        }
+        y = y + 14
+        InventoryTheme.label(box, footer, Vec2.new(0, y), Vec2.new(0.5, 0), Vec2.new(0.5, 0), 20.0, _bookFont,
+            InventoryTheme.textMuted, 22)
+        y = y + 34 + 20
+
+        var button = InventoryTheme.frame(box, "tile", Vec2.new(0, y), Vec2.new(0.5, 0), ALERT_BUTTON, Vec2.new(0, 0), 22)
+        button.setAnchorPoint(Vec2.new(0.5, 0))
+        InventoryTheme.label(button, ok, Vec2.new(0, 0), Vec2.new(0.5, 0.5), Vec2.new(0.5, 0.5), 22.0, _boldFont,
+            InventoryTheme.text, 23)
+        InventoryTheme.focusable(button, Fn.new { _onFocusMoved.call() }, null)
+        // Every direction leads back to the button itself, so the arrows can't wander onto the page behind.
+        for (direction in [NavigationDirection.UP, NavigationDirection.DOWN, NavigationDirection.LEFT, NavigationDirection.RIGHT]) {
+            button.setNavigationNeighbor(direction, button)
+        }
+        button.setOnClick { |sender, mousePos| closeAlert() }
+        UIManager.setFocus(button)
+    }
+
+    // Dismisses the alert (if one is open) and gives focus back to where it was.
+    closeAlert() {
+        if (_alert == null) return
+        UIManager.removeUIElement(_alert)
+        _alert = null
+        if (_alertReturn != null) UIManager.setFocus(_alertReturn)
+        _alertReturn = null
+    }
+
     // Esc: true when the open page used it (backing out of a half-made move swap) - otherwise the screen closes.
     cancel() {
         return _screenPanel != null && _movesPage != null && _pages[_current] == _movesPage && _movesPage.cancel()
@@ -147,6 +244,7 @@ class InventoryUI {
         _tabs = []
         _tabLabels = []
         _tabFocused = []
+        _tabBadges = []
         for (i in 0...names.count) {
             var tab = InventoryTheme.frame(window, "tab", Vec2.new(TAB_X + i * stride, TAB_Y), Vec2.new(0, 0),
                 Vec2.new(tabWidth, TAB_HEIGHT), Vec2.new(0, 0), 2)
@@ -156,6 +254,15 @@ class InventoryUI {
             _tabs.add(tab)
             _tabLabels.add(label)
             _tabFocused.add(false)
+
+            // The alert badge: a small "!" cell over the tab's top-right corner, hidden until setTabAlert.
+            var badge = InventoryTheme.fill(tab, Vec2.new(6, -8), Vec2.new(1, 0), Vec2.new(BADGE_SIZE, BADGE_SIZE),
+                Vec2.new(0, 0), InventoryTheme.bad, 4)
+            badge.setAnchorPoint(Vec2.new(1, 0))
+            InventoryTheme.label(badge, "!", Vec2.new(0, 1), Vec2.new(0.5, 0.5), Vec2.new(0.5, 0.5), 22.0, _boldFont,
+                InventoryTheme.text, 5)
+            badge.setVisible(false)
+            _tabBadges.add(badge)
 
             // Moving onto a tab opens it; focus stays on the tab until the player steps down into the page.
             tab.setOnFocus { |sender|
@@ -201,10 +308,16 @@ class InventoryUI {
         if (_partyPage != null && _pages[index] == _partyPage) {
             _partyPage.refresh()
         }
+        var opened = _current != index
         _current = index
         for (i in 0..._pages.count) {
             _pages[i].setVisible(i == index)
             styleTab_(i)
+        }
+        // Opening a tab answers its badge ("go and look here").
+        if (opened) {
+            _tabBadges[index].setVisible(false)
+            if (_onTabOpened != null) _onTabOpened.call(_tabIds[index])
         }
         if (moveFocus) {
             var first = _pages[index].firstFocusable
@@ -222,6 +335,7 @@ class InventoryUI {
     }
 
     teardown() {
+        closeAlert()
         if (_screenPanel != null) {
             UIManager.removeUIElement(_screenPanel)
             _screenPanel = null
@@ -232,8 +346,13 @@ class InventoryUI {
         _pages = []
         _movesPage = null
         _partyPage = null
+        _itemsPage = null
         _tabs = []
         _tabLabels = []
+        _tabBadges = []
+        _onFocusMoved = null
+        _onTabOpened = null
+        _onEquipWeapon = null
         _boldFont.unload()
         _bookFont.unload()
         UIKit.close()

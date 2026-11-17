@@ -8,6 +8,12 @@
 //
 // Tabs are listed in TABS; one with an unlock rule only shows once that rule holds (the Map tab needs the Old Map).
 // Pass {"tab": id} when changing to this state to open on that tab.
+//
+// Weapons: selecting one in the Items tab equips it (Inventory/Equipment.wren). A weapon that can't use some of the
+// equipped moves warns about it in the detail panel first; equipping it takes them out of the loadout, and the
+// movesRemoved game event that sends (Events/GameEvents.wren - it reaches onEvent below, through GameWorldState)
+// opens an alert listing them and flags the Moves tab until it's opened. The Moves tab lists every learned move and
+// greys out the ones the equipped weapon can't use.
 import "app" for Time
 import "math" for Math
 import "resourceManager" for Music, Sound
@@ -23,6 +29,9 @@ import "Combat/Config/BattleCritter" for BattleCritter
 import "Combat/Config/SheetAnims" for SheetAnims
 import "Combat/MoveBook" for MoveBook
 import "Combat/Move" for Move
+import "Combat/Config/Moves" for Moves
+import "Inventory/Equipment" for Equipment
+import "Events/GameEvents" for GameEvents
 import "Localization/DisplayNames" for DisplayNames
 import "Story/QuestLog" for QuestLog
 import "UI/Inventory/InventoryUI" for InventoryUI
@@ -76,11 +85,34 @@ class InventoryState is BaseState {
 
         _lastTabStep = tabStep_()
         var startTab = (params is Map) ? params["tab"] : null
-        _view = InventoryUI.new(buildModel_(startTab), Fn.new { _itemFocusSound.play() }, Fn.new { |slot, id| equip_(slot, id) })
+        var callbacks = {}
+        callbacks["focusMoved"] = Fn.new { _itemFocusSound.play() }
+        callbacks["equipMove"] = Fn.new { |slot, id| equip_(slot, id) }
+        callbacks["equipWeapon"] = Fn.new { |itemId| equipWeapon_(itemId) }
+        callbacks["tabOpened"] = Fn.new { |id| tabOpened_(id) }
+        _view = InventoryUI.new(buildModel_(startTab), callbacks)
+    }
+
+    // Game events, forwarded by GameWorldState: a weapon change that took moves out of the loadout shows the alert
+    // and flags the Moves tab.
+    onEvent(type, data) {
+        if (type == GameEvents.movesRemovedType && _view != null) {
+            var weapon = DisplayNames.itemDisplay(data["weapon"])
+            var body = Localization.get("inventory.alert.moves_removed.body").replace("{weapon}", weapon)
+            _view.showAlert(Localization.get("inventory.alert.moves_removed.title"), body, data["moves"],
+                Localization.get("inventory.alert.moves_removed.footer"), Localization.get("inventory.alert.ok"))
+            _view.setTabAlert("moves", MoveBook.needsReview)
+        }
     }
 
     update(stateManager) {
         var cancel = Input.isInputJustReleased("UICancel")
+        // An open alert takes the close keys (and holds the tabs still) until it's dismissed.
+        if (_view.alertOpen) {
+            if (cancel || Input.isInputJustReleased("Inventory")) _view.closeAlert()
+            _lastTabStep = tabStep_()
+            return
+        }
         if (Input.isInputJustReleased("Inventory") || (cancel && !_view.cancel())) {
             stateManager.clearCurrentState()
             return
@@ -135,7 +167,11 @@ class InventoryState is BaseState {
         if (tabs.any { |t| t[0] == "map" }) {
             model["map"] = mapModel_()
         }
-        model["moves"] = movesModel_()
+        _movesModel = movesModel_()
+        model["moves"] = _movesModel
+        var tabAlerts = {}
+        tabAlerts["moves"] = MoveBook.needsReview
+        model["tabAlerts"] = tabAlerts
         _partyEntries = partyEntries_()
         model["party"] = _partyEntries
         var partyLabels = {}
@@ -181,7 +217,7 @@ class InventoryState is BaseState {
             var categories = category == ItemCategory.KEY ? [ItemCategory.KEY, ItemCategory.MATERIAL] : [category]
             var section = {}
             section["title"] = Localization.get("inventory.section.%(category)")
-            section["entries"] = itemEntries_(categories)
+            section["entries"] = category == ItemCategory.WEAPON ? weaponEntries_() : itemEntries_(categories)
             sections.add(section)
         }
         return sections
@@ -214,33 +250,69 @@ class InventoryState is BaseState {
     itemEntries_(categories) {
         var entries = []
         for (category in categories) {
-            var categoryText = Localization.get(ItemCategory.labelKey(category))
             for (stack in Inventory.stacksIn(category)) {
-                var bonusMap = ItemDatabase.bonuses(stack.id)
-                var bonuses = []
-                for (attribute in ATTRIBUTE_NAMES) {
-                    if (bonusMap.containsKey(attribute)) {
-                        bonuses.add([Localization.get("inventory.stat.%(attribute)"), bonusMap[attribute]])
-                    }
-                }
-                var entry = {}
-                entry["name"] = DisplayNames.itemDisplay(stack.id)
-                entry["icon"] = ItemDatabase.iconPath(stack.id)
-                entry["count"] = stack.count
-                entry["stackable"] = stack.stacks
-                entry["showCount"] = stack.stacks && stack.count > 1
-                entry["countText"] = "%(Localization.get("inventory.quantity")) %(stack.count)"
-                entry["category"] = categoryText
-                entry["bonuses"] = bonuses
-                var opensTab = ItemDatabase.opensTab(stack.id)
-                entry["opensTab"] = opensTab
-                entry["actionText"] = opensTab != null ? Localization.get("inventory.open.%(opensTab)") : null
-                // One-of-a-kind key items don't show "Quantity: 1".
-                if (ItemDatabase.unique(stack.id)) entry["stackable"] = false
-                entries.add(entry)
+                entries.add(itemEntry_(stack.id, category, stack.count, stack.stacks))
             }
         }
         return entries
+    }
+
+    itemEntry_(id, category, count, stacks) {
+        var bonusMap = ItemDatabase.bonuses(id)
+        var bonuses = []
+        for (attribute in ATTRIBUTE_NAMES) {
+            if (bonusMap.containsKey(attribute)) {
+                bonuses.add([Localization.get("inventory.stat.%(attribute)"), bonusMap[attribute]])
+            }
+        }
+        var quantity = Localization.get("inventory.quantity")
+        var entry = {}
+        entry["name"] = DisplayNames.itemDisplay(id)
+        entry["icon"] = ItemDatabase.iconPath(id)
+        entry["count"] = count
+        entry["stackable"] = stacks
+        entry["showCount"] = stacks && count > 1
+        entry["countText"] = "%(quantity) %(count)"
+        entry["category"] = Localization.get(ItemCategory.labelKey(category))
+        entry["bonuses"] = bonuses
+        var opensTab = ItemDatabase.opensTab(id)
+        entry["opensTab"] = opensTab
+        entry["actionText"] = opensTab != null ? Localization.get("inventory.open.%(opensTab)") : null
+        // One-of-a-kind key items don't show "Quantity: 1".
+        if (ItemDatabase.unique(id)) entry["stackable"] = false
+        return entry
+    }
+
+    // The Weapons section: every weapon that can be equipped (Inventory/Equipment.weapons - the practice sword
+    // first), each pressable. Kept, so a weapon change can update them in place (refreshWeapons_).
+    weaponEntries_() {
+        _weaponEntries = []
+        for (id in Equipment.weapons) {
+            var entry = itemEntry_(id, ItemCategory.WEAPON, 1, false)
+            entry["equipItem"] = id
+            _weaponEntries.add(entry)
+        }
+        refreshWeapons_()
+        return _weaponEntries
+    }
+
+    // What equipping each weapon would do now: "Equipped" on the one in hand, otherwise "Select to equip" - plus a
+    // warning when it would take equipped moves out of the loadout.
+    refreshWeapons_() {
+        for (entry in _weaponEntries) {
+            var id = entry["equipItem"]
+            var equipped = Equipment.isEquipped(id)
+            entry["equipped"] = equipped
+            entry["actionText"] = Localization.get(equipped ? "inventory.equip.equipped" : "inventory.equip.select")
+            var dropped = equipped ? [] : Equipment.movesDroppedBy(id)
+            if (dropped.count == 0) {
+                entry["warning"] = null
+            } else {
+                var key = dropped.count == 1 ? "inventory.equip.removes_one" : "inventory.equip.removes_many"
+                var count = "%(dropped.count)"
+                entry["warning"] = [Localization.get("inventory.equip.warning"), Localization.get(key).replace("{n}", count)]
+            }
+        }
     }
 
     // Everyone in the party with a Combatant, in party order - see UI/Inventory/PartyPage.wren for the shape.
@@ -335,6 +407,7 @@ class InventoryState is BaseState {
             entry["anim"] = InventoryState.clipFor_(move, anims)
             return entry
         }.toList
+        InventoryState.markCompatible_(model)
         model["equipped"] = MoveBook.equipped.toList
         model["slots"] = MoveBook.loadoutSize
 
@@ -354,7 +427,7 @@ class InventoryState is BaseState {
         var keys = [["loadout", "loadout"], ["unlocked", "unlocked"], ["slot", "slot"], ["equippedIn", "equipped_in"],
                     ["notEquipped", "not_equipped"], ["hintIdle", "hint_idle"], ["hintSlot", "hint_slot"],
                     ["hintMove", "hint_move"], ["hintCancel", "hint_cancel"], ["time", "time"], ["damage", "damage"],
-                    ["stamina", "stamina"], ["heal", "heal"]]
+                    ["stamina", "stamina"], ["heal", "heal"], ["incompatible", "incompatible"]]
         for (key in keys) {
             labels[key[0]] = Localization.get("inventory.moves.%(key[1])")
         }
@@ -362,22 +435,55 @@ class InventoryState is BaseState {
         return model
     }
 
+    // Which moves the equipped weapon can use ("compatible" on each entry - the rest are greyed out), and its name for
+    // the "Can't be used with the ..." line.
+    static markCompatible_(model) {
+        var loadout = Equipment.loadout
+        for (entry in model["moves"]) {
+            entry["compatible"] = loadout.allows(Moves.byName(entry["id"]))
+        }
+        model["weaponName"] = DisplayNames.itemDisplay(Equipment.weapon)
+    }
+
+    // The Items tab equipped weapon `itemId`: Equipment swaps it in and takes out the moves it can't use (sending
+    // movesRemoved if it did - see onEvent). Brings the player's Combatant and every tab's copy up to date.
+    equipWeapon_(itemId) {
+        if (Equipment.isEquipped(itemId)) return
+        Equipment.equipWeapon(itemId)
+        rearmPlayer_()
+        refreshWeapons_()
+        InventoryState.markCompatible_(_movesModel)
+        _movesModel["equipped"] = MoveBook.equipped.toList
+        _view.refreshGear(_movesModel)
+    }
+
+    // A tab was opened (its badge hides itself): opening Moves clears its "update your moves" flag.
+    tabOpened_(id) {
+        if (id == "moves") MoveBook.needsReview = false
+    }
+
+    // The player's Combatant fights with the gear and moves now equipped, and the Party tab shows them.
+    rearmPlayer_() {
+        for (member in Party.members) {
+            var combatant = member.isPlayer ? Party.combatantOf(member) : null
+            if (combatant != null) {
+                BattlePlayer.refresh(combatant)
+            }
+        }
+        for (entry in _partyEntries) {
+            if (entry["isPlayer"]) {
+                entry["moves"] = BattlePlayer.kit.map { |move| InventoryState.moveEntry_(move) }.toList
+                entry["className"] = InventoryState.styleName_(BattlePlayer.loadout)
+            }
+        }
+    }
+
     // The Moves tab put `id` in loadout slot `slot`: save it, give every player's Combatant the new kit for their
     // next fight, and update the Party tab's copy of the player's moves. Returns the new loadout for the view.
     equip_(slot, id) {
         MoveBook.equip(slot, id)
         MoveBook.save("moves.sav")
-        for (member in Party.members) {
-            var combatant = member.isPlayer ? Party.combatantOf(member) : null
-            if (combatant != null) {
-                combatant.moves = MoveBook.equippedMoves
-            }
-        }
-        for (entry in _partyEntries) {
-            if (entry["isPlayer"]) {
-                entry["moves"] = MoveBook.equippedMoves.map { |move| InventoryState.moveEntry_(move) }.toList
-            }
-        }
+        rearmPlayer_()
         return MoveBook.equipped.toList
     }
 
@@ -413,8 +519,10 @@ class InventoryState is BaseState {
     }
 
     // What a member fights with, in a word or two: their main-hand weapon (Combat/Gear.wren).
-    static styleOf_(combatant) {
-        var main = combatant.loadout.main
+    static styleOf_(combatant) { InventoryState.styleName_(combatant.loadout) }
+
+    static styleName_(loadout) {
+        var main = loadout.main
         return main == null ? "Unarmed" : main.type.name
     }
 }
