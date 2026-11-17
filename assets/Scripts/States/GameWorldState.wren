@@ -383,8 +383,10 @@ class GameWorldState is BaseState {
             return
         }
 
+        // Neither runs for a moment after a fight (_combatCooldownEndTime), so the player isn't dragged straight back in.
         if (Time.scaledTime >= _combatCooldownEndTime) {
-            checkCombatTriggers()
+            if (startForcedCombat_()) return
+            updateInteractPrompt_()
         }
     }
 
@@ -448,17 +450,12 @@ class GameWorldState is BaseState {
         }
     }
 
-    // Aggressive critters (Chinlin) force the player straight into CombatState once they close the
-    // distance - no prompt, no choice. Non-aggressive critters (Chicken) just become another
-    // interactable, reusing the exact scan/prompt every Item/NPC/Door already uses
-    // (Player.getInteractEntity(), see GameWorldState for the original of this pattern) - the player
-    // has to press Interact to start that fight.
-    // NPCs and signposts get the "Interact" prompt instead and open dialogue (startDialogue).
-    checkCombatTriggers() {
-        var playerEntities = GameObject.getAllWithIdentifier("Player")
-        for (playerEntity in playerEntities) {
-            var playerScript = Script.getInstance(playerEntity)
-            if (!playerScript) {
+    // Aggressive critters (Chinlin) force the player straight into CombatState once they close the distance - no
+    // prompt, no choice. Only critters in the player's own room count, not one on the far side of a wall in the next.
+    // Returns true if a fight started.
+    startForcedCombat_() {
+        for (playerEntity in GameObject.getAllWithIdentifier("Player")) {
+            if (!Script.getInstance(playerEntity)) {
                 continue
             }
             var playerPosition = WorldTransform.getPosition(playerEntity)
@@ -466,7 +463,6 @@ class GameWorldState is BaseState {
             var playerRoom = Rooms.indexAt(playerPosition)
 
             for (critter in Critter.all) {
-                // Only critters of the room the player is in - not one on the far side of a wall in the next room.
                 if (!critter.aggressive || !sharesRoom_(critter, playerRoom)) {
                     continue
                 }
@@ -474,10 +470,23 @@ class GameWorldState is BaseState {
                 if (critterPosition && Vec3.distance(playerPosition, critterPosition) <= forceRange) {
                     _view.hide()
                     enterCombat(critter.entity, playerEntity, true)
-                    return
+                    return true
                 }
             }
+        }
+        return false
+    }
 
+    // The prompt over whatever the player can reach (Player.getInteractEntity()), and what Interact does to it:
+    //   - a non-aggressive critter (Chicken) shows "Fight!" - Interact starts that fight (enterCombat);
+    //   - any other interactable (NPC, signpost, item) shows "Interact" - Interact opens its dialogue (startDialogue);
+    //   - nothing in reach hides both prompts.
+    updateInteractPrompt_() {
+        for (playerEntity in GameObject.getAllWithIdentifier("Player")) {
+            var playerScript = Script.getInstance(playerEntity)
+            if (!playerScript) {
+                continue
+            }
             var interactEntity = playerScript.getInteractEntity()
             var interactScript = interactEntity ? Script.getInstance(interactEntity) : null
             if (interactScript is Critter) {

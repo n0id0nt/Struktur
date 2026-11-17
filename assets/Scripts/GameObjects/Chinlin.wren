@@ -29,7 +29,7 @@ class Chinlin is Critter {
     }
 
     // Aggressive: catching the player forces them into combat rather than offering it (see
-    // GameWorldState.checkCombatTriggers()) - the chase state above is what actually closes
+    // GameWorldState.startForcedCombat_()) - the chase state above is what actually closes
     // the distance to make that happen.
     aggressive { true }
 
