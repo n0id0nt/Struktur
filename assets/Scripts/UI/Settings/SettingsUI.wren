@@ -52,7 +52,7 @@ class SettingsUI {
         _screenPanel.addChild(listPanel)
 
         _scroll = UIScroll.new(Vec2.new(8, 8), Vec2.new(0, 0), Vec2.new(-40, -16), Vec2.new(1, 1))
-        _scroll.setHorizontalScrollEnabled(false)
+        _scroll.setVerticalScrollEnabled(true)
         _scroll.setZIndex(6)
         listPanel.addChild(_scroll)
 

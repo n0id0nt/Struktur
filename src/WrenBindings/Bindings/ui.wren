@@ -811,9 +811,9 @@ foreign class IconAtlas {
 foreign class UIScroll {
     // Create UIScroll with absolutePosition, relativePosition, absoluteSize, relativeSize components
     foreign construct new(arg0,arg1,arg2,arg3)
-    // Toggles vertical scrolling (default true)
+    // Opts into vertical scrolling (default false)
     foreign setVerticalScrollEnabled(arg0)
-    // Toggles horizontal scrolling (default true)
+    // Opts into horizontal scrolling (default false)
     foreign setHorizontalScrollEnabled(arg0)
     // Sets the scroll offset directly (clamped to content bounds)
     foreign setScrollOffset(arg0)

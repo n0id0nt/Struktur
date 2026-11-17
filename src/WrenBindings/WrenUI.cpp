@@ -2019,9 +2019,9 @@ WREN_BINDING_MODULE(UI)
 	WREN_CONSTRUCTOR(registry, "ui", "UIScroll", "new(_,_,_,_)", wren_UIScrollNew,
 	                 "Create UIScroll with absolutePosition, relativePosition, absoluteSize, relativeSize components");
 	WREN_CLASS_METHOD(registry, "ui", "UIScroll", "setVerticalScrollEnabled(_)",
-	                  wren_UIScrollSetVerticalScrollEnabled, "Toggles vertical scrolling (default true)");
+	                  wren_UIScrollSetVerticalScrollEnabled, "Opts into vertical scrolling (default false)");
 	WREN_CLASS_METHOD(registry, "ui", "UIScroll", "setHorizontalScrollEnabled(_)",
-	                  wren_UIScrollSetHorizontalScrollEnabled, "Toggles horizontal scrolling (default true)");
+	                  wren_UIScrollSetHorizontalScrollEnabled, "Opts into horizontal scrolling (default false)");
 	WREN_CLASS_METHOD(registry, "ui", "UIScroll", "setScrollOffset(_)", wren_UIScrollSetScrollOffset,
 	                  "Sets the scroll offset directly (clamped to content bounds)");
 	WREN_CLASS_METHOD(registry, "ui", "UIScroll", "getScrollOffset()", wren_UIScrollGetScrollOffset,

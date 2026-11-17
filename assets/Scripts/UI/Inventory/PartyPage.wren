@@ -41,7 +41,7 @@ class PartyPage {
         } else {
             // Scrolls sideways once there are more members than fit (two do).
             var scroll = UIScroll.new(Vec2.new(0, 0), Vec2.new(0, 0), Vec2.new(CARDS_WIDTH, 476), Vec2.new(0, 0))
-            scroll.setVerticalScrollEnabled(false)
+            scroll.setHorizontalScrollEnabled(true)
             // Only scroll once the selected card would be off screen, and then by one card - so both visible cards
             // stay whole (the default deadzone re-centres on every card, leaving halves at the edges).
             scroll.setFocusDeadzone(Vec2.new((CARDS_WIDTH - CARD_WIDTH) / 2, 0))

@@ -19,7 +19,7 @@ class LevelsPage {
             InventoryTheme.textMuted, 3)
 
         var scroll = UIScroll.new(Vec2.new(0, 40), Vec2.new(0, 0), Vec2.new(1072, 436), Vec2.new(0, 0))
-        scroll.setHorizontalScrollEnabled(false)
+        scroll.setVerticalScrollEnabled(true)
         scroll.setZIndex(3)
         _root.addChild(scroll)
 

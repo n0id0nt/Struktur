@@ -47,7 +47,7 @@ class ItemGridPage {
         var gridFrame = InventoryTheme.frame(_root, "well", Vec2.new(0, 0), Vec2.new(0, 0), Vec2.new(GRID_WIDTH, 476),
             Vec2.new(0, 0), 3)
         var scroll = UIScroll.new(Vec2.new(14, 14), Vec2.new(0, 0), Vec2.new(532, 448), Vec2.new(0, 0))
-        scroll.setHorizontalScrollEnabled(false)
+        scroll.setVerticalScrollEnabled(true)
         // Rows only scroll once the focused one nears an edge, instead of re-centring on every move.
         scroll.setFocusDeadzone(Vec2.new(0, 150))
         scroll.setZIndex(4)

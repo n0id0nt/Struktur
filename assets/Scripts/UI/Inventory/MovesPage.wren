@@ -152,7 +152,7 @@ class MovesPage {
             Vec2.new(0, 0), 3)
         var scroll = UIScroll.new(Vec2.new(LIST_INSET, LIST_INSET), Vec2.new(0, 0),
             Vec2.new(ROW_WIDTH + 2 * ROW_INSET, 476 - LIST_Y - 2 * LIST_INSET), Vec2.new(0, 0))
-        scroll.setHorizontalScrollEnabled(false)
+        scroll.setVerticalScrollEnabled(true)
         // Six rows fit; past them, scroll a row at a time (110 = the sixth row's centre below the viewport's).
         scroll.setFocusDeadzone(Vec2.new(0, 110))
         scroll.setZIndex(4)

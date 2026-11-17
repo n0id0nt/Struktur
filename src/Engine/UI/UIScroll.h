@@ -7,8 +7,8 @@ namespace Struktur
 namespace UI
 {
 //=============================================================================
-// UIScroll - Adds scrolling on top of UIClip's masking. Per-axis toggleable (SetVerticalScrollEnabled/
-// SetHorizontalScrollEnabled, both default true); content size is derived each Update() tick from direct
+// UIScroll - Adds scrolling on top of UIClip's masking. Each axis is opted into (SetVerticalScrollEnabled/
+// SetHorizontalScrollEnabled, both default false - a new UIScroll only clips until one is turned on); content size is derived each Update() tick from direct
 // children's combined extents (no explicit re-layout - children position themselves as usual, e.g. a
 // hand-built vertical list, and UIScroll just measures the resulting bounding box).
 //
@@ -112,8 +112,8 @@ private:
 
 	glm::vec2 m_scrollOffset = glm::vec2(0.0f, 0.0f);
 	glm::vec2 m_contentSize  = glm::vec2(0.0f, 0.0f);
-	bool m_verticalScrollEnabled   = true;
-	bool m_horizontalScrollEnabled = true;
+	bool m_verticalScrollEnabled   = false;
+	bool m_horizontalScrollEnabled = false;
 
 	glm::vec2 m_focusDeadzone = glm::vec2(24.0f, 24.0f);
 	glm::vec2 m_focusDamping  = glm::vec2(8.0f, 8.0f);

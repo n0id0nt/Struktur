@@ -42,7 +42,7 @@ class QuestsPage {
 
         var scroll = UIScroll.new(Vec2.new(14, SCROLL_Y), Vec2.new(0, 0),
             Vec2.new(LIST_WIDTH - 28, PAGE_HEIGHT - SCROLL_Y - 14), Vec2.new(0, 0))
-        scroll.setHorizontalScrollEnabled(false)
+        scroll.setVerticalScrollEnabled(true)
         scroll.setZIndex(4)
         list.addChild(scroll)
 
