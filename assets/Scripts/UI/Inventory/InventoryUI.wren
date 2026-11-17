@@ -19,12 +19,13 @@
 //   "tabOpened"    (tabId)     a tab's page was opened
 //
 // A tab can carry an alert badge ("!" on its corner - setTabAlert): the Moves tab after a weapon change took moves
-// out of the loadout. showAlert opens a popup over everything - a title, a line of text, a list, a closing line and
-// an OK button - that holds focus until it's dismissed (OK, or closeAlert from the State on Esc / the Inventory key).
+// out of the loadout. showAlert opens a UI/Theme/AlertPopup over everything, which holds focus until it's dismissed
+// (its buttons, Esc - both through update() - or closeAlert from the State on the Inventory key).
 import "app" for Application
 import "math" for Vec2
 import "ui" for UIManager, UIColor, NavigationDirection
 import "UI/Theme/UIKit" for UIKit
+import "UI/Theme/AlertPopup" for AlertPopup
 import "UI/Inventory/InventoryTheme" for InventoryTheme
 import "UI/Inventory/ItemGridPage" for ItemGridPage
 import "UI/Inventory/MovesPage" for MovesPage
@@ -48,10 +49,6 @@ var FOOTER_SIZE = 18.0
 var FOOTER_Y = -44            // from the window's bottom edge
 var GOLD_ICON_PATH = "Items/Treasure/GoldCoin.png"
 var BADGE_SIZE = 26           // a tab's alert badge
-var ALERT_WIDTH = 560
-var ALERT_PAD = 28
-var ALERT_LINE = 30           // per listed line
-var ALERT_BUTTON = Vec2.new(160, 44)
 
 class InventoryUI {
     construct new(model, callbacks) {
@@ -148,8 +145,9 @@ class InventoryUI {
         selectTab_((_current + direction + _tabs.count) % _tabs.count, true)
     }
 
-    // Per-frame: animates the Moves tab's preview while it is open. `now` is unscaled time.
+    // Per-frame: drives an open alert, and animates the Moves tab's preview while it is open. `now` is unscaled time.
     update(now) {
+        if (_alert != null && !_alert.update()) _alert = null
         if (_screenPanel != null && _movesPage != null && _pages[_current] == _movesPage) {
             _movesPage.tick(now)
         }
@@ -171,60 +169,21 @@ class InventoryUI {
         if (index >= 0) _tabBadges[index].setVisible(on)
     }
 
-    alertOpen { _alert != null }
+    alertOpen { _alert != null && _alert.isOpen }
 
-    // A popup over the whole screen: `title`, a line of `body` text, the `lines` listed under it, a `footer` line and
-    // an `ok` button. It keeps focus (and the State holds the tabs) until OK or closeAlert.
-    showAlert(title, body, lines, footer, ok) {
+    // Opens a UI/Theme/AlertPopup over the screen - `config` is its config map ("title", "body", "lines", "footer",
+    // "buttons"...). Focus goes back to whatever the open page had focused once it closes. update() drives it.
+    showAlert(config) {
         if (_screenPanel == null) return
         closeAlert()
-        _alertReturn = _pages[_current] == _itemsPage ? _itemsPage.focused : _pages[_current].firstFocusable
-
-        var height = ALERT_PAD + 44 + 34 + lines.count * ALERT_LINE + 14 + 34 + 20 + ALERT_BUTTON.y + ALERT_PAD
-        _alert = InventoryTheme.fill(null, Vec2.new(0, 0), Vec2.new(0, 0),
-            Vec2.new(Application.gameWidth, Application.gameHeight), Vec2.new(0, 0), InventoryTheme.overlay, 20)
-        UIManager.addUIElement(_alert)
-        var box = InventoryTheme.frame(_alert, "window", Vec2.new(0, 0), Vec2.new(0.5, 0.5), Vec2.new(ALERT_WIDTH, height),
-            Vec2.new(0, 0), 21)
-        box.setAnchorPoint(Vec2.new(0.5, 0.5))
-
-        var y = ALERT_PAD
-        InventoryTheme.label(box, title, Vec2.new(0, y), Vec2.new(0.5, 0), Vec2.new(0.5, 0), 30.0, _boldFont,
-            InventoryTheme.accent, 22)
-        y = y + 44
-        InventoryTheme.label(box, body, Vec2.new(0, y), Vec2.new(0.5, 0), Vec2.new(0.5, 0), 20.0, _bookFont,
-            InventoryTheme.text, 22)
-        y = y + 34
-        for (line in lines) {
-            InventoryTheme.label(box, line, Vec2.new(0, y), Vec2.new(0.5, 0), Vec2.new(0.5, 0), 24.0, _boldFont,
-                InventoryTheme.bad, 22)
-            y = y + ALERT_LINE
-        }
-        y = y + 14
-        InventoryTheme.label(box, footer, Vec2.new(0, y), Vec2.new(0.5, 0), Vec2.new(0.5, 0), 20.0, _bookFont,
-            InventoryTheme.textMuted, 22)
-        y = y + 34 + 20
-
-        var button = InventoryTheme.frame(box, "tile", Vec2.new(0, y), Vec2.new(0.5, 0), ALERT_BUTTON, Vec2.new(0, 0), 22)
-        button.setAnchorPoint(Vec2.new(0.5, 0))
-        InventoryTheme.label(button, ok, Vec2.new(0, 0), Vec2.new(0.5, 0.5), Vec2.new(0.5, 0.5), 22.0, _boldFont,
-            InventoryTheme.text, 23)
-        InventoryTheme.focusable(button, Fn.new { _onFocusMoved.call() }, null)
-        // Every direction leads back to the button itself, so the arrows can't wander onto the page behind.
-        for (direction in [NavigationDirection.UP, NavigationDirection.DOWN, NavigationDirection.LEFT, NavigationDirection.RIGHT]) {
-            button.setNavigationNeighbor(direction, button)
-        }
-        button.setOnClick { |sender, mousePos| closeAlert() }
-        UIManager.setFocus(button)
+        config["returnFocus"] = _pages[_current] == _itemsPage ? _itemsPage.focused : _pages[_current].firstFocusable
+        _alert = AlertPopup.new(config)
     }
 
-    // Dismisses the alert (if one is open) and gives focus back to where it was.
+    // Shuts the alert (if one is open) without pressing anything.
     closeAlert() {
-        if (_alert == null) return
-        UIManager.removeUIElement(_alert)
+        if (_alert != null) _alert.close()
         _alert = null
-        if (_alertReturn != null) UIManager.setFocus(_alertReturn)
-        _alertReturn = null
     }
 
     // Esc: true when the open page used it (backing out of a half-made move swap) - otherwise the screen closes.

@@ -99,17 +99,24 @@ class InventoryState is BaseState {
         if (type == GameEvents.movesRemovedType && _view != null) {
             var weapon = DisplayNames.itemDisplay(data["weapon"])
             var body = Localization.get("inventory.alert.moves_removed.body").replace("{weapon}", weapon)
-            _view.showAlert(Localization.get("inventory.alert.moves_removed.title"), body, data["moves"],
-                Localization.get("inventory.alert.moves_removed.footer"), Localization.get("inventory.alert.ok"))
+            var alert = {}
+            alert["title"] = Localization.get("inventory.alert.moves_removed.title")
+            alert["body"] = body
+            alert["lines"] = data["moves"]
+            alert["footer"] = Localization.get("inventory.alert.moves_removed.footer")
+            alert["buttons"] = [[Localization.get("inventory.alert.ok"), null]]
+            _view.showAlert(alert)
             _view.setTabAlert("moves", MoveBook.needsReview)
         }
     }
 
     update(stateManager) {
         var cancel = Input.isInputJustReleased("UICancel")
-        // An open alert takes the close keys (and holds the tabs still) until it's dismissed.
+        // An open alert takes the keys (and holds the tabs still) until it's dismissed: its own buttons and Esc go
+        // through the view's update; the Inventory key shuts it.
         if (_view.alertOpen) {
-            if (cancel || Input.isInputJustReleased("Inventory")) _view.closeAlert()
+            if (Input.isInputJustReleased("Inventory")) _view.closeAlert()
+            _view.update(Time.unscaledTime)
             _lastTabStep = tabStep_()
             return
         }
