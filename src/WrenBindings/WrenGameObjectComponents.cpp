@@ -1426,6 +1426,51 @@ void wren_ParticleEmitterGetAdditive(WrenVM* vm)
 	wrenSetSlotBool(vm, 0, emitter->component->additive);
 }
 
+// ParticleEmitter.setAnimation(definition, mode) - definition: a SpriteAnimationDefinition; mode: a
+// ParticleAnimationMode value.
+void wren_ParticleEmitterSetAnimationWithMode(WrenVM* vm)
+{
+	WrenParticleEmitter* emitter   = (WrenParticleEmitter*)wrenGetSlotForeign(vm, 0);
+	auto* definition               = static_cast<WrenSpriteAnimationDefinition*>(wrenGetSlotForeign(vm, 1));
+	emitter->component->animation  = definition->spriteAnimation;
+	int mode                       = static_cast<int>(wrenGetSlotDouble(vm, 2));
+	emitter->component->animationMode =
+	    static_cast<Struktur::Component::ParticleAnimationMode>(std::clamp(mode, 0, 3));
+}
+
+// ParticleEmitter.setAnimation(definition) - plays it like a sprite would: Loop if the definition loops, else Once.
+void wren_ParticleEmitterSetAnimation(WrenVM* vm)
+{
+	WrenParticleEmitter* emitter  = (WrenParticleEmitter*)wrenGetSlotForeign(vm, 0);
+	auto* definition              = static_cast<WrenSpriteAnimationDefinition*>(wrenGetSlotForeign(vm, 1));
+	emitter->component->animation = definition->spriteAnimation;
+	emitter->component->animationMode = definition->spriteAnimation.loop
+	                                        ? Struktur::Component::ParticleAnimationMode::Loop
+	                                        : Struktur::Component::ParticleAnimationMode::Once;
+}
+
+// ParticleEmitter.clearAnimation() - back to no animation on cell 0.
+void wren_ParticleEmitterClearAnimation(WrenVM* vm)
+{
+	WrenParticleEmitter* emitter      = (WrenParticleEmitter*)wrenGetSlotForeign(vm, 0);
+	emitter->component->animation     = Struktur::Animation::SpriteAnimation{0, 1, 1.0f, false};
+	emitter->component->animationMode = Struktur::Component::ParticleAnimationMode::None;
+}
+
+void wren_ParticleEmitterSetAnimationMode(WrenVM* vm)
+{
+	WrenParticleEmitter* emitter = (WrenParticleEmitter*)wrenGetSlotForeign(vm, 0);
+	int mode                     = static_cast<int>(wrenGetSlotDouble(vm, 1));
+	emitter->component->animationMode =
+	    static_cast<Struktur::Component::ParticleAnimationMode>(std::clamp(mode, 0, 3));
+}
+
+void wren_ParticleEmitterGetAnimationMode(WrenVM* vm)
+{
+	WrenParticleEmitter* emitter = (WrenParticleEmitter*)wrenGetSlotForeign(vm, 0);
+	wrenSetSlotDouble(vm, 0, static_cast<double>(emitter->component->animationMode));
+}
+
 void wren_ParticleEmitterSetLayer(WrenVM* vm)
 {
 	WrenParticleEmitter* emitter = (WrenParticleEmitter*)wrenGetSlotForeign(vm, 0);
@@ -2566,6 +2611,13 @@ WREN_BINDING_MODULE(GameObjectComponent)
 	          WREN_ENUM_PAIR("FOREGROUND", Struktur::World::RenderLayer::Foreground),
 	          WREN_ENUM_PAIR("UI", Struktur::World::RenderLayer::UI), );
 
+	WREN_ENUM(registry, "gameObjectComponents", ParticleAnimationMode,
+	          "How each particle plays its emitter's sprite animation (ParticleEmitter.setAnimation)",
+	          WREN_ENUM_PAIR("NONE", Struktur::Component::ParticleAnimationMode::None),
+	          WREN_ENUM_PAIR("ONCE", Struktur::Component::ParticleAnimationMode::Once),
+	          WREN_ENUM_PAIR("LOOP", Struktur::Component::ParticleAnimationMode::Loop),
+	          WREN_ENUM_PAIR("LIFETIME", Struktur::Component::ParticleAnimationMode::Lifetime), );
+
 	// Register ParticleEmitter Component foreign class
 	WREN_FOREIGN_CLASS(registry, "gameObjectComponents", "ParticleEmitter", wren_ParticleEmitterAllocate,
 	                   wren_ParticleEmitterFinalize, "ParticleEmitter component class");
@@ -2641,6 +2693,18 @@ WREN_BINDING_MODULE(GameObjectComponent)
 	                  "Get whether particles blend additively instead of with normal alpha blending");
 	WREN_CLASS_METHOD(registry, "gameObjectComponents", "ParticleEmitter", "additive=(_)", wren_ParticleEmitterSetAdditive,
 	                  "Set whether particles blend additively instead of with normal alpha blending");
+	WREN_CLASS_METHOD(registry, "gameObjectComponents", "ParticleEmitter", "setAnimation(_,_)",
+	                  wren_ParticleEmitterSetAnimationWithMode,
+	                  "Set the sprite animation (a SpriteAnimationDefinition) each particle plays, and how (a ParticleAnimationMode)");
+	WREN_CLASS_METHOD(registry, "gameObjectComponents", "ParticleEmitter", "setAnimation(_)",
+	                  wren_ParticleEmitterSetAnimation,
+	                  "Set the sprite animation each particle plays - looped if the definition loops, otherwise once");
+	WREN_CLASS_METHOD(registry, "gameObjectComponents", "ParticleEmitter", "clearAnimation()",
+	                  wren_ParticleEmitterClearAnimation, "Stop animating particles - they draw cell 0");
+	WREN_CLASS_METHOD(registry, "gameObjectComponents", "ParticleEmitter", "animationMode",
+	                  wren_ParticleEmitterGetAnimationMode, "Get how particles play their animation (a ParticleAnimationMode)");
+	WREN_CLASS_METHOD(registry, "gameObjectComponents", "ParticleEmitter", "animationMode=(_)",
+	                  wren_ParticleEmitterSetAnimationMode, "Set how particles play their animation (a ParticleAnimationMode)");
 	WREN_CLASS_METHOD(registry, "gameObjectComponents", "ParticleEmitter", "layer", wren_ParticleEmitterGetLayer,
 	                  "Get the render layer particles draw on");
 	WREN_CLASS_METHOD(registry, "gameObjectComponents", "ParticleEmitter", "layer=(_)", wren_ParticleEmitterSetLayer,

@@ -16,6 +16,47 @@
 #include "glm/glm.hpp"
 #include "glm/gtc/quaternion.hpp."
 
+#include <algorithm>
+#include <cmath>
+
+namespace
+{
+// The atlas cell `particle` draws this frame: its emitter's sprite animation, played per its animation mode on the
+// particle's own age (frame math matches AnimationSystem's - endFrame exclusive, clamped to the last frame).
+int ParticleFrame(const Struktur::Component::ParticleEmitter& emitter, const Struktur::Component::Particle& particle)
+{
+	using Struktur::Component::ParticleAnimationMode;
+	const Struktur::Animation::SpriteAnimation& animation = emitter.animation;
+	const int cellCount = emitter.columns * emitter.rows;
+	const int start     = std::clamp(static_cast<int>(animation.startFrame), 0, cellCount - 1);
+	const int span      = static_cast<int>(animation.endFrame) - start;
+	if (emitter.animationMode == ParticleAnimationMode::None || span <= 1)
+	{
+		return start;
+	}
+
+	float progress = 0.0f;  // 0..1 through the animation
+	switch (emitter.animationMode)
+	{
+		case ParticleAnimationMode::Once:
+			progress = animation.animationTime > 0.0f ? particle.age / animation.animationTime : 1.0f;
+			break;
+		case ParticleAnimationMode::Loop:
+			progress = animation.animationTime > 0.0f
+			               ? std::fmod(particle.age, animation.animationTime) / animation.animationTime
+			               : 0.0f;
+			break;
+		case ParticleAnimationMode::Lifetime:
+			progress = particle.lifetime > 0.0f ? particle.age / particle.lifetime : 1.0f;
+			break;
+		default:
+			break;
+	}
+	int frame = start + static_cast<int>(std::floor(span * std::clamp(progress, 0.0f, 1.0f)));
+	return std::clamp(frame, start, std::min(start + span, cellCount) - 1);
+}
+}  // namespace
+
 void Struktur::System::SpriteRenderSystem::Update(GameContext& context)
 {
 	entt::registry& registry               = context.GetRegistry();
@@ -175,8 +216,6 @@ void Struktur::System::SpriteRenderSystem::Update(GameContext& context)
 				ASSERT_MSG(emitter.rows > 0, "ParticleEmitter needs to have at least one row");
 				glm::vec2 frameSize = glm::vec2(imageWidth / emitter.columns, imageHeight / emitter.rows);
 
-				// Frame index 0 for every particle - flipbook animation (driving this from each particle's own
-				// age) is a documented follow-up, not part of this build (see ParticleEmitter's own comment).
 				Util::Math::Rect sourceRec{0.0f, 0.0f, frameSize.x, frameSize.y};
 
 				bgfx::ProgramHandle program     = shaderSystem.ResolveProgram(context, entity, defaultProgram);
@@ -190,6 +229,9 @@ void Struktur::System::SpriteRenderSystem::Update(GameContext& context)
 					}
 
 					float t              = particle.age / particle.lifetime;
+					int frame            = ParticleFrame(emitter, particle);
+					sourceRec.x          = static_cast<float>(frame % emitter.columns) * frameSize.x;
+					sourceRec.y          = static_cast<float>(frame / emitter.columns) * frameSize.y;
 					float scale          = Util::Math::Lerp(emitter.startScale, emitter.endScale, t);
 					Util::Color color    = Util::Color(glm::mix(glm::vec4(emitter.startColor), glm::vec4(emitter.endColor), t));
 					Util::Math::Rect destRec{::round(particle.position.x * 2) / 2, ::round(particle.position.y * 2) / 2,

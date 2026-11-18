@@ -321,6 +321,7 @@ class BattleStage {
         var battler = battlerFor(who)
         if (battler == null) return
         if (type == "hit") {
+            battler.playHitCloud(event["element"], event["blocked"], event["amount"])
             var move = event["move"]
             if (event["blocked"]) {
                 battler.playImpact("parrySpark")

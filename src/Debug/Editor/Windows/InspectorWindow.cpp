@@ -1931,6 +1931,25 @@ void InspectorWindow::RenderParticleEmitterComponent(GameContext& context, Compo
 	ImGui::Text("Sprite Sheet:");
 	ImGui::DragInt("Columns", &emitter.columns, 1.0f, 1, 100);
 	ImGui::DragInt("Rows", &emitter.rows, 1.0f, 1, 100);
+	{
+		const char* modes[] = {"None", "Once", "Loop", "Lifetime"};
+		int mode            = static_cast<int>(emitter.animationMode);
+		if (ImGui::Combo("Animation", &mode, modes, IM_ARRAYSIZE(modes)))
+		{
+			emitter.animationMode = static_cast<Component::ParticleAnimationMode>(mode);
+		}
+		int startFrame = static_cast<int>(emitter.animation.startFrame);
+		int endFrame   = static_cast<int>(emitter.animation.endFrame);
+		if (ImGui::DragInt("Start Frame", &startFrame, 1.0f, 0, 10000))
+		{
+			emitter.animation.startFrame = static_cast<unsigned int>(std::max(startFrame, 0));
+		}
+		if (ImGui::DragInt("End Frame (excl.)", &endFrame, 1.0f, 0, 10000))
+		{
+			emitter.animation.endFrame = static_cast<unsigned int>(std::max(endFrame, 0));
+		}
+		ImGui::DragFloat("Animation Time", &emitter.animation.animationTime, 0.01f, 0.01f, 60.0f, "%.2fs");
+	}
 
 	ImGui::Spacing();
 

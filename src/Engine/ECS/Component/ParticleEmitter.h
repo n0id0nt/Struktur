@@ -2,6 +2,8 @@
 
 #include <vector>
 
+#include "Engine/Animation/SpriteAnimation.h"
+
 #include "Engine/Resource/Pointers/ResourcePtr.h"
 #include "Engine/Resource/TextureResource.h"
 #include "Engine/Util/Color.h"
@@ -19,6 +21,16 @@ namespace Component
 // pipeline (cull bounds, sort-key batching, atlas frames, per-material Component::Shader) is reused as-is, and
 // CPU simulation keeps the door open for anything that isn't closed-form (collision, drag, wind) without an
 // architecture change later.
+// How each particle plays the emitter's sprite animation (ParticleEmitter::animation). Every mode runs on the
+// particle's own age, so the particles of one burst animate independently of each other and of the emitter.
+enum class ParticleAnimationMode
+{
+	None,      // no animation: every particle draws the animation's startFrame
+	Once,      // plays startFrame..endFrame over animationTime once, then holds the last frame
+	Loop,      // plays startFrame..endFrame every animationTime, round and round
+	Lifetime,  // the animation's progress is the particle's life progress (age / lifetime) - animationTime unused
+};
+
 struct Particle
 {
 	bool alive = false;
@@ -38,11 +50,16 @@ struct Particle
 struct ParticleEmitter
 {
 	Resource::ResourcePtr<Resource::TextureResource> texture;
-	// Atlas dimensions for optional flipbook animation - a particle's frame index is 0 (the sheet's first cell)
-	// unless/until per-particle flipbook animation is added; carried here now since it's free and matches
-	// Component::Sprite's own columns/rows fields exactly.
+	// Atlas dimensions, matching Component::Sprite's own columns/rows fields - cells are numbered left to right,
+	// top to bottom, the same as a sprite animation's frames.
 	int columns = 1;
 	int rows    = 1;
+	// The sprite animation each particle plays (the same data SpriteAnimationDefinition / Component::SpriteAnimation
+	// use: startFrame, endFrame exclusive, animationTime in seconds, loop) and how it's played - see
+	// ParticleAnimationMode. The default is no animation on cell 0. `loop` is only read by SetAnimation's
+	// mode-from-definition overload (Wren: setAnimation(def)); the mode decides playback.
+	Animation::SpriteAnimation animation{0, 1, 1.0f, false};
+	ParticleAnimationMode animationMode = ParticleAnimationMode::None;
 
 	float emissionRate = 10.0f;  // particles/sec while looping is true
 	int burstCount      = 0;      // one-shot particles spawned the first Update() this emitter is alive

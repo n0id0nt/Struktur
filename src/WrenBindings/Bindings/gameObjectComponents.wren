@@ -14,6 +14,14 @@ class RenderLayer {
     static UI { 5 }
 }
 
+// How each particle plays its emitter's sprite animation (ParticleEmitter.setAnimation)
+class ParticleAnimationMode {
+    static NONE { 0 }
+    static ONCE { 1 }
+    static LOOP { 2 }
+    static LIFETIME { 3 }
+}
+
 // ParticleEmitter component class
 foreign class ParticleEmitter {
     // Set the emitted particles' texture
@@ -86,6 +94,16 @@ foreign class ParticleEmitter {
     foreign additive
     // Set whether particles blend additively instead of with normal alpha blending
     foreign additive=(arg0)
+    // Set the sprite animation (a SpriteAnimationDefinition) each particle plays, and how (a ParticleAnimationMode)
+    foreign setAnimation(arg0,arg1)
+    // Set the sprite animation each particle plays - looped if the definition loops, otherwise once
+    foreign setAnimation(arg0)
+    // Stop animating particles - they draw cell 0
+    foreign clearAnimation()
+    // Get how particles play their animation (a ParticleAnimationMode)
+    foreign animationMode
+    // Set how particles play their animation (a ParticleAnimationMode)
+    foreign animationMode=(arg0)
     // Get the render layer particles draw on
     foreign layer
     // Set the render layer particles draw on

@@ -642,7 +642,9 @@ class BattleEngine {
         var result = _rules.damage(a, t, move, share, cell[3], cell[4], block, covered ? coverGuard : g)
         var dealt = result[0]
         applyDamage_(t, dealt)
-        emit_("hit", t, {"by": a, "amount": dealt, "blocked": block > 0, "guard": covered ? coverGuard : g, "move": move})
+        var element = _rules.weaponFor(a, move)[2]
+        emit_("hit", t, {"by": a, "amount": dealt, "blocked": block > 0, "guard": covered ? coverGuard : g, "move": move,
+            "element": element})
         if (dealt > 0) _rules.onDamaged(t, a, dealt)
 
         if (covered) {

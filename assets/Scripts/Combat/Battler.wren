@@ -11,9 +11,10 @@
 //     is tinted by what it is doing: guarding (blue, strongest at the peak), dodging (ghosted), Exposed (gold),
 //     staggered (red), burning / chilled.
 // A def may carry a weapon layer (def.weaponTexturePath): a second sheet with the same grid, drawn over the body
-// frame for frame.
+// frame for frame. Every hit that lands on it throws up a cloud of dust coloured by the blow's element
+// (playHitCloud), from its own emitter on a child entity.
 import "gameObject" for GameObject
-import "gameObjectComponents" for WorldTransform, Sprite, SpriteAnimation, ParticleEmitter, RenderLayer
+import "gameObjectComponents" for WorldTransform, LocalTransform, Sprite, SpriteAnimation, ParticleEmitter, RenderLayer
 import "math" for Math, Vec2, Vec3, Vec4
 import "resourceManager" for Texture
 import "animation" for SpriteAnimationDefinition
@@ -31,6 +32,8 @@ var EXPOSED_TINT = Vec4.new(255, 225, 110, 255)
 var BURN_TINT = Vec4.new(255, 170, 90, 255)
 var CHILL_TINT = Vec4.new(150, 215, 255, 255)
 var DEFEAT_TIME = 0.9
+var CLOUD_HEIGHT = 8         // px above the feet that a hit cloud bursts from (low enough for a small wolf)
+var CLOUD_FULL_DAMAGE = 40   // a hit this hard (or harder) throws up the biggest cloud
 
 class Battler {
     // def: a BattleCritter or the BattlePlayer class - same getters either way. combatant: who it shows.
@@ -75,6 +78,15 @@ class Battler {
         particleTex.unload()
         _emitter.looping = false
 
+        // The hit cloud's emitter: a child a little above the feet (where a blow lands), kept apart from the impact
+        // sparks so neither restyles the other's particles mid-flight.
+        _cloud = GameObject.create("HitCloud_%(def.name)", _entity)
+        LocalTransform.setPosition(_cloud, Vec3.new(0, -CLOUD_HEIGHT, 0))
+        var cloudTex = Texture.load("Actors/magic.png")
+        _cloudEmitter = ParticleEmitter.create(_cloud, cloudTex)
+        cloudTex.unload()
+        _cloudEmitter.looping = false
+
         face(1)
         play_("idle", null, true)
     }
@@ -102,6 +114,8 @@ class Battler {
     order=(value) {
         Sprite.setOrderInLayer(_entity, value)
         if (_weapon != null) Sprite.setOrderInLayer(_weapon, value + 1)
+        // Just over this battler (and its weapon), still under anyone standing nearer the camera.
+        _cloudEmitter.orderInLayer = value + 2
     }
 
     // dir: 1 to face right, -1 to face left. A def with left-facing art (animsLeft) switches to those clips; one
@@ -261,6 +275,13 @@ class Battler {
     // Fires one of Combat/Config/MoveParticles.wren's presets on this battler.
     playImpact(particleId) {
         MoveParticles.trigger(_emitter, particleId)
+    }
+
+    // The dust cloud a hit throws up: tinted by `element` (null = plain dust), smaller for a blocked or weak hit.
+    playHitCloud(element, blocked, amount) {
+        var strength = amount / CLOUD_FULL_DAMAGE
+        if (blocked) strength = strength * 0.5
+        MoveParticles.hitCloud(_cloudEmitter, element, strength)
     }
 
     teardown() {
