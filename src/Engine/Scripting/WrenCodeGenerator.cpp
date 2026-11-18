@@ -383,9 +383,9 @@ void CodeGenerator::GenerateAllHeaders(const std::string& wrenSourceDir, const s
 		// Escape the source for embedding in a C string
 		std::string escaped;
 		escaped.reserve(wrenSource.size());
-		for (char c : wrenSource)
+		for (char character : wrenSource)
 		{
-			switch (c)
+			switch (character)
 			{
 				case '"':
 					escaped += "\\\"";
@@ -399,7 +399,7 @@ void CodeGenerator::GenerateAllHeaders(const std::string& wrenSourceDir, const s
 				case '\r':
 					break;
 				default:
-					escaped += c;
+					escaped += character;
 					break;
 			}
 		}

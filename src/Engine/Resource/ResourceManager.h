@@ -137,23 +137,23 @@ public:
 	// from Initialise() rather than reaching into each pool individually. Each pool itself has no notion of its
 	// own category (see PoolResourceEventCallback's comment in ResourceEvents.h), so this is where that tag
 	// actually gets attached, one small forwarding lambda per pool.
-	void SetResourceEventCallback(ResourceEventCallback cb)
+	void SetResourceEventCallback(ResourceEventCallback callback)
 	{
 		m_texturePool.SetResourceEventCallback(
-		    [cb](ResourceEventType e, const std::string& n, size_t m, double t)
-		    { cb(ResourceCategory::Texture, e, n, m, t); });
+		    [callback](ResourceEventType type, const std::string& name, size_t memoryBytes, double seconds)
+		    { callback(ResourceCategory::Texture, type, name, memoryBytes, seconds); });
 		m_soundPool.SetResourceEventCallback(
-		    [cb](ResourceEventType e, const std::string& n, size_t m, double t)
-		    { cb(ResourceCategory::Sound, e, n, m, t); });
+		    [callback](ResourceEventType type, const std::string& name, size_t memoryBytes, double seconds)
+		    { callback(ResourceCategory::Sound, type, name, memoryBytes, seconds); });
 		m_musicPool.SetResourceEventCallback(
-		    [cb](ResourceEventType e, const std::string& n, size_t m, double t)
-		    { cb(ResourceCategory::Music, e, n, m, t); });
+		    [callback](ResourceEventType type, const std::string& name, size_t memoryBytes, double seconds)
+		    { callback(ResourceCategory::Music, type, name, memoryBytes, seconds); });
 		m_fontPool.SetResourceEventCallback(
-		    [cb](ResourceEventType e, const std::string& n, size_t m, double t)
-		    { cb(ResourceCategory::Font, e, n, m, t); });
+		    [callback](ResourceEventType type, const std::string& name, size_t memoryBytes, double seconds)
+		    { callback(ResourceCategory::Font, type, name, memoryBytes, seconds); });
 		m_shaderPool.SetResourceEventCallback(
-		    [cb](ResourceEventType e, const std::string& n, size_t m, double t)
-		    { cb(ResourceCategory::Shader, e, n, m, t); });
+		    [callback](ResourceEventType type, const std::string& name, size_t memoryBytes, double seconds)
+		    { callback(ResourceCategory::Shader, type, name, memoryBytes, seconds); });
 	}
 #endif
 };

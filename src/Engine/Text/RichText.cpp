@@ -4,25 +4,24 @@
 #include <cstdlib>
 #include <map>
 
-namespace
+static std::string Trim(const std::string& text)
 {
-std::string Trim(const std::string& s)
-{
-	size_t begin = s.find_first_not_of(" \t");
+	size_t begin = text.find_first_not_of(" \t");
 	if (begin == std::string::npos)
 	{
 		return "";
 	}
-	size_t end = s.find_last_not_of(" \t");
-	return s.substr(begin, end - begin + 1);
+	size_t end = text.find_last_not_of(" \t");
+	return text.substr(begin, end - begin + 1);
 }
 
-bool IsHexDigit(char c)
+static bool IsHexDigit(char character)
 {
-	return (c >= '0' && c <= '9') || (c >= 'a' && c <= 'f') || (c >= 'A' && c <= 'F');
+	return (character >= '0' && character <= '9') || (character >= 'a' && character <= 'f') ||
+	       (character >= 'A' && character <= 'F');
 }
 
-uint8_t HexByte(const std::string& digits, size_t offset)
+static uint8_t HexByte(const std::string& digits, size_t offset)
 {
 	return (uint8_t)std::strtoul(digits.substr(offset, 2).c_str(), nullptr, 16);
 }
@@ -32,7 +31,7 @@ uint8_t HexByte(const std::string& digits, size_t offset)
 // one value for. A malformed token with no '=' is simply skipped rather than erroring, and an unrecognised
 // key is just absent from the result (GetFloatOr below then falls back to that param's default) - same
 // leniency stance as the rest of this parser.
-std::map<std::string, std::string> ParseKeyValuePairs(const std::string& text)
+static std::map<std::string, std::string> ParseKeyValuePairs(const std::string& text)
 {
 	std::map<std::string, std::string> result;
 	size_t i      = 0;
@@ -64,7 +63,7 @@ std::map<std::string, std::string> ParseKeyValuePairs(const std::string& text)
 
 // Looks up key in params, parsing it as a float - returns fallback if the key is absent, or if present but
 // not parseable as a number (strtof consumed zero characters).
-float GetFloatOr(const std::map<std::string, std::string>& params, const std::string& key, float fallback)
+static float GetFloatOr(const std::map<std::string, std::string>& params, const std::string& key, float fallback)
 {
 	auto it = params.find(key);
 	if (it == params.end())
@@ -109,7 +108,6 @@ struct FadeParams
 	float start  = 0.0f;
 	float length = 8.0f;
 };
-}  // namespace
 
 bool Struktur::Text::TryParseHexColor(const std::string& hex, Util::Color& outColor)
 {
@@ -122,9 +120,9 @@ bool Struktur::Text::TryParseHexColor(const std::string& hex, Util::Color& outCo
 	{
 		return false;
 	}
-	for (char c : digits)
+	for (char digit : digits)
 	{
-		if (!IsHexDigit(c))
+		if (!IsHexDigit(digit))
 		{
 			return false;
 		}
@@ -137,8 +135,6 @@ bool Struktur::Text::TryParseHexColor(const std::string& hex, Util::Color& outCo
 	return true;
 }
 
-namespace
-{
 // Mutable parse state threaded through the scan loop in ParseMarkup - kept as one struct rather than a pile
 // of loose locals since every tag boundary needs to read/mutate several of these together.
 struct ParseState
@@ -167,7 +163,7 @@ struct ParseState
 
 // Pushes currentText as a new run (styled per the *current* state) onto currentLine, then clears it - a no-op
 // if currentText is empty, so back-to-back tags with no text between them don't create an empty run.
-void FlushTextRun(ParseState& state)
+static void FlushTextRun(ParseState& state)
 {
 	if (state.currentText.empty())
 	{
@@ -220,7 +216,7 @@ void FlushTextRun(ParseState& state)
 	state.currentText.clear();
 }
 
-void FlushLine(ParseState& state)
+static void FlushLine(ParseState& state)
 {
 	FlushTextRun(state);
 	state.lines.push_back(std::move(state.currentLine));
@@ -230,13 +226,12 @@ void FlushLine(ParseState& state)
 // Appends a tag's original source text (including its brackets) as literal content - the fallback for
 // anything that doesn't parse as a recognised, balanced tag (see ParseMarkup's leniency comment in
 // RichText.h) so a malformed/mistyped/unknown tag stays visible rather than silently vanishing.
-void AppendLiteralTag(ParseState& state, const std::string& tagContent)
+static void AppendLiteralTag(ParseState& state, const std::string& tagContent)
 {
 	state.currentText += '[';
 	state.currentText += tagContent;
 	state.currentText += ']';
 }
-}  // namespace
 
 std::vector<Struktur::Text::RichLine> Struktur::Text::ParseMarkup(const std::string& markup, Util::Color baseColor)
 {
@@ -247,18 +242,18 @@ std::vector<Struktur::Text::RichLine> Struktur::Text::ParseMarkup(const std::str
 	size_t length = markup.size();
 	while (i < length)
 	{
-		char c = markup[i];
+		char character = markup[i];
 
-		if (c == '\n')
+		if (character == '\n')
 		{
 			FlushLine(state);
 			++i;
 			continue;
 		}
 
-		if (c != '[')
+		if (character != '[')
 		{
-			state.currentText += c;
+			state.currentText += character;
 			++i;
 			continue;
 		}
@@ -403,60 +398,60 @@ std::vector<Struktur::Text::RichLine> Struktur::Text::ParseMarkup(const std::str
 		{
 			FlushTextRun(state);
 			std::map<std::string, std::string> params = ParseKeyValuePairs(remainder);
-			WaveParams p;
-			p.amplitude = GetFloatOr(params, "amp", p.amplitude);
-			p.frequency = GetFloatOr(params, "freq", p.frequency);
-			state.waveStack.push_back(p);
+			WaveParams wave;
+			wave.amplitude = GetFloatOr(params, "amp", wave.amplitude);
+			wave.frequency = GetFloatOr(params, "freq", wave.frequency);
+			state.waveStack.push_back(wave);
 			++state.waveDepth;
 		}
 		else if (name == "shake")
 		{
 			FlushTextRun(state);
 			std::map<std::string, std::string> params = ParseKeyValuePairs(remainder);
-			ShakeParams p;
-			p.rate  = GetFloatOr(params, "rate", p.rate);
-			p.level = GetFloatOr(params, "level", p.level);
-			state.shakeStack.push_back(p);
+			ShakeParams shake;
+			shake.rate  = GetFloatOr(params, "rate", shake.rate);
+			shake.level = GetFloatOr(params, "level", shake.level);
+			state.shakeStack.push_back(shake);
 			++state.shakeDepth;
 		}
 		else if (name == "pulse")
 		{
 			FlushTextRun(state);
 			std::map<std::string, std::string> params = ParseKeyValuePairs(remainder);
-			PulseParams p;
-			p.frequency = GetFloatOr(params, "freq", p.frequency);
-			state.pulseStack.push_back(p);
+			PulseParams pulse;
+			pulse.frequency = GetFloatOr(params, "freq", pulse.frequency);
+			state.pulseStack.push_back(pulse);
 			++state.pulseDepth;
 		}
 		else if (name == "rainbow")
 		{
 			FlushTextRun(state);
 			std::map<std::string, std::string> params = ParseKeyValuePairs(remainder);
-			RainbowParams p;
-			p.frequency  = GetFloatOr(params, "freq", p.frequency);
-			p.saturation = GetFloatOr(params, "sat", p.saturation);
-			p.value      = GetFloatOr(params, "val", p.value);
-			state.rainbowStack.push_back(p);
+			RainbowParams rainbow;
+			rainbow.frequency  = GetFloatOr(params, "freq", rainbow.frequency);
+			rainbow.saturation = GetFloatOr(params, "sat", rainbow.saturation);
+			rainbow.value      = GetFloatOr(params, "val", rainbow.value);
+			state.rainbowStack.push_back(rainbow);
 			++state.rainbowDepth;
 		}
 		else if (name == "tornado")
 		{
 			FlushTextRun(state);
 			std::map<std::string, std::string> params = ParseKeyValuePairs(remainder);
-			TornadoParams p;
-			p.radius    = GetFloatOr(params, "radius", p.radius);
-			p.frequency = GetFloatOr(params, "freq", p.frequency);
-			state.tornadoStack.push_back(p);
+			TornadoParams tornado;
+			tornado.radius    = GetFloatOr(params, "radius", tornado.radius);
+			tornado.frequency = GetFloatOr(params, "freq", tornado.frequency);
+			state.tornadoStack.push_back(tornado);
 			++state.tornadoDepth;
 		}
 		else if (name == "fade")
 		{
 			FlushTextRun(state);
 			std::map<std::string, std::string> params = ParseKeyValuePairs(remainder);
-			FadeParams p;
-			p.start  = GetFloatOr(params, "start", p.start);
-			p.length = GetFloatOr(params, "length", p.length);
-			state.fadeStack.push_back(p);
+			FadeParams fade;
+			fade.start  = GetFloatOr(params, "start", fade.start);
+			fade.length = GetFloatOr(params, "length", fade.length);
+			state.fadeStack.push_back(fade);
 			++state.fadeDepth;
 		}
 		else

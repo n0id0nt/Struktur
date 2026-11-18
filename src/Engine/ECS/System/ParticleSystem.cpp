@@ -9,18 +9,16 @@
 #include "Engine/GameContext.h"
 #include "glm/gtc/constants.hpp"
 
-namespace
-{
 // Shared across every emitter/particle this system ever spawns - a single well-seeded generator is both
 // cheaper and better-distributed than reseeding per spawn (see Util::Noise::PerlinNoise1's own file for the
 // cost of the opposite approach, rebuilding a table every call).
-std::mt19937& RandomEngine()
+static std::mt19937& RandomEngine()
 {
 	static std::mt19937 engine{std::random_device{}()};
 	return engine;
 }
 
-float RandomRange(float min, float max)
+static float RandomRange(float min, float max)
 {
 	if (min >= max)
 	{
@@ -32,19 +30,20 @@ float RandomRange(float min, float max)
 
 // Uniform-in-disc sample (not uniform-in-square-then-reject) via sqrt-of-radius, standard technique for an
 // evenly-distributed circular spawn area rather than one biased toward the center.
-glm::vec2 RandomInCircle(float radius)
+static glm::vec2 RandomInCircle(float radius)
 {
 	if (radius <= 0.0f)
 	{
 		return glm::vec2(0.0f, 0.0f);
 	}
 	float angle = RandomRange(0.0f, glm::two_pi<float>());
-	float r     = radius * std::sqrt(RandomRange(0.0f, 1.0f));
-	return glm::vec2(std::cos(angle), std::sin(angle)) * r;
+	float distance = radius * std::sqrt(RandomRange(0.0f, 1.0f));
+	return glm::vec2(std::cos(angle), std::sin(angle)) * distance;
 }
 
 // Returns the particle spawned, or null when the pool was full.
-Struktur::Component::Particle* SpawnParticle(Struktur::Component::ParticleEmitter& emitter, const glm::vec2& originPosition)
+static Struktur::Component::Particle* SpawnParticle(Struktur::Component::ParticleEmitter& emitter,
+                                                    const glm::vec2& originPosition)
 {
 	// Find a dead slot to reuse before growing the pool - keeps the vector at its steady-state size instead of
 	// reallocating every spawn once the pool has filled up once.
@@ -78,7 +77,6 @@ Struktur::Component::Particle* SpawnParticle(Struktur::Component::ParticleEmitte
 	slot->endColor      = emitter.endColor;
 	return slot;
 }
-}  // namespace
 
 void Struktur::System::ParticleSystem::Update(GameContext& context)
 {

@@ -16,14 +16,14 @@ class PeasantGirlBattleSprite {
 
     static data {
         if (__data == null) {
-            var d = {}
-            d["texture"] = "Actors/peasant_girl_battle.png"
-            d["origin"] = [99, 99]
-            d["columns"] = 12
-            d["rows"] = 18
-            d["cellSize"] = [198, 124]
-            d["defaultAnimation"] = "rightIdleAnimation"
-            d["animations"] = [
+            var sheet = {}
+            sheet["texture"] = "Actors/peasant_girl_battle.png"
+            sheet["origin"] = [99, 99]
+            sheet["columns"] = 12
+            sheet["rows"] = 18
+            sheet["cellSize"] = [198, 124]
+            sheet["defaultAnimation"] = "rightIdleAnimation"
+            sheet["animations"] = [
                 // name, first frame, end frame (not included), seconds, loops
                 ["rightAttackAnimation",       0,   12, 0.857, false],
                 ["leftAttackAnimation",       12,   24, 0.857, false],
@@ -46,7 +46,7 @@ class PeasantGirlBattleSprite {
                 ["rightStandRollAnimation",  192,  204, 0.857, false],
                 ["leftStandRollAnimation",   204,  216, 0.857, false]
             ]
-            __data = d
+            __data = sheet
         }
         return __data
     }

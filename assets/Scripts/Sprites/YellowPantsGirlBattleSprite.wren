@@ -16,14 +16,14 @@ class YellowPantsGirlBattleSprite {
 
     static data {
         if (__data == null) {
-            var d = {}
-            d["texture"] = "Actors/yellow_pants_girl_battle.png"
-            d["origin"] = [88, 87]
-            d["columns"] = 12
-            d["rows"] = 18
-            d["cellSize"] = [176, 108]
-            d["defaultAnimation"] = "rightIdleAnimation"
-            d["animations"] = [
+            var sheet = {}
+            sheet["texture"] = "Actors/yellow_pants_girl_battle.png"
+            sheet["origin"] = [88, 87]
+            sheet["columns"] = 12
+            sheet["rows"] = 18
+            sheet["cellSize"] = [176, 108]
+            sheet["defaultAnimation"] = "rightIdleAnimation"
+            sheet["animations"] = [
                 // name, first frame, end frame (not included), seconds, loops
                 ["rightAttackAnimation",       0,   12, 0.857, false],
                 ["leftAttackAnimation",       12,   24, 0.857, false],
@@ -46,7 +46,7 @@ class YellowPantsGirlBattleSprite {
                 ["rightStandRollAnimation",  192,  204, 0.857, false],
                 ["leftStandRollAnimation",   204,  216, 0.857, false]
             ]
-            __data = d
+            __data = sheet
         }
         return __data
     }

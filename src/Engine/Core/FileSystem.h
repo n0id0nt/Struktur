@@ -40,19 +40,19 @@ struct FileResult
 
 	static FileResult Ok(T val)
 	{
-		FileResult r;
-		r.success = true;
-		r.value   = std::move(val);
-		return r;
+		FileResult result;
+		result.success = true;
+		result.value   = std::move(val);
+		return result;
 	}
 
 	static FileResult Fail(FileSystemError err, const std::string& msg = "")
 	{
-		FileResult r;
-		r.success      = false;
-		r.error        = err;
-		r.errorMessage = msg;
-		return r;
+		FileResult result;
+		result.success      = false;
+		result.error        = err;
+		result.errorMessage = msg;
+		return result;
 	}
 };
 
@@ -70,18 +70,18 @@ struct FileResult<void>
 
 	static FileResult Ok()
 	{
-		FileResult r;
-		r.success = true;
-		return r;
+		FileResult result;
+		result.success = true;
+		return result;
 	}
 
 	static FileResult Fail(FileSystemError err, const std::string& msg = "")
 	{
-		FileResult r;
-		r.success      = false;
-		r.error        = err;
-		r.errorMessage = msg;
-		return r;
+		FileResult result;
+		result.success      = false;
+		result.error        = err;
+		result.errorMessage = msg;
+		return result;
 	}
 };
 

@@ -77,12 +77,10 @@ void Struktur::Renderer::WorldRenderer::Clear()
 	m_drawItems.clear();
 }
 
-namespace
-{
 // Fills the 4 corners of a rotated quad exactly like raylib's DrawTexturePro: destRec.x/y is the rotation
 // pivot, origin is the (dest-space) offset from the pivot to the pre-rotation top-left corner.
-void ComputeQuadCorners(const Struktur::Util::Math::Rect& destRec, const glm::vec2& origin, float rotationDegrees,
-                        glm::vec2 outCorners[4])
+static void ComputeQuadCorners(const Struktur::Util::Math::Rect& destRec, const glm::vec2& origin,
+                               float rotationDegrees, glm::vec2 outCorners[4])
 {
 	float rad = glm::radians(rotationDegrees);
 	float cs  = std::cos(rad);
@@ -98,14 +96,20 @@ void ComputeQuadCorners(const Struktur::Util::Math::Rect& destRec, const glm::ve
 	                 destRec.y + (dx + destRec.width) * sn + (dy + destRec.height) * cs};
 }
 
+// Draw order for Render's stable_sort (see the comment there).
+static bool LowerSortKeyFirst(const Struktur::Renderer::DrawItem& lhs, const Struktur::Renderer::DrawItem& rhs)
+{
+	return lhs.sortKey < rhs.sortKey;
+}
+
 // Computes the axis-aligned world-space bounding box actually covered by a sprite's quad, for culling against.
 // destRec.x/y is the rotation pivot, not the quad's top-left corner (see ComputeQuadCorners above) - culling
 // against destRec directly is wrong whenever origin is non-zero (e.g. a centered origin), since the real
 // on-screen quad is shifted away from destRec's own naive rect. Rotation == 0 skips the full corner computation
 // and 4-point min/max reduction below: an unrotated quad's AABB is just destRec translated by -origin, which is
 // both cheaper and the overwhelmingly common case (most sprites don't rotate).
-Struktur::Util::Math::Rect ComputeQuadWorldBounds(const Struktur::Util::Math::Rect& destRec, const glm::vec2& origin,
-                                                  float rotationDegrees)
+static Struktur::Util::Math::Rect ComputeQuadWorldBounds(const Struktur::Util::Math::Rect& destRec,
+                                                         const glm::vec2& origin, float rotationDegrees)
 {
 	if (rotationDegrees == 0.0f)
 	{
@@ -121,7 +125,6 @@ Struktur::Util::Math::Rect ComputeQuadWorldBounds(const Struktur::Util::Math::Re
 	float maxY = std::max({corners[0].y, corners[1].y, corners[2].y, corners[3].y});
 	return {minX, minY, maxX - minX, maxY - minY};
 }
-}  // namespace
 
 void Struktur::Renderer::WorldRenderer::SubmitSprite(World::RenderLayer layer, float orderInLayer,
                                                      bgfx::ProgramHandle program, const Component::Shader* shader,
@@ -182,8 +185,7 @@ void Struktur::Renderer::WorldRenderer::Flush(GameContext& context)
 	// submission order the tiebreaker instead, which is deterministic. This is a real perf tradeoff (stable_sort
 	// is typically O(n log n) with extra allocation/merge overhead vs. sort's in-place O(n log n)), but
 	// deterministic paint order matters more here than the constant-factor cost at this list's size.
-	std::stable_sort(m_drawItems.begin(), m_drawItems.end(),
-	                 [](const DrawItem& a, const DrawItem& b) { return a.sortKey < b.sortKey; });
+	std::stable_sort(m_drawItems.begin(), m_drawItems.end(), LowerSortKeyFirst);
 
 	System::ShaderSystem& shaderSystem = context.GetSystemManager().GetSystem<System::ShaderSystem>();
 	World::Camera& camera              = context.GetCamera();

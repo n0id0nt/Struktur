@@ -84,6 +84,13 @@ private:
 	InputGlyph GlyphForPath(GameContext& context, const std::string& path);
 	InputGlyph GlyphForSource(GameContext& context, const Input::InputSource& source, Input::GamepadFamily family);
 
+	// One InputConfig.json glyph entry per section (see Load) - false when the name doesn't parse.
+	bool AddKeyboardGlyph(const std::string& name, const std::string& path);
+	bool AddMouseGlyph(const std::string& name, const std::string& path);
+	bool AddGamepadGlyph(const std::string& name, const std::string& path);
+	bool AddPositionalGamepadGlyph(const std::string& name, const std::string& path);
+	bool AddCompositeGlyph(const std::string& name, const std::string& path);
+
 	std::unordered_map<uint64_t, std::string> m_paths;              // SourceKey -> art path
 	std::unordered_map<int, std::string> m_positionalButtonPaths;   // SDL_GamepadButton -> art path
 	std::string m_dpadPath;

@@ -429,47 +429,11 @@ private:
 	// successfully loads. A config that does define them simply overwrites these afterward, same as always.
 	void RegisterDefaultUIBindings();
 
-	// Helper functions to reduce code duplication
-	// NOTE: Template must be defined in header
-	template <typename KeyFunc, typename ButtonFunc, typename PointerFunc>
-	bool CheckBinding(const std::string& input, KeyFunc keyCheck, ButtonFunc buttonCheck, PointerFunc pointerCheck)
-	{
-		auto it = m_buttonBindings.find(input);
-		if (it == m_buttonBindings.end())
-		{
-			WarnMissingBindingOnce(input);
-			return false;
-		}
-
-		// Check keyboard inputs
-		for (auto keycode : it->second.keycodes)
-		{
-			if (keyCheck(keycode))
-			{
-				return true;
-			}
-		}
-
-		// Check controller button inputs
-		for (auto controllerButton : it->second.controllerButtons)
-		{
-			if (buttonCheck(controllerButton))
-			{
-				return true;
-			}
-		}
-
-		// Check pointer (mouse/touch) button inputs - see PointerButton's own comment.
-		for (auto pointerButton : it->second.pointerButtons)
-		{
-			if (pointerCheck(pointerButton))
-			{
-				return true;
-			}
-		}
-
-		return false;
-	}
+	// True when any of the input's bindings passes its check - keyCheck / buttonCheck / pointerCheck are this
+	// class's own per-source queries (IsKeyDown, IsControllerButtonJustPressed, ...), so the three IsInput*
+	// functions share one walk over the bindings.
+	bool CheckBinding(const std::string& input, bool (Input::*keyCheck)(SDL_Scancode),
+	                  bool (Input::*buttonCheck)(SDL_GamepadButton), bool (Input::*pointerCheck)(PointerButton));
 
 	float CalculateAxisValue(const AxisBinding& binding);
 	float ApplyDeadzone(float value) const;

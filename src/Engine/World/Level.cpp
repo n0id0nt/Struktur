@@ -184,8 +184,6 @@ void Struktur::World::Level::UnloadLevelEntities(GameContext& context, const ent
 	worldComponent->loadedLevels.erase(it);
 }
 
-namespace
-{
 struct EntityLookup
 {
 	std::string name;   // its "Name" field, or ""
@@ -193,7 +191,7 @@ struct EntityLookup
 };
 
 // The entity with this iid, anywhere in the world.
-EntityLookup FindEntity(const Struktur::FileLoading::LevelParser::World& world, const std::string& iid)
+static EntityLookup FindEntity(const Struktur::FileLoading::LevelParser::World& world, const std::string& iid)
 {
 	for (const auto& level : world.levels)
 	{
@@ -220,7 +218,6 @@ EntityLookup FindEntity(const Struktur::FileLoading::LevelParser::World& world, 
 	}
 	return {};
 }
-}  // namespace
 
 std::vector<Struktur::Wren::WrenItem> Struktur::World::Level::BuildEntityScriptArgs(
     const FileLoading::LevelParser::Entity& entityInstance, const FileLoading::LevelParser::World& world)

@@ -36,9 +36,9 @@ class Party {
     static contains(name) { Party.member(name) != null }
 
     static member(name) {
-        for (m in __members) {
-            if (m.name == name) {
-                return m
+        for (member in __members) {
+            if (member.name == name) {
+                return member
             }
         }
         return null
@@ -46,9 +46,9 @@ class Party {
 
     // The member whose world entity this is (a player or a follower), or null.
     static memberForEntity(entity) {
-        for (m in __members) {
-            if (m.entity == entity) {
-                return m
+        for (member in __members) {
+            if (member.entity == entity) {
+                return member
             }
         }
         return null
@@ -107,13 +107,13 @@ class Party {
     // The world is going away (or the player entity is being rebuilt): drop the player slots, keep the NPCs.
     static unregisterPlayers() {
         var kept = []
-        for (m in __members) {
-            if (!m.isPlayer) {
-                kept.add(m)
+        for (member in __members) {
+            if (!member.isPlayer) {
+                kept.add(member)
             }
         }
-        for (m in kept) {
-            m.entity = null   // their follower entities die with the world
+        for (member in kept) {
+            member.entity = null   // their follower entities die with the world
         }
         __members = kept
         __version = __version + 1
@@ -171,10 +171,10 @@ class Party {
 
     // Records every member's position on their trail. Call once per fixed step, before follower scripts run.
     static tick() {
-        for (m in __members) {
-            var position = Party.positionOf(m)
+        for (member in __members) {
+            var position = Party.positionOf(member)
             if (position != null) {
-                m.trail.record(position.x, position.y)
+                member.trail.record(position.x, position.y)
             }
         }
     }
@@ -191,10 +191,10 @@ class Party {
     // Everyone who fights on the player's side, in party order (players first).
     static combatants {
         var out = []
-        for (m in __members) {
-            var c = Party.combatantOf(m)
-            if (c != null) {
-                out.add(c)
+        for (member in __members) {
+            var combatant = Party.combatantOf(member)
+            if (combatant != null) {
+                out.add(combatant)
             }
         }
         return out
@@ -204,9 +204,9 @@ class Party {
 
     // True when at least one member can fight - nobody standing means no fight can start (GameWorldState).
     static anyoneStanding {
-        for (m in __members) {
-            var c = Party.combatantOf(m)
-            if (c != null && c.alive) {
+        for (member in __members) {
+            var combatant = Party.combatantOf(member)
+            if (combatant != null && combatant.alive) {
                 return true
             }
         }
@@ -216,10 +216,10 @@ class Party {
     // After a fight the party won or fled: a player on 0 HP gets back up on 1 - the leader can't stay down (only
     // NPC members are "downed" until rested - see Member.downed). A loss is handled by the game-over flow instead.
     static reviveLeaders() {
-        for (m in __members) {
-            var c = m.isPlayer ? Party.combatantOf(m) : null
-            if (c != null && !c.alive) {
-                c.stats.heal(1)
+        for (member in __members) {
+            var combatant = member.isPlayer ? Party.combatantOf(member) : null
+            if (combatant != null && !combatant.alive) {
+                combatant.stats.heal(1)
             }
         }
     }
@@ -227,10 +227,10 @@ class Party {
     // After a duel (won or lost): nobody is really hurt - every member on 0 HP, NPCs included, gets back up on 1.
     // A duel never downs anyone or ends in a game over.
     static reviveAllFallen() {
-        for (m in __members) {
-            var c = Party.combatantOf(m)
-            if (c != null && !c.alive) {
-                c.stats.heal(1)
+        for (member in __members) {
+            var combatant = Party.combatantOf(member)
+            if (combatant != null && !combatant.alive) {
+                combatant.stats.heal(1)
             }
         }
     }
@@ -238,11 +238,11 @@ class Party {
     // A rest spot (the "restParty" dialogue command): everyone back to full HP and stamina - downed members
     // included - then saved.
     static restAll() {
-        for (m in __members) {
-            var c = Party.combatantOf(m)
-            if (c != null) {
-                c.stats.heal(c.stats.maxHp)
-                c.stats.gainStamina(c.stats.maxStamina)
+        for (member in __members) {
+            var combatant = Party.combatantOf(member)
+            if (combatant != null) {
+                combatant.stats.heal(combatant.stats.maxHp)
+                combatant.stats.gainStamina(combatant.stats.maxStamina)
             }
         }
         Party.save("party.sav")
@@ -256,12 +256,12 @@ class Party {
         var names = []
         var hp = []
         var stamina = []
-        for (m in __members) {
-            if (!m.isPlayer) {
-                names.add(m.name)
-                var c = Party.combatantOf(m)
-                hp.add(c == null ? -1 : c.stats.hp)
-                stamina.add(c == null ? -1 : c.stats.stamina)
+        for (member in __members) {
+            if (!member.isPlayer) {
+                names.add(member.name)
+                var combatant = Party.combatantOf(member)
+                hp.add(combatant == null ? -1 : combatant.stats.hp)
+                stamina.add(combatant == null ? -1 : combatant.stats.stamina)
             }
         }
         var json = Json.stringify(MapUtil.mapToPairs({"members": names, "hp": hp, "stamina": stamina}))

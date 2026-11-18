@@ -395,8 +395,6 @@ void wren_PhysicsChainShapeCreateChain(WrenVM* vm)
 // PHYSICS QUERIES
 // ============================================================================
 
-namespace
-{
 // Collects every solid (non-sensor) fixture a ray crosses, nearest first once sorted.
 class SolidRayCastCallback : public b2RayCastCallback
 {
@@ -428,7 +426,11 @@ public:
 private:
 	uint16_t m_maskBits;
 };
-}  // namespace
+
+static bool NearerHitFirst(const SolidRayCastCallback::Hit& lhs, const SolidRayCastCallback::Hit& rhs)
+{
+	return lhs.fraction < rhs.fraction;
+}
 
 // PhysicsQuery.rayCast(fromX, fromY, toX, toY, maskBits) -> [[entity, fraction, isStatic], ...]
 // Positions in world pixels. Nearest hit first; fraction is how far along the ray (0 = from, 1 = to).
@@ -450,10 +452,7 @@ void wren_PhysicsQueryRayCast(WrenVM* vm)
 	{
 		physics.GetRawWorld()->RayCast(&callback, from, to);
 	}
-	std::sort(callback.m_hits.begin(), callback.m_hits.end(),
-	          [](const SolidRayCastCallback::Hit& a, const SolidRayCastCallback::Hit& b) {
-		          return a.fraction < b.fraction;
-	          });
+	std::sort(callback.m_hits.begin(), callback.m_hits.end(), NearerHitFirst);
 
 	// Slot 0: the result list, 1: one hit's list, 2: a value going into it.
 	wrenEnsureSlots(vm, 3);

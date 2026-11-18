@@ -10,10 +10,7 @@
 
 namespace Struktur::Debug
 {
-namespace
-{
-constexpr const char* LEVELS_DIRECTORY = "Levels";
-}
+static constexpr const char* LEVELS_DIRECTORY = "Levels";
 
 LevelViewerWindow::LevelViewerWindow(LevelViewer* levelViewer)
     : EditorWindow("Level Viewer"),

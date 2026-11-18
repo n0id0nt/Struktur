@@ -45,8 +45,8 @@ class Path {
         for (iid in _iids) {
             var wayPoint = byIid[iid]
             if (wayPoint != null) {
-                var p = WorldTransform.getPosition(wayPoint)
-                found.add(Vec2.new(p.x, p.y))
+                var position = WorldTransform.getPosition(wayPoint)
+                found.add(Vec2.new(position.x, position.y))
             }
         }
         // Only remembered once every point is there (a WayPoint's script may not have started yet on the first frame).

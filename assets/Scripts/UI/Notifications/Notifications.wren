@@ -120,7 +120,7 @@ class Notifications {
         // Bring in the next queued event when there's room.
         __sinceSpawn = __sinceSpawn + dt
         var banners = Notifications.banners_
-        var stacked = banners.where { |b| b.inStack }.count
+        var stacked = banners.where { |banner| banner.inStack }.count
         if (Notifications.queue_.count > 0 && __sinceSpawn >= SPAWN_INTERVAL && stacked < MAX_VISIBLE) {
             var next = Notifications.queue_.removeAt(0)
             banners.add(Banner.new(__root, next[1], next[2], next[3], stacked, __font))
@@ -227,13 +227,13 @@ class Banner {
     // How far right of its resting place the banner is: off-screen -> 0 sliding in, 0 -> off-screen sliding out.
     slideX_ {
         var offscreen = WIDTH + MARGIN + 8
-        var p = _t / SLIDE_SECONDS
-        if (p > 1) p = 1
+        var progress = _t / SLIDE_SECONDS
+        if (progress > 1) progress = 1
         if (_phase == "in") {
-            var e = 1 - (1 - p) * (1 - p) * (1 - p)   // ease out
-            return offscreen * (1 - e)
+            var eased = 1 - (1 - progress) * (1 - progress) * (1 - progress)   // ease out
+            return offscreen * (1 - eased)
         }
-        if (_phase == "out") return offscreen * p * p * p   // ease in
+        if (_phase == "out") return offscreen * progress * progress * progress   // ease in
         return 0
     }
 

@@ -68,9 +68,9 @@ std::string VariableSubstitutionSystem::ApplyModifierChain(GameContext& context,
 	std::string current;
 	int depth = 0;
 
-	for (char c : modifierChain)
+	for (char character : modifierChain)
 	{
-		if (c == '|' && depth == 0)
+		if (character == '|' && depth == 0)
 		{
 			if (!current.empty())
 			{
@@ -80,15 +80,15 @@ std::string VariableSubstitutionSystem::ApplyModifierChain(GameContext& context,
 		}
 		else
 		{
-			if (c == '(')
+			if (character == '(')
 			{
 				depth++;
 			}
-			if (c == ')')
+			if (character == ')')
 			{
 				depth--;
 			}
-			current += c;
+			current += character;
 		}
 	}
 

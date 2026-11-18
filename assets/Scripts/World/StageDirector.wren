@@ -154,8 +154,8 @@ class StageDirector {
                     if (marker == null) {
                         Debug.warning("[StageDirector] no Path or Marker named '%(to)' in the loaded rooms")
                     } else {
-                        var p = WorldTransform.getPosition(marker)
-                        targets = [Vec2.new(p.x, p.y)]
+                        var position = WorldTransform.getPosition(marker)
+                        targets = [Vec2.new(position.x, position.y)]
                         facingAfter = StageDirector.direction(Script.getInstance(marker).facing)
                     }
                 }
@@ -178,10 +178,10 @@ class StageDirector {
     static frontOfPlayer_(entity) {
         var player = StageDirector.actor("Player")
         if (player == null || player == entity) return null
-        var p = WorldTransform.getPosition(player)
-        var f = StageDirector.facingOf_(player)
-        var dir = f.x.abs > f.y.abs ? Vec2.new(f.x.sign, 0) : Vec2.new(0, f.y >= 0 ? 1 : -1)
-        return [Vec2.new(p.x + dir.x * TILE, p.y + dir.y * TILE)]
+        var position = WorldTransform.getPosition(player)
+        var facing = StageDirector.facingOf_(player)
+        var dir = facing.x.abs > facing.y.abs ? Vec2.new(facing.x.sign, 0) : Vec2.new(0, facing.y >= 0 ? 1 : -1)
+        return [Vec2.new(position.x + dir.x * TILE, position.y + dir.y * TILE)]
     }
 
     // Puts `who` at the start of the Path called `to` (its first WayPoint), or on the Marker called `to` (facing its
@@ -313,9 +313,9 @@ class StageDirector {
             }
         }
         var actions = StageDirector.actions_
-        var stale = actions.where {|a| a["kind"] == "clip" && posed.contains(a["entity"]) }.toList
-        for (a in stale) {
-            actions.remove(a)
+        var stale = actions.where {|action| action["kind"] == "clip" && posed.contains(action["entity"]) }.toList
+        for (action in stale) {
+            actions.remove(action)
         }
     }
 
@@ -364,8 +364,8 @@ class StageDirector {
         if (!(word is String)) return null
         var key = StageDirector.lowercase_(word)
         if (!DIRECTIONS.containsKey(key)) return null
-        var d = DIRECTIONS[key]
-        return Vec2.new(d[0], d[1])
+        var direction = DIRECTIONS[key]
+        return Vec2.new(direction[0], direction[1])
     }
 
     // --- internals ---------------------------------------------------------------------
@@ -373,8 +373,8 @@ class StageDirector {
     // ASCII lower-case (Wren's String has no lower).
     static lowercase_(text) {
         var out = ""
-        for (c in text.codePoints) {
-            out = out + String.fromCodePoint(c >= 65 && c <= 90 ? c + 32 : c)
+        for (character in text.codePoints) {
+            out = out + String.fromCodePoint(character >= 65 && character <= 90 ? character + 32 : character)
         }
         return out
     }
@@ -434,11 +434,11 @@ class StageDirector {
     // Unit Vec2 from `entity` towards `other`, or null if there's no other / they're on the same spot.
     static towards_(entity, other) {
         if (other == null || !GameObject.isValid(other)) return null
-        var a = WorldTransform.getPosition(entity)
-        var b = WorldTransform.getPosition(other)
-        var d = Vec2.new(b.x - a.x, b.y - a.y)
-        if (d.length() < 0.001) return null
-        return d.normalize()
+        var from = WorldTransform.getPosition(entity)
+        var to = WorldTransform.getPosition(other)
+        var offset = Vec2.new(to.x - from.x, to.y - from.y)
+        if (offset.length() < 0.001) return null
+        return offset.normalize()
     }
 
     static facingOf_(entity) {
@@ -483,9 +483,9 @@ class StageDirector {
     // A new move or clip for an entity replaces the one it was doing.
     static cancelFor_(entity) {
         var actions = StageDirector.actions_
-        var old = actions.where {|a| (a["kind"] == "move" || a["kind"] == "clip") && a["entity"] == entity }.toList
-        for (a in old) {
-            actions.remove(a)
+        var old = actions.where {|action| (action["kind"] == "move" || action["kind"] == "clip") && action["entity"] == entity }.toList
+        for (action in old) {
+            actions.remove(action)
         }
     }
 }

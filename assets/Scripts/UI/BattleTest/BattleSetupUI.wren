@@ -147,7 +147,7 @@ class BattleSetupUI {
     // column 0, the three picker columns 1-3, with the globals row and Start / Back underneath.
     link_() {
         var columns = [
-            _slotButtons.map { |b| b.panel }.toList,
+            _slotButtons.map { |button| button.panel }.toList,
             GEAR_PICKERS.map { |id| _pickers[id].panel }.toList,
             ELEMENT_PICKERS.map { |id| _pickers[id].panel }.toList,
             MOVE_PICKERS.map { |id| _pickers[id].panel }.toList
@@ -156,16 +156,16 @@ class BattleSetupUI {
         var read = _pickers["read"].panel
         var start = _startButton.panel
         var back = _backButton.panel
-        for (c in 0...columns.count) {
-            var column = columns[c]
-            for (r in 0...column.count) {
-                var panel = column[r]
-                BattleSetupUI.set_(panel, NavigationDirection.UP, r > 0 ? column[r - 1] : null)
-                BattleSetupUI.set_(panel, NavigationDirection.DOWN, r + 1 < column.count ? column[r + 1] : (c == 0 ? start : scenario))
-                var left = c > 0 ? columns[c - 1] : null
-                var right = c + 1 < columns.count ? columns[c + 1] : null
-                BattleSetupUI.set_(panel, NavigationDirection.LEFT, left == null ? null : left[r.min(left.count - 1)])
-                BattleSetupUI.set_(panel, NavigationDirection.RIGHT, right == null ? null : right[r.min(right.count - 1)])
+        for (columnIndex in 0...columns.count) {
+            var column = columns[columnIndex]
+            for (rowIndex in 0...column.count) {
+                var panel = column[rowIndex]
+                BattleSetupUI.set_(panel, NavigationDirection.UP, rowIndex > 0 ? column[rowIndex - 1] : null)
+                BattleSetupUI.set_(panel, NavigationDirection.DOWN, rowIndex + 1 < column.count ? column[rowIndex + 1] : (columnIndex == 0 ? start : scenario))
+                var left = columnIndex > 0 ? columns[columnIndex - 1] : null
+                var right = columnIndex + 1 < columns.count ? columns[columnIndex + 1] : null
+                BattleSetupUI.set_(panel, NavigationDirection.LEFT, left == null ? null : left[rowIndex.min(left.count - 1)])
+                BattleSetupUI.set_(panel, NavigationDirection.RIGHT, right == null ? null : right[rowIndex.min(right.count - 1)])
             }
         }
         // The rank pickers hang off their effect picker.

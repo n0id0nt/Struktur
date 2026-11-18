@@ -1,5 +1,9 @@
 #include "SpriteRenderSystem.h"
 
+#include <algorithm>
+#include <cmath>
+#include <vector>
+
 #include "Debug/Assertions.h"
 #include "Engine/ECS/Component/ParticleEmitter.h"
 #include "Engine/ECS/Component/Shader.h"
@@ -7,25 +11,21 @@
 #include "Engine/ECS/Component/TileMap.h"
 #include "Engine/ECS/Component/Transform.h"
 #include "Engine/ECS/System/ShaderSystem.h"
-#include "Engine/Resource/FontResource.h"
-#include "Engine/Text/Font.h"
 #include "Engine/ECS/System/TransformSystem.h"
 #include "Engine/GameContext.h"
 #include "Engine/Renderer/GraphicsDevice.h"
 #include "Engine/Renderer/TileChunkBuilder.h"
 #include "Engine/Renderer/WorldRenderer.h"
+#include "Engine/Resource/FontResource.h"
+#include "Engine/Text/Font.h"
 #include "Engine/Util/MathUtil.h"
 #include "glm/glm.hpp"
 #include "glm/gtc/quaternion.hpp."
 
-#include <algorithm>
-#include <cmath>
-
-namespace
-{
 // The atlas cell `particle` draws this frame: its emitter's sprite animation, played per its animation mode on the
 // particle's own age (frame math matches AnimationSystem's - endFrame exclusive, clamped to the last frame).
-int ParticleFrame(const Struktur::Component::ParticleEmitter& emitter, const Struktur::Component::Particle& particle)
+static int ParticleFrame(const Struktur::Component::ParticleEmitter& emitter,
+                         const Struktur::Component::Particle& particle)
 {
 	using Struktur::Component::ParticleAnimationMode;
 	const Struktur::Animation::SpriteAnimation& animation = emitter.animation;
@@ -60,10 +60,12 @@ int ParticleFrame(const Struktur::Component::ParticleEmitter& emitter, const Str
 // Draws a text particle: its text in the emitter's font, centred on the particle, glyph by glyph through the world's
 // sprite shader using the font's RGBA atlas (FontResource::GetWorldAtlas - the UI's R8 atlas needs its coverage shader,
 // which draws nothing in the world view), outline first so the fill lands on top (WorldRenderer's sort is stable).
-void SubmitParticleText(Struktur::Renderer::WorldRenderer& worldRenderer, const Struktur::Component::ParticleEmitter& emitter,
-                        Struktur::Resource::FontResource& fontResource, const Struktur::Component::Particle& particle,
-                        float scale, const Struktur::Util::Color& color, bgfx::ProgramHandle program,
-                        const Struktur::Renderer::CullBounds& cullBounds)
+static void SubmitParticleText(Struktur::Renderer::WorldRenderer& worldRenderer,
+                               const Struktur::Component::ParticleEmitter& emitter,
+                               Struktur::Resource::FontResource& fontResource,
+                               const Struktur::Component::Particle& particle, float scale,
+                               const Struktur::Util::Color& color, bgfx::ProgramHandle program,
+                               const Struktur::Renderer::CullBounds& cullBounds)
 {
 	using namespace Struktur;
 	const Text::Font& font = fontResource.font;
@@ -81,11 +83,30 @@ void SubmitParticleText(Struktur::Renderer::WorldRenderer& worldRenderer, const 
 	const glm::vec2 extent = Text::MeasureTextEx(font, particle.text, size, 0.0f);
 	const glm::vec2 origin{std::round(particle.position.x - extent.x * 0.5f), std::round(particle.position.y - extent.y * 0.5f)};
 
-	auto drawPass = [&](const glm::vec2& offset, const Util::Color& tint)
+	// The text is drawn once per pass: the outline as four copies nudged one font pixel each way, then the fill.
+	struct TextPass
 	{
-		float penX = origin.x + offset.x;
+		glm::vec2 offset;
+		Util::Color tint;
+	};
+	std::vector<TextPass> passes;
+	if (emitter.outlineColor.a > 0)
+	{
+		Util::Color outline = emitter.outlineColor;
+		outline.a           = static_cast<unsigned char>(outline.a * (color.a / 255.0f));
+		const float px      = glyphScale;  // one font pixel
+		passes.push_back({{-px, 0.0f}, outline});
+		passes.push_back({{px, 0.0f}, outline});
+		passes.push_back({{0.0f, -px}, outline});
+		passes.push_back({{0.0f, px}, outline});
+	}
+	passes.push_back({{0.0f, 0.0f}, color});
+
+	const int length = static_cast<int>(particle.text.size());
+	for (const TextPass& pass : passes)
+	{
+		float penX = origin.x + pass.offset.x;
 		int index  = 0;
-		int length = static_cast<int>(particle.text.size());
 		while (index < length)
 		{
 			int byteCount            = 0;
@@ -94,28 +115,16 @@ void SubmitParticleText(Struktur::Renderer::WorldRenderer& worldRenderer, const 
 			index += byteCount;
 			if (codepoint != ' ' && codepoint != '\t')
 			{
-				Util::Math::Rect dest{penX + glyph.offsetX * glyphScale, origin.y + offset.y + glyph.offsetY * glyphScale,
+				Util::Math::Rect dest{penX + glyph.offsetX * glyphScale,
+				                      origin.y + pass.offset.y + glyph.offsetY * glyphScale,
 				                      glyph.rec.width * glyphScale, glyph.rec.height * glyphScale};
-				worldRenderer.SubmitSprite(emitter.layer, emitter.orderInLayer, program, nullptr, atlas, glyph.rec, dest,
-				                           glm::vec2{0.0f, 0.0f}, 0.0f, tint, false, cullBounds);
+				worldRenderer.SubmitSprite(emitter.layer, emitter.orderInLayer, program, nullptr, atlas, glyph.rec,
+				                           dest, glm::vec2{0.0f, 0.0f}, 0.0f, pass.tint, false, cullBounds);
 			}
 			penX += (glyph.advanceX > 0 ? glyph.advanceX : glyph.rec.width) * glyphScale;
 		}
-	};
-
-	if (emitter.outlineColor.a > 0)
-	{
-		Util::Color outline = emitter.outlineColor;
-		outline.a           = static_cast<unsigned char>(outline.a * (color.a / 255.0f));
-		const float px      = glyphScale;  // one font pixel
-		drawPass({-px, 0.0f}, outline);
-		drawPass({px, 0.0f}, outline);
-		drawPass({0.0f, -px}, outline);
-		drawPass({0.0f, px}, outline);
 	}
-	drawPass({0.0f, 0.0f}, color);
 }
-}  // namespace
 
 void Struktur::System::SpriteRenderSystem::Update(GameContext& context)
 {

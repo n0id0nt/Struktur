@@ -140,15 +140,15 @@ class ItemGridPage {
     // Arrow keys move one slot at a time and stop at the grid's ends. Up / down step a row, jumping over section
     // headings into the next section; a column the next row doesn't reach lands on that row's last item.
     linkSlots_() {
-        for (r in 0..._rows.count) {
-            var row = _rows[r]
-            for (c in 0...row.count) {
-                var slot = row[c]
-                InventoryTheme.link(slot, NavigationDirection.LEFT, c > 0 ? row[c - 1] : null)
-                InventoryTheme.link(slot, NavigationDirection.RIGHT, c + 1 < row.count ? row[c + 1] : null)
-                InventoryTheme.link(slot, NavigationDirection.UP, r > 0 ? ItemGridPage.columnOf_(_rows[r - 1], c) : null)
+        for (rowIndex in 0..._rows.count) {
+            var row = _rows[rowIndex]
+            for (columnIndex in 0...row.count) {
+                var slot = row[columnIndex]
+                InventoryTheme.link(slot, NavigationDirection.LEFT, columnIndex > 0 ? row[columnIndex - 1] : null)
+                InventoryTheme.link(slot, NavigationDirection.RIGHT, columnIndex + 1 < row.count ? row[columnIndex + 1] : null)
+                InventoryTheme.link(slot, NavigationDirection.UP, rowIndex > 0 ? ItemGridPage.columnOf_(_rows[rowIndex - 1], columnIndex) : null)
                 InventoryTheme.link(slot, NavigationDirection.DOWN,
-                    r + 1 < _rows.count ? ItemGridPage.columnOf_(_rows[r + 1], c) : null)
+                    rowIndex + 1 < _rows.count ? ItemGridPage.columnOf_(_rows[rowIndex + 1], columnIndex) : null)
             }
         }
     }

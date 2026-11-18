@@ -30,12 +30,12 @@ enum class Dir
 // Custom hash function for glm::ivec2 --TODO Move to seperate Helper file
 struct IVec2Hash
 {
-	std::size_t operator()(const glm::ivec2& v) const
+	std::size_t operator()(const glm::ivec2& cell) const
 	{
 		// Combine hash values of each component
 		std::hash<unsigned int> hasher;
-		std::size_t hash = hasher(v.x);
-		hash ^= hasher(v.y) + 0x9e3779b9 + (hash << 6) + (hash >> 2);
+		std::size_t hash = hasher(cell.x);
+		hash ^= hasher(cell.y) + 0x9e3779b9 + (hash << 6) + (hash >> 2);
 		return hash;
 	}
 };

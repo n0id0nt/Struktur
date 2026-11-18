@@ -10,11 +10,9 @@
 
 namespace Struktur::System
 {
-namespace
-{
 // Puts args into a new map in `slot` (a script's constructor/preview args map). Uses slot + 1 and slot + 2 as
 // scratch, so the caller must have ensured at least slot + 3 slots.
-void SetArgsMapSlot(WrenVM* vm, int slot, const std::vector<Wren::WrenItem>& args)
+static void SetArgsMapSlot(WrenVM* vm, int slot, const std::vector<Wren::WrenItem>& args)
 {
 	wrenSetSlotNewMap(vm, slot);
 	for (const auto& arg : args)
@@ -42,7 +40,6 @@ void SetArgsMapSlot(WrenVM* vm, int slot, const std::vector<Wren::WrenItem>& arg
 		wrenSetMapValue(vm, slot, slot + 1, slot + 2);
 	}
 }
-}  // namespace
 
 bool WrenScriptSystem::InitialiseScript(GameContext& context, entt::entity entity, Component::WrenScript& script)
 {
@@ -374,10 +371,8 @@ void WrenScriptSystem::SendEvent(GameContext& context, entt::entity entity, Comp
 }
 
 #ifdef DEBUG
-namespace
-{
-const Wren::WrenExportedField* FindExportedField(const Wren::WrenScriptComponent& scriptComponent,
-                                                 const std::string& fieldName)
+static const Wren::WrenExportedField* FindExportedField(const Wren::WrenScriptComponent& scriptComponent,
+                                                        const std::string& fieldName)
 {
 	for (const Wren::WrenExportedField& field : scriptComponent.exportedFields)
 	{
@@ -388,7 +383,6 @@ const Wren::WrenExportedField* FindExportedField(const Wren::WrenScriptComponent
 	}
 	return nullptr;
 }
-}  // namespace
 
 bool WrenScriptSystem::GetExportedFieldValue(GameContext& context, Component::WrenScript& script,
                                              const std::string& fieldName, Wren::WrenItem& out_value)

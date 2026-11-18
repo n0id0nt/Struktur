@@ -121,7 +121,7 @@ class UIKit {
     // The on-screen thickness [left, right, top, bottom] of a style's border - where content inside it can start.
     static padding(style) {
         var def = STYLES[style]
-        return def[1].map { |b| b * def[2] }.toList
+        return def[1].map { |edge| edge * def[2] }.toList
     }
 
     // A hidden focus ring over `element` (a child, so it moves and hides with it) - show it from the element's

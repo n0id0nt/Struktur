@@ -56,6 +56,8 @@ private:
 	// Re-resolves the glyphs for the current device and resizes the element to fit them plus the label.
 	void Refresh(GameContext& context);
 	float GlyphWidth(const InputGlyph& glyph) const;
+	Renderer::UIBatchSlot SubSlot(uint32_t quadIndex) const;
+	uint32_t DrawHintText(Renderer::UIRenderer& renderer, const std::string& text, float x, uint32_t quadIndex);
 	static std::string FallbackLabel(const InputGlyph& glyph)
 	{
 		return "[" + glyph.text + "]";

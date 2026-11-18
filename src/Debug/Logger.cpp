@@ -2,11 +2,9 @@
 
 #include <cstdio>
 
-namespace
-{
-Struktur::Debug::LogCallback g_logCallback;
+static Struktur::Debug::LogCallback g_logCallback;
 
-const char* LevelName(int level)
+static const char* LevelName(int level)
 {
 	switch (level)
 	{
@@ -26,7 +24,6 @@ const char* LevelName(int level)
 			return "LOG";
 	}
 }
-}  // namespace
 
 void Struktur::Debug::Log(int level, const char* message)
 {

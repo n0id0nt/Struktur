@@ -112,9 +112,7 @@ void Struktur::FileLoading::LevelParser::LoadNeighbours(Level& level, const nloh
 	}
 }
 
-namespace
-{
-std::vector<std::string> SplitAndTrim(const std::string& value, char delimiter)
+static std::vector<std::string> SplitAndTrim(const std::string& value, char delimiter)
 {
 	std::vector<std::string> result;
 	std::stringstream stream(value);
@@ -131,7 +129,6 @@ std::vector<std::string> SplitAndTrim(const std::string& value, char delimiter)
 	}
 	return result;
 }
-}  // namespace
 
 void Struktur::FileLoading::LevelParser::LoadLevelTags(Level& level, const nlohmann::json& fieldInstancesJson)
 {
@@ -177,9 +174,7 @@ int Struktur::FileLoading::LevelParser::FindLevelIndexByIid(const World& world, 
 	return -1;
 }
 
-namespace
-{
-bool LayerNameStartsWithAny(const std::string& identifier, std::initializer_list<const char*> prefixes)
+static bool LayerNameStartsWithAny(const std::string& identifier, std::initializer_list<const char*> prefixes)
 {
 	for (const char* prefix : prefixes)
 	{
@@ -190,7 +185,6 @@ bool LayerNameStartsWithAny(const std::string& identifier, std::initializer_list
 	}
 	return false;
 }
-}  // namespace
 
 void Struktur::FileLoading::LevelParser::LoadLayers(World& world, Level& level, const nlohmann::json& json)
 {
@@ -315,11 +309,9 @@ void Struktur::FileLoading::LevelParser::LoadEntities(Layer& entityLayer, const 
 	}
 }
 
-namespace
-{
 // One LDtk field value as the string a script arg carries: enums are their value id, entity refs the referenced
 // instance's iid, numbers/bools their text. Null (an optional field left empty) is an empty string.
-std::string FieldValueToString(const nlohmann::json& value)
+static std::string FieldValueToString(const nlohmann::json& value)
 {
 	if (value.is_null())
 	{
@@ -335,7 +327,6 @@ std::string FieldValueToString(const nlohmann::json& value)
 	}
 	return value.dump();
 }
-}  // namespace
 
 void Struktur::FileLoading::LevelParser::LoadFieldInstances(std::vector<FieldInstance>& fields,
                                                             const nlohmann::json& json)

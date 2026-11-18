@@ -172,9 +172,9 @@ class Move {
         _healAmount = amount
         return this
     }
-    reach(n) {
+    reach(range) {
         _aim = "reach"
-        _reach = n
+        _reach = range
         return this
     }
     first() {
@@ -193,18 +193,18 @@ class Move {
     }
     around8(share) {
         var cells = []
-        for (d in -1..1) {
-            for (s in -1..1) {
-                if (d != 0 || s != 0) cells.add([d, s, share])
+        for (depth in -1..1) {
+            for (side in -1..1) {
+                if (depth != 0 || side != 0) cells.add([depth, side, share])
             }
         }
         return around(cells)
     }
     // Extra cells past the aim cell (reach / first): the range-modifier rule - the higher share per cell wins.
     cell(depth, side, share) {
-        for (c in _stencil) {
-            if (c[0] == depth && c[1] == side) {
-                if (share > c[2]) c[2] = share
+        for (cell in _stencil) {
+            if (cell[0] == depth && cell[1] == side) {
+                if (share > cell[2]) cell[2] = share
                 return this
             }
         }
@@ -303,9 +303,9 @@ class Move {
 
     // Hold: no types, no cost, no tax; stamina only recovers here. One per length.
     static hold(seconds) {
-        var m = Move.new("Hold", 1, seconds, 0)
-        m.holdSetup_(seconds)
-        return m
+        var move = Move.new("Hold", 1, seconds, 0)
+        move.holdSetup_(seconds)
+        return move
     }
     holdSetup_(seconds) {
         _hold = true
@@ -320,18 +320,18 @@ class Move {
     // --- queries -------------------------------------------------------------------------
 
     // The defensive curve at `t` seconds into the move: 0 outside the window, 1 at the peak, linear between.
-    guardAt(t) {
-        if (_window == null || t < _window[0] || t > _window[2]) return 0
-        if (t <= _window[1]) {
+    guardAt(seconds) {
+        if (_window == null || seconds < _window[0] || seconds > _window[2]) return 0
+        if (seconds <= _window[1]) {
             var span = _window[1] - _window[0]
-            return span <= 0 ? 1 : (t - _window[0]) / span
+            return span <= 0 ? 1 : (seconds - _window[0]) / span
         }
         var tail = _window[2] - _window[1]
-        return tail <= 0 ? 1 : (_window[2] - t) / tail
+        return tail <= 0 ? 1 : (_window[2] - seconds) / tail
     }
 
-    dodgingAt(t) { _dodge != null && t >= _dodge[0] && t <= _dodge[1] }
-    exposedAt(t) { _exposed != null && t >= _exposed[0] && t <= _exposed[1] }
+    dodgingAt(seconds) { _dodge != null && seconds >= _dodge[0] && seconds <= _dodge[1] }
+    exposedAt(seconds) { _exposed != null && seconds >= _exposed[0] && seconds <= _exposed[1] }
 
     // "Attack + Dodge + Move" - for menus and tells.
     typeLine {

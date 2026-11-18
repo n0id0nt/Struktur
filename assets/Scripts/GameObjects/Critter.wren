@@ -103,15 +103,15 @@ class Critter {
     // also within that distance of where the critter is now, so ordinary wandering stays local; null for
     // anywhere in the room. Returns null if the critter has no home room.
     randomPointInHome(maxDistance) {
-        var b = Rooms.bounds(homeRoom)
+        var bounds = Rooms.bounds(homeRoom)
         var here = position
-        if (b == null || here == null) {
+        if (bounds == null || here == null) {
             return null
         }
-        var minX = b[0] + WANDER_MARGIN
-        var maxX = b[0] + b[2] - WANDER_MARGIN
-        var minY = b[1] + WANDER_MARGIN
-        var maxY = b[1] + b[3] - WANDER_MARGIN
+        var minX = bounds[0] + WANDER_MARGIN
+        var maxX = bounds[0] + bounds[2] - WANDER_MARGIN
+        var minY = bounds[1] + WANDER_MARGIN
+        var maxY = bounds[1] + bounds[3] - WANDER_MARGIN
         if (maxDistance != null) {
             minX = minX.max(here.x - maxDistance)
             maxX = maxX.min(here.x + maxDistance)
@@ -120,7 +120,7 @@ class Critter {
         }
         // Outside its room (or a room too small for the margin): head for the room's middle instead.
         if (minX > maxX || minY > maxY) {
-            return Vec2.new(b[0] + b[2] / 2, b[1] + b[3] / 2)
+            return Vec2.new(bounds[0] + bounds[2] / 2, bounds[1] + bounds[3] / 2)
         }
         return Vec2.new(RNG.float(minX, maxX), RNG.float(minY, maxY))
     }
@@ -191,17 +191,17 @@ class Critter {
     // Cancels whatever part of velocity would carry the critter past an edge of its home room (within
     // ROOM_EDGE_MARGIN of it) - whichever state or steering push asked for it. Moving back inwards is left alone.
     keepInHomeRoom_(velocity) {
-        var b = Rooms.bounds(homeRoom)
+        var bounds = Rooms.bounds(homeRoom)
         var here = position
-        if (b == null || here == null) {
+        if (bounds == null || here == null) {
             return velocity
         }
         var x = velocity.x
         var y = velocity.y
-        if ((x < 0 && here.x <= b[0] + ROOM_EDGE_MARGIN) || (x > 0 && here.x >= b[0] + b[2] - ROOM_EDGE_MARGIN)) {
+        if ((x < 0 && here.x <= bounds[0] + ROOM_EDGE_MARGIN) || (x > 0 && here.x >= bounds[0] + bounds[2] - ROOM_EDGE_MARGIN)) {
             x = 0
         }
-        if ((y < 0 && here.y <= b[1] + ROOM_EDGE_MARGIN) || (y > 0 && here.y >= b[1] + b[3] - ROOM_EDGE_MARGIN)) {
+        if ((y < 0 && here.y <= bounds[1] + ROOM_EDGE_MARGIN) || (y > 0 && here.y >= bounds[1] + bounds[3] - ROOM_EDGE_MARGIN)) {
             y = 0
         }
         return Vec2.new(x, y)

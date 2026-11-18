@@ -383,6 +383,10 @@ private:
 	// they carry over correctly from one line to the next.
 	uint32_t RenderLine(GameContext& context, const Text::RichLine& line, glm::vec2 pos, uint32_t quadOffset,
 	                    int& remainingVisible, int& animCharIndex, std::vector<UIRichLabelAnimGroup>& animGroups);
+	// One inline picture (an icon or an input glyph) for RenderLine: at penX, centred on textMiddle, into the batch
+	// slot's quadIndex-th quad. Returns the width it took.
+	float DrawInlineImage(GameContext& context, Resource::TextureResource* texture, const Util::Math::Rect& sourceRect,
+	                      float penX, float textMiddle, uint32_t quadIndex);
 };
 }  // namespace UI
 }  // namespace Struktur

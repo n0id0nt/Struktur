@@ -778,16 +778,16 @@ class GameWorldState is BaseState {
             if (critter.entity == primaryEntity || !sharesRoom_(critter, playerRoom)) {
                 continue
             }
-            var p = critter.position
-            if (p == null) {
+            var critterPosition = critter.position
+            if (critterPosition == null) {
                 continue
             }
-            var d = Vec3.distance(playerPosition, p)
-            if (d <= groupRange) {
-                candidates.add([d, critter.entity])
+            var distance = Vec3.distance(playerPosition, critterPosition)
+            if (distance <= groupRange) {
+                candidates.add([distance, critter.entity])
             }
         }
-        candidates.sort { |a, b| a[0] < b[0] }
+        candidates.sort { |lhs, rhs| lhs[0] < rhs[0] }
 
         for (candidate in candidates) {
             if (group.count >= MAX_COMBAT_GROUP) {

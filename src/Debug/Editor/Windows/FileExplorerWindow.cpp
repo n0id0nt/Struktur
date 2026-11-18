@@ -14,78 +14,97 @@
 
 namespace Struktur::Debug
 {
-namespace
-{
 // Pure string manipulation (no disk access) over a PhysFS-style, no-leading-slash path (see FileExplorerWindow's
 // own comment on the convention) - deliberately not std::filesystem::path, which reasons about OS separators/
 // roots that don't apply to the mounted virtual filesystem's own "" root (see FileSystem::Mount).
-std::string ParentPath(const std::string& path)
+static std::string ParentPath(const std::string& path)
 {
 	size_t slash = path.find_last_of('/');
 	return slash == std::string::npos ? "" : path.substr(0, slash);
 }
 
-std::string ToLower(std::string s)
+static std::string ToLower(std::string text)
 {
-	std::transform(s.begin(), s.end(), s.begin(), [](unsigned char c) { return static_cast<char>(std::tolower(c)); });
-	return s;
+	for (char& character : text)
+	{
+		character = static_cast<char>(std::tolower(static_cast<unsigned char>(character)));
+	}
+	return text;
 }
 
-std::string ToUpper(std::string s)
+static std::string ToUpper(std::string text)
 {
-	std::transform(s.begin(), s.end(), s.begin(), [](unsigned char c) { return static_cast<char>(std::toupper(c)); });
-	return s;
+	for (char& character : text)
+	{
+		character = static_cast<char>(std::toupper(static_cast<unsigned char>(character)));
+	}
+	return text;
 }
 
-bool IsImageExtension(const std::string& e)
+static bool IsImageExtension(const std::string& extension)
 {
-	return e == ".png" || e == ".jpg" || e == ".jpeg" || e == ".bmp" || e == ".tga" || e == ".gif" || e == ".psd" ||
-	       e == ".pic" || e == ".hdr";
+	return extension == ".png" || extension == ".jpg" || extension == ".jpeg" || extension == ".bmp" ||
+	       extension == ".tga" || extension == ".gif" || extension == ".psd" || extension == ".pic" ||
+	       extension == ".hdr";
 }
 
-bool IsTextExtension(const std::string& e)
+static bool IsTextExtension(const std::string& extension)
 {
-	return e == ".txt" || e == ".cpp" || e == ".h" || e == ".hpp" || e == ".c" || e == ".cs" || e == ".lua" ||
-	       e == ".py" || e == ".wren" || e == ".fs" || e == ".vs" || e == ".json" || e == ".xml" || e == ".glsl" ||
-	       e == ".frag" || e == ".vert" || e == ".sc" || e == ".hlsl" || e == ".md" || e == ".ldtk" || e == ".ini" ||
-	       e == ".cfg" || e == ".yaml" || e == ".yml" || e == ".toml" || e == ".csv";
+	return extension == ".txt" || extension == ".cpp" || extension == ".h" || extension == ".hpp" ||
+	       extension == ".c" || extension == ".cs" || extension == ".lua" || extension == ".py" ||
+	       extension == ".wren" || extension == ".fs" || extension == ".vs" || extension == ".json" ||
+	       extension == ".xml" || extension == ".glsl" || extension == ".frag" || extension == ".vert" ||
+	       extension == ".sc" || extension == ".hlsl" || extension == ".md" || extension == ".ldtk" ||
+	       extension == ".ini" || extension == ".cfg" || extension == ".yaml" || extension == ".yml" ||
+	       extension == ".toml" || extension == ".csv";
 }
 
-FileCategory Categorize(bool isDirectory, const std::string& e)
+static FileCategory Categorize(bool isDirectory, const std::string& extension)
 {
 	if (isDirectory)
 	{
 		return FileCategory::Folder;
 	}
-	if (IsImageExtension(e))
+	if (IsImageExtension(extension))
 	{
 		return FileCategory::Image;
 	}
-	if (e == ".wav" || e == ".ogg" || e == ".mp3" || e == ".flac")
+	if (extension == ".wav" || extension == ".ogg" || extension == ".mp3" || extension == ".flac")
 	{
 		return FileCategory::Audio;
 	}
-	if (e == ".ttf" || e == ".otf")
+	if (extension == ".ttf" || extension == ".otf")
 	{
 		return FileCategory::Font;
 	}
-	if (e == ".aseprite" || e == ".ase")
+	if (extension == ".aseprite" || extension == ".ase")
 	{
 		return FileCategory::Aseprite;
 	}
-	if (e == ".json" || e == ".xml" || e == ".ldtk" || e == ".csv" || e == ".toml" || e == ".yaml" || e == ".yml" ||
-	    e == ".ini" || e == ".cfg")
+	if (extension == ".json" || extension == ".xml" || extension == ".ldtk" || extension == ".csv" ||
+	    extension == ".toml" || extension == ".yaml" || extension == ".yml" || extension == ".ini" ||
+	    extension == ".cfg")
 	{
 		return FileCategory::Data;
 	}
-	if (IsTextExtension(e))
+	if (IsTextExtension(extension))
 	{
 		return FileCategory::Text;
 	}
 	return FileCategory::Other;
 }
 
-ImU32 CategoryColor(FileCategory category)
+// The listing's order (a std::sort comparator): directories first, then case-insensitive by name.
+static bool DirectoriesFirstThenByName(const FileEntry& lhs, const FileEntry& rhs)
+{
+	if (lhs.isDirectory != rhs.isDirectory)
+	{
+		return lhs.isDirectory;
+	}
+	return ToLower(lhs.name) < ToLower(rhs.name);
+}
+
+static ImU32 CategoryColor(FileCategory category)
 {
 	switch (category)
 	{
@@ -109,7 +128,7 @@ ImU32 CategoryColor(FileCategory category)
 	}
 }
 
-const char* CategoryLabel(FileCategory category)
+static const char* CategoryLabel(FileCategory category)
 {
 	switch (category)
 	{
@@ -133,7 +152,7 @@ const char* CategoryLabel(FileCategory category)
 	}
 }
 
-std::string GetExtensionLower(const std::string& filename)
+static std::string GetExtensionLower(const std::string& filename)
 {
 	size_t dotPos = filename.find_last_of('.');
 	if (dotPos != std::string::npos && dotPos > 0 && dotPos < filename.length() - 1)
@@ -143,11 +162,10 @@ std::string GetExtensionLower(const std::string& filename)
 	return "";
 }
 
-ImU32 Recolor(ImU32 rgb, unsigned alpha)
+static ImU32 Recolor(ImU32 rgb, unsigned alpha)
 {
 	return (rgb & 0x00FFFFFFu) | (alpha << 24);
 }
-}  // namespace
 
 void FileExplorerWindow::Render(GameContext& context)
 {
@@ -229,16 +247,7 @@ void FileExplorerWindow::RefreshFileList()
 		m_files.push_back(fileEntry);
 	}
 
-	// Directories first, then case-insensitive by name.
-	std::sort(m_files.begin(), m_files.end(),
-	          [](const FileEntry& a, const FileEntry& b)
-	          {
-		          if (a.isDirectory != b.isDirectory)
-		          {
-			          return a.isDirectory;
-		          }
-		          return ToLower(a.name) < ToLower(b.name);
-	          });
+	std::sort(m_files.begin(), m_files.end(), DirectoriesFirstThenByName);
 }
 
 bool FileExplorerWindow::PassesFilter(const FileEntry& file) const
@@ -360,6 +369,158 @@ Resource::ResourcePtr<Resource::TextureResource> FileExplorerWindow::GetThumbnai
 	return texture;
 }
 
+// One cell of RenderGrid: a file, a folder, or (isParentEntry) the ".." entry that goes up a level. Clicks
+// are recorded in grid and acted on once every cell is drawn.
+void FileExplorerWindow::RenderGridCell(GameContext& context, GridState& grid, const FileEntry& entry,
+                                        bool isParentEntry)
+{
+	ImDrawList* drawList = ImGui::GetWindowDrawList();
+
+	if (grid.column > 0)
+	{
+		ImGui::SameLine();
+	}
+	grid.column = (grid.column + 1) % grid.itemsPerRow;
+
+	ImGui::PushID(entry.path.c_str());
+	ImVec2 cellMin = ImGui::GetCursorScreenPos();
+	bool visible   = ImGui::IsRectVisible(ImVec2(grid.cellWidth, grid.cellHeight));
+	bool selected  = !isParentEntry && (m_selectedFile == entry.path);
+
+	if (ImGui::Selectable("##cell", selected, ImGuiSelectableFlags_AllowDoubleClick,
+	                      ImVec2(grid.cellWidth, grid.cellHeight)))
+	{
+		bool doubleClicked = ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left);
+		if (isParentEntry)
+		{
+			grid.navigated      = true;
+			grid.navigateTarget = ParentPath(m_currentPath);
+		}
+		else if (entry.isDirectory)
+		{
+			m_selectedFile = entry.path;
+			if (doubleClicked)
+			{
+				grid.navigated      = true;
+				grid.navigateTarget = entry.path;
+			}
+		}
+		else
+		{
+			m_selectedFile        = entry.path;
+			grid.previewRequested = true;
+			grid.previewPath      = entry.path;
+			if (doubleClicked && GetExtensionLower(entry.name) == ".ldtk")
+			{
+				context.GetEditor().GetLevelViewer().Open(context, entry.path);
+			}
+		}
+	}
+
+	if (!isParentEntry && ImGui::BeginPopupContextItem("##ctx"))
+	{
+		m_selectedFile = entry.path;
+		if (ImGui::MenuItem("Copy Path"))
+		{
+			ImGui::SetClipboardText(entry.path.c_str());
+		}
+		if (ImGui::MenuItem("Copy Name"))
+		{
+			ImGui::SetClipboardText(entry.name.c_str());
+		}
+		ImGui::Separator();
+		if (entry.isDirectory && ImGui::MenuItem("Open"))
+		{
+			grid.navigated      = true;
+			grid.navigateTarget = entry.path;
+		}
+		if (!entry.isDirectory && ImGui::MenuItem("Preview"))
+		{
+			grid.previewRequested = true;
+			grid.previewPath      = entry.path;
+		}
+		if (ImGui::MenuItem("Refresh Folder"))
+		{
+			m_thumbnailCache.clear();
+			m_thumbnailOrder.clear();
+			RefreshFileList();
+		}
+		ImGui::EndPopup();
+	}
+
+	if (ImGui::IsItemHovered() && !isParentEntry)
+	{
+		std::string tip = entry.name + "\n" + CategoryLabel(entry.category);
+		if (!entry.isDirectory)
+		{
+			tip += "  -  " + FormatFileSize(entry.fileSize);
+		}
+		ImGui::SetTooltip("%s", tip.c_str());
+	}
+
+	// --- overlay: draw-list only, so nothing can steal the Selectable's clicks ---
+	ImVec2 iconMin(cellMin.x + (grid.cellWidth - m_iconSize) * 0.5f, cellMin.y + grid.pad);
+	ImVec2 iconMax(iconMin.x + m_iconSize, iconMin.y + m_iconSize);
+	ImU32 catColor = isParentEntry ? IM_COL32(180, 180, 180, 255) : CategoryColor(entry.category);
+
+	bool drewThumb = false;
+	if (visible && m_showThumbnails && entry.category == FileCategory::Image)
+	{
+		auto texture = GetThumbnail(context, entry.path);
+		if (texture.IsValid() && texture.IsReady() && texture->GetWidth() > 0 && texture->GetHeight() > 0)
+		{
+			float tw    = static_cast<float>(texture->GetWidth());
+			float th    = static_cast<float>(texture->GetHeight());
+			float scale = std::min(m_iconSize / tw, m_iconSize / th);
+			ImVec2 drawSize(tw * scale, th * scale);
+			ImVec2 tMin(iconMin.x + (m_iconSize - drawSize.x) * 0.5f, iconMin.y + (m_iconSize - drawSize.y) * 0.5f);
+			drawList->AddRectFilled(iconMin, iconMax, IM_COL32(0, 0, 0, 90), 4.0f);
+			drawList->AddImage((ImTextureID)(intptr_t)texture->GetHandle().id, tMin,
+			                   ImVec2(tMin.x + drawSize.x, tMin.y + drawSize.y));
+			drewThumb = true;
+		}
+	}
+
+	if (!drewThumb)
+	{
+		drawList->AddRectFilled(iconMin, iconMax, Recolor(catColor, 60), 4.0f);
+		drawList->AddRect(iconMin, iconMax, Recolor(catColor, 200), 4.0f);
+
+		std::string glyph;
+		if (isParentEntry)
+		{
+			glyph = "..";
+		}
+		else if (entry.isDirectory)
+		{
+			glyph = "DIR";
+		}
+		else
+		{
+			size_t dot = entry.name.find_last_of('.');
+			glyph =
+			    (dot != std::string::npos && dot + 1 < entry.name.size()) ? ToUpper(entry.name.substr(dot + 1)) : "?";
+			if (glyph.size() > 4)
+			{
+				glyph = glyph.substr(0, 4);
+			}
+		}
+		ImVec2 gs = ImGui::CalcTextSize(glyph.c_str());
+		drawList->AddText(ImVec2(iconMin.x + (m_iconSize - gs.x) * 0.5f, iconMin.y + (m_iconSize - gs.y) * 0.5f),
+		                  Recolor(catColor, 255), glyph.c_str());
+	}
+
+	// filename, clipped to the cell so long names never bleed into the next row
+	ImVec2 labelMin(cellMin.x + 3.0f, iconMax.y + 3.0f);
+	ImVec2 labelMax(cellMin.x + grid.cellWidth - 3.0f, cellMin.y + grid.cellHeight - 2.0f);
+	drawList->PushClipRect(labelMin, labelMax, true);
+	drawList->AddText(ImGui::GetFont(), ImGui::GetFontSize(), labelMin, ImGui::GetColorU32(ImGuiCol_Text),
+	                  entry.name.c_str(), nullptr, grid.cellWidth - 6.0f);
+	drawList->PopClipRect();
+
+	ImGui::PopID();
+}
+
 void FileExplorerWindow::RenderGrid(GameContext& context)
 {
 	const float pad    = 8.0f;
@@ -370,164 +531,16 @@ void FileExplorerWindow::RenderGrid(GameContext& context)
 	float availWidth = ImGui::GetContentRegionAvail().x;
 	int itemsPerRow  = std::max(1, static_cast<int>((availWidth + pad) / (cellW + pad)));
 
-	ImDrawList* drawList = ImGui::GetWindowDrawList();
-
-	bool navigated = false;
-	std::string navigateTarget;
-	bool previewRequested = false;
-	std::string previewPath;
-
-	int column = 0;
-	auto drawCell = [&](const std::string& idKey, const std::string& path, const std::string& name,
-	                    FileCategory category, bool isDirectory, size_t fileSize, bool isParentEntry)
-	{
-		if (column > 0)
-		{
-			ImGui::SameLine();
-		}
-		column = (column + 1) % itemsPerRow;
-
-		ImGui::PushID(idKey.c_str());
-		ImVec2 cellMin = ImGui::GetCursorScreenPos();
-		bool visible   = ImGui::IsRectVisible(ImVec2(cellW, cellH));
-		bool selected  = !isParentEntry && (m_selectedFile == path);
-
-		if (ImGui::Selectable("##cell", selected, ImGuiSelectableFlags_AllowDoubleClick, ImVec2(cellW, cellH)))
-		{
-			bool doubleClicked = ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left);
-			if (isParentEntry)
-			{
-				navigated      = true;
-				navigateTarget = ParentPath(m_currentPath);
-			}
-			else if (isDirectory)
-			{
-				m_selectedFile = path;
-				if (doubleClicked)
-				{
-					navigated      = true;
-					navigateTarget = path;
-				}
-			}
-			else
-			{
-				m_selectedFile   = path;
-				previewRequested = true;
-				previewPath      = path;
-				if (doubleClicked && GetExtensionLower(name) == ".ldtk")
-				{
-					context.GetEditor().GetLevelViewer().Open(context, path);
-				}
-			}
-		}
-
-		if (!isParentEntry && ImGui::BeginPopupContextItem("##ctx"))
-		{
-			m_selectedFile = path;
-			if (ImGui::MenuItem("Copy Path"))
-			{
-				ImGui::SetClipboardText(path.c_str());
-			}
-			if (ImGui::MenuItem("Copy Name"))
-			{
-				ImGui::SetClipboardText(name.c_str());
-			}
-			ImGui::Separator();
-			if (isDirectory && ImGui::MenuItem("Open"))
-			{
-				navigated      = true;
-				navigateTarget = path;
-			}
-			if (!isDirectory && ImGui::MenuItem("Preview"))
-			{
-				previewRequested = true;
-				previewPath      = path;
-			}
-			if (ImGui::MenuItem("Refresh Folder"))
-			{
-				m_thumbnailCache.clear();
-				m_thumbnailOrder.clear();
-				RefreshFileList();
-			}
-			ImGui::EndPopup();
-		}
-
-		if (ImGui::IsItemHovered() && !isParentEntry)
-		{
-			std::string tip = name + "\n" + CategoryLabel(category);
-			if (!isDirectory)
-			{
-				tip += "  -  " + FormatFileSize(fileSize);
-			}
-			ImGui::SetTooltip("%s", tip.c_str());
-		}
-
-		// --- overlay: draw-list only, so nothing can steal the Selectable's clicks ---
-		ImVec2 iconMin(cellMin.x + (cellW - m_iconSize) * 0.5f, cellMin.y + pad);
-		ImVec2 iconMax(iconMin.x + m_iconSize, iconMin.y + m_iconSize);
-		ImU32 catColor = isParentEntry ? IM_COL32(180, 180, 180, 255) : CategoryColor(category);
-
-		bool drewThumb = false;
-		if (visible && m_showThumbnails && category == FileCategory::Image)
-		{
-			auto texture = GetThumbnail(context, path);
-			if (texture.IsValid() && texture.IsReady() && texture->GetWidth() > 0 && texture->GetHeight() > 0)
-			{
-				float tw    = static_cast<float>(texture->GetWidth());
-				float th    = static_cast<float>(texture->GetHeight());
-				float scale = std::min(m_iconSize / tw, m_iconSize / th);
-				ImVec2 drawSize(tw * scale, th * scale);
-				ImVec2 tMin(iconMin.x + (m_iconSize - drawSize.x) * 0.5f,
-				            iconMin.y + (m_iconSize - drawSize.y) * 0.5f);
-				drawList->AddRectFilled(iconMin, iconMax, IM_COL32(0, 0, 0, 90), 4.0f);
-				drawList->AddImage((ImTextureID)(intptr_t)texture->GetHandle().id, tMin,
-				                   ImVec2(tMin.x + drawSize.x, tMin.y + drawSize.y));
-				drewThumb = true;
-			}
-		}
-
-		if (!drewThumb)
-		{
-			drawList->AddRectFilled(iconMin, iconMax, Recolor(catColor, 60), 4.0f);
-			drawList->AddRect(iconMin, iconMax, Recolor(catColor, 200), 4.0f);
-
-			std::string glyph;
-			if (isParentEntry)
-			{
-				glyph = "..";
-			}
-			else if (isDirectory)
-			{
-				glyph = "DIR";
-			}
-			else
-			{
-				size_t dot = name.find_last_of('.');
-				glyph      = (dot != std::string::npos && dot + 1 < name.size()) ? ToUpper(name.substr(dot + 1)) : "?";
-				if (glyph.size() > 4)
-				{
-					glyph = glyph.substr(0, 4);
-				}
-			}
-			ImVec2 gs = ImGui::CalcTextSize(glyph.c_str());
-			drawList->AddText(ImVec2(iconMin.x + (m_iconSize - gs.x) * 0.5f, iconMin.y + (m_iconSize - gs.y) * 0.5f),
-			                  Recolor(catColor, 255), glyph.c_str());
-		}
-
-		// filename, clipped to the cell so long names never bleed into the next row
-		ImVec2 labelMin(cellMin.x + 3.0f, iconMax.y + 3.0f);
-		ImVec2 labelMax(cellMin.x + cellW - 3.0f, cellMin.y + cellH - 2.0f);
-		drawList->PushClipRect(labelMin, labelMax, true);
-		drawList->AddText(ImGui::GetFont(), ImGui::GetFontSize(), labelMin, ImGui::GetColorU32(ImGuiCol_Text),
-		                  name.c_str(), nullptr, cellW - 6.0f);
-		drawList->PopClipRect();
-
-		ImGui::PopID();
-	};
+	GridState grid;
+	grid.pad         = pad;
+	grid.cellWidth   = cellW;
+	grid.cellHeight  = cellH;
+	grid.itemsPerRow = itemsPerRow;
 
 	if (!m_currentPath.empty() && m_currentPath != m_assetsPath)
 	{
-		drawCell("##parent", "##parent", "..", FileCategory::Folder, true, 0, true);
+		FileEntry parentEntry{"..", "##parent", true, 0, "", FileCategory::Folder};
+		RenderGridCell(context, grid, parentEntry, true);
 	}
 
 	for (const auto& file : m_files)
@@ -536,18 +549,18 @@ void FileExplorerWindow::RenderGrid(GameContext& context)
 		{
 			continue;
 		}
-		drawCell(file.path, file.path, file.name, file.category, file.isDirectory, file.fileSize, false);
+		RenderGridCell(context, grid, file, false);
 	}
 
-	if (navigated)
+	if (grid.navigated)
 	{
-		NavigateTo(navigateTarget);
+		NavigateTo(grid.navigateTarget);
 	}
-	else if (previewRequested)
+	else if (grid.previewRequested)
 	{
 		for (const auto& file : m_files)
 		{
-			if (file.path == previewPath)
+			if (file.path == grid.previewPath)
 			{
 				OnFileSelected(file, context);
 				break;

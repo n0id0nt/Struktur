@@ -2586,11 +2586,11 @@ bool DialogueEditorWindow::LoadDialogueFileJson(GameContext& context, const std:
 	{
 		file >> root;
 	}
-	catch (const nlohmann::json::parse_error& e)
+	catch (const nlohmann::json::parse_error& parseError)
 	{
-		DEBUG_ERROR("Failed to parse JSON dialogue file %s: %s", filepath.c_str(), e.what());
+		DEBUG_ERROR("Failed to parse JSON dialogue file %s: %s", filepath.c_str(), parseError.what());
 		m_errors.push_back(ValidationError{ValidationError::Type::InvalidReference, filepath.c_str(), "PARSE_ERROR",
-		                                   std::string("JSON parse error: ") + e.what()});
+		                                   std::string("JSON parse error: ") + parseError.what()});
 		return false;
 	}
 

@@ -17,7 +17,7 @@ class ChainEntry {
     }
     move { _move }
     dest { _dest }
-    dest=(v) { _dest = v }
+    dest=(value) { _dest = value }
 }
 
 class Combatant {
@@ -36,11 +36,11 @@ class Combatant {
     }
 
     name { _name }
-    name=(v) { _name = v }
+    name=(value) { _name = value }
     stats { _stats }
-    stats=(v) { _stats = v }
+    stats=(value) { _stats = value }
     loadout { _loadout }
-    loadout=(v) { _loadout = v == null ? Loadout.bare : v }
+    loadout=(value) { _loadout = value == null ? Loadout.bare : value }
     moves { _moves }
     moves=(value) { _moves = value }
     entity { _entity }
@@ -48,14 +48,14 @@ class Combatant {
 
     // How much of each enemy's chain this combatant's side gets to see: 0 the active move, 1 + the next, 2 all of it.
     read { _read }
-    read=(v) { _read = v }
+    read=(value) { _read = value }
 
     // The battle def this combatant was minted from (art, combo menu) and the AI that picks its chains (null = a
     // human picks).
     def { _def }
-    def=(v) { _def = v }
+    def=(value) { _def = value }
     brain { _brain }
-    brain=(v) { _brain = v }
+    brain=(value) { _brain = value }
 
     // Free-form rules a def or boss hangs on a combatant:
     //   "passive"      never acts on its own (the practice stump); hits on it count as hits on a Hold
@@ -119,51 +119,51 @@ class Combatant {
     side { _side }
     lane { _lane }
     row { _row }
-    lane=(v) { _lane = v }
-    row=(v) { _row = v }
+    lane=(value) { _lane = value }
+    row=(value) { _row = value }
     facing { _facing }
-    facing=(v) { _facing = v }
+    facing=(value) { _facing = value }
     at(lane, row) { _lane == lane && _row == row }
 
     // The committed chain and where in it the combatant is. move: the active Move (null between chains / passive).
     chain { _chain }
     chainIndex { _chainIndex }
-    chainIndex=(v) { _chainIndex = v }
+    chainIndex=(value) { _chainIndex = value }
     move { _move }
     entry { _entry }
     progress { _progress }
-    progress=(v) { _progress = v }
+    progress=(value) { _progress = value }
     // Seconds of damage animation left to play - the move doesn't advance while this runs.
     stun { _stun }
-    stun=(v) { _stun = v }
+    stun=(value) { _stun = value }
     impactDone { _impactDone }
-    impactDone=(v) { _impactDone = v }
+    impactDone=(value) { _impactDone = value }
     moved { _moved }
-    moved=(v) { _moved = v }
+    moved=(value) { _moved = value }
     // The cell this combatant's movement move has claimed ([lane, row]) until it arrives.
     claim { _claim }
-    claim=(v) { _claim = v }
+    claim=(value) { _claim = value }
     // The cells the active move will hit: [[lane, row, share, isAimCell], ...] - locked when the move starts.
     cells { _cells }
-    cells=(v) { _cells = v }
+    cells=(value) { _cells = value }
     lastWasHold { _lastWasHold }
-    lastWasHold=(v) { _lastWasHold = v }
+    lastWasHold=(value) { _lastWasHold = value }
     staggerTimes { _staggerTimes }
     animImmuneUntil { _animImmuneUntil }
-    animImmuneUntil=(v) { _animImmuneUntil = v }
+    animImmuneUntil=(value) { _animImmuneUntil = value }
     // What the active move cost when it started (Tempo refunds a share of it).
     cost { _cost }
-    cost=(v) { _cost = v }
+    cost=(value) { _cost = value }
     startedAfterHold { _startedAfterHold }
-    startedAfterHold=(v) { _startedAfterHold = v }
+    startedAfterHold=(value) { _startedAfterHold = value }
     hitLanded { _hitLanded }
-    hitLanded=(v) { _hitLanded = v }
+    hitLanded=(value) { _hitLanded = value }
     // True while this combatant has no chain left and must be given one.
     needsChain { _needsChain }
-    needsChain=(v) { _needsChain = v }
+    needsChain=(value) { _needsChain = value }
     // Taken off the board without dying (a boss shard folded back into the statue).
     removed { _removed }
-    removed=(v) { _removed = v }
+    removed=(value) { _removed = value }
     active { alive && !_removed }
 
     setChain(entries) {
@@ -207,28 +207,28 @@ class Combatant {
     // --- statuses (only these persist on a target; everything else resolves on the hit) ---------------------
 
     burn { _burn }
-    burn=(v) { _burn = v }
+    burn=(value) { _burn = value }
     burnTime { _burnTime }
-    burnTime=(v) { _burnTime = v }
+    burnTime=(value) { _burnTime = value }
     burnSource { _burnSource }
-    burnSource=(v) { _burnSource = v }
+    burnSource=(value) { _burnSource = value }
     burnRate { _burnRate }
-    burnRate=(v) { _burnRate = v }
+    burnRate=(value) { _burnRate = value }
     chill { _chill }
-    chill=(v) { _chill = v }
+    chill=(value) { _chill = value }
     chillTime { _chillTime }
-    chillTime=(v) { _chillTime = v }
+    chillTime=(value) { _chillTime = value }
     chillSource { _chillSource }
-    chillSource=(v) { _chillSource = v }
+    chillSource=(value) { _chillSource = value }
     chillStrength { _chillStrength }
-    chillStrength=(v) { _chillStrength = v }
+    chillStrength=(value) { _chillStrength = value }
     // 0, or the multiplier the next set-back taken is scaled by.
     frozen { _frozen }
-    frozen=(v) { _frozen = v }
+    frozen=(value) { _frozen = value }
     bleed { _bleed }
-    bleed=(v) { _bleed = v }
+    bleed=(value) { _bleed = value }
     bleedTime { _bleedTime }
-    bleedTime=(v) { _bleedTime = v }
+    bleedTime=(value) { _bleedTime = value }
     clearStatuses() {
         _burn = 0
         _burnTime = 0
@@ -241,17 +241,17 @@ class Combatant {
 
     // An overheal shield (Light matched set, Bloodthirst capstone): soaks damage first, fades after `shieldTime`.
     shield { _shield }
-    shield=(v) { _shield = v }
+    shield=(value) { _shield = value }
     shieldTime { _shieldTime }
-    shieldTime=(v) { _shieldTime = v }
+    shieldTime=(value) { _shieldTime = value }
 
     // Gear-effect scratch, by name (Momentum streaks, Storm Charges, a pending Reprisal...). 0 when never set.
     counter(key) { _counters.containsKey(key) ? _counters[key] : 0 }
     setCounter(key, value) { _counters[key] = value }
     addCounter(key, amount, max) {
-        var v = counter(key) + amount
-        if (max != null && v > max) v = max
-        _counters[key] = v
-        return v
+        var value = counter(key) + amount
+        if (max != null && value > max) value = max
+        _counters[key] = value
+        return value
     }
 }

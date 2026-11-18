@@ -16,14 +16,14 @@ class FinnBattleSprite {
 
     static data {
         if (__data == null) {
-            var d = {}
-            d["texture"] = "Actors/finn_battle.png"
-            d["origin"] = [87, 91]
-            d["columns"] = 13
-            d["rows"] = 19
-            d["cellSize"] = [174, 115]
-            d["defaultAnimation"] = "rightIdleAnimation"
-            d["animations"] = [
+            var sheet = {}
+            sheet["texture"] = "Actors/finn_battle.png"
+            sheet["origin"] = [87, 91]
+            sheet["columns"] = 13
+            sheet["rows"] = 19
+            sheet["cellSize"] = [174, 115]
+            sheet["defaultAnimation"] = "rightIdleAnimation"
+            sheet["animations"] = [
                 // name, first frame, end frame (not included), seconds, loops
                 ["rightAttackAnimation",         0,   12, 0.857, false],
                 ["leftAttackAnimation",         12,   24, 0.857, false],
@@ -48,7 +48,7 @@ class FinnBattleSprite {
                 ["rightUppercutJabAnimation",  216,  228, 0.857, false],
                 ["leftUppercutJabAnimation",   228,  240, 0.857, false]
             ]
-            __data = d
+            __data = sheet
         }
         return __data
     }

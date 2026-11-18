@@ -162,12 +162,12 @@ struct BindingRegistry
 	WrenForeignMethodFn FindMethod(const char* module, const char* className, bool isStatic,
 	                               const char* signature) const
 	{
-		for (const auto& b : methods)
+		for (const auto& binding : methods)
 		{
-			if (b.moduleName == module && b.className == className && b.isStatic == isStatic &&
-			    b.signature == signature)
+			if (binding.moduleName == module && binding.className == className && binding.isStatic == isStatic &&
+			    binding.signature == signature)
 			{
-				return b.function;
+				return binding.function;
 			}
 		}
 		return nullptr;
@@ -176,12 +176,12 @@ struct BindingRegistry
 	WrenForeignClassMethods FindClass(const char* module, const char* className) const
 	{
 		WrenForeignClassMethods result = {};
-		for (const auto& b : classes)
+		for (const auto& binding : classes)
 		{
-			if (b.moduleName == module && b.className == className)
+			if (binding.moduleName == module && binding.className == className)
 			{
-				result.allocate = b.allocate;
-				result.finalize = b.finalize;
+				result.allocate = binding.allocate;
+				result.finalize = binding.finalize;
 				return result;
 			}
 		}

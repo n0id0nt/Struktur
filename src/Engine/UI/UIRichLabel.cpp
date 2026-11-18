@@ -8,12 +8,10 @@
 #include "Engine/Renderer/UIRenderer.h"
 #include "Engine/Text/Font.h"
 
-namespace
-{
 // Non-space/tab codepoint count - the same "how many quads would UIRenderer::DrawText actually write for
 // this string" definition GetRequiredQuadCount uses, factored out so SetVisibleGlyphCount's per-run reveal
 // accounting (see TruncateToVisibleCount below) can share it instead of recounting with its own loop.
-int CountVisibleCodepoints(const std::string& text)
+static int CountVisibleCodepoints(const std::string& text)
 {
 	int count = 0;
 	int index = 0;
@@ -34,7 +32,7 @@ int CountVisibleCodepoints(const std::string& text)
 // Prefix of text containing exactly maxVisible non-space/tab codepoints (or all of it, if it has fewer) - any
 // whitespace immediately before the cutoff point is included since it costs no reveal budget itself, matching
 // CountVisibleCodepoints' own definition of what counts as a "visible" glyph.
-std::string TruncateToVisibleCount(const std::string& text, int maxVisible)
+static std::string TruncateToVisibleCount(const std::string& text, int maxVisible)
 {
 	if (maxVisible <= 0)
 	{
@@ -63,9 +61,9 @@ std::string TruncateToVisibleCount(const std::string& text, int maxVisible)
 // Finds a group in `groups` matching texture/effect/params exactly, or appends and returns a fresh one - so
 // non-contiguous runs sharing the same animated style still end up drawn as one UIRenderer batch/submit
 // instead of one per run (see UIRichLabelAnimGroup's own comment).
-Struktur::UI::UIRichLabelAnimGroup& FindOrCreateAnimGroup(std::vector<Struktur::UI::UIRichLabelAnimGroup>& groups,
-                                                          bgfx::TextureHandle texture,
-                                                          const Struktur::Text::RichRun& run)
+static Struktur::UI::UIRichLabelAnimGroup& FindOrCreateAnimGroup(
+    std::vector<Struktur::UI::UIRichLabelAnimGroup>& groups, bgfx::TextureHandle texture,
+    const Struktur::Text::RichRun& run)
 {
 	for (Struktur::UI::UIRichLabelAnimGroup& group : groups)
 	{
@@ -106,9 +104,9 @@ Struktur::UI::UIRichLabelAnimGroup& FindOrCreateAnimGroup(std::vector<Struktur::
 // glyph is tagged with the running animCharIndex counter (see UIRichLabel::RenderLine) before it's
 // incremented, giving every glyph in the label a stable, reading-order-based phase index regardless of which
 // run or group it ends up in. Returns the final pen X, for the caller to continue the next run from.
-float AppendAnimatedGlyphs(Struktur::UI::UIRichLabelAnimGroup& group, const Struktur::Text::Font& font,
-                          const std::string& text, float startX, float y, float fontSize, uint32_t abgr,
-                          int& animCharIndex)
+static float AppendAnimatedGlyphs(Struktur::UI::UIRichLabelAnimGroup& group, const Struktur::Text::Font& font,
+                                  const std::string& text, float startX, float y, float fontSize, uint32_t abgr,
+                                  int& animCharIndex)
 {
 	float scale       = Struktur::Text::GlyphScale(font, fontSize);
 	float atlasWidth  = (float)font.texture.width;
@@ -130,8 +128,8 @@ float AppendAnimatedGlyphs(Struktur::UI::UIRichLabelAnimGroup& group, const Stru
 		{
 			float dstX = penX + (float)glyph.offsetX * scale;
 			float dstY = y + (float)glyph.offsetY * scale;
-			float w    = rec.width * scale;
-			float h    = rec.height * scale;
+			float width  = rec.width * scale;
+			float height = rec.height * scale;
 			float u0   = rec.x / atlasWidth;
 			float v0   = rec.y / atlasHeight;
 			float u1   = (rec.x + rec.width) / atlasWidth;
@@ -142,9 +140,9 @@ float AppendAnimatedGlyphs(Struktur::UI::UIRichLabelAnimGroup& group, const Stru
 
 			Struktur::Renderer::AnimQuadVertex quad[4] = {
 			    {dstX, dstY, u0, v0, abgr, maskByte, lowByte, highByte, 0},
-			    {dstX + w, dstY, u1, v0, abgr, maskByte, lowByte, highByte, 0},
-			    {dstX + w, dstY + h, u1, v1, abgr, maskByte, lowByte, highByte, 0},
-			    {dstX, dstY + h, u0, v1, abgr, maskByte, lowByte, highByte, 0},
+			    {dstX + width, dstY, u1, v0, abgr, maskByte, lowByte, highByte, 0},
+			    {dstX + width, dstY + height, u1, v1, abgr, maskByte, lowByte, highByte, 0},
+			    {dstX, dstY + height, u0, v1, abgr, maskByte, lowByte, highByte, 0},
 			};
 			group.vertices.insert(group.vertices.end(), quad, quad + 4);
 			++animCharIndex;
@@ -154,7 +152,6 @@ float AppendAnimatedGlyphs(Struktur::UI::UIRichLabelAnimGroup& group, const Stru
 	}
 	return penX;
 }
-}  // namespace
 
 Struktur::UI::UIRichLabel::UIRichLabel(GameContext& context, const glm::vec2& absolutePosition,
                                        const glm::vec2& relativePosition, const std::string& markupText,
@@ -622,6 +619,29 @@ float Struktur::UI::UIRichLabel::ComputeLineHeight(const Text::RichLine& line) c
 	return IconSize();
 }
 
+float Struktur::UI::UIRichLabel::DrawInlineImage(GameContext& context, Resource::TextureResource* texture,
+                                                 const Util::Math::Rect& sourceRect, float penX, float textMiddle,
+                                                 uint32_t quadIndex)
+{
+	if (!texture->IsGpuReady())
+	{
+		texture->LoadToGpu(context);
+	}
+	float scale  = (float)ImageScale(sourceRect.height);
+	float width  = sourceRect.width * scale;
+	float height = sourceRect.height * scale;
+	float x      = std::floor(penX);
+	float y      = std::floor(textMiddle - height * 0.5f);
+
+	Renderer::UIBatchSlot subSlot = m_batchSlot;
+	subSlot.vertexOffset += quadIndex * 4;
+	subSlot.quadCapacity -= quadIndex;
+	// Tinted white, not run.color - pictures keep their own source pixel colours (see class comment).
+	context.GetUIRenderer().DrawTexturedRectRegion(m_batch, subSlot, {x, y, width, height}, texture->GetHandle(),
+	                                               sourceRect, Util::ColorWhite, GetZIndex());
+	return width;
+}
+
 uint32_t Struktur::UI::UIRichLabel::RenderLine(GameContext& context, const Text::RichLine& line, glm::vec2 pos,
                                                uint32_t quadOffset, int& remainingVisible, int& animCharIndex,
                                                std::vector<UIRichLabelAnimGroup>& animGroups)
@@ -670,29 +690,6 @@ uint32_t Struktur::UI::UIRichLabel::RenderLine(GameContext& context, const Text:
 		{
 			// Pictures sit on the text's vertical middle (not the taller line box's), at whole pixels.
 			float textMiddle = pos.y + Text::MeasureTextEx(m_font->font, "A", m_fontSize, 0.0f).y * 0.5f;
-			auto drawImage   = [&](Resource::TextureResource* texture, const Util::Math::Rect& sourceRect)
-			{
-				if (!texture->IsGpuReady())
-				{
-					texture->LoadToGpu(context);
-				}
-				float scale  = (float)ImageScale(sourceRect.height);
-				float width  = sourceRect.width * scale;
-				float height = sourceRect.height * scale;
-				float x      = std::floor(penX);
-				float y      = std::floor(textMiddle - height * 0.5f);
-
-				Renderer::UIBatchSlot subSlot = m_batchSlot;
-				subSlot.vertexOffset += (quadOffset + quadsWritten) * 4;
-				subSlot.quadCapacity -= (quadOffset + quadsWritten);
-				// Tinted white, not run.color - pictures keep their own source pixel colours (see class comment).
-				context.GetUIRenderer().DrawTexturedRectRegion(m_batch, subSlot, {x, y, width, height},
-				                                               texture->GetHandle(), sourceRect, Util::ColorWhite,
-				                                               GetZIndex());
-				++quadsWritten;
-				penX += width;
-				--remainingVisible;
-			};
 
 			if (!run.iconName.empty())
 			{
@@ -701,7 +698,10 @@ uint32_t Struktur::UI::UIRichLabel::RenderLine(GameContext& context, const Text:
 				Util::Math::Rect sourceRect;
 				if (m_iconAtlas.HasTexture() && m_iconAtlas.TryGetIconRect(run.iconName, sourceRect))
 				{
-					drawImage(m_iconAtlas.GetTexture().Get(), sourceRect);
+					penX += DrawInlineImage(context, m_iconAtlas.GetTexture().Get(), sourceRect, penX, textMiddle,
+					                        quadOffset + quadsWritten);
+					++quadsWritten;
+					--remainingVisible;
 				}
 				continue;
 			}
@@ -716,7 +716,11 @@ uint32_t Struktur::UI::UIRichLabel::RenderLine(GameContext& context, const Text:
 				const InputGlyph& glyph = glyphs[i];
 				if (glyph.HasTexture())
 				{
-					drawImage(glyph.texture.Get(), {0.0f, 0.0f, glyph.pixelSize.x, glyph.pixelSize.y});
+					penX += DrawInlineImage(context, glyph.texture.Get(),
+					                        {0.0f, 0.0f, glyph.pixelSize.x, glyph.pixelSize.y}, penX, textMiddle,
+					                        quadOffset + quadsWritten);
+					++quadsWritten;
+					--remainingVisible;
 					continue;
 				}
 				// No art for this binding - its name as text, in the run's own font and colour.

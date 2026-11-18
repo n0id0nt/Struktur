@@ -36,13 +36,13 @@ class MoveButtonUI {
         _layout = "row"
         _inset = 0
 
-        _panel.setOnFocus { |s|
+        _panel.setOnFocus { |sender|
             _focused = true
             UIKit.applyStyle(_panel, "buttonHover")
             recolour_()
             if (_onFocused != null) _onFocused.call()
         }
-        _panel.setOnLoseFocus { |s|
+        _panel.setOnLoseFocus { |sender|
             _focused = false
             UIKit.applyStyle(_panel, _enabled ? "button" : "buttonDisabled")
             recolour_()

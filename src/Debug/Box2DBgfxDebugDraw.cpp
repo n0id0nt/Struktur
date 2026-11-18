@@ -3,9 +3,7 @@
 #include "Engine/Renderer/DebugRenderer.h"
 #include "Engine/Util/Color.h"
 
-namespace
-{
-Struktur::Util::Color ToColor(const b2Color& c)
+static Struktur::Util::Color ToColor(const b2Color& c)
 {
 	return Struktur::Util::Color{(unsigned char)(c.r * 255.0f), (unsigned char)(c.g * 255.0f),
 	                             (unsigned char)(c.b * 255.0f), (unsigned char)(c.a * 255.0f)};
@@ -13,8 +11,7 @@ Struktur::Util::Color ToColor(const b2Color& c)
 
 // Box2D hands every shape full alpha with no separate fill/outline distinction - scale it down for fills only
 // (see DrawSolidPolygon/DrawSolidCircle) so overlapping shapes stay readable instead of solid blocks of color.
-constexpr float kFillAlphaScale = 0.35f;
-}  // namespace
+static constexpr float kFillAlphaScale = 0.35f;
 
 Struktur::Debug::Box2DBgfxDebugDraw::Box2DBgfxDebugDraw(Renderer::DebugRenderer& renderer)
     : m_renderer(renderer)

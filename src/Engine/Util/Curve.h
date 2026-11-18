@@ -33,9 +33,9 @@ struct CurveKeyframe
 	{
 	}
 
-	CurveKeyframe(float t, float v, CurveInterpolation interp = CurveInterpolation::Smooth)
-	    : time(t),
-	      value(v),
+	CurveKeyframe(float keyTime, float keyValue, CurveInterpolation interp = CurveInterpolation::Smooth)
+	    : time(keyTime),
+	      value(keyValue),
 	      inTangent(0.0f),
 	      outTangent(0.0f),
 	      interpolation(interp)
@@ -254,17 +254,17 @@ private:
 	}
 
 	// Interpolate between two keyframes
-	float InterpolateBetween(const CurveKeyframe& a, const CurveKeyframe& b, float time) const
+	float InterpolateBetween(const CurveKeyframe& from, const CurveKeyframe& to, float time) const
 	{
-		float t = (time - a.time) / (b.time - a.time);
+		float t = (time - from.time) / (to.time - from.time);
 
-		switch (a.interpolation)
+		switch (from.interpolation)
 		{
 			case CurveInterpolation::Linear:
-				return glm::mix(a.value, b.value, t);
+				return glm::mix(from.value, to.value, t);
 
 			case CurveInterpolation::Step:
-				return a.value;
+				return from.value;
 
 			case CurveInterpolation::Smooth:
 			{
@@ -277,8 +277,8 @@ private:
 				float h3 = t3 - 2.0f * t2 + t;
 				float h4 = t3 - t2;
 
-				float duration = b.time - a.time;
-				return h1 * a.value + h2 * b.value + h3 * a.outTangent * duration + h4 * b.inTangent * duration;
+				float duration = to.time - from.time;
+				return h1 * from.value + h2 * to.value + h3 * from.outTangent * duration + h4 * to.inTangent * duration;
 			}
 
 			case CurveInterpolation::Bezier:
@@ -290,15 +290,15 @@ private:
 				float mt2 = mt * mt;
 				float mt3 = mt2 * mt;
 
-				float duration = b.time - a.time;
-				float p1       = a.value + a.outTangent * duration / 3.0f;
-				float p2       = b.value - b.inTangent * duration / 3.0f;
+				float duration = to.time - from.time;
+				float p1       = from.value + from.outTangent * duration / 3.0f;
+				float p2       = to.value - to.inTangent * duration / 3.0f;
 
-				return mt3 * a.value + 3.0f * mt2 * t * p1 + 3.0f * mt * t2 * p2 + t3 * b.value;
+				return mt3 * from.value + 3.0f * mt2 * t * p1 + 3.0f * mt * t2 * p2 + t3 * to.value;
 			}
 		}
 
-		return a.value;
+		return from.value;
 	}
 
 	// Recalculate tangents for smooth curves

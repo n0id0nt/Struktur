@@ -103,9 +103,9 @@ class PartyMember {
 
     // Speed to move at (m/s) - matches the first player's, so a follower keeps pace with whoever it trails.
     speed {
-        for (m in Party.members) {
-            if (m.isPlayer && m.entity != null) {
-                var script = Script.getInstance(m.entity)
+        for (member in Party.members) {
+            if (member.isPlayer && member.entity != null) {
+                var script = Script.getInstance(member.entity)
                 if (script != null) {
                     return script.speed
                 }

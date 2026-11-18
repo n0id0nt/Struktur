@@ -9,9 +9,9 @@
 
 double Struktur::Util::Noise::Grad(int hash, double value)
 {
-	int h       = hash & 15;
-	double grad = 1 + (h & 7);  // Gradient value 1-8
-	if (h & 8)
+	int gradientIndex = hash & 15;
+	double grad       = 1 + (gradientIndex & 7);  // Gradient value 1-8
+	if (gradientIndex & 8)
 	{
 		grad = -grad;  // Randomly invert half of them
 	}
@@ -28,20 +28,20 @@ double Struktur::Util::Noise::Smoothstep(double edge0, double edge1, double x)
 
 double Struktur::Util::Noise::PerlinNoise1(unsigned int seed, double value)
 {
-	int p[512];
+	int permutation[512];
 	::srand(seed);
 	for (int i = 0; i < 256; ++i)
 	{
-		p[i] = p[256 + i] = rand() % 256;
+		permutation[i] = permutation[256 + i] = rand() % 256;
 	}
 
-	int X = static_cast<int>(std::floor(value)) & 255;
+	int cell = static_cast<int>(std::floor(value)) & 255;
 	value -= std::floor(value);
 
-	double u = Smoothstep(0.0, 1.0, value);
+	double fade = Smoothstep(0.0, 1.0, value);
 
-	int a = p[X];
-	int b = p[X + 1];
+	int leftHash  = permutation[cell];
+	int rightHash = permutation[cell + 1];
 
-	return Util::Math::Lerp(u, Grad(a, value), Grad(b, value - 1));
+	return Util::Math::Lerp(fade, Grad(leftHash, value), Grad(rightHash, value - 1));
 }

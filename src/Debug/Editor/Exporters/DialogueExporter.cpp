@@ -377,9 +377,9 @@ std::string DialogueExporter::EscapeString(const std::string& str)
 	std::string result;
 	result.reserve(str.size());
 
-	for (char c : str)
+	for (char character : str)
 	{
-		switch (c)
+		switch (character)
 		{
 			case '"':
 				result += "\\\"";
@@ -397,7 +397,7 @@ std::string DialogueExporter::EscapeString(const std::string& str)
 				result += "\\t";
 				break;
 			default:
-				result += c;
+				result += character;
 				break;
 		}
 	}

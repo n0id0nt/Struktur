@@ -180,9 +180,9 @@ bool FlagManager::Deserialise(const std::string& data)
 	{
 		json = nlohmann::json::parse(data);
 	}
-	catch (const nlohmann::json::parse_error& e)
+	catch (const nlohmann::json::parse_error& parseError)
 	{
-		DEBUG_ERROR("FLAGMANAGER: JSON parse error - %s", e.what());
+		DEBUG_ERROR("FLAGMANAGER: JSON parse error - %s", parseError.what());
 		return false;
 	}
 

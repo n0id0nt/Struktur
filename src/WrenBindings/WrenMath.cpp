@@ -51,17 +51,17 @@ void wren_MathE(WrenVM* vm)
 // Math.max(a, b) -> Num
 void wren_MathMax(WrenVM* vm)
 {
-	double a = wrenGetSlotDouble(vm, 1);
-	double b = wrenGetSlotDouble(vm, 2);
-	wrenSetSlotDouble(vm, 0, std::max(a, b));
+	double lhs = wrenGetSlotDouble(vm, 1);
+	double rhs = wrenGetSlotDouble(vm, 2);
+	wrenSetSlotDouble(vm, 0, std::max(lhs, rhs));
 }
 
 // Math.min(a, b) -> Num
 void wren_MathMin(WrenVM* vm)
 {
-	double a = wrenGetSlotDouble(vm, 1);
-	double b = wrenGetSlotDouble(vm, 2);
-	wrenSetSlotDouble(vm, 0, std::min(a, b));
+	double lhs = wrenGetSlotDouble(vm, 1);
+	double rhs = wrenGetSlotDouble(vm, 2);
+	wrenSetSlotDouble(vm, 0, std::min(lhs, rhs));
 }
 
 // Math.clamp(value, min, max) -> Num
@@ -86,15 +86,15 @@ void wren_MathClamp(WrenVM* vm)
 // Math.abs(n) -> Num
 void wren_MathAbs(WrenVM* vm)
 {
-	double n = wrenGetSlotDouble(vm, 1);
-	wrenSetSlotDouble(vm, 0, std::abs(n));
+	double value = wrenGetSlotDouble(vm, 1);
+	wrenSetSlotDouble(vm, 0, std::abs(value));
 }
 
 // Math.sqrt(n) -> Num
 void wren_MathSqrt(WrenVM* vm)
 {
-	double n = wrenGetSlotDouble(vm, 1);
-	wrenSetSlotDouble(vm, 0, std::sqrt(n));
+	double value = wrenGetSlotDouble(vm, 1);
+	wrenSetSlotDouble(vm, 0, std::sqrt(value));
 }
 
 // Math.pow(base, exponent) -> Num
@@ -129,22 +129,22 @@ void wren_MathTan(WrenVM* vm)
 // Math.asin(n) -> Num
 void wren_MathAsin(WrenVM* vm)
 {
-	double n = wrenGetSlotDouble(vm, 1);
-	wrenSetSlotDouble(vm, 0, std::asin(n));
+	double value = wrenGetSlotDouble(vm, 1);
+	wrenSetSlotDouble(vm, 0, std::asin(value));
 }
 
 // Math.acos(n) -> Num
 void wren_MathAcos(WrenVM* vm)
 {
-	double n = wrenGetSlotDouble(vm, 1);
-	wrenSetSlotDouble(vm, 0, std::acos(n));
+	double value = wrenGetSlotDouble(vm, 1);
+	wrenSetSlotDouble(vm, 0, std::acos(value));
 }
 
 // Math.atan(n) -> Num
 void wren_MathAtan(WrenVM* vm)
 {
-	double n = wrenGetSlotDouble(vm, 1);
-	wrenSetSlotDouble(vm, 0, std::atan(n));
+	double value = wrenGetSlotDouble(vm, 1);
+	wrenSetSlotDouble(vm, 0, std::atan(value));
 }
 
 // Math.atan2(y, x) -> Num
@@ -158,64 +158,64 @@ void wren_MathAtan2(WrenVM* vm)
 // Math.floor(n) -> Num
 void wren_MathFloor(WrenVM* vm)
 {
-	double n = wrenGetSlotDouble(vm, 1);
-	wrenSetSlotDouble(vm, 0, std::floor(n));
+	double value = wrenGetSlotDouble(vm, 1);
+	wrenSetSlotDouble(vm, 0, std::floor(value));
 }
 
 // Math.ceil(n) -> Num
 void wren_MathCeil(WrenVM* vm)
 {
-	double n = wrenGetSlotDouble(vm, 1);
-	wrenSetSlotDouble(vm, 0, std::ceil(n));
+	double value = wrenGetSlotDouble(vm, 1);
+	wrenSetSlotDouble(vm, 0, std::ceil(value));
 }
 
 // Math.round(n) -> Num
 void wren_MathRound(WrenVM* vm)
 {
-	double n = wrenGetSlotDouble(vm, 1);
-	wrenSetSlotDouble(vm, 0, std::round(n));
+	double value = wrenGetSlotDouble(vm, 1);
+	wrenSetSlotDouble(vm, 0, std::round(value));
 }
 
 // Math.lerp(a, b, t) -> Num
 void wren_MathLerp(WrenVM* vm)
 {
-	double a = wrenGetSlotDouble(vm, 1);
-	double b = wrenGetSlotDouble(vm, 2);
+	double from = wrenGetSlotDouble(vm, 1);
+	double to   = wrenGetSlotDouble(vm, 2);
 	double t = wrenGetSlotDouble(vm, 3);
-	wrenSetSlotDouble(vm, 0, a + (b - a) * t);
+	wrenSetSlotDouble(vm, 0, from + (to - from) * t);
 }
 
 // Math.isInfinite(n) -> Bool
 void wren_MathIsInfinite(WrenVM* vm)
 {
-	double n = wrenGetSlotDouble(vm, 1);
-	wrenSetSlotBool(vm, 0, std::isinf(n));
+	double value = wrenGetSlotDouble(vm, 1);
+	wrenSetSlotBool(vm, 0, std::isinf(value));
 }
 
 // Math.isNaN(n) -> Bool
 void wren_MathIsNaN(WrenVM* vm)
 {
-	double n = wrenGetSlotDouble(vm, 1);
-	wrenSetSlotBool(vm, 0, std::isnan(n));
+	double value = wrenGetSlotDouble(vm, 1);
+	wrenSetSlotBool(vm, 0, std::isnan(value));
 }
 
 // Math.isFinite(n) -> Bool
 void wren_MathIsFinite(WrenVM* vm)
 {
-	double n = wrenGetSlotDouble(vm, 1);
-	wrenSetSlotBool(vm, 0, std::isfinite(n));
+	double value = wrenGetSlotDouble(vm, 1);
+	wrenSetSlotBool(vm, 0, std::isfinite(value));
 }
 
 // Math.sign(n) -> Num
 void wren_MathSign(WrenVM* vm)
 {
-	double n = wrenGetSlotDouble(vm, 1);
+	double value = wrenGetSlotDouble(vm, 1);
 
-	if (n > 0)
+	if (value > 0)
 	{
 		wrenSetSlotDouble(vm, 0, 1.0);
 	}
-	else if (n < 0)
+	else if (value < 0)
 	{
 		wrenSetSlotDouble(vm, 0, -1.0);
 	}
@@ -256,10 +256,10 @@ void wren_MathClamp01(WrenVM* vm)
 // Math.inverseLerp(a, b, value) -> Num: where value sits between a and b (0 at a, 1 at b); 0 when a == b
 void wren_MathInverseLerp(WrenVM* vm)
 {
-	double a     = wrenGetSlotDouble(vm, 1);
-	double b     = wrenGetSlotDouble(vm, 2);
+	double from  = wrenGetSlotDouble(vm, 1);
+	double to    = wrenGetSlotDouble(vm, 2);
 	double value = wrenGetSlotDouble(vm, 3);
-	wrenSetSlotDouble(vm, 0, a == b ? 0.0 : (value - a) / (b - a));
+	wrenSetSlotDouble(vm, 0, from == to ? 0.0 : (value - from) / (to - from));
 }
 
 // Math.remap(value, inMin, inMax, outMin, outMax) -> Num
@@ -304,11 +304,11 @@ void wren_MathMoveTowards(WrenVM* vm)
 // Math.damp(a, b, rate, dt) -> Num: frame-rate independent ease from a toward b (rate: how fast, per second)
 void wren_MathDamp(WrenVM* vm)
 {
-	double a    = wrenGetSlotDouble(vm, 1);
-	double b    = wrenGetSlotDouble(vm, 2);
+	double from = wrenGetSlotDouble(vm, 1);
+	double to   = wrenGetSlotDouble(vm, 2);
 	double rate = wrenGetSlotDouble(vm, 3);
 	double dt   = wrenGetSlotDouble(vm, 4);
-	wrenSetSlotDouble(vm, 0, a + (b - a) * (1.0 - std::exp(-rate * dt)));
+	wrenSetSlotDouble(vm, 0, from + (to - from) * (1.0 - std::exp(-rate * dt)));
 }
 
 // Math.easeIn(t) -> Num (cubic)
@@ -321,16 +321,16 @@ void wren_MathEaseIn(WrenVM* vm)
 // Math.easeOut(t) -> Num (cubic)
 void wren_MathEaseOut(WrenVM* vm)
 {
-	double u = 1.0 - Clamp01(wrenGetSlotDouble(vm, 1));
-	wrenSetSlotDouble(vm, 0, 1.0 - u * u * u);
+	double remaining = 1.0 - Clamp01(wrenGetSlotDouble(vm, 1));
+	wrenSetSlotDouble(vm, 0, 1.0 - remaining * remaining * remaining);
 }
 
 // Math.easeInOut(t) -> Num (cubic)
 void wren_MathEaseInOut(WrenVM* vm)
 {
 	double t = Clamp01(wrenGetSlotDouble(vm, 1));
-	double u = -2.0 * t + 2.0;
-	wrenSetSlotDouble(vm, 0, t < 0.5 ? 4.0 * t * t * t : 1.0 - u * u * u / 2.0);
+	double remaining = -2.0 * t + 2.0;
+	wrenSetSlotDouble(vm, 0, t < 0.5 ? 4.0 * t * t * t : 1.0 - remaining * remaining * remaining / 2.0);
 }
 
 // Math.easeOutBack(t) -> Num: overshoots past 1 a little before settling
@@ -338,8 +338,8 @@ void wren_MathEaseOutBack(WrenVM* vm)
 {
 	const double c1 = 1.70158;
 	const double c3 = c1 + 1.0;
-	double u        = Clamp01(wrenGetSlotDouble(vm, 1)) - 1.0;
-	wrenSetSlotDouble(vm, 0, 1.0 + c3 * u * u * u + c1 * u * u);
+	double remaining = Clamp01(wrenGetSlotDouble(vm, 1)) - 1.0;
+	wrenSetSlotDouble(vm, 0, 1.0 + c3 * remaining * remaining * remaining + c1 * remaining * remaining);
 }
 
 // --- comparison and distance -----------------------------------------------------
@@ -446,23 +446,23 @@ void wren_Vec2ToString(WrenVM* vm)
 // Math operations
 void wren_Vec2Add(WrenVM* vm)
 {
-	WrenVec2* a = static_cast<WrenVec2*>(wrenGetSlotForeign(vm, 0));
-	WrenVec2* b = static_cast<WrenVec2*>(wrenGetSlotForeign(vm, 1));
+	WrenVec2* lhs = static_cast<WrenVec2*>(wrenGetSlotForeign(vm, 0));
+	WrenVec2* rhs = static_cast<WrenVec2*>(wrenGetSlotForeign(vm, 1));
 
 	// Create new Vec2 with result
 	wrenGetVariable(vm, "math", "Vec2", 1);  // Get class into slot 1
 	WrenVec2* result = (WrenVec2*)wrenSetSlotNewForeign(vm, 0, 1, sizeof(WrenVec2));
-	new (result) WrenVec2(a->value + b->value);
+	new (result) WrenVec2(lhs->value + rhs->value);
 }
 
 void wren_Vec2Subtract(WrenVM* vm)
 {
-	WrenVec2* a = static_cast<WrenVec2*>(wrenGetSlotForeign(vm, 0));
-	WrenVec2* b = static_cast<WrenVec2*>(wrenGetSlotForeign(vm, 1));
+	WrenVec2* lhs = static_cast<WrenVec2*>(wrenGetSlotForeign(vm, 0));
+	WrenVec2* rhs = static_cast<WrenVec2*>(wrenGetSlotForeign(vm, 1));
 
 	wrenGetVariable(vm, "math", "Vec2", 1);  // Get class into slot 1
 	WrenVec2* result = (WrenVec2*)wrenSetSlotNewForeign(vm, 0, 1, sizeof(WrenVec2));
-	new (result) WrenVec2(a->value - b->value);
+	new (result) WrenVec2(lhs->value - rhs->value);
 }
 
 void wren_Vec2Multiply(WrenVM* vm)
@@ -500,49 +500,49 @@ void wren_Vec2Normalize(WrenVM* vm)
 // Vec2.distance(a, b) -> Num
 void wren_Vec2Distance(WrenVM* vm)
 {
-	WrenVec2* a = static_cast<WrenVec2*>(wrenGetSlotForeign(vm, 1));
-	WrenVec2* b = static_cast<WrenVec2*>(wrenGetSlotForeign(vm, 2));
+	WrenVec2* lhs = static_cast<WrenVec2*>(wrenGetSlotForeign(vm, 1));
+	WrenVec2* rhs = static_cast<WrenVec2*>(wrenGetSlotForeign(vm, 2));
 
-	wrenSetSlotDouble(vm, 0, glm::distance(a->value, b->value));
+	wrenSetSlotDouble(vm, 0, glm::distance(lhs->value, rhs->value));
 }
 
 // Vec2.distanceSquared(a, b) -> Num
 void wren_Vec2DistanceSquared(WrenVM* vm)
 {
-	WrenVec2* a = static_cast<WrenVec2*>(wrenGetSlotForeign(vm, 1));
-	WrenVec2* b = static_cast<WrenVec2*>(wrenGetSlotForeign(vm, 2));
+	WrenVec2* lhs = static_cast<WrenVec2*>(wrenGetSlotForeign(vm, 1));
+	WrenVec2* rhs = static_cast<WrenVec2*>(wrenGetSlotForeign(vm, 2));
 
-	wrenSetSlotDouble(vm, 0, glm::distance2(a->value, b->value));
+	wrenSetSlotDouble(vm, 0, glm::distance2(lhs->value, rhs->value));
 }
 
 // Vec2.manhattan(a, b) -> Num: |dx| + |dy|
 void wren_Vec2Manhattan(WrenVM* vm)
 {
-	WrenVec2* a = static_cast<WrenVec2*>(wrenGetSlotForeign(vm, 1));
-	WrenVec2* b = static_cast<WrenVec2*>(wrenGetSlotForeign(vm, 2));
+	WrenVec2* lhs = static_cast<WrenVec2*>(wrenGetSlotForeign(vm, 1));
+	WrenVec2* rhs = static_cast<WrenVec2*>(wrenGetSlotForeign(vm, 2));
 
-	wrenSetSlotDouble(vm, 0, std::abs(a->value.x - b->value.x) + std::abs(a->value.y - b->value.y));
+	wrenSetSlotDouble(vm, 0, std::abs(lhs->value.x - rhs->value.x) + std::abs(lhs->value.y - rhs->value.y));
 }
 
 // Vec2.lerp(a, b, t) -> Vec2
 void wren_Vec2Lerp(WrenVM* vm)
 {
-	WrenVec2* a = static_cast<WrenVec2*>(wrenGetSlotForeign(vm, 1));
-	WrenVec2* b = static_cast<WrenVec2*>(wrenGetSlotForeign(vm, 2));
+	WrenVec2* lhs = static_cast<WrenVec2*>(wrenGetSlotForeign(vm, 1));
+	WrenVec2* rhs = static_cast<WrenVec2*>(wrenGetSlotForeign(vm, 2));
 	float t     = (float)wrenGetSlotDouble(vm, 3);
 
 	wrenGetVariable(vm, "math", "Vec2", 1);  // Get class into slot 1
 	WrenVec2* result = (WrenVec2*)wrenSetSlotNewForeign(vm, 0, 1, sizeof(WrenVec2));
-	new (result) WrenVec2(glm::mix(a->value, b->value, t));
+	new (result) WrenVec2(glm::mix(lhs->value, rhs->value, t));
 }
 
 // Vec2.dot(a, b) -> Num
 void wren_Vec2DotStatic(WrenVM* vm)
 {
-	WrenVec2* a = static_cast<WrenVec2*>(wrenGetSlotForeign(vm, 1));
-	WrenVec2* b = static_cast<WrenVec2*>(wrenGetSlotForeign(vm, 2));
+	WrenVec2* lhs = static_cast<WrenVec2*>(wrenGetSlotForeign(vm, 1));
+	WrenVec2* rhs = static_cast<WrenVec2*>(wrenGetSlotForeign(vm, 2));
 
-	wrenSetSlotDouble(vm, 0, glm::dot(a->value, b->value));
+	wrenSetSlotDouble(vm, 0, glm::dot(lhs->value, rhs->value));
 }
 
 // Vec2.reflect(incident, normal) -> Vec2
@@ -559,35 +559,35 @@ void wren_Vec2Reflect(WrenVM* vm)
 // Vec2.min(a, b) -> Vec2
 void wren_Vec2Min(WrenVM* vm)
 {
-	WrenVec2* a = (WrenVec2*)wrenGetSlotForeign(vm, 1);
-	WrenVec2* b = (WrenVec2*)wrenGetSlotForeign(vm, 2);
+	WrenVec2* lhs = (WrenVec2*)wrenGetSlotForeign(vm, 1);
+	WrenVec2* rhs = (WrenVec2*)wrenGetSlotForeign(vm, 2);
 
 	wrenGetVariable(vm, "math", "Vec2", 1);  // Get class into slot 1
 	WrenVec2* result = (WrenVec2*)wrenSetSlotNewForeign(vm, 0, 1, sizeof(WrenVec2));
-	new (result) WrenVec2(glm::min(a->value, b->value));
+	new (result) WrenVec2(glm::min(lhs->value, rhs->value));
 }
 
 // Vec2.max(a, b) -> Vec2
 void wren_Vec2Max(WrenVM* vm)
 {
-	WrenVec2* a = (WrenVec2*)wrenGetSlotForeign(vm, 1);
-	WrenVec2* b = (WrenVec2*)wrenGetSlotForeign(vm, 2);
+	WrenVec2* lhs = (WrenVec2*)wrenGetSlotForeign(vm, 1);
+	WrenVec2* rhs = (WrenVec2*)wrenGetSlotForeign(vm, 2);
 
 	wrenGetVariable(vm, "math", "Vec2", 1);  // Get class into slot 1
 	WrenVec2* result = (WrenVec2*)wrenSetSlotNewForeign(vm, 0, 1, sizeof(WrenVec2));
-	new (result) WrenVec2(glm::max(a->value, b->value));
+	new (result) WrenVec2(glm::max(lhs->value, rhs->value));
 }
 
 // Vec2.clamp(v, min, max) -> Vec2
 void wren_Vec2Clamp(WrenVM* vm)
 {
-	WrenVec2* v      = (WrenVec2*)wrenGetSlotForeign(vm, 1);
+	WrenVec2* vector = (WrenVec2*)wrenGetSlotForeign(vm, 1);
 	WrenVec2* minVec = (WrenVec2*)wrenGetSlotForeign(vm, 2);
 	WrenVec2* maxVec = (WrenVec2*)wrenGetSlotForeign(vm, 3);
 
 	wrenGetVariable(vm, "math", "Vec2", 1);  // Get class into slot 1
 	WrenVec2* result = (WrenVec2*)wrenSetSlotNewForeign(vm, 0, 1, sizeof(WrenVec2));
-	new (result) WrenVec2(glm::clamp(v->value, minVec->value, maxVec->value));
+	new (result) WrenVec2(glm::clamp(vector->value, minVec->value, maxVec->value));
 }
 
 // Vec2.zero() -> Vec2
@@ -727,22 +727,22 @@ void wren_Vec3ToString(WrenVM* vm)
 
 void wren_Vec3Add(WrenVM* vm)
 {
-	WrenVec3* a = (WrenVec3*)wrenGetSlotForeign(vm, 0);
-	WrenVec3* b = (WrenVec3*)wrenGetSlotForeign(vm, 1);
+	WrenVec3* lhs = (WrenVec3*)wrenGetSlotForeign(vm, 0);
+	WrenVec3* rhs = (WrenVec3*)wrenGetSlotForeign(vm, 1);
 
 	wrenGetVariable(vm, "math", "Vec3", 1);  // Get class into slot 1
 	WrenVec3* result = (WrenVec3*)wrenSetSlotNewForeign(vm, 0, 1, sizeof(WrenVec3));
-	new (result) WrenVec3(a->value + b->value);
+	new (result) WrenVec3(lhs->value + rhs->value);
 }
 
 void wren_Vec3Subtract(WrenVM* vm)
 {
-	WrenVec3* a = (WrenVec3*)wrenGetSlotForeign(vm, 0);
-	WrenVec3* b = (WrenVec3*)wrenGetSlotForeign(vm, 1);
+	WrenVec3* lhs = (WrenVec3*)wrenGetSlotForeign(vm, 0);
+	WrenVec3* rhs = (WrenVec3*)wrenGetSlotForeign(vm, 1);
 
 	wrenGetVariable(vm, "math", "Vec3", 1);  // Get class into slot 1
 	WrenVec3* result = (WrenVec3*)wrenSetSlotNewForeign(vm, 0, 1, sizeof(WrenVec3));
-	new (result) WrenVec3(a->value - b->value);
+	new (result) WrenVec3(lhs->value - rhs->value);
 }
 
 void wren_Vec3Multiply(WrenVM* vm)
@@ -779,61 +779,62 @@ void wren_Vec3Normalize(WrenVM* vm)
 // Vec3.distance(a, b) -> Num
 void wren_Vec3Distance(WrenVM* vm)
 {
-	WrenVec3* a = (WrenVec3*)wrenGetSlotForeign(vm, 1);
-	WrenVec3* b = (WrenVec3*)wrenGetSlotForeign(vm, 2);
+	WrenVec3* lhs = (WrenVec3*)wrenGetSlotForeign(vm, 1);
+	WrenVec3* rhs = (WrenVec3*)wrenGetSlotForeign(vm, 2);
 
-	wrenSetSlotDouble(vm, 0, glm::distance(a->value, b->value));
+	wrenSetSlotDouble(vm, 0, glm::distance(lhs->value, rhs->value));
 }
 
 // Vec3.distanceSquared(a, b) -> Num
 void wren_Vec3DistanceSquared(WrenVM* vm)
 {
-	WrenVec3* a = (WrenVec3*)wrenGetSlotForeign(vm, 1);
-	WrenVec3* b = (WrenVec3*)wrenGetSlotForeign(vm, 2);
+	WrenVec3* lhs = (WrenVec3*)wrenGetSlotForeign(vm, 1);
+	WrenVec3* rhs = (WrenVec3*)wrenGetSlotForeign(vm, 2);
 
-	wrenSetSlotDouble(vm, 0, glm::distance2(a->value, b->value));
+	wrenSetSlotDouble(vm, 0, glm::distance2(lhs->value, rhs->value));
 }
 
 // Vec3.manhattan(a, b) -> Num: |dx| + |dy| + |dz|
 void wren_Vec3Manhattan(WrenVM* vm)
 {
-	WrenVec3* a = static_cast<WrenVec3*>(wrenGetSlotForeign(vm, 1));
-	WrenVec3* b = static_cast<WrenVec3*>(wrenGetSlotForeign(vm, 2));
+	WrenVec3* lhs = static_cast<WrenVec3*>(wrenGetSlotForeign(vm, 1));
+	WrenVec3* rhs = static_cast<WrenVec3*>(wrenGetSlotForeign(vm, 2));
 
-	wrenSetSlotDouble(vm, 0, std::abs(a->value.x - b->value.x) + std::abs(a->value.y - b->value.y) +
-	                             std::abs(a->value.z - b->value.z));
+	wrenSetSlotDouble(vm, 0,
+	                  std::abs(lhs->value.x - rhs->value.x) + std::abs(lhs->value.y - rhs->value.y) +
+	                      std::abs(lhs->value.z - rhs->value.z));
 }
 
 // Vec3.lerp(a, b, t) -> Vec3
 void wren_Vec3Lerp(WrenVM* vm)
 {
-	WrenVec3* a = (WrenVec3*)wrenGetSlotForeign(vm, 1);
-	WrenVec3* b = (WrenVec3*)wrenGetSlotForeign(vm, 2);
+	WrenVec3* lhs = (WrenVec3*)wrenGetSlotForeign(vm, 1);
+	WrenVec3* rhs = (WrenVec3*)wrenGetSlotForeign(vm, 2);
 	float t     = (float)wrenGetSlotDouble(vm, 3);
 
 	wrenGetVariable(vm, "math", "Vec3", 1);  // Get class into slot 1
 	WrenVec3* result = (WrenVec3*)wrenSetSlotNewForeign(vm, 0, 1, sizeof(WrenVec3));
-	new (result) WrenVec3(glm::mix(a->value, b->value, t));
+	new (result) WrenVec3(glm::mix(lhs->value, rhs->value, t));
 }
 
 // Vec3.dot(a, b) -> Num
 void wren_Vec3DotStatic(WrenVM* vm)
 {
-	WrenVec3* a = (WrenVec3*)wrenGetSlotForeign(vm, 1);
-	WrenVec3* b = (WrenVec3*)wrenGetSlotForeign(vm, 2);
+	WrenVec3* lhs = (WrenVec3*)wrenGetSlotForeign(vm, 1);
+	WrenVec3* rhs = (WrenVec3*)wrenGetSlotForeign(vm, 2);
 
-	wrenSetSlotDouble(vm, 0, glm::dot(a->value, b->value));
+	wrenSetSlotDouble(vm, 0, glm::dot(lhs->value, rhs->value));
 }
 
 // Vec3.cross(a, b) -> Vec3
 void wren_Vec3CrossStatic(WrenVM* vm)
 {
-	WrenVec3* a = (WrenVec3*)wrenGetSlotForeign(vm, 1);
-	WrenVec3* b = (WrenVec3*)wrenGetSlotForeign(vm, 2);
+	WrenVec3* lhs = (WrenVec3*)wrenGetSlotForeign(vm, 1);
+	WrenVec3* rhs = (WrenVec3*)wrenGetSlotForeign(vm, 2);
 
 	wrenGetVariable(vm, "math", "Vec3", 1);  // Get class into slot 1
 	WrenVec3* result = (WrenVec3*)wrenSetSlotNewForeign(vm, 0, 1, sizeof(WrenVec3));
-	new (result) WrenVec3(glm::cross(a->value, b->value));
+	new (result) WrenVec3(glm::cross(lhs->value, rhs->value));
 }
 
 // Vec3.reflect(incident, normal) -> Vec3
@@ -862,35 +863,35 @@ void wren_Vec3Refract(WrenVM* vm)
 // Vec3.min(a, b) -> Vec3
 void wren_Vec3Min(WrenVM* vm)
 {
-	WrenVec3* a = (WrenVec3*)wrenGetSlotForeign(vm, 1);
-	WrenVec3* b = (WrenVec3*)wrenGetSlotForeign(vm, 2);
+	WrenVec3* lhs = (WrenVec3*)wrenGetSlotForeign(vm, 1);
+	WrenVec3* rhs = (WrenVec3*)wrenGetSlotForeign(vm, 2);
 
 	wrenGetVariable(vm, "math", "Vec3", 1);  // Get class into slot 1
 	WrenVec3* result = (WrenVec3*)wrenSetSlotNewForeign(vm, 0, 1, sizeof(WrenVec3));
-	new (result) WrenVec3(glm::min(a->value, b->value));
+	new (result) WrenVec3(glm::min(lhs->value, rhs->value));
 }
 
 // Vec3.max(a, b) -> Vec3
 void wren_Vec3Max(WrenVM* vm)
 {
-	WrenVec3* a = (WrenVec3*)wrenGetSlotForeign(vm, 1);
-	WrenVec3* b = (WrenVec3*)wrenGetSlotForeign(vm, 2);
+	WrenVec3* lhs = (WrenVec3*)wrenGetSlotForeign(vm, 1);
+	WrenVec3* rhs = (WrenVec3*)wrenGetSlotForeign(vm, 2);
 
 	wrenGetVariable(vm, "math", "Vec3", 1);  // Get class into slot 1
 	WrenVec3* result = (WrenVec3*)wrenSetSlotNewForeign(vm, 0, 1, sizeof(WrenVec3));
-	new (result) WrenVec3(glm::max(a->value, b->value));
+	new (result) WrenVec3(glm::max(lhs->value, rhs->value));
 }
 
 // Vec3.clamp(v, min, max) -> Vec3
 void wren_Vec3Clamp(WrenVM* vm)
 {
-	WrenVec3* v      = (WrenVec3*)wrenGetSlotForeign(vm, 1);
+	WrenVec3* vector = (WrenVec3*)wrenGetSlotForeign(vm, 1);
 	WrenVec3* minVec = (WrenVec3*)wrenGetSlotForeign(vm, 2);
 	WrenVec3* maxVec = (WrenVec3*)wrenGetSlotForeign(vm, 3);
 
 	wrenGetVariable(vm, "math", "Vec3", 1);  // Get class into slot 1
 	WrenVec3* result = (WrenVec3*)wrenSetSlotNewForeign(vm, 0, 1, sizeof(WrenVec3));
-	new (result) WrenVec3(glm::clamp(v->value, minVec->value, maxVec->value));
+	new (result) WrenVec3(glm::clamp(vector->value, minVec->value, maxVec->value));
 }
 
 // Vec3.zero() -> Vec3
@@ -1060,22 +1061,22 @@ void wren_Vec4ToString(WrenVM* vm)
 
 void wren_Vec4Add(WrenVM* vm)
 {
-	WrenVec4* a = (WrenVec4*)wrenGetSlotForeign(vm, 0);
-	WrenVec4* b = (WrenVec4*)wrenGetSlotForeign(vm, 1);
+	WrenVec4* lhs = (WrenVec4*)wrenGetSlotForeign(vm, 0);
+	WrenVec4* rhs = (WrenVec4*)wrenGetSlotForeign(vm, 1);
 
 	wrenGetVariable(vm, "math", "Vec4", 1);  // Get class into slot 1
 	WrenVec4* result = (WrenVec4*)wrenSetSlotNewForeign(vm, 0, 1, sizeof(WrenVec4));
-	new (result) WrenVec4(a->value + b->value);
+	new (result) WrenVec4(lhs->value + rhs->value);
 }
 
 void wren_Vec4Subtract(WrenVM* vm)
 {
-	WrenVec4* a = (WrenVec4*)wrenGetSlotForeign(vm, 0);
-	WrenVec4* b = (WrenVec4*)wrenGetSlotForeign(vm, 1);
+	WrenVec4* lhs = (WrenVec4*)wrenGetSlotForeign(vm, 0);
+	WrenVec4* rhs = (WrenVec4*)wrenGetSlotForeign(vm, 1);
 
 	wrenGetVariable(vm, "math", "Vec4", 1);  // Get class into slot 1
 	WrenVec4* result = (WrenVec4*)wrenSetSlotNewForeign(vm, 0, 1, sizeof(WrenVec4));
-	new (result) WrenVec4(a->value - b->value);
+	new (result) WrenVec4(lhs->value - rhs->value);
 }
 
 void wren_Vec4Multiply(WrenVM* vm)
@@ -1112,74 +1113,74 @@ void wren_Vec4Normalize(WrenVM* vm)
 // Vec4.distance(a, b) -> Num
 void wren_Vec4Distance(WrenVM* vm)
 {
-	WrenVec4* a = (WrenVec4*)wrenGetSlotForeign(vm, 1);
-	WrenVec4* b = (WrenVec4*)wrenGetSlotForeign(vm, 2);
+	WrenVec4* lhs = (WrenVec4*)wrenGetSlotForeign(vm, 1);
+	WrenVec4* rhs = (WrenVec4*)wrenGetSlotForeign(vm, 2);
 
-	wrenSetSlotDouble(vm, 0, glm::distance(a->value, b->value));
+	wrenSetSlotDouble(vm, 0, glm::distance(lhs->value, rhs->value));
 }
 
 // Vec4.distanceSquared(a, b) -> Num
 void wren_Vec4DistanceSquared(WrenVM* vm)
 {
-	WrenVec4* a = (WrenVec4*)wrenGetSlotForeign(vm, 1);
-	WrenVec4* b = (WrenVec4*)wrenGetSlotForeign(vm, 2);
+	WrenVec4* lhs = (WrenVec4*)wrenGetSlotForeign(vm, 1);
+	WrenVec4* rhs = (WrenVec4*)wrenGetSlotForeign(vm, 2);
 
-	wrenSetSlotDouble(vm, 0, glm::distance2(a->value, b->value));
+	wrenSetSlotDouble(vm, 0, glm::distance2(lhs->value, rhs->value));
 }
 
 // Vec4.lerp(a, b, t) -> Vec4
 void wren_Vec4Lerp(WrenVM* vm)
 {
-	WrenVec4* a = (WrenVec4*)wrenGetSlotForeign(vm, 1);
-	WrenVec4* b = (WrenVec4*)wrenGetSlotForeign(vm, 2);
+	WrenVec4* lhs = (WrenVec4*)wrenGetSlotForeign(vm, 1);
+	WrenVec4* rhs = (WrenVec4*)wrenGetSlotForeign(vm, 2);
 	float t     = (float)wrenGetSlotDouble(vm, 3);
 
 	wrenGetVariable(vm, "math", "Vec4", 1);  // Get class into slot 1
 	WrenVec4* result = (WrenVec4*)wrenSetSlotNewForeign(vm, 0, 1, sizeof(WrenVec4));
-	new (result) WrenVec4(glm::mix(a->value, b->value, t));
+	new (result) WrenVec4(glm::mix(lhs->value, rhs->value, t));
 }
 
 // Vec4.dot(a, b) -> Num
 void wren_Vec4DotStatic(WrenVM* vm)
 {
-	WrenVec4* a = (WrenVec4*)wrenGetSlotForeign(vm, 1);
-	WrenVec4* b = (WrenVec4*)wrenGetSlotForeign(vm, 2);
+	WrenVec4* lhs = (WrenVec4*)wrenGetSlotForeign(vm, 1);
+	WrenVec4* rhs = (WrenVec4*)wrenGetSlotForeign(vm, 2);
 
-	wrenSetSlotDouble(vm, 0, glm::dot(a->value, b->value));
+	wrenSetSlotDouble(vm, 0, glm::dot(lhs->value, rhs->value));
 }
 
 // Vec4.min(a, b) -> Vec4
 void wren_Vec4Min(WrenVM* vm)
 {
-	WrenVec4* a = (WrenVec4*)wrenGetSlotForeign(vm, 1);
-	WrenVec4* b = (WrenVec4*)wrenGetSlotForeign(vm, 2);
+	WrenVec4* lhs = (WrenVec4*)wrenGetSlotForeign(vm, 1);
+	WrenVec4* rhs = (WrenVec4*)wrenGetSlotForeign(vm, 2);
 
 	wrenGetVariable(vm, "math", "Vec4", 1);  // Get class into slot 1
 	WrenVec4* result = (WrenVec4*)wrenSetSlotNewForeign(vm, 0, 1, sizeof(WrenVec4));
-	new (result) WrenVec4(glm::min(a->value, b->value));
+	new (result) WrenVec4(glm::min(lhs->value, rhs->value));
 }
 
 // Vec4.max(a, b) -> Vec4
 void wren_Vec4Max(WrenVM* vm)
 {
-	WrenVec4* a = (WrenVec4*)wrenGetSlotForeign(vm, 1);
-	WrenVec4* b = (WrenVec4*)wrenGetSlotForeign(vm, 2);
+	WrenVec4* lhs = (WrenVec4*)wrenGetSlotForeign(vm, 1);
+	WrenVec4* rhs = (WrenVec4*)wrenGetSlotForeign(vm, 2);
 
 	wrenGetVariable(vm, "math", "Vec4", 1);  // Get class into slot 1
 	WrenVec4* result = (WrenVec4*)wrenSetSlotNewForeign(vm, 0, 1, sizeof(WrenVec4));
-	new (result) WrenVec4(glm::max(a->value, b->value));
+	new (result) WrenVec4(glm::max(lhs->value, rhs->value));
 }
 
 // Vec4.clamp(v, min, max) -> Vec4
 void wren_Vec4Clamp(WrenVM* vm)
 {
-	WrenVec4* v      = (WrenVec4*)wrenGetSlotForeign(vm, 1);
+	WrenVec4* vector = (WrenVec4*)wrenGetSlotForeign(vm, 1);
 	WrenVec4* minVec = (WrenVec4*)wrenGetSlotForeign(vm, 2);
 	WrenVec4* maxVec = (WrenVec4*)wrenGetSlotForeign(vm, 3);
 
 	wrenGetVariable(vm, "math", "Vec4", 1);  // Get class into slot 1
 	WrenVec4* result = (WrenVec4*)wrenSetSlotNewForeign(vm, 0, 1, sizeof(WrenVec4));
-	new (result) WrenVec4(glm::clamp(v->value, minVec->value, maxVec->value));
+	new (result) WrenVec4(glm::clamp(vector->value, minVec->value, maxVec->value));
 }
 
 // Vec4.zero() -> Vec4
@@ -1476,12 +1477,12 @@ void wren_QuatToAxisAngle(WrenVM* vm)
 // quat * quat -> Quat (quaternion multiplication)
 void wren_QuatMultiply(WrenVM* vm)
 {
-	WrenQuat* a = (WrenQuat*)wrenGetSlotForeign(vm, 0);
-	WrenQuat* b = (WrenQuat*)wrenGetSlotForeign(vm, 1);
+	WrenQuat* lhs = (WrenQuat*)wrenGetSlotForeign(vm, 0);
+	WrenQuat* rhs = (WrenQuat*)wrenGetSlotForeign(vm, 1);
 
 	wrenGetVariable(vm, "math", "Quat", 1);  // Get class into slot 1
 	WrenQuat* result = (WrenQuat*)wrenSetSlotNewForeign(vm, 0, 1, sizeof(WrenQuat));
-	new (result) WrenQuat(a->value * b->value);
+	new (result) WrenQuat(lhs->value * rhs->value);
 }
 
 // quat.rotate(vec3) -> Vec3 (rotate vector by quaternion)
@@ -1507,11 +1508,11 @@ void wren_QuatRotateVec3(WrenVM* vm)
 // Quat.slerp(a, b, t) -> Quat (spherical linear interpolation)
 void wren_QuatSlerp(WrenVM* vm)
 {
-	WrenQuat* a = (WrenQuat*)wrenGetSlotForeign(vm, 1);
-	WrenQuat* b = (WrenQuat*)wrenGetSlotForeign(vm, 2);
+	WrenQuat* lhs = (WrenQuat*)wrenGetSlotForeign(vm, 1);
+	WrenQuat* rhs = (WrenQuat*)wrenGetSlotForeign(vm, 2);
 	float t     = (float)wrenGetSlotDouble(vm, 3);
 
-	if (!a || !b)
+	if (!lhs || !rhs)
 	{
 		DEBUG_ERROR("Quat.slerp: Invalid quaternions");
 		wrenSetSlotNull(vm, 0);
@@ -1520,17 +1521,17 @@ void wren_QuatSlerp(WrenVM* vm)
 
 	wrenGetVariable(vm, "math", "Quat", 1);  // Get class into slot 1
 	WrenQuat* result = (WrenQuat*)wrenSetSlotNewForeign(vm, 0, 1, sizeof(WrenQuat));
-	new (result) WrenQuat(glm::slerp(a->value, b->value, t));
+	new (result) WrenQuat(glm::slerp(lhs->value, rhs->value, t));
 }
 
 // Quat.lerp(a, b, t) -> Quat (linear interpolation)
 void wren_QuatLerp(WrenVM* vm)
 {
-	WrenQuat* a = (WrenQuat*)wrenGetSlotForeign(vm, 1);
-	WrenQuat* b = (WrenQuat*)wrenGetSlotForeign(vm, 2);
+	WrenQuat* lhs = (WrenQuat*)wrenGetSlotForeign(vm, 1);
+	WrenQuat* rhs = (WrenQuat*)wrenGetSlotForeign(vm, 2);
 	float t     = (float)wrenGetSlotDouble(vm, 3);
 
-	if (!a || !b)
+	if (!lhs || !rhs)
 	{
 		DEBUG_ERROR("Quat.lerp: Invalid quaternions");
 		wrenSetSlotNull(vm, 0);
@@ -1539,23 +1540,23 @@ void wren_QuatLerp(WrenVM* vm)
 
 	wrenGetVariable(vm, "math", "Quat", 1);  // Get class into slot 1
 	WrenQuat* result = (WrenQuat*)wrenSetSlotNewForeign(vm, 0, 1, sizeof(WrenQuat));
-	new (result) WrenQuat(glm::lerp(a->value, b->value, t));
+	new (result) WrenQuat(glm::lerp(lhs->value, rhs->value, t));
 }
 
 // Quat.dot(a,b) -> Num
 void wren_QuatDot(WrenVM* vm)
 {
-	WrenQuat* a = (WrenQuat*)wrenGetSlotForeign(vm, 1);
-	WrenQuat* b = (WrenQuat*)wrenGetSlotForeign(vm, 2);
+	WrenQuat* lhs = (WrenQuat*)wrenGetSlotForeign(vm, 1);
+	WrenQuat* rhs = (WrenQuat*)wrenGetSlotForeign(vm, 2);
 
-	if (!b)
+	if (!rhs)
 	{
 		DEBUG_ERROR("Quat.dot: Invalid quaternion");
 		wrenSetSlotDouble(vm, 0, 0.0);
 		return;
 	}
 
-	wrenSetSlotDouble(vm, 0, glm::dot(a->value, b->value));
+	wrenSetSlotDouble(vm, 0, glm::dot(lhs->value, rhs->value));
 }
 
 // Helper: Get forward/up/right vectors from quaternion
@@ -1677,12 +1678,12 @@ void wren_Mat4LookAt(WrenVM* vm)
 // Operations
 void wren_Mat4Multiply(WrenVM* vm)
 {
-	WrenMat4* a = static_cast<WrenMat4*>(wrenGetSlotForeign(vm, 0));
-	WrenMat4* b = static_cast<WrenMat4*>(wrenGetSlotForeign(vm, 1));
+	WrenMat4* lhs = static_cast<WrenMat4*>(wrenGetSlotForeign(vm, 0));
+	WrenMat4* rhs = static_cast<WrenMat4*>(wrenGetSlotForeign(vm, 1));
 
 	wrenGetVariable(vm, "math", "Mat4", 1);  // Get class into slot 1
 	WrenMat4* result = static_cast<WrenMat4*>(wrenSetSlotNewForeign(vm, 0, 1, sizeof(WrenMat4)));
-	new (result) WrenMat4(a->value * b->value);
+	new (result) WrenMat4(lhs->value * rhs->value);
 }
 
 // Transformations (modify in place)
@@ -1901,9 +1902,7 @@ void wren_RectSetHeight(WrenVM* vm)
 // Curve - wraps Struktur::Util::Curve (keyframe/AnimationCurve-style easing)
 // ============================================================================
 
-namespace
-{
-Struktur::Util::CurveInterpolation ParseCurveInterpolation(const char* name)
+static Struktur::Util::CurveInterpolation ParseCurveInterpolation(const char* name)
 {
 	if (strcmp(name, "Linear") == 0)
 	{
@@ -1919,7 +1918,6 @@ Struktur::Util::CurveInterpolation ParseCurveInterpolation(const char* name)
 	}
 	return Struktur::Util::CurveInterpolation::Smooth;
 }
-}  // namespace
 
 void wren_CurveAllocate(WrenVM* vm)
 {

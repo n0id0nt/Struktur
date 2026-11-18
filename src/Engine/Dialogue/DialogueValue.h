@@ -18,24 +18,24 @@ public:
 	    : m_value(std::string(""))
 	{
 	}
-	explicit DialogueValue(const std::string& s)
-	    : m_value(s)
+	explicit DialogueValue(const std::string& text)
+	    : m_value(text)
 	{
 	}
-	explicit DialogueValue(const char* s)
-	    : m_value(std::string(s))
+	explicit DialogueValue(const char* text)
+	    : m_value(std::string(text))
 	{
 	}
 	explicit DialogueValue(int i)
 	    : m_value(i)
 	{
 	}
-	explicit DialogueValue(bool b)
-	    : m_value(b)
+	explicit DialogueValue(bool flag)
+	    : m_value(flag)
 	{
 	}
-	explicit DialogueValue(double d)
-	    : m_value(d)
+	explicit DialogueValue(double number)
+	    : m_value(number)
 	{
 	}
 

@@ -30,12 +30,12 @@ class KitButton {
         _label.setZIndex(6)
         _panel.addChild(_label)
 
-        _panel.setOnFocus { |s|
+        _panel.setOnFocus { |sender|
             UIKit.applyStyle(_panel, "buttonHover")
             _label.setTextColor(UIKit.textDark)
             if (_onFocused != null) _onFocused.call()
         }
-        _panel.setOnLoseFocus { |s|
+        _panel.setOnLoseFocus { |sender|
             UIKit.applyStyle(_panel, "button")
             _label.setTextColor(UIKit.text)
         }

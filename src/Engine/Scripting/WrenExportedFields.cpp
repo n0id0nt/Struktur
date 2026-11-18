@@ -7,17 +7,15 @@
 #include "Engine/Scripting/WrenUtil.h"
 #include "Engine/Scripting/WrenValueWrapper.h"
 
-namespace
-{
 // Interpreted once, lazily, into its own module - shared across every caller for the lifetime of the process
 // (not per-caller, not per-class). Walks a class's compile-time Attributes (stock Wren feature) to find
 // getters tagged #!export, and whether a matching setter exists. There is no way to enumerate a Wren Map's
 // keys from the public C API, so this has to be done in Wren itself: Reflect.getMethods() (this project's own
 // WrenExtensions/Modules/Reflect) gives every method signature on the class, and each is checked against the
 // attributes map by known key instead of iterating it directly.
-constexpr const char* kExportReflectionModule    = "__export_reflection";
-constexpr const char* kExportReflectionClassName = "ExportedFieldReflection";
-constexpr const char* kExportReflectionSource    = R"WREN(
+static constexpr const char* kExportReflectionModule    = "__export_reflection";
+static constexpr const char* kExportReflectionClassName = "ExportedFieldReflection";
+static constexpr const char* kExportReflectionSource    = R"WREN(
 import "reflect" for Reflect
 
 class ExportedFieldReflection {
@@ -44,10 +42,10 @@ class ExportedFieldReflection {
 }
 )WREN";
 
-WrenHandle* g_exportReflectionClassHandle = nullptr;
-WrenHandle* g_exportReflectionCallHandle  = nullptr;
+static WrenHandle* g_exportReflectionClassHandle = nullptr;
+static WrenHandle* g_exportReflectionCallHandle  = nullptr;
 
-void EnsureExportReflectionBootstrap(Struktur::GameContext& context)
+static void EnsureExportReflectionBootstrap(Struktur::GameContext& context)
 {
 	if (g_exportReflectionClassHandle)
 	{
@@ -72,7 +70,6 @@ void EnsureExportReflectionBootstrap(Struktur::GameContext& context)
 	g_exportReflectionClassHandle = wrenGetSlotHandle(vm, 0);
 	g_exportReflectionCallHandle  = wrenMakeCallHandle(vm, "discover(_)");
 }
-}  // namespace
 
 std::vector<Struktur::Wren::WrenExportedField> Struktur::Wren::ExportedFields::DiscoverExportedFields(
     GameContext& context, WrenHandle* classHandle, const std::string& classNameForLogging)

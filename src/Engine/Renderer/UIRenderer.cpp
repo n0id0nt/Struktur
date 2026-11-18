@@ -46,24 +46,21 @@ void Struktur::Renderer::UIRenderer::SetupView(GameContext& context)
 	bgfx::setViewTransform(GraphicsDevice::UIViewId, glm::value_ptr(identity), glm::value_ptr(proj));
 }
 
-namespace
-{
 // Fills one quad's 4 vertices (position/UV/packed color), CCW starting top-left - shared by every batch-write
 // function below (DrawRect/DrawRectOutline/DrawTexturedRect/DrawText), so this layout/winding only exists in
 // one place. shearX (default 0, every existing caller unaffected) skews the top edge rightward by shearX*h
 // relative to the bottom edge, turning the rectangle into a parallelogram - DrawText's synthetic-italic
 // fallback (see UIRichLabel::ResolveFont) is the only caller that ever passes a non-zero value. Pure
 // CPU-side geometry, no shader/vertex-format change needed.
-void FillQuadVertices(Struktur::Renderer::QuadVertex* quad, float x, float y, float w, float h, float u0, float v0,
-                      float u1, float v1, uint32_t abgr, float shearX = 0.0f)
+static void FillQuadVertices(Struktur::Renderer::QuadVertex* quad, float x, float y, float width, float height,
+                             float u0, float v0, float u1, float v1, uint32_t abgr, float shearX = 0.0f)
 {
-	float topShift = shearX * h;
+	float topShift = shearX * height;
 	quad[0] = {x + topShift, y, u0, v0, abgr};
-	quad[1] = {x + w + topShift, y, u1, v0, abgr};
-	quad[2] = {x + w, y + h, u1, v1, abgr};
-	quad[3] = {x, y + h, u0, v1, abgr};
+	quad[1]        = {x + width + topShift, y, u1, v0, abgr};
+	quad[2]        = {x + width, y + height, u1, v1, abgr};
+	quad[3]        = {x, y + height, u0, v1, abgr};
 }
-}  // namespace
 
 // --- Batch storage (see UIRenderer's class comment) ---
 
@@ -241,11 +238,16 @@ uint32_t Struktur::Renderer::UIRenderer::AllocateQuadRange(UIBatch& batch, uint3
 	return firstQuad;
 }
 
+// std::lower_bound predicate: the free list is kept sorted by firstQuad.
+static bool RegionStartsBefore(const Struktur::Renderer::UIFreeRegion& region, uint32_t quad)
+{
+	return region.firstQuad < quad;
+}
+
 void Struktur::Renderer::UIRenderer::FreeQuadRange(UIBatch& batch, uint32_t firstQuad, uint32_t quadCount)
 {
 	std::vector<UIFreeRegion>& regions = batch.freeRegions;
-	auto next = std::lower_bound(regions.begin(), regions.end(), firstQuad,
-	                             [](const UIFreeRegion& region, uint32_t quad) { return region.firstQuad < quad; });
+	auto next = std::lower_bound(regions.begin(), regions.end(), firstQuad, RegionStartsBefore);
 
 	// A range overlapping one that's already free means some slot was released twice (or two slots overlapped) -
 	// merging it would corrupt the list, so refuse.
@@ -291,6 +293,19 @@ void Struktur::Renderer::UIRenderer::ResizeQuadArrays(UIBatch& batch, uint32_t q
 	batch.quadLive.resize(quadTotal, 0);
 }
 
+// One entry in Flush's merged draw order: a batch or an animated batch (see the comment in Flush).
+struct FlushItem
+{
+	bool isAnimated;
+	uint32_t index;
+	int32_t drawOrder;
+};
+
+static bool LowerDrawOrderFirst(const FlushItem& lhs, const FlushItem& rhs)
+{
+	return lhs.drawOrder < rhs.drawOrder;
+}
+
 void Struktur::Renderer::UIRenderer::Flush(GameContext& context)
 {
 	uint64_t drawState = BGFX_STATE_WRITE_RGB | BGFX_STATE_WRITE_A |
@@ -300,12 +315,6 @@ void Struktur::Renderer::UIRenderer::Flush(GameContext& context)
 	// spaces (see AnimatedBatchHandle) but they still need to interleave correctly by z-order with each other
 	// (a wave-text UIRichLabel behind/in front of a sibling panel, say), not just within their own kind.
 	// isAnimated + index distinguishes which vector/submit path each entry needs.
-	struct FlushItem
-	{
-		bool isAnimated;
-		uint32_t index;
-		int32_t drawOrder;
-	};
 	std::vector<FlushItem> order;
 	order.reserve(m_batches.size() + m_animBatches.size());
 	for (uint32_t i = 0; i < (uint32_t)m_batches.size(); ++i)
@@ -322,8 +331,7 @@ void Struktur::Renderer::UIRenderer::Flush(GameContext& context)
 			order.push_back({true, i, m_animBatches[i].drawOrder});
 		}
 	}
-	std::sort(order.begin(), order.end(),
-	          [](const FlushItem& a, const FlushItem& b) { return a.drawOrder < b.drawOrder; });
+	std::sort(order.begin(), order.end(), LowerDrawOrderFirst);
 
 	for (const FlushItem& item : order)
 	{
@@ -362,13 +370,13 @@ void Struktur::Renderer::UIRenderer::SubmitBatch(UIBatch& batch, uint64_t drawSt
 			}
 		}
 		std::sort(batch.sortedQuadOrder.begin(), batch.sortedQuadOrder.end(),
-		          [&batch](uint32_t a, uint32_t b)
+		          [&batch](uint32_t lhsQuad, uint32_t rhsQuad)
 		          {
-			          if (batch.quadZIndex[a] != batch.quadZIndex[b])
+			          if (batch.quadZIndex[lhsQuad] != batch.quadZIndex[rhsQuad])
 			          {
-				          return batch.quadZIndex[a] < batch.quadZIndex[b];
+				          return batch.quadZIndex[lhsQuad] < batch.quadZIndex[rhsQuad];
 			          }
-			          return a < b;
+			          return lhsQuad < rhsQuad;
 		          });
 
 		// Index content is otherwise a fixed, deterministic pattern (the same 0,1,2,0,2,3-per-quad layout
@@ -875,8 +883,8 @@ void Struktur::Renderer::UIRenderer::ClearSlotFrom(UIBatchHandle batchHandle, co
 	uint32_t quadIndex = slot.vertexOffset / 4;
 	for (uint32_t quad = fromQuad; quad < slot.quadCapacity; ++quad)
 	{
-		QuadVertex* v = &batch->cpuVertices[slot.vertexOffset + quad * 4];
-		v[0] = v[1] = v[2] = v[3]               = QuadVertex{0.0f, 0.0f, 0.0f, 0.0f, 0};
+		QuadVertex* vertices = &batch->cpuVertices[slot.vertexOffset + quad * 4];
+		vertices[0] = vertices[1] = vertices[2] = vertices[3] = QuadVertex{0.0f, 0.0f, 0.0f, 0.0f, 0};
 		batch->quadTextures[quadIndex + quad]   = m_whiteTexture;
 		batch->quadIsCoverage[quadIndex + quad] = 0;
 		batch->quadZIndex[quadIndex + quad]     = 0;

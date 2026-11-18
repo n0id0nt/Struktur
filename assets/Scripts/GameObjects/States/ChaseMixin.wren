@@ -76,8 +76,8 @@ class ChaseMixin {
     }
 
     playerPosition() {
-        var p = player_()
-        return p ? WorldTransform.getPosition(p) : null
+        var player = player_()
+        return player ? WorldTransform.getPosition(player) : null
     }
 
     distanceToPlayer(owner) {

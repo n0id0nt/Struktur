@@ -57,25 +57,25 @@ class PartyTrail {
     }
 
     // The [x, y] position on the path at path distance `s` (clamped to the oldest point / the head).
-    pointAt(s) {
+    pointAt(distance) {
         if (_points.count == 0) {
             return null
         }
-        if (s <= _points[0][2]) {
+        if (distance <= _points[0][2]) {
             return [_points[0][0], _points[0][1]]
         }
-        if (s >= _total) {
+        if (distance >= _total) {
             return [headX, headY]
         }
         var i = _points.count - 1
-        while (i > 0 && _points[i - 1][2] > s) {
+        while (i > 0 && _points[i - 1][2] > distance) {
             i = i - 1
         }
-        var a = _points[i - 1]
-        var b = _points[i]
-        var span = b[2] - a[2]
-        var t = span > 0 ? (s - a[2]) / span : 0
-        return [a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t]
+        var from = _points[i - 1]
+        var to = _points[i]
+        var span = to[2] - from[2]
+        var t = span > 0 ? (distance - from[2]) / span : 0
+        return [from[0] + (to[0] - from[0]) * t, from[1] + (to[1] - from[1]) * t]
     }
 
     // The [x, y] position `distance` pixels back along the path from the head.

@@ -34,9 +34,9 @@ class ImpactEvent {
     target {
         var x = 0
         var y = 0
-        for (p in _positions) {
-            x = x + p.x
-            y = y + p.y
+        for (position in _positions) {
+            x = x + position.x
+            y = y + position.y
         }
         return Vec2.new(x / _positions.count, y / _positions.count)
     }

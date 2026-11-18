@@ -26,19 +26,23 @@
 
 namespace Struktur::Debug
 {
-namespace
-{
-constexpr ImU32 LEVEL_NAME_COLOR     = IM_COL32(255, 203, 0, 255);
-constexpr ImU32 LABEL_BACKGROUND     = IM_COL32(0, 0, 0, 170);
-constexpr ImU32 SELECTED_COLOR       = IM_COL32(102, 191, 255, 255);
-constexpr ImU32 HOVERED_COLOR        = IM_COL32(255, 255, 255, 200);
-constexpr ImU32 NEIGHBOUR_LINK_COLOR = IM_COL32(255, 161, 0, 160);
-constexpr float LABEL_PADDING        = 3.f;
+static constexpr ImU32 LEVEL_NAME_COLOR     = IM_COL32(255, 203, 0, 255);
+static constexpr ImU32 LABEL_BACKGROUND     = IM_COL32(0, 0, 0, 170);
+static constexpr ImU32 SELECTED_COLOR       = IM_COL32(102, 191, 255, 255);
+static constexpr ImU32 HOVERED_COLOR        = IM_COL32(255, 255, 255, 200);
+static constexpr ImU32 NEIGHBOUR_LINK_COLOR = IM_COL32(255, 161, 0, 160);
+static constexpr float LABEL_PADDING        = 3.f;
 // How often the open file's modification time is checked (seconds).
-constexpr float FILE_POLL_INTERVAL = 0.5f;
+static constexpr float FILE_POLL_INTERVAL = 0.5f;
+
+// A level's centre in world pixels.
+static glm::vec2 LevelCentre(const FileLoading::LevelParser::Level& level)
+{
+	return glm::vec2(level.worldX + level.pxWid / 2.f, level.worldY + level.pxHei / 2.f);
+}
 
 // The "Name" field if the instance has one (most do - NPC, Item, ...), otherwise its LDtk identifier.
-std::string GetDisplayName(const Component::LevelEntityInstance& instance)
+static std::string GetDisplayName(const Component::LevelEntityInstance& instance)
 {
 	for (const auto& field : instance.fields)
 	{
@@ -50,14 +54,13 @@ std::string GetDisplayName(const Component::LevelEntityInstance& instance)
 	return instance.identifier;
 }
 
-void DrawLabel(ImDrawList* drawList, const ImVec2& position, ImU32 color, const std::string& text)
+static void DrawLabel(ImDrawList* drawList, const ImVec2& position, ImU32 color, const std::string& text)
 {
 	ImVec2 textSize = ImGui::CalcTextSize(text.c_str());
 	ImVec2 max(position.x + textSize.x + LABEL_PADDING * 2, position.y + textSize.y + LABEL_PADDING * 2);
 	drawList->AddRectFilled(position, max, LABEL_BACKGROUND);
 	drawList->AddText(ImVec2(position.x + LABEL_PADDING, position.y + LABEL_PADDING), color, text.c_str());
 }
-}  // namespace
 
 void LevelViewer::Open(GameContext& context, const std::string& filePath)
 {
@@ -319,8 +322,6 @@ void LevelViewer::RenderViewportOverlay(GameContext& context, ImDrawList* drawLi
 	const auto& levels = worldComponent->worldMap.levels;
 	if (m_overlay.neighbourLinks)
 	{
-		auto centre = [](const FileLoading::LevelParser::Level& level)
-		{ return glm::vec2(level.worldX + level.pxWid / 2.f, level.worldY + level.pxHei / 2.f); };
 		for (int i = 0; i < (int)levels.size(); i++)
 		{
 			for (const auto& neighbour : levels[i].neighbours)
@@ -331,8 +332,8 @@ void LevelViewer::RenderViewportOverlay(GameContext& context, ImDrawList* drawLi
 				{
 					continue;
 				}
-				drawList->AddLine(toScreen(centre(levels[i])), toScreen(centre(levels[j])), NEIGHBOUR_LINK_COLOR,
-				                  2.f);
+				drawList->AddLine(toScreen(LevelCentre(levels[i])), toScreen(LevelCentre(levels[j])),
+				                  NEIGHBOUR_LINK_COLOR, 2.f);
 			}
 		}
 	}

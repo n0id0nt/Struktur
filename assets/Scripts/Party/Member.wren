@@ -77,12 +77,12 @@ class Member {
     }
 
     applySaved_() {
-        var s = _combatant.stats
-        if (_savedHp != null && _savedHp < s.maxHp) {
-            s.takeDamage(s.maxHp - _savedHp)
+        var stats = _combatant.stats
+        if (_savedHp != null && _savedHp < stats.maxHp) {
+            stats.takeDamage(stats.maxHp - _savedHp)
         }
-        if (_savedStamina != null && _savedStamina < s.maxStamina) {
-            s.spendStamina(s.maxStamina - _savedStamina)
+        if (_savedStamina != null && _savedStamina < stats.maxStamina) {
+            stats.spendStamina(stats.maxStamina - _savedStamina)
         }
         _savedHp = null
         _savedStamina = null

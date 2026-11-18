@@ -4,12 +4,10 @@
 
 #include "Debug/Assertions.h"
 
-namespace
-{
 // Fixed, read-only lookup tables - safe as plain namespace-scope statics (no static-initialization-order
 // fiasco risk here, since they only depend on SDL's own compile-time enum constants, never on another
 // translation unit's global state).
-const std::unordered_map<std::string, SDL_Scancode> kKeycodeMap = {
+static const std::unordered_map<std::string, SDL_Scancode> kKeycodeMap = {
     {"null", SDL_SCANCODE_UNKNOWN},
     // Alphanumeric keys
     {"apostrophe", SDL_SCANCODE_APOSTROPHE},
@@ -123,7 +121,7 @@ const std::unordered_map<std::string, SDL_Scancode> kKeycodeMap = {
     // there's no desktop/web SDL scancode equivalent, and neither platform this project targets has them.
 };
 
-const std::unordered_map<std::string, SDL_GamepadButton> kControllerButtonMap = {
+static const std::unordered_map<std::string, SDL_GamepadButton> kControllerButtonMap = {
     {"unknown", SDL_GAMEPAD_BUTTON_INVALID},
     {"a", SDL_GAMEPAD_BUTTON_SOUTH},
     {"b", SDL_GAMEPAD_BUTTON_EAST},
@@ -147,7 +145,7 @@ const std::unordered_map<std::string, SDL_GamepadButton> kControllerButtonMap = 
     {"right", SDL_GAMEPAD_BUTTON_DPAD_RIGHT},
 };
 
-const std::unordered_map<std::string, SDL_GamepadAxis> kControllerAxisMap = {
+static const std::unordered_map<std::string, SDL_GamepadAxis> kControllerAxisMap = {
     {"leftx", SDL_GAMEPAD_AXIS_LEFTX},
     {"lefty", SDL_GAMEPAD_AXIS_LEFTY},
     {"rightx", SDL_GAMEPAD_AXIS_RIGHTX},
@@ -157,7 +155,7 @@ const std::unordered_map<std::string, SDL_GamepadAxis> kControllerAxisMap = {
 };
 
 template <typename T>
-std::unordered_map<T, std::string> BuildReverseMap(const std::unordered_map<std::string, T>& forward)
+static std::unordered_map<T, std::string> BuildReverseMap(const std::unordered_map<std::string, T>& forward)
 {
 	std::unordered_map<T, std::string> reverse;
 	for (const auto& [str, code] : forward)
@@ -167,11 +165,11 @@ std::unordered_map<T, std::string> BuildReverseMap(const std::unordered_map<std:
 	return reverse;
 }
 
-const std::unordered_map<SDL_Scancode, std::string> kKeycodeReverseMap = BuildReverseMap(kKeycodeMap);
-const std::unordered_map<SDL_GamepadButton, std::string> kControllerButtonReverseMap =
+static const std::unordered_map<SDL_Scancode, std::string> kKeycodeReverseMap = BuildReverseMap(kKeycodeMap);
+static const std::unordered_map<SDL_GamepadButton, std::string> kControllerButtonReverseMap =
     BuildReverseMap(kControllerButtonMap);
-const std::unordered_map<SDL_GamepadAxis, std::string> kControllerAxisReverseMap = BuildReverseMap(kControllerAxisMap);
-}  // namespace
+static const std::unordered_map<SDL_GamepadAxis, std::string> kControllerAxisReverseMap =
+    BuildReverseMap(kControllerAxisMap);
 
 namespace Struktur::Input::InputMaps
 {

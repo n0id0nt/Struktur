@@ -75,7 +75,7 @@ class Door {
 
     static splitList_(text) {
         if (text == null || text == "") return []
-        return text.split(",").map {|c| c.trim() }.where {|c| c != "" }.toList
+        return text.split(",").map {|part| part.trim() }.where {|part| part != "" }.toList
     }
 
     name { _name }

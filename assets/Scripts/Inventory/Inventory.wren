@@ -29,16 +29,16 @@ class Inventory {
     static stacks { __stacks }
 
     // The stacks in `category`, in pickup order.
-    static stacksIn(category) { __stacks.where { |s| s.category == category }.toList }
+    static stacksIn(category) { __stacks.where { |stack| stack.category == category }.toList }
 
     static contains(id) { Inventory.count(id) > 0 }
 
     // How many of `id` are carried, across every stack (several for unstackable gear).
     static count(id) {
         var total = 0
-        for (s in __stacks) {
-            if (s.id == id) {
-                total = total + s.count
+        for (stack in __stacks) {
+            if (stack.id == id) {
+                total = total + stack.count
             }
         }
         return total
@@ -53,9 +53,9 @@ class Inventory {
             amount = 1
         }
         if (ItemDatabase.stacks(id)) {
-            for (s in __stacks) {
-                if (s.id == id) {
-                    s.count = s.count + amount
+            for (stack in __stacks) {
+                if (stack.id == id) {
+                    stack.count = stack.count + amount
                     return
                 }
             }
@@ -73,12 +73,12 @@ class Inventory {
     static removeItem(id, amount) {
         var i = __stacks.count - 1
         while (i >= 0 && amount > 0) {
-            var s = __stacks[i]
-            if (s.id == id) {
-                var taken = s.count < amount ? s.count : amount
-                s.count = s.count - taken
+            var stack = __stacks[i]
+            if (stack.id == id) {
+                var taken = stack.count < amount ? stack.count : amount
+                stack.count = stack.count - taken
                 amount = amount - taken
-                if (s.count == 0) {
+                if (stack.count == 0) {
                     __stacks.removeAt(i)
                 }
             }
@@ -107,9 +107,9 @@ class Inventory {
     static serialise() {
         var ids = []
         var counts = []
-        for (s in __stacks) {
-            ids.add(s.id)
-            counts.add(s.count)
+        for (stack in __stacks) {
+            ids.add(stack.id)
+            counts.add(stack.count)
         }
         var map = { "ids": ids, "counts": counts, "gold": __gold }
         var convertedList = MapUtil.mapToPairs(map)

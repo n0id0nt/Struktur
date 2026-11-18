@@ -10,14 +10,11 @@
 
 namespace Struktur::Debug
 {
-namespace
-{
-constexpr float MIN_ZOOM = 0.05f;
-constexpr float MAX_ZOOM = 16.f;
+static constexpr float MIN_ZOOM = 0.05f;
+static constexpr float MAX_ZOOM = 16.f;
 // Zoom factor per mouse-wheel notch.
-constexpr float ZOOM_STEP    = 1.15f;
-constexpr float FRAME_MARGIN = 0.95f;
-}  // namespace
+static constexpr float ZOOM_STEP    = 1.15f;
+static constexpr float FRAME_MARGIN = 0.95f;
 
 void EditorCamera::HandleInput(GameContext& context, const GameViewportWindow& viewport)
 {

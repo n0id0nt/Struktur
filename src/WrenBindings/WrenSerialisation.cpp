@@ -147,9 +147,9 @@ void wren_JsonParse(WrenVM* vm)
 	{
 		json = nlohmann::json::parse(jsonStr);
 	}
-	catch (const nlohmann::json::parse_error& e)
+	catch (const nlohmann::json::parse_error& parseError)
 	{
-		BREAK_MSG("WREN SERIALISATION: JSON parse error - %s", e.what());
+		BREAK_MSG("WREN SERIALISATION: JSON parse error - %s", parseError.what());
 		wrenSetSlotNull(vm, 0);
 		return;
 	}

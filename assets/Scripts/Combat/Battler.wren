@@ -199,7 +199,7 @@ class Battler {
 
     // dt: game seconds since the last frame. Reads the Combatant and shows it.
     update(dt) {
-        var c = _combatant
+        var combatant = _combatant
         var now = Time.scaledTime
         if (_defeatedAt != null) {
             var t = Math.min((now - _defeatedAt) / DEFEAT_TIME, 1)
@@ -209,7 +209,7 @@ class Battler {
             return
         }
 
-        face(c.facing)
+        face(combatant.facing)
 
         // Position: slide toward the cell, lean into an attack around its impact, hop on a dodge.
         var gap = Vec3.distance(_pos, _target)
@@ -218,21 +218,21 @@ class Battler {
             _pos = gap <= step ? _target : Vec3.lerp(_pos, _target, step / gap)
         }
         var lean = 0
-        var move = c.move
-        if (move != null && move.isAttack && move.impact != null && c.stun <= 0) {
-            var d = c.progress - move.impact
-            if (d < 0) {
-                lean = -2 * Math.clamp01(1 + d / 0.25)             // a small draw-back just before the hit
-                if (d > -0.08) lean = LEAN * (1 + d / 0.08)
+        var move = combatant.move
+        if (move != null && move.isAttack && move.impact != null && combatant.stun <= 0) {
+            var pastImpact = combatant.progress - move.impact
+            if (pastImpact < 0) {
+                lean = -2 * Math.clamp01(1 + pastImpact / 0.25)             // a small draw-back just before the hit
+                if (pastImpact > -0.08) lean = LEAN * (1 + pastImpact / 0.08)
             } else {
-                lean = LEAN * Math.clamp01(1 - d / 0.25)
+                lean = LEAN * Math.clamp01(1 - pastImpact / 0.25)
             }
         }
         var hop = now < _hopUntil ? -6 * Math.sin((1 - (_hopUntil - now) / 0.3) * Math.pi) : 0
-        WorldTransform.setPosition(_entity, Vec3.new(_pos.x + lean * c.facing, _pos.y + hop, 0))
+        WorldTransform.setPosition(_entity, Vec3.new(_pos.x + lean * combatant.facing, _pos.y + hop, 0))
 
         // Animation.
-        if (c.stun > 0) {
+        if (combatant.stun > 0) {
             if (!_wasStunned) {
                 _clip = clip_("hurt", 0.35, false)
                 SpriteAnimation.forcePlayAnimation(_entity, _clip)
@@ -245,31 +245,31 @@ class Battler {
             } else {
                 var key = clip_(move.anim, move.completion, false)
                 _clip = key
-                SpriteAnimation.playAnimationAt(_entity, key, Math.clamp01(c.progress / move.completion))
+                SpriteAnimation.playAnimationAt(_entity, key, Math.clamp01(combatant.progress / move.completion))
             }
         }
 
         // Tint: what the combatant is doing right now.
         var color = _base
-        if (c.stun > 0) {
+        if (combatant.stun > 0) {
             color = HURT_TINT
-        } else if (c.guardNow > 0) {
-            color = Battler.mix_(_base, GUARD_TINT, 0.35 + 0.65 * c.guardNow)
-        } else if (c.exposedNow) {
+        } else if (combatant.guardNow > 0) {
+            color = Battler.mix_(_base, GUARD_TINT, 0.35 + 0.65 * combatant.guardNow)
+        } else if (combatant.exposedNow) {
             color = Battler.mix_(_base, EXPOSED_TINT, 0.6 + 0.4 * Math.sin(now * 14))
-        } else if (c.burn > 0) {
+        } else if (combatant.burn > 0) {
             color = Battler.mix_(_base, BURN_TINT, 0.5 + 0.3 * Math.sin(now * 9))
-        } else if (c.chill > 0 || c.frozen > 0) {
-            color = Battler.mix_(_base, CHILL_TINT, c.frozen > 0 ? 1 : 0.6)
+        } else if (combatant.chill > 0 || combatant.frozen > 0) {
+            color = Battler.mix_(_base, CHILL_TINT, combatant.frozen > 0 ? 1 : 0.6)
         }
-        if (c.dodgingNow) color = Vec4.new(color.x, color.y, color.z, 120)
+        if (combatant.dodgingNow) color = Vec4.new(color.x, color.y, color.z, 120)
         setColor_(color)
         syncWeapon_()
     }
 
-    static mix_(a, b, t) {
+    static mix_(from, to, t) {
         var k = Math.clamp01(t)
-        return Vec4.new(a.x + (b.x - a.x) * k, a.y + (b.y - a.y) * k, a.z + (b.z - a.z) * k, 255)
+        return Vec4.new(from.x + (to.x - from.x) * k, from.y + (to.y - from.y) * k, from.z + (to.z - from.z) * k, 255)
     }
 
     setColor_(color) {

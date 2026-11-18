@@ -107,17 +107,17 @@ var PARTICLES = {
 
 class MoveParticles {
     static trigger(emitter, id) {
-        var p = PARTICLES[id]
-        if (p == null) {
+        var particle = PARTICLES[id]
+        if (particle == null) {
             // Unrecognised / null id (non-offensive moves never call this - see
             // States/Combat/CombatResolver.wren) - no effect.
             return
         }
-        MoveParticles.configure_(emitter, p["texturePath"], p["columns"], p["rows"], p["burstCount"],
-                                 p["lifetimeMin"], p["lifetimeMax"], p["spawnRadius"], p["velocityMin"],
-                                 p["velocityMax"], p["startScale"], p["endScale"], p["startColor"],
-                                 p["endColor"], p["additive"])
-        MoveParticles.animate_(emitter, p["animation"], p["animationMode"])
+        MoveParticles.configure_(emitter, particle["texturePath"], particle["columns"], particle["rows"], particle["burstCount"],
+                                 particle["lifetimeMin"], particle["lifetimeMax"], particle["spawnRadius"], particle["velocityMin"],
+                                 particle["velocityMax"], particle["startScale"], particle["endScale"], particle["startColor"],
+                                 particle["endColor"], particle["additive"])
+        MoveParticles.animate_(emitter, particle["animation"], particle["animationMode"])
         emitter.emit()
     }
 
@@ -144,12 +144,12 @@ class MoveParticles {
     // A cloud of puffs where a hit lands. strength 0..1: how hard it was (a blocked or glancing hit is a small cloud,
     // a heavy blow a big one).
     static hitCloud(emitter, element, strength) {
-        var s = strength < 0 ? 0 : (strength > 1 ? 1 : strength)
+        var clamped = strength < 0 ? 0 : (strength > 1 ? 1 : strength)
         var tint = MoveParticles.tint(element)
-        var count = 8 + (s * 6).round
-        var speed = 20 + s * 26
-        MoveParticles.configure_(emitter, SMOKE_SHEET, SMOKE_COLUMNS, 1, count, 0.55, 0.85, 6 + s * 4,
-            Vec2.new(-speed, -speed * 0.7), Vec2.new(speed, speed * 0.5), 0.65 + s * 0.25, 1.15 + s * 0.4,
+        var count = 8 + (clamped * 6).round
+        var speed = 20 + clamped * 26
+        MoveParticles.configure_(emitter, SMOKE_SHEET, SMOKE_COLUMNS, 1, count, 0.55, 0.85, 6 + clamped * 4,
+            Vec2.new(-speed, -speed * 0.7), Vec2.new(speed, speed * 0.5), 0.65 + clamped * 0.25, 1.15 + clamped * 0.4,
             tint, Vec4.new(tint.x, tint.y, tint.z, 0), false)
         // A slight drift upward as it clears, and only a gentle spin - smoke, not sparks.
         emitter.acceleration = Vec2.new(0, -10)

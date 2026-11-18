@@ -118,11 +118,11 @@ class TrailFollow {
     }
 
     // trail.pointAt, carried on past the head toward the leader's live position (_live, _liveGap px beyond it).
-    pointAt_(trail, s) {
-        if (s <= trail.total || _liveGap < 0.001) {
-            return trail.pointAt(s)
+    pointAt_(trail, distance) {
+        if (distance <= trail.total || _liveGap < 0.001) {
+            return trail.pointAt(distance)
         }
-        var t = Math.min((s - trail.total) / _liveGap, 1)
+        var t = Math.min((distance - trail.total) / _liveGap, 1)
         return [Math.lerp(trail.headX, _live.x, t), Math.lerp(trail.headY, _live.y, t)]
     }
 

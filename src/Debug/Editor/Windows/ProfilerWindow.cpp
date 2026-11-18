@@ -5,6 +5,7 @@
 #include <algorithm>
 #include <cmath>
 #include <cstdio>
+#include <string>
 #include <vector>
 
 #include "Engine/Core/GameData.h"
@@ -12,29 +13,74 @@
 #include "Engine/GameContext.h"
 #include "Engine/Renderer/GraphicsDevice.h"
 
-namespace
-{
 // Shared phase palette - used by the graph bands, the stacked summary bar and the tree headers so the same
 // phase always reads as the same colour everywhere in the window.
-const ImU32 kColFixed     = IM_COL32(232, 151, 58, 255);
-const ImU32 kColUpdate    = IM_COL32(80, 150, 232, 255);
-const ImU32 kColRender    = IM_COL32(92, 200, 122, 255);
-const ImU32 kColOther     = IM_COL32(150, 150, 160, 255);
-const ImU32 kColFrameLine = IM_COL32(240, 240, 245, 255);
-const ImU32 kColGuide     = IM_COL32(255, 255, 255, 38);
-const ImU32 kColGuideText = IM_COL32(200, 200, 210, 150);
-const ImU32 kColGraphBg   = IM_COL32(18, 18, 22, 255);
+static const ImU32 kColFixed     = IM_COL32(232, 151, 58, 255);
+static const ImU32 kColUpdate    = IM_COL32(80, 150, 232, 255);
+static const ImU32 kColRender    = IM_COL32(92, 200, 122, 255);
+static const ImU32 kColOther     = IM_COL32(150, 150, 160, 255);
+static const ImU32 kColFrameLine = IM_COL32(240, 240, 245, 255);
+static const ImU32 kColGuide     = IM_COL32(255, 255, 255, 38);
+static const ImU32 kColGuideText = IM_COL32(200, 200, 210, 150);
+static const ImU32 kColGraphBg   = IM_COL32(18, 18, 22, 255);
 
-ImVec4 ToVec4(ImU32 c)
+// The four game loop phases in stacking order (graph bands, summary bar and legend all use this order).
+static const int kPhaseCount                 = 4;
+static const ImU32 kPhaseColors[kPhaseCount] = {kColFixed, kColUpdate, kColRender, kColOther};
+static const char* kPhaseNames[kPhaseCount]  = {"Fixed Update", "Update", "Render", "Other"};
+
+// Where the frame graph is on screen and how samples map onto it (see DrawFrameGraph).
+struct FrameGraphArea
 {
-	return ImGui::ColorConvertU32ToFloat4(c);
+	ImVec2 topLeft;
+	ImVec2 bottomRight;
+	float height;
+	float displayMaxMs;  // the frame time at the top edge
+	float sampleStep;    // px between samples
+	int sampleCount;     // the newest sample sits on the right edge
+};
+
+static float GraphY(const FrameGraphArea& area, float ms)
+{
+	float t = std::clamp(ms / area.displayMaxMs, 0.0f, 1.0f);
+	return area.bottomRight.y - t * area.height;
 }
 
-ImU32 WithAlpha(ImU32 c, unsigned a)
+static float GraphX(const FrameGraphArea& area, int sampleIndex)
 {
-	return (c & 0x00FFFFFFu) | (a << 24);
+	return area.bottomRight.x - static_cast<float>(area.sampleCount - 1 - sampleIndex) * area.sampleStep;
 }
-}  // namespace
+
+static ImVec4 ToVec4(ImU32 color)
+{
+	return ImGui::ColorConvertU32ToFloat4(color);
+}
+
+static ImU32 WithAlpha(ImU32 color, unsigned alpha)
+{
+	return (color & 0x00FFFFFFu) | (alpha << 24);
+}
+
+// Sort orders for the profile tree (std::sort comparators).
+static bool LongerDurationFirst(const Struktur::Debug::ProfileNode* lhs, const Struktur::Debug::ProfileNode* rhs)
+{
+	return lhs->duration_us > rhs->duration_us;
+}
+
+static bool LongerSelfDurationFirst(const Struktur::Debug::ProfileNode* lhs, const Struktur::Debug::ProfileNode* rhs)
+{
+	return lhs->self_duration_us > rhs->self_duration_us;
+}
+
+static bool MoreCallsFirst(const Struktur::Debug::ProfileNode* lhs, const Struktur::Debug::ProfileNode* rhs)
+{
+	return lhs->call_count > rhs->call_count;
+}
+
+static bool AlphabeticalByName(const Struktur::Debug::ProfileNode* lhs, const Struktur::Debug::ProfileNode* rhs)
+{
+	return lhs->name < rhs->name;
+}
 
 void Struktur::Debug::ProfilerWindow::Render(GameContext& context)
 {
@@ -119,21 +165,23 @@ void Struktur::Debug::ProfilerWindow::DrawControls(GameContext& context)
 	// re-sort for hunting down a specific hotspot.
 	ImGui::TextUnformatted("Tree:");
 	ImGui::SameLine();
-	auto sortRadio = [&](const char* label, SortMode mode)
+	struct SortOption
 	{
-		if (ImGui::RadioButton(label, m_sortMode == mode))
+		const char* label;
+		SortMode mode;
+	};
+	static const SortOption kSortOptions[] = {{"Call order", SortMode::CallOrder},
+	                                          {"Total", SortMode::Duration},
+	                                          {"Self", SortMode::SelfDuration},
+	                                          {"Calls", SortMode::CallCount},
+	                                          {"Name", SortMode::Name}};
+	for (const SortOption& option : kSortOptions)
+	{
+		if (ImGui::RadioButton(option.label, m_sortMode == option.mode))
 		{
-			m_sortMode = mode;
+			m_sortMode = option.mode;
 		}
 		ImGui::SameLine();
-	};
-	sortRadio("Call order", SortMode::CallOrder);
-	sortRadio("Total", SortMode::Duration);
-	sortRadio("Self", SortMode::SelfDuration);
-	sortRadio("Calls", SortMode::CallCount);
-	if (ImGui::RadioButton("Name", m_sortMode == SortMode::Name))
-	{
-		m_sortMode = SortMode::Name;
 	}
 	ImGui::NewLine();
 
@@ -196,18 +244,16 @@ void Struktur::Debug::ProfilerWindow::DrawOverrideControls(GameContext& context)
 		gameData.overrideFps = fps;
 	}
 	ImGui::SameLine();
-	auto fpsBtn = [&](const char* label, int v)
+	// Quick presets.
+	static const int kFpsPresets[] = {15, 30, 45, 60};
+	for (int preset : kFpsPresets)
 	{
-		if (ImGui::SmallButton(label))
+		if (ImGui::SmallButton(std::to_string(preset).c_str()))
 		{
-			gameData.overrideFps = v;
+			gameData.overrideFps = preset;
 		}
 		ImGui::SameLine();
-	};
-	fpsBtn("15", 15);
-	fpsBtn("30", 30);
-	fpsBtn("45", 45);
-	fpsBtn("60", 60);
+	}
 	ImGui::NewLine();
 	ImGui::EndDisabled();
 
@@ -234,11 +280,11 @@ void Struktur::Debug::ProfilerWindow::DrawFrameTimeGraph(GameContext& context)
 	}
 
 	float maxTime = 0.0f, minTime = 1e9f, avgTime = 0.0f;
-	for (const auto& s : m_phaseHistory)
+	for (const auto& sample : m_phaseHistory)
 	{
-		maxTime = std::max(maxTime, s.totalMs);
-		minTime = std::min(minTime, s.totalMs);
-		avgTime += s.totalMs;
+		maxTime = std::max(maxTime, sample.totalMs);
+		minTime = std::min(minTime, sample.totalMs);
+		avgTime += sample.totalMs;
 	}
 	avgTime /= static_cast<float>(m_phaseHistory.size());
 	float lastMs = m_phaseHistory.back().totalMs;
@@ -281,47 +327,43 @@ void Struktur::Debug::ProfilerWindow::DrawFrameTimeGraph(GameContext& context)
 	dl->AddRectFilled(p0, p1, kColGraphBg);
 	dl->PushClipRect(p0, p1, true);
 
-	auto yFor = [&](float ms)
-	{
-		float t = std::clamp(ms / displayMax, 0.0f, 1.0f);
-		return p1.y - t * height;
-	};
-
-	const int n     = static_cast<int>(m_phaseHistory.size());
-	const int cap   = static_cast<int>(m_maxPhaseHistory);
-	const float step = width / static_cast<float>(std::max(cap - 1, 1));
-	auto xFor = [&](int i) { return p1.x - static_cast<float>(n - 1 - i) * step; };
+	const int sampleCount = static_cast<int>(m_phaseHistory.size());
+	const int cap         = static_cast<int>(m_maxPhaseHistory);
+	const float step      = width / static_cast<float>(std::max(cap - 1, 1));
+	const FrameGraphArea area{p0, p1, height, displayMax, step, sampleCount};
 
 	if (m_showPhaseBands)
 	{
-		for (int i = 1; i < n; ++i)
+		// Each phase is a band stacked on the ones before it, joined sample to sample.
+		for (int i = 1; i < sampleCount; ++i)
 		{
-			const PhaseSample& a = m_phaseHistory[i - 1];
-			const PhaseSample& b = m_phaseHistory[i];
-			float x0             = xFor(i - 1);
-			float x1             = xFor(i);
-			float accA = 0.0f, accB = 0.0f;
-
-			auto band = [&](float av, float bv, ImU32 col)
+			const PhaseSample& previous             = m_phaseHistory[i - 1];
+			const PhaseSample& current              = m_phaseHistory[i];
+			const float previousPhases[kPhaseCount] = {previous.fixedMs, previous.updateMs, previous.renderMs,
+			                                           previous.otherMs};
+			const float currentPhases[kPhaseCount]  = {current.fixedMs, current.updateMs, current.renderMs,
+			                                           current.otherMs};
+			float x0                                = GraphX(area, i - 1);
+			float x1                                = GraphX(area, i);
+			float previousTop                       = 0.0f;
+			float currentTop                        = 0.0f;
+			for (int phase = 0; phase < kPhaseCount; ++phase)
 			{
-				float a1 = accA + av;
-				float b1 = accB + bv;
-				dl->AddQuadFilled(ImVec2(x0, yFor(accA)), ImVec2(x1, yFor(accB)), ImVec2(x1, yFor(b1)),
-				                  ImVec2(x0, yFor(a1)), WithAlpha(col, 115));
-				accA = a1;
-				accB = b1;
-			};
-			band(a.fixedMs, b.fixedMs, kColFixed);
-			band(a.updateMs, b.updateMs, kColUpdate);
-			band(a.renderMs, b.renderMs, kColRender);
-			band(a.otherMs, b.otherMs, kColOther);
+				float previousNext = previousTop + previousPhases[phase];
+				float currentNext  = currentTop + currentPhases[phase];
+				dl->AddQuadFilled(ImVec2(x0, GraphY(area, previousTop)), ImVec2(x1, GraphY(area, currentTop)),
+				                  ImVec2(x1, GraphY(area, currentNext)), ImVec2(x0, GraphY(area, previousNext)),
+				                  WithAlpha(kPhaseColors[phase], 115));
+				previousTop = previousNext;
+				currentTop  = currentNext;
+			}
 		}
 	}
 
-	for (int i = 1; i < n; ++i)
+	for (int i = 1; i < sampleCount; ++i)
 	{
-		dl->AddLine(ImVec2(xFor(i - 1), yFor(m_phaseHistory[i - 1].totalMs)),
-		            ImVec2(xFor(i), yFor(m_phaseHistory[i].totalMs)), kColFrameLine, 1.5f);
+		dl->AddLine(ImVec2(GraphX(area, i - 1), GraphY(area, m_phaseHistory[i - 1].totalMs)),
+		            ImVec2(GraphX(area, i), GraphY(area, m_phaseHistory[i].totalMs)), kColFrameLine, 1.5f);
 	}
 
 	if (m_showFpsGuides)
@@ -329,17 +371,17 @@ void Struktur::Debug::ProfilerWindow::DrawFrameTimeGraph(GameContext& context)
 		// Reference lines at common refresh rates - a frame trace touching the "60 FPS" line means 16.7 ms
 		// frames, and so on. The line closest to the target refresh doubles as the "budget" marker.
 		const int fpsGuides[] = {30, 60, 120, 144};
-		for (int f : fpsGuides)
+		for (int fps : fpsGuides)
 		{
-			float ms = 1000.0f / static_cast<float>(f);
+			float ms = 1000.0f / static_cast<float>(fps);
 			if (ms > displayMax)
 			{
 				continue;
 			}
-			float y = yFor(ms);
+			float y = GraphY(area, ms);
 			dl->AddLine(ImVec2(p0.x, y), ImVec2(p1.x, y), kColGuide, 1.0f);
 			char lbl[16];
-			std::snprintf(lbl, sizeof(lbl), "%d FPS", f);
+			std::snprintf(lbl, sizeof(lbl), "%d FPS", fps);
 			dl->AddText(ImVec2(p0.x + 4, y - 14), kColGuideText, lbl);
 		}
 	}
@@ -349,16 +391,16 @@ void Struktur::Debug::ProfilerWindow::DrawFrameTimeGraph(GameContext& context)
 	if (ImGui::IsItemHovered())
 	{
 		float mx  = ImGui::GetIO().MousePos.x;
-		int idx   = n - 1 - static_cast<int>(std::round((p1.x - mx) / step));
-		if (idx >= 0 && idx < n)
+		int idx   = sampleCount - 1 - static_cast<int>(std::round((p1.x - mx) / step));
+		if (idx >= 0 && idx < sampleCount)
 		{
-			const PhaseSample& s = m_phaseHistory[idx];
+			const PhaseSample& sample = m_phaseHistory[idx];
 			ImGui::BeginTooltip();
-			ImGui::Text("Game Loop  %.2f ms", s.totalMs);
-			ImGui::TextColored(ToVec4(kColFixed), "  Fixed Update  %.2f ms", s.fixedMs);
-			ImGui::TextColored(ToVec4(kColUpdate), "  Update        %.2f ms", s.updateMs);
-			ImGui::TextColored(ToVec4(kColRender), "  Render        %.2f ms", s.renderMs);
-			ImGui::TextColored(ToVec4(kColOther), "  Other         %.2f ms", s.otherMs);
+			ImGui::Text("Game Loop  %.2f ms", sample.totalMs);
+			ImGui::TextColored(ToVec4(kColFixed), "  Fixed Update  %.2f ms", sample.fixedMs);
+			ImGui::TextColored(ToVec4(kColUpdate), "  Update        %.2f ms", sample.updateMs);
+			ImGui::TextColored(ToVec4(kColRender), "  Render        %.2f ms", sample.renderMs);
+			ImGui::TextColored(ToVec4(kColOther), "  Other         %.2f ms", sample.otherMs);
 			ImGui::EndTooltip();
 		}
 	}
@@ -370,8 +412,8 @@ void Struktur::Debug::ProfilerWindow::DrawPhaseSummary(GameContext& context)
 	{
 		return;
 	}
-	const PhaseSample& s = m_phaseHistory.back();
-	float total          = std::max(s.totalMs, 0.0001f);
+	const PhaseSample& latest = m_phaseHistory.back();
+	float total               = std::max(latest.totalMs, 0.0001f);
 
 	float width = ImGui::GetContentRegionAvail().x;
 	if (width < 32.0f)
@@ -383,31 +425,26 @@ void Struktur::Debug::ProfilerWindow::DrawPhaseSummary(GameContext& context)
 	float height   = 22.0f;
 	ImGui::InvisibleButton("##phaseBar", ImVec2(width, height));
 
+	const float phases[kPhaseCount] = {latest.fixedMs, latest.updateMs, latest.renderMs, latest.otherMs};
+
+	// One segment per phase, sized by its share of the frame.
 	float x = p0.x;
-	auto seg = [&](float ms, ImU32 col)
+	for (int phase = 0; phase < kPhaseCount; ++phase)
 	{
-		float w = width * (ms / total);
-		dl->AddRectFilled(ImVec2(x, p0.y), ImVec2(x + w, p0.y + height), col);
-		x += w;
-	};
-	seg(s.fixedMs, kColFixed);
-	seg(s.updateMs, kColUpdate);
-	seg(s.renderMs, kColRender);
-	seg(s.otherMs, kColOther);
+		float segmentWidth = width * (phases[phase] / total);
+		dl->AddRectFilled(ImVec2(x, p0.y), ImVec2(x + segmentWidth, p0.y + height), kPhaseColors[phase]);
+		x += segmentWidth;
+	}
 	dl->AddRect(p0, ImVec2(p0.x + width, p0.y + height), IM_COL32(0, 0, 0, 120));
 
-	auto legend = [&](const char* name, float ms, ImU32 col)
+	for (int phase = 0; phase < kPhaseCount; ++phase)
 	{
-		ImGui::ColorButton(name, ToVec4(col), ImGuiColorEditFlags_NoTooltip | ImGuiColorEditFlags_NoPicker,
-		                   ImVec2(12, 12));
+		ImGui::ColorButton(kPhaseNames[phase], ToVec4(kPhaseColors[phase]),
+		                   ImGuiColorEditFlags_NoTooltip | ImGuiColorEditFlags_NoPicker, ImVec2(12, 12));
 		ImGui::SameLine();
-		ImGui::Text("%s %.2f ms (%.0f%%)", name, ms, 100.0f * ms / total);
+		ImGui::Text("%s %.2f ms (%.0f%%)", kPhaseNames[phase], phases[phase], 100.0f * phases[phase] / total);
 		ImGui::SameLine(0.0f, 16.0f);
-	};
-	legend("Fixed Update", s.fixedMs, kColFixed);
-	legend("Update", s.updateMs, kColUpdate);
-	legend("Render", s.renderMs, kColRender);
-	legend("Other", s.otherMs, kColOther);
+	}
 	ImGui::NewLine();
 }
 
@@ -448,14 +485,14 @@ void Struktur::Debug::ProfilerWindow::SamplePhases(GameContext& context)
 	const ProfileNode* upd   = FindNode(root, "Update");
 	const ProfileNode* ren   = FindNode(root, "Render");
 
-	PhaseSample s;
-	s.totalMs  = loop ? loop->duration_us / 1000.0f : 0.0f;
-	s.fixedMs  = fixed ? fixed->duration_us / 1000.0f : 0.0f;
-	s.updateMs = upd ? upd->duration_us / 1000.0f : 0.0f;
-	s.renderMs = ren ? ren->duration_us / 1000.0f : 0.0f;
-	s.otherMs  = std::max(0.0f, s.totalMs - s.fixedMs - s.updateMs - s.renderMs);
+	PhaseSample sample;
+	sample.totalMs  = loop ? loop->duration_us / 1000.0f : 0.0f;
+	sample.fixedMs  = fixed ? fixed->duration_us / 1000.0f : 0.0f;
+	sample.updateMs = upd ? upd->duration_us / 1000.0f : 0.0f;
+	sample.renderMs = ren ? ren->duration_us / 1000.0f : 0.0f;
+	sample.otherMs  = std::max(0.0f, sample.totalMs - sample.fixedMs - sample.updateMs - sample.renderMs);
 
-	m_phaseHistory.push_back(s);
+	m_phaseHistory.push_back(sample);
 	while (m_phaseHistory.size() > m_maxPhaseHistory)
 	{
 		m_phaseHistory.pop_front();
@@ -473,8 +510,7 @@ void Struktur::Debug::ProfilerWindow::DrawTimingBarChart(GameContext& context, c
 	ImGui::Separator();
 
 	std::vector<const ProfileNode*> nodes(rootNode->children.begin(), rootNode->children.end());
-	std::sort(nodes.begin(), nodes.end(),
-	          [](const ProfileNode* a, const ProfileNode* b) { return a->duration_us > b->duration_us; });
+	std::sort(nodes.begin(), nodes.end(), LongerDurationFirst);
 
 	float targetMs = context.GetProfiler().GetTargetFrameTimeMs();
 	for (const auto* node : nodes)
@@ -585,20 +621,16 @@ void Struktur::Debug::ProfilerWindow::DrawProfileTree(GameContext& context, cons
 				// children are already stored in first-entered order - leave them
 				break;
 			case SortMode::Duration:
-				std::sort(children.begin(), children.end(),
-				          [](const ProfileNode* a, const ProfileNode* b) { return a->duration_us > b->duration_us; });
+				std::sort(children.begin(), children.end(), LongerDurationFirst);
 				break;
 			case SortMode::SelfDuration:
-				std::sort(children.begin(), children.end(), [](const ProfileNode* a, const ProfileNode* b)
-				          { return a->self_duration_us > b->self_duration_us; });
+				std::sort(children.begin(), children.end(), LongerSelfDurationFirst);
 				break;
 			case SortMode::CallCount:
-				std::sort(children.begin(), children.end(),
-				          [](const ProfileNode* a, const ProfileNode* b) { return a->call_count > b->call_count; });
+				std::sort(children.begin(), children.end(), MoreCallsFirst);
 				break;
 			case SortMode::Name:
-				std::sort(children.begin(), children.end(),
-				          [](const ProfileNode* a, const ProfileNode* b) { return a->name < b->name; });
+				std::sort(children.begin(), children.end(), AlphabeticalByName);
 				break;
 		}
 

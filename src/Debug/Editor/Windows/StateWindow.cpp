@@ -11,13 +11,11 @@
 
 namespace Struktur::Debug
 {
-namespace
-{
 // "key1=value1, key2=value2" from a JSON object - values are dumped as JSON (so a string still reads as
 // "value" with quotes, matching how StateManager.wren's summariseParams already renders non-primitive params
 // as a quoted "<Type>" placeholder string). Empty params render as "(none)" rather than an empty string, so a
 // leaf state's row doesn't look broken/blank.
-std::string FormatParams(const nlohmann::json& params)
+static std::string FormatParams(const nlohmann::json& params)
 {
 	if (!params.is_object() || params.empty())
 	{
@@ -37,7 +35,6 @@ std::string FormatParams(const nlohmann::json& params)
 	}
 	return result;
 }
-}  // namespace
 
 StateWindow::StateWindow()
     : EditorWindow("State")

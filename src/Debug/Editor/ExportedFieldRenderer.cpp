@@ -10,8 +10,6 @@
 
 namespace Struktur::Debug
 {
-namespace
-{
 class NumFieldRenderer : public IExportedFieldRenderer
 {
 public:
@@ -89,7 +87,7 @@ public:
 
 // One instance of each registered renderer, for the lifetime of the process - these are stateless (each Render
 // call is self-contained), so there's no reason to construct/destroy them per call or per window.
-const std::vector<std::unique_ptr<IExportedFieldRenderer>>& GetRenderers()
+static const std::vector<std::unique_ptr<IExportedFieldRenderer>>& GetRenderers()
 {
 	static const std::vector<std::unique_ptr<IExportedFieldRenderer>> renderers = []
 	{
@@ -101,7 +99,6 @@ const std::vector<std::unique_ptr<IExportedFieldRenderer>>& GetRenderers()
 	}();
 	return renderers;
 }
-}  // namespace
 
 bool RenderExportedField(const std::string& label, const Wren::WrenItem& value, bool editable,
                          Wren::WrenItem& out_newValue)

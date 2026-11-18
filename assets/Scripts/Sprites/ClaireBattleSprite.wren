@@ -16,14 +16,14 @@ class ClaireBattleSprite {
 
     static data {
         if (__data == null) {
-            var d = {}
-            d["texture"] = "Actors/claire_battle.png"
-            d["origin"] = [75, 84]
-            d["columns"] = 13
-            d["rows"] = 17
-            d["cellSize"] = [150, 113]
-            d["defaultAnimation"] = "rightIdleAnimation"
-            d["animations"] = [
+            var sheet = {}
+            sheet["texture"] = "Actors/claire_battle.png"
+            sheet["origin"] = [75, 84]
+            sheet["columns"] = 13
+            sheet["rows"] = 17
+            sheet["cellSize"] = [150, 113]
+            sheet["defaultAnimation"] = "rightIdleAnimation"
+            sheet["animations"] = [
                 // name, first frame, end frame (not included), seconds, loops
                 ["rightAttackAnimation",       0,   12, 0.857, false],
                 ["leftAttackAnimation",       12,   24, 0.857, false],
@@ -46,7 +46,7 @@ class ClaireBattleSprite {
                 ["rightStandRollAnimation",  192,  204, 0.857, false],
                 ["leftStandRollAnimation",   204,  216, 0.857, false]
             ]
-            __data = d
+            __data = sheet
         }
         return __data
     }

@@ -52,13 +52,10 @@ bool Struktur::UI::FocusNavigator::NavigateDirection(GameContext& context, Navig
 	return false;
 }
 
-namespace
-{
-bool IsNavigable(const Struktur::UI::UIElement* element)
+static bool IsNavigable(const Struktur::UI::UIElement* element)
 {
 	return element->IsEffectivelyVisible() && element->IsEnabled() && element->IsFocusable();
 }
-}  // namespace
 
 bool Struktur::UI::FocusNavigator::NavigateToNext(GameContext& context)
 {
@@ -248,28 +245,24 @@ Struktur::UI::UIElement* Struktur::UI::FocusNavigator::FindElementByDirection(Na
 	return bestMatch;
 }
 
+// Tab order (a std::sort comparator): ascending tab index, elements with no tab index (-1) at the end.
+static bool LowerTabIndexFirst(Struktur::UI::UIElement* lhs, Struktur::UI::UIElement* rhs)
+{
+	int lhsTab = lhs->GetTabIndex();
+	int rhsTab = rhs->GetTabIndex();
+
+	if (lhsTab == -1)
+	{
+		return false;
+	}
+	if (rhsTab == -1)
+	{
+		return true;
+	}
+	return lhsTab < rhsTab;
+}
+
 void Struktur::UI::FocusNavigator::SortElementsByTabIndex()
 {
-	std::sort(m_focusableElements.begin(), m_focusableElements.end(),
-	          [](UIElement* a, UIElement* b)
-	          {
-		          int aTab = a->GetTabIndex();
-		          int bTab = b->GetTabIndex();
-
-		          // Elements with no tab index go to the end
-		          if (aTab == -1 && bTab == -1)
-		          {
-			          return false;
-		          }
-		          if (aTab == -1)
-		          {
-			          return false;
-		          }
-		          if (bTab == -1)
-		          {
-			          return true;
-		          }
-
-		          return aTab < bTab;
-	          });
+	std::sort(m_focusableElements.begin(), m_focusableElements.end(), LowerTabIndexFirst);
 }

@@ -7,18 +7,15 @@
 #include "Engine/Renderer/FlipBit.h"
 #include "Engine/Renderer/QuadVertex.h"
 
-namespace
-{
 using Struktur::Renderer::FlipBit;
 using Struktur::World::TileMap::GridTile;
 
-constexpr int kChunkTiles = 16;
+static constexpr int kChunkTiles = 16;
 
-int64_t BucketKey(int bucketX, int bucketY)
+static int64_t BucketKey(int bucketX, int bucketY)
 {
 	return (static_cast<int64_t>(bucketX) << 32) | static_cast<uint32_t>(bucketY);
 }
-}  // namespace
 
 std::vector<Struktur::Renderer::TileChunk> Struktur::Renderer::BuildTileChunks(
     const std::vector<World::TileMap::GridTile>& gridTiles, int tileSize, const glm::vec2& worldOffset,

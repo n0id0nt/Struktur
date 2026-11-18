@@ -71,8 +71,8 @@ class InventoryUI {
             Vec2.new(0, 0), 1)
         window.setAnchorPoint(Vec2.new(0.5, 0.5))
 
-        _tabIds = model["tabs"].map { |t| t[0] }.toList
-        buildTabBar_(window, model["tabs"].map { |t| t[1] }.toList)
+        _tabIds = model["tabs"].map { |tab| tab[0] }.toList
+        buildTabBar_(window, model["tabs"].map { |tab| tab[1] }.toList)
         var tabAlerts = model["tabAlerts"]
         if (tabAlerts != null) {
             for (id in tabAlerts.keys) {

@@ -115,14 +115,14 @@ class MovesPage {
         }
         var anim = _previewMove["anim"]
         var idle = _sheet["idle"]
-        var t = (now - _previewStart) % (anim[2] + IDLE_HOLD)
+        var elapsed = (now - _previewStart) % (anim[2] + IDLE_HOLD)
         var frame = 0
-        if (t < anim[2]) {
+        if (elapsed < anim[2]) {
             var count = anim[1] - anim[0]
-            frame = anim[0] + Math.min((t / anim[2] * count).floor, count - 1)
+            frame = anim[0] + Math.min((elapsed / anim[2] * count).floor, count - 1)
         } else {
             var count = idle[1] - idle[0]
-            frame = idle[0] + ((t - anim[2]) / idle[2] * count).floor % count
+            frame = idle[0] + ((elapsed - anim[2]) / idle[2] * count).floor % count
         }
         showFrame_(frame)
     }
@@ -172,9 +172,9 @@ class MovesPage {
         scroll.setZIndex(4)
         frame.addChild(scroll)
 
-        for (r in 0..._moves.count) {
-            var move = _moves[r]
-            var panel = InventoryTheme.frame(scroll, "tile", Vec2.new(ROW_INSET, ROW_INSET + r * ROW_STRIDE), Vec2.new(0, 0),
+        for (rowIndex in 0..._moves.count) {
+            var move = _moves[rowIndex]
+            var panel = InventoryTheme.frame(scroll, "tile", Vec2.new(ROW_INSET, ROW_INSET + rowIndex * ROW_STRIDE), Vec2.new(0, 0),
                 Vec2.new(ROW_WIDTH, ROW_HEIGHT), Vec2.new(0, 0), 5)
             var row = {}
             row["panel"] = panel
@@ -191,7 +191,7 @@ class MovesPage {
                 }
                 _onFocus.call()
             }, null)
-            panel.setOnClick { |sender, mousePos| rowPressed_(r) }
+            panel.setOnClick { |sender, mousePos| rowPressed_(rowIndex) }
         }
     }
 
@@ -262,10 +262,10 @@ class MovesPage {
             InventoryTheme.link(panel, NavigationDirection.DOWN,
                 i + SLOT_COLUMNS < _slots.count ? _slots[i + SLOT_COLUMNS]["panel"] : firstRow)
         }
-        for (r in 0..._rows.count) {
-            var panel = _rows[r]["panel"]
-            InventoryTheme.link(panel, NavigationDirection.UP, r > 0 ? _rows[r - 1]["panel"] : firstFocusable)
-            InventoryTheme.link(panel, NavigationDirection.DOWN, r + 1 < _rows.count ? _rows[r + 1]["panel"] : null)
+        for (rowIndex in 0..._rows.count) {
+            var panel = _rows[rowIndex]["panel"]
+            InventoryTheme.link(panel, NavigationDirection.UP, rowIndex > 0 ? _rows[rowIndex - 1]["panel"] : firstFocusable)
+            InventoryTheme.link(panel, NavigationDirection.DOWN, rowIndex + 1 < _rows.count ? _rows[rowIndex + 1]["panel"] : null)
             InventoryTheme.link(panel, NavigationDirection.LEFT, null)
             InventoryTheme.link(panel, NavigationDirection.RIGHT, null)
         }
@@ -282,15 +282,15 @@ class MovesPage {
             // Pick what goes here: jump to the move currently in the slot, in the list.
             _armedSlot = slot
             refresh_()
-            var r = rowIndexOf_(equippedAt_(slot))
-            if (_rows.count > 0) UIManager.setFocus(_rows[r >= 0 ? r : 0]["panel"])
+            var rowIndex = rowIndexOf_(equippedAt_(slot))
+            if (_rows.count > 0) UIManager.setFocus(_rows[rowIndex >= 0 ? rowIndex : 0]["panel"])
         }
     }
 
-    rowPressed_(r) {
+    rowPressed_(rowIndex) {
         // A move the equipped weapon can't use can't go in the loadout (the preview says why).
-        if (_moves[r]["compatible"] == false) return
-        var id = _moves[r]["id"]
+        if (_moves[rowIndex]["compatible"] == false) return
+        var id = _moves[rowIndex]["id"]
         if (_armedSlot != null) {
             var slot = _armedSlot
             equip_(slot, id)
@@ -300,7 +300,7 @@ class MovesPage {
         } else {
             // Pick where it goes: up to the loadout, the preview staying on this move meanwhile.
             _armedMove = id
-            preview_(_moves[r])
+            preview_(_moves[rowIndex])
             refresh_()
             UIManager.setFocus(_slots[0]["panel"])
         }
@@ -331,9 +331,9 @@ class MovesPage {
             row["badge"].setText("")
         }
         for (i in 0..._equipped.count) {
-            var r = rowIndexOf_(_equipped[i])
-            if (r >= 0) {
-                setText_(_rows[r]["badge"], "%(i + 1)")
+            var rowIndex = rowIndexOf_(_equipped[i])
+            if (rowIndex >= 0) {
+                setText_(_rows[rowIndex]["badge"], "%(i + 1)")
             }
         }
         style_()
@@ -357,16 +357,16 @@ class MovesPage {
         for (i in 0..._slots.count) {
             styleElement_(_slots[i]["panel"], _armedSlot == i, true)
         }
-        for (r in 0..._rows.count) {
-            var move = _moves[r]
+        for (rowIndex in 0..._rows.count) {
+            var move = _moves[rowIndex]
             var usable = MovesPage.usable_(move)
-            styleElement_(_rows[r]["panel"], _armedMove == move["id"], usable)
-            var cells = _rows[r]["cells"]
+            styleElement_(_rows[rowIndex]["panel"], _armedMove == move["id"], usable)
+            var cells = _rows[rowIndex]["cells"]
             var values = [MoveCells.time(move), MoveCells.damage(move), MoveCells.stamina(move), MoveCells.heal(move)]
-            for (c in 0...cells.count) {
-                MoveCells.apply(cells[c], usable ? values[c] : [values[c][0], InventoryTheme.textMuted])
+            for (columnIndex in 0...cells.count) {
+                MoveCells.apply(cells[columnIndex], usable ? values[columnIndex] : [values[columnIndex][0], InventoryTheme.textMuted])
             }
-            _rows[r]["name"].setTextColor(usable ? InventoryTheme.text : InventoryTheme.textMuted)
+            _rows[rowIndex]["name"].setTextColor(usable ? InventoryTheme.text : InventoryTheme.textMuted)
         }
     }
 
@@ -431,14 +431,14 @@ class MovesPage {
 
     entryFor_(id) {
         if (id == null) return null
-        var r = rowIndexOf_(id)
-        return r >= 0 ? _moves[r] : null
+        var rowIndex = rowIndexOf_(id)
+        return rowIndex >= 0 ? _moves[rowIndex] : null
     }
 
     rowIndexOf_(id) {
-        for (r in 0..._moves.count) {
-            if (_moves[r]["id"] == id) {
-                return r
+        for (rowIndex in 0..._moves.count) {
+            if (_moves[rowIndex]["id"] == id) {
+                return rowIndex
             }
         }
         return -1

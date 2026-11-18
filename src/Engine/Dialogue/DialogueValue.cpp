@@ -151,5 +151,5 @@ double Struktur::Dialogue::DialogueValue::AsDouble() const
 
 nlohmann::json Struktur::Dialogue::DialogueValue::AsJson() const
 {
-	return std::visit([](const auto& v) -> nlohmann::json { return v; }, m_value);
+	return std::visit([](const auto& value) -> nlohmann::json { return value; }, m_value);
 }

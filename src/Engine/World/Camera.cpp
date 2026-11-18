@@ -6,21 +6,21 @@
 
 glm::vec2 Struktur::World::Camera::WorldPosToScreenPos(const glm::vec2& worldPos)
 {
-	glm::vec2 p   = worldPos - target;
+	glm::vec2 relative = worldPos - target;
 	float rad     = glm::radians(rotation);
 	float cs      = std::cos(rad);
 	float sn      = std::sin(rad);
-	glm::vec2 rot = glm::vec2{p.x * cs - p.y * sn, p.x * sn + p.y * cs};
+	glm::vec2 rot      = glm::vec2{relative.x * cs - relative.y * sn, relative.x * sn + relative.y * cs};
 	return rot * zoom + offset;
 }
 
 glm::vec2 Struktur::World::Camera::ScreenPosToWorldPos(const glm::vec2& screenPos)
 {
-	glm::vec2 p   = (screenPos - offset) / zoom;
+	glm::vec2 relative = (screenPos - offset) / zoom;
 	float rad     = -glm::radians(rotation);
 	float cs      = std::cos(rad);
 	float sn      = std::sin(rad);
-	glm::vec2 rot = glm::vec2{p.x * cs - p.y * sn, p.x * sn + p.y * cs};
+	glm::vec2 rot      = glm::vec2{relative.x * cs - relative.y * sn, relative.x * sn + relative.y * cs};
 	return rot + target;
 }
 

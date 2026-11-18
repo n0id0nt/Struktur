@@ -62,6 +62,21 @@ private:
 	void RefreshFileList();
 	void RenderToolbar();
 	void RenderGrid(GameContext& context);
+
+	// RenderGrid's layout (shared by every cell) plus what the cells asked for, acted on after they're all drawn.
+	struct GridState
+	{
+		float pad        = 0.0f;
+		float cellWidth  = 0.0f;
+		float cellHeight = 0.0f;
+		int itemsPerRow  = 1;
+		int column       = 0;  // the next cell's column in its row
+		bool navigated   = false;
+		std::string navigateTarget;
+		bool previewRequested = false;
+		std::string previewPath;
+	};
+	void RenderGridCell(GameContext& context, GridState& grid, const FileEntry& entry, bool isParentEntry);
 	void RenderStatusBar();
 	void OnFileSelected(const FileEntry& file, GameContext& context);
 

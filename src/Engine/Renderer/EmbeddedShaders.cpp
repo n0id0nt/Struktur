@@ -64,8 +64,6 @@
 	#include <metal/fs_soulEffect.sc.bin.h>
 #endif
 
-namespace
-{
 static const bgfx::EmbeddedShader kEmbeddedShaders[] = {
     BGFX_EMBEDDED_SHADER(vs_sprite),         BGFX_EMBEDDED_SHADER(fs_sprite),
     BGFX_EMBEDDED_SHADER(vs_spriteCoverage), BGFX_EMBEDDED_SHADER(fs_spriteCoverage),
@@ -74,10 +72,9 @@ static const bgfx::EmbeddedShader kEmbeddedShaders[] = {
     BGFX_EMBEDDED_SHADER_END(),
 };
 
-std::unordered_map<std::string, bgfx::ShaderHandle> g_shaderCache;
-std::unordered_map<std::string, bgfx::ProgramHandle> g_programCache;
-std::unordered_map<std::string, bgfx::UniformHandle> g_uniformCache;
-}  // namespace
+static std::unordered_map<std::string, bgfx::ShaderHandle> g_shaderCache;
+static std::unordered_map<std::string, bgfx::ProgramHandle> g_programCache;
+static std::unordered_map<std::string, bgfx::UniformHandle> g_uniformCache;
 
 bgfx::ShaderHandle Struktur::Renderer::GetEmbeddedShader(const char* name)
 {

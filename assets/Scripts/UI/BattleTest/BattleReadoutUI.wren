@@ -47,11 +47,11 @@ class BattleReadoutUI {
 
     // rolls: short roll lines, oldest first - the newest fill the bottom of the panel.
     setRolls(rolls) {
-        var n = _rollLabels.count
-        var start = rolls.count > n ? rolls.count - n : 0
+        var labelCount = _rollLabels.count
+        var start = rolls.count > labelCount ? rolls.count - labelCount : 0
         for (i in 0...n) {
-            var r = start + i
-            show_(_rollLabels[i], "r%(i)", r < rolls.count ? rolls[r] : "")
+            var rollIndex = start + i
+            show_(_rollLabels[i], "r%(i)", rollIndex < rolls.count ? rolls[rollIndex] : "")
         }
     }
 

@@ -4,10 +4,7 @@
 #include "Engine/Core/FileSystem.h"
 #include "nlohmann/json.hpp"
 
-namespace
-{
-constexpr const char* kSettingsPath = "engine_settings.json";
-}
+static constexpr const char* kSettingsPath = "engine_settings.json";
 
 Struktur::Core::EngineSettings Struktur::Core::EngineSettings::Load()
 {

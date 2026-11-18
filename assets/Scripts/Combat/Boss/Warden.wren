@@ -92,10 +92,10 @@ class WardenBrain {
 
     // --- the one mind ----------------------------------------------------------------------
 
-    chainFor(engine, f) {
-        if (_core == null) attach_(engine, f)
+    chainFor(engine, fighter) {
+        if (_core == null) attach_(engine, fighter)
         // Only the core decides - and only once every shard has finished its line too.
-        if (f != _core) return null
+        if (fighter != _core) return null
         for (shard in _shards) {
             if (shard != null && shard.active && !shard.needsChain) return null
         }
@@ -105,10 +105,10 @@ class WardenBrain {
     attach_(engine, core) {
         _core = core
         _engine = engine
-        engine.onSpecial("sunder", Fn.new { |e, f, move| sunder_() })
-        engine.onSpecial("reform", Fn.new { |e, f, move| reform_() })
-        engine.onSpecial("wardenFist", Fn.new { |e, f, move| say_("fist", "It's stuck after the punch! Hit it now!") })
-        engine.onDefeat(Fn.new { |e, f| defeated_(f) })
+        engine.onSpecial("sunder", Fn.new { |battleEngine, fighter, move| sunder_() })
+        engine.onSpecial("reform", Fn.new { |battleEngine, fighter, move| reform_() })
+        engine.onSpecial("wardenFist", Fn.new { |battleEngine, fighter, move| say_("fist", "It's stuck after the punch! Hit it now!") })
+        engine.onDefeat(Fn.new { |battleEngine, fighter| defeated_(fighter) })
     }
 
     bothArms { !_broken[0] && !_broken[1] }
@@ -142,20 +142,20 @@ class WardenBrain {
         remember_(combo)
         _engine.combo(_core, combo)
 
-        var m = WardenMoves
+        var moves = WardenMoves
         if (combo == "Awakening") {
-            return [entry_(m.hold("Settle", 2.0), null), entry_(m.lumber, "toward"), entry_(m.stoneFist, null)]
+            return [entry_(moves.hold("Settle", 2.0), null), entry_(moves.lumber, "toward"), entry_(moves.stoneFist, null)]
         }
         if (combo == "Earthshaker") {
             say_("slam", "The floor's glowing! Get off the glowy bit!")
-            return [entry_(m.lumber, "toward"), entry_(m.groundSlam, null), entry_(m.hold("Settle", 0.8), null)]
+            return [entry_(moves.lumber, "toward"), entry_(moves.groundSlam, null), entry_(moves.hold("Settle", 0.8), null)]
         }
         if (combo == "Sunder") {
             say_("sunder", "It's splitting into three! Watch all of them!")
-            return [entry_(m.stoneFist, null), entry_(m.sunder, null)]
+            return [entry_(moves.stoneFist, null), entry_(moves.sunder, null)]
         }
         say_("bastion", "Don't hit it while it's got its arms up! It's like Dad's swing-post, but grumpier.")
-        return [entry_(m.bastion, null), entry_(m.stoneFist, null)]
+        return [entry_(moves.bastion, null), entry_(moves.stoneFist, null)]
     }
 
     allowed_(combo) {
@@ -199,26 +199,26 @@ class WardenBrain {
         remember_(combo)
         _engine.combo(_core, combo)
 
-        var m = WardenMoves
+        var moves = WardenMoves
         var heart = null
         if (combo == "Three Stones") {
-            heart = [entry_(m.heartGuard, null), entry_(m.heartPulse, null), entry_(m.hold("Rattle", 0.8), null)]
+            heart = [entry_(moves.heartGuard, null), entry_(moves.heartPulse, null), entry_(moves.hold("Rattle", 0.8), null)]
         } else if (combo == "Crossfire") {
-            heart = [entry_(m.heartPulse, null), entry_(m.hold("Rattle", 1.2), null), entry_(m.heartGuard, null)]
+            heart = [entry_(moves.heartPulse, null), entry_(moves.hold("Rattle", 1.2), null), entry_(moves.heartGuard, null)]
         } else {
             say_("reform", "It's pulling itself back together, and the middle's wide open!")
-            heart = [entry_(m.heartPulse, null), entry_(m.reform, null)]
+            heart = [entry_(moves.heartPulse, null), entry_(moves.reform, null)]
         }
         // The side shards are mirrored and share one line.
         for (shard in _shards) {
             if (shard == null || !shard.active) continue
             var line = null
             if (combo == "Three Stones") {
-                line = [entry_(m.shardRoll, "toward"), entry_(m.shardSlam, null), entry_(m.shardSlam, null)]
+                line = [entry_(moves.shardRoll, "toward"), entry_(moves.shardSlam, null), entry_(moves.shardSlam, null)]
             } else if (combo == "Crossfire") {
-                line = [entry_(m.shardSlam, null), entry_(m.shardRoll, "toward"), entry_(m.shardSlam, null)]
+                line = [entry_(moves.shardSlam, null), entry_(moves.shardRoll, "toward"), entry_(moves.shardSlam, null)]
             } else {
-                line = [entry_(m.shardSlam, null), entry_(m.shardRoll, "toward"), entry_(m.gather, gatherCell_)]
+                line = [entry_(moves.shardSlam, null), entry_(moves.shardRoll, "toward"), entry_(moves.gather, gatherCell_)]
             }
             _engine.commit(shard, line)
         }
@@ -229,13 +229,13 @@ class WardenBrain {
 
     // Where Gather rolls: the free neighbouring cell nearest the Heart.
     gatherCell_ {
-        return Fn.new { |engine, f|
+        return Fn.new { |engine, fighter|
             var best = null
-            var bestDistance = (f.lane - _core.lane).abs + (f.row - _core.row).abs
-            for (offset in Grid.offsets("ortho", f.facing)) {
-                var lane = f.lane + offset[0]
-                var row = f.row + offset[1]
-                if (!engine.isFree(lane, row, f)) continue
+            var bestDistance = (fighter.lane - _core.lane).abs + (fighter.row - _core.row).abs
+            for (offset in Grid.offsets("ortho", fighter.facing)) {
+                var lane = fighter.lane + offset[0]
+                var row = fighter.row + offset[1]
+                if (!engine.isFree(lane, row, fighter)) continue
                 var distance = (lane - _core.lane).abs + (row - _core.row).abs
                 if (distance < bestDistance) {
                     best = [lane, row]
@@ -298,11 +298,11 @@ class WardenBrain {
         _engine.note(_core, "Reform")
     }
 
-    defeated_(f) {
+    defeated_(fighter) {
         for (i in 0...2) {
-            if (i < _shards.count && _shards[i] == f) {
+            if (i < _shards.count && _shards[i] == fighter) {
                 _broken[i] = true
-                _engine.note(f, "Crumbled")
+                _engine.note(fighter, "Crumbled")
                 say_("crumble", "It crumbled! That arm's not coming back!")
             }
         }
@@ -312,7 +312,7 @@ class WardenBrain {
     say_(key, text) {
         if (_said.containsKey(key)) return
         _said[key] = true
-        var kira = _engine.fighters.any { |f| f.side != _core.side && f.name == "Kira" && f.active }
+        var kira = _engine.fighters.any { |fighter| fighter.side != _core.side && fighter.name == "Kira" && fighter.active }
         _engine.say(kira ? "Kira: " + text : text)
     }
 }

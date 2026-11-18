@@ -16,14 +16,14 @@ class FinnSprite {
 
     static data {
         if (__data == null) {
-            var d = {}
-            d["texture"] = "Actors/finn.png"
-            d["origin"] = [25, 33]
-            d["columns"] = 29
-            d["rows"] = 32
-            d["cellSize"] = [50, 46]
-            d["defaultAnimation"] = "downIdleAnimation"
-            d["animations"] = [
+            var sheet = {}
+            sheet["texture"] = "Actors/finn.png"
+            sheet["origin"] = [25, 33]
+            sheet["columns"] = 29
+            sheet["rows"] = 32
+            sheet["cellSize"] = [50, 46]
+            sheet["defaultAnimation"] = "downIdleAnimation"
+            sheet["animations"] = [
                 // name, first frame, end frame (not included), seconds, loops
                 ["downDeathAnimation",                0,   12, 0.857, false],
                 ["downRightDeathAnimation",          12,   24, 0.857, false],
@@ -114,7 +114,7 @@ class FinnSprite {
                 ["leftWorkingAnimation",            880,  896, 4.571, true],
                 ["downLeftWorkingAnimation",        896,  912, 4.571, true]
             ]
-            __data = d
+            __data = sheet
         }
         return __data
     }

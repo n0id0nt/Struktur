@@ -12,9 +12,10 @@ namespace Util
 {
 namespace Math
 {
-inline float AngleZFromQuat(const glm::quat& q)
+inline float AngleZFromQuat(const glm::quat& rotation)
 {
-	return std::atan2(2.0f * (q.w * q.z + q.x * q.y), 1.0f - 2.0f * (q.y * q.y + q.z * q.z));
+	return std::atan2(2.0f * (rotation.w * rotation.z + rotation.x * rotation.y),
+	                  1.0f - 2.0f * (rotation.y * rotation.y + rotation.z * rotation.z));
 }
 
 // Replaces raylib's raymath.h ::Lerp - same signature/behaviour (unclamped linear interpolation).

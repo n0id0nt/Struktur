@@ -140,20 +140,20 @@ class GearTypes {
     }
 
     static weapon(id) {
-        for (w in GearTypes.weapons) {
-            if (w.id == id) return w
+        for (weapon in GearTypes.weapons) {
+            if (weapon.id == id) return weapon
         }
         return null
     }
 
     static armour(id) {
-        for (a in GearTypes.armours) {
-            if (a.id == id) return a
+        for (armour in GearTypes.armours) {
+            if (armour.id == id) return armour
         }
         return null
     }
 
     // What can go in the main hand / the off-hand - the battle test's pickers.
-    static mainHands { GearTypes.weapons.where { |w| w.hands != "off" }.toList }
-    static offHands { GearTypes.weapons.where { |w| w.offhandOk }.toList }
+    static mainHands { GearTypes.weapons.where { |weapon| weapon.hands != "off" }.toList }
+    static offHands { GearTypes.weapons.where { |weapon| weapon.offhandOk }.toList }
 }

@@ -126,6 +126,29 @@ void Struktur::UI::UIInputHint::Update(GameContext& context)
 	UpdateChildren(context);
 }
 
+// The batch slot from its quadIndex-th quad on.
+Struktur::Renderer::UIBatchSlot Struktur::UI::UIInputHint::SubSlot(uint32_t quadIndex) const
+{
+	Renderer::UIBatchSlot slot = m_batchSlot;
+	slot.vertexOffset += quadIndex * 4;
+	slot.quadCapacity -= std::min(quadIndex, slot.quadCapacity);
+	return slot;
+}
+
+// Text at x, centred vertically in the hint, from the quadIndex-th quad on. Returns the quads it used.
+uint32_t Struktur::UI::UIInputHint::DrawHintText(Renderer::UIRenderer& renderer, const std::string& text, float x,
+                                                 uint32_t quadIndex)
+{
+	if (!m_font)
+	{
+		return 0;
+	}
+	float textHeight = Text::MeasureTextEx(m_font->font, text, m_fontSize, 1.0f).y;
+	float y          = std::floor(m_bounds.y) + std::floor((m_bounds.height - textHeight) * 0.5f);
+	return renderer.DrawText(m_batch, SubSlot(quadIndex), m_font->font, text, {x, y}, m_fontSize, m_textColor,
+	                         GetZIndex());
+}
+
 void Struktur::UI::UIInputHint::Render(GameContext& context)
 {
 	if (m_visualDirty)
@@ -146,24 +169,6 @@ void Struktur::UI::UIInputHint::Render(GameContext& context)
 		float top        = std::floor(m_bounds.y);
 		float height     = m_bounds.height;
 		uint32_t used    = 0;
-		auto subSlot     = [&](uint32_t offset)
-		{
-			Renderer::UIBatchSlot slot = m_batchSlot;
-			slot.vertexOffset += offset * 4;
-			slot.quadCapacity -= std::min(offset, slot.quadCapacity);
-			return slot;
-		};
-		auto drawText = [&](const std::string& text, float atX)
-		{
-			if (!m_font)
-			{
-				return;
-			}
-			float textHeight = Text::MeasureTextEx(m_font->font, text, m_fontSize, 1.0f).y;
-			float y          = top + std::floor((height - textHeight) * 0.5f);
-			used += renderer.DrawText(m_batch, subSlot(used), m_font->font, text, {atX, y}, m_fontSize, m_textColor,
-			                          GetZIndex());
-		};
 
 		for (size_t i = 0; i < m_glyphs.size(); ++i)
 		{
@@ -181,19 +186,19 @@ void Struktur::UI::UIInputHint::Render(GameContext& context)
 				}
 				glm::vec2 size = glyph.pixelSize * (float)m_glyphScale;
 				float y        = top + std::floor((height - size.y) * 0.5f);
-				renderer.DrawTexturedRect(m_batch, subSlot(used), Util::Math::Rect{x, y, size.x, size.y},
+				renderer.DrawTexturedRect(m_batch, SubSlot(used), Util::Math::Rect{x, y, size.x, size.y},
 				                          texture->GetHandle(), Util::ColorWhite, GetZIndex());
 				++used;
 			}
 			else
 			{
-				drawText(FallbackLabel(glyph), x);
+				used += DrawHintText(renderer, FallbackLabel(glyph), x, used);
 			}
 			x += GlyphWidth(glyph);
 		}
 		if (!m_label.empty())
 		{
-			drawText(m_label, x + (m_glyphs.empty() ? 0.0f : m_labelGap));
+			used += DrawHintText(renderer, m_label, x + (m_glyphs.empty() ? 0.0f : m_labelGap), used);
 		}
 
 		// A device switch can leave fewer quads than last time (one D-pad picture instead of four keys).

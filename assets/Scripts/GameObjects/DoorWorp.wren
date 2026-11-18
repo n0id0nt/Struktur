@@ -56,13 +56,13 @@ class DoorWorp {
     }
 
     static offsetFor_(direction) {
-        var d = direction
+        var heading = direction
         var x = 0
         var y = 0
-        if (d.contains("North") || d.contains("north") || d.contains("Up") || d.contains("up")) y = -1
-        if (d.contains("South") || d.contains("south") || d.contains("Down") || d.contains("down")) y = 1
-        if (d.contains("East") || d.contains("east") || d.contains("Right") || d.contains("right")) x = 1
-        if (d.contains("West") || d.contains("west") || d.contains("Left") || d.contains("left")) x = -1
+        if (heading.contains("North") || heading.contains("north") || heading.contains("Up") || heading.contains("up")) y = -1
+        if (heading.contains("South") || heading.contains("south") || heading.contains("Down") || heading.contains("down")) y = 1
+        if (heading.contains("East") || heading.contains("east") || heading.contains("Right") || heading.contains("right")) x = 1
+        if (heading.contains("West") || heading.contains("west") || heading.contains("Left") || heading.contains("left")) x = -1
         if (x == 0 && y == 0) return null
         return Vec2.new(x * TILE_SIZE, y * TILE_SIZE)
     }

@@ -144,13 +144,13 @@ class CombatState is BaseState {
         } else {
             addStageEnemies_(_encounter.stages[0])
         }
-        var roster = _engine.side(1).map { |e| e.name }.join(", ")
-        var partyRoster = _party.map { |c| c.name }.join(", ")
+        var roster = _engine.side(1).map { |enemy| enemy.name }.join(", ")
+        var partyRoster = _party.map { |combatant| combatant.name }.join(", ")
         Debug.info("[CombatState] %(partyRoster) vs %(roster)")
 
         // Room on screen for whoever may join the opposition mid-fight (a boss's shards).
         var enemySlots = _engine.side(1).count
-        if (_engine.side(1).any { |e| e.has("boss") }) enemySlots = enemySlots + 2
+        if (_engine.side(1).any { |enemy| enemy.has("boss") }) enemySlots = enemySlots + 2
         _view = CombatUI.new(_party.count, enemySlots.max(1))
         _view.onSlotClick = Fn.new { |index| slotClicked_(index) }
         _view.onSlotFocus = Fn.new { |index| slotFocused_(index) }
@@ -174,10 +174,10 @@ class CombatState is BaseState {
         var names = []
         if (params["opponents"] != null) {
             for (entity in params["opponents"]) {
-                var s = Script.getInstance(entity)
-                if (s == null) continue
-                var def = BattleCritter.forName(s.name)
-                var combatant = enemyCombatant_(s, def, entity)
+                var script = Script.getInstance(entity)
+                if (script == null) continue
+                var def = BattleCritter.forName(script.name)
+                var combatant = enemyCombatant_(script, def, entity)
                 combatant.brain = def.makeBrain()
                 _enemies.add(combatant)
                 names.add(def.name)
@@ -387,7 +387,7 @@ class CombatState is BaseState {
     mark(key, value) { _marks[key] = value }
     marked(key) { _marks.containsKey(key) }
     markOf(key) { _marks[key] }
-    inParty(name) { _party.any { |c| c.name == name && c.alive } }
+    inParty(name) { _party.any { |combatant| combatant.name == name && combatant.alive } }
     // A line on the banner - nothing stops.
     say(text) { _view.setMessage(text, 4.5) }
     // Lines for a prompt box at the next selection stop.
@@ -401,15 +401,15 @@ class CombatState is BaseState {
         // The battle test fights with its own picks and saves nothing.
         var sandbox = _params["partyCombatants"] != null
         if (!sandbox && MoveBook.unlock(moveName)) MoveBook.save("moves.sav")
-        for (c in _party) {
-            if (c.def == BattlePlayer) {
+        for (combatant in _party) {
+            if (combatant.def == BattlePlayer) {
                 if (!sandbox) {
-                    c.moves = BattlePlayer.kit
-                } else if (!c.moves.any { |m| m.id == moveName } && c.moves.count < LOADOUT_SLOTS) {
-                    c.moves.add(Moves.byName(moveName))
+                    combatant.moves = BattlePlayer.kit
+                } else if (!combatant.moves.any { |move| move.id == moveName } && combatant.moves.count < LOADOUT_SLOTS) {
+                    combatant.moves.add(Moves.byName(moveName))
                 }
-            } else if (c.def != null && c.def.kitNames.contains(moveName) && !c.moves.any { |m| m.id == moveName }) {
-                c.moves.add(Moves.byName(moveName))
+            } else if (combatant.def != null && combatant.def.kitNames.contains(moveName) && !combatant.moves.any { |move| move.id == moveName }) {
+                combatant.moves.add(Moves.byName(moveName))
             }
         }
     }
@@ -558,15 +558,15 @@ class CombatState is BaseState {
         _view.setSlots([["Start", "", true], ["Undo last", "", true]], 0, "pair")
         _view.setHeader("Chain ready")
         _view.setHint(HINT_CONFIRM)
-        _view.setDetail(_builder.entries.map { |e| e.move.name }.join(" > "))
+        _view.setDetail(_builder.entries.map { |enemy| enemy.move.name }.join(" > "))
         refreshChain_()
         if (_stage != null) _stage.setHighlights(null, [_builder.lane, _builder.row])
     }
 
     refreshChain_() {
-        var b = _builder
-        var text = "%(Move.fmt(b.time)) / %(Move.fmt(b.budget))s   SP %(b.stamina.floor)"
-        _view.setChain(text, b.time / b.budget)
+        var builder = _builder
+        var text = "%(Move.fmt(builder.time)) / %(Move.fmt(builder.budget))s   SP %(builder.stamina.floor)"
+        _view.setChain(text, builder.time / builder.budget)
     }
 
     // The usable items: [[id, display name, count left], ...] - the party's consumables (less what this chain has
@@ -693,7 +693,7 @@ class CombatState is BaseState {
             if (index == MENU_ITEMS) text = itemList_().count > 0 ? "Use an item - it takes time too, and works when it lands." : "You have nothing to use."
             if (index == MENU_FLEE) text = "Run from this fight."
             if (_builder.count > 0) {
-                var chain = _builder.entries.map { |e| e.move.name }.join(" > ")
+                var chain = _builder.entries.map { |enemy| enemy.move.name }.join(" > ")
                 text = "%(text)\n%(chain)"
             }
             _view.setDetail(text)
@@ -746,8 +746,8 @@ class CombatState is BaseState {
             parts.add("heals %(_engine.rules.healAmount(_chooser, move, 1)) at %(Move.fmt(move.impact))s")
         }
         if (move.isDefend) {
-            var w = move.window
-            parts.add("guard %(Move.fmt(w[0]))-%(Move.fmt(w[2]))s (best %(Move.fmt(w[1]))s)")
+            var window = move.window
+            parts.add("guard %(Move.fmt(window[0]))-%(Move.fmt(window[2]))s (best %(Move.fmt(window[1]))s)")
             parts.add("def %(move.defence.round)")
         }
         if (move.isDodge) parts.add("dodge %(Move.fmt(move.dodge[0]))-%(Move.fmt(move.dodge[1]))s")
@@ -906,7 +906,7 @@ class CombatState is BaseState {
                 cards[i].setVisible(false)
             }
         }
-        var foes = _engine.fighters.where { |f| f.side == 1 && !f.removed }.toList
+        var foes = _engine.fighters.where { |foe| foe.side == 1 && !foe.removed }.toList
         cards = _view.enemyCards
         for (i in 0...cards.count) {
             if (i < foes.count) {
@@ -917,15 +917,15 @@ class CombatState is BaseState {
         }
 
         var read = 0
-        for (c in _party) {
-            if (c.read > read) read = c.read
+        for (combatant in _party) {
+            if (combatant.read > read) read = combatant.read
         }
         var rows = []
-        for (c in _party) {
-            if (c.active) rows.add(timelineRow_(c, 2))
+        for (combatant in _party) {
+            if (combatant.active) rows.add(timelineRow_(combatant, 2))
         }
-        for (f in foes) {
-            if (f.active) rows.add(timelineRow_(f, read))
+        for (foe in foes) {
+            if (foe.active) rows.add(timelineRow_(foe, read))
         }
         // While a chain is being built, the chooser's row marks the budget it has to reach - not on the main menu until
         // something has been picked, never while the clock runs.
@@ -933,48 +933,48 @@ class CombatState is BaseState {
         _view.timeline.draw(rows, building ? _builder.budget : null)
     }
 
-    refreshCard_(card, c) {
-        var s = c.stats
+    refreshCard_(card, combatant) {
+        var stats = combatant.stats
         card.setVisible(true)
-        card.refresh(c.name, c.alive, s.hp, s.maxHp, (c.has("noStamina") || s.maxStamina <= 0) ? 1 : s.staminaFraction, CombatState.statusText_(c))
-        card.selected = c == _chooser && _phase == "select"
+        card.refresh(combatant.name, combatant.alive, stats.hp, stats.maxHp, (combatant.has("noStamina") || stats.maxStamina <= 0) ? 1 : stats.staminaFraction, CombatState.statusText_(combatant))
+        card.selected = combatant == _chooser && _phase == "select"
     }
 
-    static statusText_(c) {
+    static statusText_(combatant) {
         var parts = []
-        if (c.burn > 0) parts.add("Burn x%(c.burn)")
-        if (c.frozen > 0) {
+        if (combatant.burn > 0) parts.add("Burn x%(combatant.burn)")
+        if (combatant.frozen > 0) {
             parts.add("Frozen")
-        } else if (c.chill > 0) {
-            parts.add("Chill x%(c.chill)")
+        } else if (combatant.chill > 0) {
+            parts.add("Chill x%(combatant.chill)")
         }
-        if (c.bleed > 0) parts.add("Bleed x%(c.bleed)")
-        var charges = c.counter("charges")
+        if (combatant.bleed > 0) parts.add("Bleed x%(combatant.bleed)")
+        var charges = combatant.counter("charges")
         if (charges > 0) parts.add("Charge x%(charges)")
-        if (c.shield >= 1) parts.add("Shield %(c.shield.round)")
-        if (c.exposedNow) parts.add("Open!")
+        if (combatant.shield >= 1) parts.add("Shield %(combatant.shield.round)")
+        if (combatant.exposedNow) parts.add("Open!")
         return parts.join("  ")
     }
 
     // One combatant's row: a damage animation first if it is in one, the rest of its active move, then as much of
     // its chain as may be seen (visible: 0 the active move only, 1 the next one too, 2 everything). The chooser's
     // row previews the chain being built instead.
-    timelineRow_(c, visible) {
-        var row = TimelineRow.new(c.name, c.side == 0, c == _chooser && _phase == "select")
-        var t = 0
-        if (c == _chooser && _phase == "select" && _builder != null) {
+    timelineRow_(combatant, visible) {
+        var row = TimelineRow.new(combatant.name, combatant.side == 0, combatant == _chooser && _phase == "select")
+        var endTime = 0
+        if (combatant == _chooser && _phase == "select" && _builder != null) {
             for (entry in _builder.entries) {
-                t = row.addMove(entry.move, t, 0, false, true)
+                endTime = row.addMove(entry.move, endTime, 0, false, true)
             }
             return row
         }
-        if (c.stun > 0) t = row.addBlock(0, c.stun, "stagger", "")
-        if (c.move == null) return row
-        t = row.addMove(c.move, t, c.progress, c.impactDone, false)
-        var last = visible >= 2 ? c.chain.count - 1 : c.chainIndex + visible
-        var i = c.chainIndex + 1
-        while (i <= last && i < c.chain.count) {
-            t = row.addMove(c.chain[i].move, t, 0, false, false)
+        if (combatant.stun > 0) endTime = row.addBlock(0, combatant.stun, "stagger", "")
+        if (combatant.move == null) return row
+        endTime = row.addMove(combatant.move, endTime, combatant.progress, combatant.impactDone, false)
+        var last = visible >= 2 ? combatant.chain.count - 1 : combatant.chainIndex + visible
+        var i = combatant.chainIndex + 1
+        while (i <= last && i < combatant.chain.count) {
+            endTime = row.addMove(combatant.chain[i].move, endTime, 0, false, false)
             i = i + 1
         }
         return row
@@ -1019,12 +1019,12 @@ class CombatState is BaseState {
     // GameObjects/NPC.joinsPartyOnDefeat) are added to the party instead of just vanishing.
     win_() {
         var recruited = []
-        for (e in _enemies) {
-            if (e.entity != null && GameObject.isValid(e.entity)) {
-                var script = Script.getInstance(e.entity)
+        for (enemy in _enemies) {
+            if (enemy.entity != null && GameObject.isValid(enemy.entity)) {
+                var script = Script.getInstance(enemy.entity)
                 // Duck-typed (not `is NPC`): registered scripts live in their own module instance.
                 if (script != null && Reflect.hasMethod(script, "joinsPartyOnDefeat()") && script.joinsPartyOnDefeat()) {
-                    Party.join(script.name, WorldTransform.getPosition(e.entity))
+                    Party.join(script.name, WorldTransform.getPosition(enemy.entity))
                     recruited.add(script.name)
                 }
             }
@@ -1066,16 +1066,16 @@ class CombatState is BaseState {
     // world so their dialogue can carry on.
     removeFallen_(recruited) {
         var fallen = []
-        for (e in _enemies) {
-            if (e.alive) continue
-            if (!recruited.contains(e.name)) fallen.add(e.name)
-            if (e.entity != null && GameObject.isValid(e.entity)) {
-                var script = Script.getInstance(e.entity)
-                if (!(script is Critter) && !recruited.contains(e.name)) continue
-                if (!recruited.contains(e.name) && script is Critter) {
+        for (enemy in _enemies) {
+            if (enemy.alive) continue
+            if (!recruited.contains(enemy.name)) fallen.add(enemy.name)
+            if (enemy.entity != null && GameObject.isValid(enemy.entity)) {
+                var script = Script.getInstance(enemy.entity)
+                if (!(script is Critter) && !recruited.contains(enemy.name)) continue
+                if (!recruited.contains(enemy.name) && script is Critter) {
                     Defeated.add(script.iid)
                 }
-                GameObject.destroy(e.entity)
+                GameObject.destroy(enemy.entity)
             }
         }
         return fallen

@@ -16,7 +16,7 @@ class HealthBarUI {
     // fraction: 0..1
     setFraction(fraction) {
         _bar.setFraction(fraction)
-        var f = _bar.fraction
-        _bar.setColor(f > 0.5 ? FILL_HEALTHY : (f > 0.25 ? FILL_HURT : FILL_CRITICAL))
+        var shown = _bar.fraction
+        _bar.setColor(shown > 0.5 ? FILL_HEALTHY : (shown > 0.25 ? FILL_HURT : FILL_CRITICAL))
     }
 }

@@ -16,14 +16,14 @@ class YellowPantsGirlSprite {
 
     static data {
         if (__data == null) {
-            var d = {}
-            d["texture"] = "Actors/yellow_pants_girl.png"
-            d["origin"] = [24, 29]
-            d["columns"] = 20
-            d["rows"] = 23
-            d["cellSize"] = [48, 41]
-            d["defaultAnimation"] = "downIdleAnimation"
-            d["animations"] = [
+            var sheet = {}
+            sheet["texture"] = "Actors/yellow_pants_girl.png"
+            sheet["origin"] = [24, 29]
+            sheet["columns"] = 20
+            sheet["rows"] = 23
+            sheet["cellSize"] = [48, 41]
+            sheet["defaultAnimation"] = "downIdleAnimation"
+            sheet["animations"] = [
                 // name, first frame, end frame (not included), seconds, loops
                 ["downDeathAnimation",         0,   12, 0.857, false],
                 ["downRightDeathAnimation",   12,   24, 0.857, false],
@@ -74,7 +74,7 @@ class YellowPantsGirlSprite {
                 ["leftWalkAnimation",        432,  440, 0.571, true],
                 ["downLeftWalkAnimation",    440,  448, 0.571, true]
             ]
-            __data = d
+            __data = sheet
         }
         return __data
     }

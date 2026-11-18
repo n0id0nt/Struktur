@@ -86,7 +86,7 @@ class BattleTestState is BaseState {
         _focusKind = null
         _focusId = null
         _tabHeld = false
-        _scenario = 0
+        _scenario = 1
         _read = 0
 
         // The world root the arena level (and every battle entity) hangs off - no overworld levels are loaded.
@@ -284,7 +284,7 @@ class BattleTestState is BaseState {
             if (!wanted.contains(id)) wanted.add(id)
         }
         // Only top up a loadout that has gone short - a deliberately small one (the starter kit) stays small.
-        var have = moves.where { |m| m != null }.count
+        var have = moves.where { |move| move != null }.count
         if (have >= 3) return
         for (id in wanted) {
             if (have >= MOVE_SLOTS) break

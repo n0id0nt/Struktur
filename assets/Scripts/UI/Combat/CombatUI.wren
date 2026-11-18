@@ -131,8 +131,8 @@ class CombatUI {
         showCommand(false)
     }
 
-    static group_(parent, x, y, w, h) {
-        var panel = UIPanel.new(Vec2.new(x, y), Vec2.new(0, 0), Vec2.new(w, h), Vec2.new(0, 0))
+    static group_(parent, x, y, width, height) {
+        var panel = UIPanel.new(Vec2.new(x, y), Vec2.new(0, 0), Vec2.new(width, height), Vec2.new(0, 0))
         panel.setBackgroundColor(BLANK)
         panel.setBorderColor(BLANK)
         parent.addChild(panel)
@@ -159,7 +159,7 @@ class CombatUI {
         for (i in 0...SLOT_COUNT) {
             var button = MoveButtonUI.new(_command, Vec2.new(0, HEADER_HEIGHT + 4), Vec2.new(100, 40), font)
             var index = i
-            button.setOnClick { |s, m|
+            button.setOnClick { |sender, mousePos|
                 if (_onSlotClick != null) _onSlotClick.call(index)
             }
             button.setOnFocused(Fn.new {
@@ -222,7 +222,7 @@ class CombatUI {
                 Vec2.new(rowWidth, ITEM_ROW_HEIGHT), font)
             row.inset = ITEM_ICON + 6
             var index = i
-            row.setOnClick { |s, m|
+            row.setOnClick { |sender, mousePos|
                 if (_onItemClick != null) _onItemClick.call(index)
             }
             row.setOnFocused(Fn.new {
@@ -510,9 +510,9 @@ class CombatUI {
                 label.setVisible(false)
                 continue
             }
-            var c = popup["color"]
+            var color = popup["color"]
             label.setPosition(Vec2.new(popup["x"], popup["y"] - 46 * Math.easeOut(t)), Vec2.new(0, 0))
-            label.setTextColor(Vec4.new(c.x, c.y, c.z, t < 0.6 ? 255 : 255 * (1 - (t - 0.6) / 0.4)))
+            label.setTextColor(Vec4.new(color.x, color.y, color.z, t < 0.6 ? 255 : 255 * (1 - (t - 0.6) / 0.4)))
         }
         if (_messageUntil != null && now >= _messageUntil) setMessage("")
     }

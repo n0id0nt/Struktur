@@ -72,21 +72,18 @@ Struktur::Resource::FontResource::~FontResource()
 #define STB_TRUETYPE_IMPLEMENTATION
 #include <stb_truetype.h>
 
-namespace
-{
 // raylib's built-in bitmap font (the old "default" shortcut) has no equivalent without a real file - point the
 // same shortcut at an already-shipped ttf instead. Invisible to callers either way.
-constexpr const char* kDefaultFontPath = "Fonts/machine-std/machine-std-regular.ttf";
+static constexpr const char* kDefaultFontPath = "Fonts/machine-std/machine-std-regular.ttf";
 // Starting size for the pack-and-retry loop below, not a hard limit - a fixed atlas size that happened to fit
 // this project's original, smaller font sizes silently dropped glyphs (as zero-size, invisible rects) the moment
 // a larger fontSize/codepoint-count combination needed more area than one atlas this size could hold.
-constexpr int kInitialAtlasSize = 512;
+static constexpr int kInitialAtlasSize = 512;
 // Doubled from kInitialAtlasSize on each overflow until packing succeeds or this cap is hit - 4096 comfortably
 // fits every font size this project actually uses (see LoadFromDisk) while staying well within any GPU's texture
 // size limits.
-constexpr int kMaxAtlasSize = 4096;
-constexpr int kAtlasPadding = 1;
-}  // namespace
+static constexpr int kMaxAtlasSize = 4096;
+static constexpr int kAtlasPadding = 1;
 
 bool Struktur::Resource::FontResource::LoadFromDisk(GameContext& context)
 {

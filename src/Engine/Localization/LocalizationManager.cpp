@@ -4,12 +4,10 @@
 #include "Engine/Core/FileSystem.h"
 #include "nlohmann/json.hpp"
 
-namespace
-{
 // allow_exceptions=false + is_discarded() instead of a bare parse() call - malformed content should log and
 // fail gracefully, not throw a native exception across whatever call boundary (Wren included) sits above this
 // - same hardened-parse fix InputConfigLoader already applies to its own JSON loading.
-nlohmann::json ParseJsonFile(const std::string& path, const char* what)
+static nlohmann::json ParseJsonFile(const std::string& path, const char* what)
 {
 	auto result = Struktur::FileSystem::ReadString(path);
 	if (!result.success)
@@ -26,7 +24,6 @@ nlohmann::json ParseJsonFile(const std::string& path, const char* what)
 	}
 	return json;
 }
-}  // namespace
 
 namespace Struktur::Localization
 {

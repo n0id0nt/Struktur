@@ -171,7 +171,7 @@ class InventoryState is BaseState {
         model["startTab"] = startTab
         model["items"] = itemSections_()
         model["itemsEmpty"] = Localization.get("inventory.empty.items")
-        if (tabs.any { |t| t[0] == "map" }) {
+        if (tabs.any { |tab| tab[0] == "map" }) {
             model["map"] = mapModel_()
         }
         _movesModel = movesModel_()
@@ -214,7 +214,7 @@ class InventoryState is BaseState {
     }
 
     // True when an item carried opens this tab (ItemDatabase "opensTab") - the unlock rule for item-backed tabs.
-    static carrying_(tabId) { Inventory.stacks.any { |s| ItemDatabase.opensTab(s.id) == tabId } }
+    static carrying_(tabId) { Inventory.stacks.any { |stack| ItemDatabase.opensTab(stack.id) == tabId } }
 
     // The Items tab: a section per category (ItemCategory.all - key items, consumables, weapons, armour). Old
     // "material" items show with the key items. See UI/Inventory/ItemGridPage.wren for the shape.
@@ -353,7 +353,7 @@ class InventoryState is BaseState {
     // The players only - their level is the one that matters (NPC members don't level).
     levelEntries_() {
         var entries = []
-        for (member in Party.members.where { |m| m.isPlayer }) {
+        for (member in Party.members.where { |candidate| candidate.isPlayer }) {
             var entry = {}
             entry["name"] = memberName_(member)
             entry["level"] = PLACEHOLDER_LEVEL
@@ -372,12 +372,12 @@ class InventoryState is BaseState {
         for (category in QuestLog.categories) {
             var section = {}
             section["title"] = Localization.get("quest.category.%(category)")
-            section["quests"] = quests.where { |q| q["category"] == category && q["state"] == QuestLog.active }.map { |q| InventoryState.questEntry_(q) }.toList
+            section["quests"] = quests.where { |quest| quest["category"] == category && quest["state"] == QuestLog.active }.map { |quest| InventoryState.questEntry_(quest) }.toList
             sections.add(section)
         }
         var completed = {}
         completed["title"] = Localization.get("inventory.quests.completed")
-        completed["quests"] = quests.where { |q| q["state"] == QuestLog.complete }.map { |q| InventoryState.questEntry_(q) }.toList
+        completed["quests"] = quests.where { |quest| quest["state"] == QuestLog.complete }.map { |quest| InventoryState.questEntry_(quest) }.toList
         sections.add(completed)
         var model = {}
         model["overall"] = QuestLog.overallFraction
@@ -394,11 +394,11 @@ class InventoryState is BaseState {
         entry["summary"] = Localization.get("quest.%(id).summary")
         entry["fraction"] = quest["fraction"]
         entry["complete"] = quest["state"] == QuestLog.complete
-        entry["objectives"] = quest["objectives"].map { |o|
-            var objectiveId = o["id"]
+        entry["objectives"] = quest["objectives"].map { |objective|
+            var objectiveId = objective["id"]
             var line = {}
             line["text"] = Localization.get("quest.%(id).%(objectiveId)")
-            line["done"] = o["done"]
+            line["done"] = objective["done"]
             return line
         }.toList
         return entry

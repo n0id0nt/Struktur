@@ -13,10 +13,10 @@ std::vector<std::string> Struktur::UI::TextLayout::WrapText(const std::string& t
 
 	for (size_t i = 0; i < text.length(); ++i)
 	{
-		char c = text[i];
+		char character = text[i];
 
 		// Handle newlines
-		if (c == '\n')
+		if (character == '\n')
 		{
 			if (!word.empty())
 			{
@@ -31,15 +31,15 @@ std::vector<std::string> Struktur::UI::TextLayout::WrapText(const std::string& t
 		if (mode == TextWrapping::WORD_WRAP)
 		{
 			// Word wrap mode
-			if (c == ' ' || c == '\t')
+			if (character == ' ' || character == '\t')
 			{
-				std::string testLine = currentLine + word + c;
+				std::string testLine  = currentLine + word + character;
 				float width           = measureWidth(testLine);
 
 				if (width > maxWidth && !currentLine.empty())
 				{
 					lines.push_back(currentLine);
-					currentLine = word + c;
+					currentLine = word + character;
 				}
 				else
 				{
@@ -49,23 +49,23 @@ std::vector<std::string> Struktur::UI::TextLayout::WrapText(const std::string& t
 			}
 			else
 			{
-				word += c;
+				word += character;
 			}
 		}
 		else if (mode == TextWrapping::CHARACTER_WRAP)
 		{
 			// Character wrap mode
-			std::string testLine = currentLine + c;
+			std::string testLine  = currentLine + character;
 			float width           = measureWidth(testLine);
 
 			if (width > maxWidth && !currentLine.empty())
 			{
 				lines.push_back(currentLine);
-				currentLine = std::string(1, c);
+				currentLine = std::string(1, character);
 			}
 			else
 			{
-				currentLine += c;
+				currentLine += character;
 			}
 		}
 	}
@@ -87,9 +87,9 @@ std::vector<std::string> Struktur::UI::TextLayout::SplitWords(const std::string&
 {
 	std::vector<std::string> words;
 	std::string currentWord;
-	for (char c : line)
+	for (char character : line)
 	{
-		if (c == ' ' || c == '\t')
+		if (character == ' ' || character == '\t')
 		{
 			if (!currentWord.empty())
 			{
@@ -99,7 +99,7 @@ std::vector<std::string> Struktur::UI::TextLayout::SplitWords(const std::string&
 		}
 		else
 		{
-			currentWord += c;
+			currentWord += character;
 		}
 	}
 	if (!currentWord.empty())
@@ -168,10 +168,10 @@ std::vector<Struktur::UI::TextLayout::WrapToken> Struktur::UI::TextLayout::Token
 	// WORD_WRAP (also used for TextWrapping::NONE callers that still want tokens for some other reason - NONE
 	// itself never reaches here in practice, see UIRichLabel::BuildRenderLines).
 	std::string word;
-	for (char c : text)
+	for (char character : text)
 	{
-		word += c;
-		if (c == ' ' || c == '\t')
+		word += character;
+		if (character == ' ' || character == '\t')
 		{
 			tokens.push_back(WrapToken{word, measureWidth(word), styleId});
 			word.clear();

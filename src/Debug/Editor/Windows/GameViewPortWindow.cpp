@@ -10,8 +10,6 @@
 
 namespace Struktur::Debug
 {
-namespace
-{
 struct AspectPreset
 {
 	const char* label;
@@ -22,13 +20,12 @@ struct AspectPreset
 // Common aspect-ratio presets for the viewport-size overlay buttons - width held at a fixed base (matching
 // Main.wren's own default game width) with height derived per ratio, so switching between them reads as "same
 // width, taller/shorter" instead of jumping around in both dimensions at once.
-constexpr int kPresetBaseWidth = 1280;
-constexpr AspectPreset kAspectPresets[] = {
+static constexpr int kPresetBaseWidth          = 1280;
+static constexpr AspectPreset kAspectPresets[] = {
     {"16:9", kPresetBaseWidth, kPresetBaseWidth * 9 / 16},
     {"4:3", kPresetBaseWidth, kPresetBaseWidth * 3 / 4},
     {"21:9", kPresetBaseWidth, kPresetBaseWidth * 9 / 21},
 };
-}  // namespace
 
 void GameViewportWindow::Initialise(GameContext& context)
 {

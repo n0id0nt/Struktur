@@ -16,14 +16,14 @@ class PeasantGirlSprite {
 
     static data {
         if (__data == null) {
-            var d = {}
-            d["texture"] = "Actors/peasant_girl.png"
-            d["origin"] = [29, 33]
-            d["columns"] = 20
-            d["rows"] = 23
-            d["cellSize"] = [58, 50]
-            d["defaultAnimation"] = "downIdleAnimation"
-            d["animations"] = [
+            var sheet = {}
+            sheet["texture"] = "Actors/peasant_girl.png"
+            sheet["origin"] = [29, 33]
+            sheet["columns"] = 20
+            sheet["rows"] = 23
+            sheet["cellSize"] = [58, 50]
+            sheet["defaultAnimation"] = "downIdleAnimation"
+            sheet["animations"] = [
                 // name, first frame, end frame (not included), seconds, loops
                 ["downDeathAnimation",         0,   12, 0.857, false],
                 ["downRightDeathAnimation",   12,   24, 0.857, false],
@@ -74,7 +74,7 @@ class PeasantGirlSprite {
                 ["leftWalkAnimation",        432,  440, 0.571, true],
                 ["downLeftWalkAnimation",    440,  448, 0.571, true]
             ]
-            __data = d
+            __data = sheet
         }
         return __data
     }

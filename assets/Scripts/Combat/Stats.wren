@@ -30,10 +30,10 @@ class Stats {
     mana { _mana }
     defence { _defence }
     recovery { _recovery }
-    attack=(v) { _attack = v }
-    mana=(v) { _mana = v }
-    defence=(v) { _defence = v }
-    recovery=(v) { _recovery = v }
+    attack=(value) { _attack = value }
+    mana=(value) { _mana = value }
+    defence=(value) { _defence = value }
+    recovery=(value) { _recovery = value }
 
     // By name - the inventory's stat rows (ATTRIBUTE_NAMES).
     attr(name) {

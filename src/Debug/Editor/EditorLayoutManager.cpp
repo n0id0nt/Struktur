@@ -137,9 +137,9 @@ std::unordered_map<std::string, bool> Struktur::Debug::EditorLayoutManager::Load
 	{
 		file >> json;
 	}
-	catch (const nlohmann::json::parse_error &e)
+	catch (const nlohmann::json::parse_error &parseError)
 	{
-		DEBUG_ERROR("EditorLayoutManager: JSON parse error in %s - %s", filename.c_str(), e.what());
+		DEBUG_ERROR("EditorLayoutManager: JSON parse error in %s - %s", filename.c_str(), parseError.what());
 		return windowStates;
 	}
 

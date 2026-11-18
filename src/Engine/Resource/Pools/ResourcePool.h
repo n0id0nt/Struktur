@@ -296,17 +296,13 @@ public:
 	}
 
 #ifdef EDITOR
-	// Read-only walk over every currently-cached entry - for the resource manager editor window's live table
-	// (ResourceManagerWindow.cpp). fn is called once per entry with (name, resource, refCount, pinned); m_resources
-	// (a SparseSet) already supports const range-for internally (see GetTotalMemoryUsage above), this just
-	// surfaces that publicly instead of leaving it protected.
-	template <typename F>
-	void ForEachEntry(F&& fn) const
+	// Read-only view of every currently-cached entry, for range-for (each has name, resource, refCount, pinned) -
+	// for the resource manager editor window's live table (ResourceManagerWindow.cpp). m_resources (a SparseSet)
+	// already supports const range-for internally (see GetTotalMemoryUsage above), this just surfaces that
+	// publicly instead of leaving it protected.
+	const SparseSet<ResourceEntry>& GetEntries() const
 	{
-		for (const auto& entry : m_resources)
-		{
-			fn(entry.name, entry.resource, entry.refCount, entry.pinned);
-		}
+		return m_resources;
 	}
 
 	// Registers a sink for Loaded/Unloaded events fired by this pool (ReadyForUse is fired by subclasses that

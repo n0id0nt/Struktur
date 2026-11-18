@@ -18,8 +18,8 @@ struct WrenVec2
 	    : value(x, y)
 	{
 	}
-	WrenVec2(const glm::vec2& v)
-	    : value(v)
+	WrenVec2(const glm::vec2& vector)
+	    : value(vector)
 	{
 	}
 };
@@ -36,8 +36,8 @@ struct WrenVec3
 	    : value(x, y, z)
 	{
 	}
-	WrenVec3(const glm::vec3& v)
-	    : value(v)
+	WrenVec3(const glm::vec3& vector)
+	    : value(vector)
 	{
 	}
 };
@@ -54,8 +54,8 @@ struct WrenVec4
 	    : value(x, y, z, w)
 	{
 	}
-	WrenVec4(const glm::vec4& v)
-	    : value(v)
+	WrenVec4(const glm::vec4& vector)
+	    : value(vector)
 	{
 	}
 };
@@ -72,8 +72,8 @@ struct WrenQuat
 	    : value(w, x, y, z)
 	{
 	}
-	WrenQuat(const glm::quat& q)
-	    : value(q)
+	WrenQuat(const glm::quat& quaternion)
+	    : value(quaternion)
 	{
 	}
 };
@@ -86,8 +86,8 @@ struct WrenMat4
 	    : value(1.0f)
 	{
 	}  // Identity Matrix
-	WrenMat4(const glm::mat4& m)
-	    : value(m)
+	WrenMat4(const glm::mat4& matrix)
+	    : value(matrix)
 	{
 	}
 };
@@ -96,8 +96,8 @@ struct WrenRect
 {
 	Struktur::Util::Math::Rect value;
 
-	WrenRect(const Struktur::Util::Math::Rect& m)
-	    : value(m)
+	WrenRect(const Struktur::Util::Math::Rect& rect)
+	    : value(rect)
 	{
 	}
 };

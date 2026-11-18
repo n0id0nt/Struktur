@@ -38,7 +38,7 @@ var LIST_SIZE = 24.0
 var LIST_LINE = 30
 var BUTTON_SIZE = Vec2.new(160, 44)
 var BUTTON_GAP = 16
-var Z = 20                    // above any screen's own UI
+var POPUP_Z = 20                    // above any screen's own UI
 
 class AlertPopup {
     construct new(config) {
@@ -47,7 +47,7 @@ class AlertPopup {
         _returnFocus = config["returnFocus"]
         _onClose = config["onClose"]
         var buttons = config["buttons"] != null ? config["buttons"] : [["OK", null]]
-        _actions = buttons.map { |b| b[1] }.toList
+        _actions = buttons.map { |button| button[1] }.toList
         _cancel = config["cancel"] != null ? config["cancel"] : buttons.count - 1
         var body = config["body"] != null ? config["body"].split("\n") : []
         var lines = config["lines"] != null ? config["lines"] : []
@@ -61,10 +61,10 @@ class AlertPopup {
             Vec2.new(0, 0))
         _root.setBackgroundColor(OVERLAY)
         _root.setBorderColor(Vec4.new(0, 0, 0, 0))
-        _root.setZIndex(Z)
+        _root.setZIndex(POPUP_Z)
         UIManager.addUIElement(_root)
         var box = UIKit.frame(_root, "window", Vec2.new(0, 0), Vec2.new(0.5, 0.5), Vec2.new(WIDTH, height), Vec2.new(0, 0),
-            Z + 1)
+            POPUP_Z + 1)
         box.setAnchorPoint(Vec2.new(0.5, 0.5))
 
         var y = PAD
@@ -90,16 +90,16 @@ class AlertPopup {
         var rowWidth = buttons.count * BUTTON_SIZE.x + (buttons.count - 1) * BUTTON_GAP
         for (i in 0...buttons.count) {
             var x = -rowWidth / 2 + i * (BUTTON_SIZE.x + BUTTON_GAP)
-            var button = UIKit.frame(box, "tile", Vec2.new(x, y), Vec2.new(0.5, 0), BUTTON_SIZE, Vec2.new(0, 0), Z + 1)
+            var button = UIKit.frame(box, "tile", Vec2.new(x, y), Vec2.new(0.5, 0), BUTTON_SIZE, Vec2.new(0, 0), POPUP_Z + 1)
             var text = UILabel.new(Vec2.new(0, 0), Vec2.new(0.5, 0.5), buttons[i][0], 22.0)
             text.setFont(_font)
             text.setTextColor(UIKit.text)
             text.setBoundingBoxToText()
             text.setAnchorPoint(Vec2.new(0.5, 0.5))
-            text.setZIndex(Z + 2)
+            text.setZIndex(POPUP_Z + 2)
             button.addChild(text)
             button.setFocusable(true)
-            var ring = UIKit.focusRing(button, Z + 3)
+            var ring = UIKit.focusRing(button, POPUP_Z + 3)
             button.setOnFocus { |sender| ring.setVisible(true) }
             button.setOnLoseFocus { |sender| ring.setVisible(false) }
             var index = i
@@ -166,7 +166,7 @@ class AlertPopup {
         label.setTextColor(color)
         label.setBoundingBoxToText()
         label.setAnchorPoint(Vec2.new(0.5, 0))
-        label.setZIndex(Z + 2)
+        label.setZIndex(POPUP_Z + 2)
         parent.addChild(label)
         return label
     }

@@ -30,9 +30,9 @@ inline bgfx::VertexLayout BuildQuadVertexLayout()
 	return layout;
 }
 
-inline uint32_t PackColor(const Util::Color& c)
+inline uint32_t PackColor(const Util::Color& color)
 {
-	return ((uint32_t)c.a << 24) | ((uint32_t)c.b << 16) | ((uint32_t)c.g << 8) | (uint32_t)c.r;
+	return ((uint32_t)color.a << 24) | ((uint32_t)color.b << 16) | ((uint32_t)color.g << 8) | (uint32_t)color.r;
 }
 }  // namespace Renderer
 }  // namespace Struktur

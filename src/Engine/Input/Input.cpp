@@ -8,11 +8,9 @@
 #include "InputConfigLoader.h"
 #include "InputMaps.h"
 
-namespace
-{
 // SDL3 identifies gamepads by a (non-sequential) joystick instance ID rather than a flat 0-based index, so this
 // re-derives "the Nth currently connected gamepad" from SDL_GetGamepads()'s list.
-SDL_JoystickID GetGamepadInstanceIdAtIndex(int index)
+static SDL_JoystickID GetGamepadInstanceIdAtIndex(int index)
 {
 	int count                = 0;
 	SDL_JoystickID* gamepads = ::SDL_GetGamepads(&count);
@@ -28,7 +26,7 @@ SDL_JoystickID GetGamepadInstanceIdAtIndex(int index)
 	return result;
 }
 
-Struktur::Input::InputComponent ToInputComponent(Struktur::Input::Input::Axis2Component axis)
+static Struktur::Input::InputComponent ToInputComponent(Struktur::Input::Input::Axis2Component axis)
 {
 	using Axis2Component = Struktur::Input::Input::Axis2Component;
 	using Struktur::Input::InputComponent;
@@ -46,7 +44,6 @@ Struktur::Input::InputComponent ToInputComponent(Struktur::Input::Input::Axis2Co
 			return InputComponent::None;
 	}
 }
-}  // namespace
 
 namespace Struktur::Input
 {
@@ -186,15 +183,12 @@ void Input::Update()
 // BUTTON HINTS
 // ============================================================================
 
-namespace
-{
 // A stick/trigger has to travel this far (of its -1..1 range) before it counts as "used" for hints - well past
 // any sane deadzone, so resting-stick drift never flips the shown device. Same idea as HasGamepadActivity's
 // threshold, as an edge rather than a level.
-constexpr float kHintAxisThreshold = 0.5f;
+static constexpr float kHintAxisThreshold = 0.5f;
 // Mouse travel in one frame (window pixels) that counts as using the mouse - small jitter is ignored.
-constexpr float kHintPointerTravel = 3.0f;
-}  // namespace
+static constexpr float kHintPointerTravel = 3.0f;
 
 void Input::AddDisplaySource(const std::string& input, InputSource source)
 {
@@ -1119,28 +1113,61 @@ void Input::CreateAxis2Binding(const std::string& input, SDL_GamepadAxis code, A
 // HIGH-LEVEL BUTTON INPUT
 // ============================================================================
 
+bool Input::CheckBinding(const std::string& input, bool (Input::*keyCheck)(SDL_Scancode),
+                         bool (Input::*buttonCheck)(SDL_GamepadButton), bool (Input::*pointerCheck)(PointerButton))
+{
+	auto it = m_buttonBindings.find(input);
+	if (it == m_buttonBindings.end())
+	{
+		WarnMissingBindingOnce(input);
+		return false;
+	}
+
+	// Check keyboard inputs
+	for (auto keycode : it->second.keycodes)
+	{
+		if ((this->*keyCheck)(keycode))
+		{
+			return true;
+		}
+	}
+
+	// Check controller button inputs
+	for (auto controllerButton : it->second.controllerButtons)
+	{
+		if ((this->*buttonCheck)(controllerButton))
+		{
+			return true;
+		}
+	}
+
+	// Check pointer (mouse/touch) button inputs - see PointerButton's own comment.
+	for (auto pointerButton : it->second.pointerButtons)
+	{
+		if ((this->*pointerCheck)(pointerButton))
+		{
+			return true;
+		}
+	}
+
+	return false;
+}
+
 bool Input::IsInputDown(const std::string& input)
 {
-	return CheckBinding(
-	    input, [this](SDL_Scancode k) { return IsKeyDown(k); },
-	    [this](SDL_GamepadButton b) { return IsControllerButtonDown(b); },
-	    [this](PointerButton p) { return IsPointerButtonDown(p); });
+	return CheckBinding(input, &Input::IsKeyDown, &Input::IsControllerButtonDown, &Input::IsPointerButtonDown);
 }
 
 bool Input::IsInputJustPressed(const std::string& input)
 {
-	return CheckBinding(
-	    input, [this](SDL_Scancode k) { return IsKeyJustPressed(k); },
-	    [this](SDL_GamepadButton b) { return IsControllerButtonJustPressed(b); },
-	    [this](PointerButton p) { return IsPointerButtonJustPressed(p); });
+	return CheckBinding(input, &Input::IsKeyJustPressed, &Input::IsControllerButtonJustPressed,
+	                    &Input::IsPointerButtonJustPressed);
 }
 
 bool Input::IsInputJustReleased(const std::string& input)
 {
-	return CheckBinding(
-	    input, [this](SDL_Scancode k) { return IsKeyJustReleased(k); },
-	    [this](SDL_GamepadButton b) { return IsControllerButtonJustReleased(b); },
-	    [this](PointerButton p) { return IsPointerButtonJustReleased(p); });
+	return CheckBinding(input, &Input::IsKeyJustReleased, &Input::IsControllerButtonJustReleased,
+	                    &Input::IsPointerButtonJustReleased);
 }
 
 // ============================================================================

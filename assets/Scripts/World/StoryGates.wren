@@ -30,7 +30,7 @@ class StoryGates {
         var versions = null
         var versionsText = args["Versions"]
         if (versionsText is String && versionsText != "") {
-            versions = versionsText.split(",").map {|v| Num.fromString(v.trim()) }.where {|v| v != null }.toList
+            versions = versionsText.split(",").map {|version| Num.fromString(version.trim()) }.where {|version| version != null }.toList
             if (versions.count == 0) {
                 versions = null
             }

@@ -83,8 +83,8 @@ class GearItem {
 
     // This item's own rank of a custom effect (0 = it doesn't carry it).
     rank(effect) {
-        for (e in _effects) {
-            if (e[0] == effect) return e[1]
+        for (entry in _effects) {
+            if (entry[0] == effect) return entry[1]
         }
         return 0
     }
@@ -97,7 +97,7 @@ class GearItem {
         parts.add(_type.name)
         var text = parts.join(" ")
         if (_effects.count > 0) {
-            text = text + " (" + _effects.map { |e| "%(e[0]) %(RANK_NAMES[e[1]])" }.join(", ") + ")"
+            text = text + " (" + _effects.map { |effect| "%(effect[0]) %(RANK_NAMES[effect[1]])" }.join(", ") + ")"
         }
         return text
     }
@@ -174,22 +174,22 @@ class Loadout {
     // --- custom effects ------------------------------------------------------------------
 
     rawWeaponRank_(effect) {
-        var a = _main != null ? _main.rank(effect) : 0
-        var b = _off != null ? _off.rank(effect) : 0
-        return a > b ? a : b
+        var mainRank = _main != null ? _main.rank(effect) : 0
+        var offRank = _off != null ? _off.rank(effect) : 0
+        return mainRank > offRank ? mainRank : offRank
     }
     rawArmourRank_(effect) { _armour != null ? _armour.rank(effect) : 0 }
 
     // The weapon / armour version's rank after Resonance (0 = not carried).
     weaponRank(effect) {
-        var w = rawWeaponRank_(effect)
-        if (w == 0) return 0
-        return (rawArmourRank_(effect) > 0 && w < 3) ? w + 1 : w
+        var weaponRank = rawWeaponRank_(effect)
+        if (weaponRank == 0) return 0
+        return (rawArmourRank_(effect) > 0 && weaponRank < 3) ? weaponRank + 1 : weaponRank
     }
     armourRank(effect) {
-        var a = rawArmourRank_(effect)
-        if (a == 0) return 0
-        return (rawWeaponRank_(effect) > 0 && a < 3) ? a + 1 : a
+        var armourRank = rawArmourRank_(effect)
+        if (armourRank == 0) return 0
+        return (rawWeaponRank_(effect) > 0 && armourRank < 3) ? armourRank + 1 : armourRank
     }
     // Both versions carried at rank III: the effect's capstone.
     capstone(effect) { rawWeaponRank_(effect) == 3 && rawArmourRank_(effect) == 3 }

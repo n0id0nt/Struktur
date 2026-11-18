@@ -43,8 +43,8 @@ class ButtonUI {
         _label.setZIndex(10)
         _panel.addChild(_label)
 
-        _panel.setOnFocus { |s| _panel.setBackgroundColor(WHITE) }
-        _panel.setOnLoseFocus { |s| _panel.setBackgroundColor(LIGHTGRAY) }
+        _panel.setOnFocus { |sender| _panel.setBackgroundColor(WHITE) }
+        _panel.setOnLoseFocus { |sender| _panel.setBackgroundColor(LIGHTGRAY) }
     }
 
     // The raw panel - for callers that need to reposition/reparent/read focus state directly

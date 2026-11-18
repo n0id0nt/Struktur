@@ -148,12 +148,12 @@ class BattleStage {
         var half = (_engine.rows / 2).floor
         var threat = {}   // "lane,row" -> 0..1
         var marks = {}
-        for (f in _engine.fighters) {
-            if (!f.active || f.side == 0) continue
-            var move = f.move
-            if (move != null && move.isAttack && !f.impactDone && move.impact != null) {
-                var closeness = Math.clamp01(1 - (move.impact - f.progress) / 2)
-                for (cell in f.cells) {
+        for (fighter in _engine.fighters) {
+            if (!fighter.active || fighter.side == 0) continue
+            var move = fighter.move
+            if (move != null && move.isAttack && !fighter.impactDone && move.impact != null) {
+                var closeness = Math.clamp01(1 - (move.impact - fighter.progress) / 2)
+                for (cell in fighter.cells) {
                     var key = cell[0] * 100 + cell[1]
                     var level = 0.35 + 0.65 * closeness
                     if (!threat.containsKey(key) || threat[key] < level) threat[key] = level
@@ -161,14 +161,14 @@ class BattleStage {
             }
             // Shadow marks: a slow marked hit later in the chain shades its cells from the commit - while nothing
             // before it moves the attacker (after a move the cells are only known once it lands).
-            var index = f.chainIndex + 1
-            var chain = f.chain
-            var moving = move != null && move.isMovement && !f.moved
+            var index = fighter.chainIndex + 1
+            var chain = fighter.chain
+            var moving = move != null && move.isMovement && !fighter.moved
             while (!moving && index < chain.count) {
                 var next = chain[index].move
                 if (next.isMovement) break
                 if (next.heavy && next.isAttack) {
-                    for (cell in _engine.cellsAt(f, next, f.lane, f.row, f.facing)) {
+                    for (cell in _engine.cellsAt(fighter, next, fighter.lane, fighter.row, fighter.facing)) {
                         marks[cell[0] * 100 + cell[1]] = true
                     }
                 }
@@ -176,8 +176,8 @@ class BattleStage {
             }
         }
         var overlay = {}
-        for (h in _highlights) {
-            overlay[h[0] * 100 + h[1]] = h[2]
+        for (highlight in _highlights) {
+            overlay[highlight[0] * 100 + highlight[1]] = highlight[2]
         }
         var pulse = 0.75 + 0.25 * Math.sin(Time.unscaledTime * 7)
         for (lane in 0..._engine.lanes) {
@@ -215,8 +215,8 @@ class BattleStage {
     }
 
     battlerFor(combatant) {
-        for (b in _battlers) {
-            if (b.combatant == combatant) return b
+        for (battler in _battlers) {
+            if (battler.combatant == combatant) return battler
         }
         return null
     }
@@ -225,11 +225,11 @@ class BattleStage {
     // newcomers get one, and everybody stands on their cell.
     resync() {
         var kept = []
-        for (b in _battlers) {
-            if (_engine.fighters.contains(b.combatant)) {
-                kept.add(b)
+        for (battler in _battlers) {
+            if (_engine.fighters.contains(battler.combatant)) {
+                kept.add(battler)
             } else {
-                b.teardown()
+                battler.teardown()
             }
         }
         _battlers = kept
@@ -243,11 +243,11 @@ class BattleStage {
 
     // Where a combatant is on screen right now (its feet) - for floating text.
     screenOf(combatant) {
-        var b = battlerFor(combatant)
-        if (b == null) return cellScreen(combatant.lane, combatant.row)
-        var p = b.position
-        return Vec2.new(Application.gameWidth / 2 + (p.x - _focus.x) * _zoom,
-                        Application.gameHeight / 2 + (p.y - _focus.y) * _zoom)
+        var battler = battlerFor(combatant)
+        if (battler == null) return cellScreen(combatant.lane, combatant.row)
+        var position = battler.position
+        return Vec2.new(Application.gameWidth / 2 + (position.x - _focus.x) * _zoom,
+                        Application.gameHeight / 2 + (position.y - _focus.y) * _zoom)
     }
 
     // --- the entrance ------------------------------------------------------------------------
@@ -255,29 +255,29 @@ class BattleStage {
     // t: 0..1 progress through the entrance. Eases the camera down onto the formation and slides every battler in
     // from its wing.
     intro(t) {
-        var e = Math.smoothstep(t)
-        WorldTransform.setPosition(_camEntity, Vec3.lerp(_camStart, _focus, e))
+        var eased = Math.smoothstep(t)
+        WorldTransform.setPosition(_camEntity, Vec3.lerp(_camStart, _focus, eased))
         _camera.forcePosition = true
-        for (b in _battlers) {
-            var c = b.combatant
-            var home = cellWorld(c.lane, c.row)
-            var off = c.side == 0 ? -SLIDE_DISTANCE : SLIDE_DISTANCE
-            b.place(Vec3.lerp(Vec3.new(home.x + off, home.y, 0), home, e))
-            b.order = c.lane * 10
+        for (battler in _battlers) {
+            var combatant = battler.combatant
+            var home = cellWorld(combatant.lane, combatant.row)
+            var off = combatant.side == 0 ? -SLIDE_DISTANCE : SLIDE_DISTANCE
+            battler.place(Vec3.lerp(Vec3.new(home.x + off, home.y, 0), home, eased))
+            battler.order = combatant.lane * 10
         }
         paintGrid_()
     }
 
     playEntrance() {
-        for (b in _battlers) {
-            b.playEntrance()
+        for (battler in _battlers) {
+            battler.playEntrance()
         }
     }
 
     settle() {
         intro(1)
-        for (b in _battlers) {
-            b.playIdle()
+        for (battler in _battlers) {
+            battler.playIdle()
         }
     }
 
@@ -288,13 +288,13 @@ class BattleStage {
         for (event in events) {
             react_(event)
         }
-        for (b in _battlers) {
-            var c = b.combatant
-            if (c.active) {
-                b.target = cellWorld(c.lane, c.row)
-                b.order = c.lane * 10
+        for (battler in _battlers) {
+            var combatant = battler.combatant
+            if (combatant.active) {
+                battler.target = cellWorld(combatant.lane, combatant.row)
+                battler.order = combatant.lane * 10
             }
-            b.update(dt)
+            battler.update(dt)
         }
         // Battlers that have finished fading out leave the stage.
         var i = _battlers.count - 1
@@ -343,21 +343,21 @@ class BattleStage {
 
     // t: 0..1 progress of the party running off-stage (the flee animation).
     runOff(t) {
-        for (b in _battlers) {
-            var c = b.combatant
-            if (c.side != 0 || !c.active) continue
-            var home = cellWorld(c.lane, c.row)
-            b.face(-1)
-            b.playEntrance()
-            b.place(Vec3.new(home.x - 220 * Math.smoothstep(t), home.y, 0))
+        for (battler in _battlers) {
+            var combatant = battler.combatant
+            if (combatant.side != 0 || !combatant.active) continue
+            var home = cellWorld(combatant.lane, combatant.row)
+            battler.face(-1)
+            battler.playEntrance()
+            battler.place(Vec3.new(home.x - 220 * Math.smoothstep(t), home.y, 0))
         }
     }
 
     // Fold the arena away: destroy every battler, the grid and the camera, bring the real player and every other
     // level back.
     teardown() {
-        for (b in _battlers) {
-            b.teardown()
+        for (battler in _battlers) {
+            battler.teardown()
         }
         _battlers = []
         for (line in _cells) {

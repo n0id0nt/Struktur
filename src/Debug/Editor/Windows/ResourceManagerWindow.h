@@ -77,6 +77,9 @@ private:
 	                     const std::string& name, size_t memoryBytes, double seconds);
 
 	void CollectRows(GameContext& context, std::vector<RowData>& outRows) const;
+	// Appends one row per entry cached in pool (GPU fields only for GpuResource types).
+	template <typename PoolT>
+	static void AppendPoolRows(const PoolT& pool, Resource::ResourceCategory category, std::vector<RowData>& outRows);
 	void RenderToolbar(GameContext& context);
 	void RenderSummary(GameContext& context);
 	void RenderTable(GameContext& context, const std::vector<RowData>& rows);

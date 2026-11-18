@@ -21,14 +21,14 @@ struct ProfileNode
 	std::vector<ProfileNode*> children;
 	std::chrono::time_point<std::chrono::high_resolution_clock> start;
 
-	ProfileNode(const std::string& n, size_t d, ProfileNode* p = nullptr)
-	    : name(n),
+	ProfileNode(const std::string& nodeName, size_t nodeDepth, ProfileNode* parentNode = nullptr)
+	    : name(nodeName),
 	      duration_us(0),
 	      self_duration_us(0),
 	      accumulated_duration_us(0),
 	      call_count(0),
-	      depth(d),
-	      parent(p)
+	      depth(nodeDepth),
+	      parent(parentNode)
 	{
 	}
 };

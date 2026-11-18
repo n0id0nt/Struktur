@@ -443,9 +443,9 @@ std::vector<const char*> FileSystem::BuildFilterList(const std::vector<std::stri
 {
 	std::vector<const char*> filterList;
 	filterList.reserve(filters.size());
-	for (const auto& f : filters)
+	for (const auto& filter : filters)
 	{
-		filterList.push_back(f.c_str());
+		filterList.push_back(filter.c_str());
 	}
 	return filterList;
 }

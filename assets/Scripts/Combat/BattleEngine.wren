@@ -59,7 +59,7 @@ class BattleEngine {
     fighters { _fighters }
     clock { _clock }
     budget { _budget }
-    budget=(v) { _budget = v }
+    budget=(value) { _budget = value }
     rules { _rules }
 
     // Adds a combatant to the board. side 0 = the party, 1 = the opposition.
@@ -105,12 +105,12 @@ class BattleEngine {
     // The next stage of a staged encounter (the lessons): the fallen leave the board, the party lines up afresh at
     // full stamina with clean chains and statuses, and the fight is open again - add the new opposition after this.
     nextStage() {
-        var party = _fighters.where { |f| f.side == 0 && f.active }.toList
+        var party = _fighters.where { |fighter| fighter.side == 0 && fighter.active }.toList
         _fighters = []
         _events = []
         _result = null
-        for (f in party) {
-            f.stats.gainStamina(f.stats.maxStamina)
+        for (fighter in party) {
+            fighter.stats.gainStamina(fighter.stats.maxStamina)
         }
         deploy(party, 0)
     }
@@ -138,26 +138,26 @@ class BattleEngine {
     }
 
     // Rules' side channel: a named reaction popped on `t`, a status changed, healing landed.
-    note(t, text) { emit_("note", t, {"text": text}) }
-    status(t, text) { emit_("status", t, {"text": text}) }
-    healed(f, amount) {
-        if (amount >= 1) emit_("heal", f, {"amount": amount.round})
+    note(target, text) { emit_("note", target, {"text": text}) }
+    status(target, text) { emit_("status", target, {"text": text}) }
+    healed(fighter, amount) {
+        if (amount >= 1) emit_("heal", fighter, {"amount": amount.round})
     }
     say(text) { emit_("say", null, {"text": text}) }
     // The combo an AI combatant just went into - its name is the tell.
-    combo(f, text) { emit_("combo", f, {"text": text}) }
+    combo(fighter, text) { emit_("combo", fighter, {"text": text}) }
 
     // --- the board -------------------------------------------------------------------------
 
     forward(side) { side == 0 ? 1 : -1 }
     inBounds(lane, row) { lane >= 0 && lane < _lanes && row >= 0 && row < _rows }
     frontRow(side) { side == 0 ? (_rows / 2).floor - 1 : (_rows / 2).floor }
-    inFrontRow(f) { f.row == frontRow(f.side) }
-    inEnemyHalf(f) { f.side == 0 ? f.row >= (_rows / 2).floor : f.row < (_rows / 2).floor }
+    inFrontRow(fighter) { fighter.row == frontRow(fighter.side) }
+    inEnemyHalf(fighter) { fighter.side == 0 ? fighter.row >= (_rows / 2).floor : fighter.row < (_rows / 2).floor }
 
     occupant(lane, row) {
-        for (f in _fighters) {
-            if (f.active && f.lane == lane && f.row == row) return f
+        for (fighter in _fighters) {
+            if (fighter.active && fighter.lane == lane && fighter.row == row) return fighter
         }
         return null
     }
@@ -165,84 +165,84 @@ class BattleEngine {
     // Unoccupied (by anyone but `mover`) and not claimed by someone else's movement.
     isFree(lane, row, mover) {
         if (!inBounds(lane, row)) return false
-        for (f in _fighters) {
-            if (!f.active || f == mover) continue
-            if (f.lane == lane && f.row == row) return false
-            if (f.claim != null && f.claim[0] == lane && f.claim[1] == row) return false
+        for (fighter in _fighters) {
+            if (!fighter.active || fighter == mover) continue
+            if (fighter.lane == lane && fighter.row == row) return false
+            if (fighter.claim != null && fighter.claim[0] == lane && fighter.claim[1] == row) return false
         }
         return true
     }
 
-    side(index) { _fighters.where { |f| f.side == index && f.active }.toList }
-    enemiesOf(f) { _fighters.where { |o| o.side != f.side && o.active }.toList }
-    alliesOf(f) { _fighters.where { |o| o.side == f.side && o.active && o != f }.toList }
+    side(index) { _fighters.where { |fighter| fighter.side == index && fighter.active }.toList }
+    enemiesOf(fighter) { _fighters.where { |other| other.side != fighter.side && other.active }.toList }
+    alliesOf(fighter) { _fighters.where { |other| other.side == fighter.side && other.active && other != fighter }.toList }
 
     // Everyone in the eight cells around `f`.
-    neighbours(f) {
-        return _fighters.where { |o| o != f && o.active && (o.lane - f.lane).abs <= 1 && (o.row - f.row).abs <= 1 }.toList
+    neighbours(fighter) {
+        return _fighters.where { |other| other != fighter && other.active && (other.lane - fighter.lane).abs <= 1 && (other.row - fighter.row).abs <= 1 }.toList
     }
-    adjacentEnemies(f) { neighbours(f).where { |o| o.side != f.side }.toList }
+    adjacentEnemies(fighter) { neighbours(fighter).where { |other| other.side != fighter.side }.toList }
     // `t`'s own side standing in the lanes either side of it, same row.
-    besideEnemies(t) {
-        return _fighters.where { |o| o != t && o.active && o.side == t.side && o.row == t.row && (o.lane - t.lane).abs == 1 }.toList
+    besideEnemies(target) {
+        return _fighters.where { |other| other != target && other.active && other.side == target.side && other.row == target.row && (other.lane - target.lane).abs == 1 }.toList
     }
     // `a`'s opponents in the cells either side of [lane, row].
-    enemiesBesideCell(a, lane, row) {
-        return _fighters.where { |o| o.active && o.side != a.side && o.row == row && (o.lane - lane).abs == 1 }.toList
+    enemiesBesideCell(fighter, lane, row) {
+        return _fighters.where { |other| other.active && other.side != fighter.side && other.row == row && (other.lane - lane).abs == 1 }.toList
     }
 
     // True when `a` stands behind `t`, relative to the way `t` faces.
-    isBehind(a, t) { (a.row - t.row) * t.facing < 0 }
+    isBehind(attacker, target) { (attacker.row - target.row) * target.facing < 0 }
 
     // The [lane, row] step directly away from `a`, as seen from `t`.
-    awayFrom(a, t) {
-        var dl = (t.lane - a.lane).sign
-        var dr = (t.row - a.row).sign
-        if (dl == 0 && dr == 0) dr = a.facing
+    awayFrom(attacker, target) {
+        var dl = (target.lane - attacker.lane).sign
+        var dr = (target.row - attacker.row).sign
+        if (dl == 0 && dr == 0) dr = attacker.facing
         return [dl, dr]
     }
 
     // Turn-to-face: the nearest opponent along the lane decides; with none in the lane, the nearest by row.
-    facingAt(f, lane, row) {
+    facingAt(fighter, lane, row) {
         var best = null
         var bestDistance = 999
         var inLane = false
-        for (o in _fighters) {
-            if (!o.active || o.side == f.side || o.row == row) continue
-            var sameLane = o.lane == lane
-            var distance = (o.row - row).abs
+        for (other in _fighters) {
+            if (!other.active || other.side == fighter.side || other.row == row) continue
+            var sameLane = other.lane == lane
+            var distance = (other.row - row).abs
             if ((sameLane && !inLane) || (sameLane == inLane && distance < bestDistance)) {
-                best = o
+                best = other
                 bestDistance = distance
                 inLane = sameLane
             }
         }
-        if (best == null) return f.facing
+        if (best == null) return fighter.facing
         return best.row > row ? 1 : -1
     }
 
     // Moves `t` one cell by [dl, dr] if it can be moved and the cell is free. Returns whether it moved.
-    push(t, dl, dr) {
-        if (!t.active || t.has("immovable")) return false
-        var lane = t.lane + dl
-        var row = t.row + dr
-        if (!isFree(lane, row, t)) return false
-        relocate_(t, lane, row, "push")
+    push(target, dl, dr) {
+        if (!target.active || target.has("immovable")) return false
+        var lane = target.lane + dl
+        var row = target.row + dr
+        if (!isFree(lane, row, target)) return false
+        relocate_(target, lane, row, "push")
         return true
     }
 
-    relocate_(f, lane, row, how) {
-        var from = [f.lane, f.row]
-        f.lane = lane
-        f.row = row
-        emit_("move", f, {"from": from, "how": how})
+    relocate_(fighter, lane, row, how) {
+        var from = [fighter.lane, fighter.row]
+        fighter.lane = lane
+        fighter.row = row
+        emit_("move", fighter, {"from": from, "how": how})
     }
 
     // --- cells a move covers -----------------------------------------------------------------
 
     // [[lane, row, share, isAim, isDepth], ...] for `move` used by `f` standing at [lane, row] facing `facing`.
     // The aim cell takes 100%; the stencil adds the rest, the higher share winning where they overlap.
-    cellsAt(f, move, lane, row, facing) {
+    cellsAt(fighter, move, lane, row, facing) {
         var out = []
         if (!move.isAttack && !move.isHeal) return out
         if (move.aim == "self") {
@@ -250,35 +250,35 @@ class BattleEngine {
             return out
         }
         if (move.aim == "around") {
-            for (c in move.stencil) {
-                addCell_(out, lane + c[1], row + facing * c[0], c[2], true, false)
+            for (cell in move.stencil) {
+                addCell_(out, lane + cell[1], row + facing * cell[0], cell[2], true, false)
             }
             return out
         }
         var aimRow = row + facing * move.reach
         if (move.aim == "first") {
             aimRow = null
-            var r = row + facing
+            var targetRow = row + facing
             var last = null
-            while (inBounds(lane, r)) {
-                last = r
-                var who = occupant(lane, r)
-                if (who != null && who != f && ((who.side != f.side) == move.isAttack)) {
-                    aimRow = r
+            while (inBounds(lane, targetRow)) {
+                last = targetRow
+                var who = occupant(lane, targetRow)
+                if (who != null && who != fighter && ((who.side != fighter.side) == move.isAttack)) {
+                    aimRow = targetRow
                     break
                 }
-                r = r + facing
+                targetRow = targetRow + facing
             }
             if (aimRow == null) aimRow = last
             if (aimRow == null) return out
         }
         addCell_(out, lane, aimRow, 1, true, false)
-        for (c in move.stencil) {
-            addCell_(out, lane + c[1], aimRow + facing * c[0], c[2], false, c[1] == 0)
+        for (cell in move.stencil) {
+            addCell_(out, lane + cell[1], aimRow + facing * cell[0], cell[2], false, cell[1] == 0)
         }
         // What the weapon adds: Piercing, the warbow's piercing Aimed Shot, the pike's long reach.
-        var pierce = Rules.r([0, 0.2, 0.3, 0.4], f.loadout.weaponRank("Piercing"))
-        var item = f.loadout.itemFor(move)[1]
+        var pierce = Rules.r([0, 0.2, 0.3, 0.4], fighter.loadout.weaponRank("Piercing"))
+        var item = fighter.loadout.itemFor(move)[1]
         if (item != null) {
             if (item.type.id == "warbow" && move.id == "Aimed Shot") pierce = pierce.max(0.5)
             if (item.type.id == "pike" && move.aim == "reach" && move.reach >= 2) pierce = pierce.max(0.5)
@@ -289,9 +289,9 @@ class BattleEngine {
 
     addCell_(out, lane, row, share, isAim, isDepth) {
         if (!inBounds(lane, row)) return
-        for (c in out) {
-            if (c[0] == lane && c[1] == row) {
-                if (share > c[2]) c[2] = share
+        for (cell in out) {
+            if (cell[0] == lane && cell[1] == row) {
+                if (share > cell[2]) cell[2] = share
                 return
             }
         }
@@ -301,90 +301,90 @@ class BattleEngine {
     // --- chains ------------------------------------------------------------------------------
 
     // Human-controlled combatants waiting on a chain - while there are any, the clock is stopped.
-    waiting { _fighters.where { |f| f.active && f.needsChain && f.brain == null && !f.has("passive") }.toList }
+    waiting { _fighters.where { |fighter| fighter.active && fighter.needsChain && fighter.brain == null && !fighter.has("passive") }.toList }
 
     // Commits `entries` (ChainEntry list) as `f`'s chain and starts its first move.
-    commit(f, entries) {
+    commit(fighter, entries) {
         if (entries == null || entries.count == 0) return
-        f.setChain(entries)
-        _rules.onChainStart(f)
-        startNext_(f, 0)
+        fighter.setChain(entries)
+        _rules.onChainStart(fighter)
+        startNext_(fighter, 0)
     }
 
     // Lets every AI combatant that needs a chain pick one. Called before the clock starts and every step.
     think() {
-        for (f in _fighters) {
-            if (f.active && f.needsChain && f.brain != null) {
-                var entries = f.brain.chainFor(this, f)
-                if (entries != null) commit(f, entries)
+        for (fighter in _fighters) {
+            if (fighter.active && fighter.needsChain && fighter.brain != null) {
+                var entries = fighter.brain.chainFor(this, fighter)
+                if (entries != null) commit(fighter, entries)
             }
         }
     }
 
     // Starts the chain's current move, `carry` seconds into it (what the last move overran its completion by).
-    startNext_(f, carry) {
-        var entry = f.chain[f.chainIndex]
+    startNext_(fighter, carry) {
+        var entry = fighter.chain[fighter.chainIndex]
         var move = entry.move
-        f.facing = facingAt(f, f.lane, f.row)
+        fighter.facing = facingAt(fighter, fighter.lane, fighter.row)
 
-        var cost = _rules.moveCost(f, move, true)
-        var falter = !f.has("noStamina") && f.stats.stamina < cost - EPS
-        if (move.special == "bolt" && f.counter("loaded") < 1) falter = true
+        var cost = _rules.moveCost(fighter, move, true)
+        var falter = !fighter.has("noStamina") && fighter.stats.stamina < cost - EPS
+        if (move.special == "bolt" && fighter.counter("loaded") < 1) falter = true
         if (falter) {
             // It can't be paid for: a Falter - a 0.5 s stumble with no effect.
             move = Move.falter()
             cost = 0
-            emit_("falter", f, null)
+            emit_("falter", fighter, null)
         } else {
-            f.stats.spendStamina(cost)
-            if (move.special == "bolt") f.setCounter("loaded", 0)
+            fighter.stats.spendStamina(cost)
+            if (move.special == "bolt") fighter.setCounter("loaded", 0)
         }
-        f.startMove(entry, move)
-        f.cost = cost
-        f.progress = carry
-        f.startedAfterHold = f.lastWasHold
-        f.lastWasHold = move.isHold
+        fighter.startMove(entry, move)
+        fighter.cost = cost
+        fighter.progress = carry
+        fighter.startedAfterHold = fighter.lastWasHold
+        fighter.lastWasHold = move.isHold
 
-        var lane = f.lane
-        var row = f.row
+        var lane = fighter.lane
+        var row = fighter.row
         if (move.isMovement) {
-            var dest = destinationFor_(f, entry, move)
+            var dest = destinationFor_(fighter, entry, move)
             entry.dest = dest
-            if (dest != null && isFree(dest[0], dest[1], f)) {
-                f.claim = dest
+            if (dest != null && isFree(dest[0], dest[1], fighter)) {
+                fighter.claim = dest
                 if (move.impact == null || move.moveTime <= move.impact) {
                     lane = dest[0]
                     row = dest[1]
                 }
             }
         }
-        f.cells = cellsAt(f, move, lane, row, facingAt(f, lane, row))
-        _rules.onMoveStart(f, move)
-        emit_("start", f, {"move": move})
+        fighter.cells = cellsAt(fighter, move, lane, row, facingAt(fighter, lane, row))
+        _rules.onMoveStart(fighter, move)
+        emit_("start", fighter, {"move": move})
     }
 
     // Where a movement move is headed: a fixed pattern's forced cell, the cell the player picked, or an AI hint
     // ("toward" / "away" / "side" / a [lane, row]) resolved against the board as it is now.
-    destinationFor_(f, entry, move) {
+    destinationFor_(fighter, entry, move) {
         if (Grid.fixed(move.pattern)) {
-            var offset = Grid.offsets(move.pattern, f.facing)[0]
-            return [f.lane + offset[0], f.row + offset[1]]
+            var offset = Grid.offsets(move.pattern, fighter.facing)[0]
+            return [fighter.lane + offset[0], fighter.row + offset[1]]
         }
         var dest = entry.dest
         if (dest is List) return dest
-        if (dest is String) return hintedCell_(f, move, dest)
-        if (dest is Fn) return dest.call(this, f)
+        if (dest is String) return hintedCell_(fighter, move, dest)
+        if (dest is Fn) return dest.call(this, fighter)
         return null
     }
 
-    hintedCell_(f, move, hint) {
-        var target = nearestOpponent(f)
+    hintedCell_(fighter, move, hint) {
+        var target = nearestOpponent(fighter)
         var best = null
         var bestScore = null
-        for (offset in Grid.offsets(move.pattern, f.facing)) {
-            var lane = f.lane + offset[0]
-            var row = f.row + offset[1]
-            if (!isFree(lane, row, f)) continue
+        for (offset in Grid.offsets(move.pattern, fighter.facing)) {
+            var lane = fighter.lane + offset[0]
+            var row = fighter.row + offset[1]
+            if (!isFree(lane, row, fighter)) continue
             var score = 0
             if (target != null) {
                 // Distance to the cell in front of the target (where a Reach 1 attack can hit it from).
@@ -404,14 +404,14 @@ class BattleEngine {
         return best
     }
 
-    nearestOpponent(f) {
+    nearestOpponent(fighter) {
         var best = null
         var bestDistance = 999
-        for (o in _fighters) {
-            if (!o.active || o.side == f.side) continue
-            var distance = (o.lane - f.lane).abs * 2 + (o.row - f.row).abs
+        for (other in _fighters) {
+            if (!other.active || other.side == fighter.side) continue
+            var distance = (other.lane - fighter.lane).abs * 2 + (other.row - fighter.row).abs
             if (distance < bestDistance) {
-                best = o
+                best = other
                 bestDistance = distance
             }
         }
@@ -445,45 +445,45 @@ class BattleEngine {
         _clock = _clock + dt
 
         // 1. advance
-        for (f in _fighters) {
-            if (!f.active || f.move == null) continue
-            if (f.stun > 0) {
-                f.stun = f.stun - dt
-                if (f.stun < 0) {
-                    f.progress = f.progress - f.stun
-                    f.stun = 0
+        for (fighter in _fighters) {
+            if (!fighter.active || fighter.move == null) continue
+            if (fighter.stun > 0) {
+                fighter.stun = fighter.stun - dt
+                if (fighter.stun < 0) {
+                    fighter.progress = fighter.progress - fighter.stun
+                    fighter.stun = 0
                 }
             } else {
-                f.progress = f.progress + dt
+                fighter.progress = fighter.progress + dt
             }
         }
 
         // 2. movement
-        for (f in _fighters) {
-            var move = f.move
-            if (f.active && move != null && move.isMovement && !f.moved && f.progress >= move.moveTime - EPS) {
-                applyMovement_(f)
+        for (fighter in _fighters) {
+            var move = fighter.move
+            if (fighter.active && move != null && move.isMovement && !fighter.moved && fighter.progress >= move.moveTime - EPS) {
+                applyMovement_(fighter)
             }
         }
 
         // 3 + 4. impacts - everything due this step is collected first, so simultaneous impacts all land
         var due = []
-        for (f in _fighters) {
-            var move = f.move
-            if (f.active && move != null && move.impact != null && !f.impactDone && f.progress >= move.impact - EPS) {
-                f.impactDone = true
-                due.add(f)
+        for (fighter in _fighters) {
+            var move = fighter.move
+            if (fighter.active && move != null && move.impact != null && !fighter.impactDone && fighter.progress >= move.impact - EPS) {
+                fighter.impactDone = true
+                due.add(fighter)
             }
         }
-        for (f in due) {
-            resolveImpact_(f)
+        for (fighter in due) {
+            resolveImpact_(fighter)
         }
 
         // 5. statuses, and stamina for anyone in Hold
         _rules.tick(dt)
-        for (f in _fighters) {
-            if (f.active && f.move != null && f.move.isHold && f.stun <= 0 && !f.has("noStamina")) {
-                f.stats.gainStamina(_rules.holdRecovery(f) * dt)
+        for (fighter in _fighters) {
+            if (fighter.active && fighter.move != null && fighter.move.isHold && fighter.stun <= 0 && !fighter.has("noStamina")) {
+                fighter.stats.gainStamina(_rules.holdRecovery(fighter) * dt)
             }
         }
 
@@ -491,10 +491,10 @@ class BattleEngine {
         sweepDefeated_()
 
         // 7. completions
-        for (f in _fighters) {
-            var move = f.move
-            if (f.active && move != null && f.stun <= 0 && f.progress >= move.completion - EPS) {
-                completeMove_(f)
+        for (fighter in _fighters) {
+            var move = fighter.move
+            if (fighter.active && move != null && fighter.stun <= 0 && fighter.progress >= move.completion - EPS) {
+                completeMove_(fighter)
             }
         }
         think()
@@ -506,205 +506,205 @@ class BattleEngine {
         }
     }
 
-    completeMove_(f) {
-        var move = f.move
-        var over = f.progress - move.completion
+    completeMove_(fighter) {
+        var move = fighter.move
+        var over = fighter.progress - move.completion
         if (over < 0) over = 0
-        if (move.special == "reload") f.setCounter("loaded", 1)
-        emit_("end", f, {"move": move})
-        f.clearMove()
-        f.chainIndex = f.chainIndex + 1
-        if (f.chainIndex < f.chain.count) {
-            startNext_(f, over)
+        if (move.special == "reload") fighter.setCounter("loaded", 1)
+        emit_("end", fighter, {"move": move})
+        fighter.clearMove()
+        fighter.chainIndex = fighter.chainIndex + 1
+        if (fighter.chainIndex < fighter.chain.count) {
+            startNext_(fighter, over)
         } else {
-            f.needsChain = true
-            emit_("chainEnd", f, null)
+            fighter.needsChain = true
+            emit_("chainEnd", fighter, null)
         }
     }
 
     sweepDefeated_() {
-        for (f in _fighters) {
-            if (f.stats.hp > 0 || f.counter("dead") > 0 || f.removed) continue
-            f.setCounter("dead", 1)
-            f.clearMove()
-            f.clearStatuses()
-            emit_("defeat", f, null)
+        for (fighter in _fighters) {
+            if (fighter.stats.hp > 0 || fighter.counter("dead") > 0 || fighter.removed) continue
+            fighter.setCounter("dead", 1)
+            fighter.clearMove()
+            fighter.clearStatuses()
+            emit_("defeat", fighter, null)
             for (hook in _defeatHooks) {
-                hook.call(this, f)
+                hook.call(this, fighter)
             }
             // A boss's shared pool running dry takes every part with it.
             for (part in _fighters) {
-                if (part.active && part.trait("pool") == f) part.stats.takeDamage(part.stats.hp)
+                if (part.active && part.trait("pool") == fighter) part.stats.takeDamage(part.stats.hp)
             }
         }
     }
 
     // --- movement ------------------------------------------------------------------------------
 
-    applyMovement_(f) {
-        f.moved = true
-        var move = f.move
-        var dest = f.entry.dest
-        f.claim = null
+    applyMovement_(fighter) {
+        fighter.moved = true
+        var move = fighter.move
+        var dest = fighter.entry.dest
+        fighter.claim = null
         if (dest == null) return
         var target = null
         if (move.pattern == "forward2") {
             // A fixed two-cell path: all the way, or - stopping short - as far as it is clear.
-            var mid = [f.lane, f.row + f.facing]
-            if (isFree(mid[0], mid[1], f)) {
-                target = isFree(dest[0], dest[1], f) ? dest : (move.blocked == "short" ? mid : null)
+            var mid = [fighter.lane, fighter.row + fighter.facing]
+            if (isFree(mid[0], mid[1], fighter)) {
+                target = isFree(dest[0], dest[1], fighter) ? dest : (move.blocked == "short" ? mid : null)
             }
-        } else if (isFree(dest[0], dest[1], f)) {
+        } else if (isFree(dest[0], dest[1], fighter)) {
             target = dest
         }
         if (target == null) {
-            emit_("blocked", f, null)
+            emit_("blocked", fighter, null)
             return
         }
-        var from = [f.lane, f.row]
-        relocate_(f, target[0], target[1], "move")
+        var from = [fighter.lane, fighter.row]
+        relocate_(fighter, target[0], target[1], "move")
         // The cells were locked for where the move expected to stand; if that isn't where it ended up, re-lock.
-        if (!f.impactDone && move.impact != null && (move.isAttack || move.isHeal)) {
-            f.cells = cellsAt(f, move, f.lane, f.row, f.facing)
+        if (!fighter.impactDone && move.impact != null && (move.isAttack || move.isHeal)) {
+            fighter.cells = cellsAt(fighter, move, fighter.lane, fighter.row, fighter.facing)
         }
     }
 
     // --- impacts -------------------------------------------------------------------------------
 
-    resolveImpact_(a) {
-        var move = a.move
+    resolveImpact_(attacker) {
+        var move = attacker.move
         if (move == null) return
         if (move.special != null && _specials.containsKey(move.special)) {
-            _specials[move.special].call(this, a, move)
+            _specials[move.special].call(this, attacker, move)
         }
         if (move.isAttack) {
             // One hit per target, at the best share of the cells it stands in.
             var hits = []
-            for (cell in a.cells) {
-                var t = occupant(cell[0], cell[1])
-                if (t == null || t.side == a.side) continue
+            for (cell in attacker.cells) {
+                var target = occupant(cell[0], cell[1])
+                if (target == null || target.side == attacker.side) continue
                 var known = false
                 for (hit in hits) {
-                    if (hit[0] == t) {
+                    if (hit[0] == target) {
                         known = true
                         if (cell[2] > hit[1][2]) hit[1] = cell
                     }
                 }
-                if (!known) hits.add([t, cell])
+                if (!known) hits.add([target, cell])
             }
-            if (hits.count == 0) emit_("miss", a, null)
+            if (hits.count == 0) emit_("miss", attacker, null)
             for (hit in hits) {
-                hit_(a, hit[0], move, hit[1])
+                hit_(attacker, hit[0], move, hit[1])
             }
         }
         if (move.isHeal) {
-            for (cell in a.cells) {
-                var t = occupant(cell[0], cell[1])
-                if (t == null || t.side != a.side) continue
-                var amount = move.special == "potion" ? (t.stats.maxHp * move.healAmount / 100).round : _rules.healAmount(a, move, cell[2])
-                var over = t.stats.heal(amount)
-                healed(t, amount - over)
+            for (cell in attacker.cells) {
+                var target = occupant(cell[0], cell[1])
+                if (target == null || target.side != attacker.side) continue
+                var amount = move.special == "potion" ? (target.stats.maxHp * move.healAmount / 100).round : _rules.healAmount(attacker, move, cell[2])
+                var over = target.stats.heal(amount)
+                healed(target, amount - over)
             }
         }
-        if (move.special == "salts") a.clearStatuses()
-        if (move.item != null) emit_("item", a, {"item": move.item})
+        if (move.special == "salts") attacker.clearStatuses()
+        if (move.item != null) emit_("item", attacker, {"item": move.item})
     }
 
-    hit_(a, t, move, cell) {
-        if (t.dodgingNow) {
-            emit_("dodge", t, {"by": a})
-            _rules.onDodge(t, a)
+    hit_(attacker, target, move, cell) {
+        if (target.dodgingNow) {
+            emit_("dodge", target, {"by": attacker})
+            _rules.onDodge(target, attacker)
             return
         }
         var share = cell[2]
-        var g = t.stun > 0 ? 0 : t.guardNow
-        var own = _rules.blockValue(t, g)
+        var guard = target.stun > 0 ? 0 : target.guardNow
+        var own = _rules.blockValue(target, guard)
 
         // Guard range: an ally's Defend move covering this cell - the stronger of the two applies.
         var cover = 0
         var guarder = null
         var coverGuard = 0
-        for (u in alliesOf(t)) {
-            if (u.stun > 0 || u.move == null || !u.move.isDefend) continue
-            var gu = u.guardNow
+        for (defender in alliesOf(target)) {
+            if (defender.stun > 0 || defender.move == null || !defender.move.isDefend) continue
+            var gu = defender.guardNow
             if (gu <= 0) continue
-            var value = _rules.blockValue(u, gu) * coverShare_(u, t)
+            var value = _rules.blockValue(defender, gu) * coverShare_(defender, target)
             if (value > cover) {
                 cover = value
-                guarder = u
+                guarder = defender
                 coverGuard = gu
             }
         }
         var covered = cover > own
         var block = covered ? cover : own
 
-        var stagger = _rules.staggerOf(a, t, move, share)
-        var result = _rules.damage(a, t, move, share, cell[3], cell[4], block, covered ? coverGuard : g)
+        var stagger = _rules.staggerOf(attacker, target, move, share)
+        var result = _rules.damage(attacker, target, move, share, cell[3], cell[4], block, covered ? coverGuard : guard)
         var dealt = result[0]
-        applyDamage_(t, dealt)
-        var element = _rules.weaponFor(a, move)[2]
-        emit_("hit", t, {"by": a, "amount": dealt, "blocked": block > 0, "guard": covered ? coverGuard : g, "move": move,
+        applyDamage_(target, dealt)
+        var element = _rules.weaponFor(attacker, move)[2]
+        emit_("hit", target, {"by": attacker, "amount": dealt, "blocked": block > 0, "guard": covered ? coverGuard : guard, "move": move,
             "element": element})
-        if (dealt > 0) _rules.onDamaged(t, a, dealt)
+        if (dealt > 0) _rules.onDamaged(target, attacker, dealt)
 
         if (covered) {
             // The cover was used: the guarder takes the skip and the ally isn't staggered.
-            _rules.onBlock(guarder, a, coverGuard, peakDistance_(guarder), stagger, dealt)
-            blockReaction_(guarder, a, coverGuard, stagger)
-        } else if (g > 0) {
-            _rules.onBlock(t, a, g, peakDistance_(t), stagger, dealt)
-            blockReaction_(t, a, g, stagger)
+            _rules.onBlock(guarder, attacker, coverGuard, peakDistance_(guarder), stagger, dealt)
+            blockReaction_(guarder, attacker, coverGuard, stagger)
+        } else if (guard > 0) {
+            _rules.onBlock(target, attacker, guard, peakDistance_(target), stagger, dealt)
+            blockReaction_(target, attacker, guard, stagger)
         } else {
-            stagger_(t, stagger, a)
+            stagger_(target, stagger, attacker)
         }
-        if (dealt > 0) _rules.onHit(a, t, move, dealt, cell, cell[3], stagger)
+        if (dealt > 0) _rules.onHit(attacker, target, move, dealt, cell, cell[3], stagger)
         // A Fire Flask sets alight whatever it splashes.
-        if (move.special == "flask") _rules.addBurn(t, a, 1, false)
+        if (move.special == "flask") _rules.addBurn(target, attacker, 1, false)
 
-        if (move.push > 0 && t.active) {
-            var dir = awayFrom(a, t)
-            push(t, dir[0], dir[1])
+        if (move.push > 0 && target.active) {
+            var dir = awayFrom(attacker, target)
+            push(target, dir[0], dir[1])
         }
-        if (move.special == "throw" && t.active && !t.has("immovable")) {
+        if (move.special == "throw" && target.active && !target.has("immovable")) {
             // Throw: the target lands in the cell behind the thrower, if it is free.
-            var row = a.row - a.facing
-            if (isFree(a.lane, row, t)) relocate_(t, a.lane, row, "push")
+            var row = attacker.row - attacker.facing
+            if (isFree(attacker.lane, row, target)) relocate_(target, attacker.lane, row, "push")
         }
         // A reactive prop (the swing-post) answers a hit taken while idle.
-        if (t.active && t.move == null && t.has("reactive")) {
-            t.stun = 0
-            commit(t, [ChainEntry.new(t.trait("reactive").call(), null)])
+        if (target.active && target.move == null && target.has("reactive")) {
+            target.stun = 0
+            commit(target, [ChainEntry.new(target.trait("reactive").call(), null)])
         }
     }
 
-    peakDistance_(u) { (u.progress - u.move.window[1]).abs }
+    peakDistance_(defender) { (defender.progress - defender.move.window[1]).abs }
 
     // A hit landed inside `u`'s defensive window: the skip (or Absorb's stamina), and Deflect near the peak.
-    blockReaction_(u, a, g, stagger) {
-        var move = u.move
+    blockReaction_(defender, attacker, guard, stagger) {
+        var move = defender.move
         if (move.reaction == "absorb") {
-            u.stats.gainStamina(stagger * STAGGER_TO_STAMINA)
-        } else if (!a.loadout.capstone("Breaker")) {
-            var to = u.progress + move.skip + _rules.skipBonus(u)
-            u.progress = to > move.completion ? move.completion : to
+            defender.stats.gainStamina(stagger * STAGGER_TO_STAMINA)
+        } else if (!attacker.loadout.capstone("Breaker")) {
+            var to = defender.progress + move.skip + _rules.skipBonus(defender)
+            defender.progress = to > move.completion ? move.completion : to
         }
-        emit_("block", u, {"by": a, "guard": g})
-        var deflects = move.reaction == "deflect" && g >= DEFLECT_GUARD
-        if (u.loadout.capstone("Riposte") && g >= 0.9) deflects = true
+        emit_("block", defender, {"by": attacker, "guard": guard})
+        var deflects = move.reaction == "deflect" && guard >= DEFLECT_GUARD
+        if (defender.loadout.capstone("Riposte") && guard >= 0.9) deflects = true
         if (deflects) {
-            emit_("note", u, {"text": "Deflect"})
-            stagger_(a, stagger, u)
+            emit_("note", defender, {"text": "Deflect"})
+            stagger_(attacker, stagger, defender)
         }
     }
 
     // Guard range: the share of `u`'s block that reaches `t` (0 = not covered).
-    coverShare_(u, t) {
-        var move = u.move
+    coverShare_(defender, target) {
+        var move = defender.move
         var cells = []
         if (move != null) {
-            for (c in move.guardRange) cells.add(c)
+            for (cell in move.guardRange) cells.add(cell)
         }
-        var shield = u.loadout.shield
+        var shield = defender.loadout.shield
         if (shield != null && (move == null || move.addsShield)) {
             if (shield.type.rangeSides > 0) {
                 cells.add([0, -1, shield.type.rangeSides])
@@ -712,97 +712,97 @@ class BattleEngine {
             }
             if (shield.type.rangeBehind > 0) cells.add([-1, 0, shield.type.rangeBehind])
         }
-        if (u.loadout.capstone("Sentinel")) cells.add([-1, 0, 1])
+        if (defender.loadout.capstone("Sentinel")) cells.add([-1, 0, 1])
         var best = 0
-        for (c in cells) {
-            if (t.at(u.lane + c[1], u.row + u.facing * c[0])) {
-                var share = _rules.guardShare(u, c[2], c[1])
+        for (cell in cells) {
+            if (target.at(defender.lane + cell[1], defender.row + defender.facing * cell[0])) {
+                var share = _rules.guardShare(defender, cell[2], cell[1])
                 if (share > best) best = share
             }
         }
         return best
     }
-    covers(u, t) { coverShare_(u, t) > 0 }
+    covers(defender, target) { coverShare_(defender, target) > 0 }
 
-    applyDamage_(t, amount) {
+    applyDamage_(target, amount) {
         if (amount <= 0) return
         var left = amount
-        if (t.shield > 0) {
-            var soak = left.min(t.shield)
-            t.shield = t.shield - soak
+        if (target.shield > 0) {
+            var soak = left.min(target.shield)
+            target.shield = target.shield - soak
             left = left - soak
         }
-        t.stats.takeDamage(left)
+        target.stats.takeDamage(left)
         // A boss part's damage also comes off the shared pool.
-        var pool = t.trait("pool")
+        var pool = target.trait("pool")
         if (pool != null) pool.stats.takeDamage(left)
     }
 
     // Damage outside a hit (statuses, reactions, Reprisal). tag: shown on the target (null = silent, e.g. a tick).
-    dealDirect(source, t, amount, tag) {
-        if (!t.active || amount <= 0) return
-        applyDamage_(t, amount)
-        if (tag != null) emit_("direct", t, {"amount": amount.round, "text": tag})
+    dealDirect(source, target, amount, tag) {
+        if (!target.active || amount <= 0) return
+        applyDamage_(target, amount)
+        if (tag != null) emit_("direct", target, {"amount": amount.round, "text": tag})
     }
 
     // A set-back from something other than a plain hit landing (Thermal Shock, a Deflect, Permafrost...).
-    setback(t, seconds, source) {
-        if (seconds > 0) stagger_(t, seconds, source)
+    setback(target, seconds, source) {
+        if (seconds > 0) stagger_(target, seconds, source)
     }
 
     // Staggers `t` by `s` seconds: its move's damage animation plays, then the move resumes from a set-back point.
-    stagger_(t, s, source) {
-        if (!t.active) return
-        var move = t.move
+    stagger_(target, staggerAmount, source) {
+        if (!target.active) return
+        var move = target.move
         if (move == null || move.isHold) {
             // In Hold (or idle): the Hold damage animation only - the Hold just ends that much later.
-            if (_clock >= t.animImmuneUntil) t.stun = t.stun.max(HOLD_DAMAGE_ANIM)
-            emit_("stagger", t, {"setback": 0})
+            if (_clock >= target.animImmuneUntil) target.stun = target.stun.max(HOLD_DAMAGE_ANIM)
+            emit_("stagger", target, {"setback": 0})
             return
         }
         var recent = 0
-        for (time in t.staggerTimes) {
+        for (time in target.staggerTimes) {
             if (_clock - time <= DR_WINDOW) recent = recent + 1
         }
-        t.staggerTimes.add(_clock)
-        if (t.staggerTimes.count > 6) t.staggerTimes.removeAt(0)
+        target.staggerTimes.add(_clock)
+        if (target.staggerTimes.count > 6) target.staggerTimes.removeAt(0)
 
-        var amount = s * DR_FACTORS[recent.min(3)]
-        if (!t.has("noStamina") && t.stats.stamina <= 0) amount = amount * 1.5
-        if (t.frozen > 0) {
-            amount = amount * t.frozen
-            t.frozen = 0
+        var amount = staggerAmount * DR_FACTORS[recent.min(3)]
+        if (!target.has("noStamina") && target.stats.stamina <= 0) amount = amount * 1.5
+        if (target.frozen > 0) {
+            amount = amount * target.frozen
+            target.frozen = 0
         }
         if (source != null && source.counter("halveSetback") > 0) {
             amount = amount * 0.5
             source.setCounter("halveSetback", 0)
         }
-        amount = amount * (1 - _rules.setbackReduction(t))
+        amount = amount * (1 - _rules.setbackReduction(target))
         // Steadfast / Unflinching - which an Exposed boss part loses.
-        if (!t.exposedNow) {
+        if (!target.exposedNow) {
             if (move.reaction == "steadfast") amount = amount * 0.5
-            if (move.reaction == "unflinching" && t.impactDone) amount = 0
+            if (move.reaction == "unflinching" && target.impactDone) amount = 0
         }
         // Focus capstone: a spell started straight after a Hold can't be set back before its impact.
-        if (t.loadout.capstone("Focus") && t.startedAfterHold && move.scaling == "mana" && !t.impactDone) amount = 0
+        if (target.loadout.capstone("Focus") && target.startedAfterHold && move.scaling == "mana" && !target.impactDone) amount = 0
 
         var floor = 0
-        if (move.impact != null && t.impactDone) {
+        if (move.impact != null && target.impactDone) {
             floor = move.impact
-        } else if (move.window != null && t.progress > move.window[2]) {
+        } else if (move.window != null && target.progress > move.window[2]) {
             floor = move.window[2]
         }
-        var back = amount.min(t.progress - floor)
+        var back = amount.min(target.progress - floor)
         if (back < 0) back = 0
-        t.progress = t.progress - back
-        if (_clock >= t.animImmuneUntil) {
-            t.stun = t.stun.max(move.damageAnim)
-            if (recent >= 2) t.animImmuneUntil = _clock + move.damageAnim + 1
+        target.progress = target.progress - back
+        if (_clock >= target.animImmuneUntil) {
+            target.stun = target.stun.max(move.damageAnim)
+            if (recent >= 2) target.animImmuneUntil = _clock + move.damageAnim + 1
         }
         // Opportunist capstone: set back during the wind-up counts as "in recovery" for 1 s.
-        if (source != null && !t.impactDone && source.loadout.capstone("Opportunist")) {
-            t.setCounter("recoverUntil", _clock + 1)
+        if (source != null && !target.impactDone && source.loadout.capstone("Opportunist")) {
+            target.setCounter("recoverUntil", _clock + 1)
         }
-        emit_("stagger", t, {"setback": back})
+        emit_("stagger", target, {"setback": back})
     }
 }

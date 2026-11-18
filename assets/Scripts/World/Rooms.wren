@@ -43,12 +43,12 @@ class Rooms {
 
     // True if position is inside the room, at least `inset` px in from every edge.
     static contains(index, position, inset) {
-        var b = Rooms.bounds(index)
-        if (b == null || position == null) {
+        var bounds = Rooms.bounds(index)
+        if (bounds == null || position == null) {
             return false
         }
-        return position.x >= b[0] + inset && position.x <= b[0] + b[2] - inset &&
-               position.y >= b[1] + inset && position.y <= b[1] + b[3] - inset
+        return position.x >= bounds[0] + inset && position.x <= bounds[0] + bounds[2] - inset &&
+               position.y >= bounds[1] + inset && position.y <= bounds[1] + bounds[3] - inset
     }
 
     // True unless the room's "Runable" field is switched off. Read once per room and remembered (the world file

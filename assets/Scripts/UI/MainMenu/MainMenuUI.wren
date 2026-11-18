@@ -95,10 +95,10 @@ class MainMenuUI {
         var buttonHeight = 64
         var spacing = 24
         var startY = 610
-        var b = ButtonUI.new(_screenPanel, text, Vec2.new(0, startY + index * (buttonHeight + spacing)),
+        var button = ButtonUI.new(_screenPanel, text, Vec2.new(0, startY + index * (buttonHeight + spacing)),
                              Vec2.new(0.5, 0), Vec2.new(buttonWidth, buttonHeight), font, 26.0)
-        b.panel.setAnchorPoint(Vec2.new(0.5, 0))
-        return b
+        button.panel.setAnchorPoint(Vec2.new(0.5, 0))
+        return button
     }
 
     startButton { _startButton }

@@ -16,14 +16,14 @@ class GoblinVikingBattleSprite {
 
     static data {
         if (__data == null) {
-            var d = {}
-            d["texture"] = "Actors/goblin_viking_battle.png"
-            d["origin"] = [57, 72]
-            d["columns"] = 14
-            d["rows"] = 16
-            d["cellSize"] = [114, 99]
-            d["defaultAnimation"] = "rightIdleAnimation"
-            d["animations"] = [
+            var sheet = {}
+            sheet["texture"] = "Actors/goblin_viking_battle.png"
+            sheet["origin"] = [57, 72]
+            sheet["columns"] = 14
+            sheet["rows"] = 16
+            sheet["cellSize"] = [114, 99]
+            sheet["defaultAnimation"] = "rightIdleAnimation"
+            sheet["animations"] = [
                 // name, first frame, end frame (not included), seconds, loops
                 ["rightAttackAnimation",       0,   12, 0.857, false],
                 ["leftAttackAnimation",       12,   24, 0.857, false],
@@ -46,7 +46,7 @@ class GoblinVikingBattleSprite {
                 ["rightStandRollAnimation",  192,  204, 0.857, false],
                 ["leftStandRollAnimation",   204,  216, 0.857, false]
             ]
-            __data = d
+            __data = sheet
         }
         return __data
     }

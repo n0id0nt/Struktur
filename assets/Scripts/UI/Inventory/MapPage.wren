@@ -54,11 +54,11 @@ class MapPage {
         var maxX = minX
         var maxY = minY
         for (room in rooms) {
-            var b = room["bounds"]
-            if (b[0] < minX) minX = b[0]
-            if (b[1] < minY) minY = b[1]
-            if (b[0] + b[2] > maxX) maxX = b[0] + b[2]
-            if (b[1] + b[3] > maxY) maxY = b[1] + b[3]
+            var bounds = room["bounds"]
+            if (bounds[0] < minX) minX = bounds[0]
+            if (bounds[1] < minY) minY = bounds[1]
+            if (bounds[0] + bounds[2] > maxX) maxX = bounds[0] + bounds[2]
+            if (bounds[1] + bounds[3] > maxY) maxY = bounds[1] + bounds[3]
         }
         var areaW = PAGE_SIZE.x - 2 * MAP_PAD
         var areaH = PAGE_SIZE.y - HEADER_HEIGHT - LEGEND_HEIGHT - MAP_PAD
@@ -69,23 +69,23 @@ class MapPage {
         var originY = HEADER_HEIGHT + (areaH - (maxY - minY) * scale) / 2
 
         for (room in rooms) {
-            var b = room["bounds"]
-            var x = (originX + (b[0] - minX) * scale).round
-            var y = (originY + (b[1] - minY) * scale).round
-            var w = (b[2] * scale).round
-            var h = (b[3] * scale).round
+            var bounds = room["bounds"]
+            var x = (originX + (bounds[0] - minX) * scale).round
+            var y = (originY + (bounds[1] - minY) * scale).round
+            var width = (bounds[2] * scale).round
+            var height = (bounds[3] * scale).round
             var isCurrent = room["id"] == model["current"]
             if (isCurrent) {
-                MapPage.rect_(well, x - CURRENT_RING, y - CURRENT_RING, w + 2 * CURRENT_RING, h + 2 * CURRENT_RING,
+                MapPage.rect_(well, x - CURRENT_RING, y - CURRENT_RING, width + 2 * CURRENT_RING, height + 2 * CURRENT_RING,
                     InventoryTheme.accent, 6)
             }
-            MapPage.rect_(well, x, y, w, h, InventoryTheme.textDark, isCurrent ? 7 : 4)
-            var c = room["color"]
-            MapPage.rect_(well, x + EDGE, y + EDGE, w - 2 * EDGE, h - 2 * EDGE, Vec4.new(c[0], c[1], c[2], 255),
+            MapPage.rect_(well, x, y, width, height, InventoryTheme.textDark, isCurrent ? 7 : 4)
+            var color = room["color"]
+            MapPage.rect_(well, x + EDGE, y + EDGE, width - 2 * EDGE, height - 2 * EDGE, Vec4.new(color[0], color[1], color[2], 255),
                 isCurrent ? 8 : 5)
             if (isCurrent) {
-                var mx = x + ((w - MARKER_SIZE) / 2).round
-                var my = y + ((h - MARKER_SIZE) / 2).round
+                var mx = x + ((width - MARKER_SIZE) / 2).round
+                var my = y + ((height - MARKER_SIZE) / 2).round
                 MapPage.rect_(well, mx - 2, my - 2, MARKER_SIZE + 4, MARKER_SIZE + 4, InventoryTheme.textDark, 9)
                 MapPage.rect_(well, mx, my, MARKER_SIZE, MARKER_SIZE, InventoryTheme.text, 10)
             }
@@ -94,12 +94,12 @@ class MapPage {
         // Doorways into interiors. The one leading to the interior the player is in now stands out.
         var doors = model["doors"]
         for (door in doors) {
-            var p = door["position"]
+            var position = door["position"]
             var size = DOOR_SIZE
             var isCurrent = door["interior"] == model["current"]
             if (isCurrent) size = MARKER_SIZE
-            var x = (originX + (p[0] - minX) * scale - size / 2).round
-            var y = (originY + (p[1] - minY) * scale - size / 2).round
+            var x = (originX + (position[0] - minX) * scale - size / 2).round
+            var y = (originY + (position[1] - minY) * scale - size / 2).round
             if (isCurrent) {
                 MapPage.rect_(well, x - 2 - CURRENT_RING, y - 2 - CURRENT_RING, size + 4 + 2 * CURRENT_RING,
                     size + 4 + 2 * CURRENT_RING, InventoryTheme.accent, 11)
@@ -116,10 +116,10 @@ class MapPage {
             if (!seen.contains(terrain)) {
                 var x = MAP_PAD + seen.count * LEGEND_STRIDE
                 seen.add(terrain)
-                var c = room["color"]
+                var color = room["color"]
                 MapPage.rect_(well, x - EDGE, legendY - EDGE, SWATCH_SIZE + 2 * EDGE, SWATCH_SIZE + 2 * EDGE,
                     InventoryTheme.textDark, 4)
-                MapPage.rect_(well, x, legendY, SWATCH_SIZE, SWATCH_SIZE, Vec4.new(c[0], c[1], c[2], 255), 5)
+                MapPage.rect_(well, x, legendY, SWATCH_SIZE, SWATCH_SIZE, Vec4.new(color[0], color[1], color[2], 255), 5)
                 var names = model["terrainNames"]
                 var name = names.containsKey(terrain) ? names[terrain] : terrain
                 InventoryTheme.label(well, name, Vec2.new(x + SWATCH_SIZE + 10, legendY - 1), Vec2.new(0, 0),
@@ -136,8 +136,8 @@ class MapPage {
         }
     }
 
-    static rect_(parent, x, y, w, h, color, z) {
-        var rect = UIColor.new(Vec2.new(x, y), Vec2.new(0, 0), Vec2.new(w, h), Vec2.new(0, 0))
+    static rect_(parent, x, y, width, height, color, z) {
+        var rect = UIColor.new(Vec2.new(x, y), Vec2.new(0, 0), Vec2.new(width, height), Vec2.new(0, 0))
         rect.setColor(color)
         rect.setZIndex(z)
         parent.addChild(rect)

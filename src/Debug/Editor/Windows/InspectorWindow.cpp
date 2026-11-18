@@ -51,6 +51,69 @@
 
 namespace Struktur::Debug
 {
+// A level entity field's value as text. Lists (LDtk Colour / Point fields) are shown as their named parts, e.g.
+// "x: 3, y: 4".
+static std::string FormatFieldValue(const Wren::WrenItem& item)
+{
+	switch (item.type)
+	{
+		case WrenType::WREN_TYPE_NUM:
+			return std::format("{:.4g}", std::any_cast<double>(item.value));
+		case WrenType::WREN_TYPE_BOOL:
+			return std::any_cast<bool>(item.value) ? "true" : "false";
+		case WrenType::WREN_TYPE_STRING:
+			return "\"" + std::any_cast<std::string>(item.value) + "\"";
+		case WrenType::WREN_TYPE_LIST:
+		{
+			std::string text;
+			for (const auto& part : std::any_cast<std::vector<Wren::WrenItem>>(item.value))
+			{
+				text += (text.empty() ? "" : ", ") + part.identifier + ": " + FormatFieldValue(part);
+			}
+			return text;
+		}
+		default:
+			return "null";
+	}
+}
+
+// A checkbox per named collision layer for one of a body's filter bitmasks. True when a box was toggled.
+static bool RenderCollisionLayerToggles(Physics::CollisionLayers& collisionLayers, const char* title, uint16& bits)
+{
+	bool changed = false;
+	ImGui::TextDisabled("%s", title);
+	ImGui::Indent();
+	for (uint16_t bit = 0x0001; bit != 0; bit = static_cast<uint16_t>(bit << 1))
+	{
+		const std::string& layerName = collisionLayers.GetLayerName(bit);
+		if (layerName.empty())
+		{
+			continue;
+		}
+		bool on = (bits & bit) != 0;
+		if (ImGui::Checkbox(layerName.c_str(), &on))
+		{
+			bits    = on ? static_cast<uint16>(bits | bit) : static_cast<uint16>(bits & ~bit);
+			changed = true;
+		}
+	}
+	ImGui::Unindent();
+	return changed;
+}
+
+// One of a body's filter bitmasks, entered/shown as hex. True when it was edited.
+static bool RenderRawCollisionBits(const char* label, uint16& bits)
+{
+	ImU16 value = bits;
+	if (ImGui::InputScalar(label, ImGuiDataType_U16, &value, nullptr, nullptr, "%04X",
+	                       ImGuiInputTextFlags_CharsHexadecimal))
+	{
+		bits = value;
+		return true;
+	}
+	return false;
+}
+
 InspectorWindow::InspectorWindow(HierarchyWindow* hierarchyWindow, UIHierarchyWindow* uiHierarchyWindow,
                                  PreviewWindow* previewWindow)
     : EditorWindow("Inspector"),
@@ -972,9 +1035,9 @@ bool InspectorWindow::RenderUIElementPicker(const char* label, GameContext& cont
 
 	std::vector<const char*> labelPtrs;
 	labelPtrs.reserve(labels.size());
-	for (const std::string& l : labels)
+	for (const std::string& label : labels)
 	{
-		labelPtrs.push_back(l.c_str());
+		labelPtrs.push_back(label.c_str());
 	}
 
 	int selectedIndex = currentIndex;
@@ -1184,32 +1247,13 @@ void InspectorWindow::RenderPhysicsBodyComponent(GameContext& context, Component
 
 		if (hasNamedLayers)
 		{
-			auto renderLayerToggles = [&](const char* title, uint16& bits)
-			{
-				ImGui::TextDisabled("%s", title);
-				ImGui::Indent();
-				for (uint16_t bit = 0x0001; bit != 0; bit = static_cast<uint16_t>(bit << 1))
-				{
-					const std::string& layerName = collisionLayers.GetLayerName(bit);
-					if (layerName.empty())
-					{
-						continue;
-					}
-					bool on = (bits & bit) != 0;
-					if (ImGui::Checkbox(layerName.c_str(), &on))
-					{
-						bits = on ? static_cast<uint16>(bits | bit) : static_cast<uint16>(bits & ~bit);
-						filterChanged = true;
-					}
-				}
-				ImGui::Unindent();
-			};
-
 			ImGui::PushID("category");
-			renderLayerToggles("Category (layers this body belongs to)", filter.categoryBits);
+			filterChanged |= RenderCollisionLayerToggles(collisionLayers, "Category (layers this body belongs to)",
+			                                             filter.categoryBits);
 			ImGui::PopID();
 			ImGui::PushID("mask");
-			renderLayerToggles("Mask (layers this body collides with)", filter.maskBits);
+			filterChanged |=
+			    RenderCollisionLayerToggles(collisionLayers, "Mask (layers this body collides with)", filter.maskBits);
 			ImGui::PopID();
 		}
 		else
@@ -1218,19 +1262,9 @@ void InspectorWindow::RenderPhysicsBodyComponent(GameContext& context, Component
 		}
 
 		// Raw bitmask access - always available, so an unnamed bit or a body with no registered layers
-		// can still be edited. Entered/shown as hex.
-		auto renderRawBits = [&](const char* label, uint16& bits)
-		{
-			ImU16 value = bits;
-			if (ImGui::InputScalar(label, ImGuiDataType_U16, &value, nullptr, nullptr, "%04X",
-			                       ImGuiInputTextFlags_CharsHexadecimal))
-			{
-				bits          = value;
-				filterChanged = true;
-			}
-		};
-		renderRawBits("categoryBits", filter.categoryBits);
-		renderRawBits("maskBits", filter.maskBits);
+		// can still be edited.
+		filterChanged |= RenderRawCollisionBits("categoryBits", filter.categoryBits);
+		filterChanged |= RenderRawCollisionBits("maskBits", filter.maskBits);
 
 		int groupIndex = filter.groupIndex;
 		if (ImGui::InputInt("groupIndex", &groupIndex))
@@ -1383,33 +1417,9 @@ void InspectorWindow::RenderLevelEntityInstanceComponent(GameContext& context, C
 	ImGui::Spacing();
 	ImGui::TextUnformatted("Fields");
 	ImGui::Indent();
-	// Lists (LDtk Colour / Point fields) are shown as their named parts, e.g. "x: 3, y: 4".
-	auto formatValue = [](const Wren::WrenItem& item, auto& self) -> std::string
-	{
-		switch (item.type)
-		{
-			case WrenType::WREN_TYPE_NUM:
-				return std::format("{:.4g}", std::any_cast<double>(item.value));
-			case WrenType::WREN_TYPE_BOOL:
-				return std::any_cast<bool>(item.value) ? "true" : "false";
-			case WrenType::WREN_TYPE_STRING:
-				return "\"" + std::any_cast<std::string>(item.value) + "\"";
-			case WrenType::WREN_TYPE_LIST:
-			{
-				std::string text;
-				for (const auto& part : std::any_cast<std::vector<Wren::WrenItem>>(item.value))
-				{
-					text += (text.empty() ? "" : ", ") + part.identifier + ": " + self(part, self);
-				}
-				return text;
-			}
-			default:
-				return "null";
-		}
-	};
 	for (const Wren::WrenItem& field : instance.fields)
 	{
-		ImGui::TextWrapped("%s: %s", field.identifier.c_str(), formatValue(field, formatValue).c_str());
+		ImGui::TextWrapped("%s: %s", field.identifier.c_str(), FormatFieldValue(field).c_str());
 	}
 	ImGui::Unindent();
 	ImGui::TextDisabled("Read-only - sourced from the loaded level file");
@@ -2074,11 +2084,11 @@ void InspectorWindow::RenderShaderComponent(GameContext& context, Component::Sha
 			for (auto& [name, value] : shader.vec2Uniforms)
 			{
 				ImGui::PushID(name.c_str());
-				float v[2] = {value.x, value.y};
-				if (ImGui::DragFloat2(name.c_str(), v, 0.01f))
+				float components[2] = {value.x, value.y};
+				if (ImGui::DragFloat2(name.c_str(), components, 0.01f))
 				{
-					value.x = v[0];
-					value.y = v[1];
+					value.x = components[0];
+					value.y = components[1];
 				}
 				ImGui::PopID();
 			}
@@ -2098,12 +2108,12 @@ void InspectorWindow::RenderShaderComponent(GameContext& context, Component::Sha
 			for (auto& [name, value] : shader.vec3Uniforms)
 			{
 				ImGui::PushID(name.c_str());
-				float v[3] = {value.x, value.y, value.z};
-				if (ImGui::DragFloat3(name.c_str(), v, 0.01f))
+				float components[3] = {value.x, value.y, value.z};
+				if (ImGui::DragFloat3(name.c_str(), components, 0.01f))
 				{
-					value.x = v[0];
-					value.y = v[1];
-					value.z = v[2];
+					value.x = components[0];
+					value.y = components[1];
+					value.z = components[2];
 				}
 				ImGui::PopID();
 			}
@@ -2123,13 +2133,13 @@ void InspectorWindow::RenderShaderComponent(GameContext& context, Component::Sha
 			for (auto& [name, value] : shader.vec4Uniforms)
 			{
 				ImGui::PushID(name.c_str());
-				float v[4] = {value.x, value.y, value.z, value.w};
-				if (ImGui::DragFloat4(name.c_str(), v, 0.01f))
+				float components[4] = {value.x, value.y, value.z, value.w};
+				if (ImGui::DragFloat4(name.c_str(), components, 0.01f))
 				{
-					value.x = v[0];
-					value.y = v[1];
-					value.z = v[2];
-					value.w = v[3];
+					value.x = components[0];
+					value.y = components[1];
+					value.z = components[2];
+					value.w = components[3];
 				}
 				ImGui::PopID();
 			}

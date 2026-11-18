@@ -1,7 +1,10 @@
 #include "ResourceManagerWindow.h"
 
 #include <cstdio>
+#include <type_traits>
 
+#include "Debug/Editor/PreviewRenderers/PreviewHelpers.h"
+#include "Debug/Editor/Windows/PreviewWindow.h"
 #include "Engine/Core/FileSystem.h"
 #include "Engine/GameContext.h"
 #include "Engine/Resource/FontResource.h"
@@ -10,14 +13,10 @@
 #include "Engine/Resource/ShaderResource.h"
 #include "Engine/Resource/SoundResource.h"
 #include "Engine/Resource/TextureResource.h"
-#include "Debug/Editor/PreviewRenderers/PreviewHelpers.h"
-#include "Debug/Editor/Windows/PreviewWindow.h"
 
 namespace Struktur::Debug
 {
-namespace
-{
-std::string FormatBytes(size_t bytes)
+static std::string FormatBytes(size_t bytes)
 {
 	static const char* kUnits[] = {"B", "KB", "MB", "GB"};
 	double value                = (double)bytes;
@@ -32,7 +31,7 @@ std::string FormatBytes(size_t bytes)
 	return buffer;
 }
 
-std::string FormatMilliseconds(double seconds)
+static std::string FormatMilliseconds(double seconds)
 {
 	if (seconds < 0.0)
 	{
@@ -45,8 +44,8 @@ std::string FormatMilliseconds(double seconds)
 
 // Adds a red tint once a GPU pool is nearly full - the raw percent text already shows the real number, this is
 // just a glance-able warning on top of it.
-void RenderGpuBudgetBar(const char* label, size_t loadedCount, size_t cpuMemory, size_t gpuMemory, size_t maxGpu,
-                        float percent)
+static void RenderGpuBudgetBar(const char* label, size_t loadedCount, size_t cpuMemory, size_t gpuMemory, size_t maxGpu,
+                               float percent)
 {
 	ImGui::Text("%s: %zu (%s CPU)  |  GPU %s / %s (%.0f%%)", label, loadedCount, FormatBytes(cpuMemory).c_str(),
 	           FormatBytes(gpuMemory).c_str(), FormatBytes(maxGpu).c_str(), percent);
@@ -61,7 +60,6 @@ void RenderGpuBudgetBar(const char* label, size_t loadedCount, size_t cpuMemory,
 		ImGui::PopStyleColor();
 	}
 }
-}  // namespace
 
 ResourceManagerWindow::ResourceManagerWindow(PreviewWindow* previewWindow)
     : EditorWindow("Resource Manager"),
@@ -144,88 +142,38 @@ void ResourceManagerWindow::OnResourceEvent(Resource::ResourceCategory category,
 	}
 }
 
+template <typename PoolT>
+void ResourceManagerWindow::AppendPoolRows(const PoolT& pool, Resource::ResourceCategory category,
+                                           std::vector<RowData>& outRows)
+{
+	for (const auto& entry : pool.GetEntries())
+	{
+		RowData row;
+		row.category  = category;
+		row.name      = entry.name;
+		row.filePath  = entry.resource.filePath;
+		row.refCount  = entry.refCount;
+		row.pinned    = entry.pinned;
+		row.isLoaded  = entry.resource.isLoaded;
+		row.cpuMemory = entry.resource.GetMemoryUsage();
+		if constexpr (std::is_base_of_v<Resource::GpuResource, std::decay_t<decltype(entry.resource)>>)
+		{
+			row.hasGpuInfo = true;
+			row.gpuMemory  = entry.resource.GetGpuMemoryUsage();
+			row.gpuState   = entry.resource.gpuState;
+		}
+		outRows.push_back(std::move(row));
+	}
+}
+
 void ResourceManagerWindow::CollectRows(GameContext& context, std::vector<RowData>& outRows) const
 {
 	Resource::ResourceManager& resourceManager = context.GetResourceManager();
-
-	resourceManager.GetTexturePool().ForEachEntry(
-	    [&](const std::string& name, const Resource::TextureResource& resource, size_t refCount, bool pinned)
-	    {
-		    RowData row;
-		    row.category   = Resource::ResourceCategory::Texture;
-		    row.name       = name;
-		    row.filePath   = resource.filePath;
-		    row.refCount   = refCount;
-		    row.pinned     = pinned;
-		    row.isLoaded   = resource.isLoaded;
-		    row.cpuMemory  = resource.GetMemoryUsage();
-		    row.hasGpuInfo = true;
-		    row.gpuMemory  = resource.GetGpuMemoryUsage();
-		    row.gpuState   = resource.gpuState;
-		    outRows.push_back(std::move(row));
-	    });
-
-	resourceManager.GetFontPool().ForEachEntry(
-	    [&](const std::string& name, const Resource::FontResource& resource, size_t refCount, bool pinned)
-	    {
-		    RowData row;
-		    row.category   = Resource::ResourceCategory::Font;
-		    row.name       = name;
-		    row.filePath   = resource.filePath;
-		    row.refCount   = refCount;
-		    row.pinned     = pinned;
-		    row.isLoaded   = resource.isLoaded;
-		    row.cpuMemory  = resource.GetMemoryUsage();
-		    row.hasGpuInfo = true;
-		    row.gpuMemory  = resource.GetGpuMemoryUsage();
-		    row.gpuState   = resource.gpuState;
-		    outRows.push_back(std::move(row));
-	    });
-
-	resourceManager.GetShaderPool().ForEachEntry(
-	    [&](const std::string& name, const Resource::ShaderResource& resource, size_t refCount, bool pinned)
-	    {
-		    RowData row;
-		    row.category   = Resource::ResourceCategory::Shader;
-		    row.name       = name;
-		    row.filePath   = resource.filePath;
-		    row.refCount   = refCount;
-		    row.pinned     = pinned;
-		    row.isLoaded   = resource.isLoaded;
-		    row.cpuMemory  = resource.GetMemoryUsage();
-		    row.hasGpuInfo = true;
-		    row.gpuMemory  = resource.GetGpuMemoryUsage();
-		    row.gpuState   = resource.gpuState;
-		    outRows.push_back(std::move(row));
-	    });
-
-	resourceManager.GetSoundPool().ForEachEntry(
-	    [&](const std::string& name, const Resource::SoundResource& resource, size_t refCount, bool pinned)
-	    {
-		    RowData row;
-		    row.category  = Resource::ResourceCategory::Sound;
-		    row.name      = name;
-		    row.filePath  = resource.filePath;
-		    row.refCount  = refCount;
-		    row.pinned    = pinned;
-		    row.isLoaded  = resource.isLoaded;
-		    row.cpuMemory = resource.GetMemoryUsage();
-		    outRows.push_back(std::move(row));
-	    });
-
-	resourceManager.GetMusicPool().ForEachEntry(
-	    [&](const std::string& name, const Resource::MusicResource& resource, size_t refCount, bool pinned)
-	    {
-		    RowData row;
-		    row.category  = Resource::ResourceCategory::Music;
-		    row.name      = name;
-		    row.filePath  = resource.filePath;
-		    row.refCount  = refCount;
-		    row.pinned    = pinned;
-		    row.isLoaded  = resource.isLoaded;
-		    row.cpuMemory = resource.GetMemoryUsage();
-		    outRows.push_back(std::move(row));
-	    });
+	AppendPoolRows(resourceManager.GetTexturePool(), Resource::ResourceCategory::Texture, outRows);
+	AppendPoolRows(resourceManager.GetFontPool(), Resource::ResourceCategory::Font, outRows);
+	AppendPoolRows(resourceManager.GetShaderPool(), Resource::ResourceCategory::Shader, outRows);
+	AppendPoolRows(resourceManager.GetSoundPool(), Resource::ResourceCategory::Sound, outRows);
+	AppendPoolRows(resourceManager.GetMusicPool(), Resource::ResourceCategory::Music, outRows);
 }
 
 void ResourceManagerWindow::RenderToolbar(GameContext& context)

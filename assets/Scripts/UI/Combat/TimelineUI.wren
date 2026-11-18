@@ -95,8 +95,8 @@ class TimelineRow {
 
     band_(start, progress, from, to, kind) {
         if (to <= progress) return
-        var a = from < progress ? progress : from
-        _bands.add([start + a - progress, start + to - progress, kind])
+        var visibleFrom = from < progress ? progress : from
+        _bands.add([start + visibleFrom - progress, start + to - progress, kind])
     }
 
     addBlock(start, end, kind, text) {
@@ -285,10 +285,10 @@ class TimelineUI {
         var labels = view["labels"]
         var texts = view["texts"]
         var used = 0
-        for (b in data.blocks) {
+        for (segment in data.blocks) {
             if (used >= blocks.count) break
-            var start = b[0] < 0 ? 0 : b[0]
-            var end = b[1] > WINDOW ? WINDOW : b[1]
+            var start = segment[0] < 0 ? 0 : segment[0]
+            var end = segment[1] > WINDOW ? WINDOW : segment[1]
             if (end - start <= 0.001) continue
             var x0 = NAME_WIDTH + (start * _scale).round
             var width = ((end - start) * _scale).round - 1
@@ -296,10 +296,10 @@ class TimelineUI {
             var block = blocks[used]
             block.setPosition(Vec2.new(x0, y), Vec2.new(0, 0))
             block.setSize(Vec2.new(width, _rowH), Vec2.new(0, 0))
-            block.setColor(COLORS[b[2]])
+            block.setColor(COLORS[segment[2]])
             block.setVisible(true)
             var label = labels[used]
-            var text = b[3]
+            var text = segment[3]
             // ~9px a character at this size: only name blocks wide enough to hold it.
             if (text != "" && width >= text.count * 9 + 6) {
                 if (texts[used] != text) {
@@ -319,29 +319,29 @@ class TimelineUI {
 
         // Bands and ticks share one pool.
         var marks = view["marks"]
-        var m = 0
+        var latestEnd = 0
         for (band in data.bands) {
-            if (m >= marks.count) break
+            if (latestEnd >= marks.count) break
             var start = band[0] < 0 ? 0 : band[0]
             var end = band[1] > WINDOW ? WINDOW : band[1]
             if (end - start <= 0.001) continue
-            var mark = marks[m]
+            var mark = marks[latestEnd]
             mark.setPosition(Vec2.new(NAME_WIDTH + (start * _scale).round, y + _rowH - 6), Vec2.new(0, 0))
             mark.setSize(Vec2.new(((end - start) * _scale).round.max(2), 6), Vec2.new(0, 0))
             mark.setColor(COLORS[band[2]])
             mark.setVisible(true)
-            m = m + 1
+            latestEnd = latestEnd + 1
         }
         for (tick in data.ticks) {
-            if (m >= marks.count) break
+            if (latestEnd >= marks.count) break
             if (tick[0] < 0 || tick[0] > WINDOW) continue
-            var mark = marks[m]
+            var mark = marks[latestEnd]
             mark.setPosition(Vec2.new(NAME_WIDTH + (tick[0] * _scale).round - 1, y), Vec2.new(0, 0))
             mark.setSize(Vec2.new(tick[1] == "impact" ? 3 : 2, _rowH), Vec2.new(0, 0))
             mark.setColor(COLORS[tick[1]])
             mark.setVisible(true)
-            m = m + 1
+            latestEnd = latestEnd + 1
         }
-        hideFrom_(marks, m)
+        hideFrom_(marks, latestEnd)
     }
 }
