@@ -14,7 +14,7 @@ import "fileSystem" for FileSystem
 import "Combat/Config/Moves" for Moves
 import "debug" for Debug
 
-var LOADOUT_SIZE = 6
+var LOADOUT_SIZE = 5   // five moves - with Hold, a 3 x 2 grid in the battle's Moves menu
 
 class MoveBook {
     static loadoutSize { LOADOUT_SIZE }
@@ -108,6 +108,8 @@ class MoveBook {
         }
         var unlocked = data["unlocked"].where { |name| Moves.byName(name) != null }.toList
         var equipped = data["equipped"] == null ? [] : data["equipped"].where { |name| unlocked.contains(name) }.toList
+        // An older save may carry more than the loadout holds now (it was six): keep the first ones.
+        if (equipped.count > LOADOUT_SIZE) equipped = equipped.take(LOADOUT_SIZE).toList
         for (name in __starter) {
             if (!unlocked.contains(name)) {
                 unlocked.add(name)

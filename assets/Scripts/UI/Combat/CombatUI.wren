@@ -9,13 +9,19 @@
 //   - floating text over the fighters: damage, "Blocked", "Dodged", reactions.
 //
 // The command panel is where a chain is built. It always shows whose chain it is and how full it is (seconds of the
-// budget, stamina left after it), then one grid of up to eight slot buttons whose meaning the caller sets:
-//   the moves (the six loadout moves, Hold and Item), Hold's lengths, the items, or Start / Undo once it is full -
-// with a detail line for whatever slot has focus and a hint line of button prompts.
+// budget, stamina left after it), then one screen at a time (States/CombatState.wren decides which):
+//   main menu   Moves / Items / Flee - one row of big buttons (setSlots, style "menu");
+//   Moves       the five loadout moves and Hold - a 3 x 2 grid, each a name over its time and cost ("grid");
+//   Hold        the six Hold lengths - a 3 x 2 grid ("grid");
+//   Items       a scrolling list (icon, name, count) with the focused item's picture, effect and description beside it
+//               (showItems);
+//   ready       Start / Undo last ("pair").
+// A detail line under the buttons describes whatever has focus, and the hint line of button prompts runs along the
+// panel's bottom edge, under everything. There's no Back button - Esc goes back (the State reads it).
 //
 // Pure construction + refresh: it never reads a Combatant or the engine and never calls back into game logic except
-// through the two callbacks States/CombatState.wren sets (onSlotClick / onSlotFocus).
-import "ui" for UIManager, UIPanel, UIColor, UILabel, UIRichLabel, TextWrapping, NavigationDirection
+// through the callbacks States/CombatState.wren sets (onSlotClick / onSlotFocus, onItemClick / onItemFocus).
+import "ui" for UIManager, UIPanel, UIColor, UILabel, UIRichLabel, UIScroll, TextWrapping, NavigationDirection
 import "math" for Math, Vec2, Vec4
 import "app" for Application, Time
 import "Util/Colors" for BLANK
@@ -23,7 +29,6 @@ import "UI/Combat/CombatantUI" for CombatantUI
 import "UI/Combat/TimelineUI" for TimelineUI
 import "UI/Combat/MoveButtonUI" for MoveButtonUI
 import "UI/Theme/KitBar" for KitBar
-import "UI/Theme/KitButton" for KitButton
 import "UI/Theme/UIKit" for UIKit
 
 var TOP_EDGE = 12
@@ -35,17 +40,33 @@ var MESSAGE_PAD_X = 22
 var MESSAGE_PAD_Y = 10
 var BAR_HEIGHT = 252          // the bar along the bottom
 var BAR_PAD = 24              // inside the bar's window (its rim is 5px art at 4x = 20px)
-var COMMAND_WIDTH = 600
-var SLOT_COUNT = 8
-var SLOT_WIDTH = 296
-var SLOT_HEIGHT = 32
+var COMMAND_WIDTH = 738       // the command panel: everything right of the timeline (24 + 470 + 24 gap)
+var HINT_HEIGHT = 30          // the button-prompt line along the panel's bottom (its glyphs stand a little taller)
+var SLOT_COUNT = 6             // the button pool: the biggest screen is a 3 x 2 grid
 var SLOT_GAP_X = 8
-var SLOT_GAP_Y = 4
+var SLOT_GAP_Y = 6
+// Per screen style: [columns, button height, button layout] - see MoveButtonUI.setLayout.
+var STYLES = {
+    "menu": [3, 58, "center"],
+    "grid": [3, 50, "stacked"],
+    "pair": [2, 58, "center"]
+}
+var ITEM_ROWS = 12             // the Items list's row pool
+var ITEM_LIST_WIDTH = 290
+var ITEM_BAR_WIDTH = 8         // the list's scroll bar, shown only when the list is longer than it is tall
+var ITEM_HINT_GAP = 8          // air between the item list's frame and the hint line
+var ITEM_ROW_HEIGHT = 34
+var ITEM_ROW_GAP = 4
+var ITEM_ICON = 24             // px an item's icon is fitted to in its row
+var ITEM_CELL = 64             // the focused item's picture cell
+var ITEM_PICTURE = 40
 var HEADER_HEIGHT = 26
 var DETAIL_SIZE = 18.0
 var DETAIL_LINE = 22          // px per wrapped line of the detail text
+var DETAIL_LIFT = 4           // the rich label's text starts this far below its box top
 var CHAIN_BAR_WIDTH = 120
 var TIMELINE_ROWS = 8
+var TIMELINE_WIDTH = 470      // the timeline strip, names included - a guide, kept compact
 var POPUPS = 16
 var POPUP_TIME = 0.9
 var PROMPT_WIDTH = 760
@@ -89,11 +110,9 @@ class CombatUI {
 
         var commandX = gw - BAR_PAD - COMMAND_WIDTH
         var innerHeight = BAR_HEIGHT - 2 * BAR_PAD
-        _timeline = TimelineUI.new(_bar, BAR_PAD, BAR_PAD - 4, commandX - BAR_PAD - 20, TIMELINE_ROWS, font)
-        // The hint line sits under the timeline, bottom left (-5: the rich label's own padding).
-        _hint = UIKit.richText(_bar, "", Vec2.new(BAR_PAD - 5, -BAR_PAD + 16), Vec2.new(0, 1), Vec2.new(0, 1), 18.0,
-            UIKit.textMuted, 6)
-
+        // The timeline's rows share the panel's whole height (TimelineUI: four rows fill it, more shrink to fit).
+        _timeline = TimelineUI.new(_bar, BAR_PAD, BAR_PAD - 4, TIMELINE_WIDTH.min(commandX - BAR_PAD - 20), TIMELINE_ROWS, font,
+            innerHeight + 2)
         buildCommand_(font, commandX, innerHeight)
         // Battle log / call-outs: in the command area while the clock runs (the panel is hidden then), on a dark
         // well, word-wrapped - off the arena, so it never covers a fighter.
@@ -123,17 +142,22 @@ class CombatUI {
     // --- building ----------------------------------------------------------------------
 
     buildCommand_(font, x, height) {
-        _command = CombatUI.group_(_bar, x, BAR_PAD - 4, COMMAND_WIDTH, height + 8)
+        // Ends 2 px inside the window's bottom rim (BAR_HEIGHT - its 24 px border), so nothing sits on the frame.
+        _commandHeight = height + 2
+        _command = CombatUI.group_(_bar, x, BAR_PAD - 4, COMMAND_WIDTH, _commandHeight)
+        // The button prompts, along the bottom under everything else (-5: the rich label's own padding).
+        _hint = UIKit.richText(_command, "", Vec2.new(-5, 0), Vec2.new(0, 1), Vec2.new(0, 1), 18.0, UIKit.textMuted, 6)
 
         // Header: whose chain / what is being picked, and how full the chain is.
         _header = UIKit.richText(_command, "", Vec2.new(-5, 0), Vec2.new(0, 0), Vec2.new(0, 0), 20.0, UIKit.accent, 6)
         _chainText = UIKit.richText(_command, "", Vec2.new(5, 0), Vec2.new(1, 0), Vec2.new(1, 0), 18.0, UIKit.text, 6)
-        _chainBar = KitBar.new(_command, COMMAND_WIDTH - CHAIN_BAR_WIDTH - 150, 5, CHAIN_BAR_WIDTH, 14, UIKit.accent, 6)
+        // Just left of the readout ("2.6 / 4.0s   SP 80" - about 170 px).
+        _chainBar = KitBar.new(_command, COMMAND_WIDTH - CHAIN_BAR_WIDTH - 186, 5, CHAIN_BAR_WIDTH, 14, UIKit.accent, 6)
 
+        // The button pool, laid out per screen by setSlots.
         _slots = []
         for (i in 0...SLOT_COUNT) {
-            var pos = Vec2.new((i % 2) * (SLOT_WIDTH + SLOT_GAP_X), HEADER_HEIGHT + 4 + (i / 2).floor * (SLOT_HEIGHT + SLOT_GAP_Y))
-            var button = MoveButtonUI.new(_command, pos, Vec2.new(SLOT_WIDTH, SLOT_HEIGHT), font)
+            var button = MoveButtonUI.new(_command, Vec2.new(0, HEADER_HEIGHT + 4), Vec2.new(100, 40), font)
             var index = i
             button.setOnClick { |s, m|
                 if (_onSlotClick != null) _onSlotClick.call(index)
@@ -142,42 +166,111 @@ class CombatUI {
                 _focusedSlot = index
                 if (_onSlotFocus != null) _onSlotFocus.call(index)
             })
+            button.panel.setVisible(false)
             _slots.add(button)
         }
-        // What the focused slot does: right under the last row in use (layoutDetail_), word-wrapped over whatever
-        // height is left - so a short grid (the items) leaves room for a description.
-        _commandHeight = height + 8
-        var detailY = rowTop_(4)
-        _detail = UIRichLabel.new(Vec2.new(-5, detailY), Vec2.new(0, 0), "", DETAIL_SIZE)
+
+        // What the focused button does: right under the last row in use (layoutDetail_), word-wrapped over the height
+        // that's left.
+        _detail = UIRichLabel.new(Vec2.new(-5, rowTop_(2, 50)), Vec2.new(0, 0), "", DETAIL_SIZE)
         _detail.setFont(font)
         _detail.setTextColor(UIKit.text)
         _detail.setWordWrap(TextWrapping.WORD_WRAP)
         _detail.setZIndex(6)
         _command.addChild(_detail)
         _detailLines = 1
-        // Flee - only in fights that can be fled (setFleeAvailable). Stays on the bottom line whatever the grid holds.
-        _fleeButton = KitButton.new(_command, "Flee", Vec2.new(0, detailY - 2), Vec2.new(1, 0), Vec2.new(84, 28), font, 17.0)
-        _fleeButton.panel.setAnchorPoint(Vec2.new(1, 0))
-        _fleeAvailable = false
-        _fleeButton.panel.setVisible(false)
-        layoutDetail_(4)
+        layoutDetail_(rowTop_(2, 50))
+
+        buildItems_(font)
     }
 
-    // The top of grid row `row` (0-3; 4 = just past the grid, the bottom line).
-    rowTop_(row) { HEADER_HEIGHT + 4 + row * (SLOT_HEIGHT + SLOT_GAP_Y) + 2 }
+    // The Items screen: the list on the left (a scroll of pooled rows), the focused item on the right.
+    buildItems_(font) {
+        var top = HEADER_HEIGHT + 4
+        // Stops short of the hint line with a little air (ITEM_HINT_GAP), so the list's frame never touches it.
+        var height = _commandHeight - top - HINT_HEIGHT - ITEM_HINT_GAP
+        _itemsPanel = CombatUI.group_(_command, 0, top, COMMAND_WIDTH, height)
+        _itemsPanel.setVisible(false)
+        var well = UIKit.frame(_itemsPanel, "well", Vec2.new(0, 0), Vec2.new(0, 0), Vec2.new(ITEM_LIST_WIDTH, height),
+            Vec2.new(0, 0), 3)
+        var pad = UIKit.padding("well")
+        var viewHeight = height - pad[2] - pad[3]
+        _itemScroll = UIScroll.new(Vec2.new(pad[0], pad[2]), Vec2.new(0, 0),
+            Vec2.new(ITEM_LIST_WIDTH - pad[0] - pad[1] - ITEM_BAR_WIDTH - 4, viewHeight), Vec2.new(0, 0))
+        _itemScroll.setVerticalScrollEnabled(true)
+        _itemScroll.setFocusDeadzone(Vec2.new(0, 30))
+        _itemScroll.setZIndex(4)
+        well.addChild(_itemScroll)
+        _itemViewHeight = viewHeight
+        // The scroll bar down the list's right edge - the engine sizes and moves the thumb (setScrollIndicator).
+        _itemTrack = UIPanel.new(Vec2.new(ITEM_LIST_WIDTH - pad[1] - ITEM_BAR_WIDTH, pad[2]), Vec2.new(0, 0),
+            Vec2.new(ITEM_BAR_WIDTH, viewHeight), Vec2.new(0, 0))
+        _itemTrack.setBackgroundColor(Vec4.new(19, 27, 27, 120))
+        _itemTrack.setBorderColor(BLANK)
+        _itemTrack.setZIndex(5)
+        well.addChild(_itemTrack)
+        var thumb = UIPanel.new(Vec2.new(0, 0), Vec2.new(0, 0), Vec2.new(ITEM_BAR_WIDTH, 40), Vec2.new(0, 0))
+        thumb.setBackgroundColor(UIKit.accent)
+        thumb.setBorderColor(BLANK)
+        thumb.setZIndex(6)
+        _itemTrack.addChild(thumb)
+        _itemScroll.setScrollIndicator(thumb)
+        _itemRows = []
+        var rowWidth = ITEM_LIST_WIDTH - pad[0] - pad[1] - ITEM_BAR_WIDTH - 8
+        for (i in 0...ITEM_ROWS) {
+            var row = MoveButtonUI.new(_itemScroll, Vec2.new(2, 2 + i * (ITEM_ROW_HEIGHT + ITEM_ROW_GAP)),
+                Vec2.new(rowWidth, ITEM_ROW_HEIGHT), font)
+            row.inset = ITEM_ICON + 6
+            var index = i
+            row.setOnClick { |s, m|
+                if (_onItemClick != null) _onItemClick.call(index)
+            }
+            row.setOnFocused(Fn.new {
+                showItemDetail_(index)
+                if (_onItemFocus != null) _onItemFocus.call(index)
+            })
+            row.panel.setVisible(false)
+            _itemRows.add({"button": row, "icon": null})
+        }
 
-    // Puts the detail line under `rows` rows of slots, as wide as the panel (short of Flee when it shows) and as
-    // tall as what's left - detailLines says how many lines that is.
-    layoutDetail_(rows) {
-        var top = rowTop_(rows)
-        var width = COMMAND_WIDTH + 5 - (_fleeAvailable ? 96 : 0)
-        var height = _commandHeight - top
+        // The focused item: its picture in a kit cell, name, effect and description.
+        var x = ITEM_LIST_WIDTH + 14
+        _itemCell = UIKit.frame(_itemsPanel, "cell", Vec2.new(x, 0), Vec2.new(0, 0), Vec2.new(ITEM_CELL, ITEM_CELL),
+            Vec2.new(0, 0), 4)
+        _itemPicture = null
+        var textX = x + ITEM_CELL + 12
+        var textWidth = COMMAND_WIDTH - textX
+        _itemName = UIKit.richText(_itemsPanel, "", Vec2.new(textX - 5, -2), Vec2.new(0, 0), Vec2.new(0, 0), 20.0, UIKit.text, 6)
+        _itemEffect = UIRichLabel.new(Vec2.new(textX - 5, 26), Vec2.new(0, 0), "", 18.0)
+        _itemEffect.setFont(font)
+        _itemEffect.setTextColor(UIKit.accent)
+        _itemEffect.setWordWrap(TextWrapping.WORD_WRAP)
+        _itemEffect.setSize(Vec2.new(textWidth + 5, 44), Vec2.new(0, 0))
+        _itemEffect.setZIndex(6)
+        _itemsPanel.addChild(_itemEffect)
+        _itemDesc = UIRichLabel.new(Vec2.new(x - 5, ITEM_CELL + 12), Vec2.new(0, 0), "", 18.0)
+        _itemDesc.setFont(font)
+        _itemDesc.setTextColor(UIKit.textMuted)
+        _itemDesc.setWordWrap(TextWrapping.WORD_WRAP)
+        _itemDesc.setSize(Vec2.new(COMMAND_WIDTH - x + 5, height - ITEM_CELL - 20), Vec2.new(0, 0))
+        _itemDesc.setZIndex(6)
+        _itemsPanel.addChild(_itemDesc)
+        _items = []
+    }
+
+    // The top of button row `row` for buttons `height` tall (row = the row count: just past the last one).
+    rowTop_(row, height) { HEADER_HEIGHT + 4 + row * (height + SLOT_GAP_Y) }
+
+    // Puts the detail line at `top`, as wide as the panel and as tall as what's left - detailLines says how many
+    // lines that is.
+    layoutDetail_(top) {
+        var height = _commandHeight - HINT_HEIGHT - top
         _detail.setPosition(Vec2.new(-5, top), Vec2.new(0, 0))
-        _detail.setSize(Vec2.new(width, height), Vec2.new(0, 0))
+        _detail.setSize(Vec2.new(COMMAND_WIDTH + 5, height), Vec2.new(0, 0))
         _detailLines = (height / DETAIL_LINE).floor.max(1)
     }
 
-    // How many lines the detail line has room for under the current grid.
+    // How many lines the detail line has room for under the current buttons.
     detailLines { _detailLines }
 
     buildPrompt_(font, gw, gh) {
@@ -221,11 +314,12 @@ class CombatUI {
     enemyCards { _enemyCards }
     timeline { _timeline }
     slots { _slots }
-    fleeButton { _fleeButton }
     focusedSlot { _focusedSlot }
 
     onSlotClick=(fn) { _onSlotClick = fn }
     onSlotFocus=(fn) { _onSlotFocus = fn }
+    onItemClick=(fn) { _onItemClick = fn }
+    onItemFocus=(fn) { _onItemFocus = fn }
 
     setVisible(visible) { _root.setVisible(visible) }
 
@@ -254,47 +348,111 @@ class CombatUI {
         _chainBar.setFraction(fraction)
     }
 
-    setFleeAvailable(available) {
-        _fleeAvailable = available
-        _fleeButton.panel.setVisible(available)
-        layoutDetail_(((_slotCount + 1) / 2).floor)
-    }
-
-    // The slot grid. entries: up to SLOT_COUNT of [name, info, enabled]; slots past the list are hidden. Links the
-    // grid so the arrows stay on it, and (focus != null) puts focus on that slot.
-    setSlots(entries, focus) {
+    // A screen of buttons. entries: up to SLOT_COUNT of [name, info, enabled]; style: "menu", "grid" or "pair" (see
+    // STYLES - columns, height, layout). Links the buttons so the arrows stay on them, puts focus on `focus` (if not
+    // null), and hides the Items panel.
+    setSlots(entries, focus) { setSlots(entries, focus, "grid") }
+    setSlots(entries, focus, style) {
+        _itemsPanel.setVisible(false)
+        var spec = STYLES[style]
+        var columns = spec[0]
+        var height = spec[1]
+        var width = ((COMMAND_WIDTH - (columns - 1) * SLOT_GAP_X) / columns).floor
         _slotCount = entries.count.min(SLOT_COUNT)
         for (i in 0...SLOT_COUNT) {
             var used = i < _slotCount
-            _slots[i].panel.setVisible(used)
+            var button = _slots[i]
+            button.panel.setVisible(used)
             if (used) {
-                _slots[i].setTexts(entries[i][0], entries[i][1])
-                _slots[i].setEnabled(entries[i][2])
+                button.place(Vec2.new((i % columns) * (width + SLOT_GAP_X), rowTop_((i / columns).floor, height)),
+                    Vec2.new(width, height))
+                button.setLayout(spec[2])
+                button.setTexts(entries[i][0], entries[i][1])
+                button.setEnabled(entries[i][2])
             }
         }
         for (i in 0..._slotCount) {
             var panel = _slots[i].panel
-            var column = i % 2
-            CombatUI.link_(panel, NavigationDirection.LEFT, column == 1 ? _slots[i - 1].panel : null)
-            CombatUI.link_(panel, NavigationDirection.RIGHT, column == 0 && i + 1 < _slotCount ? _slots[i + 1].panel : null)
-            CombatUI.link_(panel, NavigationDirection.UP, i >= 2 ? _slots[i - 2].panel : null)
-            var below = i + 2 < _slotCount ? _slots[i + 2].panel : (_fleeAvailable ? _fleeButton.panel : null)
-            CombatUI.link_(panel, NavigationDirection.DOWN, below)
+            var column = i % columns
+            CombatUI.link_(panel, NavigationDirection.LEFT, column > 0 ? _slots[i - 1].panel : null)
+            CombatUI.link_(panel, NavigationDirection.RIGHT, column + 1 < columns && i + 1 < _slotCount ? _slots[i + 1].panel : null)
+            CombatUI.link_(panel, NavigationDirection.UP, i >= columns ? _slots[i - columns].panel : null)
+            CombatUI.link_(panel, NavigationDirection.DOWN, i + columns < _slotCount ? _slots[i + columns].panel : null)
         }
-        if (_fleeAvailable && _slotCount > 0) {
-            var last = _slots[_slotCount - 1].panel
-            CombatUI.link_(_fleeButton.panel, NavigationDirection.UP, last)
-            CombatUI.link_(_fleeButton.panel, NavigationDirection.DOWN, null)
-            CombatUI.link_(_fleeButton.panel, NavigationDirection.LEFT, null)
-            CombatUI.link_(_fleeButton.panel, NavigationDirection.RIGHT, null)
-        }
-        layoutDetail_(((_slotCount + 1) / 2).floor)
+        var rows = ((_slotCount + columns - 1) / columns).floor
+        _detail.setVisible(true)
+        // Centred between the last row of buttons and the hint line (a one-line description; the rich label draws a
+        // few px below its box top, hence DETAIL_LIFT).
+        var gridBottom = rowTop_(rows, height) - SLOT_GAP_Y
+        var room = _commandHeight - HINT_HEIGHT - gridBottom
+        layoutDetail_(gridBottom + ((room - DETAIL_LINE) / 2).floor.max(0) - DETAIL_LIFT)
         if (focus != null && _slotCount > 0) focusSlot(focus)
     }
 
     focusSlot(index) {
         var i = Math.clamp(index, 0, _slotCount - 1)
         UIManager.setFocus(_slots[i].panel)
+    }
+
+    // The Items screen. items: [{ "name", "count" (text), "icon" (path or null), "effect", "description", "enabled" }],
+    // up to ITEM_ROWS. Focus goes to row `focus`.
+    showItems(items, focus) {
+        for (button in _slots) {
+            button.panel.setVisible(false)
+        }
+        _detail.setVisible(false)
+        _itemsPanel.setVisible(true)
+        _items = items.take(ITEM_ROWS).toList
+        for (i in 0...ITEM_ROWS) {
+            var row = _itemRows[i]
+            var button = row["button"]
+            var used = i < _items.count
+            button.panel.setVisible(used)
+            if (row["icon"] != null) {
+                button.panel.removeChild(row["icon"])
+                row["icon"] = null
+            }
+            if (!used) continue
+            var item = _items[i]
+            button.setTexts(item["name"], item["count"])
+            button.setEnabled(item["enabled"] != false)
+            if (item["icon"] != null) {
+                row["icon"] = UIKit.image(button.panel, item["icon"], Vec2.new(8, 0), Vec2.new(0, 0.5), Vec2.new(0, 0.5),
+                    UIKit.fitScale(item["icon"], ITEM_ICON), 7)
+            }
+        }
+        // The scroll bar only when the rows don't all fit.
+        _itemTrack.setVisible(_items.count * (ITEM_ROW_HEIGHT + ITEM_ROW_GAP) > _itemViewHeight)
+        for (i in 0..._items.count) {
+            var panel = _itemRows[i]["button"].panel
+            CombatUI.link_(panel, NavigationDirection.UP, i > 0 ? _itemRows[i - 1]["button"].panel : null)
+            CombatUI.link_(panel, NavigationDirection.DOWN, i + 1 < _items.count ? _itemRows[i + 1]["button"].panel : null)
+            CombatUI.link_(panel, NavigationDirection.LEFT, null)
+            CombatUI.link_(panel, NavigationDirection.RIGHT, null)
+        }
+        if (_items.count > 0) {
+            var index = Math.clamp(focus, 0, _items.count - 1)
+            showItemDetail_(index)
+            UIManager.setFocus(_itemRows[index]["button"].panel)
+        }
+    }
+
+    // The right-hand side of the Items screen for item `index`.
+    showItemDetail_(index) {
+        if (index >= _items.count) return
+        var item = _items[index]
+        if (_itemPicture != null) {
+            _itemCell.removeChild(_itemPicture)
+            _itemPicture = null
+        }
+        if (item["icon"] != null) {
+            var pad = UIKit.padding("cell")
+            _itemPicture = UIKit.image(_itemCell, item["icon"], Vec2.new((pad[0] - pad[1]) / 2, (pad[2] - pad[3]) / 2),
+                Vec2.new(0.5, 0.5), Vec2.new(0.5, 0.5), UIKit.fitScale(item["icon"], ITEM_PICTURE), 5)
+        }
+        _itemName.setMarkupText(item["name"])
+        _itemEffect.setMarkupText(item["effect"] == null ? "" : item["effect"])
+        _itemDesc.setMarkupText(item["description"] == null ? "" : item["description"])
     }
 
     // Sets where `direction` moves focus from `element`; null blocks it (focus stays put).

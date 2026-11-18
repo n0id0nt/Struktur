@@ -1,7 +1,9 @@
 // UI/Combat/MoveButtonUI.wren
-// A command-panel button in the UI kit's "button" art (like UI/Theme/KitButton.wren), with two texts: a name on the
-// left and a short readout on the right ("1.0s  9sp"). Disabled buttons stay focusable - so the player can still
-// read why a move can't be added - but draw muted.
+// A command-panel button in the UI kit's "button" art (like UI/Theme/KitButton.wren), with two texts: a name and a
+// short readout ("1.0s  9sp"). Disabled buttons stay focusable - so the player can still read why a move can't be
+// added - but draw muted. Three layouts (setLayout): "row" - name left, readout right; "stacked" - the name over the
+// readout, for narrow grid buttons; "center" - just the name, centred (a menu button). inset= pushes the texts right
+// (room for an icon on the left).
 import "ui" for UILabel
 import "math" for Vec2, Vec4
 import "UI/Theme/UIKit" for UIKit
@@ -31,6 +33,8 @@ class MoveButtonUI {
         _panel.addChild(_info)
         _nameText = ""
         _infoText = ""
+        _layout = "row"
+        _inset = 0
 
         _panel.setOnFocus { |s|
             _focused = true
@@ -48,6 +52,47 @@ class MoveButtonUI {
 
     panel { _panel }
     enabled { _enabled }
+
+    // Moves and sizes the button (the command panel lays its pool out per screen).
+    place(absPos, size) {
+        _panel.setPosition(absPos, Vec2.new(0, 0))
+        _panel.setSize(size, Vec2.new(0, 0))
+    }
+
+    // "row", "stacked" or "center" - see the top of the file.
+    setLayout(layout) {
+        if (layout == _layout) return
+        _layout = layout
+        arrange_()
+    }
+
+    // Px the texts start further right - room for an icon.
+    inset=(px) {
+        if (px == _inset) return
+        _inset = px
+        arrange_()
+    }
+
+    arrange_() {
+        var left = PAD_X - 5 + _inset
+        if (_layout == "center") {
+            _name.setPosition(Vec2.new(0, 0), Vec2.new(0.5, 0.5))
+            _name.setAnchorPoint(Vec2.new(0.5, 0.5))
+            _info.setVisible(false)
+        } else if (_layout == "stacked") {
+            _name.setPosition(Vec2.new(left, -10), Vec2.new(0, 0.5))
+            _name.setAnchorPoint(Vec2.new(0, 0.5))
+            _info.setPosition(Vec2.new(left, 11), Vec2.new(0, 0.5))
+            _info.setAnchorPoint(Vec2.new(0, 0.5))
+            _info.setVisible(true)
+        } else {
+            _name.setPosition(Vec2.new(left, 0), Vec2.new(0, 0.5))
+            _name.setAnchorPoint(Vec2.new(0, 0.5))
+            _info.setPosition(Vec2.new(-PAD_X + 5, 0), Vec2.new(1, 0.5))
+            _info.setAnchorPoint(Vec2.new(1, 0.5))
+            _info.setVisible(true)
+        }
+    }
 
     setTexts(name, info) {
         if (name != _nameText) {

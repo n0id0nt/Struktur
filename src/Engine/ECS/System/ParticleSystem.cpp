@@ -43,7 +43,8 @@ glm::vec2 RandomInCircle(float radius)
 	return glm::vec2(std::cos(angle), std::sin(angle)) * r;
 }
 
-void SpawnParticle(Struktur::Component::ParticleEmitter& emitter, const glm::vec2& originPosition)
+// Returns the particle spawned, or null when the pool was full.
+Struktur::Component::Particle* SpawnParticle(Struktur::Component::ParticleEmitter& emitter, const glm::vec2& originPosition)
 {
 	// Find a dead slot to reuse before growing the pool - keeps the vector at its steady-state size instead of
 	// reallocating every spawn once the pool has filled up once.
@@ -60,7 +61,7 @@ void SpawnParticle(Struktur::Component::ParticleEmitter& emitter, const glm::vec
 	{
 		if ((int)emitter.particles.size() >= emitter.maxParticles)
 		{
-			return;  // pool full - drop the spawn rather than exceeding maxParticles
+			return nullptr;  // pool full - drop the spawn rather than exceeding maxParticles
 		}
 		emitter.particles.emplace_back();
 		slot = &emitter.particles.back();
@@ -73,6 +74,9 @@ void SpawnParticle(Struktur::Component::ParticleEmitter& emitter, const glm::vec
 	                            RandomRange(emitter.velocityMin.y, emitter.velocityMax.y));
 	slot->lifetime  = RandomRange(emitter.lifetimeMin, emitter.lifetimeMax);
 	slot->rotationSpeed = RandomRange(emitter.rotationSpeedMin, emitter.rotationSpeedMax);
+	slot->startColor    = emitter.startColor;
+	slot->endColor      = emitter.endColor;
+	return slot;
 }
 }  // namespace
 
@@ -111,6 +115,19 @@ void Struktur::System::ParticleSystem::Update(GameContext& context)
 			}
 			emitter.hasBurst = true;
 		}
+		// Queued spawns (ParticleEmitter.spawn / spawnText from scripts) - added to whatever is alive.
+		for (; emitter.pendingSpawns > 0; --emitter.pendingSpawns)
+		{
+			SpawnParticle(emitter, origin);
+		}
+		for (const std::string& text : emitter.pendingTexts)
+		{
+			if (Component::Particle* particle = SpawnParticle(emitter, origin))
+			{
+				particle->text = text;
+			}
+		}
+		emitter.pendingTexts.clear();
 
 		// Update - simple Euler integration (not exact closed-form kinematics) so this stays easy to extend
 		// with non-constant forces (drag, a sampled wind field, ...) later without changing the integration

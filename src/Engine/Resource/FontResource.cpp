@@ -27,6 +27,7 @@ Struktur::Resource::FontResource::FontResource(FontResource&& other) noexcept
       m_codepointCount(other.m_codepointCount),
       m_pointSampled(other.m_pointSampled),
       m_atlasTexture(other.m_atlasTexture),
+      m_worldAtlas(other.m_worldAtlas),
       m_atlasAlpha(std::move(other.m_atlasAlpha)),
       m_atlasWidth(other.m_atlasWidth),
       m_atlasHeight(other.m_atlasHeight),
@@ -34,6 +35,7 @@ Struktur::Resource::FontResource::FontResource(FontResource&& other) noexcept
 {
 	other.m_fontLoaded   = false;
 	other.m_atlasTexture = BGFX_INVALID_HANDLE;
+	other.m_worldAtlas   = BGFX_INVALID_HANDLE;
 }
 
 Struktur::Resource::FontResource& Struktur::Resource::FontResource::operator=(FontResource&& other) noexcept
@@ -49,12 +51,14 @@ Struktur::Resource::FontResource& Struktur::Resource::FontResource::operator=(Fo
 		m_codepointCount     = other.m_codepointCount;
 		m_pointSampled       = other.m_pointSampled;
 		m_atlasTexture       = other.m_atlasTexture;
+		m_worldAtlas         = other.m_worldAtlas;
 		m_atlasAlpha         = std::move(other.m_atlasAlpha);
 		m_atlasWidth         = other.m_atlasWidth;
 		m_atlasHeight        = other.m_atlasHeight;
 		font                 = std::move(other.font);
 		other.m_fontLoaded   = false;
 		other.m_atlasTexture = BGFX_INVALID_HANDLE;
+		other.m_worldAtlas   = BGFX_INVALID_HANDLE;
 	}
 	return *this;
 }
@@ -234,8 +238,41 @@ bool Struktur::Resource::FontResource::LoadToGpu(GameContext& context)
 	return true;
 }
 
+Struktur::Renderer::TextureHandle Struktur::Resource::FontResource::GetWorldAtlas()
+{
+	if (!bgfx::isValid(m_worldAtlas))
+	{
+		if (m_atlasAlpha.empty() || m_atlasWidth <= 0 || m_atlasHeight <= 0)
+		{
+			return Renderer::TextureHandle{0, 0, 0};
+		}
+		std::vector<uint8_t> rgba(m_atlasAlpha.size() * 4);
+		for (size_t i = 0; i < m_atlasAlpha.size(); ++i)
+		{
+			rgba[i * 4 + 0] = 255;
+			rgba[i * 4 + 1] = 255;
+			rgba[i * 4 + 2] = 255;
+			rgba[i * 4 + 3] = m_atlasAlpha[i];
+		}
+		const bgfx::Memory* memory = bgfx::copy(rgba.data(), (uint32_t)rgba.size());
+		uint64_t samplerFlags      = m_pointSampled ? (BGFX_SAMPLER_POINT | BGFX_SAMPLER_UVW_CLAMP) : 0;
+		m_worldAtlas = bgfx::createTexture2D((uint16_t)m_atlasWidth, (uint16_t)m_atlasHeight, false, 1,
+		                                     bgfx::TextureFormat::RGBA8, samplerFlags, memory);
+		if (!bgfx::isValid(m_worldAtlas))
+		{
+			return Renderer::TextureHandle{0, 0, 0};
+		}
+	}
+	return Renderer::TextureHandle{m_worldAtlas.idx, m_atlasWidth, m_atlasHeight};
+}
+
 void Struktur::Resource::FontResource::UnloadFromGpu()
 {
+	if (bgfx::isValid(m_worldAtlas))
+	{
+		bgfx::destroy(m_worldAtlas);
+		m_worldAtlas = BGFX_INVALID_HANDLE;
+	}
 	if (bgfx::isValid(m_atlasTexture))
 	{
 		bgfx::destroy(m_atlasTexture);

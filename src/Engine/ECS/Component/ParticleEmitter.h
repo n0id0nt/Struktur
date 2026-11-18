@@ -1,9 +1,11 @@
 #pragma once
 
+#include <string>
 #include <vector>
 
 #include "Engine/Animation/SpriteAnimation.h"
 
+#include "Engine/Resource/FontResource.h"
 #include "Engine/Resource/Pointers/ResourcePtr.h"
 #include "Engine/Resource/TextureResource.h"
 #include "Engine/Util/Color.h"
@@ -40,6 +42,14 @@ struct Particle
 	float lifetime = 1.0f;
 	float rotation      = 0.0f;  // radians
 	float rotationSpeed = 0.0f;  // radians/sec
+	// A text particle draws this (centred on its position, in the emitter's font) instead of the texture - set at
+	// spawn from ParticleEmitter::pendingTexts, so one emitter's particles can each show different text (damage
+	// numbers). Empty = an ordinary sprite particle.
+	std::string text;
+	// The emitter's start/end colours when this particle spawned - so restyling the emitter for the next burst
+	// (another element's hit cloud, a heal number after a damage number) never recolours particles in flight.
+	Util::Color startColor = Util::ColorWhite;
+	Util::Color endColor   = Util::Color{255, 255, 255, 0};
 };
 
 // Spawns and (via System::ParticleSystem) simulates a pool of Particle slots at this entity's world position
@@ -97,6 +107,19 @@ struct ParticleEmitter
 
 	// Engine-internal state, not meant to be set directly by scripts - written by System::ParticleSystem.
 	std::vector<Particle> particles;
+
+	// Text particles (Particle::text): drawn in `font` at fontSize world pixels (a pixel font snaps to whole
+	// multiples of its own size - Text::GlyphScale), scaled by start/endScale, coloured by start/endColor like any
+	// particle, never rotated, with a one-pixel outline in outlineColor (alpha 0 = no outline; its alpha follows the
+	// particle's fade).
+	Resource::ResourcePtr<Resource::FontResource> font;
+	float fontSize           = 9.0f;
+	Util::Color outlineColor = Util::Color{19, 27, 27, 255};
+
+	// Spawns queued for the next update, on top of looping/burst emission and without clearing live particles
+	// (unlike re-arming the burst): one text particle per pendingTexts entry, pendingSpawns plain ones.
+	std::vector<std::string> pendingTexts;
+	int pendingSpawns = 0;
 	float spawnAccumulator = 0.0f;
 	bool hasBurst          = false;
 };

@@ -4,7 +4,7 @@
 // pickers in three columns -
 //   gear      the fighter, its stats tier, main hand, off-hand, armour, gear quality, move tier
 //   elements  weapon element, armour element, two weapon effects and two armour effects (each an effect + a rank)
-//   moves     the six loadout moves (only what the equipment allows)
+//   moves     the five loadout moves (only what the equipment allows)
 // - then what that adds up to (tax per move, the weapon x armour pairing, Resonance), the scenario and Read level,
 // and Start / Back with the last result.
 //
@@ -16,7 +16,7 @@ import "UI/Theme/UIKit" for UIKit
 import "UI/Theme/KitButton" for KitButton
 
 var SLOTS_PER_SIDE = 3
-var MOVE_SLOTS = 6
+var MOVE_SLOTS = 5   // the player's loadout size (Combat/MoveBook.wren)
 
 var SLOT_WIDTH = 250
 var SLOT_HEIGHT = 34
@@ -77,7 +77,7 @@ class BattleSetupUI {
         var top = 78
         text_(_panel, "Gear", Vec2.new(COLUMN_X[0] + 4, top - 26), 18.0, UIKit.textMuted)
         text_(_panel, "Elements and custom effects", Vec2.new(COLUMN_X[1] + 4, top - 26), 18.0, UIKit.textMuted)
-        text_(_panel, "Moves (6 + Hold + Item)", Vec2.new(COLUMN_X[2] + 4, top - 26), 18.0, UIKit.textMuted)
+        text_(_panel, "Moves (5 + Hold)", Vec2.new(COLUMN_X[2] + 4, top - 26), 18.0, UIKit.textMuted)
         for (i in 0...GEAR_PICKERS.count) {
             addPicker_(GEAR_PICKERS[i], COLUMN_X[0], top + i * ROW_STRIDE, COLUMN_WIDTH)
         }

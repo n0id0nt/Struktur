@@ -55,9 +55,12 @@ var OVER_TIME = 1.8         // the closing line
 var FLEE_TIME = 0.7
 var STAGE_PAUSE = 0.9       // between the stages of an encounter
 var NAV_ARM_TIME = 0.14     // input lockout after a menu change, so the press that caused it can't bleed through
-var LOADOUT_SLOTS = 6
-var SLOT_HOLD = 6
-var SLOT_ITEM = 7
+var LOADOUT_SLOTS = 5      // the Moves menu: five moves, then Hold - a 3 x 2 grid
+var SLOT_HOLD = 5
+// The main menu's buttons, in order (Flee only shows in fights that can be fled).
+var MENU_MOVES = 0
+var MENU_ITEMS = 1
+var MENU_FLEE = 2
 
 var COLOR_DAMAGE = Vec4.new(255, 235, 150, 255)
 var COLOR_HURT = Vec4.new(255, 110, 100, 255)
@@ -66,7 +69,9 @@ var COLOR_GOOD = Vec4.new(140, 255, 170, 255)
 var COLOR_NOTE = Vec4.new(255, 190, 90, 255)
 var COLOR_TELL = Vec4.new(215, 210, 200, 255)
 
-var HINT_MOVES = "[input=UIAccept] Add move    [input=UICancel] Undo"
+var HINT_MENU = "[input=UIAccept] Choose"
+var HINT_MENU_UNDO = "[input=UIAccept] Choose    [input=UICancel] Undo last"
+var HINT_MOVES = "[input=UIAccept] Add move    [input=UICancel] Back"
 var HINT_SUB = "[input=UIAccept] Choose    [input=UICancel] Back"
 var HINT_PICK = "[input=UIDir] Choose a cell    [input=UIAccept] Confirm    [input=UICancel] Back"
 var HINT_CONFIRM = "[input=UIAccept] Choose    [input=UICancel] Undo last"
@@ -147,10 +152,10 @@ class CombatState is BaseState {
         var enemySlots = _engine.side(1).count
         if (_engine.side(1).any { |e| e.has("boss") }) enemySlots = enemySlots + 2
         _view = CombatUI.new(_party.count, enemySlots.max(1))
-        _view.setFleeAvailable(_canFlee)
         _view.onSlotClick = Fn.new { |index| slotClicked_(index) }
         _view.onSlotFocus = Fn.new { |index| slotFocused_(index) }
-        _view.fleeButton.setOnClick { |s, m| flee_() }
+        _view.onItemClick = Fn.new { |index| itemClicked_(index) }
+        _view.onItemFocus = Fn.new { |index| itemFocused_(index) }
 
         buildStage_(params)
         refreshViews_()
@@ -429,9 +434,11 @@ class CombatState is BaseState {
         _builder = ChainBuilder.new(_engine, _chooser)
         _itemsQueued = {}
         _lastSlot = 0
+        _menuSlot = MENU_MOVES
+        _itemSlot = 0
         setPhase_("select")
         _view.showCommand(true)
-        showMoves_()
+        showMenu_()
     }
 
     select_() {
@@ -440,17 +447,43 @@ class CombatState is BaseState {
             pickInput_()
             return
         }
+        // Esc goes back a level: Hold -> Moves, Moves / Items -> the main menu; on the main menu (and the ready
+        // screen) it takes the last move back.
         if (Input.isInputJustPressed("UICancel")) {
-            if (_mode == "hold" || _mode == "items") {
+            if (_mode == "hold") {
                 showMoves_()
+            } else if (_mode == "moves" || _mode == "items") {
+                showMenu_()
             } else if (_builder.count > 0) {
                 _builder.undo()
-                showMoves_()
+                if (_mode == "confirm") {
+                    showMoves_()
+                } else {
+                    showMenu_()
+                }
             }
         }
     }
 
-    // The main grid: the six loadout moves, Hold, Item.
+    // The main menu: Moves, Items, and Flee in a fight that can be fled.
+    showMenu_() {
+        if (_builder.complete) {
+            showConfirm_()
+            return
+        }
+        _mode = "menu"
+        arm_()
+        var items = itemList_()
+        var entries = [["Moves", "", true], ["Items", "", items.count > 0]]
+        if (_canFlee) entries.add(["Flee", "", true])
+        _view.setSlots(entries, _menuSlot.min(entries.count - 1), "menu")
+        _view.setHeader(_chooser.name == "You" ? "Your turn" : "%(_chooser.name)'s turn")
+        _view.setHint(_builder.count > 0 ? HINT_MENU_UNDO : HINT_MENU)
+        refreshChain_()
+        slotFocused_(_menuSlot.min(entries.count - 1))
+    }
+
+    // The Moves menu: the five loadout moves, then Hold - a 3 x 2 grid, each a name over its time and cost.
     showMoves_() {
         if (_builder.complete) {
             showConfirm_()
@@ -465,20 +498,15 @@ class CombatState is BaseState {
                 entries.add(["-", "", false])
             } else {
                 var cost = _builder.costOf(move)
-                var info = "%(Move.fmt(move.completion))s  %(cost)sp"
-                // Long names (tier III heavies) give up the time - it is in the detail line and the timeline preview.
-                if (move.name.count + info.count > 22) info = "%(cost)sp"
                 var label = move.name
-                if (label.count + info.count > 22) label = label[0...(21 - info.count)] + "."
-                entries.add([label, info, _builder.blockedBy(move) == null])
+                // A grid button fits about 20 characters (longer tier III names get shortened - the detail line has it).
+                if (label.count > 20) label = label[0...19] + "."
+                entries.add([label, "%(Move.fmt(move.completion))s  %(cost)sp", _builder.blockedBy(move) == null])
             }
         }
-        entries.add(["Hold", "rest", !_builder.lastIsHold])
-        var items = itemList_()
-        entries.add(["Item", items.count == 0 ? "none" : "x%(items.count)", items.count > 0])
-        _view.setSlots(entries, _lastSlot)
-        var whose = _chooser.name == "You" ? "Your chain" : "%(_chooser.name)'s chain"
-        _view.setHeader(whose)
+        entries.add(["Hold", _builder.lastIsHold ? "not after Hold" : "rest", !_builder.lastIsHold])
+        _view.setSlots(entries, _lastSlot, "grid")
+        _view.setHeader("Moves")
         var stage = encounterStage_
         _view.setHint(stage != null && stage.hint != null ? "%(HINT_MOVES)    %(stage.hint)" : HINT_MOVES)
         refreshChain_()
@@ -493,23 +521,32 @@ class CombatState is BaseState {
         for (seconds in Moves.holdLengths) {
             entries.add(["Hold %(Move.fmt(seconds))s", "+%((rate * seconds).round)sp", true])
         }
-        _view.setSlots(entries, 3)
+        _view.setSlots(entries, 3, "grid")
         _view.setHeader("Hold - for how long?")
         _view.setHint(HINT_SUB)
-        _view.setDetail("Stand and catch your breath: the only way stamina comes back. Never twice in a row.")
+        _view.setDetail("Rest to get stamina back - never twice in a row.")
         if (_stage != null) _stage.setHighlights(null, [_builder.lane, _builder.row])
     }
 
+    // The Items screen: a scrolling list beside the focused item's picture, effect and description.
     showItems_() {
         _mode = "items"
         arm_()
         _itemList = itemList_()
-        var entries = []
+        var items = []
         for (item in _itemList) {
-            entries.add([item[1], "x%(item[2])", true])
+            var move = BattleItems.forItem(item[0])
+            var entry = {}
+            entry["name"] = item[1]
+            entry["count"] = "x%(item[2])"
+            entry["icon"] = ItemDatabase.iconPath(item[0])
+            entry["effect"] = BattleItems.describe(item[0])
+            entry["description"] = itemDescription_(item[0])
+            entry["enabled"] = move != null && _builder.blockedBy(move) == null
+            items.add(entry)
         }
-        _view.setSlots(entries, 0)
-        _view.setHeader("Use which item?")
+        _view.showItems(items, _itemSlot.min(items.count - 1).max(0))
+        _view.setHeader("Items")
         _view.setHint(HINT_SUB)
         if (_stage != null) _stage.setHighlights(null, [_builder.lane, _builder.row])
     }
@@ -518,7 +555,7 @@ class CombatState is BaseState {
     showConfirm_() {
         _mode = "confirm"
         arm_()
-        _view.setSlots([["Start", "go", true], ["Undo last", "", true]], 0)
+        _view.setSlots([["Start", "", true], ["Undo last", "", true]], 0, "pair")
         _view.setHeader("Chain ready")
         _view.setHint(HINT_CONFIRM)
         _view.setDetail(_builder.entries.map { |e| e.move.name }.join(" > "))
@@ -550,40 +587,34 @@ class CombatState is BaseState {
         return out
     }
 
-    // The Items screen's detail for item `id`: what it does in the fight, then its description (en.json
-    // "<item key>.desc") when the grid leaves the detail line room for more than one line.
-    itemDetail_(id) {
-        var effect = BattleItems.describe(id)
-        if (_view.detailLines < 2) return effect
+    // An item's description (en.json "<item key>.desc"), or "" when it has none.
+    itemDescription_(id) {
         var key = DisplayNames.itemKey(id)
-        if (key == null) return effect
+        if (key == null) return ""
         var descKey = key + ".desc"
-        if (!Localization.hasString(descKey)) return effect
-        var description = Localization.get(descKey)
-        return effect + "\n" + description
+        return Localization.hasString(descKey) ? Localization.get(descKey) : ""
     }
 
     slotClicked_(index) {
         if (_phase != "select" || !armed_ || _builder == null) return
-        if (_mode == "moves") {
+        if (_mode == "menu") {
+            _menuSlot = index
+            if (index == MENU_MOVES) {
+                showMoves_()
+            } else if (index == MENU_ITEMS) {
+                if (itemList_().count > 0) showItems_()
+            } else if (index == MENU_FLEE) {
+                flee_()
+            }
+        } else if (_mode == "moves") {
             _lastSlot = index
             if (index == SLOT_HOLD) {
                 if (!_builder.lastIsHold) showHold_()
-            } else if (index == SLOT_ITEM) {
-                if (itemList_().count > 0) showItems_()
             } else if (index < _chooser.moves.count) {
                 chooseMove_(_chooser.moves[index])
             }
         } else if (_mode == "hold") {
             _builder.add(Moves.hold(Moves.holdLengths[index]), null)
-            showMoves_()
-        } else if (_mode == "items") {
-            var item = _itemList[index]
-            var move = BattleItems.forItem(item[0])
-            if (_builder.blockedBy(move) == null) {
-                _builder.add(move, null)
-                _itemsQueued[item[0]] = (_itemsQueued.containsKey(item[0]) ? _itemsQueued[item[0]] : 0) + 1
-            }
             showMoves_()
         } else if (_mode == "confirm") {
             if (index == 0) {
@@ -593,6 +624,37 @@ class CombatState is BaseState {
                 showMoves_()
             }
         }
+    }
+
+    // An item picked from the Items list: it joins the chain (if it can), and it's back to the main menu.
+    itemClicked_(index) {
+        if (_phase != "select" || !armed_ || _builder == null || _mode != "items") return
+        if (_itemList == null || index >= _itemList.count) return
+        _itemSlot = index
+        var item = _itemList[index]
+        var move = BattleItems.forItem(item[0])
+        var why = move == null ? "weapon" : _builder.blockedBy(move)
+        if (why != null) {
+            _view.setHint("%(HINT_SUB)    %(CombatState.reason_(why))")
+            return
+        }
+        _builder.add(move, null)
+        _itemsQueued[item[0]] = (_itemsQueued.containsKey(item[0]) ? _itemsQueued[item[0]] : 0) + 1
+        showMenu_()
+    }
+
+    itemFocused_(index) {
+        if (_phase != "select" || _builder == null || _mode != "items") return
+        _itemSlot = index
+        if (_stage == null || _itemList == null || index >= _itemList.count) return
+        var move = BattleItems.forItem(_itemList[index][0])
+        var cells = []
+        if (move != null) {
+            for (cell in _builder.cellsOf(move, null)) {
+                cells.add([cell[0], cell[1], move.isHeal ? "heal" : "aim"])
+            }
+        }
+        _stage.setHighlights(cells, [_builder.lane, _builder.row])
     }
 
     chooseMove_(move) {
@@ -626,19 +688,21 @@ class CombatState is BaseState {
     slotFocused_(index) {
         if (_phase != "select" || _builder == null) return
         var here = [_builder.lane, _builder.row]
-        if (_mode != "moves") {
-            if (_mode == "items" && _itemList != null && index < _itemList.count) {
-                _view.setDetail(itemDetail_(_itemList[index][0]))
+        if (_mode == "menu") {
+            var text = "Pick moves for your chain - they play out back to back."
+            if (index == MENU_ITEMS) text = itemList_().count > 0 ? "Use an item - it takes time too, and works when it lands." : "You have nothing to use."
+            if (index == MENU_FLEE) text = "Run from this fight."
+            if (_builder.count > 0) {
+                var chain = _builder.entries.map { |e| e.move.name }.join(" > ")
+                text = "%(text)\n%(chain)"
             }
-            return
-        }
-        if (index == SLOT_HOLD) {
-            _view.setDetail("Hold: wait 0.2 - 2.0s and recover stamina.")
+            _view.setDetail(text)
             if (_stage != null) _stage.setHighlights(null, here)
             return
         }
-        if (index == SLOT_ITEM) {
-            _view.setDetail("Use an item - it takes time, and lands at its effect time.")
+        if (_mode != "moves") return
+        if (index == SLOT_HOLD) {
+            _view.setDetail("Hold: wait 0.2 - 2.0s and recover stamina.")
             if (_stage != null) _stage.setHighlights(null, here)
             return
         }
@@ -771,6 +835,7 @@ class CombatState is BaseState {
         _view.showCommand(false)
         if (_stage != null) _stage.clearHighlights()
         setPhase_("fleeing")
+        refreshViews_()   // takes the budget line off the timeline - nothing redraws it while fleeing
     }
 
     // --- showing the fight -----------------------------------------------------------------
@@ -817,8 +882,15 @@ class CombatState is BaseState {
         if (stage != null && stage.onEvent != null) stage.onEvent.call(this, event)
     }
 
+    // Floating text over a fighter: a text particle off its battler (Combat/Battler.popText) - or, for a fighter with
+    // no battler, the old screen pop-up.
     pop_(who, text, color) {
         if (who == null || _stage == null) return
+        var battler = _stage.battlerFor(who)
+        if (battler != null) {
+            battler.popText(text, color)
+            return
+        }
         var at = _stage.screenOf(who)
         _view.popup(Vec2.new(at.x, at.y - 96), text, color)
     }
@@ -855,7 +927,10 @@ class CombatState is BaseState {
         for (f in foes) {
             if (f.active) rows.add(timelineRow_(f, read))
         }
-        _view.timeline.draw(rows)
+        // While a chain is being built, the chooser's row marks the budget it has to reach - not on the main menu until
+        // something has been picked, never while the clock runs.
+        var building = _phase == "select" && _builder != null && (_mode != "menu" || _builder.count > 0)
+        _view.timeline.draw(rows, building ? _builder.budget : null)
     }
 
     refreshCard_(card, c) {

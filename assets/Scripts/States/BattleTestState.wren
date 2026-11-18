@@ -2,7 +2,7 @@
 // A sandbox for trying the battle system. A setup screen (UI/BattleTest/BattleSetupUI.wren) picks up to three
 // fighters per side from Combat/Config/BattleTestRoster.wren and, for every humanoid, what they carry and know:
 // main hand, off-hand and armour type, gear quality, a weapon and an armour element, two custom effects on each
-// (rank I-III), their stats tier and their six moves at tier I-III (only moves the equipment allows are offered).
+// (rank I-III), their stats tier and their five moves at tier I-III (only moves the equipment allows are offered).
 // Monsters and props (the Training Dummy, the wolves, the Warden boss...) bring their own natural weapons and combo
 // menus. A scenario can replace the opposition with a scripted fight: Thomas's lessons, the first wolves, the Warden.
 //

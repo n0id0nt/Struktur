@@ -1,5 +1,5 @@
 // UI/Inventory/MovesPage.wren
-// The inventory's Moves tab: the player's loadout (Combat/MoveBook.wren - the six moves they fight with) along the
+// The inventory's Moves tab: the player's loadout (Combat/MoveBook.wren - the five moves they fight with) along the
 // top, every move they have unlocked listed below it, and on the right a preview of the selected move - the
 // player's battle sprite playing that move's animation, then a beat of idle, on a loop - with its numbers.
 //
@@ -21,7 +21,7 @@ import "UI/Theme/UIKit" for UIKit
 import "UI/Inventory/InventoryTheme" for InventoryTheme
 import "UI/Inventory/MoveCells" for MoveCells
 
-var SLOT_COLUMNS = 3     // six loadout slots: three across the list's width (528), two rows
+var SLOT_COLUMNS = 3     // the loadout slots (five): three across the list's width (528), two rows
 var SLOT_WIDTH = 168
 var SLOT_STRIDE = 180
 var SLOT_HEIGHT = 64

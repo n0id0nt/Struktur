@@ -7,6 +7,8 @@
 #include "Engine/ECS/Component/TileMap.h"
 #include "Engine/ECS/Component/Transform.h"
 #include "Engine/ECS/System/ShaderSystem.h"
+#include "Engine/Resource/FontResource.h"
+#include "Engine/Text/Font.h"
 #include "Engine/ECS/System/TransformSystem.h"
 #include "Engine/GameContext.h"
 #include "Engine/Renderer/GraphicsDevice.h"
@@ -54,6 +56,64 @@ int ParticleFrame(const Struktur::Component::ParticleEmitter& emitter, const Str
 	}
 	int frame = start + static_cast<int>(std::floor(span * std::clamp(progress, 0.0f, 1.0f)));
 	return std::clamp(frame, start, std::min(start + span, cellCount) - 1);
+}
+// Draws a text particle: its text in the emitter's font, centred on the particle, glyph by glyph through the world's
+// sprite shader using the font's RGBA atlas (FontResource::GetWorldAtlas - the UI's R8 atlas needs its coverage shader,
+// which draws nothing in the world view), outline first so the fill lands on top (WorldRenderer's sort is stable).
+void SubmitParticleText(Struktur::Renderer::WorldRenderer& worldRenderer, const Struktur::Component::ParticleEmitter& emitter,
+                        Struktur::Resource::FontResource& fontResource, const Struktur::Component::Particle& particle,
+                        float scale, const Struktur::Util::Color& color, bgfx::ProgramHandle program,
+                        const Struktur::Renderer::CullBounds& cullBounds)
+{
+	using namespace Struktur;
+	const Text::Font& font = fontResource.font;
+	if (font.baseSize <= 0 || font.glyphs.empty())
+	{
+		return;
+	}
+	const Renderer::TextureHandle atlas = fontResource.GetWorldAtlas();
+	if (atlas.width <= 0)
+	{
+		return;
+	}
+	const float size       = emitter.fontSize * scale;
+	const float glyphScale = Text::GlyphScale(font, size);
+	const glm::vec2 extent = Text::MeasureTextEx(font, particle.text, size, 0.0f);
+	const glm::vec2 origin{std::round(particle.position.x - extent.x * 0.5f), std::round(particle.position.y - extent.y * 0.5f)};
+
+	auto drawPass = [&](const glm::vec2& offset, const Util::Color& tint)
+	{
+		float penX = origin.x + offset.x;
+		int index  = 0;
+		int length = static_cast<int>(particle.text.size());
+		while (index < length)
+		{
+			int byteCount            = 0;
+			int codepoint            = Text::GetCodepointNext(&particle.text[index], &byteCount);
+			const Text::Glyph& glyph = font.glyphs[Text::GetGlyphIndex(font, codepoint)];
+			index += byteCount;
+			if (codepoint != ' ' && codepoint != '\t')
+			{
+				Util::Math::Rect dest{penX + glyph.offsetX * glyphScale, origin.y + offset.y + glyph.offsetY * glyphScale,
+				                      glyph.rec.width * glyphScale, glyph.rec.height * glyphScale};
+				worldRenderer.SubmitSprite(emitter.layer, emitter.orderInLayer, program, nullptr, atlas, glyph.rec, dest,
+				                           glm::vec2{0.0f, 0.0f}, 0.0f, tint, false, cullBounds);
+			}
+			penX += (glyph.advanceX > 0 ? glyph.advanceX : glyph.rec.width) * glyphScale;
+		}
+	};
+
+	if (emitter.outlineColor.a > 0)
+	{
+		Util::Color outline = emitter.outlineColor;
+		outline.a           = static_cast<unsigned char>(outline.a * (color.a / 255.0f));
+		const float px      = glyphScale;  // one font pixel
+		drawPass({-px, 0.0f}, outline);
+		drawPass({px, 0.0f}, outline);
+		drawPass({0.0f, -px}, outline);
+		drawPass({0.0f, px}, outline);
+	}
+	drawPass({0.0f, 0.0f}, color);
 }
 }  // namespace
 
@@ -199,18 +259,22 @@ void Struktur::System::SpriteRenderSystem::Update(GameContext& context)
 			for (const auto& [entity, emitter] : view.each())
 			{
 				Resource::TextureResource* texture = emitter.texture.Get();
-				if (!texture)
+				Resource::FontResource* font       = emitter.font.Get();
+				if (!texture && !font)
 				{
 					continue;
 				}
-
-				if (!texture->IsGpuReady())
+				if (font && !font->IsGpuReady())
+				{
+					font->LoadToGpu(context);
+				}
+				if (texture && !texture->IsGpuReady())
 				{
 					texture->LoadToGpu(context);
 				}
 
-				int imageWidth  = texture->GetWidth();
-				int imageHeight = texture->GetHeight();
+				int imageWidth  = texture ? texture->GetWidth() : 1;
+				int imageHeight = texture ? texture->GetHeight() : 1;
 
 				ASSERT_MSG(emitter.columns > 0, "ParticleEmitter needs to have at least one column");
 				ASSERT_MSG(emitter.rows > 0, "ParticleEmitter needs to have at least one row");
@@ -229,11 +293,27 @@ void Struktur::System::SpriteRenderSystem::Update(GameContext& context)
 					}
 
 					float t              = particle.age / particle.lifetime;
+					if (!particle.text.empty())
+					{
+						if (font)
+						{
+							float textScale = Util::Math::Lerp(emitter.startScale, emitter.endScale, t);
+							Util::Color textColor =
+							    Util::Color(glm::mix(glm::vec4(particle.startColor), glm::vec4(particle.endColor), t));
+							SubmitParticleText(worldRenderer, emitter, *font, particle, textScale, textColor, defaultProgram,
+							                   cullBounds);
+						}
+						continue;
+					}
+					if (!texture)
+					{
+						continue;
+					}
 					int frame            = ParticleFrame(emitter, particle);
 					sourceRec.x          = static_cast<float>(frame % emitter.columns) * frameSize.x;
 					sourceRec.y          = static_cast<float>(frame / emitter.columns) * frameSize.y;
 					float scale          = Util::Math::Lerp(emitter.startScale, emitter.endScale, t);
-					Util::Color color    = Util::Color(glm::mix(glm::vec4(emitter.startColor), glm::vec4(emitter.endColor), t));
+					Util::Color color    = Util::Color(glm::mix(glm::vec4(particle.startColor), glm::vec4(particle.endColor), t));
 					Util::Math::Rect destRec{::round(particle.position.x * 2) / 2, ::round(particle.position.y * 2) / 2,
 					                         frameSize.x * scale, frameSize.y * scale};
 					glm::vec2 origin{destRec.width * 0.5f, destRec.height * 0.5f};  // rotate/scale about center

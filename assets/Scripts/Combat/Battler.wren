@@ -12,11 +12,12 @@
 //     staggered (red), burning / chilled.
 // A def may carry a weapon layer (def.weaponTexturePath): a second sheet with the same grid, drawn over the body
 // frame for frame. Every hit that lands on it throws up a cloud of dust coloured by the blow's element
-// (playHitCloud), from its own emitter on a child entity.
+// (playHitCloud), from its own emitter on a child entity; damage, heals and call-outs float up off it as text
+// particles (popText), from another.
 import "gameObject" for GameObject
 import "gameObjectComponents" for WorldTransform, LocalTransform, Sprite, SpriteAnimation, ParticleEmitter, RenderLayer
 import "math" for Math, Vec2, Vec3, Vec4
-import "resourceManager" for Texture
+import "resourceManager" for Texture, Font
 import "animation" for SpriteAnimationDefinition
 import "renderer" for FlipBit
 import "app" for Time
@@ -34,6 +35,8 @@ var CHILL_TINT = Vec4.new(150, 215, 255, 255)
 var DEFEAT_TIME = 0.9
 var CLOUD_HEIGHT = 8         // px above the feet that a hit cloud bursts from (low enough for a small wolf)
 var CLOUD_FULL_DAMAGE = 40   // a hit this hard (or harder) throws up the biggest cloud
+var TEXT_HEIGHT = 46         // px above the feet that floating text starts from (clear of the player's head)
+var TEXT_FONT = "UI/Font/NormalFont.ttf"   // the game's pixel font (9 px design size)
 
 class Battler {
     // def: a BattleCritter or the BattlePlayer class - same getters either way. combatant: who it shows.
@@ -87,6 +90,31 @@ class Battler {
         cloudTex.unload()
         _cloudEmitter.looping = false
 
+        // Floating text (popText): text particles that rise and fade over the battler's head. Each carries its own
+        // text and colour, so a quick second number never restyles the first.
+        _text = GameObject.create("FloatText_%(def.name)", _entity)
+        LocalTransform.setPosition(_text, Vec3.new(0, -TEXT_HEIGHT, 0))
+        var textTex = Texture.load("Actors/magic.png")   // unused by text particles - create() needs one
+        _textEmitter = ParticleEmitter.create(_text, textTex)
+        textTex.unload()
+        _textFont = Font.load(TEXT_FONT, 9, true)
+        _textEmitter.font = _textFont
+        _textEmitter.fontSize = 9
+        _textEmitter.outlineColor = Vec4.new(19, 27, 27, 255)
+        _textEmitter.looping = false
+        _textEmitter.burstCount = 0
+        _textEmitter.maxParticles = 12
+        _textEmitter.spawnRadius = 3
+        _textEmitter.lifetimeMin = 1.1
+        _textEmitter.lifetimeMax = 1.25
+        _textEmitter.velocityMin = Vec2.new(-6, -34)
+        _textEmitter.velocityMax = Vec2.new(6, -26)
+        _textEmitter.acceleration = Vec2.new(0, 22)   // slows as it rises
+        _textEmitter.startScale = 1
+        _textEmitter.endScale = 1
+        _textEmitter.rotationSpeedMin = 0
+        _textEmitter.rotationSpeedMax = 0
+
         face(1)
         play_("idle", null, true)
     }
@@ -116,6 +144,8 @@ class Battler {
         if (_weapon != null) Sprite.setOrderInLayer(_weapon, value + 1)
         // Just over this battler (and its weapon), still under anyone standing nearer the camera.
         _cloudEmitter.orderInLayer = value + 2
+        // Text reads over everyone in the arena.
+        _textEmitter.orderInLayer = 1000 + value
     }
 
     // dir: 1 to face right, -1 to face left. A def with left-facing art (animsLeft) switches to those clips; one
@@ -277,6 +307,13 @@ class Battler {
         MoveParticles.trigger(_emitter, particleId)
     }
 
+    // Floating text over the battler - a damage number, a heal, "Blocked" - in `color` (a Vec4), rising and fading.
+    popText(text, color) {
+        _textEmitter.startColor = color
+        _textEmitter.endColor = Vec4.new(color.x, color.y, color.z, 0)
+        _textEmitter.spawnText(text)
+    }
+
     // The dust cloud a hit throws up: tinted by `element` (null = plain dust), smaller for a blocked or weak hit.
     playHitCloud(element, blocked, amount) {
         var strength = amount / CLOUD_FULL_DAMAGE
@@ -285,6 +322,10 @@ class Battler {
     }
 
     teardown() {
+        if (_textFont != null) {
+            _textFont.unload()
+            _textFont = null
+        }
         if (GameObject.isValid(_entity)) {
             GameObject.destroy(_entity)
         }

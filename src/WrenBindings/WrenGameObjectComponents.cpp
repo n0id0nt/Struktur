@@ -1202,6 +1202,49 @@ void wren_ParticleEmitterSetTexture(WrenVM* vm)
 	emitter->component->texture  = texture->resource;
 }
 
+// ParticleEmitter.font = Font - the font text particles draw in (see spawnText).
+void wren_ParticleEmitterSetFont(WrenVM* vm)
+{
+	WrenParticleEmitter* emitter = (WrenParticleEmitter*)wrenGetSlotForeign(vm, 0);
+	WrenFontHandle* font         = (WrenFontHandle*)wrenGetSlotForeign(vm, 1);
+	emitter->component->font     = font->resource;
+}
+
+void wren_ParticleEmitterSetFontSize(WrenVM* vm)
+{
+	WrenParticleEmitter* emitter = (WrenParticleEmitter*)wrenGetSlotForeign(vm, 0);
+	emitter->component->fontSize = static_cast<float>(wrenGetSlotDouble(vm, 1));
+}
+
+void wren_ParticleEmitterGetFontSize(WrenVM* vm)
+{
+	WrenParticleEmitter* emitter = (WrenParticleEmitter*)wrenGetSlotForeign(vm, 0);
+	wrenSetSlotDouble(vm, 0, static_cast<double>(emitter->component->fontSize));
+}
+
+void wren_ParticleEmitterSetOutlineColor(WrenVM* vm)
+{
+	WrenParticleEmitter* emitter      = (WrenParticleEmitter*)wrenGetSlotForeign(vm, 0);
+	WrenVec4* color                   = (WrenVec4*)wrenGetSlotForeign(vm, 1);
+	emitter->component->outlineColor = Struktur::Util::Color{(unsigned char)color->value.r, (unsigned char)color->value.g,
+	                                                         (unsigned char)color->value.b, (unsigned char)color->value.a};
+}
+
+// ParticleEmitter.spawnText(text) - one text particle carrying `text`, spawned next update without clearing the
+// particles already alive.
+void wren_ParticleEmitterSpawnText(WrenVM* vm)
+{
+	WrenParticleEmitter* emitter = (WrenParticleEmitter*)wrenGetSlotForeign(vm, 0);
+	emitter->component->pendingTexts.emplace_back(wrenGetSlotString(vm, 1));
+}
+
+// ParticleEmitter.spawn(count) - `count` more particles next update, without clearing the ones alive.
+void wren_ParticleEmitterSpawn(WrenVM* vm)
+{
+	WrenParticleEmitter* emitter      = (WrenParticleEmitter*)wrenGetSlotForeign(vm, 0);
+	emitter->component->pendingSpawns += std::max(0, static_cast<int>(wrenGetSlotDouble(vm, 1)));
+}
+
 void wren_ParticleEmitterSetColumns(WrenVM* vm)
 {
 	WrenParticleEmitter* emitter = (WrenParticleEmitter*)wrenGetSlotForeign(vm, 0);
@@ -2693,6 +2736,18 @@ WREN_BINDING_MODULE(GameObjectComponent)
 	                  "Get whether particles blend additively instead of with normal alpha blending");
 	WREN_CLASS_METHOD(registry, "gameObjectComponents", "ParticleEmitter", "additive=(_)", wren_ParticleEmitterSetAdditive,
 	                  "Set whether particles blend additively instead of with normal alpha blending");
+	WREN_CLASS_METHOD(registry, "gameObjectComponents", "ParticleEmitter", "font=(_)", wren_ParticleEmitterSetFont,
+	                  "Set the font text particles draw in (see spawnText)");
+	WREN_CLASS_METHOD(registry, "gameObjectComponents", "ParticleEmitter", "fontSize", wren_ParticleEmitterGetFontSize,
+	                  "Get text particles' size in world pixels");
+	WREN_CLASS_METHOD(registry, "gameObjectComponents", "ParticleEmitter", "fontSize=(_)", wren_ParticleEmitterSetFontSize,
+	                  "Set text particles' size in world pixels (a pixel font snaps to whole multiples of its own size)");
+	WREN_CLASS_METHOD(registry, "gameObjectComponents", "ParticleEmitter", "outlineColor=(_)",
+	                  wren_ParticleEmitterSetOutlineColor, "Set text particles' one-pixel outline colour (alpha 0 = none)");
+	WREN_CLASS_METHOD(registry, "gameObjectComponents", "ParticleEmitter", "spawnText(_)", wren_ParticleEmitterSpawnText,
+	                  "Spawn one text particle showing the given text, keeping the particles already alive");
+	WREN_CLASS_METHOD(registry, "gameObjectComponents", "ParticleEmitter", "spawn(_)", wren_ParticleEmitterSpawn,
+	                  "Spawn this many more particles, keeping the particles already alive");
 	WREN_CLASS_METHOD(registry, "gameObjectComponents", "ParticleEmitter", "setAnimation(_,_)",
 	                  wren_ParticleEmitterSetAnimationWithMode,
 	                  "Set the sprite animation (a SpriteAnimationDefinition) each particle plays, and how (a ParticleAnimationMode)");

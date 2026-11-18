@@ -94,6 +94,18 @@ foreign class ParticleEmitter {
     foreign additive
     // Set whether particles blend additively instead of with normal alpha blending
     foreign additive=(arg0)
+    // Set the font text particles draw in (see spawnText)
+    foreign font=(arg0)
+    // Get text particles' size in world pixels
+    foreign fontSize
+    // Set text particles' size in world pixels (a pixel font snaps to whole multiples of its own size)
+    foreign fontSize=(arg0)
+    // Set text particles' one-pixel outline colour (alpha 0 = none)
+    foreign outlineColor=(arg0)
+    // Spawn one text particle showing the given text, keeping the particles already alive
+    foreign spawnText(arg0)
+    // Spawn this many more particles, keeping the particles already alive
+    foreign spawn(arg0)
     // Set the sprite animation (a SpriteAnimationDefinition) each particle plays, and how (a ParticleAnimationMode)
     foreign setAnimation(arg0,arg1)
     // Set the sprite animation each particle plays - looped if the definition loops, otherwise once
