@@ -21,6 +21,7 @@ class BattleTestRoster {
             ["Training Dummy", BattleCritter.trainingDummy, false],
             ["Practice Stump", BattleCritter.practiceStump, false],
             ["Swing-post", BattleCritter.swingPost, false],
+            ["Snap-post", BattleCritter.snapPost, false],
             ["Chicken", BattleCritter.chicken, false],
             ["Chinlin", BattleCritter.chinlin, false],
             ["Starving Thornwolf", BattleCritter.starvingThornwolf, false],

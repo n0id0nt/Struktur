@@ -1771,6 +1771,196 @@
               "parameters": [
                 {
                   "type": "flag",
+                  "value": "thomas_lesson"
+                },
+                {
+                  "type": "op",
+                  "value": ">="
+                },
+                {
+                  "type": "value",
+                  "value": 3.0
+                }
+              ]
+            },
+            {
+              "type": "hasIntFlag",
+              "parameters": [
+                {
+                  "type": "flag",
+                  "value": "duel_won_Thomas"
+                },
+                {
+                  "type": "op",
+                  "value": "=="
+                },
+                {
+                  "type": "value",
+                  "value": 1.0
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "node": "thomas_test_again",
+          "conditions": [
+            {
+              "type": "hasIntFlag",
+              "parameters": [
+                {
+                  "type": "flag",
+                  "value": "arc1_stage"
+                },
+                {
+                  "type": "op",
+                  "value": "=="
+                },
+                {
+                  "type": "value",
+                  "value": 2.0
+                }
+              ]
+            },
+            {
+              "type": "hasIntFlag",
+              "parameters": [
+                {
+                  "type": "flag",
+                  "value": "thomas_lesson"
+                },
+                {
+                  "type": "op",
+                  "value": ">="
+                },
+                {
+                  "type": "value",
+                  "value": 3.0
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "node": "thomas_wolf_back",
+          "conditions": [
+            {
+              "type": "hasIntFlag",
+              "parameters": [
+                {
+                  "type": "flag",
+                  "value": "arc1_stage"
+                },
+                {
+                  "type": "op",
+                  "value": "=="
+                },
+                {
+                  "type": "value",
+                  "value": 2.0
+                }
+              ]
+            },
+            {
+              "type": "hasIntFlag",
+              "parameters": [
+                {
+                  "type": "flag",
+                  "value": "thomas_lesson"
+                },
+                {
+                  "type": "op",
+                  "value": "=="
+                },
+                {
+                  "type": "value",
+                  "value": 1.0
+                }
+              ]
+            },
+            {
+              "type": "hasIntFlag",
+              "parameters": [
+                {
+                  "type": "flag",
+                  "value": "defeated_StarvingThornwolf"
+                },
+                {
+                  "type": "op",
+                  "value": ">="
+                },
+                {
+                  "type": "value",
+                  "value": 1.0
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "node": "thomas_wolf_wait",
+          "conditions": [
+            {
+              "type": "hasIntFlag",
+              "parameters": [
+                {
+                  "type": "flag",
+                  "value": "arc1_stage"
+                },
+                {
+                  "type": "op",
+                  "value": "=="
+                },
+                {
+                  "type": "value",
+                  "value": 2.0
+                }
+              ]
+            },
+            {
+              "type": "hasIntFlag",
+              "parameters": [
+                {
+                  "type": "flag",
+                  "value": "thomas_lesson"
+                },
+                {
+                  "type": "op",
+                  "value": "=="
+                },
+                {
+                  "type": "value",
+                  "value": 1.0
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "node": "thomas_lesson_done",
+          "conditions": [
+            {
+              "type": "hasIntFlag",
+              "parameters": [
+                {
+                  "type": "flag",
+                  "value": "arc1_stage"
+                },
+                {
+                  "type": "op",
+                  "value": "=="
+                },
+                {
+                  "type": "value",
+                  "value": 2.0
+                }
+              ]
+            },
+            {
+              "type": "hasIntFlag",
+              "parameters": [
+                {
+                  "type": "flag",
                   "value": "duel_won_Thomas"
                 },
                 {
@@ -1885,6 +2075,153 @@
     "node": "thomas_s4_end_2",
     "data": {
       "text": "dialogue.arc1.thomas_s4_end_2",
+      "speaker": "Thomas",
+      "commands": [
+        {
+          "type": "startDuel",
+          "parameters": [
+            {
+              "type": "name",
+              "value": "Thomas"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "node": "thomas_lesson_done",
+    "data": {
+      "text": "dialogue.arc1.thomas_lesson_done",
+      "speaker": "Thomas",
+      "next": "thomas_lesson_done_2"
+    }
+  },
+  {
+    "node": "thomas_lesson_done_2",
+    "data": {
+      "text": "dialogue.arc1.thomas_lesson_done_2",
+      "speaker": "Thomas",
+      "next": "thomas_lesson_done_3"
+    }
+  },
+  {
+    "node": "thomas_lesson_done_3",
+    "data": {
+      "text": "dialogue.arc1.thomas_lesson_done_3",
+      "speaker": "Thomas",
+      "next": "thomas_lesson_done_4"
+    }
+  },
+  {
+    "node": "thomas_lesson_done_4",
+    "data": {
+      "text": "dialogue.arc1.thomas_lesson_done_4",
+      "speaker": "Kira",
+      "next": "thomas_lesson_done_5"
+    }
+  },
+  {
+    "node": "thomas_lesson_done_5",
+    "data": {
+      "text": "dialogue.arc1.thomas_lesson_done_5",
+      "speaker": "Thomas",
+      "commands": [
+        {
+          "type": "setIntFlag",
+          "parameters": [
+            {
+              "type": "flag",
+              "value": "duel_won_Thomas"
+            },
+            {
+              "type": "value",
+              "value": 0.0
+            }
+          ]
+        },
+        {
+          "type": "setIntFlag",
+          "parameters": [
+            {
+              "type": "flag",
+              "value": "thomas_lesson"
+            },
+            {
+              "type": "value",
+              "value": 1.0
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "node": "thomas_wolf_wait",
+    "data": {
+      "text": "dialogue.arc1.thomas_wolf_wait",
+      "speaker": "Thomas"
+    }
+  },
+  {
+    "node": "thomas_wolf_back",
+    "data": {
+      "text": "dialogue.arc1.thomas_wolf_back",
+      "speaker": "Thomas",
+      "next": "thomas_wolf_back_2"
+    }
+  },
+  {
+    "node": "thomas_wolf_back_2",
+    "data": {
+      "text": "dialogue.arc1.thomas_wolf_back_2",
+      "speaker": "Kira",
+      "next": "thomas_wolf_back_3"
+    }
+  },
+  {
+    "node": "thomas_wolf_back_3",
+    "data": {
+      "text": "dialogue.arc1.thomas_wolf_back_3",
+      "speaker": "Thomas",
+      "next": "thomas_wolf_back_4"
+    }
+  },
+  {
+    "node": "thomas_wolf_back_4",
+    "data": {
+      "text": "dialogue.arc1.thomas_wolf_back_4",
+      "speaker": "Thomas",
+      "commands": [
+        {
+          "type": "setIntFlag",
+          "parameters": [
+            {
+              "type": "flag",
+              "value": "thomas_lesson"
+            },
+            {
+              "type": "value",
+              "value": 3.0
+            }
+          ]
+        },
+        {
+          "type": "startDuel",
+          "parameters": [
+            {
+              "type": "name",
+              "value": "Thomas"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "node": "thomas_test_again",
+    "data": {
+      "text": "dialogue.arc1.thomas_test_again",
       "speaker": "Thomas",
       "commands": [
         {

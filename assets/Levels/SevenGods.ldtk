@@ -11265,7 +11265,7 @@
 			}
 		}
 	], "enums": [
-		{ "identifier": "Enemy", "uid": 266, "values": [ { "id": "Chinlin", "tileRect": null, "color": 12470831 }, { "id": "Chicken", "tileRect": null, "color": 14120515 } ], "iconTilesetUid": null, "externalRelPath": null, "externalFileChecksum": null, "tags": [] },
+		{ "identifier": "Enemy", "uid": 266, "values": [ { "id": "Chinlin", "tileRect": null, "color": 12470831 }, { "id": "Chicken", "tileRect": null, "color": 14120515 }, { "id": "StarvingThornwolf", "tileRect": null, "color": 9079434 } ], "iconTilesetUid": null, "externalRelPath": null, "externalFileChecksum": null, "tags": [] },
 		{ "identifier": "Item", "uid": 273, "values": [
 			{ "id": "Coin", "tileRect": null, "color": 12470831 },
 			{ "id": "Key", "tileRect": null, "color": 14120515 },
@@ -17824,6 +17824,25 @@
 					"overrideTilesetUid": null,
 					"gridTiles": [],
 					"entityInstances": [
+						{
+							"__identifier": "Critter",
+							"__grid": [10,6],
+							"__pivot": [0,0],
+							"__tags": [],
+							"__tile": null,
+							"__smartColor": "#BE4A2F",
+							"iid": "38f21283-e399-11f1-a7d0-28d043bb8e9f",
+							"width": 16,
+							"height": 16,
+							"defUid": 265,
+							"px": [160,96],
+							"fieldInstances": [{ "__identifier": "Enemy", "__type": "LocalEnum.Enemy", "__value": "StarvingThornwolf", "__tile": null, "defUid": 268, "realEditorValues": [{
+								"id": "V_String",
+								"params": ["StarvingThornwolf"]
+							}] }],
+							"__worldX": 608,
+							"__worldY": 1152
+						},
 						{
 							"__identifier": "NPC",
 							"__grid": [8,12],

@@ -59,6 +59,12 @@ struct Particle
 // than this component needing its own texture-rect logic.
 struct ParticleEmitter
 {
+	// Pointer-stable storage: a script's ParticleEmitter handle keeps a raw pointer to this component (see
+	// WrenBindings/wrenGameObjectComponents.h) for as long as it likes - a battler holds its hit-cloud and text
+	// emitters for the whole fight. entt's default removal swaps the last component into the freed slot, which
+	// would leave such a handle writing into a moved-from emitter as soon as any other emitter is destroyed.
+	static constexpr auto in_place_delete = true;
+
 	Resource::ResourcePtr<Resource::TextureResource> texture;
 	// Atlas dimensions, matching Component::Sprite's own columns/rows fields - cells are numbered left to right,
 	// top to bottom, the same as a sprite animation's frames.

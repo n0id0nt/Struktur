@@ -116,6 +116,10 @@ class CombatState is BaseState {
         _armedAt = 0
         _lastSlot = 0
         _itemsQueued = {}
+        _round = 0
+        _restrict = null
+        _roundHint = null
+        _finishing = false
 
         _party = []
         _enemies = []
@@ -127,6 +131,8 @@ class CombatState is BaseState {
         } else {
             gatherSides_(params)
         }
+        // A solo lesson: just the leader (the player) - the rest of the party watches.
+        if (_encounter != null && _encounter.solo && _party.count > 1) _party = [_party[0]]
         // A scripted fight takes its opposition from its first stage (when that stage names one).
         if (_encounter != null && _encounter.stages[0].enemies.count > 0) {
             _enemies = []
@@ -325,7 +331,7 @@ class CombatState is BaseState {
         if (_engine.result != null) {
             decided_(_engine.result)
         } else if (_engine.waiting.count > 0) {
-            beginSelection_()
+            newRound_()
         }
     }
 
@@ -335,6 +341,9 @@ class CombatState is BaseState {
 
     // The (first or next) stage is on the board: its start hook and intro lines, then the fight.
     startStage_() {
+        _round = 0
+        _restrict = null
+        _roundHint = null
         var stage = encounterStage_
         if (stage != null) {
             if (stage.onStart != null) stage.onStart.call(this)
@@ -343,6 +352,20 @@ class CombatState is BaseState {
             }
         }
         _engine.think()
+        newRound_()
+    }
+
+    // The clock has stopped for the party's next chains: the stage's round hook (a lesson's next step), then the
+    // selection - or, if the hook finished the stage, its win.
+    newRound_() {
+        _round = _round + 1
+        var stage = encounterStage_
+        if (stage != null && stage.onRound != null) stage.onRound.call(this, _round)
+        if (_finishing) {
+            _finishing = false
+            decided_("won")
+            return
+        }
         beginSelection_()
     }
 
@@ -396,6 +419,20 @@ class CombatState is BaseState {
             _prompts.add(line)
         }
     }
+    // Only one kind of move can be picked until this is changed: "movement", "attack", "hold" - or null for anything.
+    // Items are off while anything is restricted.
+    restrict(kind) { _restrict = kind }
+    // A line for the Moves screen for the rest of this stage (instead of the stage's own hint; null to go back to it).
+    hint(text) { _roundHint = text }
+    // The party is out of breath: every member's stamina to 0.
+    exhaust() {
+        for (combatant in _party) {
+            combatant.stats.spendStamina(combatant.stats.stamina)
+        }
+    }
+    // Ends the stage as won at the next selection stop, whoever is still standing (a lesson that's been learned).
+    finish() { _finishing = true }
+
     // The player learns a move (and anyone in the party whose own kit has it starts using it).
     teach(moveName) {
         // The battle test fights with its own picks and saves nothing.
@@ -405,7 +442,9 @@ class CombatState is BaseState {
             if (combatant.def == BattlePlayer) {
                 if (!sandbox) {
                     combatant.moves = BattlePlayer.kit
-                } else if (!combatant.moves.any { |move| move.id == moveName } && combatant.moves.count < LOADOUT_SLOTS) {
+                } else if (!combatant.moves.any { |move| move.id == moveName }) {
+                    // A full sandbox loadout gives up its last slot - the lesson needs the move.
+                    if (combatant.moves.count >= LOADOUT_SLOTS) combatant.moves.removeAt(-1)
                     combatant.moves.add(Moves.byName(moveName))
                 }
             } else if (combatant.def != null && combatant.def.kitNames.contains(moveName) && !combatant.moves.any { |move| move.id == moveName }) {
@@ -474,7 +513,7 @@ class CombatState is BaseState {
         _mode = "menu"
         arm_()
         var items = itemList_()
-        var entries = [["Moves", "", true], ["Items", "", items.count > 0]]
+        var entries = [["Moves", "", true], ["Items", "", items.count > 0 && _restrict == null]]
         if (_canFlee) entries.add(["Flee", "", true])
         _view.setSlots(entries, _menuSlot.min(entries.count - 1), "menu")
         _view.setHeader(_chooser.name == "You" ? "Your turn" : "%(_chooser.name)'s turn")
@@ -501,14 +540,24 @@ class CombatState is BaseState {
                 var label = move.name
                 // A grid button fits about 20 characters (longer tier III names get shortened - the detail line has it).
                 if (label.count > 20) label = label[0...19] + "."
-                entries.add([label, "%(Move.fmt(move.completion))s  %(cost)sp", _builder.blockedBy(move) == null])
+                entries.add([label, "%(Move.fmt(move.completion))s  %(cost)sp", _builder.blockedBy(move) == null && allows_(move)])
             }
         }
-        entries.add(["Hold", _builder.lastIsHold ? "not after Hold" : "rest", !_builder.lastIsHold])
+        entries.add(["Hold", _builder.lastIsHold ? "not after Hold" : "rest", !_builder.lastIsHold && holdAllowed_])
+        // A lesson step starts on the first button it allows.
+        if (_restrict != null && !entries[_lastSlot][2]) {
+            for (i in 0...entries.count) {
+                if (entries[i][2]) {
+                    _lastSlot = i
+                    break
+                }
+            }
+        }
         _view.setSlots(entries, _lastSlot, "grid")
         _view.setHeader("Moves")
         var stage = encounterStage_
-        _view.setHint(stage != null && stage.hint != null ? "%(HINT_MOVES)    %(stage.hint)" : HINT_MOVES)
+        var hint = _roundHint != null ? _roundHint : (stage != null ? stage.hint : null)
+        _view.setHint(hint != null ? "%(HINT_MOVES)    %(hint)" : HINT_MOVES)
         refreshChain_()
         slotFocused_(_lastSlot)
     }
@@ -602,20 +651,21 @@ class CombatState is BaseState {
             if (index == MENU_MOVES) {
                 showMoves_()
             } else if (index == MENU_ITEMS) {
-                if (itemList_().count > 0) showItems_()
+                if (itemList_().count > 0 && _restrict == null) showItems_()
             } else if (index == MENU_FLEE) {
                 flee_()
             }
         } else if (_mode == "moves") {
             _lastSlot = index
             if (index == SLOT_HOLD) {
-                if (!_builder.lastIsHold) showHold_()
+                if (!_builder.lastIsHold && holdAllowed_) showHold_()
             } else if (index < _chooser.moves.count) {
                 chooseMove_(_chooser.moves[index])
             }
         } else if (_mode == "hold") {
-            _builder.add(Moves.hold(Moves.holdLengths[index]), null)
-            showMoves_()
+            var hold = Moves.hold(Moves.holdLengths[index])
+            _builder.add(hold, null)
+            picked_(hold)
         } else if (_mode == "confirm") {
             if (index == 0) {
                 commit_()
@@ -657,7 +707,46 @@ class CombatState is BaseState {
         _stage.setHighlights(cells, [_builder.lane, _builder.row])
     }
 
+    // Whether a lesson's restriction (Combat/Encounter.wren, host.restrict) lets `move` be picked.
+    allows_(move) {
+        if (_restrict == null) return true
+        // Movement alone - not an attack that moves you too (Lunge).
+        if (_restrict == "movement") return move.isMovement && !move.isAttack
+        if (_restrict == "attack") return move.isAttack
+        return false
+    }
+    holdAllowed_ { _restrict == null || _restrict == "hold" }
+
+    restrictNote_ {
+        if (_restrict == "movement") return "Only movement for now."
+        if (_restrict == "attack") return "Only attacks for now."
+        if (_restrict == "hold") return "Only Hold for now."
+        return ""
+    }
+
+    // A move has joined the chain: the stage's pick hook (a lesson reacting), any lines it raised, then the Moves menu.
+    picked_(move) {
+        var stage = encounterStage_
+        if (stage != null && stage.onPick != null) stage.onPick.call(this, move)
+        if (_prompts.count > 0) {
+            showPrompts_(Fn.new { resumeSelection_() })
+            return
+        }
+        showMoves_()
+    }
+
+    // Back to building the same chain after a prompt raised mid-selection.
+    resumeSelection_() {
+        setPhase_("select")
+        _view.showCommand(true)
+        showMoves_()
+    }
+
     chooseMove_(move) {
+        if (!allows_(move)) {
+            _view.setDetail(restrictNote_)
+            return
+        }
         var why = _builder.blockedBy(move)
         if (why != null) {
             _view.setDetail(CombatState.reason_(why))
@@ -673,7 +762,7 @@ class CombatState is BaseState {
             return
         }
         _builder.add(move, null)
-        showMoves_()
+        picked_(move)
     }
 
     static reason_(why) {
@@ -714,7 +803,11 @@ class CombatState is BaseState {
         var move = _chooser.moves[index]
         var why = _builder.blockedBy(move)
         var text = describe_(move)
-        if (why != null && why != "full") text = "%(text)  -  %(CombatState.reason_(why))"
+        if (!allows_(move)) {
+            text = "%(text)  -  %(restrictNote_)"
+        } else if (why != null && why != "full") {
+            text = "%(text)  -  %(CombatState.reason_(why))"
+        }
         _view.setDetail(text)
         if (_stage != null) {
             var cells = []
@@ -818,7 +911,7 @@ class CombatState is BaseState {
         }
         if (Input.isInputJustPressed("UIAccept")) {
             _builder.add(_pickMove, _pickCells[_pickIndex])
-            showMoves_()
+            picked_(_pickMove)
         } else if (Input.isInputJustPressed("UICancel")) {
             showMoves_()
         }

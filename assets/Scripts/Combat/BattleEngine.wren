@@ -309,6 +309,20 @@ class BattleEngine {
         fighter.setChain(entries)
         _rules.onChainStart(fighter)
         startNext_(fighter, 0)
+        answerChainStart_(fighter)
+    }
+
+    // A prop that snaps at a chain started in its reach (Thomas's snap-post) starts its move as `starter`'s chain
+    // starts - like a starving wolf biting the moment you move next to it.
+    answerChainStart_(starter) {
+        for (prop in _fighters) {
+            if (prop.side == starter.side || !prop.active || prop.move != null || !prop.has("snaps")) continue
+            var move = prop.trait("snaps").call()
+            var cells = cellsAt(prop, move, prop.lane, prop.row, facingAt(prop, prop.lane, prop.row))
+            if (cells.any { |cell| cell[0] == starter.lane && cell[1] == starter.row }) {
+                commit(prop, [ChainEntry.new(move, null)])
+            }
+        }
     }
 
     // Lets every AI combatant that needs a chain pick one. Called before the clock starts and every step.

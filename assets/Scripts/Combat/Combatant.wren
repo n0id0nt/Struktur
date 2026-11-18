@@ -64,6 +64,8 @@ class Combatant {
     //                  replacing its Defence stat (the Warden's Granite Skin)
     //   "pool"         the Combatant whose HP this part's damage also comes off (boss shards)
     //   "reactive"     a Fn(move id) -> Move it starts whenever it is hit while idle (the swing-post's arm)
+    //   "snaps"        a Fn -> Move it starts, when idle, as an opponent in that move's reach starts a chain (the
+    //                  snap-post)
     //   "natural"      [power, staggerMul] of a monster's natural weapon, used by every one of its moves
     //   "element"      a monster's attack element         "bodyElement"  a monster's body element (its "armour")
     //   "bleed"        its damaging hits add a Bleed stack

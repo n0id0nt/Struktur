@@ -90,6 +90,8 @@ var GROUP_COMBAT_METERS = 3.0
 var MAX_COMBAT_GROUP = 3
 // Int flag a won duel or story battle leaves for the challenger's dialogue to branch on: "duel_won_<Name>" = 1.
 var DUEL_WON_FLAG_PREFIX = "duel_won_"
+// Int flag counting the kills of each opponent (name without spaces) in real fights: "defeated_StarvingThornwolf".
+var DEFEATED_FLAG_PREFIX = "defeated_"
 
 class GameWorldState is BaseState {
     // Where a run starts the player: the editor level viewer's "Play from here" spot if it was picked in this world
@@ -585,6 +587,13 @@ class GameWorldState is BaseState {
         if (outcome.lost && !outcome.duel) {
             gameOver_()
             return
+        }
+        // Kills count towards quests ("defeated_StarvingThornwolf" - Thomas's wolf hunt).
+        if (!outcome.duel) {
+            for (name in outcome.fallen) {
+                var flag = DEFEATED_FLAG_PREFIX + name.replace(" ", "")
+                QuestLog.setFlag(flag, FlagManager.getIntFlag(flag) + 1)
+            }
         }
         // A won duel or story battle: remember it and let the challenger have their say straight away (their dialogue
         // branches on the flag - Thomas hands over gear, the Wardens start to remember...).

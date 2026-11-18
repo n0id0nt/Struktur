@@ -167,6 +167,7 @@ class BattleCritter {
         if (name == "Desperate Raider") return BattleCritter.raider
         if (name == "Practice Stump") return BattleCritter.practiceStump
         if (name == "Swing-post") return BattleCritter.swingPost
+        if (name == "Snap-post") return BattleCritter.snapPost
         if (name == "Training Dummy") return BattleCritter.trainingDummy
         return BattleCritter.chicken
     }
@@ -386,6 +387,22 @@ class BattleCritter {
         def.trait("passive", true).trait("immovable", true).trait("noStamina", true).tint(Vec4.new(205, 175, 120, 255))
         return def.trait("reactive", Fn.new {
             return Move.new("Arm Swing", 1, 1.2, 0).attackFlat(0.8, 13, 0.4).reach(1).heavy().react("unflinching").anim("attack")
+        })
+    }
+
+    // Thomas's training dummy (first arc, the lesson's first part): it never fights back, and the lesson ends by
+    // script rather than by breaking it.
+    static lessonDummy {
+        return BattleCritter.fromSheet("Training Dummy", GoblinVikingBattleSprite).stats(300, 0, 0, 0, 0, 0).trait("passive", true).trait("immovable", true).tint(Vec4.new(170, 130, 95, 255))
+    }
+
+    // Thomas's snap-post (the lesson's last part, standing in for a thornwolf): whenever someone starts a chain in the
+    // cell in front of it, it snaps at them half a second later - Brace first, then hit it while it's still.
+    static snapPost {
+        var def = BattleCritter.fromSheet("Snap-post", GoblinVikingBattleSprite).stats(400, 0, 6, 0, 0, 0)
+        def.trait("passive", true).trait("immovable", true).trait("noStamina", true).tint(Vec4.new(150, 120, 90, 255))
+        return def.trait("snaps", Fn.new {
+            return Move.new("Snap", 1, 0.9, 0).attackFlat(0.5, 8, 0.3).reach(1).anim("attack")
         })
     }
 
