@@ -133,6 +133,38 @@ void Struktur::Renderer::UIRenderer::SetBatchDrawOrder(UIBatchHandle handle, int
 	m_batches[handle.index].drawOrder = drawOrder;
 }
 
+void Struktur::Renderer::UIRenderer::SetBatchRoot(UI::UIElement* element, bool isRoot)
+{
+	if (!element || element->IsBatchRoot() == isRoot)
+	{
+		return;
+	}
+	if (!isRoot && !element->GetParent() && element->m_uiManager)
+	{
+		DEBUG_WARNING("UIRenderer::SetBatchRoot: a top-level UI element must keep its own batch - ignored");
+		return;
+	}
+
+	element->SetBatchRoot(isRoot);
+	UI::UIElement* root    = element->GetRoot();
+	UIBatchHandle rootBatch = root->GetBatch();
+	if (!rootBatch.IsValid() && !root->IsBatchRoot())
+	{
+		// Not assigned yet (still being built, not attached anywhere): the flag is all there is to set - the first
+		// AssignBatches pass over this tree (UIManager.addUIElement / addChild) honours it.
+		return;
+	}
+	AssignBatches(root, rootBatch);
+
+	// Its quads have moved into the batch it now shares, so the one it owned is empty - free it (UIElement::Dispose
+	// only destroys an owned batch while the element is still a batch root).
+	if (!isRoot && element->m_ownBatch.IsValid())
+	{
+		DestroyBatch(element->m_ownBatch);
+		element->m_ownBatch = UIBatchHandle{};
+	}
+}
+
 void Struktur::Renderer::UIRenderer::SetBatchClip(UIBatchHandle handle, const Util::Math::Rect& clipRect)
 {
 	ASSERT_MSG(handle.IsValid() && handle.index < m_batches.size(), "SetBatchClip: invalid batch handle (index %u)",

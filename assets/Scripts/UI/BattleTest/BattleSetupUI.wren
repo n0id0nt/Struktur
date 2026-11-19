@@ -5,7 +5,7 @@
 //   gear      the fighter, its stats tier, main hand, off-hand, armour, gear quality, move tier
 //   elements  weapon element, armour element, two weapon effects and two armour effects (each an effect + a rank)
 //   moves     the five loadout moves (only what the equipment allows)
-// - then what that adds up to (tax per move, the weapon x armour pairing, Resonance), the scenario and Read level,
+// - then what that adds up to (tax per move, the weapon x armour pairing, Resonance), the scenario and Soul Sight level,
 // and Start / Back with the last result.
 //
 // Pure view: every button is a picker the state wires and relabels. Pickers are named by id (PICKERS below).
@@ -36,7 +36,7 @@ var BACKDROP = Vec4.new(24, 28, 30, 255)
 var GEAR_PICKERS = ["fighter", "stats", "main", "off", "armour", "quality", "tier"]
 var ELEMENT_PICKERS = ["welem", "aelem", "wfx0", "wfx1", "afx0", "afx1"]
 var MOVE_PICKERS = ["move0", "move1", "move2", "move3", "move4", "move5"]
-var GLOBAL_PICKERS = ["scenario", "read"]
+var GLOBAL_PICKERS = ["scenario", "soul"]
 
 class BattleSetupUI {
     construct new() {
@@ -100,16 +100,16 @@ class BattleSetupUI {
             _info.add(text_(_panel, "", Vec2.new(COLUMN_X[0] + 4, top + 7 * ROW_STRIDE + 6 + i * 24), 18.0, UIKit.text))
         }
 
-        // Scenario, Read, Start, Back.
+        // Scenario, Soul Sight level, Start, Back.
         var bottomY = PANEL_Y + PANEL_HEIGHT + 16
         _globals = UIPanel.new(Vec2.new(PANEL_X, bottomY), Vec2.new(0, 0), Vec2.new(PANEL_WIDTH, 120), Vec2.new(0, 0))
         _globals.setBackgroundColor(BACKDROP)
         _globals.setBorderColor(BACKDROP)
         _root.addChild(_globals)
         _pickers["scenario"] = KitButton.new(_globals, "", Vec2.new(0, 0), Vec2.new(0, 0), Vec2.new(400, 34), font, 18.0)
-        _pickers["read"] = KitButton.new(_globals, "", Vec2.new(412, 0), Vec2.new(0, 0), Vec2.new(240, 34), font, 18.0)
+        _pickers["soul"] = KitButton.new(_globals, "", Vec2.new(412, 0), Vec2.new(0, 0), Vec2.new(240, 34), font, 18.0)
         watch_("scenario")
-        watch_("read")
+        watch_("soul")
         _startButton = KitButton.new(_globals, "Start battle", Vec2.new(0, 46), Vec2.new(0, 0), Vec2.new(240, 40), font)
         _backButton = KitButton.new(_globals, "Back to game", Vec2.new(252, 46), Vec2.new(0, 0), Vec2.new(240, 40), font)
         _result = text_(_globals, "", Vec2.new(508, 54), 18.0, UIKit.textMuted)
@@ -153,7 +153,7 @@ class BattleSetupUI {
             MOVE_PICKERS.map { |id| _pickers[id].panel }.toList
         ]
         var scenario = _pickers["scenario"].panel
-        var read = _pickers["read"].panel
+        var soul = _pickers["soul"].panel
         var start = _startButton.panel
         var back = _backButton.panel
         for (columnIndex in 0...columns.count) {
@@ -184,16 +184,16 @@ class BattleSetupUI {
         BattleSetupUI.set_(scenario, NavigationDirection.UP, lastGear)
         BattleSetupUI.set_(scenario, NavigationDirection.DOWN, start)
         BattleSetupUI.set_(scenario, NavigationDirection.LEFT, columns[0][columns[0].count - 1])
-        BattleSetupUI.set_(scenario, NavigationDirection.RIGHT, read)
-        BattleSetupUI.set_(read, NavigationDirection.UP, columns[2][columns[2].count - 1])
-        BattleSetupUI.set_(read, NavigationDirection.DOWN, back)
-        BattleSetupUI.set_(read, NavigationDirection.LEFT, scenario)
-        BattleSetupUI.set_(read, NavigationDirection.RIGHT, null)
+        BattleSetupUI.set_(scenario, NavigationDirection.RIGHT, soul)
+        BattleSetupUI.set_(soul, NavigationDirection.UP, columns[2][columns[2].count - 1])
+        BattleSetupUI.set_(soul, NavigationDirection.DOWN, back)
+        BattleSetupUI.set_(soul, NavigationDirection.LEFT, scenario)
+        BattleSetupUI.set_(soul, NavigationDirection.RIGHT, null)
         BattleSetupUI.set_(start, NavigationDirection.UP, scenario)
         BattleSetupUI.set_(start, NavigationDirection.DOWN, null)
         BattleSetupUI.set_(start, NavigationDirection.LEFT, columns[0][columns[0].count - 1])
         BattleSetupUI.set_(start, NavigationDirection.RIGHT, back)
-        BattleSetupUI.set_(back, NavigationDirection.UP, read)
+        BattleSetupUI.set_(back, NavigationDirection.UP, soul)
         BattleSetupUI.set_(back, NavigationDirection.DOWN, null)
         BattleSetupUI.set_(back, NavigationDirection.LEFT, start)
         BattleSetupUI.set_(back, NavigationDirection.RIGHT, null)

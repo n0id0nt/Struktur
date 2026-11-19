@@ -19,13 +19,13 @@
 // Soul Sight (World/SoulSight.wren) sees further into a foe's chain: a move the party's Read doesn't show but that
 // starts within Soul Sight's reach is foreseen - drawn whole, see-through and tinted the soul's blue, with a slow
 // shimmer running over it - and a blue gradient on each foe's row, from "now" to the reach, shows how far it sees.
-// The gradient and the shimmers are their own top-level UI element (buildSoulLayer), so they're their own UI batch:
-// the shimmer animating every frame (animate) never dirties the rest of the battle UI.
+// The gradient and the shimmers hang off one panel inside the strip that has its own UI batch (setBatchRoot - see
+// buildSoulLayer_), so the shimmer animating every frame (animate) never dirties the rest of the battle UI.
 //
 // Pure view: States/CombatState.wren builds the rows (TimelineRow) from the Combatants each frame and hands them to
 // draw(); the elements are pooled, so a frame only moves and resizes them - and only the ones whose place, size or
 // colour actually changed (Placed), since every set marks its element for redrawing.
-import "ui" for UILabel, UIColor, UIPanel, UITexture, UIManager
+import "ui" for UILabel, UIColor, UIPanel, UITexture
 import "app" for Time
 import "math" for Vec2, Vec4
 import "Util/Colors" for BLANK
@@ -64,18 +64,23 @@ var BUDGET_COLOR = Vec4.new(245, 240, 228, 255)
 var SELECTED_NAME = Vec4.new(255, 173, 85, 255)
 
 // Soul Sight: the soul's blue, how far a foreseen block's colour leans to it and how see-through it is, the gradient
-// art (white, fading in towards the reach - tinted here) and its tint, and the shimmer over a foreseen block (alpha
-// low..high, a wave travelling left to right).
+// art and its tint, and the shimmer over a foreseen block (alpha low..high, a wave travelling left to right).
+// The gradient is pixel art at the battle panel's scale: each texel is SOUL_PIXEL screen pixels. The sheet (white,
+// tinted here) holds the fade at every length - row r is a fade r + 1 texels long: a bright edge on the "now" line,
+// then stepped bands fading out - so a row picks the length that fits the reach and is drawn texel for texel, never
+// stretched.
 var SOUL_BLUE = Vec4.new(130, 215, 255, 255)
 var FORESEEN_LEAN = 0.55
 var FORESEEN_ALPHA = 150
 var SOUL_GRADIENT = "Ui/Battle/soul_sight_gradient.png"
-var SOUL_GRADIENT_TINT = Vec4.new(90, 170, 255, 100)
+var SOUL_GRADIENT_TINT = Vec4.new(90, 170, 255, 110)
+var SOUL_GRADIENT_LENGTHS = 64   // rows in the sheet - the longest fade, in texels
+var SOUL_PIXEL = 4               // screen pixels per texel (the battle panel's art scale)
 var SHIMMER_LOW = 10
 var SHIMMER_HIGH = 70
 var SHIMMER_SPEED = 3.5      // radians a second
 var SHIMMER_WAVE = 0.06      // radians per px along the strip - the wave's travel
-var SOUL_LAYER_Z = 0         // over the battle UI's root (-1)
+var SOUL_LAYER_Z = 0         // its batch's draw order: over the battle UI's root batch (-1)
 
 // A foreseen block's colour, per kind - made once, so it's the same Vec4 every frame (Placed compares them).
 var FORESEEN = {}
@@ -205,7 +210,7 @@ class TimelineUI {
         _rowH = ROW_HEIGHT
         _laidOut = -1
         _width = width
-        _soul = null   // the Soul Sight layer, if buildSoulLayer made one
+        _soul = null   // the Soul Sight layer (buildSoulLayer_)
         _root = UIPanel.new(Vec2.new(x, y), Vec2.new(0, 0), Vec2.new(width, height), Vec2.new(0, 0))
         _root.setBackgroundColor(BLANK)
         _root.setBorderColor(BLANK)
@@ -224,6 +229,7 @@ class TimelineUI {
         _budgetCap = Placed.new(rect_(_root, Vec2.new(0, 0), Vec2.new(11, 4), BUDGET_COLOR, 10))
         _budgetLine.setVisible(false)
         _budgetCap.setVisible(false)
+        buildSoulLayer_()
     }
 
     rect_(parent, pos, size, color, z) {
@@ -428,15 +434,16 @@ class TimelineUI {
 
     // --- Soul Sight -------------------------------------------------------------------------------------------
 
-    // The Soul Sight layer: its own top-level element over the strip - screenX / screenY are where the strip's top-left
-    // corner is on screen - holding each row's gradient and shimmers. Made once by the battle UI (UI/Combat/
-    // CombatUI.wren); teardown removes it.
-    buildSoulLayer(screenX, screenY) {
-        _soul = UIPanel.new(Vec2.new(screenX, screenY), Vec2.new(0, 0), Vec2.new(_width, _height), Vec2.new(0, 0))
+    // The Soul Sight layer: a panel over the strip holding each row's gradient and shimmers, in a batch of its own
+    // (setBatchRoot) so the shimmer's per-frame colour changes redraw only it. A child of the strip, so it moves, hides
+    // and goes away with the rest of the battle UI.
+    buildSoulLayer_() {
+        _soul = UIPanel.new(Vec2.new(0, 0), Vec2.new(0, 0), Vec2.new(_width, _height), Vec2.new(0, 0))
         _soul.setBackgroundColor(BLANK)
         _soul.setBorderColor(BLANK)
         _soul.setZIndex(SOUL_LAYER_Z)
-        UIManager.addUIElement(_soul)
+        _soul.setBatchRoot(true)
+        _root.addChild(_soul)
         var texture = UIKit.texture(SOUL_GRADIENT)
         for (view in _rows) {
             var gradient = UITexture.new(Vec2.new(NAME_WIDTH, view["y"]), Vec2.new(0, 0), Vec2.new(1, ROW_HEIGHT), Vec2.new(0, 0))
@@ -446,6 +453,7 @@ class TimelineUI {
             gradient.setVisible(false)
             _soul.addChild(gradient)
             view["gradient"] = Placed.new(gradient)
+            view["gradientTexels"] = null   // the fade length (sheet row) it's showing
             var shimmers = []
             for (i in 0...BLOCKS_PER_ROW) {
                 var shimmer = Placed.new(rect_(_soul, Vec2.new(NAME_WIDTH, view["y"]), Vec2.new(10, ROW_HEIGHT), BLANK, 2))
@@ -457,17 +465,19 @@ class TimelineUI {
         }
     }
 
-    setSoulVisible(visible) {
-        if (_soul != null) _soul.setVisible(visible)
-    }
-
     // A foe's row: the gradient out to the reach, and a shimmer over each foreseen block.
     drawSoul_(view, data, reach) {
         var gradient = view["gradient"]
         var seeing = !data.party && reach > 0
         if (seeing) {
+            // As many whole texels as cover the reach, and the sheet row with a fade exactly that long.
+            var texels = (reach.min(WINDOW) * _scale / SOUL_PIXEL).round.max(2).min(SOUL_GRADIENT_LENGTHS)
+            if (view["gradientTexels"] != texels) {
+                view["gradientTexels"] = texels
+                gradient.element.setSourceRect(0, texels - 1, texels, 1)
+            }
             gradient.move(NAME_WIDTH, view["y"])
-            gradient.resize(((reach.min(WINDOW) * _scale).round).max(2), _rowH)
+            gradient.resize(texels * SOUL_PIXEL, _rowH)
         }
         gradient.setVisible(seeing)
 
@@ -509,10 +519,5 @@ class TimelineUI {
                 shimmers[i].element.setColor(Vec4.new(SOUL_BLUE.x, SOUL_BLUE.y, SOUL_BLUE.z, alpha))
             }
         }
-    }
-
-    teardown() {
-        if (_soul != null) UIManager.removeUIElement(_soul)
-        _soul = null
     }
 }

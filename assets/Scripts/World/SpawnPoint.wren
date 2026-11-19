@@ -2,11 +2,11 @@
 // Where the player starts a session and wakes up after the party is wiped: an LDtk "Spawn" entity, remembered by its
 // iid (and the level it's in, so that level can be streamed in to find it). Saved in flags.sav, so it survives a
 // restart. Resting at a RestSpot (GameObjects/RestSpot.wren) makes that rest spot's linked Spawn (its "SpawnPoint"
-// field) the current one. A new game starts at DEFAULT_IID - the Spawn next to the bed in Finn's workshop.
+// field) the current one. A new game starts at DEFAULT_IID - the Spawn by the bed upstairs in Finn's workshop.
 import "flags" for FlagManager
 
-var DEFAULT_IID = "2f3bf788-bde0-11f1-99f1-4379b4e07faa"
-var DEFAULT_LEVEL = "FinnsWorkshop"
+var DEFAULT_IID = "a6a26a28-bde0-11f1-b1f7-5d7e65f8793c"
+var DEFAULT_LEVEL = "FinnsWorkshopUpstairs"
 
 var IID_FLAG = "spawn_point_iid"
 var LEVEL_FLAG = "spawn_point_level"

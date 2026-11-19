@@ -60,7 +60,7 @@
     "data": {
       "text": "dialogue.arc1.bed_sign",
       "speaker": "Narrator",
-      "next": "bed_getup",
+      "next": "bed_wake",
       "commands": [
         {
           "type": "setIntFlag",
@@ -74,7 +74,32 @@
               "value": 1.0
             }
           ]
-        },
+        }
+      ]
+    }
+  },
+  {
+    "node": "bed_wake",
+    "data": {
+      "text": "dialogue.arc1.bed_wake"
+    }
+  },
+  {
+    "node": "opening",
+    "data": {
+      "targets": [
+        {
+          "node": "bed_sign"
+        }
+      ]
+    }
+  },
+  {
+    "node": "workshop_stairs",
+    "data": {
+      "text": "dialogue.arc1.workshop_stairs",
+      "next": "workshop_walk",
+      "commands": [
         {
           "type": "teleport",
           "parameters": [
@@ -118,8 +143,9 @@
     }
   },
   {
-    "node": "bed_getup",
+    "node": "workshop_walk",
     "data": {
+      "next": "finn_s1",
       "commands": [
         {
           "type": "moveTo",
@@ -133,38 +159,6 @@
               "value": "PlayerOutOfBed"
             }
           ]
-        }
-      ],
-      "next": "bed_wake"
-    }
-  },
-  {
-    "node": "bed_wake",
-    "data": {
-      "text": "dialogue.arc1.bed_wake",
-      "commands": [
-        {
-          "type": "face",
-          "parameters": [
-            {
-              "type": "who",
-              "value": "Player"
-            },
-            {
-              "type": "towards",
-              "value": "Finn"
-            }
-          ]
-        }
-      ]
-    }
-  },
-  {
-    "node": "opening",
-    "data": {
-      "targets": [
-        {
-          "node": "bed_sign"
         }
       ]
     }
@@ -452,6 +446,19 @@
       "speaker": "Finn",
       "next": "finn_s1_2",
       "commands": [
+        {
+          "type": "face",
+          "parameters": [
+            {
+              "type": "who",
+              "value": "Player"
+            },
+            {
+              "type": "towards",
+              "value": "Finn"
+            }
+          ]
+        },
         {
           "type": "face",
           "parameters": [

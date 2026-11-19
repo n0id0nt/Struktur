@@ -29,14 +29,27 @@ class SoulSight {
 
     static active { __active == true }
 
-    // Its strength: one level per Soul Fragment carried (0 before the first).
-    static level { Inventory.count(FRAGMENT_ITEM) }
+    // Its strength: one level per Soul Fragment carried (0 before the first) - or the battle test's pick.
+    static level { __levelOverride != null ? __levelOverride : Inventory.count(FRAGMENT_ITEM) }
+
+    // The highest level with a reach of its own.
+    static maxLevel { REACH.count }
+
+    // A level forced from outside the save - the battle test's Soul Sight picker (States/BattleTestState.wren) - or
+    // null to go by the Soul Fragments carried. While set, it stands in for having the gift too.
+    static levelOverride { __levelOverride }
+    static levelOverride=(value) { __levelOverride = value }
 
     // Seconds ahead a fight's Soul Sight sees at this level (0 without it).
     static reach {
-        var fragments = SoulSight.level
-        if (!SoulSight.available || fragments <= 0) return 0
-        return REACH[(fragments - 1).min(REACH.count - 1)]
+        if (__levelOverride == null && !SoulSight.available) return 0
+        return SoulSight.reachAt(SoulSight.level)
+    }
+
+    // Seconds ahead Soul Sight sees at `level` (0 at level 0).
+    static reachAt(level) {
+        if (level <= 0) return 0
+        return REACH[(level - 1).min(REACH.count - 1)]
     }
 
     // The SoulSight input: on <-> off (ignored until the player has it).

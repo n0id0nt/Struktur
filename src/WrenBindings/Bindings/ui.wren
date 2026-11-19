@@ -81,6 +81,10 @@ foreign class UITexture {
     foreign setZIndex(arg0)
     // Sets the UI Elements Z index
     foreign getZIndex()
+    // Gives the UI Element (and its children) its own UI batch, drawn in z-index order among the others
+    foreign setBatchRoot(arg0)
+    // Whether the UI Element has its own UI batch
+    foreign isBatchRoot()
     // Adds a UI Element to elements children
     foreign addChild(arg0)
     // Removes a UI Element from the children
@@ -160,6 +164,10 @@ foreign class UIColor {
     foreign setZIndex(arg0)
     // Sets the UI Elements Z index
     foreign getZIndex()
+    // Gives the UI Element (and its children) its own UI batch, drawn in z-index order among the others
+    foreign setBatchRoot(arg0)
+    // Whether the UI Element has its own UI batch
+    foreign isBatchRoot()
     // Adds a UI Element to elements children
     foreign addChild(arg0)
     // Removes a UI Element from the children
@@ -260,6 +268,10 @@ foreign class UIRichLabel {
     foreign setZIndex(arg0)
     // Sets the UI Elements Z index
     foreign getZIndex()
+    // Gives the UI Element (and its children) its own UI batch, drawn in z-index order among the others
+    foreign setBatchRoot(arg0)
+    // Whether the UI Element has its own UI batch
+    foreign isBatchRoot()
     // Adds a UI Element to elements children
     foreign addChild(arg0)
     // Removes a UI Element from the children
@@ -324,6 +336,10 @@ foreign class UIElement {
     foreign setZIndex(arg0)
     // Sets the UI Elements Z index
     foreign getZIndex()
+    // Gives the UI Element (and its children) its own UI batch, drawn in z-index order among the others
+    foreign setBatchRoot(arg0)
+    // Whether the UI Element has its own UI batch
+    foreign isBatchRoot()
     // Adds a UI Element to elements children
     foreign addChild(arg0)
     // Removes a UI Element from the children
@@ -400,6 +416,10 @@ foreign class UIPanel {
     foreign setZIndex(arg0)
     // Sets the UI Elements Z index
     foreign getZIndex()
+    // Gives the UI Element (and its children) its own UI batch, drawn in z-index order among the others
+    foreign setBatchRoot(arg0)
+    // Whether the UI Element has its own UI batch
+    foreign isBatchRoot()
     // Adds a UI Element to elements children
     foreign addChild(arg0)
     // Removes a UI Element from the children
@@ -484,6 +504,10 @@ foreign class UILabel {
     foreign setZIndex(arg0)
     // Sets the UI Elements Z index
     foreign getZIndex()
+    // Gives the UI Element (and its children) its own UI batch, drawn in z-index order among the others
+    foreign setBatchRoot(arg0)
+    // Whether the UI Element has its own UI batch
+    foreign isBatchRoot()
     // Adds a UI Element to elements children
     foreign addChild(arg0)
     // Removes a UI Element from the children
@@ -564,6 +588,10 @@ foreign class UIInputHint {
     foreign setZIndex(arg0)
     // Sets the UI Elements Z index
     foreign getZIndex()
+    // Gives the UI Element (and its children) its own UI batch, drawn in z-index order among the others
+    foreign setBatchRoot(arg0)
+    // Whether the UI Element has its own UI batch
+    foreign isBatchRoot()
     // Adds a UI Element to elements children
     foreign addChild(arg0)
     // Removes a UI Element from the children
@@ -643,6 +671,10 @@ foreign class UINineSlice {
     foreign setZIndex(arg0)
     // Sets the UI Elements Z index
     foreign getZIndex()
+    // Gives the UI Element (and its children) its own UI batch, drawn in z-index order among the others
+    foreign setBatchRoot(arg0)
+    // Whether the UI Element has its own UI batch
+    foreign isBatchRoot()
     // Adds a UI Element to elements children
     foreign addChild(arg0)
     // Removes a UI Element from the children
@@ -709,6 +741,10 @@ foreign class UIClip {
     foreign setZIndex(arg0)
     // Sets the UI Elements Z index
     foreign getZIndex()
+    // Gives the UI Element (and its children) its own UI batch, drawn in z-index order among the others
+    foreign setBatchRoot(arg0)
+    // Whether the UI Element has its own UI batch
+    foreign isBatchRoot()
     // Adds a UI Element to elements children
     foreign addChild(arg0)
     // Removes a UI Element from the children
@@ -779,6 +815,10 @@ foreign class UIBorder {
     foreign setZIndex(arg0)
     // Sets the UI Elements Z index
     foreign getZIndex()
+    // Gives the UI Element (and its children) its own UI batch, drawn in z-index order among the others
+    foreign setBatchRoot(arg0)
+    // Whether the UI Element has its own UI batch
+    foreign isBatchRoot()
     // Adds a UI Element to elements children
     foreign addChild(arg0)
     // Removes a UI Element from the children
@@ -871,6 +911,10 @@ foreign class UIScroll {
     foreign setZIndex(arg0)
     // Sets the UI Elements Z index
     foreign getZIndex()
+    // Gives the UI Element (and its children) its own UI batch, drawn in z-index order among the others
+    foreign setBatchRoot(arg0)
+    // Whether the UI Element has its own UI batch
+    foreign isBatchRoot()
     // Adds a UI Element to elements children
     foreign addChild(arg0)
     // Removes a UI Element from the children

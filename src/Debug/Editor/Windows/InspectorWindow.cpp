@@ -506,6 +506,34 @@ void InspectorWindow::RenderUIElementProperties(GameContext& context, UI::UIElem
 		ImGui::PopID();
 	}
 
+	// Batching - read-only: which UI batch this element draws into, and the batch root that owns it (itself, or its
+	// nearest batch-root ancestor - see UIRenderer::AssignBatches). Every change to anything in a batch redraws
+	// that whole batch, so this shows what an animating element drags along with it.
+	if (ImGui::CollapsingHeader("Batching", ImGuiTreeNodeFlags_DefaultOpen))
+	{
+		Renderer::UIBatchHandle batch = element->GetBatch();
+		ImGui::Text("Batch root: %s", element->IsBatchRoot() ? "yes (owns its batch)" : "no");
+		if (batch.IsValid())
+		{
+			ImGui::Text("Batch: #%u", batch.index);
+		}
+		else
+		{
+			ImGui::TextDisabled("Batch: none assigned yet");
+		}
+		const UI::UIElement* owner = element;
+		while (owner && !owner->IsBatchRoot())
+		{
+			owner = owner->GetParent();
+		}
+		if (owner)
+		{
+			ImGui::Text("Owned by: %s", owner->GetId().empty() ? "[Unnamed]" : owner->GetId().c_str());
+			// A batch root's z index is its batch's draw order among the other batches.
+			ImGui::Text("Batch draw order: %d", owner->GetZIndex());
+		}
+	}
+
 	// Transform - edits the raw absolute/relative components SetPosition/SetSize/SetAnchorPoint actually take
 	// (see UIElement::GetAbsolutePosition's own comment for why the live, parent-walked GetPosition()/GetSize()
 	// can't be edited directly: many different (absolute, relative) pairs can produce the same combined result

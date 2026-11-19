@@ -39,6 +39,7 @@ import "World/Warps" for Warps
 import "World/StoryGates" for StoryGates
 import "World/StoryTriggers" for StoryTriggers
 import "World/SoulSight" for SoulSight
+import "World/SoulVeil" for SoulVeil
 import "UI/Gameplay/SoulSightOverlay" for SoulSightOverlay
 import "Util/SoulFx" for SoulFx
 import "Events/GameEvents" for GameEvents
@@ -488,6 +489,8 @@ class GameWorldState is BaseState {
             if (levelEntity == null) {
                 levelEntity = World.loadLevelEntities(_worldEntity, i)
                 GameObject.setParent(levelEntity, _worldEntity)
+                // A newly loaded SoulVeil tile layer comes in drawn - hide it if Soul Sight is on (World/SoulVeil.wren).
+                SoulVeil.refresh()
             }
             GameObject.setActive(levelEntity)
         }
@@ -708,10 +711,11 @@ class GameWorldState is BaseState {
         }
     }
 
-    // Soul Sight went on or off: the screen tint and the sparks off the player follow (the player entity is rebuilt
-    // on a respawn, so its spark emitter is made again when it has gone).
+    // Soul Sight went on or off: the screen tint, the sparks off the player and the SoulVeil tile layers follow (the
+    // player entity is rebuilt on a respawn, so its spark emitter is made again when it has gone).
     showSoulSight_(active) {
         if (_soulOverlay != null) _soulOverlay.setActive(active)
+        SoulVeil.show(!active)
         if (_playerEntity == null || !GameObject.isValid(_playerEntity)) return
         if (_soulLight == null || !GameObject.isValid(_soulLight)) _soulLight = SoulFx.lightEmitter(_playerEntity, SOUL_LIGHT_HEIGHT)
         SoulFx.setLit(_soulLight, active ? SOUL_LIGHT_RATE : 0)
@@ -723,6 +727,7 @@ class GameWorldState is BaseState {
     startWarp_(targetIndex, fromIndex, destination) {
         Debug.info("[GameWorldState] warping from room %(fromIndex) to room %(targetIndex)")
         World.loadLevelEntities(_worldEntity, targetIndex)
+        SoulVeil.refresh()
         // origin: where the player stepped on the warp door - the Map tab's doorway marker (World/MapLog.warped).
         _warp = {"target": targetIndex, "from": fromIndex, "destination": destination, "frames": 0,
                  "origin": WorldTransform.getPosition(_playerEntity)}

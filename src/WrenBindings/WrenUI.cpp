@@ -390,6 +390,30 @@ void wren_UIElementGetZIndex(WrenVM* vm)
 }
 
 // UIElement.addChild(child)
+// UIElement.setBatchRoot(isRoot) - opts this element (and every descendant that isn't a batch root itself) into its
+// own UI batch, so changing anything in it redraws only that batch: e.g. an animating overlay nested inside a big
+// mostly-static panel. Its draw order among the other batches is its z-index. Top-level elements (UIManager.
+// addUIElement) always have their own batch already - see UIRenderer::SetBatchRoot.
+void wren_UIElementSetBatchRoot(WrenVM* vm)
+{
+	WrenUIElement* uiElement = static_cast<WrenUIElement*>(wrenGetSlotForeign(vm, 0));
+	if (!uiElement->element)
+	{
+		DEBUG_ERROR("UIElement.setBatchRoot: element is Null");
+		return;
+	}
+	bool isRoot                    = wrenGetSlotBool(vm, 1);
+	Struktur::GameContext* context = static_cast<Struktur::GameContext*>(wrenGetUserData(vm));
+	context->GetUIRenderer().SetBatchRoot(uiElement->element, isRoot);
+}
+
+// UIElement.isBatchRoot() -> bool
+void wren_UIElementIsBatchRoot(WrenVM* vm)
+{
+	WrenUIElement* uiElement = static_cast<WrenUIElement*>(wrenGetSlotForeign(vm, 0));
+	wrenSetSlotBool(vm, 0, uiElement->element != nullptr && uiElement->element->IsBatchRoot());
+}
+
 void wren_UIElementAddChild(WrenVM* vm)
 {
 	WrenUIElement* uiElement = static_cast<WrenUIElement*>(wrenGetSlotForeign(vm, 0));
@@ -1807,6 +1831,10 @@ WREN_BINDING_MODULE(UI)
 	                  "Sets the UI Elements Z index");
 	WREN_CLASS_METHOD(registry, "ui", "UIElement", "getZIndex()", wren_UIElementGetZIndex,
 	                  "Sets the UI Elements Z index");
+	WREN_CLASS_METHOD(registry, "ui", "UIElement", "setBatchRoot(_)", wren_UIElementSetBatchRoot,
+	                  "Gives the UI Element (and its children) its own UI batch, drawn in z-index order among the others");
+	WREN_CLASS_METHOD(registry, "ui", "UIElement", "isBatchRoot()", wren_UIElementIsBatchRoot,
+	                  "Whether the UI Element has its own UI batch");
 	WREN_CLASS_METHOD(registry, "ui", "UIElement", "addChild(_)", wren_UIElementAddChild,
 	                  "Adds a UI Element to elements children");
 	WREN_CLASS_METHOD(registry, "ui", "UIElement", "removeChild(_)", wren_UIElementRemoveChild,

@@ -227,6 +227,13 @@ public:
 	// root's z-index changes after the fact (see WrenUI.cpp's setZIndex binding), same "renderer-side state needs
 	// an explicit follow-up call" contract SetBatchRoot's own comment already documents for AssignBatches.
 	void SetBatchDrawOrder(UIBatchHandle handle, int32_t drawOrder);
+	// Makes `element` a batch root (its own batch, shared by every descendant that isn't one itself) or takes that
+	// away again, and does the follow-up UIElement::SetBatchRoot leaves to its caller: re-runs AssignBatches over the
+	// element's tree if that tree already has batches (a tree still being built picks it up when it's attached), and
+	// on the way off destroys the batch the element owned once its quads have moved out. A top-level element mounted
+	// on the UIManager must stay a batch root (see WrenUI.cpp's UIManager.addUIElement), so turning one off is refused.
+	// The new batch's draw order among the others is the element's z-index (AssignBatches' initial sync).
+	void SetBatchRoot(UI::UIElement* element, bool isRoot);
 	// Sets the batch's scissor rect (see UIBatch::clipRect/hasClip, already consumed by SubmitBatch's
 	// bgfx::setScissor) - clipping is strictly per-batch, applied uniformly to every run within it, so a subtree
 	// that needs to be clipped independent of whatever it's nested inside must be its own batch root (see

@@ -121,6 +121,13 @@ void UIHierarchyWindow::RenderUIElementNode(UI::UIElement* element)
 	{
 		label += " [Focusable]";
 	}
+	// Owns its own UI batch - it and every descendant that isn't a batch root itself draw into it (see
+	// UIRenderer::AssignBatches). Top-level elements added from Wren always are (UIManager.addUIElement), as are
+	// clips / scroll areas.
+	if (element->IsBatchRoot())
+	{
+		label += " [Batch root #" + std::to_string(element->GetBatch().index) + "]";
+	}
 
 	// Render the tree node
 	bool nodeOpen = ImGui::TreeNodeEx(nodeId, flags, "%s", label.c_str());

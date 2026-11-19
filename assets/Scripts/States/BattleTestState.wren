@@ -24,6 +24,7 @@ import "Combat/Gear" for GearItem, Loadout, Elements
 import "Combat/Encounter" for Encounter
 import "Combat/EnemyAI" for PlannerBrain
 import "Combat/MoveBook" for MoveBook
+import "World/SoulSight" for SoulSight
 import "Combat/Config/Moves" for Moves
 import "Combat/Config/GearTypes" for GearTypes
 import "Combat/Config/BattleCritter" for BattleCritter
@@ -87,7 +88,7 @@ class BattleTestState is BaseState {
         _focusId = null
         _tabHeld = false
         _scenario = 1
-        _read = 0
+        _soulLevel = 0   // the fight's Soul Sight level (World/SoulSight.wren) - 0: none
 
         // The world root the arena level (and every battle entity) hangs off - no overworld levels are loaded.
         _world = World.createWorldEntity(WORLD_FILE_PATH)
@@ -166,6 +167,7 @@ class BattleTestState is BaseState {
         }
         CombatOutcome.take()
         _inBattle = false
+        SoulSight.levelOverride = null
         Time.setTimeScale(1)
         if (_view != null) {
             _view.teardown()
@@ -318,8 +320,8 @@ class BattleTestState is BaseState {
             refresh_()
             return
         }
-        if (id == "read") {
-            _read = BattleTestState.wrap_(_read + dir, 0, 2)
+        if (id == "soul") {
+            _soulLevel = BattleTestState.wrap_(_soulLevel + dir, 0, SoulSight.maxLevel)
             refresh_()
             return
         }
@@ -403,7 +405,7 @@ class BattleTestState is BaseState {
         }
         _view.setSelected(_selected)
         _view.setPickerText("scenario", "Scenario: %(SCENARIOS[_scenario])")
-        _view.setPickerText("read", "Your Read: %(_read)")
+        _view.setPickerText("soul", _soulLevel == 0 ? "Soul Sight: none" : "Soul Sight: %(_soulLevel) (%(SoulSight.reachAt(_soulLevel))s)")
 
         var slot = _slots[_selected]
         var side = isPartySlot_(_selected) ? "Your side" : "Opponent"
@@ -411,7 +413,7 @@ class BattleTestState is BaseState {
         if (slot.empty) {
             _view.setTitle("%(side) %(number): empty")
             for (id in _view.pickerIds) {
-                if (id != "scenario" && id != "read") _view.setPickerText(id, id == "fighter" ? "(empty)" : "-")
+                if (id != "scenario" && id != "soul") _view.setPickerText(id, id == "fighter" ? "(empty)" : "-")
             }
             _view.setInfo(["Pick a fighter for this slot."])
             return
@@ -421,7 +423,7 @@ class BattleTestState is BaseState {
         _view.setPickerText("fighter", label)
         if (!humanoid_(slot)) {
             for (id in _view.pickerIds) {
-                if (id != "scenario" && id != "read" && id != "fighter") _view.setPickerText(id, "-")
+                if (id != "scenario" && id != "soul" && id != "fighter") _view.setPickerText(id, "-")
             }
             var def = defOf_(slot)
             var kind = def.passive ? "A prop: it never acts on its own." : "A monster: its own natural weapon and combo menu."
@@ -484,6 +486,8 @@ class BattleTestState is BaseState {
 
     startBattle_() {
         if (_inBattle) return
+        // The fight's Soul Sight comes from the picker, not the save's Soul Fragments.
+        SoulSight.levelOverride = _soulLevel
         var used = {}
         var party = []
         var enemies = []
@@ -493,7 +497,6 @@ class BattleTestState is BaseState {
             var isParty = isPartySlot_(i)
             var combatant = build_(slot, used)
             if (isParty) {
-                combatant.read = _read
                 party.add(combatant)
             } else {
                 combatant.brain = brainFor_(slot)

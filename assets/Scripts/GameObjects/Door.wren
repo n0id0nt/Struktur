@@ -18,9 +18,11 @@
 //   Barrier     - the other way round: open until a scene drops it (the "closeDoor" dialogue command - the wall that
 //                 splits the party in the shrine), shut until "openDoor" lifts it again. Its state is the saved flag
 //                 closedFlag, so it comes back the same way after a reload or with its room streamed out;
-//   Hidden      - a doorway that passes for the dark beyond the room's walls until Soul Sight is on (World/SoulSight.wren):
-//                 then it glows with the soul's light and can be talked to, which opens it (or runs its dialogue -
-//                 the Guide apologising to the first one). It listens for the soulSight event; it never opens unseen.
+//   Hidden      - a doorway only Soul Sight shows (World/SoulSight.wren). Unseen it draws nothing - just blocks the
+//                 way - and a SoulVeil tile layer painted over the doorway makes it pass for wall (World/SoulVeil.wren).
+//                 With Soul Sight on the veil lifts and the door glows with the soul's light and can be talked to, which
+//                 opens it (or runs its dialogue - the Guide apologising to the first one). It listens for the
+//                 soulSight event; it never opens unseen.
 // Any level door can also list story events in KeyIds (World/StoryEvents.wren - e.g. "Defeat RunicConstuct1", fired by
 // the "triggerEvent" dialogue command): it stays sealed until every one has happened (and its plates, if any, are
 // held), then opens by itself. Doors sharing the same KeyIds open together in one moment - a wide doorway.
@@ -54,8 +56,8 @@ var SHEET_ROWS = 4
 var CLOSED_SPRITE_INDEX = 0
 // The art is 16 px and the doorway 32 px.
 var ART_SCALE = 2
-// A Hidden door unseen: the keyhole block tinted to the black past the room's walls.
-var HIDDEN_TINT = Vec4.new(0, 0, 0, 255)
+// A Hidden door unseen: not drawn at all (the SoulVeil layer shows the wall instead).
+var HIDDEN_TINT = Vec4.new(255, 255, 255, 0)
 
 class Door {
     // args (all optional): "Name" - its dialogue key and saved-flag name (a level door without one uses its LDtk
