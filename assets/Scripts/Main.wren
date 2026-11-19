@@ -55,6 +55,7 @@ class Game {
             "Marker",
             "Path",
             "WayPoint",
+            "Trigger",
         ]
 
         for (gameObjectsScript in gameObjectsScripts) {

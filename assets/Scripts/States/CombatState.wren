@@ -49,6 +49,7 @@ import "Inventory/ItemDatabase" for ItemDatabase, ItemCategory
 import "Localization/DisplayNames" for DisplayNames
 import "localization" for Localization
 import "debug" for Debug
+import "flags" for FlagManager
 
 var ENTER_TIME = 0.65       // arena sweep + battler slide-in
 var OVER_TIME = 1.8         // the closing line
@@ -405,6 +406,15 @@ class CombatState is BaseState {
     once(key) {
         if (_flags.containsKey(key)) return false
         _flags[key] = true
+        return true
+    }
+    // True the first time `key` is asked about in this save (a saved int flag) - for lines that would wear thin in
+    // every fight. The battle test saves nothing, so there it's once per fight.
+    firstTime(key) {
+        if (_params["partyCombatants"] != null) return once(key)
+        if (FlagManager.getIntFlag(key) != 0) return false
+        FlagManager.setIntFlag(key, 1)
+        FlagManager.save("flags.sav")
         return true
     }
     mark(key, value) { _marks[key] = value }

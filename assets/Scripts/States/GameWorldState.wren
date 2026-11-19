@@ -37,6 +37,7 @@ import "World/PressurePlates" for PressurePlates
 import "World/ImpactEvents" for ImpactEvents
 import "World/Warps" for Warps
 import "World/StoryGates" for StoryGates
+import "World/StoryTriggers" for StoryTriggers
 import "World/Npcs" for Npcs
 import "World/SpawnPoint" for SpawnPoint
 import "World/StageDirector" for StageDirector
@@ -156,6 +157,15 @@ class GameWorldState is BaseState {
             _gameMusic.stop()
         }
         _stateManager.changeState("InteractState", {"entryNode": OPENING_NODE})
+    }
+
+    // A Trigger's moment: a conversation started straight from its node, the player stopped where they stand.
+    startTriggered_(node) {
+        var player = Script.getInstance(_playerEntity)
+        if (player != null) {
+            player.playerForceStop()
+        }
+        _stateManager.changeState("InteractState", {"entryNode": node})
     }
 
     // A level's index by its identifier, or null.
@@ -371,6 +381,13 @@ class GameWorldState is BaseState {
         var impact = ImpactEvents.take()
         if (impact != null) {
             playImpact_(impact)
+            return
+        }
+
+        // A walk-in story moment (GameObjects/Trigger.wren) - also only while nothing else is running.
+        var triggered = StoryTriggers.take()
+        if (triggered != null) {
+            startTriggered_(triggered)
             return
         }
 

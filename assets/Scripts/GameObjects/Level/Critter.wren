@@ -20,7 +20,9 @@ class Critter {
             __species = {
                 "Chinlin": ["Chinlin", "Chinlin", null],
                 "Chicken": ["Chicken", "Chicken", null],
-                "StarvingThornwolf": ["Chinlin", "Starving Thornwolf", "wolf_at_the_edge"]
+                "StarvingThornwolf": ["Chinlin", "Starving Thornwolf", null],
+                // The one at the village's north edge that Thomas sends you after.
+                "PerimeterThornwolf": ["Chinlin", "Starving Thornwolf", "wolf_at_the_edge"]
             }
         }
         return __species

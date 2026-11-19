@@ -450,7 +450,7 @@
     "data": {
       "text": "dialogue.arc1.finn_s1",
       "speaker": "Finn",
-      "next": "finn_s1_menu",
+      "next": "finn_s1_2",
       "commands": [
         {
           "type": "face",
@@ -466,6 +466,37 @@
           ]
         }
       ]
+    }
+  },
+  {
+    "node": "finn_s1_2",
+    "data": {
+      "text": "dialogue.arc1.finn_s1_2",
+      "speaker": "Finn",
+      "next": "finn_s1_hammer"
+    }
+  },
+  {
+    "node": "finn_s1_hammer",
+    "data": {
+      "text": "dialogue.arc1.finn_s1_hammer",
+      "next": "finn_s1_hammer_2"
+    }
+  },
+  {
+    "node": "finn_s1_hammer_2",
+    "data": {
+      "text": "dialogue.arc1.finn_s1_hammer_2",
+      "speaker": "Finn",
+      "next": "finn_s1_task"
+    }
+  },
+  {
+    "node": "finn_s1_task",
+    "data": {
+      "text": "dialogue.arc1.finn_s1_task",
+      "speaker": "Finn",
+      "next": "finn_s1_menu"
     }
   },
   {
@@ -494,7 +525,7 @@
     "data": {
       "text": "dialogue.arc1.finn_s1_a1",
       "speaker": "Finn",
-      "next": "finn_s1_task"
+      "next": "finn_s1_end"
     }
   },
   {
@@ -502,74 +533,13 @@
     "data": {
       "text": "dialogue.arc1.finn_s1_a2",
       "speaker": "Finn",
-      "next": "finn_s1_task"
+      "next": "finn_s1_end"
     }
   },
   {
     "node": "finn_s1_a3",
     "data": {
       "text": "dialogue.arc1.finn_s1_a3",
-      "speaker": "Finn",
-      "next": "finn_s1_task"
-    }
-  },
-  {
-    "node": "finn_s1_task",
-    "data": {
-      "text": "dialogue.arc1.finn_s1_task",
-      "speaker": "Finn",
-      "next": "finn_s1_task_2"
-    }
-  },
-  {
-    "node": "finn_s1_task_2",
-    "data": {
-      "text": "dialogue.arc1.finn_s1_task_2",
-      "speaker": "Finn",
-      "next": "finn_s1_menu2"
-    }
-  },
-  {
-    "node": "finn_s1_menu2",
-    "data": {
-      "text": "dialogue.arc1.finn_s1_menu2",
-      "choices": [
-        {
-          "target": "finn_s1_b1",
-          "text": "dialogue.arc1.finn_s1_menu2.choice1"
-        },
-        {
-          "target": "finn_s1_b2",
-          "text": "dialogue.arc1.finn_s1_menu2.choice2"
-        },
-        {
-          "target": "finn_s1_b3",
-          "text": "dialogue.arc1.finn_s1_menu2.choice3"
-        }
-      ],
-      "speaker": "Finn"
-    }
-  },
-  {
-    "node": "finn_s1_b1",
-    "data": {
-      "text": "dialogue.arc1.finn_s1_b1",
-      "speaker": "Finn",
-      "next": "finn_s1_end"
-    }
-  },
-  {
-    "node": "finn_s1_b2",
-    "data": {
-      "text": "dialogue.arc1.finn_s1_b2",
-      "speaker": "Finn",
-      "next": "finn_s1_end"
-    }
-  },
-  {
-    "node": "finn_s1_b3",
-    "data": {
-      "text": "dialogue.arc1.finn_s1_b3",
       "speaker": "Finn",
       "next": "finn_s1_end"
     }
@@ -669,19 +639,6 @@
       "speaker": "Finn",
       "next": "finn_to_anvil",
       "commands": [
-        {
-          "type": "giveItem",
-          "parameters": [
-            {
-              "type": "item",
-              "value": "Iron Sword"
-            },
-            {
-              "type": "count",
-              "value": 1.0
-            }
-          ]
-        },
         {
           "type": "giveItem",
           "parameters": [
@@ -1462,7 +1419,7 @@
     "data": {
       "text": "dialogue.arc1.kira_s3",
       "speaker": "Kira",
-      "next": "kira_s3_menu",
+      "next": "kira_s3_facts",
       "commands": [
         {
           "type": "face",
@@ -1481,6 +1438,14 @@
     }
   },
   {
+    "node": "kira_s3_facts",
+    "data": {
+      "text": "dialogue.arc1.kira_s3_facts",
+      "speaker": "Kira",
+      "next": "kira_s3_menu"
+    }
+  },
+  {
     "node": "kira_s3_menu",
     "data": {
       "text": "dialogue.arc1.kira_s3_menu",
@@ -1490,12 +1455,8 @@
           "text": "dialogue.arc1.kira_s3_menu.choice1"
         },
         {
-          "target": "kira_s3_a2",
+          "target": "kira_s3_end",
           "text": "dialogue.arc1.kira_s3_menu.choice2"
-        },
-        {
-          "target": "kira_s3_a3",
-          "text": "dialogue.arc1.kira_s3_menu.choice3"
         }
       ],
       "speaker": "Kira"
@@ -1506,21 +1467,30 @@
     "data": {
       "text": "dialogue.arc1.kira_s3_a1",
       "speaker": "Kira",
-      "next": "kira_s3_end"
+      "next": "kira_s3_menu2"
+    }
+  },
+  {
+    "node": "kira_s3_menu2",
+    "data": {
+      "text": "dialogue.arc1.kira_s3_menu2",
+      "choices": [
+        {
+          "target": "kira_s3_a2",
+          "text": "dialogue.arc1.kira_s3_menu2.choice1"
+        },
+        {
+          "target": "kira_s3_end",
+          "text": "dialogue.arc1.kira_s3_menu2.choice2"
+        }
+      ],
+      "speaker": "Kira"
     }
   },
   {
     "node": "kira_s3_a2",
     "data": {
       "text": "dialogue.arc1.kira_s3_a2",
-      "speaker": "Kira",
-      "next": "kira_s3_end"
-    }
-  },
-  {
-    "node": "kira_s3_a3",
-    "data": {
-      "text": "dialogue.arc1.kira_s3_a3",
       "speaker": "Kira",
       "next": "kira_s3_end"
     }
@@ -2442,6 +2412,55 @@
     "data": {
       "text": "dialogue.arc1.thomas_after_2",
       "speaker": "Thomas",
+      "next": "thomas_after_kira",
+      "commands": [
+        {
+          "type": "face",
+          "parameters": [
+            {
+              "type": "who",
+              "value": "Thomas"
+            },
+            {
+              "type": "towards",
+              "value": "Kira"
+            }
+          ]
+        },
+        {
+          "type": "face",
+          "parameters": [
+            {
+              "type": "who",
+              "value": "Kira"
+            },
+            {
+              "type": "towards",
+              "value": "Thomas"
+            }
+          ]
+        },
+        {
+          "type": "giveItem",
+          "parameters": [
+            {
+              "type": "item",
+              "value": "Leather Armor"
+            },
+            {
+              "type": "count",
+              "value": 1.0
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "node": "thomas_after_kira",
+    "data": {
+      "text": "dialogue.arc1.thomas_after_kira",
+      "speaker": "Kira",
       "next": "thomas_after_2_2",
       "commands": [
         {
@@ -2474,32 +2493,6 @@
       "text": "dialogue.arc1.thomas_after_2_3",
       "speaker": "Thomas",
       "commands": [
-        {
-          "type": "giveItem",
-          "parameters": [
-            {
-              "type": "item",
-              "value": "Hunter's Bow"
-            },
-            {
-              "type": "count",
-              "value": 1.0
-            }
-          ]
-        },
-        {
-          "type": "giveItem",
-          "parameters": [
-            {
-              "type": "item",
-              "value": "Leather Armor"
-            },
-            {
-              "type": "count",
-              "value": 1.0
-            }
-          ]
-        },
         {
           "type": "giveItem",
           "parameters": [
@@ -2887,6 +2880,168 @@
     }
   },
   {
+    "node": "kira_stones",
+    "data": {
+      "text": "dialogue.arc1.kira_stones",
+      "speaker": "Kira",
+      "commands": [
+        {
+          "type": "face",
+          "parameters": [
+            {
+              "type": "who",
+              "value": "Kira"
+            },
+            {
+              "type": "towards",
+              "value": "Player"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "node": "claw_marks_spotted",
+    "data": {
+      "text": "dialogue.arc1.claw_marks_spotted",
+      "speaker": "Kira",
+      "next": "claw_marks_walk"
+    }
+  },
+  {
+    "node": "claw_marks_walk",
+    "data": {
+      "commands": [
+        {
+          "type": "moveTo",
+          "parameters": [
+            {
+              "type": "who",
+              "value": "Kira"
+            },
+            {
+              "type": "to",
+              "value": "KiraToClawMarks"
+            }
+          ]
+        },
+        {
+          "type": "face",
+          "parameters": [
+            {
+              "type": "who",
+              "value": "Player"
+            },
+            {
+              "type": "towards",
+              "value": "Kira"
+            }
+          ]
+        }
+      ],
+      "next": "claw_marks_look"
+    }
+  },
+  {
+    "node": "claw_marks_look",
+    "data": {
+      "text": "dialogue.arc1.claw_marks",
+      "speaker": "Kira",
+      "commands": [
+        {
+          "type": "face",
+          "parameters": [
+            {
+              "type": "who",
+              "value": "Kira"
+            },
+            {
+              "type": "towards",
+              "value": "Player"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "node": "big_book",
+    "data": {
+      "text": "dialogue.arc1.big_book",
+      "next": "big_book_menu"
+    }
+  },
+  {
+    "node": "big_book_menu",
+    "data": {
+      "text": "dialogue.arc1.big_book_menu",
+      "choices": [
+        {
+          "target": "big_book_a1",
+          "text": "dialogue.arc1.big_book_menu.choice1"
+        },
+        {
+          "target": "big_book_a2",
+          "text": "dialogue.arc1.big_book_menu.choice2"
+        }
+      ]
+    }
+  },
+  {
+    "node": "big_book_a1",
+    "data": {
+      "text": "dialogue.arc1.big_book_a1",
+      "speaker": "Kira",
+      "next": "big_book_2"
+    }
+  },
+  {
+    "node": "big_book_a2",
+    "data": {
+      "text": "dialogue.arc1.big_book_a2",
+      "speaker": "Kira",
+      "next": "big_book_2"
+    }
+  },
+  {
+    "node": "big_book_2",
+    "data": {
+      "text": "dialogue.arc1.big_book_2",
+      "speaker": "Kira",
+      "next": "big_book_menu2"
+    }
+  },
+  {
+    "node": "big_book_menu2",
+    "data": {
+      "text": "dialogue.arc1.big_book_menu2",
+      "choices": [
+        {
+          "target": "big_book_b1",
+          "text": "dialogue.arc1.big_book_menu2.choice1"
+        },
+        {
+          "target": "big_book_b2",
+          "text": "dialogue.arc1.big_book_menu2.choice2"
+        }
+      ]
+    }
+  },
+  {
+    "node": "big_book_b1",
+    "data": {
+      "text": "dialogue.arc1.big_book_b1",
+      "speaker": "Kira"
+    }
+  },
+  {
+    "node": "big_book_b2",
+    "data": {
+      "text": "dialogue.arc1.big_book_b2"
+    }
+  },
+  {
     "node": "claw_marks",
     "data": {
       "text": "dialogue.arc1.claw_marks",
@@ -2911,6 +3066,14 @@
     "node": "stone_pillars_2",
     "data": {
       "text": "dialogue.arc1.stone_pillars_2",
+      "speaker": "Kira",
+      "next": "stone_pillars_3"
+    }
+  },
+  {
+    "node": "stone_pillars_3",
+    "data": {
+      "text": "dialogue.arc1.stone_pillars_3",
       "speaker": "Kira"
     }
   },

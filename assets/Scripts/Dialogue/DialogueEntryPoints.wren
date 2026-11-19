@@ -45,11 +45,14 @@ class DialogueEntryPoints {
                 "WisperWoodsDoor2": "wisperwood_door",
                 "ShrineEntranceDoor": "shrine_door",
 
-                // --- Written but not placed in the level yet: an Interactable with this MessageKey picks it up ---
-                "Village Well": "village_well",
+                // Whisperwood: the claw-marked tree (path), the blue lights (deep woods), the carved pillars (by the
+                // way out to the shrine courtyard).
                 "Claw Marks": "claw_marks",
                 "Blue Lights": "blue_lights",
                 "Stone Pillars": "stone_pillars",
+
+                // --- Written but not placed in the level yet: an Interactable with this MessageKey picks it up ---
+                "Village Well": "village_well",
                 "Shrine Entry": "shrine_entry_kira",
                 "Shifting Floor": "shifting_floor",
                 "Wounded Thornwolf": "wounded_wolf"

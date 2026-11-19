@@ -246,25 +246,26 @@ class Encounter {
 
     // --- the first wolves (scene 6) ---------------------------------------------------------
 
+    // Every wolf fight has these, but each line plays once per save (host.firstTime) - there are a lot of wolves.
     static wolves_ {
         var stage = EncounterStage.new([])
         stage.onStart(Fn.new { |host|
-            if (host.inParty("Kira")) host.say("Kira: Thornwolves! They're so skinny... Remember what Dad said! Brace the bite, then hit it!")
+            if (host.inParty("Kira") && host.firstTime("seen_wolves_kira")) host.say("Kira: Thornwolves! They're so skinny... Remember what Dad said! Brace the bite, then hit it!")
         })
         stage.onEvent(Fn.new { |host, event|
             var type = event["type"]
             var who = event["who"]
             // The first bite that gets through.
-            if (type == "hit" && who.name == "You" && !event["blocked"] && event["amount"] > 0 && host.once("wolf.bitten")) {
+            if (type == "hit" && who.name == "You" && !event["blocked"] && event["amount"] > 0 && host.firstTime("seen_wolves_bite")) {
                 host.prompt([
-                    [host.inParty("Kira") ? "Kira" : null, "It bit you before you'd even moved! It's faster than the post!"],
+                    [host.inParty("Kira") ? "Kira" : null, "It bit you before you'd even moved! Just like Dad's snap-post!"],
                     [null, "Watch the wolf's timeline. A starving wolf bites the moment it starts a chain next to you. Start your chain with Brace when a wolf is beside you, then Slash it while it circles."]
                 ])
             }
             // Block a bite, then land the punish before the wolf has finished its chain.
             if (type == "block" && who.name == "You") host.mark("wolf.blockedAt", event["time"])
             if (type == "hit" && who.side == 1 && event["by"].name == "You" && host.marked("wolf.blockedAt") &&
-                event["time"] - host.markOf("wolf.blockedAt") < 2.5 && host.once("wolf.punished")) {
+                event["time"] - host.markOf("wolf.blockedAt") < 2.5 && host.firstTime("seen_wolves_punish")) {
                 host.say(host.inParty("Kira") ? "Kira: That's it! It bites, you block, then you bonk it!" : "It bites, you block, then you punish.")
             }
         })

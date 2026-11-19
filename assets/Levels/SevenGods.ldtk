@@ -11,7 +11,7 @@
 	"iid": "41438cf0-bde0-11f1-b533-6fad8cb2a972",
 	"jsonVersion": "1.5.3",
 	"appBuildId": 473703,
-	"nextUid": 797,
+	"nextUid": 802,
 	"identifierStyle": "Capitalize",
 	"toc": [],
 	"worldLayout": "Free",
@@ -10327,6 +10327,7 @@
 				}
 			]
 		},
+			{"identifier": "Trigger", "uid": 801, "tags": [], "exportToToc": false, "allowOutOfBounds": false, "doc": "Walk-in story moment: plays the dialogue node Node once, while RequiresFlag (\"flag op number\") holds.", "width": 32, "height": 32, "resizableX": true, "resizableY": true, "minWidth": 16, "maxWidth": null, "minHeight": 16, "maxHeight": null, "keepAspectRatio": false, "tileOpacity": 1, "fillOpacity": 0.15, "lineOpacity": 1, "hollow": false, "color": "#7FB6FF", "renderMode": "Rectangle", "showName": true, "tilesetId": null, "tileRenderMode": "FitInside", "tileRect": null, "uiTileRect": null, "nineSliceBorders": [], "maxCount": 0, "limitScope": "PerLevel", "limitBehavior": "MoveLastOne", "pivotX": 0, "pivotY": 0, "fieldDefs": [{"identifier": "Node", "doc": null, "__type": "String", "uid": 797, "type": "F_String", "isArray": false, "canBeNull": true, "arrayMinLength": null, "arrayMaxLength": null, "editorDisplayMode": "ValueOnly", "editorDisplayScale": 1, "editorDisplayPos": "Above", "editorLinkStyle": "StraightArrow", "editorDisplayColor": null, "editorAlwaysShow": false, "editorShowInWorld": true, "editorCutLongValues": true, "editorTextSuffix": null, "editorTextPrefix": null, "useForSmartColor": false, "exportToToc": false, "searchable": false, "min": null, "max": null, "regex": null, "acceptFileTypes": null, "defaultOverride": null, "textLanguageMode": null, "symmetricalRef": false, "autoChainRef": true, "allowOutOfLevelRef": true, "allowedRefs": "OnlySame", "allowedRefsEntityUid": null, "allowedRefTags": [], "tilesetUid": null}, {"identifier": "RequiresFlag", "doc": null, "__type": "String", "uid": 798, "type": "F_String", "isArray": false, "canBeNull": true, "arrayMinLength": null, "arrayMaxLength": null, "editorDisplayMode": "Hidden", "editorDisplayScale": 1, "editorDisplayPos": "Above", "editorLinkStyle": "StraightArrow", "editorDisplayColor": null, "editorAlwaysShow": false, "editorShowInWorld": true, "editorCutLongValues": true, "editorTextSuffix": null, "editorTextPrefix": null, "useForSmartColor": false, "exportToToc": false, "searchable": false, "min": null, "max": null, "regex": null, "acceptFileTypes": null, "defaultOverride": null, "textLanguageMode": null, "symmetricalRef": false, "autoChainRef": true, "allowOutOfLevelRef": true, "allowedRefs": "OnlySame", "allowedRefsEntityUid": null, "allowedRefTags": [], "tilesetUid": null}, {"identifier": "ShowFromStage", "doc": null, "__type": "Int", "uid": 799, "type": "F_Int", "isArray": false, "canBeNull": true, "arrayMinLength": null, "arrayMaxLength": null, "editorDisplayMode": "Hidden", "editorDisplayScale": 1, "editorDisplayPos": "Above", "editorLinkStyle": "StraightArrow", "editorDisplayColor": null, "editorAlwaysShow": false, "editorShowInWorld": true, "editorCutLongValues": true, "editorTextSuffix": null, "editorTextPrefix": null, "useForSmartColor": false, "exportToToc": false, "searchable": false, "min": null, "max": null, "regex": null, "acceptFileTypes": null, "defaultOverride": null, "textLanguageMode": null, "symmetricalRef": false, "autoChainRef": true, "allowOutOfLevelRef": true, "allowedRefs": "OnlySame", "allowedRefsEntityUid": null, "allowedRefTags": [], "tilesetUid": null}, {"identifier": "HideFromStage", "doc": null, "__type": "Int", "uid": 800, "type": "F_Int", "isArray": false, "canBeNull": true, "arrayMinLength": null, "arrayMaxLength": null, "editorDisplayMode": "Hidden", "editorDisplayScale": 1, "editorDisplayPos": "Above", "editorLinkStyle": "StraightArrow", "editorDisplayColor": null, "editorAlwaysShow": false, "editorShowInWorld": true, "editorCutLongValues": true, "editorTextSuffix": null, "editorTextPrefix": null, "useForSmartColor": false, "exportToToc": false, "searchable": false, "min": null, "max": null, "regex": null, "acceptFileTypes": null, "defaultOverride": null, "textLanguageMode": null, "symmetricalRef": false, "autoChainRef": true, "allowOutOfLevelRef": true, "allowedRefs": "OnlySame", "allowedRefsEntityUid": null, "allowedRefTags": [], "tilesetUid": null}]},
 		{
 			"identifier": "DoorWorp",
 			"uid": 295,
@@ -11265,7 +11266,7 @@
 			}
 		}
 	], "enums": [
-		{ "identifier": "Enemy", "uid": 266, "values": [ { "id": "Chinlin", "tileRect": null, "color": 12470831 }, { "id": "Chicken", "tileRect": null, "color": 14120515 }, { "id": "StarvingThornwolf", "tileRect": null, "color": 9079434 } ], "iconTilesetUid": null, "externalRelPath": null, "externalFileChecksum": null, "tags": [] },
+		{ "identifier": "Enemy", "uid": 266, "values": [ { "id": "Chinlin", "tileRect": null, "color": 12470831 }, { "id": "Chicken", "tileRect": null, "color": 14120515 }, { "id": "StarvingThornwolf", "tileRect": null, "color": 9079434 }, { "id": "PerimeterThornwolf", "tileRect": null, "color": 7039851 } ], "iconTilesetUid": null, "externalRelPath": null, "externalFileChecksum": null, "tags": [] },
 		{ "identifier": "Item", "uid": 273, "values": [
 			{ "id": "Coin", "tileRect": null, "color": 12470831 },
 			{ "id": "Key", "tileRect": null, "color": 14120515 },
@@ -17836,9 +17837,9 @@
 							"height": 16,
 							"defUid": 265,
 							"px": [160,96],
-							"fieldInstances": [{ "__identifier": "Enemy", "__type": "LocalEnum.Enemy", "__value": "StarvingThornwolf", "__tile": null, "defUid": 268, "realEditorValues": [{
+							"fieldInstances": [{ "__identifier": "Enemy", "__type": "LocalEnum.Enemy", "__value": "PerimeterThornwolf", "__tile": null, "defUid": 268, "realEditorValues": [{
 								"id": "V_String",
-								"params": ["StarvingThornwolf"]
+								"params": ["PerimeterThornwolf"]
 							}] }],
 							"__worldX": 608,
 							"__worldY": 1152
@@ -23291,7 +23292,32 @@
 					"seed": 5745306,
 					"overrideTilesetUid": null,
 					"gridTiles": [],
-					"entityInstances": []
+					"entityInstances": [
+							{"__identifier": "Trigger", "__grid": [4, 13], "__pivot": [0, 0], "__tags": [], "__tile": null, "__smartColor": "#7FB6FF", "iid": "c11a0394-e3b5-11f1-9c47-28d043bb8e9f", "width": 112, "height": 32, "defUid": 801, "px": [64, 208], "fieldInstances": [{"__identifier": "Node", "__type": "String", "__value": "kira_stones", "__tile": null, "defUid": 797, "realEditorValues": [{"id": "V_String", "params": ["kira_stones"]}]}, {"__identifier": "RequiresFlag", "__type": "String", "__value": null, "__tile": null, "defUid": 798, "realEditorValues": []}, {"__identifier": "ShowFromStage", "__type": "Int", "__value": null, "__tile": null, "defUid": 799, "realEditorValues": []}, {"__identifier": "HideFromStage", "__type": "Int", "__value": null, "__tile": null, "defUid": 800, "realEditorValues": []}], "__worldX": 512, "__worldY": 1008},
+							{"__identifier": "Trigger", "__grid": [2, 9], "__pivot": [0, 0], "__tags": [], "__tile": null, "__smartColor": "#7FB6FF", "iid": "c11a03d3-e3b5-11f1-96ab-28d043bb8e9f", "width": 208, "height": 32, "defUid": 801, "px": [32, 144], "fieldInstances": [{"__identifier": "Node", "__type": "String", "__value": "claw_marks_spotted", "__tile": null, "defUid": 797, "realEditorValues": [{"id": "V_String", "params": ["claw_marks_spotted"]}]}, {"__identifier": "RequiresFlag", "__type": "String", "__value": null, "__tile": null, "defUid": 798, "realEditorValues": []}, {"__identifier": "ShowFromStage", "__type": "Int", "__value": null, "__tile": null, "defUid": 799, "realEditorValues": []}, {"__identifier": "HideFromStage", "__type": "Int", "__value": null, "__tile": null, "defUid": 800, "realEditorValues": []}], "__worldX": 480, "__worldY": 944},
+							{"__identifier": "Trigger", "__grid": [0, 0], "__pivot": [0, 0], "__tags": [], "__tile": null, "__smartColor": "#7FB6FF", "iid": "c11a0401-e3b5-11f1-9436-28d043bb8e9f", "width": 256, "height": 256, "defUid": 801, "px": [0, 0], "fieldInstances": [{"__identifier": "Node", "__type": "String", "__value": "big_book", "__tile": null, "defUid": 797, "realEditorValues": [{"id": "V_String", "params": ["big_book"]}]}, {"__identifier": "RequiresFlag", "__type": "String", "__value": "defeated_StarvingThornwolf >= 2", "__tile": null, "defUid": 798, "realEditorValues": [{"id": "V_String", "params": ["defeated_StarvingThornwolf >= 2"]}]}, {"__identifier": "ShowFromStage", "__type": "Int", "__value": null, "__tile": null, "defUid": 799, "realEditorValues": []}, {"__identifier": "HideFromStage", "__type": "Int", "__value": null, "__tile": null, "defUid": 800, "realEditorValues": []}], "__worldX": 448, "__worldY": 800},
+							{"__identifier": "WayPoint", "__grid": [4, 12], "__pivot": [0, 0], "__tags": [], "__tile": null, "__smartColor": "#FEE761", "iid": "c119a0ee-e3b5-11f1-800d-28d043bb8e9f", "width": 16, "height": 16, "defUid": 790, "px": [64, 192], "fieldInstances": [], "__worldX": 512, "__worldY": 992},
+							{"__identifier": "Path", "__grid": [2, 12], "__pivot": [0, 0], "__tags": [], "__tile": null, "__smartColor": "#FEAE34", "iid": "c11a0331-e3b5-11f1-a04b-28d043bb8e9f", "width": 16, "height": 16, "defUid": 788, "px": [32, 192], "fieldInstances": [{"__identifier": "Name", "__type": "String", "__value": "KiraToClawMarks", "__tile": null, "defUid": 791, "realEditorValues": [{"id": "V_String", "params": ["KiraToClawMarks"]}]}, {"__identifier": "Entity_ref", "__type": "Array<EntityRef>", "__value": [{"entityIid": "c119a0ee-e3b5-11f1-800d-28d043bb8e9f", "layerIid": "c4419db3-bde0-11f1-99f1-9dad40f2bba1", "levelIid": "c44176a0-bde0-11f1-99f1-cd27a6a761b9", "worldIid": "4143b400-bde0-11f1-b533-5302ffc7fc1c"}], "__tile": null, "defUid": 789, "realEditorValues": [{"id": "V_String", "params": ["c119a0ee-e3b5-11f1-800d-28d043bb8e9f"]}]}, {"__identifier": "PathFollowType", "__type": "LocalEnum.PathFollowType", "__value": "Once", "__tile": null, "defUid": 793, "realEditorValues": [{"id": "V_String", "params": ["Once"]}]}], "__worldX": 480, "__worldY": 992},
+							{
+								"__identifier": "Interactable",
+								"__grid": [4,11],
+								"__pivot": [0,0],
+								"__tags": [],
+								"__tile": null,
+								"__smartColor": "#E4A672",
+								"iid": "95a187ba-e3b3-11f1-b335-28d043bb8e9f",
+								"width": 16,
+								"height": 16,
+								"defUid": 277,
+								"px": [64,176],
+								"fieldInstances": [{ "__identifier": "MessageKey", "__type": "String", "__value": "Claw Marks", "__tile": null, "defUid": 278, "realEditorValues": [{
+									"id": "V_String",
+									"params": ["Claw Marks"]
+								}] }],
+								"__worldX": 512,
+								"__worldY": 976
+							}
+						]
 				},
 				{
 					"__identifier": "BuildingsInfront",
@@ -23992,6 +24018,7 @@
 					"overrideTilesetUid": null,
 					"gridTiles": [],
 					"entityInstances": [
+							{"__identifier": "Trigger", "__grid": [0, 0], "__pivot": [0, 0], "__tags": [], "__tile": null, "__smartColor": "#7FB6FF", "iid": "c11a3c6b-e3b5-11f1-a786-28d043bb8e9f", "width": 256, "height": 256, "defUid": 801, "px": [0, 0], "fieldInstances": [{"__identifier": "Node", "__type": "String", "__value": "big_book", "__tile": null, "defUid": 797, "realEditorValues": [{"id": "V_String", "params": ["big_book"]}]}, {"__identifier": "RequiresFlag", "__type": "String", "__value": "defeated_StarvingThornwolf >= 2", "__tile": null, "defUid": 798, "realEditorValues": [{"id": "V_String", "params": ["defeated_StarvingThornwolf >= 2"]}]}, {"__identifier": "ShowFromStage", "__type": "Int", "__value": null, "__tile": null, "defUid": 799, "realEditorValues": []}, {"__identifier": "HideFromStage", "__type": "Int", "__value": null, "__tile": null, "defUid": 800, "realEditorValues": []}], "__worldX": 704, "__worldY": 800},
 						{
 							"__identifier": "Critter",
 							"__grid": [7,8],
@@ -24004,9 +24031,9 @@
 							"height": 16,
 							"defUid": 265,
 							"px": [112,128],
-							"fieldInstances": [{ "__identifier": "Enemy", "__type": "LocalEnum.Enemy", "__value": "Chinlin", "__tile": null, "defUid": 268, "realEditorValues": [{
+							"fieldInstances": [{ "__identifier": "Enemy", "__type": "LocalEnum.Enemy", "__value": "StarvingThornwolf", "__tile": null, "defUid": 268, "realEditorValues": [{
 								"id": "V_String",
-								"params": ["Chinlin"]
+								"params": ["StarvingThornwolf"]
 							}] }],
 							"__worldX": 816,
 							"__worldY": 928
@@ -24690,6 +24717,7 @@
 					"overrideTilesetUid": null,
 					"gridTiles": [],
 					"entityInstances": [
+							{"__identifier": "Trigger", "__grid": [0, 0], "__pivot": [0, 0], "__tags": [], "__tile": null, "__smartColor": "#7FB6FF", "iid": "c11a773e-e3b5-11f1-a27b-28d043bb8e9f", "width": 256, "height": 256, "defUid": 801, "px": [0, 0], "fieldInstances": [{"__identifier": "Node", "__type": "String", "__value": "big_book", "__tile": null, "defUid": 797, "realEditorValues": [{"id": "V_String", "params": ["big_book"]}]}, {"__identifier": "RequiresFlag", "__type": "String", "__value": "defeated_StarvingThornwolf >= 2", "__tile": null, "defUid": 798, "realEditorValues": [{"id": "V_String", "params": ["defeated_StarvingThornwolf >= 2"]}]}, {"__identifier": "ShowFromStage", "__type": "Int", "__value": null, "__tile": null, "defUid": 799, "realEditorValues": []}, {"__identifier": "HideFromStage", "__type": "Int", "__value": null, "__tile": null, "defUid": 800, "realEditorValues": []}], "__worldX": 960, "__worldY": 800},
 						{
 							"__identifier": "Critter",
 							"__grid": [8,10],
@@ -24702,9 +24730,9 @@
 							"height": 16,
 							"defUid": 265,
 							"px": [128,160],
-							"fieldInstances": [{ "__identifier": "Enemy", "__type": "LocalEnum.Enemy", "__value": "Chinlin", "__tile": null, "defUid": 268, "realEditorValues": [{
+							"fieldInstances": [{ "__identifier": "Enemy", "__type": "LocalEnum.Enemy", "__value": "StarvingThornwolf", "__tile": null, "defUid": 268, "realEditorValues": [{
 								"id": "V_String",
-								"params": ["Chinlin"]
+								"params": ["StarvingThornwolf"]
 							}] }],
 							"__worldX": 1088,
 							"__worldY": 960
@@ -24721,9 +24749,9 @@
 							"height": 16,
 							"defUid": 265,
 							"px": [128,80],
-							"fieldInstances": [{ "__identifier": "Enemy", "__type": "LocalEnum.Enemy", "__value": "Chinlin", "__tile": null, "defUid": 268, "realEditorValues": [{
+							"fieldInstances": [{ "__identifier": "Enemy", "__type": "LocalEnum.Enemy", "__value": "StarvingThornwolf", "__tile": null, "defUid": 268, "realEditorValues": [{
 								"id": "V_String",
-								"params": ["Chinlin"]
+								"params": ["StarvingThornwolf"]
 							}] }],
 							"__worldX": 1088,
 							"__worldY": 880
@@ -25400,6 +25428,26 @@
 					"overrideTilesetUid": null,
 					"gridTiles": [],
 					"entityInstances": [
+							{"__identifier": "Trigger", "__grid": [0, 0], "__pivot": [0, 0], "__tags": [], "__tile": null, "__smartColor": "#7FB6FF", "iid": "c11ab1f4-e3b5-11f1-8fad-28d043bb8e9f", "width": 256, "height": 256, "defUid": 801, "px": [0, 0], "fieldInstances": [{"__identifier": "Node", "__type": "String", "__value": "big_book", "__tile": null, "defUid": 797, "realEditorValues": [{"id": "V_String", "params": ["big_book"]}]}, {"__identifier": "RequiresFlag", "__type": "String", "__value": "defeated_StarvingThornwolf >= 2", "__tile": null, "defUid": 798, "realEditorValues": [{"id": "V_String", "params": ["defeated_StarvingThornwolf >= 2"]}]}, {"__identifier": "ShowFromStage", "__type": "Int", "__value": null, "__tile": null, "defUid": 799, "realEditorValues": []}, {"__identifier": "HideFromStage", "__type": "Int", "__value": null, "__tile": null, "defUid": 800, "realEditorValues": []}], "__worldX": 960, "__worldY": 544},
+							{
+								"__identifier": "Interactable",
+								"__grid": [4,2],
+								"__pivot": [0,0],
+								"__tags": [],
+								"__tile": null,
+								"__smartColor": "#E4A672",
+								"iid": "95a229e7-e3b3-11f1-9580-28d043bb8e9f",
+								"width": 16,
+								"height": 16,
+								"defUid": 277,
+								"px": [64,32],
+								"fieldInstances": [{ "__identifier": "MessageKey", "__type": "String", "__value": "Blue Lights", "__tile": null, "defUid": 278, "realEditorValues": [{
+									"id": "V_String",
+									"params": ["Blue Lights"]
+								}] }],
+								"__worldX": 1024,
+								"__worldY": 576
+							},
 						{
 							"__identifier": "Critter",
 							"__grid": [7,8],
@@ -25412,9 +25460,9 @@
 							"height": 16,
 							"defUid": 265,
 							"px": [112,128],
-							"fieldInstances": [{ "__identifier": "Enemy", "__type": "LocalEnum.Enemy", "__value": "Chinlin", "__tile": null, "defUid": 268, "realEditorValues": [{
+							"fieldInstances": [{ "__identifier": "Enemy", "__type": "LocalEnum.Enemy", "__value": "StarvingThornwolf", "__tile": null, "defUid": 268, "realEditorValues": [{
 								"id": "V_String",
-								"params": ["Chinlin"]
+								"params": ["StarvingThornwolf"]
 							}] }],
 							"__worldX": 1072,
 							"__worldY": 672
@@ -26084,6 +26132,7 @@
 					"overrideTilesetUid": null,
 					"gridTiles": [],
 					"entityInstances": [
+							{"__identifier": "Trigger", "__grid": [0, 0], "__pivot": [0, 0], "__tags": [], "__tile": null, "__smartColor": "#7FB6FF", "iid": "c11ae7e1-e3b5-11f1-90d7-28d043bb8e9f", "width": 256, "height": 256, "defUid": 801, "px": [0, 0], "fieldInstances": [{"__identifier": "Node", "__type": "String", "__value": "big_book", "__tile": null, "defUid": 797, "realEditorValues": [{"id": "V_String", "params": ["big_book"]}]}, {"__identifier": "RequiresFlag", "__type": "String", "__value": "defeated_StarvingThornwolf >= 2", "__tile": null, "defUid": 798, "realEditorValues": [{"id": "V_String", "params": ["defeated_StarvingThornwolf >= 2"]}]}, {"__identifier": "ShowFromStage", "__type": "Int", "__value": null, "__tile": null, "defUid": 799, "realEditorValues": []}, {"__identifier": "HideFromStage", "__type": "Int", "__value": null, "__tile": null, "defUid": 800, "realEditorValues": []}], "__worldX": 960, "__worldY": 288},
 						{
 							"__identifier": "Critter",
 							"__grid": [5,7],
@@ -26096,9 +26145,9 @@
 							"height": 16,
 							"defUid": 265,
 							"px": [80,112],
-							"fieldInstances": [{ "__identifier": "Enemy", "__type": "LocalEnum.Enemy", "__value": "Chinlin", "__tile": null, "defUid": 268, "realEditorValues": [{
+							"fieldInstances": [{ "__identifier": "Enemy", "__type": "LocalEnum.Enemy", "__value": "StarvingThornwolf", "__tile": null, "defUid": 268, "realEditorValues": [{
 								"id": "V_String",
-								"params": ["Chinlin"]
+								"params": ["StarvingThornwolf"]
 							}] }],
 							"__worldX": 1040,
 							"__worldY": 400
@@ -26115,9 +26164,9 @@
 							"height": 16,
 							"defUid": 265,
 							"px": [144,176],
-							"fieldInstances": [{ "__identifier": "Enemy", "__type": "LocalEnum.Enemy", "__value": "Chinlin", "__tile": null, "defUid": 268, "realEditorValues": [{
+							"fieldInstances": [{ "__identifier": "Enemy", "__type": "LocalEnum.Enemy", "__value": "StarvingThornwolf", "__tile": null, "defUid": 268, "realEditorValues": [{
 								"id": "V_String",
-								"params": ["Chinlin"]
+								"params": ["StarvingThornwolf"]
 							}] }],
 							"__worldX": 1104,
 							"__worldY": 464
@@ -26794,6 +26843,26 @@
 					"overrideTilesetUid": null,
 					"gridTiles": [],
 					"entityInstances": [
+							{"__identifier": "Trigger", "__grid": [0, 0], "__pivot": [0, 0], "__tags": [], "__tile": null, "__smartColor": "#7FB6FF", "iid": "c11b1b26-e3b5-11f1-8dbb-28d043bb8e9f", "width": 256, "height": 256, "defUid": 801, "px": [0, 0], "fieldInstances": [{"__identifier": "Node", "__type": "String", "__value": "big_book", "__tile": null, "defUid": 797, "realEditorValues": [{"id": "V_String", "params": ["big_book"]}]}, {"__identifier": "RequiresFlag", "__type": "String", "__value": "defeated_StarvingThornwolf >= 2", "__tile": null, "defUid": 798, "realEditorValues": [{"id": "V_String", "params": ["defeated_StarvingThornwolf >= 2"]}]}, {"__identifier": "ShowFromStage", "__type": "Int", "__value": null, "__tile": null, "defUid": 799, "realEditorValues": []}, {"__identifier": "HideFromStage", "__type": "Int", "__value": null, "__tile": null, "defUid": 800, "realEditorValues": []}], "__worldX": 704, "__worldY": 288},
+							{
+								"__identifier": "Interactable",
+								"__grid": [11,2],
+								"__pivot": [0,0],
+								"__tags": [],
+								"__tile": null,
+								"__smartColor": "#E4A672",
+								"iid": "95a25f7c-e3b3-11f1-a32b-28d043bb8e9f",
+								"width": 16,
+								"height": 16,
+								"defUid": 277,
+								"px": [176,32],
+								"fieldInstances": [{ "__identifier": "MessageKey", "__type": "String", "__value": "Stone Pillars", "__tile": null, "defUid": 278, "realEditorValues": [{
+									"id": "V_String",
+									"params": ["Stone Pillars"]
+								}] }],
+								"__worldX": 880,
+								"__worldY": 320
+							},
 						{
 							"__identifier": "Critter",
 							"__grid": [11,5],
@@ -26806,9 +26875,9 @@
 							"height": 16,
 							"defUid": 265,
 							"px": [176,80],
-							"fieldInstances": [{ "__identifier": "Enemy", "__type": "LocalEnum.Enemy", "__value": "Chinlin", "__tile": null, "defUid": 268, "realEditorValues": [{
+							"fieldInstances": [{ "__identifier": "Enemy", "__type": "LocalEnum.Enemy", "__value": "StarvingThornwolf", "__tile": null, "defUid": 268, "realEditorValues": [{
 								"id": "V_String",
-								"params": ["Chinlin"]
+								"params": ["StarvingThornwolf"]
 							}] }],
 							"__worldX": 880,
 							"__worldY": 368
@@ -26825,9 +26894,9 @@
 							"height": 16,
 							"defUid": 265,
 							"px": [80,80],
-							"fieldInstances": [{ "__identifier": "Enemy", "__type": "LocalEnum.Enemy", "__value": "Chicken", "__tile": null, "defUid": 268, "realEditorValues": [{
+							"fieldInstances": [{ "__identifier": "Enemy", "__type": "LocalEnum.Enemy", "__value": "StarvingThornwolf", "__tile": null, "defUid": 268, "realEditorValues": [{
 								"id": "V_String",
-								"params": ["Chicken"]
+								"params": ["StarvingThornwolf"]
 							}] }],
 							"__worldX": 784,
 							"__worldY": 368
@@ -26844,9 +26913,9 @@
 							"height": 16,
 							"defUid": 265,
 							"px": [64,128],
-							"fieldInstances": [{ "__identifier": "Enemy", "__type": "LocalEnum.Enemy", "__value": "Chicken", "__tile": null, "defUid": 268, "realEditorValues": [{
+							"fieldInstances": [{ "__identifier": "Enemy", "__type": "LocalEnum.Enemy", "__value": "StarvingThornwolf", "__tile": null, "defUid": 268, "realEditorValues": [{
 								"id": "V_String",
-								"params": ["Chicken"]
+								"params": ["StarvingThornwolf"]
 							}] }],
 							"__worldX": 768,
 							"__worldY": 416
@@ -26863,9 +26932,9 @@
 							"height": 16,
 							"defUid": 265,
 							"px": [144,144],
-							"fieldInstances": [{ "__identifier": "Enemy", "__type": "LocalEnum.Enemy", "__value": "Chicken", "__tile": null, "defUid": 268, "realEditorValues": [{
+							"fieldInstances": [{ "__identifier": "Enemy", "__type": "LocalEnum.Enemy", "__value": "StarvingThornwolf", "__tile": null, "defUid": 268, "realEditorValues": [{
 								"id": "V_String",
-								"params": ["Chicken"]
+								"params": ["StarvingThornwolf"]
 							}] }],
 							"__worldX": 848,
 							"__worldY": 432
