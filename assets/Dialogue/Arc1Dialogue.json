@@ -218,6 +218,140 @@
           ]
         },
         {
+          "node": "finn_spar_after",
+          "conditions": [
+            {
+              "type": "hasIntFlag",
+              "parameters": [
+                {
+                  "type": "flag",
+                  "value": "arc1_stage"
+                },
+                {
+                  "type": "op",
+                  "value": "=="
+                },
+                {
+                  "type": "value",
+                  "value": 9.0
+                }
+              ]
+            },
+            {
+              "type": "hasIntFlag",
+              "parameters": [
+                {
+                  "type": "flag",
+                  "value": "duel_won_Finn"
+                },
+                {
+                  "type": "op",
+                  "value": "=="
+                },
+                {
+                  "type": "value",
+                  "value": 1.0
+                }
+              ]
+            },
+            {
+              "type": "hasIntFlag",
+              "parameters": [
+                {
+                  "type": "flag",
+                  "value": "finn_spar"
+                },
+                {
+                  "type": "op",
+                  "value": "<"
+                },
+                {
+                  "type": "value",
+                  "value": 2.0
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "node": "finn_spar_again",
+          "conditions": [
+            {
+              "type": "hasIntFlag",
+              "parameters": [
+                {
+                  "type": "flag",
+                  "value": "arc1_stage"
+                },
+                {
+                  "type": "op",
+                  "value": "=="
+                },
+                {
+                  "type": "value",
+                  "value": 9.0
+                }
+              ]
+            },
+            {
+              "type": "hasIntFlag",
+              "parameters": [
+                {
+                  "type": "flag",
+                  "value": "finn_spar"
+                },
+                {
+                  "type": "op",
+                  "value": "=="
+                },
+                {
+                  "type": "value",
+                  "value": 1.0
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "node": "finn_spar",
+          "conditions": [
+            {
+              "type": "hasIntFlag",
+              "parameters": [
+                {
+                  "type": "flag",
+                  "value": "arc1_stage"
+                },
+                {
+                  "type": "op",
+                  "value": "=="
+                },
+                {
+                  "type": "value",
+                  "value": 9.0
+                }
+              ]
+            },
+            {
+              "type": "hasIntFlag",
+              "parameters": [
+                {
+                  "type": "flag",
+                  "value": "finn_spar"
+                },
+                {
+                  "type": "op",
+                  "value": "=="
+                },
+                {
+                  "type": "value",
+                  "value": 0.0
+                }
+              ]
+            }
+          ]
+        },
+        {
           "node": "finn_reveal",
           "conditions": [
             {
@@ -4287,6 +4421,184 @@
     "data": {
       "text": "dialogue.arc1.wolf_leave",
       "speaker": "Kira"
+    }
+  },
+  {
+    "node": "finn_spar",
+    "data": {
+      "text": "dialogue.arc1.finn_spar",
+      "speaker": "Finn",
+      "next": "finn_spar_2",
+      "commands": [
+        {
+          "type": "face",
+          "parameters": [
+            {
+              "type": "who",
+              "value": "Finn"
+            },
+            {
+              "type": "towards",
+              "value": "Player"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "node": "finn_spar_2",
+    "data": {
+      "text": "dialogue.arc1.finn_spar_2",
+      "speaker": "Finn",
+      "commands": [
+        {
+          "type": "setIntFlag",
+          "parameters": [
+            {
+              "type": "flag",
+              "value": "finn_spar"
+            },
+            {
+              "type": "value",
+              "value": 1.0
+            }
+          ]
+        },
+        {
+          "type": "startDuel",
+          "parameters": [
+            {
+              "type": "name",
+              "value": "Finn"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "node": "finn_spar_again",
+    "data": {
+      "text": "dialogue.arc1.finn_spar_again",
+      "speaker": "Finn",
+      "commands": [
+        {
+          "type": "face",
+          "parameters": [
+            {
+              "type": "who",
+              "value": "Finn"
+            },
+            {
+              "type": "towards",
+              "value": "Player"
+            }
+          ]
+        },
+        {
+          "type": "startDuel",
+          "parameters": [
+            {
+              "type": "name",
+              "value": "Finn"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "node": "finn_spar_after",
+    "data": {
+      "text": "dialogue.arc1.finn_spar_after",
+      "speaker": "Finn",
+      "next": "finn_spar_after_2",
+      "commands": [
+        {
+          "type": "face",
+          "parameters": [
+            {
+              "type": "who",
+              "value": "Finn"
+            },
+            {
+              "type": "towards",
+              "value": "Player"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "node": "finn_spar_after_2",
+    "data": {
+      "text": "dialogue.arc1.finn_spar_after_2",
+      "speaker": "Finn",
+      "next": "finn_spar_after_3",
+      "commands": [
+        {
+          "type": "giveItem",
+          "parameters": [
+            {
+              "type": "item",
+              "value": "Finn's Blade"
+            },
+            {
+              "type": "count",
+              "value": 1.0
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "node": "finn_spar_after_3",
+    "data": {
+      "text": "dialogue.arc1.finn_spar_after_3",
+      "speaker": "Kira",
+      "next": "finn_spar_after_4"
+    }
+  },
+  {
+    "node": "finn_spar_after_4",
+    "data": {
+      "text": "dialogue.arc1.finn_spar_after_4",
+      "speaker": "Finn",
+      "next": "finn_spar_after_5"
+    }
+  },
+  {
+    "node": "finn_spar_after_5",
+    "data": {
+      "text": "dialogue.arc1.finn_spar_after_5",
+      "speaker": "Kira",
+      "next": "finn_spar_after_6"
+    }
+  },
+  {
+    "node": "finn_spar_after_6",
+    "data": {
+      "text": "dialogue.arc1.finn_spar_after_6",
+      "speaker": "Finn",
+      "next": "finn_reveal_2",
+      "commands": [
+        {
+          "type": "setIntFlag",
+          "parameters": [
+            {
+              "type": "flag",
+              "value": "finn_spar"
+            },
+            {
+              "type": "value",
+              "value": 2.0
+            }
+          ]
+        }
+      ]
     }
   },
   {

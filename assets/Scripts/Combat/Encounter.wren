@@ -13,6 +13,7 @@
 //   Thomas's test (the same command once you're back from the hunt): Thomas himself, against you and Kira.
 //   The constructs, alone: read their timelines, Brace the heavy hit, then punish.
 //   The Warden (the "startBattle Warden" command): the boss, one statue whatever the level holds.
+//   Finn's sparring match (the "startDuel Finn" command, home from the shrine): call-outs only.
 //
 // A stage's lines come in three kinds: `intro` (a prompt box before the first selection - the clock is stopped
 // anyway), `outro` (after the stage is won) and call-outs raised from `onEvent` as the fight plays: host.say(text)
@@ -109,6 +110,7 @@ class Encounter {
         // Thomas: the lesson first; the test once the perimeter wolf is dealt with.
         if (challenger == "Thomas") return FlagManager.getIntFlag(LESSON_FLAG) >= 3 ? Encounter.thomasDuel : Encounter.thomasLessons
         if (challenger == "Warden") return Encounter.warden
+        if (challenger == "Finn") return Encounter.finnSpar
         return null
     }
 
@@ -212,6 +214,34 @@ class Encounter {
         var stage = EncounterStage.new([])
         stage.intro([["Thomas", "No dummies this time. The both of you, against me. Show me you'll come home."]])
         return Encounter.new("Thomas's test", [stage])
+    }
+
+    // --- Finn's sparring match (scene 11) -------------------------------------------------------
+    // Finn fights with the player's own kit and leaves big openings (Combat/Config/BattleCritter.finn). He calls out
+    // the two timings Thomas taught - hit then block, block then hit - and always catches Kira's first arrow with tongs.
+
+    static finnSpar {
+        var stage = EncounterStage.new([])
+        stage.onEvent(Fn.new { |host, event|
+            var type = event["type"]
+            var who = event["who"]
+            // A party hit on Finn: remember it for "hit, then block"; after a block, it's "block, then hit".
+            if (type == "hit" && who.side == 1 && event["by"].side == 0) {
+                if (host.marked("finn.blockedAt") && event["time"] - host.markOf("finn.blockedAt") < 2.5 && host.once("finn.blockThenHit")) {
+                    host.say("Finn: Block, then hit. Good. Thomas taught you something after all.")
+                }
+                host.mark("finn.hitAt", event["time"])
+            }
+            if (type == "block" && who.side == 0) {
+                if (host.marked("finn.hitAt") && event["time"] - host.markOf("finn.hitAt") < 2.5 && host.once("finn.hitThenBlock")) {
+                    host.say("Finn: Hit, then block. Good.")
+                }
+                host.mark("finn.blockedAt", event["time"])
+            }
+            // Kira's first arrow: Finn catches it with a pair of tongs, barely looking (his "catches" trait).
+            if (type == "caught") host.say("(Finn catches Kira's arrow with a pair of tongs, without looking up.)")
+        })
+        return Encounter.new("Sparring with Finn", [stage])
     }
 
     // --- the first wolves (scene 6) ---------------------------------------------------------

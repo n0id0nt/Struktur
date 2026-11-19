@@ -66,6 +66,8 @@ class Combatant {
     //   "reactive"     a Fn(move id) -> Move it starts whenever it is hit while idle (the swing-post's arm)
     //   "snaps"        a Fn -> Move it starts, when idle, as an opponent in that move's reach starts a chain (the
     //                  snap-post)
+    //   "catches"      the name of an opponent whose first hit it catches outright - no damage, a "caught" event
+    //                  (Finn and Kira's arrow)
     //   "natural"      [power, staggerMul] of a monster's natural weapon, used by every one of its moves
     //   "element"      a monster's attack element         "bodyElement"  a monster's body element (its "armour")
     //   "bleed"        its damaging hits add a Bleed stack

@@ -630,6 +630,12 @@ class BattleEngine {
             _rules.onDodge(target, attacker)
             return
         }
+        // The first hit from one named attacker is caught outright, whatever the timing (Finn's tongs - "catches").
+        if (target.has("catches") && target.trait("catches") == attacker.name && target.counter("caught") == 0) {
+            target.setCounter("caught", 1)
+            emit_("caught", target, {"by": attacker})
+            return
+        }
         var share = cell[2]
         var guard = target.stun > 0 ? 0 : target.guardNow
         var own = _rules.blockValue(target, guard)

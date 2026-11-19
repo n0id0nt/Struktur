@@ -345,13 +345,16 @@ class BattleCritter {
         return BattleCritter.fromNpc("Thomas").stats(110, 80, 12, 5, 6, 12).gear("armingsword", null, "padded").kit(["Step", "Slash", "Brace", "Pommel Strike"])
     }
 
-    // Master Finn, sparring: exactly the player's kit, holding back - big slow openings between his swings.
+    // Master Finn, sparring: exactly the player's kit, holding back - big slow openings between his swings, and his
+    // Slash pulled (a quarter of a real one's base damage, no Attack behind it), so you can see him choosing not to
+    // hurt you (First Arc Script, scene 11).
     static finn {
-        var def = BattleCritter.fromNpc("Finn").stats(180, 110, 14, 10, 10, 16).gear("armingsword", null, "leather")
+        // Mid-fight, barely looking, he catches Kira's first arrow with a pair of tongs.
+        var def = BattleCritter.fromNpc("Finn").stats(180, 110, 0, 10, 10, 16).gear("armingsword", null, "leather").trait("catches", "Kira")
         return def.kit(["Step", "Slash", "Brace"]).menu(Fn.new {
             var moves = {}
             moves["Step"] = Fn.new { Moves.get("Step", 1) }
-            moves["Slash"] = Fn.new { Moves.get("Slash", 1) }
+            moves["Slash"] = Fn.new { Moves.get("Slash", 1).attackFlat(0.5, 4, 0.3) }
             moves["Brace"] = Fn.new { Moves.get("Brace", 1) }
             var combos = {}
             combos["Measure"] = [["Step", "toward"], ["Wait", 1.2], ["Slash"], ["Brace"], ["Wait", 0.8]]

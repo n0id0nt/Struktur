@@ -949,6 +949,8 @@ class CombatState is BaseState {
             }
         } else if (type == "dodge") {
             pop_(who, "Dodged", COLOR_GOOD)
+        } else if (type == "caught") {
+            pop_(who, "Caught", COLOR_TELL)
         } else if (type == "heal") {
             var healed = event["amount"]
             pop_(who, "+%(healed)", COLOR_GOOD)

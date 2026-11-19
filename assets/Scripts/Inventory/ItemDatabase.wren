@@ -52,6 +52,8 @@ var ITEMS = {
     // Finn's practice sword: never in the inventory itself - Inventory/Equipment.wren always offers it.
     "Practice Sword": {"category": "weapon", "weaponType": "armingsword"},
     "Leather Armor": {"category": "armor", "bonuses": {"defence": 8}},
+    // Finn's old blade, after the sparring match (scene 11) - stamped with the anvil-and-mountain mark, and warm.
+    "Finn's Blade": {"category": "weapon", "weaponType": "armingsword", "bonuses": {"attack": 4}},
     "Old Map": {"category": "key", "opensTab": "map"},
     "Soul Fragment": {"category": "key", "collect": true}
 }
@@ -96,6 +98,7 @@ var ICONS = {
     "Special Ration": "Items/Food/Meat.png",
     "Village Key": "Items/Treasure/SilverKey.png",
     "Hunter's Bow": "Items/Weapons/Bow/Sprite.png",
+    "Finn's Blade": "Items/Weapons/Sword/Sprite.png",
     "Old Map": "Items/Scroll/Scroll.png",
     "Fragment Map": "Items/Scroll/Scroll.png",
     "Soul Fragment": "Items/Resource/GemPurple.png",

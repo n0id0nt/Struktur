@@ -19,7 +19,8 @@
         {"id": "hunt_wolf", "done": [{"flag": "defeated_StarvingThornwolf", "op": ">=", "value": 1}]},
         {"id": "report_thomas", "done": [{"flag": "thomas_lesson", "op": ">=", "value": 3}]},
         {"id": "pass_test", "done": [{"flag": "arc1_stage", "op": ">=", "value": 3}]}
-      ]
+      ],
+      "complete": [{"flag": "arc1_stage", "op": ">=", "value": 3}]
     },
     {
       "id": "the_old_shrine",

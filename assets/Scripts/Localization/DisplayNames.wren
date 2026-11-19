@@ -72,6 +72,7 @@ class DisplayNames {
             "Healing Herb": "item.healing_herb",
             "Bread Roll": "item.bread_roll",
             "Special Ration": "item.special_ration",
+            "Finn's Blade": "item.finns_blade",
             "Village Key": "item.village_key",
             "Hunter's Bow": "item.hunters_bow",
             "Leather Armor": "item.leather_armor",
