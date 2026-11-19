@@ -8,6 +8,9 @@
 // Once whatever it opens is open for good (its channel retired - Signals.retire, done by Door.wren) the plate goes
 // inactive: it stays down, greyed out, ignores whoever steps on it, and any party member left holding it down
 // (Member.staying) comes back to follow the party. Spawned by States/GameWorldState.wren.
+// A Hidden plate (the LDtk "Hidden" field) can't be seen - or pressed - without Soul Sight (World/SoulSight.wren): it
+// shows in the soul's colour while Soul Sight is on, and only counts as pressed then. It listens for the soulSight
+// event, so switching Soul Sight on while standing on it presses it.
 import "gameObjectComponents" for Sprite, PhysicsBody, RenderLayer
 import "renderer" for FlipBit
 import "math" for Vec2, Vec4
@@ -17,6 +20,9 @@ import "Util/Colors" for WHITE
 import "World/Signals" for Signals
 import "World/PressurePlates" for PressurePlates
 import "Party/Party" for Party
+import "World/SoulSight" for SoulSight
+import "Events/GameEvents" for GameEvents
+import "Util/SoulFx" for SoulFx
 
 // TilesetDungeon.png is a 12 x 4 grid of 16 px tiles; the button is the first two tiles of the second row.
 var UP_SPRITE_INDEX = 12
@@ -38,11 +44,14 @@ class PressurePlate {
         _channel = args["Channel"] != null ? args["Channel"] : args["Iid"]
         _occupants = {}   // entity id -> true, for everyone currently standing on it
         _inactive = false
+        _hidden = args["Hidden"] == true
+        _signalled = false   // what it last told its channel
     }
 
     name { _name }
     channel { _channel }
-    pressed { _occupants.count > 0 }
+    // Someone's on it - and, for a Hidden plate, Soul Sight shows it.
+    pressed { _occupants.count > 0 && (!_hidden || SoulSight.active) }
     inactive { _inactive }
 
     start() {
@@ -56,6 +65,24 @@ class PressurePlate {
                                       PhysicsBoxShape.new(SENSOR_HALF_SIZE, SENSOR_HALF_SIZE))
         body.isSensor = true
         body.setCollisionFilter(CollisionLayers.getLayer("Trigger"), CollisionLayers.getLayer("Actor"))
+        if (_hidden) showHidden_()
+    }
+
+    // A Hidden plate: invisible without Soul Sight, the soul's colour with it. The pressed / up tile still shows.
+    showHidden_() {
+        var sprite = Sprite.get(_entity)
+        if (sprite == null || _inactive) return
+        sprite.color = SoulSight.active ? SoulFx.tint : Vec4.new(255, 255, 255, 0)
+    }
+
+    // Pressed or not changed: the sprite and the channel follow.
+    refresh_() {
+        var now = pressed
+        Sprite.get(_entity).index = now ? PRESSED_SPRITE_INDEX : UP_SPRITE_INDEX
+        if (now != _signalled) {
+            _signalled = now
+            Signals.set(_channel, _entity, now)
+        }
     }
 
     update() {
@@ -79,6 +106,7 @@ class PressurePlate {
             }
         }
         _occupants = {}
+        _signalled = false
         Signals.set(_channel, _entity, false)
     }
 
@@ -91,6 +119,11 @@ class PressurePlate {
 
     // Contact events go to every script, so only the ones involving this plate count.
     onEvent(type, data) {
+        if (_hidden && !_inactive && type == GameEvents.soulSightType) {
+            showHidden_()
+            refresh_()
+            return
+        }
         if (_inactive || (type != "collisionEnter" && type != "collisionExit")) {
             return
         }
@@ -104,7 +137,6 @@ class PressurePlate {
             return
         }
 
-        var wasPressed = pressed
         if (type == "collisionEnter") {
             if (!_occupants.containsKey(other)) {
                 _occupants[other] = true
@@ -114,10 +146,7 @@ class PressurePlate {
             _occupants.remove(other)
             PressurePlates.track(other, -1)
         }
-        if (pressed != wasPressed) {
-            Sprite.get(_entity).index = pressed ? PRESSED_SPRITE_INDEX : UP_SPRITE_INDEX
-            Signals.set(_channel, _entity, pressed)
-        }
+        refresh_()
     }
 
     isInteractable() { false }

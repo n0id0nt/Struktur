@@ -38,6 +38,10 @@ import "World/ImpactEvents" for ImpactEvents
 import "World/Warps" for Warps
 import "World/StoryGates" for StoryGates
 import "World/StoryTriggers" for StoryTriggers
+import "World/SoulSight" for SoulSight
+import "UI/Gameplay/SoulSightOverlay" for SoulSightOverlay
+import "Util/SoulFx" for SoulFx
+import "Events/GameEvents" for GameEvents
 import "World/Npcs" for Npcs
 import "World/SpawnPoint" for SpawnPoint
 import "World/StageDirector" for StageDirector
@@ -63,6 +67,12 @@ var SPAWN_MAX_WAIT_FRAMES = 30
 // spawn point; OPENING_PLAYED_FLAG (saved) makes sure it only ever plays once.
 var OPENING_NODE = "opening"
 var OPENING_PLAYED_FLAG = "opening_played"
+// Soul Sight (World/SoulSight.wren): its screen tint's z index (under every other piece of UI), and the sparks the
+// player gives off while it's on - px above their feet, and sparks per second.
+var SOUL_OVERLAY_Z = -20
+var SOUL_LIGHT_HEIGHT = 14
+var SOUL_LIGHT_RATE = 14
+
 // Gap between followers lined up behind the player on a respawn.
 var RESPAWN_FOLLOWER_SPACING = 24.0
 // How far from the DoorWorp you arrive next to (towards the room's centre), so you don't land back on it.
@@ -225,6 +235,8 @@ class GameWorldState is BaseState {
         _spawnArrival = null     // {"iid", "frames"} while heading for a spawn point - see beginSpawnArrival_
         _openingPending = false  // a fresh save's opening conversation is waiting for the spawn arrival - see enter
         _arenaIndices = {}       // arena levels used so far (level index -> true) - kept loaded, see updateLevelStreaming_
+        _soulOverlay = null      // Soul Sight's screen tint (UI/Gameplay/SoulSightOverlay.wren)
+        _soulLight = null        // the sparks the player gives off while Soul Sight is on (Util/SoulFx.wren), a child entity
     }
 
     enter(stateManager, params) {
@@ -260,6 +272,9 @@ class GameWorldState is BaseState {
         // "Fight" prompt for non-aggressive critters, "Interact" prompt for everything else you can talk to / use.
         _view = FightPromptUI.new("Fight!")
         _talkView = InteractPromptUI.new("Interact")
+        // Soul Sight starts each session off (World/SoulSight.wren); its tint sits under every other piece of UI.
+        SoulSight.reset()
+        _soulOverlay = SoulSightOverlay.new(false, SOUL_OVERLAY_Z)
 
         // NPCs, signs, doors, pressure plates, items and critters are placed in the level (LDtk) - World::Level spawns
         // them with their scripts.
@@ -320,6 +335,12 @@ class GameWorldState is BaseState {
         // Banners (game events become them - onEvent) show over the world and dialogue, not over the inventory or a fight.
         var substate = _stateManager.currentState
         Notifications.update(substate == null || substate.name == "InteractState")
+        // Soul Sight's tint shows over the world, a conversation and an impact moment - a fight draws its own.
+        _soulOverlay.setShowing(substate == null || substate.name == "InteractState" || substate.name == "ImpactState")
+        _soulOverlay.update()
+
+        // Someone who joins mid-conversation ("joinParty") appears straight away, so the scene can walk them over.
+        if (substate != null && substate.name == "InteractState") syncPartyFollowers()
 
         // if substate return out here
         if (_stateManager.currentState) {
@@ -395,6 +416,9 @@ class GameWorldState is BaseState {
             openInventory()
             return
         }
+
+        // Soul Sight on / off (once the Heart has given it) - everything that shows it reacts to the soulSight event.
+        if (Input.isInputJustPressed(SoulSight.input)) SoulSight.toggle()
 
         // Debug: F6 / Select opens the battle test sandbox (States/BattleTestState.wren); its Back button returns here.
         if (Input.isInputJustPressed(BATTLE_TEST_INPUT)) {
@@ -684,6 +708,15 @@ class GameWorldState is BaseState {
         }
     }
 
+    // Soul Sight went on or off: the screen tint and the sparks off the player follow (the player entity is rebuilt
+    // on a respawn, so its spark emitter is made again when it has gone).
+    showSoulSight_(active) {
+        if (_soulOverlay != null) _soulOverlay.setActive(active)
+        if (_playerEntity == null || !GameObject.isValid(_playerEntity)) return
+        if (_soulLight == null || !GameObject.isValid(_soulLight)) _soulLight = SoulFx.lightEmitter(_playerEntity, SOUL_LIGHT_HEIGHT)
+        SoulFx.setLit(_soulLight, active ? SOUL_LIGHT_RATE : 0)
+    }
+
     // --- warps (GameObjects/DoorWorp.wren) -----------------------------------
     // The target room is loaded first so the DoorWorp leading back can be found; the party moves once it has
     // started (updateWarp_), a frame or two later.
@@ -878,6 +911,12 @@ class GameWorldState is BaseState {
             _talkView.teardown()
             _talkView = null
         }
+        if (_soulOverlay != null) {
+            _soulOverlay.teardown()
+            _soulOverlay = null
+        }
+        _soulLight = null   // destroyed with the player
+        SoulSight.reset()
         _gameMusic.stop()
         _gameMusic.unload()
         _gameMusic = null
@@ -889,6 +928,7 @@ class GameWorldState is BaseState {
         super.onEvent(type, data)
         // Game events (Events/GameEvents.wren) that deserve a banner - a quest moving on, an item received...
         Notifications.onEvent(type, data)
+        if (type == GameEvents.soulSightType) showSoulSight_(SoulSight.fromEvent(data))
         if (_stateManager && _stateManager.currentState) {
             _stateManager.currentState.onEvent(type, data)
         }

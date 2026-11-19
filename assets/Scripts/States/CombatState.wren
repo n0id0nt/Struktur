@@ -50,6 +50,11 @@ import "Localization/DisplayNames" for DisplayNames
 import "localization" for Localization
 import "debug" for Debug
 import "flags" for FlagManager
+import "World/SoulSight" for SoulSight
+import "Util/SoulFx" for SoulFx
+
+// Soul Step's untouchable moment shows as "Phased" rather than "Dodged".
+var SOUL_STEP = "Soul Step"
 
 var ENTER_TIME = 0.65       // arena sweep + battler slide-in
 var OVER_TIME = 1.8         // the closing line
@@ -958,7 +963,9 @@ class CombatState is BaseState {
                 pop_(who, "0", COLOR_TELL)
             }
         } else if (type == "dodge") {
-            pop_(who, "Dodged", COLOR_GOOD)
+            // Soul Step's untouchable moment: the blow goes straight through.
+            var soulStep = who.move != null && who.move.name == SOUL_STEP
+            pop_(who, soulStep ? Localization.get("combat.phased") : "Dodged", soulStep ? SoulFx.tint : COLOR_GOOD)
         } else if (type == "caught") {
             pop_(who, "Caught", COLOR_TELL)
         } else if (type == "heal") {
@@ -1025,17 +1032,20 @@ class CombatState is BaseState {
         for (combatant in _party) {
             if (combatant.read > read) read = combatant.read
         }
+        // Soul Sight (always on in a fight, once the player has it) sees this many seconds of the foes' future, past
+        // whatever the party's Read shows - see timelineRow_.
+        var reach = SoulSight.reach
         var rows = []
         for (combatant in _party) {
-            if (combatant.active) rows.add(timelineRow_(combatant, 2))
+            if (combatant.active) rows.add(timelineRow_(combatant, 2, 0))
         }
         for (foe in foes) {
-            if (foe.active) rows.add(timelineRow_(foe, read))
+            if (foe.active) rows.add(timelineRow_(foe, read, reach))
         }
         // While a chain is being built, the chooser's row marks the budget it has to reach - not on the main menu until
         // something has been picked, never while the clock runs.
         var building = _phase == "select" && _builder != null && (_mode != "menu" || _builder.count > 0)
-        _view.timeline.draw(rows, building ? _builder.budget : null)
+        _view.timeline.draw(rows, building ? _builder.budget : null, reach)
     }
 
     refreshCard_(card, combatant) {
@@ -1062,9 +1072,10 @@ class CombatState is BaseState {
     }
 
     // One combatant's row: a damage animation first if it is in one, the rest of its active move, then as much of
-    // its chain as may be seen (visible: 0 the active move only, 1 the next one too, 2 everything). The chooser's
-    // row previews the chain being built instead.
-    timelineRow_(combatant, visible) {
+    // its chain as may be seen (visible: 0 the active move only, 1 the next one too, 2 everything), then - foreseen,
+    // in the soul's colour - any further move that starts within `foresee` seconds (Soul Sight's reach), whole. The
+    // chooser's row previews the chain being built instead.
+    timelineRow_(combatant, visible, foresee) {
         var row = TimelineRow.new(combatant.name, combatant.side == 0, combatant == _chooser && _phase == "select")
         var endTime = 0
         if (combatant == _chooser && _phase == "select" && _builder != null) {
@@ -1080,6 +1091,10 @@ class CombatState is BaseState {
         var i = combatant.chainIndex + 1
         while (i <= last && i < combatant.chain.count) {
             endTime = row.addMove(combatant.chain[i].move, endTime, 0, false, false)
+            i = i + 1
+        }
+        while (i < combatant.chain.count && endTime < foresee) {
+            endTime = row.addForeseen(combatant.chain[i].move, endTime)
             i = i + 1
         }
         return row

@@ -16,7 +16,6 @@ class DialogueEntryPoints {
                 "HavenVillageChild": "child",
                 "Kira": "kira",
                 "Thomas": "thomas",
-                "Guide": "guide",
                 // The shrine chamber's three constructs, each guarding its own door.
                 "RunicConstuct1": "construct_1",
                 "RunicConstruct2": "construct_2",
@@ -44,6 +43,9 @@ class DialogueEntryPoints {
                 "WisperWoodsDoor": "wisperwood_door",
                 "WisperWoodsDoor2": "wisperwood_door",
                 "ShrineEntranceDoor": "shrine_door",
+                "ShrineSplitWall": "split_wall",
+                "ShrineHiddenDoor": "hidden_door",
+                "ShrineMemoryDoor": "memory_door",
 
                 // Whisperwood: the claw-marked tree (path), the blue lights (deep woods), the carved pillars (by the
                 // way out to the shrine courtyard).

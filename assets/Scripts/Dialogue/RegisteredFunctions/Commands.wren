@@ -15,6 +15,12 @@ import "World/StoryEvents" for StoryEvents
 import "World/StageDirector" for StageDirector
 import "Story/QuestLog" for QuestLog
 import "Events/GameEvents" for GameEvents
+import "GameObjects/Door" for Door
+import "World/SpawnPoint" for SpawnPoint
+import "World/Rooms" for Rooms
+
+// px above the crystal's centre that the soul fragment comes loose from ("soulFragment").
+var FRAGMENT_LIFT = 14
 
 class Commands {
     // A staging command's "wait" parameter: on unless it's 0 / false / "no" (JSON bools are avoided in dialogue
@@ -25,6 +31,17 @@ class Commands {
         if (value is Num) return value != 0
         if (value is Bool) return value
         return value != "no" && value != "false" && value != "0"
+    }
+
+    // The scripts of every loaded door called `doorName`. Script-spawned doors use their name as the entity identifier;
+    // doors placed in the level are all "Door".
+    static doorsNamed_(doorName) {
+        var doors = []
+        for (doorEntity in GameObject.getAllWithIdentifier(doorName) + GameObject.getAllWithIdentifier("Door")) {
+            var door = Script.getInstance(doorEntity)
+            if (door && door.name == doorName) doors.add(door)
+        }
+        return doors
     }
 
     static registerFunctions() {
@@ -110,6 +127,9 @@ class Commands {
         }
         // The named NPC joins the party: the standing NPC steps out of the overworld, and their follower appears
         // where they stood (States/GameWorldState.syncPartyFollowers does the spawning).
+        // "at" (optional): a Path or Marker name - the follower appears there instead (someone arriving through a door
+        // rather than standing in the room). The follower appears straight away, even mid-conversation, so a later
+        // node can walk them over (moveTo / moveToPlayer).
         DialogueRegistry.registerCommand("joinParty") { |params|
             var npcName = params["name"]
             var spawnPosition = null
@@ -117,9 +137,23 @@ class Commands {
                 spawnPosition = WorldTransform.getPosition(npcEntity)
                 GameObject.destroy(npcEntity)
             }
+            if (params["at"] != null) {
+                var spot = StageDirector.spotNamed(params["at"])
+                if (spot != null) spawnPosition = spot
+            }
             Party.join(npcName, spawnPosition)
             Debug.info("[Dialogue Command] Party joined by %(npcName)")
             Event.addEvent("joinParty", [["__type", "map"], ["name", npcName]])
+        }
+        // The named NPC leaves the party - their follower vanishes (best done off screen). Saved, so they stay gone
+        // after a reload until a "joinParty" brings them back.
+        DialogueRegistry.registerCommand("leaveParty") { |params|
+            Party.leave(params["name"])
+        }
+        // Where the player starts a session / wakes after a wipe from now on: the LDtk Spawn with this "iid", in the
+        // level "level" (World/SpawnPoint.wren) - so a scene that shuts the way back doesn't strand a reload behind it.
+        DialogueRegistry.registerCommand("setSpawnPoint") { |params|
+            SpawnPoint.set(params["iid"], params["level"])
         }
         // The arc is over: once this dialogue closes, the gameplay state shows the end-of-arc card (Story/ArcEnd.wren).
         DialogueRegistry.registerCommand("endArc") { |params|
@@ -157,18 +191,27 @@ class Commands {
             Debug.info("[Dialogue Command] Battle requested against %(foeName)")
         }
         // Opens every door with this name - its entity identifier (both halves of a double door - GameObjects/Door.wren)
-        // for good; the door saves that it's open.
+        // for good; the door saves that it's open. A Barrier lifts, even with its room not loaded (its flag clears).
         DialogueRegistry.registerCommand("openDoor") { |params|
             var doorName = params["name"]
-            // Script-spawned doors use their name as the entity identifier; doors placed in the level are all "Door".
-            var doorEntities = GameObject.getAllWithIdentifier(doorName) + GameObject.getAllWithIdentifier("Door")
-            for (doorEntity in doorEntities) {
-                var door = Script.getInstance(doorEntity)
-                if (door && door.name == doorName && !door.open) {
-                    door.openNow()
-                }
+            if (FlagManager.getFlag(Door.closedFlag(doorName))) {
+                FlagManager.setFlag(Door.closedFlag(doorName), false)
+                FlagManager.save("flags.sav")
+            }
+            for (door in Commands.doorsNamed_(doorName)) {
+                if (!door.open) door.openNow()
             }
             Debug.info("[Dialogue Command] Opened door %(doorName)")
+        }
+        // Drops every Barrier door with this name (GameObjects/Door.wren), and saves that it's down.
+        DialogueRegistry.registerCommand("closeDoor") { |params|
+            var doorName = params["name"]
+            FlagManager.setFlag(Door.closedFlag(doorName), true)
+            FlagManager.save("flags.sav")
+            for (door in Commands.doorsNamed_(doorName)) {
+                door.closeNow()
+            }
+            Debug.info("[Dialogue Command] Closed door %(doorName)")
         }
         // --- Staging (World/StageDirector.wren) ---------------------------------------------------------------
         // "who" is "Player", a party member or an NPC / Interactable name; "to" is an LDtk Path's (or Marker's) Name, or "Player". moveTo and
@@ -182,6 +225,18 @@ class Commands {
         // character it waits its turn, so the two chain: walk a Path, then come over to the player.
         DialogueRegistry.registerCommand("moveToPlayer") { |params|
             StageDirector.moveToPlayer(params["who"], params["speed"], Commands.waitParam_(params), params["animation"])
+        }
+        // Scene 9: the soul fragment drifts from "from" (a character / Interactable name - the shrine's crystal) into
+        // the player's chest (GameObjects/SoulFragment.wren), holding the conversation until it's in.
+        // "seconds" (optional, default 2.5): how long the drift takes.
+        DialogueRegistry.registerCommand("soulFragment") { |params|
+            var seconds = params["seconds"] is Num ? params["seconds"] : 2.5
+            var source = StageDirector.actor(params["from"])
+            if (source == null || Rooms.world == null) return
+            var from = WorldTransform.getPosition(source)
+            var entity = GameObject.create("SoulFragment", Rooms.world)
+            Script.createArg(entity, "SoulFragment", {"FromX": from.x, "FromY": from.y - FRAGMENT_LIFT, "Seconds": seconds})
+            StageDirector.wait(seconds + 0.3)
         }
         DialogueRegistry.registerCommand("teleport") { |params|
             StageDirector.teleport(params["who"], params["to"])

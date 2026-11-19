@@ -13,6 +13,8 @@
 //   questCompleted  a quest is complete           }
 //   movesRemoved    equipping a weapon took moves it can't use out of the loadout (Inventory/Equipment.wren) - the
 //                   inventory (States/InventoryState.wren) shows an alert and flags its Moves tab
+//   soulSight       Soul Sight was switched on or off (World/SoulSight.wren) - hidden doors and plates show or hide,
+//                   and the screen tint and the player's soul light follow (out in the world - a fight keeps its own)
 //
 // Each method names the event's type (the constants below) and builds its data as a map.
 import "events" for Event
@@ -24,6 +26,7 @@ var QUEST_STARTED = "questStarted"
 var QUEST_UPDATED = "questUpdated"
 var QUEST_COMPLETED = "questCompleted"
 var MOVES_REMOVED = "movesRemoved"
+var SOUL_SIGHT = "soulSight"
 
 class GameEvents {
     static itemReceivedType { ITEM_RECEIVED }
@@ -33,6 +36,12 @@ class GameEvents {
     static questUpdatedType { QUEST_UPDATED }
     static questCompletedType { QUEST_COMPLETED }
     static movesRemovedType { MOVES_REMOVED }
+    static soulSightType { SOUL_SIGHT }
+
+    // data: {"active": 1 or 0}
+    static soulSightChanged(active) {
+        Event.addEvent(SOUL_SIGHT, [["__type", "map"], ["active", active ? 1 : 0]])
+    }
 
     // data: {"item": id, "count": n}
     static itemReceived(id, count) {

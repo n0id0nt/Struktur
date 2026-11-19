@@ -113,6 +113,9 @@ class CombatUI {
         // The timeline's rows share the panel's whole height (TimelineUI: four rows fill it, more shrink to fit).
         _timeline = TimelineUI.new(_bar, BAR_PAD, BAR_PAD - 4, TIMELINE_WIDTH.min(commandX - BAR_PAD - 20), TIMELINE_ROWS, font,
             innerHeight + 2)
+        // Soul Sight's gradient and shimmers over the strip - their own UI root (and batch), at the strip's screen
+        // position: the bar hangs from the bottom of the screen.
+        _timeline.buildSoulLayer(BAR_PAD, gh - BAR_HEIGHT + BAR_PAD - 4)
         buildCommand_(font, commandX, innerHeight)
         // Battle log / call-outs: in the command area while the clock runs (the panel is hidden then), on a dark
         // well, word-wrapped - off the arena, so it never covers a fighter.
@@ -321,7 +324,10 @@ class CombatUI {
     onItemClick=(fn) { _onItemClick = fn }
     onItemFocus=(fn) { _onItemFocus = fn }
 
-    setVisible(visible) { _root.setVisible(visible) }
+    setVisible(visible) {
+        _root.setVisible(visible)
+        _timeline.setSoulVisible(visible)
+    }
 
     // A line on the banner. seconds: how long it stays (null = until replaced).
     setMessage(text) { setMessage(text, null) }
@@ -500,6 +506,7 @@ class CombatUI {
     // Every frame: floats the popups, clears a timed message.
     update() {
         var now = Time.unscaledTime
+        _timeline.animate()
         for (popup in _popups) {
             var start = popup["start"]
             if (start == null) continue
@@ -518,6 +525,10 @@ class CombatUI {
     }
 
     teardown() {
+        if (_timeline != null) {
+            _timeline.teardown()
+            _timeline = null
+        }
         if (_root != null) {
             UIManager.removeUIElement(_root)
             _root = null

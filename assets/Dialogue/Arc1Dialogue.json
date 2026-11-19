@@ -3351,6 +3351,252 @@
     }
   },
   {
+    "node": "kira_split",
+    "data": {
+      "next": "kira_split_2",
+      "commands": [
+        {
+          "type": "teleport",
+          "parameters": [
+            {
+              "type": "who",
+              "value": "Kira"
+            },
+            {
+              "type": "to",
+              "value": "KiraBehindTheWall"
+            }
+          ]
+        },
+        {
+          "type": "closeDoor",
+          "parameters": [
+            {
+              "type": "name",
+              "value": "ShrineSplitWall"
+            }
+          ]
+        },
+        {
+          "type": "cameraShake",
+          "parameters": []
+        }
+      ]
+    }
+  },
+  {
+    "node": "kira_split_2",
+    "data": {
+      "text": "dialogue.arc1.kira_split_2",
+      "next": "kira_split_3",
+      "commands": [
+        {
+          "type": "face",
+          "parameters": [
+            {
+              "type": "who",
+              "value": "Player"
+            },
+            {
+              "type": "towards",
+              "value": "down"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "node": "kira_split_3",
+    "data": {
+      "text": "dialogue.arc1.kira_split_3",
+      "speaker": "Kira",
+      "commands": [
+        {
+          "type": "leaveParty",
+          "parameters": [
+            {
+              "type": "name",
+              "value": "Kira"
+            }
+          ]
+        },
+        {
+          "type": "setIntFlag",
+          "parameters": [
+            {
+              "type": "flag",
+              "value": "kira_separated"
+            },
+            {
+              "type": "value",
+              "value": 1.0
+            }
+          ]
+        },
+        {
+          "type": "setSpawnPoint",
+          "parameters": [
+            {
+              "type": "iid",
+              "value": "fb8791e3-e3c1-11f1-9dc9-28d043bb8e9f"
+            },
+            {
+              "type": "level",
+              "value": "ShrineChamber"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "node": "split_wall",
+    "data": {
+      "text": "dialogue.arc1.split_wall"
+    }
+  },
+  {
+    "node": "kira_reunion",
+    "data": {
+      "next": "kira_reunion_walk",
+      "commands": [
+        {
+          "type": "joinParty",
+          "parameters": [
+            {
+              "type": "name",
+              "value": "Kira"
+            },
+            {
+              "type": "at",
+              "value": "KiraTumblesIn"
+            }
+          ]
+        },
+        {
+          "type": "setIntFlag",
+          "parameters": [
+            {
+              "type": "flag",
+              "value": "kira_separated"
+            },
+            {
+              "type": "value",
+              "value": 0.0
+            }
+          ]
+        },
+        {
+          "type": "openDoor",
+          "parameters": [
+            {
+              "type": "name",
+              "value": "ShrineSplitWall"
+            }
+          ]
+        },
+        {
+          "type": "wait",
+          "parameters": [
+            {
+              "type": "seconds",
+              "value": 0.2
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "node": "kira_reunion_walk",
+    "data": {
+      "next": "kira_reunion_2",
+      "commands": [
+        {
+          "type": "face",
+          "parameters": [
+            {
+              "type": "who",
+              "value": "Player"
+            },
+            {
+              "type": "towards",
+              "value": "right"
+            }
+          ]
+        },
+        {
+          "type": "moveToPlayer",
+          "parameters": [
+            {
+              "type": "who",
+              "value": "Kira"
+            },
+            {
+              "type": "speed",
+              "value": "run"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "node": "kira_reunion_2",
+    "data": {
+      "text": "dialogue.arc1.kira_reunion_2",
+      "speaker": "Kira",
+      "next": "kira_reunion_menu",
+      "commands": [
+        {
+          "type": "face",
+          "parameters": [
+            {
+              "type": "who",
+              "value": "Player"
+            },
+            {
+              "type": "towards",
+              "value": "Kira"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "node": "kira_reunion_menu",
+    "data": {
+      "text": "dialogue.arc1.kira_reunion_menu",
+      "speaker": "Kira",
+      "choices": [
+        {
+          "target": "kira_reunion_a1",
+          "text": "dialogue.arc1.kira_reunion_menu.choice1"
+        },
+        {
+          "target": "kira_reunion_a2",
+          "text": "dialogue.arc1.kira_reunion_menu.choice2"
+        }
+      ]
+    }
+  },
+  {
+    "node": "kira_reunion_a1",
+    "data": {
+      "text": "dialogue.arc1.kira_reunion_a1",
+      "speaker": "Kira"
+    }
+  },
+  {
+    "node": "kira_reunion_a2",
+    "data": {
+      "text": "dialogue.arc1.kira_reunion_a2",
+      "speaker": "Kira"
+    }
+  },
+  {
     "node": "construct_1",
     "data": {
       "targets": [
@@ -3562,13 +3808,220 @@
     }
   },
   {
-    "node": "guide",
+    "node": "heart",
     "data": {
-      "targets": [
+      "text": "dialogue.arc1.heart",
+      "next": "heart_2",
+      "commands": [
         {
-          "node": "guide_s12"
+          "type": "face",
+          "parameters": [
+            {
+              "type": "who",
+              "value": "Player"
+            },
+            {
+              "type": "towards",
+              "value": "ShrineCrystal"
+            }
+          ]
+        },
+        {
+          "type": "soulFragment",
+          "parameters": [
+            {
+              "type": "from",
+              "value": "ShrineCrystal"
+            },
+            {
+              "type": "seconds",
+              "value": 2.6
+            }
+          ]
         }
       ]
+    }
+  },
+  {
+    "node": "heart_2",
+    "data": {
+      "text": "dialogue.arc1.heart_2",
+      "next": "heart_3",
+      "commands": [
+        {
+          "type": "cameraShake",
+          "parameters": []
+        }
+      ]
+    }
+  },
+  {
+    "node": "heart_3",
+    "data": {
+      "text": "dialogue.arc1.heart_3",
+      "speaker": "Guide",
+      "next": "heart_menu"
+    }
+  },
+  {
+    "node": "heart_menu",
+    "data": {
+      "text": "dialogue.arc1.heart_menu",
+      "speaker": "Guide",
+      "choices": [
+        {
+          "target": "heart_a1",
+          "text": "dialogue.arc1.heart_menu.choice1"
+        },
+        {
+          "target": "heart_a2",
+          "text": "dialogue.arc1.heart_menu.choice2"
+        }
+      ]
+    }
+  },
+  {
+    "node": "heart_a1",
+    "data": {
+      "text": "dialogue.arc1.heart_a1",
+      "speaker": "Guide",
+      "next": "heart_memory"
+    }
+  },
+  {
+    "node": "heart_a2",
+    "data": {
+      "text": "dialogue.arc1.heart_a2",
+      "speaker": "Guide",
+      "next": "heart_memory"
+    }
+  },
+  {
+    "node": "heart_memory",
+    "data": {
+      "text": "dialogue.arc1.heart_memory",
+      "next": "heart_4"
+    }
+  },
+  {
+    "node": "heart_4",
+    "data": {
+      "text": "dialogue.arc1.heart_4",
+      "speaker": "Guide",
+      "next": "heart_sight",
+      "commands": [
+        {
+          "type": "setIntFlag",
+          "parameters": [
+            {
+              "type": "flag",
+              "value": "ability_soul_sight"
+            },
+            {
+              "type": "value",
+              "value": 1.0
+            }
+          ]
+        },
+        {
+          "type": "giveItem",
+          "parameters": [
+            {
+              "type": "item",
+              "value": "Soul Fragment"
+            },
+            {
+              "type": "count",
+              "value": 1.0
+            }
+          ]
+        },
+        {
+          "type": "setIntFlag",
+          "parameters": [
+            {
+              "type": "flag",
+              "value": "arc1_stage"
+            },
+            {
+              "type": "value",
+              "value": 7.0
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "node": "heart_sight",
+    "data": {
+      "text": "dialogue.arc1.heart_sight",
+      "next": "heart_5"
+    }
+  },
+  {
+    "node": "heart_5",
+    "data": {
+      "text": "dialogue.arc1.heart_5",
+      "speaker": "Guide",
+      "next": "heart_step",
+      "commands": [
+        {
+          "type": "unlockMove",
+          "parameters": [
+            {
+              "type": "name",
+              "value": "Soul Step"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "node": "heart_step",
+    "data": {
+      "text": "dialogue.arc1.heart_step"
+    }
+  },
+  {
+    "node": "hidden_door",
+    "data": {
+      "text": "dialogue.arc1.hidden_door",
+      "speaker": "Guide",
+      "next": "hidden_door_2"
+    }
+  },
+  {
+    "node": "hidden_door_2",
+    "data": {
+      "text": "dialogue.arc1.hidden_door_2",
+      "speaker": "Guide",
+      "next": "hidden_door_3"
+    }
+  },
+  {
+    "node": "hidden_door_3",
+    "data": {
+      "text": "dialogue.arc1.hidden_door_3",
+      "commands": [
+        {
+          "type": "openDoor",
+          "parameters": [
+            {
+              "type": "name",
+              "value": "ShrineHiddenDoor"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "node": "memory_door",
+    "data": {
+      "text": "dialogue.arc1.memory_door",
+      "speaker": "Guide"
     }
   },
   {
@@ -3598,7 +4051,7 @@
           ]
         },
         {
-          "node": "shrine_crystal_glow"
+          "node": "heart"
         }
       ]
     }
@@ -3613,222 +4066,6 @@
     "node": "shrine_crystal_dim",
     "data": {
       "text": "dialogue.arc1.shrine_crystal_dim"
-    }
-  },
-  {
-    "node": "guide_s12",
-    "data": {
-      "text": "dialogue.arc1.guide_s12",
-      "speaker": "Guide",
-      "next": "guide_s12_2"
-    }
-  },
-  {
-    "node": "guide_s12_2",
-    "data": {
-      "text": "dialogue.arc1.guide_s12_2",
-      "speaker": "Guide",
-      "next": "guide_s12_menu"
-    }
-  },
-  {
-    "node": "guide_s12_menu",
-    "data": {
-      "text": "dialogue.arc1.guide_s12_menu",
-      "choices": [
-        {
-          "target": "guide_a1",
-          "text": "dialogue.arc1.guide_s12_menu.choice1"
-        },
-        {
-          "target": "guide_a2",
-          "text": "dialogue.arc1.guide_s12_menu.choice2"
-        },
-        {
-          "target": "guide_a3",
-          "text": "dialogue.arc1.guide_s12_menu.choice3"
-        }
-      ],
-      "speaker": "Guide"
-    }
-  },
-  {
-    "node": "guide_a1",
-    "data": {
-      "text": "dialogue.arc1.guide_a1",
-      "speaker": "Guide",
-      "next": "guide_offer"
-    }
-  },
-  {
-    "node": "guide_a2",
-    "data": {
-      "text": "dialogue.arc1.guide_a2",
-      "speaker": "Guide",
-      "next": "guide_offer"
-    }
-  },
-  {
-    "node": "guide_a3",
-    "data": {
-      "text": "dialogue.arc1.guide_a3",
-      "speaker": "Guide",
-      "next": "guide_offer"
-    }
-  },
-  {
-    "node": "guide_offer",
-    "data": {
-      "text": "dialogue.arc1.guide_offer",
-      "speaker": "Guide",
-      "next": "guide_warn"
-    }
-  },
-  {
-    "node": "guide_warn",
-    "data": {
-      "text": "dialogue.arc1.guide_warn",
-      "speaker": "Guide",
-      "next": "guide_choice"
-    }
-  },
-  {
-    "node": "guide_choice",
-    "data": {
-      "text": "dialogue.arc1.guide_choice",
-      "choices": [
-        {
-          "target": "guide_fuse",
-          "text": "dialogue.arc1.guide_choice.choice1"
-        },
-        {
-          "target": "guide_q_power",
-          "text": "dialogue.arc1.guide_choice.choice2"
-        },
-        {
-          "target": "guide_q_why",
-          "text": "dialogue.arc1.guide_choice.choice3"
-        }
-      ],
-      "speaker": "Guide"
-    }
-  },
-  {
-    "node": "guide_q_power",
-    "data": {
-      "text": "dialogue.arc1.guide_q_power",
-      "speaker": "Guide",
-      "next": "guide_choice"
-    }
-  },
-  {
-    "node": "guide_q_why",
-    "data": {
-      "text": "dialogue.arc1.guide_q_why",
-      "speaker": "Guide",
-      "next": "guide_choice"
-    }
-  },
-  {
-    "node": "guide_fuse",
-    "data": {
-      "text": "dialogue.arc1.guide_fuse",
-      "next": "guide_fuse_2"
-    }
-  },
-  {
-    "node": "guide_fuse_2",
-    "data": {
-      "text": "dialogue.arc1.guide_fuse_2",
-      "commands": [
-        {
-          "type": "unlockMove",
-          "parameters": [
-            {
-              "type": "name",
-              "value": "Soul Step"
-            }
-          ]
-        },
-        {
-          "type": "giveItem",
-          "parameters": [
-            {
-              "type": "item",
-              "value": "Soul Fragment"
-            },
-            {
-              "type": "count",
-              "value": 1.0
-            }
-          ]
-        },
-        {
-          "type": "setIntFlag",
-          "parameters": [
-            {
-              "type": "flag",
-              "value": "ability_soul_sight"
-            },
-            {
-              "type": "value",
-              "value": 1.0
-            }
-          ]
-        },
-        {
-          "type": "setIntFlag",
-          "parameters": [
-            {
-              "type": "flag",
-              "value": "ability_healing"
-            },
-            {
-              "type": "value",
-              "value": 1.0
-            }
-          ]
-        },
-        {
-          "type": "setIntFlag",
-          "parameters": [
-            {
-              "type": "flag",
-              "value": "ability_truth_sense"
-            },
-            {
-              "type": "value",
-              "value": 1.0
-            }
-          ]
-        },
-        {
-          "type": "setIntFlag",
-          "parameters": [
-            {
-              "type": "flag",
-              "value": "ability_ancient_knowledge"
-            },
-            {
-              "type": "value",
-              "value": 1.0
-            }
-          ]
-        },
-        {
-          "type": "setIntFlag",
-          "parameters": [
-            {
-              "type": "flag",
-              "value": "arc1_stage"
-            },
-            {
-              "type": "value",
-              "value": 7.0
-            }
-          ]
-        }
-      ]
     }
   },
   {

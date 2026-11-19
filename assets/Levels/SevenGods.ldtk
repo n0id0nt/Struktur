@@ -11,7 +11,7 @@
 	"iid": "41438cf0-bde0-11f1-b533-6fad8cb2a972",
 	"jsonVersion": "1.5.3",
 	"appBuildId": 473703,
-	"nextUid": 802,
+	"nextUid": 803,
 	"identifierStyle": "Capitalize",
 	"toc": [],
 	"worldLayout": "Free",
@@ -10252,7 +10252,7 @@
 			"limitBehavior": "MoveLastOne",
 			"pivotX": 0,
 			"pivotY": 0,
-			"fieldDefs": []
+			"fieldDefs": [{"identifier": "Hidden", "doc": "Only seen - and only pressed - while Soul Sight is on.", "__type": "Bool", "uid": 802, "type": "F_Bool", "isArray": false, "canBeNull": false, "arrayMinLength": null, "arrayMaxLength": null, "editorDisplayMode": "NameAndValue", "editorDisplayScale": 1, "editorDisplayPos": "Above", "editorLinkStyle": "StraightArrow", "editorDisplayColor": null, "editorAlwaysShow": false, "editorShowInWorld": true, "editorCutLongValues": true, "editorTextSuffix": null, "editorTextPrefix": null, "useForSmartColor": false, "exportToToc": false, "searchable": false, "min": null, "max": null, "regex": null, "acceptFileTypes": null, "defaultOverride": null, "textLanguageMode": null, "symmetricalRef": false, "autoChainRef": true, "allowOutOfLevelRef": true, "allowedRefs": "OnlySame", "allowedRefsEntityUid": null, "allowedRefTags": [], "tilesetUid": null}]
 		},
 		{
 			"identifier": "Interactable",
@@ -11276,7 +11276,9 @@
 			{ "id": "Key", "tileRect": null, "color": 12470831 },
 			{ "id": "PressurePad", "tileRect": null, "color": 14120515 },
 			{ "id": "Dialogue", "tileRect": null, "color": 15389866 },
-			{ "id": "GameEvent", "tileRect": null, "color": 14984818 }
+			{ "id": "GameEvent", "tileRect": null, "color": 14984818 },
+					{ "id": "Barrier", "tileRect": null, "color": 9474192 },
+					{ "id": "Hidden", "tileRect": null, "color": 5291007 }
 		], "iconTilesetUid": null, "externalRelPath": null, "externalFileChecksum": null, "tags": [] },
 		{ "identifier": "Directions", "uid": 306, "values": [
 			{ "id": "North", "tileRect": null, "color": 12470831 },
@@ -28517,6 +28519,8 @@
 					"overrideTilesetUid": null,
 					"gridTiles": [],
 					"entityInstances": [
+							{"__identifier": "WayPoint", "__grid": [7, 2], "__pivot": [0, 0], "__tags": [], "__tile": null, "__smartColor": "#FEE761", "iid": "fb883b9d-e3c1-11f1-ac34-28d043bb8e9f", "width": 16, "height": 16, "defUid": 790, "px": [120, 40], "fieldInstances": [], "__worldX": 824, "__worldY": -216},
+							{"__identifier": "Path", "__grid": [6, 2], "__pivot": [0, 0], "__tags": [], "__tile": null, "__smartColor": "#FEAE34", "iid": "fb883c2a-e3c1-11f1-b356-28d043bb8e9f", "width": 16, "height": 16, "defUid": 788, "px": [104, 40], "fieldInstances": [{"__identifier": "Name", "__type": "String", "__value": "KiraBehindTheWall", "__tile": null, "defUid": 791, "realEditorValues": [{"id": "V_String", "params": ["KiraBehindTheWall"]}]}, {"__identifier": "Entity_ref", "__type": "Array<EntityRef>", "__value": [{"entityIid": "fb883b9d-e3c1-11f1-ac34-28d043bb8e9f", "layerIid": "62f3e3f4-bde0-11f1-99f1-533c93ff349f", "levelIid": "62f3e3f0-bde0-11f1-99f1-553a65c52e4e", "worldIid": "4143b400-bde0-11f1-b533-5302ffc7fc1c"}], "__tile": null, "defUid": 789, "realEditorValues": [{"id": "V_String", "params": ["fb883b9d-e3c1-11f1-ac34-28d043bb8e9f"]}]}, {"__identifier": "PathFollowType", "__type": "LocalEnum.PathFollowType", "__value": "Once", "__tile": null, "defUid": 793, "realEditorValues": [{"id": "V_String", "params": ["Once"]}]}], "__worldX": 808, "__worldY": -216},
 						{
 							"__identifier": "DoorWorp",
 							"__grid": [7,15],
@@ -29136,6 +29140,10 @@
 					"overrideTilesetUid": null,
 					"gridTiles": [],
 					"entityInstances": [
+							{"__identifier": "Door", "__grid": [6, 14], "__pivot": [0, 0], "__tags": [], "__tile": null, "__smartColor": "#D77643", "iid": "fb87fd14-e3c1-11f1-af33-28d043bb8e9f", "width": 32, "height": 32, "defUid": 274, "px": [96, 224], "fieldInstances": [{"__identifier": "Name", "__type": "String", "__value": "ShrineSplitWall", "__tile": null, "defUid": 787, "realEditorValues": [{"id": "V_String", "params": ["ShrineSplitWall"]}]}, {"__identifier": "DoorType", "__type": "LocalEnum.DoorType", "__value": "Barrier", "__tile": null, "defUid": 286, "realEditorValues": [{"id": "V_String", "params": ["Barrier"]}]}, {"__identifier": "KeyRefs", "__type": "Array<EntityRef>", "__value": [], "__tile": null, "defUid": 287, "realEditorValues": []}, {"__identifier": "KeyIds", "__type": "Array<String>", "__value": [], "__tile": null, "defUid": 786, "realEditorValues": []}], "__worldX": 800, "__worldY": -288},
+							{"__identifier": "Door", "__grid": [8, 14], "__pivot": [0, 0], "__tags": [], "__tile": null, "__smartColor": "#D77643", "iid": "fb87fd74-e3c1-11f1-bc54-28d043bb8e9f", "width": 32, "height": 32, "defUid": 274, "px": [128, 224], "fieldInstances": [{"__identifier": "Name", "__type": "String", "__value": "ShrineSplitWall", "__tile": null, "defUid": 787, "realEditorValues": [{"id": "V_String", "params": ["ShrineSplitWall"]}]}, {"__identifier": "DoorType", "__type": "LocalEnum.DoorType", "__value": "Barrier", "__tile": null, "defUid": 286, "realEditorValues": [{"id": "V_String", "params": ["Barrier"]}]}, {"__identifier": "KeyRefs", "__type": "Array<EntityRef>", "__value": [], "__tile": null, "defUid": 287, "realEditorValues": []}, {"__identifier": "KeyIds", "__type": "Array<String>", "__value": [], "__tile": null, "defUid": 786, "realEditorValues": []}], "__worldX": 832, "__worldY": -288},
+							{"__identifier": "Spawn", "__grid": [7, 11], "__pivot": [0, 0], "__tags": [], "__tile": null, "__smartColor": "#63C74D", "iid": "fb8791e3-e3c1-11f1-9dc9-28d043bb8e9f", "width": 16, "height": 16, "defUid": 370, "px": [120, 184], "fieldInstances": [], "__worldX": 824, "__worldY": -328},
+							{"__identifier": "Trigger", "__grid": [1, 11], "__pivot": [0, 0], "__tags": [], "__tile": null, "__smartColor": "#7FB6FF", "iid": "fb87fdc5-e3c1-11f1-8604-28d043bb8e9f", "width": 224, "height": 32, "defUid": 801, "px": [16, 176], "fieldInstances": [{"__identifier": "Node", "__type": "String", "__value": "kira_split", "__tile": null, "defUid": 797, "realEditorValues": [{"id": "V_String", "params": ["kira_split"]}]}, {"__identifier": "RequiresFlag", "__type": "String", "__value": null, "__tile": null, "defUid": 798, "realEditorValues": []}, {"__identifier": "ShowFromStage", "__type": "Int", "__value": null, "__tile": null, "defUid": 799, "realEditorValues": []}, {"__identifier": "HideFromStage", "__type": "Int", "__value": null, "__tile": null, "defUid": 800, "realEditorValues": []}], "__worldX": 720, "__worldY": -336},
 						{
 							"__identifier": "Door",
 							"__grid": [11,9],
@@ -29790,29 +29798,8 @@
 					"overrideTilesetUid": null,
 					"gridTiles": [],
 					"entityInstances": [
-						{
-							"__identifier": "NPC",
-							"__grid": [11,8],
-							"__pivot": [0,0],
-							"__tags": [],
-							"__tile": null,
-							"__smartColor": "#0099DB",
-							"iid": "b7a83f20-bde0-11f1-99f1-3fbb8a0baaa7",
-							"width": 16,
-							"height": 16,
-							"defUid": 270,
-							"px": [176,128],
-							"fieldInstances": [
-								{ "__identifier": "Name", "__type": "String", "__value": "Guide", "__tile": null, "defUid": 271, "realEditorValues": [{
-									"id": "V_String",
-									"params": ["Guide"]
-								}] },
-								{ "__identifier": "Versions", "__type": "Array<Int>", "__value": [], "__tile": null, "defUid": 369, "realEditorValues": [] },
-								{ "__identifier": "Entity_ref", "__type": "EntityRef", "__value": null, "__tile": null, "defUid": 794, "realEditorValues": [] }
-							],
-							"__worldX": 880,
-							"__worldY": -640
-						},
+							{"__identifier": "Door", "__grid": [14, 6], "__pivot": [0, 0], "__tags": [], "__tile": null, "__smartColor": "#D77643", "iid": "a8237eea-e3cc-11f1-9fa3-28d043bb8e9f", "width": 32, "height": 32, "defUid": 274, "px": [224, 96], "fieldInstances": [{"__identifier": "Name", "__type": "String", "__value": "ShrineHiddenDoor", "__tile": null, "defUid": 787, "realEditorValues": [{"id": "V_String", "params": ["ShrineHiddenDoor"]}]}, {"__identifier": "DoorType", "__type": "LocalEnum.DoorType", "__value": "Hidden", "__tile": null, "defUid": 286, "realEditorValues": [{"id": "V_String", "params": ["Hidden"]}]}, {"__identifier": "KeyRefs", "__type": "Array<EntityRef>", "__value": [], "__tile": null, "defUid": 287, "realEditorValues": []}, {"__identifier": "KeyIds", "__type": "Array<String>", "__value": [], "__tile": null, "defUid": 786, "realEditorValues": []}], "__worldX": 928, "__worldY": -672},
+							{"__identifier": "Door", "__grid": [14, 8], "__pivot": [0, 0], "__tags": [], "__tile": null, "__smartColor": "#D77643", "iid": "a823e393-e3cc-11f1-a2e9-28d043bb8e9f", "width": 32, "height": 32, "defUid": 274, "px": [224, 128], "fieldInstances": [{"__identifier": "Name", "__type": "String", "__value": "ShrineHiddenDoor", "__tile": null, "defUid": 787, "realEditorValues": [{"id": "V_String", "params": ["ShrineHiddenDoor"]}]}, {"__identifier": "DoorType", "__type": "LocalEnum.DoorType", "__value": "Hidden", "__tile": null, "defUid": 286, "realEditorValues": [{"id": "V_String", "params": ["Hidden"]}]}, {"__identifier": "KeyRefs", "__type": "Array<EntityRef>", "__value": [], "__tile": null, "defUid": 287, "realEditorValues": []}, {"__identifier": "KeyIds", "__type": "Array<String>", "__value": [], "__tile": null, "defUid": 786, "realEditorValues": []}], "__worldX": 928, "__worldY": -640},
 						{
 							"__identifier": "Interactable",
 							"__grid": [7,7],
@@ -30267,6 +30254,9 @@
 					"overrideTilesetUid": null,
 					"gridTiles": [],
 					"entityInstances": [
+							{"__identifier": "PressurePad", "__grid": [11, 8], "__pivot": [0, 0], "__tags": [], "__tile": null, "__smartColor": "#EAD4AA", "iid": "a8241e81-e3cc-11f1-bce0-28d043bb8e9f", "width": 16, "height": 16, "defUid": 275, "px": [176, 128], "fieldInstances": [{"__identifier": "Hidden", "__type": "Bool", "__value": true, "__tile": null, "defUid": 802, "realEditorValues": [{"id": "V_Bool", "params": [true]}]}], "__worldX": 1136, "__worldY": -640},
+							{"__identifier": "Door", "__grid": [6, 0], "__pivot": [0, 0], "__tags": [], "__tile": null, "__smartColor": "#D77643", "iid": "a8241f0b-e3cc-11f1-a7b8-28d043bb8e9f", "width": 32, "height": 32, "defUid": 274, "px": [96, 0], "fieldInstances": [{"__identifier": "Name", "__type": "String", "__value": "ShrineMemoryDoor", "__tile": null, "defUid": 787, "realEditorValues": [{"id": "V_String", "params": ["ShrineMemoryDoor"]}]}, {"__identifier": "DoorType", "__type": "LocalEnum.DoorType", "__value": "PressurePad", "__tile": null, "defUid": 286, "realEditorValues": [{"id": "V_String", "params": ["PressurePad"]}]}, {"__identifier": "KeyRefs", "__type": "Array<EntityRef>", "__value": [{"entityIid": "a8241e81-e3cc-11f1-bce0-28d043bb8e9f", "layerIid": "6edc5b84-bde0-11f1-99f1-b77d79945688", "levelIid": "6edc5b80-bde0-11f1-99f1-63a4d311c04f", "worldIid": "4143b400-bde0-11f1-b533-5302ffc7fc1c"}], "__tile": null, "defUid": 287, "realEditorValues": [{"id": "V_String", "params": ["a8241e81-e3cc-11f1-bce0-28d043bb8e9f"]}]}, {"__identifier": "KeyIds", "__type": "Array<String>", "__value": [], "__tile": null, "defUid": 786, "realEditorValues": []}], "__worldX": 1056, "__worldY": -768},
+							{"__identifier": "Door", "__grid": [8, 0], "__pivot": [0, 0], "__tags": [], "__tile": null, "__smartColor": "#D77643", "iid": "a8241f4a-e3cc-11f1-903a-28d043bb8e9f", "width": 32, "height": 32, "defUid": 274, "px": [128, 0], "fieldInstances": [{"__identifier": "Name", "__type": "String", "__value": "ShrineMemoryDoor", "__tile": null, "defUid": 787, "realEditorValues": [{"id": "V_String", "params": ["ShrineMemoryDoor"]}]}, {"__identifier": "DoorType", "__type": "LocalEnum.DoorType", "__value": "PressurePad", "__tile": null, "defUid": 286, "realEditorValues": [{"id": "V_String", "params": ["PressurePad"]}]}, {"__identifier": "KeyRefs", "__type": "Array<EntityRef>", "__value": [{"entityIid": "a8241e81-e3cc-11f1-bce0-28d043bb8e9f", "layerIid": "6edc5b84-bde0-11f1-99f1-b77d79945688", "levelIid": "6edc5b80-bde0-11f1-99f1-63a4d311c04f", "worldIid": "4143b400-bde0-11f1-b533-5302ffc7fc1c"}], "__tile": null, "defUid": 287, "realEditorValues": [{"id": "V_String", "params": ["a8241e81-e3cc-11f1-bce0-28d043bb8e9f"]}]}, {"__identifier": "KeyIds", "__type": "Array<String>", "__value": [], "__tile": null, "defUid": 786, "realEditorValues": []}], "__worldX": 1088, "__worldY": -768},
 						{
 							"__identifier": "Interactable",
 							"__grid": [7,7],
@@ -30861,6 +30851,9 @@
 					"overrideTilesetUid": null,
 					"gridTiles": [],
 					"entityInstances": [
+							{"__identifier": "WayPoint", "__grid": [15, 14], "__pivot": [0, 0], "__tags": [], "__tile": null, "__smartColor": "#FEE761", "iid": "fb8874cb-e3c1-11f1-8ce0-28d043bb8e9f", "width": 16, "height": 16, "defUid": 790, "px": [248, 232], "fieldInstances": [], "__worldX": 1080, "__worldY": -792},
+							{"__identifier": "Path", "__grid": [14, 14], "__pivot": [0, 0], "__tags": [], "__tile": null, "__smartColor": "#FEAE34", "iid": "fb887527-e3c1-11f1-a085-28d043bb8e9f", "width": 16, "height": 16, "defUid": 788, "px": [232, 232], "fieldInstances": [{"__identifier": "Name", "__type": "String", "__value": "KiraTumblesIn", "__tile": null, "defUid": 791, "realEditorValues": [{"id": "V_String", "params": ["KiraTumblesIn"]}]}, {"__identifier": "Entity_ref", "__type": "Array<EntityRef>", "__value": [{"entityIid": "fb8874cb-e3c1-11f1-8ce0-28d043bb8e9f", "layerIid": "7a7f0694-bde0-11f1-99f1-29de9cfaab6b", "levelIid": "7a7f0690-bde0-11f1-99f1-81f489016522", "worldIid": "4143b400-bde0-11f1-b533-5302ffc7fc1c"}], "__tile": null, "defUid": 789, "realEditorValues": [{"id": "V_String", "params": ["fb8874cb-e3c1-11f1-8ce0-28d043bb8e9f"]}]}, {"__identifier": "PathFollowType", "__type": "LocalEnum.PathFollowType", "__value": "Once", "__tile": null, "defUid": 793, "realEditorValues": [{"id": "V_String", "params": ["Once"]}]}], "__worldX": 1064, "__worldY": -792},
+							{"__identifier": "Trigger", "__grid": [1, 10], "__pivot": [0, 0], "__tags": [], "__tile": null, "__smartColor": "#7FB6FF", "iid": "fb887557-e3c1-11f1-b92b-28d043bb8e9f", "width": 480, "height": 48, "defUid": 801, "px": [16, 160], "fieldInstances": [{"__identifier": "Node", "__type": "String", "__value": "kira_reunion", "__tile": null, "defUid": 797, "realEditorValues": [{"id": "V_String", "params": ["kira_reunion"]}]}, {"__identifier": "RequiresFlag", "__type": "String", "__value": "kira_separated == 1", "__tile": null, "defUid": 798, "realEditorValues": [{"id": "V_String", "params": ["kira_separated == 1"]}]}, {"__identifier": "ShowFromStage", "__type": "Int", "__value": null, "__tile": null, "defUid": 799, "realEditorValues": []}, {"__identifier": "HideFromStage", "__type": "Int", "__value": null, "__tile": null, "defUid": 800, "realEditorValues": []}], "__worldX": 848, "__worldY": -864},
 						{
 							"__identifier": "Door",
 							"__grid": [15,0],

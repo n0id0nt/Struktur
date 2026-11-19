@@ -8,7 +8,8 @@
 //     combatant is - so the clip, the hit and the timeline are one thing, and pausing game time freezes all of it;
 //   - a combatant in a damage animation plays its hurt clip; an idle or holding one idles;
 //   - the sprite slides to the combatant's cell whenever that changes, leans into an attack around its impact, and
-//     is tinted by what it is doing: guarding (blue, strongest at the peak), dodging (ghosted), Exposed (gold),
+//     is tinted by what it is doing: guarding (blue, strongest at the peak), dodging (ghosted - Soul Step turns it
+//     into flickering soul light, pouring off sparks: Util/SoulFx.wren), Exposed (gold),
 //     staggered (red), burning / chilled.
 // A def may carry a weapon layer (def.weaponTexturePath): a second sheet with the same grid, drawn over the body
 // frame for frame. Every hit that lands on it throws up a cloud of dust coloured by the blow's element
@@ -24,6 +25,7 @@ import "app" for Time
 import "Util/Colors" for WHITE
 import "Combat/Config/SheetAnims" for SheetAnims
 import "Combat/Config/MoveParticles" for MoveParticles
+import "Util/SoulFx" for SoulFx
 
 var SLIDE_SPEED = 260        // px per second between cells
 var LEAN = 7                 // px an attack leans toward its target at impact
@@ -33,6 +35,11 @@ var EXPOSED_TINT = Vec4.new(255, 225, 110, 255)
 var BURN_TINT = Vec4.new(255, 170, 90, 255)
 var CHILL_TINT = Vec4.new(150, 215, 255, 255)
 var DEFEAT_TIME = 0.9
+// Soul Step's untouchable moment: the move's name, how many soul sparks a second pour off the battler, and how high
+// (px above its feet) they rise from.
+var SOUL_STEP = "Soul Step"
+var SOUL_SPARK_RATE = 45
+var SOUL_SPARK_HEIGHT = 20
 var CLOUD_HEIGHT = 8         // px above the feet that a hit cloud bursts from (low enough for a small wolf)
 var CLOUD_FULL_DAMAGE = 40   // a hit this hard (or harder) throws up the biggest cloud
 var TEXT_HEIGHT = 46         // px above the feet that floating text starts from (clear of the player's head)
@@ -262,9 +269,26 @@ class Battler {
         } else if (combatant.chill > 0 || combatant.frozen > 0) {
             color = Battler.mix_(_base, CHILL_TINT, combatant.frozen > 0 ? 1 : 0.6)
         }
-        if (combatant.dodgingNow) color = Vec4.new(color.x, color.y, color.z, 120)
+        // Dodging ghosts the battler; Soul Step's dodge turns it into flickering soul light, pouring off sparks.
+        var soulStepping = combatant.dodgingNow && move != null && move.name == SOUL_STEP
+        if (soulStepping) {
+            var tint = SoulFx.tint
+            color = Vec4.new(tint.x, tint.y, tint.z, 125 + (35 * (now * 30).sin).round)
+        } else if (combatant.dodgingNow) {
+            color = Vec4.new(color.x, color.y, color.z, 120)
+        }
+        showSoulStep_(soulStepping)
         setColor_(color)
         syncWeapon_()
+    }
+
+    // The soul sparks of a Soul Step: their emitter is made the first time one is needed, and only told when they
+    // start or stop.
+    showSoulStep_(on) {
+        if (on == (_soulLit == true)) return
+        _soulLit = on
+        if (_soulLight == null) _soulLight = SoulFx.lightEmitter(_entity, SOUL_SPARK_HEIGHT)
+        SoulFx.setLit(_soulLight, on ? SOUL_SPARK_RATE : 0)
     }
 
     static mix_(from, to, t) {

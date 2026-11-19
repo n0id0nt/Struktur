@@ -47,6 +47,7 @@ class Game {
             "PressurePlate",
             "PressurePad",
             "Sign",
+            "SoulFragment",
             "Player",
             "Room",
             "Interactable",

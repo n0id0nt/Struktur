@@ -16,9 +16,17 @@
 // Rows fill the strip's height: up to FILL_ROWS combatants each get an equal share of it (FILL_ROWS rows exactly
 // fill it - that's the thickest a row gets); more than that and the rows shrink so every one still fits.
 //
+// Soul Sight (World/SoulSight.wren) sees further into a foe's chain: a move the party's Read doesn't show but that
+// starts within Soul Sight's reach is foreseen - drawn whole, see-through and tinted the soul's blue, with a slow
+// shimmer running over it - and a blue gradient on each foe's row, from "now" to the reach, shows how far it sees.
+// The gradient and the shimmers are their own top-level UI element (buildSoulLayer), so they're their own UI batch:
+// the shimmer animating every frame (animate) never dirties the rest of the battle UI.
+//
 // Pure view: States/CombatState.wren builds the rows (TimelineRow) from the Combatants each frame and hands them to
-// draw(); the elements are pooled, so a frame only moves and resizes them.
-import "ui" for UILabel, UIColor, UIPanel
+// draw(); the elements are pooled, so a frame only moves and resizes them - and only the ones whose place, size or
+// colour actually changed (Placed), since every set marks its element for redrawing.
+import "ui" for UILabel, UIColor, UIPanel, UITexture, UIManager
+import "app" for Time
 import "math" for Vec2, Vec4
 import "Util/Colors" for BLANK
 import "UI/Theme/UIKit" for UIKit
@@ -55,6 +63,66 @@ var NOW_COLOR = Vec4.new(255, 173, 85, 255)
 var BUDGET_COLOR = Vec4.new(245, 240, 228, 255)
 var SELECTED_NAME = Vec4.new(255, 173, 85, 255)
 
+// Soul Sight: the soul's blue, how far a foreseen block's colour leans to it and how see-through it is, the gradient
+// art (white, fading in towards the reach - tinted here) and its tint, and the shimmer over a foreseen block (alpha
+// low..high, a wave travelling left to right).
+var SOUL_BLUE = Vec4.new(130, 215, 255, 255)
+var FORESEEN_LEAN = 0.55
+var FORESEEN_ALPHA = 150
+var SOUL_GRADIENT = "Ui/Battle/soul_sight_gradient.png"
+var SOUL_GRADIENT_TINT = Vec4.new(90, 170, 255, 100)
+var SHIMMER_LOW = 10
+var SHIMMER_HIGH = 70
+var SHIMMER_SPEED = 3.5      // radians a second
+var SHIMMER_WAVE = 0.06      // radians per px along the strip - the wave's travel
+var SOUL_LAYER_Z = 0         // over the battle UI's root (-1)
+
+// A foreseen block's colour, per kind - made once, so it's the same Vec4 every frame (Placed compares them).
+var FORESEEN = {}
+for (kind in COLORS.keys) {
+    var color = COLORS[kind]
+    FORESEEN[kind] = Vec4.new((color.x + (SOUL_BLUE.x - color.x) * FORESEEN_LEAN).round,
+                              (color.y + (SOUL_BLUE.y - color.y) * FORESEEN_LEAN).round,
+                              (color.z + (SOUL_BLUE.z - color.z) * FORESEEN_LEAN).round, FORESEEN_ALPHA)
+}
+
+// A pooled element and the place, size and colour last given to it - setting them again only when they change.
+class Placed {
+    construct new(element) {
+        _element = element
+        _x = null
+        _y = null
+        _width = null
+        _height = null
+        _color = null
+    }
+
+    element { _element }
+
+    move(x, y) {
+        if (x == _x && y == _y) return
+        _x = x
+        _y = y
+        _element.setPosition(Vec2.new(x, y), Vec2.new(0, 0))
+    }
+
+    resize(width, height) {
+        if (width == _width && height == _height) return
+        _width = width
+        _height = height
+        _element.setSize(Vec2.new(width, height), Vec2.new(0, 0))
+    }
+
+    // Colours are compared by identity - pass the shared Vec4s (COLORS / FORESEEN), not fresh ones.
+    tint(color) {
+        if (Object.same(color, _color)) return
+        _color = color
+        _element.setColor(color)
+    }
+
+    setVisible(visible) { _element.setVisible(visible) }
+}
+
 // One row's content, in seconds from now.
 class TimelineRow {
     construct new(label, party, selected) {
@@ -77,7 +145,7 @@ class TimelineRow {
     addMove(move, start, progress, impactDone, preview) {
         var end = start + move.completion - progress
         var kind = preview ? "preview" : TimelineRow.kindOf(move)
-        _blocks.add([start, end, kind, move.name])
+        _blocks.add([start, end, kind, move.name, false])
         if (move.impact != null && !impactDone && move.impact >= progress) {
             _ticks.add([start + move.impact - progress, "impact"])
         }
@@ -93,6 +161,13 @@ class TimelineRow {
         return end
     }
 
+    // A move only Soul Sight sees (it starts within its reach): drawn whole, in the soul's colour.
+    addForeseen(move, start) {
+        var end = addMove(move, start, 0, false, false)
+        _blocks[-1][4] = true
+        return end
+    }
+
     band_(start, progress, from, to, kind) {
         if (to <= progress) return
         var visibleFrom = from < progress ? progress : from
@@ -100,7 +175,7 @@ class TimelineRow {
     }
 
     addBlock(start, end, kind, text) {
-        _blocks.add([start, end, kind, text])
+        _blocks.add([start, end, kind, text, false])
         return end
     }
 
@@ -129,6 +204,8 @@ class TimelineUI {
         _height = height
         _rowH = ROW_HEIGHT
         _laidOut = -1
+        _width = width
+        _soul = null   // the Soul Sight layer, if buildSoulLayer made one
         _root = UIPanel.new(Vec2.new(x, y), Vec2.new(0, 0), Vec2.new(width, height), Vec2.new(0, 0))
         _root.setBackgroundColor(BLANK)
         _root.setBorderColor(BLANK)
@@ -143,8 +220,8 @@ class TimelineUI {
         _nowLine = rect_(_root, Vec2.new(NAME_WIDTH - 1, AXIS_HEIGHT - 2), Vec2.new(2, rows * (ROW_HEIGHT + ROW_GAP) + 2), NOW_COLOR, 9)
 
         // The budget marker: a bright line through the chooser's row, reaching a little past it, with a cap on top.
-        _budgetLine = rect_(_root, Vec2.new(0, 0), Vec2.new(3, ROW_HEIGHT + 8), BUDGET_COLOR, 10)
-        _budgetCap = rect_(_root, Vec2.new(0, 0), Vec2.new(11, 4), BUDGET_COLOR, 10)
+        _budgetLine = Placed.new(rect_(_root, Vec2.new(0, 0), Vec2.new(3, ROW_HEIGHT + 8), BUDGET_COLOR, 10))
+        _budgetCap = Placed.new(rect_(_root, Vec2.new(0, 0), Vec2.new(11, 4), BUDGET_COLOR, 10))
         _budgetLine.setVisible(false)
         _budgetCap.setVisible(false)
     }
@@ -175,7 +252,7 @@ class TimelineUI {
         var labels = []
         var texts = []
         for (i in 0...BLOCKS_PER_ROW) {
-            var block = rect_(_root, Vec2.new(NAME_WIDTH, y), Vec2.new(10, ROW_HEIGHT), COLORS["hold"], 4)
+            var block = Placed.new(rect_(_root, Vec2.new(NAME_WIDTH, y), Vec2.new(10, ROW_HEIGHT), COLORS["hold"], 4))
             block.setVisible(false)
             blocks.add(block)
             var label = UILabel.new(Vec2.new(NAME_WIDTH, y + 1), Vec2.new(0, 0), "", 18.0)
@@ -185,7 +262,7 @@ class TimelineUI {
             label.setZIndex(8)
             label.setVisible(false)
             _root.addChild(label)
-            labels.add(label)
+            labels.add(Placed.new(label))
             texts.add("")
         }
         row["blocks"] = blocks
@@ -193,7 +270,7 @@ class TimelineUI {
         row["texts"] = texts
         var marks = []
         for (i in 0...MARKS_PER_ROW) {
-            var mark = rect_(_root, Vec2.new(NAME_WIDTH, y), Vec2.new(2, ROW_HEIGHT), COLORS["impact"], 7)
+            var mark = Placed.new(rect_(_root, Vec2.new(NAME_WIDTH, y), Vec2.new(2, ROW_HEIGHT), COLORS["impact"], 7))
             mark.setVisible(false)
             marks.add(mark)
         }
@@ -203,7 +280,8 @@ class TimelineUI {
     }
 
     // rows: [TimelineRow] - one per combatant, in the order they should appear. Rows past the list are hidden.
-    draw(rows) { draw(rows, null) }
+    draw(rows) { draw(rows, null, 0) }
+    draw(rows, budget) { draw(rows, budget, 0) }
 
     // Sizes the rows for `count` combatants (only when that count changes): each gets an equal share of the strip,
     // never thicker than a FILL_ROWS share, never thinner than ROW_HEIGHT.
@@ -222,19 +300,20 @@ class TimelineUI {
             view["track"].setSize(Vec2.new(_trackWidth, _rowH), Vec2.new(0, 0))
         }
         _nowLine.setSize(Vec2.new(2, count.min(_rows.count) * (_rowH + ROW_GAP) + 2), Vec2.new(0, 0))
-        _budgetLine.setSize(Vec2.new(3, _rowH + 8), Vec2.new(0, 0))
+        _budgetLine.resize(3, _rowH + 8)
     }
 
     // budget: seconds the chain being built has to reach - marked on the selected row - or null for no marker.
-    draw(rows, budget) {
+    // reach: seconds of the foes' future Soul Sight sees (0 without it) - its gradient on every foe's row.
+    draw(rows, budget, reach) {
         layout_(rows.count)
         var marked = false
         for (i in 0...rows.count.min(_rows.count)) {
             if (budget != null && rows[i].selected) {
                 var x = NAME_WIDTH + (budget.min(WINDOW) * _scale).round - 1
                 var y = _rows[i]["y"]
-                _budgetLine.setPosition(Vec2.new(x, y - 4), Vec2.new(0, 0))
-                _budgetCap.setPosition(Vec2.new(x - 4, y - 6), Vec2.new(0, 0))
+                _budgetLine.move(x, y - 4)
+                _budgetCap.move(x - 4, y - 6)
                 marked = true
             }
         }
@@ -254,9 +333,11 @@ class TimelineUI {
                 hideFrom_(view["blocks"], 0)
                 hideFrom_(view["labels"], 0)
                 hideFrom_(view["marks"], 0)
+                if (_soul != null) hideSoul_(view)
                 continue
             }
             drawRow_(view, data)
+            if (_soul != null) drawSoul_(view, data, reach)
         }
     }
 
@@ -294,9 +375,9 @@ class TimelineUI {
             var width = ((end - start) * _scale).round - 1
             if (width < 1) width = 1
             var block = blocks[used]
-            block.setPosition(Vec2.new(x0, y), Vec2.new(0, 0))
-            block.setSize(Vec2.new(width, _rowH), Vec2.new(0, 0))
-            block.setColor(COLORS[segment[2]])
+            block.move(x0, y)
+            block.resize(width, _rowH)
+            block.tint(segment[4] ? FORESEEN[segment[2]] : COLORS[segment[2]])
             block.setVisible(true)
             var label = labels[used]
             var text = segment[3]
@@ -304,10 +385,10 @@ class TimelineUI {
             if (text != "" && width >= text.count * 9 + 6) {
                 if (texts[used] != text) {
                     texts[used] = text
-                    label.setText(text)
-                    label.setBoundingBoxToText()
+                    label.element.setText(text)
+                    label.element.setBoundingBoxToText()
                 }
-                label.setPosition(Vec2.new(x0 + 3, y + ((_rowH - LABEL_HEIGHT) / 2).floor), Vec2.new(0, 0))
+                label.move(x0 + 3, y + ((_rowH - LABEL_HEIGHT) / 2).floor)
                 label.setVisible(true)
             } else {
                 label.setVisible(false)
@@ -326,9 +407,9 @@ class TimelineUI {
             var end = band[1] > WINDOW ? WINDOW : band[1]
             if (end - start <= 0.001) continue
             var mark = marks[latestEnd]
-            mark.setPosition(Vec2.new(NAME_WIDTH + (start * _scale).round, y + _rowH - 6), Vec2.new(0, 0))
-            mark.setSize(Vec2.new(((end - start) * _scale).round.max(2), 6), Vec2.new(0, 0))
-            mark.setColor(COLORS[band[2]])
+            mark.move(NAME_WIDTH + (start * _scale).round, y + _rowH - 6)
+            mark.resize(((end - start) * _scale).round.max(2), 6)
+            mark.tint(COLORS[band[2]])
             mark.setVisible(true)
             latestEnd = latestEnd + 1
         }
@@ -336,12 +417,102 @@ class TimelineUI {
             if (latestEnd >= marks.count) break
             if (tick[0] < 0 || tick[0] > WINDOW) continue
             var mark = marks[latestEnd]
-            mark.setPosition(Vec2.new(NAME_WIDTH + (tick[0] * _scale).round - 1, y), Vec2.new(0, 0))
-            mark.setSize(Vec2.new(tick[1] == "impact" ? 3 : 2, _rowH), Vec2.new(0, 0))
-            mark.setColor(COLORS[tick[1]])
+            mark.move(NAME_WIDTH + (tick[0] * _scale).round - 1, y)
+            mark.resize(tick[1] == "impact" ? 3 : 2, _rowH)
+            mark.tint(COLORS[tick[1]])
             mark.setVisible(true)
             latestEnd = latestEnd + 1
         }
         hideFrom_(marks, latestEnd)
+    }
+
+    // --- Soul Sight -------------------------------------------------------------------------------------------
+
+    // The Soul Sight layer: its own top-level element over the strip - screenX / screenY are where the strip's top-left
+    // corner is on screen - holding each row's gradient and shimmers. Made once by the battle UI (UI/Combat/
+    // CombatUI.wren); teardown removes it.
+    buildSoulLayer(screenX, screenY) {
+        _soul = UIPanel.new(Vec2.new(screenX, screenY), Vec2.new(0, 0), Vec2.new(_width, _height), Vec2.new(0, 0))
+        _soul.setBackgroundColor(BLANK)
+        _soul.setBorderColor(BLANK)
+        _soul.setZIndex(SOUL_LAYER_Z)
+        UIManager.addUIElement(_soul)
+        var texture = UIKit.texture(SOUL_GRADIENT)
+        for (view in _rows) {
+            var gradient = UITexture.new(Vec2.new(NAME_WIDTH, view["y"]), Vec2.new(0, 0), Vec2.new(1, ROW_HEIGHT), Vec2.new(0, 0))
+            gradient.setTexture(texture)
+            gradient.setTint(SOUL_GRADIENT_TINT)
+            gradient.setZIndex(1)
+            gradient.setVisible(false)
+            _soul.addChild(gradient)
+            view["gradient"] = Placed.new(gradient)
+            var shimmers = []
+            for (i in 0...BLOCKS_PER_ROW) {
+                var shimmer = Placed.new(rect_(_soul, Vec2.new(NAME_WIDTH, view["y"]), Vec2.new(10, ROW_HEIGHT), BLANK, 2))
+                shimmer.setVisible(false)
+                shimmers.add(shimmer)
+            }
+            view["shimmers"] = shimmers
+            view["shimmerX"] = []   // the visible shimmers' x, for the wave
+        }
+    }
+
+    setSoulVisible(visible) {
+        if (_soul != null) _soul.setVisible(visible)
+    }
+
+    // A foe's row: the gradient out to the reach, and a shimmer over each foreseen block.
+    drawSoul_(view, data, reach) {
+        var gradient = view["gradient"]
+        var seeing = !data.party && reach > 0
+        if (seeing) {
+            gradient.move(NAME_WIDTH, view["y"])
+            gradient.resize(((reach.min(WINDOW) * _scale).round).max(2), _rowH)
+        }
+        gradient.setVisible(seeing)
+
+        var shimmers = view["shimmers"]
+        var xs = []
+        for (segment in data.blocks) {
+            if (!segment[4] || xs.count >= shimmers.count) continue
+            var start = segment[0] < 0 ? 0 : segment[0]
+            var end = segment[1] > WINDOW ? WINDOW : segment[1]
+            if (end - start <= 0.001) continue
+            var x = NAME_WIDTH + (start * _scale).round
+            var shimmer = shimmers[xs.count]
+            shimmer.move(x, view["y"])
+            shimmer.resize((((end - start) * _scale).round - 1).max(1), _rowH)
+            shimmer.setVisible(true)
+            xs.add(x)
+        }
+        hideFrom_(shimmers, xs.count)
+        view["shimmerX"] = xs
+    }
+
+    hideSoul_(view) {
+        view["gradient"].setVisible(false)
+        hideFrom_(view["shimmers"], 0)
+        view["shimmerX"] = []
+    }
+
+    // Every frame (UI/Combat/CombatUI.update): the shimmers breathe, a slow wave running left to right along the strip.
+    // Only the Soul Sight layer's own batch is redrawn for it.
+    animate() {
+        if (_soul == null) return
+        var now = Time.unscaledTime
+        for (view in _rows) {
+            var shimmers = view["shimmers"]
+            var xs = view["shimmerX"]
+            for (i in 0...xs.count) {
+                var wave = 0.5 + 0.5 * (now * SHIMMER_SPEED - xs[i] * SHIMMER_WAVE).sin
+                var alpha = (SHIMMER_LOW + (SHIMMER_HIGH - SHIMMER_LOW) * wave).round
+                shimmers[i].element.setColor(Vec4.new(SOUL_BLUE.x, SOUL_BLUE.y, SOUL_BLUE.z, alpha))
+            }
+        }
+    }
+
+    teardown() {
+        if (_soul != null) UIManager.removeUIElement(_soul)
+        _soul = null
     }
 }

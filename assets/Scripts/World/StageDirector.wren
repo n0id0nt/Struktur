@@ -213,6 +213,17 @@ class StageDirector {
         }
     }
 
+    // Where the Path called `name` starts, or where the Marker called `name` stands (a Vec3) - nearest the player if
+    // there are several - or null.
+    static spotNamed(name) {
+        var player = StageDirector.actor_("Player", false)
+        var near = player == null ? null : WorldTransform.getPosition(player)
+        var path = Paths.named(name, near)
+        if (path != null && path.points.count > 0) return Vec3.new(path.points[0].x, path.points[0].y, 0)
+        var marker = StageDirector.marker_(name, near, true)
+        return marker == null ? null : WorldTransform.getPosition(marker)
+    }
+
     // Turns `who` to a direction word ("up", "downLeft", "North"...) or towards another character / Marker by name.
     static face(who, towards) {
         var entity = StageDirector.actor(who)
