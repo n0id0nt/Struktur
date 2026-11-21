@@ -1,4 +1,5 @@
 import "gameObjectComponents" for PhysicsBody
+import "Util/Shadow" for Shadow
 import "physics" for BodyDefinition, PhysicsCircleShape, BodyType
 import "Util/CharacterCollider" for CharacterCollider
 import "debug" for Debug
@@ -15,6 +16,7 @@ import "Sprites/PinkHairGirlSprite" for PinkHairGirlSprite
 import "Sprites/PinkHairGirlBattleSprite" for PinkHairGirlBattleSprite
 import "Sprites/WrestlerSprite" for WrestlerSprite
 import "Sprites/WrestlerBattleSprite" for WrestlerBattleSprite
+import "Sprites/MutantBattleSprite" for MutantBattleSprite
 import "Sprites/YellowPantsGirlSprite" for YellowPantsGirlSprite
 import "Sprites/YellowPantsGirlBattleSprite" for YellowPantsGirlBattleSprite
 
@@ -39,7 +41,7 @@ class NPCData {
     static forName(name) {
         var table = {
             // Arc 1 cast (Levels/SevenGods.ldtk, Dialogue/Arc1Dialogue.json). Finn has his own model (with the cutscene
-            // clips - Working, LayingIdle, GettingUp, PickingUp, StandardWalk); the rest wear placeholder looks until
+            // clips - Working, LayingIdle, GettingUp, PickingUp); the rest wear placeholder looks until
             // the cast gets their own (docs/FirstArcPlan.md).
             "Finn": NPCData.new(FinnSprite, FinnBattleSprite),
             "Elena": NPCData.new(PeasantGirlSprite, PeasantGirlBattleSprite),
@@ -54,7 +56,7 @@ class NPCData {
             "RunicConstuct1": NPCData.new(GoblinVikingSprite, GoblinVikingBattleSprite),
             "RunicConstruct2": NPCData.new(GoblinVikingSprite, GoblinVikingBattleSprite),
             "RunicConstruct3": NPCData.new(GoblinVikingSprite, GoblinVikingBattleSprite),
-            "Warden": NPCData.new(WrestlerSprite, WrestlerBattleSprite),
+            "Warden": NPCData.new(WrestlerSprite, MutantBattleSprite),   // the mutant fights; no overworld sheet of its own yet
             // Older test fighters (Combat/Config/BattleCritter.wren, the battle test roster).
             "Villager": NPCData.new(PeasantGirlSprite, PeasantGirlBattleSprite),
             "Duelist": NPCData.new(YellowPantsGirlSprite, YellowPantsGirlBattleSprite),
@@ -94,7 +96,8 @@ class NPC {
 
         // RenderLayer.ENTITIES already y-sorts by world position, so no manual offset is needed here.
         npcData.createSprite(_entity)
-        
+        Shadow.attach(_entity)
+
         var bodyDef = BodyDefinition.new(BodyType.STATIC_BODY)
         PhysicsBody.create(_entity, bodyDef, CharacterCollider.shape())
 

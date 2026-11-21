@@ -218,7 +218,7 @@ class Commands {
         // wait hold the conversation until they finish (the next line shows after) unless "wait" is 0; a node with no
         // text just plays its commands and carries on.
         DialogueRegistry.registerCommand("moveTo") { |params|
-            // "animation" (optional): move with this clip instead of Walk / Run - e.g. Finn's StandardWalk.
+            // "animation" (optional): move with this clip instead of Walk / Run (any clip the sheet has).
             StageDirector.moveTo(params["who"], params["to"], params["speed"], Commands.waitParam_(params), params["animation"])
         }
         // Walks "who" to the tile in front of the player and turns them to face the player. After a moveTo of the same
@@ -247,7 +247,7 @@ class Commands {
             StageDirector.face(params["who"], params["towards"])
         }
         // "animation": a clip of the character's sheet - Idle, Walk, Run, Hurt, Roll, Death (everyone); Finn also has
-        // Working, LayingIdle, GettingUp, PickingUp, StandardWalk. Held as a pose until changed. "wait" (default 0
+        // Working, LayingIdle, GettingUp, PickingUp. Held as a pose until changed. "wait" (default 0
         // here): hold the conversation until it has played once. "then" (optional): the clip to switch to after.
         DialogueRegistry.registerCommand("playAnimation") { |params|
             var wait = params["wait"] == null ? false : Commands.waitParam_(params)

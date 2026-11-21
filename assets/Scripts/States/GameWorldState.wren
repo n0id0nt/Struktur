@@ -42,6 +42,7 @@ import "World/StoryTriggers" for StoryTriggers
 import "World/SoulSight" for SoulSight
 import "World/SoulVeil" for SoulVeil
 import "UI/Gameplay/SoulSightOverlay" for SoulSightOverlay
+import "UI/Gameplay/ScreenFade" for ScreenFade
 import "Util/SoulFx" for SoulFx
 import "Events/GameEvents" for GameEvents
 import "World/Npcs" for Npcs
@@ -85,6 +86,11 @@ var WARP_MAX_WAIT_FRAMES = 10
 // Seconds after arriving during which stepping on a DoorWorp does nothing - so being nudged out of a wall onto the
 // doorway you came through (or a follower bumping you) doesn't bounce you straight back.
 var WARP_COOLDOWN = 0.75
+// A warp fades to black (seconds, real time), moves the party while the screen is black, then fades back in.
+var WARP_FADE_OUT = 0.25
+var WARP_FADE_IN = 0.3
+// Waking after the party fell: the fade in from black once you're back at the spawn point, while you get up.
+var WAKE_FADE_IN = 1.0
 
 var WORLD_FILE_PATH = "Levels/SevenGods.ldtk"
 // Authored arena levels (see Combat/BattleStage.wren) - a fight loads the arena matching the level it starts in and
@@ -242,6 +248,8 @@ class GameWorldState is BaseState {
         _arenaIndices = {}       // arena levels used so far (level index -> true) - kept loaded, see updateLevelStreaming_
         _soulOverlay = null      // Soul Sight's screen tint (UI/Gameplay/SoulSightOverlay.wren)
         _soulLight = null        // the sparks the player gives off while Soul Sight is on (Util/SoulFx.wren), a child entity
+        _fade = null             // the black screen fade (UI/Gameplay/ScreenFade.wren) - warps and waking after a fall
+        _waking = false          // respawned: fade in and get up once the party is at the spawn point - see respawn_
     }
 
     enter(stateManager, params) {
@@ -278,6 +286,8 @@ class GameWorldState is BaseState {
         // Soul Sight starts each session off (World/SoulSight.wren); its tint sits under every other piece of UI.
         SoulSight.reset()
         _soulOverlay = SoulSightOverlay.new(false, SOUL_OVERLAY_Z)
+        _fade = ScreenFade.new()
+        _waking = false
 
         // NPCs, signs, doors, pressure plates, items and critters are placed in the level (LDtk) - World::Level spawns
         // them with their scripts.
@@ -341,6 +351,7 @@ class GameWorldState is BaseState {
         // Soul Sight's tint shows over the world, a conversation and an impact moment - a fight draws its own.
         _soulOverlay.setShowing(substate == null || substate.name == "InteractState" || substate.name == "ImpactState")
         _soulOverlay.update()
+        _fade.update()
 
         // Someone who joins mid-conversation ("joinParty") appears straight away, so the scene can walk them over.
         if (substate != null && substate.name == "InteractState") syncPartyFollowers()
@@ -394,6 +405,9 @@ class GameWorldState is BaseState {
         updateLevelStreaming_()
         if (_spawnArrival != null) {
             updateSpawnArrival_()
+        }
+        if (_waking && _spawnArrival == null) {
+            wake_()
         }
         if (_openingPending && _spawnArrival == null) {
             startOpening_()
@@ -709,10 +723,21 @@ class GameWorldState is BaseState {
     // enemies stay gone (Combat/Defeated.wren); survivors keep their wounds until their level unloads, and streaming
     // swaps levels as normal on the next update. The usual post-fight cooldown applies.
     respawn_() {
+        // Black under the "You fell" screen as it closes; wake_ fades in once the party is at the spawn point.
+        _fade.setBlack()
+        _waking = true
         Party.restAll()
         teleportParty_(beginSpawnArrival_())
         _combatCooldownEndTime = Time.scaledTime + 2.0
         Debug.info("[GameWorldState] respawned at the start point")
+    }
+
+    // Back at the spawn point after a fall: the screen fades in from black while the player gets up off the ground.
+    wake_() {
+        _waking = false
+        _fade.fadeIn(WAKE_FADE_IN)
+        var player = Script.getInstance(_playerEntity)
+        if (player != null) player.getUp()
     }
 
     // Moves the player to position and lines the followers up behind them, their trails wiped so nobody walks back
@@ -746,22 +771,29 @@ class GameWorldState is BaseState {
     }
 
     // --- warps (GameObjects/DoorWorp.wren) -----------------------------------
-    // The target room is loaded first so the DoorWorp leading back can be found; the party moves once it has
-    // started (updateWarp_), a frame or two later.
+    // The screen fades to black, holding the player still; then the target room is loaded so the DoorWorp leading
+    // back can be found, and the party moves once it has started (updateWarp_), a frame or two later - and the
+    // screen fades back in.
     startWarp_(targetIndex, fromIndex, destination) {
         Debug.info("[GameWorldState] warping from room %(fromIndex) to room %(targetIndex)")
-        World.loadLevelEntities(_worldEntity, targetIndex)
-        SoulVeil.refresh()
         // origin: where the player stepped on the warp door - the Map tab's doorway marker (World/MapLog.warped).
         _warp = {"target": targetIndex, "from": fromIndex, "destination": destination, "frames": 0,
-                 "origin": WorldTransform.getPosition(_playerEntity)}
+                 "origin": WorldTransform.getPosition(_playerEntity), "loaded": false}
+        _fade.fadeOut(WARP_FADE_OUT)
         var player = Script.getInstance(_playerEntity)
         if (player != null) {
-            player.playerForceStop()
+            player.setInteracting(true)
         }
     }
 
     updateWarp_() {
+        if (!_warp["loaded"]) {
+            if (!_fade.black) return
+            World.loadLevelEntities(_worldEntity, _warp["target"])
+            SoulVeil.refresh()
+            _warp["loaded"] = true
+            return
+        }
         _warp["frames"] = _warp["frames"] + 1
         var arrival = warpArrival_(_warp["target"], _warp["from"], _warp["destination"],
                                    _warp["frames"] >= WARP_MAX_WAIT_FRAMES)
@@ -771,6 +803,11 @@ class GameWorldState is BaseState {
         MapLog.warped(_worldEntity, _warp["from"], _warp["target"], _warp["origin"], arrival)
         _warp = null
         teleportParty_(arrival)
+        var player = Script.getInstance(_playerEntity)
+        if (player != null) {
+            player.setInteracting(false)
+        }
+        _fade.fadeIn(WARP_FADE_IN)
         _warpCooldownEndTime = Time.scaledTime + WARP_COOLDOWN
         // Stepping out of a doorway shouldn't drop you straight into a fight.
         _combatCooldownEndTime = Time.scaledTime + 1.0
@@ -944,6 +981,11 @@ class GameWorldState is BaseState {
             _soulOverlay.teardown()
             _soulOverlay = null
         }
+        if (_fade != null) {
+            _fade.teardown()
+            _fade = null
+        }
+        _waking = false
         _soulLight = null   // destroyed with the player
         SoulSight.reset()
         if (_gameMusic) {

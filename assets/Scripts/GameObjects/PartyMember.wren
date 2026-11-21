@@ -19,10 +19,12 @@
 // Art: the NPC's generated sheet (GameObjects/NPC.wren's NPCData) - it walks / runs facing the way it moves (8
 // directions) and idles facing that way when it stops.
 import "gameObjectComponents" for PhysicsBody, Sprite, SpriteAnimation, WorldTransform, Script
+import "Util/Shadow" for Shadow
 import "math" for Vec2, Vec3, Vec4
 import "physics" for BodyDefinition, PhysicsCircleShape, BodyType, CollisionLayers
 import "Util/CharacterCollider" for CharacterCollider
 import "app" for Time
+import "random" for Random
 import "debug" for Debug
 import "Party/Party" for Party
 import "Party/TrailFollow" for TrailFollow
@@ -61,6 +63,10 @@ var CATCH_UP_RUN      = 2.6    // m/s - or when catching up this fast
 var FACING_TURN       = 0.9    // cos of the angle the heading must swing past before the facing changes (~25 deg)
 var DOWNED_TINT       = Vec4.new(120, 120, 130, 255)   // a downed member (Member.downed) - greyed out until rested
 var NORMAL_TINT       = Vec4.new(255, 255, 255, 255)
+// Resting with the player (restSoon): the clips it picks between at random - like the player's (GameObjects/Player.wren).
+var REST_CLIPS        = ["SittingIdle", "LyingDown"]
+var DOWN_CLIP         = "LyingDown"   // goes down with this whichever it picks, and up with "GettingUp"
+var RNG               = Random.new()
 
 class PartyMember {
     construct new(entity, args) {
@@ -78,6 +84,68 @@ class PartyMember {
         _tintedDowned = false
         _leader = null               // who it followed last step - a change restarts the follow strategy
         _scripted = false            // moved by a dialogue scene (World/StageDirector.wren) - see setScripted
+        _restAt = null               // Time.scaledTime it sits / lies down, the player having just rested - see restSoon
+        _resting = null              // the rest clip playing ("SittingIdle" / "LyingDown"), or null
+        _upAt = null                 // Time.scaledTime its getting-up animation ends (standUp), or null
+        _settleAt = null             // Time.scaledTime its lying-down animation ends and a sit settles, or null
+    }
+
+    // The player has just sat or lain down (GameObjects/Player.wren): this follower rests too, `delay` seconds later -
+    // sitting or lying down, its own random pick - once it has come to a stop behind them.
+    restSoon(delay) {
+        if (_resting == null) _restAt = Time.scaledTime + delay
+    }
+
+    // The player is getting up: stops resting (or waiting to) - getting up first, if its sheet can.
+    standUp() {
+        _restAt = null
+        _settleAt = null
+        var wasResting = _resting != null
+        _resting = null
+        if (!wasResting) return
+        var animation = SpriteSheet.clipName(_facing, "GettingUp")
+        var clip = SpriteSheet.clip(_entity, animation)
+        if (clip == null) return
+        SpriteAnimation.setCurrentAnimation(_entity, animation)
+        _upAt = Time.scaledTime + clip[2]
+    }
+
+    // Resting (or getting up from it), or starting to now that its moment has come: holds it still and leaves the
+    // clip alone. True while it is.
+    rest_() {
+        if (_upAt != null) {
+            if (Time.scaledTime < _upAt) return holdStill_()
+            _upAt = null
+        }
+        if (_resting != null) {
+            if (_settleAt != null && Time.scaledTime >= _settleAt) {
+                _settleAt = null
+                SpriteAnimation.setCurrentAnimation(_entity, SpriteSheet.clipName(_facing, _resting))
+            }
+            return holdStill_()
+        }
+        if (_restAt == null || Time.scaledTime < _restAt || _velocity.length() > IDLE_SPEED) return false
+        _restAt = null
+        var choice = REST_CLIPS[RNG.int(REST_CLIPS.count)]
+        var animation = SpriteSheet.clipName(_facing, choice)
+        if (SpriteSheet.clip(_entity, animation) == null) return false
+        _resting = choice
+        _moving = false
+        var down = SpriteSheet.clipName(_facing, DOWN_CLIP)
+        var downClip = SpriteSheet.clip(_entity, down)
+        if (downClip != null && choice != DOWN_CLIP) {
+            SpriteAnimation.setCurrentAnimation(_entity, down)
+            _settleAt = Time.scaledTime + downClip[2]
+        } else {
+            SpriteAnimation.setCurrentAnimation(_entity, animation)
+        }
+        return holdStill_()
+    }
+
+    holdStill_() {
+        _velocity = Vec2.new(0, 0)
+        PhysicsBody.setLinearVelocity(_entity, _velocity)
+        return true
     }
 
     // Handed to a dialogue scene (World/StageDirector.wren "moveTo"): while scripted, following stands aside. When the
@@ -126,6 +194,7 @@ class PartyMember {
         Debug.assertMsg(data != null, "No sprite data for party member %(_name)")
 
         data.createSprite(_entity)
+        Shadow.attach(_entity)
 
         var body = PhysicsBody.create(_entity, BodyDefinition.new(BodyType.DYNAMIC_BODY), CharacterCollider.shape())
         body.fixedRotation = true
@@ -141,6 +210,7 @@ class PartyMember {
         }
         var me = member
         refreshTint_(me)
+        if (rest_()) return
         var leader = me == null || me.staying ? null : Party.ahead(me)
         if (leader != _leader) {
             // Told to stay or to follow again, or the member ahead started/stopped staying: walk the new

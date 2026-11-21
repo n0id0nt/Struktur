@@ -4,13 +4,17 @@ import "math" for Vec2, Vec3, Vec4, Math
 import "physics" for BodyDefinition, PhysicsCircleShape, BodyType, CollisionLayers, PhysicsQuery
 import "Util/CharacterCollider" for CharacterCollider
 import "input" for Input
+import "app" for Time
+import "random" for Random
 
 import "reflect" for Reflect
 
 import "World/Rooms" for Rooms
+import "Party/Party" for Party
 import "Combat/Config/BattlePlayer" for BattlePlayer
 import "Sprites/ExplorerSprite" for ExplorerSprite
 import "Sprites/SpriteSheet" for SpriteSheet
+import "Util/Shadow" for Shadow
 import "debug" for Debug
 
 var INTERACTABLE_DISTANCE = 32.0
@@ -23,6 +27,17 @@ var INTERACT_FACING_DEGREES = 90
 // is grown by FOOTPRINT_SLACK px to absorb hits landing exactly on its edge.
 var DEFAULT_INTERACT_SIZE = [16, 16]
 var FOOTPRINT_SLACK = 2.0
+// Left standing still this long (seconds of game time, no movement input), the player rests: sits or lies, picked at
+// random (REST_CLIPS). Either way they go down with the lying-down animation (DOWN_CLIP - a sit then settles into its
+// sitting idle) and come back up with the getting-up animation when moved again.
+var DOWN_CLIP = "LyingDown"
+var IDLE_REST_SECONDS = 12
+var REST_CLIPS = ["SittingIdle", "LyingDown"]
+// The party rests with the player (GameObjects/PartyMember.wren restSoon): each follower this many seconds after
+// them, its own random delay in the range, so they don't all drop at once.
+var PARTY_REST_DELAY_MIN = 0.2
+var PARTY_REST_DELAY_MAX = 0.5
+var RNG = Random.new()
 
 class Player {
     construct new(entity, args) {
@@ -38,6 +53,10 @@ class Player {
         _combatant = null
         _interacting = false
         _scripted = false   // moved by a dialogue scene (World/StageDirector.wren) - see setScripted
+        _stillSince = null  // Time.scaledTime the player last stood still from - see rest_
+        _resting = null     // the rest clip playing ("SittingIdle" / "LyingDown"), or null
+        _upAt = null        // Time.scaledTime a getting-up animation ends (getUp), or null
+        _settleAt = null    // Time.scaledTime the lying-down animation ends and a sit settles into its idle, or null
 
         Debug.info("Player constructed for: %(_name)")
     }
@@ -67,6 +86,25 @@ class Player {
     // The way the player faces (+y down the screen) - a dialogue scene can turn them ("face" command).
     facing { _facing }
     facing=(value) { _facing = value }
+
+    // Plays the getting-up animation, facing down - after waking from a fall (States/GameWorldState.wren respawn_), or
+    // rising from lying down. The player can't move until it has finished.
+    getUp() {
+        if (_resting != null) Player.standParty_()
+        _resting = null
+        _settleAt = null
+        _stillSince = null
+        _facing = Vec2.new(0, 1)
+        PhysicsBody.setLinearVelocity(_entity, Vec2.new())
+        var animation = getPlayerAnimation("GettingUp")
+        var clip = SpriteSheet.clip(_entity, animation)
+        if (clip == null) {
+            _upAt = null
+            return
+        }
+        SpriteAnimation.setCurrentAnimation(_entity, animation)
+        _upAt = Time.scaledTime + clip[2]
+    }
 
     setInteracting(value) {
         _interacting = value
@@ -99,6 +137,7 @@ class Player {
         // Sprite + every <direction><Animation>Animation clip, generated from the 3D model by
         // 3dModelsToSprites/build_sprites.bat explorer (see Sprites/ExplorerSprite.wren).
         ExplorerSprite.create(_entity)
+        Shadow.attach(_entity)
         var camera = Camera.create(_entity)
         camera.zoom = 5
         camera.forcePosition = true
@@ -124,6 +163,14 @@ class Player {
             playerForceStop()
             return
         }
+        if (_upAt != null) {
+            if (Time.scaledTime < _upAt) {
+                PhysicsBody.setLinearVelocity(_entity, Vec2.new())
+                return
+            }
+            _upAt = null
+            _stillSince = null
+        }
         var inputDir = Input.getInputAxis2("Move")
         inputDir.y = inputDir.y * -1
 
@@ -147,6 +194,11 @@ class Player {
     getPlayerAnimation(animationType) { SpriteSheet.clipName(_facing, animationType) }
 
     playerForceStop() {
+        if (_resting != null) Player.standParty_()
+        _resting = null
+        _settleAt = null
+        _stillSince = null
+        _upAt = null
         var velocity = Vec2.new()
         PhysicsBody.setLinearVelocity(_entity, velocity)
         var animation = getPlayerAnimation("Idle")
@@ -154,6 +206,20 @@ class Player {
     }
 
     playerControl(dir) {
+        var moving = dir.length() > 0.001
+        // Resting, the first push gets them up before they can walk.
+        if (moving && _resting != null) {
+            getUp()
+            return
+        }
+        if (moving) {
+            if (_resting != null) Player.standParty_()
+            _resting = null
+            _stillSince = null
+        } else if (rest_()) {
+            return
+        }
+
         // set player facing
         if (dir.length() > 0.001) {
             dir = dir.normalize()
@@ -171,6 +237,66 @@ class Player {
             var animation = getPlayerAnimation("Idle")
             SpriteAnimation.setCurrentAnimation(_entity, animation)
         }
+    }
+
+    // Standing still: once it has been IDLE_REST_SECONDS, goes down with the lying-down animation and rests (a random
+    // REST_CLIPS clip the sheet has) - a sit settles into its sitting idle once the lying-down animation ends. True
+    // while resting, so the caller leaves the animation alone.
+    rest_() {
+        if (_resting != null) {
+            PhysicsBody.setLinearVelocity(_entity, Vec2.new())
+            if (_settleAt != null && Time.scaledTime >= _settleAt) {
+                _settleAt = null
+                SpriteAnimation.setCurrentAnimation(_entity, getPlayerAnimation(_resting))
+            }
+            return true
+        }
+        if (_stillSince == null) {
+            _stillSince = Time.scaledTime
+            return false
+        }
+        if (Time.scaledTime - _stillSince < IDLE_REST_SECONDS) return false
+        var choice = REST_CLIPS[RNG.int(REST_CLIPS.count)]
+        var animation = getPlayerAnimation(choice)
+        if (SpriteSheet.clip(_entity, animation) == null) {
+            _stillSince = Time.scaledTime
+            return false
+        }
+        _resting = choice
+        PhysicsBody.setLinearVelocity(_entity, Vec2.new())
+        var down = getPlayerAnimation(DOWN_CLIP)
+        var downClip = SpriteSheet.clip(_entity, down)
+        if (downClip != null && choice != DOWN_CLIP) {
+            SpriteAnimation.setCurrentAnimation(_entity, down)
+            _settleAt = Time.scaledTime + downClip[2]
+        } else {
+            SpriteAnimation.setCurrentAnimation(_entity, animation)
+        }
+        Player.restParty_()
+        return true
+    }
+
+    // The followers' scripts (GameObjects/PartyMember.wren) - the ones that can rest.
+    static followers_ {
+        var scripts = []
+        for (member in Party.members) {
+            if (member.isPlayer || member.entity == null || !GameObject.isValid(member.entity)) continue
+            var script = Script.getInstance(member.entity)
+            if (script != null && Reflect.hasMethod(script, "restSoon(_)")) scripts.add(script)
+        }
+        return scripts
+    }
+
+    // The player sat or lay down: every follower follows suit a moment later, each at its own time.
+    static restParty_() {
+        for (follower in Player.followers_) {
+            follower.restSoon(RNG.float(PARTY_REST_DELAY_MIN, PARTY_REST_DELAY_MAX))
+        }
+    }
+
+    // The player is getting up: so is everyone resting with them.
+    static standParty_() {
+        for (follower in Player.followers_) follower.standUp()
     }
 
     getInteractEntity() {

@@ -79,8 +79,8 @@ class StageDirector {
 
     // Walks `who` along the Path called `to` (through each of its WayPoints), or to the Marker called `to`. `to` can also
     // be "Player": the same as moveToPlayer.
-    // speed: "walk" (default), "run", or px per second. animation: the clip to move with instead of Walk / Run (e.g.
-    // Finn's "StandardWalk"), or null.
+    // speed: "walk" (default), "run", or px per second. animation: the clip to move with instead of Walk / Run (any clip
+    // the character's sheet has), or null.
     // A character already on a move (from an earlier command - even one in the same node) finishes it first: moves
     // queue up, so `moveTo FinnToTable` then `moveToPlayer` walks the Path and then over to the player.
     static moveTo(who, to, speed, wait, animation) {
@@ -245,7 +245,7 @@ class StageDirector {
     }
 
     // Plays one of `who`'s clips in the way it is facing - every sheet has Idle, Walk, Run, Hurt, Roll and Death; Finn
-    // also has Working, LayingIdle, GettingUp, PickingUp and StandardWalk. A clip the character's sheet doesn't have is
+    // also has Working, LayingIdle, GettingUp and PickingUp. A clip the character's sheet doesn't have is
     // skipped with a warning. Anything but Idle is held as a pose (see the header).
     // wait: hold the conversation until the clip has played once. then: a clip to switch to once it has (e.g.
     // GettingUp then Idle), or null to stay on the clip's last frame (a one-shot) / keep looping it.
