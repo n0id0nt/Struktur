@@ -3,12 +3,17 @@
 // short readout ("1.0s  9sp"). Disabled buttons stay focusable - so the player can still read why a move can't be
 // added - but draw muted. Three layouts (setLayout): "row" - name left, readout right; "stacked" - the name over the
 // readout, for narrow grid buttons; "center" - just the name, centred (a menu button). inset= pushes the texts right
-// (room for an icon on the left).
-import "ui" for UILabel
+// (room for an icon on the left); setIcon puts one there (a move's type - UI/Combat/MoveIcons.wren).
+import "ui" for UILabel, UITexture
 import "math" for Vec2, Vec4
 import "UI/Theme/UIKit" for UIKit
 
 var PAD_X = 12
+var ICON_X = 10              // the icon's left edge, in from the button's
+var ICON_SLOT = 24           // the room an icon takes (the pack's tiles are 24 px), before the texts start
+var ICON_GAP = 6
+var DISABLED_ICON = Vec4.new(150, 150, 150, 170)
+var ICON_TINT = Vec4.new(255, 255, 255, 255)
 var DISABLED_TEXT = Vec4.new(150, 140, 125, 255)
 
 class MoveButtonUI {
@@ -35,6 +40,8 @@ class MoveButtonUI {
         _infoText = ""
         _layout = "row"
         _inset = 0
+        _icon = null       // the icon image, made the first time one is set
+        _iconPath = null
 
         _panel.setOnFocus { |sender|
             _focused = true
@@ -114,10 +121,36 @@ class MoveButtonUI {
         recolour_()
     }
 
+    // An icon at the button's left, the texts moved over for it - or none (null).
+    setIcon(path) {
+        if (path == _iconPath) return
+        _iconPath = path
+        if (path == null) {
+            if (_icon != null) _icon.setVisible(false)
+            inset = 0
+            return
+        }
+        var texture = UIKit.texture(path)
+        if (_icon == null) {
+            _icon = UITexture.new(Vec2.new(ICON_X, 0), Vec2.new(0, 0.5), Vec2.new(texture.width, texture.height), Vec2.new(0, 0))
+            _icon.setAnchorPoint(Vec2.new(0, 0.5))
+            _icon.setZIndex(6)
+            _panel.addChild(_icon)
+        }
+        _icon.setTexture(texture)
+        // Centred in the slot (the Hourglass is smaller than the pack's tiles).
+        _icon.setPosition(Vec2.new(ICON_X + ((ICON_SLOT - texture.width) / 2).floor, 0), Vec2.new(0, 0.5))
+        _icon.setSize(Vec2.new(texture.width, texture.height), Vec2.new(0, 0))
+        _icon.setVisible(true)
+        inset = ICON_SLOT + ICON_GAP
+        recolour_()
+    }
+
     recolour_() {
         var color = _focused ? UIKit.textDark : (_enabled ? UIKit.text : DISABLED_TEXT)
         _name.setTextColor(color)
         _info.setTextColor(color)
+        if (_icon != null) _icon.setTint(_enabled || _focused ? ICON_TINT : DISABLED_ICON)
     }
 
     setOnClick(fn) { _panel.setOnClick(fn) }

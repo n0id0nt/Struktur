@@ -32,6 +32,7 @@ import "Combat/Move" for Move
 import "Combat/Chain" for ChainBuilder
 import "Combat/BattleEngine" for BattleEngine
 import "Combat/BattleStage" for BattleStage
+import "Combat/BattlePlan" for BattlePlan
 import "Combat/CombatOutcome" for CombatOutcome
 import "Combat/Defeated" for Defeated
 import "Combat/Encounter" for Encounter
@@ -44,6 +45,7 @@ import "Party/Party" for Party
 import "GameObjects/Critter" for Critter
 import "UI/Combat/CombatUI" for CombatUI
 import "UI/Combat/TimelineUI" for TimelineRow
+import "UI/Combat/MoveIcons" for MoveIcons
 import "Inventory/Inventory" for Inventory
 import "Inventory/ItemDatabase" for ItemDatabase, ItemCategory
 import "Localization/DisplayNames" for DisplayNames
@@ -107,6 +109,7 @@ class CombatState is BaseState {
     enter(stateManager, params) {
         super.enter(stateManager, params)
         _outer = stateManager
+        _frozen = false
         _params = params
         _duel = params["duel"] == true
         _canFlee = params["canFlee"] == true
@@ -289,6 +292,11 @@ class CombatState is BaseState {
 
     update(stateManager) {
         if (_engine == null) return
+        if (_frozen && _phase != "select" && _phase != "prompt") {
+            _frozen = false
+            Time.setTimeScale(1)
+        }
+        if (_phase != "select" && _stage != null) _stage.hidePlans()
         _view.update()
         var elapsed = Time.unscaledTime - _phaseStart
         if (_phase == "entering") {
@@ -302,10 +310,10 @@ class CombatState is BaseState {
             run_()
         } else if (_phase == "select") {
             select_()
-            idleFrame_()
+            frozenFrame_()
         } else if (_phase == "prompt") {
             if (armed_ && Input.isInputJustPressed("UIAccept")) nextPrompt_()
-            idleFrame_()
+            frozenFrame_()
         } else if (_phase == "stageClear") {
             idleFrame_()
             if (elapsed >= STAGE_PAUSE) nextStage_()
@@ -316,6 +324,39 @@ class CombatState is BaseState {
             idleFrame_()
             if (elapsed >= OVER_TIME) _outer.clearCurrentState()
         }
+    }
+
+    // A frame while moves are picked (or a prompt is up): every fighter freezes exactly as the clock left them - no
+    // battler updates, and game time stands still so no sprite animation, tint pulse or particle moves - while the grid
+    // overlays and the screen stay fresh. Only a defeated fighter's fade and a blow's flash finish (BattleStage.settleFrozen).
+    // The clock restarts when the fight runs again (update / exit).
+    frozenFrame_() {
+        if (!_frozen) {
+            _frozen = true
+            Time.setTimeScale(0)
+        }
+        if (_stage != null) {
+            _stage.settleFrozen()
+            if (_phase == "select") _stage.drawPlans(plans_())
+            _stage.refresh()
+        }
+        refreshViews_()
+    }
+
+    // What the plan ghosts play (BattleStage.drawPlans): the chain being built, and the rest of every chain the party
+    // has already committed - [[combatant, steps], ...].
+    plans_() {
+        var plans = []
+        for (fighter in _party) {
+            if (!fighter.active) continue
+            if (fighter == _chooser) {
+                if (_builder != null && _builder.count > 0) plans.add([fighter, _builder.steps])
+            } else {
+                var steps = BattlePlan.stepsOf(fighter)
+                if (steps.count > 0) plans.add([fighter, steps])
+            }
+        }
+        return plans
     }
 
     // A frame with the clock stopped: the stage holds its poses (idles still breathe) and the screen stays fresh.
@@ -533,7 +574,6 @@ class CombatState is BaseState {
         _view.setSlots(entries, _menuSlot.min(entries.count - 1), "menu")
         _view.setHeader(_chooser.name == "You" ? "Your turn" : "%(_chooser.name)'s turn")
         _view.setHint(_builder.count > 0 ? HINT_MENU_UNDO : HINT_MENU)
-        refreshChain_()
         slotFocused_(_menuSlot.min(entries.count - 1))
     }
 
@@ -555,10 +595,11 @@ class CombatState is BaseState {
                 var label = move.name
                 // A grid button fits about 20 characters (longer tier III names get shortened - the detail line has it).
                 if (label.count > 20) label = label[0...19] + "."
-                entries.add([label, "%(Move.fmt(move.completion))s  %(cost)sp", _builder.blockedBy(move) == null && allows_(move)])
+                entries.add([label, "%(Move.fmt(move.completion))s  %(cost)sp", _builder.blockedBy(move) == null && allows_(move),
+                    MoveIcons.pathFor(move)])
             }
         }
-        entries.add(["Hold", _builder.lastIsHold ? "not after Hold" : "rest", !_builder.lastIsHold && holdAllowed_])
+        entries.add(["Hold", _builder.lastIsHold ? "not after Hold" : "rest", !_builder.lastIsHold && holdAllowed_, MoveIcons.hold])
         // A lesson step starts on the first button it allows.
         if (_restrict != null && !entries[_lastSlot][2]) {
             for (i in 0...entries.count) {
@@ -573,7 +614,6 @@ class CombatState is BaseState {
         var stage = encounterStage_
         var hint = _roundHint != null ? _roundHint : (stage != null ? stage.hint : null)
         _view.setHint(hint != null ? "%(HINT_MOVES)    %(hint)" : HINT_MOVES)
-        refreshChain_()
         slotFocused_(_lastSlot)
     }
 
@@ -583,7 +623,7 @@ class CombatState is BaseState {
         var entries = []
         var rate = _engine.rules.holdRecovery(_chooser)
         for (seconds in Moves.holdLengths) {
-            entries.add(["Hold %(Move.fmt(seconds))s", "+%((rate * seconds).round)sp", true])
+            entries.add(["Hold %(Move.fmt(seconds))s", "+%((rate * seconds).round)sp", true, MoveIcons.hold])
         }
         _view.setSlots(entries, 3, "grid")
         _view.setHeader("Hold - for how long?")
@@ -623,14 +663,7 @@ class CombatState is BaseState {
         _view.setHeader("Chain ready")
         _view.setHint(HINT_CONFIRM)
         _view.setDetail(_builder.entries.map { |enemy| enemy.move.name }.join(" > "))
-        refreshChain_()
         if (_stage != null) _stage.setHighlights(null, [_builder.lane, _builder.row])
-    }
-
-    refreshChain_() {
-        var builder = _builder
-        var text = "%(Move.fmt(builder.time)) / %(Move.fmt(builder.budget))s   SP %(builder.stamina.floor)"
-        _view.setChain(text, builder.time / builder.budget)
     }
 
     // The usable items: [[id, display name, count left], ...] - the party's consumables (less what this chain has
@@ -1096,6 +1129,16 @@ class CombatState is BaseState {
         while (i < combatant.chain.count && endTime < foresee) {
             endTime = row.addForeseen(combatant.chain[i].move, endTime)
             i = i + 1
+        }
+        if (combatant.side != 0) {
+            // Where the chain ends is always shown, even when the moves before it aren't: they're one dim "?" block.
+            var chainEnd = endTime
+            while (i < combatant.chain.count) {
+                chainEnd = chainEnd + combatant.chain[i].move.completion
+                i = i + 1
+            }
+            if (chainEnd > endTime) row.addBlock(endTime, chainEnd, "hidden", "?")
+            row.chainEnd = chainEnd
         }
         return row
     }

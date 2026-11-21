@@ -25,17 +25,20 @@ import "renderer" for FlipBit
 import "app" for Time, Application
 import "Util/Colors" for WHITE
 import "Combat/Battler" for Battler
+import "Combat/PlanGhost" for PlanGhost
 
 // Where the fight happens when there's no arena level or authored BattleAnchor - far above the level grid.
 var DEFAULT_ARENA = Vec3.new(1200, -1500, 0)
 
 // The grid, in world pixels around the camera focus (+y is down). At CAMERA_ZOOM 3 the camera sees ~427x240 world
-// px; the cards across the top and the bar along the bottom (UI/Combat/CombatUI.wren) leave a strip about 120 tall.
+// px; the bar along the bottom (UI/Combat/CombatUI.wren) leaves about 156 above it, the cards stacked in the top
+// corners beside the grid.
 var CELL_WIDTH = 50
 var CELL_HEIGHT = 34
-var GRID_CENTRE_Y = -10          // the middle lane's feet, relative to the camera focus
+var GRID_CENTRE_Y = -26          // the middle lane's feet, relative to the camera focus
 var CAMERA_FOCUS = Vec2.new(0, 24)
 var CAMERA_ZOOM = 3
+var PLAN_PAUSE = 0.8             // seconds the plan ghosts hold their final cells before running again
 var CAMERA_DROP = 90             // the camera eases down this far onto the formation during the intro
 var SLIDE_DISTANCE = 110         // how far off its mark each battler starts the slide-in
 
@@ -80,6 +83,9 @@ class BattleStage {
         }
         _highlights = []
         _cursor = null
+        _ghosts = []          // [combatant, its PlanGhost] while plans are shown (drawPlans)
+        _planKey = null       // what the plans shown were, to restart their clock when they change
+        _planStart = 0
 
         // Battle camera - its own entity. Starts a little high and eases down onto the formation.
         _camStart = Vec3.new(_focus.x, _focus.y - CAMERA_DROP, 0)
@@ -296,7 +302,12 @@ class BattleStage {
             }
             battler.update(dt)
         }
-        // Battlers that have finished fading out leave the stage.
+        removeGone_()
+        paintGrid_()
+    }
+
+    // Battlers that have finished fading out leave the stage.
+    removeGone_() {
         var i = _battlers.count - 1
         while (i >= 0) {
             if (_battlers[i].gone) {
@@ -305,11 +316,19 @@ class BattleStage {
             }
             i = i - 1
         }
-        paintGrid_()
     }
 
     // Keeps the grid overlays (and the selection cursor) fresh while game time is paused for a menu.
     refresh() { paintGrid_() }
+
+    // While the fight is frozen for move picking: the defeated finish fading out (and leave the stage) and a blow's
+    // flash and bump finish - nobody else moves (Battler.settle).
+    settleFrozen() {
+        for (battler in _battlers) {
+            if (battler.settling) battler.settle()
+        }
+        removeGone_()
+    }
 
     react_(event) {
         var type = event["type"]
@@ -322,6 +341,7 @@ class BattleStage {
         if (battler == null) return
         if (type == "hit") {
             battler.playHitCloud(event["element"], event["blocked"], event["amount"])
+            if (!event["blocked"] && event["amount"] > 0) battler.hurt(battlerFor(event["by"]))
             var move = event["move"]
             if (event["blocked"]) {
                 battler.playImpact("parrySpark")
@@ -353,9 +373,65 @@ class BattleStage {
         }
     }
 
+    // --- plan ghosts ---------------------------------------------------------------------------
+
+    // While moves are picked: a see-through ghost for each party member with a plan plays it through - all on one
+    // clock that loops (a short pause on the final positions between runs) and starts over whenever a plan changes.
+    // plans: [[combatant, steps], ...] - steps as ChainBuilder.steps / BattlePlan.stepsOf give them.
+    drawPlans(plans) {
+        var key = ""
+        var length = 0
+        for (plan in plans) {
+            key = key + plan[0].name + ":"
+            for (step in plan[1]) {
+                key = key + step["move"].name + ","
+                length = length.max(step["end"])
+            }
+            key = key + ";"
+        }
+        if (key != _planKey) {
+            _planKey = key
+            _planStart = Time.unscaledTime
+        }
+        var clock = (Time.unscaledTime - _planStart) % (length + PLAN_PAUSE)
+        var kept = []
+        for (plan in plans) {
+            var fighter = plan[0]
+            var battler = battlerFor(fighter)
+            if (battler == null || !fighter.active) continue
+            var ghost = ghostFor_(fighter)
+            if (ghost == null) ghost = PlanGhost.new(battler.def, battler.wearsWeapon, _worldParent)
+            ghost.show(clock.min(length), plan[1], fighter, this)
+            kept.add([fighter, ghost])
+        }
+        for (pair in _ghosts) {
+            var stillShown = false
+            for (keep in kept) {
+                if (keep[1] == pair[1]) stillShown = true
+            }
+            if (!stillShown) pair[1].teardown()
+        }
+        _ghosts = kept
+    }
+
+    ghostFor_(fighter) {
+        for (pair in _ghosts) {
+            if (pair[0] == fighter) return pair[1]
+        }
+        return null
+    }
+
+    hidePlans() {
+        if (_ghosts.count == 0) return
+        for (pair in _ghosts) pair[1].teardown()
+        _ghosts = []
+        _planKey = null
+    }
+
     // Fold the arena away: destroy every battler, the grid and the camera, bring the real player and every other
     // level back.
     teardown() {
+        hidePlans()
         for (battler in _battlers) {
             battler.teardown()
         }

@@ -1,15 +1,16 @@
 // UI/Combat/CombatUI.wren
 // The battle screen, built from the UI kit (UI/Theme/UIKit.wren) as a frame around the arena so nothing sits on the
 // fighters (Combat/BattleStage.wren places the grid in the strip between):
-//   - combatant cards along the top: the party from the left, the opposition from the right (UI/Combat/CombatantUI);
+//   - combatant cards stacked down the top corners: the party on the left, the opposition (health only) on the right
+//     (UI/Combat/CombatantUI);
 //   - a message banner just under them: the battle log, call-outs and tips;
 //   - a full-width bar along the bottom: the shared timeline on the left (UI/Combat/TimelineUI - every combatant's
 //     committed moves on one time axis) and the command panel on the right;
 //   - a prompt box over the middle for tutorial lines (speaker + text, Accept to continue);
 //   - floating text over the fighters: damage, "Blocked", "Dodged", reactions.
 //
-// The command panel is where a chain is built. It always shows whose chain it is and how full it is (seconds of the
-// budget, stamina left after it), then one screen at a time (States/CombatState.wren decides which):
+// The command panel is where a chain is built (how full it is shows on the timeline's budget marker). It always shows
+// whose chain it is, then one screen at a time (States/CombatState.wren decides which):
 //   main menu   Moves / Items / Flee - one row of big buttons (setSlots, style "menu");
 //   Moves       the five loadout moves and Hold - a 3 x 2 grid, each a name over its time and cost ("grid");
 //   Hold        the six Hold lengths - a 3 x 2 grid ("grid");
@@ -28,7 +29,6 @@ import "Util/Colors" for BLANK
 import "UI/Combat/CombatantUI" for CombatantUI
 import "UI/Combat/TimelineUI" for TimelineUI
 import "UI/Combat/MoveButtonUI" for MoveButtonUI
-import "UI/Theme/KitBar" for KitBar
 import "UI/Theme/UIKit" for UIKit
 
 var TOP_EDGE = 12
@@ -64,7 +64,6 @@ var HEADER_HEIGHT = 26
 var DETAIL_SIZE = 18.0
 var DETAIL_LINE = 22          // px per wrapped line of the detail text
 var DETAIL_LIFT = 4           // the rich label's text starts this far below its box top
-var CHAIN_BAR_WIDTH = 120
 var TIMELINE_ROWS = 8
 var TIMELINE_WIDTH = 470      // the timeline strip, names included - a guide, kept compact
 var POPUPS = 16
@@ -92,18 +91,9 @@ class CombatUI {
         _root.setZIndex(-1)
         UIManager.addUIElement(_root)
 
-        // Cards: the party from the left edge, the opposition from the right - narrower if there are too many.
-        var total = partySlots + enemySlots
-        var width = CARD_WIDTH.min(((gw - 2 * TOP_EDGE - 40 - (total - 1) * CARD_GAP) / total.max(1)).floor)
-        _partyCards = []
-        for (i in 0...partySlots) {
-            _partyCards.add(CombatantUI.new(_root, TOP_EDGE + i * (width + CARD_GAP), TOP_EDGE, width, font))
-        }
-        _enemyCards = []
-        for (i in 0...enemySlots) {
-            var x = gw - TOP_EDGE - width - i * (width + CARD_GAP)
-            _enemyCards.add(CombatantUI.new(_root, x, TOP_EDGE, width, font))
-        }
+        // Cards: a column down each top corner, beside the grid - the party on the left, the opposition on the right.
+        _partyCards = CombatUI.cardColumn_(_root, TOP_EDGE, partySlots, true, font)
+        _enemyCards = CombatUI.cardColumn_(_root, gw - TOP_EDGE - CARD_WIDTH, enemySlots, false, font)
 
         _bar = UIKit.frame(_root, "window", Vec2.new(0, 0), Vec2.new(0, 1), Vec2.new(gw, BAR_HEIGHT), Vec2.new(0, 0), 0)
         _bar.setAnchorPoint(Vec2.new(0, 1))
@@ -148,11 +138,8 @@ class CombatUI {
         // The button prompts, along the bottom under everything else (-5: the rich label's own padding).
         _hint = UIKit.richText(_command, "", Vec2.new(-5, 0), Vec2.new(0, 1), Vec2.new(0, 1), 18.0, UIKit.textMuted, 6)
 
-        // Header: whose chain / what is being picked, and how full the chain is.
+        // Header: whose chain / what is being picked.
         _header = UIKit.richText(_command, "", Vec2.new(-5, 0), Vec2.new(0, 0), Vec2.new(0, 0), 20.0, UIKit.accent, 6)
-        _chainText = UIKit.richText(_command, "", Vec2.new(5, 0), Vec2.new(1, 0), Vec2.new(1, 0), 18.0, UIKit.text, 6)
-        // Just left of the readout ("2.6 / 4.0s   SP 80" - about 170 px).
-        _chainBar = KitBar.new(_command, COMMAND_WIDTH - CHAIN_BAR_WIDTH - 186, 5, CHAIN_BAR_WIDTH, 14, UIKit.accent, 6)
 
         // The button pool, laid out per screen by setSlots.
         _slots = []
@@ -310,6 +297,16 @@ class CombatUI {
 
     // --- cards, timeline, message --------------------------------------------------------
 
+    // `count` cards stacked downward from the top at x - with the stamina bar or not (CombatantUI).
+    static cardColumn_(parent, x, count, showStamina, font) {
+        var cards = []
+        var step = CombatantUI.heightFor(showStamina) + CARD_GAP
+        for (i in 0...count) {
+            cards.add(CombatantUI.new(parent, x, TOP_EDGE + i * step, CARD_WIDTH, font, showStamina))
+        }
+        return cards
+    }
+
     partyCards { _partyCards }
     enemyCards { _enemyCards }
     timeline { _timeline }
@@ -342,13 +339,7 @@ class CombatUI {
     setDetail(text) { _detail.setMarkupText(text) }
     setHint(markup) { _hint.setMarkupText(markup) }
 
-    // How full the chain is: "2.6 / 4.0s   SP 54".
-    setChain(text, fraction) {
-        _chainText.setMarkupText(text)
-        _chainBar.setFraction(fraction)
-    }
-
-    // A screen of buttons. entries: up to SLOT_COUNT of [name, info, enabled]; style: "menu", "grid" or "pair" (see
+    // A screen of buttons. entries: up to SLOT_COUNT of [name, info, enabled] or [name, info, enabled, icon path]; style: "menu", "grid" or "pair" (see
     // STYLES - columns, height, layout). Links the buttons so the arrows stay on them, puts focus on `focus` (if not
     // null), and hides the Items panel.
     setSlots(entries, focus) { setSlots(entries, focus, "grid") }
@@ -369,6 +360,7 @@ class CombatUI {
                 button.setLayout(spec[2])
                 button.setTexts(entries[i][0], entries[i][1])
                 button.setEnabled(entries[i][2])
+                button.setIcon(entries[i].count > 3 ? entries[i][3] : null)
             }
         }
         for (i in 0..._slotCount) {

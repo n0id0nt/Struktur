@@ -9,7 +9,8 @@
 //
 // Order of operations each step (TICK seconds):
 //   1. every active move advances (a combatant playing a damage animation doesn't);
-//   2. movement resolves for every move reaching its move time;
+//   2. movement resolves for every move reaching its move time - anyone stepping out of a cell before anyone
+//      stepping into it; a move whose cell is taken stops at the nearest free cell on the way, or stays put;
 //   3. every impact / effect time resolves against the updated positions - simultaneous impacts all land;
 //   4. hit reactions (damage animation + set-back, or a block's skip) and on-hit statuses apply with each hit;
 //   5. statuses tick, stamina comes back for anyone in Hold;
@@ -472,12 +473,32 @@ class BattleEngine {
             }
         }
 
-        // 2. movement
+        // 2. movement - whoever's cell is free goes first, which frees theirs for the next; whoever is still blocked
+        // once nobody else can go falls back (applyMovement_).
+        var pending = []
         for (fighter in _fighters) {
             var move = fighter.move
             if (fighter.active && move != null && move.isMovement && !fighter.moved && fighter.progress >= move.moveTime - EPS) {
-                applyMovement_(fighter)
+                pending.add(fighter)
             }
+        }
+        var progressed = true
+        while (pending.count > 0 && progressed) {
+            progressed = false
+            var still = []
+            for (fighter in pending) {
+                var dest = fighter.entry.dest
+                if (dest is List && isFree(dest[0], dest[1], fighter) && pathClear_(fighter, dest)) {
+                    applyMovement_(fighter)
+                    progressed = true
+                } else {
+                    still.add(fighter)
+                }
+            }
+            pending = still
+        }
+        for (fighter in pending) {
+            applyMovement_(fighter)
         }
 
         // 3 + 4. impacts - everything due this step is collected first, so simultaneous impacts all land
@@ -560,16 +581,13 @@ class BattleEngine {
         var move = fighter.move
         var dest = fighter.entry.dest
         fighter.claim = null
-        if (dest == null) return
+        if (!(dest is List)) return
         var target = null
-        if (move.pattern == "forward2") {
-            // A fixed two-cell path: all the way, or - stopping short - as far as it is clear.
-            var mid = [fighter.lane, fighter.row + fighter.facing]
-            if (isFree(mid[0], mid[1], fighter)) {
-                target = isFree(dest[0], dest[1], fighter) ? dest : (move.blocked == "short" ? mid : null)
-            }
-        } else if (isFree(dest[0], dest[1], fighter)) {
+        if (isFree(dest[0], dest[1], fighter) && pathClear_(fighter, dest)) {
             target = dest
+        } else {
+            // Taken (the plan couldn't know where the opposition would be): the nearest free cell on the way, if any.
+            target = fallbackCell_(fighter, dest)
         }
         if (target == null) {
             emit_("blocked", fighter, null)
@@ -581,6 +599,50 @@ class BattleEngine {
         if (!fighter.impactDone && move.impact != null && (move.isAttack || move.isHeal)) {
             fighter.cells = cellsAt(fighter, move, fighter.lane, fighter.row, fighter.facing)
         }
+    }
+
+    // The cells between where `fighter` stands and `dest`, nearest `dest` first: the midpoint of a two-cell trip.
+    static pathCells_(fighter, dest) {
+        var laneGap = dest[0] - fighter.lane
+        var rowGap = dest[1] - fighter.row
+        var steps = laneGap.abs.max(rowGap.abs)
+        var out = []
+        var step = steps - 1
+        while (step >= 1) {
+            out.add([fighter.lane + (laneGap * step / steps).round, fighter.row + (rowGap * step / steps).round])
+            step = step - 1
+        }
+        return out
+    }
+
+    // A walk along the rows (forward2) needs every cell on the way free; a jump (blink) doesn't.
+    pathClear_(fighter, dest) {
+        if (fighter.move.pattern != "forward2") return true
+        for (cell in BattleEngine.pathCells_(fighter, dest)) {
+            if (!isFree(cell[0], cell[1], fighter)) return false
+        }
+        return true
+    }
+
+    // Where a blocked move ends up: the free cell on the way nearest its destination - for a walk, only as far as the
+    // way is clear - or null to stay put.
+    fallbackCell_(fighter, dest) {
+        var walk = fighter.move.pattern == "forward2"
+        var cells = BattleEngine.pathCells_(fighter, dest)
+        if (walk) {
+            // Walking: the furthest cell reached before the first taken one.
+            var reached = null
+            var i = cells.count - 1
+            while (i >= 0 && isFree(cells[i][0], cells[i][1], fighter)) {
+                reached = cells[i]
+                i = i - 1
+            }
+            return reached
+        }
+        for (cell in cells) {
+            if (isFree(cell[0], cell[1], fighter)) return cell
+        }
+        return null
     }
 
     // --- impacts -------------------------------------------------------------------------------

@@ -1,6 +1,7 @@
 // UI/Combat/CombatantUI.wren
 // One combatant's card: a compact UI-kit "tile" with its name and HP numbers on the top row, its HP bar, its stamina
-// bar and a line for its statuses (Burn x2, Chill, Frozen, Charge...), with the kit's orange focus ring around it
+// bar (party cards only - the opposition's cards leave it out and are shorter) and a line for its statuses (Burn x2,
+// Chill, Frozen, Charge...), with the kit's orange focus ring around it
 // while it is the one whose chain is being picked. A defeated combatant's card dims; an unused card is hidden.
 // Pure view - refresh() takes only primitives States/CombatState.wren has already read off the Combatant.
 //
@@ -24,6 +25,7 @@ var STAMINA_Y = 52
 var BAR_HEIGHT = 12
 var STATUS_Y = 66
 var CARD_HEIGHT = 92
+var NO_STAMINA_LIFT = 18   // how much shorter a card without the stamina bar is
 var TEXT_SIZE = 18.0
 var DEAD_TINT = Vec4.new(150, 150, 150, 255)
 var NO_TINT = Vec4.new(255, 255, 255, 255)
@@ -31,10 +33,15 @@ var STATUS_COLOR = Vec4.new(255, 200, 120, 255)
 
 class CombatantUI {
     static height { CARD_HEIGHT }
+    // A card's height, px, with or without the stamina bar.
+    static heightFor(showStamina) { showStamina ? CARD_HEIGHT : CARD_HEIGHT - NO_STAMINA_LIFT }
 
-    // parent: UIElement to attach to. x,y: the card's top-left, px. width: the card's width, px.
-    construct new(parent, x, y, width, font) {
-        _card = UIKit.frame(parent, "tile", Vec2.new(x, y), Vec2.new(0, 0), Vec2.new(width, CARD_HEIGHT), Vec2.new(0, 0), 1)
+    // parent: UIElement to attach to. x,y: the card's top-left, px. width: the card's width, px. showStamina: false
+    // for the opposition's cards, which show only health.
+    construct new(parent, x, y, width, font, showStamina) {
+        var statusY = showStamina ? STATUS_Y : STATUS_Y - NO_STAMINA_LIFT
+        _card = UIKit.frame(parent, "tile", Vec2.new(x, y), Vec2.new(0, 0), Vec2.new(width, CombatantUI.heightFor(showStamina)),
+            Vec2.new(0, 0), 1)
         _ring = UIKit.focusRing(_card, 4)
 
         _name = UILabel.new(Vec2.new(PAD_X - 5, NAME_Y), Vec2.new(0, 0), "", TEXT_SIZE)
@@ -46,14 +53,14 @@ class CombatantUI {
 
         // HP numbers, right-aligned on the status row - the name gets the whole top row (5 / 2: the rich label's
         // own padding).
-        _numbers = UIKit.richText(_card, "", Vec2.new(-PAD_X + 5, STATUS_Y - 2), Vec2.new(1, 0), Vec2.new(1, 0), TEXT_SIZE,
+        _numbers = UIKit.richText(_card, "", Vec2.new(-PAD_X + 5, statusY - 2), Vec2.new(1, 0), Vec2.new(1, 0), TEXT_SIZE,
             UIKit.textMuted, 3)
-        _status = UIKit.richText(_card, "", Vec2.new(PAD_X - 5, STATUS_Y - 2), Vec2.new(0, 0), Vec2.new(0, 0), TEXT_SIZE,
+        _status = UIKit.richText(_card, "", Vec2.new(PAD_X - 5, statusY - 2), Vec2.new(0, 0), Vec2.new(0, 0), TEXT_SIZE,
             STATUS_COLOR, 3)
 
         var barWidth = width - 2 * PAD_X
         _hp = HealthBarUI.new(_card, PAD_X, HP_Y, barWidth, HP_HEIGHT)
-        _stamina = StaminaBarUI.new(_card, PAD_X, STAMINA_Y, barWidth, BAR_HEIGHT)
+        _stamina = showStamina ? StaminaBarUI.new(_card, PAD_X, STAMINA_Y, barWidth, BAR_HEIGHT) : null
         _shown = {}
         _alive = null
     }
@@ -70,7 +77,7 @@ class CombatantUI {
     // Everything is resolved by the caller from the Combatant before this is called.
     refresh(name, alive, hp, maxHp, staminaFraction, statusText) {
         _hp.setFraction(maxHp > 0 ? hp / maxHp : 0)
-        _stamina.setFraction(staminaFraction)
+        if (_stamina != null) _stamina.setFraction(staminaFraction)
         // Only when they change - refresh runs every frame of the fight.
         if (_shown["name"] != name) {
             _shown["name"] = name

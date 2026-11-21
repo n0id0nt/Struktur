@@ -6,11 +6,14 @@
 // Battles are animation driven. Every frame the battler reads its Combatant (Combat/BattleEngine.wren moves it on):
 //   - a move in progress plays that move's clip, retimed to the move's length and anchored to how far into it the
 //     combatant is - so the clip, the hit and the timeline are one thing, and pausing game time freezes all of it;
-//   - a combatant in a damage animation plays its hurt clip; an idle or holding one idles;
+//   - every blow that lands (hurt) restarts the hurt clip, bumps the sprite back from the attacker and flashes it red,
+//     fading back to its own colour - each hit on its own, however many land during one damage animation;
+//   - an idle or holding combatant idles;
 //   - the sprite slides to the combatant's cell whenever that changes, leans into an attack around its impact, and
 //     is tinted by what it is doing: guarding (blue, strongest at the peak), dodging (ghosted - Soul Step turns it
-//     into flickering soul light, pouring off sparks: Util/SoulFx.wren), Exposed (gold),
-//     staggered (red), burning / chilled.
+//     into flickering soul light, pouring off sparks: Util/SoulFx.wren), Exposed (gold), burning / chilled;
+//   - a foe in the last moments of its chain winds down (windingDown): a soft pale pulse and a "..." over its head -
+//     it is about to pick its next chain.
 // A def may carry a weapon layer (def.weaponTexturePath): a second sheet with the same grid, drawn over the body
 // frame for frame. Every hit that lands on it throws up a cloud of dust coloured by the blow's element
 // (playHitCloud), from its own emitter on a child entity; damage, heals and call-outs float up off it as text
@@ -34,7 +37,15 @@ var GUARD_TINT = Vec4.new(120, 170, 255, 255)
 var EXPOSED_TINT = Vec4.new(255, 225, 110, 255)
 var BURN_TINT = Vec4.new(255, 170, 90, 255)
 var CHILL_TINT = Vec4.new(150, 215, 255, 255)
+var WIND_DOWN_TINT = Vec4.new(240, 232, 255, 255)
+var WIND_DOWN_TIME = 0.6     // seconds before a foe's chain ends that it starts winding down
+var WIND_DOWN_TEXT = Vec4.new(235, 228, 255, 255)
 var DEFEAT_TIME = 0.9
+var HURT_CLIP_TIME = 0.35    // the hurt clip's length, restarted by every blow
+var HURT_FLASH_TIME = 0.35   // a blow's red flash fades back to the battler's own colour over this long
+var BUMP = 5                 // px a blow knocks the sprite back from its attacker
+var BUMP_OUT_TIME = 0.06     // the knock back is this quick...
+var BUMP_BACK_TIME = 0.2     // ...and it eases back onto its cell over this long
 // Soul Step's untouchable moment: the move's name, how many soul sparks a second pour off the battler, and how high
 // (px above its feet) they rise from.
 var SOUL_STEP = "Soul Step"
@@ -68,6 +79,8 @@ class Battler {
         _gone = false
         _hop = 0
         _hopUntil = 0
+        _hurtAt = null     // Time.unscaledTime of the last blow that landed (hurt) - null before the first
+        _hurtDir = 0       // which way (+1 right / -1 left) that blow knocked it
         _base = def.tint == null ? WHITE : def.tint
         _lastMove = null
         WorldTransform.setPosition(_entity, position)
@@ -133,8 +146,14 @@ class Battler {
 
     entity { _entity }
     combatant { _combatant }
+    def { _def }
+    // Whether this battler draws the weapon layer over its body (a plan ghost of it does too - Combat/PlanGhost.wren).
+    wearsWeapon { _weapon != null }
     position { _pos }
     gone { _gone }
+    // Fading out after a defeat (defeat), or still flashing / bumped from a blow (hurt) - what settle() finishes while
+    // the fight is frozen.
+    settling { _defeatedAt != null || hurtShowing_ }
 
     // Where the battler should stand; it slides there.
     target=(pos) { _target = pos }
@@ -209,10 +228,7 @@ class Battler {
         var combatant = _combatant
         var now = Time.scaledTime
         if (_defeatedAt != null) {
-            var t = Math.min((now - _defeatedAt) / DEFEAT_TIME, 1)
-            setColor_(Vec4.new(HURT_TINT.x, HURT_TINT.y, HURT_TINT.z, 255 * (1 - t)))
-            if (t >= 1) _gone = true
-            syncWeapon_()
+            fadeOut_()
             return
         }
 
@@ -236,12 +252,15 @@ class Battler {
             }
         }
         var hop = now < _hopUntil ? -6 * Math.sin((1 - (_hopUntil - now) / 0.3) * Math.pi) : 0
-        WorldTransform.setPosition(_entity, Vec3.new(_pos.x + lean * combatant.facing, _pos.y + hop, 0))
+        _lean = lean * combatant.facing
+        _hopOffset = hop
+        place_()
 
-        // Animation.
+        // Animation - while staggered, the hurt clip each blow restarted (hurt) plays out and holds; a stagger that
+        // came without a landed blow starts it once.
         if (combatant.stun > 0) {
-            if (!_wasStunned) {
-                _clip = clip_("hurt", 0.35, false)
+            if (!_wasStunned && !hurtShowing_) {
+                _clip = clip_("hurt", HURT_CLIP_TIME, false)
                 SpriteAnimation.forcePlayAnimation(_entity, _clip)
             }
             _wasStunned = true
@@ -258,8 +277,11 @@ class Battler {
 
         // Tint: what the combatant is doing right now.
         var color = _base
+        var windingDown = windingDown_(combatant)
+        if (windingDown && !_wasWindingDown) popText("...", WIND_DOWN_TEXT)
+        _wasWindingDown = windingDown
         if (combatant.stun > 0) {
-            color = HURT_TINT
+            color = _base   // staggered: its own colour, under each blow's red flash (hurtTint_)
         } else if (combatant.guardNow > 0) {
             color = Battler.mix_(_base, GUARD_TINT, 0.35 + 0.65 * combatant.guardNow)
         } else if (combatant.exposedNow) {
@@ -268,6 +290,8 @@ class Battler {
             color = Battler.mix_(_base, BURN_TINT, 0.5 + 0.3 * Math.sin(now * 9))
         } else if (combatant.chill > 0 || combatant.frozen > 0) {
             color = Battler.mix_(_base, CHILL_TINT, combatant.frozen > 0 ? 1 : 0.6)
+        } else if (windingDown) {
+            color = Battler.mix_(_base, WIND_DOWN_TINT, 0.35 + 0.3 * Math.sin(now * 16))
         }
         // Dodging ghosts the battler; Soul Step's dodge turns it into flickering soul light, pouring off sparks.
         var soulStepping = combatant.dodgingNow && move != null && move.name == SOUL_STEP
@@ -278,8 +302,70 @@ class Battler {
             color = Vec4.new(color.x, color.y, color.z, 120)
         }
         showSoulStep_(soulStepping)
-        setColor_(color)
+        _tint = color
+        setColor_(hurtTint_(color))
         syncWeapon_()
+    }
+
+    // A foe in the last WIND_DOWN_TIME seconds of its chain - its last move nearly played out.
+    windingDown_(combatant) {
+        if (combatant.side == 0 || combatant.needsChain || combatant.move == null) return false
+        if (combatant.chainIndex < combatant.chain.count - 1) return false
+        var left = combatant.move.completion - combatant.progress + combatant.stun
+        return left > 0 && left <= WIND_DOWN_TIME
+    }
+
+    // While the fight is frozen for move picking (States/CombatState.wren): only a defeat's fade and a blow's flash and
+    // bump carry on - no animation, sliding or other tint changes.
+    settle() {
+        if (_defeatedAt != null) {
+            fadeOut_()
+        } else if (_tint != null) {
+            place_()
+            setColor_(hurtTint_(_tint))
+        }
+    }
+
+    // A defeat's fall and fade, on real time so it finishes even while the fight is frozen.
+    fadeOut_() {
+        var t = Math.min((Time.unscaledTime - _defeatedAt) / DEFEAT_TIME, 1)
+        SpriteAnimation.playAnimationAt(_entity, _clip, t)
+        setColor_(Vec4.new(HURT_TINT.x, HURT_TINT.y, HURT_TINT.z, 255 * (1 - t)))
+        if (t >= 1) _gone = true
+        syncWeapon_()
+    }
+
+    // The sprite on its spot, with its lean, hop and a blow's knock back added.
+    place_() {
+        var lean = _lean == null ? 0 : _lean
+        var hop = _hopOffset == null ? 0 : _hopOffset
+        WorldTransform.setPosition(_entity, Vec3.new(_pos.x + lean + bump_, _pos.y + hop, 0))
+    }
+
+    // Seconds since the last blow landed, or null.
+    sinceHurt_ { _hurtAt == null ? null : Time.unscaledTime - _hurtAt }
+
+    hurtShowing_ {
+        var since = sinceHurt_
+        return since != null && since < HURT_FLASH_TIME.max(BUMP_OUT_TIME + BUMP_BACK_TIME)
+    }
+
+    // px the last blow has the sprite knocked back right now: out fast, then easing back onto its cell.
+    bump_ {
+        var since = sinceHurt_
+        if (since == null) return 0
+        if (since < BUMP_OUT_TIME) return _hurtDir * BUMP * since / BUMP_OUT_TIME
+        var back = (since - BUMP_OUT_TIME) / BUMP_BACK_TIME
+        if (back >= 1) return 0
+        return _hurtDir * BUMP * (1 - back) * (1 - back)
+    }
+
+    // `color` under the last blow's red flash, fading back to it.
+    hurtTint_(color) {
+        var since = sinceHurt_
+        if (since == null || since >= HURT_FLASH_TIME) return color
+        var flash = Battler.mix_(color, HURT_TINT, 1 - since / HURT_FLASH_TIME)
+        return Vec4.new(flash.x, flash.y, flash.z, color.w)
     }
 
     // The soul sparks of a Soul Step: their emitter is made the first time one is needed, and only told when they
@@ -318,10 +404,21 @@ class Battler {
     // A quick hop: the dodge that let a hit pass.
     hop() { _hopUntil = Time.scaledTime + 0.3 }
 
+    // A blow landed: the hurt clip starts over, and the sprite flashes red and is knocked back - away from `from` (the
+    // attacker's Battler, or null to go back against its own facing).
+    hurt(from) {
+        if (_defeatedAt != null) return
+        _hurtAt = Time.unscaledTime
+        _hurtDir = -_combatant.facing
+        if (from != null && from.position.x != _pos.x) _hurtDir = from.position.x < _pos.x ? 1 : -1
+        _clip = clip_("hurt", HURT_CLIP_TIME, false)
+        SpriteAnimation.forcePlayAnimation(_entity, _clip)
+    }
+
     // Falls and fades out; `gone` turns true once it has.
     defeat() {
         if (_defeatedAt != null) return
-        _defeatedAt = Time.scaledTime
+        _defeatedAt = Time.unscaledTime
         _clip = clip_("defeat", DEFEAT_TIME, false)
         SpriteAnimation.forcePlayAnimation(_entity, _clip)
     }

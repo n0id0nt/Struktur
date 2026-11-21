@@ -8,8 +8,11 @@
 //     the chain will recover (each move still pays when it starts);
 //   - nothing cancels: once committed, a chain plays out.
 // ChainBuilder also projects where the combatant will stand after each step, so the selection screen can show the
-// cells a move will cover from there and offer the right destinations.
+// cells a move will cover from there and offer the right destinations. Whether a cell is free is judged when the move
+// would get there (Combat/BattlePlan.wren): an ally whose committed chain walks out of a cell before then leaves it
+// free, and one walking into it takes it.
 import "Combat/Combatant" for ChainEntry
+import "Combat/BattlePlan" for BattlePlan
 
 // Movement patterns -> the [lane, row] offsets a mover may pick (row offsets already turned by `facing`).
 class Grid {
@@ -47,6 +50,8 @@ class ChainBuilder {
         _row = fighter.row
         _stamina = fighter.stats.stamina
         _trail = []      // per entry: [lane, row, stamina, time] before it was added - for undo
+        _plan = BattlePlan.new(engine, fighter)
+        _steps = []      // per entry, timed from the chain's start - see steps
     }
 
     fighter { _f }
@@ -61,6 +66,10 @@ class ChainBuilder {
     facing { _e.facingAt(_f, _lane, _row) }
     // Stamina left after the chain so far (counting what its Holds recover).
     stamina { _stamina }
+
+    // The chain so far as timed steps, the way BattlePlan.stepsOf reads a committed one: [{"move", "start", "end",
+    // "at", "to"}, ...] - "at" / "to": when and where a movement move puts the combatant (null if it doesn't).
+    steps { _steps }
 
     complete { _entries.count >= 2 && _time >= _e.budget - 0.0001 }
 
@@ -94,18 +103,17 @@ class ChainBuilder {
     // True when the player has to pick where `move` goes.
     needsDestination(move) { move.isMovement && !Grid.fixed(move.pattern) }
 
-    // The cells `move` could take the combatant to from where the chain leaves it: on the board and not standing on
-    // someone (who may of course have moved by then - legality is checked again at the move time).
+    // The cells `move` could take the combatant to from where the chain leaves it: on the board and free when it
+    // would arrive (BattlePlan) - the opposition may of course have moved by then; the engine checks again at the move
+    // time and falls back to the nearest free cell on the way.
     destinations(move) {
         var out = []
         if (!move.isMovement) return out
+        var arriveAt = _time + move.moveTime
         for (offset in Grid.offsets(move.pattern, facing)) {
             var lane = _lane + offset[0]
             var row = _row + offset[1]
-            if (!_e.inBounds(lane, row)) continue
-            var who = _e.occupant(lane, row)
-            if (who != null && who != _f) continue
-            out.add([lane, row])
+            if (_plan.isFree(lane, row, arriveAt)) out.add([lane, row])
         }
         return out
     }
@@ -131,24 +139,27 @@ class ChainBuilder {
             if (!_e.inBounds(target[0], target[1])) target = null
         }
         _entries.add(ChainEntry.new(move, target))
+        var arriveAt = _time + (move.isMovement ? move.moveTime : 0)
         _time = _time + move.completion
         if (move.isHold) {
             _stamina = (_stamina + _e.rules.holdRecovery(_f) * move.completion).min(_f.stats.maxStamina)
         } else {
             _stamina = _stamina - costOf(move)
         }
-        if (target != null) {
-            var who = _e.occupant(target[0], target[1])
-            if (who == null || who == _f) {
-                _lane = target[0]
-                _row = target[1]
-            }
+        var step = {"move": move, "start": _time - move.completion, "end": _time, "at": null, "to": null}
+        if (target != null && _plan.isFree(target[0], target[1], arriveAt)) {
+            _lane = target[0]
+            _row = target[1]
+            step["at"] = arriveAt
+            step["to"] = target
         }
+        _steps.add(step)
     }
 
     undo() {
         if (_entries.count == 0) return
         _entries.removeAt(-1)
+        _steps.removeAt(-1)
         var before = _trail.removeAt(-1)
         _lane = before[0]
         _row = before[1]
