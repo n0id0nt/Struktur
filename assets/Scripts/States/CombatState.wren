@@ -33,6 +33,7 @@ import "Combat/Chain" for ChainBuilder
 import "Combat/BattleEngine" for BattleEngine
 import "Combat/BattleStage" for BattleStage
 import "Combat/BattlePlan" for BattlePlan
+import "Combat/BattleAudio" for BattleAudio
 import "Combat/CombatOutcome" for CombatOutcome
 import "Combat/Defeated" for Defeated
 import "Combat/Encounter" for Encounter
@@ -165,7 +166,10 @@ class CombatState is BaseState {
 
         // Room on screen for whoever may join the opposition mid-fight (a boss's shards).
         var enemySlots = _engine.side(1).count
-        if (_engine.side(1).any { |enemy| enemy.has("boss") }) enemySlots = enemySlots + 2
+        var bossFight = _engine.side(1).any { |enemy| enemy.has("boss") }
+        if (bossFight) enemySlots = enemySlots + 2
+        // The fight's song (a boss gets a heavier one) and its sounds.
+        _audio = BattleAudio.new(bossFight)
         _view = CombatUI.new(_party.count, enemySlots.max(1))
         _view.onSlotClick = Fn.new { |index| slotClicked_(index) }
         _view.onSlotFocus = Fn.new { |index| slotFocused_(index) }
@@ -551,6 +555,7 @@ class CombatState is BaseState {
                 showMenu_()
             } else if (_builder.count > 0) {
                 _builder.undo()
+                _audio.play("cancel")
                 if (_mode == "confirm") {
                     showMoves_()
                 } else {
@@ -719,6 +724,7 @@ class CombatState is BaseState {
                 commit_()
             } else {
                 _builder.undo()
+                _audio.play("cancel")
                 showMoves_()
             }
         }
@@ -774,6 +780,7 @@ class CombatState is BaseState {
 
     // A move has joined the chain: the stage's pick hook (a lesson reacting), any lines it raised, then the Moves menu.
     picked_(move) {
+        _audio.play("accept")
         var stage = encounterStage_
         if (stage != null && stage.onPick != null) stage.onPick.call(this, move)
         if (_prompts.count > 0) {
@@ -823,6 +830,7 @@ class CombatState is BaseState {
     // What the focused slot would do: a readout under the grid, and its cells on the arena - from where the chain
     // so far leaves the chooser.
     slotFocused_(index) {
+        if (_phase == "select" && _audio != null) _audio.play("focus")
         if (_phase != "select" || _builder == null) return
         var here = [_builder.lane, _builder.row]
         if (_mode == "menu") {
@@ -954,6 +962,7 @@ class CombatState is BaseState {
             }
             if (best != _pickIndex) {
                 _pickIndex = best
+                _audio.play("focus")
                 paintPick_()
             }
         }
@@ -967,6 +976,7 @@ class CombatState is BaseState {
 
     // The chain is built: commit it, then the next party member who needs one - or let the clock run.
     commit_() {
+        _audio.play("start")
         _engine.commit(_chooser, _builder.entries)
         beginSelection_()
     }
@@ -983,6 +993,7 @@ class CombatState is BaseState {
 
     // One engine event: floating text over whoever it happened to, the banner, the encounter's hooks.
     show_(event) {
+        _audio.onEvent(event)
         var type = event["type"]
         var who = event["who"]
         var text = event["text"]
@@ -1215,6 +1226,7 @@ class CombatState is BaseState {
         }
         var fallen = removeFallen_(recruited)
         var outcome = CombatOutcome.new(result, _duel, fallen, recruited)
+        _audio.finish(result)
         Debug.info("[CombatState] fight over: %(outcome)")
         CombatOutcome.record(outcome)
         _view.showCommand(false)
@@ -1254,6 +1266,10 @@ class CombatState is BaseState {
         if (_view != null) {
             _view.teardown()
             _view = null
+        }
+        if (_audio != null) {
+            _audio.teardown()
+            _audio = null
         }
         _engine = null
         _chooser = null

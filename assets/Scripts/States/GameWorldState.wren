@@ -10,6 +10,7 @@ import "gameObject" for GameObject
 import "gameObjectComponents" for WorldTransform, World, Script
 import "math" for Vec3
 import "resourceManager" for Music
+import "World/AreaMusic" for AreaMusic
 import "input" for Input
 import "flags" for FlagManager
 import "app" for Time, Application
@@ -176,6 +177,9 @@ class GameWorldState is BaseState {
         if (player != null) {
             player.playerForceStop()
         }
+        if (_gameMusic) {
+            _gameMusic.stop()
+        }
         _stateManager.changeState("InteractState", {"entryNode": node})
     }
 
@@ -245,11 +249,9 @@ class GameWorldState is BaseState {
 
         Debug.info("Loading game world...")
 
-        _gameMusic = Music.load("Audio/Musics/33 - Calm Village.ogg")
-        if (_gameMusic) {
-            _gameMusic.setLooping(true)
-            _gameMusic.play()
-        }
+        // The song follows the level's terrain (World/AreaMusic.wren) - picked once the first level is known.
+        _gameMusic = null
+        _gameSong = null
 
         var worldEntity = World.createWorldEntity(WORLD_FILE_PATH)
         _worldEntity = worldEntity
@@ -452,6 +454,24 @@ class GameWorldState is BaseState {
         _stateManager.changeState("InventoryState")
     }
 
+    // Switches to the song for level levelIndex's terrain (World/AreaMusic.wren) if it isn't already the one loaded.
+    // It plays straight away when nothing else is on (a conversation, a fight...); otherwise update starts it once
+    // they're over, as it does after every interruption.
+    playAreaSong_(levelIndex) {
+        var song = AreaMusic.songFor(World.getLevelField(_worldEntity, levelIndex, "Terrain"))
+        if (song == _gameSong) return
+        _gameSong = song
+        if (_gameMusic) {
+            _gameMusic.stop()
+            _gameMusic.unload()
+        }
+        _gameMusic = Music.load(song)
+        if (_gameMusic) {
+            _gameMusic.setLooping(true)
+            if (_stateManager.currentState == null) _gameMusic.play()
+        }
+    }
+
     // Keeps only the level the player is currently standing in, plus its immediate LDtk neighbours,
     // loaded - everything else gets unloaded to free its tiles/collision/entities. Cheap to call every
     // frame: the streaming work only runs when the player's current level actually changes, and
@@ -463,6 +483,7 @@ class GameWorldState is BaseState {
             return
         }
         _currentLevelIndex = levelIndex
+        playAreaSong_(levelIndex)
         MapLog.visit(_worldEntity, levelIndex)   // the inventory's Map tab (World/MapLog.wren)
         // The first room (spawn) is snapped to; every room after that is slid to.
         _roomCamera.moveTo(levelIndex)
@@ -645,6 +666,9 @@ class GameWorldState is BaseState {
             QuestLog.setFlag(DUEL_WON_FLAG_PREFIX + challenger, 1)   // may move a quest on - announced as an event
             var entity = Npcs.first(challenger)
             if (entity != null) {
+                if (_gameMusic) {
+                    _gameMusic.stop()
+                }
                 _stateManager.changeState("InteractState", {"interactingEntity": entity})
             }
         }
@@ -922,9 +946,12 @@ class GameWorldState is BaseState {
         }
         _soulLight = null   // destroyed with the player
         SoulSight.reset()
-        _gameMusic.stop()
-        _gameMusic.unload()
+        if (_gameMusic) {
+            _gameMusic.stop()
+            _gameMusic.unload()
+        }
         _gameMusic = null
+        _gameSong = null
 
         Debug.info("Game world unloaded")
     }
