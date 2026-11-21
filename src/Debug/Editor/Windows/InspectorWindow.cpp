@@ -8,7 +8,9 @@
 #define GLM_ENABLE_EXPERIMENTAL
 #include <glm/gtx/quaternion.hpp>
 
+#include "Debug/Editor/Editor.h"
 #include "Debug/Editor/ExportedFieldRenderer.h"
+#include "Debug/Editor/LevelViewer/EntityFieldEditor.h"
 #include "Debug/Editor/PreviewRenderers/PreviewHelpers.h"
 #include "Debug/Editor/Windows/HierarchyWindow.h"
 #include "Debug/Editor/Windows/PreviewWindow.h"
@@ -1445,6 +1447,29 @@ void InspectorWindow::RenderLevelEntityInstanceComponent(GameContext& context, C
 	ImGui::Spacing();
 	ImGui::TextUnformatted("Fields");
 	ImGui::Indent();
+	// Editable while the level viewer has the file open (it always does for a LevelEntityInstance, unless the file
+	// couldn't be read for editing).
+	LevelViewer& levelViewer = context.GetEditor().GetLevelViewer();
+	if (levelViewer.IsActive() && levelViewer.GetDocument().HasEntity(instance.Iid))
+	{
+		if (registry.all_of<Component::ParticleEmitter>(entity))
+		{
+			if (ImGui::SmallButton("Replay"))
+			{
+				levelViewer.ReplayParticles(context, entity);
+			}
+			ImGui::SetItemTooltip("Clear the particles and fire the burst again");
+		}
+		EntityFieldEditor::Render(context, levelViewer, instance.Iid);
+		// Save / undo / redo while editing here, as in the Game Viewport and Level Viewer window.
+		if (ImGui::IsWindowFocused(ImGuiFocusedFlags_RootAndChildWindows))
+		{
+			levelViewer.HandleShortcuts(context);
+		}
+		ImGui::Unindent();
+		ImGui::TextDisabled("Saved with the level viewer's Save (Ctrl+S)");
+		return;
+	}
 	for (const Wren::WrenItem& field : instance.fields)
 	{
 		ImGui::TextWrapped("%s: %s", field.identifier.c_str(), FormatFieldValue(field).c_str());

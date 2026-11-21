@@ -1,5 +1,6 @@
 #include "Level.h"
 
+#include <filesystem>
 #include <format>
 #include <sstream>
 
@@ -251,27 +252,24 @@ std::vector<Struktur::Wren::WrenItem> Struktur::World::Level::BuildEntityScriptA
 				break;
 			case Struktur::FileLoading::LevelParser::FieldInstanceType::STRING:
 			case Struktur::FileLoading::LevelParser::FieldInstanceType::MULTILINE:
-			case Struktur::FileLoading::LevelParser::FieldInstanceType::FILE_PATH:
 			case Struktur::FileLoading::LevelParser::FieldInstanceType::ENUM:
+			// A "#RRGGBB" string - see LevelParser::LoadFieldInstances.
+			case Struktur::FileLoading::LevelParser::FieldInstanceType::COLOUR:
 				item.type  = WrenType::WREN_TYPE_STRING;
 				item.value = field.value;
 				break;
-			case Struktur::FileLoading::LevelParser::FieldInstanceType::COLOUR:
+			case Struktur::FileLoading::LevelParser::FieldInstanceType::FILE_PATH:
 			{
-				item.type  = WrenType::WREN_TYPE_LIST;
-				auto color = std::any_cast<Util::Color>(field.value);
-				// Create nested list [r, g, b, a]
-				std::vector<Wren::WrenItem> colorList;
-				Wren::WrenItem r{"r", static_cast<double>(color.r), WrenType::WREN_TYPE_NUM};
-				colorList.emplace_back(r);
-				Wren::WrenItem g{"g", static_cast<double>(color.g), WrenType::WREN_TYPE_NUM};
-				colorList.emplace_back(g);
-				Wren::WrenItem b{"b", static_cast<double>(color.b), WrenType::WREN_TYPE_NUM};
-				colorList.emplace_back(b);
-				Wren::WrenItem a{"a", static_cast<double>(color.a), WrenType::WREN_TYPE_NUM};
-				colorList.emplace_back(a);
-
-				item.value = colorList;
+				// LDtk stores the path relative to the .ldtk file; scripts get the virtual path every loader takes
+				// (e.g. "../FX/Particle/Spark.png" from Levels/SevenGods.ldtk -> "FX/Particle/Spark.png").
+				item.type             = WrenType::WREN_TYPE_STRING;
+				std::string pathValue = std::any_cast<std::string>(field.value);
+				if (!pathValue.empty())
+				{
+					std::filesystem::path worldDirectory = std::filesystem::path(world.filePath).parent_path();
+					pathValue = (worldDirectory / pathValue).lexically_normal().generic_string();
+				}
+				item.value = pathValue;
 				break;
 			}
 			case Struktur::FileLoading::LevelParser::FieldInstanceType::POINT:

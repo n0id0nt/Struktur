@@ -317,6 +317,7 @@ if(EDITOR)
         third_party/imgui/imgui_draw.cpp
         third_party/imgui/imgui_tables.cpp
         third_party/imgui/imgui_widgets.cpp
+        third_party/imgui/misc/cpp/imgui_stdlib.cpp
     )
     add_library(imgui STATIC ${IMGUI_SOURCES})
     target_include_directories(imgui PUBLIC third_party/imgui)
@@ -371,6 +372,7 @@ if(EDITOR)
         src/Debug/Editor/EditorLayoutManager.h      src/Debug/Editor/EditorLayoutManager.cpp
         src/Debug/Editor/EditorSettings.h           src/Debug/Editor/EditorSettings.cpp
         src/Debug/Editor/EditorTheme.h              src/Debug/Editor/EditorTheme.cpp
+        src/Debug/Editor/ProjectLauncher.h          src/Debug/Editor/ProjectLauncher.cpp
         src/Debug/Editor/Exporters/DialogueExporter.h src/Debug/Editor/Exporters/DialogueExporter.cpp
 
         src/Debug/Editor/EditorSettings.h           src/Debug/Editor/EditorSettings.cpp
@@ -396,6 +398,8 @@ if(EDITOR)
         src/Debug/Editor/Windows/LevelViewerWindow.h src/Debug/Editor/Windows/LevelViewerWindow.cpp
 
         src/Debug/Editor/LevelViewer/LevelViewer.h  src/Debug/Editor/LevelViewer/LevelViewer.cpp
+        src/Debug/Editor/LevelViewer/LdtkDocument.h src/Debug/Editor/LevelViewer/LdtkDocument.cpp
+        src/Debug/Editor/LevelViewer/EntityFieldEditor.h src/Debug/Editor/LevelViewer/EntityFieldEditor.cpp
         src/Debug/Editor/LevelViewer/EditorCamera.h src/Debug/Editor/LevelViewer/EditorCamera.cpp
 
         src/Debug/Editor/PreviewRenderers/PreviewRenderer.h

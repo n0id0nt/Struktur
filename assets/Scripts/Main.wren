@@ -57,6 +57,7 @@ class Game {
             "Path",
             "WayPoint",
             "Trigger",
+            "ParticleEffect",
         ]
 
         for (gameObjectsScript in gameObjectsScripts) {

@@ -430,10 +430,13 @@ void Struktur::FileLoading::LevelParser::LoadFieldInstances(std::vector<FieldIns
 			case Struktur::FileLoading::LevelParser::FieldInstanceType::FILE_PATH:
 			case Struktur::FileLoading::LevelParser::FieldInstanceType::ENUM:
 			case Struktur::FileLoading::LevelParser::FieldInstanceType::ENTITY_REF:
+			// LDtk exports a colour as a "#RRGGBB" string - kept as is (scripts turn it into a Vec4 with
+			// Util/Colors.wren's Colors.fromHex).
+			case Struktur::FileLoading::LevelParser::FieldInstanceType::COLOUR:
 				field.value = FieldValueToString(value);
 				break;
 			default:
-				// Colour / Point / Tile aren't used by any script yet - pass them as null rather than crash.
+				// Point / Tile aren't used by any script yet - pass them as null rather than crash.
 				DEBUG_WARNING("Field %s has unsupported type %s - passed to its script as null", fieldName.c_str(),
 				              typeName.c_str());
 				field.value.reset();

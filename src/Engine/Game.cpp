@@ -54,6 +54,10 @@
 #ifdef EDITOR
 	#include <imgui.h>
 	#include <imgui_impl_sdl3.h>
+
+	#include "Debug/Editor/EditorLayoutManager.h"
+	#include "Debug/Editor/EditorTheme.h"
+	#include "Debug/Editor/ProjectLauncher.h"
 #endif
 
 #ifdef EDITOR
@@ -70,7 +74,7 @@
 	#define SPLASHSCREENTEXT "Seven Gods"
 #endif
 
-void Struktur::InitialiseGame(GameContext& context)
+bool Struktur::InitialiseGame(GameContext& context)
 {
 	Core::GameData& gameData                                       = context.GetGameData();
 	System::SystemManager& systemManager                           = context.GetSystemManager();
@@ -86,12 +90,8 @@ void Struktur::InitialiseGame(GameContext& context)
 	// Mount the preloaded assets directory directly
 	FileSystem::Mount("/assets");
 #elif defined(EDITOR)
-	// Project folder selection at startup
-	std::string projectPath =
-	    FileSystem::OpenFolderDialog("Select Project Directory", FileSystem::GetWorkingDirectory());
-
-	// Fall back to default assets/ if user cancels
-	FileSystem::Mount(projectPath.empty() ? "assets/" : projectPath);
+	// Mounted below, once the launcher (drawn in the editor window, which needs creating first) picks a project
+	std::string projectPath;
 #elif defined(DEBUG)
 	FileSystem::Mount("assets/");
 #else
@@ -122,6 +122,21 @@ void Struktur::InitialiseGame(GameContext& context)
 	// how ImGui sees the raw events it needs (text input, wheel, focus) that polled state can't provide.
 	window.AddEventCallback([](const SDL_Event& event) { ImGui_ImplSDL3_ProcessEvent(&event); });
 	context.GetImGuiRenderer().Initialise();
+
+	// Set before the launcher's first ImGui frame - ImGui reads its ini once, on the first NewFrame, so the
+	// editor's docking layout has to be the file loaded then (Editor::Initialise sets the same path again).
+	io.IniFilename = Debug::EditorLayoutManager::kDefaultLayoutFilePath;
+	Debug::EditorTheme::ApplyDarkTheme();
+
+	// Project folder selection at startup - an in-editor launcher of remembered projects
+	Debug::ProjectLauncher projectLauncher;
+	projectPath = projectLauncher.Run(context);
+	if (projectPath.empty())
+	{
+		// Window closed in the launcher - nothing is mounted or initialised past this point
+		return false;
+	}
+	FileSystem::Mount(projectPath);
 
 	Debug::Editor& editor = context.GetEditor();
 	editor.Initialise(context);
@@ -218,6 +233,7 @@ void Struktur::InitialiseGame(GameContext& context)
 #if !defined(EDITOR)
 	wrenStateManager.Start(context);
 #endif
+	return true;
 }
 
 void Struktur::ExitGame(GameContext& context)
@@ -506,7 +522,18 @@ void Struktur::Game()
 	GameContext context;
 
 	// Load resources
-	InitialiseGame(context);
+	if (!InitialiseGame(context))
+	{
+		// Closed from the editor's project launcher before any project was opened - only the window, graphics
+		// device and ImGui exist yet, so skip ExitGame's game-side teardown.
+#ifdef EDITOR
+		ImGui_ImplSDL3_Shutdown();
+		ImGui::DestroyContext();
+#endif
+		context.Shutdown();
+		FileSystem::Shutdown();
+		return;
+	}
 
 	Core::GameData& gameData = context.GetGameData();
 

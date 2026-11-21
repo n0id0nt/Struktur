@@ -163,3 +163,31 @@ var WHITE = Vec4.new(255, 255, 255, 255)
 var WHITESMOKE = Vec4.new(245, 245, 245, 255)
 var YELLOW = Vec4.new(255, 255, 0, 255)
 var YELLOWGREEN = Vec4.new(154, 205, 50, 255)
+
+// Hex colour strings, e.g. an LDtk Color field (LDtk gives scripts its "#RRGGBB" value).
+class Colors {
+    // "#RRGGBB" (or "RRGGBB", either case) as an RGBA Vec4 with this alpha (0-255); null if it isn't six hex digits.
+    static fromHex(hex, alpha) {
+        if (!(hex is String)) return null
+        var digits = hex.startsWith("#") ? hex[1..-1] : hex
+        if (digits.count != 6) return null
+        var channels = []
+        for (i in 0...3) {
+            var high = Colors.hexDigit_(digits[i * 2])
+            var low = Colors.hexDigit_(digits[i * 2 + 1])
+            if (high == null || low == null) return null
+            channels.add(high * 16 + low)
+        }
+        return Vec4.new(channels[0], channels[1], channels[2], alpha)
+    }
+
+    // Fully opaque.
+    static fromHex(hex) { Colors.fromHex(hex, 255) }
+
+    // A hex digit's value (0-15), or null.
+    static hexDigit_(character) {
+        var index = "0123456789ABCDEF0123456789abcdef".indexOf(character)
+        if (index < 0) return null
+        return index % 16
+    }
+}

@@ -3,6 +3,7 @@
 #include "Debug/Editor/Windows/HierarchyWindow.h"
 #include "Engine/ECS/Component/Level.h"
 #include "Engine/ECS/Component/LevelEntityInstance.h"
+#include "Engine/ECS/Component/ParticleEmitter.h"
 #include "Engine/ECS/Component/Sprite.h"
 #include "Engine/ECS/Component/PhysicsBody.h"
 #include "Engine/ECS/Component/Transform.h"
@@ -301,10 +302,14 @@ void Struktur::System::DebugSystem::RenderLevelEntityPlaceholders(GameContext& c
 		glm::vec3 worldPosition = transformSystem.GetWorldPosition(context, entity);
 		glm::vec2 min           = glm::vec2(worldPosition) + placeholder.offset;
 		glm::vec2 max           = min + placeholder.size;
-		glm::vec2 corners[4]    = {min, {max.x, min.y}, max, {min.x, max.y}};
-		Util::Color fill        = placeholder.color;
-		fill.a                  = FILL_ALPHA;
-		m_debugRenderer.DrawSolidPolygon(corners, 4, fill);
+		// A particle emitter shows its particles - just outline where it is, so a fill doesn't cover them.
+		if (!registry.all_of<Component::ParticleEmitter>(entity))
+		{
+			glm::vec2 corners[4] = {min, {max.x, min.y}, max, {min.x, max.y}};
+			Util::Color fill     = placeholder.color;
+			fill.a               = FILL_ALPHA;
+			m_debugRenderer.DrawSolidPolygon(corners, 4, fill);
+		}
 		m_debugRenderer.DrawRectOutline(min, max, 1.0f, placeholder.color);
 	}
 }

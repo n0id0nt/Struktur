@@ -170,6 +170,10 @@ public:
 	// Last-modified time (seconds since the epoch) via PHYSFS_stat - cheap enough to poll, e.g. the level viewer
 	// watching its .ldtk for saves from LDtk.
 	static FileResult<int64_t> GetModificationTime(const std::string& path);
+	// The OS path of a file in the mounted virtual filesystem (the directory PhysFS found it in, joined with the
+	// virtual path) - for editor tools that write back to source assets, which WriteBytes/WriteString can't (they
+	// write to the save directory). Fails if the file isn't in a mounted directory (e.g. it lives in a .pak).
+	static FileResult<std::string> GetRealPath(const std::string& path);
 
 	// Immediate children (files and directories, names only - no path prefix) of a directory in the mounted
 	// virtual filesystem, via PHYSFS_enumerateFiles - for the File Explorer editor window's directory browsing.

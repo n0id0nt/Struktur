@@ -9,6 +9,7 @@
 #include "glm/glm.hpp"
 
 #include "Debug/Editor/LevelViewer/EditorCamera.h"
+#include "Debug/Editor/LevelViewer/LdtkDocument.h"
 
 struct ImDrawList;
 
@@ -40,7 +41,8 @@ public:
 	{
 		// Re-open the file when it changes on disk (e.g. saved from LDtk), keeping the camera and visibility.
 		bool autoReload = true;
-		// Play the preview sprites' animations (only AnimationSystem runs - nothing else simulates).
+		// Play the preview sprites' animations (only AnimationSystem runs - nothing else simulates). Particle effects
+		// always play: an emitter shows nothing until its particles are simulated.
 		bool animatePreviews = false;
 	};
 
@@ -111,11 +113,96 @@ public:
 		return m_options;
 	}
 
-	// Starts the game (like the toolbar's Play) with the player at worldPos - see Core::GameData::debugSpawnWorldFile
-	// for which game state honours it. Stop comes back to the viewer.
-	void PlayFrom(GameContext& context, const glm::vec2& worldPos);
+	// Actions that replace the scene. They run straight away - or, while the open file has unsaved edits, once the
+	// unsaved-changes prompt is answered (Save / Discard; Cancel drops the action).
+	void RequestOpen(GameContext& context, const std::string& filePath);
+	void RequestReload(GameContext& context);
+	void RequestClose(GameContext& context);
+	// The toolbar's Play.
+	void RequestPlay(GameContext& context);
+	// Play with the player at worldPos - see Core::GameData::debugSpawnWorldFile for which game state honours it.
+	// Stop comes back to the viewer.
+	void RequestPlayFrom(GameContext& context, const glm::vec2& worldPos);
+
+	// Editing the open file (see LdtkDocument). Save's outcome is the status message.
+	bool HasUnsavedChanges() const
+	{
+		return m_document.HasUnsavedChanges();
+	}
+	bool CanUndo() const
+	{
+		return m_document.CanUndo();
+	}
+	bool CanRedo() const
+	{
+		return m_document.CanRedo();
+	}
+	bool Save(GameContext& context);
+	void Undo(GameContext& context);
+	void Redo(GameContext& context);
+	// Field edits from the Inspector (EntityFieldEditor). The entity's preview is rebuilt from its new fields at the
+	// next Update, after the windows have drawn. mergeWithLastEdit continues the previous undo step (a drag or typing
+	// session still in progress).
+	void SetEntityField(GameContext& context, const std::string& entityIid, const std::string& fieldIdentifier,
+	                    const nlohmann::ordered_json& value, bool mergeWithLastEdit);
+	void ResetEntityField(GameContext& context, const std::string& entityIid, const std::string& fieldIdentifier);
+	// Clears a previewed particle effect's particles and fires its burst again (BurstCount particles at once).
+	void ReplayParticles(GameContext& context, entt::entity entity);
+	// Ctrl+S save, Ctrl+Z undo, Ctrl+Y / Ctrl+Shift+Z redo - called while the Game Viewport, the Level Viewer window
+	// or the Inspector (showing an LDtk entity) has the user's attention.
+	void HandleShortcuts(GameContext& context);
+	LdtkDocument& GetDocument()
+	{
+		return m_document;
+	}
+	// The last save/load outcome or warning, for the Level Viewer window.
+	const std::string& GetStatusMessage() const
+	{
+		return m_statusMessage;
+	}
+	bool IsStatusError() const
+	{
+		return m_isStatusError;
+	}
 
 private:
+	enum class PendingAction
+	{
+		NONE,
+		OPEN,
+		RELOAD,
+		CLOSE,
+		PLAY,
+		PLAY_FROM,
+	};
+
+	void Request(GameContext& context, PendingAction action, const std::string& filePath, const glm::vec2& worldPos);
+	void RunPendingAction(GameContext& context);
+	void RenderUnsavedChangesPrompt(GameContext& context);
+	// Starts the game (debugSpawnWorldFile already set or cleared by the caller); Stop comes back to the viewer.
+	void StartGame(GameContext& context);
+	void SetStatus(const std::string& message, bool isError);
+	// Brings the preview of an entity back in line with the document after an edit, undo or redo: its position, or -
+	// queued for the next Update - its fields (args rebuilt, preview re-run).
+	void RefreshEntity(GameContext& context, const std::string& entityIid);
+	void RefreshAfterEdit(GameContext& context, const LdtkDocument::Edit& edit);
+	void RefreshEntityFields(GameContext& context, const std::string& entityIid);
+	// The preview entity of the LDtk entity with this iid, or entt::null.
+	entt::entity FindPreviewEntity(GameContext& context, const std::string& entityIid) const;
+	// Puts a preview entity where the loader would for LDtk position `position`: the centre of its cell.
+	void PlacePreview(GameContext& context, entt::entity entity, const glm::ivec2& position, int gridSize);
+
+	// Moving entities. A left-drag on an entity moves its preview with the mouse and records one MoveEntity when the
+	// button is released (Escape cancels); the arrow keys nudge the selected entity. Both snap to the entity's layer
+	// grid unless Shift is held (then 1 px) and keep it inside its level.
+	void StartEntityDrag(GameContext& context, entt::entity entity);
+	void UpdateEntityDrag(GameContext& context);
+	void EndEntityDrag();
+	void NudgeSelectedEntity(GameContext& context);
+	// Where an entity moved to `position` (LDtk px, level-relative) lands: snapped to its layer grid if snapToGrid,
+	// and inside its level.
+	glm::ivec2 ConstrainEntityPosition(const std::string& entityIid, const glm::vec2& position, bool snapToGrid) const;
+
 	// (De)activates every level, tile layer and entity to match the visibility settings.
 	void ApplyVisibility(GameContext& context);
 	void UpdateHover(GameContext& context, const GameViewportWindow& viewport);
@@ -131,6 +218,14 @@ private:
 	bool m_reopenAfterPlay     = false;
 
 	EditorCamera m_camera;
+	LdtkDocument m_document;
+
+	PendingAction m_pendingAction = PendingAction::NONE;
+	std::string m_pendingFilePath;
+	glm::vec2 m_pendingWorldPos{0.f};
+	bool m_shouldOpenUnsavedPrompt = false;
+	std::string m_statusMessage;
+	bool m_isStatusError = false;
 	// Last camera view per world file this session.
 	std::unordered_map<std::string, EditorCamera::View> m_savedViews;
 
@@ -152,6 +247,19 @@ private:
 	int m_hoveredLevel           = -1;
 	bool m_isMouseOverView       = false;
 	glm::vec2 m_mouseWorldPos{0.f};
+
+	// The entity being dragged (entt::null when none), where it started, where it is now and where the mouse was when
+	// the button went down. It only moves once the mouse has travelled past ImGui's drag threshold, so a plain click
+	// just selects.
+	entt::entity m_dragEntity = entt::null;
+	std::string m_dragEntityIid;
+	glm::ivec2 m_dragStartPosition{0};
+	glm::ivec2 m_dragPosition{0};
+	glm::vec2 m_dragStartMouse{0.f};
+	bool m_isDragMoving = false;
+
+	// Entities whose fields changed since the last Update - see RefreshEntityFields.
+	std::unordered_set<std::string> m_entitiesToRefresh;
 };
 }  // namespace Debug
 }  // namespace Struktur

@@ -337,6 +337,21 @@ FileResult<int64_t> FileSystem::GetModificationTime(const std::string& path)
 	return FileResult<int64_t>::Ok((int64_t)stat.modtime);
 }
 
+FileResult<std::string> FileSystem::GetRealPath(const std::string& path)
+{
+	const char* realDirectory = PHYSFS_getRealDir(path.c_str());
+	if (!realDirectory)
+	{
+		return FileResult<std::string>::Fail(FileSystemError::FileNotFound, "Not in a mounted directory: " + path);
+	}
+	std::filesystem::path realPath = std::filesystem::path(realDirectory) / path;
+	if (!std::filesystem::is_regular_file(realPath))
+	{
+		return FileResult<std::string>::Fail(FileSystemError::FileNotFound, "Not a file on disk: " + realPath.string());
+	}
+	return FileResult<std::string>::Ok(realPath.lexically_normal().generic_string());
+}
+
 std::vector<std::string> FileSystem::ListDirectory(const std::string& path)
 {
 	std::vector<std::string> result;

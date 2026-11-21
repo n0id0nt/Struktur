@@ -6,7 +6,8 @@ class GameContext;
 
 void Game();
 void UpdateLoop(void* userData);
-void InitialiseGame(GameContext& context);
+// Returns false if startup was abandoned before a project was mounted (editor launcher window closed)
+bool InitialiseGame(GameContext& context);
 void ExitGame(GameContext& context);
 void GameLoop(GameContext& context);
 void SplashScreenLoop(GameContext& context);

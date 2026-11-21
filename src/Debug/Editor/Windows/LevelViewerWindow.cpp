@@ -68,14 +68,14 @@ void LevelViewerWindow::Render(GameContext& context)
 	ImGui::BeginDisabled(m_worldFiles.empty());
 	if (ImGui::Button("Open"))
 	{
-		m_levelViewer->Open(context, m_worldFiles[m_selectedWorldFile]);
+		m_levelViewer->RequestOpen(context, m_worldFiles[m_selectedWorldFile]);
 	}
 	ImGui::EndDisabled();
 	ImGui::SameLine();
 	ImGui::BeginDisabled(!m_levelViewer->IsActive());
 	if (ImGui::Button("Reload"))
 	{
-		m_levelViewer->Reload(context);
+		m_levelViewer->RequestReload(context);
 	}
 	ImGui::SameLine();
 	if (ImGui::Button("Frame All"))
@@ -85,7 +85,7 @@ void LevelViewerWindow::Render(GameContext& context)
 	ImGui::SameLine();
 	if (ImGui::Button("Close"))
 	{
-		m_levelViewer->Close(context);
+		m_levelViewer->RequestClose(context);
 	}
 	ImGui::EndDisabled();
 	ImGui::SameLine();
@@ -94,10 +94,56 @@ void LevelViewerWindow::Render(GameContext& context)
 		RefreshWorldFiles();
 	}
 
+	RenderEditControls(context);
+	if (ImGui::IsWindowFocused(ImGuiFocusedFlags_RootAndChildWindows))
+	{
+		m_levelViewer->HandleShortcuts(context);
+	}
+
 	ImGui::Separator();
 	RenderLevelList(context);
 
 	ImGui::End();
+}
+
+void LevelViewerWindow::RenderEditControls(GameContext& context)
+{
+	if (!m_levelViewer->IsActive())
+	{
+		return;
+	}
+
+	ImGui::BeginDisabled(!m_levelViewer->HasUnsavedChanges());
+	if (ImGui::Button(m_levelViewer->HasUnsavedChanges() ? "Save*" : "Save"))
+	{
+		m_levelViewer->Save(context);
+	}
+	ImGui::EndDisabled();
+	ImGui::SameLine();
+	ImGui::BeginDisabled(!m_levelViewer->CanUndo());
+	if (ImGui::Button("Undo"))
+	{
+		m_levelViewer->Undo(context);
+	}
+	ImGui::EndDisabled();
+	ImGui::SameLine();
+	ImGui::BeginDisabled(!m_levelViewer->CanRedo());
+	if (ImGui::Button("Redo"))
+	{
+		m_levelViewer->Redo(context);
+	}
+	ImGui::EndDisabled();
+	ImGui::SameLine();
+	ImGui::TextDisabled("Ctrl+S / Ctrl+Z / Ctrl+Y");
+
+	const std::string& status = m_levelViewer->GetStatusMessage();
+	if (!status.empty())
+	{
+		ImVec4 color = m_levelViewer->IsStatusError() ? ImVec4(1.0f, 0.45f, 0.45f, 1.0f) : ImVec4(0.55f, 0.9f, 0.55f, 1.0f);
+		ImGui::PushStyleColor(ImGuiCol_Text, color);
+		ImGui::TextWrapped("%s", status.c_str());
+		ImGui::PopStyleColor();
+	}
 }
 
 void LevelViewerWindow::RenderLevelList(GameContext& context)

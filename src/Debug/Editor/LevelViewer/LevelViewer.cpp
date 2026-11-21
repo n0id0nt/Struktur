@@ -2,6 +2,7 @@
 
 #include <imgui.h>
 
+#include <algorithm>
 #include <format>
 #include <limits>
 
@@ -12,13 +13,17 @@
 #include "Engine/Core/FileSystem.h"
 #include "Engine/ECS/Component/Identifier.h"
 #include "Engine/ECS/Component/LevelEntityInstance.h"
+#include "Engine/ECS/Component/ParticleEmitter.h"
 #include "Engine/ECS/Component/Sprite.h"
+#include "Engine/ECS/Component/SpriteAnimation.h"
 #include "Engine/ECS/Component/TileMap.h"
 #include "Engine/ECS/Component/Transform.h"
 #include "Engine/ECS/Component/World.h"
 #include "Engine/ECS/System/AnimationSystem.h"
 #include "Engine/ECS/System/HierarchySystem.h"
+#include "Engine/ECS/System/ParticleSystem.h"
 #include "Engine/ECS/System/TransformSystem.h"
+#include "Engine/ECS/System/WrenScriptSystem.h"
 #include "Engine/Game.h"
 #include "Engine/GameContext.h"
 #include "Engine/World/Level.h"
@@ -34,6 +39,27 @@ static constexpr ImU32 NEIGHBOUR_LINK_COLOR = IM_COL32(255, 161, 0, 160);
 static constexpr float LABEL_PADDING        = 3.f;
 // How often the open file's modification time is checked (seconds).
 static constexpr float FILE_POLL_INTERVAL = 0.5f;
+static constexpr const char* UNSAVED_PROMPT_ID = "Unsaved level edits";
+
+// The parsed copy (World component's worldMap) of the LDtk entity with this iid, or null.
+static FileLoading::LevelParser::Entity* FindParsedEntity(FileLoading::LevelParser::World& world,
+                                                          const std::string& entityIid)
+{
+	for (auto& level : world.levels)
+	{
+		for (auto& layer : level.layers)
+		{
+			for (auto& entity : layer.entityInstaces)
+			{
+				if (entity.Iid == entityIid)
+				{
+					return &entity;
+				}
+			}
+		}
+	}
+	return nullptr;
+}
 
 // A level's centre in world pixels.
 static glm::vec2 LevelCentre(const FileLoading::LevelParser::Level& level)
@@ -81,6 +107,7 @@ void LevelViewer::Open(GameContext& context, const std::string& filePath)
 	}
 	m_hoveredEntity = entt::null;
 	m_hoveredLevel  = -1;
+	EndEntityDrag();
 
 	m_filePath    = filePath;
 	m_worldEntity = World::Level::CreateWorldEntity(context, filePath);
@@ -89,6 +116,17 @@ void LevelViewer::Open(GameContext& context, const std::string& filePath)
 	m_fileModTime    = modTime.success ? modTime.value : 0;
 	m_pendingModTime = 0;
 	m_timeSincePoll  = 0.f;
+
+	std::string loadError;
+	if (m_document.Load(filePath, loadError))
+	{
+		SetStatus("", false);
+	}
+	else
+	{
+		DEBUG_ERROR("[Level Viewer] %s", loadError.c_str());
+		SetStatus(loadError + " - editing is off", true);
+	}
 
 	World::Level::LevelLoadOptions options;
 	options.createPhysics = false;
@@ -124,6 +162,9 @@ void LevelViewer::Close(GameContext& context)
 	m_selectedLevel   = -1;
 	m_hoveredEntity   = entt::null;
 	m_hoveredLevel    = -1;
+	m_document.Clear();
+	EndEntityDrag();
+	SetStatus("", false);
 	SelectEntity(context, entt::null);
 	ClearGameSystems(context);
 }
@@ -142,6 +183,7 @@ void LevelViewer::OnPlayStarted()
 	m_reopenAfterPlay = IsActive();
 	m_worldEntity     = entt::null;
 	m_hoveredEntity   = entt::null;
+	EndEntityDrag();
 }
 
 void LevelViewer::OnPlayStopped(GameContext& context)
@@ -158,6 +200,17 @@ void LevelViewer::Update(GameContext& context)
 	{
 		return;
 	}
+	RenderUnsavedChangesPrompt(context);
+	// The prompt's answer may have replaced or wiped the scene.
+	if (!IsActive() || context.GetEditor().GetSettings().debugRender.playingGame)
+	{
+		return;
+	}
+	for (const std::string& entityIid : m_entitiesToRefresh)
+	{
+		RefreshEntityFields(context, entityIid);
+	}
+	m_entitiesToRefresh.clear();
 
 	GameViewportWindow* viewport = context.GetEditor().GetGameViewport();
 	if (viewport)
@@ -165,16 +218,24 @@ void LevelViewer::Update(GameContext& context)
 		m_camera.HandleInput(context, *viewport);
 
 		ImGuiIO& io = ImGui::GetIO();
-		if ((viewport->IsViewportHovered() || viewport->IsViewportFocused()) && !io.WantTextInput &&
-		    ImGui::IsKeyPressed(ImGuiKey_F, false))
+		if ((viewport->IsViewportHovered() || viewport->IsViewportFocused()) && !io.WantTextInput)
 		{
-			FrameWorld(context);
+			if (ImGui::IsKeyPressed(ImGuiKey_F, false) && !io.KeyCtrl)
+			{
+				FrameWorld(context);
+			}
+			if (m_dragEntity == entt::null)
+			{
+				HandleShortcuts(context);
+				NudgeSelectedEntity(context);
+			}
 		}
 	}
 
 	m_camera.Apply(context);
 	m_savedViews[m_filePath] = m_camera.GetView();
 
+	context.GetSystemManager().GetSystem<System::ParticleSystem>().Update(context);
 	if (m_options.animatePreviews)
 	{
 		context.GetSystemManager().GetSystem<System::AnimationSystem>().Update(context);
@@ -197,38 +258,465 @@ void LevelViewer::Update(GameContext& context)
 	{
 		if (ImGui::GetIO().KeyCtrl)
 		{
-			PlayFrom(context, m_mouseWorldPos);
+			RequestPlayFrom(context, m_mouseWorldPos);
 			return;
 		}
 		if (m_hoveredEntity != entt::null)
 		{
 			m_selectedLevel = m_hoveredLevel;
 			SelectEntity(context, m_hoveredEntity);
+			StartEntityDrag(context, m_hoveredEntity);
 		}
 		else
 		{
 			SelectLevel(context, m_hoveredLevel);
 		}
 	}
+	UpdateEntityDrag(context);
 
-	if (m_hoveredEntity != entt::null)
+	if (m_hoveredEntity != entt::null && !m_isDragMoving)
 	{
 		const auto& instance = context.GetRegistry().get<Component::LevelEntityInstance>(m_hoveredEntity);
 		ImGui::SetTooltip("%s (%s)", GetDisplayName(instance).c_str(), instance.identifier.c_str());
 	}
 }
 
-void LevelViewer::PlayFrom(GameContext& context, const glm::vec2& worldPos)
+void LevelViewer::RequestOpen(GameContext& context, const std::string& filePath)
 {
-	Core::GameData& gameData     = context.GetGameData();
-	gameData.debugSpawnWorldFile = m_filePath;
-	gameData.debugSpawnPosition  = worldPos;
-	auto& debugSettings          = context.GetEditor().GetSettings().debugRender;
-	debugSettings.playingGame    = true;
-	debugSettings.pausedGame     = false;
-	DEBUG_INFO("[Level Viewer] Play from %s (%.0f, %.0f)", m_filePath.c_str(), worldPos.x, worldPos.y);
+	Request(context, PendingAction::OPEN, filePath, glm::vec2(0.f));
+}
+
+void LevelViewer::RequestReload(GameContext& context)
+{
+	Request(context, PendingAction::RELOAD, "", glm::vec2(0.f));
+}
+
+void LevelViewer::RequestClose(GameContext& context)
+{
+	Request(context, PendingAction::CLOSE, "", glm::vec2(0.f));
+}
+
+void LevelViewer::RequestPlay(GameContext& context)
+{
+	Request(context, PendingAction::PLAY, "", glm::vec2(0.f));
+}
+
+void LevelViewer::RequestPlayFrom(GameContext& context, const glm::vec2& worldPos)
+{
+	Request(context, PendingAction::PLAY_FROM, "", worldPos);
+}
+
+void LevelViewer::Request(GameContext& context, PendingAction action, const std::string& filePath,
+                          const glm::vec2& worldPos)
+{
+	m_pendingAction   = action;
+	m_pendingFilePath = filePath;
+	m_pendingWorldPos = worldPos;
+	if (IsActive() && m_document.HasUnsavedChanges())
+	{
+		m_shouldOpenUnsavedPrompt = true;
+		return;
+	}
+	RunPendingAction(context);
+}
+
+void LevelViewer::RunPendingAction(GameContext& context)
+{
+	PendingAction action = m_pendingAction;
+	m_pendingAction      = PendingAction::NONE;
+	switch (action)
+	{
+		case PendingAction::OPEN:
+			Open(context, m_pendingFilePath);
+			break;
+		case PendingAction::RELOAD:
+			Reload(context);
+			break;
+		case PendingAction::CLOSE:
+			Close(context);
+			break;
+		case PendingAction::PLAY:
+			context.GetGameData().debugSpawnWorldFile.clear();
+			StartGame(context);
+			break;
+		case PendingAction::PLAY_FROM:
+		{
+			Core::GameData& gameData     = context.GetGameData();
+			gameData.debugSpawnWorldFile = m_filePath;
+			gameData.debugSpawnPosition  = m_pendingWorldPos;
+			DEBUG_INFO("[Level Viewer] Play from %s (%.0f, %.0f)", m_filePath.c_str(), m_pendingWorldPos.x,
+			           m_pendingWorldPos.y);
+			StartGame(context);
+			break;
+		}
+		case PendingAction::NONE:
+			break;
+	}
+}
+
+void LevelViewer::RenderUnsavedChangesPrompt(GameContext& context)
+{
+	if (m_shouldOpenUnsavedPrompt)
+	{
+		ImGui::OpenPopup(UNSAVED_PROMPT_ID);
+		m_shouldOpenUnsavedPrompt = false;
+	}
+	if (!ImGui::BeginPopupModal(UNSAVED_PROMPT_ID, nullptr, ImGuiWindowFlags_AlwaysAutoResize))
+	{
+		return;
+	}
+
+	// Run after EndPopup - the action may clear the scene this prompt is about.
+	bool shouldRunAction = false;
+	ImGui::Text("%s has unsaved edits.", m_filePath.c_str());
+	if (m_isStatusError && !m_statusMessage.empty())
+	{
+		ImGui::TextColored(ImVec4(1.0f, 0.45f, 0.45f, 1.0f), "%s", m_statusMessage.c_str());
+	}
+	if (ImGui::Button("Save"))
+	{
+		if (Save(context))
+		{
+			shouldRunAction = true;
+			ImGui::CloseCurrentPopup();
+		}
+	}
+	ImGui::SameLine();
+	if (ImGui::Button("Discard"))
+	{
+		shouldRunAction = true;
+		ImGui::CloseCurrentPopup();
+	}
+	ImGui::SameLine();
+	if (ImGui::Button("Cancel"))
+	{
+		m_pendingAction = PendingAction::NONE;
+		ImGui::CloseCurrentPopup();
+	}
+	ImGui::EndPopup();
+
+	if (shouldRunAction)
+	{
+		// Every action reloads the document from disk (or drops it), so discarding needs nothing more.
+		RunPendingAction(context);
+	}
+}
+
+void LevelViewer::StartGame(GameContext& context)
+{
+	auto& debugSettings       = context.GetEditor().GetSettings().debugRender;
+	debugSettings.playingGame = true;
+	debugSettings.pausedGame  = false;
 	OnPlayStarted();
 	StartDebugGame(context);
+}
+
+bool LevelViewer::Save(GameContext& context)
+{
+	std::string saveError;
+	if (!m_document.Save(saveError))
+	{
+		DEBUG_ERROR("[Level Viewer] Save failed: %s", saveError.c_str());
+		SetStatus("Save failed: " + saveError, true);
+		return false;
+	}
+	// Our own write - not an outside change for auto-reload to pick up.
+	auto modTime     = FileSystem::GetModificationTime(m_filePath);
+	m_fileModTime    = modTime.success ? modTime.value : m_fileModTime;
+	m_pendingModTime = 0;
+	DEBUG_INFO("[Level Viewer] Saved %s", m_filePath.c_str());
+	SetStatus("Saved " + m_filePath, false);
+	return true;
+}
+
+void LevelViewer::Undo(GameContext& context)
+{
+	if (const LdtkDocument::Edit* edit = m_document.Undo())
+	{
+		RefreshAfterEdit(context, *edit);
+	}
+}
+
+void LevelViewer::Redo(GameContext& context)
+{
+	if (const LdtkDocument::Edit* edit = m_document.Redo())
+	{
+		RefreshAfterEdit(context, *edit);
+	}
+}
+
+void LevelViewer::SetEntityField(GameContext& context, const std::string& entityIid,
+                                 const std::string& fieldIdentifier, const nlohmann::ordered_json& value,
+                                 bool mergeWithLastEdit)
+{
+	if (m_document.SetFieldValue(entityIid, fieldIdentifier, value, mergeWithLastEdit))
+	{
+		m_entitiesToRefresh.insert(entityIid);
+	}
+}
+
+void LevelViewer::ResetEntityField(GameContext& context, const std::string& entityIid,
+                                   const std::string& fieldIdentifier)
+{
+	if (m_document.ResetFieldToDefault(entityIid, fieldIdentifier))
+	{
+		m_entitiesToRefresh.insert(entityIid);
+	}
+}
+
+void LevelViewer::ReplayParticles(GameContext& context, entt::entity entity)
+{
+	auto* emitter = context.GetRegistry().try_get<Component::ParticleEmitter>(entity);
+	if (!emitter)
+	{
+		return;
+	}
+	for (Component::Particle& particle : emitter->particles)
+	{
+		particle.alive = false;
+	}
+	emitter->hasBurst         = false;
+	emitter->spawnAccumulator = 0.0f;
+}
+
+void LevelViewer::RefreshAfterEdit(GameContext& context, const LdtkDocument::Edit& edit)
+{
+	if (edit.fieldIdentifier.empty())
+	{
+		RefreshEntity(context, edit.entityIid);
+	}
+	else
+	{
+		m_entitiesToRefresh.insert(edit.entityIid);
+	}
+}
+
+void LevelViewer::RefreshEntityFields(GameContext& context, const std::string& entityIid)
+{
+	entt::registry& registry             = context.GetRegistry();
+	entt::entity entity                  = FindPreviewEntity(context, entityIid);
+	auto* worldComponent                 = registry.try_get<Component::World>(m_worldEntity);
+	const nlohmann::ordered_json* edited = m_document.FindEntity(entityIid);
+	if (entity == entt::null || !worldComponent || !edited)
+	{
+		return;
+	}
+	FileLoading::LevelParser::Entity* parsedEntity = FindParsedEntity(worldComponent->worldMap, entityIid);
+	if (!parsedEntity)
+	{
+		return;
+	}
+
+	// Same parsing and arg building as loading the level, so the preview sees exactly what it would after a reload.
+	parsedEntity->fieldInstances.clear();
+	FileLoading::LevelParser::LoadFieldInstances(parsedEntity->fieldInstances,
+	                                             nlohmann::json::parse((*edited)["fieldInstances"].dump()));
+	auto& instance  = registry.get<Component::LevelEntityInstance>(entity);
+	instance.fields = World::Level::BuildEntityScriptArgs(*parsedEntity, worldComponent->worldMap);
+
+	// Re-run the preview from scratch: drop what the last one made, then call it again.
+	registry.remove<Component::Sprite, Component::SpriteAnimation, Component::ParticleEmitter>(entity);
+	if (auto* children = registry.try_get<Component::Children>(entity))
+	{
+		std::vector<entt::entity> previewChildren = children->entities;
+		auto& hierarchySystem                     = context.GetSystemManager().GetSystem<System::HierarchySystem>();
+		for (entt::entity child : previewChildren)
+		{
+			hierarchySystem.DestroyEntity(context, child);
+		}
+	}
+	context.GetSystemManager().GetSystem<System::WrenScriptSystem>().CallPreview(context, entity, instance.identifier,
+	                                                                             instance.fields);
+}
+
+void LevelViewer::HandleShortcuts(GameContext& context)
+{
+	ImGuiIO& io = ImGui::GetIO();
+	if (!io.KeyCtrl || io.WantTextInput)
+	{
+		return;
+	}
+	if (ImGui::IsKeyPressed(ImGuiKey_S, false))
+	{
+		Save(context);
+	}
+	else if (ImGui::IsKeyPressed(ImGuiKey_Y, false) || (io.KeyShift && ImGui::IsKeyPressed(ImGuiKey_Z, false)))
+	{
+		Redo(context);
+	}
+	else if (ImGui::IsKeyPressed(ImGuiKey_Z, false))
+	{
+		Undo(context);
+	}
+}
+
+void LevelViewer::SetStatus(const std::string& message, bool isError)
+{
+	m_statusMessage = message;
+	m_isStatusError = isError;
+}
+
+void LevelViewer::RefreshEntity(GameContext& context, const std::string& entityIid)
+{
+	entt::entity entity = FindPreviewEntity(context, entityIid);
+	if (entity == entt::null)
+	{
+		return;
+	}
+	PlacePreview(context, entity, m_document.GetEntityPosition(entityIid), m_document.GetEntityGridSize(entityIid));
+}
+
+void LevelViewer::PlacePreview(GameContext& context, entt::entity entity, const glm::ivec2& position, int gridSize)
+{
+	// Matches World::Level::LoadLevelEntities: px + half the layer's grid size.
+	glm::vec2 cellCentre = glm::vec2(position) + glm::vec2(gridSize / 2.f);
+	context.GetSystemManager().GetSystem<System::TransformSystem>().SetLocalTransform(
+	    context, entity, glm::vec3(cellCentre, 0.0f), glm::vec3(1.0f), glm::quat(1.0f, 0.0f, 0.0f, 0.0f));
+}
+
+void LevelViewer::StartEntityDrag(GameContext& context, entt::entity entity)
+{
+	const auto* instance = context.GetRegistry().try_get<Component::LevelEntityInstance>(entity);
+	if (!instance || !m_document.HasEntity(instance->Iid))
+	{
+		return;
+	}
+	m_dragEntity        = entity;
+	m_dragEntityIid     = instance->Iid;
+	m_dragStartPosition = m_document.GetEntityPosition(instance->Iid);
+	m_dragPosition      = m_dragStartPosition;
+	m_dragStartMouse    = m_mouseWorldPos;
+	m_isDragMoving      = false;
+}
+
+void LevelViewer::UpdateEntityDrag(GameContext& context)
+{
+	if (m_dragEntity == entt::null)
+	{
+		return;
+	}
+	if (!context.GetRegistry().valid(m_dragEntity))
+	{
+		EndEntityDrag();
+		return;
+	}
+	int gridSize = m_document.GetEntityGridSize(m_dragEntityIid);
+
+	if (ImGui::IsKeyPressed(ImGuiKey_Escape, false))
+	{
+		PlacePreview(context, m_dragEntity, m_dragStartPosition, gridSize);
+		EndEntityDrag();
+		return;
+	}
+
+	if (ImGui::IsMouseDown(ImGuiMouseButton_Left))
+	{
+		if (!m_isDragMoving && !ImGui::IsMouseDragging(ImGuiMouseButton_Left))
+		{
+			return;
+		}
+		m_isDragMoving = true;
+		// The mouse position stops updating while the cursor is off the viewport - the entity waits at the edge.
+		glm::vec2 target = glm::vec2(m_dragStartPosition) + (m_mouseWorldPos - m_dragStartMouse);
+		m_dragPosition   = ConstrainEntityPosition(m_dragEntityIid, target, !ImGui::GetIO().KeyShift);
+		PlacePreview(context, m_dragEntity, m_dragPosition, gridSize);
+		return;
+	}
+
+	// Released: one undoable move for the whole drag.
+	if (m_isDragMoving && m_dragPosition != m_dragStartPosition)
+	{
+		m_document.MoveEntity(m_dragEntityIid, m_dragPosition);
+	}
+	RefreshEntity(context, m_dragEntityIid);
+	EndEntityDrag();
+}
+
+void LevelViewer::EndEntityDrag()
+{
+	m_dragEntity = entt::null;
+	m_dragEntityIid.clear();
+	m_isDragMoving = false;
+}
+
+void LevelViewer::NudgeSelectedEntity(GameContext& context)
+{
+	ImGuiIO& io = ImGui::GetIO();
+	if (io.KeyCtrl || io.WantTextInput)
+	{
+		return;
+	}
+	auto* hierarchyWindow = dynamic_cast<HierarchyWindow*>(context.GetEditor().GetWindow("Hierarchy"));
+	if (!hierarchyWindow)
+	{
+		return;
+	}
+	entt::entity selected = hierarchyWindow->GetSelectedEntity();
+	if (selected == entt::null || !context.GetRegistry().valid(selected))
+	{
+		return;
+	}
+	const auto* instance = context.GetRegistry().try_get<Component::LevelEntityInstance>(selected);
+	if (!instance || !m_document.HasEntity(instance->Iid))
+	{
+		return;
+	}
+
+	glm::ivec2 direction(0);
+	if (ImGui::IsKeyPressed(ImGuiKey_LeftArrow))
+	{
+		direction.x = -1;
+	}
+	else if (ImGui::IsKeyPressed(ImGuiKey_RightArrow))
+	{
+		direction.x = 1;
+	}
+	else if (ImGui::IsKeyPressed(ImGuiKey_UpArrow))
+	{
+		direction.y = -1;
+	}
+	else if (ImGui::IsKeyPressed(ImGuiKey_DownArrow))
+	{
+		direction.y = 1;
+	}
+	if (direction == glm::ivec2(0))
+	{
+		return;
+	}
+
+	int stepSize      = io.KeyShift ? 1 : m_document.GetEntityGridSize(instance->Iid);
+	glm::ivec2 target = m_document.GetEntityPosition(instance->Iid) + direction * stepSize;
+	// Not snapped: a grid-sized step keeps an on-grid entity on the grid, and leaves a 1 px-placed one where it was.
+	target = ConstrainEntityPosition(instance->Iid, glm::vec2(target), false);
+	if (m_document.MoveEntity(instance->Iid, target))
+	{
+		RefreshEntity(context, instance->Iid);
+	}
+}
+
+glm::ivec2 LevelViewer::ConstrainEntityPosition(const std::string& entityIid, const glm::vec2& position,
+                                                bool snapToGrid) const
+{
+	int gridSize         = std::max(1, m_document.GetEntityGridSize(entityIid));
+	glm::ivec2 levelSize = m_document.GetEntityLevelSize(entityIid);
+	glm::vec2 placed     = snapToGrid ? glm::round(position / (float)gridSize) * (float)gridSize : glm::round(position);
+	// The last cell (or pixel) that's still inside the level.
+	int cellSize       = snapToGrid ? gridSize : 1;
+	glm::ivec2 maximum = glm::max(levelSize - glm::ivec2(cellSize), glm::ivec2(0));
+	return glm::clamp(glm::ivec2(placed), glm::ivec2(0), maximum);
+}
+
+entt::entity LevelViewer::FindPreviewEntity(GameContext& context, const std::string& entityIid) const
+{
+	auto view = context.GetRegistry().view<Component::LevelEntityInstance>();
+	for (auto [entity, instance] : view.each())
+	{
+		if (instance.Iid == entityIid)
+		{
+			return entity;
+		}
+	}
+	return entt::null;
 }
 
 bool LevelViewer::PollForFileChanges(GameContext& context)
@@ -244,6 +732,12 @@ bool LevelViewer::PollForFileChanges(GameContext& context)
 	if (!modTime.success || modTime.value == m_fileModTime)
 	{
 		m_pendingModTime = 0;
+		return false;
+	}
+	// Reloading would throw the edits away - leave it to the user (Save refuses too: its baseline is stale).
+	if (m_document.HasUnsavedChanges())
+	{
+		SetStatus(m_filePath + " changed on disk - reload to see it (your unsaved edits will be lost)", true);
 		return false;
 	}
 	// First sighting of this change - give the writer a poll to finish.
@@ -389,6 +883,11 @@ void LevelViewer::RenderViewportOverlay(GameContext& context, ImDrawList* drawLi
 
 	// Status line: the level and grid cell under the mouse, its world position, and zoom.
 	std::string status = std::format("Zoom {:.0f}%", camera.zoom * 100.f);
+	if (m_isDragMoving)
+	{
+		status = std::format("Moving to {}, {} px (Shift: free, Esc: cancel)   ", m_dragPosition.x, m_dragPosition.y) +
+		         status;
+	}
 	if (m_isMouseOverView)
 	{
 		status = std::format("{:.0f}, {:.0f} px   ", m_mouseWorldPos.x, m_mouseWorldPos.y) + status;

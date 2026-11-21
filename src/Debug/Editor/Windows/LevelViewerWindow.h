@@ -21,6 +21,8 @@ public:
 private:
 	void RefreshWorldFiles();
 	void RenderLevelList(GameContext& context);
+	// Save / Undo / Redo and the last save outcome.
+	void RenderEditControls(GameContext& context);
 
 	LevelViewer* m_levelViewer;
 	// Virtual paths of every .ldtk under LEVELS_DIRECTORY.
