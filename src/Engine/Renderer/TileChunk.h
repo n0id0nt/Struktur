@@ -20,6 +20,9 @@ struct TileChunk
 	// World-space AABB (tile positions already have the tilemap entity's world offset baked in), used to
 	// cull whole chunks against the camera instead of testing every tile individually.
 	Util::Math::Rect worldBounds{};
+	// World-space y of the bottom edge of this chunk's tiles. Row-sorted tile maps (Component::TileMap::rowSorted)
+	// build one chunk per row segment and sort each one by this against the characters' feet.
+	float sortY = 0.0f;
 };
 }  // namespace Renderer
 }  // namespace Struktur

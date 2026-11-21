@@ -19,15 +19,17 @@ static int64_t BucketKey(int bucketX, int bucketY)
 
 std::vector<Struktur::Renderer::TileChunk> Struktur::Renderer::BuildTileChunks(
     const std::vector<World::TileMap::GridTile>& gridTiles, int tileSize, const glm::vec2& worldOffset,
-    int textureWidth, int textureHeight)
+    int textureWidth, int textureHeight, bool rowSorted)
 {
 	int chunkPixelSize = tileSize * kChunkTiles;
+	// A row-sorted map's chunks are a row high (still kChunkTiles wide), so every row sorts on its own.
+	int chunkPixelHeight = rowSorted ? tileSize : chunkPixelSize;
 
 	std::unordered_map<int64_t, std::vector<const GridTile*>> buckets;
 	for (const GridTile& tile : gridTiles)
 	{
 		int bucketX = (int)std::floor(tile.position.x / chunkPixelSize);
-		int bucketY = (int)std::floor(tile.position.y / chunkPixelSize);
+		int bucketY = (int)std::floor(tile.position.y / chunkPixelHeight);
 		buckets[BucketKey(bucketX, bucketY)].push_back(&tile);
 	}
 
@@ -121,6 +123,7 @@ std::vector<Struktur::Renderer::TileChunk> Struktur::Renderer::BuildTileChunks(
 		chunk.ib = bgfx::createIndexBuffer(bgfx::copy(indices.data(), (uint32_t)(indices.size() * sizeof(uint16_t))));
 		chunk.indexCount  = (uint32_t)indices.size();
 		chunk.worldBounds = Util::Math::Rect{minX, minY, maxX - minX, maxY - minY};
+		chunk.sortY       = maxY;
 		chunks.push_back(chunk);
 	}
 

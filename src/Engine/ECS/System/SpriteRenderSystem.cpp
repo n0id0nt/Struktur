@@ -22,6 +22,10 @@
 #include "glm/glm.hpp"
 #include "glm/gtc/quaternion.hpp."
 
+// How far apart (in pixels of sort y) two row-sorted tile layers' rows on the same row sit, per panel index - small
+// enough never to pass a character standing a pixel away, big enough to survive float precision at large y.
+static constexpr float kSortedLayerNudge = 0.01f;
+
 // The atlas cell `particle` draws this frame: its emitter's sprite animation, played per its animation mode on the
 // particle's own age (frame math matches AnimationSystem's - endFrame exclusive, clamped to the last frame).
 static int ParticleFrame(const Struktur::Component::ParticleEmitter& emitter,
@@ -164,7 +168,8 @@ void Struktur::System::SpriteRenderSystem::Update(GameContext& context)
 				{
 					tileMap.chunks      = Renderer::BuildTileChunks(tileMap.gridTiles, tileMap.tileSize,
 					                                                glm::vec2(worldPosition.x, worldPosition.y),
-					                                                texture->GetWidth(), texture->GetHeight());
+					                                                texture->GetWidth(), texture->GetHeight(),
+					                                                tileMap.rowSorted);
 					tileMap.chunksBuilt = true;
 				}
 
@@ -175,7 +180,11 @@ void Struktur::System::SpriteRenderSystem::Update(GameContext& context)
 				const Component::Shader* shader = registry.try_get<Component::Shader>(entity);
 				for (const Renderer::TileChunk& chunk : tileMap.chunks)
 				{
-					worldRenderer.SubmitChunk(tileMap.layer, tileMap.orderInLayer, program, shader, chunk,
+					// A row-sorted map's rows y-sort with the entities by their bottom edge; orderInLayer (minus the
+					// layer's panel index) only nudges it so two sorted layers keep their panel order on the same row.
+					float orderInLayer =
+					    tileMap.rowSorted ? chunk.sortY + tileMap.orderInLayer * kSortedLayerNudge : tileMap.orderInLayer;
+					worldRenderer.SubmitChunk(tileMap.layer, orderInLayer, program, shader, chunk,
 					                          texture->GetHandle(), cullBounds);
 				}
 			}
@@ -245,7 +254,7 @@ void Struktur::System::SpriteRenderSystem::Update(GameContext& context)
 				float orderInLayer = sprite.orderInLayer;
 				if (sprite.layer == World::RenderLayer::Entities)
 				{
-					// y-sort: interleave with whatever background layers sit immediately above/below Entities
+					// y-sort by the feet, against each other and against row-sorted tile maps' rows
 					orderInLayer += worldPosition.y;
 				}
 

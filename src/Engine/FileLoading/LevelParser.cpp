@@ -1,5 +1,6 @@
 #include "LevelParser.h"
 
+#include <algorithm>
 #include <filesystem>
 #include <fstream>
 #include <sstream>
@@ -39,7 +40,21 @@ Struktur::FileLoading::LevelParser::World Struktur::FileLoading::LevelParser::Lo
 void Struktur::FileLoading::LevelParser::LoadDefinitions(World& world, Definitions& definitions,
                                                          const nlohmann::json& json)
 {
-	// layers
+	// layers - only their tags are kept (LoadLayers hands them to each layer instance)
+	if (json.contains("layers"))
+	{
+		for (auto& layerJson : json["layers"])
+		{
+			auto& tags = world.layerTags[layerJson["uid"].get<int>()];
+			if (layerJson.contains("uiFilterTags") && layerJson["uiFilterTags"].is_array())
+			{
+				for (auto& tagJson : layerJson["uiFilterTags"])
+				{
+					tags.push_back(tagJson.get<std::string>());
+				}
+			}
+		}
+	}
 	// entities
 	// enums - only their values' colours are kept (scripts read them through World.getLevelFieldColor)
 	if (json.contains("enums"))
@@ -256,6 +271,11 @@ void Struktur::FileLoading::LevelParser::LoadLayers(World& world, Level& level, 
 		layer.pxTotalOffsetX = layerJson["__pxTotalOffsetX"];
 		layer.pxTotalOffsetY = layerJson["__pxTotalOffsetY"];
 		layer.opacity        = layerJson["__opacity"];
+		auto tagsFound       = world.layerTags.find(layerJson.value("layerDefUid", -1));
+		if (tagsFound != world.layerTags.end())
+		{
+			layer.tags = tagsFound->second;
+		}
 
 		// Higher array index = further back (drawn earlier), so a negated index keeps layers ordered
 		// correctly relative to each other even when several land in the same RenderLayer bucket.
@@ -263,6 +283,13 @@ void Struktur::FileLoading::LevelParser::LoadLayers(World& world, Level& level, 
 		if (layer.type == LayerType::ENTITIES)
 		{
 			layer.renderLayer = Struktur::World::RenderLayer::Entities;
+		}
+		else if (LayerHasTag(layer, "Sort"))
+		{
+			// Sorted with the entities wherever it sits in the panel: each tile row draws behind a character whose
+			// feet are below it and in front of one whose feet are above it.
+			layer.renderLayer = Struktur::World::RenderLayer::Entities;
+			layer.rowSorted   = true;
 		}
 		else if (entitiesIndex >= 0 && layerIndex < entitiesIndex)
 		{
@@ -282,6 +309,11 @@ void Struktur::FileLoading::LevelParser::LoadLayers(World& world, Level& level, 
 		level.layers.push_back(layer);
 		layerIndex++;
 	}
+}
+
+bool Struktur::FileLoading::LevelParser::LayerHasTag(const Layer& layer, const std::string& tag)
+{
+	return std::find(layer.tags.begin(), layer.tags.end(), tag) != layer.tags.end();
 }
 
 void Struktur::FileLoading::LevelParser::LoadEntities(Layer& entityLayer, const nlohmann::json& json)

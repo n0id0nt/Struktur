@@ -110,6 +110,10 @@ struct Layer
 	// Derived from this layer's position relative to the Entities layer in the LDtk file - see
 	// LoadLayers. Also usable as a within-layer draw-order tie-break for tile layers.
 	float orderInLayer;
+	// The layer's LDtk tags (its definition's "Tags" setting, uiFilterTags in the file) - e.g. "Sort", "Collision".
+	std::vector<std::string> tags;
+	// Tagged "Sort": its tile rows y-sort with the entities (Component::TileMap::rowSorted).
+	bool rowSorted = false;
 };
 
 struct Neighbour
@@ -141,6 +145,8 @@ struct World
 	std::vector<Level> levels;
 	// Every enum value's LDtk colour: enumColors[enum identifier][value id] (e.g. ["BattleArena"]["Grass"]).
 	std::unordered_map<std::string, std::unordered_map<std::string, Util::Color>> enumColors;
+	// Every layer definition's tags by its uid (layer instances name their definition by layerDefUid).
+	std::unordered_map<int, std::vector<std::string>> layerTags;
 };
 
 struct TileSet
@@ -171,6 +177,7 @@ void LoadLevelTags(Level& level, const nlohmann::json& fieldInstancesJson);
 int FindLevelIndexByIdentifier(const World& world, const std::string& identifier);
 int FindLevelIndexByIid(const World& world, const std::string& iid);
 void LoadLayers(World& world, Level& level, const nlohmann::json& json);
+bool LayerHasTag(const Layer& layer, const std::string& tag);
 void LoadEntities(Layer& entityLayer, const nlohmann::json& json);
 void LoadFieldInstances(std::vector<FieldInstance>& fields, const nlohmann::json& json);
 void LoadIntGrid(Layer& gridLayer, const nlohmann::json& json);

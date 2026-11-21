@@ -24,7 +24,7 @@ struct Sprite
 	int index;
 	Struktur::World::RenderLayer layer;
 	// Manual sort bias within layer. For RenderLayer::Entities the render system adds world Y to this,
-	// so dynamic entities y-sort against whichever tile layers sit immediately behind/in front of them.
+	// so entities y-sort by their feet against each other and against the rows of "Sort"-tagged tile layers.
 	float orderInLayer;
 };
 }  // namespace Component

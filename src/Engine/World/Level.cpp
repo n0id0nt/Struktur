@@ -82,7 +82,7 @@ entt::entity Struktur::World::Level::LoadLevelEntities(GameContext& context, con
 			case FileLoading::LevelParser::LayerType::TILES:
 			{
 				// A layer with no tileset (an IntGrid layer used only for collision / data) gets no texture: it
-				// still holds its grid (and the "Collision" layer still builds its physics body below), it just
+				// still holds its grid (and a layer tagged "Collision" still builds its physics body below), it just
 				// draws nothing - SpriteRenderSystem skips tile maps without a texture.
 				Resource::ResourcePtr<Resource::TextureResource> texture;
 				if (layer.tilesetPath.has_value())
@@ -105,9 +105,9 @@ entt::entity Struktur::World::Level::LoadLevelEntities(GameContext& context, con
 				Component::TileMap& tileMap =
 				    registry.emplace<Component::TileMap>(layerEntity, std::move(texture), layer.cWid, layer.cHei,
 				                                         layer.gridSize, grid, layer.intGrid, layer.renderLayer,
-				                                         layer.orderInLayer);
+				                                         layer.orderInLayer, layer.rowSorted);
 
-				if (options.createPhysics && layer.identifier == "Collision")
+				if (options.createPhysics && FileLoading::LevelParser::LayerHasTag(layer, "Collision"))
 				{
 					bool isSensor = false;
 					b2BodyDef staticBodyDef;
