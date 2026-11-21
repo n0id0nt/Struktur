@@ -19,8 +19,8 @@ var ROLE_CLIPS = [
     ["slash", "Slash2"],         // quick forward cut
     ["thrust", "Slash2"],
     ["punch", "Slash2"],
-    ["shoot", "Slash2"],         // no bow or casting clips yet - a thrust stands in
-    ["cast", "Slash2"],
+    ["shoot", "Shoot"],          // draw, aim and loose (the archery draw + recoil, joined - animations/battle/shoot.fbx)
+    ["cast", "Slash2"],          // no casting clip yet - a thrust stands in
     ["heavy", "Attack"],         // leaping overhead slam
     ["spin", "Slash"],           // spinning slash
     ["step", "Run"],

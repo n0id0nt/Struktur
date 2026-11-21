@@ -23,7 +23,7 @@ import "Combat/Stats" for Stats
 import "Combat/Combatant" for Combatant, ChainEntry
 import "Combat/Chain" for Grid
 import "Combat/Config/BattleCritter" for BattleCritter
-import "Sprites/WrestlerBattleSprite" for WrestlerBattleSprite
+import "Sprites/MutantBattleSprite" for MutantBattleSprite
 
 var RNG = Random.new()
 var POOL_HP = 300
@@ -320,14 +320,14 @@ class WardenBrain {
 class Warden {
     // The statue: 300 HP in one pool, Granite Skin, no stamina, Iron-bodied (weak to Storm).
     static def {
-        var def = BattleCritter.fromSheet("The Warden", WrestlerBattleSprite).stats(POOL_HP, 0, 10, 0, 0, 0)
+        var def = BattleCritter.fromSheet("The Warden", MutantBattleSprite).stats(POOL_HP, 0, 10, 0, 0, 0)
         def.trait("noStamina", true).trait("immovable", true).trait("granite", GRANITE).trait("bodyElement", "Iron")
         return def.trait("boss", true).tint(STONE_TINT).brain(Fn.new { WardenBrain.new() })
     }
 
     // A side shard: 60 HP of its own (and everything it takes also comes off the pool).
     static shardDef(name) {
-        var def = BattleCritter.fromSheet(name, WrestlerBattleSprite).stats(SHARD_HP, 0, 10, 0, 0, 0)
+        var def = BattleCritter.fromSheet(name, MutantBattleSprite).stats(SHARD_HP, 0, 10, 0, 0, 0)
         def.trait("noStamina", true).trait("immovable", true).trait("granite", GRANITE).trait("bodyElement", "Iron")
         return def.trait("boss", true).tint(SHARD_TINT)
     }
