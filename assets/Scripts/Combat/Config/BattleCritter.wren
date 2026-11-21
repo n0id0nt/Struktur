@@ -22,6 +22,7 @@ import "Combat/Config/SheetAnims" for SheetAnims
 import "GameObjects/NPC" for NPCData
 import "Sprites/GoblinVikingBattleSprite" for GoblinVikingBattleSprite
 import "Sprites/WrestlerBattleSprite" for WrestlerBattleSprite
+import "Sprites/YellowPantsGirlBattleWeaponSprite" for YellowPantsGirlBattleWeaponSprite
 
 class BattleCritter {
     // anims: { role: [startFrame, endFrameExclusive, seconds] }. facing: 1 = art faces right, -1 = left.
@@ -34,6 +35,7 @@ class BattleCritter {
         _facing = facing
         _anims = anims
         _animsLeft = null
+        _weaponTexturePath = null
         _numbers = [100, 80, 10, 10, 5, 12]
         _gear = [null, null, null]
         _kit = []
@@ -50,6 +52,11 @@ class BattleCritter {
     // battler faces left.
     withLeftAnims(animsLeft) {
         _animsLeft = animsLeft
+        return this
+    }
+    // Draws `sheet`'s weapon layer over the body (generated with the body sheet, on the same grid).
+    weaponLayer(sheet) {
+        _weaponTexturePath = sheet.data["texture"]
         return this
     }
     stats(maxHp, maxStamina, attack, mana, defence, recovery) {
@@ -102,6 +109,8 @@ class BattleCritter {
     facing { _facing }
     anims { _anims }
     animsLeft { _animsLeft }   // null = no left-facing art; Battler flips `anims` instead
+    // The weapon layer drawn over the sheet, frame for frame (a Sprites/<Name>BattleWeaponSprite) - null for none.
+    weaponTexturePath { _weaponTexturePath }
     tint { _tint }
     maxHp { _numbers[0] }
     maxStamina { _numbers[1] }
@@ -337,7 +346,7 @@ class BattleCritter {
 
     // Kira - the hunter's daughter and first companion: a short bow from the back row.
     static kira {
-        return BattleCritter.fromNpc("Kira").stats(85, 80, 10, 8, 4, 12).gear("shortbow", null, "clothes").kit(["Step", "Quick Shot", "Brace"])
+        return BattleCritter.fromNpc("Kira").weaponLayer(YellowPantsGirlBattleWeaponSprite).stats(85, 80, 10, 8, 4, 12).gear("shortbow", null, "clothes").kit(["Step", "Quick Shot", "Brace"])
     }
 
     // Thomas - Kira's father, who teaches the three lessons. A plain sword, swung at the right time.

@@ -139,10 +139,8 @@ class Battler {
         play_("idle", null, true)
     }
 
-    // Only the player's sheet has a weapon layer so far (Combat/Config/BattlePlayer.weaponTexturePath).
-    static hasWeaponLayer_(def) {
-        return def.name == "You" && def.weaponTexturePath != null
-    }
+    // The player's sheet (Combat/Config/BattlePlayer.weaponTexturePath) and Kira's (BattleCritter.weaponLayer).
+    static hasWeaponLayer_(def) { def.weaponTexturePath != null }
 
     entity { _entity }
     combatant { _combatant }

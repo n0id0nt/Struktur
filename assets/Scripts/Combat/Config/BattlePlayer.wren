@@ -23,8 +23,8 @@ import "Combat/MoveBook" for MoveBook
 import "Inventory/Equipment" for Equipment
 
 var STARTER_MOVES = ["Step", "Slash"]
-// The weapon layer sheet (see weaponTexturePath): a placeholder cylinder in the right hand, rendered by
-// 3dModelsToSprites (characters/explorer/job.battle_weapon.json) on the same grid as the body sheet.
+// The weapon layer sheet (see weaponTexturePath): a placeholder sword in the right hand (a bow in the left for Shoot),
+// rendered by 3dModelsToSprites (characters/explorer/job.battle_weapon.json) on the same grid as the body sheet.
 var WEAPON_LAYER = ExplorerBattleWeaponSprite.data["texture"]
 
 class BattlePlayer {
