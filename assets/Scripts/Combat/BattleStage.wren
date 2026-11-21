@@ -375,18 +375,26 @@ class BattleStage {
 
     // --- plan ghosts ---------------------------------------------------------------------------
 
-    // While moves are picked: a see-through ghost for each party member with a plan plays it through - all on one
-    // clock that loops (a short pause on the final positions between runs) and starts over whenever a plan changes.
-    // plans: [[combatant, steps], ...] - steps as ChainBuilder.steps / BattlePlan.stepsOf give them.
+    // While moves are picked: a see-through ghost for each party member with a plan plays it through - and, with Soul
+    // Sight, one for each opponent that plays only as far as Soul Sight sees and then holds. All on one clock that
+    // loops - as long as the longest ghost sequence, then a short pause on the final positions - and starts over
+    // whenever a plan changes.
+    // plans: [[combatant, steps, seconds], ...] - steps as ChainBuilder.steps / BattlePlan.stepsOf give them; seconds:
+    // how far into them the ghost may play (null for all of it).
     drawPlans(plans) {
         var key = ""
         var length = 0
+        var lengths = []
         for (plan in plans) {
             key = key + plan[0].name + ":"
+            var planLength = 0
             for (step in plan[1]) {
                 key = key + step["move"].name + ","
-                length = length.max(step["end"])
+                planLength = planLength.max(step["end"])
             }
+            if (plan[2] != null) planLength = planLength.min(plan[2])
+            lengths.add(planLength)
+            length = length.max(planLength)
             key = key + ";"
         }
         if (key != _planKey) {
@@ -395,13 +403,15 @@ class BattleStage {
         }
         var clock = (Time.unscaledTime - _planStart) % (length + PLAN_PAUSE)
         var kept = []
-        for (plan in plans) {
+        for (i in 0...plans.count) {
+            var plan = plans[i]
             var fighter = plan[0]
             var battler = battlerFor(fighter)
             if (battler == null || !fighter.active) continue
             var ghost = ghostFor_(fighter)
-            if (ghost == null) ghost = PlanGhost.new(battler.def, battler.wearsWeapon, _worldParent)
-            ghost.show(clock.min(length), plan[1], fighter, this)
+            if (ghost == null) ghost = PlanGhost.new(battler.def, battler.wearsWeapon, _worldParent, fighter.side != 0)
+            // Each ghost plays its own sequence, then holds on its last pose until the loop comes round.
+            ghost.show(clock.min(lengths[i]), plan[1], fighter, this)
             kept.add([fighter, ghost])
         }
         for (pair in _ghosts) {

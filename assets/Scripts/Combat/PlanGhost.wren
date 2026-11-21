@@ -1,7 +1,8 @@
 // Combat/PlanGhost.wren
 // A see-through copy of a party member that plays through its planned chain while moves are being picked - the chain
 // being built, or one an ally already committed - so the player can see where everyone will be and which cells they
-// leave free (Combat/BattlePlan.wren decides which cells a new chain may use). Every ghost on the stage runs on one
+// leave free (Combat/BattlePlan.wren decides which cells a new chain may use). With Soul Sight an opponent gets one
+// too, in the soul's blue, that plays only as far into its chain as Soul Sight reaches. Every ghost on the stage runs on one
 // shared, looping clock (BattleStage.drawPlans), so allies' plans play side by side, in step.
 //
 // It replays timed steps ({"move", "start", "end", "at", "to"} - ChainBuilder.steps / BattlePlan.stepsOf): each move's
@@ -16,23 +17,25 @@ import "renderer" for FlipBit
 import "Combat/Config/SheetAnims" for SheetAnims
 
 var GHOST_TINT = Vec4.new(170, 205, 255, 130)
+var SOUL_GHOST_TINT = Vec4.new(110, 200, 255, 120)   // an opponent's ghost, seen with Soul Sight
 var SLIDE_TIME = 0.19        // how long the slide into a new cell takes (about a battler's own slide)
 
 class PlanGhost {
     // def: the battle def the fighter wears (Battler.def). wearsWeapon: whether it draws the weapon layer too.
-    // parent: entity to spawn under.
-    construct new(def, wearsWeapon, parent) {
+    // parent: entity to spawn under. soul: an opponent's ghost, seen with Soul Sight (drawn in the soul's blue).
+    construct new(def, wearsWeapon, parent, soul) {
         _def = def
+        var tint = soul ? SOUL_GHOST_TINT : GHOST_TINT
         _entity = GameObject.create("PlanGhost_%(def.name)", parent)
         var texture = Texture.load(def.texturePath)
-        Sprite.create(_entity, texture, GHOST_TINT, def.pivot, def.cols, def.rows, FlipBit.NONE, 0, RenderLayer.ENTITIES, 0)
+        Sprite.create(_entity, texture, tint, def.pivot, def.cols, def.rows, FlipBit.NONE, 0, RenderLayer.ENTITIES, 0)
         texture.unload()
         _anim = SpriteAnimation.create(_entity)
         _weapon = null
         if (wearsWeapon) {
             _weapon = GameObject.create("PlanGhostWeapon_%(def.name)", _entity)
             var weaponTexture = Texture.load(def.weaponTexturePath)
-            Sprite.create(_weapon, weaponTexture, GHOST_TINT, def.pivot, def.cols, def.rows, FlipBit.NONE, 0, RenderLayer.ENTITIES, 1)
+            Sprite.create(_weapon, weaponTexture, tint, def.pivot, def.cols, def.rows, FlipBit.NONE, 0, RenderLayer.ENTITIES, 1)
             weaponTexture.unload()
         }
         _registered = {}   // clip key -> its length in seconds (addAnimation rejects duplicates)

@@ -347,17 +347,26 @@ class CombatState is BaseState {
         refreshViews_()
     }
 
-    // What the plan ghosts play (BattleStage.drawPlans): the chain being built, and the rest of every chain the party
-    // has already committed - [[combatant, steps], ...].
+    // What the plan ghosts play (BattleStage.drawPlans): the chain being built, the rest of every chain the party has
+    // already committed, and - with Soul Sight - each opponent's chain as far as Soul Sight reaches (World/SoulSight.wren)
+    // - [[combatant, steps, seconds or null for all], ...].
     plans_() {
         var plans = []
         for (fighter in _party) {
             if (!fighter.active) continue
             if (fighter == _chooser) {
-                if (_builder != null && _builder.count > 0) plans.add([fighter, _builder.steps])
+                if (_builder != null && _builder.count > 0) plans.add([fighter, _builder.steps, null])
             } else {
                 var steps = BattlePlan.stepsOf(fighter)
-                if (steps.count > 0) plans.add([fighter, steps])
+                if (steps.count > 0) plans.add([fighter, steps, null])
+            }
+        }
+        var reach = SoulSight.reach
+        if (reach > 0) {
+            for (foe in _engine.fighters) {
+                if (foe.side == 0 || !foe.active || foe.removed) continue
+                var steps = BattlePlan.stepsOf(foe)
+                if (steps.count > 0) plans.add([foe, steps, reach])
             }
         }
         return plans
