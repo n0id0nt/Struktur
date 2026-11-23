@@ -1,7 +1,7 @@
 // GameObjects/Trigger.wren
 // The LDtk "Trigger" entity: an invisible area that plays a dialogue node the first time the player walks into it
 // (Kira noticing something and going over to look, a line as you cross into the woods...). Fields:
-//   Node          - the Dialogue/Arc1Dialogue.json node to play (once per save - World/StoryTriggers.wren)
+//   Node          - the Dialogue/Arc1/ node to play (once per save - World/StoryTriggers.wren)
 //   RequiresFlag  - optional "<int flag> <op> <number>": it only fires while this holds. Checked again while the
 //                   player stands inside, so a moment can wait for something to happen there (a fight ending)
 //   ShowFromStage / HideFromStage - optional story gating, as for NPCs (World/StoryGates.wren)

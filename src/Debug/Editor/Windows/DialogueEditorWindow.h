@@ -88,7 +88,11 @@ private:
 	// File operations
 	bool LoadDialogueFileWren(GameContext& context, const std::string& filepath, const std::string& className);
 	bool LoadDialogueFileJson(GameContext& context, const std::string& filepath);
-	void ParseDialogueDataFromJson(GameContext& context, const nlohmann::json& root);
+	// nodes: the file's list of nodes (a JSON dialogue file is {"root", "nodes", "editor": {"positions"}} - or, older,
+	// just that list).
+	void ParseDialogueDataFromJson(GameContext& context, const nlohmann::json& nodes);
+	// The nodes in the order they're saved in: the order they were loaded in, then any added since (by id).
+	std::vector<std::string> SaveOrder() const;
 	std::unique_ptr<Dialogue::Command> ParseCommandFromJson(const nlohmann::json& j);
 	std::unique_ptr<Dialogue::Choice> ParseChoiceFromJson(const nlohmann::json& j);
 	std::unique_ptr<Dialogue::ConditionalTarget> ParseTargetFromJson(const nlohmann::json& j);
@@ -157,6 +161,10 @@ private:
 		glm::vec2 visualPosition;
 	};
 	std::unordered_map<std::string, NodeData> m_nodes;
+	// The order the nodes were loaded in - saving keeps it, so a saved file only changes where something changed.
+	std::vector<std::string> m_nodeOrder;
+	// Graph positions read from a JSON file's "editor" block - placed over the automatic layout once it's done.
+	std::unordered_map<std::string, glm::vec2> m_loadedPositions;
 	std::string m_entryNodeId;
 	std::string m_selectedNodeId;
 

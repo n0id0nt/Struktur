@@ -44,7 +44,7 @@ var ITEMS = {
     "Leather Vest": {"category": "armor", "bonuses": {"defence": 8}},
     "Iron Helm": {"category": "armor", "bonuses": {"defence": 2}},
 
-    // Arc 1 (Dialogue/Arc1Dialogue.json). Everything else it hands out (keys, the horn, records...) is a key item.
+    // Arc 1 (Dialogue/Arc1/). Everything else it hands out (keys, the horn, records...) is a key item.
     "Healing Herb": {"category": "consumable"},
     // Thomas's, before and after a sparring lesson (drunk straight away - the "drinkPotion" dialogue command).
     "Healing Potion": {"category": "consumable"},

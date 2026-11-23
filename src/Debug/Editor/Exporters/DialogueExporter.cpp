@@ -1,5 +1,6 @@
 #include "DialogueExporter.h"
 
+#include <cmath>
 #include <sstream>
 
 #include "Debug/Assertions.h"
@@ -154,11 +155,13 @@ std::string DialogueExporter::ExportToWren(const std::unordered_map<std::string,
 	return output.str();
 }
 
-std::string DialogueExporter::ExportToJson(const std::unordered_map<std::string, Dialogue::DialogueNode*>& nodes)
+std::string DialogueExporter::ExportToJson(const std::vector<std::pair<std::string, Dialogue::DialogueNode*>>& orderedNodes,
+                                          const std::string& rootNode,
+                                          const std::unordered_map<std::string, glm::vec2>& positions)
 {
-	nlohmann::json root = nlohmann::json::array();
+	nlohmann::json nodeList = nlohmann::json::array();
 
-	for (const auto& [nodeId, node] : nodes)
+	for (const auto& [nodeId, node] : orderedNodes)
 	{
 		nlohmann::json nodeData = nlohmann::json::object();
 
@@ -213,10 +216,25 @@ std::string DialogueExporter::ExportToJson(const std::unordered_map<std::string,
 			nodeData["targets"] = targets;
 		}
 
-		root.push_back({{"node", nodeId}, {"data", nodeData}});
+		nodeList.push_back({{"node", nodeId}, {"data", nodeData}});
 	}
 
-	return root.dump(2);
+	// Whole pixels keep the file readable and stable between saves.
+	nlohmann::json positionMap = nlohmann::json::object();
+	for (const auto& [nodeId, node] : orderedNodes)
+	{
+		auto found = positions.find(nodeId);
+		if (found != positions.end())
+		{
+			positionMap[nodeId] = {std::round(found->second.x), std::round(found->second.y)};
+		}
+	}
+
+	nlohmann::json document = nlohmann::json::object();
+	document["root"]        = rootNode;
+	document["nodes"]       = nodeList;
+	document["editor"]      = {{"positions", positionMap}};
+	return document.dump(2) + "\n";
 }
 
 std::string DialogueExporter::ExportChoiceWren(const Choice& choice, int indent)

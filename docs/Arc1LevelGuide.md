@@ -11,7 +11,7 @@
 > The dialogue lookup names match the LDtk names (`Dialogue/DialogueEntryPoints.wren`). The field tables and the
 > map below describe the earlier proposal, not the level as built.
 
-What to build in `assets/Levels/SevenGods.ldtk` so the Arc 1 dialogue (`assets/Dialogue/Arc1Dialogue.json`)
+What to build in `assets/Levels/SevenGods.ldtk` so the Arc 1 dialogue (`assets/Dialogue/Arc1/`)
 plays start to finish. The game boots straight into `GameWorldState`, which spawns only the player (and party
 followers). **Everything else is placed here.**
 

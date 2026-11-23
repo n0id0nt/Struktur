@@ -1,0 +1,317 @@
+{
+  "root": "garrett",
+  "nodes": [
+    {
+      "node": "garrett",
+      "data": {
+        "targets": [
+          {
+            "node": "garrett_reward",
+            "conditions": [
+              {
+                "type": "hasIntFlag",
+                "parameters": [
+                  {
+                    "type": "flag",
+                    "value": "well_fixed"
+                  },
+                  {
+                    "type": "op",
+                    "value": "=="
+                  },
+                  {
+                    "type": "value",
+                    "value": 1.0
+                  }
+                ]
+              },
+              {
+                "type": "hasIntFlag",
+                "parameters": [
+                  {
+                    "type": "flag",
+                    "value": "garrett_key"
+                  },
+                  {
+                    "type": "op",
+                    "value": "=="
+                  },
+                  {
+                    "type": "value",
+                    "value": 0.0
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "node": "garrett_idle",
+            "conditions": [
+              {
+                "type": "hasIntFlag",
+                "parameters": [
+                  {
+                    "type": "flag",
+                    "value": "well_fixed"
+                  },
+                  {
+                    "type": "op",
+                    "value": "=="
+                  },
+                  {
+                    "type": "value",
+                    "value": 1.0
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "node": "garrett_ask"
+          }
+        ]
+      }
+    },
+    {
+      "node": "garrett_ask",
+      "data": {
+        "text": "dialogue.arc1.garrett_ask",
+        "speaker": "Garrett",
+        "commands": [
+          {
+            "type": "expression",
+            "parameters": [
+              {
+                "type": "mood",
+                "value": "glaring"
+              }
+            ]
+          },
+          {
+            "type": "setIntFlag",
+            "parameters": [
+              {
+                "type": "flag",
+                "value": "garrett_asked"
+              },
+              {
+                "type": "value",
+                "value": 1.0
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "node": "garrett_reward",
+      "data": {
+        "text": "dialogue.arc1.garrett_reward",
+        "speaker": "Garrett",
+        "commands": [
+          {
+            "type": "giveItem",
+            "parameters": [
+              {
+                "type": "item",
+                "value": "Village Key"
+              },
+              {
+                "type": "count",
+                "value": 1.0
+              }
+            ]
+          },
+          {
+            "type": "setIntFlag",
+            "parameters": [
+              {
+                "type": "flag",
+                "value": "garrett_key"
+              },
+              {
+                "type": "value",
+                "value": 1.0
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "node": "garrett_idle",
+      "data": {
+        "text": "dialogue.arc1.garrett_idle",
+        "speaker": "Garrett"
+      }
+    },
+    {
+      "node": "village_well",
+      "data": {
+        "targets": [
+          {
+            "node": "well_fixed",
+            "conditions": [
+              {
+                "type": "hasIntFlag",
+                "parameters": [
+                  {
+                    "type": "flag",
+                    "value": "well_fixed"
+                  },
+                  {
+                    "type": "op",
+                    "value": "=="
+                  },
+                  {
+                    "type": "value",
+                    "value": 1.0
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "node": "well_puzzle"
+          }
+        ]
+      }
+    },
+    {
+      "node": "well_puzzle_fail",
+      "data": {
+        "text": "dialogue.arc1.well_puzzle_fail"
+      }
+    },
+    {
+      "node": "well_puzzle_done",
+      "data": {
+        "text": "dialogue.arc1.well_puzzle_done",
+        "commands": [
+          {
+            "type": "playAnimation",
+            "parameters": [
+              {
+                "type": "who",
+                "value": "Player"
+              },
+              {
+                "type": "animation",
+                "value": "Lifting"
+              },
+              {
+                "type": "wait",
+                "value": 1.0
+              },
+              {
+                "type": "then",
+                "value": "Idle"
+              }
+            ]
+          },
+          {
+            "type": "setIntFlag",
+            "parameters": [
+              {
+                "type": "flag",
+                "value": "well_fixed"
+              },
+              {
+                "type": "value",
+                "value": 1.0
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "node": "well_puzzle_step1",
+      "data": {
+        "text": "dialogue.arc1.well_puzzle_step1",
+        "choices": [
+          {
+            "target": "well_puzzle_step2",
+            "text": "dialogue.arc1.well_puzzle_step1.choice1"
+          },
+          {
+            "target": "well_puzzle_fail",
+            "text": "dialogue.arc1.well_puzzle_step1.choice2"
+          },
+          {
+            "target": "well_puzzle_fail",
+            "text": "dialogue.arc1.well_puzzle_step1.choice3"
+          },
+          {
+            "target": "well_puzzle_fail",
+            "text": "dialogue.arc1.well_puzzle_step1.choice4"
+          }
+        ]
+      }
+    },
+    {
+      "node": "well_puzzle_step2",
+      "data": {
+        "text": "dialogue.arc1.well_puzzle_step2",
+        "choices": [
+          {
+            "target": "well_puzzle_fail",
+            "text": "dialogue.arc1.well_puzzle_step2.choice1"
+          },
+          {
+            "target": "well_puzzle_fail",
+            "text": "dialogue.arc1.well_puzzle_step2.choice2"
+          },
+          {
+            "target": "well_puzzle_fail",
+            "text": "dialogue.arc1.well_puzzle_step2.choice3"
+          },
+          {
+            "target": "well_puzzle_step3",
+            "text": "dialogue.arc1.well_puzzle_step2.choice4"
+          }
+        ]
+      }
+    },
+    {
+      "node": "well_puzzle_step3",
+      "data": {
+        "text": "dialogue.arc1.well_puzzle_step3",
+        "choices": [
+          {
+            "target": "well_puzzle_fail",
+            "text": "dialogue.arc1.well_puzzle_step3.choice1"
+          },
+          {
+            "target": "well_puzzle_done",
+            "text": "dialogue.arc1.well_puzzle_step3.choice2"
+          },
+          {
+            "target": "well_puzzle_fail",
+            "text": "dialogue.arc1.well_puzzle_step3.choice3"
+          },
+          {
+            "target": "well_puzzle_fail",
+            "text": "dialogue.arc1.well_puzzle_step3.choice4"
+          }
+        ]
+      }
+    },
+    {
+      "node": "well_puzzle",
+      "data": {
+        "text": "dialogue.arc1.well_puzzle",
+        "next": "well_puzzle_step1"
+      }
+    },
+    {
+      "node": "well_fixed",
+      "data": {
+        "text": "dialogue.arc1.well_fixed"
+      }
+    }
+  ],
+  "editor": {
+    "positions": {}
+  }
+}

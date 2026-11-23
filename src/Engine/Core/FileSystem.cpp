@@ -93,6 +93,17 @@ FileResult<void> FileSystem::Mount(const std::string& path, const std::string& m
 	return FileResult<void>::Ok();
 }
 
+FileResult<void> FileSystem::Unmount(const std::string& path)
+{
+	if (PHYSFS_unmount(path.c_str()) == 0)
+	{
+		auto physfsError = GetLastPhysFSError();
+		return FileResult<void>::Fail(physfsError.error, physfsError.message);
+	}
+
+	return FileResult<void>::Ok();
+}
+
 //////////////////////////////////////////////////////////////////////////////////////////
 // Write directory
 //////////////////////////////////////////////////////////////////////////////////////////

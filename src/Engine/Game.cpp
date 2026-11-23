@@ -58,6 +58,7 @@
 	#include "Debug/Editor/EditorLayoutManager.h"
 	#include "Debug/Editor/EditorTheme.h"
 	#include "Debug/Editor/ProjectLauncher.h"
+	#include "Debug/Editor/SaveFolders.h"
 #endif
 
 #ifdef EDITOR
@@ -167,7 +168,8 @@ bool Struktur::InitialiseGame(GameContext& context)
 #if defined(PLATFORM_WEB)
 	std::string saveDir = "/saves";  // Emscripten virtual path
 #elif defined(EDITOR)
-	std::string saveDir = (projectPath.empty() ? "" : projectPath) + "/../saves";
+	// <saves folder>/Current - the saves folder is picked in the editor's Saves window (default <project>/../saves)
+	std::string saveDir = Debug::SaveFolders::Initialise(projectPath);
 #else
 	std::string saveDir = FileSystem::GetSaveDir("StrukturGames", gameData.projectName);
 #endif

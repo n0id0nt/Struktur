@@ -1,16 +1,18 @@
-"""Writes docs/Arc1Dialogue.md - the whole Arc 1 dialogue as a readable script: every line with its speaker and
+"""Writes docs/Arc1Dialogue.md - the whole Arc 1 dialogue (every file in assets/Dialogue/Arc1, one per character) as a readable script: every line with its speaker and
 expression, the actions and close-ups that play with it, the choices and where they lead, and what's still missing.
 
     python tools/dialogue_to_markup.py
 
-The game reads assets/Dialogue/Arc1Dialogue.json (the graph) and assets/Localization/en.json (the text); this only
+The game reads assets/Dialogue/Arc1/*.json (the graph, one file per character) and assets/Localization/en.json (the text); this only
 reads them. Edit the markdown to mark changes you want, then have them applied to the JSON and re-run this.
 """
 import json
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
-DIALOGUE = ROOT / "assets" / "Dialogue" / "Arc1Dialogue.json"
+DIALOGUE_DIR = ROOT / "assets" / "Dialogue" / "Arc1"
+# The files in the order the script lists them (the game's load order - Scripts/Dialogue/DialogueLoader.wren).
+DIALOGUE_FILES = ["Finn", "Thomas", "Kira", "Elena", "Garrett", "Child", "Guide", "Warden", "World"]
 STRINGS = ROOT / "assets" / "Localization" / "en.json"
 OUT = ROOT / "docs" / "Arc1Dialogue.md"
 
@@ -169,15 +171,21 @@ def condition_text(conditions):
 
 
 def main():
-    nodes = json.loads(DIALOGUE.read_text(encoding="utf-8"))
+    nodes = []
+    file_of = {}
+    for name in DIALOGUE_FILES:
+        document = json.loads((DIALOGUE_DIR / f"{name}.json").read_text(encoding="utf-8"))
+        for node in document["nodes"]:
+            file_of[node["node"]] = (name, document.get("root"))
+        nodes += document["nodes"]
     strings = json.loads(STRINGS.read_text(encoding="utf-8"))["strings"]
     scene_starts = dict(SCENES)
 
     out = ["# Arc 1 dialogue", "",
-           "Generated from `assets/Dialogue/Arc1Dialogue.json` and `assets/Localization/en.json` by",
+           "Generated from `assets/Dialogue/Arc1/*.json` (one file per character) and `assets/Localization/en.json` by",
            "`python tools/dialogue_to_markup.py` - regenerate it after the dialogue changes.", "",
            "## How to read and mark this", "",
-           "- Each `###` heading is one dialogue node (its id in the JSON).",
+           "- Each `##` heading is one dialogue file, each `###` a scene in it and each `####` one node (its id in the JSON).",
            "- **Speaker** *(expression)*: the line. The expression shows on the speaker's portrait; with no art for it",
            "  yet, the portrait shows its default face with the expression written underneath.",
            "- *Staging* lines are what plays while the line shows (or, for a node with no line, before moving on).",
@@ -210,12 +218,16 @@ def main():
             "- The player has a portrait (`Portraits/explorer_portrait.png`) but never speaks a line yet.",
             "- `[PH]` lines are placeholder writing from the original script.", ""]
 
-    out += ["## The script", ""]
+    out += ["# The script", ""]
+    current_file = None
     for node in nodes:
         node_id, d = node["node"], node["data"]
+        if file_of[node_id][0] != current_file:
+            current_file, root = file_of[node_id]
+            out += [f"## {current_file} - `assets/Dialogue/Arc1/{current_file}.json` (root `{root}`)", ""]
         if node_id in scene_starts:
-            out += [f"## {scene_starts[node_id]}", ""]
-        out.append(f"### `{node_id}`")
+            out += [f"### {scene_starts[node_id]}", ""]
+        out.append(f"#### `{node_id}`")
         out.append("")
         commands = d.get("commands", [])
         mood = next((params(c)["mood"] for c in commands if c["type"] == "expression"), None)

@@ -112,6 +112,8 @@ public:
 	// append = true  : lower priority (checked after existing mounts)
 	// append = false : higher priority (checked before existing mounts, useful for patches/mods)
 	static FileResult<void> Mount(const std::string& path, const std::string& mountPoint = "/", bool append = true);
+	// Removes a mount - `path` must be spelled exactly as it was passed to Mount
+	static FileResult<void> Unmount(const std::string& path);
 
 	//-----------------------------------------------------------------------------------
 	// Write directory

@@ -20,6 +20,7 @@
 #include "Debug/Editor/Windows/PreviewWindow.h"
 #include "Debug/Editor/Windows/ProfilerWindow.h"
 #include "Debug/Editor/Windows/ResourceManagerWindow.h"
+#include "Debug/Editor/Windows/SavesWindow.h"
 #include "Debug/Editor/Windows/SettingsWindow.h"
 #include "Debug/Editor/Windows/StateWindow.h"
 #include "Debug/Editor/Windows/ToolbarWindow.h"
@@ -85,6 +86,9 @@ void Editor::Initialise(GameContext& context)
 
 	// LDtk world picker for the level viewer
 	CreateWindow<LevelViewerWindow>(&m_levelViewer);
+
+	// Saves folder picker and save versions (see SaveFolders)
+	CreateWindow<SavesWindow>();
 
 	// Route ImGui's own ini autosave/autoload through a single canonical file (also used by the explicit
 	// Save/Load Layout menu actions), so docking state persists automatically across launches.

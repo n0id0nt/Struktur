@@ -1,0 +1,158 @@
+{
+  "root": "child",
+  "nodes": [
+    {
+      "node": "child",
+      "data": {
+        "targets": [
+          {
+            "node": "child_return",
+            "conditions": [
+              {
+                "type": "hasIntFlag",
+                "parameters": [
+                  {
+                    "type": "flag",
+                    "value": "arc1_stage"
+                  },
+                  {
+                    "type": "op",
+                    "value": ">="
+                  },
+                  {
+                    "type": "value",
+                    "value": 9.0
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "node": "child_s5",
+            "conditions": [
+              {
+                "type": "hasIntFlag",
+                "parameters": [
+                  {
+                    "type": "flag",
+                    "value": "arc1_stage"
+                  },
+                  {
+                    "type": "op",
+                    "value": ">="
+                  },
+                  {
+                    "type": "value",
+                    "value": 3.0
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "node": "child_idle"
+          }
+        ]
+      }
+    },
+    {
+      "node": "child_idle",
+      "data": {
+        "text": "dialogue.arc1.child_idle",
+        "speaker": "Child"
+      }
+    },
+    {
+      "node": "child_s5",
+      "data": {
+        "text": "dialogue.arc1.child_s5",
+        "choices": [
+          {
+            "target": "child_s5_end",
+            "text": "dialogue.arc1.child_s5.choice1"
+          },
+          {
+            "target": "child_s5_end",
+            "text": "dialogue.arc1.child_s5.choice2"
+          },
+          {
+            "target": "child_s5_end",
+            "text": "dialogue.arc1.child_s5.choice3"
+          }
+        ],
+        "speaker": "Child",
+        "commands": [
+          {
+            "type": "expression",
+            "parameters": [
+              {
+                "type": "mood",
+                "value": "eager"
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "node": "child_s5_end",
+      "data": {
+        "text": "dialogue.arc1.child_s5_end",
+        "speaker": "Child",
+        "commands": [
+          {
+            "type": "expression",
+            "parameters": [
+              {
+                "type": "mood",
+                "value": "excited"
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "node": "child_return",
+      "data": {
+        "text": "dialogue.arc1.child_return",
+        "choices": [
+          {
+            "target": "child_return_end",
+            "text": "dialogue.arc1.child_return.choice1"
+          },
+          {
+            "target": "child_return_end",
+            "text": "dialogue.arc1.child_return.choice2"
+          },
+          {
+            "target": "child_return_end",
+            "text": "dialogue.arc1.child_return.choice3"
+          }
+        ],
+        "speaker": "Child"
+      }
+    },
+    {
+      "node": "child_return_end",
+      "data": {
+        "text": "dialogue.arc1.child_return_end",
+        "speaker": "Child",
+        "commands": [
+          {
+            "type": "expression",
+            "parameters": [
+              {
+                "type": "mood",
+                "value": "wide-eyed"
+              }
+            ]
+          }
+        ]
+      }
+    }
+  ],
+  "editor": {
+    "positions": {}
+  }
+}

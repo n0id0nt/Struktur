@@ -103,7 +103,7 @@ The generator, `gen_arc1.py`, puts each walk in a node with no text, ahead of th
 `face` or `playAnimation` in the same node would stop the walk.
 
 Every scene in the arc's dialogue where someone should walk, in story order. Each beat is taken from the script's
-stage directions (the *(italic)* notes in `Arc1Dialogue.json`). **Path** is the name to give the LDtk Path, placed
+stage directions (the *(italic)* notes in the old `Arc1Dialogue.json`, now `assets/Dialogue/Arc1/`). **Path** is the name to give the LDtk Path, placed
 in that scene's level. A "1 point" Path is just a spot to stand on.
 
 **Party followers:** Kira follows the player by herself, so the player's walks bring her along. Give her a Path only

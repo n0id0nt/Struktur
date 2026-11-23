@@ -28,7 +28,7 @@ import "Sprites/SpriteSheet" for SpriteSheet
 // optional - not added to the NPC entity yet) wins over this table.
 // NPCs only shown while an int flag holds a value, by their LDtk iid: [flag, value] (World/StoryGates.wren withFlag).
 // Thomas has three spots during his lessons (arc1_stage 2): "thomas_place" 0 his cabin, 1 the training grounds,
-// 2 the north gate (Dialogue/Arc1Dialogue.json moves him). Kept here, not as an LDtk field, as the NPC entity has no
+// 2 the north gate (Dialogue/Arc1/Thomas.json moves him). Kept here, not as an LDtk field, as the NPC entity has no
 // field for it.
 var FLAG_GATES = {
     "c96a0770-bde0-11f1-99f1-014b901230a9": ["thomas_place", 0],   // ThomasCabin
@@ -61,7 +61,7 @@ class NPCData {
     // look (Combat/Config/BattleCritter.wren, which uses battleSprite).
     static forName(name) {
         var table = {
-            // Arc 1 cast (Levels/SevenGods.ldtk, Dialogue/Arc1Dialogue.json). Finn has his own model (with the cutscene
+            // Arc 1 cast (Levels/SevenGods.ldtk, Dialogue/Arc1/). Finn has his own model (with the cutscene
             // clips - Working, LayingIdle, GettingUp, PickingUp); the rest wear placeholder looks until
             // the cast gets their own (docs/FirstArcPlan.md).
             "Finn": NPCData.new(FinnSprite, FinnBattleSprite),
@@ -137,7 +137,7 @@ class NPC {
         npcData.createSprite(_entity)
         Shadow.attach(_entity)
         if (_startingClip != null) {
-            // Facing down the screen, like the scenes that set it (Dialogue/Arc1Dialogue.json "finn_working").
+            // Facing down the screen, like the scenes that set it (Dialogue/Arc1/Finn.json "finn_working").
             var clipName = SpriteSheet.clipName(Vec2.new(0, 1), _startingClip)
             if (SpriteSheet.clip(_entity, clipName) != null) {
                 SpriteAnimation.setCurrentAnimation(_entity, clipName)

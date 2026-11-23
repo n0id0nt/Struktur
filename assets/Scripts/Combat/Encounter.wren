@@ -9,7 +9,7 @@
 //                   but Slashes, then out of breath: Hold (never twice in a row), and the rest of that chain is
 //                   theirs. The dummy can't be beaten (it never loses health).
 //   The perimeter wolf (Thomas talks you through it at the north gate and teaches Brace there - Dialogue/
-//     Arc1Dialogue.json "thomas_gate"; it charges and you fight it alone - GameObjects/PerimeterWolf.wren)
+//     Arc1/Thomas.json "thomas_gate"; it charges and you fight it alone - GameObjects/PerimeterWolf.wren)
 //   The first wolves (any fight against Starving Thornwolves)
 //   Thomas's test (the same command once you're back from the hunt): Thomas himself, against you and Kira.
 //   The constructs, alone: read their timelines, Brace the heavy hit, then punish.
@@ -28,7 +28,7 @@ import "Combat/Config/BattleCritter" for BattleCritter
 import "Combat/Boss/Warden" for Warden
 import "flags" for FlagManager
 
-// Thomas's part of the first arc, an int flag (Dialogue/Arc1Dialogue.json): 0 not taught, 1 lesson done and the
+// Thomas's part of the first arc, an int flag (Dialogue/Arc1/Thomas.json): 0 not taught, 1 lesson done and the
 // wolf hunt given, 3 back from the hunt - the test is next.
 var LESSON_FLAG = "thomas_lesson"
 

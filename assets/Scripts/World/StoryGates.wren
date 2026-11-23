@@ -14,7 +14,7 @@
 import "flags" for FlagManager
 import "gameObject" for GameObject
 
-// The int flag the story's progress lives in (Dialogue/Arc1Dialogue.json sets it).
+// The int flag the story's progress lives in (Dialogue/Arc1/ sets it).
 var STAGE_FLAG = "arc1_stage"
 
 class StoryGates {

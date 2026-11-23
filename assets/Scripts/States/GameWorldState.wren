@@ -4,7 +4,7 @@
 // InventoryState/InteractState/GameOverState/CombatState/ImpactState) plus the UI/Gameplay Fight!/Interact prompts.
 // Everything else in the world - NPCs, signs, doors, items, critters, warps - is placed in the LDtk level and spawned
 // by World::Level with its script; nothing but the player and party followers is created from here.
-// Story progress (Dialogue/Arc1Dialogue.json's "arc1_stage" flag) shows and hides level-placed entities through
+// Story progress (Dialogue/Arc1/'s "arc1_stage" flag) shows and hides level-placed entities through
 // World/StoryGates.wren, refreshed every update.
 import "gameObject" for GameObject
 import "gameObjectComponents" for WorldTransform, World, Script
@@ -67,7 +67,7 @@ var BATTLE_TEST_INPUT = "DebugBattleTest"
 var FALLBACK_SPAWN_POSITION = Vec3.new(208.0, 208.0, 0.0)
 // Frames to wait for the spawn level's Spawn entities to start before giving up and staying at the level's centre.
 var SPAWN_MAX_WAIT_FRAMES = 30
-// A fresh save opens straight into this conversation (Dialogue/Arc1Dialogue.json) once the player has arrived at the
+// A fresh save opens straight into this conversation (Dialogue/Arc1/) once the player has arrived at the
 // spawn point; OPENING_PLAYED_FLAG (saved) makes sure it only ever plays once.
 var OPENING_NODE = "opening"
 var OPENING_PLAYED_FLAG = "opening_played"
@@ -84,9 +84,9 @@ var WARP_ARRIVAL_OFFSET = 24.0
 // Frames to wait for the target room's DoorWorps to start (their scripts run a frame after the room loads) before
 // giving up on finding the one that leads back and arriving at the room's centre.
 var WARP_MAX_WAIT_FRAMES = 10
-// Seconds after arriving during which stepping on a DoorWorp does nothing - so being nudged out of a wall onto the
-// doorway you came through (or a follower bumping you) doesn't bounce you straight back.
-var WARP_COOLDOWN = 0.75
+// Seconds after arriving during which stepping on a DoorWorp does nothing. None: arrivals stand clear of the door's
+// trigger (GameObjects/DoorWorp.wren), so stepping straight back onto it should warp straight back.
+var WARP_COOLDOWN = 0
 // A warp fades to black (seconds, real time), moves the party while the screen is black, then fades back in.
 var WARP_FADE_OUT = 0.25
 var WARP_FADE_IN = 0.3
@@ -759,7 +759,10 @@ class GameWorldState is BaseState {
 
     // Moves the player to position and lines the followers up behind them, their trails wiped so nobody walks back
     // to where they were. A teleport, not a walk - the camera lands in the new room's view rather than sliding there.
-    teleportParty_(position) {
+    teleportParty_(position) { teleportParty_(position, null) }
+
+    // The same, with every follower put on followerPosition instead (a warp door's centre) - null lines them up.
+    teleportParty_(position, followerPosition) {
         WorldTransform.setPosition(_playerEntity, position)
         _roomCamera.snapTo(Rooms.indexAt(position))
         var player = Script.getInstance(_playerEntity)
@@ -771,8 +774,9 @@ class GameWorldState is BaseState {
             member.trail.clear()
             if (!member.isPlayer && member.entity != null && GameObject.isValid(member.entity)) {
                 behind = behind + 1
-                WorldTransform.setPosition(member.entity,
-                    Vec3.new(position.x - RESPAWN_FOLLOWER_SPACING * behind, position.y, 0.0))
+                var spot = followerPosition
+                if (spot == null) spot = Vec3.new(position.x - RESPAWN_FOLLOWER_SPACING * behind, position.y, 0.0)
+                WorldTransform.setPosition(member.entity, spot)
             }
         }
     }
@@ -817,9 +821,11 @@ class GameWorldState is BaseState {
         if (arrival == null) {
             return
         }
-        MapLog.warped(_worldEntity, _warp["from"], _warp["target"], _warp["origin"], arrival)
+        MapLog.warped(_worldEntity, _warp["from"], _warp["target"], _warp["origin"], arrival[0])
         _warp = null
-        teleportParty_(arrival)
+        // The player just outside the door, the followers on the door itself (always inside the room - they don't
+        // trigger it), so they walk out after the player.
+        teleportParty_(arrival[0], arrival[1])
         var player = Script.getInstance(_playerEntity)
         if (player != null) {
             player.setInteracting(false)
@@ -831,9 +837,10 @@ class GameWorldState is BaseState {
     }
 
     // Where a warp into room target arrives: next to its destination DoorWorp (the one with that iid - or, with no
-    // destination, the one there that leads back to room from): one tile out in that door's direction, or one step
-    // towards the room's centre if it has no direction - else the room's centre. Null while that room's DoorWorps
-    // haven't started yet (unless giveUp).
+    // destination, the one there that leads back to room from): just clear of its trigger in that door's direction
+    // (GameObjects/DoorWorp.wren arrivalOffset), or one step towards the room's centre if it has no direction - else
+    // the room's centre. Returns [player position, followers' position - the door's centre, or null to line them up].
+    // Null while that room's DoorWorps haven't started yet (unless giveUp).
     warpArrival_(target, from, destination, giveUp) {
         var bounds = Rooms.bounds(target)
         var centre = Vec3.new(bounds[0] + bounds[2] / 2, bounds[1] + bounds[3] / 2, 0.0)
@@ -850,23 +857,24 @@ class GameWorldState is BaseState {
             }
             var isDestination = destination != null ? doorWorp.iid == destination : doorWorp.targetIndex == from
             if (isDestination) {
+                var doorCentre = Vec3.new(position.x, position.y, 0.0)
                 var offset = doorWorp.arrivalOffset
                 if (offset != null) {
-                    return Vec3.new(position.x + offset.x, position.y + offset.y, 0.0)
+                    return [Vec3.new(position.x + offset.x, position.y + offset.y, 0.0), doorCentre]
                 }
                 // No direction set: step one tile off it, along whichever axis points more towards the room's centre.
                 var dx = centre.x - position.x
                 var dy = centre.y - position.y
                 if (dx.abs > dy.abs) {
-                    return Vec3.new(position.x + WARP_ARRIVAL_OFFSET * dx.sign, position.y, 0.0)
+                    return [Vec3.new(position.x + WARP_ARRIVAL_OFFSET * dx.sign, position.y, 0.0), doorCentre]
                 }
-                return Vec3.new(position.x, position.y + WARP_ARRIVAL_OFFSET * dy.sign, 0.0)
+                return [Vec3.new(position.x, position.y + WARP_ARRIVAL_OFFSET * dy.sign, 0.0), doorCentre]
             }
         }
         if (waiting && !giveUp) {
             return null
         }
-        return centre
+        return [centre, null]
     }
 
     // duel: true for a challenge fight (startDuel) - carried through to the fight's CombatOutcome. canFlee: whether the

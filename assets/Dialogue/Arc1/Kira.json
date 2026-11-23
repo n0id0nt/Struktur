@@ -1,0 +1,1939 @@
+{
+  "root": "kira",
+  "nodes": [
+    {
+      "node": "kira",
+      "data": {
+        "targets": [
+          {
+            "node": "kira_s3_walk",
+            "conditions": [
+              {
+                "type": "hasIntFlag",
+                "parameters": [
+                  {
+                    "type": "flag",
+                    "value": "arc1_stage"
+                  },
+                  {
+                    "type": "op",
+                    "value": ">="
+                  },
+                  {
+                    "type": "value",
+                    "value": 1.0
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "node": "kira_early_walk"
+          }
+        ]
+      }
+    },
+    {
+      "node": "kira_early_walk",
+      "data": {
+        "text": "dialogue.arc1.kira_early_walk",
+        "speaker": "Kira",
+        "next": "kira_early_spot",
+        "commands": [
+          {
+            "type": "face",
+            "parameters": [
+              {
+                "type": "who",
+                "value": "Kira"
+              },
+              {
+                "type": "towards",
+                "value": "Player"
+              }
+            ]
+          },
+          {
+            "type": "face",
+            "parameters": [
+              {
+                "type": "who",
+                "value": "Player"
+              },
+              {
+                "type": "towards",
+                "value": "Kira"
+              }
+            ]
+          },
+          {
+            "type": "expression",
+            "parameters": [
+              {
+                "type": "mood",
+                "value": "cheerful"
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "node": "kira_early_spot",
+      "data": {
+        "next": "kira_early_face",
+        "commands": [
+          {
+            "type": "moveTo",
+            "parameters": [
+              {
+                "type": "who",
+                "value": "Kira"
+              },
+              {
+                "type": "to",
+                "value": "KiraToTrainingSpot"
+              }
+            ]
+          },
+          {
+            "type": "moveTo",
+            "parameters": [
+              {
+                "type": "who",
+                "value": "Player"
+              },
+              {
+                "type": "to",
+                "value": "PlayerWatchesKira"
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "node": "kira_early_face",
+      "data": {
+        "next": "kira_early_watch",
+        "commands": [
+          {
+            "type": "face",
+            "parameters": [
+              {
+                "type": "who",
+                "value": "Kira"
+              },
+              {
+                "type": "towards",
+                "value": "right"
+              }
+            ]
+          },
+          {
+            "type": "face",
+            "parameters": [
+              {
+                "type": "who",
+                "value": "Player"
+              },
+              {
+                "type": "towards",
+                "value": "right"
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "node": "kira_early_watch",
+      "data": {
+        "text": "dialogue.arc1.kira_early_watch",
+        "speaker": "Kira",
+        "next": "kira_early_shot",
+        "commands": [
+          {
+            "type": "expression",
+            "parameters": [
+              {
+                "type": "mood",
+                "value": "focused"
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "node": "kira_early_shot",
+      "data": {
+        "next": "kira_early",
+        "commands": [
+          {
+            "type": "playAnimation",
+            "parameters": [
+              {
+                "type": "who",
+                "value": "Kira"
+              },
+              {
+                "type": "animation",
+                "value": "Shoot"
+              },
+              {
+                "type": "wait",
+                "value": 1.0
+              },
+              {
+                "type": "then",
+                "value": "Idle"
+              }
+            ]
+          },
+          {
+            "type": "shootArrow",
+            "parameters": [
+              {
+                "type": "who",
+                "value": "Kira"
+              },
+              {
+                "type": "distance",
+                "value": 70.0
+              },
+              {
+                "type": "delay",
+                "value": 0.75
+              }
+            ]
+          },
+          {
+            "type": "wait",
+            "parameters": [
+              {
+                "type": "seconds",
+                "value": 0.5
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "node": "kira_s3_walk",
+      "data": {
+        "text": "dialogue.arc1.kira_s3_walk",
+        "speaker": "Kira",
+        "next": "kira_s3_spot",
+        "commands": [
+          {
+            "type": "face",
+            "parameters": [
+              {
+                "type": "who",
+                "value": "Kira"
+              },
+              {
+                "type": "towards",
+                "value": "Player"
+              }
+            ]
+          },
+          {
+            "type": "face",
+            "parameters": [
+              {
+                "type": "who",
+                "value": "Player"
+              },
+              {
+                "type": "towards",
+                "value": "Kira"
+              }
+            ]
+          },
+          {
+            "type": "expression",
+            "parameters": [
+              {
+                "type": "mood",
+                "value": "cheerful"
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "node": "kira_s3_spot",
+      "data": {
+        "next": "kira_s3_face",
+        "commands": [
+          {
+            "type": "moveTo",
+            "parameters": [
+              {
+                "type": "who",
+                "value": "Kira"
+              },
+              {
+                "type": "to",
+                "value": "KiraToTrainingSpot"
+              }
+            ]
+          },
+          {
+            "type": "moveTo",
+            "parameters": [
+              {
+                "type": "who",
+                "value": "Player"
+              },
+              {
+                "type": "to",
+                "value": "PlayerWatchesKira"
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "node": "kira_s3_face",
+      "data": {
+        "next": "kira_s3_watch",
+        "commands": [
+          {
+            "type": "face",
+            "parameters": [
+              {
+                "type": "who",
+                "value": "Kira"
+              },
+              {
+                "type": "towards",
+                "value": "right"
+              }
+            ]
+          },
+          {
+            "type": "face",
+            "parameters": [
+              {
+                "type": "who",
+                "value": "Player"
+              },
+              {
+                "type": "towards",
+                "value": "right"
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "node": "kira_s3_watch",
+      "data": {
+        "text": "dialogue.arc1.kira_s3_watch",
+        "speaker": "Kira",
+        "next": "kira_s3_shot",
+        "commands": [
+          {
+            "type": "expression",
+            "parameters": [
+              {
+                "type": "mood",
+                "value": "focused"
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "node": "kira_s3_shot",
+      "data": {
+        "next": "kira_s3",
+        "commands": [
+          {
+            "type": "playAnimation",
+            "parameters": [
+              {
+                "type": "who",
+                "value": "Kira"
+              },
+              {
+                "type": "animation",
+                "value": "Shoot"
+              },
+              {
+                "type": "wait",
+                "value": 1.0
+              },
+              {
+                "type": "then",
+                "value": "Idle"
+              }
+            ]
+          },
+          {
+            "type": "shootArrow",
+            "parameters": [
+              {
+                "type": "who",
+                "value": "Kira"
+              },
+              {
+                "type": "distance",
+                "value": 70.0
+              },
+              {
+                "type": "delay",
+                "value": 0.75
+              }
+            ]
+          },
+          {
+            "type": "wait",
+            "parameters": [
+              {
+                "type": "seconds",
+                "value": 0.5
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "node": "kira_early",
+      "data": {
+        "text": "dialogue.arc1.kira_early",
+        "speaker": "Kira",
+        "commands": [
+          {
+            "type": "expression",
+            "parameters": [
+              {
+                "type": "mood",
+                "value": "pleased"
+              }
+            ]
+          },
+          {
+            "type": "face",
+            "parameters": [
+              {
+                "type": "who",
+                "value": "Kira"
+              },
+              {
+                "type": "towards",
+                "value": "Player"
+              }
+            ]
+          },
+          {
+            "type": "face",
+            "parameters": [
+              {
+                "type": "who",
+                "value": "Player"
+              },
+              {
+                "type": "towards",
+                "value": "Kira"
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "node": "kira_s3",
+      "data": {
+        "text": "dialogue.arc1.kira_s3",
+        "speaker": "Kira",
+        "next": "kira_s3_facts",
+        "commands": [
+          {
+            "type": "expression",
+            "parameters": [
+              {
+                "type": "mood",
+                "value": "chewing"
+              }
+            ]
+          },
+          {
+            "type": "face",
+            "parameters": [
+              {
+                "type": "who",
+                "value": "Kira"
+              },
+              {
+                "type": "towards",
+                "value": "Player"
+              }
+            ]
+          },
+          {
+            "type": "face",
+            "parameters": [
+              {
+                "type": "who",
+                "value": "Player"
+              },
+              {
+                "type": "towards",
+                "value": "Kira"
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "node": "kira_s3_facts",
+      "data": {
+        "text": "dialogue.arc1.kira_s3_facts",
+        "speaker": "Kira",
+        "next": "kira_s3_menu"
+      }
+    },
+    {
+      "node": "kira_s3_menu",
+      "data": {
+        "text": "dialogue.arc1.kira_s3_menu",
+        "choices": [
+          {
+            "target": "kira_s3_a1",
+            "text": "dialogue.arc1.kira_s3_menu.choice1"
+          },
+          {
+            "target": "kira_s3_end",
+            "text": "dialogue.arc1.kira_s3_menu.choice2"
+          }
+        ],
+        "speaker": "Kira"
+      }
+    },
+    {
+      "node": "kira_s3_a1",
+      "data": {
+        "text": "dialogue.arc1.kira_s3_a1",
+        "speaker": "Kira",
+        "next": "kira_s3_menu2",
+        "commands": [
+          {
+            "type": "expression",
+            "parameters": [
+              {
+                "type": "mood",
+                "value": "proud"
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "node": "kira_s3_menu2",
+      "data": {
+        "text": "dialogue.arc1.kira_s3_menu2",
+        "choices": [
+          {
+            "target": "kira_s3_a2",
+            "text": "dialogue.arc1.kira_s3_menu2.choice1"
+          },
+          {
+            "target": "kira_s3_end",
+            "text": "dialogue.arc1.kira_s3_menu2.choice2"
+          }
+        ],
+        "speaker": "Kira"
+      }
+    },
+    {
+      "node": "kira_s3_a2",
+      "data": {
+        "text": "dialogue.arc1.kira_s3_a2",
+        "speaker": "Kira",
+        "next": "kira_s3_end",
+        "commands": [
+          {
+            "type": "expression",
+            "parameters": [
+              {
+                "type": "mood",
+                "value": "confident"
+              }
+            ]
+          },
+          {
+            "type": "playAnimation",
+            "parameters": [
+              {
+                "type": "who",
+                "value": "Kira"
+              },
+              {
+                "type": "animation",
+                "value": "Inspecting"
+              }
+            ]
+          },
+          {
+            "type": "closeUp",
+            "parameters": [
+              {
+                "type": "image",
+                "value": "CloseUps/kira_book_upside_down.png"
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "node": "kira_s3_end",
+      "data": {
+        "text": "dialogue.arc1.kira_s3_end",
+        "speaker": "Kira",
+        "next": "kira_comes_over",
+        "commands": [
+          {
+            "type": "closeUpEnd",
+            "parameters": []
+          },
+          {
+            "type": "playAnimation",
+            "parameters": [
+              {
+                "type": "who",
+                "value": "Kira"
+              },
+              {
+                "type": "animation",
+                "value": "Idle"
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "node": "kira_comes_over",
+      "data": {
+        "commands": [
+          {
+            "type": "moveToPlayer",
+            "parameters": [
+              {
+                "type": "who",
+                "value": "Kira"
+              }
+            ]
+          }
+        ],
+        "next": "kira_s3_end_2"
+      }
+    },
+    {
+      "node": "kira_s3_end_2",
+      "data": {
+        "text": "dialogue.arc1.kira_s3_end_2",
+        "speaker": "Kira",
+        "commands": [
+          {
+            "type": "joinParty",
+            "parameters": [
+              {
+                "type": "name",
+                "value": "Kira"
+              }
+            ]
+          },
+          {
+            "type": "setIntFlag",
+            "parameters": [
+              {
+                "type": "flag",
+                "value": "arc1_stage"
+              },
+              {
+                "type": "value",
+                "value": 2.0
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "node": "kira_party_stay",
+      "data": {
+        "targets": [
+          {
+            "node": "kira_s21",
+            "conditions": [
+              {
+                "type": "hasIntFlag",
+                "parameters": [
+                  {
+                    "type": "flag",
+                    "value": "arc1_stage"
+                  },
+                  {
+                    "type": "op",
+                    "value": "=="
+                  },
+                  {
+                    "type": "value",
+                    "value": 10.0
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "node": "kira_banter"
+          }
+        ]
+      }
+    },
+    {
+      "node": "kira_party_follow",
+      "data": {
+        "targets": [
+          {
+            "node": "kira_follow_menu"
+          }
+        ]
+      }
+    },
+    {
+      "node": "kira_banter",
+      "data": {
+        "targets": [
+          {
+            "node": "kira_banter_home",
+            "conditions": [
+              {
+                "type": "hasIntFlag",
+                "parameters": [
+                  {
+                    "type": "flag",
+                    "value": "arc1_stage"
+                  },
+                  {
+                    "type": "op",
+                    "value": ">="
+                  },
+                  {
+                    "type": "value",
+                    "value": 9.0
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "node": "kira_banter_shrine",
+            "conditions": [
+              {
+                "type": "hasIntFlag",
+                "parameters": [
+                  {
+                    "type": "flag",
+                    "value": "arc1_stage"
+                  },
+                  {
+                    "type": "op",
+                    "value": ">="
+                  },
+                  {
+                    "type": "value",
+                    "value": 7.0
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "node": "kira_banter_forest",
+            "conditions": [
+              {
+                "type": "hasIntFlag",
+                "parameters": [
+                  {
+                    "type": "flag",
+                    "value": "arc1_stage"
+                  },
+                  {
+                    "type": "op",
+                    "value": ">="
+                  },
+                  {
+                    "type": "value",
+                    "value": 4.0
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "node": "kira_banter_village"
+          }
+        ]
+      }
+    },
+    {
+      "node": "kira_banter_village",
+      "data": {
+        "text": "dialogue.arc1.kira_banter_village",
+        "speaker": "Kira",
+        "next": "kira_stay_menu"
+      }
+    },
+    {
+      "node": "kira_banter_forest",
+      "data": {
+        "text": "dialogue.arc1.kira_banter_forest",
+        "speaker": "Kira",
+        "next": "kira_stay_menu"
+      }
+    },
+    {
+      "node": "kira_banter_shrine",
+      "data": {
+        "text": "dialogue.arc1.kira_banter_shrine",
+        "speaker": "Kira",
+        "next": "kira_stay_menu"
+      }
+    },
+    {
+      "node": "kira_banter_home",
+      "data": {
+        "text": "dialogue.arc1.kira_banter_home",
+        "speaker": "Kira",
+        "next": "kira_stay_menu"
+      }
+    },
+    {
+      "node": "kira_stay_menu",
+      "data": {
+        "text": "dialogue.arc1.kira_stay_menu",
+        "choices": [
+          {
+            "target": "kira_stay_yes",
+            "text": "dialogue.arc1.kira_stay_menu.choice1"
+          },
+          {
+            "target": "kira_stay_no",
+            "text": "dialogue.arc1.kira_stay_menu.choice2"
+          }
+        ],
+        "speaker": "Kira"
+      }
+    },
+    {
+      "node": "kira_stay_yes",
+      "data": {
+        "text": "dialogue.arc1.kira_stay_yes",
+        "speaker": "Kira",
+        "commands": [
+          {
+            "type": "partyStay",
+            "parameters": [
+              {
+                "type": "name",
+                "value": "Kira"
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "node": "kira_stay_no",
+      "data": {
+        "text": "dialogue.arc1.kira_stay_no",
+        "speaker": "Kira"
+      }
+    },
+    {
+      "node": "kira_follow_menu",
+      "data": {
+        "text": "dialogue.arc1.kira_follow_menu",
+        "choices": [
+          {
+            "target": "kira_follow_yes",
+            "text": "dialogue.arc1.kira_follow_menu.choice1"
+          },
+          {
+            "target": "kira_follow_no",
+            "text": "dialogue.arc1.kira_follow_menu.choice2"
+          }
+        ],
+        "speaker": "Kira"
+      }
+    },
+    {
+      "node": "kira_follow_yes",
+      "data": {
+        "text": "dialogue.arc1.kira_follow_yes",
+        "speaker": "Kira",
+        "commands": [
+          {
+            "type": "partyFollow",
+            "parameters": [
+              {
+                "type": "name",
+                "value": "Kira"
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "node": "kira_follow_no",
+      "data": {
+        "text": "dialogue.arc1.kira_follow_no",
+        "speaker": "Kira"
+      }
+    },
+    {
+      "node": "kira_stones",
+      "data": {
+        "text": "dialogue.arc1.kira_stones",
+        "speaker": "Kira",
+        "commands": [
+          {
+            "type": "expression",
+            "parameters": [
+              {
+                "type": "mood",
+                "value": "uneasy"
+              }
+            ]
+          },
+          {
+            "type": "face",
+            "parameters": [
+              {
+                "type": "who",
+                "value": "Kira"
+              },
+              {
+                "type": "towards",
+                "value": "Player"
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "node": "claw_marks_spotted",
+      "data": {
+        "text": "dialogue.arc1.claw_marks_spotted",
+        "speaker": "Kira",
+        "next": "claw_marks_walk"
+      }
+    },
+    {
+      "node": "claw_marks_walk",
+      "data": {
+        "commands": [
+          {
+            "type": "moveTo",
+            "parameters": [
+              {
+                "type": "who",
+                "value": "Kira"
+              },
+              {
+                "type": "to",
+                "value": "KiraToClawMarks"
+              }
+            ]
+          },
+          {
+            "type": "face",
+            "parameters": [
+              {
+                "type": "who",
+                "value": "Player"
+              },
+              {
+                "type": "towards",
+                "value": "Kira"
+              }
+            ]
+          }
+        ],
+        "next": "claw_marks_look"
+      }
+    },
+    {
+      "node": "claw_marks_look",
+      "data": {
+        "text": "dialogue.arc1.claw_marks_look",
+        "speaker": "Kira",
+        "commands": [
+          {
+            "type": "playAnimation",
+            "parameters": [
+              {
+                "type": "who",
+                "value": "Kira"
+              },
+              {
+                "type": "animation",
+                "value": "Inspecting"
+              }
+            ]
+          },
+          {
+            "type": "face",
+            "parameters": [
+              {
+                "type": "who",
+                "value": "Kira"
+              },
+              {
+                "type": "towards",
+                "value": "Player"
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "node": "big_book",
+      "data": {
+        "next": "big_book_menu",
+        "commands": [
+          {
+            "type": "face",
+            "parameters": [
+              {
+                "type": "who",
+                "value": "Kira"
+              },
+              {
+                "type": "towards",
+                "value": "Player"
+              }
+            ]
+          },
+          {
+            "type": "playAnimation",
+            "parameters": [
+              {
+                "type": "who",
+                "value": "Kira"
+              },
+              {
+                "type": "animation",
+                "value": "Inspecting"
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "node": "big_book_menu",
+      "data": {
+        "text": "dialogue.arc1.big_book_menu",
+        "choices": [
+          {
+            "target": "big_book_a1",
+            "text": "dialogue.arc1.big_book_menu.choice1"
+          },
+          {
+            "target": "big_book_a2",
+            "text": "dialogue.arc1.big_book_menu.choice2"
+          }
+        ],
+        "speaker": "Kira",
+        "commands": [
+          {
+            "type": "expression",
+            "parameters": [
+              {
+                "type": "mood",
+                "value": "concentrating"
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "node": "big_book_a1",
+      "data": {
+        "text": "dialogue.arc1.big_book_a1",
+        "speaker": "Kira",
+        "next": "big_book_2",
+        "commands": [
+          {
+            "type": "closeUp",
+            "parameters": [
+              {
+                "type": "image",
+                "value": "CloseUps/kira_book_wolf_fact.png"
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "node": "big_book_a2",
+      "data": {
+        "text": "dialogue.arc1.big_book_a2",
+        "speaker": "Kira",
+        "next": "big_book_2",
+        "commands": [
+          {
+            "type": "closeUp",
+            "parameters": [
+              {
+                "type": "image",
+                "value": "CloseUps/kira_book_wolf_fact.png"
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "node": "big_book_2",
+      "data": {
+        "text": "dialogue.arc1.big_book_2",
+        "speaker": "Kira",
+        "next": "big_book_menu2",
+        "commands": [
+          {
+            "type": "expression",
+            "parameters": [
+              {
+                "type": "mood",
+                "value": "quietly pleased"
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "node": "big_book_menu2",
+      "data": {
+        "text": "dialogue.arc1.big_book_menu2",
+        "choices": [
+          {
+            "target": "big_book_b1",
+            "text": "dialogue.arc1.big_book_menu2.choice1"
+          },
+          {
+            "target": "big_book_b2",
+            "text": "dialogue.arc1.big_book_menu2.choice2"
+          }
+        ],
+        "speaker": "Kira",
+        "commands": [
+          {
+            "type": "expression",
+            "parameters": [
+              {
+                "type": "mood",
+                "value": "content"
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "node": "big_book_b1",
+      "data": {
+        "text": "dialogue.arc1.big_book_b1",
+        "speaker": "Kira",
+        "commands": [
+          {
+            "type": "closeUpEnd",
+            "parameters": []
+          },
+          {
+            "type": "playAnimation",
+            "parameters": [
+              {
+                "type": "who",
+                "value": "Kira"
+              },
+              {
+                "type": "animation",
+                "value": "Idle"
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "node": "big_book_b2",
+      "data": {
+        "commands": [
+          {
+            "type": "closeUpEnd",
+            "parameters": []
+          },
+          {
+            "type": "playAnimation",
+            "parameters": [
+              {
+                "type": "who",
+                "value": "Kira"
+              },
+              {
+                "type": "animation",
+                "value": "Idle"
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "node": "claw_marks",
+      "data": {
+        "text": "dialogue.arc1.claw_marks",
+        "speaker": "Kira",
+        "commands": [
+          {
+            "type": "playAnimation",
+            "parameters": [
+              {
+                "type": "who",
+                "value": "Kira"
+              },
+              {
+                "type": "animation",
+                "value": "Inspecting"
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "node": "blue_lights",
+      "data": {
+        "text": "dialogue.arc1.blue_lights",
+        "speaker": "Kira",
+        "commands": [
+          {
+            "type": "expression",
+            "parameters": [
+              {
+                "type": "mood",
+                "value": "quiet"
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "node": "stone_pillars",
+      "data": {
+        "next": "stone_pillars_2",
+        "commands": [
+          {
+            "type": "closeUp",
+            "parameters": [
+              {
+                "type": "image",
+                "value": "CloseUps/shrine_pillar_carvings.png"
+              }
+            ]
+          },
+          {
+            "type": "wait",
+            "parameters": [
+              {
+                "type": "seconds",
+                "value": 1.5
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "node": "stone_pillars_2",
+      "data": {
+        "text": "dialogue.arc1.stone_pillars_2",
+        "speaker": "Kira",
+        "next": "stone_pillars_3"
+      }
+    },
+    {
+      "node": "stone_pillars_3",
+      "data": {
+        "text": "dialogue.arc1.stone_pillars_3",
+        "speaker": "Kira"
+      }
+    },
+    {
+      "node": "shrine_entry_kira",
+      "data": {
+        "text": "dialogue.arc1.shrine_entry_kira",
+        "speaker": "Kira",
+        "next": "shrine_entry_kira_2",
+        "commands": [
+          {
+            "type": "expression",
+            "parameters": [
+              {
+                "type": "mood",
+                "value": "awed"
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "node": "shrine_entry_kira_2",
+      "data": {
+        "text": "dialogue.arc1.shrine_entry_kira_2",
+        "speaker": "Kira"
+      }
+    },
+    {
+      "node": "shifting_floor",
+      "data": {
+        "text": "dialogue.arc1.shifting_floor",
+        "speaker": "Kira",
+        "commands": [
+          {
+            "type": "expression",
+            "parameters": [
+              {
+                "type": "mood",
+                "value": "startled"
+              }
+            ]
+          },
+          {
+            "type": "cameraShake",
+            "parameters": []
+          }
+        ]
+      }
+    },
+    {
+      "node": "kira_split",
+      "data": {
+        "next": "kira_split_2",
+        "commands": [
+          {
+            "type": "teleport",
+            "parameters": [
+              {
+                "type": "who",
+                "value": "Kira"
+              },
+              {
+                "type": "to",
+                "value": "KiraBehindTheWall"
+              }
+            ]
+          },
+          {
+            "type": "closeDoor",
+            "parameters": [
+              {
+                "type": "name",
+                "value": "ShrineSplitWall"
+              }
+            ]
+          },
+          {
+            "type": "cameraShake",
+            "parameters": []
+          }
+        ]
+      }
+    },
+    {
+      "node": "kira_split_2",
+      "data": {
+        "next": "kira_split_3",
+        "commands": [
+          {
+            "type": "face",
+            "parameters": [
+              {
+                "type": "who",
+                "value": "Player"
+              },
+              {
+                "type": "towards",
+                "value": "down"
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "node": "kira_split_3",
+      "data": {
+        "text": "dialogue.arc1.kira_split_3",
+        "speaker": "Kira",
+        "commands": [
+          {
+            "type": "expression",
+            "parameters": [
+              {
+                "type": "mood",
+                "value": "flustered"
+              }
+            ]
+          },
+          {
+            "type": "leaveParty",
+            "parameters": [
+              {
+                "type": "name",
+                "value": "Kira"
+              }
+            ]
+          },
+          {
+            "type": "setIntFlag",
+            "parameters": [
+              {
+                "type": "flag",
+                "value": "kira_separated"
+              },
+              {
+                "type": "value",
+                "value": 1.0
+              }
+            ]
+          },
+          {
+            "type": "setSpawnPoint",
+            "parameters": [
+              {
+                "type": "iid",
+                "value": "fb8791e3-e3c1-11f1-9dc9-28d043bb8e9f"
+              },
+              {
+                "type": "level",
+                "value": "ShrineChamber"
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "node": "kira_reunion",
+      "data": {
+        "next": "kira_reunion_walk",
+        "commands": [
+          {
+            "type": "joinParty",
+            "parameters": [
+              {
+                "type": "name",
+                "value": "Kira"
+              },
+              {
+                "type": "at",
+                "value": "KiraTumblesIn"
+              }
+            ]
+          },
+          {
+            "type": "setIntFlag",
+            "parameters": [
+              {
+                "type": "flag",
+                "value": "kira_separated"
+              },
+              {
+                "type": "value",
+                "value": 0.0
+              }
+            ]
+          },
+          {
+            "type": "openDoor",
+            "parameters": [
+              {
+                "type": "name",
+                "value": "ShrineSplitWall"
+              }
+            ]
+          },
+          {
+            "type": "wait",
+            "parameters": [
+              {
+                "type": "seconds",
+                "value": 0.2
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "node": "kira_reunion_walk",
+      "data": {
+        "next": "kira_reunion_2",
+        "commands": [
+          {
+            "type": "face",
+            "parameters": [
+              {
+                "type": "who",
+                "value": "Player"
+              },
+              {
+                "type": "towards",
+                "value": "right"
+              }
+            ]
+          },
+          {
+            "type": "moveToPlayer",
+            "parameters": [
+              {
+                "type": "who",
+                "value": "Kira"
+              },
+              {
+                "type": "speed",
+                "value": "run"
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "node": "kira_reunion_2",
+      "data": {
+        "text": "dialogue.arc1.kira_reunion_2",
+        "speaker": "Kira",
+        "next": "kira_reunion_menu",
+        "commands": [
+          {
+            "type": "expression",
+            "parameters": [
+              {
+                "type": "mood",
+                "value": "breathless"
+              }
+            ]
+          },
+          {
+            "type": "face",
+            "parameters": [
+              {
+                "type": "who",
+                "value": "Player"
+              },
+              {
+                "type": "towards",
+                "value": "Kira"
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "node": "kira_reunion_menu",
+      "data": {
+        "text": "dialogue.arc1.kira_reunion_menu",
+        "speaker": "Kira",
+        "choices": [
+          {
+            "target": "kira_reunion_a1",
+            "text": "dialogue.arc1.kira_reunion_menu.choice1"
+          },
+          {
+            "target": "kira_reunion_a2",
+            "text": "dialogue.arc1.kira_reunion_menu.choice2"
+          }
+        ],
+        "commands": [
+          {
+            "type": "expression",
+            "parameters": [
+              {
+                "type": "mood",
+                "value": "squinting"
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "node": "kira_reunion_a1",
+      "data": {
+        "text": "dialogue.arc1.kira_reunion_a1",
+        "speaker": "Kira"
+      }
+    },
+    {
+      "node": "kira_reunion_a2",
+      "data": {
+        "text": "dialogue.arc1.kira_reunion_a2",
+        "speaker": "Kira"
+      }
+    },
+    {
+      "node": "memory_murals",
+      "data": {
+        "targets": [
+          {
+            "node": "murals_again",
+            "conditions": [
+              {
+                "type": "hasIntFlag",
+                "parameters": [
+                  {
+                    "type": "flag",
+                    "value": "told_kira"
+                  },
+                  {
+                    "type": "op",
+                    "value": ">="
+                  },
+                  {
+                    "type": "value",
+                    "value": 1.0
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "node": "murals_s13"
+          }
+        ]
+      }
+    },
+    {
+      "node": "murals_s13",
+      "data": {
+        "text": "dialogue.arc1.murals_s13",
+        "speaker": "Kira",
+        "next": "murals_s13_menu"
+      }
+    },
+    {
+      "node": "murals_s13_menu",
+      "data": {
+        "text": "dialogue.arc1.murals_s13_menu",
+        "choices": [
+          {
+            "target": "murals_told",
+            "text": "dialogue.arc1.murals_s13_menu.choice1"
+          },
+          {
+            "target": "murals_secret",
+            "text": "dialogue.arc1.murals_s13_menu.choice2"
+          }
+        ],
+        "speaker": "Kira"
+      }
+    },
+    {
+      "node": "murals_told",
+      "data": {
+        "text": "dialogue.arc1.murals_told",
+        "speaker": "Kira",
+        "next": "murals_paint",
+        "commands": [
+          {
+            "type": "expression",
+            "parameters": [
+              {
+                "type": "mood",
+                "value": "amazed"
+              }
+            ]
+          },
+          {
+            "type": "setIntFlag",
+            "parameters": [
+              {
+                "type": "flag",
+                "value": "told_kira"
+              },
+              {
+                "type": "value",
+                "value": 1.0
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "node": "murals_secret",
+      "data": {
+        "text": "dialogue.arc1.murals_secret",
+        "speaker": "Kira",
+        "next": "murals_paint",
+        "commands": [
+          {
+            "type": "setIntFlag",
+            "parameters": [
+              {
+                "type": "flag",
+                "value": "told_kira"
+              },
+              {
+                "type": "value",
+                "value": 2.0
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "node": "murals_paint",
+      "data": {
+        "text": "dialogue.arc1.murals_paint",
+        "speaker": "Kira",
+        "next": "murals_paint_menu"
+      }
+    },
+    {
+      "node": "murals_paint_menu",
+      "data": {
+        "text": "dialogue.arc1.murals_paint_menu",
+        "choices": [
+          {
+            "target": "murals_end",
+            "text": "dialogue.arc1.murals_paint_menu.choice1"
+          },
+          {
+            "target": "murals_end",
+            "text": "dialogue.arc1.murals_paint_menu.choice2"
+          },
+          {
+            "target": "murals_wrong",
+            "text": "dialogue.arc1.murals_paint_menu.choice3"
+          }
+        ],
+        "speaker": "Kira"
+      }
+    },
+    {
+      "node": "murals_wrong",
+      "data": {
+        "text": "dialogue.arc1.murals_wrong",
+        "speaker": "Kira",
+        "next": "murals_end",
+        "commands": [
+          {
+            "type": "expression",
+            "parameters": [
+              {
+                "type": "mood",
+                "value": "thoughtful"
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "node": "murals_end",
+      "data": {
+        "text": "dialogue.arc1.murals_end",
+        "speaker": "Kira"
+      }
+    },
+    {
+      "node": "murals_again",
+      "data": {
+        "text": "dialogue.arc1.murals_again",
+        "speaker": "Kira"
+      }
+    },
+    {
+      "node": "kira_s21",
+      "data": {
+        "text": "dialogue.arc1.kira_s21",
+        "speaker": "Kira",
+        "next": "kira_s21_menu",
+        "commands": [
+          {
+            "type": "expression",
+            "parameters": [
+              {
+                "type": "mood",
+                "value": "pensive"
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "node": "kira_s21_menu",
+      "data": {
+        "text": "dialogue.arc1.kira_s21_menu",
+        "choices": [
+          {
+            "target": "kira_21a",
+            "text": "dialogue.arc1.kira_s21_menu.choice1"
+          },
+          {
+            "target": "kira_21b",
+            "text": "dialogue.arc1.kira_s21_menu.choice2"
+          },
+          {
+            "target": "kira_21c",
+            "text": "dialogue.arc1.kira_s21_menu.choice3"
+          }
+        ],
+        "speaker": "Kira"
+      }
+    },
+    {
+      "node": "kira_21a",
+      "data": {
+        "text": "dialogue.arc1.kira_21a",
+        "speaker": "Kira",
+        "next": "kira_s21_end",
+        "commands": [
+          {
+            "type": "expression",
+            "parameters": [
+              {
+                "type": "mood",
+                "value": "firm"
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "node": "kira_21b",
+      "data": {
+        "text": "dialogue.arc1.kira_21b",
+        "speaker": "Kira",
+        "next": "kira_s21_end",
+        "commands": [
+          {
+            "type": "expression",
+            "parameters": [
+              {
+                "type": "mood",
+                "value": "nodding"
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "node": "kira_21c",
+      "data": {
+        "text": "dialogue.arc1.kira_21c",
+        "speaker": "Kira",
+        "next": "kira_s21_end",
+        "commands": [
+          {
+            "type": "expression",
+            "parameters": [
+              {
+                "type": "mood",
+                "value": "smiling"
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "node": "kira_s21_end",
+      "data": {
+        "text": "dialogue.arc1.kira_s21_end",
+        "speaker": "Kira",
+        "commands": [
+          {
+            "type": "expression",
+            "parameters": [
+              {
+                "type": "mood",
+                "value": "determined"
+              }
+            ]
+          },
+          {
+            "type": "playAnimation",
+            "parameters": [
+              {
+                "type": "who",
+                "value": "Kira"
+              },
+              {
+                "type": "animation",
+                "value": "Shoot"
+              },
+              {
+                "type": "wait",
+                "value": 0.0
+              },
+              {
+                "type": "then",
+                "value": "Idle"
+              }
+            ]
+          },
+          {
+            "type": "setIntFlag",
+            "parameters": [
+              {
+                "type": "flag",
+                "value": "arc1_stage"
+              },
+              {
+                "type": "value",
+                "value": 11.0
+              }
+            ]
+          }
+        ]
+      }
+    }
+  ],
+  "editor": {
+    "positions": {}
+  }
+}

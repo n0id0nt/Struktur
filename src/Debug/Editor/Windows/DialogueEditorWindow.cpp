@@ -535,6 +535,14 @@ void DialogueEditorWindow::OpenFileWithPicker(GameContext& context)
 		derivedClassName = filename.substr(0, dotPos);
 	}
 
+	// A JSON dialogue file names its own root node (and keeps its node positions), so it opens straight away. A Wren
+	// one needs its class name confirmed first.
+	if (FormatFromExtension(filepath) == Dialogue::DialogueExporter::DialogueSaveFormat::Json)
+	{
+		LoadDialogueFile(context, filepath, derivedClassName, "");
+		return;
+	}
+
 	// Store pending load state so the popup can access it
 	m_pendingLoadFilepath  = filepath;
 	m_pendingLoadClassName = derivedClassName;
@@ -2478,6 +2486,8 @@ void DialogueEditorWindow::LoadDialogueFile(GameContext& context, const std::str
 {
 	// Clear existing data
 	m_nodes.clear();
+	m_nodeOrder.clear();
+	m_loadedPositions.clear();
 	m_selectedNodeId = "";
 	m_entryNodeId    = entryNode;
 	m_errors.clear();
@@ -2505,7 +2515,16 @@ void DialogueEditorWindow::LoadDialogueFile(GameContext& context, const std::str
 
 	m_currentSaveFormat = format;
 
+	// Saved positions win over the automatic layout; nodes without one (added by hand to the file) keep their layout spot.
 	CalculateGraphLayout();
+	for (const auto& [nodeId, position] : m_loadedPositions)
+	{
+		auto found = m_nodes.find(nodeId);
+		if (found != m_nodes.end())
+		{
+			found->second.visualPosition = position;
+		}
+	}
 	m_hasUnsavedChanges = false;
 	DEBUG_INFO("Loaded dialogue: %s (%zu nodes)", m_currentClassName.c_str(), m_nodes.size());
 }
@@ -2594,21 +2613,49 @@ bool DialogueEditorWindow::LoadDialogueFileJson(GameContext& context, const std:
 		return false;
 	}
 
-	if (!root.is_array())
+	// {"root": entry node, "nodes": [...], "editor": {"positions": {id: [x, y]}}} - or, older, just the list of nodes.
+	const nlohmann::json* nodes = &root;
+	if (root.is_object())
 	{
-		DEBUG_ERROR("JSON dialogue file root must be an array: %s", filepath.c_str());
+		if (!root.contains("nodes") || !root["nodes"].is_array())
+		{
+			DEBUG_ERROR("JSON dialogue file has no \"nodes\" list: %s", filepath.c_str());
+			m_errors.push_back(ValidationError{ValidationError::Type::InvalidReference, filepath.c_str(), "PARSE_ERROR",
+			                                   "JSON dialogue file needs a \"nodes\" list"});
+			return false;
+		}
+		nodes = &root["nodes"];
+		// The file's own root, unless the caller asked for a particular entry node.
+		if (m_entryNodeId.empty() && root.contains("root") && root["root"].is_string())
+		{
+			m_entryNodeId = root["root"].get<std::string>();
+		}
+		if (root.contains("editor") && root["editor"].contains("positions") && root["editor"]["positions"].is_object())
+		{
+			for (const auto& [nodeId, position] : root["editor"]["positions"].items())
+			{
+				if (position.is_array() && position.size() == 2 && position[0].is_number() && position[1].is_number())
+				{
+					m_loadedPositions[nodeId] = glm::vec2(position[0].get<float>(), position[1].get<float>());
+				}
+			}
+		}
+	}
+	else if (!root.is_array())
+	{
+		DEBUG_ERROR("JSON dialogue file must be an object or an array of nodes: %s", filepath.c_str());
 		m_errors.push_back(ValidationError{ValidationError::Type::InvalidReference, filepath.c_str(), "PARSE_ERROR",
-		                                   "JSON dialogue root must be an array of nodes"});
+		                                   "JSON dialogue file must be an object with \"nodes\" or an array of nodes"});
 		return false;
 	}
 
-	ParseDialogueDataFromJson(context, root);
+	ParseDialogueDataFromJson(context, *nodes);
 	return true;
 }
 
-void DialogueEditorWindow::ParseDialogueDataFromJson(GameContext& context, const nlohmann::json& root)
+void DialogueEditorWindow::ParseDialogueDataFromJson(GameContext& context, const nlohmann::json& nodes)
 {
-	for (const auto& entry : root)
+	for (const auto& entry : nodes)
 	{
 		if (!entry.contains("node") || !entry.contains("data"))
 		{
@@ -2663,12 +2710,38 @@ void DialogueEditorWindow::ParseDialogueDataFromJson(GameContext& context, const
 		NodeData nodeData;
 		nodeData.node   = std::move(node);
 		m_nodes[nodeId] = std::move(nodeData);
+		m_nodeOrder.push_back(nodeId);
+	}
 
-		if (!m_nodes.contains(m_entryNodeId))
+	// No root given (or it's not in the file): the first node in the file.
+	if (!m_nodes.contains(m_entryNodeId) && !m_nodeOrder.empty())
+	{
+		m_entryNodeId = m_nodeOrder.front();
+	}
+}
+
+std::vector<std::string> DialogueEditorWindow::SaveOrder() const
+{
+	std::vector<std::string> order;
+	std::set<std::string> placed;
+	for (const std::string& nodeId : m_nodeOrder)
+	{
+		if (m_nodes.contains(nodeId) && placed.insert(nodeId).second)
 		{
-			m_entryNodeId = m_nodes.begin()->first;
+			order.push_back(nodeId);
 		}
 	}
+	std::vector<std::string> added;
+	for (const auto& [nodeId, nodeData] : m_nodes)
+	{
+		if (!placed.contains(nodeId))
+		{
+			added.push_back(nodeId);
+		}
+	}
+	std::sort(added.begin(), added.end());
+	order.insert(order.end(), added.begin(), added.end());
+	return order;
 }
 
 std::unique_ptr<Dialogue::Command> DialogueEditorWindow::ParseCommandFromJson(const nlohmann::json& j)
@@ -2767,8 +2840,24 @@ void DialogueEditorWindow::SaveDialogueFile(const std::string& filepath,
 			output = Dialogue::DialogueExporter::ExportToWren(nodesToExport, m_currentClassName);
 			break;
 		case Dialogue::DialogueExporter::DialogueSaveFormat::Json:
-			output = Dialogue::DialogueExporter::ExportToJson(nodesToExport);
+		{
+			// In the file's own order, with the root and every node's graph position.
+			std::vector<std::pair<std::string, Dialogue::DialogueNode*>> orderedNodes;
+			std::unordered_map<std::string, glm::vec2> positions;
+			for (const std::string& nodeId : SaveOrder())
+			{
+				const NodeData& nodeData = m_nodes.at(nodeId);
+				orderedNodes.emplace_back(nodeId, nodeData.node.get());
+				positions[nodeId] = nodeData.visualPosition;
+			}
+			output = Dialogue::DialogueExporter::ExportToJson(orderedNodes, m_entryNodeId, positions);
+			m_nodeOrder.clear();
+			for (const auto& [nodeId, node] : orderedNodes)
+			{
+				m_nodeOrder.push_back(nodeId);
+			}
 			break;
+		}
 	}
 
 	// Write to file
@@ -2794,6 +2883,8 @@ void DialogueEditorWindow::CreateNewDialogue(const std::string& className)
 
 	// Clear existing dialogue
 	m_nodes.clear();
+	m_nodeOrder.clear();
+	m_loadedPositions.clear();
 	m_selectedNodeId = "";
 	m_errors.clear();
 	m_warnings.clear();
@@ -3613,11 +3704,12 @@ void DialogueEditorWindow::ParseDialogueDataFromWren(GameContext& context, WrenV
 	{
 		std::string key = node->GetId();
 		m_nodes[key]    = {std::move(node), glm::vec2()};
+		m_nodeOrder.push_back(key);
 	}
 
 	if (!m_nodes.contains(m_entryNodeId))
 	{
-		m_entryNodeId = m_nodes.begin()->first;
+		m_entryNodeId = m_nodeOrder.front();
 	}
 }
 }  // namespace Struktur::Debug

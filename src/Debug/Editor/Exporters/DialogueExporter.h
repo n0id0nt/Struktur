@@ -7,8 +7,11 @@
 #include <memory>
 #include <string>
 #include <unordered_map>
+#include <utility>
+#include <vector>
 
 #include "Engine/Dialogue/DialogueNode.h"
+#include "glm/glm.hpp"
 #include "nlohmann/json.hpp"
 
 namespace Struktur::Dialogue
@@ -27,8 +30,12 @@ public:
 	static std::string ExportToWren(const std::unordered_map<std::string, Dialogue::DialogueNode*>& nodes,
 	                                const std::string& className);
 
-	// Export entire dialogue to Json format
-	static std::string ExportToJson(const std::unordered_map<std::string, Dialogue::DialogueNode*>& nodes);
+	// Export entire dialogue to Json format: {"root": rootNode, "nodes": [...] in the given order, "editor":
+	// {"positions": {node id: [x, y]}}} - the root is what the dialogue editor opens on, the positions where its graph
+	// draws each node (the game only reads "nodes").
+	static std::string ExportToJson(const std::vector<std::pair<std::string, Dialogue::DialogueNode*>>& orderedNodes,
+	                                const std::string& rootNode,
+	                                const std::unordered_map<std::string, glm::vec2>& positions);
 
 private:
 	// Export individual components

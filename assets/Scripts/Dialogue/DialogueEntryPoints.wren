@@ -1,5 +1,5 @@
 // Dialogue/DialogueEntryPoints.wren
-// Interactable name -> dialogue node id (Dialogue/Arc1Dialogue.json). The names are exactly as they are in the LDtk
+// Interactable name -> dialogue node id (Dialogue/Arc1/). The names are exactly as they are in the LDtk
 // level (Levels/SevenGods.ldtk): an NPC's "Name" field, an Interactable's "MessageKey" or a Door's "Name". Anything not
 // listed falls back to handling itself (an Item picks itself up, an Interactable shows its MessageKey as a localized
 // line, a door with KeyIds says it's sealed). RestSpots pick their own node (GameObjects/RestSpot.wren).

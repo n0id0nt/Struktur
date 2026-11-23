@@ -373,6 +373,7 @@ if(EDITOR)
         src/Debug/Editor/EditorSettings.h           src/Debug/Editor/EditorSettings.cpp
         src/Debug/Editor/EditorTheme.h              src/Debug/Editor/EditorTheme.cpp
         src/Debug/Editor/ProjectLauncher.h          src/Debug/Editor/ProjectLauncher.cpp
+        src/Debug/Editor/SaveFolders.h              src/Debug/Editor/SaveFolders.cpp
         src/Debug/Editor/Exporters/DialogueExporter.h src/Debug/Editor/Exporters/DialogueExporter.cpp
 
         src/Debug/Editor/EditorSettings.h           src/Debug/Editor/EditorSettings.cpp
@@ -395,6 +396,7 @@ if(EDITOR)
         src/Debug/Editor/Windows/ResourceManagerWindow.h src/Debug/Editor/Windows/ResourceManagerWindow.cpp
         src/Debug/Editor/Windows/LocalizationWindow.h src/Debug/Editor/Windows/LocalizationWindow.cpp
         src/Debug/Editor/Windows/StateWindow.h      src/Debug/Editor/Windows/StateWindow.cpp
+        src/Debug/Editor/Windows/SavesWindow.h      src/Debug/Editor/Windows/SavesWindow.cpp
         src/Debug/Editor/Windows/LevelViewerWindow.h src/Debug/Editor/Windows/LevelViewerWindow.cpp
 
         src/Debug/Editor/LevelViewer/LevelViewer.h  src/Debug/Editor/LevelViewer/LevelViewer.cpp

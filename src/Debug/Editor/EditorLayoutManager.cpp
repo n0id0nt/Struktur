@@ -83,6 +83,9 @@ void Struktur::Debug::EditorLayoutManager::CreateDefaultLayout()
 	// Split right panel (30% - Inspector + Preview stacked)
 	defaultLayout.splits.push_back({"Profiler", ImGuiDir_None, 0.0f, "File Explorer"});
 
+	// Saves sits with the console / profiler tabs
+	defaultLayout.splits.push_back({"Saves", ImGuiDir_None, 0.0f, "File Explorer"});
+
 	// Split top toolbar (20%)
 	defaultLayout.splits.push_back({"Toolbar", ImGuiDir_Up, 0.2f, "main"});
 

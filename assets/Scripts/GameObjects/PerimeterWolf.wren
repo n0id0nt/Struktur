@@ -1,5 +1,5 @@
 // GameObjects/PerimeterWolf.wren
-// The starving thornwolf at the village's north edge that Thomas talks you through (Dialogue/Arc1Dialogue.json
+// The starving thornwolf at the village's north edge that Thomas talks you through (Dialogue/Arc1/
 // "thomas_gate"). Unlike the woods' wolves it never notices you by itself: it only wanders and idles about its room.
 // When Thomas says it has spotted you, the "chargePlayer" dialogue command calls charge(): it runs straight at the
 // player, and catching them starts the fight (States/GameWorldState.startForcedCombat_) - the player's alone, the

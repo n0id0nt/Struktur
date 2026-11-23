@@ -13,9 +13,18 @@ class DialogueLoader {
     static loadAllDialogue() {
         Debug.info("Loading all dialogue...")
         
-        // Arc 1 ("The Awakening") - docs/FirstArcPlan.md. Generated content; one file until it's worth splitting.
+        // Arc 1 ("The Awakening") - docs/FirstArcPlan.md, one file per character (places and things in World). All of
+        // them load into one graph, so a node can lead into another file's nodes. docs/Arc1Dialogue.md is the script.
         var dialogueFiles = [
-            "Dialogue/Arc1Dialogue.json"
+            "Dialogue/Arc1/Finn.json",
+            "Dialogue/Arc1/Thomas.json",
+            "Dialogue/Arc1/Kira.json",
+            "Dialogue/Arc1/Elena.json",
+            "Dialogue/Arc1/Garrett.json",
+            "Dialogue/Arc1/Child.json",
+            "Dialogue/Arc1/Guide.json",
+            "Dialogue/Arc1/Warden.json",
+            "Dialogue/Arc1/World.json"
         ]
 
         for (filePath in dialogueFiles) {
@@ -23,7 +32,10 @@ class DialogueLoader {
             if (result.success) {
                 var value = result.value
                 var data = Json.parse(value)
-                if (data) {
+                // A dialogue file is {"root": the node the editor opens on, "nodes": [...], "editor": {"positions"}} -
+                // or, older, just the list of nodes.
+                if (data is Map) data = data["nodes"]
+                if (data is List) {
                     DialogueManager.loadDialogueData(data)
                     Debug.info("[Dialogue Loading] succesfuly loaded %(filePath)")
                 } else {

@@ -1,0 +1,446 @@
+{
+  "root": "shrine_crystal",
+  "nodes": [
+    {
+      "node": "heart",
+      "data": {
+        "next": "heart_2",
+        "commands": [
+          {
+            "type": "face",
+            "parameters": [
+              {
+                "type": "who",
+                "value": "Player"
+              },
+              {
+                "type": "towards",
+                "value": "ShrineCrystal"
+              }
+            ]
+          },
+          {
+            "type": "soulFragment",
+            "parameters": [
+              {
+                "type": "from",
+                "value": "ShrineCrystal"
+              },
+              {
+                "type": "seconds",
+                "value": 2.6
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "node": "heart_2",
+      "data": {
+        "next": "heart_3",
+        "commands": [
+          {
+            "type": "cameraShake",
+            "parameters": []
+          }
+        ]
+      }
+    },
+    {
+      "node": "heart_3",
+      "data": {
+        "text": "dialogue.arc1.heart_3",
+        "speaker": "Guide",
+        "next": "heart_menu"
+      }
+    },
+    {
+      "node": "heart_menu",
+      "data": {
+        "text": "dialogue.arc1.heart_menu",
+        "speaker": "Guide",
+        "choices": [
+          {
+            "target": "heart_a1",
+            "text": "dialogue.arc1.heart_menu.choice1"
+          },
+          {
+            "target": "heart_a2",
+            "text": "dialogue.arc1.heart_menu.choice2"
+          }
+        ],
+        "commands": [
+          {
+            "type": "expression",
+            "parameters": [
+              {
+                "type": "mood",
+                "value": "delighted"
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "node": "heart_a1",
+      "data": {
+        "text": "dialogue.arc1.heart_a1",
+        "speaker": "Guide",
+        "next": "heart_memory"
+      }
+    },
+    {
+      "node": "heart_a2",
+      "data": {
+        "text": "dialogue.arc1.heart_a2",
+        "speaker": "Guide",
+        "next": "heart_memory"
+      }
+    },
+    {
+      "node": "heart_memory",
+      "data": {
+        "next": "heart_4",
+        "commands": [
+          {
+            "type": "closeUp",
+            "parameters": [
+              {
+                "type": "image",
+                "value": "CloseUps/memory_long_table.png"
+              }
+            ]
+          },
+          {
+            "type": "wait",
+            "parameters": [
+              {
+                "type": "seconds",
+                "value": 3.0
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "node": "heart_4",
+      "data": {
+        "text": "dialogue.arc1.heart_4",
+        "speaker": "Guide",
+        "next": "heart_sight",
+        "commands": [
+          {
+            "type": "closeUpEnd",
+            "parameters": []
+          },
+          {
+            "type": "setIntFlag",
+            "parameters": [
+              {
+                "type": "flag",
+                "value": "ability_soul_sight"
+              },
+              {
+                "type": "value",
+                "value": 1.0
+              }
+            ]
+          },
+          {
+            "type": "giveItem",
+            "parameters": [
+              {
+                "type": "item",
+                "value": "Soul Fragment"
+              },
+              {
+                "type": "count",
+                "value": 1.0
+              }
+            ]
+          },
+          {
+            "type": "setIntFlag",
+            "parameters": [
+              {
+                "type": "flag",
+                "value": "arc1_stage"
+              },
+              {
+                "type": "value",
+                "value": 7.0
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "node": "heart_sight",
+      "data": {
+        "text": "dialogue.arc1.heart_sight",
+        "next": "heart_5"
+      }
+    },
+    {
+      "node": "heart_5",
+      "data": {
+        "text": "dialogue.arc1.heart_5",
+        "speaker": "Guide",
+        "next": "heart_step",
+        "commands": [
+          {
+            "type": "unlockMove",
+            "parameters": [
+              {
+                "type": "name",
+                "value": "Soul Step"
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "node": "heart_step",
+      "data": {
+        "text": "dialogue.arc1.heart_step"
+      }
+    },
+    {
+      "node": "hidden_door",
+      "data": {
+        "text": "dialogue.arc1.hidden_door",
+        "speaker": "Guide",
+        "next": "hidden_door_2"
+      }
+    },
+    {
+      "node": "hidden_door_2",
+      "data": {
+        "text": "dialogue.arc1.hidden_door_2",
+        "speaker": "Guide",
+        "next": "hidden_door_3",
+        "commands": [
+          {
+            "type": "expression",
+            "parameters": [
+              {
+                "type": "mood",
+                "value": "sheepish"
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "node": "hidden_door_3",
+      "data": {
+        "commands": [
+          {
+            "type": "openDoor",
+            "parameters": [
+              {
+                "type": "name",
+                "value": "ShrineHiddenDoor"
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "node": "memory_door",
+      "data": {
+        "text": "dialogue.arc1.memory_door",
+        "speaker": "Guide"
+      }
+    },
+    {
+      "node": "shrine_crystal",
+      "data": {
+        "targets": [
+          {
+            "node": "shrine_crystal_dim",
+            "conditions": [
+              {
+                "type": "hasIntFlag",
+                "parameters": [
+                  {
+                    "type": "flag",
+                    "value": "arc1_stage"
+                  },
+                  {
+                    "type": "op",
+                    "value": ">="
+                  },
+                  {
+                    "type": "value",
+                    "value": 7.0
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "node": "heart"
+          }
+        ]
+      }
+    },
+    {
+      "node": "shrine_crystal_dim",
+      "data": {
+        "text": "dialogue.arc1.shrine_crystal_dim"
+      }
+    },
+    {
+      "node": "central_mural",
+      "data": {
+        "targets": [
+          {
+            "node": "central_mural_empty",
+            "conditions": [
+              {
+                "type": "hasIntFlag",
+                "parameters": [
+                  {
+                    "type": "flag",
+                    "value": "fragment_2"
+                  },
+                  {
+                    "type": "op",
+                    "value": "=="
+                  },
+                  {
+                    "type": "value",
+                    "value": 1.0
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "node": "central_mural_find"
+          }
+        ]
+      }
+    },
+    {
+      "node": "central_mural_find",
+      "data": {
+        "next": "central_mural_find_2",
+        "commands": [
+          {
+            "type": "playAnimation",
+            "parameters": [
+              {
+                "type": "who",
+                "value": "Player"
+              },
+              {
+                "type": "animation",
+                "value": "Inspecting"
+              },
+              {
+                "type": "wait",
+                "value": 1.0
+              },
+              {
+                "type": "then",
+                "value": "Idle"
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "node": "central_mural_find_2",
+      "data": {
+        "next": "central_mural_find_3",
+        "commands": [
+          {
+            "type": "closeUp",
+            "parameters": [
+              {
+                "type": "image",
+                "value": "CloseUps/memory_six_figures.png"
+              }
+            ]
+          },
+          {
+            "type": "wait",
+            "parameters": [
+              {
+                "type": "seconds",
+                "value": 3.5
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "node": "central_mural_find_3",
+      "data": {
+        "text": "dialogue.arc1.central_mural_find_3",
+        "speaker": "Guide",
+        "commands": [
+          {
+            "type": "expression",
+            "parameters": [
+              {
+                "type": "mood",
+                "value": "stronger"
+              }
+            ]
+          },
+          {
+            "type": "closeUpEnd",
+            "parameters": []
+          },
+          {
+            "type": "giveItem",
+            "parameters": [
+              {
+                "type": "item",
+                "value": "Soul Fragment"
+              },
+              {
+                "type": "count",
+                "value": 1.0
+              }
+            ]
+          },
+          {
+            "type": "setIntFlag",
+            "parameters": [
+              {
+                "type": "flag",
+                "value": "fragment_2"
+              },
+              {
+                "type": "value",
+                "value": 1.0
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "node": "central_mural_empty",
+      "data": {
+        "text": "dialogue.arc1.central_mural_empty"
+      }
+    }
+  ],
+  "editor": {
+    "positions": {}
+  }
+}
