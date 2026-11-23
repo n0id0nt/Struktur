@@ -7,6 +7,7 @@ import "math" for Vec2
 import "resourceManager" for Texture
 import "animation" for SpriteAnimationDefinition
 import "Util/Colors" for WHITE
+import "Util/CharacterCollider" for CharacterCollider
 
 // Direction prefixes of the generated clips by octant of atan2(y, x) - +x is right, +y is down the screen.
 var FACING_NAMES = ["right", "downRight", "down", "downLeft", "left", "upLeft", "up", "upRight"]
@@ -19,7 +20,10 @@ class SpriteSheet {
     static create(entity, data, layer) {
         var texture = Texture.load(data["texture"])
         var origin = data["origin"]
-        Sprite.create(entity, texture, WHITE, Vec2.new(origin[0], origin[1]), data["columns"], data["rows"], FlipBit.NONE, 0, layer, 0)
+        // The pivot raised so the entity's position is the centre of its collider, not the sheet's pivot
+        // (Util/CharacterCollider.wren) - every sheet made here is a walking character's.
+        var pivot = Vec2.new(origin[0], origin[1] - CharacterCollider.originLiftPx)
+        Sprite.create(entity, texture, WHITE, pivot, data["columns"], data["rows"], FlipBit.NONE, 0, layer, 0)
         texture.unload()
 
         var spriteAnimation = SpriteAnimation.create(entity)

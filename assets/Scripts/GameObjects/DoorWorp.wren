@@ -1,21 +1,23 @@
 // GameObjects/DoorWorp.wren
-// A doorway to another room - e.g. a tent's entrance. Any part of the player's collider (Util/CharacterCollider.wren -
-// not followers) over its trigger warps the party to the DoorWorp its "Destination" field links to. It checks the
-// overlap itself every frame rather than waiting for physics contact events, so it can't miss a player who steps
-// straight back on after arriving, or keep a stale "inside" from before a teleport. Invisible - the doorway itself is drawn by the level's tiles. The move is done by
-// States/GameWorldState.wren (via World/Warps.wren). Placed in the level (LDtk "DoorWorp" entity).
+// A doorway to another room - e.g. a tent's entrance. The player (not followers) touching its trigger - a physics
+// sensor - warps the party to the DoorWorp its "Destination" field links to, on the contact's collisionEnter event.
+// Arrivals stand clear of the destination's trigger and there's no cooldown after a warp (States/GameWorldState.wren),
+// so stepping straight back onto the door is a fresh contact and warps straight back. Invisible - the doorway itself
+// is drawn by the level's tiles. The move is done by States/GameWorldState.wren (via World/Warps.wren). Placed in the
+// level (LDtk "DoorWorp" entity).
 //
 // A door with a direction field (where you stand arriving through it - North = above it) is only a trigger on its far
 // half: a North door's trigger is the bottom half of its rect, so the trigger's edge runs through the door's centre.
 // Arrivals stand arrivalDistance from the centre in that direction - the same distance whichever way the door faces,
 // and just far enough that the player's collider (Util/CharacterCollider.wren) is clear of the trigger. A door with
 // no direction keeps its whole rect, and arrivals step a little further, towards the room's centre.
-import "gameObject" for GameObject
-import "gameObjectComponents" for WorldTransform, World
+import "gameObjectComponents" for PhysicsBody, WorldTransform, World
+import "physics" for BodyDefinition, PhysicsBoxShape, BodyType, CollisionLayers
 import "math" for Vec2
 import "app" for Application
 import "debug" for Debug
 import "World/Rooms" for Rooms
+import "Party/Party" for Party
 import "World/Warps" for Warps
 import "Util/CharacterCollider" for CharacterCollider
 
@@ -45,18 +47,12 @@ class DoorWorp {
             _arrivalOffset = Vec2.new(_direction.x * distance, _direction.y * distance)
         }
         _targetIndex = null
-        // The trigger, in px: its centre's offset from the door's centre, and its half-size (set in start).
-        _triggerOffset = Vec2.new(0, 0)
-        _triggerHalf = Vec2.new(_width / 2, _height / 2)
     }
 
     // Px from a door's centre that someone arriving through it stands, in every direction: the trigger's edge runs
-    // through the centre, so the feet must be far enough out that no part of the collider - a circle raised above the
-    // feet - is still over it. The worst case (arriving south, the circle reaching back up towards the door) sets it.
-    static arrivalDistance {
-        var ppm = Application.pixelsPerMeter
-        return (CharacterCollider.radius * ppm + CharacterCollider.offsetY.abs * ppm + ARRIVAL_MARGIN).ceil
-    }
+    // through the centre and a character's origin is its collider's centre (Util/CharacterCollider.wren), so one
+    // radius and a margin clears it - the same whichever way the door faces.
+    static arrivalDistance { (CharacterCollider.radius * Application.pixelsPerMeter + ARRIVAL_MARGIN).ceil }
 
     static nonEmpty_(value) {
         if (value == null || value == "") return null
@@ -97,7 +93,8 @@ class DoorWorp {
     getEntity() { _entity }
 
     start() {
-        // With a direction, only the half of the rect away from it is the trigger (see the header).
+        // The sensor, in px then metres. With a direction, only the half of the rect away from it (see the header).
+        var ppm = Application.pixelsPerMeter
         var halfWidth = _width / 2
         var halfHeight = _height / 2
         var centreX = 0
@@ -110,8 +107,10 @@ class DoorWorp {
             halfHeight = _height / 4
             centreY = -_direction.y * _height / 4
         }
-        _triggerOffset = Vec2.new(centreX, centreY)
-        _triggerHalf = Vec2.new(halfWidth, halfHeight)
+        var shape = PhysicsBoxShape.new(halfWidth / ppm, halfHeight / ppm, centreX / ppm, centreY / ppm, 0)
+        var body = PhysicsBody.create(_entity, BodyDefinition.new(BodyType.STATIC_BODY), shape)
+        body.isSensor = true
+        body.setCollisionFilter(CollisionLayers.getLayer("Trigger"), CollisionLayers.getLayer("Actor"))
 
         if (Rooms.world != null && _level != null) {
             _targetIndex = World.getLevelIndex(Rooms.world, _level)
@@ -121,37 +120,30 @@ class DoorWorp {
         }
     }
 
-    // Every frame the player's collider is over the trigger, it asks for the warp (the gameplay state ignores the request
-    // while a warp is already under way, and takes it as soon as it can).
-    update() {
-        if (_targetIndex == null || !playerOverlaps_) return
-        Warps.request(_targetIndex, Rooms.indexAt(WorldTransform.getPosition(_entity)), _destination)
-    }
-
-    // Whether the player's collider - a circle raised above the feet - touches the trigger rect at all.
-    playerOverlaps_ {
-        var players = GameObject.getAllWithIdentifier("Player")
-        if (players.count == 0) return false
-        var leader = players[0]
-        var ppm = Application.pixelsPerMeter
-        var feet = WorldTransform.getPosition(leader)
-        var circleX = feet.x
-        var circleY = feet.y + CharacterCollider.offsetY * ppm
-        var radius = CharacterCollider.radius * ppm
-        var door = WorldTransform.getPosition(_entity)
-        var rectX = door.x + _triggerOffset.x
-        var rectY = door.y + _triggerOffset.y
-        // The rect's nearest point to the circle's centre, then whether that is within the radius.
-        var nearestX = circleX.max(rectX - _triggerHalf.x).min(rectX + _triggerHalf.x)
-        var nearestY = circleY.max(rectY - _triggerHalf.y).min(rectY + _triggerHalf.y)
-        var dx = circleX - nearestX
-        var dy = circleY - nearestY
-        return dx * dx + dy * dy < radius * radius
-    }
+    update() {}
 
     onDestroy() {}
 
-    onEvent(type, data) {}
+    // Contact events go to every script, so only the player stepping onto this trigger counts.
+    onEvent(type, data) {
+        if (type != "collisionEnter" || _targetIndex == null) {
+            return
+        }
+        var other = null
+        if (data["entityA"] == _entity) {
+            other = data["entityB"]
+        } else if (data["entityB"] == _entity) {
+            other = data["entityA"]
+        }
+        if (other == null) {
+            return
+        }
+        var member = Party.memberForEntity(other)
+        if (member == null || !member.isPlayer) {
+            return
+        }
+        Warps.request(_targetIndex, Rooms.indexAt(WorldTransform.getPosition(_entity)), _destination)
+    }
 
     isInteractable() { false }
 }

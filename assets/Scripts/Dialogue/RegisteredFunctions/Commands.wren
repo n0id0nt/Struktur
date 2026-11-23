@@ -26,8 +26,8 @@ import "reflect" for Reflect
 
 // px above the crystal's centre that the soul fragment comes loose from ("soulFragment").
 var FRAGMENT_LIFT = 14
-// "shootArrow": where the arrow leaves the bow, from the shooter's feet (px).
-var BOW_OFFSET = Vec2.new(6, -14)
+// "shootArrow": where the arrow leaves the bow, from the shooter's origin - its collider's centre (px).
+var BOW_OFFSET = Vec2.new(6, -11)
 
 class Commands {
     // A staging command's "wait" parameter: on unless it's 0 / false / "no" (JSON bools are avoided in dialogue
