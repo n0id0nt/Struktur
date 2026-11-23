@@ -23,7 +23,10 @@ class SpriteSheet {
         // The pivot raised so the entity's position is the centre of its collider, not the sheet's pivot
         // (Util/CharacterCollider.wren) - every sheet made here is a walking character's.
         var pivot = Vec2.new(origin[0], origin[1] - CharacterCollider.originLiftPx)
-        Sprite.create(entity, texture, WHITE, pivot, data["columns"], data["rows"], FlipBit.NONE, 0, layer, 0)
+        // On the entities layer the render system sorts by y + this bias: sorted by the feet - the bottom of the sprite -
+        // rather than the origin, so a character is drawn in front of whatever their feet are in front of.
+        var sortBias = layer == RenderLayer.ENTITIES ? CharacterCollider.feetBelowOriginPx : 0
+        Sprite.create(entity, texture, WHITE, pivot, data["columns"], data["rows"], FlipBit.NONE, 0, layer, sortBias)
         texture.unload()
 
         var spriteAnimation = SpriteAnimation.create(entity)
