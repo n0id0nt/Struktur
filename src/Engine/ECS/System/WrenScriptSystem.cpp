@@ -215,7 +215,8 @@ void WrenScriptSystem::Update(GameContext& context)
 		}
 	}
 
-	auto view = registry.view<Component::WrenScript>(entt::exclude<Inactive>);
+	// Frozen scripts (a neighbouring room's) are still started, but not updated.
+	auto view = registry.view<Component::WrenScript>(entt::exclude<Inactive, Frozen>);
 
 	for (auto entity : view)
 	{
@@ -265,7 +266,7 @@ void WrenScriptSystem::FixedUpdate(GameContext& context)
 	}
 
 	auto& registry = context.GetRegistry();
-	auto view       = registry.view<Component::WrenScript>(entt::exclude<Inactive>);
+	auto view       = registry.view<Component::WrenScript>(entt::exclude<Inactive, Frozen>);
 
 	for (auto entity : view)
 	{

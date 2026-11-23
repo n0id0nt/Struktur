@@ -516,6 +516,50 @@ void LevelViewer::ResetEntityField(GameContext& context, const std::string& enti
 	}
 }
 
+void LevelViewer::CopyEntityFields(const std::string& entityIid)
+{
+	const nlohmann::ordered_json* entity = m_document.FindEntity(entityIid);
+	if (!entity)
+	{
+		return;
+	}
+	m_copiedFields     = (*entity)["fieldInstances"];
+	m_copiedDefUid     = m_document.GetEntityDefUid(entityIid);
+	m_copiedIdentifier = (*entity)["__identifier"].get<std::string>();
+	m_copiedFromIid    = entityIid;
+	SetStatus(std::format("Copied {} fields from {}", m_copiedFields.size(), m_copiedIdentifier), false);
+}
+
+bool LevelViewer::CanPasteEntityFields(const std::string& entityIid) const
+{
+	return HasCopiedFields() && entityIid != m_copiedFromIid && m_document.HasEntity(entityIid) &&
+	       m_document.GetEntityDefUid(entityIid) == m_copiedDefUid;
+}
+
+void LevelViewer::PasteEntityFields(GameContext& context, const std::string& entityIid)
+{
+	if (!HasCopiedFields() || !m_document.HasEntity(entityIid))
+	{
+		return;
+	}
+	if (!CanPasteEntityFields(entityIid))
+	{
+		SetStatus(entityIid == m_copiedFromIid ? "That's the entity the fields were copied from"
+		                                       : "Copied fields are from a " + m_copiedIdentifier +
+		                                             " - they only paste onto another " + m_copiedIdentifier,
+		          true);
+		return;
+	}
+	int changedFields = m_document.PasteFieldInstances(entityIid, m_copiedFields);
+	if (changedFields == 0)
+	{
+		SetStatus("Fields already match - nothing pasted", false);
+		return;
+	}
+	m_entitiesToRefresh.insert(entityIid);
+	SetStatus(std::format("Pasted {} fields onto {} (one undo step)", changedFields, m_copiedIdentifier), false);
+}
+
 void LevelViewer::ReplayParticles(GameContext& context, entt::entity entity)
 {
 	auto* emitter = context.GetRegistry().try_get<Component::ParticleEmitter>(entity);
@@ -591,6 +635,23 @@ void LevelViewer::HandleShortcuts(GameContext& context)
 	if (ImGui::IsKeyPressed(ImGuiKey_S, false))
 	{
 		Save(context);
+	}
+	else if (ImGui::IsKeyPressed(ImGuiKey_C, false) || ImGui::IsKeyPressed(ImGuiKey_V, false))
+	{
+		// Copy/paste the selected entity's fields
+		entt::entity selected = GetSelectedDocumentEntity(context);
+		if (selected != entt::null)
+		{
+			const std::string& entityIid = context.GetRegistry().get<Component::LevelEntityInstance>(selected).Iid;
+			if (ImGui::IsKeyPressed(ImGuiKey_C, false))
+			{
+				CopyEntityFields(entityIid);
+			}
+			else
+			{
+				PasteEntityFields(context, entityIid);
+			}
+		}
 	}
 	else if (ImGui::IsKeyPressed(ImGuiKey_Y, false) || (io.KeyShift && ImGui::IsKeyPressed(ImGuiKey_Z, false)))
 	{

@@ -1460,8 +1460,38 @@ void InspectorWindow::RenderLevelEntityInstanceComponent(GameContext& context, C
 			}
 			ImGui::SetItemTooltip("Clear the particles and fire the burst again");
 		}
+		if (ImGui::SmallButton("Copy Fields"))
+		{
+			levelViewer.CopyEntityFields(instance.Iid);
+		}
+		ImGui::SetItemTooltip("Copy this entity's field values (Ctrl+C), to paste onto another %s",
+		                      instance.identifier.c_str());
+		ImGui::SameLine();
+		ImGui::BeginDisabled(!levelViewer.CanPasteEntityFields(instance.Iid));
+		if (ImGui::SmallButton("Paste Fields"))
+		{
+			levelViewer.PasteEntityFields(context, instance.Iid);
+		}
+		ImGui::EndDisabled();
+		if (ImGui::IsItemHovered(ImGuiHoveredFlags_AllowWhenDisabled))
+		{
+			if (!levelViewer.HasCopiedFields())
+			{
+				ImGui::SetTooltip("Copy the fields of another %s first", instance.identifier.c_str());
+			}
+			else if (levelViewer.CanPasteEntityFields(instance.Iid))
+			{
+				ImGui::SetTooltip("Replace every field with the copied %s's (Ctrl+V, one undo step)",
+				                  levelViewer.GetCopiedFieldsIdentifier().c_str());
+			}
+			else
+			{
+				ImGui::SetTooltip("The copied fields are from a %s (or this same entity)",
+				                  levelViewer.GetCopiedFieldsIdentifier().c_str());
+			}
+		}
 		EntityFieldEditor::Render(context, levelViewer, instance.Iid);
-		// Save / undo / redo while editing here, as in the Game Viewport and Level Viewer window.
+		// Save / undo / redo / copy / paste while editing here, as in the Game Viewport and Level Viewer window.
 		if (ImGui::IsWindowFocused(ImGuiFocusedFlags_RootAndChildWindows))
 		{
 			levelViewer.HandleShortcuts(context);

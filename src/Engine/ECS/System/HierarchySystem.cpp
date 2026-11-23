@@ -3,7 +3,9 @@
 #include <algorithm>
 #include <vector>
 
+#include "Engine/ECS/Component/PhysicsBody.h"
 #include "Engine/ECS/Component/Transform.h"
+#include "Engine/ECS/SystemManager.h"
 #include "Engine/GameContext.h"
 
 void Struktur::System::HierarchySystem::SetParent(GameContext& context, entt::entity child, entt::entity parent)
@@ -109,6 +111,42 @@ void Struktur::System::HierarchySystem::DeactivevateEntity(GameContext& context,
 	registry.patch<Component::Active>(entity, [](Component::Active& active)
 	                                  { active.activeState = Component::Active::ActiveState::InactiveSelf; });
 	PropagateActiveStateToChildren(context, entity, Component::Active::ActiveState::InactiveParent);
+}
+
+void Struktur::System::HierarchySystem::SetFrozen(GameContext& context, entt::entity entity, bool frozen)
+{
+	entt::registry& registry = context.GetRegistry();
+	if (!registry.valid(entity))
+	{
+		return;
+	}
+	if (frozen)
+	{
+		registry.emplace_or_replace<Frozen>(entity);
+		// Its script won't steer it any more - stop it where it is rather than let it drift on its last velocity.
+		if (auto* physicsBody = registry.try_get<Component::PhysicsBody>(entity))
+		{
+			if (physicsBody->body != nullptr && physicsBody->body->GetType() == b2_dynamicBody)
+			{
+				physicsBody->body->SetLinearVelocity(b2Vec2(0.0f, 0.0f));
+			}
+		}
+	}
+	else
+	{
+		registry.remove<Frozen>(entity);
+	}
+
+	// A copy: nothing here re-parents, but a child list must not be held across the recursion (see DestroyEntity).
+	std::vector<entt::entity> children;
+	if (auto* childrenComponent = registry.try_get<Component::Children>(entity))
+	{
+		children = childrenComponent->entities;
+	}
+	for (entt::entity child : children)
+	{
+		SetFrozen(context, child, frozen);
+	}
 }
 
 void Struktur::System::HierarchySystem::PropagateActiveStateToChildren(GameContext& context, entt::entity entity,

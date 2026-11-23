@@ -520,6 +520,20 @@ void wren_GameObjectSetInactive(WrenVM* vm)
 	hierarchySystem.DeactivevateEntity(*context, entity);
 }
 
+// GameObject.setFrozen(entity, frozen)
+void wren_GameObjectSetFrozen(WrenVM* vm)
+{
+	Struktur::GameContext* context                     = static_cast<Struktur::GameContext*>(wrenGetUserData(vm));
+	Struktur::System::SystemManager& systemManager     = context->GetSystemManager();
+	Struktur::System::HierarchySystem& hierarchySystem = systemManager.GetSystem<Struktur::System::HierarchySystem>();
+
+	double entityId     = wrenGetSlotDouble(vm, 1);
+	entt::entity entity = static_cast<entt::entity>(entityId);
+	bool frozen         = wrenGetSlotBool(vm, 2);
+
+	hierarchySystem.SetFrozen(*context, entity, frozen);
+}
+
 // ============================================================================
 // BINDING REGISTRATION
 // ============================================================================
@@ -563,4 +577,6 @@ WREN_BINDING_MODULE(GameObject)
 	                  "Sets an entity to acitve.");
 	WREN_CLASS_STATIC(registry, "gameObject", "GameObject", "setInactive(_)", wren_GameObjectSetInactive,
 	                  "Sets an entity to inacitve.");
+	WREN_CLASS_STATIC(registry, "gameObject", "GameObject", "setFrozen(_,_)", wren_GameObjectSetFrozen,
+	                  "Freezes an entity and everything under it (drawn and colliding, scripts not updated) - or thaws it.");
 }

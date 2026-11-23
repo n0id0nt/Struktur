@@ -512,6 +512,8 @@ inline const char* wrengameObjectSource()
     "    foreign static setActive(arg0)\n"
     "    // Sets an entity to inacitve.\n"
     "    foreign static setInactive(arg0)\n"
+    "    // Freezes an entity and everything under it (drawn and colliding, scripts not updated) - or thaws it.\n"
+    "    foreign static setFrozen(arg0,arg1)\n"
     "}\n"
     "\n"
     "";

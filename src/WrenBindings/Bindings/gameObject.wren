@@ -35,5 +35,7 @@ class GameObject {
     foreign static setActive(arg0)
     // Sets an entity to inacitve.
     foreign static setInactive(arg0)
+    // Freezes an entity and everything under it (drawn and colliding, scripts not updated) - or thaws it.
+    foreign static setFrozen(arg0,arg1)
 }
 

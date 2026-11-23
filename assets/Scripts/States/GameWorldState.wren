@@ -103,10 +103,10 @@ var DEFAULT_ARENA_LEVEL_NAME = "GrassBattleStage"
 // Combat proximity ranges, in metres (converted to world pixels at use via Application.pixelsPerMeter,
 // default 64). An aggressive critter (Chinlin) within FORCE range forces combat outright rather than
 // just offering it via the interact prompt - meant to feel like being caught, not spotted. When a
-// fight starts, every other critter within GROUP range OF THE PLAYER is dragged in too, nearest
-// first, up to MAX_COMBAT_GROUP total (the closest 3 when more than that are in range).
+// fight starts, every other critter within GROUP range OF THE PLAYER and standing in the player's room is dragged in
+// too, nearest first, up to MAX_COMBAT_GROUP total (the closest 3 when more than that are in range).
 var FORCE_COMBAT_METERS = 1.0
-var GROUP_COMBAT_METERS = 3.0
+var GROUP_COMBAT_METERS = 6.0
 var MAX_COMBAT_GROUP = 3
 // Int flag a won duel or story battle leaves for the challenger's dialogue to branch on: "duel_won_<Name>" = 1.
 var DUEL_WON_FLAG_PREFIX = "duel_won_"
@@ -529,6 +529,9 @@ class GameWorldState is BaseState {
                 SoulVeil.refresh()
             }
             GameObject.setActive(levelEntity)
+            // Only the player's room runs: the neighbours are drawn (and keep their walls), but everything in them -
+            // critters, wandering NPCs - holds still until the player walks in (System::Frozen in the engine).
+            GameObject.setFrozen(levelEntity, i != levelIndex)
         }
     }
 
@@ -929,7 +932,8 @@ class GameWorldState is BaseState {
                 continue
             }
             var critterPosition = critter.position
-            if (critterPosition == null) {
+            // Standing in the player's room, not just belonging to it - never one through a wall in the next room.
+            if (critterPosition == null || (playerRoom != null && Rooms.indexAt(critterPosition) != playerRoom)) {
                 continue
             }
             var distance = Vec3.distance(playerPosition, critterPosition)

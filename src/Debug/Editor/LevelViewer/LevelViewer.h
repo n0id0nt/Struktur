@@ -146,6 +146,22 @@ public:
 	void SetEntityField(GameContext& context, const std::string& entityIid, const std::string& fieldIdentifier,
 	                    const nlohmann::ordered_json& value, bool mergeWithLastEdit);
 	void ResetEntityField(GameContext& context, const std::string& entityIid, const std::string& fieldIdentifier);
+
+	// Copying fields between entities of the same type: Copy keeps a snapshot of the entity's field instances, Paste
+	// sets another entity's fields to it as one undoable edit. Also Ctrl+C / Ctrl+V on the selected entity (see
+	// HandleShortcuts).
+	void CopyEntityFields(const std::string& entityIid);
+	void PasteEntityFields(GameContext& context, const std::string& entityIid);
+	// Something's copied, it's the same type as this entity, and this isn't the entity it came from.
+	bool CanPasteEntityFields(const std::string& entityIid) const;
+	bool HasCopiedFields() const
+	{
+		return m_copiedDefUid >= 0;
+	}
+	const std::string& GetCopiedFieldsIdentifier() const
+	{
+		return m_copiedIdentifier;
+	}
 	// Clears a previewed particle effect's particles and fires its burst again (BurstCount particles at once).
 	void ReplayParticles(GameContext& context, entt::entity entity);
 	// Ctrl+S save, Ctrl+Z undo, Ctrl+Y / Ctrl+Shift+Z redo - called while the Game Viewport, the Level Viewer window
@@ -283,6 +299,13 @@ private:
 	glm::ivec2 m_dragPosition{0};
 	glm::vec2 m_dragStartMouse{0.f};
 	bool m_isDragMoving = false;
+
+	// The copied fields (a "fieldInstances" array), the type they came from (definition uid, -1 when nothing's
+	// copied), its identifier, and the iid of the entity copied from.
+	nlohmann::ordered_json m_copiedFields;
+	int m_copiedDefUid = -1;
+	std::string m_copiedIdentifier;
+	std::string m_copiedFromIid;
 
 	// Entities whose fields changed since the last Update - see RefreshEntityFields.
 	std::unordered_set<std::string> m_entitiesToRefresh;

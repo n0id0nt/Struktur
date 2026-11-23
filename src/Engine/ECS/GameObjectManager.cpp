@@ -56,6 +56,11 @@ entt::entity Struktur::System::GameObjectManager::CreateGameObject(GameContext& 
 	if (parent != entt::null)
 	{
 		hierarchySystem.SetParent(context, entity, parent);
+		// Born into a frozen room (a critter its spawner makes as a neighbouring room loads): frozen with it.
+		if (registry.all_of<Frozen>(parent))
+		{
+			registry.emplace<Frozen>(entity);
+		}
 	}
 
 	return entity;

@@ -24,6 +24,8 @@ public:
 	void DestroyEntity(GameContext& context, entt::entity entity);
 	void ActivevateEntity(GameContext& context, entt::entity entity);
 	void DeactivevateEntity(GameContext& context, entt::entity entity);
+	// Freezes (or thaws) the entity and everything under it - see System::Frozen.
+	void SetFrozen(GameContext& context, entt::entity entity, bool frozen);
 
 	std::string Name() const override
 	{

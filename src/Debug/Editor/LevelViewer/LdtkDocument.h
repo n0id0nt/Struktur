@@ -28,6 +28,8 @@ public:
 		// A move's [x, y] (px within the level, LDtk's "px"), or a field's __value - before and after the edit.
 		nlohmann::ordered_json before;
 		nlohmann::ordered_json after;
+		// Undone and redone together with the edit before it - a paste of several fields is one step.
+		bool joinsPrevious = false;
 	};
 
 	// Reads and parses the file (a virtual path, e.g. "Levels/SevenGods.ldtk"). Clears the undo history.
@@ -48,6 +50,8 @@ public:
 	glm::vec2 GetEntityPivot(const std::string& entityIid) const;
 	// The size (px) of the level the entity is in.
 	glm::ivec2 GetEntityLevelSize(const std::string& entityIid) const;
+	// The uid of the entity's definition (defs.entities[].uid) - entities of the same type share it. -1 if unknown.
+	int GetEntityDefUid(const std::string& entityIid) const;
 	// The entity's JSON object, or null.
 	const nlohmann::ordered_json* FindEntity(const std::string& entityIid) const;
 	// The entity's field instance with this identifier, or null.
@@ -70,8 +74,13 @@ public:
 	                   const nlohmann::ordered_json& value, bool mergeWithLastEdit = false);
 	// Back to "use the definition's default" (no realEditorValues), __value set to that default.
 	bool ResetFieldToDefault(const std::string& entityIid, const std::string& fieldIdentifier);
+	// Sets the target's field instances to copies of these (another entity's "fieldInstances", of the same type -
+	// the caller checks that), matched by identifier, as one undoable step. Every field type is copied whole, values
+	// and "use the default" state alike. Returns how many fields changed (0: nothing recorded).
+	int PasteFieldInstances(const std::string& entityIid, const nlohmann::ordered_json& sourceFieldInstances);
 
-	// The edit just undone/redone (the caller refreshes that entity), or null when there's nothing to undo/redo.
+	// The edit just undone/redone (the caller refreshes that entity), or null when there's nothing to undo/redo. A
+	// step of several joined edits (a paste) is undone/redone whole; they're all on the same entity.
 	const Edit* Undo();
 	const Edit* Redo();
 	bool CanUndo() const

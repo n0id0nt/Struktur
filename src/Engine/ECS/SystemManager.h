@@ -17,6 +17,13 @@ struct Inactive
 {
 };
 
+// Paused but still in the world: drawn, animated and colliding, but its script's update() / fixedUpdate() aren't called
+// and a moving body is stopped. Set on a whole subtree by HierarchySystem::SetFrozen - the rooms next to the player's
+// (States/GameWorldState.wren) are frozen so they show without their creatures roaming about.
+struct Frozen
+{
+};
+
 class ISystem
 {
 public:

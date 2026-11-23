@@ -545,6 +545,16 @@ glm::vec2 LdtkDocument::GetEntityPivot(const std::string& entityIid) const
 	return glm::vec2((*entity)["__pivot"][0].get<float>(), (*entity)["__pivot"][1].get<float>());
 }
 
+int LdtkDocument::GetEntityDefUid(const std::string& entityIid) const
+{
+	const nlohmann::ordered_json* entity = FindEntity(entityIid);
+	if (!entity || !entity->contains("defUid"))
+	{
+		return -1;
+	}
+	return (*entity)["defUid"].get<int>();
+}
+
 glm::ivec2 LdtkDocument::GetEntityLevelSize(const std::string& entityIid) const
 {
 	auto location = m_entityLocations.find(entityIid);
@@ -679,6 +689,35 @@ bool LdtkDocument::ResetFieldToDefault(const std::string& entityIid, const std::
 	return CommitFieldEdit(entityIid, fieldIdentifier, after, false);
 }
 
+int LdtkDocument::PasteFieldInstances(const std::string& entityIid,
+                                      const nlohmann::ordered_json& sourceFieldInstances)
+{
+	if (!sourceFieldInstances.is_array())
+	{
+		return 0;
+	}
+	int changedFields = 0;
+	for (const nlohmann::ordered_json& sourceField : sourceFieldInstances)
+	{
+		if (!sourceField.contains("__identifier"))
+		{
+			continue;
+		}
+		std::string fieldIdentifier         = sourceField["__identifier"].get<std::string>();
+		const nlohmann::ordered_json* field = FindFieldInstance(entityIid, fieldIdentifier);
+		if (!field || *field == sourceField)
+		{
+			continue;
+		}
+		Edit edit{entityIid, fieldIdentifier, *field, sourceField};
+		edit.joinsPrevious = changedFields > 0;
+		ApplyValue(entityIid, fieldIdentifier, sourceField);
+		RecordEdit(std::move(edit));
+		changedFields++;
+	}
+	return changedFields;
+}
+
 bool LdtkDocument::CommitFieldEdit(const std::string& entityIid, const std::string& fieldIdentifier,
                                    const nlohmann::ordered_json& after, bool mergeWithLastEdit)
 {
@@ -689,7 +728,8 @@ bool LdtkDocument::CommitFieldEdit(const std::string& entityIid, const std::stri
 	}
 
 	bool canMerge = mergeWithLastEdit && m_historyIndex > 0 && m_historyIndex == m_history.size() &&
-	                m_history.back().entityIid == entityIid && m_history.back().fieldIdentifier == fieldIdentifier;
+	                m_history.back().entityIid == entityIid && m_history.back().fieldIdentifier == fieldIdentifier &&
+	                !m_history.back().joinsPrevious;
 	if (canMerge)
 	{
 		m_history.back().after = after;
@@ -762,10 +802,15 @@ const LdtkDocument::Edit* LdtkDocument::Undo()
 	{
 		return nullptr;
 	}
-	m_historyIndex--;
-	const Edit& edit = m_history[m_historyIndex];
-	ApplyValue(edit.entityIid, edit.fieldIdentifier, edit.before);
-	return &edit;
+	// Back through the whole step: joined edits, then the edit that started it.
+	const Edit* edit = nullptr;
+	do
+	{
+		m_historyIndex--;
+		edit = &m_history[m_historyIndex];
+		ApplyValue(edit->entityIid, edit->fieldIdentifier, edit->before);
+	} while (edit->joinsPrevious && m_historyIndex > 0);
+	return edit;
 }
 
 const LdtkDocument::Edit* LdtkDocument::Redo()
@@ -774,10 +819,15 @@ const LdtkDocument::Edit* LdtkDocument::Redo()
 	{
 		return nullptr;
 	}
-	const Edit& edit = m_history[m_historyIndex];
-	m_historyIndex++;
-	ApplyValue(edit.entityIid, edit.fieldIdentifier, edit.after);
-	return &edit;
+	// The step's first edit, then every edit joined to it.
+	const Edit* edit = nullptr;
+	do
+	{
+		edit = &m_history[m_historyIndex];
+		m_historyIndex++;
+		ApplyValue(edit->entityIid, edit->fieldIdentifier, edit->after);
+	} while (m_historyIndex < m_history.size() && m_history[m_historyIndex].joinsPrevious);
+	return edit;
 }
 
 bool LdtkDocument::BuildPatchedText(std::string& outText, std::string& outError) const
