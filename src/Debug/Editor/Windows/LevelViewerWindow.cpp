@@ -164,6 +164,7 @@ void LevelViewerWindow::RenderLevelList(GameContext& context)
 	ImGui::Text("%s", m_levelViewer->GetFilePath().c_str());
 	ImGui::TextDisabled("Right/middle drag: pan   Wheel: zoom   F: frame all");
 	ImGui::TextDisabled("Click: select (Inspector)   Double-click a level: frame it");
+	ImGui::TextDisabled("Gizmo: drag an arrow or the centre to move   Shift: free   Arrows: nudge");
 	ImGui::TextDisabled("Ctrl+click: play from here");
 	if (ImGui::IsItemHovered())
 	{

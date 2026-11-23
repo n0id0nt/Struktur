@@ -70,6 +70,7 @@ class DisplayNames {
             "Iron Helm": "item.iron_helm",
             // Arc 1
             "Healing Herb": "item.healing_herb",
+            "Healing Potion": "item.healing_potion",
             "Bread Roll": "item.bread_roll",
             "Special Ration": "item.special_ration",
             "Finn's Blade": "item.finns_blade",

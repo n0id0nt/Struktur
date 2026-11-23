@@ -7,11 +7,13 @@
 // States/InteractState.wren (same precedent as Combat's strike animation / Main Menu's rich-text reveal) and handed in
 // via revealGlyphs(count); tick(now) only bobs the prompt. A line too long for the box makes it taller (upward at the
 // bottom, downward at the top) rather than spilling out - the choices ride along on its top edge.
-import "ui" for UIManager, UIRichLabel, UIPanel, TextWrapping
+// setPortrait puts the speaker's face (Dialogue/Portraits.wren) at the box's left, with the text moved over for it; a
+// caption across the portrait's foot names an expression it has no art for yet.
+import "ui" for UIManager, UIRichLabel, UIPanel, UITexture, UIColor, TextWrapping
 import "app" for Application
-import "math" for Vec2
+import "math" for Vec2, Vec4
 import "localization" for Localization
-import "Util/Colors" for BLANK, BLACK
+import "Util/Colors" for BLANK, BLACK, WHITE
 import "UI/Theme/UIKit" for UIKit
 
 var BOX_WIDTH = 800
@@ -27,6 +29,11 @@ var PROMPT_PAD_X = 14         // around the hint, inside the plate (the plate's 
 var PROMPT_PAD_Y = 10
 var PROMPT_BOB = 2            // how far the prompt bobs while it waits, in pixels
 var PROMPT_PERIOD = 1.0       // seconds per bob
+var PORTRAIT_SCALE = 2        // portraits are 64px art (3dModelsToSprites job.portrait.json), shown at 2x
+var PORTRAIT_SIZE = 128
+var PORTRAIT_GAP = 16         // between the portrait and the text
+var CAPTION_SIZE = 16.0       // the placeholder caption under an expression with no art
+var CAPTION_BACK = Vec4.new(20, 16, 28, 200)
 
 class DialogueBoxUI {
     construct new() {
@@ -73,6 +80,28 @@ class DialogueBoxUI {
         _dialogueLabel.setZIndex(1)
         _textBox.addChild(_dialogueLabel)
 
+        // The speaker's portrait at the box's top-left, inside the rim, and the caption strip across its foot.
+        _portrait = UITexture.new(Vec2.new(TEXT_INSET_X - 6, TEXT_INSET_TOP - 4), Vec2.new(0, 0),
+            Vec2.new(PORTRAIT_SIZE, PORTRAIT_SIZE), Vec2.new(0, 0))
+        _portrait.setZIndex(1)
+        _textBox.addChild(_portrait)
+        _captionBack = UIColor.new(Vec2.new(0, 0), Vec2.new(0, 1), Vec2.new(PORTRAIT_SIZE, 0), Vec2.new(0, 0))
+        _captionBack.setColor(CAPTION_BACK)
+        _captionBack.setAnchorPoint(Vec2.new(0, 1))
+        _captionBack.setZIndex(2)
+        _portrait.addChild(_captionBack)
+        _caption = UIRichLabel.new(Vec2.new(2, 0), Vec2.new(0, 0), "", CAPTION_SIZE)
+        _caption.setFont(_font)
+        _caption.setTextColor(WHITE)
+        _caption.setWordWrap(TextWrapping.WORD_WRAP)
+        _caption.setSize(Vec2.new(PORTRAIT_SIZE - 4, PORTRAIT_SIZE), Vec2.new(0, 0))
+        _caption.setZIndex(3)
+        _captionBack.addChild(_caption)
+        _portrait.setVisible(false)
+        _portraitPath = null
+        _textLeft = null
+        placeText_(false)
+
         // The prompt: a small plate centred on the box's bottom rim at the right (anchored by its right-middle), with
         // the Interact button's hint inside. Sized to the hint in tick(), since the hint changes width with the device.
         _promptPlate = UIKit.frame(_textBox, "plate", Vec2.new(-PROMPT_INSET_RIGHT, 0), Vec2.new(1, 1), Vec2.new(0, 0),
@@ -93,6 +122,39 @@ class DialogueBoxUI {
     textBox { _textBox }
     // The game font - ChoiceListUI's row labels use it too.
     font { _font }
+
+    // The speaker's face at the box's left (path: an image, or null for none - the text then uses the whole box), and
+    // a caption across its foot (null for none) - an expression the portrait has no art for (Dialogue/Portraits.wren).
+    setPortrait(path, caption) {
+        if (path == null) {
+            _portrait.setVisible(false)
+            placeText_(false)
+            return
+        }
+        if (path != _portraitPath) {
+            _portraitPath = path
+            _portrait.setTexture(UIKit.texture(path))
+        }
+        if (caption == null) {
+            _captionBack.setVisible(false)
+        } else {
+            _caption.setMarkupText("(%(caption))")
+            var height = (_caption.getContentHeight() + 4).ceil
+            _captionBack.setSize(Vec2.new(PORTRAIT_SIZE, height), Vec2.new(0, 0))
+            _captionBack.setVisible(true)
+        }
+        _portrait.setVisible(true)
+        placeText_(true)
+    }
+
+    // The text starts after the portrait while one shows.
+    placeText_(withPortrait) {
+        var left = withPortrait ? TEXT_INSET_X + PORTRAIT_SIZE + PORTRAIT_GAP : TEXT_INSET_X
+        if (left == _textLeft) return
+        _textLeft = left
+        _dialogueLabel.setPosition(Vec2.new(left - 5, TEXT_INSET_TOP - 2), Vec2.new(0, 0))
+        _dialogueLabel.setSize(Vec2.new(-left - TEXT_INSET_X + 10, -TEXT_INSET_TOP - TEXT_INSET_BOTTOM), Vec2.new(1, 1))
+    }
 
     setMarkupText(text) {
         _dialogueLabel.setMarkupText(text)
@@ -140,6 +202,7 @@ class DialogueBoxUI {
     // reveal starts, so the box doesn't grow as the text types out.
     fitToText_() {
         var needed = (_dialogueLabel.getContentHeight() + TEXT_INSET_TOP + TEXT_INSET_BOTTOM).ceil
+        if (_portrait.isVisible) needed = needed.max(PORTRAIT_SIZE + 2 * TEXT_INSET_TOP - 8)
         _textBox.setSize(Vec2.new(BOX_WIDTH, needed.max(_baseHeight)), Vec2.new(0, 0))
     }
 

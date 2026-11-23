@@ -71,6 +71,9 @@ class Notifications {
             var objective = data["objective"]
             Notifications.push_("quest", Localization.get("notify.quest.updated"),
                 Localization.get("quest.%(quest).%(objective)"))
+        } else if (type == GameEvents.partyRestedType) {
+            // "Rested - Everyone is back on their feet."
+            Notifications.push_("info", Localization.get("notify.rested"), Localization.get("notify.rested.message"))
         } else if (type == GameEvents.questCompletedType) {
             // "Quest complete - The Stubborn Well"
             Notifications.push_("quest", Localization.get("notify.quest.complete"), Notifications.questTitle_(data))

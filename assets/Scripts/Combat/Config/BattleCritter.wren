@@ -164,11 +164,11 @@ class BattleCritter {
         if (name == "Kira") return BattleCritter.kira
         if (name == "Thomas") return BattleCritter.thomas
         if (name == "Finn" || name == "Master Finn") return BattleCritter.finn
-        if (name == "Runic Construct") return BattleCritter.runicConstruct(110)
+        if (name == "Runic Construct") return BattleCritter.runicConstruct(7)
         // The shrine chamber's three constructs (LDtk NPC names) - a little tougher each time.
-        if (name == "RunicConstuct1") return BattleCritter.runicConstruct(70)
-        if (name == "RunicConstruct2") return BattleCritter.runicConstruct(85)
-        if (name == "RunicConstruct3") return BattleCritter.runicConstruct(100)
+        if (name == "RunicConstuct1") return BattleCritter.runicConstruct(5)
+        if (name == "RunicConstruct2") return BattleCritter.runicConstruct(6)
+        if (name == "RunicConstruct3") return BattleCritter.runicConstruct(7)
         if (name == "Starving Thornwolf") return BattleCritter.starvingThornwolf
         if (name == "Corrupted Thornwolf" || name == "Thornwolf") return BattleCritter.thornwolf
         if (name == "Twisted Sprite") return BattleCritter.twistedSprite
@@ -192,7 +192,7 @@ class BattleCritter {
     static chicken {
         var anims = {"idle": [6, 9, 0.5], "attack": [32, 39, 1.0], "hurt": [15, 18, 0.35], "run": [15, 18, 0.35]}
         var def = BattleCritter.new("Chicken", "Actors/chicken.png", 7, 6, Vec2.new(8, 8), 1, anims)
-        return def.stats(28, 60, 6, 6, 2, 12).natural(2, 0.6).menu(Fn.new {
+        return def.stats(2, 60, 0, 0, 0, 12).natural(0, 0.6).menu(Fn.new {
             var moves = {}
             moves["Hop"] = BattleCritter.reskin("Step", 1, "Hop")
             moves["Peck"] = BattleCritter.reskin("Stab", 1, "Peck")
@@ -208,7 +208,7 @@ class BattleCritter {
     static chinlin {
         var anims = {"idle": [4, 6, 0.8], "attack": [12, 15, 0.45], "hurt": [12, 15, 0.45], "run": [12, 15, 0.45]}
         var def = BattleCritter.new("Chinlin", "Actors/chinlin.png", 4, 4, Vec2.new(12, 16), 1, anims)
-        return def.stats(90, 80, 12, 5, 6, 12).natural(8, 1.1).trait("tax", 1).menu(Fn.new {
+        return def.stats(6, 80, 0, 0, 0, 12).natural(0, 1.1).trait("tax", 1).menu(Fn.new {
             var moves = {}
             moves["Trot"] = BattleCritter.reskin("Step", 1, "Trot")
             moves["Gore"] = BattleCritter.reskin("Lunge", 1, "Gore")
@@ -224,11 +224,11 @@ class BattleCritter {
 
     // --- early enemies (the enemy types and combo patterns doc) --------------------------------------
 
-    // The first arc's tutorial wolf: 30 HP and two combos. It closes in one cell at a time (Stalk); whenever someone
+    // The first arc's tutorial wolf: 3 HP (three Slashes) and two combos. It closes in one cell at a time (Stalk); whenever someone
     // is in reach as it starts a chain it bites straight away, circles, then leaps back (Snap) - brace, then punish.
     static starvingThornwolf {
         var def = BattleCritter.wolfArt_("Starving Thornwolf")
-        return def.stats(30, 60, 8, 5, 2, 12).natural(4, 0.7).tint(Vec4.new(205, 200, 190, 255)).menu(Fn.new {
+        return def.stats(3, 60, 0, 0, 0, 12).natural(0, 0.7).tint(Vec4.new(205, 200, 190, 255)).menu(Fn.new {
             var moves = BattleCritter.wolfMoves_()
             var combos = {}
             combos["Stalk"] = [["Lope", "toward"], ["Circle", 1.2], ["Lope", "toward"], ["Circle", 1.2], ["Lope", "toward"]]
@@ -241,7 +241,7 @@ class BattleCritter {
     // Back), and a Bite-heavy Worry almost always follows.
     static thornwolf {
         var def = BattleCritter.wolfArt_("Corrupted Thornwolf")
-        return def.stats(70, 70, 10, 5, 4, 12).natural(5, 0.8).tint(Vec4.new(190, 160, 215, 255)).menu(Fn.new {
+        return def.stats(5, 70, 0, 0, 0, 12).natural(0, 0.8).tint(Vec4.new(190, 160, 215, 255)).menu(Fn.new {
             var moves = BattleCritter.wolfMoves_()
             var combos = {}
             combos["Stalk"] = [["Lope", "toward"], ["Circle", 0.6], ["Pounce"], ["Bite"], ["Bite"], ["Leap Back", "away"]]
@@ -272,7 +272,7 @@ class BattleCritter {
     static twistedSprite {
         var anims = {"idle": [6, 9, 0.5], "attack": [32, 39, 1.0], "hurt": [15, 18, 0.35], "run": [15, 18, 0.35]}
         var def = BattleCritter.new("Twisted Sprite", "Actors/chicken.png", 7, 6, Vec2.new(8, 8), 1, anims)
-        def.stats(40, 70, 5, 12, 2, 14).natural(4, 0.6).tint(Vec4.new(150, 235, 215, 255))
+        def.stats(3, 70, 0, 0, 0, 14).natural(0, 0.6).tint(Vec4.new(150, 235, 215, 255))
         return def.menu(Fn.new {
             var moves = {}
             moves["Pixie Bolt"] = BattleCritter.reskin("Spark", 1, "Pixie Bolt")
@@ -289,7 +289,7 @@ class BattleCritter {
     // the big hit, then punish the recovery.
     static runicConstruct(maxHp) {
         var def = BattleCritter.fromSheet("Runic Construct", GoblinVikingBattleSprite)
-        return def.stats(maxHp, 90, 12, 5, 10, 12).natural(10, 1.2).trait("tax", 1).tint(Vec4.new(170, 200, 230, 255)).menu(Fn.new {
+        return def.stats(maxHp, 90, 0, 0, 0, 12).natural(0, 1.2).trait("tax", 1).tint(Vec4.new(170, 200, 230, 255)).menu(Fn.new {
             var moves = {}
             moves["Trudge"] = BattleCritter.reskin("Step", 1, "Trudge")
             moves["Rune Slam"] = Fn.new { Moves.get("Overhead Cleave", 1).rename("Rune Slam").heavy() }
@@ -307,7 +307,7 @@ class BattleCritter {
     // Stone Guardian (early elite): a long-window guard and one slow telegraphed slam.
     static stoneGuardian {
         var def = BattleCritter.fromSheet("Stone Guardian", GoblinVikingBattleSprite)
-        return def.stats(160, 100, 12, 5, 14, 12).natural(10, 1.2).trait("tax", 2).tint(Vec4.new(190, 190, 180, 255)).menu(Fn.new {
+        return def.stats(10, 100, 0, 0, 0, 12).natural(1, 1.2).trait("tax", 2).tint(Vec4.new(190, 190, 180, 255)).menu(Fn.new {
             var moves = {}
             moves["Rumble Step"] = BattleCritter.reskin("Step", 1, "Rumble Step")
             moves["Stone Slam"] = Fn.new { Moves.get("Overhead Cleave", 1).rename("Stone Slam").heavy() }
@@ -325,7 +325,7 @@ class BattleCritter {
     // Desperate Raider (human): rushes in - a Step, then a Lunge.
     static raider {
         var def = BattleCritter.fromSheet("Desperate Raider", WrestlerBattleSprite)
-        return def.stats(90, 80, 10, 5, 4, 12).gear("sabre", null, "padded").kit(["Step", "Lunge", "Slash", "Stab"]).menu(Fn.new {
+        return def.stats(6, 80, 0, 0, 0, 12).gear("sabre", null, "padded").kit(["Step", "Lunge", "Slash", "Stab"]).menu(Fn.new {
             var moves = {}
             moves["Step"] = Fn.new { Moves.get("Step", 1) }
             moves["Lunge"] = Fn.new { Moves.get("Lunge", 1) }
@@ -346,12 +346,12 @@ class BattleCritter {
 
     // Kira - the hunter's daughter and first companion: a short bow from the back row.
     static kira {
-        return BattleCritter.fromNpc("Kira").weaponLayer(YellowPantsGirlBattleWeaponSprite).stats(85, 80, 10, 8, 4, 12).gear("shortbow", null, "clothes").kit(["Step", "Quick Shot", "Brace"])
+        return BattleCritter.fromNpc("Kira").weaponLayer(YellowPantsGirlBattleWeaponSprite).stats(4, 80, 0, 0, 0, 12).gear("shortbow", null, "clothes").kit(["Step", "Quick Shot", "Brace"])
     }
 
     // Thomas - Kira's father, who teaches the three lessons. A plain sword, swung at the right time.
     static thomas {
-        return BattleCritter.fromNpc("Thomas").stats(110, 80, 12, 5, 6, 12).gear("armingsword", null, "padded").kit(["Step", "Slash", "Brace", "Pommel Strike"])
+        return BattleCritter.fromNpc("Thomas").stats(8, 80, 0, 0, 0, 12).gear("armingsword", null, "padded").kit(["Step", "Slash", "Brace", "Pommel Strike"])
     }
 
     // Master Finn, sparring: exactly the player's kit, holding back - big slow openings between his swings, and his
@@ -359,11 +359,11 @@ class BattleCritter {
     // hurt you (First Arc Script, scene 11).
     static finn {
         // Mid-fight, barely looking, he catches Kira's first arrow with a pair of tongs.
-        var def = BattleCritter.fromNpc("Finn").stats(180, 110, 0, 10, 10, 16).gear("armingsword", null, "leather").trait("catches", "Kira")
+        var def = BattleCritter.fromNpc("Finn").stats(10, 110, 0, 0, 0, 16).gear("armingsword", null, "leather").trait("catches", "Kira")
         return def.kit(["Step", "Slash", "Brace"]).menu(Fn.new {
             var moves = {}
             moves["Step"] = Fn.new { Moves.get("Step", 1) }
-            moves["Slash"] = Fn.new { Moves.get("Slash", 1).attackFlat(0.5, 4, 0.3) }
+            moves["Slash"] = Fn.new { Moves.get("Slash", 1).attackFlat(0.5, 1, 0.3) }
             moves["Brace"] = Fn.new { Moves.get("Brace", 1) }
             var combos = {}
             combos["Measure"] = [["Step", "toward"], ["Wait", 1.2], ["Slash"], ["Brace"], ["Wait", 0.8]]
@@ -376,12 +376,12 @@ class BattleCritter {
 
     // The Villager - a support caster who joins the party after the locket quest.
     static villager {
-        return BattleCritter.fromNpc("Villager").stats(80, 80, 6, 14, 3, 12).gear("wand", null, "robes").kit(["Step", "Spark", "Mend", "Ward"])
+        return BattleCritter.fromNpc("Villager").stats(5, 80, 0, 0, 0, 12).gear("wand", null, "robes").kit(["Step", "Spark", "Mend", "Ward"])
     }
 
     // The Duelist - a trained fencer you must beat to recruit: parry and riposte into a lunge.
     static duelist {
-        var def = BattleCritter.fromNpc("Duelist").stats(100, 90, 12, 5, 5, 13).gear("rapier", "parrydagger", "leather")
+        var def = BattleCritter.fromNpc("Duelist").stats(6, 90, 0, 0, 0, 13).gear("rapier", "parrydagger", "leather")
         return def.kit(["Step", "Stab", "Slash", "Lunge", "Parry", "Riposte"])
     }
 
@@ -389,39 +389,39 @@ class BattleCritter {
 
     // Lesson 1's rotten stump (first arc, scene 4): it doesn't fight back.
     static practiceStump {
-        return BattleCritter.fromSheet("Practice Stump", GoblinVikingBattleSprite).stats(110, 0, 0, 0, 0, 0).trait("passive", true).trait("immovable", true).tint(Vec4.new(170, 130, 95, 255))
+        return BattleCritter.fromSheet("Practice Stump", GoblinVikingBattleSprite).stats(8, 0, 0, 0, 0, 0).trait("passive", true).trait("immovable", true).tint(Vec4.new(170, 130, 95, 255))
     }
 
     // Lesson 2's swing-post: every time it is hit while still, its arm comes round at the cell in front of it 0.8 s
     // later.
     static swingPost {
-        var def = BattleCritter.fromSheet("Swing-post", GoblinVikingBattleSprite).stats(90, 0, 10, 0, 0, 0)
+        var def = BattleCritter.fromSheet("Swing-post", GoblinVikingBattleSprite).stats(6, 0, 0, 0, 0, 0)
         def.trait("passive", true).trait("immovable", true).trait("noStamina", true).tint(Vec4.new(205, 175, 120, 255))
         return def.trait("reactive", Fn.new {
-            return Move.new("Arm Swing", 1, 1.2, 0).attackFlat(0.8, 13, 0.4).reach(1).heavy().react("unflinching").anim("attack")
+            return Move.new("Arm Swing", 1, 1.2, 0).attackFlat(0.8, 2, 0.4).reach(1).heavy().react("unflinching").anim("attack")
         })
     }
 
     // Thomas's training dummy (first arc, the lesson's first part): it never fights back, and the lesson ends by
     // script rather than by breaking it.
     static lessonDummy {
-        return BattleCritter.fromSheet("Training Dummy", GoblinVikingBattleSprite).stats(300, 0, 0, 0, 0, 0).trait("passive", true).trait("immovable", true).tint(Vec4.new(170, 130, 95, 255))
+        return BattleCritter.fromSheet("Training Dummy", GoblinVikingBattleSprite).stats(9, 0, 0, 0, 0, 0).trait("passive", true).trait("immovable", true).trait("endless", true).tint(Vec4.new(170, 130, 95, 255))
     }
 
     // Thomas's snap-post (the lesson's last part, standing in for a thornwolf): whenever someone starts a chain in the
     // cell in front of it, it snaps at them half a second later - Brace first, then hit it while it's still.
     static snapPost {
-        var def = BattleCritter.fromSheet("Snap-post", GoblinVikingBattleSprite).stats(400, 0, 6, 0, 0, 0)
+        var def = BattleCritter.fromSheet("Snap-post", GoblinVikingBattleSprite).stats(30, 0, 0, 0, 0, 0)
         def.trait("passive", true).trait("immovable", true).trait("noStamina", true).tint(Vec4.new(150, 120, 90, 255))
         return def.trait("snaps", Fn.new {
-            return Move.new("Snap", 1, 0.9, 0).attackFlat(0.5, 8, 0.3).reach(1).anim("attack")
+            return Move.new("Snap", 1, 0.9, 0).attackFlat(0.5, 1, 0.3).reach(1).anim("attack")
         })
     }
 
     // The Training Dummy (States/BattleTestState.wren): a punching bag for trying moves and gear. Effectively endless
     // HP and it never acts, so the damage and stagger it shows are a neutral baseline.
     static trainingDummy {
-        return BattleCritter.fromSheet("Training Dummy", GoblinVikingBattleSprite).stats(9999, 0, 0, 0, 5, 0).trait("passive", true)
+        return BattleCritter.fromSheet("Training Dummy", GoblinVikingBattleSprite).stats(9, 0, 0, 0, 0, 0).trait("passive", true).trait("endless", true)
     }
 
     // A def wearing the generated battle sheet of the NPC called `name`.

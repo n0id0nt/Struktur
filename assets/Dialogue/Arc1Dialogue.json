@@ -2,11 +2,56 @@
   {
     "node": "rest_spot",
     "data": {
-      "text": "dialogue.arc1.rest_spot",
       "commands": [
+        {
+          "type": "playAnimation",
+          "parameters": [
+            {
+              "type": "who",
+              "value": "Player"
+            },
+            {
+              "type": "animation",
+              "value": "SittingIdle"
+            },
+            {
+              "type": "wait",
+              "value": 1.0
+            }
+          ]
+        },
         {
           "type": "restParty",
           "parameters": []
+        }
+      ],
+      "next": "rest_spot_up"
+    }
+  },
+  {
+    "node": "rest_spot_up",
+    "data": {
+      "commands": [
+        {
+          "type": "playAnimation",
+          "parameters": [
+            {
+              "type": "who",
+              "value": "Player"
+            },
+            {
+              "type": "animation",
+              "value": "GettingUp"
+            },
+            {
+              "type": "wait",
+              "value": 1.0
+            },
+            {
+              "type": "then",
+              "value": "Idle"
+            }
+          ]
         }
       ]
     }
@@ -46,11 +91,56 @@
   {
     "node": "rest_bed_sleep",
     "data": {
-      "text": "dialogue.arc1.rest_bed_sleep",
       "commands": [
+        {
+          "type": "playAnimation",
+          "parameters": [
+            {
+              "type": "who",
+              "value": "Player"
+            },
+            {
+              "type": "animation",
+              "value": "LyingDown"
+            },
+            {
+              "type": "wait",
+              "value": 1.0
+            }
+          ]
+        },
         {
           "type": "restParty",
           "parameters": []
+        }
+      ],
+      "next": "rest_bed_sleep_up"
+    }
+  },
+  {
+    "node": "rest_bed_sleep_up",
+    "data": {
+      "commands": [
+        {
+          "type": "playAnimation",
+          "parameters": [
+            {
+              "type": "who",
+              "value": "Player"
+            },
+            {
+              "type": "animation",
+              "value": "GettingUp"
+            },
+            {
+              "type": "wait",
+              "value": 1.0
+            },
+            {
+              "type": "then",
+              "value": "Idle"
+            }
+          ]
         }
       ]
     }
@@ -58,8 +148,6 @@
   {
     "node": "bed_sign",
     "data": {
-      "text": "dialogue.arc1.bed_sign",
-      "speaker": "Narrator",
       "next": "bed_wake",
       "commands": [
         {
@@ -74,15 +162,34 @@
               "value": 1.0
             }
           ]
+        },
+        {
+          "type": "playAnimation",
+          "parameters": [
+            {
+              "type": "who",
+              "value": "Player"
+            },
+            {
+              "type": "animation",
+              "value": "GettingUp"
+            },
+            {
+              "type": "wait",
+              "value": 1.0
+            },
+            {
+              "type": "then",
+              "value": "Idle"
+            }
+          ]
         }
       ]
     }
   },
   {
     "node": "bed_wake",
-    "data": {
-      "text": "dialogue.arc1.bed_wake"
-    }
+    "data": {}
   },
   {
     "node": "opening",
@@ -97,7 +204,6 @@
   {
     "node": "workshop_stairs",
     "data": {
-      "text": "dialogue.arc1.workshop_stairs",
       "next": "workshop_walk",
       "commands": [
         {
@@ -390,7 +496,7 @@
           ]
         },
         {
-          "node": "finn_map_walk",
+          "node": "finn_map_greet",
           "conditions": [
             {
               "type": "hasIntFlag",
@@ -406,6 +512,28 @@
                 {
                   "type": "value",
                   "value": 3.0
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "node": "finn_reminder_thomas",
+          "conditions": [
+            {
+              "type": "hasIntFlag",
+              "parameters": [
+                {
+                  "type": "flag",
+                  "value": "arc1_stage"
+                },
+                {
+                  "type": "op",
+                  "value": "=="
+                },
+                {
+                  "type": "value",
+                  "value": 2.0
                 }
               ]
             }
@@ -447,6 +575,15 @@
       "next": "finn_s1_2",
       "commands": [
         {
+          "type": "expression",
+          "parameters": [
+            {
+              "type": "mood",
+              "value": "squinting"
+            }
+          ]
+        },
+        {
           "type": "face",
           "parameters": [
             {
@@ -471,6 +608,19 @@
               "value": "Player"
             }
           ]
+        },
+        {
+          "type": "playAnimation",
+          "parameters": [
+            {
+              "type": "who",
+              "value": "Finn"
+            },
+            {
+              "type": "animation",
+              "value": "Inspecting"
+            }
+          ]
         }
       ]
     }
@@ -486,8 +636,30 @@
   {
     "node": "finn_s1_hammer",
     "data": {
-      "text": "dialogue.arc1.finn_s1_hammer",
-      "next": "finn_s1_hammer_2"
+      "next": "finn_s1_hammer_2",
+      "commands": [
+        {
+          "type": "playAnimation",
+          "parameters": [
+            {
+              "type": "who",
+              "value": "Finn"
+            },
+            {
+              "type": "animation",
+              "value": "PickingUp"
+            },
+            {
+              "type": "wait",
+              "value": 1.0
+            },
+            {
+              "type": "then",
+              "value": "Idle"
+            }
+          ]
+        }
+      ]
     }
   },
   {
@@ -495,7 +667,18 @@
     "data": {
       "text": "dialogue.arc1.finn_s1_hammer_2",
       "speaker": "Finn",
-      "next": "finn_s1_task"
+      "next": "finn_s1_task",
+      "commands": [
+        {
+          "type": "expression",
+          "parameters": [
+            {
+              "type": "mood",
+              "value": "caught out"
+            }
+          ]
+        }
+      ]
     }
   },
   {
@@ -540,7 +723,39 @@
     "data": {
       "text": "dialogue.arc1.finn_s1_a2",
       "speaker": "Finn",
-      "next": "finn_s1_end"
+      "next": "finn_s1_end",
+      "commands": [
+        {
+          "type": "expression",
+          "parameters": [
+            {
+              "type": "mood",
+              "value": "straining"
+            }
+          ]
+        },
+        {
+          "type": "playAnimation",
+          "parameters": [
+            {
+              "type": "who",
+              "value": "Finn"
+            },
+            {
+              "type": "animation",
+              "value": "Lifting"
+            },
+            {
+              "type": "wait",
+              "value": 1.0
+            },
+            {
+              "type": "then",
+              "value": "Idle"
+            }
+          ]
+        }
+      ]
     }
   },
   {
@@ -625,6 +840,28 @@
               "value": "FinnBackToPlayer"
             }
           ]
+        }
+      ],
+      "next": "finn_fetch_4"
+    }
+  },
+  {
+    "node": "finn_fetch_4",
+    "data": {
+      "next": "finn_s1_end_2",
+      "commands": [
+        {
+          "type": "face",
+          "parameters": [
+            {
+              "type": "who",
+              "value": "Player"
+            },
+            {
+              "type": "towards",
+              "value": "down"
+            }
+          ]
         },
         {
           "type": "moveToPlayer",
@@ -635,8 +872,7 @@
             }
           ]
         }
-      ],
-      "next": "finn_s1_end_2"
+      ]
     }
   },
   {
@@ -646,6 +882,27 @@
       "speaker": "Finn",
       "next": "finn_to_anvil",
       "commands": [
+        {
+          "type": "playAnimation",
+          "parameters": [
+            {
+              "type": "who",
+              "value": "Player"
+            },
+            {
+              "type": "animation",
+              "value": "Lifting"
+            },
+            {
+              "type": "wait",
+              "value": 0.0
+            },
+            {
+              "type": "then",
+              "value": "Idle"
+            }
+          ]
+        },
         {
           "type": "giveItem",
           "parameters": [
@@ -733,6 +990,29 @@
     "node": "finn_reminder",
     "data": {
       "text": "dialogue.arc1.finn_reminder",
+      "speaker": "Finn",
+      "next": "finn_working",
+      "commands": [
+        {
+          "type": "face",
+          "parameters": [
+            {
+              "type": "who",
+              "value": "Finn"
+            },
+            {
+              "type": "towards",
+              "value": "Player"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "node": "finn_reminder_thomas",
+    "data": {
+      "text": "dialogue.arc1.finn_reminder_thomas",
       "speaker": "Finn",
       "next": "finn_working",
       "commands": [
@@ -852,6 +1132,36 @@
       "speaker": "Elena",
       "commands": [
         {
+          "type": "expression",
+          "parameters": [
+            {
+              "type": "mood",
+              "value": "fussing"
+            }
+          ]
+        },
+        {
+          "type": "playAnimation",
+          "parameters": [
+            {
+              "type": "who",
+              "value": "Player"
+            },
+            {
+              "type": "animation",
+              "value": "Lifting"
+            },
+            {
+              "type": "wait",
+              "value": 0.0
+            },
+            {
+              "type": "then",
+              "value": "Idle"
+            }
+          ]
+        },
+        {
           "type": "giveItem",
           "parameters": [
             {
@@ -886,6 +1196,15 @@
       "text": "dialogue.arc1.elena_rations",
       "speaker": "Elena",
       "commands": [
+        {
+          "type": "expression",
+          "parameters": [
+            {
+              "type": "mood",
+              "value": "out of breath"
+            }
+          ]
+        },
         {
           "type": "giveItem",
           "parameters": [
@@ -1007,6 +1326,15 @@
       "speaker": "Garrett",
       "commands": [
         {
+          "type": "expression",
+          "parameters": [
+            {
+              "type": "mood",
+              "value": "glaring"
+            }
+          ]
+        },
+        {
           "type": "setIntFlag",
           "parameters": [
             {
@@ -1107,6 +1435,27 @@
     "data": {
       "text": "dialogue.arc1.well_puzzle_done",
       "commands": [
+        {
+          "type": "playAnimation",
+          "parameters": [
+            {
+              "type": "who",
+              "value": "Player"
+            },
+            {
+              "type": "animation",
+              "value": "Lifting"
+            },
+            {
+              "type": "wait",
+              "value": 1.0
+            },
+            {
+              "type": "then",
+              "value": "Idle"
+            }
+          ]
+        },
         {
           "type": "setIntFlag",
           "parameters": [
@@ -1287,14 +1636,36 @@
           "text": "dialogue.arc1.child_s5.choice3"
         }
       ],
-      "speaker": "Child"
+      "speaker": "Child",
+      "commands": [
+        {
+          "type": "expression",
+          "parameters": [
+            {
+              "type": "mood",
+              "value": "eager"
+            }
+          ]
+        }
+      ]
     }
   },
   {
     "node": "child_s5_end",
     "data": {
       "text": "dialogue.arc1.child_s5_end",
-      "speaker": "Child"
+      "speaker": "Child",
+      "commands": [
+        {
+          "type": "expression",
+          "parameters": [
+            {
+              "type": "mood",
+              "value": "excited"
+            }
+          ]
+        }
+      ]
     }
   },
   {
@@ -1322,7 +1693,18 @@
     "node": "child_return_end",
     "data": {
       "text": "dialogue.arc1.child_return_end",
-      "speaker": "Child"
+      "speaker": "Child",
+      "commands": [
+        {
+          "type": "expression",
+          "parameters": [
+            {
+              "type": "mood",
+              "value": "wide-eyed"
+            }
+          ]
+        }
+      ]
     }
   },
   {
@@ -1360,50 +1742,9 @@
   {
     "node": "kira_early_walk",
     "data": {
-      "commands": [
-        {
-          "type": "moveTo",
-          "parameters": [
-            {
-              "type": "who",
-              "value": "Kira"
-            },
-            {
-              "type": "to",
-              "value": "KiraAtTargets"
-            }
-          ]
-        }
-      ],
-      "next": "kira_early"
-    }
-  },
-  {
-    "node": "kira_s3_walk",
-    "data": {
-      "commands": [
-        {
-          "type": "moveTo",
-          "parameters": [
-            {
-              "type": "who",
-              "value": "Kira"
-            },
-            {
-              "type": "to",
-              "value": "KiraAtTargets"
-            }
-          ]
-        }
-      ],
-      "next": "kira_s3"
-    }
-  },
-  {
-    "node": "kira_early",
-    "data": {
-      "text": "dialogue.arc1.kira_early",
+      "text": "dialogue.arc1.kira_early_walk",
       "speaker": "Kira",
+      "next": "kira_early_spot",
       "commands": [
         {
           "type": "face",
@@ -1415,6 +1756,401 @@
             {
               "type": "towards",
               "value": "Player"
+            }
+          ]
+        },
+        {
+          "type": "face",
+          "parameters": [
+            {
+              "type": "who",
+              "value": "Player"
+            },
+            {
+              "type": "towards",
+              "value": "Kira"
+            }
+          ]
+        },
+        {
+          "type": "expression",
+          "parameters": [
+            {
+              "type": "mood",
+              "value": "cheerful"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "node": "kira_early_spot",
+    "data": {
+      "next": "kira_early_face",
+      "commands": [
+        {
+          "type": "moveTo",
+          "parameters": [
+            {
+              "type": "who",
+              "value": "Kira"
+            },
+            {
+              "type": "to",
+              "value": "KiraToTrainingSpot"
+            }
+          ]
+        },
+        {
+          "type": "moveTo",
+          "parameters": [
+            {
+              "type": "who",
+              "value": "Player"
+            },
+            {
+              "type": "to",
+              "value": "PlayerWatchesKira"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "node": "kira_early_face",
+    "data": {
+      "next": "kira_early_watch",
+      "commands": [
+        {
+          "type": "face",
+          "parameters": [
+            {
+              "type": "who",
+              "value": "Kira"
+            },
+            {
+              "type": "towards",
+              "value": "right"
+            }
+          ]
+        },
+        {
+          "type": "face",
+          "parameters": [
+            {
+              "type": "who",
+              "value": "Player"
+            },
+            {
+              "type": "towards",
+              "value": "right"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "node": "kira_early_watch",
+    "data": {
+      "text": "dialogue.arc1.kira_early_watch",
+      "speaker": "Kira",
+      "next": "kira_early_shot",
+      "commands": [
+        {
+          "type": "expression",
+          "parameters": [
+            {
+              "type": "mood",
+              "value": "focused"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "node": "kira_early_shot",
+    "data": {
+      "next": "kira_early",
+      "commands": [
+        {
+          "type": "playAnimation",
+          "parameters": [
+            {
+              "type": "who",
+              "value": "Kira"
+            },
+            {
+              "type": "animation",
+              "value": "Shoot"
+            },
+            {
+              "type": "wait",
+              "value": 1.0
+            },
+            {
+              "type": "then",
+              "value": "Idle"
+            }
+          ]
+        },
+        {
+          "type": "shootArrow",
+          "parameters": [
+            {
+              "type": "who",
+              "value": "Kira"
+            },
+            {
+              "type": "distance",
+              "value": 70.0
+            },
+            {
+              "type": "delay",
+              "value": 0.75
+            }
+          ]
+        },
+        {
+          "type": "wait",
+          "parameters": [
+            {
+              "type": "seconds",
+              "value": 0.5
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "node": "kira_s3_walk",
+    "data": {
+      "text": "dialogue.arc1.kira_s3_walk",
+      "speaker": "Kira",
+      "next": "kira_s3_spot",
+      "commands": [
+        {
+          "type": "face",
+          "parameters": [
+            {
+              "type": "who",
+              "value": "Kira"
+            },
+            {
+              "type": "towards",
+              "value": "Player"
+            }
+          ]
+        },
+        {
+          "type": "face",
+          "parameters": [
+            {
+              "type": "who",
+              "value": "Player"
+            },
+            {
+              "type": "towards",
+              "value": "Kira"
+            }
+          ]
+        },
+        {
+          "type": "expression",
+          "parameters": [
+            {
+              "type": "mood",
+              "value": "cheerful"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "node": "kira_s3_spot",
+    "data": {
+      "next": "kira_s3_face",
+      "commands": [
+        {
+          "type": "moveTo",
+          "parameters": [
+            {
+              "type": "who",
+              "value": "Kira"
+            },
+            {
+              "type": "to",
+              "value": "KiraToTrainingSpot"
+            }
+          ]
+        },
+        {
+          "type": "moveTo",
+          "parameters": [
+            {
+              "type": "who",
+              "value": "Player"
+            },
+            {
+              "type": "to",
+              "value": "PlayerWatchesKira"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "node": "kira_s3_face",
+    "data": {
+      "next": "kira_s3_watch",
+      "commands": [
+        {
+          "type": "face",
+          "parameters": [
+            {
+              "type": "who",
+              "value": "Kira"
+            },
+            {
+              "type": "towards",
+              "value": "right"
+            }
+          ]
+        },
+        {
+          "type": "face",
+          "parameters": [
+            {
+              "type": "who",
+              "value": "Player"
+            },
+            {
+              "type": "towards",
+              "value": "right"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "node": "kira_s3_watch",
+    "data": {
+      "text": "dialogue.arc1.kira_s3_watch",
+      "speaker": "Kira",
+      "next": "kira_s3_shot",
+      "commands": [
+        {
+          "type": "expression",
+          "parameters": [
+            {
+              "type": "mood",
+              "value": "focused"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "node": "kira_s3_shot",
+    "data": {
+      "next": "kira_s3",
+      "commands": [
+        {
+          "type": "playAnimation",
+          "parameters": [
+            {
+              "type": "who",
+              "value": "Kira"
+            },
+            {
+              "type": "animation",
+              "value": "Shoot"
+            },
+            {
+              "type": "wait",
+              "value": 1.0
+            },
+            {
+              "type": "then",
+              "value": "Idle"
+            }
+          ]
+        },
+        {
+          "type": "shootArrow",
+          "parameters": [
+            {
+              "type": "who",
+              "value": "Kira"
+            },
+            {
+              "type": "distance",
+              "value": 70.0
+            },
+            {
+              "type": "delay",
+              "value": 0.75
+            }
+          ]
+        },
+        {
+          "type": "wait",
+          "parameters": [
+            {
+              "type": "seconds",
+              "value": 0.5
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "node": "kira_early",
+    "data": {
+      "text": "dialogue.arc1.kira_early",
+      "speaker": "Kira",
+      "commands": [
+        {
+          "type": "expression",
+          "parameters": [
+            {
+              "type": "mood",
+              "value": "pleased"
+            }
+          ]
+        },
+        {
+          "type": "face",
+          "parameters": [
+            {
+              "type": "who",
+              "value": "Kira"
+            },
+            {
+              "type": "towards",
+              "value": "Player"
+            }
+          ]
+        },
+        {
+          "type": "face",
+          "parameters": [
+            {
+              "type": "who",
+              "value": "Player"
+            },
+            {
+              "type": "towards",
+              "value": "Kira"
             }
           ]
         }
@@ -1429,6 +2165,15 @@
       "next": "kira_s3_facts",
       "commands": [
         {
+          "type": "expression",
+          "parameters": [
+            {
+              "type": "mood",
+              "value": "chewing"
+            }
+          ]
+        },
+        {
           "type": "face",
           "parameters": [
             {
@@ -1438,6 +2183,19 @@
             {
               "type": "towards",
               "value": "Player"
+            }
+          ]
+        },
+        {
+          "type": "face",
+          "parameters": [
+            {
+              "type": "who",
+              "value": "Player"
+            },
+            {
+              "type": "towards",
+              "value": "Kira"
             }
           ]
         }
@@ -1474,7 +2232,18 @@
     "data": {
       "text": "dialogue.arc1.kira_s3_a1",
       "speaker": "Kira",
-      "next": "kira_s3_menu2"
+      "next": "kira_s3_menu2",
+      "commands": [
+        {
+          "type": "expression",
+          "parameters": [
+            {
+              "type": "mood",
+              "value": "proud"
+            }
+          ]
+        }
+      ]
     }
   },
   {
@@ -1499,7 +2268,40 @@
     "data": {
       "text": "dialogue.arc1.kira_s3_a2",
       "speaker": "Kira",
-      "next": "kira_s3_end"
+      "next": "kira_s3_end",
+      "commands": [
+        {
+          "type": "expression",
+          "parameters": [
+            {
+              "type": "mood",
+              "value": "confident"
+            }
+          ]
+        },
+        {
+          "type": "playAnimation",
+          "parameters": [
+            {
+              "type": "who",
+              "value": "Kira"
+            },
+            {
+              "type": "animation",
+              "value": "Inspecting"
+            }
+          ]
+        },
+        {
+          "type": "closeUp",
+          "parameters": [
+            {
+              "type": "image",
+              "value": "CloseUps/kira_book_upside_down.png"
+            }
+          ]
+        }
+      ]
     }
   },
   {
@@ -1507,7 +2309,26 @@
     "data": {
       "text": "dialogue.arc1.kira_s3_end",
       "speaker": "Kira",
-      "next": "kira_comes_over"
+      "next": "kira_comes_over",
+      "commands": [
+        {
+          "type": "closeUpEnd",
+          "parameters": []
+        },
+        {
+          "type": "playAnimation",
+          "parameters": [
+            {
+              "type": "who",
+              "value": "Kira"
+            },
+            {
+              "type": "animation",
+              "value": "Idle"
+            }
+          ]
+        }
+      ]
     }
   },
   {
@@ -1858,7 +2679,7 @@
           ]
         },
         {
-          "node": "thomas_after",
+          "node": "thomas_heal_test",
           "conditions": [
             {
               "type": "hasIntFlag",
@@ -1947,6 +2768,101 @@
                 {
                   "type": "value",
                   "value": 3.0
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "node": "thomas_gate_done",
+          "conditions": [
+            {
+              "type": "hasIntFlag",
+              "parameters": [
+                {
+                  "type": "flag",
+                  "value": "arc1_stage"
+                },
+                {
+                  "type": "op",
+                  "value": "=="
+                },
+                {
+                  "type": "value",
+                  "value": 2.0
+                }
+              ]
+            },
+            {
+              "type": "hasIntFlag",
+              "parameters": [
+                {
+                  "type": "flag",
+                  "value": "thomas_place"
+                },
+                {
+                  "type": "op",
+                  "value": "=="
+                },
+                {
+                  "type": "value",
+                  "value": 2.0
+                }
+              ]
+            },
+            {
+              "type": "hasIntFlag",
+              "parameters": [
+                {
+                  "type": "flag",
+                  "value": "defeated_StarvingThornwolf"
+                },
+                {
+                  "type": "op",
+                  "value": ">="
+                },
+                {
+                  "type": "value",
+                  "value": 1.0
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "node": "thomas_gate",
+          "conditions": [
+            {
+              "type": "hasIntFlag",
+              "parameters": [
+                {
+                  "type": "flag",
+                  "value": "arc1_stage"
+                },
+                {
+                  "type": "op",
+                  "value": "=="
+                },
+                {
+                  "type": "value",
+                  "value": 2.0
+                }
+              ]
+            },
+            {
+              "type": "hasIntFlag",
+              "parameters": [
+                {
+                  "type": "flag",
+                  "value": "thomas_place"
+                },
+                {
+                  "type": "op",
+                  "value": "=="
+                },
+                {
+                  "type": "value",
+                  "value": 2.0
                 }
               ]
             }
@@ -2048,7 +2964,7 @@
           ]
         },
         {
-          "node": "thomas_lesson_done",
+          "node": "thomas_heal_after",
           "conditions": [
             {
               "type": "hasIntFlag",
@@ -2072,7 +2988,63 @@
               "parameters": [
                 {
                   "type": "flag",
+                  "value": "thomas_place"
+                },
+                {
+                  "type": "op",
+                  "value": "=="
+                },
+                {
+                  "type": "value",
+                  "value": 1.0
+                }
+              ]
+            },
+            {
+              "type": "hasIntFlag",
+              "parameters": [
+                {
+                  "type": "flag",
                   "value": "duel_won_Thomas"
+                },
+                {
+                  "type": "op",
+                  "value": "=="
+                },
+                {
+                  "type": "value",
+                  "value": 1.0
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "node": "thomas_grounds",
+          "conditions": [
+            {
+              "type": "hasIntFlag",
+              "parameters": [
+                {
+                  "type": "flag",
+                  "value": "arc1_stage"
+                },
+                {
+                  "type": "op",
+                  "value": "=="
+                },
+                {
+                  "type": "value",
+                  "value": 2.0
+                }
+              ]
+            },
+            {
+              "type": "hasIntFlag",
+              "parameters": [
+                {
+                  "type": "flag",
+                  "value": "thomas_place"
                 },
                 {
                   "type": "op",
@@ -2118,7 +3090,31 @@
     "node": "thomas_early",
     "data": {
       "text": "dialogue.arc1.thomas_early",
-      "speaker": "Thomas"
+      "speaker": "Thomas",
+      "commands": [
+        {
+          "type": "expression",
+          "parameters": [
+            {
+              "type": "mood",
+              "value": "focused"
+            }
+          ]
+        },
+        {
+          "type": "playAnimation",
+          "parameters": [
+            {
+              "type": "who",
+              "value": "Thomas"
+            },
+            {
+              "type": "animation",
+              "value": "Working"
+            }
+          ]
+        }
+      ]
     }
   },
   {
@@ -2126,7 +3122,31 @@
     "data": {
       "text": "dialogue.arc1.thomas_s4",
       "speaker": "Thomas",
-      "next": "thomas_s4_menu"
+      "next": "thomas_s4_menu",
+      "commands": [
+        {
+          "type": "expression",
+          "parameters": [
+            {
+              "type": "mood",
+              "value": "pleased"
+            }
+          ]
+        },
+        {
+          "type": "face",
+          "parameters": [
+            {
+              "type": "who",
+              "value": "Thomas"
+            },
+            {
+              "type": "towards",
+              "value": "Player"
+            }
+          ]
+        }
+      ]
     }
   },
   {
@@ -2155,7 +3175,18 @@
     "data": {
       "text": "dialogue.arc1.thomas_s4_a1",
       "speaker": "Thomas",
-      "next": "thomas_s4_end"
+      "next": "thomas_s4_end",
+      "commands": [
+        {
+          "type": "expression",
+          "parameters": [
+            {
+              "type": "mood",
+              "value": "chuckling"
+            }
+          ]
+        }
+      ]
     }
   },
   {
@@ -2163,7 +3194,18 @@
     "data": {
       "text": "dialogue.arc1.thomas_s4_a2",
       "speaker": "Thomas",
-      "next": "thomas_s4_end"
+      "next": "thomas_s4_end",
+      "commands": [
+        {
+          "type": "expression",
+          "parameters": [
+            {
+              "type": "mood",
+              "value": "nodding"
+            }
+          ]
+        }
+      ]
     }
   },
   {
@@ -2171,7 +3213,18 @@
     "data": {
       "text": "dialogue.arc1.thomas_s4_a3",
       "speaker": "Thomas",
-      "next": "thomas_s4_end"
+      "next": "thomas_s4_end",
+      "commands": [
+        {
+          "type": "expression",
+          "parameters": [
+            {
+              "type": "mood",
+              "value": "rueful"
+            }
+          ]
+        }
+      ]
     }
   },
   {
@@ -2179,13 +3232,106 @@
     "data": {
       "text": "dialogue.arc1.thomas_s4_end",
       "speaker": "Thomas",
-      "next": "thomas_s4_end_2"
+      "next": "thomas_s4_end_2",
+      "commands": [
+        {
+          "type": "expression",
+          "parameters": [
+            {
+              "type": "mood",
+              "value": "serious"
+            }
+          ]
+        }
+      ]
     }
   },
   {
-    "node": "thomas_s4_end_2",
+    "node": "thomas_heal_before",
     "data": {
-      "text": "dialogue.arc1.thomas_s4_end_2",
+      "text": "dialogue.arc1.thomas_heal_before",
+      "speaker": "Thomas",
+      "next": "thomas_heal_before_drink",
+      "commands": [
+        {
+          "type": "face",
+          "parameters": [
+            {
+              "type": "who",
+              "value": "Thomas"
+            },
+            {
+              "type": "towards",
+              "value": "Player"
+            }
+          ]
+        },
+        {
+          "type": "giveItem",
+          "parameters": [
+            {
+              "type": "item",
+              "value": "Healing Potion"
+            },
+            {
+              "type": "count",
+              "value": 1.0
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "node": "thomas_heal_before_drink",
+    "data": {
+      "next": "thomas_grounds_start",
+      "commands": [
+        {
+          "type": "playAnimation",
+          "parameters": [
+            {
+              "type": "who",
+              "value": "Player"
+            },
+            {
+              "type": "animation",
+              "value": "Drinking"
+            },
+            {
+              "type": "wait",
+              "value": 1.0
+            },
+            {
+              "type": "then",
+              "value": "Idle"
+            }
+          ]
+        },
+        {
+          "type": "removeItem",
+          "parameters": [
+            {
+              "type": "item",
+              "value": "Healing Potion"
+            },
+            {
+              "type": "count",
+              "value": 1.0
+            }
+          ]
+        },
+        {
+          "type": "restParty",
+          "parameters": []
+        }
+      ]
+    }
+  },
+  {
+    "node": "thomas_grounds_start",
+    "data": {
+      "text": "dialogue.arc1.thomas_grounds_start",
       "speaker": "Thomas",
       "commands": [
         {
@@ -2201,11 +3347,185 @@
     }
   },
   {
+    "node": "thomas_s4_end_2",
+    "data": {
+      "text": "dialogue.arc1.thomas_s4_end_2",
+      "speaker": "Thomas",
+      "next": "thomas_leaves_cabin"
+    }
+  },
+  {
+    "node": "thomas_leaves_cabin",
+    "data": {
+      "next": "thomas_gone_to_grounds",
+      "commands": [
+        {
+          "type": "moveTo",
+          "parameters": [
+            {
+              "type": "who",
+              "value": "Thomas"
+            },
+            {
+              "type": "to",
+              "value": "ThomasLeavesCabin"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "node": "thomas_gone_to_grounds",
+    "data": {
+      "commands": [
+        {
+          "type": "setIntFlag",
+          "parameters": [
+            {
+              "type": "flag",
+              "value": "thomas_place"
+            },
+            {
+              "type": "value",
+              "value": 1.0
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "node": "thomas_grounds",
+    "data": {
+      "text": "dialogue.arc1.thomas_grounds",
+      "speaker": "Thomas",
+      "next": "thomas_heal_before",
+      "commands": [
+        {
+          "type": "face",
+          "parameters": [
+            {
+              "type": "who",
+              "value": "Thomas"
+            },
+            {
+              "type": "towards",
+              "value": "Player"
+            }
+          ]
+        },
+        {
+          "type": "expression",
+          "parameters": [
+            {
+              "type": "mood",
+              "value": "pleased"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "node": "thomas_heal_after",
+    "data": {
+      "text": "dialogue.arc1.thomas_heal_after",
+      "speaker": "Thomas",
+      "next": "thomas_heal_after_drink",
+      "commands": [
+        {
+          "type": "face",
+          "parameters": [
+            {
+              "type": "who",
+              "value": "Thomas"
+            },
+            {
+              "type": "towards",
+              "value": "Player"
+            }
+          ]
+        },
+        {
+          "type": "giveItem",
+          "parameters": [
+            {
+              "type": "item",
+              "value": "Healing Potion"
+            },
+            {
+              "type": "count",
+              "value": 1.0
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "node": "thomas_heal_after_drink",
+    "data": {
+      "next": "thomas_lesson_done",
+      "commands": [
+        {
+          "type": "playAnimation",
+          "parameters": [
+            {
+              "type": "who",
+              "value": "Player"
+            },
+            {
+              "type": "animation",
+              "value": "Drinking"
+            },
+            {
+              "type": "wait",
+              "value": 1.0
+            },
+            {
+              "type": "then",
+              "value": "Idle"
+            }
+          ]
+        },
+        {
+          "type": "removeItem",
+          "parameters": [
+            {
+              "type": "item",
+              "value": "Healing Potion"
+            },
+            {
+              "type": "count",
+              "value": 1.0
+            }
+          ]
+        },
+        {
+          "type": "restParty",
+          "parameters": []
+        }
+      ]
+    }
+  },
+  {
     "node": "thomas_lesson_done",
     "data": {
       "text": "dialogue.arc1.thomas_lesson_done",
       "speaker": "Thomas",
-      "next": "thomas_lesson_done_2"
+      "next": "thomas_lesson_done_2",
+      "commands": [
+        {
+          "type": "expression",
+          "parameters": [
+            {
+              "type": "mood",
+              "value": "winded"
+            }
+          ]
+        }
+      ]
     }
   },
   {
@@ -2213,22 +3533,6 @@
     "data": {
       "text": "dialogue.arc1.thomas_lesson_done_2",
       "speaker": "Thomas",
-      "next": "thomas_lesson_done_3"
-    }
-  },
-  {
-    "node": "thomas_lesson_done_3",
-    "data": {
-      "text": "dialogue.arc1.thomas_lesson_done_3",
-      "speaker": "Thomas",
-      "next": "thomas_lesson_done_4"
-    }
-  },
-  {
-    "node": "thomas_lesson_done_4",
-    "data": {
-      "text": "dialogue.arc1.thomas_lesson_done_4",
-      "speaker": "Kira",
       "next": "thomas_lesson_done_5"
     }
   },
@@ -2237,6 +3541,7 @@
     "data": {
       "text": "dialogue.arc1.thomas_lesson_done_5",
       "speaker": "Thomas",
+      "next": "thomas_gone_to_gate",
       "commands": [
         {
           "type": "setIntFlag",
@@ -2268,6 +3573,209 @@
     }
   },
   {
+    "node": "thomas_gone_to_gate",
+    "data": {
+      "commands": [
+        {
+          "type": "setIntFlag",
+          "parameters": [
+            {
+              "type": "flag",
+              "value": "thomas_place"
+            },
+            {
+              "type": "value",
+              "value": 2.0
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "node": "thomas_gate",
+    "data": {
+      "text": "dialogue.arc1.thomas_gate",
+      "speaker": "Thomas",
+      "next": "thomas_gate_brace",
+      "commands": [
+        {
+          "type": "face",
+          "parameters": [
+            {
+              "type": "who",
+              "value": "Thomas"
+            },
+            {
+              "type": "towards",
+              "value": "Player"
+            }
+          ]
+        },
+        {
+          "type": "face",
+          "parameters": [
+            {
+              "type": "who",
+              "value": "Player"
+            },
+            {
+              "type": "towards",
+              "value": "Thomas"
+            }
+          ]
+        },
+        {
+          "type": "expression",
+          "parameters": [
+            {
+              "type": "mood",
+              "value": "serious"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "node": "thomas_gate_brace",
+    "data": {
+      "text": "dialogue.arc1.thomas_gate_brace",
+      "speaker": "Thomas",
+      "next": "thomas_gate_move",
+      "commands": [
+        {
+          "type": "unlockMove",
+          "parameters": [
+            {
+              "type": "name",
+              "value": "Brace"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "node": "thomas_gate_move",
+    "data": {
+      "text": "dialogue.arc1.thomas_gate_move",
+      "next": "thomas_gate_kira"
+    }
+  },
+  {
+    "node": "thomas_gate_kira",
+    "data": {
+      "text": "dialogue.arc1.thomas_gate_kira",
+      "speaker": "Kira",
+      "next": "thomas_gate_alone",
+      "commands": [
+        {
+          "type": "expression",
+          "parameters": [
+            {
+              "type": "mood",
+              "value": "eager"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "node": "thomas_gate_alone",
+    "data": {
+      "text": "dialogue.arc1.thomas_gate_alone",
+      "speaker": "Thomas",
+      "next": "thomas_gate_noticed",
+      "commands": [
+        {
+          "type": "expression",
+          "parameters": [
+            {
+              "type": "mood",
+              "value": "firm"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "node": "thomas_gate_noticed",
+    "data": {
+      "text": "dialogue.arc1.thomas_gate_noticed",
+      "speaker": "Thomas",
+      "commands": [
+        {
+          "type": "chargePlayer",
+          "parameters": []
+        },
+        {
+          "type": "expression",
+          "parameters": [
+            {
+              "type": "mood",
+              "value": "urgent"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "node": "thomas_gate_done",
+    "data": {
+      "text": "dialogue.arc1.thomas_gate_done",
+      "speaker": "Thomas",
+      "next": "thomas_gone_home",
+      "commands": [
+        {
+          "type": "face",
+          "parameters": [
+            {
+              "type": "who",
+              "value": "Thomas"
+            },
+            {
+              "type": "towards",
+              "value": "Player"
+            }
+          ]
+        },
+        {
+          "type": "expression",
+          "parameters": [
+            {
+              "type": "mood",
+              "value": "impressed"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "node": "thomas_gone_home",
+    "data": {
+      "commands": [
+        {
+          "type": "setIntFlag",
+          "parameters": [
+            {
+              "type": "flag",
+              "value": "thomas_place"
+            },
+            {
+              "type": "value",
+              "value": 0.0
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
     "node": "thomas_wolf_wait",
     "data": {
       "text": "dialogue.arc1.thomas_wolf_wait",
@@ -2279,7 +3787,18 @@
     "data": {
       "text": "dialogue.arc1.thomas_wolf_back",
       "speaker": "Thomas",
-      "next": "thomas_wolf_back_2"
+      "next": "thomas_wolf_back_2",
+      "commands": [
+        {
+          "type": "expression",
+          "parameters": [
+            {
+              "type": "mood",
+              "value": "impressed"
+            }
+          ]
+        }
+      ]
     }
   },
   {
@@ -2287,7 +3806,18 @@
     "data": {
       "text": "dialogue.arc1.thomas_wolf_back_2",
       "speaker": "Kira",
-      "next": "thomas_wolf_back_3"
+      "next": "thomas_wolf_back_3",
+      "commands": [
+        {
+          "type": "expression",
+          "parameters": [
+            {
+              "type": "mood",
+              "value": "sulky"
+            }
+          ]
+        }
+      ]
     }
   },
   {
@@ -2295,7 +3825,18 @@
     "data": {
       "text": "dialogue.arc1.thomas_wolf_back_3",
       "speaker": "Thomas",
-      "next": "thomas_wolf_back_4"
+      "next": "thomas_wolf_back_4",
+      "commands": [
+        {
+          "type": "expression",
+          "parameters": [
+            {
+              "type": "mood",
+              "value": "laughing"
+            }
+          ]
+        }
+      ]
     }
   },
   {
@@ -2343,6 +3884,88 @@
               "value": "Thomas"
             }
           ]
+        }
+      ]
+    }
+  },
+  {
+    "node": "thomas_heal_test",
+    "data": {
+      "text": "dialogue.arc1.thomas_heal_test",
+      "speaker": "Thomas",
+      "next": "thomas_heal_test_drink",
+      "commands": [
+        {
+          "type": "face",
+          "parameters": [
+            {
+              "type": "who",
+              "value": "Thomas"
+            },
+            {
+              "type": "towards",
+              "value": "Player"
+            }
+          ]
+        },
+        {
+          "type": "giveItem",
+          "parameters": [
+            {
+              "type": "item",
+              "value": "Healing Potion"
+            },
+            {
+              "type": "count",
+              "value": 1.0
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "node": "thomas_heal_test_drink",
+    "data": {
+      "next": "thomas_after",
+      "commands": [
+        {
+          "type": "playAnimation",
+          "parameters": [
+            {
+              "type": "who",
+              "value": "Player"
+            },
+            {
+              "type": "animation",
+              "value": "Drinking"
+            },
+            {
+              "type": "wait",
+              "value": 1.0
+            },
+            {
+              "type": "then",
+              "value": "Idle"
+            }
+          ]
+        },
+        {
+          "type": "removeItem",
+          "parameters": [
+            {
+              "type": "item",
+              "value": "Healing Potion"
+            },
+            {
+              "type": "count",
+              "value": 1.0
+            }
+          ]
+        },
+        {
+          "type": "restParty",
+          "parameters": []
         }
       ]
     }
@@ -2398,15 +4021,11 @@
     "data": {
       "commands": [
         {
-          "type": "moveTo",
+          "type": "moveToPlayer",
           "parameters": [
             {
               "type": "who",
               "value": "Thomas"
-            },
-            {
-              "type": "to",
-              "value": "ThomasBackToPair"
             }
           ]
         }
@@ -2459,6 +4078,27 @@
               "value": 1.0
             }
           ]
+        },
+        {
+          "type": "playAnimation",
+          "parameters": [
+            {
+              "type": "who",
+              "value": "Kira"
+            },
+            {
+              "type": "animation",
+              "value": "Lifting"
+            },
+            {
+              "type": "wait",
+              "value": 0.0
+            },
+            {
+              "type": "then",
+              "value": "Idle"
+            }
+          ]
         }
       ]
     }
@@ -2471,6 +4111,15 @@
       "next": "thomas_after_2_2",
       "commands": [
         {
+          "type": "expression",
+          "parameters": [
+            {
+              "type": "mood",
+              "value": "delighted"
+            }
+          ]
+        },
+        {
           "type": "face",
           "parameters": [
             {
@@ -2482,6 +4131,19 @@
               "value": "Player"
             }
           ]
+        },
+        {
+          "type": "playAnimation",
+          "parameters": [
+            {
+              "type": "who",
+              "value": "Kira"
+            },
+            {
+              "type": "animation",
+              "value": "Inspecting"
+            }
+          ]
         }
       ]
     }
@@ -2491,7 +4153,31 @@
     "data": {
       "text": "dialogue.arc1.thomas_after_2_2",
       "speaker": "Thomas",
-      "next": "thomas_after_2_3"
+      "next": "thomas_after_2_3",
+      "commands": [
+        {
+          "type": "expression",
+          "parameters": [
+            {
+              "type": "mood",
+              "value": "earnest"
+            }
+          ]
+        },
+        {
+          "type": "playAnimation",
+          "parameters": [
+            {
+              "type": "who",
+              "value": "Kira"
+            },
+            {
+              "type": "animation",
+              "value": "Idle"
+            }
+          ]
+        }
+      ]
     }
   },
   {
@@ -2540,12 +4226,122 @@
     "node": "thomas_violent",
     "data": {
       "text": "dialogue.arc1.thomas_violent",
-      "speaker": "Thomas"
+      "speaker": "Thomas",
+      "commands": [
+        {
+          "type": "expression",
+          "parameters": [
+            {
+              "type": "mood",
+              "value": "quiet"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "node": "finn_map_greet",
+    "data": {
+      "text": "dialogue.arc1.finn_map_greet",
+      "speaker": "Finn",
+      "next": "finn_map_greet_2",
+      "commands": [
+        {
+          "type": "face",
+          "parameters": [
+            {
+              "type": "who",
+              "value": "Finn"
+            },
+            {
+              "type": "towards",
+              "value": "Player"
+            }
+          ]
+        },
+        {
+          "type": "face",
+          "parameters": [
+            {
+              "type": "who",
+              "value": "Player"
+            },
+            {
+              "type": "towards",
+              "value": "Finn"
+            }
+          ]
+        },
+        {
+          "type": "expression",
+          "parameters": [
+            {
+              "type": "mood",
+              "value": "proud"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "node": "finn_map_greet_2",
+    "data": {
+      "text": "dialogue.arc1.finn_map_greet_2",
+      "speaker": "Finn",
+      "next": "finn_map_walk",
+      "commands": [
+        {
+          "type": "expression",
+          "parameters": [
+            {
+              "type": "mood",
+              "value": "warm"
+            }
+          ]
+        }
+      ]
     }
   },
   {
     "node": "finn_map_walk",
     "data": {
+      "next": "finn_map_walk_2",
+      "commands": [
+        {
+          "type": "moveTo",
+          "parameters": [
+            {
+              "type": "who",
+              "value": "Finn"
+            },
+            {
+              "type": "to",
+              "value": "FinnToParty"
+            },
+            {
+              "type": "wait",
+              "value": 0.0
+            }
+          ]
+        },
+        {
+          "type": "wait",
+          "parameters": [
+            {
+              "type": "seconds",
+              "value": 0.7
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "node": "finn_map_walk_2",
+    "data": {
+      "next": "finn_map",
       "commands": [
         {
           "type": "moveTo",
@@ -2560,29 +4356,7 @@
             }
           ]
         }
-      ],
-      "next": "finn_map_walk_2"
-    }
-  },
-  {
-    "node": "finn_map_walk_2",
-    "data": {
-      "commands": [
-        {
-          "type": "moveTo",
-          "parameters": [
-            {
-              "type": "who",
-              "value": "Finn"
-            },
-            {
-              "type": "to",
-              "value": "FinnToParty"
-            }
-          ]
-        }
-      ],
-      "next": "finn_map"
+      ]
     }
   },
   {
@@ -2592,6 +4366,15 @@
       "speaker": "Finn",
       "next": "finn_map_kira",
       "commands": [
+        {
+          "type": "expression",
+          "parameters": [
+            {
+              "type": "mood",
+              "value": "sly"
+            }
+          ]
+        },
         {
           "type": "face",
           "parameters": [
@@ -2674,6 +4457,19 @@
               "value": "Kira"
             }
           ]
+        },
+        {
+          "type": "playAnimation",
+          "parameters": [
+            {
+              "type": "who",
+              "value": "Kira"
+            },
+            {
+              "type": "animation",
+              "value": "Inspecting"
+            }
+          ]
         }
       ]
     }
@@ -2685,6 +4481,19 @@
       "speaker": "Finn",
       "next": "finn_map_doors",
       "commands": [
+        {
+          "type": "playAnimation",
+          "parameters": [
+            {
+              "type": "who",
+              "value": "Kira"
+            },
+            {
+              "type": "animation",
+              "value": "Idle"
+            }
+          ]
+        },
         {
           "type": "giveItem",
           "parameters": [
@@ -2893,6 +4702,15 @@
       "speaker": "Kira",
       "commands": [
         {
+          "type": "expression",
+          "parameters": [
+            {
+              "type": "mood",
+              "value": "uneasy"
+            }
+          ]
+        },
+        {
           "type": "face",
           "parameters": [
             {
@@ -2953,9 +4771,22 @@
   {
     "node": "claw_marks_look",
     "data": {
-      "text": "dialogue.arc1.claw_marks",
+      "text": "dialogue.arc1.claw_marks_look",
       "speaker": "Kira",
       "commands": [
+        {
+          "type": "playAnimation",
+          "parameters": [
+            {
+              "type": "who",
+              "value": "Kira"
+            },
+            {
+              "type": "animation",
+              "value": "Inspecting"
+            }
+          ]
+        },
         {
           "type": "face",
           "parameters": [
@@ -2975,8 +4806,35 @@
   {
     "node": "big_book",
     "data": {
-      "text": "dialogue.arc1.big_book",
-      "next": "big_book_menu"
+      "next": "big_book_menu",
+      "commands": [
+        {
+          "type": "face",
+          "parameters": [
+            {
+              "type": "who",
+              "value": "Kira"
+            },
+            {
+              "type": "towards",
+              "value": "Player"
+            }
+          ]
+        },
+        {
+          "type": "playAnimation",
+          "parameters": [
+            {
+              "type": "who",
+              "value": "Kira"
+            },
+            {
+              "type": "animation",
+              "value": "Inspecting"
+            }
+          ]
+        }
+      ]
     }
   },
   {
@@ -2992,6 +4850,18 @@
           "target": "big_book_a2",
           "text": "dialogue.arc1.big_book_menu.choice2"
         }
+      ],
+      "speaker": "Kira",
+      "commands": [
+        {
+          "type": "expression",
+          "parameters": [
+            {
+              "type": "mood",
+              "value": "concentrating"
+            }
+          ]
+        }
       ]
     }
   },
@@ -3000,7 +4870,18 @@
     "data": {
       "text": "dialogue.arc1.big_book_a1",
       "speaker": "Kira",
-      "next": "big_book_2"
+      "next": "big_book_2",
+      "commands": [
+        {
+          "type": "closeUp",
+          "parameters": [
+            {
+              "type": "image",
+              "value": "CloseUps/kira_book_wolf_fact.png"
+            }
+          ]
+        }
+      ]
     }
   },
   {
@@ -3008,7 +4889,18 @@
     "data": {
       "text": "dialogue.arc1.big_book_a2",
       "speaker": "Kira",
-      "next": "big_book_2"
+      "next": "big_book_2",
+      "commands": [
+        {
+          "type": "closeUp",
+          "parameters": [
+            {
+              "type": "image",
+              "value": "CloseUps/kira_book_wolf_fact.png"
+            }
+          ]
+        }
+      ]
     }
   },
   {
@@ -3016,7 +4908,18 @@
     "data": {
       "text": "dialogue.arc1.big_book_2",
       "speaker": "Kira",
-      "next": "big_book_menu2"
+      "next": "big_book_menu2",
+      "commands": [
+        {
+          "type": "expression",
+          "parameters": [
+            {
+              "type": "mood",
+              "value": "quietly pleased"
+            }
+          ]
+        }
+      ]
     }
   },
   {
@@ -3032,6 +4935,18 @@
           "target": "big_book_b2",
           "text": "dialogue.arc1.big_book_menu2.choice2"
         }
+      ],
+      "speaker": "Kira",
+      "commands": [
+        {
+          "type": "expression",
+          "parameters": [
+            {
+              "type": "mood",
+              "value": "content"
+            }
+          ]
+        }
       ]
     }
   },
@@ -3039,34 +4954,116 @@
     "node": "big_book_b1",
     "data": {
       "text": "dialogue.arc1.big_book_b1",
-      "speaker": "Kira"
+      "speaker": "Kira",
+      "commands": [
+        {
+          "type": "closeUpEnd",
+          "parameters": []
+        },
+        {
+          "type": "playAnimation",
+          "parameters": [
+            {
+              "type": "who",
+              "value": "Kira"
+            },
+            {
+              "type": "animation",
+              "value": "Idle"
+            }
+          ]
+        }
+      ]
     }
   },
   {
     "node": "big_book_b2",
     "data": {
-      "text": "dialogue.arc1.big_book_b2"
+      "commands": [
+        {
+          "type": "closeUpEnd",
+          "parameters": []
+        },
+        {
+          "type": "playAnimation",
+          "parameters": [
+            {
+              "type": "who",
+              "value": "Kira"
+            },
+            {
+              "type": "animation",
+              "value": "Idle"
+            }
+          ]
+        }
+      ]
     }
   },
   {
     "node": "claw_marks",
     "data": {
       "text": "dialogue.arc1.claw_marks",
-      "speaker": "Kira"
+      "speaker": "Kira",
+      "commands": [
+        {
+          "type": "playAnimation",
+          "parameters": [
+            {
+              "type": "who",
+              "value": "Kira"
+            },
+            {
+              "type": "animation",
+              "value": "Inspecting"
+            }
+          ]
+        }
+      ]
     }
   },
   {
     "node": "blue_lights",
     "data": {
       "text": "dialogue.arc1.blue_lights",
-      "speaker": "Kira"
+      "speaker": "Kira",
+      "commands": [
+        {
+          "type": "expression",
+          "parameters": [
+            {
+              "type": "mood",
+              "value": "quiet"
+            }
+          ]
+        }
+      ]
     }
   },
   {
     "node": "stone_pillars",
     "data": {
-      "text": "dialogue.arc1.stone_pillars",
-      "next": "stone_pillars_2"
+      "next": "stone_pillars_2",
+      "commands": [
+        {
+          "type": "closeUp",
+          "parameters": [
+            {
+              "type": "image",
+              "value": "CloseUps/shrine_pillar_carvings.png"
+            }
+          ]
+        },
+        {
+          "type": "wait",
+          "parameters": [
+            {
+              "type": "seconds",
+              "value": 1.5
+            }
+          ]
+        }
+      ]
     }
   },
   {
@@ -3087,31 +5084,86 @@
   {
     "node": "tablet_1",
     "data": {
-      "text": "dialogue.arc1.tablet_1"
+      "text": "dialogue.arc1.tablet_1",
+      "commands": [
+        {
+          "type": "closeUp",
+          "parameters": [
+            {
+              "type": "image",
+              "value": "CloseUps/tablet_circle.png"
+            }
+          ]
+        }
+      ]
     }
   },
   {
     "node": "tablet_2",
     "data": {
-      "text": "dialogue.arc1.tablet_2"
+      "text": "dialogue.arc1.tablet_2",
+      "commands": [
+        {
+          "type": "closeUp",
+          "parameters": [
+            {
+              "type": "image",
+              "value": "CloseUps/tablet_triangle.png"
+            }
+          ]
+        }
+      ]
     }
   },
   {
     "node": "tablet_3",
     "data": {
-      "text": "dialogue.arc1.tablet_3"
+      "text": "dialogue.arc1.tablet_3",
+      "commands": [
+        {
+          "type": "closeUp",
+          "parameters": [
+            {
+              "type": "image",
+              "value": "CloseUps/tablet_square.png"
+            }
+          ]
+        }
+      ]
     }
   },
   {
     "node": "tablet_4",
     "data": {
-      "text": "dialogue.arc1.tablet_4"
+      "text": "dialogue.arc1.tablet_4",
+      "commands": [
+        {
+          "type": "closeUp",
+          "parameters": [
+            {
+              "type": "image",
+              "value": "CloseUps/tablet_diamond.png"
+            }
+          ]
+        }
+      ]
     }
   },
   {
     "node": "tablet_5",
     "data": {
-      "text": "dialogue.arc1.tablet_5"
+      "text": "dialogue.arc1.tablet_5",
+      "commands": [
+        {
+          "type": "closeUp",
+          "parameters": [
+            {
+              "type": "image",
+              "value": "CloseUps/tablet_star.png"
+            }
+          ]
+        }
+      ]
     }
   },
   {
@@ -3155,7 +5207,6 @@
   {
     "node": "shrine_pedestals_done",
     "data": {
-      "text": "dialogue.arc1.shrine_pedestals_done",
       "commands": [
         {
           "type": "openDoor",
@@ -3178,6 +5229,10 @@
               "value": 5.0
             }
           ]
+        },
+        {
+          "type": "cameraShake",
+          "parameters": []
         }
       ]
     }
@@ -3340,7 +5395,18 @@
     "data": {
       "text": "dialogue.arc1.shrine_entry_kira",
       "speaker": "Kira",
-      "next": "shrine_entry_kira_2"
+      "next": "shrine_entry_kira_2",
+      "commands": [
+        {
+          "type": "expression",
+          "parameters": [
+            {
+              "type": "mood",
+              "value": "awed"
+            }
+          ]
+        }
+      ]
     }
   },
   {
@@ -3354,7 +5420,22 @@
     "node": "shifting_floor",
     "data": {
       "text": "dialogue.arc1.shifting_floor",
-      "speaker": "Kira"
+      "speaker": "Kira",
+      "commands": [
+        {
+          "type": "expression",
+          "parameters": [
+            {
+              "type": "mood",
+              "value": "startled"
+            }
+          ]
+        },
+        {
+          "type": "cameraShake",
+          "parameters": []
+        }
+      ]
     }
   },
   {
@@ -3394,7 +5475,6 @@
   {
     "node": "kira_split_2",
     "data": {
-      "text": "dialogue.arc1.kira_split_2",
       "next": "kira_split_3",
       "commands": [
         {
@@ -3419,6 +5499,15 @@
       "text": "dialogue.arc1.kira_split_3",
       "speaker": "Kira",
       "commands": [
+        {
+          "type": "expression",
+          "parameters": [
+            {
+              "type": "mood",
+              "value": "flustered"
+            }
+          ]
+        },
         {
           "type": "leaveParty",
           "parameters": [
@@ -3557,6 +5646,15 @@
       "next": "kira_reunion_menu",
       "commands": [
         {
+          "type": "expression",
+          "parameters": [
+            {
+              "type": "mood",
+              "value": "breathless"
+            }
+          ]
+        },
+        {
           "type": "face",
           "parameters": [
             {
@@ -3585,6 +5683,17 @@
         {
           "target": "kira_reunion_a2",
           "text": "dialogue.arc1.kira_reunion_menu.choice2"
+        }
+      ],
+      "commands": [
+        {
+          "type": "expression",
+          "parameters": [
+            {
+              "type": "mood",
+              "value": "squinting"
+            }
+          ]
         }
       ]
     }
@@ -3638,8 +5747,11 @@
   {
     "node": "construct_1_wake",
     "data": {
-      "text": "dialogue.arc1.construct_1_wake",
       "commands": [
+        {
+          "type": "cameraShake",
+          "parameters": []
+        },
         {
           "type": "startDuel",
           "parameters": [
@@ -3655,8 +5767,11 @@
   {
     "node": "construct_1_after",
     "data": {
-      "text": "dialogue.arc1.construct_1_after",
       "commands": [
+        {
+          "type": "cameraShake",
+          "parameters": []
+        },
         {
           "type": "triggerEvent",
           "parameters": [
@@ -3704,8 +5819,11 @@
   {
     "node": "construct_2_wake",
     "data": {
-      "text": "dialogue.arc1.construct_2_wake",
       "commands": [
+        {
+          "type": "cameraShake",
+          "parameters": []
+        },
         {
           "type": "startDuel",
           "parameters": [
@@ -3721,8 +5839,11 @@
   {
     "node": "construct_2_after",
     "data": {
-      "text": "dialogue.arc1.construct_2_after",
       "commands": [
+        {
+          "type": "cameraShake",
+          "parameters": []
+        },
         {
           "type": "triggerEvent",
           "parameters": [
@@ -3770,8 +5891,11 @@
   {
     "node": "construct_3_wake",
     "data": {
-      "text": "dialogue.arc1.construct_3_wake",
       "commands": [
+        {
+          "type": "cameraShake",
+          "parameters": []
+        },
         {
           "type": "startDuel",
           "parameters": [
@@ -3787,8 +5911,11 @@
   {
     "node": "construct_3_after",
     "data": {
-      "text": "dialogue.arc1.construct_3_after",
       "commands": [
+        {
+          "type": "cameraShake",
+          "parameters": []
+        },
         {
           "type": "triggerEvent",
           "parameters": [
@@ -3817,7 +5944,6 @@
   {
     "node": "heart",
     "data": {
-      "text": "dialogue.arc1.heart",
       "next": "heart_2",
       "commands": [
         {
@@ -3852,7 +5978,6 @@
   {
     "node": "heart_2",
     "data": {
-      "text": "dialogue.arc1.heart_2",
       "next": "heart_3",
       "commands": [
         {
@@ -3884,6 +6009,17 @@
           "target": "heart_a2",
           "text": "dialogue.arc1.heart_menu.choice2"
         }
+      ],
+      "commands": [
+        {
+          "type": "expression",
+          "parameters": [
+            {
+              "type": "mood",
+              "value": "delighted"
+            }
+          ]
+        }
       ]
     }
   },
@@ -3906,8 +6042,27 @@
   {
     "node": "heart_memory",
     "data": {
-      "text": "dialogue.arc1.heart_memory",
-      "next": "heart_4"
+      "next": "heart_4",
+      "commands": [
+        {
+          "type": "closeUp",
+          "parameters": [
+            {
+              "type": "image",
+              "value": "CloseUps/memory_long_table.png"
+            }
+          ]
+        },
+        {
+          "type": "wait",
+          "parameters": [
+            {
+              "type": "seconds",
+              "value": 3.0
+            }
+          ]
+        }
+      ]
     }
   },
   {
@@ -3917,6 +6072,10 @@
       "speaker": "Guide",
       "next": "heart_sight",
       "commands": [
+        {
+          "type": "closeUpEnd",
+          "parameters": []
+        },
         {
           "type": "setIntFlag",
           "parameters": [
@@ -4004,13 +6163,23 @@
     "data": {
       "text": "dialogue.arc1.hidden_door_2",
       "speaker": "Guide",
-      "next": "hidden_door_3"
+      "next": "hidden_door_3",
+      "commands": [
+        {
+          "type": "expression",
+          "parameters": [
+            {
+              "type": "mood",
+              "value": "sheepish"
+            }
+          ]
+        }
+      ]
     }
   },
   {
     "node": "hidden_door_3",
     "data": {
-      "text": "dialogue.arc1.hidden_door_3",
       "commands": [
         {
           "type": "openDoor",
@@ -4140,6 +6309,15 @@
       "next": "murals_paint",
       "commands": [
         {
+          "type": "expression",
+          "parameters": [
+            {
+              "type": "mood",
+              "value": "amazed"
+            }
+          ]
+        },
+        {
           "type": "setIntFlag",
           "parameters": [
             {
@@ -4212,7 +6390,18 @@
     "data": {
       "text": "dialogue.arc1.murals_wrong",
       "speaker": "Kira",
-      "next": "murals_end"
+      "next": "murals_end",
+      "commands": [
+        {
+          "type": "expression",
+          "parameters": [
+            {
+              "type": "mood",
+              "value": "thoughtful"
+            }
+          ]
+        }
+      ]
     }
   },
   {
@@ -4264,15 +6453,56 @@
   {
     "node": "central_mural_find",
     "data": {
-      "text": "dialogue.arc1.central_mural_find",
-      "next": "central_mural_find_2"
+      "next": "central_mural_find_2",
+      "commands": [
+        {
+          "type": "playAnimation",
+          "parameters": [
+            {
+              "type": "who",
+              "value": "Player"
+            },
+            {
+              "type": "animation",
+              "value": "Inspecting"
+            },
+            {
+              "type": "wait",
+              "value": 1.0
+            },
+            {
+              "type": "then",
+              "value": "Idle"
+            }
+          ]
+        }
+      ]
     }
   },
   {
     "node": "central_mural_find_2",
     "data": {
-      "text": "dialogue.arc1.central_mural_find_2",
-      "next": "central_mural_find_3"
+      "next": "central_mural_find_3",
+      "commands": [
+        {
+          "type": "closeUp",
+          "parameters": [
+            {
+              "type": "image",
+              "value": "CloseUps/memory_six_figures.png"
+            }
+          ]
+        },
+        {
+          "type": "wait",
+          "parameters": [
+            {
+              "type": "seconds",
+              "value": 3.5
+            }
+          ]
+        }
+      ]
     }
   },
   {
@@ -4281,6 +6511,19 @@
       "text": "dialogue.arc1.central_mural_find_3",
       "speaker": "Guide",
       "commands": [
+        {
+          "type": "expression",
+          "parameters": [
+            {
+              "type": "mood",
+              "value": "stronger"
+            }
+          ]
+        },
+        {
+          "type": "closeUpEnd",
+          "parameters": []
+        },
         {
           "type": "giveItem",
           "parameters": [
@@ -4409,7 +6652,18 @@
     "data": {
       "text": "dialogue.arc1.warden_s14",
       "speaker": "Warden",
-      "next": "warden_s14_2"
+      "next": "warden_s14_2",
+      "commands": [
+        {
+          "type": "expression",
+          "parameters": [
+            {
+              "type": "mood",
+              "value": "menacing"
+            }
+          ]
+        }
+      ]
     }
   },
   {
@@ -4435,7 +6689,18 @@
     "data": {
       "text": "dialogue.arc1.warden_s16",
       "speaker": "Warden",
-      "next": "warden_s16_2"
+      "next": "warden_s16_2",
+      "commands": [
+        {
+          "type": "expression",
+          "parameters": [
+            {
+              "type": "mood",
+              "value": "awakening"
+            }
+          ]
+        }
+      ]
     }
   },
   {
@@ -4492,7 +6757,18 @@
     "data": {
       "text": "dialogue.arc1.warden_p3",
       "speaker": "Warden",
-      "next": "warden_peace"
+      "next": "warden_peace",
+      "commands": [
+        {
+          "type": "expression",
+          "parameters": [
+            {
+              "type": "mood",
+              "value": "reverent"
+            }
+          ]
+        }
+      ]
     }
   },
   {
@@ -4509,6 +6785,10 @@
       "text": "dialogue.arc1.warden_peace_2",
       "speaker": "Warden",
       "commands": [
+        {
+          "type": "cameraShake",
+          "parameters": []
+        },
         {
           "type": "giveItem",
           "parameters": [
@@ -4589,7 +6869,6 @@
   {
     "node": "warden_violent",
     "data": {
-      "text": "dialogue.arc1.warden_violent",
       "next": "warden_violent_2"
     }
   },
@@ -4599,6 +6878,15 @@
       "text": "dialogue.arc1.warden_violent_2",
       "speaker": "Kira",
       "commands": [
+        {
+          "type": "expression",
+          "parameters": [
+            {
+              "type": "mood",
+              "value": "troubled"
+            }
+          ]
+        },
         {
           "type": "giveItem",
           "parameters": [
@@ -4698,15 +6986,108 @@
   {
     "node": "viewer_s17",
     "data": {
-      "text": "dialogue.arc1.viewer_s17",
-      "next": "viewer_s17_2"
+      "next": "viewer_s17_2",
+      "commands": [
+        {
+          "type": "playAnimation",
+          "parameters": [
+            {
+              "type": "who",
+              "value": "Player"
+            },
+            {
+              "type": "animation",
+              "value": "Inspecting"
+            },
+            {
+              "type": "wait",
+              "value": 1.0
+            },
+            {
+              "type": "then",
+              "value": "Idle"
+            }
+          ]
+        }
+      ]
     }
   },
   {
     "node": "viewer_s17_2",
     "data": {
-      "text": "dialogue.arc1.viewer_s17_2",
-      "next": "viewer_s17_3"
+      "next": "viewer_s17_2b",
+      "commands": [
+        {
+          "type": "closeUp",
+          "parameters": [
+            {
+              "type": "image",
+              "value": "CloseUps/memory_city_height.png"
+            }
+          ]
+        },
+        {
+          "type": "wait",
+          "parameters": [
+            {
+              "type": "seconds",
+              "value": 3.0
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "node": "viewer_s17_2b",
+    "data": {
+      "next": "viewer_s17_2c",
+      "commands": [
+        {
+          "type": "closeUp",
+          "parameters": [
+            {
+              "type": "image",
+              "value": "CloseUps/memory_war.png"
+            }
+          ]
+        },
+        {
+          "type": "wait",
+          "parameters": [
+            {
+              "type": "seconds",
+              "value": 3.0
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "node": "viewer_s17_2c",
+    "data": {
+      "next": "viewer_s17_3",
+      "commands": [
+        {
+          "type": "closeUp",
+          "parameters": [
+            {
+              "type": "image",
+              "value": "CloseUps/memory_equalitas.png"
+            }
+          ]
+        },
+        {
+          "type": "wait",
+          "parameters": [
+            {
+              "type": "seconds",
+              "value": 3.0
+            }
+          ]
+        }
+      ]
     }
   },
   {
@@ -4714,7 +7095,13 @@
     "data": {
       "text": "dialogue.arc1.viewer_s17_3",
       "speaker": "Guide",
-      "next": "viewer_s17_4"
+      "next": "viewer_s17_4",
+      "commands": [
+        {
+          "type": "closeUpEnd",
+          "parameters": []
+        }
+      ]
     }
   },
   {
@@ -4722,13 +7109,23 @@
     "data": {
       "text": "dialogue.arc1.viewer_s17_4",
       "speaker": "Kira",
-      "next": "viewer_s17_5"
+      "next": "viewer_s17_5",
+      "commands": [
+        {
+          "type": "expression",
+          "parameters": [
+            {
+              "type": "mood",
+              "value": "overwhelmed"
+            }
+          ]
+        }
+      ]
     }
   },
   {
     "node": "viewer_s17_5",
     "data": {
-      "text": "dialogue.arc1.viewer_s17_5",
       "commands": [
         {
           "type": "giveItem",
@@ -4797,7 +7194,6 @@
   {
     "node": "wolf_heal",
     "data": {
-      "text": "dialogue.arc1.wolf_heal",
       "next": "wolf_heal_2"
     }
   },
@@ -4827,7 +7223,18 @@
     "node": "wolf_leave",
     "data": {
       "text": "dialogue.arc1.wolf_leave",
-      "speaker": "Kira"
+      "speaker": "Kira",
+      "commands": [
+        {
+          "type": "expression",
+          "parameters": [
+            {
+              "type": "mood",
+              "value": "sad"
+            }
+          ]
+        }
+      ]
     }
   },
   {
@@ -4837,6 +7244,28 @@
       "speaker": "Finn",
       "next": "finn_spar_2",
       "commands": [
+        {
+          "type": "expression",
+          "parameters": [
+            {
+              "type": "mood",
+              "value": "searching"
+            }
+          ]
+        },
+        {
+          "type": "playAnimation",
+          "parameters": [
+            {
+              "type": "who",
+              "value": "Finn"
+            },
+            {
+              "type": "animation",
+              "value": "Inspecting"
+            }
+          ]
+        },
         {
           "type": "face",
           "parameters": [
@@ -4859,6 +7288,19 @@
       "text": "dialogue.arc1.finn_spar_2",
       "speaker": "Finn",
       "commands": [
+        {
+          "type": "playAnimation",
+          "parameters": [
+            {
+              "type": "who",
+              "value": "Finn"
+            },
+            {
+              "type": "animation",
+              "value": "Idle"
+            }
+          ]
+        },
         {
           "type": "setIntFlag",
           "parameters": [
@@ -4946,6 +7388,36 @@
       "next": "finn_spar_after_3",
       "commands": [
         {
+          "type": "expression",
+          "parameters": [
+            {
+              "type": "mood",
+              "value": "wistful"
+            }
+          ]
+        },
+        {
+          "type": "playAnimation",
+          "parameters": [
+            {
+              "type": "who",
+              "value": "Player"
+            },
+            {
+              "type": "animation",
+              "value": "Lifting"
+            },
+            {
+              "type": "wait",
+              "value": 0.0
+            },
+            {
+              "type": "then",
+              "value": "Idle"
+            }
+          ]
+        },
+        {
           "type": "giveItem",
           "parameters": [
             {
@@ -4982,7 +7454,22 @@
     "data": {
       "text": "dialogue.arc1.finn_spar_after_5",
       "speaker": "Kira",
-      "next": "finn_spar_after_6"
+      "next": "finn_spar_after_6",
+      "commands": [
+        {
+          "type": "playAnimation",
+          "parameters": [
+            {
+              "type": "who",
+              "value": "Kira"
+            },
+            {
+              "type": "animation",
+              "value": "Inspecting"
+            }
+          ]
+        }
+      ]
     }
   },
   {
@@ -4992,6 +7479,28 @@
       "speaker": "Finn",
       "next": "finn_reveal_2",
       "commands": [
+        {
+          "type": "expression",
+          "parameters": [
+            {
+              "type": "mood",
+              "value": "evasive"
+            }
+          ]
+        },
+        {
+          "type": "playAnimation",
+          "parameters": [
+            {
+              "type": "who",
+              "value": "Kira"
+            },
+            {
+              "type": "animation",
+              "value": "Idle"
+            }
+          ]
+        },
         {
           "type": "setIntFlag",
           "parameters": [
@@ -5013,7 +7522,31 @@
     "data": {
       "text": "dialogue.arc1.finn_reveal",
       "speaker": "Finn",
-      "next": "finn_reveal_2"
+      "next": "finn_reveal_2",
+      "commands": [
+        {
+          "type": "expression",
+          "parameters": [
+            {
+              "type": "mood",
+              "value": "knowing"
+            }
+          ]
+        },
+        {
+          "type": "face",
+          "parameters": [
+            {
+              "type": "who",
+              "value": "Finn"
+            },
+            {
+              "type": "towards",
+              "value": "Player"
+            }
+          ]
+        }
+      ]
     }
   },
   {
@@ -5027,8 +7560,6 @@
   {
     "node": "finn_reveal_3",
     "data": {
-      "text": "dialogue.arc1.finn_reveal_3",
-      "speaker": "Finn",
       "next": "finn_reveal_menu"
     }
   },
@@ -5058,7 +7589,18 @@
     "data": {
       "text": "dialogue.arc1.finn_r1",
       "speaker": "Finn",
-      "next": "finn_rev_b"
+      "next": "finn_rev_b",
+      "commands": [
+        {
+          "type": "expression",
+          "parameters": [
+            {
+              "type": "mood",
+              "value": "chuckling"
+            }
+          ]
+        }
+      ]
     }
   },
   {
@@ -5066,7 +7608,18 @@
     "data": {
       "text": "dialogue.arc1.finn_r2",
       "speaker": "Finn",
-      "next": "finn_rev_b"
+      "next": "finn_rev_b",
+      "commands": [
+        {
+          "type": "expression",
+          "parameters": [
+            {
+              "type": "mood",
+              "value": "mysterious"
+            }
+          ]
+        }
+      ]
     }
   },
   {
@@ -5074,7 +7627,18 @@
     "data": {
       "text": "dialogue.arc1.finn_r3",
       "speaker": "Finn",
-      "next": "finn_rev_b"
+      "next": "finn_rev_b",
+      "commands": [
+        {
+          "type": "expression",
+          "parameters": [
+            {
+              "type": "mood",
+              "value": "approving"
+            }
+          ]
+        }
+      ]
     }
   },
   {
@@ -5111,7 +7675,18 @@
     "data": {
       "text": "dialogue.arc1.finn_q1",
       "speaker": "Finn",
-      "next": "finn_rev_c"
+      "next": "finn_rev_c",
+      "commands": [
+        {
+          "type": "expression",
+          "parameters": [
+            {
+              "type": "mood",
+              "value": "sad smile"
+            }
+          ]
+        }
+      ]
     }
   },
   {
@@ -5135,7 +7710,18 @@
     "data": {
       "text": "dialogue.arc1.finn_rev_c",
       "speaker": "Kira",
-      "next": "finn_rev_c_2"
+      "next": "finn_rev_c_2",
+      "commands": [
+        {
+          "type": "expression",
+          "parameters": [
+            {
+              "type": "mood",
+              "value": "realising"
+            }
+          ]
+        }
+      ]
     }
   },
   {
@@ -5151,7 +7737,30 @@
     "data": {
       "text": "dialogue.arc1.finn_rev_c_3",
       "speaker": "Finn",
-      "next": "finn_rev_c_4"
+      "next": "finn_rev_c_4",
+      "commands": [
+        {
+          "type": "playAnimation",
+          "parameters": [
+            {
+              "type": "who",
+              "value": "Finn"
+            },
+            {
+              "type": "animation",
+              "value": "PickingUp"
+            },
+            {
+              "type": "wait",
+              "value": 1.0
+            },
+            {
+              "type": "then",
+              "value": "Idle"
+            }
+          ]
+        }
+      ]
     }
   },
   {
@@ -5220,7 +7829,22 @@
     "data": {
       "text": "dialogue.arc1.finn_rev_d_2",
       "speaker": "Kira",
-      "next": "finn_path"
+      "next": "finn_path",
+      "commands": [
+        {
+          "type": "playAnimation",
+          "parameters": [
+            {
+              "type": "who",
+              "value": "Kira"
+            },
+            {
+              "type": "animation",
+              "value": "Inspecting"
+            }
+          ]
+        }
+      ]
     }
   },
   {
@@ -5241,7 +7865,22 @@
           "text": "dialogue.arc1.finn_path.choice3"
         }
       ],
-      "speaker": "Finn"
+      "speaker": "Finn",
+      "commands": [
+        {
+          "type": "playAnimation",
+          "parameters": [
+            {
+              "type": "who",
+              "value": "Kira"
+            },
+            {
+              "type": "animation",
+              "value": "Idle"
+            }
+          ]
+        }
+      ]
     }
   },
   {
@@ -5347,7 +7986,18 @@
     "data": {
       "text": "dialogue.arc1.kira_s21",
       "speaker": "Kira",
-      "next": "kira_s21_menu"
+      "next": "kira_s21_menu",
+      "commands": [
+        {
+          "type": "expression",
+          "parameters": [
+            {
+              "type": "mood",
+              "value": "pensive"
+            }
+          ]
+        }
+      ]
     }
   },
   {
@@ -5376,7 +8026,18 @@
     "data": {
       "text": "dialogue.arc1.kira_21a",
       "speaker": "Kira",
-      "next": "kira_s21_end"
+      "next": "kira_s21_end",
+      "commands": [
+        {
+          "type": "expression",
+          "parameters": [
+            {
+              "type": "mood",
+              "value": "firm"
+            }
+          ]
+        }
+      ]
     }
   },
   {
@@ -5384,7 +8045,18 @@
     "data": {
       "text": "dialogue.arc1.kira_21b",
       "speaker": "Kira",
-      "next": "kira_s21_end"
+      "next": "kira_s21_end",
+      "commands": [
+        {
+          "type": "expression",
+          "parameters": [
+            {
+              "type": "mood",
+              "value": "nodding"
+            }
+          ]
+        }
+      ]
     }
   },
   {
@@ -5392,7 +8064,18 @@
     "data": {
       "text": "dialogue.arc1.kira_21c",
       "speaker": "Kira",
-      "next": "kira_s21_end"
+      "next": "kira_s21_end",
+      "commands": [
+        {
+          "type": "expression",
+          "parameters": [
+            {
+              "type": "mood",
+              "value": "smiling"
+            }
+          ]
+        }
+      ]
     }
   },
   {
@@ -5401,6 +8084,36 @@
       "text": "dialogue.arc1.kira_s21_end",
       "speaker": "Kira",
       "commands": [
+        {
+          "type": "expression",
+          "parameters": [
+            {
+              "type": "mood",
+              "value": "determined"
+            }
+          ]
+        },
+        {
+          "type": "playAnimation",
+          "parameters": [
+            {
+              "type": "who",
+              "value": "Kira"
+            },
+            {
+              "type": "animation",
+              "value": "Shoot"
+            },
+            {
+              "type": "wait",
+              "value": 0.0
+            },
+            {
+              "type": "then",
+              "value": "Idle"
+            }
+          ]
+        },
         {
           "type": "setIntFlag",
           "parameters": [
@@ -5454,7 +8167,18 @@
     "data": {
       "text": "dialogue.arc1.farewell_violent",
       "speaker": "Finn",
-      "next": "farewell_1"
+      "next": "farewell_1",
+      "commands": [
+        {
+          "type": "expression",
+          "parameters": [
+            {
+              "type": "mood",
+              "value": "grave"
+            }
+          ]
+        }
+      ]
     }
   },
   {
@@ -5462,7 +8186,18 @@
     "data": {
       "text": "dialogue.arc1.farewell_1",
       "speaker": "Finn",
-      "next": "farewell_1_2"
+      "next": "farewell_1_2",
+      "commands": [
+        {
+          "type": "expression",
+          "parameters": [
+            {
+              "type": "mood",
+              "value": "proud"
+            }
+          ]
+        }
+      ]
     }
   },
   {
@@ -5472,6 +8207,15 @@
       "speaker": "Finn",
       "next": "farewell_menu",
       "commands": [
+        {
+          "type": "expression",
+          "parameters": [
+            {
+              "type": "mood",
+              "value": "warm"
+            }
+          ]
+        },
         {
           "type": "giveItem",
           "parameters": [
@@ -5527,7 +8271,18 @@
     "data": {
       "text": "dialogue.arc1.farewell_2",
       "speaker": "Finn",
-      "next": "road_1"
+      "next": "road_1",
+      "commands": [
+        {
+          "type": "expression",
+          "parameters": [
+            {
+              "type": "mood",
+              "value": "proud"
+            }
+          ]
+        }
+      ]
     }
   },
   {
@@ -5535,7 +8290,18 @@
     "data": {
       "text": "dialogue.arc1.road_1",
       "speaker": "Kira",
-      "next": "road_choice"
+      "next": "road_choice",
+      "commands": [
+        {
+          "type": "expression",
+          "parameters": [
+            {
+              "type": "mood",
+              "value": "eager"
+            }
+          ]
+        }
+      ]
     }
   },
   {
@@ -5566,8 +8332,6 @@
   {
     "node": "road_end_1",
     "data": {
-      "text": "dialogue.arc1.road_end_1",
-      "speaker": "Narrator",
       "commands": [
         {
           "type": "setIntFlag",
@@ -5592,8 +8356,6 @@
   {
     "node": "road_end_2",
     "data": {
-      "text": "dialogue.arc1.road_end_2",
-      "speaker": "Narrator",
       "commands": [
         {
           "type": "setIntFlag",
@@ -5618,8 +8380,6 @@
   {
     "node": "road_end_3",
     "data": {
-      "text": "dialogue.arc1.road_end_3",
-      "speaker": "Narrator",
       "commands": [
         {
           "type": "setIntFlag",
@@ -5644,8 +8404,6 @@
   {
     "node": "road_end_4",
     "data": {
-      "text": "dialogue.arc1.road_end_4",
-      "speaker": "Narrator",
       "commands": [
         {
           "type": "setIntFlag",

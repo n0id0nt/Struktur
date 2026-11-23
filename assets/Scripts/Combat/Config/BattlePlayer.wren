@@ -29,13 +29,14 @@ var WEAPON_LAYER = ExplorerBattleWeaponSprite.data["texture"]
 
 class BattlePlayer {
     static name { "You" }
-    static maxHp { 100 }
+    static maxHp { 5 }
     static maxStamina { 80 }
     static tint { null }
     static hasMenu { false }
     static passive { false }
 
-    static newStats { Stats.new(100, 80, 10, 10, 5, 12) }
+    // Five hits of a tier I move (docs/CombatBalance.md).
+    static newStats { Stats.new(5, 80, 0, 0, 0, 12) }
 
     // What the player fights with - their equipped gear (Inventory/Equipment.wren).
     static loadout { Equipment.loadout }

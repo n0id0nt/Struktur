@@ -21,9 +21,10 @@ class Stats {
 
     // The early / mid / late combatant tiers of the battle system doc.
     static tier(tier) {
-        if (tier >= 2) return Stats.new(280, 140, 45, 45, 30, 20)
-        if (tier == 1) return Stats.new(180, 110, 25, 25, 15, 16)
-        return Stats.new(100, 80, 10, 10, 5, 12)
+        // Health in whole hits (docs/CombatBalance.md); attack / mana / defence 0 so a move's damage is what lands.
+        if (tier >= 2) return Stats.new(14, 140, 0, 0, 0, 20)
+        if (tier == 1) return Stats.new(9, 110, 0, 0, 0, 16)
+        return Stats.new(5, 80, 0, 0, 0, 12)
     }
 
     attack { _attack }

@@ -6,8 +6,8 @@
 //   Twist - Sunder and Reform: merged, the Warden is one statue in one cell. Sunder splits it into three shards
 //     across its row (Left shard / Heart / Right shard), each its own enemy with its own line; Reform pulls them
 //     back together. Its menu has two halves, one per form.
-//   Granite Skin: defence 30 and only a scratch gets through - except while Exposed (defence 5, full damage x1.5).
-//   One HP pool (300): damage to any shard comes off the pool. The side shards also have 60 HP of their own;
+//   Granite Skin: defence 30 and only half a hit gets through - except while Exposed (defence 5, full damage x1.5).
+//   One HP pool (14): damage to any shard comes off the pool. The side shards also have 4 HP of their own;
 //     breaking one crumbles it - the Warden Reforms without that arm and loses Ground Slam (it needs both), and with
 //     both broken it can't Sunder any more.
 //   Easy by design: no stamina, no feints, and it never stays split for more than three combos (Three Stones, at
@@ -26,11 +26,11 @@ import "Combat/Config/BattleCritter" for BattleCritter
 import "Sprites/MutantBattleSprite" for MutantBattleSprite
 
 var RNG = Random.new()
-var POOL_HP = 300
-var SHARD_HP = 60
+var POOL_HP = 14
+var SHARD_HP = 4
 // Defence 30 (5 while Exposed); outside an Exposed window only 30% of a hit gets through - with the defence formula
 // alone a 30 still lets three quarters of a hit in, which is not "barely scratching".
-var GRANITE = [30, 5, 0.3]
+var GRANITE = [30, 5, 0.5]
 var STONE_TINT = Vec4.new(165, 175, 190, 255)
 var SHARD_TINT = Vec4.new(130, 150, 185, 255)
 
@@ -38,11 +38,11 @@ var SHARD_TINT = Vec4.new(130, 150, 185, 255)
 class WardenMoves {
     // The fist stays in the ground after impact: Exposed from impact to the end.
     static stoneFist {
-        return Move.new("Stone Fist", 1, 2.2, 0).attackFlat(1.5, 41, 0.8).reach(1).exposed(1.5, 2.2).heavy().special("wardenFist").anim("heavy").damageAnim(0.4)
+        return Move.new("Stone Fist", 1, 2.2, 0).attackFlat(1.5, 3, 0.8).reach(1).exposed(1.5, 2.2).heavy().special("wardenFist").anim("heavy").damageAnim(0.4)
     }
     // Marks the whole row in front - step back a row.
     static groundSlam {
-        return Move.new("Ground Slam", 1, 2.6, 0).attackFlat(1.8, 36, 0.8).reach(1).sides(1).cell(0, -2, 1).cell(0, 2, 1).exposed(1.8, 2.6).heavy().anim("spin").damageAnim(0.4)
+        return Move.new("Ground Slam", 1, 2.6, 0).attackFlat(1.8, 2, 0.8).reach(1).sides(1).cell(0, -2, 1).cell(0, 2, 1).exposed(1.8, 2.6).heavy().anim("spin").damageAnim(0.4)
     }
     // Arms crossed, covering both sides. Swinging into the peak feeds its skip.
     static bastion {
@@ -53,14 +53,14 @@ class WardenMoves {
     static sunder { Move.new("Sunder", 1, 1.8, 0).special("sunder").at(1.2).anim("spin") }
 
     static shardSlam {
-        return Move.new("Shard Slam", 1, 1.8, 0).attackFlat(1.2, 24, 0.5).reach(1).exposed(1.2, 1.8).heavy().anim("heavy")
+        return Move.new("Shard Slam", 1, 1.8, 0).attackFlat(1.2, 2, 0.5).reach(1).exposed(1.2, 1.8).heavy().anim("heavy")
     }
     static shardRoll { Move.new("Shard Roll", 1, 1.0, 0).movement(0.5, "ortho", "stay").anim("step") }
     // Rolls back toward the Heart for Reform - Exposed for the whole move.
     static gather { Move.new("Gather", 1, 1.0, 0).movement(0.5, "ortho", "stay").exposed(0, 1.0).anim("step") }
     // Punishes anyone standing next to the Heart.
     static heartPulse {
-        return Move.new("Heart Pulse", 1, 2.0, 0).attackFlat(1.4, 36, 0.5).around8(0.5).heavy().anim("spin")
+        return Move.new("Heart Pulse", 1, 2.0, 0).attackFlat(1.4, 2, 0.5).around8(0.5).heavy().anim("spin")
     }
     // Its guard range covers the shards beside it.
     static heartGuard {
@@ -318,14 +318,14 @@ class WardenBrain {
 }
 
 class Warden {
-    // The statue: 300 HP in one pool, Granite Skin, no stamina, Iron-bodied (weak to Storm).
+    // The statue: 14 HP in one pool, Granite Skin, no stamina, Iron-bodied (weak to Storm).
     static def {
         var def = BattleCritter.fromSheet("The Warden", MutantBattleSprite).stats(POOL_HP, 0, 10, 0, 0, 0)
         def.trait("noStamina", true).trait("immovable", true).trait("granite", GRANITE).trait("bodyElement", "Iron")
         return def.trait("boss", true).tint(STONE_TINT).brain(Fn.new { WardenBrain.new() })
     }
 
-    // A side shard: 60 HP of its own (and everything it takes also comes off the pool).
+    // A side shard: 4 HP of its own (and everything it takes also comes off the pool).
     static shardDef(name) {
         var def = BattleCritter.fromSheet(name, MutantBattleSprite).stats(SHARD_HP, 0, 10, 0, 0, 0)
         def.trait("noStamina", true).trait("immovable", true).trait("granite", GRANITE).trait("bodyElement", "Iron")

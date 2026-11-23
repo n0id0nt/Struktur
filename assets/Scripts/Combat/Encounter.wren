@@ -4,12 +4,13 @@
 // fight is just "these opponents, lined up".
 //
 // The first arc's battle tutorial (First Arc Script) is built from these:
-//   Thomas's lesson (the "startDuel Thomas" dialogue command, before the wolf hunt), the player alone
-//     The dummy     one chain of nothing but Steps, one of nothing but Slashes, then out of breath: Hold (never twice
-//                   in a row), and the rest of that chain is theirs.
-//     The snap-post what a thornwolf does - bites the moment you move next to it - and the counter: Brace, then hit.
-//                   Thomas teaches Brace.
-//   The first wolves (any fight against Starving Thornwolves - the perimeter wolf Thomas sends you after)
+//   Thomas's lesson (the "startDuel Thomas" dialogue command at the training grounds), the player alone
+//     The dummy     one chain of nothing but Steps - then the player is set in front of the dummy - one of nothing
+//                   but Slashes, then out of breath: Hold (never twice in a row), and the rest of that chain is
+//                   theirs. The dummy can't be beaten (it never loses health).
+//   The perimeter wolf (Thomas talks you through it at the north gate and teaches Brace there - Dialogue/
+//     Arc1Dialogue.json "thomas_gate"; it charges and you fight it alone - GameObjects/PerimeterWolf.wren)
+//   The first wolves (any fight against Starving Thornwolves)
 //   Thomas's test (the same command once you're back from the hunt): Thomas himself, against you and Kira.
 //   The constructs, alone: read their timelines, Brace the heavy hit, then punish.
 //   The Warden (the "startBattle Warden" command): the boss, one statue whatever the level holds.
@@ -123,9 +124,9 @@ class Encounter {
     }
 
     // --- Thomas teaches you to fight (scene 4) -------------------------------------------------
-    // One step per chain, each allowing only the kind of move it teaches: Step about, then Slash, then (out of breath)
-    // Hold - after which the chain is the player's to finish. Then the snap-post: what a thornwolf does, and the
-    // counter - Brace the bite, then hit back.
+    // One step per chain, each allowing only the kind of move it teaches: Step about, then Slash (from the cell in front
+    // of the dummy, so every swing lands), then (out of breath) Hold - after which the chain is the player's to finish.
+    // Brace and the wolf come after, at the north gate.
 
     static thomasLessons {
         var dummy = EncounterStage.new([[BattleCritter.lessonDummy, 1, 2]])
@@ -135,15 +136,17 @@ class Encounter {
                 host.hint("Fill the chain with Step")
                 host.prompt([
                     ["Thomas", "Right. In a fight everything takes time - what you do, and what they do. So you don't just flail. You pick a few moves, then you watch them play out."],
-                    [null, "Choose moves until the chain bar fills (about 4 seconds). Then they play out one after another, and you choose again."],
-                    ["Thomas", "Feet first. Step about. Fill the whole chain with steps, and finish right in front of the dummy."],
+                    [null, "Choose moves until the chain bar fills (about 3 seconds). Then they play out one after another, and you choose again."],
+                    ["Thomas", "Feet first. Step about. Fill the whole chain with steps."],
                     [null, "Moves > Step, then pick a cell. For now, moving is all you can choose."]
                 ])
             } else if (round == 2) {
+                // Wherever the steps ended, the player starts this round right in front of the dummy - every Slash lands.
+                host.placeInFrontOfFoe()
                 host.restrict("attack")
                 host.hint("Fill the chain with Slash")
                 host.prompt([
-                    ["Thomas", "Good. Now hit it. That sword only reaches the spot right in front of you, mind."],
+                    ["Thomas", "Good. Now step up and hit it. That sword only reaches the spot right in front of you, mind."],
                     [null, "Slash hits the cell in front of you. This time only attacks can be chosen - fill the chain with them."]
                 ])
             } else if (round == 3) {
@@ -170,43 +173,9 @@ class Encounter {
                 ])
             }
         })
-        dummy.outro([["Thomas", "Feet, sword, breath. That's most of it. Now, one more thing."]])
+        dummy.outro([["Thomas", "Feet, sword, breath. That's most of it."]])
 
-        var post = EncounterStage.new([[BattleCritter.snapPost, 1, 2]])
-        post.onStart(Fn.new { |host| host.teach("Brace") })
-        post.intro([
-            ["Thomas", "Thornwolves. That's what's been coming out of those woods. A thornwolf waits till you're close, and the moment you move, it bites. You won't beat it to the first hit, so don't try."],
-            ["Thomas", "Instead you Brace. Tuck in and take the bite on your guard, then hit it before it gets its teeth back."],
-            [null, "New move: Brace. It blocks hits that land while you're tucked in, best right in the middle."],
-            ["Thomas", "This post snaps like a wolf. Step up to it. Then start your next chain with Brace, and hit it."]
-        ])
-        post.hint("Next to it: Brace, then Slash")
-        post.onEvent(Fn.new { |host, event|
-            var type = event["type"]
-            var who = event["who"]
-            if (type == "hit" && who.side == 0 && !event["blocked"] && host.once("post.bitten")) {
-                host.say("Thomas: It got you. When you're next to it, start the chain with Brace.")
-            }
-            if (type == "block" && who.side == 0) {
-                host.mark("post.blockedAt", event["time"])
-                if (host.once("post.blocked")) host.say("Thomas: Caught it! Now hit it!")
-            }
-            if (type == "hit" && who.side == 1 && event["by"].side == 0 && host.marked("post.blockedAt") &&
-                event["time"] - host.markOf("post.blockedAt") < 2.5 && host.once("post.countered")) {
-                host.mark("post.countered", true)
-                host.say("Thomas: That's it! Take the bite, then bite back.")
-            }
-        })
-        post.onRound(Fn.new { |host, round|
-            if (host.marked("post.countered")) {
-                host.finish()
-            } else if (round == 4 && host.once("post.reminder")) {
-                host.prompt([[null, "Stand in the cell in front of the post. Start the chain with Brace - the post snaps half a second in - then Slash it."]])
-            }
-        })
-        post.outro([["Thomas", "There. That's a wolf beaten. Brace the bite, then hit back - every time."]])
-
-        return Encounter.new("Thomas's lesson", [dummy, post]).soloFight()
+        return Encounter.new("Thomas's lesson", [dummy]).soloFight()
     }
 
     // The test after the wolf hunt: Thomas himself, against the player and Kira.
@@ -258,7 +227,7 @@ class Encounter {
             // The first bite that gets through.
             if (type == "hit" && who.name == "You" && !event["blocked"] && event["amount"] > 0 && host.firstTime("seen_wolves_bite")) {
                 host.prompt([
-                    [host.inParty("Kira") ? "Kira" : null, "It bit you before you'd even moved! Just like Dad's snap-post!"],
+                    [host.inParty("Kira") ? "Kira" : null, "It bit you before you'd even moved! Just like Dad said!"],
                     [null, "Watch the wolf's timeline. A starving wolf bites the moment it starts a chain next to you. Start your chain with Brace when a wolf is beside you, then Slash it while it circles."]
                 ])
             }

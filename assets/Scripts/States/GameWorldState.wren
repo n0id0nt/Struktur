@@ -50,6 +50,7 @@ import "World/SpawnPoint" for SpawnPoint
 import "World/StageDirector" for StageDirector
 import "World/PathWalkers" for PathWalkers
 import "Story/QuestLog" for QuestLog
+import "reflect" for Reflect
 import "UI/Notifications/Notifications" for Notifications
 import "Story/ArcEnd" for ArcEnd
 import "localization" for Localization
@@ -622,6 +623,9 @@ class GameWorldState is BaseState {
     // forced: an aggressive critter caught the player - the only kind of fight that can be fled. One the player started
     // (Interact on a critter's Fight! prompt) can't be.
     enterCombat(primaryEntity, playerEntity, forced) {
+        // A creature someone is watching you fight (the perimeter wolf - Thomas) names them, and they speak once it's won.
+        var primary = Script.getInstance(primaryEntity)
+        _talkAfterFight = (primary != null && Reflect.hasMethod(primary, "talkAfterFight()")) ? primary.talkAfterFight() : null
         beginCombat_(combatGroup(primaryEntity, playerEntity), playerEntity, false, forced)
     }
 
@@ -654,6 +658,8 @@ class GameWorldState is BaseState {
         Debug.info("[GameWorldState] combat ended: %(outcome)")
         var challenger = _duelChallenger
         _duelChallenger = null
+        var watcher = _talkAfterFight
+        _talkAfterFight = null
         if (outcome.duel) {
             // Duels are non-lethal: anyone knocked out (you or an NPC) is back up on 1 HP, win or lose, and a lost
             // duel just ends - the challenger is still standing there to be challenged again.
@@ -676,6 +682,17 @@ class GameWorldState is BaseState {
         }
         // A won duel or story battle: remember it and let the challenger have their say straight away (their dialogue
         // branches on the flag - Thomas hands over gear, the Wardens start to remember...).
+        // A won fight someone watched (enterCombat): they have their say straight away.
+        if (outcome.won && challenger == null && watcher != null) {
+            var watching = Npcs.first(watcher)
+            if (watching != null) {
+                if (_gameMusic) {
+                    _gameMusic.stop()
+                }
+                _stateManager.changeState("InteractState", {"interactingEntity": watching})
+                return
+            }
+        }
         if (outcome.won && challenger != null) {
             QuestLog.setFlag(DUEL_WON_FLAG_PREFIX + challenger, 1)   // may move a quest on - announced as an event
             var entity = Npcs.first(challenger)

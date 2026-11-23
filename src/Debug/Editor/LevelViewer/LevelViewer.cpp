@@ -37,6 +37,17 @@ static constexpr ImU32 SELECTED_COLOR       = IM_COL32(102, 191, 255, 255);
 static constexpr ImU32 HOVERED_COLOR        = IM_COL32(255, 255, 255, 200);
 static constexpr ImU32 NEIGHBOUR_LINK_COLOR = IM_COL32(255, 161, 0, 160);
 static constexpr float LABEL_PADDING        = 3.f;
+
+// Move gizmo, in screen px - the same size at any zoom.
+static constexpr ImU32 GIZMO_X_COLOR          = IM_COL32(235, 75, 75, 255);
+static constexpr ImU32 GIZMO_Y_COLOR          = IM_COL32(95, 210, 95, 255);
+static constexpr ImU32 GIZMO_FREE_COLOR       = IM_COL32(102, 191, 255, 200);
+static constexpr ImU32 GIZMO_ACTIVE_COLOR     = IM_COL32(255, 220, 60, 255);
+static constexpr float GIZMO_AXIS_LENGTH      = 64.f;
+static constexpr float GIZMO_ARROW_HEAD       = 11.f;
+static constexpr float GIZMO_LINE_THICKNESS   = 3.f;
+static constexpr float GIZMO_PICK_TOLERANCE   = 6.f;
+static constexpr float GIZMO_CENTRE_HALF_SIZE = 7.f;
 // How often the open file's modification time is checked (seconds).
 static constexpr float FILE_POLL_INTERVAL = 0.5f;
 static constexpr const char* UNSAVED_PROMPT_ID = "Unsaved level edits";
@@ -62,6 +73,32 @@ static FileLoading::LevelParser::Entity* FindParsedEntity(FileLoading::LevelPars
 }
 
 // A level's centre in world pixels.
+static float DistanceToSegment(const glm::vec2& point, const glm::vec2& segmentStart, const glm::vec2& segmentEnd)
+{
+	glm::vec2 segment   = segmentEnd - segmentStart;
+	float lengthSquared = glm::dot(segment, segment);
+	float t = lengthSquared > 0.f ? glm::clamp(glm::dot(point - segmentStart, segment) / lengthSquared, 0.f, 1.f) : 0.f;
+	glm::vec2 closestPoint = segmentStart + segment * t;
+	return glm::length(point - closestPoint);
+}
+
+static ImVec2 ToImVec2(const glm::vec2& vector)
+{
+	return ImVec2(vector.x, vector.y);
+}
+
+// A gizmo axis: a line from origin with a triangular head pointing along direction (unit, screen space).
+static void DrawGizmoArrow(ImDrawList* drawList, const glm::vec2& origin, const glm::vec2& direction, ImU32 color)
+{
+	glm::vec2 tip      = origin + direction * GIZMO_AXIS_LENGTH;
+	glm::vec2 headBase = tip - direction * GIZMO_ARROW_HEAD;
+	glm::vec2 perpendicular(-direction.y, direction.x);
+	drawList->AddLine(ToImVec2(origin + direction * GIZMO_CENTRE_HALF_SIZE), ToImVec2(headBase), color,
+	                  GIZMO_LINE_THICKNESS);
+	drawList->AddTriangleFilled(ToImVec2(tip), ToImVec2(headBase + perpendicular * (GIZMO_ARROW_HEAD * 0.5f)),
+	                            ToImVec2(headBase - perpendicular * (GIZMO_ARROW_HEAD * 0.5f)), color);
+}
+
 static glm::vec2 LevelCentre(const FileLoading::LevelParser::Level& level)
 {
 	return glm::vec2(level.worldX + level.pxWid / 2.f, level.worldY + level.pxHei / 2.f);
@@ -253,6 +290,18 @@ void LevelViewer::Update(GameContext& context)
 	}
 	UpdateHover(context, *viewport);
 
+	// The gizmo sits on top of everything - over a handle, the entity underneath isn't hovered or picked.
+	m_hoveredGizmoHandle = GizmoHandle::NONE;
+	if (m_isMouseOverView && m_dragEntity == entt::null)
+	{
+		ImVec2 mousePos      = ImGui::GetMousePos();
+		m_hoveredGizmoHandle = FindGizmoHandleAt(context, glm::vec2(mousePos.x, mousePos.y));
+		if (m_hoveredGizmoHandle != GizmoHandle::NONE)
+		{
+			m_hoveredEntity = entt::null;
+		}
+	}
+
 	// The size-preset buttons float over the image - a click on one of those isn't a pick.
 	if (m_isMouseOverView && ImGui::IsMouseClicked(ImGuiMouseButton_Left) && !ImGui::IsAnyItemHovered())
 	{
@@ -261,11 +310,14 @@ void LevelViewer::Update(GameContext& context)
 			RequestPlayFrom(context, m_mouseWorldPos);
 			return;
 		}
-		if (m_hoveredEntity != entt::null)
+		if (m_hoveredGizmoHandle != GizmoHandle::NONE)
+		{
+			StartEntityDrag(context, GetSelectedDocumentEntity(context), m_hoveredGizmoHandle);
+		}
+		else if (m_hoveredEntity != entt::null)
 		{
 			m_selectedLevel = m_hoveredLevel;
 			SelectEntity(context, m_hoveredEntity);
-			StartEntityDrag(context, m_hoveredEntity);
 		}
 		else
 		{
@@ -563,24 +615,31 @@ void LevelViewer::RefreshEntity(GameContext& context, const std::string& entityI
 	{
 		return;
 	}
-	PlacePreview(context, entity, m_document.GetEntityPosition(entityIid), m_document.GetEntityGridSize(entityIid));
+	PlacePreview(context, entity, entityIid, m_document.GetEntityPosition(entityIid));
 }
 
-void LevelViewer::PlacePreview(GameContext& context, entt::entity entity, const glm::ivec2& position, int gridSize)
+void LevelViewer::PlacePreview(GameContext& context, entt::entity entity, const std::string& entityIid,
+                               const glm::ivec2& position)
 {
-	// Matches World::Level::LoadLevelEntities: px + half the layer's grid size.
-	glm::vec2 cellCentre = glm::vec2(position) + glm::vec2(gridSize / 2.f);
+	// Matches World::Level::LoadLevelEntities: px is the pivot point, the entity sits at the centre of its rect.
+	glm::vec2 size       = glm::vec2(m_document.GetEntitySize(entityIid));
+	glm::vec2 rectCentre = glm::vec2(position) - m_document.GetEntityPivot(entityIid) * size + size * 0.5f;
 	context.GetSystemManager().GetSystem<System::TransformSystem>().SetLocalTransform(
-	    context, entity, glm::vec3(cellCentre, 0.0f), glm::vec3(1.0f), glm::quat(1.0f, 0.0f, 0.0f, 0.0f));
+	    context, entity, glm::vec3(rectCentre, 0.0f), glm::vec3(1.0f), glm::quat(1.0f, 0.0f, 0.0f, 0.0f));
 }
 
-void LevelViewer::StartEntityDrag(GameContext& context, entt::entity entity)
+void LevelViewer::StartEntityDrag(GameContext& context, entt::entity entity, GizmoHandle handle)
 {
+	if (entity == entt::null || handle == GizmoHandle::NONE)
+	{
+		return;
+	}
 	const auto* instance = context.GetRegistry().try_get<Component::LevelEntityInstance>(entity);
 	if (!instance || !m_document.HasEntity(instance->Iid))
 	{
 		return;
 	}
+	m_dragHandle        = handle;
 	m_dragEntity        = entity;
 	m_dragEntityIid     = instance->Iid;
 	m_dragStartPosition = m_document.GetEntityPosition(instance->Iid);
@@ -600,11 +659,9 @@ void LevelViewer::UpdateEntityDrag(GameContext& context)
 		EndEntityDrag();
 		return;
 	}
-	int gridSize = m_document.GetEntityGridSize(m_dragEntityIid);
-
 	if (ImGui::IsKeyPressed(ImGuiKey_Escape, false))
 	{
-		PlacePreview(context, m_dragEntity, m_dragStartPosition, gridSize);
+		PlacePreview(context, m_dragEntity, m_dragEntityIid, m_dragStartPosition);
 		EndEntityDrag();
 		return;
 	}
@@ -617,9 +674,27 @@ void LevelViewer::UpdateEntityDrag(GameContext& context)
 		}
 		m_isDragMoving = true;
 		// The mouse position stops updating while the cursor is off the viewport - the entity waits at the edge.
-		glm::vec2 target = glm::vec2(m_dragStartPosition) + (m_mouseWorldPos - m_dragStartMouse);
+		glm::vec2 mouseDelta = m_mouseWorldPos - m_dragStartMouse;
+		if (m_dragHandle == GizmoHandle::MOVE_X)
+		{
+			mouseDelta.y = 0.f;
+		}
+		else if (m_dragHandle == GizmoHandle::MOVE_Y)
+		{
+			mouseDelta.x = 0.f;
+		}
+		glm::vec2 target = glm::vec2(m_dragStartPosition) + mouseDelta;
 		m_dragPosition   = ConstrainEntityPosition(m_dragEntityIid, target, !ImGui::GetIO().KeyShift);
-		PlacePreview(context, m_dragEntity, m_dragPosition, gridSize);
+		// An axis drag leaves the other axis exactly where it was, even if that's off the grid.
+		if (m_dragHandle == GizmoHandle::MOVE_X)
+		{
+			m_dragPosition.y = m_dragStartPosition.y;
+		}
+		else if (m_dragHandle == GizmoHandle::MOVE_Y)
+		{
+			m_dragPosition.x = m_dragStartPosition.x;
+		}
+		PlacePreview(context, m_dragEntity, m_dragEntityIid, m_dragPosition);
 		return;
 	}
 
@@ -637,6 +712,7 @@ void LevelViewer::EndEntityDrag()
 	m_dragEntity = entt::null;
 	m_dragEntityIid.clear();
 	m_isDragMoving = false;
+	m_dragHandle   = GizmoHandle::NONE;
 }
 
 void LevelViewer::NudgeSelectedEntity(GameContext& context)
@@ -697,13 +773,100 @@ void LevelViewer::NudgeSelectedEntity(GameContext& context)
 glm::ivec2 LevelViewer::ConstrainEntityPosition(const std::string& entityIid, const glm::vec2& position,
                                                 bool snapToGrid) const
 {
-	int gridSize         = std::max(1, m_document.GetEntityGridSize(entityIid));
-	glm::ivec2 levelSize = m_document.GetEntityLevelSize(entityIid);
-	glm::vec2 placed     = snapToGrid ? glm::round(position / (float)gridSize) * (float)gridSize : glm::round(position);
-	// The last cell (or pixel) that's still inside the level.
-	int cellSize       = snapToGrid ? gridSize : 1;
-	glm::ivec2 maximum = glm::max(levelSize - glm::ivec2(cellSize), glm::ivec2(0));
-	return glm::clamp(glm::ivec2(placed), glm::ivec2(0), maximum);
+	// Works on the rect's top-left corner (px - pivot * size) - that's what LDtk lines up with the grid.
+	float gridSize        = (float)std::max(1, m_document.GetEntityGridSize(entityIid));
+	glm::vec2 levelSize   = glm::vec2(m_document.GetEntityLevelSize(entityIid));
+	glm::vec2 entitySize  = glm::vec2(m_document.GetEntitySize(entityIid));
+	glm::vec2 pivotOffset = m_document.GetEntityPivot(entityIid) * entitySize;
+
+	glm::vec2 topLeft = position - pivotOffset;
+	topLeft           = snapToGrid ? glm::round(topLeft / gridSize) * gridSize : glm::round(topLeft);
+	// The furthest the rect can go and still be inside the level - on the grid when snapping.
+	glm::vec2 maximum = glm::max(levelSize - entitySize, glm::vec2(0.f));
+	if (snapToGrid)
+	{
+		maximum = glm::floor(maximum / gridSize) * gridSize;
+	}
+	topLeft = glm::clamp(topLeft, glm::vec2(0.f), maximum);
+	return glm::ivec2(glm::round(topLeft + pivotOffset));
+}
+
+entt::entity LevelViewer::GetSelectedDocumentEntity(GameContext& context) const
+{
+	auto* hierarchyWindow = dynamic_cast<HierarchyWindow*>(context.GetEditor().GetWindow("Hierarchy"));
+	if (!hierarchyWindow)
+	{
+		return entt::null;
+	}
+	entt::entity selected = hierarchyWindow->GetSelectedEntity();
+	entt::registry& registry = context.GetRegistry();
+	if (selected == entt::null || !registry.valid(selected) || registry.all_of<System::Inactive>(selected))
+	{
+		return entt::null;
+	}
+	const auto* instance = registry.try_get<Component::LevelEntityInstance>(selected);
+	if (!instance || !m_document.HasEntity(instance->Iid))
+	{
+		return entt::null;
+	}
+	return selected;
+}
+
+glm::vec2 LevelViewer::WorldToViewScreen(GameContext& context, const glm::vec2& worldPos) const
+{
+	Core::GameData& gameData = context.GetGameData();
+	glm::vec2 gameToScreen   = m_viewImageSize / glm::vec2((float)gameData.gameWidth, (float)gameData.gameHeight);
+	return m_viewImagePos + context.GetCamera().WorldPosToScreenPos(worldPos) * gameToScreen;
+}
+
+LevelViewer::GizmoHandle LevelViewer::FindGizmoHandleAt(GameContext& context, const glm::vec2& screenPos) const
+{
+	entt::entity selected = GetSelectedDocumentEntity(context);
+	if (selected == entt::null || m_viewImageSize.x <= 0.f)
+	{
+		return GizmoHandle::NONE;
+	}
+	System::TransformSystem& transformSystem = context.GetSystemManager().GetSystem<System::TransformSystem>();
+	glm::vec2 origin = WorldToViewScreen(context, glm::vec2(transformSystem.GetWorldPosition(context, selected)));
+
+	glm::vec2 fromOrigin = glm::abs(screenPos - origin);
+	if (fromOrigin.x <= GIZMO_CENTRE_HALF_SIZE + 1.f && fromOrigin.y <= GIZMO_CENTRE_HALF_SIZE + 1.f)
+	{
+		return GizmoHandle::MOVE_FREE;
+	}
+	if (DistanceToSegment(screenPos, origin, origin + glm::vec2(GIZMO_AXIS_LENGTH, 0.f)) <= GIZMO_PICK_TOLERANCE)
+	{
+		return GizmoHandle::MOVE_X;
+	}
+	if (DistanceToSegment(screenPos, origin, origin + glm::vec2(0.f, GIZMO_AXIS_LENGTH)) <= GIZMO_PICK_TOLERANCE)
+	{
+		return GizmoHandle::MOVE_Y;
+	}
+	return GizmoHandle::NONE;
+}
+
+void LevelViewer::DrawGizmo(GameContext& context, ImDrawList* drawList) const
+{
+	entt::entity selected = GetSelectedDocumentEntity(context);
+	if (selected == entt::null)
+	{
+		return;
+	}
+	System::TransformSystem& transformSystem = context.GetSystemManager().GetSystem<System::TransformSystem>();
+	glm::vec2 origin = WorldToViewScreen(context, glm::vec2(transformSystem.GetWorldPosition(context, selected)));
+
+	// Highlight the handle being dragged, or else the one under the mouse.
+	GizmoHandle highlighted = m_dragHandle != GizmoHandle::NONE ? m_dragHandle : m_hoveredGizmoHandle;
+	ImU32 xColor            = highlighted == GizmoHandle::MOVE_X ? GIZMO_ACTIVE_COLOR : GIZMO_X_COLOR;
+	ImU32 yColor            = highlighted == GizmoHandle::MOVE_Y ? GIZMO_ACTIVE_COLOR : GIZMO_Y_COLOR;
+	ImU32 freeColor         = highlighted == GizmoHandle::MOVE_FREE ? GIZMO_ACTIVE_COLOR : GIZMO_FREE_COLOR;
+
+	// World y runs down the screen (as in LDtk), so the Y arrow points down.
+	DrawGizmoArrow(drawList, origin, glm::vec2(1.f, 0.f), xColor);
+	DrawGizmoArrow(drawList, origin, glm::vec2(0.f, 1.f), yColor);
+	glm::vec2 centreExtent(GIZMO_CENTRE_HALF_SIZE);
+	drawList->AddRectFilled(ToImVec2(origin - centreExtent), ToImVec2(origin + centreExtent), freeColor);
+	drawList->AddRect(ToImVec2(origin - centreExtent), ToImVec2(origin + centreExtent), IM_COL32(0, 0, 0, 200));
 }
 
 entt::entity LevelViewer::FindPreviewEntity(GameContext& context, const std::string& entityIid) const
@@ -810,6 +973,9 @@ void LevelViewer::RenderViewportOverlay(GameContext& context, ImDrawList* drawLi
 		return ImVec2(screen.x, screen.y);
 	};
 
+	m_viewImagePos  = imagePos;
+	m_viewImageSize = imageSize;
+
 	drawList->PushClipRect(ImVec2(imagePos.x, imagePos.y), ImVec2(imagePos.x + imageSize.x, imagePos.y + imageSize.y),
 	                       true);
 
@@ -880,6 +1046,8 @@ void LevelViewer::RenderViewportOverlay(GameContext& context, ImDrawList* drawLi
 			DrawLabel(drawList, ImVec2(screenMin.x, screenMax.y + 2.f), IM_COL32_WHITE, GetDisplayName(instance));
 		}
 	}
+
+	DrawGizmo(context, drawList);
 
 	// Status line: the level and grid cell under the mouse, its world position, and zoom.
 	std::string status = std::format("Zoom {:.0f}%", camera.zoom * 100.f);

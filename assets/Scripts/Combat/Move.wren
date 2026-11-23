@@ -18,9 +18,9 @@
 //               impact), "deflect" (a block at the peak sets the attacker back), "absorb" (no skip; stagger -> stamina)
 //
 // Moves are built by Combat/Config/Moves.wren with the fluent setters below (each returns the move). A move comes in
-// up to three tiers (I early, II mid, III late): the tier scales base damage / heal / defence x1 / x1.5 / x2, adds
+// up to three tiers (I early, II mid, III late): the tier scales base damage / heal / defence x1 / x2 / x3, adds
 // 0.05 s / 0.10 s of stagger and costs x1 / x1.25 / x1.5 stamina - the animation and every time stay the same.
-var TIER_SCALE = [1, 1, 1.5, 2]
+var TIER_SCALE = [1, 1, 2, 3]
 var TIER_STAGGER = [0, 0, 0.05, 0.10]
 var TIER_COST = [1, 1, 1.25, 1.5]
 var TIER_SUFFIX = ["", "", " II", " III"]

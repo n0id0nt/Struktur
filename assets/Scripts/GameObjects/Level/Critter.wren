@@ -21,8 +21,9 @@ class Critter {
                 "Chinlin": ["Chinlin", "Chinlin", null],
                 "Chicken": ["Chicken", "Chicken", null],
                 "StarvingThornwolf": ["Chinlin", "Starving Thornwolf", null],
-                // The one at the village's north edge that Thomas sends you after.
-                "PerimeterThornwolf": ["Chinlin", "Starving Thornwolf", "wolf_at_the_edge"]
+                // The one at the village's north edge that Thomas talks you through: it only wanders until he says it
+                // has seen you (GameObjects/PerimeterWolf.wren).
+                "PerimeterThornwolf": ["PerimeterWolf", "Starving Thornwolf", "wolf_at_the_edge"]
             }
         }
         return __species

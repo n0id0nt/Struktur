@@ -19,6 +19,27 @@ import "Sprites/WrestlerBattleSprite" for WrestlerBattleSprite
 import "Sprites/MutantBattleSprite" for MutantBattleSprite
 import "Sprites/YellowPantsGirlSprite" for YellowPantsGirlSprite
 import "Sprites/YellowPantsGirlBattleSprite" for YellowPantsGirlBattleSprite
+import "gameObjectComponents" for SpriteAnimation
+import "math" for Vec2
+import "Sprites/SpriteSheet" for SpriteSheet
+
+// The clip an NPC is already playing when it appears, by Name and its LDtk Versions (the story stages it's shown in):
+// [name, versions, clip]. Finn is at his anvil / forge in the workshop. An NPC's own "Animation" field (LDtk String,
+// optional - not added to the NPC entity yet) wins over this table.
+// NPCs only shown while an int flag holds a value, by their LDtk iid: [flag, value] (World/StoryGates.wren withFlag).
+// Thomas has three spots during his lessons (arc1_stage 2): "thomas_place" 0 his cabin, 1 the training grounds,
+// 2 the north gate (Dialogue/Arc1Dialogue.json moves him). Kept here, not as an LDtk field, as the NPC entity has no
+// field for it.
+var FLAG_GATES = {
+    "c96a0770-bde0-11f1-99f1-014b901230a9": ["thomas_place", 0],   // ThomasCabin
+    "07e1c04a-e6ea-11f1-a87b-28d043bb8e9f": ["thomas_place", 1],   // HavenVillageTrainingGrounds
+    "07e22958-e6ea-11f1-9b7e-28d043bb8e9f": ["thomas_place", 2]    // HavenVillageBorderNorth
+}
+
+var STARTING_POSES = [
+    ["Finn", [0, 1, 2], "Working"],
+    ["Finn", [9, 10], "Working"]
+]
 
 class NPCData {
     // The generated sheets this NPC wears (made by 3dModelsToSprites/build_sprites.bat):
@@ -73,8 +94,26 @@ class NPC {
         _name = args["Name"]
         // Optional story window (the Versions LDtk field - the stages it's shown in) - World/StoryGates.wren.
         _gate = StoryGates.fromArgs(args)
+        var flagGate = FLAG_GATES[args["Iid"]]
+        if (flagGate != null) _gate = StoryGates.withFlag(_gate, flagGate[0], flagGate[1])
         // Optional: the iid of the Path it wanders (the Entity_ref LDtk field - World/PathWalkers.wren).
         _wanderPathIid = args["Entity_ref"]
+        _startingClip = NPC.startingClip_(_name, _gate == null ? null : _gate[3], args["Animation"])
+    }
+
+    // The clip it starts in (STARTING_POSES), or null for its idle.
+    static startingClip_(name, versions, animation) {
+        if (animation is String && animation != "") return animation
+        if (!(versions is List)) return null
+        for (pose in STARTING_POSES) {
+            if (pose[0] != name || pose[1].count != versions.count) continue
+            var same = true
+            for (i in 0...versions.count) {
+                if (pose[1][i] != versions[i]) same = false
+            }
+            if (same) return pose[2]
+        }
+        return null
     }
 
     name { _name }
@@ -97,6 +136,15 @@ class NPC {
         // RenderLayer.ENTITIES already y-sorts by world position, so no manual offset is needed here.
         npcData.createSprite(_entity)
         Shadow.attach(_entity)
+        if (_startingClip != null) {
+            // Facing down the screen, like the scenes that set it (Dialogue/Arc1Dialogue.json "finn_working").
+            var clipName = SpriteSheet.clipName(Vec2.new(0, 1), _startingClip)
+            if (SpriteSheet.clip(_entity, clipName) != null) {
+                SpriteAnimation.setCurrentAnimation(_entity, clipName)
+            } else {
+                Debug.warning("NPC %(_name): no %(clipName) clip to start in")
+            }
+        }
 
         var bodyDef = BodyDefinition.new(BodyType.STATIC_BODY)
         PhysicsBody.create(_entity, bodyDef, CharacterCollider.shape())

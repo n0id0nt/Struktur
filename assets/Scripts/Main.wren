@@ -48,6 +48,8 @@ class Game {
             "PressurePad",
             "Sign",
             "SoulFragment",
+            "ArrowShot",
+            "PerimeterWolf",
             "Player",
             "Room",
             "Interactable",

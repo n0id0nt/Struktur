@@ -176,6 +176,15 @@ private:
 		PLAY_FROM,
 	};
 
+	// Parts of the selected entity's move gizmo
+	enum class GizmoHandle
+	{
+		NONE,
+		MOVE_X,
+		MOVE_Y,
+		MOVE_FREE,
+	};
+
 	void Request(GameContext& context, PendingAction action, const std::string& filePath, const glm::vec2& worldPos);
 	void RunPendingAction(GameContext& context);
 	void RenderUnsavedChangesPrompt(GameContext& context);
@@ -189,19 +198,30 @@ private:
 	void RefreshEntityFields(GameContext& context, const std::string& entityIid);
 	// The preview entity of the LDtk entity with this iid, or entt::null.
 	entt::entity FindPreviewEntity(GameContext& context, const std::string& entityIid) const;
-	// Puts a preview entity where the loader would for LDtk position `position`: the centre of its cell.
-	void PlacePreview(GameContext& context, entt::entity entity, const glm::ivec2& position, int gridSize);
+	// Puts a preview entity where World::Level::LoadLevelEntities would for LDtk position `position`: the centre of
+	// its rect (px - pivot * size + size / 2).
+	void PlacePreview(GameContext& context, entt::entity entity, const std::string& entityIid,
+	                  const glm::ivec2& position);
 
-	// Moving entities. A left-drag on an entity moves its preview with the mouse and records one MoveEntity when the
-	// button is released (Escape cancels); the arrow keys nudge the selected entity. Both snap to the entity's layer
-	// grid unless Shift is held (then 1 px) and keep it inside its level.
-	void StartEntityDrag(GameContext& context, entt::entity entity);
+	// Moving entities. The selected entity shows a move gizmo: dragging its X or Y arrow moves the entity along that
+	// axis, its centre square moves it freely, and one MoveEntity is recorded when the button is released (Escape
+	// cancels). The arrow keys nudge the selected entity. Both snap the entity's top-left corner to its layer grid
+	// unless Shift is held (then 1 px) and keep its rect inside its level.
+	void StartEntityDrag(GameContext& context, entt::entity entity, GizmoHandle handle);
 	void UpdateEntityDrag(GameContext& context);
 	void EndEntityDrag();
 	void NudgeSelectedEntity(GameContext& context);
-	// Where an entity moved to `position` (LDtk px, level-relative) lands: snapped to its layer grid if snapToGrid,
-	// and inside its level.
+	// Where an entity moved to `position` (LDtk px, level-relative) lands: its top-left corner snapped to its layer
+	// grid if snapToGrid, and its rect inside its level.
 	glm::ivec2 ConstrainEntityPosition(const std::string& entityIid, const glm::vec2& position, bool snapToGrid) const;
+
+	// The Hierarchy's selected entity if it's an LDtk entity in the open document, else entt::null.
+	entt::entity GetSelectedDocumentEntity(GameContext& context) const;
+	// Where a world position is drawn on screen, in the Game Viewport image as of the last overlay draw.
+	glm::vec2 WorldToViewScreen(GameContext& context, const glm::vec2& worldPos) const;
+	// The selected entity's gizmo handle under the screen position, or NONE.
+	GizmoHandle FindGizmoHandleAt(GameContext& context, const glm::vec2& screenPos) const;
+	void DrawGizmo(GameContext& context, ImDrawList* drawList) const;
 
 	// (De)activates every level, tile layer and entity to match the visibility settings.
 	void ApplyVisibility(GameContext& context);
@@ -248,9 +268,15 @@ private:
 	bool m_isMouseOverView       = false;
 	glm::vec2 m_mouseWorldPos{0.f};
 
-	// The entity being dragged (entt::null when none), where it started, where it is now and where the mouse was when
-	// the button went down. It only moves once the mouse has travelled past ImGui's drag threshold, so a plain click
-	// just selects.
+	// The Game Viewport image rect (screen px) as of the last overlay draw - for mapping the gizmo to the screen.
+	glm::vec2 m_viewImagePos{0.f};
+	glm::vec2 m_viewImageSize{0.f};
+	// The gizmo handle under the mouse as of the last Update (NONE while dragging), and the one being dragged.
+	GizmoHandle m_hoveredGizmoHandle = GizmoHandle::NONE;
+	GizmoHandle m_dragHandle         = GizmoHandle::NONE;
+
+	// The entity being dragged by its gizmo (entt::null when none), where it started, where it is now and where the
+	// mouse was when the button went down. It only moves once the mouse has travelled past ImGui's drag threshold.
 	entt::entity m_dragEntity = entt::null;
 	std::string m_dragEntityIid;
 	glm::ivec2 m_dragStartPosition{0};

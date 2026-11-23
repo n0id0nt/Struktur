@@ -31,6 +31,12 @@ var ROLE_CLIPS = [
     ["defeat", "Death"]
 ]
 
+// Roles only some sheets have (the player's and Kira's - their job.battle.json renders "drinking"): added when the
+// sheet has the clip; without it the role falls back (fallbackRole).
+var OPTIONAL_ROLE_CLIPS = [
+    ["drink", "Drinking"]        // a healing item (Combat/Config/BattleItems.wren)
+]
+
 class SheetAnims {
     // data: a generated sheet's data map. side: "right" or "left". sheetName: for the error when a clip is missing.
     static forSheet(data, side, sheetName) {
@@ -46,6 +52,10 @@ class SheetAnims {
             }
             anims[pair[0]] = clips[name]
         }
+        for (pair in OPTIONAL_ROLE_CLIPS) {
+            var name = "%(side)%(pair[1])Animation"
+            if (clips.containsKey(name)) anims[pair[0]] = clips[name]
+        }
         return anims
     }
 
@@ -54,7 +64,7 @@ class SheetAnims {
     static fallbackRole(role) {
         if (role == "step" || role == "roll" || role == "flee" || role == "entrance") return "run"
         if (role == "defeat") return "hurt"
-        if (role == "guard") return "idle"
+        if (role == "guard" || role == "drink") return "idle"
         if (role == "idle" || role == "attack" || role == "hurt" || role == "run") return null
         return "attack"
     }

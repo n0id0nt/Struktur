@@ -33,7 +33,7 @@ import "Combat/Chain" for Grid
 import "Combat/Rules" for Rules, STAGGER_TO_STAMINA
 
 var TICK = 1 / 120
-var CHAIN_BUDGET = 4.0
+var CHAIN_BUDGET = 3.0     // seconds of moves a chain holds
 var EPS = 0.00001
 var HOLD_DAMAGE_ANIM = 0.3
 var DR_WINDOW = 2
@@ -231,6 +231,10 @@ class BattleEngine {
         relocate_(target, lane, row, "push")
         return true
     }
+
+    // Puts `fighter` on a cell straight away, outside any move (a lesson setting the player up - States/CombatState.wren
+    // placeInFrontOfFoe). The caller checks the cell is free.
+    place(fighter, lane, row) { relocate_(fighter, lane, row, "place") }
 
     relocate_(fighter, lane, row, how) {
         var from = [fighter.lane, fighter.row]
@@ -808,6 +812,8 @@ class BattleEngine {
 
     applyDamage_(target, amount) {
         if (amount <= 0) return
+        // A lesson's dummy (Combat/Config/BattleCritter.lessonDummy): hits land and show, but it never loses health.
+        if (target.has("endless")) return
         var left = amount
         if (target.shield > 0) {
             var soak = left.min(target.shield)

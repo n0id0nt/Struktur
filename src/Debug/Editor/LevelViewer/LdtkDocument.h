@@ -39,9 +39,13 @@ public:
 	}
 
 	bool HasEntity(const std::string& entityIid) const;
-	// LDtk's "px" (top-left of the entity's cell relative to its level, before the pivot) and its layer's grid size.
+	// LDtk's "px": where the entity's pivot point sits, relative to its level - with the default (0, 0) pivot, its
+	// rect's top-left corner. And its layer's grid size.
 	glm::ivec2 GetEntityPosition(const std::string& entityIid) const;
 	int GetEntityGridSize(const std::string& entityIid) const;
+	// The entity's rect size (px) and its pivot (0-1 across that rect: px - pivot * size is the rect's top-left).
+	glm::ivec2 GetEntitySize(const std::string& entityIid) const;
+	glm::vec2 GetEntityPivot(const std::string& entityIid) const;
 	// The size (px) of the level the entity is in.
 	glm::ivec2 GetEntityLevelSize(const std::string& entityIid) const;
 	// The entity's JSON object, or null.

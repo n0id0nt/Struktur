@@ -13,6 +13,7 @@
 //   questCompleted  a quest is complete           }
 //   movesRemoved    equipping a weapon took moves it can't use out of the loadout (Inventory/Equipment.wren) - the
 //                   inventory (States/InventoryState.wren) shows an alert and flags its Moves tab
+//   partyRested     the party rested back to full (the restParty dialogue command - a rest spot, a bed)
 //   soulSight       Soul Sight was switched on or off (World/SoulSight.wren) - hidden doors and plates show or hide,
 //                   and the screen tint and the player's soul light follow (out in the world - a fight keeps its own)
 //
@@ -27,6 +28,7 @@ var QUEST_UPDATED = "questUpdated"
 var QUEST_COMPLETED = "questCompleted"
 var MOVES_REMOVED = "movesRemoved"
 var SOUL_SIGHT = "soulSight"
+var PARTY_RESTED = "partyRested"
 
 class GameEvents {
     static itemReceivedType { ITEM_RECEIVED }
@@ -37,6 +39,12 @@ class GameEvents {
     static questCompletedType { QUEST_COMPLETED }
     static movesRemovedType { MOVES_REMOVED }
     static soulSightType { SOUL_SIGHT }
+    static partyRestedType { PARTY_RESTED }
+
+    // data: {}
+    static partyRested() {
+        Event.addEvent(PARTY_RESTED, [["__type", "map"]])
+    }
 
     // data: {"active": 1 or 0}
     static soulSightChanged(active) {

@@ -133,6 +133,7 @@ class CombatState is BaseState {
 
         _party = []
         _enemies = []
+        _leaderAlone = false     // an opponent asked for the leader alone (gatherSides_)
         _encounter = params["encounter"]
         _stageIndex = 0
         if (params["partyCombatants"] != null) {
@@ -141,8 +142,9 @@ class CombatState is BaseState {
         } else {
             gatherSides_(params)
         }
-        // A solo lesson: just the leader (the player) - the rest of the party watches.
-        if (_encounter != null && _encounter.solo && _party.count > 1) _party = [_party[0]]
+        // A solo lesson, or a foe that's the leader's alone to face (the perimeter wolf): just the leader (the player) -
+        // the rest of the party watches.
+        if (((_encounter != null && _encounter.solo) || _leaderAlone) && _party.count > 1) _party = [_party[0]]
         // A scripted fight takes its opposition from its first stage (when that stage names one).
         if (_encounter != null && _encounter.stages[0].enemies.count > 0) {
             _enemies = []
@@ -195,6 +197,8 @@ class CombatState is BaseState {
             for (entity in params["opponents"]) {
                 var script = Script.getInstance(entity)
                 if (script == null) continue
+                // A foe that's the leader's alone to face (GameObjects/PerimeterWolf.wren) - see enter.
+                if (Reflect.hasMethod(script, "fightsLeaderAlone()") && script.fightsLeaderAlone()) _leaderAlone = true
                 var def = BattleCritter.forName(script.name)
                 var combatant = enemyCombatant_(script, def, entity)
                 combatant.brain = def.makeBrain()
@@ -501,6 +505,22 @@ class CombatState is BaseState {
     }
     // Ends the stage as won at the next selection stop, whoever is still standing (a lesson that's been learned).
     finish() { _finishing = true }
+
+    // The party's leader steps onto the cell in front of the first opponent and faces it - a lesson making sure the
+    // next attack lands (Thomas's dummy). Nothing happens if that cell is taken.
+    placeInFrontOfFoe() {
+        var leader = _party.count > 0 ? _party[0] : null
+        var foe = null
+        for (fighter in _engine.fighters) {
+            if (foe == null && fighter.side == 1 && fighter.active) foe = fighter
+        }
+        if (leader == null || foe == null) return
+        var row = foe.row - _engine.forward(leader.side)
+        if (!_engine.isFree(foe.lane, row, leader)) return
+        _engine.place(leader, foe.lane, row)
+        leader.facing = _engine.forward(leader.side)
+        _stage.resync()
+    }
 
     // The player learns a move (and anyone in the party whose own kit has it starts using it).
     teach(moveName) {

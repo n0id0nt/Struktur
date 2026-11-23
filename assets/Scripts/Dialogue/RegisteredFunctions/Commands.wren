@@ -18,9 +18,16 @@ import "Events/GameEvents" for GameEvents
 import "GameObjects/Door" for Door
 import "World/SpawnPoint" for SpawnPoint
 import "World/Rooms" for Rooms
+import "math" for Vec2
+import "Dialogue/Portraits" for Portraits
+import "Dialogue/CloseUp" for CloseUp
+import "GameObjects/Critter" for Critter
+import "reflect" for Reflect
 
 // px above the crystal's centre that the soul fragment comes loose from ("soulFragment").
 var FRAGMENT_LIFT = 14
+// "shootArrow": where the arrow leaves the bow, from the shooter's feet (px).
+var BOW_OFFSET = Vec2.new(6, -14)
 
 class Commands {
     // A staging command's "wait" parameter: on unless it's 0 / false / "no" (JSON bools are avoided in dialogue
@@ -163,6 +170,7 @@ class Commands {
         // A rest spot: the whole party back to full HP / stamina, downed members included (Party.restAll).
         DialogueRegistry.registerCommand("restParty") { |params|
             Party.restAll()
+            GameEvents.partyRested()
             Debug.info("[Dialogue Command] Party rested")
         }
         // The named party member waits where they stand (holding a pressure plate down, say) / follows again.
@@ -238,6 +246,27 @@ class Commands {
             Script.createArg(entity, "SoulFragment", {"FromX": from.x, "FromY": from.y - FRAGMENT_LIFT, "Seconds": seconds})
             StageDirector.wait(seconds + 0.3)
         }
+        // An arrow from "who"'s bow (GameObjects/ArrowShot.wren) - a particle flying east, "distance" px (default 64),
+        // loosed "delay" seconds after the node is reached (default 0.8 - the draw of the Shoot clip that plays
+        // alongside it). The arrow art points east, so only eastward shots look right.
+        DialogueRegistry.registerCommand("shootArrow") { |params|
+            var shooter = StageDirector.actor(params["who"])
+            if (shooter == null || Rooms.world == null) return
+            var feet = WorldTransform.getPosition(shooter)
+            var distance = params["distance"] is Num ? params["distance"] : 64
+            var delay = params["delay"] is Num ? params["delay"] : 0.8
+            var fromX = feet.x + BOW_OFFSET.x
+            var fromY = feet.y + BOW_OFFSET.y
+            var entity = GameObject.create("ArrowShot", Rooms.world)
+            Script.createArg(entity, "ArrowShot", {"FromX": fromX, "FromY": fromY, "ToX": fromX + distance, "ToY": fromY, "Delay": delay})
+        }
+        // Every creature here that can charge (the perimeter wolf - GameObjects/PerimeterWolf.wren) runs at the player;
+        // catching them starts the fight once the conversation is over.
+        DialogueRegistry.registerCommand("chargePlayer") { |params|
+            for (critter in Critter.all) {
+                if (Reflect.hasMethod(critter, "charge()")) critter.charge()
+            }
+        }
         DialogueRegistry.registerCommand("teleport") { |params|
             StageDirector.teleport(params["who"], params["to"])
         }
@@ -246,12 +275,27 @@ class Commands {
         DialogueRegistry.registerCommand("face") { |params|
             StageDirector.face(params["who"], params["towards"])
         }
-        // "animation": a clip of the character's sheet - Idle, Walk, Run, Hurt, Roll, Death (everyone); Finn also has
-        // Working, LayingIdle, GettingUp, PickingUp. Held as a pose until changed. "wait" (default 0
+        // "animation": a clip of the character's sheet - Idle, Walk, Run, Hurt, Roll, Death, SittingIdle, LyingDown,
+        // GettingUp (everyone); the player and Kira also Drinking, Inspecting, Lifting, and Kira Shoot; Finn Working,
+        // LayingIdle, PickingUp, Inspecting, Lifting; Thomas Working (docs/DialogueStaging.md). Held as a pose until changed. "wait" (default 0
         // here): hold the conversation until it has played once. "then" (optional): the clip to switch to after.
         DialogueRegistry.registerCommand("playAnimation") { |params|
             var wait = params["wait"] == null ? false : Commands.waitParam_(params)
             StageDirector.playAnimation(params["who"], params["animation"], wait, params["then"])
+        }
+        // How the node's line is said - shown on the speaker's portrait (Dialogue/Portraits.wren): "mood" is a short
+        // description ("chuckling", "quietly"). Without art for it yet, the portrait shows its default face with the
+        // mood written under it.
+        DialogueRegistry.registerCommand("expression") { |params|
+            Portraits.expression = params["mood"]
+        }
+        // The close-up view (Dialogue/CloseUp.wren): "image" (e.g. "CloseUps/kira_book_wolf_fact.png") shown large
+        // above the dialogue box until "closeUpEnd" or the end of the conversation.
+        DialogueRegistry.registerCommand("closeUp") { |params|
+            CloseUp.show(params["image"])
+        }
+        DialogueRegistry.registerCommand("closeUpEnd") { |params|
+            CloseUp.hide()
         }
         DialogueRegistry.registerCommand("wait") { |params|
             var seconds = params["seconds"]

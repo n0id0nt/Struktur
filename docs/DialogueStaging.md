@@ -20,22 +20,43 @@ nearest them. Only rooms that are currently loaded are searched (the player's ro
 
 | Command | Parameters | What it does |
 |---|---|---|
-| `moveTo` | `who`, `to` (a Path's Name - walked through its WayPoints - or a Marker name), `speed` (`walk` - default, `run`, or px/s), `wait` (1 default / 0), `animation` (optional - a clip to move with instead, e.g. Finn's `StandardWalk`) | Walks there with the walk or run animation, then idles facing the Marker's `Facing` (or the way it walked) |
+| `moveTo` | `who`, `to` (a Path's Name - walked through its WayPoints - or a Marker name), `speed` (`walk` - default, `run`, or px/s), `wait` (1 default / 0), `animation` (optional - a clip to move with instead of Walk / Run) | Walks there with the walk or run animation, then idles facing the Marker's `Facing` (or the way it walked) |
 | `moveToPlayer` | `who`, `speed`, `wait`, `animation` (as `moveTo`) | Walks to the tile in front of the player (one tile the way the player faces) and turns to face them. `moveTo` with `to='Player'` does the same |
 | `teleport` | `who`, `to` | Puts them on the Path's first WayPoint (or the Marker) at once |
 | `face` | `who`, `towards`: `up` `down` `left` `right` `upLeft` … or `North`/`South`/`East`/`West`, or a character / Marker name | Turns them |
 | `playAnimation` | `who`, `animation` (see below), `wait` (0 default / 1 - hold the conversation until it has played once), `then` (optional - the clip to switch to after, e.g. `GettingUp` then `Idle`) | Plays that clip of their sheet in the way they face, and holds it as a pose |
 | `wait` | `seconds` | Pauses the conversation |
+| `expression` | `mood` (a word or two - `chuckling`, `uneasy`) | How the node's line is said, shown on the speaker's portrait. Portraits only have their default face so far, so the mood is written under the portrait as a placeholder (`Dialogue/Portraits.wren`) |
+| `closeUp` | `image` (e.g. `CloseUps/kira_book_wolf_fact.png`) | Shows a picture large above the dialogue box - a book page, a carving, a memory - until `closeUpEnd` or the end of the conversation. It stays up while a staged node hides the box, so a memory can play with no text (`closeUp` + `wait`). Pictures are 320x180, shown at 2x (`Dialogue/CloseUp.wren`) |
+| `closeUpEnd` | - | Puts the close-up away |
+| `shootArrow` | `who`, `distance` (px, default 64), `delay` (seconds, default 0.8) | An arrow particle flies east from `who`'s bow and ends in a puff of dust (`GameObjects/ArrowShot.wren`). Play it alongside `playAnimation` `Shoot` - the delay matches the draw. The arrow art points east, so shoot east |
+| `chargePlayer` | - | Every creature here that can charge (the perimeter wolf - `GameObjects/PerimeterWolf.wren`) runs at the player; catching them starts the fight once the conversation closes. The perimeter wolf's fight is the player's alone |
 
 ## Animations
 
 | Sheet | Clips |
 |---|---|
-| Everyone (player, NPCs, party) | `Idle` `Walk` `Run` `Hurt` `Roll` `Death` |
-| Finn (`Sprites/FinnSprite.wren`) | also `Working` (looping - at the anvil), `LayingIdle` (looping), `GettingUp`, `PickingUp`, `StandardWalk` (a calmer walk) |
+| Everyone (player, NPCs, party) | `Idle` `Walk` `Run` `Hurt` `Roll` `Death` `SittingIdle` `LyingDown` `GettingUp` |
+| The player (`ExplorerSprite`) | also `Drinking` `Inspecting` (looping) `Lifting` - Lifting plays when an item is picked up |
+| Kira (`YellowPantsGirlSprite`) | also `Drinking` `Inspecting` (looping - reading her book) `Lifting` `Shoot` (with her bow) |
+| Finn (`FinnSprite`) | also `Working` (looping - at the anvil), `LayingIdle` (looping), `PickingUp`, `Inspecting`, `Lifting` |
+| Thomas (`GoblinVikingSprite`) | also `Working` (looping) |
 
 A clip a character's sheet doesn't have is skipped with a warning in the log. One-shot clips (`GettingUp`,
-`PickingUp`, `Hurt`, `Roll`, `Death`) stop on their last frame unless `then` names the next clip.
+`PickingUp`, `Lifting`, `Drinking`, `Shoot`, `LyingDown`, `Hurt`, `Roll`, `Death`) stop on their last frame unless
+`then` names the next clip.
+
+Finn starts in `Working` when he's placed at his anvil or forge (`GameObjects/NPC.wren` `STARTING_POSES`, by his
+`Versions`). An NPC entity with a String field `Animation` would start in that clip instead (not added to the LDtk
+NPC entity yet).
+
+## Portraits and close-ups
+
+- A speaker's portrait shows at the left of the dialogue box (`Dialogue/Portraits.wren` maps speaker ids to
+  `assets/Portraits/*.png`). They're rendered by 3dModelsToSprites: each character's `job.portrait.json` frames the
+  head and shoulders (`"framing": "head"`) and `build_sprites.bat <character> --sheet portrait` installs the image.
+- The whole Arc 1 script, with staging and what's missing, is in `docs/Arc1Dialogue.md`
+  (`python tools/dialogue_to_markup.py` regenerates it).
 
 **Poses**
 - Any clip but `Idle` is held as a pose until a `moveTo`, `face` or another `playAnimation` replaces it.

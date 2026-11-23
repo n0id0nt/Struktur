@@ -5,7 +5,7 @@
 //
 //   Health Potion   1.3 s, effect 1.0 s, Self            heal 30% max HP
 //   Smelling Salts  1.0 s, effect 0.7 s, Self            clears statuses
-//   Fire Flask      1.7 s, effect 1.1 s, First; sides 30%   20 damage + Burn
+//   Fire Flask      1.7 s, effect 1.1 s, First; sides 30%   2 damage + Burn
 //
 // The consumables the game hands out so far are all food and herbs: each is a self-heal of a share of max HP.
 // forItem(id) returns the move for an inventory item (null = it can't be used in a fight).
@@ -13,6 +13,7 @@ import "Combat/Move" for Move
 
 // item id -> % of max HP it restores.
 var HEALING = {
+    "Healing Potion": 50,
     "Healing Herb": 30,
     "Dried Herbs": 20,
     "Bread Roll": 15,
@@ -30,13 +31,14 @@ class BattleItems {
             return Move.new(id, 1, 1.0, 0).self().at(0.7).special("salts").item(id).anim("guard")
         }
         if (id == "Fire Flask") {
-            return Move.new(id, 1, 1.7, 0).attackFlat(1.1, 20, 0.2).first().sides(0.3).special("flask").item(id).anim("shoot")
+            return Move.new(id, 1, 1.7, 0).attackFlat(1.1, 2, 0.2).first().sides(0.3).special("flask").item(id).anim("shoot")
         }
         return null
     }
 
     static heal_(id, percent) {
-        return Move.new(id, 1, 1.3, 0).healFlat(1.0, percent).self().special("potion").item(id).anim("guard")
+        // The Drinking clip where the sheet has one (the player, Kira - Combat/Config/SheetAnims.wren), idle otherwise.
+        return Move.new(id, 1, 1.3, 0).healFlat(1.0, percent).self().special("potion").item(id).anim("drink")
     }
 
     // One line for the command panel: what the item does.
@@ -44,7 +46,7 @@ class BattleItems {
         if (HEALING.containsKey(id)) return "Heals %(HEALING[id]) pct of max HP at 1.0s"
         if (id == "Health Potion") return "Heals 30 pct of max HP at 1.0s"
         if (id == "Smelling Salts") return "Clears statuses at 0.7s"
-        if (id == "Fire Flask") return "20 damage and Burn to the first enemy in the lane at 1.1s"
+        if (id == "Fire Flask") return "2 damage and Burn to the first enemy in the lane at 1.1s"
         return ""
     }
 

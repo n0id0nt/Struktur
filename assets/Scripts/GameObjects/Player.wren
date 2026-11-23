@@ -90,13 +90,19 @@ class Player {
     // Plays the getting-up animation, facing down - after waking from a fall (States/GameWorldState.wren respawn_), or
     // rising from lying down. The player can't move until it has finished.
     getUp() {
+        _facing = Vec2.new(0, 1)
+        perform("GettingUp")
+    }
+
+    // Plays a one-shot clip ("Lifting" for an item picked up - GameObjects/Item.wren) the way they face, standing still
+    // until it has finished - then back to their own control. A clip the sheet doesn't have is skipped.
+    perform(animationType) {
         if (_resting != null) Player.standParty_()
         _resting = null
         _settleAt = null
         _stillSince = null
-        _facing = Vec2.new(0, 1)
         PhysicsBody.setLinearVelocity(_entity, Vec2.new())
-        var animation = getPlayerAnimation("GettingUp")
+        var animation = getPlayerAnimation(animationType)
         var clip = SpriteSheet.clip(_entity, animation)
         if (clip == null) {
             _upAt = null

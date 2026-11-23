@@ -525,6 +525,26 @@ int LdtkDocument::GetEntityGridSize(const std::string& entityIid) const
 	    .get<int>();
 }
 
+glm::ivec2 LdtkDocument::GetEntitySize(const std::string& entityIid) const
+{
+	const nlohmann::ordered_json* entity = FindEntity(entityIid);
+	if (!entity)
+	{
+		return glm::ivec2(0);
+	}
+	return glm::ivec2((*entity)["width"].get<int>(), (*entity)["height"].get<int>());
+}
+
+glm::vec2 LdtkDocument::GetEntityPivot(const std::string& entityIid) const
+{
+	const nlohmann::ordered_json* entity = FindEntity(entityIid);
+	if (!entity || !entity->contains("__pivot"))
+	{
+		return glm::vec2(0.f);
+	}
+	return glm::vec2((*entity)["__pivot"][0].get<float>(), (*entity)["__pivot"][1].get<float>());
+}
+
 glm::ivec2 LdtkDocument::GetEntityLevelSize(const std::string& entityIid) const
 {
 	auto location = m_entityLocations.find(entityIid);

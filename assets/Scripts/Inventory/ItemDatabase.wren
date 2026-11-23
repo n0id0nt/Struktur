@@ -46,6 +46,8 @@ var ITEMS = {
 
     // Arc 1 (Dialogue/Arc1Dialogue.json). Everything else it hands out (keys, the horn, records...) is a key item.
     "Healing Herb": {"category": "consumable"},
+    // Thomas's, before and after a sparring lesson (drunk straight away - the "drinkPotion" dialogue command).
+    "Healing Potion": {"category": "consumable"},
     "Bread Roll": {"category": "consumable"},
     "Special Ration": {"category": "consumable"},
     "Hunter's Bow": {"category": "weapon", "weaponType": "shortbow", "bonuses": {"attack": 2}},
@@ -94,6 +96,7 @@ var ICONS = {
     "Oak Staff": "Items/Weapons/MagicWand/Sprite.png",
     // Arc 1
     "Healing Herb": "Items/Food/TeaLeaf.png",
+    "Healing Potion": "Items/Potion/LifePot.png",
     "Bread Roll": "Items/Food/Onigiri.png",
     "Special Ration": "Items/Food/Meat.png",
     "Village Key": "Items/Treasure/SilverKey.png",

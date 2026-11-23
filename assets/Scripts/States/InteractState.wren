@@ -20,6 +20,9 @@ import "Dialogue/ChoiceRecord" for ChoiceRecord
 import "Localization/DisplayNames" for DisplayNames
 import "UI/Dialogue/DialogueBoxUI" for DialogueBoxUI
 import "UI/Dialogue/ChoiceListUI" for ChoiceListUI
+import "UI/Dialogue/CloseUpUI" for CloseUpUI
+import "Dialogue/Portraits" for Portraits
+import "Dialogue/CloseUp" for CloseUp
 import "World/StageDirector" for StageDirector
 
 var TEXT_SCROLL_SPEED = 0.02
@@ -41,6 +44,7 @@ class InteractState is BaseState {
         super()
         name = "InteractState"
         _view = null
+        _closeUp = null      // the close-up picture (Dialogue/CloseUp.wren) - under the box, hidden until asked for
         _choiceList = null   // only while the current node offers choices
 
         _interactingEntity        = null
@@ -69,6 +73,11 @@ class InteractState is BaseState {
         _menuMusic.play()
         _textScrollSound = Sound.load("Audio/Sounds/Menu/Move1.wav")
 
+        // Requests left over from a conversation that ended early don't carry into this one.
+        CloseUp.take()
+        Portraits.takeExpression()
+        // Made before the box, so the box draws over it.
+        _closeUp = CloseUpUI.new()
         _view = DialogueBoxUI.new()
         _heldResult = null
 
@@ -126,6 +135,14 @@ class InteractState is BaseState {
     // once that's done (update). A node with no line of its own just carries on to the next.
     show_(result) {
         _currentResult = result
+        // A close-up its commands asked for shows straight away - even while the node is held for staging, so a memory
+        // can play with no line of text.
+        var closeUp = CloseUp.take()
+        if (closeUp is String) {
+            _closeUp.show(closeUp)
+        } else if (closeUp == false) {
+            _closeUp.show(null)
+        }
         if (StageDirector.blocking) {
             _heldResult = result
             _view.screenPanel.setVisible(false)
@@ -226,6 +243,12 @@ class InteractState is BaseState {
             _view.teardown()
             _view = null
         }
+        if (_closeUp != null) {
+            _closeUp.teardown()
+            _closeUp = null
+        }
+        CloseUp.take()
+        Portraits.takeExpression()
 
         _menuMusic.stop()
         _menuMusic.unload()
@@ -268,6 +291,13 @@ class InteractState is BaseState {
     processDialogueResult(result) {
         var speaker = result.speaker
         var text = result.text
+
+        // The speaker's face, and the expression this line is said with ("expression" command) - written under the
+        // face while the portrait has no art for it (Dialogue/Portraits.wren).
+        var expression = Portraits.takeExpression()
+        var speakerId = (speaker && speaker != "") ? speaker : null
+        var caption = Portraits.supports(speakerId, expression) ? null : expression
+        _view.setPortrait(Portraits.path(speakerId), caption)
 
         if (text) {
             // result.text/result.speaker are localization keys/raw npc ids respectively - resolve both to

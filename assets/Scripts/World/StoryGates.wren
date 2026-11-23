@@ -5,6 +5,8 @@
 //   ShowFromStage (Int)  - hidden until the "arc1_stage" flag reaches this (empty = from the start)
 //   HideFromStage (Int)  - hidden once "arc1_stage" reaches this (empty = never)
 //   HideIfFlag (String)  - hidden while this int flag is non-zero (e.g. "healed_wolf")
+// and, set from a script rather than LDtk (withFlag - e.g. GameObjects/NPC.wren FLAG_GATES), an int flag that has to
+// hold one value - Thomas is in his cabin, at the training grounds or at the north gate by "thomas_place".
 // so one level can hold Finn in the workshop at the start and again in the evening, a guardian that steps aside
 // after its fight, and so on. Scripts call register() from start(); the gameplay state (States/GameWorldState.wren)
 // calls refresh() every update, which setActive/setInactives each entity when its visibility changes (an inactive
@@ -39,6 +41,13 @@ class StoryGates {
             return null
         }
         return [showFrom, hideFrom, hideIfFlag, versions]
+    }
+
+    // `gate` (null for none yet) also needing int flag `flag` to equal `value` - the gate to register.
+    static withFlag(gate, flag, value) {
+        var result = gate == null ? [null, null, null, null] : gate
+        result.add([flag, value])
+        return result
     }
 
     static register(entity, gate) {
@@ -113,6 +122,9 @@ class StoryGates {
             return false
         }
         if (gate[3] != null && !gate[3].contains(stage)) {
+            return false
+        }
+        if (gate.count > 4 && FlagManager.getIntFlag(gate[4][0]) != gate[4][1]) {
             return false
         }
         return true

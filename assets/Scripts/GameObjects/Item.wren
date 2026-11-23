@@ -9,6 +9,8 @@ import "flags" for FlagManager
 import "debug" for Debug
 import "Inventory/ItemDatabase" for ItemDatabase
 import "Localization/DisplayNames" for DisplayNames
+import "gameObject" for GameObject
+import "gameObjectComponents" for Script
 import "localization" for Localization
 
 var SHADOW_COLOR = Vec4.copy(BLACK)
@@ -117,7 +119,8 @@ class Item {
     }
 
     // Picked up with no dialogue of its own (States/InteractState.wren): into the inventory, gone from the world (or,
-    // returnable, left as a shadow to put back). Returns the line to show.
+    // returnable, left as a shadow to put back). The player lifts it (their "Lifting" clip) and the itemReceived event's
+    // banner says what it was (UI/Notifications/Notifications.wren) - no dialogue box, so returns null.
     interact() {
         if (_disabled || _isShadow) return null
         Inventory.addItem(_name)
@@ -130,7 +133,11 @@ class Item {
             FlagManager.save("flags.sav")
             disableItem()
         }
-        return Localization.get("interact.item.picked_up").replace("{item}", DisplayNames.itemDisplay(_name))
+        for (playerEntity in GameObject.getAllWithIdentifier("Player")) {
+            var player = Script.getInstance(playerEntity)
+            if (player != null) player.perform("Lifting")
+        }
+        return null
     }
     
     name { _name }
