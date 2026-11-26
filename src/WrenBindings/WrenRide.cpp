@@ -59,51 +59,26 @@ static VariantList ColorList(const Ride::ZoneColor& color)
 	return list;
 }
 
-static double NumberIn(const VariantMap& map, const char* key, double fallback)
+// A number argument clamped to [minimum, maximum], or `fallback` when the slot isn't a number.
+static double ClampedNumber(WrenVM* vm, int slot, double fallback, double minimum, double maximum)
 {
-	auto found = map.items.find(key);
-	if (found == map.items.end())
-	{
-		return fallback;
-	}
-	if (const double* number = std::get_if<double>(&found->second))
-	{
-		return *number;
-	}
-	if (const int* integer = std::get_if<int>(&found->second))
-	{
-		return *integer;
-	}
-	return fallback;
+	return wrenGetSlotType(vm, slot) == WREN_TYPE_NUM ? std::clamp(wrenGetSlotDouble(vm, slot), minimum, maximum)
+	                                                  : fallback;
 }
 
-static std::string StringIn(const VariantMap& map, const char* key)
-{
-	auto found = map.items.find(key);
-	if (found != map.items.end())
-	{
-		if (const std::string* text = std::get_if<std::string>(&found->second))
-		{
-			return *text;
-		}
-	}
-	return "";
-}
-
-// Rider map from Wren: {"name", "ftpWatts", "maxHeartRateBpm", "thresholdHeartRateBpm", "weightKg"}.
-static Ride::RiderInfo RiderFromSlot(WrenVM* vm, int slot)
+// Rider from five consecutive slots starting at `slot`: name, ftpWatts, maxHeartRateBpm, thresholdHeartRateBpm,
+// weightKg. (Separate arguments rather than a map: the Wren C API can't read map contents back out.)
+static Ride::RiderInfo RiderFromSlots(WrenVM* vm, int slot)
 {
 	Ride::RiderInfo rider;
-	const Variant value = Struktur::Callback::HelperFunctions::WrenSlotToVariant(vm, slot);
-	if (const VariantMap* map = std::get_if<VariantMap>(&value))
+	if (wrenGetSlotType(vm, slot) == WREN_TYPE_STRING)
 	{
-		rider.name            = StringIn(*map, "name");
-		rider.ftpWatts        = std::clamp(NumberIn(*map, "ftpWatts", rider.ftpWatts), 50.0, 600.0);
-		rider.maxHeartRateBpm = std::clamp(NumberIn(*map, "maxHeartRateBpm", rider.maxHeartRateBpm), 100.0, 240.0);
-		rider.thresholdHeartRateBpm =
-		    std::clamp(NumberIn(*map, "thresholdHeartRateBpm", rider.thresholdHeartRateBpm), 80.0, 230.0);
-		rider.weightKg = std::clamp(NumberIn(*map, "weightKg", rider.weightKg), 30.0, 200.0);
+		rider.name = wrenGetSlotString(vm, slot);
 	}
+	rider.ftpWatts              = ClampedNumber(vm, slot + 1, rider.ftpWatts, 50.0, 600.0);
+	rider.maxHeartRateBpm       = ClampedNumber(vm, slot + 2, rider.maxHeartRateBpm, 100.0, 240.0);
+	rider.thresholdHeartRateBpm = ClampedNumber(vm, slot + 3, rider.thresholdHeartRateBpm, 80.0, 230.0);
+	rider.weightKg              = ClampedNumber(vm, slot + 4, rider.weightKg, 30.0, 200.0);
 	return rider;
 }
 
@@ -313,18 +288,18 @@ static void wren_RideIsDemo(WrenVM* vm)
 // Session
 // ============================================================================
 
-// Ride.startFreeRide(rider) -> bool
+// Ride.startFreeRide(name, ftpWatts, maxHeartRateBpm, thresholdHeartRateBpm, weightKg) -> bool
 static void wren_RideStartFreeRide(WrenVM* vm)
 {
-	wrenSetSlotBool(vm, 0, GetService(vm).StartFreeRide(RiderFromSlot(vm, 1), GetNow(vm)));
+	wrenSetSlotBool(vm, 0, GetService(vm).StartFreeRide(RiderFromSlots(vm, 1), GetNow(vm)));
 }
 
-// Ride.startWorkout(id, rider) -> {"ok", "error"}
+// Ride.startWorkout(id, name, ftpWatts, maxHeartRateBpm, thresholdHeartRateBpm, weightKg) -> {"ok", "error"}
 static void wren_RideStartWorkout(WrenVM* vm)
 {
 	const std::string id = wrenGetSlotType(vm, 1) == WREN_TYPE_STRING ? wrenGetSlotString(vm, 1) : "";
 	std::string error;
-	const bool ok = GetService(vm).StartWorkout(id, RiderFromSlot(vm, 2), GetNow(vm), error);
+	const bool ok = GetService(vm).StartWorkout(id, RiderFromSlots(vm, 2), GetNow(vm), error);
 	VariantMap result;
 	result.items["ok"]    = ok;
 	result.items["error"] = error;
@@ -557,6 +532,9 @@ static void wren_RideDiscard(WrenVM* vm)
 // Graphs
 // ============================================================================
 
+static const Struktur::Util::Color TARGET_COLOR{235, 240, 245, 225};
+static const Struktur::Util::Color FTP_LINE_COLOR{255, 255, 255, 45};
+
 static Struktur::UI::UIGraph* GraphFromSlot(WrenVM* vm, int slot)
 {
 	if (wrenGetSlotType(vm, slot) != WREN_TYPE_FOREIGN)
@@ -591,8 +569,12 @@ static void wren_RideUpdateGraph(WrenVM* vm)
 	const Ride::HeartRateZoneModel hrModel       = session->GetSettings().heartRateZoneModel;
 
 	Struktur::UI::UIGraph::Series target;
-	target.thickness = 3.0f;
+	target.thickness = 4.0f;
 	target.zOffset   = -3;
+	// A faint line at FTP gives the zones a reference.
+	Struktur::UI::UIGraph::Series ftpLine;
+	ftpLine.thickness = 1.0f;
+	ftpLine.zOffset   = -4;
 	Struktur::UI::UIGraph::Series power;
 	power.thickness = 2.0f;
 	power.fill      = true;
@@ -623,20 +605,22 @@ static void wren_RideUpdateGraph(WrenVM* vm)
 		}
 		if (sample.targetWatts)
 		{
-			target.points.push_back({x, (float)*sample.targetWatts, Struktur::Util::Color{255, 255, 255, 150}});
+			target.points.push_back({x, (float)*sample.targetWatts, TARGET_COLOR});
 			maximumPower = std::max(maximumPower, *sample.targetWatts * 1.1);
 		}
 	}
 	// Extend the target ahead of "now" so the rider sees what's coming in the next few seconds of this step.
 	if (const std::optional<double> current = session->GetTargetWatts())
 	{
-		target.points.push_back({1.0f, (float)*current, Struktur::Util::Color{255, 255, 255, 150}});
+		target.points.push_back({1.0f, (float)*current, TARGET_COLOR});
 	}
-	power.maximum  = (float)maximumPower;
-	target.maximum = (float)maximumPower;
-	heart.minimum  = 40.0f;
-	heart.maximum  = (float)std::max(rider.maxHeartRateBpm, rider.thresholdHeartRateBpm * 1.15) + 5.0f;
-	graph->SetSeries({target, power, heart});
+	ftpLine.points  = {{0.0f, (float)rider.ftpWatts, FTP_LINE_COLOR}, {1.0f, (float)rider.ftpWatts, FTP_LINE_COLOR}};
+	ftpLine.maximum = (float)maximumPower;
+	power.maximum   = (float)maximumPower;
+	target.maximum  = (float)maximumPower;
+	heart.minimum   = 40.0f;
+	heart.maximum   = (float)std::max(rider.maxHeartRateBpm, rider.thresholdHeartRateBpm * 1.15) + 5.0f;
+	graph->SetSeries({ftpLine, target, power, heart});
 }
 
 // The workout as zone-coloured blocks: one fill point per step (ramps split into 12 slices so their colour follows the
@@ -783,11 +767,11 @@ WREN_BINDING_MODULE(Ride)
 	WREN_CLASS_STATIC(registry, "ride", "Ride", "commandLineWorkout()", wren_RideCommandLineWorkout,
 	                  "A workout path from the command line, returned once (else null).");
 	WREN_CLASS_STATIC(registry, "ride", "Ride", "isDemo()", wren_RideIsDemo, "True when started with --demo.");
+	WREN_CLASS_STATIC(registry, "ride", "Ride", "startFreeRide(_,_,_,_,_)", wren_RideStartFreeRide,
+	                  "Starts a Free Ride (name, ftpWatts, maxHeartRateBpm, thresholdHeartRateBpm, weightKg).");
 	WREN_CLASS_STATIC(
-	    registry, "ride", "Ride", "startFreeRide(_)", wren_RideStartFreeRide,
-	    "Starts a Free Ride for the rider map (name, ftpWatts, maxHeartRateBpm, thresholdHeartRateBpm, weightKg).");
-	WREN_CLASS_STATIC(registry, "ride", "Ride", "startWorkout(_,_)", wren_RideStartWorkout,
-	                  "Starts a workout (id, rider) -> map with ok/error.");
+	    registry, "ride", "Ride", "startWorkout(_,_,_,_,_,_)", wren_RideStartWorkout,
+	    "Starts a workout (id, name, ftpWatts, maxHeartRateBpm, thresholdHeartRateBpm, weightKg) -> map.");
 	WREN_CLASS_STATIC(registry, "ride", "Ride", "isActive()", wren_RideIsActive, "True while a ride is running.");
 	WREN_CLASS_STATIC(registry, "ride", "Ride", "state()", wren_RideState,
 	                  "Snapshot of the ride for the HUD, or null.");
