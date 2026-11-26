@@ -438,6 +438,7 @@ set(WREN_BINDING_SOURCES
                                                 src/WrenBindings/WrenLocalization.cpp
                                                 src/WrenBindings/WrenEvents.cpp
                                                 src/WrenBindings/WrenFitness.cpp
+                                                src/WrenBindings/WrenRide.cpp
                                                 src/WrenBindings/WrenApplication.cpp
                                                 src/WrenBindings/WrenAudio.cpp
                                                 src/WrenBindings/WrenGameObject.cpp
@@ -458,6 +459,7 @@ set(SOURCES
     src/Engine/Core/TimeSystem.h                src/Engine/Core/TimeSystem.cpp
     src/Engine/Core/FileSystem.h                src/Engine/Core/FileSystem.cpp
     src/Engine/Core/EngineSettings.h            src/Engine/Core/EngineSettings.cpp
+    src/Engine/Core/CommandLine.h               src/Engine/Core/CommandLine.cpp
 
     src/Engine/Input/Input.h                    src/Engine/Input/Input.cpp
     src/Engine/Input/InputConfigLoader.h        src/Engine/Input/InputConfigLoader.cpp
@@ -532,6 +534,8 @@ set(SOURCES
     src/Engine/ECS/System/WrenStateSystem.h     src/Engine/ECS/System/WrenStateSystem.cpp
     src/Engine/ECS/System/SoundSystem.h         src/Engine/ECS/System/SoundSystem.cpp
     src/Engine/ECS/System/FitnessSystem.h       src/Engine/ECS/System/FitnessSystem.cpp
+    src/Engine/ECS/System/RideSystem.h          src/Engine/ECS/System/RideSystem.cpp
+    src/Engine/RideIntegration/RideService.h    src/Engine/RideIntegration/RideService.cpp
     src/Engine/ECS/System/EventSystem.h         src/Engine/ECS/System/EventSystem.cpp
 
     src/Engine/Physics/PhysicsWorld.h           src/Engine/Physics/PhysicsWorld.cpp
@@ -549,6 +553,7 @@ set(SOURCES
     src/Engine/UI/UIRichLabel.h                 src/Engine/UI/UIRichLabel.cpp
     src/Engine/UI/UIPanel.h                     src/Engine/UI/UIPanel.cpp
     src/Engine/UI/UIColor.h                     src/Engine/UI/UIColor.cpp
+    src/Engine/UI/UIGraph.h                     src/Engine/UI/UIGraph.cpp
     src/Engine/UI/UITexture.h                   src/Engine/UI/UITexture.cpp
     src/Engine/UI/InputGlyphs.h                 src/Engine/UI/InputGlyphs.cpp
     src/Engine/UI/UIInputHint.h                 src/Engine/UI/UIInputHint.cpp
@@ -611,6 +616,7 @@ target_link_libraries(${PROJECT_NAME}
     box2d
     PhysFS::PhysFS-static
     StrukturFitness
+    StrukturRide
     $<$<OR:$<BOOL:${PLATFORM_DESKTOP}>,$<BOOL:${PLATFORM_WEB}>>:SDL3_mixer::SDL3_mixer>
     $<$<OR:$<BOOL:${PLATFORM_DESKTOP}>,$<BOOL:${PLATFORM_WEB}>>:SDL3::SDL3>
     $<$<OR:$<BOOL:${PLATFORM_DESKTOP}>,$<BOOL:${PLATFORM_WEB}>>:bgfx>

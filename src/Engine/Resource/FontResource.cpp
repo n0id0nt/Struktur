@@ -5,6 +5,7 @@
 
 #include "Debug/Assertions.h"
 #include "Engine/Core/FileSystem.h"
+#include "Engine/GameContext.h"
 
 Struktur::Resource::FontResource::FontResource(const std::string& filePath, int size, bool pointSampled)
     : GpuResource(filePath),
@@ -83,6 +84,23 @@ static constexpr int kInitialAtlasSize = 512;
 // fits every font size this project actually uses (see LoadFromDisk) while staying well within any GPU's texture
 // size limits.
 static constexpr int kMaxAtlasSize = 4096;
+// Largest pixel size a smooth font is baked at - keeps a full ASCII atlas of very large display numbers inside
+// kMaxAtlasSize (a 96 px label at 4K would otherwise want 288 px glyphs).
+static constexpr int kMaxBakeSize = 256;
+
+static int BakeSizeFor(Struktur::GameContext& context, int designSize)
+{
+	const Struktur::Core::GameData& gameData = context.GetGameData();
+	float pixelScale                         = 1.0f;
+	if (gameData.gameWidth > 0 && gameData.gameHeight > 0 && gameData.applicationWidth > 0 &&
+	    gameData.applicationHeight > 0)
+	{
+		pixelScale = std::max((float)gameData.applicationWidth / (float)gameData.gameWidth,
+		                      (float)gameData.applicationHeight / (float)gameData.gameHeight);
+	}
+	pixelScale = std::clamp(pixelScale, 1.0f, 4.0f);
+	return std::clamp((int)std::ceil(designSize * pixelScale), designSize, std::max(designSize, kMaxBakeSize));
+}
 static constexpr int kAtlasPadding = 1;
 
 bool Struktur::Resource::FontResource::LoadFromDisk(GameContext& context)
@@ -108,8 +126,13 @@ bool Struktur::Resource::FontResource::LoadFromDisk(GameContext& context)
 	// A pixel font's outlines sit on a grid of whole pixels per em, so it is baked with 1 em = m_fontSize pixels
 	// (stb's "point size") - the line-height scaling used for smooth fonts (ascent - descent = m_fontSize) lands
 	// between grid lines and blurs every glyph edge.
-	float scale        = m_pointSampled ? stbtt_ScaleForMappingEmToPixels(&fontInfo, (float)m_fontSize)
-	                                    : stbtt_ScaleForPixelHeight(&fontInfo, (float)m_fontSize);
+	// Smooth fonts are baked at the window's real pixel density (the UI is laid out in game pixels and stretched to
+	// the window), so text stays crisp at 1080p and 4K instead of being a 720p bitmap scaled up. baseSize records the
+	// baked size, and Text::GlyphScale's fontSize / baseSize brings it back to layout size. Pixel fonts keep their
+	// design grid - they're drawn at whole multiples and point-sampled.
+	const int bakeSize = m_pointSampled ? m_fontSize : BakeSizeFor(context, m_fontSize);
+	float scale        = m_pointSampled ? stbtt_ScaleForMappingEmToPixels(&fontInfo, (float)bakeSize)
+	                                    : stbtt_ScaleForPixelHeight(&fontInfo, (float)bakeSize);
 	float ascentPixels = (float)ascent * scale;
 	int codepointCount = (m_codepoints != nullptr && m_codepointCount > 0) ? m_codepointCount : 95;
 
@@ -132,7 +155,7 @@ bool Struktur::Resource::FontResource::LoadFromDisk(GameContext& context)
 		stbtt_PackBegin(&packContext, m_atlasAlpha.data(), m_atlasWidth, m_atlasHeight, 0, kAtlasPadding, nullptr);
 
 		stbtt_pack_range range{};
-		range.font_size          = m_pointSampled ? STBTT_POINT_SIZE((float)m_fontSize) : (float)m_fontSize;
+		range.font_size          = m_pointSampled ? STBTT_POINT_SIZE((float)m_fontSize) : (float)bakeSize;
 		range.num_chars          = codepointCount;
 		range.chardata_for_range = packedChars.data();
 		if (m_codepoints != nullptr && m_codepointCount > 0)
@@ -159,7 +182,7 @@ bool Struktur::Resource::FontResource::LoadFromDisk(GameContext& context)
 		             kMaxAtlasSize, kMaxAtlasSize);
 	}
 
-	font.baseSize = m_fontSize;
+	font.baseSize = bakeSize;
 	font.pixelSnap = m_pointSampled;
 	font.glyphs.assign(codepointCount, Text::Glyph{});
 

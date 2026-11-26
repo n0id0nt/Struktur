@@ -2,16 +2,22 @@
 
 #include <cstdlib>
 
+#include "Engine/Core/CommandLine.h"
 #include "Engine/Fitness/Ble/BleCentralFactory.h"
 #include "Engine/Fitness/Ble/SimulatedBleCentral.h"
 
 namespace Struktur
 {
-// STRUKTUR_FITNESS_SIMULATE=1 swaps Bluetooth for a fake trainer, heart rate strap and power meter, so the pairing
-// screen and the rest of the fitness UI can be worked on without hardware.
+// --demo on the command line, or STRUKTUR_FITNESS_SIMULATE=1, swaps Bluetooth for a fake trainer, heart rate strap and
+// power meter driven by a synthetic rider, so every fitness screen can be worked on without hardware.
 static std::unique_ptr<Fitness::IBleCentral> CreateFitnessCentral()
 {
 	const char* simulate = std::getenv("STRUKTUR_FITNESS_SIMULATE");
+	if (Core::CommandLine::HasFlag("--demo"))
+	{
+		DEBUG_INFO("--demo - using simulated fitness devices and a synthetic rider");
+		return std::make_unique<Fitness::SimulatedBleCentral>();
+	}
 	if (simulate != nullptr && simulate[0] != '\0' && simulate[0] != '0')
 	{
 		DEBUG_INFO("STRUKTUR_FITNESS_SIMULATE is set - using simulated fitness devices");
@@ -33,6 +39,7 @@ GameContext::GameContext()
 	// Idle until the game asks it to scan or connect (see docs/SmartTrainer.md) - constructing it never touches the
 	// radio. Non-Windows platforms get a backend that reports Bluetooth as unavailable.
 	m_fitnessManager = std::make_unique<Fitness::FitnessManager>(CreateFitnessCentral());
+	m_rideService    = std::make_unique<RideIntegration::RideService>();
 	m_flagManager       = std::make_unique<Flag::FlagManager>();
 	m_gameData          = std::make_unique<Core::GameData>();
 	m_gameObjectManager = std::make_unique<System::GameObjectManager>();
@@ -69,6 +76,12 @@ void GameContext::Shutdown()
 	// everything else first, in any order, means declaration order above no longer has to encode this.
 	// First, while everything else is still alive: a graceful trainer stop (FTMS Reset, then disconnect) so a
 	// single-connection trainer is released for other apps the moment the game exits.
+	// An unfinished ride is saved (autosave already keeps it current) before the trainer is released.
+	if (m_rideService && m_rideService->IsActive())
+	{
+		m_rideService->Finish(m_timeSystem ? m_timeSystem->unscaledTime : 0.0);
+	}
+	m_rideService.reset();
 	m_fitnessManager.reset();
 	m_camera.reset();
 	m_collisionLayers.reset();
@@ -148,6 +161,12 @@ Fitness::FitnessManager& GameContext::GetFitnessManager() const
 {
 	ASSERT_MSG(m_fitnessManager.get(), "Fitness Manager not initialised");
 	return *m_fitnessManager;
+}
+
+RideIntegration::RideService& GameContext::GetRideService() const
+{
+	ASSERT_MSG(m_rideService.get(), "Ride Service not initialised");
+	return *m_rideService;
 }
 
 Event::EventManager& GameContext::GetEventManager() const

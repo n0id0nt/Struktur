@@ -161,10 +161,9 @@ public:
 	static bool Exists(const std::string& path);
 
 	//-----------------------------------------------------------------------------------
-	// Editor only - native file dialogs via tinyfiledialogs
+	// PhysFS queries (all builds), then editor-only native file dialogs via tinyfiledialogs
 	//-----------------------------------------------------------------------------------
 
-#ifdef EDITOR
 	// On-disk file size in bytes via PHYSFS_stat - does not open/read the file, so this is cheap enough to call
 	// once per visible row every frame (see the resource manager editor window's inspector table). Fails for
 	// keys that aren't real mounted files (e.g. ShaderPool's "vs,fs" combined cache key).
@@ -190,6 +189,7 @@ public:
 	// cost/notes as GetFileSize.
 	static bool IsDirectory(const std::string& path);
 
+#ifdef EDITOR
 	// Opens a native OS folder picker
 	// Returns empty string if user cancels
 	static std::string OpenFolderDialog(const std::string& title, const std::string& defaultPath = "");

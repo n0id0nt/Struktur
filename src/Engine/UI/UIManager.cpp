@@ -143,20 +143,35 @@ void Struktur::UI::UIManager::SetFocus(UIElement* element)
 	m_focusJustChanged = true;
 }
 
+// The pointer arrives in real window pixels, but UI elements are laid out in "game" pixels (gameWidth x gameHeight)
+// that the renderer stretches to the window - convert, or clicks miss whenever the window isn't the game's size
+// (fullscreen at 1080p / 4K).
+static glm::vec2 PointerInGamePixels(Struktur::GameContext& context, const glm::vec2& windowPosition)
+{
+	const Struktur::Core::GameData& gameData = context.GetGameData();
+	if (gameData.applicationWidth <= 0 || gameData.applicationHeight <= 0)
+	{
+		return windowPosition;
+	}
+	return glm::vec2(windowPosition.x * (float)gameData.gameWidth / (float)gameData.applicationWidth,
+	                 windowPosition.y * (float)gameData.gameHeight / (float)gameData.applicationHeight);
+}
+
 void Struktur::UI::UIManager::HandleInput(GameContext& context)
 {
 	Input::Input& input = context.GetInput();
+	const glm::vec2 pointer = PointerInGamePixels(context, input.GetPointerPosition());
 
 	// Handle pointer hover - Input::GetPointerPosition() is one unified coordinate regardless of whether it's
 	// currently driven by the real mouse or an active touch (see Input::GetPointerPosition's own comment), so
 	// this needs no separate touch-handling branch here.
-	UIElement* elementUnderPointer = GetElementAt(input.GetPointerPosition());
+	UIElement* elementUnderPointer = GetElementAt(pointer);
 	if (elementUnderPointer != m_hoveredElement)
 	{
 		m_hoveredElement = elementUnderPointer;
 		if (m_hoveredElement)
 		{
-			m_hoveredElement->OnHover(context, input.GetPointerPosition());
+			m_hoveredElement->OnHover(context, pointer);
 		}
 	}
 

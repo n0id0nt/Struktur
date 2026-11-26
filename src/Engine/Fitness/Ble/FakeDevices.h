@@ -34,8 +34,10 @@ public:
 
 	FakeFtmsTrainer(FakeBleCentral& central, Config config);
 
-	// Emits one Indoor Bike Data notification derived from the current mode (ERG -> target power).
+	// Emits one Indoor Bike Data notification derived from the current mode (ERG -> target power), or from the values
+	// given to SetRiderOutput when a synthetic rider drives it.
 	void Tick(double nowSeconds);
+	void SetRiderOutput(int powerWatts, double cadenceRpm);
 
 	// --- fault injection -------------------------------------------------------------------------------------
 	// false = writes are acknowledged but never answered (the reported Direto X "ERG does nothing" case).
@@ -70,6 +72,8 @@ private:
 	std::vector<Bytes> m_commands;
 	double m_distanceMeters;
 	double m_lastTickSeconds;
+	std::optional<int> m_riderPower;
+	double m_riderCadence = 90.0;
 };
 
 // Plain sensors for simulate mode / tests. Each Tick sends one measurement.

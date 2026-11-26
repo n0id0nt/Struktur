@@ -11,6 +11,7 @@
 
 #include "Debug/Assertions.h"
 #include "Debug/Profiling/Profiler.h"
+#include "Engine/Core/CommandLine.h"
 #include "Engine/Core/EngineSettings.h"
 #include "Engine/Core/FileSystem.h"
 #include "Engine/ECS/Component/Camera.h"
@@ -23,6 +24,7 @@
 #include "Engine/ECS/System/DebugSystem.h"
 #include "Engine/ECS/System/EventSystem.h"
 #include "Engine/ECS/System/FitnessSystem.h"
+#include "Engine/ECS/System/RideSystem.h"
 #include "Engine/ECS/System/HierarchySystem.h"
 #include "Engine/ECS/System/ParticleSystem.h"
 #include "Engine/ECS/System/PhysicsSystem.h"
@@ -165,6 +167,17 @@ bool Struktur::InitialiseGame(GameContext& context)
 	// keyboard/gamepad stay polled in Input::Update() as before; only touch needs the raw event stream (see
 	// Input::HandleEvent's own comment).
 	context.GetWindow().AddEventCallback([&context](const SDL_Event& event) { context.GetInput().HandleEvent(event); });
+	// Files dropped on the window (a workout to ride) become a "fileDropped" engine event: {"path": String, UTF-8}.
+	context.GetWindow().AddEventCallback(
+	    [&context](const SDL_Event& event)
+	    {
+		    if (event.type == SDL_EVENT_DROP_FILE && event.drop.data != nullptr)
+		    {
+			    Callback::VariantMap data;
+			    data.items["path"] = std::string(event.drop.data);
+			    context.GetEventManager().AddEvent("fileDropped", data);
+		    }
+	    });
 
 #if defined(PLATFORM_WEB)
 	std::string saveDir = "/saves";  // Emscripten virtual path
@@ -180,6 +193,19 @@ bool Struktur::InitialiseGame(GameContext& context)
 	// nothing connects until the game calls FitnessManager::ConnectRememberedDevices.
 	context.GetFitnessManager().SetRegistryPath(saveDir + "/fitness_devices.json");
 	context.GetFitnessManager().LoadRegistry();
+	context.GetRideService().Initialise(saveDir);
+	if (Core::CommandLine::HasFlag("--demo"))
+	{
+		// Demo: the simulated trainer and strap are "remembered" in memory only, so pairing connects them at once and
+		// the player's real device choices on disk are never touched.
+		Fitness::FitnessManager& fitness = context.GetFitnessManager();
+		fitness.SetRegistryPath("");
+		fitness.GetRegistry() = Fitness::DeviceRegistry();
+		fitness.GetRegistry().Remember(Fitness::DeviceRole::TRAINER,
+		                               Fitness::RememberedDevice{"5E:ED:00:00:00:01", "SIM Smart Trainer", "ble"});
+		fitness.GetRegistry().Remember(Fitness::DeviceRole::HEART_RATE,
+		                               Fitness::RememberedDevice{"5E:ED:00:00:00:02", "SIM Heart Rate", "ble"});
+	}
 	// Audio setup now happens in GameContext's constructor via SDL3_mixer, so it's already available here.
 
 	// GraphicsDevice::Initialise (above) already ran with the hardcoded VSync-on default, since it happens
@@ -214,6 +240,7 @@ bool Struktur::InitialiseGame(GameContext& context)
 	systemManager.AddFixedUpdateSystem<System::PhysicsFixedStepSystem>();
 	// Before WrenScriptSystem/EventSystem so fitness events queued this frame are delivered this frame.
 	systemManager.AddUpdateSystem<System::FitnessSystem>();
+	systemManager.AddUpdateSystem<System::RideSystem>();
 	systemManager.AddUpdateSystem<System::WrenScriptSystem>();
 	systemManager.AddUpdateSystem<System::EventSystem>();
 	systemManager.AddUpdateSystem<System::PhysicsSystem>();

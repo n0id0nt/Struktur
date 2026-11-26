@@ -96,7 +96,11 @@ void FakeFtmsTrainer::Tick(double nowSeconds)
 {
 	// Crude but plausible rider: 90 rpm; ERG holds the target, simulation adds load with grade.
 	int power = 150;
-	if (m_targetPower)
+	if (m_riderPower)
+	{
+		power = *m_riderPower;
+	}
+	else if (m_targetPower)
 	{
 		power = *m_targetPower;
 	}
@@ -113,13 +117,19 @@ void FakeFtmsTrainer::Tick(double nowSeconds)
 	Bytes data;
 	AppendU16(data, INSTANTANEOUS_CADENCE | TOTAL_DISTANCE | INSTANTANEOUS_POWER);
 	AppendU16(data, static_cast<uint16_t>(std::lround(speedKmh * 100.0)));
-	AppendU16(data, 180);  // 90 rpm in 0.5 rpm units
+	AppendU16(data, (uint16_t)std::lround(std::max(0.0, m_riderCadence) * 2.0));  // 0.5 rpm units
 	const uint32_t distance = static_cast<uint32_t>(m_distanceMeters);
 	data.push_back(static_cast<uint8_t>(distance & 0xFF));
 	data.push_back(static_cast<uint8_t>((distance >> 8) & 0xFF));
 	data.push_back(static_cast<uint8_t>((distance >> 16) & 0xFF));
 	AppendU16(data, static_cast<uint16_t>(static_cast<int16_t>(power)));
 	m_central->Notify(m_config.address, INDOOR_BIKE_DATA, std::move(data));
+}
+
+void FakeFtmsTrainer::SetRiderOutput(int powerWatts, double cadenceRpm)
+{
+	m_riderPower   = powerWatts;
+	m_riderCadence = cadenceRpm;
 }
 
 void FakeFtmsTrainer::SetRespondToControlPoint(bool respond)
