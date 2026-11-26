@@ -58,24 +58,52 @@ road is drawn behind the HUD; see [RideWorld.md](RideWorld.md).*
 - **Wren screens** follow the events-not-polling rule: the HUD refreshes on `rideTick` and shows cues on `rideCue`.
   Clicks are queued and handled in `update()`, because they arrive inside the UI input pass.
 
-### Layout (data-driven)
+### HUD: UI kit and layouts (data-driven)
 
-`assets/Settings/RideLayout.json` places every panel by `anchor` (both where it attaches on screen and its own pivot),
-`position` and `size`, in the 1280×720 layout space. Move or resize panels there, with no code changes. A missing or
-malformed entry falls back to its built-in default (`UI/Ride/RideLayout.wren`), so a bad edit can't break the screen.
+The ride HUD is built from the UI kit (`UI/Theme/UIKit.wren`):
+- **Panels:** translucent "hud" frames (the dark wood panel at 2×, tinted so the world shows through).
+- **Font:** the kit's pixel font, at whole multiples of its 9 px grid.
+- **Buttons:** kit button art. ERG OFF shows the grey disabled art, ERG ON the lit art.
 
-| Panel id | What it shows |
+The workout browser and Ride Settings screens still use the clean Barlow style.
+
+| Compact (default) | Classic | Minimal |
+|---|---|---|
+| ![Compact](Images/hud-compact-free.png) | ![Classic](Images/hud-classic-workout.png) | ![Minimal](Images/hud-minimal-free.png) |
+
+*More: [compact during a workout](Images/hud-compact-workout.png).*
+
+**Choosing a layout:** `assets/Settings/RideLayout.json` holds named layouts, listed in `order`, with a `default`.
+- **H** in a ride switches to the next layout and saves the choice (`hudLayout` in `ride_settings.json`).
+- Ride Settings has a "HUD layout" row.
+- **Compact:** one slim strip of tiles along the top, with the workout, ERG and graph panels small along the bottom.
+- **Classic:** the original arrangement in kit style.
+- **Minimal:** two small tile columns in the top corners, the workout and ERG panels in the bottom corners, and no
+  graph.
+- All three keep the middle of the screen, where the rider is, clear.
+
+**Panels:** a layout is a list of panels, each with `anchor` (where it attaches on screen and its own pivot),
+`position` and `size` in the 1280×720 layout space, plus a `sizeClass`:
+
+| Size class | Caption / value / power text | Buttons |
+|---|---|---|
+| `L` | 18 / 45 / 72 | 34 px |
+| `M` | 18 / 36 / 54 | 30 px |
+| `S` | 9 / 27 / 36 | 26 px |
+
+Everything inside a panel is laid out from its size and size class, so a new layout is purely a JSON edit. A bad
+panel is skipped with a warning, and a layout with no usable panels falls back to the built-in Compact layout.
+
+| `widget` | What it shows |
 |---|---|
-| `workout` | Workout: name, step n/N + label, countdown, step target (W and % FTP), cadence target, next step, elapsed / total, mini profile with position marker. Free Ride: "Free Ride", elapsed, lap + lap time, distance. |
-| `stats` | Power (3 s, zone colour), cadence, heart rate (zone colour, or dashes when the strap is gone), simulated speed, average speed, average power |
-| `grade` | Grade (the simulated road) and virtual elevation climbed |
-| `target` | The target being held: ERG target (step + trim), or the step target when ERG is off. Workouts also show % time in target. |
-| `erg` | ERG badge (click or E). Resistance with −/+: ERG on means trim (W or %, toggle with the W/% button or M); ERG off means grade. Free Ride + ERG adds the target (click or T to type) with −/+ nudges. Workouts add Skip step and +30 s. |
-| `cue` | Workout text cues |
-| `banner` | "Start pedalling to begin", "Paused - pedal to resume" (auto), "Paused - press P to resume", "Workout complete!" |
-| `graph` | Power (zone-coloured line + fill) and heart rate (zone-coloured line, own scale) over the last N minutes, the target as a step line behind the actuals, and a faint FTP line |
-| `status` | Trainer / heart rate / power meter connection dots (green connected, red lost, grey none), DEMO tag, End ride |
+| `tiles` | Stat tiles in a `"flow": "row"` (caption over value, centred) or `"column"` (caption left, value right). `tiles` ids: `power` (zone colour, bigger), `averagePower`, `cadence`, `heartRate` (zone colour), `speed`, `averageSpeed`, `grade`, `climbed`, `target`, `inTarget`, `distance`, `elapsed`, `lapTime`. |
+| `workout` | Workout: name, elapsed / total, step n/N + label, countdown, step target (W and % FTP), next step, cadence target, and the profile with a position marker (when the panel is tall enough). Free Ride: title, time, lap, distance. |
+| `erg` | ERG badge (click or E), plus resistance with W/% and −/+ (ERG on: trim; off: grade). If the panel has room for a third row: the Free Ride target (click or T) with −/+, or the workout's Skip step and +30 s. |
+| `graph` | Power and heart rate over the last N minutes, zone-coloured, with the target step line |
+| `status` | Trainer / heart rate / power meter dots, DEMO tag, End ride |
 | `hints` | Keyboard keys |
+| `cue` | Workout text cues, shown while one is due |
+| `banner` | "Start pedalling", paused, workout complete |
 
 ### Resolution scaling (1080p to 4K)
 
@@ -97,6 +125,8 @@ next time they open.
 | Resistance + / − (ERG on: trim; ERG off: grade) | **+ / −** (also keypad, **↑ / ↓**) | D-pad ↑ / ↓ | − / + buttons |
 | Trim in watts ↔ percent | **M** | – | W/% button |
 | Pause / resume | **P** | Start | – |
+| Next HUD layout (saved) | **H** | – | – |
+| World stats overlay | **F3** | – | – |
 | Skip step (workout) | **N** | X | Skip step |
 | Extend step +30 s (workout) | **]** | – | +30 s |
 | New lap (Free Ride) | **L** | X | – |

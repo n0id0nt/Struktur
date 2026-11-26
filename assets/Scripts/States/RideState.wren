@@ -19,6 +19,7 @@ import "localization" for Localization
 import "ride" for Ride
 import "States/BaseState" for BaseState
 import "UI/Ride/RideHudUI" for RideHudUI
+import "UI/Ride/RideLayout" for RideLayout
 import "UI/Ride/RideFormat" for RideFormat
 import "UI/Theme/AlertPopup" for AlertPopup
 import "Rider/RiderProfiles" for RiderProfiles
@@ -74,8 +75,19 @@ class RideState is BaseState {
                 rider["weightKg"])
         }
 
+        buildView_()
+
+        if (!started) {
+            showMessage_(Localization.get("ride.start_failed"), error, true)
+            return
+        }
+        _view.refresh(Ride.state(), Time.unscaledTime)
+    }
+
+    // The HUD in the saved layout (Ride Settings / H). Rebuilding is cheap, so switching layouts just rebuilds.
+    buildView_() {
         var settings = Ride.settings()
-        _view = RideHudUI.new(_mode, _imperial, Ride.isDemo(), settings["graphWindowSeconds"])
+        _view = RideHudUI.new(_mode, _imperial, Ride.isDemo(), settings["graphWindowSeconds"], settings["hudLayout"])
         _view.onErg = Fn.new { _pending.add(["erg", 0]) }
         _view.onResistance = Fn.new { |direction| _pending.add(["resistance", direction]) }
         _view.onTrimMode = Fn.new { _pending.add(["trimMode", 0]) }
@@ -84,11 +96,17 @@ class RideState is BaseState {
         _view.onSkip = Fn.new { _pending.add(["skip", 0]) }
         _view.onExtend = Fn.new { _pending.add(["extend", 0]) }
         _view.onEnd = Fn.new { _pending.add(["end", 0]) }
+    }
 
-        if (!started) {
-            showMessage_(Localization.get("ride.start_failed"), error, true)
-            return
-        }
+    // H: the next HUD layout in RideLayout.json.
+    cycleLayout_() {
+        var names = RideLayout.names
+        var index = names.indexOf(Ride.settings()["hudLayout"])
+        var next = names[(index + 1) % names.count]
+        Ride.setSetting("hudLayout", next)
+        Ride.saveSettings()
+        _view.teardown()
+        buildView_()
         _view.refresh(Ride.state(), Time.unscaledTime)
     }
 
@@ -182,6 +200,10 @@ class RideState is BaseState {
         if (Input.isKeyJustPressed("m")) perform_("trimMode", 0)
         // F3: world debug overlay (frame time, draw calls, chunk build times). Not saved.
         if (Input.isKeyJustPressed("f3")) Ride.setSetting("worldDebugOverlay", !Ride.settings()["worldDebugOverlay"])
+        if (Input.isKeyJustPressed("h")) {
+            cycleLayout_()
+            return
+        }
         if (_mode == "workout") {
             if (Input.isKeyJustPressed("n") || Input.isControllerButtonJustPressed("x")) perform_("skip", 0)
             if (Input.isKeyJustPressed("rightbracket")) perform_("extend", 0)

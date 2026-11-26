@@ -6,6 +6,8 @@
 //   frames   "window"  a screen's main panel (UI/Theme/Wip/<WINDOW_THEME> - ThemeMetal; the borders below are
 //                      measured for it, so re-measure them when switching theme)
 //            "well"    a recessed dark panel for a section inside a window
+//            "hud"     the same dark panel with thinner (2x) borders - in-game HUD panels over the world (tint it to
+//                      let the scene show through)
 //            "tile"    a bevelled olive tile - list rows, cards, loadout slots
 //            "cell"    an inventory slot (a recessed light cell for an icon)
 //            "dialogue" the dialogue box (UI/Dialog - light, orange-rimmed); "choice" a dialogue choice row in the same
@@ -41,6 +43,7 @@ var HINT_FONT_SIZE = 18                         // the font at 2x, next to 2x bu
 var STYLES = {
     "window": ["UI/Theme/Wip/%(WINDOW_THEME)/nine_path_panel.png", [5, 5, 5, 6], 4],
     "well": ["UI/Theme/Theme Wood/nine_path_bg.png", [2, 2, 2, 2], 4],
+    "hud": ["UI/Theme/Theme Wood/nine_path_bg.png", [2, 2, 2, 2], 2],
     "tile": ["UI/Theme/Theme Wood/unchecked.png", [4, 4, 4, 4], 2],
     "cell": ["UI/Theme/Theme Wood/inventory_cell.png", [3, 1, 3, 1], 3],
     "focus": ["UI/Theme/Theme Wood/nine_path_focus.png", [3, 3, 3, 3], 3],

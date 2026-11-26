@@ -31,6 +31,7 @@ struct RideSettings
 	double targetBandMinimumWatts         = 10.0;  // ...but never narrower than +/- this many watts
 	double leadInSeconds                  = 4.0;   // workout step lead-in ramp
 	int freeRideStartTargetWatts          = 0;     // 0 = 65 % of FTP
+	std::string hudLayout                 = "compact";  // a layout name in assets/Settings/RideLayout.json
 	SpeedModelParameters speed;                    // riderMassKg is replaced by the rider's weight at ride start
 	TrainerControlSettings control;
 	RideWorld::WorldSettings world = RideWorld::WorldSettings::Defaults();  // the "world" section

@@ -15,6 +15,7 @@ import "States/BaseState" for BaseState
 import "UI/Ride/RideTheme" for RideTheme, RideFonts, TextField, RideListRow
 import "UI/Ride/RideFormat" for RideFormat
 import "Rider/RiderProfiles" for RiderProfiles, Units
+import "UI/Ride/RideLayout" for RideLayout
 
 var ROW_SIZE = Vec2.new(580, 38)
 var LEFT_COLUMN_X = 40
@@ -31,7 +32,7 @@ var ZONE_MODELS = ["percentMax", "percentLthr"]
 var QUALITIES = ["low", "medium", "high"]
 var GRADE_SOURCES = ["manual", "route"]
 var LOOKS = ["pixel", "pixelDither", "crt", "smooth"]
-var WORLD_ROWS = ["world", "worldQuality", "worldGradeSource", "worldBiome", "worldSeed", "worldLook", "worldComfort", "worldStats"]
+var WORLD_ROWS = ["hudLayout", "world", "worldQuality", "worldGradeSource", "worldBiome", "worldSeed", "worldLook", "worldComfort", "worldStats"]
 
 class RideSettingsState is BaseState {
     construct new() {
@@ -186,6 +187,8 @@ class RideSettingsState is BaseState {
             Ride.setSetting("autoPauseSeconds", cycle_(AUTO_PAUSES, settings["autoPauseSeconds"], direction))
         } else if (id == "trimMode") {
             Ride.setSetting("trimMode", settings["trimMode"] == "watts" ? "percent" : "watts")
+        } else if (id == "hudLayout") {
+            Ride.setSetting("hudLayout", cycle_(RideLayout.names, settings["hudLayout"], direction))
         } else if (id == "world") {
             Ride.setSetting("worldEnabled", !settings["worldEnabled"])
         } else if (id == "worldQuality") {
@@ -257,6 +260,7 @@ class RideSettingsState is BaseState {
         _rows["trimMode"].value = Localization.get("ride.trim_mode_" + settings["trimMode"])
         _rows["pair"].value = ">"
         _rows["back"].value = ""
+        _rows["hudLayout"].value = Localization.get("ride.hud_layout_" + settings["hudLayout"])
         _rows["world"].value = onOff_(settings["worldEnabled"])
         _rows["worldQuality"].value = Localization.get("ride.world_quality_" + settings["worldQuality"])
         _rows["worldGradeSource"].value = Localization.get("ride.world_grade_" + settings["worldGradeSource"])

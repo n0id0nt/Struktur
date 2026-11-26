@@ -1,28 +1,23 @@
 // UI/Ride/RideHudUI.wren
-// The ride screen (Free Ride and Workout share it). Every panel is placed from UI/Ride/RideLayout.wren
-// (assets/Settings/RideLayout.json), so the layout can be rearranged without code changes:
+// The ride screen (Free Ride and Workout share it), built from the UI kit (UI/Theme/UIKit.wren): translucent "hud"
+// frames over the 3D world, the kit's pixel font, kit buttons. Which panels exist, where they sit and how big their
+// text is comes from a layout in assets/Settings/RideLayout.json (UI/Ride/RideLayout.wren) - everything inside a
+// panel is laid out from the panel's size and size class, so a new layout is a data edit:
 //
-//   workout  top left   - Workout: name, step + countdown, step target, next step, profile with position marker.
-//                         Free Ride: "Free Ride", elapsed time, lap and lap time, distance.
-//   stats    top centre - power (zone colour), cadence, heart rate (zone colour), speed, average speed, average power
-//   grade    top right  - grade and virtual elevation climbed
-//   target   top right  - the target being held (ERG) or the workout step's target (ERG off), time in target
-//   erg      top right  - ERG badge (click/E), resistance with -/+ (ERG on: trim; off: grade), Free Ride target entry,
-//                         workout skip / extend
-//   cue      under the stats - workout text cues
-//   banner   centre     - start / paused / auto-paused / workout complete
-//   graph    bottom     - power and heart rate over the last N minutes, zone-coloured, target step line behind
-//   status   bottom left - trainer / HR / power meter connection, End ride
-//   hints    bottom right - keyboard keys
+//   tiles    stat tiles in a row or column (power, cadence, heart rate, speed, grade, target, ...)
+//   workout  workout name, step, countdown, step target, next step, profile - or Free Ride time / lap / distance
+//   erg      ERG badge, resistance -/+ (trim or grade), Free Ride target or workout skip / +30 s
+//   graph    power and heart rate history; status: sensors + End ride; hints: keys; cue / banner: shown when needed
 //
 // Pure view: refresh(state) shows a Ride.state() snapshot; clicks go back through the callbacks the state sets.
 // Each panel is its own UI batch, so a value changing in one panel doesn't rebuild the others.
 import "app" for Application
 import "math" for Vec2, Vec4
-import "ui" for UIManager, UIPanel, UIGraph
+import "ui" for UIManager, UIPanel, UIGraph, NavigationDirection
 import "localization" for Localization
 import "ride" for Ride
-import "UI/Ride/RideTheme" for RideTheme, RideFonts, TextField, RideButton
+import "UI/Theme/UIKit" for UIKit
+import "UI/Ride/RideTheme" for RideTheme, TextField
 import "UI/Ride/RideFormat" for RideFormat
 import "UI/Ride/RideLayout" for RideLayout
 
@@ -30,18 +25,87 @@ var ROOT_Z = 1
 var PANEL_Z = 2
 var TEXT_Z = 6
 var OVERLAY_Z = 3
-var STATUS_DOT_SIZE = 10
+var HUD_TINT = Vec4.new(255, 255, 255, 220)
+var CUE_TINT = Vec4.new(150, 210, 255, 235)
+
+// Size classes: [caption, value, hero (power), mid (secondary values), button height, padding]. Text sizes are whole
+// multiples of the kit font's 9 px grid, so they draw crisp.
+var SIZES = {
+    "L": [18, 45, 72, 27, 34, 12],
+    "M": [18, 36, 54, 27, 30, 10],
+    "S": [9, 27, 36, 18, 26, 8]
+}
+
+// A kit button for the HUD: orange "button" art, lighter while focused; "active" (ERG ON) keeps the lit look, and an
+// "off" toggle shows the grey disabled art.
+class HudButton {
+    construct new(parent, font, labelSize, text, absPos, size, z) {
+        _active = null
+        _focused = false
+        _panel = UIKit.frame(parent, "button", absPos, Vec2.new(0, 0), size, Vec2.new(0, 0), z)
+        _panel.setFocusable(true)
+        _label = TextField.new(_panel, font, labelSize, Vec2.new(0, 0), Vec2.new(0.5, 0.5), Vec2.new(0.5, 0.5), UIKit.text, z + 1)
+        _label.text = text
+        _panel.setOnFocus { |sender|
+            _focused = true
+            applyLook_()
+        }
+        _panel.setOnLoseFocus { |sender|
+            _focused = false
+            applyLook_()
+        }
+        // The HUD reads its own keys: arrows must never walk focus around the screen.
+        for (direction in [NavigationDirection.UP, NavigationDirection.DOWN, NavigationDirection.LEFT, NavigationDirection.RIGHT]) {
+            _panel.setNavigationNeighbor(direction, _panel)
+        }
+    }
+
+    panel { _panel }
+    text=(value) { _label.text = value }
+    setOnClick(fn) { _panel.setOnClick(fn) }
+    visible=(value) { _panel.setVisible(value) }
+
+    // null = a plain button; true / false = a toggle shown lit / grey.
+    active=(value) {
+        if (_active == value) return
+        _active = value
+        applyLook_()
+    }
+
+    applyLook_() {
+        if (_active == false) {
+            UIKit.applyStyle(_panel, "buttonDisabled")
+            _label.color = UIKit.textMuted
+        } else if (_focused || _active == true) {
+            UIKit.applyStyle(_panel, "buttonHover")
+            _label.color = UIKit.textDark
+        } else {
+            UIKit.applyStyle(_panel, "button")
+            _label.color = UIKit.text
+        }
+    }
+}
 
 class RideHudUI {
-    // mode: "freeRide" | "workout"; imperial: units for speed/distance/elevation.
-    construct new(mode, imperial, isDemo, graphWindowSeconds) {
+    // mode: "freeRide" | "workout"; imperial: units for speed/distance/elevation; layoutName: a RideLayout.json layout.
+    construct new(mode, imperial, isDemo, graphWindowSeconds, layoutName) {
         _mode = mode
         _imperial = imperial
+        _isDemo = isDemo
         _graphWindow = graphWindowSeconds
-        _fonts = RideFonts.new()
-        _layout = RideLayout.load()
         _cueUntil = 0
         _targetEntry = null
+        _tiles = []
+        _buttons = []
+        _graphs = []
+        _profiles = []
+        _dots = {}
+        _cuePanels = []
+        _bannerPanels = []
+        _workoutFields = {}
+        _ergFields = {}
+        UIKit.open()
+        _font = UIKit.font()
 
         _root = UIPanel.new(Vec2.new(0, 0), Vec2.new(0, 0), Vec2.new(Application.gameWidth, Application.gameHeight), Vec2.new(0, 0))
         // Transparent over the procedural world (drawn behind the UI); a solid backdrop when the world is off.
@@ -50,16 +114,7 @@ class RideHudUI {
         _root.setZIndex(ROOT_Z)
         UIManager.addUIElement(_root)
 
-        buildWorkoutPanel_()
-        buildStatsPanel_()
-        buildGradePanel_()
-        buildTargetPanel_()
-        buildErgPanel_()
-        buildCuePanel_()
-        buildBannerPanel_()
-        buildGraphPanel_()
-        buildStatusPanel_(isDemo)
-        buildHintsPanel_()
+        for (spec in RideLayout.load(layoutName)) build_(spec)
     }
 
     // --- callbacks the state sets ------------------------------------------------------------------------------
@@ -74,307 +129,311 @@ class RideHudUI {
 
     // --- building ----------------------------------------------------------------------------------------------
 
-    panel_(id) {
-        var spec = _layout[id]
-        var panel = RideTheme.panel(_root, spec.position, spec.anchor, spec.anchor, spec.size, PANEL_Z)
-        panel.setBatchRoot(true)
-        return panel
-    }
-
-    text_(parent, bold, size, x, y, anchor, color) {
-        var font = bold ? _fonts.bold(size) : _fonts.regular(size)
-        return TextField.new(parent, font, size, Vec2.new(x, y), Vec2.new(0, 0), anchor, color, TEXT_Z)
-    }
-
-    caption_(parent, text, x, y, anchor) {
-        var field = text_(parent, false, 15, x, y, anchor, RideTheme.muted)
-        field.text = text
-        return field
-    }
-
     tr_(key) { Localization.get(key) }
 
-    buildWorkoutPanel_() {
-        var spec = _layout["workout"]
-        var width = spec.size.x
-        var height = spec.size.y
-        var panel = panel_("workout")
-        var left = Vec2.new(0, 0)
-        var right = Vec2.new(1, 0)
+    build_(spec) {
+        var sizes = SIZES[spec.sizeClass]
+        var panel = UIKit.frame(_root, "hud", spec.position, spec.anchor, spec.size, Vec2.new(0, 0), PANEL_Z)
+        panel.setAnchorPoint(spec.anchor)
+        panel.setTint(HUD_TINT)
+        panel.setBatchRoot(true)
+        var widget = spec.widget
+        if (widget == "tiles") {
+            buildTiles_(panel, spec.tiles, spec.flow, sizes, 0, 0, spec.size.x, spec.size.y)
+        } else if (widget == "workout") {
+            buildWorkout_(panel, spec.size, sizes)
+        } else if (widget == "erg") {
+            buildErg_(panel, spec.size, sizes)
+        } else if (widget == "graph") {
+            buildGraph_(panel, spec.size, sizes)
+        } else if (widget == "status") {
+            buildStatus_(panel, spec.size, sizes)
+        } else if (widget == "hints") {
+            buildHints_(panel, spec.size, sizes)
+        } else if (widget == "cue") {
+            panel.setTint(CUE_TINT)
+            var text = text_(panel, sizes[3], spec.size.x / 2, (spec.size.y - sizes[3]) / 2, Vec2.new(0.5, 0), UIKit.text)
+            panel.setVisible(false)
+            _cuePanels.add([panel, text])
+        } else if (widget == "banner") {
+            var text = text_(panel, sizes[3], spec.size.x / 2, (spec.size.y - sizes[3]) / 2, Vec2.new(0.5, 0), UIKit.accent)
+            panel.setVisible(false)
+            _bannerPanels.add([panel, text])
+        }
+    }
+
+    text_(parent, size, x, y, anchor, color) {
+        return TextField.new(parent, _font, size, Vec2.new(x, y), Vec2.new(0, 0), anchor, color, TEXT_Z)
+    }
+
+    button_(parent, sizes, text, x, y, width, onClick) {
+        var height = sizes[4]
+        var button = HudButton.new(parent, _font, height > 28 ? 18 : 9, text, Vec2.new(x, y), Vec2.new(width, height), TEXT_Z)
+        button.setOnClick(onClick)
+        _buttons.add(button)
+        return button
+    }
+
+    tileCaption_(id) {
+        var caption = tr_("ride.tile_" + id)
+        if (id == "speed" || id == "averageSpeed") return caption + " " + RideFormat.speedUnit(_imperial)
+        if (id == "distance") return caption + " " + RideFormat.distanceUnit(_imperial)
+        if (id == "climbed") return caption + " " + RideFormat.elevationUnit(_imperial)
+        return caption
+    }
+
+    // Stat tiles in the rectangle (x, y, width, height) of `panel`. Row: equal columns, caption over value, centred.
+    // Column: equal rows, caption left and value right on one line.
+    buildTiles_(panel, ids, flow, sizes, x, y, width, height) {
+        var caption = sizes[0]
+        var pad = sizes[5]
+        var count = ids.count
+        for (i in 0...count) {
+            var id = ids[i]
+            var valueSize = id == "power" ? sizes[2] : sizes[1]
+            var captionField = null
+            var valueField = null
+            if (flow == "row") {
+                var cellWidth = (width - 2 * pad) / count
+                var centre = x + pad + cellWidth * i + cellWidth / 2
+                // The hero size only where the panel is tall enough for it.
+                if (pad * 2 + caption + 3 + valueSize > height) valueSize = sizes[1]
+                captionField = text_(panel, caption, centre, y + pad, Vec2.new(0.5, 0), UIKit.textMuted)
+                valueField = text_(panel, valueSize, centre, y + pad + caption + 3, Vec2.new(0.5, 0), UIKit.text)
+            } else {
+                var cellHeight = (height - 2 * pad) / count
+                if (valueSize > cellHeight) valueSize = sizes[1]
+                var top = y + pad + cellHeight * i
+                captionField = text_(panel, caption, x + pad, top + (cellHeight - caption) / 2, Vec2.new(0, 0), UIKit.textMuted)
+                valueField = text_(panel, valueSize, x + width - pad, top + (cellHeight - valueSize) / 2, Vec2.new(1, 0), UIKit.text)
+            }
+            captionField.text = tileCaption_(id)
+            valueField.text = "--"
+            _tiles.add([id, valueField, captionField])
+        }
+    }
+
+    buildWorkout_(panel, size, sizes) {
+        var caption = sizes[0]
+        var value = sizes[1]
+        var mid = sizes[3]
+        var pad = sizes[5]
+        var width = size.x
+        var height = size.y
+        var fields = _workoutFields
         if (_mode == "workout") {
-            _workoutName = text_(panel, true, 22, 14, 10, left, RideTheme.text)
-            _stepLine = text_(panel, false, 15, 14, 40, left, RideTheme.muted)
-            _countdown = text_(panel, true, 54, 14, 58, left, RideTheme.text)
-            _stepTarget = text_(panel, true, 26, width - 14, 66, right, RideTheme.text)
-            _stepCadence = text_(panel, false, 15, width - 14, 98, right, RideTheme.muted)
-            _nextLine = text_(panel, false, 16, 14, 130, left, RideTheme.muted)
-            _workoutTime = text_(panel, false, 16, width - 14, 130, right, RideTheme.muted)
-            var well = UIPanel.new(Vec2.new(14, 158), Vec2.new(0, 0), Vec2.new(width - 28, height - 170), Vec2.new(0, 0))
-            well.setBackgroundColor(Vec4.new(0, 0, 0, 90))
-            well.setBorderColor(RideTheme.clear)
-            well.setZIndex(PANEL_Z + 1)
-            panel.addChild(well)
-            _profile = UIGraph.new(Vec2.new(4, 4), Vec2.new(0, 0), Vec2.new(width - 36, height - 178), Vec2.new(0, 0))
-            _profile.setZIndex(PANEL_Z + 2)
-            well.addChild(_profile)
+            var y = pad
+            fields["name"] = text_(panel, caption, pad, y, Vec2.new(0, 0), UIKit.accent)
+            fields["time"] = text_(panel, caption, width - pad, y, Vec2.new(1, 0), UIKit.textMuted)
+            y = y + caption + 3
+            fields["step"] = text_(panel, caption, pad, y, Vec2.new(0, 0), UIKit.textMuted)
+            y = y + caption + 3
+            fields["countdown"] = text_(panel, value, pad, y, Vec2.new(0, 0), UIKit.text)
+            fields["stepTarget"] = text_(panel, mid, width - pad, y + value - mid, Vec2.new(1, 0), UIKit.text)
+            y = y + value + 3
+            fields["next"] = text_(panel, caption, pad, y, Vec2.new(0, 0), UIKit.textMuted)
+            fields["cadence"] = text_(panel, caption, width - pad, y, Vec2.new(1, 0), UIKit.textMuted)
+            y = y + caption + 4
+            var graphHeight = height - pad - y
+            if (graphHeight >= 16) {
+                var profile = UIGraph.new(Vec2.new(pad, y), Vec2.new(0, 0), Vec2.new(width - 2 * pad, graphHeight), Vec2.new(0, 0))
+                profile.setZIndex(PANEL_Z + 1)
+                panel.addChild(profile)
+                _profiles.add(profile)
+            }
         } else {
-            var title = text_(panel, true, 28, 14, 10, left, RideTheme.text)
+            var title = text_(panel, caption, pad, pad, Vec2.new(0, 0), UIKit.accent)
             title.text = tr_("ride.free_ride")
-            caption_(panel, tr_("ride.elapsed"), 14, 54, left)
-            _elapsed = text_(panel, true, 54, 14, 72, left, RideTheme.text)
-            _lapCaption = caption_(panel, "LAP 1", 14, 146, left)
-            _lapTime = text_(panel, true, 32, 14, 164, left, RideTheme.text)
-            caption_(panel, tr_("ride.distance") + " (" + RideFormat.distanceUnit(_imperial) + ")", width / 2 + 10, 146, left)
-            _distance = text_(panel, true, 32, width / 2 + 10, 164, left, RideTheme.text)
-            caption_(panel, tr_("ride.lap_hint"), 14, height - 26, left)
+            var hint = text_(panel, caption, width - pad, pad, Vec2.new(1, 0), UIKit.textMuted)
+            hint.text = tr_("ride.lap_hint")
+            var top = pad + caption + 8
+            buildTiles_(panel, ["elapsed", "lapTime", "distance"], "row", sizes, 0, top - pad, width, height - top + pad)
         }
     }
 
-    buildStatsPanel_() {
-        var spec = _layout["stats"]
-        var width = spec.size.x
-        var panel = panel_("stats")
-        var left = Vec2.new(0, 0)
-        var centre = Vec2.new(0.5, 0)
-        var right = Vec2.new(1, 0)
-        caption_(panel, tr_("ride.power") + " (W)", width / 2, 10, centre)
-        _power = text_(panel, true, 100, width / 2, 26, centre, RideTheme.text)
-        caption_(panel, tr_("ride.average_power") + " (W)", width / 2, 140, centre)
-        _averagePower = text_(panel, true, 34, width / 2, 158, centre, RideTheme.text)
-
-        caption_(panel, tr_("ride.cadence") + " (rpm)", 20, 12, left)
-        _cadence = text_(panel, true, 46, 20, 32, left, RideTheme.text)
-        caption_(panel, tr_("ride.heart_rate") + " (bpm)", 20, 110, left)
-        _heartRate = text_(panel, true, 46, 20, 130, left, RideTheme.text)
-
-        caption_(panel, tr_("ride.speed") + " (" + RideFormat.speedUnit(_imperial) + ")", width - 20, 12, right)
-        _speed = text_(panel, true, 46, width - 20, 32, right, RideTheme.text)
-        caption_(panel, tr_("ride.average_speed"), width - 20, 110, right)
-        _averageSpeed = text_(panel, true, 46, width - 20, 130, right, RideTheme.text)
-    }
-
-    buildGradePanel_() {
-        var width = _layout["grade"].size.x
-        var panel = panel_("grade")
-        caption_(panel, tr_("ride.grade"), 14, 8, Vec2.new(0, 0))
-        _grade = text_(panel, true, 38, 14, 26, Vec2.new(0, 0), RideTheme.text)
-        caption_(panel, tr_("ride.climbed") + " (" + RideFormat.elevationUnit(_imperial) + ")", width - 14, 8, Vec2.new(1, 0))
-        _climbed = text_(panel, true, 38, width - 14, 26, Vec2.new(1, 0), RideTheme.text)
-    }
-
-    buildTargetPanel_() {
-        var width = _layout["target"].size.x
-        var panel = panel_("target")
-        _targetCaption = caption_(panel, tr_("ride.target"), 14, 8, Vec2.new(0, 0))
-        _target = text_(panel, true, 38, 14, 26, Vec2.new(0, 0), RideTheme.text)
-        _inTargetCaption = caption_(panel, tr_("ride.in_target"), width - 14, 8, Vec2.new(1, 0))
-        _inTarget = text_(panel, true, 38, width - 14, 26, Vec2.new(1, 0), RideTheme.text)
-    }
-
-    buildErgPanel_() {
-        var width = _layout["erg"].size.x
-        var panel = panel_("erg")
-        var buttonFont = _fonts.bold(17)
-        _ergButton = RideButton.new(panel, buttonFont, "ERG", Vec2.new(12, 10), Vec2.new(0, 0), Vec2.new(0, 0), Vec2.new(128, 34), TEXT_Z)
-        _ergButton.setOnClick { |sender, mousePos|
+    buildErg_(panel, size, sizes) {
+        var mid = 18  // beside three buttons: the 2x font fits at every size class
+        var caption = sizes[0]
+        var buttonHeight = sizes[4]
+        var pad = sizes[5]
+        var width = size.x
+        var fields = _ergFields
+        var gap = 4
+        var small = (buttonHeight * 1.3).round
+        var y = pad
+        fields["erg"] = button_(panel, sizes, "ERG", pad, y, (buttonHeight * 3.4).round, Fn.new { |sender, mousePos|
             if (_onErg != null) _onErg.call()
-        }
-        _ergDetail = text_(panel, false, 16, width - 14, 18, Vec2.new(1, 0), RideTheme.muted)
-
-        _resistance = text_(panel, true, 22, 14, 60, Vec2.new(0, 0), RideTheme.text)
-        _trimModeButton = RideButton.new(panel, buttonFont, "W", Vec2.new(width - 140, 54), Vec2.new(0, 0), Vec2.new(0, 0), Vec2.new(40, 34), TEXT_Z)
-        _trimModeButton.setOnClick { |sender, mousePos|
+        })
+        fields["detail"] = text_(panel, caption, width - pad, y + (buttonHeight - caption) / 2, Vec2.new(1, 0), UIKit.textMuted)
+        y = y + buttonHeight + gap
+        fields["resistance"] = text_(panel, mid, pad, y + (buttonHeight - mid) / 2, Vec2.new(0, 0), UIKit.text)
+        fields["trimMode"] = button_(panel, sizes, "W", width - pad - small * 3 - gap * 2, y, small, Fn.new { |sender, mousePos|
             if (_onTrimMode != null) _onTrimMode.call()
-        }
-        var minus = RideButton.new(panel, _fonts.bold(22), "-", Vec2.new(width - 94, 54), Vec2.new(0, 0), Vec2.new(0, 0), Vec2.new(38, 34), TEXT_Z)
-        minus.setOnClick { |sender, mousePos|
+        })
+        button_(panel, sizes, "-", width - pad - small * 2 - gap, y, small, Fn.new { |sender, mousePos|
             if (_onResistance != null) _onResistance.call(-1)
-        }
-        var plus = RideButton.new(panel, _fonts.bold(22), "+", Vec2.new(width - 50, 54), Vec2.new(0, 0), Vec2.new(0, 0), Vec2.new(38, 34), TEXT_Z)
-        plus.setOnClick { |sender, mousePos|
+        })
+        button_(panel, sizes, "+", width - pad - small, y, small, Fn.new { |sender, mousePos|
             if (_onResistance != null) _onResistance.call(1)
-        }
-
+        })
+        y = y + buttonHeight + gap
+        if (y + buttonHeight > size.y - pad + 2) return
         if (_mode == "freeRide") {
-            _targetRowCaption = text_(panel, true, 22, 14, 104, Vec2.new(0, 0), RideTheme.text)
-            _targetEditButton = RideButton.new(panel, buttonFont, "--", Vec2.new(width - 190, 98), Vec2.new(0, 0), Vec2.new(0, 0), Vec2.new(88, 34), TEXT_Z)
-            _targetEditButton.setOnClick { |sender, mousePos|
+            fields["targetCaption"] = text_(panel, mid, pad, y + (buttonHeight - mid) / 2, Vec2.new(0, 0), UIKit.text)
+            fields["targetEdit"] = button_(panel, sizes, "--", width - pad - small * 2 - gap * 2 - small * 2, y, small * 2, Fn.new { |sender, mousePos|
                 if (_onTargetEdit != null) _onTargetEdit.call()
-            }
-            _nudgeDown = RideButton.new(panel, _fonts.bold(22), "-", Vec2.new(width - 94, 98), Vec2.new(0, 0), Vec2.new(0, 0), Vec2.new(38, 34), TEXT_Z)
-            _nudgeDown.setOnClick { |sender, mousePos|
+            })
+            fields["nudgeDown"] = button_(panel, sizes, "-", width - pad - small * 2 - gap, y, small, Fn.new { |sender, mousePos|
                 if (_onTargetNudge != null) _onTargetNudge.call(-1)
-            }
-            _nudgeUp = RideButton.new(panel, _fonts.bold(22), "+", Vec2.new(width - 50, 98), Vec2.new(0, 0), Vec2.new(0, 0), Vec2.new(38, 34), TEXT_Z)
-            _nudgeUp.setOnClick { |sender, mousePos|
+            })
+            fields["nudgeUp"] = button_(panel, sizes, "+", width - pad - small, y, small, Fn.new { |sender, mousePos|
                 if (_onTargetNudge != null) _onTargetNudge.call(1)
-            }
+            })
         } else {
-            var skip = RideButton.new(panel, buttonFont, tr_("ride.skip_step"), Vec2.new(12, 98), Vec2.new(0, 0), Vec2.new(0, 0), Vec2.new(130, 34), TEXT_Z)
-            skip.setOnClick { |sender, mousePos|
+            var half = (width - 2 * pad - gap) / 2
+            button_(panel, sizes, tr_("ride.skip_step"), pad, y, half, Fn.new { |sender, mousePos|
                 if (_onSkip != null) _onSkip.call()
-            }
-            var extend = RideButton.new(panel, buttonFont, tr_("ride.extend_step"), Vec2.new(150, 98), Vec2.new(0, 0), Vec2.new(0, 0), Vec2.new(width - 162, 34), TEXT_Z)
-            extend.setOnClick { |sender, mousePos|
+            })
+            button_(panel, sizes, tr_("ride.extend_step"), pad + half + gap, y, half, Fn.new { |sender, mousePos|
                 if (_onExtend != null) _onExtend.call()
-            }
+            })
         }
     }
 
-    buildCuePanel_() {
-        var spec = _layout["cue"]
-        _cuePanel = panel_("cue")
-        _cuePanel.setBackgroundColor(Vec4.new(20, 90, 120, 225))
-        _cueText = text_(_cuePanel, true, 22, spec.size.x / 2, 10, Vec2.new(0.5, 0), RideTheme.text)
-        _cuePanel.setVisible(false)
-    }
-
-    buildBannerPanel_() {
-        var spec = _layout["banner"]
-        _bannerPanel = panel_("banner")
-        _bannerText = text_(_bannerPanel, true, 30, spec.size.x / 2, 12, Vec2.new(0.5, 0), RideTheme.text)
-        _bannerPanel.setVisible(false)
-        _bannerShown = false
-    }
-
-    buildGraphPanel_() {
-        var spec = _layout["graph"]
-        var width = spec.size.x
-        var height = spec.size.y
-        var panel = panel_("graph")
-        var powerKey = text_(panel, true, 15, 14, 8, Vec2.new(0, 0), RideTheme.text)
+    buildGraph_(panel, size, sizes) {
+        var caption = sizes[0]
+        var pad = sizes[5]
+        var powerKey = text_(panel, caption, pad, pad, Vec2.new(0, 0), UIKit.text)
         powerKey.text = tr_("ride.graph_power")
-        var heartKey = text_(panel, true, 15, 160, 8, Vec2.new(0, 0), RideTheme.muted)
+        var heartKey = text_(panel, caption, pad + caption * 7, pad, Vec2.new(0, 0), UIKit.textMuted)
         heartKey.text = tr_("ride.graph_heart_rate")
-        _graphWindowLabel = text_(panel, false, 15, width - 14, 8, Vec2.new(1, 0), RideTheme.muted)
-        _graphWindowLabel.text = tr_("ride.graph_last") + " " + (_graphWindow / 60).round.toString + " min"
-        _graph = UIGraph.new(Vec2.new(12, 30), Vec2.new(0, 0), Vec2.new(width - 24, height - 40), Vec2.new(0, 0))
-        _graph.setZIndex(PANEL_Z + 1)
-        panel.addChild(_graph)
+        var window = text_(panel, caption, size.x - pad, pad, Vec2.new(1, 0), UIKit.textMuted)
+        window.text = tr_("ride.graph_last") + " " + (_graphWindow / 60).round.toString + " min"
+        var top = pad + caption + 3
+        var graph = UIGraph.new(Vec2.new(pad, top), Vec2.new(0, 0), Vec2.new(size.x - 2 * pad, size.y - top - pad), Vec2.new(0, 0))
+        graph.setZIndex(PANEL_Z + 1)
+        panel.addChild(graph)
+        _graphs.add(graph)
     }
 
-    buildStatusPanel_(isDemo) {
-        var spec = _layout["status"]
-        var panel = panel_("status")
-        panel.setBackgroundColor(RideTheme.clear)
-        panel.setBorderColor(RideTheme.clear)
-        _dots = {}
-        var x = 0
+    buildStatus_(panel, size, sizes) {
+        var caption = sizes[0]
+        var dotSize = (caption * 0.8).round
+        var x = sizes[5]
+        var middle = size.y / 2
         for (entry in [["trainer", "ride.sensor_trainer"], ["heartRate", "ride.sensor_heart_rate"], ["powerMeter", "ride.sensor_power_meter"]]) {
-            var dot = UIPanel.new(Vec2.new(x, 9), Vec2.new(0, 0), Vec2.new(STATUS_DOT_SIZE, STATUS_DOT_SIZE), Vec2.new(0, 0))
-            dot.setBackgroundColor(RideTheme.muted)
+            var dot = UIPanel.new(Vec2.new(x, middle - dotSize / 2), Vec2.new(0, 0), Vec2.new(dotSize, dotSize), Vec2.new(0, 0))
+            dot.setBackgroundColor(UIKit.textMuted)
             dot.setBorderColor(RideTheme.clear)
             dot.setZIndex(TEXT_Z)
             panel.addChild(dot)
-            var label = text_(panel, false, 15, x + 16, 5, Vec2.new(0, 0), RideTheme.muted)
+            var label = text_(panel, caption, x + dotSize + 5, middle - caption / 2, Vec2.new(0, 0), UIKit.textMuted)
             label.text = tr_(entry[1])
             _dots[entry[0]] = [dot, label, null]
-            x = x + 120
+            x = x + dotSize + 5 + caption * 8
         }
-        if (isDemo) {
-            var demo = text_(panel, true, 15, x, 5, Vec2.new(0, 0), RideTheme.warn)
+        if (_isDemo) {
+            var demo = text_(panel, caption, x, middle - caption / 2, Vec2.new(0, 0), UIKit.accent)
             demo.text = "DEMO"
         }
-        var end = RideButton.new(panel, _fonts.bold(15), tr_("ride.end_ride"), Vec2.new(spec.size.x, 0), Vec2.new(0, 0), Vec2.new(1, 0), Vec2.new(96, 26), TEXT_Z)
-        end.activeColor = RideTheme.bad
-        end.setOnClick { |sender, mousePos|
+        var endSizes = [sizes[0], sizes[1], sizes[2], sizes[3], size.y - 4, sizes[5]]
+        button_(panel, endSizes, tr_("ride.end_ride"), size.x - 2 - caption * 9, 2, caption * 9, Fn.new { |sender, mousePos|
             if (_onEnd != null) _onEnd.call()
-        }
+        })
     }
 
-    buildHintsPanel_() {
-        var spec = _layout["hints"]
-        var panel = panel_("hints")
-        panel.setBackgroundColor(RideTheme.clear)
-        panel.setBorderColor(RideTheme.clear)
-        var hints = text_(panel, false, 15, spec.size.x, 5, Vec2.new(1, 0), RideTheme.muted)
-        hints.text = _mode == "workout" ? tr_("ride.keys_workout") : tr_("ride.keys_free_ride")
+    buildHints_(panel, size, sizes) {
+        var caption = sizes[0]
+        var hints = text_(panel, caption, size.x - sizes[5], (size.y - caption) / 2, Vec2.new(1, 0), UIKit.textMuted)
+        hints.text = (_mode == "workout" ? tr_("ride.keys_workout") : tr_("ride.keys_free_ride")) + "   " + tr_("ride.keys_layout")
     }
 
     // --- refresh -----------------------------------------------------------------------------------------------
 
     refresh(state, now) {
         if (_root == null || state == null) return
-        var imperial = _imperial
-        _power.text = RideFormat.whole(state["power"])
-        _power.color = state["power"] == null ? RideTheme.muted : RideTheme.color(state["powerColor"])
-        _averagePower.text = RideFormat.whole(state["averagePower"])
-        _cadence.text = RideFormat.whole(state["cadence"])
-        _heartRate.text = RideFormat.whole(state["heartRate"])
-        _heartRate.color = state["heartRate"] == null ? RideTheme.muted : RideTheme.color(state["heartRateColor"])
-        _speed.text = RideFormat.speed(state["speed"], imperial)
-        _averageSpeed.text = RideFormat.speed(state["averageSpeed"], imperial)
-        _grade.text = RideFormat.grade(state["grade"])
-        _climbed.text = RideFormat.elevation(state["elevationGain"], imperial)
-
-        refreshTarget_(state)
+        for (tile in _tiles) refreshTile_(tile, state)
         refreshErg_(state)
         refreshStatus_(state)
         refreshBanner_(state)
-        if (_mode == "workout") {
-            refreshWorkout_(state)
-        } else {
-            _elapsed.text = RideFormat.duration(state["timer"])
-            _lapCaption.text = "LAP " + state["lap"].toString
-            _lapTime.text = RideFormat.duration(state["lapSeconds"])
-            _distance.text = RideFormat.distance(state["distance"], imperial)
-        }
+        refreshWorkout_(state)
         if (_cueShown && now >= _cueUntil) {
             _cueShown = false
-            _cuePanel.setVisible(false)
+            for (entry in _cuePanels) entry[0].setVisible(false)
         }
-        Ride.updateGraph(_graph, _graphWindow)
+        for (graph in _graphs) Ride.updateGraph(graph, _graphWindow)
     }
 
-    refreshTarget_(state) {
-        var target = state["target"]
-        var caption = tr_("ride.target")
-        if (state["mode"] == "workout") {
-            caption = caption + (state["erg"] ? " - ERG" : " - " + tr_("ride.step"))
-        } else if (state["erg"]) {
-            caption = caption + " - ERG"
-        }
-        _targetCaption.text = caption
-        _target.text = target == null ? "--" : target.round.toString + " W"
-        var showScore = state["mode"] == "workout"
-        _inTargetCaption.visible = showScore
-        _inTarget.visible = showScore
-        if (showScore) {
+    refreshTile_(tile, state) {
+        var id = tile[0]
+        var field = tile[1]
+        var imperial = _imperial
+        if (id == "power") {
+            field.text = RideFormat.whole(state["power"])
+            field.color = state["power"] == null ? UIKit.textMuted : RideTheme.color(state["powerColor"])
+        } else if (id == "averagePower") {
+            field.text = RideFormat.whole(state["averagePower"])
+        } else if (id == "cadence") {
+            field.text = RideFormat.whole(state["cadence"])
+        } else if (id == "heartRate") {
+            field.text = RideFormat.whole(state["heartRate"])
+            field.color = state["heartRate"] == null ? UIKit.textMuted : RideTheme.color(state["heartRateColor"])
+        } else if (id == "speed") {
+            field.text = RideFormat.speed(state["speed"], imperial)
+        } else if (id == "averageSpeed") {
+            field.text = RideFormat.speed(state["averageSpeed"], imperial)
+        } else if (id == "grade") {
+            field.text = RideFormat.grade(state["grade"])
+        } else if (id == "climbed") {
+            field.text = RideFormat.elevation(state["elevationGain"], imperial)
+        } else if (id == "target") {
+            var target = state["target"]
+            field.text = target == null ? "--" : target.round.toString + " W"
+        } else if (id == "inTarget") {
             var seconds = state["targetSeconds"]
-            _inTarget.text = seconds > 0 ? (state["inTargetSeconds"] * 100 / seconds).round.toString + "\%" : "--"
+            field.text = seconds > 0 ? (state["inTargetSeconds"] * 100 / seconds).round.toString + "\%" : "--"
+        } else if (id == "distance") {
+            field.text = RideFormat.distance(state["distance"], imperial)
+        } else if (id == "elapsed") {
+            field.text = RideFormat.duration(state["timer"])
+        } else if (id == "lapTime") {
+            field.text = RideFormat.duration(state["lapSeconds"])
+            tile[2].text = tr_("ride.tile_lapTime") + " " + state["lap"].toString
         }
     }
 
     refreshErg_(state) {
+        var fields = _ergFields
+        if (!fields.containsKey("erg")) return
         var erg = state["erg"]
-        _ergButton.text = erg ? "ERG ON" : "ERG OFF"
-        _ergButton.active = erg
+        fields["erg"].text = erg ? "ERG ON" : "ERG OFF"
+        fields["erg"].active = erg
+        var detail = fields["detail"]
         if (state["cadenceProtection"]) {
-            _ergDetail.text = tr_("ride.cadence_protection")
-            _ergDetail.color = RideTheme.warn
+            detail.text = tr_("ride.cadence_protection")
+            detail.color = UIKit.accent
         } else if (state["controlMode"] == "erg") {
-            _ergDetail.text = tr_("ride.holding") + " " + RideFormat.whole(state["target"]) + " W"
-            _ergDetail.color = RideTheme.muted
+            detail.text = tr_("ride.holding") + " " + RideFormat.whole(state["target"]) + " W"
+            detail.color = UIKit.textMuted
         } else {
-            _ergDetail.text = tr_("ride.simulation")
-            _ergDetail.color = RideTheme.muted
+            detail.text = tr_("ride.simulation")
+            detail.color = UIKit.textMuted
         }
         if (erg) {
             var percent = state["trimMode"] == "percent"
-            _resistance.text = tr_("ride.trim") + " " + (percent ? RideFormat.signedWhole(state["trimPercent"]) + "\%" : RideFormat.signedWhole(state["trimWatts"]) + " W")
-            _trimModeButton.text = percent ? "\%" : "W"
+            fields["resistance"].text = tr_("ride.trim") + " " + (percent ? RideFormat.signedWhole(state["trimPercent"]) + "\%" : RideFormat.signedWhole(state["trimWatts"]) + " W")
+            fields["trimMode"].text = percent ? "\%" : "W"
         } else {
-            _resistance.text = tr_("ride.grade") + " " + RideFormat.grade(state["userGrade"])
+            fields["resistance"].text = tr_("ride.grade") + " " + RideFormat.grade(state["userGrade"])
         }
-        _trimModeButton.panel.setVisible(erg)
-        if (_mode == "freeRide") {
-            _targetRowCaption.text = tr_("ride.target")
-            _targetEditButton.text = state["freeRideTarget"].round.toString + " W"
-            var show = erg
-            _targetRowCaption.visible = show
-            _targetEditButton.panel.setVisible(show)
-            _nudgeDown.panel.setVisible(show)
-            _nudgeUp.panel.setVisible(show)
+        fields["trimMode"].visible = erg
+        if (fields.containsKey("targetEdit")) {
+            fields["targetCaption"].text = tr_("ride.target")
+            fields["targetEdit"].text = state["freeRideTarget"].round.toString + " W"
+            fields["targetCaption"].visible = erg
+            fields["targetEdit"].visible = erg
+            fields["nudgeDown"].visible = erg
+            fields["nudgeUp"].visible = erg
         }
     }
 
@@ -387,7 +446,7 @@ class RideHudUI {
                 entry[2] = status
                 var color = status == "connected" ? RideTheme.good : (status == "lost" ? RideTheme.bad : Vec4.new(70, 78, 90, 255))
                 entry[0].setBackgroundColor(color)
-                entry[1].color = status == "none" ? Vec4.new(90, 98, 110, 255) : RideTheme.text
+                entry[1].color = status == "none" ? UIKit.textMuted : UIKit.text
             }
         }
     }
@@ -403,54 +462,50 @@ class RideHudUI {
         } else if (_workoutComplete) {
             text = tr_("ride.banner_workout_complete")
         }
-        if (text == null) {
-            if (_bannerShown) {
-                _bannerShown = false
-                _bannerPanel.setVisible(false)
-            }
-            return
+        var show = text != null
+        for (entry in _bannerPanels) {
+            if (show) entry[1].text = text
+            if (show != _bannerShown) entry[0].setVisible(show)
         }
-        _bannerText.text = text
-        if (!_bannerShown) {
-            _bannerShown = true
-            _bannerPanel.setVisible(true)
-        }
+        _bannerShown = show
     }
 
     refreshWorkout_(state) {
+        var fields = _workoutFields
+        if (!fields.containsKey("name")) return
         var workout = state["workout"]
         if (workout == null) return
         _workoutComplete = workout["finished"]
-        _workoutName.text = workout["name"]
-        _stepLine.text = tr_("ride.step") + " " + (workout["stepIndex"] + 1).toString + "/" + workout["stepCount"].toString + "  " + workout["stepLabel"]
-        _countdown.text = workout["finished"] ? tr_("ride.done") : RideFormat.duration(workout["stepRemaining"])
+        fields["name"].text = workout["name"]
+        fields["step"].text = tr_("ride.step") + " " + (workout["stepIndex"] + 1).toString + "/" + workout["stepCount"].toString + "  " + workout["stepLabel"]
+        fields["countdown"].text = workout["finished"] ? tr_("ride.done") : RideFormat.duration(workout["stepRemaining"])
         if (workout["stepHasTarget"] && !workout["finished"]) {
             var stepTarget = state["stepTarget"]
             var ftp = state["ftpWatts"]
-            _stepTarget.text = RideFormat.whole(stepTarget) + " W  " + (stepTarget == null ? "" : (stepTarget * 100 / ftp).round.toString + "\%")
+            fields["stepTarget"].text = RideFormat.whole(stepTarget) + " W " + (stepTarget == null ? "" : (stepTarget * 100 / ftp).round.toString + "\%")
         } else {
-            _stepTarget.text = workout["finished"] ? "" : tr_("ride.free")
+            fields["stepTarget"].text = workout["finished"] ? "" : tr_("ride.free")
         }
         var cadence = workout["stepCadence"]
-        _stepCadence.text = cadence == null ? "" : cadence.round.toString + " rpm"
+        fields["cadence"].text = cadence == null ? "" : cadence.round.toString + " rpm"
         if (workout.containsKey("nextLabel")) {
             var nextTarget = workout["nextHasTarget"] ? " @ " + workout["nextLow"].round.toString + " W" : ""
-            _nextLine.text = tr_("ride.next") + "  " + RideFormat.duration(workout["nextDuration"]) + nextTarget
+            fields["next"].text = tr_("ride.next") + " " + RideFormat.duration(workout["nextDuration"]) + nextTarget
         } else {
-            _nextLine.text = tr_("ride.next") + "  " + tr_("ride.finish")
+            fields["next"].text = tr_("ride.next") + " " + tr_("ride.finish")
         }
-        _workoutTime.text = RideFormat.duration(workout["planPosition"]) + " / " + RideFormat.duration(workout["totalDuration"])
-        Ride.updateProfile(_profile)
+        fields["time"].text = RideFormat.duration(workout["planPosition"]) + " / " + RideFormat.duration(workout["totalDuration"])
+        for (profile in _profiles) Ride.updateProfile(profile)
     }
 
     showCue(message, durationSeconds, now) {
         if (_root == null) return
-        _cueText.text = message
         _cueUntil = now + (durationSeconds > 0 ? durationSeconds : 8)
-        if (!_cueShown) {
-            _cueShown = true
-            _cuePanel.setVisible(true)
+        for (entry in _cuePanels) {
+            entry[1].text = message
+            entry[0].setVisible(true)
         }
+        _cueShown = true
     }
 
     // --- Free Ride target entry ---------------------------------------------------------------------------------
@@ -464,12 +519,12 @@ class RideHudUI {
         _targetEntry.setBorderColor(RideTheme.clear)
         _targetEntry.setZIndex(OVERLAY_Z)
         UIManager.addUIElement(_targetEntry)
-        var box = RideTheme.panel(_targetEntry, Vec2.new(0, 0), Vec2.new(0.5, 0.5), Vec2.new(0.5, 0.5), Vec2.new(420, 190), OVERLAY_Z + 1)
-        box.setBackgroundColor(Vec4.new(18, 24, 32, 245))
-        var caption = TextField.new(box, _fonts.regular(18), 18, Vec2.new(0, 16), Vec2.new(0.5, 0), Vec2.new(0.5, 0), RideTheme.muted, OVERLAY_Z + 4)
+        var box = UIKit.frame(_targetEntry, "window", Vec2.new(0, 0), Vec2.new(0.5, 0.5), Vec2.new(420, 200), Vec2.new(0, 0), OVERLAY_Z + 1)
+        box.setAnchorPoint(Vec2.new(0.5, 0.5))
+        var caption = TextField.new(box, _font, 18, Vec2.new(0, 28), Vec2.new(0.5, 0), Vec2.new(0.5, 0), UIKit.text, OVERLAY_Z + 4)
         caption.text = tr_("ride.set_target_title")
-        _entryText = TextField.new(box, _fonts.bold(64), 64, Vec2.new(0, 44), Vec2.new(0.5, 0), Vec2.new(0.5, 0), RideTheme.text, OVERLAY_Z + 4)
-        var hint = TextField.new(box, _fonts.regular(15), 15, Vec2.new(0, 150), Vec2.new(0.5, 0), Vec2.new(0.5, 0), RideTheme.muted, OVERLAY_Z + 4)
+        _entryText = TextField.new(box, _font, 54, Vec2.new(0, 64), Vec2.new(0.5, 0), Vec2.new(0.5, 0), UIKit.accent, OVERLAY_Z + 4)
+        var hint = TextField.new(box, _font, 9, Vec2.new(0, 150), Vec2.new(0.5, 0), Vec2.new(0.5, 0), UIKit.text, OVERLAY_Z + 4)
         hint.text = tr_("ride.set_target_hint")
     }
 
@@ -491,16 +546,19 @@ class RideHudUI {
             _root = null
         }
         // Every field below pointed into the removed tree (see the reused-state rule).
-        _graph = null
-        _profile = null
+        _tiles = []
+        _buttons = []
+        _graphs = []
+        _profiles = []
         _dots = {}
-        _ergButton = null
-        _trimModeButton = null
-        _targetEditButton = null
-        _nudgeDown = null
-        _nudgeUp = null
-        _cuePanel = null
-        _bannerPanel = null
-        _fonts.unloadAll()
+        _cuePanels = []
+        _bannerPanels = []
+        _workoutFields = {}
+        _ergFields = {}
+        if (_font != null) {
+            _font.unload()
+            _font = null
+        }
+        UIKit.close()
     }
 }

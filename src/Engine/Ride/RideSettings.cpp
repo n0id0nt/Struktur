@@ -69,6 +69,10 @@ void RideSettings::Validate()
 	leadInSeconds                      = std::clamp(leadInSeconds, 0.0, 5.0);
 	freeRideStartTargetWatts           = std::clamp(freeRideStartTargetWatts, 0, 1500);
 	world.Validate();
+	if (hudLayout.empty() || hudLayout.size() > 64)
+	{
+		hudLayout = "compact";
+	}
 	speed.bikeMassKg                   = std::clamp(speed.bikeMassKg, 3.0, 40.0);
 	speed.rollingResistance            = std::clamp(speed.rollingResistance, 0.001, 0.02);
 	speed.dragAreaSquareMeters         = std::clamp(speed.dragAreaSquareMeters, 0.15, 0.8);
@@ -120,6 +124,10 @@ RideSettings RideSettings::FromJson(const std::string& json, std::string& warnin
 	ReadValue(root, "targetBandMinimumWatts", settings.targetBandMinimumWatts);
 	ReadValue(root, "leadInSeconds", settings.leadInSeconds);
 	ReadValue(root, "freeRideStartTargetWatts", settings.freeRideStartTargetWatts);
+	if (root.contains("hudLayout") && root["hudLayout"].is_string())
+	{
+		settings.hudLayout = root["hudLayout"].get<std::string>();
+	}
 
 	if (root.contains("speed"))
 	{
@@ -178,6 +186,7 @@ std::string RideSettings::ToJson() const
 	root["targetBandMinimumWatts"]   = targetBandMinimumWatts;
 	root["leadInSeconds"]            = leadInSeconds;
 	root["freeRideStartTargetWatts"] = freeRideStartTargetWatts;
+	root["hudLayout"]                = hudLayout;
 	root["speed"]                    = {{"bikeMassKg", speed.bikeMassKg},
 	                                    {"rollingResistance", speed.rollingResistance},
 	                                    {"dragArea", speed.dragAreaSquareMeters},

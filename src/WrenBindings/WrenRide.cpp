@@ -130,6 +130,7 @@ static void wren_RideSettings(WrenVM* vm)
 	map.items["dragArea"]          = settings.speed.dragAreaSquareMeters;
 	map.items["rollingResistance"] = settings.speed.rollingResistance;
 	map.items["targetBandPercent"] = settings.targetBandPercent;
+	map.items["hudLayout"]         = settings.hudLayout;
 	// Procedural world ("world" section of ride_settings.json).
 	const RideWorld::WorldSettings& world = settings.world;
 	map.items["worldEnabled"]        = world.enabled;
@@ -264,6 +265,10 @@ static void wren_RideSetSetting(WrenVM* vm)
 		else if (key == "trimMode")
 		{
 			settings.control.trimMode = value == "percent" ? Ride::TrimMode::PERCENT : Ride::TrimMode::WATTS;
+		}
+		else if (key == "hudLayout")
+		{
+			settings.hudLayout = value;
 		}
 		else
 		{
