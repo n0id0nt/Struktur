@@ -1,8 +1,10 @@
 // States/RideSettingsState.wren
 // Ride settings: the current rider's numbers (FTP, max HR, threshold HR, weight, units - saved on the rider profile,
 // so they're never stored twice) and the app-wide ride options (zone model, graph window, power source, auto-pause,
-// trim mode - saved to ride_settings.json through the ride module), plus Pair devices and Change rider. Left/Right
-// changes a value (hold to repeat); Accept runs an action row; every change saves immediately.
+// trim mode - saved to ride_settings.json through the ride module), plus Pair devices and Change rider. A second column
+// holds the procedural world's settings (on/off, quality, grade source, biome, seed, look, comfort mode, stats).
+// Left/Right changes a value (hold to repeat); Accept runs an action row; every change saves immediately. Down from the
+// last left row moves to the world column, Up from its first row comes back.
 import "app" for Application, Time
 import "input" for Input
 import "math" for Vec2, Vec4
@@ -14,7 +16,9 @@ import "UI/Ride/RideTheme" for RideTheme, RideFonts, TextField, RideListRow
 import "UI/Ride/RideFormat" for RideFormat
 import "Rider/RiderProfiles" for RiderProfiles, Units
 
-var ROW_SIZE = Vec2.new(720, 38)
+var ROW_SIZE = Vec2.new(580, 38)
+var LEFT_COLUMN_X = 40
+var RIGHT_COLUMN_X = 660
 var ROW_STEP = 42
 var ROWS_TOP = 96
 var REPEAT_DELAY_SECONDS = 0.4
@@ -24,6 +28,10 @@ var GRAPH_WINDOWS = [120, 300, 600, 1200, 1800]
 var AUTO_PAUSES = [0, 3, 5, 10, 20, 30]
 var POWER_SOURCES = ["auto", "trainer", "powerMeter"]
 var ZONE_MODELS = ["percentMax", "percentLthr"]
+var QUALITIES = ["low", "medium", "high"]
+var GRADE_SOURCES = ["manual", "route"]
+var LOOKS = ["pixel", "pixelDither", "crt", "smooth"]
+var WORLD_ROWS = ["world", "worldQuality", "worldGradeSource", "worldBiome", "worldSeed", "worldLook", "worldComfort", "worldStats"]
 
 class RideSettingsState is BaseState {
     construct new() {
@@ -54,16 +62,22 @@ class RideSettingsState is BaseState {
         var hint = TextField.new(_root, _fonts.regular(16), 16, Vec2.new(0, -26), Vec2.new(0.5, 1), Vec2.new(0.5, 1), RideTheme.muted, 6)
         hint.text = Localization.get("ride.settings_hint")
 
-        _rowIds = ["rider", "ftp", "maxHr", "thresholdHr", "weight", "units", "zones", "graph", "powerSource", "autoPause", "trimMode", "pair", "back"]
+        _leftIds = ["rider", "ftp", "maxHr", "thresholdHr", "weight", "units", "zones", "graph", "powerSource", "autoPause", "trimMode", "pair", "back"]
+        _rowIds = _leftIds + WORLD_ROWS
         _rows = {}
-        var left = (Application.gameWidth - ROW_SIZE.x) / 2
         for (i in 0..._rowIds.count) {
             var id = _rowIds[i]
-            var row = RideListRow.new(_root, _fonts, Localization.get("ride.setting_" + id), "", Vec2.new(left, ROWS_TOP + i * ROW_STEP), ROW_SIZE, 4)
+            var inLeft = i < _leftIds.count
+            var x = inLeft ? LEFT_COLUMN_X : RIGHT_COLUMN_X
+            var y = ROWS_TOP + (inLeft ? i : i - _leftIds.count) * ROW_STEP
+            var row = RideListRow.new(_root, _fonts, Localization.get("ride.setting_" + id), "", Vec2.new(x, y), ROW_SIZE, 4)
             row.setOnFocused(Fn.new { _focusedRow = id })
             row.setOnClick { |sender, mousePos| _pending.add(["activate", id]) }
             _rows[id] = row
         }
+        var worldTitle = TextField.new(_root, _fonts.bold(18), 18, Vec2.new(RIGHT_COLUMN_X, ROWS_TOP - 30), Vec2.new(0, 0), Vec2.new(0, 0), RideTheme.accent, 6)
+        worldTitle.text = Localization.get("ride.world_title")
+        // One chain of rows: the left column, then the world column.
         for (i in 0..._rowIds.count) {
             var panel = _rows[_rowIds[i]].panel
             panel.setNavigationNeighbor(NavigationDirection.UP, i > 0 ? _rows[_rowIds[i - 1]].panel : panel)
@@ -124,6 +138,11 @@ class RideSettingsState is BaseState {
             _stateManager.changeState("RiderSelect")
         } else if (id == "back") {
             _stateManager.changeState("MainMenu")
+        } else if (id == "worldSeed") {
+            // Accept: a fresh random seed (Left/Right step it by one).
+            Ride.setSetting("worldSeed", (Time.unscaledTime * 7919).floor % 1000000 + 1)
+            Ride.saveSettings()
+            refresh_()
         } else {
             change_(id, 1)
         }
@@ -167,6 +186,23 @@ class RideSettingsState is BaseState {
             Ride.setSetting("autoPauseSeconds", cycle_(AUTO_PAUSES, settings["autoPauseSeconds"], direction))
         } else if (id == "trimMode") {
             Ride.setSetting("trimMode", settings["trimMode"] == "watts" ? "percent" : "watts")
+        } else if (id == "world") {
+            Ride.setSetting("worldEnabled", !settings["worldEnabled"])
+        } else if (id == "worldQuality") {
+            Ride.setSetting("worldQuality", cycle_(QUALITIES, settings["worldQuality"], direction))
+        } else if (id == "worldGradeSource") {
+            Ride.setSetting("worldGradeSource", cycle_(GRADE_SOURCES, settings["worldGradeSource"], direction))
+        } else if (id == "worldBiome") {
+            Ride.setSetting("worldBiome", cycle_(["auto"] + Ride.biomes(), settings["worldBiome"], direction))
+        } else if (id == "worldSeed") {
+            var seed = settings["worldSeed"] + direction
+            Ride.setSetting("worldSeed", seed < 0 ? 0 : seed)
+        } else if (id == "worldLook") {
+            applyLook_(cycle_(LOOKS, lookOf_(settings), direction))
+        } else if (id == "worldComfort") {
+            Ride.setSetting("worldComfortMode", !settings["worldComfortMode"])
+        } else if (id == "worldStats") {
+            Ride.setSetting("worldDebugOverlay", !settings["worldDebugOverlay"])
         }
         if (riderChanged) {
             RiderProfiles.update(_rider)
@@ -177,6 +213,31 @@ class RideSettingsState is BaseState {
         }
         refresh_()
     }
+
+    // The retro-look preset the world flags match, or "custom".
+    lookOf_(settings) {
+        var nearest = settings["worldNearestUpscale"]
+        var banded = settings["worldBandedFog"]
+        var flat = settings["worldFlatShading"]
+        var dither = settings["worldDither"]
+        var scan = settings["worldScanlines"]
+        if (!nearest && !banded && !flat && !dither && !scan) return "smooth"
+        if (nearest && banded && flat && !dither && !scan) return "pixel"
+        if (nearest && banded && flat && dither && !scan) return "pixelDither"
+        if (nearest && banded && flat && !dither && scan) return "crt"
+        return "custom"
+    }
+
+    applyLook_(look) {
+        var pixel = look != "smooth"
+        Ride.setSetting("worldNearestUpscale", pixel)
+        Ride.setSetting("worldBandedFog", pixel)
+        Ride.setSetting("worldFlatShading", pixel)
+        Ride.setSetting("worldDither", look == "pixelDither")
+        Ride.setSetting("worldScanlines", look == "crt")
+    }
+
+    onOff_(value) { Localization.get(value ? "ride.on" : "ride.off") }
 
     refresh_() {
         var settings = Ride.settings()
@@ -196,5 +257,14 @@ class RideSettingsState is BaseState {
         _rows["trimMode"].value = Localization.get("ride.trim_mode_" + settings["trimMode"])
         _rows["pair"].value = ">"
         _rows["back"].value = ""
+        _rows["world"].value = onOff_(settings["worldEnabled"])
+        _rows["worldQuality"].value = Localization.get("ride.world_quality_" + settings["worldQuality"])
+        _rows["worldGradeSource"].value = Localization.get("ride.world_grade_" + settings["worldGradeSource"])
+        var biome = settings["worldBiome"]
+        _rows["worldBiome"].value = biome == "auto" ? Localization.get("ride.world_biome_auto") : biome
+        _rows["worldSeed"].value = settings["worldSeed"].round.toString
+        _rows["worldLook"].value = Localization.get("ride.world_look_" + lookOf_(settings))
+        _rows["worldComfort"].value = onOff_(settings["worldComfortMode"])
+        _rows["worldStats"].value = onOff_(settings["worldDebugOverlay"])
     }
 }

@@ -86,6 +86,17 @@ void SimulatedBleCentral::StepRider(double now, double deltaSeconds)
 		const double grade = m_trainer->GetTargetGradePercent().value_or(0.0);
 		desired            = SIMULATED_EFFORT_WATTS * std::clamp(1.0 + 0.07 * grade, 0.35, 1.9);
 		cadence            = std::clamp(90.0 - 1.8 * grade, 62.0, 100.0);
+		if (grade < -4.5)
+		{
+			// Steep descent: freewheel.
+			desired = 0.0;
+			cadence = 0.0;
+		}
+	}
+	// Every 80 s, a 10 s high-cadence spin-up (~118 rpm).
+	if (cadence > 0.0 && std::fmod(now, 80.0) > 70.0)
+	{
+		cadence = 118.0;
 	}
 	desired *= 1.0 + wobble;
 	m_riderPower += (desired - m_riderPower) * (1.0 - std::exp(-deltaSeconds / 1.1));

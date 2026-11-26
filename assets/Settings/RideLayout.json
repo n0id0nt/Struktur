@@ -8,7 +8,7 @@
     "erg":     { "anchor": [1, 0],     "position": [-16, 184],  "size": [300, 142] },
     "cue":     { "anchor": [0.5, 0],   "position": [0, 236],    "size": [620, 44] },
     "banner":  { "anchor": [0.5, 0.5], "position": [0, -40],    "size": [560, 70] },
-    "graph":   { "anchor": [0.5, 1],   "position": [0, -46],    "size": [1248, 300] },
+    "graph":   { "anchor": [0.5, 1],   "position": [0, -46],    "size": [1248, 170] },
     "status":  { "anchor": [0, 1],     "position": [16, -10],   "size": [520, 28] },
     "hints":   { "anchor": [1, 1],     "position": [-16, -10],  "size": [700, 28] }
   }

@@ -180,6 +180,8 @@ class RideState is BaseState {
         _lastVertical = direction
         if (Input.isKeyJustPressed("p") || Input.isControllerButtonJustPressed("start")) Ride.togglePause()
         if (Input.isKeyJustPressed("m")) perform_("trimMode", 0)
+        // F3: world debug overlay (frame time, draw calls, chunk build times). Not saved.
+        if (Input.isKeyJustPressed("f3")) Ride.setSetting("worldDebugOverlay", !Ride.settings()["worldDebugOverlay"])
         if (_mode == "workout") {
             if (Input.isKeyJustPressed("n") || Input.isControllerButtonJustPressed("x")) perform_("skip", 0)
             if (Input.isKeyJustPressed("rightbracket")) perform_("extend", 0)
