@@ -64,6 +64,10 @@ public:
 
 	// IBleCentral
 	bool IsAvailable() const override;
+	void Poll() override
+	{
+		Pump();
+	}
 	void StartScan(std::vector<BleUuid> serviceFilter, AdvertisementCallback onAdvertisement) override;
 	void StopScan() override;
 	void Connect(BleAddress address, DisconnectCallback onDisconnected, StatusCallback onDone) override;

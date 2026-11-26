@@ -102,6 +102,10 @@ public:
 	// operation just completes with NOT_AVAILABLE - so callers never need a separate code path.
 	virtual bool IsAvailable() const = 0;
 
+	// Called by the game thread once per frame before device updates. Real backends deliver callbacks on their own
+	// threads and ignore this; the fake backend uses it to run its deferred callbacks.
+	virtual void Poll() {}
+
 	// Reports advertisements that list at least one of serviceFilter (empty filter = everything). Repeated
 	// advertisements from one device are reported repeatedly; the scanner de-duplicates.
 	virtual void StartScan(std::vector<BleUuid> serviceFilter, AdvertisementCallback onAdvertisement) = 0;

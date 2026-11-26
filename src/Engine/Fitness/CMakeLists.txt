@@ -44,6 +44,17 @@ set(FITNESS_SOURCES
     Ble/NullBleCentral.h
     Ble/FakeBleCentral.h            Ble/FakeBleCentral.cpp
     Ble/BleCentralFactory.h         Ble/BleCentralFactory.cpp
+    Ble/FakeDevices.h               Ble/FakeDevices.cpp
+
+    Devices/DeviceTypes.h           Devices/DeviceTypes.cpp
+    Devices/BleLink.h               Devices/BleLink.cpp
+    Devices/ControlPointQueue.h     Devices/ControlPointQueue.cpp
+    Devices/FtmsTrainer.h           Devices/FtmsTrainer.cpp
+    Devices/BleSensors.h            Devices/BleSensors.cpp
+    Devices/DeviceDiscovery.h       Devices/DeviceDiscovery.cpp
+    Devices/DeviceRegistry.h        Devices/DeviceRegistry.cpp
+
+    FitnessManager.h                FitnessManager.cpp
 )
 
 # Windows desktop: real BLE through the WinRT APIs (C++/WinRT headers ship with the Windows 10+ SDK). Every other
@@ -89,6 +100,7 @@ if(STRUKTUR_BUILD_TESTS)
     add_executable(StrukturFitnessTests
         Tests/TestMain.cpp
         Tests/ProtocolTests.cpp
+        Tests/DeviceTests.cpp
         ${STRUKTUR_FITNESS_LOGGER_SOURCE}
     )
     target_include_directories(StrukturFitnessTests PRIVATE ${doctest_SOURCE_DIR}/doctest)
