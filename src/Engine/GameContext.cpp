@@ -1,9 +1,25 @@
 #include "GameContext.h"
 
+#include <cstdlib>
+
 #include "Engine/Fitness/Ble/BleCentralFactory.h"
+#include "Engine/Fitness/Ble/SimulatedBleCentral.h"
 
 namespace Struktur
 {
+// STRUKTUR_FITNESS_SIMULATE=1 swaps Bluetooth for a fake trainer, heart rate strap and power meter, so the pairing
+// screen and the rest of the fitness UI can be worked on without hardware.
+static std::unique_ptr<Fitness::IBleCentral> CreateFitnessCentral()
+{
+	const char* simulate = std::getenv("STRUKTUR_FITNESS_SIMULATE");
+	if (simulate != nullptr && simulate[0] != '\0' && simulate[0] != '0')
+	{
+		DEBUG_INFO("STRUKTUR_FITNESS_SIMULATE is set - using simulated fitness devices");
+		return std::make_unique<Fitness::SimulatedBleCentral>();
+	}
+	return Fitness::CreatePlatformBleCentral();
+}
+
 GameContext::GameContext()
 {
 	m_camera           = std::make_unique<World::Camera>();
@@ -16,7 +32,7 @@ GameContext::GameContext()
 	m_eventManager      = std::make_unique<Event::EventManager>();
 	// Idle until the game asks it to scan or connect (see docs/SmartTrainer.md) - constructing it never touches the
 	// radio. Non-Windows platforms get a backend that reports Bluetooth as unavailable.
-	m_fitnessManager = std::make_unique<Fitness::FitnessManager>(Fitness::CreatePlatformBleCentral());
+	m_fitnessManager = std::make_unique<Fitness::FitnessManager>(CreateFitnessCentral());
 	m_flagManager       = std::make_unique<Flag::FlagManager>();
 	m_gameData          = std::make_unique<Core::GameData>();
 	m_gameObjectManager = std::make_unique<System::GameObjectManager>();

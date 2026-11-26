@@ -55,6 +55,19 @@ const std::vector<DiscoveredDevice>& FitnessManager::GetDiscoveredDevices() cons
 	return m_scanner.GetDevices();
 }
 
+std::vector<DiscoveredDevice> FitnessManager::TakeDiscoveries()
+{
+	return m_scanner.TakeChangedDevices();
+}
+
+bool FitnessManager::HasConnectedPowerSource() const
+{
+	const Trainer* trainer  = GetTrainer();
+	const PowerMeter* meter = GetPowerMeter();
+	return (trainer && trainer->GetConnectionState() == ConnectionState::CONNECTED) ||
+	       (meter && meter->GetConnectionState() == ConnectionState::CONNECTED);
+}
+
 bool FitnessManager::AssignDevice(DeviceRole role, BleAddress address, const std::string& name, double now)
 {
 	const std::string identifier = FormatAddress(address);

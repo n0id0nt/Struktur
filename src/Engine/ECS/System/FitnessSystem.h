@@ -15,6 +15,8 @@ namespace System
 //   data  {"role": "trainer" | "heartRate" | "powerMeter", "detail": String, "device": "AA:BB:...", "name": String}
 //         fitnessSample also carries the snapshot: trainer -> power, cadence, speed, heartRate; heartRate -> bpm;
 //         powerMeter -> power, cadence (only the fields the device has reported).
+//   plus  fitnessDeviceFound while scanning, once per newly seen (or newly named) device:
+//         {"address": String, "name": String, "rssi": Num, "roles": [role...]}
 class FitnessSystem : public ISystem
 {
 public:

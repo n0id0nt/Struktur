@@ -52,6 +52,8 @@ public:
 
 	const std::vector<DiscoveredDevice>& GetDevices() const;
 	const DiscoveredDevice* FindDevice(BleAddress address) const;
+	// Devices first seen (or whose name first arrived) since the last call - what a "device found" event reports.
+	std::vector<DiscoveredDevice> TakeChangedDevices();
 
 private:
 	using Inbox = ThreadSafeQueue<BleAdvertisement>;
@@ -59,6 +61,7 @@ private:
 	IBleCentral* m_central;
 	std::shared_ptr<Inbox> m_inbox;
 	std::vector<DiscoveredDevice> m_devices;
+	std::vector<BleAddress> m_changed;
 	bool m_scanning;
 };
 }  // namespace Struktur::Fitness

@@ -39,6 +39,10 @@ public:
 	void StopScan();
 	bool IsScanning() const;
 	const std::vector<DiscoveredDevice>& GetDiscoveredDevices() const;
+	// Devices found (or named) since the last call - FitnessSystem turns each into a fitnessDeviceFound event.
+	std::vector<DiscoveredDevice> TakeDiscoveries();
+	// True when a trainer or power meter is connected - the minimum the game needs to ride.
+	bool HasConnectedPowerSource() const;
 
 	// Creates (replacing any previous device in that role), starts and remembers the device. Fails if the address
 	// already serves another role - one BLE link per peripheral.

@@ -45,6 +45,7 @@ set(FITNESS_SOURCES
     Ble/FakeBleCentral.h            Ble/FakeBleCentral.cpp
     Ble/BleCentralFactory.h         Ble/BleCentralFactory.cpp
     Ble/FakeDevices.h               Ble/FakeDevices.cpp
+    Ble/SimulatedBleCentral.h       Ble/SimulatedBleCentral.cpp
 
     Devices/DeviceTypes.h           Devices/DeviceTypes.cpp
     Devices/BleLink.h               Devices/BleLink.cpp

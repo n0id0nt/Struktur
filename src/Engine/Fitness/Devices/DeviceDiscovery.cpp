@@ -90,6 +90,7 @@ bool DeviceScanner::IsScanning() const
 void DeviceScanner::Clear()
 {
 	m_devices.clear();
+	m_changed.clear();
 }
 
 void DeviceScanner::Update(double now)
@@ -108,15 +109,22 @@ void DeviceScanner::Update(double now)
 		auto existing =
 		    std::find_if(m_devices.begin(), m_devices.end(), [&advertisement](const DiscoveredDevice& device)
 		                 { return device.address == advertisement.address; });
+		bool changed = false;
 		if (existing == m_devices.end())
 		{
 			m_devices.push_back(DiscoveredDevice{});
 			existing          = m_devices.end() - 1;
 			existing->address = advertisement.address;
+			changed           = true;
 		}
-		if (!advertisement.name.empty())
+		if (!advertisement.name.empty() && advertisement.name != existing->name)
 		{
 			existing->name = advertisement.name;
+			changed        = true;
+		}
+		if (changed && std::find(m_changed.begin(), m_changed.end(), existing->address) == m_changed.end())
+		{
+			m_changed.push_back(existing->address);
 		}
 		existing->rssi            = advertisement.rssi;
 		existing->roles           = std::move(roles);
@@ -139,5 +147,18 @@ const DiscoveredDevice* DeviceScanner::FindDevice(BleAddress address) const
 		}
 	}
 	return nullptr;
+}
+std::vector<DiscoveredDevice> DeviceScanner::TakeChangedDevices()
+{
+	std::vector<DiscoveredDevice> changed;
+	for (BleAddress address : m_changed)
+	{
+		if (const DiscoveredDevice* device = FindDevice(address))
+		{
+			changed.push_back(*device);
+		}
+	}
+	m_changed.clear();
+	return changed;
 }
 }  // namespace Struktur::Fitness

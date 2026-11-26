@@ -421,6 +421,53 @@ inline const char* wrenfileSystemSource()
     "";
 }
 
+// Module: fitness
+inline const char* wrenfitnessSource()
+{
+    return "// AUTO-GENERATED FILE - DO NOT EDIT\n"
+    "// Generated from C++ bindings\n"
+    "// Module: fitness\n"
+    "\n"
+    "class Fitness {\n"
+    "    // True when a Bluetooth LE adapter (or the simulated backend) is usable.\n"
+    "    foreign static isAvailable()\n"
+    "    // True when STRUKTUR_FITNESS_SIMULATE replaced Bluetooth with fake devices.\n"
+    "    foreign static isSimulated()\n"
+    "    // Starts scanning for trainers, heart rate monitors and power meters.\n"
+    "    foreign static startScan()\n"
+    "    // Stops scanning.\n"
+    "    foreign static stopScan()\n"
+    "    // True while a scan is running.\n"
+    "    foreign static isScanning()\n"
+    "    // Devices found by scanning: list of maps (address, name, rssi, roles, inUseAs).\n"
+    "    foreign static devices()\n"
+    "    // Connects a device in a role (role, address, name) and remembers it. Returns false if refused.\n"
+    "    foreign static assign(arg0,arg1,arg2)\n"
+    "    // Disconnects and forgets the device in a role.\n"
+    "    foreign static unassign(arg0)\n"
+    "    // Connects every remembered device that is not already connected.\n"
+    "    foreign static connectRemembered()\n"
+    "    // The remembered device for a role (address, name) or null.\n"
+    "    foreign static remembered(arg0)\n"
+    "    // Connection status of a role's device (state, name, address, control, mode) or null.\n"
+    "    foreign static status(arg0)\n"
+    "    // Latest values reported by a role's device, as a map.\n"
+    "    foreign static sample(arg0)\n"
+    "    // True when a trainer or power meter is connected.\n"
+    "    foreign static hasPowerSource()\n"
+    "    // ERG target in watts. Returns the command result as a string.\n"
+    "    foreign static setTargetPower(arg0)\n"
+    "    // Simulation grade in percent. Returns the command result as a string.\n"
+    "    foreign static setGrade(arg0)\n"
+    "    // Manual resistance 0..1 (simulation grade when supported). Returns the command result.\n"
+    "    foreign static setManualResistance(arg0)\n"
+    "    // Removes the trainer target (free ride). Returns the command result as a string.\n"
+    "    foreign static clearTarget()\n"
+    "}\n"
+    "\n"
+    "";
+}
+
 // Module: flags
 inline const char* wrenflagsSource()
 {
@@ -2798,6 +2845,7 @@ inline const std::unordered_map<std::string, const char*(*)()>& GetWrenBindingSo
         { "dialogue", wrendialogueSource },
         { "events", wreneventsSource },
         { "fileSystem", wrenfileSystemSource },
+        { "fitness", wrenfitnessSource },
         { "flags", wrenflagsSource },
         { "gameObject", wrengameObjectSource },
         { "gameObjectComponents", wrengameObjectComponentsSource },

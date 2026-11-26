@@ -437,6 +437,7 @@ set(WREN_BINDING_SOURCES
                                                 src/WrenBindings/WrenFlags.cpp
                                                 src/WrenBindings/WrenLocalization.cpp
                                                 src/WrenBindings/WrenEvents.cpp
+                                                src/WrenBindings/WrenFitness.cpp
                                                 src/WrenBindings/WrenApplication.cpp
                                                 src/WrenBindings/WrenAudio.cpp
                                                 src/WrenBindings/WrenGameObject.cpp

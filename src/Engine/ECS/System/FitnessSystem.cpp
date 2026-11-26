@@ -78,6 +78,20 @@ void FitnessSystem::Update(GameContext& context)
 	fitnessManager.Update(context.GetTimeSystem().unscaledTime);
 
 	Event::EventManager& eventManager = context.GetEventManager();
+	for (const Fitness::DiscoveredDevice& device : fitnessManager.TakeDiscoveries())
+	{
+		Callback::VariantMap data;
+		data.items["address"] = Fitness::FormatAddress(device.address);
+		data.items["name"]    = device.name;
+		data.items["rssi"]    = static_cast<int>(device.rssi);
+		Callback::VariantList roles;
+		for (Fitness::DeviceRole role : device.roles)
+		{
+			roles.items.push_back(std::string(Fitness::ToString(role)));
+		}
+		data.items["roles"] = roles;
+		eventManager.AddEvent("fitnessDeviceFound", data);
+	}
 	for (const Fitness::DeviceEvent& event : fitnessManager.TakeEvents())
 	{
 		Callback::VariantMap data;
