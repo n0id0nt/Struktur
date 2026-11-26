@@ -8,7 +8,8 @@ the main menu (**Free Ride**, **Workouts**, **Ride Settings**) after device pair
 |---|---|---|
 | ![Workout screen](Images/ride-workout.png) | ![Free Ride screen](Images/ride-free-ride.png) | ![Workout browser](Images/ride-workout-browser.png) |
 
-*Screenshots from `--demo` with a synthetic rider.*
+*Screenshots from `--demo` with a synthetic rider, taken before the procedural world was added. Since then, a 3D
+road is drawn behind the HUD; see [RideWorld.md](RideWorld.md).*
 
 ## Architecture
 
