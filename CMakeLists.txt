@@ -286,6 +286,12 @@ set(PHYSFS_BUILD_DOCS   FALSE CACHE BOOL "" FORCE)
 set(PHYSFS_TARGETNAME_UNINSTALL "physfs_uninstall" CACHE STRING "" FORCE)
 add_subdirectory(third_party/physfs)
 
+# StrukturFitness - BLE smart trainer / heart rate / power meter support (docs/SmartTrainer.md). Its unit tests and
+# the trainer_probe tool are off in the game build; configure src/Engine/Fitness on its own to build them.
+option(STRUKTUR_BUILD_TESTS "Build the StrukturFitness unit tests" OFF)
+option(STRUKTUR_BUILD_TOOLS "Build trainer_probe" OFF)
+add_subdirectory(src/Engine/Fitness)
+
 # Wren (manual build - same as before, just different source path)
 file(GLOB WREN_SOURCES
     ${CMAKE_CURRENT_SOURCE_DIR}/third_party/wren/src/vm/*.c
@@ -524,6 +530,7 @@ set(SOURCES
     src/Engine/ECS/System/WrenScriptSystem.h    src/Engine/ECS/System/WrenScriptSystem.cpp
     src/Engine/ECS/System/WrenStateSystem.h     src/Engine/ECS/System/WrenStateSystem.cpp
     src/Engine/ECS/System/SoundSystem.h         src/Engine/ECS/System/SoundSystem.cpp
+    src/Engine/ECS/System/FitnessSystem.h       src/Engine/ECS/System/FitnessSystem.cpp
     src/Engine/ECS/System/EventSystem.h         src/Engine/ECS/System/EventSystem.cpp
 
     src/Engine/Physics/PhysicsWorld.h           src/Engine/Physics/PhysicsWorld.cpp
@@ -602,6 +609,7 @@ target_link_libraries(${PROJECT_NAME}
     nlohmann_json::nlohmann_json
     box2d
     PhysFS::PhysFS-static
+    StrukturFitness
     $<$<OR:$<BOOL:${PLATFORM_DESKTOP}>,$<BOOL:${PLATFORM_WEB}>>:SDL3_mixer::SDL3_mixer>
     $<$<OR:$<BOOL:${PLATFORM_DESKTOP}>,$<BOOL:${PLATFORM_WEB}>>:SDL3::SDL3>
     $<$<OR:$<BOOL:${PLATFORM_DESKTOP}>,$<BOOL:${PLATFORM_WEB}>>:bgfx>

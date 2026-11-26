@@ -1,5 +1,7 @@
 #include "GameContext.h"
 
+#include "Engine/Fitness/Ble/BleCentralFactory.h"
+
 namespace Struktur
 {
 GameContext::GameContext()
@@ -12,6 +14,9 @@ GameContext::GameContext()
 	m_editor = std::make_unique<Debug::Editor>();
 #endif
 	m_eventManager      = std::make_unique<Event::EventManager>();
+	// Idle until the game asks it to scan or connect (see docs/SmartTrainer.md) - constructing it never touches the
+	// radio. Non-Windows platforms get a backend that reports Bluetooth as unavailable.
+	m_fitnessManager = std::make_unique<Fitness::FitnessManager>(Fitness::CreatePlatformBleCentral());
 	m_flagManager       = std::make_unique<Flag::FlagManager>();
 	m_gameData          = std::make_unique<Core::GameData>();
 	m_gameObjectManager = std::make_unique<System::GameObjectManager>();
@@ -46,6 +51,9 @@ void GameContext::Shutdown()
 	// Every member below (other than the graphics device itself) must be torn down before
 	// m_graphicsDevice->Shutdown() runs - bgfx::destroy() is invalid once bgfx has shut down. Resetting
 	// everything else first, in any order, means declaration order above no longer has to encode this.
+	// First, while everything else is still alive: a graceful trainer stop (FTMS Reset, then disconnect) so a
+	// single-connection trainer is released for other apps the moment the game exits.
+	m_fitnessManager.reset();
 	m_camera.reset();
 	m_collisionLayers.reset();
 	m_dialogueManager.reset();
@@ -119,6 +127,12 @@ Debug::Editor& GameContext::GetEditor() const
 	return *m_editor;
 }
 #endif
+
+Fitness::FitnessManager& GameContext::GetFitnessManager() const
+{
+	ASSERT_MSG(m_fitnessManager.get(), "Fitness Manager not initialised");
+	return *m_fitnessManager;
+}
 
 Event::EventManager& GameContext::GetEventManager() const
 {

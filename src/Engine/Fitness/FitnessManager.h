@@ -47,6 +47,8 @@ public:
 	// Starts every role that has a remembered device and no live one.
 	void ConnectRememberedDevices(double now);
 
+	// Where chosen devices are remembered (overrides FitnessSettings::registryPath). Empty = in memory only.
+	void SetRegistryPath(const std::string& path);
 	bool LoadRegistry();
 	bool SaveRegistry() const;
 	DeviceRegistry& GetRegistry();

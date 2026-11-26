@@ -22,6 +22,7 @@
 #include "Engine/ECS/System/CameraSystem.h"
 #include "Engine/ECS/System/DebugSystem.h"
 #include "Engine/ECS/System/EventSystem.h"
+#include "Engine/ECS/System/FitnessSystem.h"
 #include "Engine/ECS/System/HierarchySystem.h"
 #include "Engine/ECS/System/ParticleSystem.h"
 #include "Engine/ECS/System/PhysicsSystem.h"
@@ -175,6 +176,10 @@ bool Struktur::InitialiseGame(GameContext& context)
 #endif
 	FileSystem::SetWriteDir(saveDir);
 	FileSystem::Mount(saveDir, "/", false);
+	// Remember the player's trainer / HR strap / power meter next to the saves. Loading only reads the choices;
+	// nothing connects until the game calls FitnessManager::ConnectRememberedDevices.
+	context.GetFitnessManager().SetRegistryPath(saveDir + "/fitness_devices.json");
+	context.GetFitnessManager().LoadRegistry();
 	// Audio setup now happens in GameContext's constructor via SDL3_mixer, so it's already available here.
 
 	// GraphicsDevice::Initialise (above) already ran with the hardcoded VSync-on default, since it happens
@@ -207,6 +212,8 @@ bool Struktur::InitialiseGame(GameContext& context)
 	// right before CameraSystem, same relative slot it always had) which handles the Transform<->physics sync.
 	// See PhysicsFixedStepSystem's own comment for why these two can't both move to fixed-rate together.
 	systemManager.AddFixedUpdateSystem<System::PhysicsFixedStepSystem>();
+	// Before WrenScriptSystem/EventSystem so fitness events queued this frame are delivered this frame.
+	systemManager.AddUpdateSystem<System::FitnessSystem>();
 	systemManager.AddUpdateSystem<System::WrenScriptSystem>();
 	systemManager.AddUpdateSystem<System::EventSystem>();
 	systemManager.AddUpdateSystem<System::PhysicsSystem>();

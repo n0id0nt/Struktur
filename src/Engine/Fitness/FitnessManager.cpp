@@ -137,6 +137,11 @@ void FitnessManager::ConnectRememberedDevices(double now)
 	}
 }
 
+void FitnessManager::SetRegistryPath(const std::string& path)
+{
+	m_settings.registryPath = path;
+}
+
 bool FitnessManager::LoadRegistry()
 {
 	return !m_settings.registryPath.empty() && m_registry.LoadFromFile(m_settings.registryPath);
@@ -244,6 +249,16 @@ void FitnessManager::Shutdown(double timeoutSeconds)
 			break;
 		}
 		std::this_thread::sleep_for(std::chrono::milliseconds(10));
+	}
+	for (DeviceRole role : ALL_ROLES)
+	{
+		if (Slot(role))
+		{
+			for (DeviceEvent& event : Slot(role)->TakeEvents())
+			{
+				m_events.push_back(std::move(event));
+			}
+		}
 	}
 	// Destroying a device drops its link even if the graceful handshake did not finish in time.
 	m_trainer.reset();

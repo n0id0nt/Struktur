@@ -14,6 +14,7 @@
 #include "Engine/ECS/GameObjectManager.h"
 #include "Engine/ECS/SystemManager.h"
 #include "Engine/Event/EventManager.h"
+#include "Engine/Fitness/FitnessManager.h"
 #include "Engine/Flag/FlagManager.h"
 #include "Engine/Input/Input.h"
 #include "Engine/Localization/LocalizationManager.h"
@@ -58,6 +59,7 @@ public:
 	Debug::Editor& GetEditor() const;
 #endif
 	Event::EventManager& GetEventManager() const;
+	Fitness::FitnessManager& GetFitnessManager() const;
 	Flag::FlagManager& GetFlagManager() const;
 	Core::GameData& GetGameData() const;
 	System::GameObjectManager& GetGameObjectManager() const;
@@ -95,6 +97,7 @@ private:
 	std::unique_ptr<Debug::Editor> m_editor;
 #endif
 	std::unique_ptr<Event::EventManager> m_eventManager;
+	std::unique_ptr<Fitness::FitnessManager> m_fitnessManager;
 	std::unique_ptr<Flag::FlagManager> m_flagManager;
 	std::unique_ptr<Core::GameData> m_gameData;
 	std::unique_ptr<System::GameObjectManager> m_gameObjectManager;
