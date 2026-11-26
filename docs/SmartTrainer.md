@@ -279,6 +279,8 @@ started and exited cleanly with the manager constructed.
 - One outstanding control-point procedure, a 5 s timeout, and coalesced targets.
 - Reset on stop, so the trainer is not left in ERG at the game's last wattage.
 - A target set while disconnected is remembered and re-applied after a reconnect.
+- The pairing screen is a strict gate: no way past it without a connected trainer or power meter (no keyboard or
+  "ride without a trainer" fallback). `STRUKTUR_FITNESS_SIMULATE` is the only bypass, for development.
 
 **Open questions:**
 1. **Set Target Resistance Level encoding.** This implements FTMS v1.0's `uint8`, 0.1 resolution (max 25.5). Some
@@ -286,11 +288,9 @@ started and exited cleanly with the manager constructed.
    feature bits on both trainers.
 2. **A game-wide power cap.** The game currently uses only the trainer's own range (`maximumTargetPowerWatts` is
    unset). Should there be a player setting?
-3. **Pairing gate:** the game currently can't get past the pairing screen without a power source (or
-   `STRUKTUR_FITNESS_SIMULATE`). Do you want a keyboard or "ride without a trainer" fallback?
-4. `GameContext` constructs the WinRT backend at startup (a worker thread plus an adapter query, with no radio
+3. `GameContext` constructs the WinRT backend at startup (a worker thread plus an adapter query, with no radio
    activity). Would you prefer it created lazily, on first use?
-5. In editor builds the registry follows the selected save folder (`<saves>/Current`). Is that the place you want it?
-6. The game link shows `LNK4098: defaultlib 'LIBCMT' conflicts`. `trainer_probe` links the same library and
+4. In editor builds the registry follows the selected save folder (`<saves>/Current`). Is that the place you want it?
+5. The game link shows `LNK4098: defaultlib 'LIBCMT' conflicts`. `trainer_probe` links the same library and
    `windowsapp` without it, so it comes from another game dependency, but this hasn't been confirmed against a build
    of `main`.
