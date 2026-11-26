@@ -189,6 +189,21 @@ Web builds default to Low (`WorldSettings::Defaults`).
   - **Spoked side-on wheels:** they alias early. A 6-spoke wheel strobes above ≈ 5 rev/s (≈ 39 km/h); a 32-spoke wheel
     already at ≈ 1 rev/s. `WheelAliases()` decides when to fade to a blur.
 
+### The shipped rider: the Explorer on the bike
+
+`rider.json` draws the Explorer's run cycle over the bike: wheel, bike frame, then the Explorer.
+- **Frames:** `upRunAnimation` (8 frames) is one crank revolution, so its legs step in time with your cadence. The
+  first `upIdleAnimation` frame is the idle pose when there's no cadence sensor, and run frame 0 is the coasting
+  pose.
+- **Cut-out:** the frames come straight from `Actors/explorer.png` through the manifest's `regions` (`rider_explorer`
+  role).
+- **Placement:** the layer's `rect` (`[-16, 9, 97, 92]`) scales the 46×44 cells about 2.1× so the hips sit on the
+  saddle and the feet reach the pedals. A rect may reach outside the 64×96 frame.
+- **Repacking:** `build_sprites` can repack the atlas. If it does, update the regions; the cell grid is in
+  `Scripts/Sprites/ExplorerSprite.wren`.
+- **Going back to the drawn rider:** replace that layer with the `rider_legs` + `rider_torso` layers
+  (`DefaultSpriteDescriptor`).
+
 ### Sprite descriptor (`assets/World/Rider/rider.json`)
 
 ```json
@@ -217,6 +232,8 @@ Web builds default to Low (`WorldSettings::Defaults`).
   - `scroll`: a tileable strip scrolled with the wheel angle (rear view).
   - `rotate`: rotates about the rect's centre (side view). Add `"spokes": n` for the strobe check.
 - **Flat sheet:** use `"kind": "sheet"` with one `crank` layer whose role is `rider_sheet`.
+- **Per-layer cycle:** a `crank` layer can set its own `"framesPerRevolution"` (the Explorer uses 8, while the
+  descriptor's default is 12).
 - **Bad descriptor:** an invalid file falls back to the built-in descriptor, with a warning in the log.
 
 ## Biome data (`assets/World/Biomes/*.json`)
@@ -264,16 +281,24 @@ One entry per art role: `role`, `category`, `file` (relative to `assets/`), `siz
 `framesPerRevolution`, `anchor`, `tileable`, `format`, `notes`, and the `placeholder` (`shape` + `color`).
 
 - **Missing file:** the renderer generates the placeholder in code (`RideWorld::GeneratePlaceholder`).
+- **`regions`:** an optional list of `[x, y, w, h]` cut-outs from a larger sheet (a tileset, a character atlas). Each
+  region becomes one frame, placed bottom-centre in equal cells (`ComposeRegions`, tested). The trees and the
+  Explorer use this.
 - **Replacing art:** drop a PNG at `file`, or point `file` at an existing asset. Nothing else changes.
 - **Safety:** paths are checked (relative only, no `..`, no drive letters).
-- **Mapped to existing assets:** four roles point at the current pack: `rider_shadow` → `Actors/Character/Shadow.png`,
-  `sky_clouds` → `FX/Particle/Clouds.png`, `particle_rain` → `FX/Particle/Rain.png`, `particle_snow` →
-  `FX/Particle/Snow.png`.
-- **Not mapped:** the tileset trees and rocks (`Backgrounds/Tilesets/TilesetNature.png`) are drawn top-down, so they
-  don't work as upright billboards.
+- **Mapped to existing assets:** seven roles point at the current pack:
+  - `rider_shadow` → `Actors/Character/Shadow.png`.
+  - `sky_clouds` → `FX/Particle/Clouds.png`.
+  - `particle_rain` → `FX/Particle/Rain.png`.
+  - `particle_snow` → `FX/Particle/Snow.png`.
+  - `tree_broadleaf` (green, autumn, blossom) and `tree_pine` (snowy, green) → the bottom-row trees of
+    `Backgrounds/Tilesets/TilesetNature.png`.
+  - `rider_explorer` → the Explorer atlas.
+- **Biome tweaks for the square tileset trees:** they're placed smaller (5–10 m), and the forest uses only the leafy
+  ones (the snowy tree stays in the alpine).
 - **Logging:** the missing list is logged once at startup.
 - **`Struktur.exe --list-missing-assets`** prints it as the Markdown table in [missing-assets.md](missing-assets.md)
-  and quits.
+  and quits. The engine log goes to stdout as well, so the table is the lines starting with `|`.
 
 ## Settings (`ride_settings.json` → `"world"`)
 
@@ -359,8 +384,8 @@ glm, and the stb_image already vendored by bimg (for real PNGs). Tests use the e
   The ride HUD's graph is 170 px tall so the rider stays visible.
 - **Ride Settings:** the world settings are a second column with presets for the look. Advanced values (camera,
   limits) live only in `ride_settings.json`.
-- **Existing art:** only four existing assets are mapped (shadow, cloud, rain, snow). The top-down tileset trees and
-  rocks don't work as upright billboards.
+- **Existing art:** the tileset's free-standing trees and the Explorer's run cycle are used, cut out of their sheets
+  with manifest `regions`. Palms, cactus, bushes, rocks and the bike are still placeholders.
 
 ## Open questions
 

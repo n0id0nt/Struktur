@@ -603,6 +603,56 @@ static void DrawRiderTorso(Canvas& canvas, const Rgba& jersey)
 	canvas.FillRect(width * 0.47, height * 0.21, width * 0.53, height * 0.25, skin);  // neck
 }
 
+PlaceholderImage ComposeRegions(const uint8_t* pixels, int width, int height, const AssetRole& role)
+{
+	PlaceholderImage image;
+	if (role.regions.empty() || pixels == nullptr || width <= 0 || height <= 0)
+	{
+		return image;
+	}
+	int cellWidth  = 1;
+	int cellHeight = 1;
+	for (const std::array<int, 4>& region : role.regions)
+	{
+		cellWidth  = std::max(cellWidth, region[2]);
+		cellHeight = std::max(cellHeight, region[3]);
+	}
+	const int cells = static_cast<int>(role.regions.size());
+	image.width     = std::min(cellWidth * cells, MAX_PLACEHOLDER_DIMENSION * 4);
+	image.height    = cellHeight;
+	image.pixels.assign(static_cast<size_t>(image.width) * image.height * 4, 0);
+	for (int cell = 0; cell < cells; ++cell)
+	{
+		const std::array<int, 4>& region = role.regions[static_cast<size_t>(cell)];
+		const int offsetX = cell * cellWidth + (cellWidth - region[2]) / 2;
+		const int offsetY = cellHeight - region[3];
+		for (int row = 0; row < region[3]; ++row)
+		{
+			const int sourceY = region[1] + row;
+			if (sourceY < 0 || sourceY >= height)
+			{
+				continue;
+			}
+			for (int column = 0; column < region[2]; ++column)
+			{
+				const int sourceX = region[0] + column;
+				const int targetX = offsetX + column;
+				if (sourceX < 0 || sourceX >= width || targetX >= image.width)
+				{
+					continue;
+				}
+				const size_t source = (static_cast<size_t>(sourceY) * width + sourceX) * 4;
+				const size_t target = (static_cast<size_t>(offsetY + row) * image.width + targetX) * 4;
+				for (int channel = 0; channel < 4; ++channel)
+				{
+					image.pixels[target + channel] = pixels[source + channel];
+				}
+			}
+		}
+	}
+	return image;
+}
+
 const std::vector<std::string>& KnownPlaceholderShapes()
 {
 	static const std::vector<std::string> shapes = {

@@ -145,11 +145,24 @@ void RideWorldRenderer::LoadTexture(const RideWorld::AssetRole& role, const Ride
 			    stbi_load_from_memory(bytes.value.data(), static_cast<int>(bytes.value.size()), &width, &height, &channels, 4);
 			if (pixels != nullptr && width > 0 && height > 0 && width <= 8192 && height <= 8192)
 			{
-				texture.handle = bgfx::createTexture2D(static_cast<uint16_t>(width), static_cast<uint16_t>(height), false, 1,
-				                                       bgfx::TextureFormat::RGBA8, flags,
-				                                       bgfx::copy(pixels, static_cast<uint32_t>(width * height * 4)));
-				texture.width       = width;
-				texture.height      = height;
+				if (!role.regions.empty())
+				{
+					// Frames cut out of a larger sheet (tileset trees, a character atlas): build a strip of them.
+					const RideWorld::PlaceholderImage strip = RideWorld::ComposeRegions(pixels, width, height, role);
+					texture.handle = bgfx::createTexture2D(static_cast<uint16_t>(strip.width), static_cast<uint16_t>(strip.height),
+					                                       false, 1, bgfx::TextureFormat::RGBA8, flags,
+					                                       bgfx::copy(strip.pixels.data(), static_cast<uint32_t>(strip.pixels.size())));
+					texture.width  = strip.width;
+					texture.height = strip.height;
+				}
+				else
+				{
+					texture.handle = bgfx::createTexture2D(static_cast<uint16_t>(width), static_cast<uint16_t>(height), false, 1,
+					                                       bgfx::TextureFormat::RGBA8, flags,
+					                                       bgfx::copy(pixels, static_cast<uint32_t>(width * height * 4)));
+					texture.width  = width;
+					texture.height = height;
+				}
 				texture.placeholder = false;
 			}
 			if (pixels != nullptr)
@@ -629,7 +642,7 @@ void RideWorldRenderer::DrawProps(const RideWorld::RideWorld& world, const Chunk
 
 void RideWorldRenderer::SubmitBillboard(const RideWorld::RideWorld& world, const std::string& role, double distance,
                                         double lateral, double heightMeters, double angle, bool aligned, int column,
-                                        int row, uint32_t tint, double towardsCamera)
+                                        int row, uint32_t tint, double towardsCamera, double baseHeight)
 {
 	if (bgfx::getAvailInstanceDataBuffer(1, sizeof(RideWorld::PropInstance)) < 1)
 	{
@@ -650,7 +663,7 @@ void RideWorldRenderer::SubmitBillboard(const RideWorld::RideWorld& world, const
 	RideWorld::PropInstance* instance = reinterpret_cast<RideWorld::PropInstance*>(instances.data);
 	const RoleTexture& texture        = Texture(role);
 	instance->x            = x;
-	instance->y            = 0.0f;
+	instance->y            = static_cast<float>(baseHeight);
 	instance->z            = z;
 	instance->distance     = 0.0f;
 	instance->heightMeters = static_cast<float>(heightMeters);
@@ -680,7 +693,7 @@ static void CrankCell(const RideWorld::SpriteLayer& layer, const RideWorld::Spri
                       RideWorld::RiderPose pose, double phase, int& column, int& row)
 {
 	row    = layer.pedalRow;
-	column = RideWorld::CrankFrame(phase, descriptor.framesPerRevolution);
+	column = RideWorld::CrankFrame(phase, layer.framesPerRevolution > 0 ? layer.framesPerRevolution : descriptor.framesPerRevolution);
 	if (pose == RideWorld::RiderPose::OUT_OF_SADDLE && layer.outOfSaddleRow >= 0)
 	{
 		row = layer.outOfSaddleRow;
@@ -720,9 +733,17 @@ void RideWorldRenderer::DrawActors(const RideWorld::RideWorld& world)
 			{
 				CrankCell(layer, m_descriptor, RideWorld::RiderPose::PEDALLING, actor.crankPhase, column, row);
 			}
+			// A layer with its own rect (e.g. the character over the bike) is scaled and lifted to match the frame.
+			double layerHeight = height;
+			double baseHeight  = 0.0;
+			if (layer.rectHeight > 0)
+			{
+				layerHeight = height * layer.rectHeight / m_descriptor.frameHeight;
+				baseHeight  = height * (m_descriptor.anchorY - (layer.rectY + layer.rectHeight)) / m_descriptor.frameHeight;
+			}
 			const bool tinted = layer.name == "torso";
-			SubmitBillboard(world, layer.role, actor.distance, actor.lateral, height, 0.0, false, column, row,
-			                tinted ? actor.tint : 0xFFFFFFFFu, offset);
+			SubmitBillboard(world, layer.role, actor.distance, actor.lateral, layerHeight, 0.0, false, column, row,
+			                tinted ? actor.tint : 0xFFFFFFFFu, offset, baseHeight);
 			offset += 0.02;
 		}
 	}

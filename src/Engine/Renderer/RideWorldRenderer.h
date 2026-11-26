@@ -91,7 +91,7 @@ private:
 	                  float u1, float v1, uint32_t abgr, uint64_t extraState = 0, uint32_t samplerFlags = UINT32_MAX);
 	void SubmitBillboard(const RideWorld::RideWorld& world, const std::string& role, double distance, double lateral,
 	                     double heightMeters, double angle, bool aligned, int column, int row, uint32_t tint,
-	                     double towardsCamera);
+	                     double towardsCamera, double baseHeight = 0.0);
 
 	bool m_initialised = false;
 	RideWorld::SpriteDescriptor m_descriptor;

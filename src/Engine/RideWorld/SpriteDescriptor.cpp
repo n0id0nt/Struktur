@@ -124,13 +124,14 @@ bool ParseSpriteDescriptor(const std::string& json, SpriteDescriptor& out, std::
 				if (rect[0].is_number_integer() && rect[1].is_number_integer() && rect[2].is_number_integer() &&
 				    rect[3].is_number_integer())
 				{
-					layer.rectX      = std::clamp(rect[0].get<int>(), 0, descriptor.frameWidth);
-					layer.rectY      = std::clamp(rect[1].get<int>(), 0, descriptor.frameHeight);
-					layer.rectWidth  = std::clamp(rect[2].get<int>(), 0, descriptor.frameWidth);
-					layer.rectHeight = std::clamp(rect[3].get<int>(), 0, descriptor.frameHeight);
+					layer.rectX      = std::clamp(rect[0].get<int>(), -descriptor.frameWidth * 2, descriptor.frameWidth * 2);
+					layer.rectY      = std::clamp(rect[1].get<int>(), -descriptor.frameHeight * 2, descriptor.frameHeight * 2);
+					layer.rectWidth  = std::clamp(rect[2].get<int>(), 0, descriptor.frameWidth * 4);
+					layer.rectHeight = std::clamp(rect[3].get<int>(), 0, descriptor.frameHeight * 4);
 				}
 			}
 			layer.spokes             = ReadInt(item, "spokes", 0, 0, 64);
+			layer.framesPerRevolution = ReadInt(item, "framesPerRevolution", 0, 0, 128);
 			layer.coastColumn        = ReadInt(item, "coastColumn", 0, 0, 127);
 			layer.idleColumn         = ReadInt(item, "idleColumn", 0, 0, 127);
 			layer.outOfSaddleOffsetY = ReadInt(item, "outOfSaddleOffsetY", 0, -256, 256);

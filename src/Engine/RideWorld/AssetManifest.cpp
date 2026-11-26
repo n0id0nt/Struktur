@@ -114,6 +114,31 @@ bool ParseManifest(const std::string& json, AssetManifest& out, std::string& err
 			role.anchorY = std::clamp(item["anchor"][1].get<int>(), 0, role.height);
 		}
 		role.tileable = item.contains("tileable") && item["tileable"].is_boolean() && item["tileable"].get<bool>();
+		if (item.contains("regions") && item["regions"].is_array())
+		{
+			for (const nlohmann::json& region : item["regions"])
+			{
+				if (!region.is_array() || region.size() != 4 || !region[0].is_number_integer() ||
+				    !region[1].is_number_integer() || !region[2].is_number_integer() || !region[3].is_number_integer())
+				{
+					warnings.push_back("role '" + role.role + "' has a malformed region - ignored");
+					continue;
+				}
+				const std::array<int, 4> rect = {std::clamp(region[0].get<int>(), 0, MAX_IMAGE_SIZE),
+				                                 std::clamp(region[1].get<int>(), 0, MAX_IMAGE_SIZE),
+				                                 std::clamp(region[2].get<int>(), 1, MAX_IMAGE_SIZE),
+				                                 std::clamp(region[3].get<int>(), 1, MAX_IMAGE_SIZE)};
+				if (role.regions.size() < static_cast<size_t>(MAX_FRAMES))
+				{
+					role.regions.push_back(rect);
+				}
+			}
+			if (!role.regions.empty())
+			{
+				role.frames = static_cast<int>(role.regions.size());
+				role.rows   = 1;
+			}
+		}
 		role.notes    = ReadText(item, "notes", "");
 		if (item.contains("placeholder") && item["placeholder"].is_object())
 		{

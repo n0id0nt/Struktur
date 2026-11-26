@@ -638,11 +638,66 @@ TEST_CASE("asset manifest parses, resolves real files and placeholders for every
 		CHECK(asset.placeholderName == "placeholder_" + asset.role->role);
 		found += asset.found ? 1 : 0;
 	}
-	CHECK(found >= 4);
+	CHECK(found >= 7);  // shadow, cloud, rain, snow, two tree roles from the nature tileset, the Explorer
 	const std::string markdown = FormatMissingAssetsMarkdown(resolved);
 	CHECK(markdown.find("`rider_legs`") != std::string::npos);
 	CHECK(markdown.find("`particle_rain`") == std::string::npos);
 	CHECK(FormatMissingAssetsLines(resolved).size() == resolved.size() - static_cast<size_t>(found));
+}
+
+TEST_CASE("manifest regions cut frames out of a sheet, bottom-centred in equal cells")
+{
+	AssetManifest manifest;
+	std::string error;
+	std::vector<std::string> warnings;
+	REQUIRE(ParseManifest("{\"roles\":[{\"role\":\"trees\",\"file\":\"sheet.png\",\"regions\":[[0,0,2,2],[2,0,4,3],[9,9,9]]}]}",
+	                      manifest, error, warnings));
+	REQUIRE(manifest.roles.size() == 1);
+	const AssetRole& role = manifest.roles[0];
+	CHECK(role.regions.size() == 2);
+	CHECK(role.frames == 2);
+	CHECK(warnings.size() == 1);  // the 3-number region
+	// A 6x3 sheet: region 0 red, region 1 green.
+	std::vector<uint8_t> sheet(6 * 3 * 4, 0);
+	for (int y = 0; y < 3; ++y)
+	{
+		for (int x = 0; x < 6; ++x)
+		{
+			uint8_t* pixel = &sheet[(static_cast<size_t>(y) * 6 + x) * 4];
+			pixel[x < 2 ? 0 : 1] = 255;
+			pixel[3]             = 255;
+		}
+	}
+	const PlaceholderImage strip = ComposeRegions(sheet.data(), 6, 3, role);
+	CHECK(strip.width == 8);  // 2 cells of the widest region (4)
+	CHECK(strip.height == 3);
+	// Cell 0: the 2x2 red frame sits bottom-centre (x 1..2, y 1..2); the top row stays empty.
+	CHECK(strip.pixels[(0 * 8 + 1) * 4 + 3] == 0);
+	CHECK(strip.pixels[(1 * 8 + 1) * 4 + 0] == 255);
+	CHECK(strip.pixels[(2 * 8 + 2) * 4 + 0] == 255);
+	CHECK(strip.pixels[(2 * 8 + 0) * 4 + 3] == 0);
+	// Cell 1: green fills x 4..7.
+	CHECK(strip.pixels[(0 * 8 + 4) * 4 + 1] == 255);
+	CHECK(strip.pixels[(2 * 8 + 7) * 4 + 1] == 255);
+	// Real data: the shipped tree and Explorer regions lie inside their sheets.
+	AssetManifest shipped;
+	REQUIRE(ParseManifest(ReadTextFile(AssetsDir() / "World" / "manifest.json"), shipped, error, warnings));
+	const AssetRole* trees    = shipped.Find("tree_broadleaf");
+	const AssetRole* explorer = shipped.Find("rider_explorer");
+	REQUIRE(trees != nullptr);
+	REQUIRE(explorer != nullptr);
+	CHECK(trees->frames == 3);
+	CHECK(explorer->frames == 9);
+	for (const std::array<int, 4>& region : trees->regions)
+	{
+		CHECK(region[0] + region[2] <= 384);  // TilesetNature.png is 384 x 336
+		CHECK(region[1] + region[3] <= 336);
+	}
+	for (const std::array<int, 4>& region : explorer->regions)
+	{
+		CHECK(region[0] + region[2] <= 1380);  // explorer.png is 1380 x 1408
+		CHECK(region[1] + region[3] <= 1408);
+	}
 }
 
 static bool NothingExists(const std::string&)
@@ -676,12 +731,20 @@ TEST_CASE("rider sprite descriptor parses and matches the defaults")
 	SpriteDescriptor descriptor;
 	std::string error;
 	REQUIRE_MESSAGE(ParseSpriteDescriptor(ReadTextFile(AssetsDir() / "World" / "Rider" / "rider.json"), descriptor, error), error);
+	// The shipped rider: wheel + bike frame + the Explorer's run cycle drawn over them (8 frames per revolution, the
+	// idle frame after them).
+	REQUIRE(descriptor.layers.size() == 3);
+	const SpriteLayer& explorer = descriptor.layers[2];
+	CHECK(explorer.role == "rider_explorer");
+	CHECK(explorer.motion == SpriteLayerMotion::CRANK);
+	CHECK(explorer.framesPerRevolution == 8);
+	CHECK(explorer.framesPerRevolution >= MinimumFramesPerRevolution(45.0));
+	CHECK(explorer.idleColumn == 8);
+	CHECK(explorer.rectX < 0);  // reaches outside the frame
+	CHECK(explorer.rectY + explorer.rectHeight > descriptor.frameHeight);
 	const SpriteDescriptor defaults = DefaultSpriteDescriptor();
-	CHECK(descriptor.framesPerRevolution == defaults.framesPerRevolution);
-	CHECK(descriptor.layers.size() == defaults.layers.size());
-	CHECK(descriptor.layers[2].motion == SpriteLayerMotion::CRANK);
-	CHECK(descriptor.layers[2].stillRow == 2);
-	CHECK(descriptor.framesPerRevolution >= MinimumFramesPerRevolution(45.0));
+	CHECK(defaults.layers.size() == 4);
+	CHECK(defaults.layers[2].stillRow == 2);
 	CHECK_FALSE(ParseSpriteDescriptor("{\"kind\":\"sheet\"}", descriptor, error));
 	CHECK_FALSE(ParseSpriteDescriptor("{\"kind\":\"weird\",\"layers\":[{\"role\":\"x\"}]}", descriptor, error));
 }

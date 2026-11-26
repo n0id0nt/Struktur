@@ -1,5 +1,6 @@
 #pragma once
 
+#include <array>
 #include <cstdint>
 #include <string>
 #include <vector>
@@ -20,6 +21,9 @@ struct AssetRole
 	int frames            = 1;   // frames / variants laid out left to right
 	int rows              = 1;   // rows of frames (e.g. rider legs: pedalling, out of saddle, still poses)
 	int framesPerRevolution = 0;  // rider crank layers: frames per crank revolution
+	// Optional: cut the frames out of a larger sheet (a tileset, a character atlas). Each region is one frame
+	// (x, y, width, height in the file's pixels), laid out left to right in this order; frames = regions.size().
+	std::vector<std::array<int, 4>> regions;
 	int anchorX           = -1;  // pixel in a frame that sits on the ground / attaches; -1 = bottom centre
 	int anchorY           = -1;
 	bool tileable         = false;

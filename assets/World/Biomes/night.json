@@ -22,7 +22,7 @@
   "props": [
     { "role": "lamp_post", "placement": "edge", "side": "right", "spacing": 60, "lateral": [6.2, 6.2], "height": [7, 7], "maxDistance": 900 },
     { "role": "building", "placement": "scatter", "side": "both", "density": 0.12, "lateral": [16, 80], "height": [6, 10], "maxDistance": 1000, "alignToRoad": true },
-    { "role": "tree_broadleaf", "placement": "scatter", "side": "both", "density": 1.2, "lateral": [10, 120], "height": [7, 11], "maxDistance": 800 },
+    { "role": "tree_broadleaf", "placement": "scatter", "side": "both", "density": 1.2, "lateral": [10, 120], "height": [5, 8], "maxDistance": 800 },
     { "role": "bush", "placement": "scatter", "side": "both", "density": 1.5, "lateral": [6, 40], "height": [0.8, 1.4], "maxDistance": 300 },
     { "role": "sign_post", "placement": "edge", "side": "right", "spacing": 500, "lateral": [6.5, 6.5], "height": [2.2, 2.6], "maxDistance": 500 }
   ]
