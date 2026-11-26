@@ -2,7 +2,7 @@
 // The first screen: pair a smart trainer / power meter / heart rate strap before the main menu (the pairing screen
 // cycling apps open with). Remembered devices reconnect on their own and a scan runs while the screen is up; the
 // player picks a tile, chooses a device from what the scan found, and "Let's Ride" unlocks once a power source -
-// a trainer or a power meter - is connected. Heart rate is optional.
+// a trainer or a power meter - is connected. Heart rate is optional. Next comes the rider select screen.
 //
 // Driven by the fitness* engine events (ECS/System/FitnessSystem.h), never by polling: connection changes refresh
 // a tile, fitnessSample updates its live value, fitnessDeviceFound refreshes an open picker. UI/Pairing/
@@ -19,8 +19,8 @@ import "UI/Theme/UIKit" for UIKit
 import "debug" for Debug
 
 var ROLES = ["trainer", "powerMeter", "heartRate"]
-// Where "Let's Ride" leads.
-var NEXT_STATE = "MainMenu"
+// Where "Let's Ride" leads: choosing the rider (States/RiderSelectState), then the main menu.
+var NEXT_STATE = "RiderSelect"
 
 class DevicePairingState is BaseState {
     construct new() {

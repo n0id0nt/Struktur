@@ -14,6 +14,9 @@ import "States/StateManager" for StateManager
 import "States/GameWorldState" for GameWorldState
 import "States/MainMenuState" for MainMenuState
 import "States/DevicePairingState" for DevicePairingState
+import "States/RiderSelectState" for RiderSelectState
+import "States/RiderEditState" for RiderEditState
+import "Rider/RiderProfiles" for RiderProfiles
 import "States/SettingsState" for SettingsState
 import "States/BattleTestState" for BattleTestState
 import "Inventory/Inventory" for Inventory
@@ -99,6 +102,7 @@ class Game {
         Party.load("party.sav")
         Defeated.load("defeated.sav")
         MapLog.load("map.sav")
+        RiderProfiles.load()
 
         DialogueLoader.loadAllDialogue()
 
@@ -118,12 +122,15 @@ class Game {
         _stateManager.insertState("GameWorld", GameWorldState)
         // First screen: pair a trainer / power meter / heart rate strap, then on to the main menu.
         _stateManager.insertState("DevicePairing", DevicePairingState)
+        // Then "Who's Riding?": pick or create a rider profile (name, weight, height, units).
+        _stateManager.insertState("RiderSelect", RiderSelectState)
+        _stateManager.insertState("RiderEdit", RiderEditState)
         _stateManager.insertState("MainMenu", MainMenuState)
         _stateManager.insertState("Settings", SettingsState)
         // The battle sandbox - F6 from the overworld (GameWorldState) opens it.
         _stateManager.insertState("BattleTest", BattleTestState)
 
-        // Device pairing -> main menu -> the gameplay state (Arc 1 - Levels/SevenGods.ldtk, via MainMenu's Start).
+        // Device pairing -> rider select -> main menu -> the gameplay state (Arc 1 - Levels/SevenGods.ldtk, via MainMenu's Start).
         // Set STRUKTUR_FITNESS_SIMULATE=1 to pair with simulated devices when no trainer is to hand.
         _stateManager.changeState("DevicePairing")
     }
