@@ -62,6 +62,7 @@ constexpr uint16_t CYCLING_POWER_FEATURE     = 0x2A65;
 
 constexpr uint16_t FTMS_FEATURE              = 0x2ACC;
 constexpr uint16_t FTMS_INDOOR_BIKE_DATA     = 0x2AD2;
+constexpr uint16_t FTMS_SUPPORTED_INCLINATION = 0x2AD5;
 constexpr uint16_t FTMS_SUPPORTED_RESISTANCE = 0x2AD6;
 constexpr uint16_t FTMS_SUPPORTED_POWER      = 0x2AD8;
 constexpr uint16_t FTMS_CONTROL_POINT        = 0x2AD9;

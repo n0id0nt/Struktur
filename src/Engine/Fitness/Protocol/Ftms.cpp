@@ -187,6 +187,19 @@ std::optional<ResistanceRange> ParseResistanceRange(std::span<const uint8_t> dat
 	return ResistanceRange{minimum * 0.1, maximum * 0.1, increment * 0.1};
 }
 
+std::optional<InclinationRange> ParseInclinationRange(std::span<const uint8_t> data)
+{
+	ByteReader reader(data);
+	int16_t minimum    = 0;
+	int16_t maximum    = 0;
+	uint16_t increment = 0;
+	if (!reader.ReadS16(minimum) || !reader.ReadS16(maximum) || !reader.ReadU16(increment))
+	{
+		return std::nullopt;
+	}
+	return InclinationRange{minimum * 0.1, maximum * 0.1, increment * 0.1};
+}
+
 const char* ToString(OpCode opCode)
 {
 	switch (opCode)

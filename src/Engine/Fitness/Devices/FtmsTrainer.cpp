@@ -19,6 +19,9 @@ static const BleCharacteristicRef POWER_RANGE_CHARACTERISTIC{FTMS_SERVICE,
                                                              BleUuid::FromShort(Uuids::FTMS_SUPPORTED_POWER)};
 static const BleCharacteristicRef RESISTANCE_RANGE_CHARACTERISTIC{FTMS_SERVICE,
                                                                   BleUuid::FromShort(Uuids::FTMS_SUPPORTED_RESISTANCE)};
+static const BleCharacteristicRef INCLINATION_RANGE_CHARACTERISTIC{FTMS_SERVICE,
+                                                                   BleUuid::FromShort(
+                                                                       Uuids::FTMS_SUPPORTED_INCLINATION)};
 static const BleCharacteristicRef INDOOR_BIKE_DATA_CHARACTERISTIC{FTMS_SERVICE,
                                                                   BleUuid::FromShort(Uuids::FTMS_INDOOR_BIKE_DATA)};
 static const BleCharacteristicRef CONTROL_POINT_CHARACTERISTIC{FTMS_SERVICE,
@@ -63,6 +66,7 @@ BleLinkConfig FtmsTrainer::MakeLinkConfig(BleAddress address, const ReconnectPol
         {LinkSetupStep::Kind::READ, FEATURE_CHARACTERISTIC, SubscriptionKind::NOTIFY, true},
         {LinkSetupStep::Kind::READ, POWER_RANGE_CHARACTERISTIC, SubscriptionKind::NOTIFY, false},
         {LinkSetupStep::Kind::READ, RESISTANCE_RANGE_CHARACTERISTIC, SubscriptionKind::NOTIFY, false},
+        {LinkSetupStep::Kind::READ, INCLINATION_RANGE_CHARACTERISTIC, SubscriptionKind::NOTIFY, false},
         {LinkSetupStep::Kind::SUBSCRIBE, INDOOR_BIKE_DATA_CHARACTERISTIC, SubscriptionKind::NOTIFY, true},
         {LinkSetupStep::Kind::SUBSCRIBE, CONTROL_POINT_CHARACTERISTIC, SubscriptionKind::INDICATE, true},
         {LinkSetupStep::Kind::SUBSCRIBE, MACHINE_STATUS_CHARACTERISTIC, SubscriptionKind::NOTIFY, false},
@@ -444,6 +448,15 @@ void FtmsTrainer::HandleLinkEvent(LinkEvent& event, double now)
 					m_capabilities.minimumPowerWatts   = range->minimumWatts;
 					m_capabilities.maximumPowerWatts   = range->maximumWatts;
 					m_capabilities.powerIncrementWatts = std::max<int>(1, range->incrementWatts);
+				}
+			}
+			else if (event.characteristic == INCLINATION_RANGE_CHARACTERISTIC)
+			{
+				const std::optional<Ftms::InclinationRange> range = Ftms::ParseInclinationRange(event.value);
+				if (range && range->maximumPercent > range->minimumPercent)
+				{
+					m_capabilities.minimumGradePercent = range->minimumPercent;
+					m_capabilities.maximumGradePercent = range->maximumPercent;
 				}
 			}
 			else if (event.characteristic == RESISTANCE_RANGE_CHARACTERISTIC)

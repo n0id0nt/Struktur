@@ -149,6 +149,13 @@ TEST_CASE("Supported Power Range and Supported Resistance Range")
 	CHECK(resistance->increment == doctest::Approx(1.0));
 
 	CHECK_FALSE(Ftms::ParsePowerRange(Bytes{0x00, 0x00, 0xD0, 0x07, 0x01}).has_value());
+
+	// inclination: min -100 (-10.0 %), max 200 (20.0 %), increment 5 (0.5 %)
+	const auto inclination = Ftms::ParseInclinationRange(Bytes{0x9C, 0xFF, 0xC8, 0x00, 0x05, 0x00});
+	REQUIRE(inclination.has_value());
+	CHECK(inclination->minimumPercent == doctest::Approx(-10.0));
+	CHECK(inclination->maximumPercent == doctest::Approx(20.0));
+	CHECK(inclination->incrementPercent == doctest::Approx(0.5));
 }
 
 // ---------------------------------------------------------------------------------------------------------------

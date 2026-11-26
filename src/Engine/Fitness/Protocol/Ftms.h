@@ -148,6 +148,17 @@ struct ResistanceRange
 
 std::optional<ResistanceRange> ParseResistanceRange(std::span<const uint8_t> data);
 
+// Supported Inclination Range (0x2AD5): sint16 min, sint16 max, uint16 increment, 0.1 % resolution. Trainers that
+// report it bound the grade they accept in simulation mode.
+struct InclinationRange
+{
+	double minimumPercent   = 0.0;
+	double maximumPercent   = 0.0;
+	double incrementPercent = 0.0;
+};
+
+std::optional<InclinationRange> ParseInclinationRange(std::span<const uint8_t> data);
+
 // ---------------------------------------------------------------------------------------------------------------
 // Fitness Machine Control Point (0x2AD9)
 // ---------------------------------------------------------------------------------------------------------------

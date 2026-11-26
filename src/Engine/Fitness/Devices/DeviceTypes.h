@@ -115,6 +115,8 @@ struct TrainerCapabilities
 	std::optional<double> minimumResistance;
 	std::optional<double> maximumResistance;
 	std::optional<double> resistanceIncrement;
+	std::optional<double> minimumGradePercent;  // Supported Inclination Range, when the trainer reports one
+	std::optional<double> maximumGradePercent;
 };
 
 enum class ControlState : uint8_t

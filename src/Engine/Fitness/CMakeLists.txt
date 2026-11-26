@@ -101,6 +101,11 @@ set(RIDE_SOURCES
     ${RIDE_DIR}/SpeedModel.h            ${RIDE_DIR}/SpeedModel.cpp
     ${RIDE_DIR}/Workout.h               ${RIDE_DIR}/WorkoutLoader.cpp
     ${RIDE_DIR}/WorkoutRunner.h         ${RIDE_DIR}/WorkoutRunner.cpp
+    ${RIDE_DIR}/TrainerController.h     ${RIDE_DIR}/TrainerController.cpp
+    ${RIDE_DIR}/RideLog.h               ${RIDE_DIR}/RideLog.cpp
+    ${RIDE_DIR}/FitWriter.h             ${RIDE_DIR}/FitWriter.cpp
+    ${RIDE_DIR}/RideSettings.h          ${RIDE_DIR}/RideSettings.cpp
+    ${RIDE_DIR}/RideSession.h           ${RIDE_DIR}/RideSession.cpp
     ${pugixml_SOURCE_DIR}/src/pugixml.cpp
 )
 add_library(StrukturRide STATIC ${RIDE_SOURCES})
@@ -134,6 +139,7 @@ if(STRUKTUR_BUILD_TESTS)
         Tests/ProtocolTests.cpp
         Tests/DeviceTests.cpp
         Tests/RideCoreTests.cpp
+        Tests/RideControlTests.cpp
         ${STRUKTUR_FITNESS_LOGGER_SOURCE}
     )
     target_include_directories(StrukturFitnessTests PRIVATE ${doctest_SOURCE_DIR}/doctest)
