@@ -5,6 +5,7 @@
 #include "Engine/Ride/SpeedModel.h"
 #include "Engine/Ride/TrainerController.h"
 #include "Engine/Ride/Zones.h"
+#include "Engine/RideWorld/WorldSettings.h"
 
 namespace Struktur::Ride
 {
@@ -32,6 +33,7 @@ struct RideSettings
 	int freeRideStartTargetWatts          = 0;     // 0 = 65 % of FTP
 	SpeedModelParameters speed;                    // riderMassKg is replaced by the rider's weight at ride start
 	TrainerControlSettings control;
+	RideWorld::WorldSettings world = RideWorld::WorldSettings::Defaults();  // the "world" section
 
 	// Missing or out-of-range values fall back to defaults; `warning` describes anything that was ignored.
 	static RideSettings FromJson(const std::string& json, std::string& warning);

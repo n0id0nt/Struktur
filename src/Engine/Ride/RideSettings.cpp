@@ -68,6 +68,7 @@ void RideSettings::Validate()
 	targetBandMinimumWatts             = std::clamp(targetBandMinimumWatts, 0.0, 50.0);
 	leadInSeconds                      = std::clamp(leadInSeconds, 0.0, 5.0);
 	freeRideStartTargetWatts           = std::clamp(freeRideStartTargetWatts, 0, 1500);
+	world.Validate();
 	speed.bikeMassKg                   = std::clamp(speed.bikeMassKg, 3.0, 40.0);
 	speed.rollingResistance            = std::clamp(speed.rollingResistance, 0.001, 0.02);
 	speed.dragAreaSquareMeters         = std::clamp(speed.dragAreaSquareMeters, 0.15, 0.8);
@@ -151,6 +152,15 @@ RideSettings RideSettings::FromJson(const std::string& json, std::string& warnin
 			    control["trimMode"].get<std::string>() == "percent" ? TrimMode::PERCENT : TrimMode::WATTS;
 		}
 	}
+	if (root.contains("world"))
+	{
+		std::string worldWarning;
+		settings.world = RideWorld::WorldSettings::FromJson(root["world"], worldWarning);
+		if (!worldWarning.empty())
+		{
+			warning = worldWarning;
+		}
+	}
 	settings.Validate();
 	return settings;
 }
@@ -187,6 +197,7 @@ std::string RideSettings::ToJson() const
 	                                    {"lowCadenceRpm", control.lowCadenceRpm},
 	                                    {"recoveryCadenceRpm", control.recoveryCadenceRpm},
 	                                    {"protectionMinimumFraction", control.protectionMinimumFraction}};
+	root["world"] = world.ToJson();
 	return root.dump(2);
 }
 }  // namespace Struktur::Ride

@@ -1,0 +1,32 @@
+{
+  "id": "coastal",
+  "name": "Coastal",
+  "weight": 1.0,
+  "lengthMeters": [3500, 6000],
+  "sky": { "zenith": [70, 130, 210], "horizon": [190, 220, 240], "ground": [120, 150, 160], "clouds": 0.5 },
+  "sun": { "timeOfDay": 15.0, "azimuth": 210, "color": [255, 244, 220], "size": 1.0 },
+  "ambient": [120, 130, 145],
+  "fog": { "color": [185, 212, 232], "density": 0.0016, "start": 80 },
+  "mountains": { "far": [150, 175, 200], "near": [120, 150, 165], "height": 0.06 },
+  "terrain": {
+    "amplitude": 14, "scale": 260, "corridor": 2, "blend": 40, "leftOffset": 6, "rightOffset": -26,
+    "palette": [
+      { "material": "sand", "maxHeight": 1.2, "color": [222, 205, 160] },
+      { "material": "rock", "minSlope": 0.9, "color": [140, 132, 120] },
+      { "material": "grass", "color": [112, 160, 82] }
+    ]
+  },
+  "road": { "asphalt": [64, 66, 72], "shoulder": [150, 140, 120], "line": [240, 240, 230] },
+  "water": { "enabled": true, "level": -4.0, "side": "right", "color": [40, 110, 160] },
+  "weather": { "type": "none" },
+  "grade": { "amplitude": 3.0, "wavelength": 1100 },
+  "props": [
+    { "role": "tree_palm", "placement": "scatter", "side": "left", "density": 0.9, "lateral": [9, 90], "height": [6, 10], "maxDistance": 900 },
+    { "role": "bush", "placement": "scatter", "side": "left", "density": 2.0, "lateral": [7, 60], "height": [0.8, 1.6], "maxDistance": 400 },
+    { "role": "rock", "placement": "scatter", "side": "right", "density": 1.2, "lateral": [6, 30], "height": [0.6, 1.8], "maxDistance": 500 },
+    { "role": "grass", "placement": "scatter", "side": "left", "density": 6.0, "lateral": [6, 22], "height": [0.3, 0.6], "maxDistance": 140 },
+    { "role": "building", "placement": "scatter", "side": "left", "density": 0.05, "lateral": [16, 60], "height": [6, 9], "maxDistance": 1000, "alignToRoad": true },
+    { "role": "guardrail", "placement": "edge", "side": "right", "spacing": 4, "lateral": [5.6, 5.6], "height": [0.8, 0.8], "maxDistance": 350, "alignToRoad": true },
+    { "role": "sign_post", "placement": "edge", "side": "right", "spacing": 600, "lateral": [6.5, 6.5], "height": [2.2, 2.6], "maxDistance": 500 }
+  ]
+}

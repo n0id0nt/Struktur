@@ -88,6 +88,10 @@ public:
 	double GetTrimPercent() const;
 	double GetGradePercent() const;  // the rider's chosen grade (SIM resistance)
 	void SetGradePercent(double gradePercent);
+	// The procedural world's road grade under the rider. When set, SIM sends this instead of the chosen grade (the
+	// world blends its road towards the chosen grade, so the rider still controls it with -/+). nullopt = no world.
+	void SetRoadGrade(std::optional<double> gradePercent);
+	std::optional<double> GetRoadGrade() const;
 
 	// Applies capability ranges (call whenever the trainer's capabilities change).
 	void SetCapabilities(const Fitness::TrainerCapabilities& capabilities);
@@ -122,6 +126,7 @@ private:
 	double m_trimWatts;
 	double m_trimPercent;
 	double m_gradePercent;
+	std::optional<double> m_roadGrade;
 	double m_minimumPower;
 	double m_maximumPower;
 	double m_minimumGrade;

@@ -1,0 +1,30 @@
+{
+  "id": "alpine",
+  "name": "Alpine",
+  "weight": 1.0,
+  "lengthMeters": [4000, 7000],
+  "sky": { "zenith": [50, 100, 190], "horizon": [175, 205, 235], "ground": [110, 120, 125], "clouds": 0.6 },
+  "sun": { "timeOfDay": 11.5, "azimuth": 160, "color": [255, 250, 235], "size": 0.9 },
+  "ambient": [125, 135, 155],
+  "fog": { "color": [190, 210, 230], "density": 0.0012, "start": 120 },
+  "mountains": { "far": [175, 190, 215], "near": [95, 115, 130], "height": 0.2 },
+  "terrain": {
+    "amplitude": 55, "scale": 300, "corridor": 2, "blend": 55, "leftOffset": 18, "rightOffset": 4,
+    "palette": [
+      { "material": "snow", "minHeight": 38, "color": [238, 242, 248] },
+      { "material": "rock", "minSlope": 0.75, "color": [128, 124, 122] },
+      { "material": "grass", "color": [92, 140, 74] }
+    ]
+  },
+  "road": { "asphalt": [58, 58, 62], "shoulder": [120, 118, 112], "line": [240, 240, 235] },
+  "water": { "enabled": false },
+  "weather": { "type": "none" },
+  "grade": { "amplitude": 7.0, "wavelength": 1400 },
+  "props": [
+    { "role": "tree_pine", "placement": "scatter", "side": "both", "density": 2.4, "lateral": [8, 160], "height": [7, 14], "maxDistance": 1100 },
+    { "role": "rock", "placement": "scatter", "side": "both", "density": 1.4, "lateral": [6, 80], "height": [0.8, 2.4], "maxDistance": 500 },
+    { "role": "grass", "placement": "scatter", "side": "both", "density": 4.0, "lateral": [6, 20], "height": [0.3, 0.5], "maxDistance": 140 },
+    { "role": "guardrail", "placement": "edge", "side": "outer", "spacing": 4, "lateral": [5.6, 5.6], "height": [0.8, 0.8], "maxDistance": 350, "minCurvature": 0.004, "alignToRoad": true },
+    { "role": "sign_post", "placement": "edge", "side": "right", "spacing": 500, "lateral": [6.5, 6.5], "height": [2.2, 2.6], "maxDistance": 500 }
+  ]
+}

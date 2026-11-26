@@ -108,6 +108,16 @@ double TrainerController::GetTrimPercent() const
 	return m_trimPercent;
 }
 
+void TrainerController::SetRoadGrade(std::optional<double> gradePercent)
+{
+	m_roadGrade = gradePercent;
+}
+
+std::optional<double> TrainerController::GetRoadGrade() const
+{
+	return m_roadGrade;
+}
+
 double TrainerController::GetGradePercent() const
 {
 	return m_gradePercent;
@@ -223,7 +233,7 @@ void TrainerController::Update(const ControlInputs& inputs, Fitness::Trainer* tr
 
 	const std::optional<double> ergTarget = DesiredErgTarget();
 	const Mode desiredMode                = ergTarget ? Mode::ERG : Mode::SIM;
-	const double desiredValue             = ergTarget ? *ergTarget : ClampGrade(m_gradePercent);
+	const double desiredValue             = ergTarget ? *ergTarget : ClampGrade(m_roadGrade.value_or(m_gradePercent));
 
 	if (desiredMode != m_mode)
 	{
@@ -306,7 +316,7 @@ std::optional<double> TrainerController::GetLastSentValue() const
 
 double TrainerController::GetEffectiveGradePercent() const
 {
-	return m_mode == Mode::SIM ? m_currentValue : ClampGrade(m_gradePercent);
+	return m_mode == Mode::SIM ? m_currentValue : ClampGrade(m_roadGrade.value_or(m_gradePercent));
 }
 
 bool TrainerController::IsRamping(double now) const

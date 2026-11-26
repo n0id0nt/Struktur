@@ -97,6 +97,8 @@ public:
 	void SkipStep(double now);
 	void ExtendStep(double seconds);
 	void Lap(double now);
+	// The procedural world's road grade under the rider (SIM simulates it); nullopt = no world.
+	void SetRoadGrade(std::optional<double> gradePercent);
 	// Stops the ride and writes the final FIT + JSON. Returns false if writing failed (see GetLastSaveError).
 	bool Finish(double now);
 	bool SaveNow();
@@ -121,6 +123,7 @@ public:
 	double GetDistanceMeters() const;
 	double GetElevationGainMeters() const;
 	double GetGradePercent() const;
+	double GetChosenGradePercent() const;  // the rider's -/+ grade (the world blends its road towards it)
 	int GetPowerZone() const;
 	int GetHeartRateZone() const;
 	// The target the rider should hold: the workout step's (FTP-relative, lead-in applied) or the Free Ride ERG target.

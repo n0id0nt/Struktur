@@ -585,6 +585,16 @@ double RideSession::GetElevationGainMeters() const
 {
 	return m_speedModel.GetElevationGainMeters();
 }
+void RideSession::SetRoadGrade(std::optional<double> gradePercent)
+{
+	m_controller.SetRoadGrade(gradePercent);
+}
+
+double RideSession::GetChosenGradePercent() const
+{
+	return m_controller.GetGradePercent();
+}
+
 double RideSession::GetGradePercent() const
 {
 	return m_controller.GetEffectiveGradePercent();

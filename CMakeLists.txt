@@ -617,6 +617,7 @@ target_link_libraries(${PROJECT_NAME}
     PhysFS::PhysFS-static
     StrukturFitness
     StrukturRide
+    StrukturRideWorld
     $<$<OR:$<BOOL:${PLATFORM_DESKTOP}>,$<BOOL:${PLATFORM_WEB}>>:SDL3_mixer::SDL3_mixer>
     $<$<OR:$<BOOL:${PLATFORM_DESKTOP}>,$<BOOL:${PLATFORM_WEB}>>:SDL3::SDL3>
     $<$<OR:$<BOOL:${PLATFORM_DESKTOP}>,$<BOOL:${PLATFORM_WEB}>>:bgfx>
