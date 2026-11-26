@@ -10,7 +10,7 @@
 //   RiderProfiles.select(id) / current    the rider who is riding (remembered as "last ridden")
 //
 // A profile map: {"id": Num, "name": String, "weightKg": Num, "heightCm": Num, "units": "metric" | "imperial",
-//                 "ftpWatts": Num, "thresholdHeartRateBpm": Num}.
+//                 "ftpWatts": Num, "thresholdHeartRateBpm": Num, "maxHeartRateBpm": Num}.
 import "fileSystem" for FileSystem
 import "serialisation" for Json, MapUtil
 import "debug" for Debug
@@ -36,6 +36,9 @@ var FTP_STEP_WATTS = 5
 var DEFAULT_THRESHOLD_HEART_RATE_BPM = 165
 var MIN_THRESHOLD_HEART_RATE_BPM = 100
 var MAX_THRESHOLD_HEART_RATE_BPM = 220
+var DEFAULT_MAX_HEART_RATE_BPM = 190
+var MIN_MAX_HEART_RATE_BPM = 120
+var MAX_MAX_HEART_RATE_BPM = 230
 
 class RiderProfiles {
     static maxProfiles { MAX_PROFILES }
@@ -103,6 +106,7 @@ class RiderProfiles {
         profile["units"] = "metric"
         profile["ftpWatts"] = DEFAULT_FTP_WATTS
         profile["thresholdHeartRateBpm"] = DEFAULT_THRESHOLD_HEART_RATE_BPM
+        profile["maxHeartRateBpm"] = DEFAULT_MAX_HEART_RATE_BPM
         return profile
     }
 
@@ -140,6 +144,19 @@ class RiderProfiles {
     // The rider who is riding, or null before one has been chosen.
     static current { __selectedId == null ? null : RiderProfiles.find(__selectedId) }
 
+    // The current rider as the ride screens want it (Ride.startFreeRide / startWorkout), or null.
+    static rideInfo {
+        var rider = RiderProfiles.current
+        if (rider == null) return null
+        var info = {}
+        info["name"] = rider["name"]
+        info["ftpWatts"] = rider["ftpWatts"]
+        info["maxHeartRateBpm"] = rider["maxHeartRateBpm"]
+        info["thresholdHeartRateBpm"] = rider["thresholdHeartRateBpm"]
+        info["weightKg"] = rider["weightKg"]
+        return info
+    }
+
     // A copy with every field present, clamped and the name trimmed - what gets stored.
     static sanitised_(profile) {
         var stored = {}
@@ -154,6 +171,8 @@ class RiderProfiles {
         stored["ftpWatts"] = RiderProfiles.clampFtp_(profile["ftpWatts"] is Num ? profile["ftpWatts"] : DEFAULT_FTP_WATTS)
         stored["thresholdHeartRateBpm"] = RiderProfiles.clampThresholdHeartRate_(
             profile["thresholdHeartRateBpm"] is Num ? profile["thresholdHeartRateBpm"] : DEFAULT_THRESHOLD_HEART_RATE_BPM)
+        stored["maxHeartRateBpm"] = RiderProfiles.clampMaxHeartRate_(
+            profile["maxHeartRateBpm"] is Num ? profile["maxHeartRateBpm"] : DEFAULT_MAX_HEART_RATE_BPM)
         return stored
     }
 
@@ -163,9 +182,13 @@ class RiderProfiles {
         return RiderProfiles.clampFtp_(steps * FTP_STEP_WATTS)
     }
 
+    static stepMaxHeartRate(bpm, direction) { RiderProfiles.clampMaxHeartRate_(bpm.round + direction) }
+
     static stepThresholdHeartRate(bpm, direction) { RiderProfiles.clampThresholdHeartRate_(bpm.round + direction) }
 
     static clampFtp_(watts) { watts.round.clamp(MIN_FTP_WATTS, MAX_FTP_WATTS) }
+    static clampMaxHeartRate_(bpm) { bpm.round.clamp(MIN_MAX_HEART_RATE_BPM, MAX_MAX_HEART_RATE_BPM) }
+
     static clampThresholdHeartRate_(bpm) { bpm.round.clamp(MIN_THRESHOLD_HEART_RATE_BPM, MAX_THRESHOLD_HEART_RATE_BPM) }
 }
 

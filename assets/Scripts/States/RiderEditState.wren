@@ -10,7 +10,7 @@
 //   weight   Left/Right steps 0.5 kg or 1 lb; hold to repeat.
 //   height   Left/Right steps 1 cm or 1 inch; hold to repeat.
 //   FTP      Left/Right steps 5 W; hold to repeat.
-//   threshold heart rate   Left/Right steps 1 bpm; hold to repeat.
+//   max / threshold heart rate   Left/Right steps 1 bpm; hold to repeat.
 //
 // Clicks are queued and handled in update() - they arrive inside the UI input pass, and several actions remove UI
 // or leave the state.
@@ -145,6 +145,8 @@ class RiderEditState is BaseState {
         _view.setField("height", "<  " + Localization.get("menu.rider.height") +
             Units.formatHeight(_profile["heightCm"], units) + "  >")
         _view.setField("ftp", "<  " + Localization.get("menu.rider.ftp") + _profile["ftpWatts"].toString + " W  >")
+        _view.setField("maxHeartRate", "<  " + Localization.get("menu.rider.max_hr") +
+            _profile["maxHeartRateBpm"].toString + " bpm  >")
         _view.setField("thresholdHeartRate", "<  " + Localization.get("menu.rider.threshold_hr") +
             _profile["thresholdHeartRateBpm"].toString + " bpm  >")
         _view.setCanSave(name.trim() != "")
@@ -188,6 +190,8 @@ class RiderEditState is BaseState {
             _profile["heightCm"] = Units.stepHeightCm(_profile["heightCm"], units, direction)
         } else if (field == "ftp") {
             _profile["ftpWatts"] = RiderProfiles.stepFtp(_profile["ftpWatts"], direction)
+        } else if (field == "maxHeartRate") {
+            _profile["maxHeartRateBpm"] = RiderProfiles.stepMaxHeartRate(_profile["maxHeartRateBpm"], direction)
         } else if (field == "thresholdHeartRate") {
             _profile["thresholdHeartRateBpm"] = RiderProfiles.stepThresholdHeartRate(_profile["thresholdHeartRateBpm"],
                 direction)

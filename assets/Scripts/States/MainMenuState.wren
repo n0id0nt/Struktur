@@ -4,6 +4,7 @@
 // pure view this owns and refreshes.
 import "app" for Time
 import "States/BaseState" for BaseState
+import "ride" for Ride
 import "UI/MainMenu/MainMenuUI" for MainMenuUI
 import "debug" for Debug
 
@@ -28,6 +29,16 @@ class MainMenuState is BaseState {
         Debug.info("Entering Main Menu")
 
         _view = MainMenuUI.new()
+        _pendingState = null
+        _view.freeRideButton.setOnClick { |sender, mousePos|
+            _pendingState = ["Ride", {"mode": "freeRide"}]
+        }
+        _view.workoutsButton.setOnClick { |sender, mousePos|
+            _pendingState = ["WorkoutBrowser", {}]
+        }
+        _view.rideSettingsButton.setOnClick { |sender, mousePos|
+            _pendingState = ["RideSettings", {}]
+        }
         _view.startButton.setOnClick { |sender, mousePos| startGame() }
         _view.settingsButton.setOnClick { |sender, mousePos| openSettings() }
         _view.quitButton.setOnClick { |sender, mousePos| quit() }
@@ -37,6 +48,22 @@ class MainMenuState is BaseState {
     }
 
     update(stateManager) {
+        // Ride screens are opened from update(), not from inside the click (the UI's input pass).
+        if (_pendingState != null) {
+            var target = _pendingState
+            _pendingState = null
+            _stateManager.changeState(target[0], target[1])
+            return
+        }
+        // A workout given on the command line opens straight in the workout browser (once).
+        if (!_checkedCommandLine) {
+            _checkedCommandLine = true
+            var path = Ride.commandLineWorkout()
+            if (path != null) {
+                _stateManager.changeState("WorkoutBrowser", {"preselect": path})
+                return
+            }
+        }
         // Rich-text showcase reveal (see MainMenuUI.showcaseRichText_/RICH_TEXT_REVEAL_SPEED) - same
         // elapsed-time-driven glyph count InteractState's dialogue scroll uses, just driving
         // revealGlyphs instead of slicing a raw string.

@@ -16,6 +16,9 @@ import "States/MainMenuState" for MainMenuState
 import "States/DevicePairingState" for DevicePairingState
 import "States/RiderSelectState" for RiderSelectState
 import "States/RiderEditState" for RiderEditState
+import "States/RideState" for RideState
+import "States/WorkoutBrowserState" for WorkoutBrowserState
+import "States/RideSettingsState" for RideSettingsState
 import "Rider/RiderProfiles" for RiderProfiles
 import "States/SettingsState" for SettingsState
 import "States/BattleTestState" for BattleTestState
@@ -125,6 +128,10 @@ class Game {
         // Then "Who's Riding?": pick or create a rider profile (name, weight, height, units).
         _stateManager.insertState("RiderSelect", RiderSelectState)
         _stateManager.insertState("RiderEdit", RiderEditState)
+        // Indoor-cycling screens, opened from the main menu.
+        _stateManager.insertState("Ride", RideState)
+        _stateManager.insertState("WorkoutBrowser", WorkoutBrowserState)
+        _stateManager.insertState("RideSettings", RideSettingsState)
         _stateManager.insertState("MainMenu", MainMenuState)
         _stateManager.insertState("Settings", SettingsState)
         // The battle sandbox - F6 from the overworld (GameWorldState) opens it.

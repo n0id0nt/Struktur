@@ -35,6 +35,8 @@ class DevicePairingState is BaseState {
         super.enter(stateManager, params)
         _stateManager = stateManager
         _pending = []
+        // Ride settings opens pairing with {"returnTo": "RideSettings"}; at startup it leads on to rider select.
+        _nextState = params != null && params["returnTo"] is String ? params["returnTo"] : NEXT_STATE
 
         UIKit.open()
         _view = DevicePairingUI.new()
@@ -120,7 +122,7 @@ class DevicePairingState is BaseState {
             _view.closePicker()
         } else if (kind == "continue") {
             if (Fitness.hasPowerSource()) {
-                _stateManager.changeState(NEXT_STATE)
+                _stateManager.changeState(_nextState)
             }
         }
     }

@@ -13,12 +13,12 @@ import "UI/Theme/UIKit" for UIKit
 import "UI/Theme/KitButton" for KitButton
 import "UI/Rider/RiderTheme" for RiderTheme
 
-var WINDOW_SIZE = Vec2.new(760, 660)
-var ROW_SIZE = Vec2.new(560, 52)
+var WINDOW_SIZE = Vec2.new(760, 690)
+var ROW_SIZE = Vec2.new(560, 48)
 var ROW_TOP = 104
-var ROW_STEP = 58
+var ROW_STEP = 54
 var BUTTON_SIZE = Vec2.new(180, 52)
-var BUTTON_TOP = 500
+var BUTTON_TOP = 528
 var BUTTON_GAP = 20
 
 var KEYBOARD_SIZE = Vec2.new(680, 470)
@@ -29,7 +29,7 @@ var KEY_TOP = 150
 var WIDE_KEY_SIZE = Vec2.new(142, 46)
 
 // Field rows, in order; every one but "name" responds to Left/Right.
-var FIELDS = ["name", "units", "weight", "height", "ftp", "thresholdHeartRate"]
+var FIELDS = ["name", "units", "weight", "height", "ftp", "maxHeartRate", "thresholdHeartRate"]
 
 class RiderEditUI {
     // isNew picks the title; canDelete adds the Delete button.
