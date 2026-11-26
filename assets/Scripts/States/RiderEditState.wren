@@ -1,5 +1,5 @@
 // States/RiderEditState.wren
-// Create or edit a rider profile: name, units (metric / imperial), weight and height. Opened from
+// Create or edit a rider profile: name, units (metric / imperial), weight, height, FTP and threshold heart rate. Opened from
 // States/RiderSelectState (params {"id": id} edits that rider, {} creates one) and returns there, focusing the
 // rider it saved. UI/Rider/RiderEditUI.wren is the view.
 //
@@ -9,6 +9,8 @@
 //   units    Left/Right or Accept switches metric / imperial. Values are stored in kg / cm either way.
 //   weight   Left/Right steps 0.5 kg or 1 lb; hold to repeat.
 //   height   Left/Right steps 1 cm or 1 inch; hold to repeat.
+//   FTP      Left/Right steps 5 W; hold to repeat.
+//   threshold heart rate   Left/Right steps 1 bpm; hold to repeat.
 //
 // Clicks are queued and handled in update() - they arrive inside the UI input pass, and several actions remove UI
 // or leave the state.
@@ -142,6 +144,9 @@ class RiderEditState is BaseState {
             Units.formatWeight(_profile["weightKg"], units) + "  >")
         _view.setField("height", "<  " + Localization.get("menu.rider.height") +
             Units.formatHeight(_profile["heightCm"], units) + "  >")
+        _view.setField("ftp", "<  " + Localization.get("menu.rider.ftp") + _profile["ftpWatts"].toString + " W  >")
+        _view.setField("thresholdHeartRate", "<  " + Localization.get("menu.rider.threshold_hr") +
+            _profile["thresholdHeartRateBpm"].toString + " bpm  >")
         _view.setCanSave(name.trim() != "")
     }
 
@@ -150,10 +155,10 @@ class RiderEditState is BaseState {
         refreshFields_()
     }
 
-    // Left/Right on a units / weight / height row, with hold-to-repeat for the numbers.
+    // Left/Right on any row but the name, with hold-to-repeat for the numbers.
     updateStepper_() {
         var field = _view.focusedField
-        var stepsValue = field == "units" || field == "weight" || field == "height"
+        var stepsValue = field != null && field != "name"
         var horizontal = Input.getInputAxis2("UIDir").x
         var direction = horizontal > DIRECTION_THRESHOLD ? 1 : (horizontal < -DIRECTION_THRESHOLD ? -1 : 0)
         if (!stepsValue || direction == 0) {
@@ -179,8 +184,13 @@ class RiderEditState is BaseState {
         }
         if (field == "weight") {
             _profile["weightKg"] = Units.stepWeightKg(_profile["weightKg"], units, direction)
-        } else {
+        } else if (field == "height") {
             _profile["heightCm"] = Units.stepHeightCm(_profile["heightCm"], units, direction)
+        } else if (field == "ftp") {
+            _profile["ftpWatts"] = RiderProfiles.stepFtp(_profile["ftpWatts"], direction)
+        } else if (field == "thresholdHeartRate") {
+            _profile["thresholdHeartRateBpm"] = RiderProfiles.stepThresholdHeartRate(_profile["thresholdHeartRateBpm"],
+                direction)
         }
         refreshFields_()
     }

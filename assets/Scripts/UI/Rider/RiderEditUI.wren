@@ -1,6 +1,7 @@
 // UI/Rider/RiderEditUI.wren
-// The rider editor (States/RiderEditState.wren owns it): rows for name, units, weight and height, Save / Cancel /
-// Delete, and a name keyboard that opens over the screen. Weight, height and units change with Left/Right on their
+// The rider editor (States/RiderEditState.wren owns it): rows for name, units, weight, height, FTP and threshold
+// heart rate, Save / Cancel /
+// Delete, and a name keyboard that opens over the screen. Every row but the name changes with Left/Right on
 // row (the state reads the direction; this view only reports which row has focus). The keyboard is for pads -
 // a physical keyboard types straight in while it is open (the state runs Input text entry). Pure view: clicks go
 // back through the callbacks the state sets. Built from the UI kit, so the owner brackets it with UIKit.open/close.
@@ -12,12 +13,12 @@ import "UI/Theme/UIKit" for UIKit
 import "UI/Theme/KitButton" for KitButton
 import "UI/Rider/RiderTheme" for RiderTheme
 
-var WINDOW_SIZE = Vec2.new(760, 600)
+var WINDOW_SIZE = Vec2.new(760, 660)
 var ROW_SIZE = Vec2.new(560, 52)
 var ROW_TOP = 104
-var ROW_STEP = 62
+var ROW_STEP = 58
 var BUTTON_SIZE = Vec2.new(180, 52)
-var BUTTON_TOP = 430
+var BUTTON_TOP = 500
 var BUTTON_GAP = 20
 
 var KEYBOARD_SIZE = Vec2.new(680, 470)
@@ -27,8 +28,8 @@ var KEY_ROWS = ["1234567890", "QWERTYUIOP", "ASDFGHJKL'", "ZXCVBNM-."]
 var KEY_TOP = 150
 var WIDE_KEY_SIZE = Vec2.new(142, 46)
 
-// Field rows, in order; "units", "weight" and "height" respond to Left/Right.
-var FIELDS = ["name", "units", "weight", "height"]
+// Field rows, in order; every one but "name" responds to Left/Right.
+var FIELDS = ["name", "units", "weight", "height", "ftp", "thresholdHeartRate"]
 
 class RiderEditUI {
     // isNew picks the title; canDelete adds the Delete button.
@@ -94,7 +95,7 @@ class RiderEditUI {
     onButton=(fn) { _onButton = fn }             // fn.call("save" | "cancel" | "delete")
     onKey=(fn) { _onKey = fn }                   // fn.call(keyName) - "char:X", "shift", "space", "delete", "done"
 
-    // The field row with focus ("name", "units", "weight", "height") or null.
+    // The field row with focus (one of FIELDS) or null.
     focusedField { _focusedField }
     isKeyboardOpen { _keyboard != null }
     // Where focus goes back to after a popup closes.

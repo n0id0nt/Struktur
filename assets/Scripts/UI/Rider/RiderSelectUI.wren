@@ -1,6 +1,6 @@
 // UI/Rider/RiderSelectUI.wren
 // "Who's Riding?" - the rider list (States/RiderSelectState.wren owns it). One row per profile showing its name,
-// weight and height in that rider's units, an Edit button beside each row, and New Rider underneath. Pure view:
+// weight and height in that rider's units, FTP and threshold heart rate, an Edit button beside each row, and New Rider underneath. Pure view:
 // clicks go back through the callbacks the state sets (onChoose, onEdit, onNew). Built from the UI kit, so the
 // owner brackets it with UIKit.open()/close().
 import "app" for Application
@@ -12,9 +12,9 @@ import "UI/Theme/KitButton" for KitButton
 import "UI/Rider/RiderTheme" for RiderTheme
 import "Rider/RiderProfiles" for Units
 
-var WINDOW_SIZE = Vec2.new(900, 640)
+var WINDOW_SIZE = Vec2.new(960, 640)
 var LIST_TOP = 132
-var ROW_SIZE = Vec2.new(560, 52)
+var ROW_SIZE = Vec2.new(660, 52)
 var EDIT_SIZE = Vec2.new(140, 52)
 var ROW_GAP = 10
 var COLUMN_GAP = 16
@@ -102,7 +102,9 @@ class RiderSelectUI {
     rowText_(profile) {
         var units = profile["units"]
         return profile["name"] + "   " + Units.formatWeight(profile["weightKg"], units) + "   " +
-            Units.formatHeight(profile["heightCm"], units)
+            Units.formatHeight(profile["heightCm"], units) + "   " + Localization.get("menu.rider.list_ftp") +
+            profile["ftpWatts"].toString + " W   " + Localization.get("menu.rider.list_threshold_hr") +
+            profile["thresholdHeartRateBpm"].toString
     }
 
     // Rows go up/down, Right steps onto the row's Edit button; everything explicit (see ui-focus-navigation notes).

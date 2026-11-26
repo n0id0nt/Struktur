@@ -1,6 +1,7 @@
 // Rider/RiderProfiles.wren
 // The rider profiles: a name, a weight, a height and the player's preferred units (metric or imperial). Kept in
-// riders.json in the save folder. Weight and height are always stored in metric (kg, cm) and only converted for
+// riders.json in the save folder. Also FTP (functional threshold power) and threshold heart rate, for training
+// zones and ERG targets. Weight and height are always stored in metric (kg, cm) and only converted for
 // display and editing, so switching units never drifts the stored values.
 //
 //   RiderProfiles.load()                  read riders.json (missing file = no riders yet)
@@ -8,7 +9,8 @@
 //   RiderProfiles.create(profile) / update(profile) / remove(id), then save()
 //   RiderProfiles.select(id) / current    the rider who is riding (remembered as "last ridden")
 //
-// A profile map: {"id": Num, "name": String, "weightKg": Num, "heightCm": Num, "units": "metric" | "imperial"}.
+// A profile map: {"id": Num, "name": String, "weightKg": Num, "heightCm": Num, "units": "metric" | "imperial",
+//                 "ftpWatts": Num, "thresholdHeartRateBpm": Num}.
 import "fileSystem" for FileSystem
 import "serialisation" for Json, MapUtil
 import "debug" for Debug
@@ -26,6 +28,14 @@ var MIN_HEIGHT_CM = 120
 var MAX_HEIGHT_CM = 220
 var METRIC_WEIGHT_STEP_KG = 0.5
 var METRIC_HEIGHT_STEP_CM = 1
+
+var DEFAULT_FTP_WATTS = 200
+var MIN_FTP_WATTS = 50
+var MAX_FTP_WATTS = 600
+var FTP_STEP_WATTS = 5
+var DEFAULT_THRESHOLD_HEART_RATE_BPM = 165
+var MIN_THRESHOLD_HEART_RATE_BPM = 100
+var MAX_THRESHOLD_HEART_RATE_BPM = 220
 
 class RiderProfiles {
     static maxProfiles { MAX_PROFILES }
@@ -91,6 +101,8 @@ class RiderProfiles {
         profile["weightKg"] = 75
         profile["heightCm"] = 175
         profile["units"] = "metric"
+        profile["ftpWatts"] = DEFAULT_FTP_WATTS
+        profile["thresholdHeartRateBpm"] = DEFAULT_THRESHOLD_HEART_RATE_BPM
         return profile
     }
 
@@ -138,8 +150,23 @@ class RiderProfiles {
         stored["weightKg"] = Units.clampWeightKg(profile["weightKg"] is Num ? profile["weightKg"] : 75)
         stored["heightCm"] = Units.clampHeightCm(profile["heightCm"] is Num ? profile["heightCm"] : 175)
         stored["units"] = profile["units"] == "imperial" ? "imperial" : "metric"
+        // Riders saved before these existed get the defaults.
+        stored["ftpWatts"] = RiderProfiles.clampFtp_(profile["ftpWatts"] is Num ? profile["ftpWatts"] : DEFAULT_FTP_WATTS)
+        stored["thresholdHeartRateBpm"] = RiderProfiles.clampThresholdHeartRate_(
+            profile["thresholdHeartRateBpm"] is Num ? profile["thresholdHeartRateBpm"] : DEFAULT_THRESHOLD_HEART_RATE_BPM)
         return stored
     }
+
+    // FTP moves in 5 W steps and threshold heart rate in 1 bpm; direction is -1 or 1. Units don't apply to either.
+    static stepFtp(watts, direction) {
+        var steps = (watts / FTP_STEP_WATTS).round + direction
+        return RiderProfiles.clampFtp_(steps * FTP_STEP_WATTS)
+    }
+
+    static stepThresholdHeartRate(bpm, direction) { RiderProfiles.clampThresholdHeartRate_(bpm.round + direction) }
+
+    static clampFtp_(watts) { watts.round.clamp(MIN_FTP_WATTS, MAX_FTP_WATTS) }
+    static clampThresholdHeartRate_(bpm) { bpm.round.clamp(MIN_THRESHOLD_HEART_RATE_BPM, MAX_THRESHOLD_HEART_RATE_BPM) }
 }
 
 // Metric/imperial conversion, stepping and display. Inputs and outputs of the step functions are metric; the
