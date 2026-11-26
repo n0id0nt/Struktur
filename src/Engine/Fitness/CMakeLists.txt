@@ -82,6 +82,37 @@ if(STRUKTUR_FITNESS_WINRT)
     target_link_libraries(StrukturFitness PRIVATE windowsapp)
 endif()
 
+# StrukturRide - the ride screens' logic (zones, speed model, workouts, ERG/SIM control, recording, FIT). Lives
+# beside StrukturFitness because it drives a Fitness::Trainer; still free of SDL/bgfx/Wren so it unit-tests here.
+include(FetchContent)
+# pugixml (MIT) - workout (.zwo) parsing. Pinned release tarball + hash; pugixml.cpp is compiled straight into
+# StrukturRide (SOURCE_SUBDIR keeps pugixml's own CMake project, and its install rules, out of the build).
+FetchContent_Declare(pugixml
+    URL https://github.com/zeux/pugixml/releases/download/v1.14/pugixml-1.14.tar.gz
+    URL_HASH SHA256=2f10e276870c64b1db6809050a75e11a897a8d7456c4be5c6b2e35a11168a015
+    SOURCE_SUBDIR not-a-cmake-dir
+    DOWNLOAD_EXTRACT_TIMESTAMP TRUE
+)
+FetchContent_MakeAvailable(pugixml)
+
+set(RIDE_DIR ${STRUKTUR_REPO_ROOT}/src/Engine/Ride)
+set(RIDE_SOURCES
+    ${RIDE_DIR}/Zones.h                 ${RIDE_DIR}/Zones.cpp
+    ${RIDE_DIR}/SpeedModel.h            ${RIDE_DIR}/SpeedModel.cpp
+    ${RIDE_DIR}/Workout.h               ${RIDE_DIR}/WorkoutLoader.cpp
+    ${RIDE_DIR}/WorkoutRunner.h         ${RIDE_DIR}/WorkoutRunner.cpp
+    ${pugixml_SOURCE_DIR}/src/pugixml.cpp
+)
+add_library(StrukturRide STATIC ${RIDE_SOURCES})
+target_include_directories(StrukturRide PUBLIC ${STRUKTUR_REPO_ROOT}/src ${pugixml_SOURCE_DIR}/src)
+target_link_libraries(StrukturRide PUBLIC StrukturFitness nlohmann_json::nlohmann_json)
+target_compile_features(StrukturRide PUBLIC cxx_std_20)
+if(MSVC)
+    target_compile_options(StrukturRide PRIVATE /W4)
+    # Third-party source compiled into this target: keep its warnings out of our /W4 output.
+    set_source_files_properties(${pugixml_SOURCE_DIR}/src/pugixml.cpp PROPERTIES COMPILE_OPTIONS "/W0")
+endif()
+
 # Debug/Logger.cpp is compiled into the game executable already; standalone consumers (tests, probe) add it to
 # their own sources instead of this library, so the game never sees a duplicate definition.
 set(STRUKTUR_FITNESS_LOGGER_SOURCE ${STRUKTUR_REPO_ROOT}/src/Debug/Logger.cpp)
@@ -102,10 +133,15 @@ if(STRUKTUR_BUILD_TESTS)
         Tests/TestMain.cpp
         Tests/ProtocolTests.cpp
         Tests/DeviceTests.cpp
+        Tests/RideCoreTests.cpp
         ${STRUKTUR_FITNESS_LOGGER_SOURCE}
     )
     target_include_directories(StrukturFitnessTests PRIVATE ${doctest_SOURCE_DIR}/doctest)
-    target_link_libraries(StrukturFitnessTests PRIVATE StrukturFitness)
+    target_link_libraries(StrukturFitnessTests PRIVATE StrukturFitness StrukturRide)
+    # Sample/malformed workout files the tests load from disk.
+    target_compile_definitions(StrukturFitnessTests PRIVATE
+        STRUKTUR_TEST_DATA_DIR="${CMAKE_CURRENT_SOURCE_DIR}/Tests/Data"
+        STRUKTUR_WORKOUTS_DIR="${STRUKTUR_REPO_ROOT}/assets/Workouts")
 
     enable_testing()
     add_test(NAME StrukturFitnessTests COMMAND StrukturFitnessTests)

@@ -1,0 +1,17 @@
+[COURSE HEADER]
+VERSION = 2
+UNITS = ENGLISH
+DESCRIPTION = Long steady endurance with a gentle build. Written in the MRC format.
+FILE NAME = Endurance Builder
+MINUTES PERCENT
+[END COURSE HEADER]
+[COURSE DATA]
+0.00	45
+10.00	65
+10.00	65
+30.00	65
+30.00	72
+45.00	72
+45.00	50
+55.00	40
+[END COURSE DATA]

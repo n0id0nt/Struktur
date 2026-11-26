@@ -1,0 +1,17 @@
+<workout_file>
+    <author>Struktur</author>
+    <name>Demo Quick Tour</name>
+    <description>A six-minute tour of every step type - handy for trying the workout screen.</description>
+    <sportType>bike</sportType>
+    <workout>
+        <Warmup Duration="60" PowerLow="0.50" PowerHigh="0.70">
+            <textevent timeoffset="2" message="Welcome! This short workout shows every kind of step."/>
+        </Warmup>
+        <SteadyState Duration="45" Power="0.95"/>
+        <IntervalsT Repeat="3" OnDuration="20" OffDuration="20" OnPower="1.20" OffPower="0.55"/>
+        <Ramp Duration="60" PowerLow="0.60" PowerHigh="1.05"/>
+        <FreeRide Duration="30"/>
+        <MaxEffort Duration="15"/>
+        <Cooldown Duration="60" PowerLow="0.40" PowerHigh="0.65"/>
+    </workout>
+</workout_file>
