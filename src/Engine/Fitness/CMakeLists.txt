@@ -36,7 +36,24 @@ set(FITNESS_SOURCES
     Protocol/HeartRate.h            Protocol/HeartRate.cpp
     Protocol/CyclingPower.h         Protocol/CyclingPower.cpp
     Protocol/CadenceCalculator.h    Protocol/CadenceCalculator.cpp
+
+    Core/ThreadSafeQueue.h
+    Core/Backoff.h
+
+    Ble/IBleCentral.h               Ble/BleCommon.cpp
+    Ble/NullBleCentral.h
+    Ble/FakeBleCentral.h            Ble/FakeBleCentral.cpp
+    Ble/BleCentralFactory.h         Ble/BleCentralFactory.cpp
 )
+
+# Windows desktop: real BLE through the WinRT APIs (C++/WinRT headers ship with the Windows 10+ SDK). Every other
+# platform (web, Linux, macOS) gets NullBleCentral until a backend is written - see docs/SmartTrainerLibraries.md.
+if(WIN32 AND NOT EMSCRIPTEN)
+    set(STRUKTUR_FITNESS_WINRT TRUE)
+    list(APPEND FITNESS_SOURCES Ble/WinRtBleCentral.h Ble/WinRtBleCentral.cpp)
+else()
+    set(STRUKTUR_FITNESS_WINRT FALSE)
+endif()
 
 add_library(StrukturFitness STATIC ${FITNESS_SOURCES})
 # Includes are written repo-style ("Engine/Fitness/...", "Debug/Assertions.h"), so expose src/ itself.
@@ -45,6 +62,12 @@ target_link_libraries(StrukturFitness PUBLIC nlohmann_json::nlohmann_json)
 target_compile_features(StrukturFitness PUBLIC cxx_std_20)
 if(MSVC)
     target_compile_options(StrukturFitness PRIVATE /W4)
+endif()
+if(STRUKTUR_FITNESS_WINRT)
+    target_compile_definitions(StrukturFitness PRIVATE STRUKTUR_FITNESS_WINRT)
+    # C++/WinRT projection headers produce very large objects; windowsapp is the umbrella import lib for WinRT.
+    set_source_files_properties(Ble/WinRtBleCentral.cpp PROPERTIES COMPILE_OPTIONS "/bigobj")
+    target_link_libraries(StrukturFitness PRIVATE windowsapp)
 endif()
 
 # Debug/Logger.cpp is compiled into the game executable already; standalone consumers (tests, probe) add it to
