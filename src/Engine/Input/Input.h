@@ -16,6 +16,7 @@
 #include "glm/glm.hpp"
 
 union SDL_Event;
+struct SDL_Window;
 
 namespace Struktur::Input
 {
@@ -222,6 +223,16 @@ public:
 	// Mouse motion/buttons don't need this - they're polled in Update() like keyboard/gamepad already are.
 	void HandleEvent(const SDL_Event& event);
 
+	// Text entry (a name field). While active, SDL delivers typed characters (layout- and IME-aware UTF-8) and
+	// keyboard keys stop driving input ACTIONS - so typing a space doesn't also press UIAccept, and letters don't
+	// trigger gameplay bindings. Raw key queries (IsKeyJustPressed - Backspace/Enter/Escape) still work, and so do
+	// gamepad and pointer bindings. Always pair Start with Stop.
+	void StartTextInput(SDL_Window* window);
+	void StopTextInput(SDL_Window* window);
+	bool IsTextInputActive() const;
+	// Characters typed since the last call, as UTF-8.
+	std::string TakeTypedText();
+
 	// SDL3 reports touch finger positions normalized to the window (0-1), but GetPointerPosition() needs to
 	// return the same window-relative pixel space SDL_GetMouseState already uses for the mouse - this is the
 	// one piece of window info Input needs to do that conversion. A plain width/height setter (not a stored
@@ -376,7 +387,12 @@ private:
 	// plain uint64_t so this header doesn't need <SDL3/SDL_touch.h>) - lets Update()'s mouse-motion poll avoid
 	// stomping a touch-driven position with a stale/synthetic mouse position on platforms that also emit
 	// synthetic mouse events for touch.
+	// The keyboard keys an action binding may use right now - none while text entry is active.
+	const std::set<SDL_Scancode>& KeyboardBindings(const std::set<SDL_Scancode>& keycodes) const;
+
 	bool m_hasActiveTouch = false;
+	bool m_textInputActive = false;
+	std::string m_typedText;
 	uint64_t m_activeTouchId = 0;
 	// See SetWindowSize's own comment - defaults to 1x1 rather than 0x0 purely to avoid a multiply-by-zero
 	// producing an always-(0,0) touch position if a touch event somehow arrives before the first SetWindowSize

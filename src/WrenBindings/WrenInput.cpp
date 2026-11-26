@@ -189,6 +189,36 @@ void wren_InputLoadInputBindings(WrenVM* vm)
 	input.LoadInputBindings(filePath);
 }
 
+// Input.startTextInput() - typed characters start arriving through takeTypedText(), and keyboard keys stop
+// driving input actions until stopTextInput() (see Input::StartTextInput).
+void wren_InputStartTextInput(WrenVM* vm)
+{
+	Struktur::GameContext* context = static_cast<Struktur::GameContext*>(wrenGetUserData(vm));
+	context->GetInput().StartTextInput(context->GetWindow().GetSDLWindow());
+}
+
+// Input.stopTextInput()
+void wren_InputStopTextInput(WrenVM* vm)
+{
+	Struktur::GameContext* context = static_cast<Struktur::GameContext*>(wrenGetUserData(vm));
+	context->GetInput().StopTextInput(context->GetWindow().GetSDLWindow());
+}
+
+// Input.isTextInputActive -> bool
+void wren_InputIsTextInputActive(WrenVM* vm)
+{
+	Struktur::GameContext* context = static_cast<Struktur::GameContext*>(wrenGetUserData(vm));
+	wrenSetSlotBool(vm, 0, context->GetInput().IsTextInputActive());
+}
+
+// Input.takeTypedText() -> String typed since the last call (UTF-8, may be empty)
+void wren_InputTakeTypedText(WrenVM* vm)
+{
+	Struktur::GameContext* context = static_cast<Struktur::GameContext*>(wrenGetUserData(vm));
+	const std::string typed        = context->GetInput().TakeTypedText();
+	wrenSetSlotString(vm, 0, typed.c_str());
+}
+
 // Input.activeDevice -> "keyboard" | "gamepad"
 void wren_InputActiveDevice(WrenVM* vm)
 {
@@ -281,6 +311,14 @@ WREN_BINDING_MODULE(Input)
 	WREN_CLASS_STATIC(registry, "input", "Input", "loadInputBindings(_)", wren_InputLoadInputBindings,
 	                  "Loads the input bindings.");
 
+	WREN_CLASS_STATIC(registry, "input", "Input", "startTextInput()", wren_InputStartTextInput,
+	                  "Starts text entry: typed characters arrive via takeTypedText() and keyboard keys stop driving actions.");
+	WREN_CLASS_STATIC(registry, "input", "Input", "stopTextInput()", wren_InputStopTextInput,
+	                  "Ends text entry; keyboard keys drive actions again.");
+	WREN_CLASS_STATIC(registry, "input", "Input", "isTextInputActive", wren_InputIsTextInputActive,
+	                  "True between startTextInput() and stopTextInput().");
+	WREN_CLASS_STATIC(registry, "input", "Input", "takeTypedText()", wren_InputTakeTypedText,
+	                  "Text typed since the last call (UTF-8, may be empty).");
 	WREN_CLASS_STATIC(registry, "input", "Input", "activeDevice", wren_InputActiveDevice,
 	                  "The device used most recently: \"keyboard\" (keyboard or mouse) or \"gamepad\".");
 	WREN_CLASS_STATIC(registry, "input", "Input", "gamepadFamily", wren_InputGamepadFamily,

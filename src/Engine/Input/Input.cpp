@@ -4,6 +4,7 @@
 #include <SDL3/SDL_touch.h>
 
 #include <cmath>
+#include <utility>
 
 #include "InputConfigLoader.h"
 #include "InputMaps.h"
@@ -847,6 +848,12 @@ void Input::HandleEvent(const SDL_Event& event)
 	// explicit non-goals) rather than fighting the first for control of the pointer.
 	switch (event.type)
 	{
+		case SDL_EVENT_TEXT_INPUT:
+			if (m_textInputActive && event.text.text != nullptr)
+			{
+				m_typedText += event.text.text;
+			}
+			break;
 		case SDL_EVENT_FINGER_DOWN:
 			if (!m_hasActiveTouch)
 			{
@@ -1123,8 +1130,8 @@ bool Input::CheckBinding(const std::string& input, bool (Input::*keyCheck)(SDL_S
 		return false;
 	}
 
-	// Check keyboard inputs
-	for (auto keycode : it->second.keycodes)
+	// Check keyboard inputs (not while text entry owns the keyboard - see StartTextInput)
+	for (auto keycode : KeyboardBindings(it->second.keycodes))
 	{
 		if ((this->*keyCheck)(keycode))
 		{
@@ -1178,8 +1185,8 @@ float Input::CalculateAxisValue(const AxisBinding& binding)
 {
 	float positive = 0.0f;
 
-	// Check positive keyboard inputs
-	for (auto keycode : binding.positive.keycodes)
+	// Check positive keyboard inputs (not while text entry owns the keyboard)
+	for (auto keycode : KeyboardBindings(binding.positive.keycodes))
 	{
 		if (IsKeyDown(keycode))
 		{
@@ -1203,8 +1210,8 @@ float Input::CalculateAxisValue(const AxisBinding& binding)
 
 	float negative = 0.0f;
 
-	// Check negative keyboard inputs
-	for (auto keycode : binding.negative.keycodes)
+	// Check negative keyboard inputs (not while text entry owns the keyboard)
+	for (auto keycode : KeyboardBindings(binding.negative.keycodes))
 	{
 		if (IsKeyDown(keycode))
 		{
@@ -1268,8 +1275,8 @@ float Input::GetInputVariable(const std::string& input)
 
 	float value = 0.0f;
 
-	// Check button bindings (keyboard)
-	for (auto keycode : it->second.buttonBindings.keycodes)
+	// Check button bindings (keyboard - not while text entry owns the keyboard)
+	for (auto keycode : KeyboardBindings(it->second.buttonBindings.keycodes))
 	{
 		if (IsKeyDown(keycode))
 		{
@@ -1329,3 +1336,47 @@ glm::vec2 Input::GetInputAxis2(const std::string& input)
 }
 
 }  // namespace Struktur::Input
+
+// ============================================================================
+// TEXT ENTRY
+// ============================================================================
+
+const std::set<SDL_Scancode>& Struktur::Input::Input::KeyboardBindings(const std::set<SDL_Scancode>& keycodes) const
+{
+	static const std::set<SDL_Scancode> NO_KEYS;
+	return m_textInputActive ? NO_KEYS : keycodes;
+}
+
+void Struktur::Input::Input::StartTextInput(SDL_Window* window)
+{
+	m_typedText.clear();
+	m_textInputActive = true;
+	if (window != nullptr && !::SDL_StartTextInput(window))
+	{
+		DEBUG_WARNING("SDL_StartTextInput failed: %s", ::SDL_GetError());
+	}
+}
+
+void Struktur::Input::Input::StopTextInput(SDL_Window* window)
+{
+	if (!m_textInputActive)
+	{
+		return;
+	}
+	m_textInputActive = false;
+	m_typedText.clear();
+	if (window != nullptr)
+	{
+		::SDL_StopTextInput(window);
+	}
+}
+
+bool Struktur::Input::Input::IsTextInputActive() const
+{
+	return m_textInputActive;
+}
+
+std::string Struktur::Input::Input::TakeTypedText()
+{
+	return std::exchange(m_typedText, std::string());
+}
