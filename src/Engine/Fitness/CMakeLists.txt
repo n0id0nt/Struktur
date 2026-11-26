@@ -109,3 +109,11 @@ if(STRUKTUR_BUILD_TESTS)
     enable_testing()
     add_test(NAME StrukturFitnessTests COMMAND StrukturFitnessTests)
 endif()
+
+if(STRUKTUR_BUILD_TOOLS)
+    add_executable(trainer_probe
+        ${STRUKTUR_REPO_ROOT}/tools/trainer_probe/main.cpp
+        ${STRUKTUR_FITNESS_LOGGER_SOURCE}
+    )
+    target_link_libraries(trainer_probe PRIVATE StrukturFitness)
+endif()
