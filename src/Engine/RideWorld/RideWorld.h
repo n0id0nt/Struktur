@@ -99,6 +99,7 @@ public:
 	const std::vector<ChunkMesh*>& GetChunks() const;
 	std::shared_ptr<const PropTypeTable> GetPropTypes() const;
 	BiomeSequence& GetBiomeSequence();
+	const std::vector<BiomeDefinition>& GetBiomes() const;
 	const BiomeLook& GetLook() const;
 	BiomeBlend GetBlend() const;
 	const WorldCamera& GetCamera() const;
@@ -109,6 +110,8 @@ public:
 	double GetTimeSeconds() const;
 	// Puts a finish banner `aheadMeters` in front of the rider (e.g. when a workout finishes).
 	void PlaceBanner(double aheadMeters);
+	// Moves the rider to `distance` along the same seeded road (development: screenshots of far-away scenery).
+	void JumpTo(double distance);
 	// Builds every chunk around the rider now (screenshots, tests).
 	void WaitForChunks();
 

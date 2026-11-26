@@ -1,5 +1,6 @@
 #include "Game.h"
 
+#include <cstdio>
 #include <memory>
 #include <string>
 #include <variant>
@@ -25,6 +26,7 @@
 #include "Engine/ECS/System/EventSystem.h"
 #include "Engine/ECS/System/FitnessSystem.h"
 #include "Engine/ECS/System/RideSystem.h"
+#include "Engine/ECS/System/RideWorldRenderSystem.h"
 #include "Engine/ECS/System/HierarchySystem.h"
 #include "Engine/ECS/System/ParticleSystem.h"
 #include "Engine/ECS/System/PhysicsSystem.h"
@@ -194,6 +196,19 @@ bool Struktur::InitialiseGame(GameContext& context)
 	context.GetFitnessManager().SetRegistryPath(saveDir + "/fitness_devices.json");
 	context.GetFitnessManager().LoadRegistry();
 	context.GetRideService().Initialise(saveDir);
+	if (Core::CommandLine::HasFlag("--list-missing-assets"))
+	{
+		// Prints every ride-world art role still using a placeholder (Markdown, same table as docs/missing-assets.md)
+		// and quits before the first frame.
+		const std::string table = context.GetRideService().GetMissingAssetsMarkdown();
+		std::printf("%s", table.c_str());
+		std::fflush(stdout);
+		for (const std::string& line : context.GetRideService().GetMissingAssetLines())
+		{
+			DEBUG_INFO("missing %s", line.c_str());
+		}
+		gameData.gameState = Core::GameState::QUIT;
+	}
 	if (Core::CommandLine::HasFlag("--demo"))
 	{
 		// Demo: the simulated trainer and strap are "remembered" in memory only, so pairing connects them at once and
@@ -250,6 +265,8 @@ bool Struktur::InitialiseGame(GameContext& context)
 	systemManager.AddUpdateSystem<System::UISystem>();
 	systemManager.AddUpdateSystem<System::SoundSystem>();
 	systemManager.AddRenderSystem<System::SpriteRenderSystem>();
+	// Ride world: its own bgfx views, ordered before the UI's (see GraphicsDevice).
+	systemManager.AddRenderSystem<System::RideWorldRenderSystem>();
 	// Wren rendering not used for anything at the moment so commenting it out
 // #if defined(PLATFORM_WEB)
 //	systemManager.AddRenderSystem<System::WrenStateRenderSystem>();

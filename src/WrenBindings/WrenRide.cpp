@@ -26,6 +26,7 @@ using Struktur::Callback::Variant;
 using Struktur::Callback::VariantList;
 using Struktur::Callback::VariantMap;
 namespace Ride = Struktur::Ride;
+namespace RideWorld = Struktur::RideWorld;
 
 static Struktur::GameContext& GetContext(WrenVM* vm)
 {
@@ -129,7 +130,95 @@ static void wren_RideSettings(WrenVM* vm)
 	map.items["dragArea"]          = settings.speed.dragAreaSquareMeters;
 	map.items["rollingResistance"] = settings.speed.rollingResistance;
 	map.items["targetBandPercent"] = settings.targetBandPercent;
+	// Procedural world ("world" section of ride_settings.json).
+	const RideWorld::WorldSettings& world = settings.world;
+	map.items["worldEnabled"]        = world.enabled;
+	map.items["worldSeed"]           = (double)world.seed;
+	map.items["worldQuality"]        = std::string(RideWorld::ToString(world.quality));
+	map.items["worldGradeSource"]    = std::string(RideWorld::ToString(world.gradeSource));
+	map.items["worldBiome"]          = world.biome;
+	map.items["worldComfortMode"]    = world.comfortMode;
+	map.items["worldCadenceBob"]     = world.cadenceBob;
+	map.items["worldSpeedFov"]       = world.speedFov;
+	map.items["worldNearestUpscale"] = world.nearestUpscale;
+	map.items["worldFlatShading"]    = world.flatShading;
+	map.items["worldBandedFog"]      = world.bandedFog;
+	map.items["worldDither"]         = world.dither;
+	map.items["worldScanlines"]      = world.scanlines;
+	map.items["worldDebugOverlay"]   = world.debugOverlay;
+	map.items["worldCameraHeight"]   = world.cameraHeightMeters;
+	map.items["worldMaxGrade"]       = world.maxGradePercent;
+	map.items["worldLowResHeight"]   = world.lowResHeight;
 	ReturnVariant(vm, map);
+}
+
+// world* keys of Ride.setSetting. Returns false for an unknown key / wrong type.
+static bool SetWorldSetting(RideWorld::WorldSettings& world, const std::string& key, WrenVM* vm, WrenType type)
+{
+	if (type == WREN_TYPE_STRING)
+	{
+		const std::string value = wrenGetSlotString(vm, 2);
+		if (key == "worldQuality")
+		{
+			world.quality = RideWorld::QualityFromString(value, world.quality);
+			return true;
+		}
+		if (key == "worldGradeSource")
+		{
+			world.gradeSource = RideWorld::GradeSourceFromString(value, world.gradeSource);
+			return true;
+		}
+		if (key == "worldBiome")
+		{
+			world.biome = value;
+			return true;
+		}
+		return false;
+	}
+	if (type == WREN_TYPE_NUM)
+	{
+		const double value = wrenGetSlotDouble(vm, 2);
+		if (key == "worldSeed")
+		{
+			world.seed = (uint32_t)std::clamp(value, 0.0, 4294967295.0);
+			return true;
+		}
+		if (key == "worldCameraHeight")
+		{
+			world.cameraHeightMeters = value;
+			return true;
+		}
+		if (key == "worldMaxGrade")
+		{
+			world.maxGradePercent = value;
+			return true;
+		}
+		if (key == "worldLowResHeight")
+		{
+			world.lowResHeight = (int)value;
+			return true;
+		}
+		return false;
+	}
+	if (type == WREN_TYPE_BOOL)
+	{
+		const bool value = wrenGetSlotBool(vm, 2);
+		bool* const flags[] = {&world.enabled,        &world.comfortMode, &world.cadenceBob, &world.speedFov,
+		                       &world.nearestUpscale, &world.flatShading, &world.bandedFog,  &world.dither,
+		                       &world.scanlines,      &world.debugOverlay, &world.demoPacer};
+		const char* const names[] = {"worldEnabled",        "worldComfortMode", "worldCadenceBob", "worldSpeedFov",
+		                             "worldNearestUpscale", "worldFlatShading", "worldBandedFog",  "worldDither",
+		                             "worldScanlines",      "worldDebugOverlay", "worldDemoPacer"};
+		for (size_t index = 0; index < sizeof(names) / sizeof(names[0]); ++index)
+		{
+			if (key == names[index])
+			{
+				*flags[index] = value;
+				return true;
+			}
+		}
+	}
+	return false;
 }
 
 // Ride.setSetting(key, value) -> bool. Call saveSettings() to persist.
@@ -139,6 +228,21 @@ static void wren_RideSetSetting(WrenVM* vm)
 	const std::string key        = wrenGetSlotType(vm, 1) == WREN_TYPE_STRING ? wrenGetSlotString(vm, 1) : "";
 	const WrenType type          = wrenGetSlotType(vm, 2);
 	bool ok                      = true;
+	if (key.rfind("world", 0) == 0)
+	{
+		ok = SetWorldSetting(settings.world, key, vm, type);
+		settings.Validate();
+		if (ok)
+		{
+			GetService(vm).ApplyWorldSettings();
+		}
+		else
+		{
+			DEBUG_WARNING("Ride.setSetting: unknown setting or wrong value type for '%s'", key.c_str());
+		}
+		wrenSetSlotBool(vm, 0, ok);
+		return;
+	}
 	if (type == WREN_TYPE_STRING)
 	{
 		const std::string value = wrenGetSlotString(vm, 2);
@@ -282,6 +386,51 @@ static void wren_RideCommandLineWorkout(WrenVM* vm)
 static void wren_RideIsDemo(WrenVM* vm)
 {
 	wrenSetSlotBool(vm, 0, GetService(vm).IsDemo());
+}
+
+// Ride.worldActive() -> bool: a procedural world is drawn behind the ride HUD.
+static void wren_RideWorldActive(WrenVM* vm)
+{
+	wrenSetSlotBool(vm, 0, GetService(vm).GetWorld() != nullptr);
+}
+
+// Ride.biomes() -> list of biome ids (assets/World/Biomes).
+static void wren_RideBiomes(WrenVM* vm)
+{
+	VariantList list;
+	for (const std::string& id : GetService(vm).GetBiomeIds())
+	{
+		list.items.push_back(id);
+	}
+	ReturnVariant(vm, list);
+}
+
+// Ride.worldJumpTo(distance) - development helper: moves the rider along the same seeded road.
+static void wren_RideWorldJumpTo(WrenVM* vm)
+{
+	RideWorld::RideWorld* world = GetService(vm).GetWorld();
+	if (world != nullptr && wrenGetSlotType(vm, 1) == WREN_TYPE_NUM)
+	{
+		world->JumpTo(std::clamp(wrenGetSlotDouble(vm, 1), 0.0, 1.0e7));
+	}
+}
+
+// Ride.worldInfo() -> map (biome, distance, grade) or null when there is no world.
+static void wren_RideWorldInfo(WrenVM* vm)
+{
+	RideWorld::RideWorld* world = GetService(vm).GetWorld();
+	if (world == nullptr)
+	{
+		wrenSetSlotNull(vm, 0);
+		return;
+	}
+	const RideWorld::BiomeBlend blend               = world->GetBlend();
+	const std::vector<RideWorld::BiomeDefinition>& biomes = world->GetBiomes();
+	VariantMap map;
+	map.items["biome"]    = biomes.empty() ? std::string() : biomes[(size_t)blend.from].name;
+	map.items["distance"] = world->GetDistance();
+	map.items["grade"]    = world->GetRoadGradePercent();
+	ReturnVariant(vm, map);
 }
 
 // ============================================================================
@@ -767,6 +916,13 @@ WREN_BINDING_MODULE(Ride)
 	WREN_CLASS_STATIC(registry, "ride", "Ride", "commandLineWorkout()", wren_RideCommandLineWorkout,
 	                  "A workout path from the command line, returned once (else null).");
 	WREN_CLASS_STATIC(registry, "ride", "Ride", "isDemo()", wren_RideIsDemo, "True when started with --demo.");
+	WREN_CLASS_STATIC(registry, "ride", "Ride", "worldActive()", wren_RideWorldActive,
+	                  "True while a procedural world is drawn behind the ride HUD.");
+	WREN_CLASS_STATIC(registry, "ride", "Ride", "biomes()", wren_RideBiomes, "Biome ids from assets/World/Biomes.");
+	WREN_CLASS_STATIC(registry, "ride", "Ride", "worldJumpTo(_)", wren_RideWorldJumpTo,
+	                  "Development: moves the rider to a distance (m) along the same seeded road.");
+	WREN_CLASS_STATIC(registry, "ride", "Ride", "worldInfo()", wren_RideWorldInfo,
+	                  "The world's current biome name, distance and road grade, or null.");
 	WREN_CLASS_STATIC(registry, "ride", "Ride", "startFreeRide(_,_,_,_,_)", wren_RideStartFreeRide,
 	                  "Starts a Free Ride (name, ftpWatts, maxHeartRateBpm, thresholdHeartRateBpm, weightKg).");
 	WREN_CLASS_STATIC(

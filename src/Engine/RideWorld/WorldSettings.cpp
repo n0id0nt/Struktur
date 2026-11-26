@@ -159,6 +159,7 @@ WorldSettings WorldSettings::FromJson(const nlohmann::json& section, std::string
 	ReadValue(section, "shoulder", settings.shoulderMeters);
 	ReadValue(section, "cameraHeight", settings.cameraHeightMeters);
 	ReadValue(section, "cameraLookAhead", settings.cameraLookAheadMeters);
+	ReadValue(section, "cameraDistance", settings.cameraDistanceMeters);
 	ReadValue(section, "comfortMode", settings.comfortMode);
 	ReadValue(section, "cadenceBob", settings.cadenceBob);
 	ReadValue(section, "speedFov", settings.speedFov);
@@ -192,6 +193,7 @@ nlohmann::json WorldSettings::ToJson() const
 	section["shoulder"]               = shoulderMeters;
 	section["cameraHeight"]           = cameraHeightMeters;
 	section["cameraLookAhead"]        = cameraLookAheadMeters;
+	section["cameraDistance"]         = cameraDistanceMeters;
 	section["comfortMode"]            = comfortMode;
 	section["cadenceBob"]             = cadenceBob;
 	section["speedFov"]               = speedFov;
@@ -221,6 +223,7 @@ void WorldSettings::Validate()
 	shoulderMeters         = std::clamp(shoulderMeters, 0.0, 4.0);
 	cameraHeightMeters     = std::clamp(cameraHeightMeters, 1.5, 3.0);
 	cameraLookAheadMeters  = std::clamp(cameraLookAheadMeters, 5.0, 80.0);
+	cameraDistanceMeters   = std::clamp(cameraDistanceMeters, 3.0, 15.0);
 	fieldOfViewDegrees     = std::clamp(fieldOfViewDegrees, 40.0, 90.0);
 	fogBands               = std::clamp(fogBands, 2, 32);
 	paletteLevels          = std::clamp(paletteLevels, 2, 32);

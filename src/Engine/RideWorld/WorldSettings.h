@@ -62,6 +62,7 @@ struct WorldSettings
 
 	// Camera.
 	double cameraHeightMeters      = 2.2;  // 1.5 - 3
+	double cameraDistanceMeters    = 7.0;  // behind the rider, who is drawn on the road in front of the camera
 	double cameraLookAheadMeters   = 22.0;
 	bool comfortMode               = false;  // disables every camera motion effect below
 	bool cadenceBob                = false;

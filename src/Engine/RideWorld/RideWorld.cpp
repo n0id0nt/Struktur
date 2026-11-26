@@ -10,7 +10,6 @@ namespace Struktur::RideWorld
 static constexpr double PI                     = 3.14159265358979323846;
 static constexpr double CHUNKS_BEHIND_METERS   = 64.0;
 static constexpr double HISTORY_METERS         = 200.0;
-static constexpr double CAMERA_BEHIND_METERS   = 4.0;
 static constexpr double LOOK_SMOOTHING_SECONDS = 0.35;
 static constexpr double FOV_SMOOTHING_SECONDS  = 1.2;
 static constexpr double BOB_AMPLITUDE_METERS   = 0.025;
@@ -263,7 +262,7 @@ void RideWorld::UpdateCamera(const RideWorldInputs& inputs)
 {
 	const double delta      = std::clamp(inputs.deltaSeconds, 0.0, 0.25);
 	const double origin     = GetHeightOrigin();
-	const double cameraAt   = std::max(m_route->GetStart(), m_distance - CAMERA_BEHIND_METERS);
+	const double cameraAt   = std::max(m_route->GetStart(), m_distance - m_settings.cameraDistanceMeters);
 	const RouteSample eye   = m_route->SampleAt(cameraAt);
 	const double lookAt     = m_distance + m_settings.cameraLookAheadMeters;
 	const RouteSample focus = m_route->SampleAt(lookAt);
@@ -360,6 +359,11 @@ BiomeSequence& RideWorld::GetBiomeSequence()
 	return *m_sequence;
 }
 
+const std::vector<BiomeDefinition>& RideWorld::GetBiomes() const
+{
+	return *m_biomes;
+}
+
 const BiomeLook& RideWorld::GetLook() const
 {
 	return m_look;
@@ -403,6 +407,12 @@ double RideWorld::GetTimeSeconds() const
 void RideWorld::PlaceBanner(double aheadMeters)
 {
 	m_banners.push_back(m_distance + aheadMeters);
+}
+
+void RideWorld::JumpTo(double distance)
+{
+	m_distance = std::max(0.0, distance);
+	Rebuild();
 }
 
 void RideWorld::WaitForChunks()

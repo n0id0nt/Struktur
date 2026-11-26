@@ -19,6 +19,14 @@ class Ride {
     foreign static commandLineWorkout()
     // True when started with --demo.
     foreign static isDemo()
+    // True while a procedural world is drawn behind the ride HUD.
+    foreign static worldActive()
+    // Biome ids from assets/World/Biomes.
+    foreign static biomes()
+    // The world's current biome name, distance and road grade, or null.
+    foreign static worldInfo()
+    // Development: moves the rider to a distance (m) along the same seeded road.
+    foreign static worldJumpTo(arg0)
     // Starts a Free Ride (name, ftpWatts, maxHeartRateBpm, thresholdHeartRateBpm, weightKg).
     foreign static startFreeRide(arg0,arg1,arg2,arg3,arg4)
     // Starts a workout (id, name, ftpWatts, maxHeartRateBpm, thresholdHeartRateBpm, weightKg) -> map.

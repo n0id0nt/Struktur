@@ -217,7 +217,12 @@ if(PLATFORM_DESKTOP OR PLATFORM_WEB)
         # NAME must have no dots - shaderc's bin2c step derives a C array name from the shader filename. Default
         # PROFILES (see bgfxToolUtils.cmake) includes 100_es (GLES2/WebGL-compatible) alongside the desktop
         # profiles, for free, on every desktop build - that's what web's bgfx picks up at runtime below.
+        # Optional second argument: a varying.def.sc other than the shared one (the ride world shaders have their own).
         function(struktur_compile_shader NAME)
+            set(VARYING_FILE ${STRUKTUR_SHADER_DIR}/varying.def.sc)
+            if(ARGC GREATER 1)
+                set(VARYING_FILE ${STRUKTUR_SHADER_DIR}/${ARGV1})
+            endif()
             # DEBUG requests shaderc's --debug (embeds source-level debug info, e.g. into the compiled DXBC/DXIL
             # blob on Windows) so a GPU capture tool (RenderDoc) can show real disassembly/source and let you
             # step a shader's execution with named variables instead of raw, symbol-free bytecode. Passed
@@ -230,7 +235,8 @@ if(PLATFORM_DESKTOP OR PLATFORM_WEB)
             bgfx_compile_shaders(
                 TYPE VERTEX
                 SHADERS ${STRUKTUR_SHADER_DIR}/vs_${NAME}.sc
-                VARYING_DEF ${STRUKTUR_SHADER_DIR}/varying.def.sc
+                VARYING_DEF ${VARYING_FILE}
+                INCLUDE_DIRS ${STRUKTUR_SHADER_DIR}
                 OUTPUT_DIR ${STRUKTUR_SHADER_OUTPUT_DIR}
                 OUT_FILES_VAR ${NAME}_VS_OUT
                 AS_HEADERS
@@ -239,7 +245,8 @@ if(PLATFORM_DESKTOP OR PLATFORM_WEB)
             bgfx_compile_shaders(
                 TYPE FRAGMENT
                 SHADERS ${STRUKTUR_SHADER_DIR}/fs_${NAME}.sc
-                VARYING_DEF ${STRUKTUR_SHADER_DIR}/varying.def.sc
+                VARYING_DEF ${VARYING_FILE}
+                INCLUDE_DIRS ${STRUKTUR_SHADER_DIR}
                 OUTPUT_DIR ${STRUKTUR_SHADER_OUTPUT_DIR}
                 OUT_FILES_VAR ${NAME}_FS_OUT
                 AS_HEADERS
@@ -251,6 +258,12 @@ if(PLATFORM_DESKTOP OR PLATFORM_WEB)
         struktur_compile_shader(spriteCoverage)
         struktur_compile_shader(richTextAnim)
         struktur_compile_shader(soulEffect)
+        # Procedural ride world (Engine/Renderer/RideWorldRenderer.cpp).
+        struktur_compile_shader(rideTerrain varying_rideWorld.def.sc)
+        struktur_compile_shader(rideRoad varying_rideWorld.def.sc)
+        struktur_compile_shader(rideProp varying_rideWorld.def.sc)
+        struktur_compile_shader(rideSky varying_rideWorld.def.sc)
+        struktur_compile_shader(ridePost varying_rideWorld.def.sc)
     else()
         # Web doesn't (can't) invoke shaderc itself - just reference whatever a prior desktop build already
         # generated on disk as plain existing sources (see the PLATFORM_DESKTOP branch above).
@@ -353,6 +366,7 @@ if(PLATFORM_DESKTOP OR PLATFORM_WEB)
         src/Engine/Renderer/TileChunk.h
         src/Engine/Renderer/TileChunkBuilder.h      src/Engine/Renderer/TileChunkBuilder.cpp
         src/Engine/Renderer/UIRenderer.h            src/Engine/Renderer/UIRenderer.cpp
+        src/Engine/Renderer/RideWorldRenderer.h     src/Engine/Renderer/RideWorldRenderer.cpp
         ${STRUKTUR_SHADER_OUTPUTS}
     )
     source_group("Shaders/Compiled" FILES ${STRUKTUR_SHADER_OUTPUTS})
@@ -535,6 +549,7 @@ set(SOURCES
     src/Engine/ECS/System/SoundSystem.h         src/Engine/ECS/System/SoundSystem.cpp
     src/Engine/ECS/System/FitnessSystem.h       src/Engine/ECS/System/FitnessSystem.cpp
     src/Engine/ECS/System/RideSystem.h          src/Engine/ECS/System/RideSystem.cpp
+    src/Engine/ECS/System/RideWorldRenderSystem.h src/Engine/ECS/System/RideWorldRenderSystem.cpp
     src/Engine/RideIntegration/RideService.h    src/Engine/RideIntegration/RideService.cpp
     src/Engine/ECS/System/EventSystem.h         src/Engine/ECS/System/EventSystem.cpp
 

@@ -40,6 +40,14 @@ public:
 	static constexpr bgfx::ViewId EditorViewId = 4;
 #endif
 
+	// Procedural ride world (RideWorldRenderer): sky and scene render into a low-resolution framebuffer, the rider
+	// sprite overlays it, then RidePostViewId upscales it into the world target. bgfx::setViewOrder (see Initialise)
+	// runs these after WorldViewId (which clears the target) and before DebugViewId/UIViewId, so the HUD draws on top.
+	static constexpr bgfx::ViewId RideSkyViewId     = 10;
+	static constexpr bgfx::ViewId RideSceneViewId   = 11;
+	static constexpr bgfx::ViewId RideOverlayViewId = 12;
+	static constexpr bgfx::ViewId RidePostViewId    = 13;
+
 	GraphicsDevice()  = default;
 	~GraphicsDevice() = default;
 
@@ -76,6 +84,10 @@ public:
 	void ResetWorldRenderTarget();
 	// Re-applies the last framebuffer passed to SetWorldRenderTarget (no-op if none was ever set).
 	void RestoreWorldRenderTarget();
+
+	// Where the world/UI views currently render: the redirect framebuffer (editor game viewport) or the backbuffer
+	// (invalid handle), and its size.
+	bgfx::FrameBufferHandle GetWorldTarget(uint16_t& width, uint16_t& height) const;
 
 	// Clears the world view and marks the start of a frame's draw submissions.
 	void BeginFrame();

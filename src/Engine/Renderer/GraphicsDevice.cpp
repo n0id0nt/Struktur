@@ -53,6 +53,13 @@ void Struktur::Renderer::GraphicsDevice::Initialise(void* nativeWindowHandle, in
 	bgfx::setViewMode(EditorViewId, bgfx::ViewMode::Sequential);
 #endif
 
+	// Execution order (position -> view id): World, the ride world's sky/scene/overlay/post, then Debug, UI, DebugUI,
+	// Editor. Ids 5-9 keep their places after those.
+	static const bgfx::ViewId viewOrder[] = {WorldViewId,       RideSkyViewId, RideSceneViewId, RideOverlayViewId,
+	                                         RidePostViewId,    DebugViewId,   UIViewId,        DebugUIViewId,
+	                                         4, 5, 6, 7, 8, 9};
+	bgfx::setViewOrder(0, static_cast<uint16_t>(sizeof(viewOrder) / sizeof(viewOrder[0])), viewOrder);
+
 	DEBUG_INFO("bgfx initialised, renderer: %s", bgfx::getRendererName(bgfx::getRendererType()));
 	m_initialised = true;
 }
@@ -160,6 +167,19 @@ void Struktur::Renderer::GraphicsDevice::RestoreWorldRenderTarget()
 		bgfx::setViewRect(UIViewId, 0, 0, m_worldFrameBufferWidth, m_worldFrameBufferHeight);
 		bgfx::setViewRect(DebugUIViewId, 0, 0, m_worldFrameBufferWidth, m_worldFrameBufferHeight);
 	}
+}
+
+bgfx::FrameBufferHandle Struktur::Renderer::GraphicsDevice::GetWorldTarget(uint16_t& width, uint16_t& height) const
+{
+	if (m_worldRenderTargetActive && bgfx::isValid(m_worldFrameBuffer))
+	{
+		width  = m_worldFrameBufferWidth;
+		height = m_worldFrameBufferHeight;
+		return m_worldFrameBuffer;
+	}
+	width  = static_cast<uint16_t>(m_width);
+	height = static_cast<uint16_t>(m_height);
+	return BGFX_INVALID_HANDLE;
 }
 
 void Struktur::Renderer::GraphicsDevice::BeginFrame()

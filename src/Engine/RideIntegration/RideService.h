@@ -8,10 +8,19 @@
 #include "Engine/Ride/RideSession.h"
 #include "Engine/Ride/RideSettings.h"
 #include "Engine/Ride/Workout.h"
+#include "Engine/RideWorld/AssetManifest.h"
+#include "Engine/RideWorld/Biome.h"
+#include "Engine/RideWorld/RideWorld.h"
+#include "Engine/RideWorld/SpriteDescriptor.h"
 
 namespace Struktur
 {
 class GameContext;
+
+namespace Renderer
+{
+class RideWorldRenderer;
+}
 
 namespace RideIntegration
 {
@@ -31,6 +40,9 @@ struct WorkoutListing
 class RideService
 {
 public:
+	RideService();
+	~RideService();
+
 	// saveDirectory: the OS path the engine mounts as its write dir. Loads ride_settings.json and makes sure the
 	// Workouts/ and Rides/ folders exist there.
 	void Initialise(const std::string& saveDirectory);
@@ -58,14 +70,38 @@ public:
 
 	void Update(GameContext& context, double now);
 
+	// --- procedural world (docs/RideWorld.md) ---------------------------------------------------------------------
+	// The world behind the active ride, or null (world disabled in settings, no biome data, or no ride).
+	RideWorld::RideWorld* GetWorld();
+	// Re-applies settings.world to the running world (creating or dropping it when "enabled" changed).
+	void ApplyWorldSettings();
+	// Draws the world (RideWorldRenderSystem, every frame). Creates the renderer's GPU resources on first use.
+	void RenderWorld(GameContext& context);
+	const std::vector<std::string>& GetBiomeIds() const;
+	// Every manifest role whose real file is missing, as log lines / a Markdown table (--list-missing-assets).
+	std::vector<std::string> GetMissingAssetLines() const;
+	std::string GetMissingAssetsMarkdown() const;
+
 private:
 	std::string MakeOutputBasePath(const std::string& title) const;
+	void LoadWorldData();
+	void CreateWorld();
+	void UpdateWorld(double now);
 
 	std::string m_saveDirectory;
 	Ride::RideSettings m_settings;
 	std::unique_ptr<Ride::RideSession> m_session;
 	bool m_commandLineWorkoutTaken = false;
 	double m_lastTickNow           = 0.0;
+
+	RideWorld::BiomeList m_biomes;
+	std::vector<std::string> m_biomeIds;
+	RideWorld::AssetManifest m_manifest;
+	RideWorld::SpriteDescriptor m_spriteDescriptor;
+	std::unique_ptr<RideWorld::RideWorld> m_world;
+	std::unique_ptr<RideWorld::DemoPacer> m_pacer;
+	std::unique_ptr<Renderer::RideWorldRenderer> m_worldRenderer;
+	double m_lastWorldNow = 0.0;
 };
 }  // namespace RideIntegration
 }  // namespace Struktur
