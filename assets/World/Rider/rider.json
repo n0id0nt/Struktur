@@ -1,0 +1,16 @@
+{
+  "comment": "Rider sprite descriptor (docs/RideWorld.md#rider-sprite). Layered: each layer is a manifest role, drawn in this order. Frames are frameSize; anchor = the pixel on the road between the wheels.",
+  "kind": "layered",
+  "frameSize": [64, 96],
+  "framesPerRevolution": 12,
+  "anchor": [32, 94],
+  "screenHeight": 0.32,
+  "heightMeters": 1.85,
+  "lean": true,
+  "layers": [
+    { "name": "wheels", "role": "rider_wheel", "motion": "scroll", "rect": [29, 58, 6, 38] },
+    { "name": "frame", "role": "rider_frame", "motion": "static" },
+    { "name": "legs", "role": "rider_legs", "motion": "crank", "rows": { "pedal": 0, "outOfSaddle": 1, "still": 2 }, "coastColumn": 0, "idleColumn": 1 },
+    { "name": "torso", "role": "rider_torso", "motion": "static", "outOfSaddleOffsetY": -7 }
+  ]
+}
