@@ -18,8 +18,6 @@ using namespace Struktur::Fitness;
 using Struktur::Fitness::Ftms::OpCode;
 using Struktur::Fitness::Ftms::ResultCode;
 
-namespace
-{
 // Drives a device and the fake central with a simulated clock. Each Step runs the central's deferred callbacks
 // and one device Update, twice, so a request and its reply both land within one step.
 struct Harness
@@ -77,13 +75,13 @@ struct Harness
 	}
 };
 
-size_t CountOpCode(const FakeFtmsTrainer& trainer, OpCode opCode)
+static size_t CountOpCode(const FakeFtmsTrainer& trainer, OpCode opCode)
 {
 	const std::vector<OpCode> opCodes = trainer.GetReceivedOpCodes();
 	return static_cast<size_t>(std::count(opCodes.begin(), opCodes.end(), opCode));
 }
 
-FtmsTrainerSettings FastSettings()
+static FtmsTrainerSettings FastSettings()
 {
 	FtmsTrainerSettings settings;
 	settings.reconnect.initialDelaySeconds = 1.0;
@@ -93,12 +91,11 @@ FtmsTrainerSettings FastSettings()
 	return settings;
 }
 
-bool IsConnectedWithControl(const FtmsTrainer& trainer)
+static bool IsConnectedWithControl(const FtmsTrainer& trainer)
 {
 	return trainer.GetConnectionState() == ConnectionState::CONNECTED &&
 	       trainer.GetControlState() == ControlState::GRANTED;
 }
-}  // namespace
 
 // ---------------------------------------------------------------------------------------------------------------
 // Small pure pieces

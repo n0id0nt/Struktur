@@ -112,17 +112,51 @@ link. `FitnessManager` declares the central first, so it is destroyed last.
 
 ## Using it from the game
 
-Nothing scans or connects on its own. From C++ (Wren bindings are a planned follow-up):
+### Device pairing screen (first screen)
 
-```cpp
-Fitness::FitnessManager& fitness = context.GetFitnessManager();
-fitness.ConnectRememberedDevices(context.GetTimeSystem().unscaledTime);   // or StartScan() + AssignDevice(...)
-if (Fitness::Trainer* trainer = fitness.GetTrainer())
-{
-	trainer->SetSimulation({/*gradePercent*/ 3.5});
-	int watts = trainer->GetLatestSample().powerWatts.value_or(0);
-}
+The game opens on `States/DevicePairingState.wren` (view: `UI/Pairing/DevicePairingUI.wren`), before the main menu,
+the way cycling apps open on a pairing screen:
+
+- **Tiles:** there are three, Smart Trainer, Power Meter and Heart Rate. Each shows its connection state, the device
+  name, and a live value (watts or bpm). Choosing a tile opens a picker listing what the scan found for that role.
+  A device already serving another role is listed but disabled; one Bluetooth link per device. The picker also offers
+  **Unpair** when the role has a device.
+- **Let's Ride** stays disabled until a **power source**, a trainer or a power meter, is connected. Heart rate is
+  optional. It then leads to `MainMenu` (`NEXT_STATE` in the state).
+- **On entering** the screen, remembered devices reconnect on their own and a scan starts. The scan stops when the
+  screen is left; paired devices stay connected.
+- **Event-driven:** connection events refresh a tile, `fitnessSample` updates its value, and `fitnessDeviceFound`
+  refreshes an open picker. Clicks are queued and handled in `update()`, because they arrive inside the UI input pass.
+- **Without hardware:** set `STRUKTUR_FITNESS_SIMULATE=1` before launching the game. `GameContext` then uses
+  `SimulatedBleCentral` (a fake trainer, strap and power meter that advertise and stream data on their own). The
+  screen's status line says so.
+
+```powershell
+$env:STRUKTUR_FITNESS_SIMULATE = '1'; ./build-nogame/Debug/Struktur.exe
 ```
+
+### Wren API (`import "fitness" for Fitness`)
+
+Roles are the strings `"trainer"`, `"heartRate"` and `"powerMeter"`. Every call returns a fresh snapshot, and nothing
+calls back into Wren. Call these in response to the events below rather than every frame.
+
+| Call | Returns |
+|---|---|
+| `Fitness.isAvailable()` / `Fitness.isSimulated()` | Bool |
+| `Fitness.startScan()` / `stopScan()` / `isScanning()` | - / - / Bool |
+| `Fitness.devices()` | `[{"address", "name", "rssi", "roles": [role...], "inUseAs": role or null}]` |
+| `Fitness.assign(role, address, name)` | Bool. Connects now and remembers the choice in `fitness_devices.json` |
+| `Fitness.unassign(role)` | Disconnects (a trainer gets Reset first, which can block for up to ~2.5 s) and forgets the device |
+| `Fitness.connectRemembered()` | Starts every remembered device that isn't already running |
+| `Fitness.remembered(role)` | `{"address", "name"}` or null |
+| `Fitness.status(role)` | `{"state", "name", "address"}`, plus `"control"` and `"mode"` for the trainer, or null |
+| `Fitness.sample(role)` | the latest values, using the same keys as `fitnessSample` |
+| `Fitness.hasPowerSource()` | Bool: a trainer or power meter is connected |
+| `Fitness.setTargetPower(w)` / `setGrade(pct)` / `setManualResistance(f)` / `clearTarget()` | `"queued"`, `"clamped"`, `"deferred"`, `"unsupported"`, `"controlDenied"` or `"noTrainer"` |
+
+From C++ the same comes from `context.GetFitnessManager()`.
+
+### Events
 
 Events reach Wren `onEvent` through the existing event system, so nothing needs to poll:
 
@@ -132,9 +166,10 @@ Events reach Wren `onEvent` through the existing event system, so nothing needs 
 | `fitnessSample` | new data. Carries `power`, `cadence`, `speed` and `heartRate` (trainer), `bpm` (heart rate), or `power` and `cadence` (power meter) |
 | `fitnessControlGranted` / `fitnessControlDenied` / `fitnessControlLost` / `fitnessTrainerUnresponsive` | trainer control |
 | `fitnessCommandSucceeded` / `fitnessCommandFailed` / `fitnessCommandUnsupported` / `fitnessTargetClamped` | target commands |
+| `fitnessDeviceFound` | while scanning, once per newly seen (or newly named) device: `address`, `name`, `rssi`, `roles` |
 
-Every event's data map has `role` (`trainer`, `heartRate` or `powerMeter`), `detail`, `device` (the address) and
-`name`.
+Every device event's data map has `role` (`trainer`, `heartRate` or `powerMeter`), `detail`, `device` (the address)
+and `name`.
 
 ## Building and testing
 
@@ -228,8 +263,9 @@ started and exited cleanly with the manager constructed.
 9. **Heart rate straps:** 8- and 16-bit formats, the contact bit, and RR intervals.
 10. **Power meters:** crank-derived cadence against the head unit, and decay to 0 when coasting.
 11. **Timing:** whether the 5 s control-point timeout and the 1→30 s reconnect backoff feel right on real hardware.
-12. **In-game:** no game code calls scan or connect yet, so `FitnessSystem` → Wren events have only been compiled,
-    not run with a device or the fake.
+12. **Pairing screen with real devices:** it has only run against `STRUKTUR_FITNESS_SIMULATE`. Check how quickly
+    real devices appear in the picker, how the tiles behave while a trainer reconnects, and the freeze while Unpair
+    resets a trainer.
 
 ## Decisions and open questions
 
@@ -250,7 +286,8 @@ started and exited cleanly with the manager constructed.
    feature bits on both trainers.
 2. **A game-wide power cap.** The game currently uses only the trainer's own range (`maximumTargetPowerWatts` is
    unset). Should there be a player setting?
-3. **Wren bindings** (scan UI, device picker, targets) are the next step and were left out of this branch on purpose.
+3. **Pairing gate:** the game currently can't get past the pairing screen without a power source (or
+   `STRUKTUR_FITNESS_SIMULATE`). Do you want a keyboard or "ride without a trainer" fallback?
 4. `GameContext` constructs the WinRT backend at startup (a worker thread plus an adapter query, with no radio
    activity). Would you prefer it created lazily, on first use?
 5. In editor builds the registry follows the selected save folder (`<saves>/Current`). Is that the place you want it?
