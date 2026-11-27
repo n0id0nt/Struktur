@@ -30,6 +30,7 @@ get_filename_component(STRUKTUR_REPO_ROOT "${CMAKE_CURRENT_SOURCE_DIR}/../../.."
 
 add_library(StrukturJobs STATIC
     ${CMAKE_CURRENT_SOURCE_DIR}/JobSystem.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/Task.h
     ${CMAKE_CURRENT_SOURCE_DIR}/JobSystem.cpp
 )
 target_include_directories(StrukturJobs PUBLIC ${STRUKTUR_REPO_ROOT}/src)
@@ -58,6 +59,8 @@ if(STRUKTUR_JOBS_BUILD_TESTS)
     add_executable(StrukturJobsTests
         ${CMAKE_CURRENT_SOURCE_DIR}/Tests/TestMain.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/Tests/JobSystemTests.cpp
+        ${CMAKE_CURRENT_SOURCE_DIR}/Tests/TaskTests.cpp
+        ${CMAKE_CURRENT_SOURCE_DIR}/Tests/TestHelpers.h
     )
     target_include_directories(StrukturJobsTests PRIVATE ${doctest_SOURCE_DIR}/doctest)
     target_link_libraries(StrukturJobsTests PRIVATE StrukturJobs)

@@ -2,6 +2,7 @@
 
 #include <algorithm>
 #include <atomic>
+#include <chrono>
 #include <condition_variable>
 #include <cstddef>
 #include <cstdint>
@@ -27,6 +28,9 @@
 //    to a limit (all but two workers by default), so frame work always finds a free worker.
 //  - Wait() never just blocks: the waiting thread runs queued jobs until the one it needs is done. The main thread
 //    waiting on frame work only helps with frame-lane jobs, so it never picks up a long background job mid-frame.
+//  - Run() gives a Task<T> (Task.h): a result, progress, cancellation and follow-ups that run on the main thread
+//    inside RunMainThreadWork(). Work that returns StepResult is stepped: it runs again after each CONTINUE, giving
+//    way to other work in between - how long background work stays out of frame work's way.
 //  - Zero workers is a first-class mode (web builds without threads, debugging, STRUKTUR_THREADS=OFF): the same API,
 //    jobs simply run on the calling thread inside Wait() / RunPending(). Nothing runs until someone waits or pumps.
 //
@@ -50,7 +54,19 @@ constexpr int LANE_COUNT = 3;
 
 const char* ToString(Lane lane);
 
-// A callable stored inline when it is small enough (most lambdas), on the heap otherwise. Move-only, called once.
+// What a stepped job returns: CONTINUE queues it again (at the back of its lane, so other work - and any higher-lane
+// work - gets a turn first), DONE completes it. Long background work written as steps gives way between steps.
+enum class StepResult : uint8_t
+{
+	CONTINUE,
+	DONE,
+};
+
+template <typename T>
+class Task;
+
+// A callable stored inline when it is small enough (most lambdas), on the heap otherwise. Move-only. Calling it
+// returns true when it is finished: always for ordinary work, and once it returns StepResult::DONE for stepped work.
 class JobFunction
 {
 public:
@@ -88,7 +104,7 @@ public:
 
 	bool IsSet() const { return m_invoke != nullptr; }
 	bool IsInline() const { return m_target == static_cast<const void*>(m_storage); }
-	void operator()() { m_invoke(m_target); }
+	bool operator()() { return m_invoke(m_target); }
 
 	void Reset()
 	{
@@ -103,9 +119,17 @@ public:
 
 private:
 	template <typename Target>
-	static void Invoke(void* target)
+	static bool Invoke(void* target)
 	{
-		(*static_cast<Target*>(target))();
+		if constexpr (std::is_same_v<std::invoke_result_t<Target&>, StepResult>)
+		{
+			return (*static_cast<Target*>(target))() == StepResult::DONE;
+		}
+		else
+		{
+			(*static_cast<Target*>(target))();
+			return true;
+		}
 	}
 	template <typename Target>
 	static void DestroyInline(void* target)
@@ -120,7 +144,7 @@ private:
 
 	alignas(std::max_align_t) unsigned char m_storage[INLINE_SIZE];
 	void* m_target              = nullptr;
-	void (*m_invoke)(void*)     = nullptr;
+	bool (*m_invoke)(void*)     = nullptr;
 	void (*m_destroy)(void*)    = nullptr;
 };
 
@@ -162,7 +186,9 @@ struct JobSystemStats
 	int workerCount           = 0;
 	int backgroundWorkerLimit = 0;
 	uint64_t jobsScheduled    = 0;
-	uint64_t jobsRun          = 0;  // by any thread
+	uint64_t jobsRun          = 0;  // by any thread; a stepped job counts once, when it is done
+	uint64_t stepsRequeued    = 0;  // steps that returned CONTINUE and went back in the queue
+	uint64_t mainThreadRun    = 0;  // follow-ups run by RunMainThreadWork()
 	uint64_t jobsRunByHelper  = 0;  // by a thread inside Wait() / RunPending() rather than a worker's own loop
 	uint64_t jobsStolen       = 0;  // taken from another worker's queue
 	uint64_t jobsDropped      = 0;
@@ -213,9 +239,40 @@ public:
 	template <typename Body>
 	JobHandle ParallelFor(size_t begin, size_t end, size_t grain, Body body, Lane lane = Lane::FRAME);
 
+	// Tasks (Task.h): a job with a result, progress and cancellation. `work` is T() or T(TaskContext&); work that
+	// returns StepResult is stepped and gives a Task<void>. Background lane by default.
+	template <typename Work>
+	auto Run(Work&& work, Lane lane = Lane::BACKGROUND);
+	template <typename Work>
+	auto Run(Work&& work, Lane lane, const JobHandle& dependency);
+	template <typename Work>
+	auto Run(Work&& work, Lane lane, const std::vector<JobHandle>& dependencies);
+
+	// Queues `callable` for the main thread: it runs inside the next RunMainThreadWork(). Task::ThenOnMainThread()
+	// uses this to hand results back to code that may only run on the main thread (Wren, entt, bgfx resources).
+	template <typename Callable>
+	void RunOnMainThread(Callable&& callable)
+	{
+		std::unique_ptr<JobFunction> work = std::make_unique<JobFunction>();
+		work->Set(std::forward<Callable>(callable));
+		PostToMainThread(std::move(work));
+	}
+
+	// Called once a frame by the main thread: runs queued main-thread follow-ups, oldest first, until none are left or
+	// `budgetSeconds` has passed (checked between them). With zero workers it then also runs queued jobs (all lanes)
+	// in what is left of the budget, and any follow-ups they made ready - so tasks keep progressing without threads.
+	// Returns how many follow-ups and jobs ran.
+	size_t RunMainThreadWork(double budgetSeconds);
+	size_t GetMainThreadQueuedCount() const;
+
 	// Runs queued jobs on this thread until `handle` is complete.
 	void Wait(const JobHandle& handle);
 	void WaitAll(const std::vector<JobHandle>& handles);
+	template <typename T>
+	void Wait(const Task<T>& task)
+	{
+		Wait(task.GetHandle());
+	}
 
 	// Runs queued jobs on the calling thread, highest lane first, down to `lowestLane`, until the queues are empty or
 	// `budgetSeconds` has passed (checked between jobs). Returns how many ran. This is how jobs progress with zero
@@ -233,6 +290,7 @@ public:
 
 private:
 	friend class JobHandle;
+	friend struct TaskStateBase;
 
 	// A tiny lock for the short critical sections around one slot or one queue.
 	class SpinLock
@@ -298,12 +356,18 @@ private:
 		return Submit(index, lane, dependencies, count);
 	}
 
+	template <typename Work>
+	auto RunWith(Work&& work, Lane lane, const JobHandle* dependencies, size_t count);
+
+	void PostToMainThread(std::unique_ptr<JobFunction> work);
+	size_t RunFollowUps(std::chrono::steady_clock::time_point start, double budgetSeconds);
+
 	JobSlot& Slot(uint32_t index) const;
 	uint32_t AllocateSlot();
 	void FreeSlot(uint32_t index);
 	void GrowPool();  // m_poolMutex held
 	JobHandle Submit(uint32_t index, Lane lane, const JobHandle* dependencies, size_t count);
-	void Enqueue(uint32_t index);
+	void Enqueue(uint32_t index, bool requeue = false);
 	bool PopJob(int self, Lane lowestLane, bool allowBackground, uint32_t& index);
 	bool PopFromQueue(int queue, int lane, bool newest, uint32_t& index);
 	void Execute(uint32_t index, bool helper);
@@ -348,7 +412,12 @@ private:
 	std::atomic<int> m_waiters{0};  // threads sleeping in Wait() - completions only notify when there are any
 
 	std::atomic<uint64_t> m_jobsScheduled{0};
+	mutable std::mutex m_mainThreadMutex;
+	std::deque<std::unique_ptr<JobFunction>> m_mainThreadQueue;
+
 	std::atomic<uint64_t> m_jobsRun{0};
+	std::atomic<uint64_t> m_stepsRequeued{0};
+	std::atomic<uint64_t> m_mainThreadRun{0};
 	std::atomic<uint64_t> m_jobsRunByHelper{0};
 	std::atomic<uint64_t> m_jobsStolen{0};
 	std::atomic<uint64_t> m_jobsDropped{0};
@@ -373,3 +442,5 @@ JobHandle JobSystem::ParallelFor(size_t begin, size_t end, size_t grain, Body bo
 	return WhenAll(parts, lane);
 }
 }  // namespace Struktur::Jobs
+
+#include "Engine/Jobs/Task.h"

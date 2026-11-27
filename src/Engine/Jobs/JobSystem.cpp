@@ -325,7 +325,7 @@ JobHandle JobSystem::Submit(uint32_t index, Lane lane, const JobHandle* dependen
 	return handle;
 }
 
-void JobSystem::Enqueue(uint32_t index)
+void JobSystem::Enqueue(uint32_t index, bool requeue)
 {
 	const int lane = static_cast<int>(Slot(index).lane);
 	if (m_shutDown.load(std::memory_order_acquire))
@@ -342,7 +342,17 @@ void JobSystem::Enqueue(uint32_t index)
 	const int queue = self >= 0 ? self : static_cast<int>(m_nextQueue.fetch_add(1, std::memory_order_relaxed) % QueueCount());
 	{
 		std::lock_guard<SpinLock> lock(m_queues[static_cast<size_t>(queue)]->lock);
-		m_queues[static_cast<size_t>(queue)]->lanes[lane].push_back(index);
+		std::deque<uint32_t>& jobs = m_queues[static_cast<size_t>(queue)]->lanes[lane];
+		// A requeued step goes behind the other work: on a worker's own queue that is the oldest end (the owner takes
+		// its newest first), elsewhere the newest end (other threads take the oldest first).
+		if (requeue && self >= 0)
+		{
+			jobs.push_front(index);
+		}
+		else
+		{
+			jobs.push_back(index);
+		}
 	}
 	m_queued[lane].fetch_add(1, std::memory_order_seq_cst);
 	WakeOne();
@@ -426,7 +436,13 @@ void JobSystem::Execute(uint32_t index, bool helper)
 	JobSlot& slot = Slot(index);
 	if (slot.work.IsSet())
 	{
-		slot.work();
+		if (!slot.work())
+		{
+			// A stepped job that wants another turn: same slot and handle, back in the queue.
+			m_stepsRequeued.fetch_add(1, std::memory_order_relaxed);
+			Enqueue(index, true);
+			return;
+		}
 		slot.work.Reset();  // release whatever the job captured as soon as it has run
 	}
 	m_jobsRun.fetch_add(1, std::memory_order_relaxed);
@@ -621,6 +637,69 @@ void JobSystem::WorkerLoop(int workerIndex)
 	}
 }
 
+// --- main thread ---------------------------------------------------------------------------------------------------
+
+static double SecondsSince(std::chrono::steady_clock::time_point start)
+{
+	return std::chrono::duration<double>(std::chrono::steady_clock::now() - start).count();
+}
+
+void JobSystem::PostToMainThread(std::unique_ptr<JobFunction> work)
+{
+	std::lock_guard<std::mutex> lock(m_mainThreadMutex);
+	m_mainThreadQueue.push_back(std::move(work));
+}
+
+size_t JobSystem::RunFollowUps(std::chrono::steady_clock::time_point start, double budgetSeconds)
+{
+	size_t ran = 0;
+	for (;;)
+	{
+		std::unique_ptr<JobFunction> work;
+		{
+			std::lock_guard<std::mutex> lock(m_mainThreadMutex);
+			if (m_mainThreadQueue.empty())
+			{
+				break;
+			}
+			work = std::move(m_mainThreadQueue.front());
+			m_mainThreadQueue.pop_front();
+		}
+		if (work->IsSet())
+		{
+			(*work)();
+		}
+		++ran;
+		m_mainThreadRun.fetch_add(1, std::memory_order_relaxed);
+		if (SecondsSince(start) >= budgetSeconds)
+		{
+			break;
+		}
+	}
+	return ran;
+}
+
+size_t JobSystem::RunMainThreadWork(double budgetSeconds)
+{
+	const std::chrono::steady_clock::time_point start = std::chrono::steady_clock::now();
+	size_t ran                                         = RunFollowUps(start, budgetSeconds);
+	if (m_workerCount == 0 && SecondsSince(start) < budgetSeconds)
+	{
+		ran += RunPending(budgetSeconds - SecondsSince(start), Lane::BACKGROUND);
+		if (SecondsSince(start) < budgetSeconds)
+		{
+			ran += RunFollowUps(start, budgetSeconds);
+		}
+	}
+	return ran;
+}
+
+size_t JobSystem::GetMainThreadQueuedCount() const
+{
+	std::lock_guard<std::mutex> lock(m_mainThreadMutex);
+	return m_mainThreadQueue.size();
+}
+
 // --- queries and shutdown ----------------------------------------------------------------------------------------
 
 size_t JobSystem::GetQueuedCount() const
@@ -644,6 +723,8 @@ JobSystemStats JobSystem::GetStats() const
 	stats.backgroundWorkerLimit = m_backgroundLimit;
 	stats.jobsScheduled         = m_jobsScheduled.load(std::memory_order_relaxed);
 	stats.jobsRun               = m_jobsRun.load(std::memory_order_relaxed);
+	stats.stepsRequeued         = m_stepsRequeued.load(std::memory_order_relaxed);
+	stats.mainThreadRun         = m_mainThreadRun.load(std::memory_order_relaxed);
 	stats.jobsRunByHelper       = m_jobsRunByHelper.load(std::memory_order_relaxed);
 	stats.jobsStolen            = m_jobsStolen.load(std::memory_order_relaxed);
 	stats.jobsDropped           = m_jobsDropped.load(std::memory_order_relaxed);
