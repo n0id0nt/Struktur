@@ -1,13 +1,13 @@
 # Job system
 
-The engine's job system and scheduler. **Phases 1, 1b, 2 and 3 are done:**
+The engine's job system and scheduler. **Phases 1 to 4 are done:**
 - **Phase 1:** worker threads, lanes, dependencies, waiting that helps, parallel-for and inline mode.
 - **Phase 1b:** pooled jobs, per-worker work-stealing queues and a cap on background workers.
 - **Phase 2:** tasks with results, progress and cancellation; follow-ups that run on the main thread; stepped jobs.
 - **Phase 3:** the engine owns a job system and syncs it with the frame loop; level tilesets decode in parallel.
+- **Phase 4:** ECS systems declare what they touch, and systems that don't clash run side by side as jobs.
 
-All of it has unit tests and a benchmark. Phases 4–6 (ECS systems as jobs, Wren handles, web threads) are planned at
-the end.
+All of it has unit tests and a benchmark. Phases 5–6 (Wren handles, web threads) are planned at the end.
 
 Code: `src/Engine/Jobs/` (library `StrukturJobs`, no SDL, bgfx or Wren). Tests: `src/Engine/Jobs/Tests/`. Benchmark:
 `tools/job_bench/`.
@@ -127,6 +127,44 @@ context.GetFrameScheduler().PostFrame([stats] { WriteStats(stats); });   // afte
 - **Thread rules:** work on workers must not touch Wren, the entt registry, bgfx or the UI. Hand results to a
   follow-up instead. File reads (PhysFS) and `TextureResource::Decode` are safe on workers.
 
+### ECS systems as jobs (phase 4)
+
+```cpp
+// AnimationSystem.cpp
+SystemAccess AnimationSystem::Access() const
+{
+    return SystemAccess::Worker()
+        .Read<Component::SpriteAnimation, Inactive, Core::TimeSystem>()
+        .Write<Component::Sprite>();
+}
+```
+
+- **Access declarations** (`src/Engine/ECS/SystemAccess.h`): `ISystem::Access()` says what a system's `Update()`
+  touches. The default is `SystemAccess::MainThread()`, so a system that declares nothing runs exactly as before.
+  `Worker()` systems list the component types (and engine services, any type works as a token) they read and
+  write. Two systems clash when either is main-thread-only or one writes what the other reads or writes.
+- **The schedule** (`src/Engine/ECS/SystemSchedule.h`), built per phase (fixed update, update, render) when systems
+  are added:
+  - a main-thread system is a step of its own, run in registration order;
+  - a run of consecutive worker systems is a batch; each system runs as a frame-lane job that waits for the
+    earlier systems of the batch it clashes with;
+  - the main thread helps run the batch, and the batch ends before the next main-thread system starts.
+
+  Registration order still decides everything a declaration doesn't.
+- **Command list** (`src/Engine/ECS/CommandList.h`): worker systems must not change the registry's structure
+  (create or destroy entities, add or remove components) or touch Wren, bgfx, the UI or audio. They record such
+  changes with `context.GetSystemManager().GetCommands().Defer(...)`; the commands run on the main thread, in the
+  order they were recorded, when the batch ends.
+- **Converted so far:** `AnimationSystem` and `ParticleSystem`. They're registered next to each other in the update
+  phase, so they run as one batch: "Systems scheduled side by side: Animation System, Particle System" in the log.
+  `ParticleSystem` declares a write to `Transform`, because reading a world position refreshes TransformSystem's
+  cached world transform.
+  - Everything else stays main-thread-only. Most systems call Wren, Box2D, bgfx or the UI, or change entities.
+- **Switches:** `--serial-systems` runs every system on the main thread in registration order, whatever it declares
+  (`SystemManager::SetParallel`). Zero job workers (`--threads=0`, web) does the same.
+- **Profiler:** it's main-thread only, so a parallel batch shows as one scope ("Batch: Animation System Particle
+  System") instead of one scope per system. Serial runs keep the per-system scopes.
+
 ### How it works (phase 1b)
 
 - **Pooled jobs:** jobs live in a pool of fixed slots (chunks of 4,096, growing on demand) and are reused, so
@@ -163,7 +201,7 @@ build-jobs/Release/job_bench.exe --csv job_bench.csv
 Add `--quick` for a shorter benchmark run, and `-DSTRUKTUR_THREADS=OFF` for the no-threads build. The root build
 links `StrukturJobs` into the game, with tests and the benchmark off.
 
-### Tests (36 cases, ~149k checks)
+### Tests (40 cases, ~151k checks)
 
 Every scenario runs with 0, 1, 4 and all workers:
 - Exactly-once execution of 20k jobs, and the job counters.
@@ -272,12 +310,32 @@ Debug game build (`build-nogame`), muted 45-second runs into the overworld:
 **Not measured yet:** a level's load time or a frame's time, before against after. Five small tilesets is too little
 work to show a difference; the ride world's chunk building is the meaningful benchmark.
 
+### Phase 4 in the game
+
+- **Tests** (`Tests/SystemScheduleTests.cpp`, 4 cases):
+  - which declarations clash;
+  - how phases split into steps and batches;
+  - running a schedule with 0, 1, 4 and all workers: clashing systems keep their order, batches end before the
+    next main-thread system, and main-thread systems run on the calling thread;
+  - four non-clashing 10 ms systems take about 10 ms side by side, and 40 ms with parallel off.
+
+  Together with the earlier suites, 40 cases pass in Release.
+- **Debug game build, muted runs into the overworld,** each ended by closing the window:
+  - Runs: default (19 workers), `--serial-systems` and `--threads=0`.
+  - No errors, and each one exited normally.
+  - Animations and particles look right in the screenshots, and the save files were unchanged.
+- **Not measured:** game frame time, before against after. Animation and particles take a fraction of a millisecond
+  in this game, so the two-system batch saves little. The gain comes as heavier systems are converted.
+
 ## Next
 
-- **Phase 3, ride part:** move the ride world's `ChunkStreamer` worker thread onto background tasks, and the ride
-  autosave onto `PostFrame`. That code lives on branch `RideSoftware`, so it needs this branch merged into it.
-- **Phase 4:** ECS systems as jobs (access declarations, a dependency graph per phase, command lists for entity
-  changes). Every existing system starts out marked main-thread-only.
+- **Ride part of phase 3:** done on branch `RideSoftware` (chunk builds as background tasks, background
+  autosaves); see docs/JobSystem.md there. Merge this branch into it again to bring phase 4 across.
+- **More worker systems:** candidates are SpriteRenderSystem's culling and sorting (not its bgfx submission) and
+  TransformSystem's world-matrix refresh as a parallel-for. Box2D v3 can also run its solver on our workers through
+  its task callbacks (`b2WorldDef.enqueueTask`).
+- **Parallel-for inside systems:** a system with many entities can split its own loop with `ParallelFor`; the batch
+  scheduler doesn't do that by itself.
 - **Phase 5:** Wren task handles (`if (load.isComplete)`).
 - **Phase 6:** optional threaded web build (pthread pool and cross-origin isolation headers).
 
