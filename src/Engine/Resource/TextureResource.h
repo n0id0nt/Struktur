@@ -22,6 +22,19 @@ namespace Resource
 {
 class TextureResource : public GpuResource
 {
+public:
+	// A decoded image, RGBA8. Decode() touches no shared state (PhysFS reads are thread-safe), so it can run on job
+	// workers - see TexturePool::Prefetch.
+	struct DecodedImage
+	{
+		std::vector<uint8_t> pixels;
+		int width  = 0;
+		int height = 0;
+	};
+	static bool Decode(const std::string& filePath, DecodedImage& image, std::string& error);
+	// Takes an already-decoded image instead of reading the file (LoadFromDisk is then a no-op).
+	void SetDecoded(DecodedImage&& image);
+
 private:
 	std::vector<uint8_t> m_pixels;  // decoded RGBA8, kept until LoadToGpu() uploads it
 	int m_width  = 0;

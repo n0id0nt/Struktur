@@ -57,24 +57,45 @@ bool Struktur::Resource::TextureResource::LoadFromDisk(GameContext& context)
 		return true;
 	}
 
-	auto result = FileSystem::ReadBytes(filePath);
-	ASSERT_MSG(result.success, "Failed to load config: %s, %s", filePath, result.errorMessage.c_str());
-
-	int channels = 0;
-	stbi_uc* pixels =
-	    ::stbi_load_from_memory(result.value.data(), (int)result.value.size(), &m_width, &m_height, &channels, 4);
-	if (!pixels)
+	DecodedImage image;
+	std::string error;
+	if (!Decode(filePath, image, error))
 	{
-		DEBUG_ERROR("Failed to load image: %s", filePath);
+		DEBUG_ERROR("Failed to load image: %s (%s)", filePath, error.c_str());
 		return false;
 	}
-
-	m_pixels.assign(pixels, pixels + (size_t)m_width * m_height * 4);
-	::stbi_image_free(pixels);
-
-	isLoaded = true;
+	SetDecoded(std::move(image));
 	DEBUG_INFO("Loaded texture from disk: %s (%dx%d)", filePath, m_width, m_height);
 	return true;
+}
+
+bool Struktur::Resource::TextureResource::Decode(const std::string& filePath, DecodedImage& image, std::string& error)
+{
+	auto result = FileSystem::ReadBytes(filePath);
+	if (!result.success)
+	{
+		error = result.errorMessage;
+		return false;
+	}
+	int channels    = 0;
+	stbi_uc* pixels = ::stbi_load_from_memory(result.value.data(), (int)result.value.size(), &image.width,
+	                                          &image.height, &channels, 4);
+	if (!pixels)
+	{
+		error = "not a readable image";
+		return false;
+	}
+	image.pixels.assign(pixels, pixels + (size_t)image.width * image.height * 4);
+	::stbi_image_free(pixels);
+	return true;
+}
+
+void Struktur::Resource::TextureResource::SetDecoded(DecodedImage&& image)
+{
+	m_pixels = std::move(image.pixels);
+	m_width  = image.width;
+	m_height = image.height;
+	isLoaded = true;
 }
 
 void Struktur::Resource::TextureResource::UnloadFromDisk()

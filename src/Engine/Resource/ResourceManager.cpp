@@ -6,6 +6,12 @@ Struktur::Resource::ResourcePtr<Struktur::Resource::TextureResource> Struktur::R
 	return m_texturePool.GetResource(context, filePath);
 }
 
+void Struktur::Resource::ResourceManager::PrefetchTextures(GameContext& context,
+                                                         const std::vector<std::string>& filePaths)
+{
+	m_texturePool.Prefetch(context, filePaths);
+}
+
 Struktur::Resource::ResourcePtr<Struktur::Resource::SoundResource> Struktur::Resource::ResourceManager::GetSound(
     GameContext& context, const std::string& filePath)
 {
