@@ -1,3 +1,5 @@
+#include "Engine/Callback/CallbackHelperFunctions.h"
+#include "Engine/Callback/Variant.h"
 #include "Engine/GameContext.h"
 #include "Engine/Scripting/WrenBindingRegistry.h"
 #include "WrenMath.h"
@@ -219,6 +221,34 @@ void wren_InputTakeTypedText(WrenVM* vm)
 	wrenSetSlotString(vm, 0, typed.c_str());
 }
 
+static Struktur::Callback::Variant OptionalVariant(const std::optional<double>& value)
+{
+	return value ? Struktur::Callback::Variant(*value) : Struktur::Callback::Variant(nullptr);
+}
+
+// Input.trainer -> map of the fitness devices and the ride in progress (see Input::TrainerInput)
+void wren_InputTrainer(WrenVM* vm)
+{
+	Struktur::GameContext* context                = static_cast<Struktur::GameContext*>(wrenGetUserData(vm));
+	const Struktur::Input::TrainerInput& trainer = context->GetInput().GetTrainer();
+	Struktur::Callback::VariantMap map;
+	map.items["power"]               = OptionalVariant(trainer.powerWatts);
+	map.items["smoothedPower"]       = OptionalVariant(trainer.smoothedPowerWatts);
+	map.items["cadence"]             = OptionalVariant(trainer.cadenceRpm);
+	map.items["heartRate"]           = OptionalVariant(trainer.heartRateBpm);
+	map.items["trainerConnected"]    = trainer.trainerConnected;
+	map.items["heartRateConnected"]  = trainer.heartRateConnected;
+	map.items["powerMeterConnected"] = trainer.powerMeterConnected;
+	map.items["speed"]               = trainer.speedMetersPerSecond;
+	map.items["grade"]               = trainer.chosenGradePercent;
+	map.items["erg"]                 = trainer.ergMode;
+	map.items["powerZone"]           = trainer.powerZone;
+	map.items["powerFraction"]       = OptionalVariant(trainer.powerFraction);
+	map.items["targetDelta"]         = OptionalVariant(trainer.targetDeltaWatts);
+	map.items["workoutProgress"]     = trainer.workoutProgress;
+	Struktur::Callback::HelperFunctions::VariantToWrenSlot(vm, 0, map);
+}
+
 // Input.activeDevice -> "keyboard" | "gamepad"
 void wren_InputActiveDevice(WrenVM* vm)
 {
@@ -319,6 +349,10 @@ WREN_BINDING_MODULE(Input)
 	                  "True between startTextInput() and stopTextInput().");
 	WREN_CLASS_STATIC(registry, "input", "Input", "takeTypedText()", wren_InputTakeTypedText,
 	                  "Text typed since the last call (UTF-8, may be empty).");
+	WREN_CLASS_STATIC(registry, "input", "Input", "trainer", wren_InputTrainer,
+	                  "Map of the fitness devices and the ride in progress: power, smoothedPower, cadence, heartRate "
+	                  "(null while nothing reports them), *Connected, speed, grade, erg, powerZone, powerFraction, "
+	                  "targetDelta, workoutProgress.");
 	WREN_CLASS_STATIC(registry, "input", "Input", "activeDevice", wren_InputActiveDevice,
 	                  "The device used most recently: \"keyboard\" (keyboard or mouse) or \"gamepad\".");
 	WREN_CLASS_STATIC(registry, "input", "Input", "gamepadFamily", wren_InputGamepadFamily,

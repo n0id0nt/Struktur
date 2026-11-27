@@ -5,6 +5,7 @@
 #include <string>
 #include <vector>
 
+#include "Engine/Input/TrainerInput.h"
 #include "Engine/Ride/RideSession.h"
 #include "Engine/Ride/RideSettings.h"
 #include "Engine/Ride/Workout.h"
@@ -87,7 +88,7 @@ private:
 	std::string MakeOutputBasePath(const std::string& title) const;
 	void LoadWorldData();
 	void CreateWorld();
-	void UpdateWorld(double now);
+	void UpdateWorld(const Input::TrainerInput& trainer, double now);
 
 	std::string m_saveDirectory;
 	Ride::RideSettings m_settings;

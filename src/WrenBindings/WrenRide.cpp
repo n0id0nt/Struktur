@@ -492,11 +492,12 @@ static void wren_RideState(WrenVM* vm)
 	state.items["elapsed"]       = session->GetElapsedSeconds();
 	state.items["lap"]           = session->GetLapNumber();
 	state.items["lapSeconds"]    = session->GetLapSeconds();
-	state.items["power"]         = OptionalNumber(session->GetPower());
+	const Struktur::Input::TrainerInput& trainer = GetContext(vm).GetInput().GetTrainer();
+	state.items["power"]         = OptionalNumber(trainer.smoothedPowerWatts);
 	state.items["powerZone"]     = session->GetPowerZone();
 	state.items["powerColor"]    = ColorList(Ride::PowerZoneColor(session->GetPowerZone()));
-	state.items["cadence"]       = OptionalNumber(session->GetCadence());
-	state.items["heartRate"]     = OptionalNumber(session->GetHeartRate());
+	state.items["cadence"]       = OptionalNumber(trainer.cadenceRpm);
+	state.items["heartRate"]     = OptionalNumber(trainer.heartRateBpm);
 	state.items["heartRateZone"] = session->GetHeartRateZone();
 	state.items["heartRateColor"] =
 	    ColorList(Ride::HeartRateZoneColor(session->GetHeartRateZone(), settings.heartRateZoneModel));
@@ -522,12 +523,11 @@ static void wren_RideState(WrenVM* vm)
 	state.items["inTargetSeconds"]       = session->GetInTargetSeconds();
 	state.items["targetSeconds"]         = session->GetTargetSeconds();
 	state.items["ftpWatts"]              = session->GetRider().ftpWatts;
-	const Ride::SensorReadings& readings = session->GetReadings();
 	VariantMap sensors;
-	sensors.items["trainer"]   = std::string(ConnectionText(readings.trainerAssigned, readings.trainerConnected));
-	sensors.items["heartRate"] = std::string(ConnectionText(readings.heartRateAssigned, readings.heartRateConnected));
+	sensors.items["trainer"]   = std::string(ConnectionText(trainer.trainerAssigned, trainer.trainerConnected));
+	sensors.items["heartRate"] = std::string(ConnectionText(trainer.heartRateAssigned, trainer.heartRateConnected));
 	sensors.items["powerMeter"] =
-	    std::string(ConnectionText(readings.powerMeterAssigned, readings.powerMeterConnected));
+	    std::string(ConnectionText(trainer.powerMeterAssigned, trainer.powerMeterConnected));
 	state.items["sensors"] = sensors;
 
 	if (const Ride::WorkoutRunner* runner = session->GetRunner())

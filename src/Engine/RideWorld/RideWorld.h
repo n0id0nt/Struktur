@@ -5,6 +5,7 @@
 #include <optional>
 #include <vector>
 
+#include "Engine/Input/TrainerInput.h"
 #include "Engine/RideWorld/Biome.h"
 #include "Engine/RideWorld/ChunkStreamer.h"
 #include "Engine/RideWorld/ElevationProfile.h"
@@ -14,25 +15,6 @@
 
 namespace Struktur::RideWorld
 {
-// What the ride screens feed the world each frame. Nothing here knows about trainers, so --demo and tests drive it
-// the same way a real ride does.
-struct RideWorldInputs
-{
-	double deltaSeconds          = 0.0;
-	double speedMetersPerSecond  = 0.0;  // simulated speed
-	double manualGradePercent    = 0.0;  // the grade the rider set (SIM resistance)
-	bool ergMode                 = false;
-	int powerZone                = 0;
-	std::optional<double> cadenceRpm;  // nullopt = no cadence source
-	std::optional<double> heartRateBpm;
-	std::optional<double> powerFraction;  // power / FTP
-	double workoutProgress       = 0.0;   // 0 - 1
-	std::optional<double> targetDeltaWatts;  // power - target
-	// Workout: target intensity (fraction of FTP) for each of the next N seconds; NaN = no target (free-ride step).
-	// Empty = Free Ride.
-	std::vector<double> intensityAhead;
-};
-
 // Something drawn on the road at a distance: a pacer or a ghost.
 struct WorldActor
 {
@@ -89,7 +71,8 @@ public:
 	const WorldSettings& GetSettings() const;
 	void SetActorSource(IWorldActorSource* source);
 
-	void Update(const RideWorldInputs& inputs);
+	// Advances the road under the rider from what the trainer and the ride report this frame.
+	void Update(double deltaSeconds, const Input::TrainerInput& trainer);
 
 	double GetDistance() const;
 	double GetRoadGradePercent() const;  // what SIM should send the trainer
@@ -119,9 +102,9 @@ public:
 private:
 	void Rebuild();
 	ChunkSettings MakeChunkSettings() const;
-	void FillTargetGrades(const RideWorldInputs& inputs);
+	void FillTargetGrades(const Input::TrainerInput& trainer);
 	double RouteGradeAt(double distance);
-	void UpdateCamera(const RideWorldInputs& inputs);
+	void UpdateCamera(double deltaSeconds, double speedMetersPerSecond);
 
 	WorldSettings m_settings;
 	BiomeList m_biomes;

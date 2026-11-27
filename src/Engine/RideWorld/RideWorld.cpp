@@ -183,14 +183,14 @@ double RideWorld::RouteGradeAt(double distance)
 	return amplitude * 1.6 * Fbm1D(Hash64(m_settings.seed ^ 0x6EADu), distance / wavelength, 2);
 }
 
-void RideWorld::FillTargetGrades(const RideWorldInputs& inputs)
+void RideWorld::FillTargetGrades(const Input::TrainerInput& trainer)
 {
 	const double spacing = m_profile.GetLimits().spacingMeters;
 	const double ahead   = m_settings.Resolved().drawDistanceMeters + PROFILE_MARGIN_METERS;
 	const size_t count   = static_cast<size_t>(ahead / spacing) + 1;
 	m_targetGrades.resize(count);
-	const bool workout = !inputs.intensityAhead.empty();
-	const double speed = std::max(MIN_LOOKAHEAD_SPEED, inputs.speedMetersPerSecond);
+	const bool workout = !trainer.intensityAhead.empty();
+	const double speed = std::max(MIN_LOOKAHEAD_SPEED, trainer.speedMetersPerSecond);
 	for (size_t index = 0; index < count; ++index)
 	{
 		const double distance = m_distance + static_cast<double>(index) * spacing;
@@ -199,14 +199,14 @@ void RideWorld::FillTargetGrades(const RideWorldInputs& inputs)
 		{
 			grade = RouteGradeAt(distance);
 		}
-		else if (!inputs.ergMode)
+		else if (!trainer.ergMode)
 		{
-			grade = inputs.manualGradePercent;
+			grade = trainer.chosenGradePercent;
 		}
 		else if (workout)
 		{
-			const size_t second = std::min(static_cast<size_t>((distance - m_distance) / speed), inputs.intensityAhead.size() - 1);
-			const double intensity = inputs.intensityAhead[second];
+			const size_t second = std::min(static_cast<size_t>((distance - m_distance) / speed), trainer.intensityAhead.size() - 1);
+			const double intensity = trainer.intensityAhead[second];
 			grade = std::isnan(intensity) ? std::clamp(RouteGradeAt(distance) * 0.4, -2.5, 2.5) : GradeForIntensity(intensity);
 		}
 		else
@@ -217,18 +217,18 @@ void RideWorld::FillTargetGrades(const RideWorldInputs& inputs)
 	}
 }
 
-void RideWorld::Update(const RideWorldInputs& inputs)
+void RideWorld::Update(double deltaSeconds, const Input::TrainerInput& trainer)
 {
-	const double delta = std::clamp(inputs.deltaSeconds, 0.0, 0.25);
+	const double delta = std::clamp(deltaSeconds, 0.0, 0.25);
 	m_time += delta;
-	m_powerZone = inputs.powerZone;
-	m_distance += std::max(0.0, inputs.speedMetersPerSecond) * delta;
+	m_powerZone = trainer.powerZone;
+	m_distance += std::max(0.0, trainer.speedMetersPerSecond) * delta;
 
 	const QualityParameters quality = m_settings.Resolved();
 	m_route->EnsureGenerated(m_distance + quality.drawDistanceMeters + PROFILE_MARGIN_METERS);
 	m_route->PruneBefore(m_distance - HISTORY_METERS);
 
-	FillTargetGrades(inputs);
+	FillTargetGrades(trainer);
 	m_profile.Update(m_distance, m_targetGrades, HISTORY_METERS);
 
 	m_streamer->Update(*m_route, *m_sequence, m_distance, CHUNKS_BEHIND_METERS, quality.drawDistanceMeters);
@@ -237,7 +237,7 @@ void RideWorld::Update(const RideWorldInputs& inputs)
 	m_look  = LookFor(*m_biomes, m_blend);
 
 	const double curvature = m_route->SampleAt(m_distance).curvature;
-	m_rider.Update(delta, inputs.cadenceRpm, inputs.speedMetersPerSecond, inputs.powerFraction, curvature);
+	m_rider.Update(delta, trainer.cadenceRpm, trainer.speedMetersPerSecond, trainer.powerFraction, curvature);
 
 	m_actors.clear();
 	if (m_actorSource != nullptr)
@@ -255,12 +255,11 @@ void RideWorld::Update(const RideWorldInputs& inputs)
 			++index;
 		}
 	}
-	UpdateCamera(inputs);
+	UpdateCamera(delta, trainer.speedMetersPerSecond);
 }
 
-void RideWorld::UpdateCamera(const RideWorldInputs& inputs)
+void RideWorld::UpdateCamera(double delta, double speedMetersPerSecond)
 {
-	const double delta      = std::clamp(inputs.deltaSeconds, 0.0, 0.25);
 	const double origin     = GetHeightOrigin();
 	const double cameraAt   = std::max(m_route->GetStart(), m_distance - m_settings.cameraDistanceMeters);
 	const RouteSample eye   = m_route->SampleAt(cameraAt);
@@ -301,7 +300,7 @@ void RideWorld::UpdateCamera(const RideWorldInputs& inputs)
 	double wantedFov = m_settings.fieldOfViewDegrees;
 	if (motion && m_settings.speedFov)
 	{
-		wantedFov += std::min(MAX_SPEED_FOV_DEGREES, std::max(0.0, inputs.speedMetersPerSecond - 5.0) * 0.8);
+		wantedFov += std::min(MAX_SPEED_FOV_DEGREES, std::max(0.0, speedMetersPerSecond - 5.0) * 0.8);
 	}
 	m_smoothedFov += (wantedFov - m_smoothedFov) * (1.0 - std::exp(-delta / FOV_SMOOTHING_SECONDS));
 

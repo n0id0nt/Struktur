@@ -282,8 +282,8 @@ TEST_CASE("terrain never folds over itself on the inside of bends over 100 km")
 	settings.flatShading = false;
 	settings.quality     = Quality::MEDIUM;
 	RideWorld world(settings, biomes, nullptr);
-	RideWorldInputs inputs;
-	inputs.deltaSeconds         = 0.25;
+	Struktur::Input::TrainerInput inputs;
+	const double deltaSeconds   = 0.25;
 	inputs.speedMetersPerSecond = 64.0 / 0.25 / 4.0;  // one chunk every 4 updates
 	int checkedChunks   = 0;
 	int flippedQuads    = 0;
@@ -291,7 +291,7 @@ TEST_CASE("terrain never folds over itself on the inside of bends over 100 km")
 	int64_t lastChecked = -1;
 	while (world.GetDistance() < 100000.0)
 	{
-		world.Update(inputs);
+		world.Update(deltaSeconds, inputs);
 		for (const ChunkMesh* chunk : world.GetChunks())
 		{
 			if (chunk->chunkIndex <= lastChecked)
@@ -333,14 +333,14 @@ TEST_CASE("chunk recycling keeps the pool and buffers flat")
 	WorldSettings settings;
 	settings.seed = 8;
 	RideWorld world(settings, biomes, nullptr);
-	RideWorldInputs inputs;
-	inputs.deltaSeconds         = 0.1;
+	Struktur::Input::TrainerInput inputs;
+	const double deltaSeconds   = 0.1;
 	inputs.speedMetersPerSecond = 40.0;
 	int poolAfterWarmup         = -1;
 	size_t capacityAfterWarmup  = 0;
 	while (world.GetDistance() < 30000.0)
 	{
-		world.Update(inputs);
+		world.Update(deltaSeconds, inputs);
 		world.GetStreamer().TakeNewlyReady();
 		world.GetStreamer().TakeReleased();
 		const StreamerStats stats = world.GetStreamer().GetStats();
@@ -377,13 +377,13 @@ TEST_CASE("job-system and inline chunk builds produce the same meshes")
 	Struktur::Jobs::JobSystem jobs(Struktur::Jobs::JobSystemConfig{workers});
 	RideWorld inlineWorld(settings, biomes, nullptr);
 	RideWorld threadedWorld(settings, biomes, &jobs);
-	RideWorldInputs inputs;
-	inputs.deltaSeconds         = 0.1;
+	Struktur::Input::TrainerInput inputs;
+	const double deltaSeconds   = 0.1;
 	inputs.speedMetersPerSecond = 10.0;
 	for (int frame = 0; frame < 20; ++frame)
 	{
-		inlineWorld.Update(inputs);
-		threadedWorld.Update(inputs);
+		inlineWorld.Update(deltaSeconds, inputs);
+		threadedWorld.Update(deltaSeconds, inputs);
 	}
 	inlineWorld.WaitForChunks();
 	threadedWorld.WaitForChunks();
@@ -433,12 +433,12 @@ TEST_CASE("changing chunk settings while builds are in flight recycles them safe
 	WorldSettings settings;
 	settings.seed = 5;
 	RideWorld world(settings, biomes, &jobs);
-	RideWorldInputs inputs;
-	inputs.deltaSeconds         = 0.1;
+	Struktur::Input::TrainerInput inputs;
+	const double deltaSeconds   = 0.1;
 	inputs.speedMetersPerSecond = 30.0;
 	for (int frame = 0; frame < 300; ++frame)
 	{
-		world.Update(inputs);
+		world.Update(deltaSeconds, inputs);
 		if (frame % 7 == 3)
 		{
 			// Flip a setting that rebuilds every chunk, mid-stream: queued builds are cancelled, running ones finish
@@ -469,10 +469,10 @@ TEST_CASE("a world destroyed with builds in flight waits for them")
 		WorldSettings settings;
 		settings.seed = static_cast<uint32_t>(round);
 		RideWorld world(settings, biomes, &jobs);
-		RideWorldInputs inputs;
-		inputs.deltaSeconds         = 0.1;
+		Struktur::Input::TrainerInput inputs;
+		const double deltaSeconds   = 0.1;
 		inputs.speedMetersPerSecond = 30.0;
-		world.Update(inputs);  // requests the first chunks, then goes out of scope immediately
+		world.Update(deltaSeconds, inputs);  // requests the first chunks, then goes out of scope immediately
 	}
 	CHECK(jobs.GetQueuedCount() == 0);
 }
@@ -484,14 +484,14 @@ TEST_CASE("SIM manual grade: the road blends towards the set grade and the rider
 	const BiomeList biomes = LoadShippedBiomes();
 	WorldSettings settings;
 	RideWorld world(settings, biomes, nullptr);
-	RideWorldInputs inputs;
-	inputs.deltaSeconds         = 0.1;
+	Struktur::Input::TrainerInput inputs;
+	const double deltaSeconds   = 0.1;
 	inputs.speedMetersPerSecond = 8.0;
-	inputs.manualGradePercent   = 6.0;
+	inputs.chosenGradePercent   = 6.0;
 	double previous             = world.GetRoadGradePercent();
 	for (int frame = 0; frame < 400; ++frame)
 	{
-		world.Update(inputs);
+		world.Update(deltaSeconds, inputs);
 		const double grade = world.GetRoadGradePercent();
 		// Smooth: never more than the change limit over the distance ridden this frame (+ interpolation slack).
 		CHECK(std::abs(grade - previous) <= settings.maxGradeChangePerMeter * 0.8 + 0.02);
@@ -499,10 +499,10 @@ TEST_CASE("SIM manual grade: the road blends towards the set grade and the rider
 	}
 	CHECK(world.GetRoadGradePercent() == doctest::Approx(6.0).epsilon(0.01));
 
-	inputs.manualGradePercent = 18.0;  // beyond the world's limit
+	inputs.chosenGradePercent = 18.0;  // beyond the world's limit
 	for (int frame = 0; frame < 600; ++frame)
 	{
-		world.Update(inputs);
+		world.Update(deltaSeconds, inputs);
 	}
 	CHECK(world.GetRoadGradePercent() == doctest::Approx(settings.maxGradePercent).epsilon(0.01));
 }
@@ -518,15 +518,15 @@ TEST_CASE("ERG grade is cosmetic and follows workout intensity")
 	const BiomeList biomes = LoadShippedBiomes();
 	WorldSettings settings;
 	RideWorld world(settings, biomes, nullptr);
-	RideWorldInputs inputs;
-	inputs.deltaSeconds         = 0.1;
+	Struktur::Input::TrainerInput inputs;
+	const double deltaSeconds   = 0.1;
 	inputs.speedMetersPerSecond = 8.0;
 	inputs.ergMode              = true;
-	inputs.manualGradePercent   = -8.0;  // ignored in ERG
+	inputs.chosenGradePercent   = -8.0;  // ignored in ERG
 	inputs.intensityAhead.assign(600, 1.05);
 	for (int frame = 0; frame < 600; ++frame)
 	{
-		world.Update(inputs);
+		world.Update(deltaSeconds, inputs);
 	}
 	CHECK(world.GetRoadGradePercent() == doctest::Approx(GradeForIntensity(1.05)).epsilon(0.02));
 }
@@ -562,13 +562,13 @@ TEST_CASE("same seed, same world: camera and grade match between two worlds")
 	settings.gradeSource = GradeSource::ROUTE;
 	RideWorld first(settings, biomes, nullptr);
 	RideWorld second(settings, biomes, nullptr);
-	RideWorldInputs inputs;
-	inputs.deltaSeconds         = 1.0 / 60.0;
+	Struktur::Input::TrainerInput inputs;
+	const double deltaSeconds   = 1.0 / 60.0;
 	inputs.speedMetersPerSecond = 9.0;
 	for (int frame = 0; frame < 3000; ++frame)
 	{
-		first.Update(inputs);
-		second.Update(inputs);
+		first.Update(deltaSeconds, inputs);
+		second.Update(deltaSeconds, inputs);
 	}
 	CHECK(first.GetCamera().x == second.GetCamera().x);
 	CHECK(first.GetCamera().z == second.GetCamera().z);

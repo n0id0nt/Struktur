@@ -39,6 +39,8 @@ class Input {
     foreign static isTextInputActive
     // Text typed since the last call (UTF-8, may be empty).
     foreign static takeTypedText()
+    // Map of the fitness devices and the ride in progress: power, smoothedPower, cadence, heartRate (null while nothing reports them), *Connected, speed, grade, erg, powerZone, powerFraction, targetDelta, workoutProgress.
+    foreign static trainer
     // The device used most recently: "keyboard" (keyboard or mouse) or "gamepad".
     foreign static activeDevice
     // How the active pad's face buttons are pictured: "lettered" (Xbox) or "positional".

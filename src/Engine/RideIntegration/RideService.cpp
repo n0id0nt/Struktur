@@ -269,7 +269,7 @@ static void FillIntensityAhead(const Ride::WorkoutRunner& runner, double seconds
 	}
 }
 
-void RideService::UpdateWorld(double now)
+void RideService::UpdateWorld(const Input::TrainerInput& trainer, double now)
 {
 	if (!m_world || !m_session)
 	{
@@ -277,31 +277,7 @@ void RideService::UpdateWorld(double now)
 	}
 	const double delta = std::clamp(now - m_lastWorldNow, 0.0, 0.25);
 	m_lastWorldNow     = now;
-	RideWorld::RideWorldInputs inputs;
-	inputs.deltaSeconds         = delta;
-	inputs.speedMetersPerSecond = m_session->GetSpeedMetersPerSecond();
-	inputs.manualGradePercent   = m_session->GetChosenGradePercent();
-	inputs.ergMode              = m_session->GetController().GetMode() == Ride::TrainerController::Mode::ERG;
-	inputs.powerZone            = m_session->GetPowerZone();
-	inputs.cadenceRpm           = m_session->GetCadence();
-	inputs.heartRateBpm         = m_session->GetHeartRate();
-	const std::optional<double> power = m_session->GetPower();
-	if (power && m_session->GetRider().ftpWatts > 0.0)
-	{
-		inputs.powerFraction = *power / m_session->GetRider().ftpWatts;
-	}
-	const std::optional<double> target = m_session->GetTargetWatts();
-	if (power && target)
-	{
-		inputs.targetDeltaWatts = *power - *target;
-	}
-	if (const Ride::WorkoutRunner* runner = m_session->GetRunner())
-	{
-		const double total     = runner->GetWorkout().TotalDurationSeconds();
-		inputs.workoutProgress = total > 0.0 ? std::clamp(runner->GetPlanPosition() / total, 0.0, 1.0) : 0.0;
-		FillIntensityAhead(*runner, WORKOUT_LOOKAHEAD_SECONDS, inputs.intensityAhead);
-	}
-	m_world->Update(inputs);
+	m_world->Update(delta, trainer);
 	// SIM simulates the road under the rider (in ERG the controller holds watts and ignores it).
 	m_session->SetRoadGrade(m_world->GetRoadGradePercent());
 }
@@ -551,56 +527,109 @@ static std::string EventName(Ride::SessionEvent::Type type)
 	return "ride" + name;
 }
 
-void RideService::Update(GameContext& context, double now)
+// The devices half of Input::TrainerInput: connection state and the freshest power, cadence and heart rate.
+static Input::TrainerInput ReadTrainerDevices(Fitness::FitnessManager& fitness, Ride::PowerSource powerSource, double now)
 {
-	if (!m_session || m_session->IsFinished())
-	{
-		return;
-	}
-	Fitness::FitnessManager& fitness = context.GetFitnessManager();
 	Fitness::Trainer* trainer        = fitness.GetTrainer();
 	Fitness::PowerMeter* meter       = fitness.GetPowerMeter();
 	Fitness::HeartRateSensor* strap  = fitness.GetHeartRateSensor();
 
-	Ride::SensorReadings readings;
-	readings.trainerAssigned     = trainer != nullptr;
-	readings.trainerConnected    = trainer && trainer->GetConnectionState() == Fitness::ConnectionState::CONNECTED;
-	readings.powerMeterAssigned  = meter != nullptr;
-	readings.powerMeterConnected = meter && meter->GetConnectionState() == Fitness::ConnectionState::CONNECTED;
-	readings.heartRateAssigned   = strap != nullptr;
-	readings.heartRateConnected  = strap && strap->GetConnectionState() == Fitness::ConnectionState::CONNECTED;
+	Input::TrainerInput input;
+	input.trainerAssigned     = trainer != nullptr;
+	input.trainerConnected    = trainer && trainer->GetConnectionState() == Fitness::ConnectionState::CONNECTED;
+	input.powerMeterAssigned  = meter != nullptr;
+	input.powerMeterConnected = meter && meter->GetConnectionState() == Fitness::ConnectionState::CONNECTED;
+	input.heartRateAssigned   = strap != nullptr;
+	input.heartRateConnected  = strap && strap->GetConnectionState() == Fitness::ConnectionState::CONNECTED;
 
-	const bool meterFresh = readings.powerMeterConnected && meter->GetLatestSample().powerWatts &&
+	const bool meterFresh = input.powerMeterConnected && meter->GetLatestSample().powerWatts &&
 	                        now - meter->GetLatestSample().timestampSeconds <= POWER_STALE_SECONDS;
-	const bool trainerFresh = readings.trainerConnected && trainer->GetLatestSample().powerWatts &&
+	const bool trainerFresh = input.trainerConnected && trainer->GetLatestSample().powerWatts &&
 	                          now - trainer->GetLatestSample().timestampSeconds <= POWER_STALE_SECONDS;
-	const bool useMeter = m_settings.powerSource == Ride::PowerSource::POWER_METER ||
-	                      (m_settings.powerSource == Ride::PowerSource::AUTO && meterFresh);
+	const bool useMeter = powerSource == Ride::PowerSource::POWER_METER ||
+	                      (powerSource == Ride::PowerSource::AUTO && meterFresh);
 	if (useMeter && meterFresh)
 	{
-		readings.powerWatts = *meter->GetLatestSample().powerWatts;
-		readings.cadenceRpm = meter->GetLatestSample().cadenceRpm;
+		input.powerWatts = *meter->GetLatestSample().powerWatts;
+		input.cadenceRpm = meter->GetLatestSample().cadenceRpm;
 	}
 	else if (!useMeter && trainerFresh)
 	{
-		readings.powerWatts = *trainer->GetLatestSample().powerWatts;
+		input.powerWatts = *trainer->GetLatestSample().powerWatts;
 	}
-	if (!readings.cadenceRpm && trainerFresh)
+	if (!input.cadenceRpm && trainerFresh)
 	{
-		readings.cadenceRpm = trainer->GetLatestSample().cadenceRpm;
+		input.cadenceRpm = trainer->GetLatestSample().cadenceRpm;
 	}
-	if (readings.heartRateConnected && strap->GetLatestSample().bpm &&
+	if (input.heartRateConnected && strap->GetLatestSample().bpm &&
 	    now - strap->GetLatestSample().timestampSeconds <= HEART_RATE_STALE_SECONDS)
 	{
-		readings.heartRateBpm = *strap->GetLatestSample().bpm;
+		input.heartRateBpm = *strap->GetLatestSample().bpm;
 	}
 	else if (trainerFresh && trainer->GetLatestSample().heartRateBpm)
 	{
-		readings.heartRateBpm = *trainer->GetLatestSample().heartRateBpm;
+		input.heartRateBpm = *trainer->GetLatestSample().heartRateBpm;
 	}
+	return input;
+}
 
-	m_session->Update(now, readings, trainer);
-	UpdateWorld(now);
+static Ride::SensorReadings ToSensorReadings(const Input::TrainerInput& input)
+{
+	Ride::SensorReadings readings;
+	readings.powerWatts          = input.powerWatts;
+	readings.cadenceRpm          = input.cadenceRpm;
+	readings.heartRateBpm        = input.heartRateBpm;
+	readings.trainerAssigned     = input.trainerAssigned;
+	readings.trainerConnected    = input.trainerConnected;
+	readings.heartRateAssigned   = input.heartRateAssigned;
+	readings.heartRateConnected  = input.heartRateConnected;
+	readings.powerMeterAssigned  = input.powerMeterAssigned;
+	readings.powerMeterConnected = input.powerMeterConnected;
+	return readings;
+}
+
+// The ride half of Input::TrainerInput: what the session makes of the sensors.
+static void FillRideInput(const Ride::RideSession& session, Input::TrainerInput& input)
+{
+	input.smoothedPowerWatts   = session.GetPower();
+	input.speedMetersPerSecond = session.GetSpeedMetersPerSecond();
+	input.chosenGradePercent   = session.GetChosenGradePercent();
+	input.ergMode              = session.GetController().GetMode() == Ride::TrainerController::Mode::ERG;
+	input.powerZone            = session.GetPowerZone();
+	if (input.smoothedPowerWatts && session.GetRider().ftpWatts > 0.0)
+	{
+		input.powerFraction = *input.smoothedPowerWatts / session.GetRider().ftpWatts;
+	}
+	const std::optional<double> target = session.GetTargetWatts();
+	if (input.smoothedPowerWatts && target)
+	{
+		input.targetDeltaWatts = *input.smoothedPowerWatts - *target;
+	}
+	if (const Ride::WorkoutRunner* runner = session.GetRunner())
+	{
+		const double total    = runner->GetWorkout().TotalDurationSeconds();
+		input.workoutProgress = total > 0.0 ? std::clamp(runner->GetPlanPosition() / total, 0.0, 1.0) : 0.0;
+		FillIntensityAhead(*runner, WORKOUT_LOOKAHEAD_SECONDS, input.intensityAhead);
+	}
+}
+
+void RideService::Update(GameContext& context, double now)
+{
+	Fitness::FitnessManager& fitness = context.GetFitnessManager();
+	Input::TrainerInput trainerInput = ReadTrainerDevices(fitness, m_settings.powerSource, now);
+	const bool riding                = m_session && !m_session->IsFinished();
+	if (riding)
+	{
+		m_session->Update(now, ToSensorReadings(trainerInput), fitness.GetTrainer());
+		FillRideInput(*m_session, trainerInput);
+	}
+	// The one place the trainer input is written; the world, the HUD and scripts read it from Input.
+	context.GetInput().SetTrainer(std::move(trainerInput));
+	if (!riding)
+	{
+		return;
+	}
+	UpdateWorld(context.GetInput().GetTrainer(), now);
 
 	Event::EventManager& events = context.GetEventManager();
 	for (const Ride::SessionEvent& event : m_session->TakeEvents())
