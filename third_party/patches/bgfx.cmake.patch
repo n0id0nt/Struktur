@@ -1,0 +1,46 @@
+diff --git a/cmake/bgfxToolUtils.cmake b/cmake/bgfxToolUtils.cmake
+index 5a1ff88..bd536a7 100644
+--- a/cmake/bgfxToolUtils.cmake
++++ b/cmake/bgfxToolUtils.cmake
+@@ -571,7 +571,7 @@ if(TARGET bgfx::shaderc)
+ 	# )
+ 	#
+ 	function(bgfx_compile_shaders)
+-		set(options AS_HEADERS NO_SOURCE_GROUP)
++		set(options AS_HEADERS NO_SOURCE_GROUP DEBUG)
+ 		set(oneValueArgs TYPE VARYING_DEF OUTPUT_DIR OUT_FILES_VAR)
+ 		set(multiValueArgs SHADERS INCLUDE_DIRS DEFINES PROFILES)
+ 		cmake_parse_arguments(ARGS "${options}" "${oneValueArgs}" "${multiValueArgs}" "${ARGN}")
+@@ -654,10 +654,31 @@ if(TARGET bgfx::shaderc)
+ 				if(ARGS_AS_HEADERS)
+ 					set(BIN2C_PART BIN2C ${SHADER_FILE_NAME_WE}_${PROFILE_EXT})
+ 				endif()
++				# NOTE(Struktur): the upstream form of this line passed a generator expression
++				# ("$<$<CONFIG:Debug,RelWithDebInfo>:DEBUG>") as a bare boolean option token - but
++				# cmake_parse_arguments (inside _bgfx_shaderc_parse, called below) matches option keywords at
++				# CONFIGURE time, before generator expressions are ever evaluated, so that token never equals
++				# the literal string "DEBUG" and the option silently never activates regardless of build config.
++				# Confirmed empirically: the generated shaderc command line for a Debug-config build had no
++				# --debug flag. Fixed by resolving ARGS_DEBUG (now a real, caller-settable option on
++				# bgfx_compile_shaders - see the `options` list above) to a plain, already-evaluated CMake
++				# boolean here, then only appending the literal "DEBUG" token when it's actually set.
++				set(DEBUG_PART "")
++				# s_6_0 (DXIL/SM6) excluded: bgfx's own shaderc_dxil.cpp compiles in two DXC passes, and the
++				# second pass unconditionally appends -Zs/-Qstrip_debug without clearing the first pass's -Zi
++				# (from --debug) first, so DXC rejects the combined args with "Cannot specify both /Zi and
++				# /Zs". A real bug in the vendored tool's C++, not fixable from CMake. s_5_0 (DXBC/SM5) has no
++				# such issue and is what bgfx actually loads on Direct3D11 anyway (DXIL is exclusively for the
++				# Direct3D12 renderer) - so skipping debug info just for s_6_0 costs nothing for D3D11 capture/
++				# debugging tools (RenderDoc etc.) while avoiding a compile failure on a profile that isn't
++				# even used at runtime here.
++				if(ARGS_DEBUG AND NOT PROFILE STREQUAL "s_6_0")
++					set(DEBUG_PART DEBUG)
++				endif()
+ 				_bgfx_shaderc_parse(
+ 					CLI #
+ 					${BIN2C_PART} #
+-					${ARGS_TYPE} ${PLATFORM_I} WERROR "$<$<CONFIG:Debug,RelWithDebInfo>:DEBUG>"
++					${ARGS_TYPE} ${PLATFORM_I} WERROR ${DEBUG_PART}
+ 					FILE ${SHADER_FILE_ABSOLUTE}
+ 					OUTPUT ${OUTPUT}
+ 					PROFILE ${PROFILE}
