@@ -164,13 +164,15 @@ void ChunkStreamer::CollectFinished()
 			++index;
 			continue;
 		}
-		Job job = std::move(*flight.job);
+		// Everything needed from the flight, before erasing it: `flight` then refers to the next one.
+		const bool succeeded = flight.task.Succeeded();
+		Job job              = std::move(*flight.job);
 		m_inFlight.erase(m_inFlight.begin() + static_cast<ptrdiff_t>(index));
 		if (job.mesh == nullptr)
 		{
 			continue;  // reclaimed before it started
 		}
-		if (!flight.task.Succeeded())
+		if (!succeeded)
 		{
 			job.generation = 0;  // dropped at shutdown: nothing was built, recycle the mesh
 		}

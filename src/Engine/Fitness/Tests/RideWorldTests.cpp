@@ -524,6 +524,37 @@ TEST_CASE("a world is empty until loaded, and loading again starts afresh")
 	CHECK(world.GetSettings().seed == 14);
 }
 
+TEST_CASE("no chunk is lost when builds finish one at a time")
+{
+	const BiomeList biomes = LoadShippedBiomes();
+	// No workers: exactly one build finishes each frame, while later ones are still waiting.
+	Struktur::Jobs::JobSystem jobs(Struktur::Jobs::JobSystemConfig{0});
+	World world;
+	WorldSettings settings;
+	settings.seed = 2;
+	LoadWorld(world, settings, biomes, &jobs);
+	Struktur::Input::TrainerInput input;
+	input.speedMetersPerSecond = 8.0;
+	for (int frame = 0; frame < 600; ++frame)
+	{
+		jobs.TryRunOne();
+		world.Update(1.0 / 60.0, input);
+	}
+	// Stand still until everything requested has arrived.
+	input.speedMetersPerSecond = 0.0;
+	for (int frame = 0; frame < 200; ++frame)
+	{
+		jobs.TryRunOne();
+		world.Update(1.0 / 60.0, input);
+	}
+	CHECK(world.GetStreamer().GetStats().pendingJobs == 0);
+	REQUIRE_FALSE(world.GetChunks().empty());
+	for (size_t index = 1; index < world.GetChunks().size(); ++index)
+	{
+		CHECK(world.GetChunks()[index]->chunkIndex == world.GetChunks()[index - 1]->chunkIndex + 1);
+	}
+}
+
 // --- grade behaviour -----------------------------------------------------------------------------------------------
 
 TEST_CASE("SIM manual grade: the road blends towards the set grade and the rider's grade follows")
