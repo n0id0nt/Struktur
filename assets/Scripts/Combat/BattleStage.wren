@@ -26,6 +26,7 @@ import "app" for Time, Application
 import "Util/Colors" for WHITE
 import "Combat/Battler" for Battler
 import "Combat/PlanGhost" for PlanGhost
+import "Combat/BattleProjectile" for BattleProjectile
 
 // Where the fight happens when there's no arena level or authored BattleAnchor - far above the level grid.
 var DEFAULT_ARENA = Vec3.new(1200, -1500, 0)
@@ -84,6 +85,7 @@ class BattleStage {
         _highlights = []
         _cursor = null
         _ghosts = []          // [combatant, its PlanGhost] while plans are shown (drawPlans)
+        _projectiles = []     // shots in flight (Combat/BattleProjectile.wren)
         _planKey = null       // what the plans shown were, to restart their clock when they change
         _planStart = 0
 
@@ -294,6 +296,11 @@ class BattleStage {
         for (event in events) {
             react_(event)
         }
+        var flying = []
+        for (projectile in _projectiles) {
+            if (projectile.update(dt)) flying.add(projectile)
+        }
+        _projectiles = flying
         for (battler in _battlers) {
             var combatant = battler.combatant
             if (combatant.active) {
@@ -339,7 +346,9 @@ class BattleStage {
         }
         var battler = battlerFor(who)
         if (battler == null) return
-        if (type == "hit") {
+        if (type == "start") {
+            shoot_(battler, who, event["move"])
+        } else if (type == "hit") {
             battler.playHitCloud(event["element"], event["blocked"], event["amount"])
             if (!event["blocked"] && event["amount"] > 0) battler.hurt(battlerFor(event["by"]))
             var move = event["move"]
@@ -359,6 +368,16 @@ class BattleStage {
         } else if (type == "direct") {
             battler.playImpact("boltSpark")
         }
+    }
+
+    // A ranged move (BattleProjectile.fires): a shot from the shooter to the cell the move aims at, landing at its impact.
+    shoot_(battler, shooter, move) {
+        if (!BattleProjectile.fires(move) || shooter.cells == null || shooter.cells.count == 0) return
+        var aim = shooter.cells[0]
+        for (cell in shooter.cells) {
+            if (cell[3]) aim = cell
+        }
+        _projectiles.add(BattleProjectile.new(move, _worldParent, battler.position, cellWorld(aim[0], aim[1]), move.impact))
     }
 
     // t: 0..1 progress of the party running off-stage (the flee animation).
@@ -441,6 +460,10 @@ class BattleStage {
     // Fold the arena away: destroy every battler, the grid and the camera, bring the real player and every other
     // level back.
     teardown() {
+        for (projectile in _projectiles) {
+            projectile.teardown()
+        }
+        _projectiles = []
         hidePlans()
         for (battler in _battlers) {
             battler.teardown()

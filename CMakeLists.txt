@@ -217,7 +217,7 @@ if(PLATFORM_DESKTOP OR PLATFORM_WEB)
         # NAME must have no dots - shaderc's bin2c step derives a C array name from the shader filename. Default
         # PROFILES (see bgfxToolUtils.cmake) includes 100_es (GLES2/WebGL-compatible) alongside the desktop
         # profiles, for free, on every desktop build - that's what web's bgfx picks up at runtime below.
-        # Optional second argument: a varying.def.sc other than the shared one (the ride world shaders have their own).
+        # Optional second argument: a varying.def.sc other than the shared one (for shaders that need different varyings).
         function(struktur_compile_shader NAME)
             set(VARYING_FILE ${STRUKTUR_SHADER_DIR}/varying.def.sc)
             if(ARGC GREATER 1)

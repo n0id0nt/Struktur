@@ -49,6 +49,7 @@ import "Events/GameEvents" for GameEvents
 import "Util/SoulFx" for SoulFx
 
 // Half the door's size in metres (32 px at 32 px/m).
+var DEFAULT_TEXTURE = "Backgrounds/Tilesets/TilesetDungeon.png"
 var HALF_SIZE = 0.5
 // TilesetDungeon.png is a 12 x 4 grid of 16 px tiles; the closed door is its first tile (the keyhole block).
 var SHEET_COLUMNS = 12
@@ -72,6 +73,10 @@ class Door {
         _doorType = args["DoorType"]
         _openMessage = args["OpenMessage"]
         _channelKey = args["Channels"]
+        _texturePath = args["Texture"]
+        _columns = args["Columns"]
+        _rows = args["Rows"]
+        _tileIndex = args["TileIndex"]
         _requiredItems = []
         var keyRefs = args["KeyRefs"] != null ? args["KeyRefs"] : args["Keys"]
         var keyRefNames = args["KeyRefsNames"] != null ? args["KeyRefsNames"] : args["KeysNames"]
@@ -86,6 +91,14 @@ class Door {
         _momentKey = _channels.count > 0 ? _channelKey : _events.join(",")
         _open = false
         _requested = false   // waiting for its impact moment to play
+    }
+
+    static preview(entity, args) {
+        var texturePath = args["Texture"]
+        var columns = args["Columns"]
+        var rows = args["Rows"]
+        var tileIndex = args["TileIndex"]
+        Door.createDoorTexture(entity, texturePath, columns, rows, tileIndex)
     }
 
     static splitList_(text) {
@@ -106,12 +119,7 @@ class Door {
     isHidden { _doorType == "Hidden" }
 
     start() {
-        var texture = Texture.load("Backgrounds/Tilesets/TilesetDungeon.png")
-        Sprite.create(_entity, texture, WHITE, Vec2.new(8, 8), SHEET_COLUMNS, SHEET_ROWS, FlipBit.NONE,
-                      CLOSED_SPRITE_INDEX, RenderLayer.ENTITIES, 0)
-        texture.unload()
-        LocalTransform.setScale(_entity, Vec3.new(ART_SCALE, ART_SCALE, 1))
-
+        Door.createDoorTexture(_entity, _texturePath, _columns, _rows, _tileIndex)
         var body = PhysicsBody.create(_entity, BodyDefinition.new(BodyType.STATIC_BODY),
                                       PhysicsBoxShape.new(HALF_SIZE, HALF_SIZE))
         body.setCollisionFilter(CollisionLayers.getLayer("Wall"), CollisionLayers.ALL)
@@ -133,6 +141,20 @@ class Door {
             open_(false)
         }
         if (isHidden && !_open && SoulSight.active) reveal_(true)
+    }
+
+    static createDoorTexture(entity, texturePath, columns, rows, tileIndex) {
+        texturePath = texturePath is String && texturePath != "" ? texturePath : DEFAULT_TEXTURE
+        columns = columns is Num ? columns : SHEET_COLUMNS
+        rows = rows is Num ? rows : SHEET_ROWS
+        tileIndex = tileIndex is Num ? tileIndex : CLOSED_SPRITE_INDEX
+
+        var texture = Texture.load(texturePath)
+
+        Sprite.create(entity, texture, WHITE, Vec2.new(16, 16), columns, rows, FlipBit.NONE,
+                      tileIndex, RenderLayer.ENTITIES, 0)
+        texture.unload()
+        return texture
     }
 
     // A Hidden door: Soul Sight came on (glow, and it can be talked to) or went off (back to the dark).

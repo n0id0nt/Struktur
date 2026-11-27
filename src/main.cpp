@@ -12,7 +12,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 
 int main(int argc, char* argv[])
 {
-	// Before Game(): GameContext's construction already reads --demo.
+	// Before Game(), so systems can read flags from their constructors.
 	Struktur::Core::CommandLine::Set(argc, argv);
 	Struktur::Game();
 	return 0;
