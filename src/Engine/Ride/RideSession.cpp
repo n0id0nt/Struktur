@@ -257,11 +257,101 @@ void RideSession::Update(double now, const SensorReadings& readings, Fitness::Tr
 		m_nextSampleTimer += 1.0;
 	}
 
-	if (now - m_lastSaveNow >= m_settings.autosaveSeconds && !m_log.GetSamples().empty())
+	CollectBackgroundSave(false);
+	if (now - m_lastSaveNow >= m_settings.autosaveSeconds && !m_log.GetSamples().empty() && !IsSaving())
 	{
-		SaveNow();
+		if (m_jobs != nullptr)
+		{
+			StartBackgroundSave();
+		}
+		else
+		{
+			SaveNow();
+		}
 		m_lastSaveNow = now;
 	}
+}
+
+void RideSession::SetBackgroundJobs(Jobs::JobSystem* jobs)
+{
+	CollectBackgroundSave(true);
+	m_jobs = jobs;
+}
+
+bool RideSession::IsSaving() const
+{
+	return m_pendingSave.IsValid() && !m_pendingSave.IsComplete();
+}
+
+// Everything a save needs, copied so the files can be written without touching the session.
+struct RideSaveJob
+{
+	RideLog snapshot;
+	FitOptions options;
+	std::string fitPath;
+	std::string jsonPath;
+	std::string jsonText;
+};
+
+static std::string WriteRideFiles(const RideSaveJob& job)
+{
+	std::string error;
+	if (!WriteFileAtomically(job.fitPath, EncodeFitActivity(job.snapshot, job.options), error))
+	{
+		return error.empty() ? "could not write " + job.fitPath : error;
+	}
+	if (!WriteFileAtomically(job.jsonPath, job.jsonText, error))
+	{
+		return error.empty() ? "could not write " + job.jsonPath : error;
+	}
+	return "";
+}
+
+void RideSession::StartBackgroundSave()
+{
+	if (m_outputBasePath.empty())
+	{
+		return;
+	}
+	std::shared_ptr<RideSaveJob> job = std::make_shared<RideSaveJob>();
+	job->snapshot = m_log;
+	// An autosave is a complete, valid file: close the copy as if the ride ended now.
+	job->snapshot.Close(job->snapshot.GetEndUnix(), m_log.GetSamples().empty() ? 0.0 : m_log.GetSamples().back().timerSeconds);
+	job->options.utcOffsetSeconds = m_utcOffsetSeconds;
+	job->options.serialNumber     = (uint32_t)(m_unixStart & 0x7FFFFFFF);
+	job->fitPath                  = GetFitPath();
+	job->jsonPath                 = GetJsonPath();
+	job->jsonText                 = EncodeJson();
+	m_pendingSave = m_jobs->Run([job] { return WriteRideFiles(*job); }, Jobs::Lane::BACKGROUND);
+}
+
+void RideSession::CollectBackgroundSave(bool wait)
+{
+	if (!m_pendingSave.IsValid())
+	{
+		return;
+	}
+	if (wait)
+	{
+		m_jobs->Wait(m_pendingSave);
+	}
+	if (!m_pendingSave.IsComplete())
+	{
+		return;
+	}
+	if (m_pendingSave.Succeeded())
+	{
+		ReportSave(GetFitPath(), m_pendingSave.GetResult());
+	}
+	// Dropped (the job system shut down first): nothing was written; Finish() writes the final files anyway.
+	m_pendingSave = Jobs::Task<std::string>();
+}
+
+void RideSession::ReportSave(const std::string& path, const std::string& error)
+{
+	m_lastSaveError = error;
+	m_events.push_back(SessionEvent{error.empty() ? SessionEvent::Type::SAVED : SessionEvent::Type::SAVE_FAILED, 0,
+	                                error.empty() ? path : error, 0.0});
 }
 
 void RideSession::RecordSample(double now)
@@ -429,6 +519,8 @@ bool RideSession::Finish(double now)
 	}
 	m_log.Close(WallClock(now), m_timer);
 	m_finished = true;
+	// An autosave still writing would otherwise finish after - and overwrite - the final files.
+	CollectBackgroundSave(true);
 	return SaveNow();
 }
 
@@ -445,16 +537,17 @@ bool RideSession::SaveNow()
 		snapshot.Close(snapshot.GetEndUnix(),
 		               m_log.GetSamples().empty() ? 0.0 : m_log.GetSamples().back().timerSeconds);
 	}
-	FitOptions options;
-	options.utcOffsetSeconds = m_utcOffsetSeconds;
-	options.serialNumber     = (uint32_t)(m_unixStart & 0x7FFFFFFF);
-	std::string error;
-	const bool fitOk  = WriteFileAtomically(GetFitPath(), EncodeFitActivity(snapshot, options), error);
-	const bool jsonOk = fitOk && WriteFileAtomically(GetJsonPath(), EncodeJson(), error);
-	m_lastSaveError   = (fitOk && jsonOk) ? "" : error;
-	m_events.push_back(SessionEvent{(fitOk && jsonOk) ? SessionEvent::Type::SAVED : SessionEvent::Type::SAVE_FAILED, 0,
-	                                (fitOk && jsonOk) ? GetFitPath() : error, 0.0});
-	return fitOk && jsonOk;
+	CollectBackgroundSave(true);
+	RideSaveJob job;
+	job.snapshot                 = std::move(snapshot);
+	job.options.utcOffsetSeconds = m_utcOffsetSeconds;
+	job.options.serialNumber     = (uint32_t)(m_unixStart & 0x7FFFFFFF);
+	job.fitPath                  = GetFitPath();
+	job.jsonPath                 = GetJsonPath();
+	job.jsonText                 = EncodeJson();
+	const std::string error      = WriteRideFiles(job);
+	ReportSave(job.fitPath, error);
+	return error.empty();
 }
 
 std::string RideSession::EncodeJson() const

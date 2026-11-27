@@ -1,9 +1,11 @@
 // Ride control tests: the ERG/SIM trainer controller (ramps, rate limit, trims, clamping, cadence protection), the ride
 // session (start on pedalling, auto-pause, laps, time in target), settings persistence, and a FIT round trip through
 // an independent minimal decoder written here from the FIT protocol description.
+#include <chrono>
 #include <cstdlib>
 #include <filesystem>
 #include <fstream>
+#include <thread>
 #include <map>
 
 #include "Engine/Ride/FitWriter.h"
@@ -541,6 +543,9 @@ TEST_CASE("FIT: a recorded workout round-trips through an independent decoder")
 	std::filesystem::remove_all(folder, cleanup);
 	const std::string basePath = (folder / "ride").string();
 	RideSession session(RideMode::WORKOUT, rider, settings, TwoStepWorkout(), basePath, 1700000000, 3600);
+	// Autosaves go through the job system (as in the game); Finish() must still leave the complete final file.
+	Struktur::Jobs::JobSystem jobs(Struktur::Jobs::JobSystemConfig{2});
+	session.SetBackgroundJobs(&jobs);
 	RecordingTrainer trainer;
 	double now = 0.0;
 	session.Start(now);
@@ -639,4 +644,49 @@ TEST_CASE("FIT: write a sample ride for the external validator")
 	session.TogglePause(now);
 	RunSession(session, trainer, now, 30.0, 260.0, 165.0);
 	CHECK(session.Finish(now));
+}
+
+TEST_CASE("autosaves write their files in the background and report back")
+{
+	for (int workers : {2, 0})
+	{
+		CAPTURE(workers);
+		RideSettings settings;
+		settings.autosaveSeconds = 10.0;
+		RiderInfo rider;
+		const std::filesystem::path folder = std::filesystem::temp_directory_path() / "struktur_autosave_test";
+		std::error_code cleanup;
+		std::filesystem::remove_all(folder, cleanup);
+		std::filesystem::create_directories(folder, cleanup);
+		const std::string basePath = (folder / "ride").string();
+		Struktur::Jobs::JobSystem jobs(Struktur::Jobs::JobSystemConfig{workers});
+		RideSession session(RideMode::FREE_RIDE, rider, settings, std::nullopt, basePath, 1700000000, 0);
+		session.SetBackgroundJobs(&jobs);
+		RecordingTrainer trainer;
+		double now = 0.0;
+		session.Start(now);
+		RunSession(session, trainer, now, 12.0, 180.0);  // past the first autosave
+		bool saved = false;
+		const auto waitStart = std::chrono::steady_clock::now();
+		while (!saved && std::chrono::steady_clock::now() - waitStart < std::chrono::seconds(10))
+		{
+			if (workers == 0)
+			{
+				jobs.RunMainThreadWork(0.01);  // what the frame scheduler does without workers
+			}
+			RunSession(session, trainer, now, 0.05, 180.0);
+			for (const SessionEvent& event : session.TakeEvents())
+			{
+				saved = saved || event.type == SessionEvent::Type::SAVED;
+			}
+			std::this_thread::yield();
+		}
+		CHECK(saved);
+		CHECK(session.GetLastSaveError().empty());
+		CHECK(std::filesystem::exists(session.GetFitPath()));
+		CHECK(std::filesystem::exists(session.GetJsonPath()));
+		REQUIRE(session.Finish(now));
+		CHECK_FALSE(session.IsSaving());
+		std::filesystem::remove_all(folder, cleanup);
+	}
 }

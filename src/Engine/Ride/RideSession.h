@@ -7,6 +7,7 @@
 #include <vector>
 
 #include "Engine/Fitness/Devices/DeviceTypes.h"
+#include "Engine/Jobs/Task.h"
 #include "Engine/Ride/RideLog.h"
 #include "Engine/Ride/RideSettings.h"
 #include "Engine/Ride/SpeedModel.h"
@@ -76,12 +77,18 @@ const char* ToString(SessionEvent::Type type);
 //    pause stays paused until resumed). The workout clock follows the ride timer.
 //  - Speed, distance and virtual elevation come from SpeedModel on the effective grade.
 //  - One sample per second of moving time goes into the RideLog; a workout opens a lap per step, Free Ride on Lap().
-//  - FIT + JSON are written on Finish() and autosaved every `autosaveSeconds`.
+//  - FIT + JSON are written on Finish() and autosaved every `autosaveSeconds`. With SetBackgroundJobs(), an autosave
+//    only snapshots the ride on the calling thread; encoding and writing the files run as a background task.
 class RideSession
 {
 public:
 	RideSession(RideMode mode, RiderInfo rider, RideSettings settings, std::optional<Workout> workout,
 	            std::string outputBasePath, int64_t unixStartTime, int32_t utcOffsetSeconds);
+
+	// Autosaves write their files on this job system instead of the calling thread (null = write in place). It must
+	// outlive the session.
+	void SetBackgroundJobs(Jobs::JobSystem* jobs);
+	bool IsSaving() const;  // a background autosave is in flight
 
 	void Start(double now);
 	void Update(double now, const SensorReadings& readings, Fitness::Trainer* trainer);
@@ -153,6 +160,9 @@ private:
 	std::optional<double> CurrentStepTarget() const;
 	bool IsInTarget(double power, double target) const;
 	std::string EncodeJson() const;
+	void StartBackgroundSave();
+	void CollectBackgroundSave(bool wait);
+	void ReportSave(const std::string& path, const std::string& error);
 
 	RideMode m_mode;
 	RiderInfo m_rider;
@@ -188,5 +198,7 @@ private:
 	int m_targetSeconds;
 	int m_inTargetSeconds;
 	std::vector<SessionEvent> m_events;
+	Jobs::JobSystem* m_jobs = nullptr;
+	Jobs::Task<std::string> m_pendingSave;  // result: the error, empty on success
 };
 }  // namespace Struktur::Ride
