@@ -1,12 +1,13 @@
 # Job system
 
-The engine's job system and scheduler. **Phases 1, 1b and 2 are done:**
+The engine's job system and scheduler. **Phases 1, 1b, 2 and 3 are done:**
 - **Phase 1:** worker threads, lanes, dependencies, waiting that helps, parallel-for and inline mode.
 - **Phase 1b:** pooled jobs, per-worker work-stealing queues and a cap on background workers.
 - **Phase 2:** tasks with results, progress and cancellation; follow-ups that run on the main thread; stepped jobs.
+- **Phase 3:** the engine owns a job system and syncs it with the frame loop; level tilesets decode in parallel.
 
-All of it has unit tests and a benchmark. Phases 3–6 (frame integration, ECS systems as jobs, Wren handles, web
-threads) are planned at the end.
+All of it has unit tests and a benchmark. Phases 4–6 (ECS systems as jobs, Wren handles, web threads) are planned at
+the end.
 
 Code: `src/Engine/Jobs/` (library `StrukturJobs`, no SDL, bgfx or Wren). Tests: `src/Engine/Jobs/Tests/`. Benchmark:
 `tools/job_bench/`.
@@ -67,7 +68,7 @@ load.ThenOnMainThread([](Task<Image>& done) {
     if (done.Succeeded()) { Upload(done.TakeResult()); }  // bgfx, Wren and entt are safe here
 });
 
-// Once a frame, on the main thread (phase 3 puts this in the frame loop):
+// Once a frame, on the main thread (the engine's FrameScheduler does this - see below):
 jobs.RunMainThreadWork(0.002);
 ```
 
@@ -93,6 +94,39 @@ jobs.RunMainThreadWork(0.002);
 - **Cost:** each task allocates a small shared state, unlike plain `Schedule()`. Tasks are for coarse work (loads,
   builds, streaming); use plain jobs or parallel-for for fine-grained work.
 
+### In the engine (phase 3)
+
+```cpp
+Jobs::JobSystem& jobs = context.GetJobSystem();
+Task<Mesh> build = jobs.Run([=] { return BuildChunk(seed); });
+build.ThenOnMainThread([&context](Task<Mesh>& done) { Upload(context, done.TakeResult()); });
+
+context.GetFrameScheduler().PostFrame([stats] { WriteStats(stats); });   // after this frame, done by the next
+```
+
+- **Ownership:** `GameContext` owns the `JobSystem` and a `FrameScheduler`. The worker count is one per core minus
+  the main thread. `--threads=N` overrides it, and `--threads=0` runs everything on the main thread (handy for
+  debugging). Builds with `STRUKTUR_THREADS` off (web by default) always get zero workers.
+- **The frame** (`UpdateLoop` in `Game.cpp`):
+
+  ```
+  poll input, time ─ BeginFrame ─ game loop (update, render, submit) ─ EndFrame
+                     │                                                 │
+                     ├ waits for last frame's post-frame jobs          └ starts this frame's post-frame jobs
+                     └ runs main-thread follow-ups (2 ms budget);        (POST_FRAME lane, overlapping the next
+                       with zero workers, also queued jobs               frame's input and update)
+  ```
+
+  `BeginFrame` shows up as "Jobs Sync" in the profiler. Background tasks aren't tied to frames: they run on
+  workers whenever there's room, and hand results back through follow-ups.
+- **Shutdown:** `GameContext::Shutdown()` shuts the job system down before anything else, so no job can outlive
+  the systems it uses. Queued jobs and their follow-ups are dropped.
+- **Parallel texture decode:** `ResourceManager::PrefetchTextures(context, paths)` decodes textures that aren't
+  loaded yet on all workers and waits; the following `GetTexture()` calls skip the file read and decode. Loading a
+  level uses it for all of the level's tilesets. The GPU upload stays on the main thread as before.
+- **Thread rules:** work on workers must not touch Wren, the entt registry, bgfx or the UI. Hand results to a
+  follow-up instead. File reads (PhysFS) and `TextureResource::Decode` are safe on workers.
+
 ### How it works (phase 1b)
 
 - **Pooled jobs:** jobs live in a pool of fixed slots (chunks of 4,096, growing on demand) and are reused, so
@@ -113,8 +147,8 @@ jobs.RunMainThreadWork(0.002);
 - **Run-time switch:** `JobSystemConfig{0}` gives zero workers on any build. Use it for debugging, or for web builds
   whose page isn't cross-origin isolated.
 - **Same API in both cases:** jobs queue up and run on the calling thread inside `Wait()` or `RunPending()`.
-  Nothing runs until something waits or pumps. Phase 3 will make the engine pump background work each frame
-  within a budget, so `IsComplete()` keeps advancing on web too.
+  Nothing runs until something waits or pumps. The engine pumps queued work every frame within the main-thread
+  budget (`FrameScheduler::BeginFrame`), so `IsComplete()` keeps advancing on web too.
 - **Tested:** the whole test suite runs with 0, 1, 4 and all workers, and also in a `STRUKTUR_THREADS=OFF` build.
 
 ## Building, testing, benchmarking
@@ -127,10 +161,9 @@ build-jobs/Release/job_bench.exe --csv job_bench.csv
 ```
 
 Add `--quick` for a shorter benchmark run, and `-DSTRUKTUR_THREADS=OFF` for the no-threads build. The root build
-links `StrukturJobs` into the game, with tests and the benchmark off. Nothing in the engine uses it yet; that's
-phase 3.
+links `StrukturJobs` into the game, with tests and the benchmark off.
 
-### Tests (32 cases, ~149k checks)
+### Tests (36 cases, ~149k checks)
 
 Every scenario runs with 0, 1, 4 and all workers:
 - Exactly-once execution of 20k jobs, and the job counters.
@@ -227,10 +260,22 @@ schedule + complete was 0.16 / 0.31 / 0.39 / 0.49 / 0.58 µs at 0 / 1 / 4 / 8 / 
   median rose to 41 µs, because requeued steps keep waking idle workers, while the worst 1 % halved.
 - **A step costs 25–300 ns** of queueing. Steps of 0.1 ms or more lose well under 1 % to it.
 
+### Phase 3 in the game
+
+Debug game build (`build-nogame`), muted 45-second runs into the overworld:
+- **19 workers:** the first level's 5 tilesets decoded in one parallel prefetch, and all 5 textures came from it.
+- **`--threads=0`:** same result.
+- **Both runs:** no errors, and the save files were unchanged.
+- **Shutdown:** closing the window shut the game down within 30 seconds, with no errors. The log stops partway
+  through cleanup because stdout is buffered, and the exit code wasn't captured.
+
+**Not measured yet:** a level's load time or a frame's time, before against after. Five small tilesets is too little
+work to show a difference; the ride world's chunk building is the meaningful benchmark.
+
 ## Next
 
-- **Phase 3:** frame integration (sync points in `UpdateLoop`, the post-frame lane, a per-frame inline budget),
-  plus moving the ride world's `ChunkStreamer`, texture decoding and the ride autosave onto it.
+- **Phase 3, ride part:** move the ride world's `ChunkStreamer` worker thread onto background tasks, and the ride
+  autosave onto `PostFrame`. That code lives on branch `RideSoftware`, so it needs this branch merged into it.
 - **Phase 4:** ECS systems as jobs (access declarations, a dependency graph per phase, command lists for entity
   changes). Every existing system starts out marked main-thread-only.
 - **Phase 5:** Wren task handles (`if (load.isComplete)`).
@@ -239,5 +284,5 @@ schedule + complete was 0.16 / 0.31 / 0.39 / 0.49 / 0.58 µs at 0 / 1 / 4 / 8 / 
 **Not covered yet:**
 - ThreadSanitizer (not available with MSVC).
 - Web, Linux and macOS builds of the library.
-- The real-world benchmarks (chunk building, game frame time) wait for phase 3, when the engine uses the job
-  system.
+- The real-world benchmarks (chunk building, game frame time) wait for the ride part of phase 3.
+- The editor build (`build-windows-debug`) and the web build haven't been rebuilt with the engine changes.
