@@ -1,9 +1,12 @@
 # Job system
 
-The engine's job system and scheduler. **Phases 1 and 1b are done:** worker threads, lanes, dependencies, waiting
-that helps, parallel-for and inline mode (phase 1), then pooled jobs, per-worker work-stealing queues and a cap on
-background workers (phase 1b), with unit tests and a benchmark. Phases 2–6 (tasks, frame integration, ECS systems
-as jobs, Wren handles, web threads) are planned at the end.
+The engine's job system and scheduler. **Phases 1, 1b and 2 are done:**
+- **Phase 1:** worker threads, lanes, dependencies, waiting that helps, parallel-for and inline mode.
+- **Phase 1b:** pooled jobs, per-worker work-stealing queues and a cap on background workers.
+- **Phase 2:** tasks with results, progress and cancellation; follow-ups that run on the main thread; stepped jobs.
+
+All of it has unit tests and a benchmark. Phases 3–6 (frame integration, ECS systems as jobs, Wren handles, web
+threads) are planned at the end.
 
 Code: `src/Engine/Jobs/` (library `StrukturJobs`, no SDL, bgfx or Wren). Tests: `src/Engine/Jobs/Tests/`. Benchmark:
 `tools/job_bench/`.
@@ -42,8 +45,53 @@ if (build.IsComplete()) { ... }                         // poll from the update 
 - **Background limit:** `JobSystemConfig{workers, backgroundWorkerLimit}` caps how many workers run background jobs
   at once. The default (-1) keeps workers free for frame work: all workers when there's 1, all but one for 2–3, all
   but two otherwise. Threads helping inside `Wait()` don't count towards it.
-- **Stats:** `GetStats()` reports jobs scheduled, run, run by helpers, stolen and dropped, how many jobs needed heap
-  storage for their work, and the pool size.
+- **Stats:** `GetStats()` reports jobs scheduled, run, run by helpers, stolen and dropped, steps requeued,
+  main-thread follow-ups run, how many jobs needed heap storage for their work, and the pool size.
+
+### Tasks (phase 2)
+
+```cpp
+#include "Engine/Jobs/Task.h"
+
+Task<Image> load = jobs.Run([path](TaskContext& context) {
+    Image image = Decode(path, [&](float done) { context.SetProgress(done); });
+    return image;                                       // ignored if the task was cancelled meanwhile
+});
+
+// In the update loop:
+if (load.IsComplete() && load.Succeeded()) { Upload(load.GetResult()); }
+loadingBar.SetValue(load.GetProgress());
+
+// Or hand the result to the main thread once it's ready:
+load.ThenOnMainThread([](Task<Image>& done) {
+    if (done.Succeeded()) { Upload(done.TakeResult()); }  // bgfx, Wren and entt are safe here
+});
+
+// Once a frame, on the main thread (phase 3 puts this in the frame loop):
+jobs.RunMainThreadWork(0.002);
+```
+
+- **`jobs.Run(work, lane, dependencies)`** schedules a task (background lane by default). `work` is `T()` or
+  `T(TaskContext&)`. The task is a `Task<T>`; copies share the same state.
+- **Status:** `PENDING`, `RUNNING`, then one of `SUCCEEDED`, `CANCELLED` or `DROPPED` (shut down before it
+  finished). `IsComplete()` is true for all three final states. `GetResult()`, `TryGetResult()` and
+  `TakeResult()` work only after `SUCCEEDED`.
+- **Progress:** the work calls `context.SetProgress(0..1)`; it reads as 1 once the task succeeds.
+- **Cancel:** `task.Cancel()` asks the task to stop. If it hasn't started, its work never runs. If it's running, it
+  stops when it next checks `context.IsCancelled()`, and any result it returns is discarded.
+- **Follow-ups:** `task.ThenOnMainThread(fn)` runs `fn(task)` inside the next `RunMainThreadWork()` after the task
+  completes, cancelled ones included. One added after completion is queued straight away. A task dropped at
+  shutdown never runs its follow-ups. `jobs.RunOnMainThread(fn)` queues any function the same way.
+- **`RunMainThreadWork(budget)`** runs queued follow-ups, oldest first, checking the time budget between them. With
+  zero workers it also runs queued jobs in what's left of the budget, so tasks keep progressing without threads.
+- **Stepped work:** work that returns `StepResult` is called again after each `CONTINUE` until it returns `DONE`.
+  Between steps it goes back in the queue, so higher-lane jobs and other queued work get a turn. Through `Run()`
+  it's a `Task<void>` that can be cancelled between steps; through `Schedule()` it's a plain job. With zero workers
+  each step is one job for `RunPending()` / `RunMainThreadWork()`, so streaming spans frames within the budget.
+- **Wait:** `jobs.Wait(task)` works like waiting on its handle. `task.GetHandle()` gives the job handle for
+  dependencies: a task's status turns final a moment before its handle completes, so poll the task, not the handle.
+- **Cost:** each task allocates a small shared state, unlike plain `Schedule()`. Tasks are for coarse work (loads,
+  builds, streaming); use plain jobs or parallel-for for fine-grained work.
 
 ### How it works (phase 1b)
 
@@ -82,7 +130,7 @@ Add `--quick` for a shorter benchmark run, and `-DSTRUKTUR_THREADS=OFF` for the 
 links `StrukturJobs` into the game, with tests and the benchmark off. Nothing in the engine uses it yet; that's
 phase 3.
 
-### Tests (18 cases, ~84k checks)
+### Tests (32 cases, ~149k checks)
 
 Every scenario runs with 0, 1, 4 and all workers:
 - Exactly-once execution of 20k jobs, and the job counters.
@@ -100,6 +148,21 @@ Every scenario runs with 0, 1, 4 and all workers:
 - Phase 1b: an old handle to a reused slot still reads as complete; the pool grows past 30k live jobs; work of
   any size (inline or heap) runs once and is destroyed once, including dropped work; background jobs never use
   more workers than the limit while a frame job still starts promptly; idle workers steal spawned jobs.
+- Phase 2 (`Tests/TaskTests.cpp`):
+  - Results, `Task<void>`, invalid tasks, and polling from a simulated update loop.
+  - Tasks depending on other tasks, including a 100-way fan-in.
+  - Cancelling before start (the work never runs) and while running (the result is discarded).
+  - Progress from a worker, and step by step without workers.
+  - Follow-ups:
+    - run only inside `RunMainThreadWork()` and on its thread;
+    - one added late still runs;
+    - cancelled tasks still get theirs.
+  - Main-thread work runs in order and respects its budget.
+  - Stepped jobs run every step once and can be cancelled between steps.
+  - With one worker busy streaming, a frame job starts within about one step.
+  - Without workers, streaming spans frames and each frame stays within budget plus one step.
+  - Shutdown drops unfinished tasks: no follow-ups, work destroyed exactly once.
+  - Four threads creating 2,000 tasks each.
 
 **Stability:** 40 Release runs and 10 Debug runs in a row all passed, plus the `STRUKTUR_THREADS=OFF` build.
 
@@ -138,11 +201,34 @@ The baseline is a plain `std::function` call: 0.8 ns.
 - **Parallel work is unchanged.** Parallel-for keeps 89–99 % efficiency, and the simulated frame still goes from
   48 ms to 3.6 ms. Those jobs are big enough that per-job cost never mattered.
 
+### Phase 2: tasks, steps and follow-ups
+
+Same machine and build. Plain-job numbers didn't change: the step check costs nothing measurable. Batched
+schedule + complete was 0.16 / 0.31 / 0.39 / 0.49 / 0.58 µs at 0 / 1 / 4 / 8 / 19 workers.
+
+| Benchmark | 0 workers (inline) | 1 | 4 | 8 | 19 |
+|---|---|---|---|---|---|
+| Task run + wait, one at a time (ns/task) | 150 | 235 | 668 | 1210 | 1973 |
+| Task run + complete, batched (ns/task) | 275 | 309 | 396 | 515 | 753 |
+| … plus a main-thread follow-up per task (ns/task) | 482 | 550 | 777 | 857 | 973 |
+| Running one follow-up on the main thread (ns) | 129 | 137 | 135 | 144 | 230 |
+| One stepped job, cost per step (ns) | 33 | 24 | 285 | 249 | 206 |
+| Frame job start, background load as one long job: p50 / p99 (µs) | – | 2549 / 4236 | 0.7 / 17 | 2.8 / 40 | 1.0 / 825 |
+| Frame job start, same load as 0.5 ms steps: p50 / p99 (µs) | – | 259 / 647 | 0.7 / 22 | 2.5 / 31 | 41 / 396 |
+
+**What this says:**
+- **A task costs about the same as a plain job,** plus its shared state: 0.3–0.75 µs batched against 0.16–0.58 µs.
+  A main-thread follow-up adds about 0.2–0.4 µs in all, 0.13 µs of it on the main thread. That's negligible for the
+  loads and builds tasks are meant for.
+- **Stepped background work fixes the single-worker case.** With one worker there's no spare worker to reserve, so
+  a frame job used to wait out the whole background job (p50 2.5 ms). With the same work split into 0.5 ms steps,
+  it waits for the current step to end (p50 0.26 ms, p99 0.65 ms). Finer steps wait less.
+- **With 4+ workers the background limit already does the job.** Steps change little there. At 19 workers the
+  median rose to 41 µs, because requeued steps keep waking idle workers, while the worst 1 % halved.
+- **A step costs 25–300 ns** of queueing. Steps of 0.1 ms or more lose well under 1 % to it.
+
 ## Next
 
-- **Phase 2:** tasks with results, progress and cancellation; follow-up steps that run on the main thread;
-  step-based background jobs that run within a per-frame budget (long jobs give way between steps, which also
-  fixes the latency issue).
 - **Phase 3:** frame integration (sync points in `UpdateLoop`, the post-frame lane, a per-frame inline budget),
   plus moving the ride world's `ChunkStreamer`, texture decoding and the ride autosave onto it.
 - **Phase 4:** ECS systems as jobs (access declarations, a dependency graph per phase, command lists for entity
