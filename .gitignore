@@ -21,3 +21,7 @@ saves/
 editor_layout_windows.json
 editor_projects.json
 editor_saves.json
+
+# Local checks: a fresh clone and the behaviour records (tools/checks)
+build-fresh/
+baseline/
