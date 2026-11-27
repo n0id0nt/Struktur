@@ -1,9 +1,30 @@
 #include "GameContext.h"
 
+#include <cstdlib>
+
+#include "Engine/Core/CommandLine.h"
+
 namespace Struktur
 {
+// --threads=N picks the worker count (0 = no worker threads, everything runs on the main thread); otherwise one per
+// core minus the main thread. Builds with STRUKTUR_THREADS off (web by default) always get zero.
+static int RequestedWorkerCount()
+{
+	const std::string prefix = "--threads=";
+	for (const std::string& argument : Core::CommandLine::GetArguments())
+	{
+		if (argument.rfind(prefix, 0) == 0)
+		{
+			return std::atoi(argument.c_str() + prefix.size());
+		}
+	}
+	return -1;
+}
+
 GameContext::GameContext()
 {
+	m_jobSystem      = std::make_unique<Jobs::JobSystem>(Jobs::JobSystemConfig{RequestedWorkerCount()});
+	m_frameScheduler = std::make_unique<Jobs::FrameScheduler>(*m_jobSystem);
 	m_camera           = std::make_unique<World::Camera>();
 	m_collisionLayers  = std::make_unique<Physics::CollisionLayers>();
 	m_dialogueManager  = std::make_unique<Dialogue::DialogueManager>();
@@ -43,6 +64,11 @@ GameContext::GameContext()
 
 void GameContext::Shutdown()
 {
+	// Jobs first: running jobs finish, queued ones and their main-thread follow-ups are dropped, so nothing below is
+	// torn down while a worker might still be using it.
+	m_frameScheduler.reset();
+	m_jobSystem->Shutdown();
+	m_jobSystem.reset();
 	// Every member below (other than the graphics device itself) must be torn down before
 	// m_graphicsDevice->Shutdown() runs - bgfx::destroy() is invalid once bgfx has shut down. Resetting
 	// everything else first, in any order, means declaration order above no longer has to encode this.
@@ -194,6 +220,18 @@ entt::registry& GameContext::GetRegistry() const
 {
 	ASSERT_MSG(m_registry.get(), "Registry not initialised");
 	return *m_registry;
+}
+
+Jobs::JobSystem& GameContext::GetJobSystem() const
+{
+	ASSERT_MSG(m_jobSystem.get(), "Job System not initialised");
+	return *m_jobSystem;
+}
+
+Jobs::FrameScheduler& GameContext::GetFrameScheduler() const
+{
+	ASSERT_MSG(m_frameScheduler.get(), "Frame Scheduler not initialised");
+	return *m_frameScheduler;
 }
 
 Resource::ResourceManager& GameContext::GetResourceManager() const
