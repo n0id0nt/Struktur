@@ -18,6 +18,8 @@ class KitButton {
     }
 
     init_(parent, text, absPos, relPos, size, font, labelSize) {
+        _enabled = true
+        _focused = false
         _panel = UIKit.frame(parent, "button", absPos, relPos, size, Vec2.new(0, 0), 5)
         _panel.setFocusable(true)
 
@@ -31,11 +33,26 @@ class KitButton {
         _panel.addChild(_label)
 
         _panel.setOnFocus { |sender|
-            UIKit.applyStyle(_panel, "buttonHover")
-            _label.setTextColor(UIKit.textDark)
+            _focused = true
+            applyLook_()
             if (_onFocused != null) _onFocused.call()
         }
         _panel.setOnLoseFocus { |sender|
+            _focused = false
+            applyLook_()
+        }
+    }
+
+    // Normal / focused / disabled art. A disabled button keeps its "buttonDisabled" pill even with focus (its text
+    // brightens so the player can still see where focus is); clicks still arrive, so the owner checks isEnabled.
+    applyLook_() {
+        if (!_enabled) {
+            UIKit.applyStyle(_panel, "buttonDisabled")
+            _label.setTextColor(_focused ? UIKit.text : UIKit.textMuted)
+        } else if (_focused) {
+            UIKit.applyStyle(_panel, "buttonHover")
+            _label.setTextColor(UIKit.textDark)
+        } else {
             UIKit.applyStyle(_panel, "button")
             _label.setTextColor(UIKit.text)
         }
@@ -50,6 +67,14 @@ class KitButton {
     }
 
     setOnClick(fn) { _panel.setOnClick(fn) }
+
+    isEnabled { _enabled }
+
+    setEnabled(enabled) {
+        if (_enabled == enabled) return
+        _enabled = enabled
+        applyLook_()
+    }
 
     // Called (no arguments) whenever the button gains focus, after its hover look is applied - the panel's own
     // setOnFocus is taken by that, so use this instead.
