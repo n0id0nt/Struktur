@@ -324,7 +324,7 @@ std::vector<uint8_t> FileSystem::Decrypt(const std::vector<uint8_t>& data)
 // Editor - tinyfiledialogs wrappers
 //////////////////////////////////////////////////////////////////////////////////////////
 
-#ifdef EDITOR
+// PhysFS queries (file size, listing, real path) - used by editor tools and game code.
 
 FileResult<uint64_t> FileSystem::GetFileSize(const std::string& path)
 {
@@ -390,6 +390,7 @@ bool FileSystem::IsDirectory(const std::string& path)
 	return stat.filetype == PHYSFS_FILETYPE_DIRECTORY;
 }
 
+#ifdef EDITOR
 std::string FileSystem::OpenFolderDialog(const std::string& title, const std::string& defaultPath)
 {
 	const char* result = tinyfd_selectFolderDialog(title.c_str(), defaultPath.empty() ? nullptr : defaultPath.c_str());
