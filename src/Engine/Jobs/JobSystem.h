@@ -334,13 +334,22 @@ private:
 		std::vector<uint32_t> free;
 	};
 
+	// One piece of a parallel-for. The body belongs to the join job, which runs after every piece.
 	template <typename Body>
 	struct ParallelForPart
 	{
-		std::shared_ptr<Body> body;
+		Body* body;
 		size_t first;
 		size_t last;
 		void operator()() const { (*body)(first, last); }
+	};
+
+	// Runs once every piece has, releasing the body (as it does if the job is dropped at shutdown).
+	template <typename Body>
+	struct ParallelForJoin
+	{
+		std::unique_ptr<Body> body;
+		void operator()() { body.reset(); }
 	};
 
 	template <typename Work>
@@ -431,15 +440,15 @@ JobHandle JobSystem::ParallelFor(size_t begin, size_t end, size_t grain, Body bo
 	{
 		return WhenAll({}, lane);
 	}
-	grain                        = std::max<size_t>(1, grain);
-	std::shared_ptr<Body> shared = std::make_shared<Body>(std::move(body));
+	grain                       = std::max<size_t>(1, grain);
+	std::unique_ptr<Body> owned = std::make_unique<Body>(std::move(body));
 	std::vector<JobHandle> parts;
 	parts.reserve((end - begin + grain - 1) / grain);
 	for (size_t first = begin; first < end; first += grain)
 	{
-		parts.push_back(Schedule(ParallelForPart<Body>{shared, first, std::min(end, first + grain)}, lane));
+		parts.push_back(Schedule(ParallelForPart<Body>{owned.get(), first, std::min(end, first + grain)}, lane));
 	}
-	return WhenAll(parts, lane);
+	return Schedule(ParallelForJoin<Body>{std::move(owned)}, lane, parts);
 }
 }  // namespace Struktur::Jobs
 

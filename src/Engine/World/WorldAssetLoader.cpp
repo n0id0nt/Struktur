@@ -30,7 +30,7 @@ static bool EngineFileExists(const std::string& path)
 // Every .json in World/Biomes, sorted by file name (adding a biome is a data-only change).
 static BiomeList LoadBiomes()
 {
-	auto biomes                    = std::make_shared<std::vector<BiomeDefinition>>();
+	BiomeList biomes;
 	std::vector<std::string> files = FileSystem::ListDirectory(BIOMES_FOLDER);
 	std::sort(files.begin(), files.end());
 	for (const std::string& file : files)
@@ -51,14 +51,14 @@ static BiomeList LoadBiomes()
 		std::string error;
 		if (text && ParseBiome(text.value, biome, error))
 		{
-			biomes->push_back(std::move(biome));
+			biomes.push_back(std::move(biome));
 		}
 		else
 		{
 			DEBUG_WARNING("World: biome %s ignored: %s", path.c_str(), error.c_str());
 		}
 	}
-	if (biomes->empty())
+	if (biomes.empty())
 	{
 		DEBUG_WARNING("World: no biomes in %s - the world is disabled", BIOMES_FOLDER);
 	}

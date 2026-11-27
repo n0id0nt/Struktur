@@ -47,7 +47,8 @@ void World::Load(const WorldSettings& settings, Jobs::JobSystem* jobs)
 	Unload();
 	m_settings = settings;
 	m_settings.Validate();
-	m_biomes = m_assets.biomes ? m_assets.biomes : std::make_shared<const std::vector<BiomeDefinition>>();
+	m_biomes    = m_assets.biomes;
+	m_propTypes = PropTypeTable::FromBiomes(m_biomes);
 	m_streamer = std::make_unique<ChunkStreamer>(jobs);
 	Rebuild();
 	// A standing frame, so the look and first chunk requests are valid before the first real one.
@@ -59,8 +60,8 @@ void World::Unload()
 	m_streamer.reset();  // waits for the builds that write into its meshes
 	m_sequence.reset();
 	m_route.reset();
-	m_propTypes.reset();
-	m_biomes.reset();
+	m_propTypes = PropTypeTable();
+	m_biomes.clear();
 	m_targetGrades.clear();
 	m_profile           = ElevationProfile();
 	m_look              = BiomeLook();
@@ -94,7 +95,6 @@ void World::Rebuild()
 	routeSettings.minCurveRadiusMeters = m_settings.minCurveRadiusMeters;
 	m_route    = std::make_unique<Route>(routeSettings);
 	m_sequence = std::make_unique<BiomeSequence>(m_biomes, Hash64(m_settings.seed ^ 0xB10Bu), m_settings.biome);
-	m_propTypes = std::make_shared<const PropTypeTable>(PropTypeTable::FromBiomes(*m_biomes));
 	m_streamer->Configure(MakeChunkSettings(), m_biomes, m_propTypes);
 
 	ElevationLimits limits;
@@ -157,7 +157,7 @@ const WorldSettings& World::GetSettings() const
 double World::RouteGradeAt(double distance)
 {
 	const BiomeBlend blend = m_sequence->BlendAt(distance);
-	const std::vector<BiomeDefinition>& biomes = *m_biomes;
+	const BiomeList& biomes = m_biomes;
 	double amplitude  = 3.0;
 	double wavelength = 900.0;
 	if (!biomes.empty())
@@ -220,7 +220,7 @@ void World::Update(double deltaSeconds, const Input::TrainerInput& trainer)
 	m_streamer->Update(*m_route, *m_sequence, m_distance, CHUNKS_BEHIND_METERS, quality.drawDistanceMeters);
 
 	m_blend = m_sequence->BlendAt(m_distance);
-	m_look  = LookFor(*m_biomes, m_blend);
+	m_look  = LookFor(m_biomes, m_blend);
 
 }
 
@@ -259,7 +259,7 @@ const std::vector<ChunkMesh*>& World::GetChunks() const
 	return m_streamer->GetReady();
 }
 
-std::shared_ptr<const PropTypeTable> World::GetPropTypes() const
+const PropTypeTable& World::GetPropTypes() const
 {
 	return m_propTypes;
 }
@@ -271,7 +271,7 @@ BiomeSequence& World::GetBiomeSequence()
 
 const std::vector<BiomeDefinition>& World::GetBiomes() const
 {
-	return *m_biomes;
+	return m_biomes;
 }
 
 const BiomeLook& World::GetLook() const

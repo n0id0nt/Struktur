@@ -37,7 +37,8 @@ public:
 	ChunkStreamer& operator=(const ChunkStreamer&) = delete;
 
 	// New settings/biomes: every chunk is rebuilt (released ones are reported through TakeReleased).
-	void Configure(const ChunkSettings& settings, BiomeList biomes, std::shared_ptr<const PropTypeTable> propTypes);
+	// `biomes` and `propTypes` are not owned: they must outlive the streamer.
+	void Configure(const ChunkSettings& settings, const BiomeList& biomes, const PropTypeTable& propTypes);
 	const ChunkSettings& GetSettings() const;
 
 	void Update(Route& route, BiomeSequence& sequence, double riderDistance, double behindMeters, double aheadMeters);
@@ -80,8 +81,8 @@ private:
 
 	Jobs::JobSystem* m_jobs;
 	ChunkSettings m_settings;
-	BiomeList m_biomes;
-	std::shared_ptr<const PropTypeTable> m_propTypes;
+	const BiomeList* m_biomes        = nullptr;
+	const PropTypeTable* m_propTypes = nullptr;
 	uint32_t m_generation;
 
 	std::vector<std::unique_ptr<ChunkMesh>> m_allMeshes;

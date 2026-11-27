@@ -50,7 +50,8 @@ inline const char* ToString(TaskStatus status)
 	}
 }
 
-// The state every copy of a Task shares.
+// The state every copy of a Task shares. The engine's one deliberate shared ownership in the job system: the running
+// work, every copy of the handle, queued follow-ups and a script's garbage-collected Task can each be the last user.
 struct TaskStateBase
 {
 	explicit TaskStateBase(JobSystem* owner) : system(owner) {}

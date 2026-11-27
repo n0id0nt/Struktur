@@ -103,12 +103,9 @@ static void wren_WorldBiomes(WrenVM* vm)
 {
 	Struktur::Callback::VariantList list;
 	const World::WorldAssets& assets = ContextOf(vm).GetWorld().GetAssets();
-	if (assets.biomes)
+	for (const World::BiomeDefinition& biome : assets.biomes)
 	{
-		for (const World::BiomeDefinition& biome : *assets.biomes)
-		{
-			list.items.push_back(biome.id);
-		}
+		list.items.push_back(biome.id);
 	}
 	Struktur::Callback::HelperFunctions::VariantToWrenSlot(vm, 0, list);
 }

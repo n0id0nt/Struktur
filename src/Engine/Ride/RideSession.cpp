@@ -283,7 +283,8 @@ bool RideSession::IsSaving() const
 	return m_pendingSave.IsValid() && !m_pendingSave.IsComplete();
 }
 
-// Everything a save needs, copied so the files can be written without touching the session.
+// Everything a save needs, copied so the files can be written without touching the session. Callable, so a background
+// task can own it outright.
 struct RideSaveJob
 {
 	RideLog snapshot;
@@ -291,6 +292,8 @@ struct RideSaveJob
 	std::string fitPath;
 	std::string jsonPath;
 	std::string jsonText;
+
+	std::string operator()() const;  // writes both files; the error, or empty
 };
 
 static std::string WriteRideFiles(const RideSaveJob& job)
@@ -307,22 +310,27 @@ static std::string WriteRideFiles(const RideSaveJob& job)
 	return "";
 }
 
+std::string RideSaveJob::operator()() const
+{
+	return WriteRideFiles(*this);
+}
+
 void RideSession::StartBackgroundSave()
 {
 	if (m_outputBasePath.empty())
 	{
 		return;
 	}
-	std::shared_ptr<RideSaveJob> job = std::make_shared<RideSaveJob>();
-	job->snapshot = m_log;
+	RideSaveJob job;
+	job.snapshot = m_log;
 	// An autosave is a complete, valid file: close the copy as if the ride ended now.
-	job->snapshot.Close(job->snapshot.GetEndUnix(), m_log.GetSamples().empty() ? 0.0 : m_log.GetSamples().back().timerSeconds);
-	job->options.utcOffsetSeconds = m_utcOffsetSeconds;
-	job->options.serialNumber     = (uint32_t)(m_unixStart & 0x7FFFFFFF);
-	job->fitPath                  = GetFitPath();
-	job->jsonPath                 = GetJsonPath();
-	job->jsonText                 = EncodeJson();
-	m_pendingSave = m_jobs->Run([job] { return WriteRideFiles(*job); }, Jobs::Lane::BACKGROUND);
+	job.snapshot.Close(job.snapshot.GetEndUnix(), m_log.GetSamples().empty() ? 0.0 : m_log.GetSamples().back().timerSeconds);
+	job.options.utcOffsetSeconds = m_utcOffsetSeconds;
+	job.options.serialNumber     = (uint32_t)(m_unixStart & 0x7FFFFFFF);
+	job.fitPath                  = GetFitPath();
+	job.jsonPath                 = GetJsonPath();
+	job.jsonText                 = EncodeJson();
+	m_pendingSave = m_jobs->Run(std::move(job), Jobs::Lane::BACKGROUND);
 }
 
 void RideSession::CollectBackgroundSave(bool wait)

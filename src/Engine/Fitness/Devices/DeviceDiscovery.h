@@ -59,6 +59,8 @@ private:
 	using Inbox = ThreadSafeQueue<BleAdvertisement>;
 
 	IBleCentral* m_central;
+	// Shared on purpose: the scan callback captures it and can fire on another thread after discovery has stopped or
+	// been destroyed.
 	std::shared_ptr<Inbox> m_inbox;
 	std::vector<DiscoveredDevice> m_devices;
 	std::vector<BleAddress> m_changed;

@@ -30,12 +30,11 @@ ChunkStreamer::~ChunkStreamer()
 	}
 }
 
-void ChunkStreamer::Configure(const ChunkSettings& settings, BiomeList biomes,
-                              std::shared_ptr<const PropTypeTable> propTypes)
+void ChunkStreamer::Configure(const ChunkSettings& settings, const BiomeList& biomes, const PropTypeTable& propTypes)
 {
 	m_settings  = settings;
-	m_biomes    = std::move(biomes);
-	m_propTypes = std::move(propTypes);
+	m_biomes    = &biomes;
+	m_propTypes = &propTypes;
 	++m_generation;
 	// Builds that haven't started give their mesh back now; running ones come back with the old generation and
 	// their mesh is recycled then (not now - they're still writing to it).

@@ -321,7 +321,7 @@ void WorldRenderer::SyncChunks(World::World& world)
 			m_chunks.erase(found);
 		}
 	}
-	const size_t propTypes = world.GetPropTypes() ? world.GetPropTypes()->roles.size() : 0;
+	const size_t propTypes = world.GetPropTypes().roles.size();
 	if (propTypes != m_propTypeCount)
 	{
 		m_propTypeCount = propTypes;
@@ -606,24 +606,20 @@ void WorldRenderer::DrawSky(const World::World& world)
 
 void WorldRenderer::DrawProps(const World::World& world, const ChunkGpu& chunk)
 {
-	const std::shared_ptr<const World::PropTypeTable> table = world.GetPropTypes();
-	if (!table)
-	{
-		return;
-	}
+	const World::PropTypeTable& table = world.GetPropTypes();
 	const double ahead = chunk.start - world.GetDistance();
-	for (size_t type = 0; type < chunk.props.size() && type < table->roles.size(); ++type)
+	for (size_t type = 0; type < chunk.props.size() && type < table.roles.size(); ++type)
 	{
 		const uint32_t count = chunk.propCounts[type];
-		if (count == 0 || ahead > table->maxDistance[type])
+		if (count == 0 || ahead > table.maxDistance[type])
 		{
 			continue;
 		}
-		const RoleTexture& texture = Texture(table->roles[type]);
+		const RoleTexture& texture = Texture(table.roles[type]);
 		const float frameWidth     = static_cast<float>(texture.width) / texture.columns;
 		const float frameHeight    = static_cast<float>(texture.height) / texture.rows;
 		SetVec4("u_propSheet", static_cast<float>(texture.columns), static_cast<float>(texture.rows), 0.0f, frameWidth / frameHeight);
-		SetVec4("u_propMode", table->alignToRoad[type] ? 1.0f : 0.0f, 0.3f, 0.0f, 0.5f);
+		SetVec4("u_propMode", table.alignToRoad[type] ? 1.0f : 0.0f, 0.3f, 0.0f, 0.5f);
 		SetVec4("u_propTint", 1.0f, 1.0f, 1.0f, 1.0f);
 		const glm::mat4 transform =
 		    glm::translate(glm::mat4(1.0f), glm::vec3(static_cast<float>(chunk.originX - m_cameraX), 0.0f,

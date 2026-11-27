@@ -5,6 +5,7 @@
 #include <atomic>
 #include <chrono>
 #include <cstdint>
+#include <memory>
 #include <mutex>
 #include <random>
 #include <thread>
@@ -706,4 +707,39 @@ TEST_CASE("idle workers steal jobs another worker spawned")
 	}
 	CHECK(runs.load() == 400);
 	CHECK(jobs.GetStats().jobsStolen > 0);
+}
+
+// A move-only parallel-for body that counts how many of it are alive.
+struct OwnedBody
+{
+	static inline std::atomic<int> alive{0};
+	std::unique_ptr<std::atomic<int>*> items;
+	explicit OwnedBody(std::atomic<int>& counter) : items(std::make_unique<std::atomic<int>*>(&counter)) { alive.fetch_add(1); }
+	OwnedBody(OwnedBody&& other) noexcept : items(std::move(other.items)) { alive.fetch_add(1); }
+	~OwnedBody() { alive.fetch_sub(1); }
+	void operator()(size_t first, size_t last) { (*items)->fetch_add(static_cast<int>(last - first)); }
+};
+
+TEST_CASE("the parallel-for join owns the body and releases it once, run or dropped")
+{
+	for (int workers : WorkerCounts())
+	{
+		CAPTURE(workers);
+		std::atomic<int> done{0};
+		{
+			JobSystem jobs(JobSystemConfig{workers});
+			JobHandle loop = jobs.ParallelFor(0, 10000, 64, OwnedBody(done));
+			jobs.Wait(loop);
+			CHECK(done.load() == 10000);
+			CHECK(OwnedBody::alive.load() == 0);  // released as soon as the loop is complete
+
+			// Still waiting behind a job that never finishes: dropped at shutdown, released all the same.
+			JobHandle endless = jobs.Schedule([] { return StepResult::CONTINUE; }, Lane::BACKGROUND);
+			JobHandle queued  = jobs.ParallelFor(0, 100, 10, OwnedBody(done), Lane::BACKGROUND);
+			(void)endless;
+			(void)queued;
+			jobs.Shutdown();
+		}
+		CHECK(OwnedBody::alive.load() == 0);
+	}
 }

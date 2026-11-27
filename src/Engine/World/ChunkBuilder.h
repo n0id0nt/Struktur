@@ -69,8 +69,9 @@ struct ChunkJob
 	int64_t firstSample   = 0;
 	double sampleSpacing  = 1.0;
 	std::vector<BiomeBlend> rowBlends;  // one per terrain row
-	BiomeList biomes;
-	std::shared_ptr<const PropTypeTable> propTypes;
+	// Owned by the World, which waits for every build before it releases them (World::Unload).
+	const BiomeList* biomes          = nullptr;
+	const PropTypeTable* propTypes   = nullptr;
 };
 
 struct ChunkMesh

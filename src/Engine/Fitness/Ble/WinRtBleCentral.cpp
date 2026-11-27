@@ -130,6 +130,7 @@ struct WinRtBleCentral::Impl
 
 	// --- links (winrt objects used on the worker; the map itself and Link::closing under linkMutex) ---------
 	std::mutex linkMutex;
+	// Shared on purpose: an asynchronous GATT operation keeps its link alive after it has been removed from the map.
 	std::map<BleAddress, std::shared_ptr<Link>> links;
 
 	Impl()

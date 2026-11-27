@@ -127,7 +127,7 @@ struct BiomeDefinition
 // when the text isn't a JSON object or has no id.
 bool ParseBiome(const std::string& json, BiomeDefinition& out, std::string& error);
 
-using BiomeList = std::shared_ptr<const std::vector<BiomeDefinition>>;
+using BiomeList = std::vector<BiomeDefinition>;
 
 // Where the road is in the biome sequence: biome `from` until `weight` starts rising towards `to`.
 struct BiomeBlend
@@ -161,7 +161,8 @@ BiomeLook LookFor(const std::vector<BiomeDefinition>& biomes, const BiomeBlend& 
 class BiomeSequence
 {
 public:
-	BiomeSequence(BiomeList biomes, uint64_t seed, const std::string& forcedBiome, double transitionMeters = 500.0);
+	// `biomes` is not owned: it must outlive the sequence.
+	BiomeSequence(const BiomeList& biomes, uint64_t seed, const std::string& forcedBiome, double transitionMeters = 500.0);
 
 	BiomeBlend BlendAt(double distance);
 	const std::vector<BiomeDefinition>& GetBiomes() const;
@@ -173,7 +174,7 @@ private:
 	void ExtendTo(double distance);
 	int PickBiome(int64_t region, int previous) const;
 
-	BiomeList m_biomes;
+	const BiomeList* m_biomes;
 	uint64_t m_seed;
 	int m_forced;  // -1 = none
 	double m_transition;

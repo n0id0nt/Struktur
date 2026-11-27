@@ -136,6 +136,8 @@ private:
 	BleLinkConfig m_config;
 	LinkState m_state;
 	uint32_t m_generation;
+	// Shared on purpose: the central's callbacks capture it and can fire on another thread after this link is gone (a
+	// late disconnect or write result), so the queue must outlive whichever goes last.
 	std::shared_ptr<Inbox> m_inbox;
 	Backoff m_backoff;
 	double m_retryAtSeconds;

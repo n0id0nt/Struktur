@@ -45,7 +45,7 @@ static std::filesystem::path AssetsDir()
 
 static BiomeList LoadShippedBiomes()
 {
-	auto biomes = std::make_shared<std::vector<BiomeDefinition>>();
+	BiomeList biomes;
 	std::vector<std::filesystem::path> files;
 	for (const auto& entry : std::filesystem::directory_iterator(AssetsDir() / "World" / "Biomes"))
 	{
@@ -60,7 +60,7 @@ static BiomeList LoadShippedBiomes()
 		BiomeDefinition biome;
 		std::string error;
 		REQUIRE_MESSAGE(ParseBiome(ReadTextFile(file), biome, error), file.string() << ": " << error);
-		biomes->push_back(biome);
+		biomes.push_back(biome);
 	}
 	return biomes;
 }
@@ -220,8 +220,8 @@ TEST_CASE("re-deriving the profile with unchanged targets reproduces the road ah
 TEST_CASE("shipped biomes parse and the sequence is seeded and blends smoothly")
 {
 	const BiomeList biomes = LoadShippedBiomes();
-	REQUIRE(biomes->size() >= 5);
-	for (const BiomeDefinition& biome : *biomes)
+	REQUIRE(biomes.size() >= 5);
+	for (const BiomeDefinition& biome : biomes)
 	{
 		CHECK_FALSE(biome.palette.empty());
 		CHECK_FALSE(biome.props.empty());
@@ -248,7 +248,7 @@ TEST_CASE("shipped biomes parse and the sequence is seeded and blends smoothly")
 	BiomeSequence forced(biomes, 11, "night");
 	for (double distance = 0.0; distance < 30000.0; distance += 500.0)
 	{
-		CHECK((*biomes)[static_cast<size_t>(forced.BlendAt(distance).from)].id == "night");
+		CHECK(biomes[static_cast<size_t>(forced.BlendAt(distance).from)].id == "night");
 	}
 }
 

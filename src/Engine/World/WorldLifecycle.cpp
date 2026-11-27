@@ -48,7 +48,7 @@ bool LoadWorld(GameContext& context, const WorldSettings& settings, bool demoPac
 	UnloadWorld(context);
 	World& world              = context.GetWorld();
 	const WorldAssets& assets = world.GetAssets();
-	if (!settings.enabled || !assets.biomes || assets.biomes->empty())
+	if (!settings.enabled || assets.biomes.empty())
 	{
 		return false;
 	}

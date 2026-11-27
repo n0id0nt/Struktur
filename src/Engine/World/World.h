@@ -66,7 +66,7 @@ public:
 	const ElevationProfile& GetProfile() const;
 	ChunkStreamer& GetStreamer();
 	const std::vector<ChunkMesh*>& GetChunks() const;
-	std::shared_ptr<const PropTypeTable> GetPropTypes() const;
+	const PropTypeTable& GetPropTypes() const;
 	BiomeSequence& GetBiomeSequence();
 	const std::vector<BiomeDefinition>& GetBiomes() const;
 	const BiomeLook& GetLook() const;
@@ -87,11 +87,13 @@ private:
 
 	WorldAssets m_assets;
 	WorldSettings m_settings;
-	BiomeList m_biomes;  // the loaded world's
+	// The loaded world's own copy, fixed from Load() to Unload(): the sequence, the streamer and its builds point into
+	// these two, so the streamer (which waits for builds) is always released first.
+	BiomeList m_biomes;
+	PropTypeTable m_propTypes;
 	std::unique_ptr<Route> m_route;
 	std::unique_ptr<BiomeSequence> m_sequence;
 	std::unique_ptr<ChunkStreamer> m_streamer;
-	std::shared_ptr<const PropTypeTable> m_propTypes;
 	ElevationProfile m_profile;
 	std::vector<double> m_targetGrades;
 	BiomeLook m_look;

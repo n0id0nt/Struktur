@@ -329,8 +329,9 @@ BiomeLook LookFor(const std::vector<BiomeDefinition>& biomes, const BiomeBlend& 
 	return look;
 }
 
-BiomeSequence::BiomeSequence(BiomeList biomes, uint64_t seed, const std::string& forcedBiome, double transitionMeters)
-    : m_biomes(std::move(biomes)),
+BiomeSequence::BiomeSequence(const BiomeList& biomes, uint64_t seed, const std::string& forcedBiome,
+                             double transitionMeters)
+    : m_biomes(&biomes),
       m_seed(seed),
       m_forced(-1),
       m_transition(std::max(1.0, transitionMeters))
@@ -354,7 +355,7 @@ const std::vector<BiomeDefinition>& BiomeSequence::GetBiomes() const
 
 const BiomeList& BiomeSequence::GetBiomeList() const
 {
-	return m_biomes;
+	return *m_biomes;
 }
 
 int BiomeSequence::PickBiome(int64_t region, int previous) const
