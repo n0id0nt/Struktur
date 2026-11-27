@@ -25,6 +25,7 @@
 #include <vector>
 
 #include "Engine/Jobs/JobSystem.h"
+#include "Engine/Jobs/Task.h"
 
 using namespace Struktur::Jobs;
 using Clock = std::chrono::steady_clock;
@@ -211,18 +212,30 @@ static void BenchParallelFor(int workers, double sequentialSeconds, std::vector<
 	Report("parallelFor", workers, "efficiency (speed-up / threads)", speedup / (workers + 1) * 100.0, "%");
 }
 
-static void BenchLatency(int workers)
+// Background load: one long job per worker in flight - 200 slices of 0.5 ms, either as one job (`stepped` false) or as
+// a stepped job that gives way after each slice.
+static void BenchLatency(int workers, bool stepped)
 {
 	if (workers == 0)
 	{
 		return;  // inline jobs start when someone pumps - there is no latency to measure
 	}
 	JobSystem jobs(JobSystemConfig{workers});
-	// Background load: keep one long job per worker in flight.
 	std::atomic<bool> stopLoad{false};
 	std::vector<JobHandle> load;
 	for (int index = 0; index < workers; ++index)
 	{
+		if (stepped)
+		{
+			load.push_back(jobs.Schedule(
+			    [&stopLoad, slice = 0]() mutable
+			    {
+				    BusyFor(500);
+				    return ++slice < 200 && !stopLoad.load() ? StepResult::CONTINUE : StepResult::DONE;
+			    },
+			    Lane::BACKGROUND));
+			continue;
+		}
 		load.push_back(jobs.Schedule(
 		    [&stopLoad]
 		    {
@@ -252,8 +265,68 @@ static void BenchLatency(int workers)
 	jobs.WaitAll(handles);
 	stopLoad = true;
 	jobs.WaitAll(load);
-	Report("latency", workers, "schedule-to-start p50 (busy)", Percentile(latency, 0.50), "us");
-	Report("latency", workers, "schedule-to-start p99 (busy)", Percentile(latency, 0.99), "us");
+	const std::string loadName = stepped ? " (stepped load)" : " (busy)";
+	Report("latency", workers, "schedule-to-start p50" + loadName, Percentile(latency, 0.50), "us");
+	Report("latency", workers, "schedule-to-start p99" + loadName, Percentile(latency, 0.99), "us");
+}
+
+// Tasks against plain jobs: the cost of a Task (shared state, status, result), of a step and of a main-thread follow-up.
+static void BenchTasks(int workers)
+{
+	JobSystem jobs(JobSystemConfig{workers});
+	const int count = s_quick ? 20000 : 100000;
+	{
+		const Clock::time_point start = Clock::now();
+		for (int index = 0; index < count; ++index)
+		{
+			jobs.Wait(jobs.Run([index] { return index; }, Lane::FRAME));
+		}
+		Report("tasks", workers, "run+wait each", SecondsSince(start) / count * 1e9, "ns/task");
+	}
+	{
+		std::vector<Task<int>> tasks;
+		std::vector<JobHandle> handles;
+		tasks.reserve(static_cast<size_t>(count));
+		handles.reserve(static_cast<size_t>(count));
+		const Clock::time_point start = Clock::now();
+		for (int index = 0; index < count; ++index)
+		{
+			tasks.push_back(jobs.Run([index] { return index; }, Lane::FRAME));
+			handles.push_back(tasks.back().GetHandle());
+		}
+		jobs.Wait(jobs.WhenAll(handles));
+		Report("tasks", workers, "run+complete (batch)", SecondsSince(start) / count * 1e9, "ns/task");
+	}
+	{
+		// Follow-ups: every task hands its result to the main thread, which runs them all in one RunMainThreadWork().
+		int64_t sum = 0;
+		std::vector<JobHandle> handles;
+		handles.reserve(static_cast<size_t>(count));
+		const Clock::time_point start = Clock::now();
+		for (int index = 0; index < count; ++index)
+		{
+			Task<int> task = jobs.Run([index] { return index; }, Lane::FRAME);
+			task.ThenOnMainThread([&sum](Task<int>& done) { sum += done.GetResult(); });
+			handles.push_back(task.GetHandle());
+		}
+		jobs.Wait(jobs.WhenAll(handles));
+		const Clock::time_point followUps = Clock::now();
+		jobs.RunMainThreadWork(1e9);
+		Report("tasks", workers, "run+complete+follow-up (batch)", SecondsSince(start) / count * 1e9, "ns/task");
+		Report("tasks", workers, "follow-up on main thread", SecondsSince(followUps) / count * 1e9, "ns/follow-up");
+		if (sum != static_cast<int64_t>(count) * (count - 1) / 2)
+		{
+			std::printf("  !! tasks: follow-ups summed %lld\n", static_cast<long long>(sum));
+		}
+	}
+	{
+		// One stepped job: the cost of going round the queue between steps.
+		const int steps = count;
+		int done        = 0;
+		const Clock::time_point start = Clock::now();
+		jobs.Wait(jobs.Schedule([&done, steps] { return ++done < steps ? StepResult::CONTINUE : StepResult::DONE; }, Lane::FRAME));
+		Report("tasks", workers, "stepped job, per step", SecondsSince(start) / steps * 1e9, "ns/step");
+	}
 }
 
 static void BenchChain(int workers)
@@ -421,7 +494,8 @@ int main(int argc, char** argv)
 	std::printf("\n[latency]\n");
 	for (int workers : sweep)
 	{
-		BenchLatency(workers);
+		BenchLatency(workers, false);
+		BenchLatency(workers, true);
 	}
 	std::printf("\n[chain]\n");
 	for (int workers : sweep)
@@ -432,6 +506,11 @@ int main(int argc, char** argv)
 	for (int workers : sweep)
 	{
 		BenchContention(workers);
+	}
+	std::printf("\n[tasks]\n");
+	for (int workers : sweep)
+	{
+		BenchTasks(workers);
 	}
 	std::printf("\n[frame]\n");
 	for (int workers : sweep)
