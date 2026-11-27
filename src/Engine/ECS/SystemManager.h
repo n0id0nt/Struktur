@@ -38,6 +38,13 @@ public:
 	{
 		return SystemAccess::MainThread();
 	}
+	// Runs on the main thread right before a worker system's batch. EnTT creates a component's storage the first
+	// time a non-const registry is asked for it (view<T>(), try_get<T>(), get<T>()) - a structural change two workers
+	// must never make at once - so a worker system ensures here (registry.storage<T>()) the storage of every
+	// component its Update() touches.
+	virtual void Prepare(GameContext& context)
+	{
+	}
 };
 
 class SystemManager
