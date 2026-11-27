@@ -1,6 +1,7 @@
 #pragma once
 
 #include <string>
+#include <vector>
 
 #include "Engine/Resource/FontResource.h"
 #include "Engine/Resource/MusicResource.h"
@@ -53,6 +54,8 @@ private:
 
 public:
 	ResourcePtr<TextureResource> GetTexture(GameContext& context, const std::string& filePath);
+	// Decodes these textures in parallel ahead of a batch of GetTexture() calls (see TexturePool::Prefetch).
+	void PrefetchTextures(GameContext& context, const std::vector<std::string>& filePaths);
 	ResourcePtr<SoundResource> GetSound(GameContext& context, const std::string& filePath);
 	ResourcePtr<MusicResource> GetMusic(GameContext& context, const std::string& filePath);
 	// pointSampled: nearest-neighbour atlas sampling, for pixel-art fonts (see FontResource::m_pointSampled).

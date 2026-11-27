@@ -73,6 +73,17 @@ entt::entity Struktur::World::Level::LoadLevelEntities(GameContext& context, con
 	transformSystem.SetWorldTransform(context, levelEntity, glm::vec3(levelToLoad.worldX, levelToLoad.worldY, 0.0f),
 	                                  glm::vec3(1.0f), glm::quat(1.0f, 0.0f, 0.0f, 0.0f));
 
+	// Decode the level's new tilesets in parallel up front; the GetTexture() calls below then skip the decode.
+	std::vector<std::string> tilesets;
+	for (const auto& layer : levelToLoad.layers)
+	{
+		if (layer.tilesetPath.has_value())
+		{
+			tilesets.push_back(layer.tilesetPath.value());
+		}
+	}
+	resoruceManager.PrefetchTextures(context, tilesets);
+
 	for (auto& layer : levelToLoad.layers)
 	{
 		const auto layerEntity = gameObjectManager.CreateGameObject(context, layer.identifier, levelEntity);

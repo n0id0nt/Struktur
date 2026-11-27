@@ -7,6 +7,7 @@ build-windows
 build-windows-debug
 build-nogame
 build-fitness
+build-jobs*
 
 # Shaders compiled at build time by CMake's struktur_compile_shader (see CMakeLists.txt)
 assets/Shaders/compiled/

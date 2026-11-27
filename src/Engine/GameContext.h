@@ -18,6 +18,8 @@
 #include "Engine/RideIntegration/RideService.h"
 #include "Engine/Flag/FlagManager.h"
 #include "Engine/Input/Input.h"
+#include "Engine/Jobs/FrameScheduler.h"
+#include "Engine/Jobs/JobSystem.h"
 #include "Engine/Localization/LocalizationManager.h"
 #include "Engine/Physics/CollisionLayers.h"
 #include "Engine/Physics/PhysicsWorld.h"
@@ -70,6 +72,8 @@ public:
 	Renderer::ImGuiRenderer& GetImGuiRenderer() const;
 #endif
 	Input::Input& GetInput() const;
+	Jobs::JobSystem& GetJobSystem() const;
+	Jobs::FrameScheduler& GetFrameScheduler() const;
 	UI::InputGlyphs& GetInputGlyphs() const;
 	Localization::LocalizationManager& GetLocalizationManager() const;
 	Audio::Mixer& GetMixer() const;
@@ -109,6 +113,8 @@ private:
 	std::unique_ptr<Renderer::ImGuiRenderer> m_imGuiRenderer;
 #endif
 	std::unique_ptr<Input::Input> m_input;
+	std::unique_ptr<Jobs::JobSystem> m_jobSystem;
+	std::unique_ptr<Jobs::FrameScheduler> m_frameScheduler;
 	std::unique_ptr<UI::InputGlyphs> m_inputGlyphs;
 	std::unique_ptr<Localization::LocalizationManager> m_localizationManager;
 	std::unique_ptr<Audio::Mixer> m_mixer;

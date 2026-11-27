@@ -305,6 +305,12 @@ option(STRUKTUR_BUILD_TESTS "Build the StrukturFitness unit tests" OFF)
 option(STRUKTUR_BUILD_TOOLS "Build trainer_probe" OFF)
 add_subdirectory(src/Engine/Fitness)
 
+# StrukturJobs - the job system (docs/JobSystem.md). STRUKTUR_THREADS (off on web by default) decides whether it starts
+# worker threads; its tests and job_bench build when src/Engine/Jobs is configured on its own.
+set(STRUKTUR_JOBS_BUILD_TESTS OFF CACHE BOOL "" FORCE)
+set(STRUKTUR_JOBS_BUILD_BENCH OFF CACHE BOOL "" FORCE)
+add_subdirectory(src/Engine/Jobs)
+
 # Wren (manual build - same as before, just different source path)
 file(GLOB WREN_SOURCES
     ${CMAKE_CURRENT_SOURCE_DIR}/third_party/wren/src/vm/*.c
@@ -633,6 +639,7 @@ target_link_libraries(${PROJECT_NAME}
     StrukturFitness
     StrukturRide
     StrukturRideWorld
+    StrukturJobs
     $<$<OR:$<BOOL:${PLATFORM_DESKTOP}>,$<BOOL:${PLATFORM_WEB}>>:SDL3_mixer::SDL3_mixer>
     $<$<OR:$<BOOL:${PLATFORM_DESKTOP}>,$<BOOL:${PLATFORM_WEB}>>:SDL3::SDL3>
     $<$<OR:$<BOOL:${PLATFORM_DESKTOP}>,$<BOOL:${PLATFORM_WEB}>>:bgfx>

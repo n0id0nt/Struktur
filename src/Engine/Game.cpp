@@ -539,6 +539,11 @@ void Struktur::UpdateLoop(void* userData)
 		context.GetGraphicsDevice().Resize(gameData.applicationWidth, gameData.applicationHeight);
 	}
 	timeSystem.Update();
+	// Sync point: last frame's post-frame jobs are done, and finished tasks hand their results to the main thread.
+	{
+		PROFILE_SCOPE("Jobs Sync");
+		context.GetFrameScheduler().BeginFrame();
+	}
 
 	if (context.GetWindow().ShouldClose())
 	{
@@ -567,6 +572,8 @@ void Struktur::UpdateLoop(void* userData)
 			break;
 	}
 
+	// The frame is submitted: post-frame jobs (PostFrame) start now and overlap the next frame's input/update.
+	context.GetFrameScheduler().EndFrame();
 	PROFILE_END_FRAME();
 }
 
