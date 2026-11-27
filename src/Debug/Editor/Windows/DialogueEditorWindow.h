@@ -85,6 +85,9 @@ private:
 		Playback
 	};
 
+	// Reads the project's script folder and speaker names (Settings/DialogueEditor.json).
+	void LoadProjectSettings();
+
 	// File operations
 	bool LoadDialogueFileWren(GameContext& context, const std::string& filepath, const std::string& className);
 	bool LoadDialogueFileJson(GameContext& context, const std::string& filepath);
@@ -142,6 +145,10 @@ private:
 	void SaveFileWithPicker();
 	void OpenFileWithPicker(GameContext& context);
 	static Dialogue::DialogueExporter::DialogueSaveFormat FormatFromExtension(const std::string& filepath);
+
+	// From the project (LoadProjectSettings): where its dialogue files are, and the speakers offered in the list.
+	std::string m_scriptFolder = "Scripts/";
+	std::vector<std::string> m_speakers;
 
 	// View mode
 	ViewMode m_viewMode;
