@@ -11,7 +11,7 @@
 	"iid": "41438cf0-bde0-11f1-b533-6fad8cb2a972",
 	"jsonVersion": "1.5.3",
 	"appBuildId": 473703,
-	"nextUid": 848,
+	"nextUid": 852,
 	"identifierStyle": "Capitalize",
 	"toc": [],
 	"worldLayout": "Free",
@@ -275,7 +275,7 @@
 			"requiredTags": [],
 			"excludedTags": [],
 			"autoTilesKilledByOtherLayerUid": null,
-			"uiFilterTags": ["Sort"],
+			"uiFilterTags": [],
 			"useAsyncRender": false,
 			"intGridValues": [],
 			"intGridValuesGroups": [],
@@ -10079,11 +10079,11 @@
 			"doc": null,
 			"width": 32,
 			"height": 32,
-			"resizableX": false,
-			"resizableY": false,
-			"minWidth": null,
+			"resizableX": true,
+			"resizableY": true,
+			"minWidth": 32,
 			"maxWidth": null,
-			"minHeight": null,
+			"minHeight": 32,
 			"maxHeight": null,
 			"keepAspectRatio": false,
 			"tileOpacity": 1,
@@ -10104,6 +10104,154 @@
 			"pivotX": 0,
 			"pivotY": 0,
 			"fieldDefs": [
+				{
+					"identifier": "Texture",
+					"doc": null,
+					"__type": "FilePath",
+					"uid": 848,
+					"type": "F_Path",
+					"isArray": false,
+					"canBeNull": true,
+					"arrayMinLength": null,
+					"arrayMaxLength": null,
+					"editorDisplayMode": "Hidden",
+					"editorDisplayScale": 1,
+					"editorDisplayPos": "Above",
+					"editorLinkStyle": "StraightArrow",
+					"editorDisplayColor": null,
+					"editorAlwaysShow": false,
+					"editorShowInWorld": true,
+					"editorCutLongValues": true,
+					"editorTextSuffix": null,
+					"editorTextPrefix": null,
+					"useForSmartColor": false,
+					"exportToToc": false,
+					"searchable": false,
+					"min": null,
+					"max": null,
+					"regex": null,
+					"acceptFileTypes": [".png"],
+					"defaultOverride": null,
+					"textLanguageMode": null,
+					"symmetricalRef": false,
+					"autoChainRef": true,
+					"allowOutOfLevelRef": true,
+					"allowedRefs": "OnlySame",
+					"allowedRefsEntityUid": null,
+					"allowedRefTags": [],
+					"tilesetUid": null
+				},
+				{
+					"identifier": "Columns",
+					"doc": null,
+					"__type": "Int",
+					"uid": 849,
+					"type": "F_Int",
+					"isArray": false,
+					"canBeNull": true,
+					"arrayMinLength": null,
+					"arrayMaxLength": null,
+					"editorDisplayMode": "Hidden",
+					"editorDisplayScale": 1,
+					"editorDisplayPos": "Above",
+					"editorLinkStyle": "StraightArrow",
+					"editorDisplayColor": null,
+					"editorAlwaysShow": false,
+					"editorShowInWorld": true,
+					"editorCutLongValues": true,
+					"editorTextSuffix": null,
+					"editorTextPrefix": null,
+					"useForSmartColor": false,
+					"exportToToc": false,
+					"searchable": false,
+					"min": 1,
+					"max": null,
+					"regex": null,
+					"acceptFileTypes": null,
+					"defaultOverride": null,
+					"textLanguageMode": null,
+					"symmetricalRef": false,
+					"autoChainRef": true,
+					"allowOutOfLevelRef": true,
+					"allowedRefs": "OnlySame",
+					"allowedRefsEntityUid": null,
+					"allowedRefTags": [],
+					"tilesetUid": null
+				},
+				{
+					"identifier": "Rows",
+					"doc": null,
+					"__type": "Int",
+					"uid": 850,
+					"type": "F_Int",
+					"isArray": false,
+					"canBeNull": true,
+					"arrayMinLength": null,
+					"arrayMaxLength": null,
+					"editorDisplayMode": "Hidden",
+					"editorDisplayScale": 1,
+					"editorDisplayPos": "Above",
+					"editorLinkStyle": "StraightArrow",
+					"editorDisplayColor": null,
+					"editorAlwaysShow": false,
+					"editorShowInWorld": true,
+					"editorCutLongValues": true,
+					"editorTextSuffix": null,
+					"editorTextPrefix": null,
+					"useForSmartColor": false,
+					"exportToToc": false,
+					"searchable": false,
+					"min": 1,
+					"max": null,
+					"regex": null,
+					"acceptFileTypes": null,
+					"defaultOverride": null,
+					"textLanguageMode": null,
+					"symmetricalRef": false,
+					"autoChainRef": true,
+					"allowOutOfLevelRef": true,
+					"allowedRefs": "OnlySame",
+					"allowedRefsEntityUid": null,
+					"allowedRefTags": [],
+					"tilesetUid": null
+				},
+				{
+					"identifier": "TileIndex",
+					"doc": null,
+					"__type": "Int",
+					"uid": 851,
+					"type": "F_Int",
+					"isArray": false,
+					"canBeNull": true,
+					"arrayMinLength": null,
+					"arrayMaxLength": null,
+					"editorDisplayMode": "Hidden",
+					"editorDisplayScale": 1,
+					"editorDisplayPos": "Above",
+					"editorLinkStyle": "StraightArrow",
+					"editorDisplayColor": null,
+					"editorAlwaysShow": false,
+					"editorShowInWorld": true,
+					"editorCutLongValues": true,
+					"editorTextSuffix": null,
+					"editorTextPrefix": null,
+					"useForSmartColor": false,
+					"exportToToc": false,
+					"searchable": false,
+					"min": 0,
+					"max": null,
+					"regex": null,
+					"acceptFileTypes": null,
+					"defaultOverride": null,
+					"textLanguageMode": null,
+					"symmetricalRef": false,
+					"autoChainRef": true,
+					"allowOutOfLevelRef": true,
+					"allowedRefs": "OnlySame",
+					"allowedRefsEntityUid": null,
+					"allowedRefTags": [],
+					"tilesetUid": null
+				},
 				{
 					"identifier": "Name",
 					"doc": null,
@@ -19903,6 +20051,22 @@
 							"defUid": 274,
 							"px": [96,16],
 							"fieldInstances": [
+								{ "__identifier": "Texture", "__type": "FilePath", "__value": "../Backgrounds/Tilesets/TilesetDesert.png", "__tile": null, "defUid": 848, "realEditorValues": [{
+									"id": "V_String",
+									"params": ["../Backgrounds/Tilesets/TilesetDesert.png"]
+								}] },
+								{ "__identifier": "Columns", "__type": "Int", "__value": 10, "__tile": null, "defUid": 849, "realEditorValues": [{
+									"id": "V_Int",
+									"params": [10]
+								}] },
+								{ "__identifier": "Rows", "__type": "Int", "__value": 6, "__tile": null, "defUid": 850, "realEditorValues": [{
+									"id": "V_Int",
+									"params": [6]
+								}] },
+								{ "__identifier": "TileIndex", "__type": "Int", "__value": 54, "__tile": null, "defUid": 851, "realEditorValues": [{
+									"id": "V_Int",
+									"params": [54]
+								}] },
 								{ "__identifier": "Name", "__type": "String", "__value": "WisperWoodsDoor", "__tile": null, "defUid": 787, "realEditorValues": [{
 									"id": "V_String",
 									"params": ["WisperWoodsDoor"]
@@ -19930,9 +20094,25 @@
 							"defUid": 274,
 							"px": [128,0],
 							"fieldInstances": [
-								{ "__identifier": "Name", "__type": "String", "__value": "WisperWoodsDoor2", "__tile": null, "defUid": 787, "realEditorValues": [{
+								{ "__identifier": "Texture", "__type": "FilePath", "__value": "../Backgrounds/Tilesets/TilesetDesert.png", "__tile": null, "defUid": 848, "realEditorValues": [{
 									"id": "V_String",
-									"params": ["WisperWoodsDoor2"]
+									"params": ["../Backgrounds/Tilesets/TilesetDesert.png"]
+								}] },
+								{ "__identifier": "Columns", "__type": "Int", "__value": 10, "__tile": null, "defUid": 849, "realEditorValues": [{
+									"id": "V_Int",
+									"params": [10]
+								}] },
+								{ "__identifier": "Rows", "__type": "Int", "__value": 6, "__tile": null, "defUid": 850, "realEditorValues": [{
+									"id": "V_Int",
+									"params": [6]
+								}] },
+								{ "__identifier": "TileIndex", "__type": "Int", "__value": 54, "__tile": null, "defUid": 851, "realEditorValues": [{
+									"id": "V_Int",
+									"params": [54]
+								}] },
+								{ "__identifier": "Name", "__type": "String", "__value": "WisperWoodsDoor", "__tile": null, "defUid": 787, "realEditorValues": [{
+									"id": "V_String",
+									"params": ["WisperWoodsDoor"]
 								}] },
 								{ "__identifier": "DoorType", "__type": "LocalEnum.DoorType", "__value": "Dialogue", "__tile": null, "defUid": 286, "realEditorValues": [{
 									"id": "V_String",
@@ -26184,11 +26364,9 @@
 					"seed": 3379718,
 					"overrideTilesetUid": 12,
 					"gridTiles": [
-						{ "px": [16,0], "src": [384,256], "f": 0, "t": 552, "d": [1], "a": 1 },
 						{ "px": [80,0], "src": [224,288], "f": 0, "t": 608, "d": [5], "a": 1 },
 						{ "px": [128,0], "src": [496,192], "f": 0, "t": 427, "d": [8], "a": 1 },
 						{ "px": [144,0], "src": [512,192], "f": 0, "t": 428, "d": [9], "a": 1 },
-						{ "px": [16,16], "src": [384,288], "f": 0, "t": 618, "d": [12], "a": 1 },
 						{ "px": [80,16], "src": [224,304], "f": 0, "t": 641, "d": [16], "a": 1 },
 						{ "px": [96,16], "src": [464,240], "f": 0, "t": 524, "d": [17], "a": 1 },
 						{ "px": [128,16], "src": [496,208], "f": 0, "t": 460, "d": [19], "a": 1 },
@@ -26222,8 +26400,8 @@
 					"__opacity": 1,
 					"__pxTotalOffsetX": 0,
 					"__pxTotalOffsetY": 0,
-					"__tilesetDefUid": 12,
-					"__tilesetRelPath": "../Backgrounds/Tilesets/TilesetHouse.png",
+					"__tilesetDefUid": 6,
+					"__tilesetRelPath": "../Backgrounds/Tilesets/TilesetElement.png",
 					"iid": "c58a0960-e4f0-11f1-b6e7-77c2ea59aa4d",
 					"levelId": 376,
 					"layerDefUid": 847,
@@ -26234,8 +26412,8 @@
 					"intGridCsv": [],
 					"autoLayerTiles": [],
 					"seed": 289144,
-					"overrideTilesetUid": 12,
-					"gridTiles": [],
+					"overrideTilesetUid": 6,
+					"gridTiles": [{ "px": [16,16], "src": [96,192], "f": 1, "t": 198, "d": [12], "a": 1 }],
 					"entityInstances": []
 				},
 				{
@@ -26486,7 +26664,7 @@
 					"optionalRules": [],
 					"intGridCsv": [
 						1,1,1,1,1,1,1,1,1,1,1,1,0,0,1,1,0,1,1,1,1,1,1,0,0,0,0,0,1,1,1,1,1,1,0,
-						0,0,0,0,1,1,1,1,1,1,0,0,0,0,0,1,1,1,1,1,1,0,0,0,0,1,1,1,1,1,1,1,0,0,0,
+						0,0,0,0,1,1,1,1,1,1,1,1,0,0,0,1,1,1,1,1,1,0,0,0,0,1,1,1,1,1,1,1,0,0,0,
 						0,0,1,0,0,0,1,1,1,0,0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0,1,1,1,1,0,0,0,0,0,
 						1,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1
 					],
@@ -26572,7 +26750,7 @@
 					"entityInstances": [
 						{
 							"__identifier": "DoorWorp",
-							"__grid": [1,1],
+							"__grid": [1,3],
 							"__pivot": [0,0],
 							"__tags": [],
 							"__tile": null,
@@ -26581,7 +26759,7 @@
 							"width": 16,
 							"height": 16,
 							"defUid": 295,
-							"px": [16,16],
+							"px": [16,48],
 							"fieldInstances": [
 								{ "__identifier": "Source", "__type": "EntityRef", "__value": {
 									"entityIid": "ad44c250-bde0-11f1-b1f7-6dea37bc064d",
@@ -26601,13 +26779,13 @@
 									"id": "V_String",
 									"params": ["ad44c250-bde0-11f1-b1f7-6dea37bc064d"]
 								}] },
-								{ "__identifier": "ConnectionDirections", "__type": "LocalEnum.Directions", "__value": "South", "__tile": null, "defUid": 307, "realEditorValues": [{
+								{ "__identifier": "ConnectionDirections", "__type": "LocalEnum.Directions", "__value": "North", "__tile": null, "defUid": 307, "realEditorValues": [{
 									"id": "V_String",
-									"params": ["South"]
+									"params": ["North"]
 								}] }
 							],
 							"__worldX": -384,
-							"__worldY": 1408
+							"__worldY": 1440
 						},
 						{
 							"__identifier": "Spawn",
@@ -26729,8 +26907,8 @@
 					"__opacity": 1,
 					"__pxTotalOffsetX": 0,
 					"__pxTotalOffsetY": 0,
-					"__tilesetDefUid": 12,
-					"__tilesetRelPath": "../Backgrounds/Tilesets/TilesetHouse.png",
+					"__tilesetDefUid": 6,
+					"__tilesetRelPath": "../Backgrounds/Tilesets/TilesetElement.png",
 					"iid": "c58a0961-e4f0-11f1-b6e7-4395b61d0542",
 					"levelId": 803,
 					"layerDefUid": 847,
@@ -26741,11 +26919,8 @@
 					"intGridCsv": [],
 					"autoLayerTiles": [],
 					"seed": 2117187,
-					"overrideTilesetUid": 12,
-					"gridTiles": [
-						{ "px": [16,0], "src": [384,256], "f": 0, "t": 552, "d": [1], "a": 1 },
-						{ "px": [16,16], "src": [384,288], "f": 0, "t": 618, "d": [12], "a": 1 }
-					],
+					"overrideTilesetUid": 6,
+					"gridTiles": [{ "px": [16,48], "src": [96,176], "f": 0, "t": 182, "d": [34], "a": 1 }],
 					"entityInstances": []
 				},
 				{
@@ -26771,14 +26946,8 @@
 						{ "px": [32,32], "src": [16,16], "f": 0, "t": 23, "d": [733,24], "a": 1 },
 						{ "px": [48,32], "src": [16,16], "f": 0, "t": 23, "d": [733,25], "a": 1 },
 						{ "px": [64,32], "src": [16,16], "f": 0, "t": 23, "d": [733,26], "a": 1 },
-						{ "px": [32,48], "src": [16,16], "f": 0, "t": 23, "d": [733,35], "a": 1 },
-						{ "px": [48,48], "src": [16,16], "f": 0, "t": 23, "d": [733,36], "a": 1 },
 						{ "px": [64,48], "src": [16,16], "f": 0, "t": 23, "d": [733,37], "a": 1 },
-						{ "px": [32,64], "src": [16,16], "f": 0, "t": 23, "d": [733,46], "a": 1 },
-						{ "px": [48,64], "src": [16,16], "f": 0, "t": 23, "d": [733,47], "a": 1 },
 						{ "px": [64,64], "src": [16,16], "f": 0, "t": 23, "d": [733,48], "a": 1 },
-						{ "px": [32,80], "src": [16,16], "f": 0, "t": 23, "d": [733,57], "a": 1 },
-						{ "px": [48,80], "src": [16,16], "f": 0, "t": 23, "d": [733,58], "a": 1 },
 						{ "px": [64,80], "src": [16,16], "f": 0, "t": 23, "d": [733,59], "a": 1 },
 						{ "px": [32,96], "src": [16,16], "f": 0, "t": 23, "d": [733,68], "a": 1 },
 						{ "px": [48,96], "src": [16,16], "f": 0, "t": 23, "d": [733,69], "a": 1 },
@@ -26791,17 +26960,18 @@
 						{ "px": [48,128], "src": [16,16], "f": 0, "t": 23, "d": [733,91], "a": 1 },
 						{ "px": [64,128], "src": [16,16], "f": 0, "t": 23, "d": [733,92], "a": 1 },
 						{ "px": [128,128], "src": [16,16], "f": 0, "t": 23, "d": [733,96], "a": 1 },
+						{ "px": [48,48], "src": [96,16], "f": 0, "t": 28, "d": [732,36], "a": 1 },
 						{ "px": [112,128], "src": [96,16], "f": 0, "t": 28, "d": [732,95], "a": 1 },
 						{ "px": [80,128], "src": [80,16], "f": 0, "t": 27, "d": [731,93], "a": 1 },
 						{ "px": [80,112], "src": [80,32], "f": 0, "t": 49, "d": [730,82], "a": 1 },
+						{ "px": [48,80], "src": [96,32], "f": 0, "t": 50, "d": [729,58], "a": 1 },
 						{ "px": [112,112], "src": [96,32], "f": 0, "t": 50, "d": [729,84], "a": 1 },
 						{ "px": [16,32], "src": [0,16], "f": 0, "t": 22, "d": [728,23], "a": 1 },
-						{ "px": [16,48], "src": [0,16], "f": 0, "t": 22, "d": [728,34], "a": 1 },
-						{ "px": [16,64], "src": [0,16], "f": 0, "t": 22, "d": [728,45], "a": 1 },
-						{ "px": [16,80], "src": [0,16], "f": 0, "t": 22, "d": [728,56], "a": 1 },
+						{ "px": [48,64], "src": [0,16], "f": 0, "t": 22, "d": [728,47], "a": 1 },
 						{ "px": [16,96], "src": [0,16], "f": 0, "t": 22, "d": [728,67], "a": 1 },
 						{ "px": [16,112], "src": [0,16], "f": 0, "t": 22, "d": [728,78], "a": 1 },
 						{ "px": [16,128], "src": [0,16], "f": 0, "t": 22, "d": [728,89], "a": 1 },
+						{ "px": [32,48], "src": [16,32], "f": 0, "t": 45, "d": [727,35], "a": 1 },
 						{ "px": [96,128], "src": [16,32], "f": 0, "t": 45, "d": [727,94], "a": 1 },
 						{ "px": [32,144], "src": [16,32], "f": 0, "t": 45, "d": [727,101], "a": 1 },
 						{ "px": [48,144], "src": [16,32], "f": 0, "t": 45, "d": [727,102], "a": 1 },
@@ -26817,8 +26987,10 @@
 						{ "px": [32,16], "src": [16,0], "f": 0, "t": 1, "d": [725,13], "a": 1 },
 						{ "px": [48,16], "src": [16,0], "f": 0, "t": 1, "d": [725,14], "a": 1 },
 						{ "px": [64,16], "src": [16,0], "f": 0, "t": 1, "d": [725,15], "a": 1 },
+						{ "px": [32,80], "src": [16,0], "f": 0, "t": 1, "d": [725,57], "a": 1 },
 						{ "px": [128,96], "src": [16,0], "f": 0, "t": 1, "d": [725,74], "a": 1 },
 						{ "px": [96,112], "src": [16,0], "f": 0, "t": 1, "d": [725,83], "a": 1 },
+						{ "px": [16,48], "src": [0,32], "f": 0, "t": 44, "d": [724,34], "a": 1 },
 						{ "px": [16,144], "src": [0,32], "f": 0, "t": 44, "d": [724,100], "a": 1 },
 						{ "px": [112,144], "src": [0,32], "f": 0, "t": 44, "d": [724,106], "a": 1 },
 						{ "px": [80,144], "src": [32,32], "f": 0, "t": 46, "d": [723,104], "a": 1 },
@@ -26826,6 +26998,7 @@
 						{ "px": [80,16], "src": [32,0], "f": 0, "t": 2, "d": [722,16], "a": 1 },
 						{ "px": [144,96], "src": [32,0], "f": 0, "t": 2, "d": [722,75], "a": 1 },
 						{ "px": [16,16], "src": [0,0], "f": 0, "t": 0, "d": [721,12], "a": 1 },
+						{ "px": [16,80], "src": [0,0], "f": 0, "t": 0, "d": [721,56], "a": 1 },
 						{ "px": [112,96], "src": [0,0], "f": 0, "t": 0, "d": [721,73], "a": 1 }
 					],
 					"seed": 5268345,
@@ -26853,7 +27026,7 @@
 					"optionalRules": [],
 					"intGridCsv": [
 						1,1,1,1,1,1,1,1,1,1,1,1,2,2,2,2,2,1,1,1,1,1,1,2,2,2,2,2,1,1,1,1,1,1,2,
-						2,2,2,2,1,1,1,1,1,1,2,2,2,2,2,1,1,1,1,1,1,2,2,2,2,2,1,1,1,1,1,1,2,2,2,
+						2,2,2,2,1,1,1,1,1,1,1,1,2,2,2,1,1,1,1,1,1,2,2,2,2,2,1,1,1,1,1,1,2,2,2,
 						2,2,1,2,2,2,1,1,2,2,2,2,2,2,2,2,2,1,1,2,2,2,2,2,2,2,2,2,1,1,2,2,2,2,2,
 						1,2,2,2,1,1,1,1,1,1,1,1,1,1,1,1
 					],
@@ -27163,9 +27336,25 @@
 							"defUid": 274,
 							"px": [112,16],
 							"fieldInstances": [
-								{ "__identifier": "Name", "__type": "String", "__value": "WhisperwoodExitDoor", "__tile": null, "defUid": 787, "realEditorValues": [{
+								{ "__identifier": "Texture", "__type": "FilePath", "__value": "../Backgrounds/Tilesets/TilesetDesert.png", "__tile": null, "defUid": 848, "realEditorValues": [{
 									"id": "V_String",
-									"params": ["WhisperwoodExitDoor"]
+									"params": ["../Backgrounds/Tilesets/TilesetDesert.png"]
+								}] },
+								{ "__identifier": "Columns", "__type": "Int", "__value": 10, "__tile": null, "defUid": 849, "realEditorValues": [{
+									"id": "V_Int",
+									"params": [10]
+								}] },
+								{ "__identifier": "Rows", "__type": "Int", "__value": 6, "__tile": null, "defUid": 850, "realEditorValues": [{
+									"id": "V_Int",
+									"params": [6]
+								}] },
+								{ "__identifier": "TileIndex", "__type": "Int", "__value": 54, "__tile": null, "defUid": 851, "realEditorValues": [{
+									"id": "V_Int",
+									"params": [54]
+								}] },
+								{ "__identifier": "Name", "__type": "String", "__value": "WisperWoodsDoor", "__tile": null, "defUid": 787, "realEditorValues": [{
+									"id": "V_String",
+									"params": ["WisperWoodsDoor"]
 								}] },
 								{ "__identifier": "DoorType", "__type": "LocalEnum.DoorType", "__value": "Dialogue", "__tile": null, "defUid": 286, "realEditorValues": [{
 									"id": "V_String",
@@ -27190,9 +27379,25 @@
 							"defUid": 274,
 							"px": [144,0],
 							"fieldInstances": [
-								{ "__identifier": "Name", "__type": "String", "__value": "WhisperwoodExitDoor", "__tile": null, "defUid": 787, "realEditorValues": [{
+								{ "__identifier": "Texture", "__type": "FilePath", "__value": "../Backgrounds/Tilesets/TilesetDesert.png", "__tile": null, "defUid": 848, "realEditorValues": [{
 									"id": "V_String",
-									"params": ["WhisperwoodExitDoor"]
+									"params": ["../Backgrounds/Tilesets/TilesetDesert.png"]
+								}] },
+								{ "__identifier": "Columns", "__type": "Int", "__value": 10, "__tile": null, "defUid": 849, "realEditorValues": [{
+									"id": "V_Int",
+									"params": [10]
+								}] },
+								{ "__identifier": "Rows", "__type": "Int", "__value": 6, "__tile": null, "defUid": 850, "realEditorValues": [{
+									"id": "V_Int",
+									"params": [6]
+								}] },
+								{ "__identifier": "TileIndex", "__type": "Int", "__value": 54, "__tile": null, "defUid": 851, "realEditorValues": [{
+									"id": "V_Int",
+									"params": [54]
+								}] },
+								{ "__identifier": "Name", "__type": "String", "__value": "WisperWoodsDoor", "__tile": null, "defUid": 787, "realEditorValues": [{
+									"id": "V_String",
+									"params": ["WisperWoodsDoor"]
 								}] },
 								{ "__identifier": "DoorType", "__type": "LocalEnum.DoorType", "__value": "Dialogue", "__tile": null, "defUid": 286, "realEditorValues": [{
 									"id": "V_String",
@@ -37607,6 +37812,10 @@
 							"defUid": 274,
 							"px": [112,32],
 							"fieldInstances": [
+								{ "__identifier": "Texture", "__type": "FilePath", "__value": null, "__tile": null, "defUid": 848, "realEditorValues": [] },
+								{ "__identifier": "Columns", "__type": "Int", "__value": null, "__tile": null, "defUid": 849, "realEditorValues": [] },
+								{ "__identifier": "Rows", "__type": "Int", "__value": null, "__tile": null, "defUid": 850, "realEditorValues": [] },
+								{ "__identifier": "TileIndex", "__type": "Int", "__value": null, "__tile": null, "defUid": 851, "realEditorValues": [] },
 								{ "__identifier": "Name", "__type": "String", "__value": "ShrineEntranceDoor", "__tile": null, "defUid": 787, "realEditorValues": [{
 									"id": "V_String",
 									"params": ["ShrineEntranceDoor"]
@@ -38573,6 +38782,10 @@
 							"defUid": 274,
 							"px": [112,112],
 							"fieldInstances": [
+								{ "__identifier": "Texture", "__type": "FilePath", "__value": null, "__tile": null, "defUid": 848, "realEditorValues": [] },
+								{ "__identifier": "Columns", "__type": "Int", "__value": null, "__tile": null, "defUid": 849, "realEditorValues": [] },
+								{ "__identifier": "Rows", "__type": "Int", "__value": null, "__tile": null, "defUid": 850, "realEditorValues": [] },
+								{ "__identifier": "TileIndex", "__type": "Int", "__value": null, "__tile": null, "defUid": 851, "realEditorValues": [] },
 								{ "__identifier": "Name", "__type": "String", "__value": "ShrineLightBridgeDoor", "__tile": null, "defUid": 787, "realEditorValues": [{
 									"id": "V_String",
 									"params": ["ShrineLightBridgeDoor"]
@@ -39178,6 +39391,10 @@
 							"defUid": 274,
 							"px": [96,224],
 							"fieldInstances": [
+								{ "__identifier": "Texture", "__type": "FilePath", "__value": null, "__tile": null, "defUid": 848, "realEditorValues": [] },
+								{ "__identifier": "Columns", "__type": "Int", "__value": null, "__tile": null, "defUid": 849, "realEditorValues": [] },
+								{ "__identifier": "Rows", "__type": "Int", "__value": null, "__tile": null, "defUid": 850, "realEditorValues": [] },
+								{ "__identifier": "TileIndex", "__type": "Int", "__value": null, "__tile": null, "defUid": 851, "realEditorValues": [] },
 								{ "__identifier": "Name", "__type": "String", "__value": "ShrineSplitWall", "__tile": null, "defUid": 787, "realEditorValues": [{
 									"id": "V_String",
 									"params": ["ShrineSplitWall"]
@@ -39205,6 +39422,10 @@
 							"defUid": 274,
 							"px": [128,224],
 							"fieldInstances": [
+								{ "__identifier": "Texture", "__type": "FilePath", "__value": null, "__tile": null, "defUid": 848, "realEditorValues": [] },
+								{ "__identifier": "Columns", "__type": "Int", "__value": null, "__tile": null, "defUid": 849, "realEditorValues": [] },
+								{ "__identifier": "Rows", "__type": "Int", "__value": null, "__tile": null, "defUid": 850, "realEditorValues": [] },
+								{ "__identifier": "TileIndex", "__type": "Int", "__value": null, "__tile": null, "defUid": 851, "realEditorValues": [] },
 								{ "__identifier": "Name", "__type": "String", "__value": "ShrineSplitWall", "__tile": null, "defUid": 787, "realEditorValues": [{
 									"id": "V_String",
 									"params": ["ShrineSplitWall"]
@@ -39272,6 +39493,10 @@
 							"defUid": 274,
 							"px": [176,144],
 							"fieldInstances": [
+								{ "__identifier": "Texture", "__type": "FilePath", "__value": null, "__tile": null, "defUid": 848, "realEditorValues": [] },
+								{ "__identifier": "Columns", "__type": "Int", "__value": null, "__tile": null, "defUid": 849, "realEditorValues": [] },
+								{ "__identifier": "Rows", "__type": "Int", "__value": null, "__tile": null, "defUid": 850, "realEditorValues": [] },
+								{ "__identifier": "TileIndex", "__type": "Int", "__value": null, "__tile": null, "defUid": 851, "realEditorValues": [] },
 								{ "__identifier": "Name", "__type": "String", "__value": "ShrineRunicConstuct1Door", "__tile": null, "defUid": 787, "realEditorValues": [{
 									"id": "V_String",
 									"params": ["ShrineRunicConstuct1Door"]
@@ -39302,6 +39527,10 @@
 							"defUid": 274,
 							"px": [48,64],
 							"fieldInstances": [
+								{ "__identifier": "Texture", "__type": "FilePath", "__value": null, "__tile": null, "defUid": 848, "realEditorValues": [] },
+								{ "__identifier": "Columns", "__type": "Int", "__value": null, "__tile": null, "defUid": 849, "realEditorValues": [] },
+								{ "__identifier": "Rows", "__type": "Int", "__value": null, "__tile": null, "defUid": 850, "realEditorValues": [] },
+								{ "__identifier": "TileIndex", "__type": "Int", "__value": null, "__tile": null, "defUid": 851, "realEditorValues": [] },
 								{ "__identifier": "Name", "__type": "String", "__value": "ShrineRunicConstuct2Door", "__tile": null, "defUid": 787, "realEditorValues": [{
 									"id": "V_String",
 									"params": ["ShrineRunicConstuct2Door"]
@@ -39332,6 +39561,10 @@
 							"defUid": 274,
 							"px": [112,0],
 							"fieldInstances": [
+								{ "__identifier": "Texture", "__type": "FilePath", "__value": null, "__tile": null, "defUid": 848, "realEditorValues": [] },
+								{ "__identifier": "Columns", "__type": "Int", "__value": null, "__tile": null, "defUid": 849, "realEditorValues": [] },
+								{ "__identifier": "Rows", "__type": "Int", "__value": null, "__tile": null, "defUid": 850, "realEditorValues": [] },
+								{ "__identifier": "TileIndex", "__type": "Int", "__value": null, "__tile": null, "defUid": 851, "realEditorValues": [] },
 								{ "__identifier": "Name", "__type": "String", "__value": "ShrineRunicConstuct3Door", "__tile": null, "defUid": 787, "realEditorValues": [{
 									"id": "V_String",
 									"params": ["ShrineRunicConstuct3Door"]
@@ -39951,6 +40184,10 @@
 							"defUid": 274,
 							"px": [224,96],
 							"fieldInstances": [
+								{ "__identifier": "Texture", "__type": "FilePath", "__value": null, "__tile": null, "defUid": 848, "realEditorValues": [] },
+								{ "__identifier": "Columns", "__type": "Int", "__value": null, "__tile": null, "defUid": 849, "realEditorValues": [] },
+								{ "__identifier": "Rows", "__type": "Int", "__value": null, "__tile": null, "defUid": 850, "realEditorValues": [] },
+								{ "__identifier": "TileIndex", "__type": "Int", "__value": null, "__tile": null, "defUid": 851, "realEditorValues": [] },
 								{ "__identifier": "Name", "__type": "String", "__value": "ShrineHiddenDoor", "__tile": null, "defUid": 787, "realEditorValues": [{
 									"id": "V_String",
 									"params": ["ShrineHiddenDoor"]
@@ -39978,6 +40215,10 @@
 							"defUid": 274,
 							"px": [224,128],
 							"fieldInstances": [
+								{ "__identifier": "Texture", "__type": "FilePath", "__value": null, "__tile": null, "defUid": 848, "realEditorValues": [] },
+								{ "__identifier": "Columns", "__type": "Int", "__value": null, "__tile": null, "defUid": 849, "realEditorValues": [] },
+								{ "__identifier": "Rows", "__type": "Int", "__value": null, "__tile": null, "defUid": 850, "realEditorValues": [] },
+								{ "__identifier": "TileIndex", "__type": "Int", "__value": null, "__tile": null, "defUid": 851, "realEditorValues": [] },
 								{ "__identifier": "Name", "__type": "String", "__value": "ShrineHiddenDoor", "__tile": null, "defUid": 787, "realEditorValues": [{
 									"id": "V_String",
 									"params": ["ShrineHiddenDoor"]
@@ -40503,6 +40744,10 @@
 							"defUid": 274,
 							"px": [96,0],
 							"fieldInstances": [
+								{ "__identifier": "Texture", "__type": "FilePath", "__value": null, "__tile": null, "defUid": 848, "realEditorValues": [] },
+								{ "__identifier": "Columns", "__type": "Int", "__value": null, "__tile": null, "defUid": 849, "realEditorValues": [] },
+								{ "__identifier": "Rows", "__type": "Int", "__value": null, "__tile": null, "defUid": 850, "realEditorValues": [] },
+								{ "__identifier": "TileIndex", "__type": "Int", "__value": null, "__tile": null, "defUid": 851, "realEditorValues": [] },
 								{ "__identifier": "Name", "__type": "String", "__value": "ShrineMemoryDoor", "__tile": null, "defUid": 787, "realEditorValues": [{
 									"id": "V_String",
 									"params": ["ShrineMemoryDoor"]
@@ -40538,6 +40783,10 @@
 							"defUid": 274,
 							"px": [128,0],
 							"fieldInstances": [
+								{ "__identifier": "Texture", "__type": "FilePath", "__value": null, "__tile": null, "defUid": 848, "realEditorValues": [] },
+								{ "__identifier": "Columns", "__type": "Int", "__value": null, "__tile": null, "defUid": 849, "realEditorValues": [] },
+								{ "__identifier": "Rows", "__type": "Int", "__value": null, "__tile": null, "defUid": 850, "realEditorValues": [] },
+								{ "__identifier": "TileIndex", "__type": "Int", "__value": null, "__tile": null, "defUid": 851, "realEditorValues": [] },
 								{ "__identifier": "Name", "__type": "String", "__value": "ShrineMemoryDoor", "__tile": null, "defUid": 787, "realEditorValues": [{
 									"id": "V_String",
 									"params": ["ShrineMemoryDoor"]
@@ -41269,6 +41518,10 @@
 							"defUid": 274,
 							"px": [240,0],
 							"fieldInstances": [
+								{ "__identifier": "Texture", "__type": "FilePath", "__value": null, "__tile": null, "defUid": 848, "realEditorValues": [] },
+								{ "__identifier": "Columns", "__type": "Int", "__value": null, "__tile": null, "defUid": 849, "realEditorValues": [] },
+								{ "__identifier": "Rows", "__type": "Int", "__value": null, "__tile": null, "defUid": 850, "realEditorValues": [] },
+								{ "__identifier": "TileIndex", "__type": "Int", "__value": null, "__tile": null, "defUid": 851, "realEditorValues": [] },
 								{ "__identifier": "Name", "__type": "String", "__value": "ShrineWardenDoor", "__tile": null, "defUid": 787, "realEditorValues": [{
 									"id": "V_String",
 									"params": ["ShrineWardenDoor"]
