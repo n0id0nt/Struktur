@@ -275,6 +275,12 @@ bool Struktur::InitialiseGame(GameContext& context)
 	systemManager.AddRenderSystem<System::DebugSystem>();
 #endif
 	systemManager.AddRenderSystem<System::UIRenderSystem>();
+	// Worker-safe systems (SystemAccess) run side by side on the job system; this runs them all on the main thread.
+	if (Core::CommandLine::HasFlag("--serial-systems"))
+	{
+		systemManager.SetParallel(false);
+		DEBUG_INFO("--serial-systems - every system runs on the main thread");
+	}
 
 	DEBUG_INFO("Game Data Loaded");
 

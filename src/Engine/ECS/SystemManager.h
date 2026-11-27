@@ -6,6 +6,9 @@
 #include <vector>
 
 #include "Debug/Assertions.h"
+#include "Engine/ECS/CommandList.h"
+#include "Engine/ECS/SystemAccess.h"
+#include "Engine/ECS/SystemSchedule.h"
 
 namespace Struktur
 {
@@ -30,6 +33,11 @@ public:
 	virtual ~ISystem()                        = default;
 	virtual void Update(GameContext& context) = 0;
 	virtual std::string Name() const          = 0;
+	// What Update() touches. Main-thread-only unless a system declares otherwise - see SystemAccess.h.
+	virtual SystemAccess Access() const
+	{
+		return SystemAccess::MainThread();
+	}
 };
 
 class SystemManager
@@ -42,6 +50,22 @@ public:
 	void Render(GameContext& context);
 	void FixedUpdate(GameContext& context);
 
+	// Structural changes recorded by worker systems, applied after their batch (see CommandList.h).
+	CommandList& GetCommands()
+	{
+		return m_commands;
+	}
+	// Off: every system runs on the main thread in registration order, whatever it declares (debugging; also what
+	// zero job workers gives). On by default; `--serial-systems` turns it off.
+	void SetParallel(bool parallel)
+	{
+		m_parallel = parallel;
+	}
+	bool IsParallel() const
+	{
+		return m_parallel;
+	}
+
 	template <typename T, typename... Args>
 	T& AddUpdateSystem(Args&&... args)
 	{
@@ -49,6 +73,7 @@ public:
 		std::type_index typeIndex = std::type_index(typeid(T));
 
 		m_updateSystems.push_back(typeIndex);
+		++m_scheduleVersion;
 
 		auto system            = std::make_unique<T>(std::forward<Args>(args)...);
 		T* ptr                 = system.get();
@@ -64,6 +89,7 @@ public:
 		std::type_index typeIndex = std::type_index(typeid(T));
 
 		m_renderSystems.push_back(typeIndex);
+		++m_scheduleVersion;
 
 		auto system            = std::make_unique<T>(std::forward<Args>(args)...);
 		T* ptr                 = system.get();
@@ -87,6 +113,7 @@ public:
 		std::type_index typeIndex = std::type_index(typeid(T));
 
 		m_fixedUpdateSystems.push_back(typeIndex);
+		++m_scheduleVersion;
 
 		auto system            = std::make_unique<T>(std::forward<Args>(args)...);
 		T* ptr                 = system.get();
@@ -133,12 +160,27 @@ public:
 	}
 
 private:
+	struct Phase
+	{
+		std::vector<ISystem*> systems;
+		std::vector<ScheduleStep> steps;
+		int builtVersion = -1;
+	};
+	void RunPhase(GameContext& context, const std::vector<std::type_index>& ids, Phase& phase);
+
 	std::vector<std::type_index> m_updateSystems;
 	std::vector<std::type_index> m_renderSystems;
 	std::vector<std::type_index> m_helperSystems;
 	std::vector<std::type_index> m_fixedUpdateSystems;
 
 	std::unordered_map<std::type_index, std::unique_ptr<ISystem>> m_systemMap;
+
+	Phase m_updatePhase;
+	Phase m_renderPhase;
+	Phase m_fixedUpdatePhase;
+	int m_scheduleVersion = 0;
+	bool m_parallel       = true;
+	CommandList m_commands;
 };
 }  // namespace System
 }  // namespace Struktur
