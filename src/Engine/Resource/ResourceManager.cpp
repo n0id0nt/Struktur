@@ -12,6 +12,12 @@ void Struktur::Resource::ResourceManager::PrefetchTextures(GameContext& context,
 	m_texturePool.Prefetch(context, filePaths);
 }
 
+void Struktur::Resource::ResourceManager::AddDecodedTexture(const std::string& filePath,
+                                                          TextureResource::DecodedImage&& image)
+{
+	m_texturePool.AddDecoded(filePath, std::move(image));
+}
+
 Struktur::Resource::ResourcePtr<Struktur::Resource::SoundResource> Struktur::Resource::ResourceManager::GetSound(
     GameContext& context, const std::string& filePath)
 {

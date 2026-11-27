@@ -25,5 +25,6 @@ void RegisterAllBindings(BindingRegistry& registry)
 	RegisterEventsBindings(registry);
 	RegisterAudioBindings(registry);
 	RegisterLocalizationBindings(registry);
+	RegisterJobsBindings(registry);
 }
 }  // namespace Struktur::Wren

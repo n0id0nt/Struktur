@@ -56,6 +56,8 @@ public:
 	ResourcePtr<TextureResource> GetTexture(GameContext& context, const std::string& filePath);
 	// Decodes these textures in parallel ahead of a batch of GetTexture() calls (see TexturePool::Prefetch).
 	void PrefetchTextures(GameContext& context, const std::vector<std::string>& filePaths);
+	// An image decoded elsewhere, used by the next GetTexture() of that path (see TexturePool::AddDecoded).
+	void AddDecodedTexture(const std::string& filePath, TextureResource::DecodedImage&& image);
 	ResourcePtr<SoundResource> GetSound(GameContext& context, const std::string& filePath);
 	ResourcePtr<MusicResource> GetMusic(GameContext& context, const std::string& filePath);
 	// pointSampled: nearest-neighbour atlas sampling, for pixel-art fonts (see FontResource::m_pointSampled).
