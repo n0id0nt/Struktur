@@ -1,6 +1,7 @@
 # Splitting the engine from the games (refactor step 6)
 
-A plan. Nothing here is implemented. It follows these choices:
+A plan. Step 6.0 is done, on the `Modules` branch (record: `docs/SplitBaseline.md`); nothing later is started. It
+follows these choices:
 
 - **Three GitHub repositories:** the engine and two games, **Seven Gods** and **Indoor Cycling Software**.
 - **Folders:** the engine stays in `Documents\Game Creation Projects\Struktur`; the games go beside it.
@@ -15,15 +16,15 @@ A plan. Nothing here is implemented. It follows these choices:
 - **Component list:** broken up, one per library.
 - **`main`** takes no changes until step 6.3 is done.
 
-## Before starting
+## Still open
 
-| For you | Why now |
+| For you | Why |
 |---|---|
-| Try the ride on the real trainer, and Play/Stop in the editor | Neither is tested since the refactor. A fault found after the files move is much harder to trace |
+| Try the ride on the real trainer, and Play/Stop in the editor | Neither is tested since the refactor. Best before 6.1 changes the code |
 | Apply or drop the two git stashes (`main`, 27 August: Editor, Game, ImGui renderer; `master`, 14 August: UI batching) | They won't apply cleanly once the files move |
 | Confirm level, dialogue and art edits to Seven Gods are also on hold until 6.3 | Code and assets both move in that step |
 | Decide on the local engine override (below) | It shapes how the game projects are set up in 6.2 |
-| Keep the game repositories private unless the art and audio licences allow sharing, and check whether Struktur is public | The only licence file in `assets` is for one font, and the engine's history keeps the old game assets |
+| `Struktur` is public on GitHub, with the old game assets in its history and the save encoding key in its source | Say if it should be private. The new game repositories will be private |
 
 ## Folders and repositories
 
@@ -132,6 +133,7 @@ What has to change for the libraries to separate (found by checking includes on 
 | `DebugSystem` is in ECS but needs the editor | Moves to `editor` |
 | One `ComponentListXMacro.h` names every library's components | One list per library (below) |
 | The dialogue editor fixes the script folder and speaker names (Greg, Mei, Baron, ...) | The game supplies both |
+| The key that encodes save files is in the engine's file system code | Each game supplies its own; Seven Gods keeps the current one, so its saves still load |
 
 ### Component lists
 
@@ -270,7 +272,7 @@ its checks.
 
 | Step | Work | Done when | Size |
 |---|---|---|---|
-| 6.0 Groundwork | Tag `main` and `RideSoftware` (`pre-split`); fix the `Ui` / `UI` folder case; fork wren and bgfx.cmake and use the forks; record how both games behave now; one script that builds and tests everything | A fresh clone builds; the record exists | Small |
+| 6.0 Groundwork (done) | Tag `main` and `RideSoftware` (`pre-split-...`); fix the `Ui` / `UI` folder case; fork wren and bgfx.cmake and use the forks; record how both games behave now; one script that builds and tests everything | A fresh clone builds; the record exists | Small |
 | 6.1 Untangle | Virtual `GameContext` and `RideContext`; per-library component lists; in-memory script modules; the include changes above and their guards | Ride tests and demo ride as today | Medium–large |
 | 6.2 Libraries | A CMake target per library and `struktur_add_game`; the ride becomes `games/IndoorCyclingSoftware` (still in this repository) with its own `Game.cpp` | The engine names no game; the library combinations build | Medium–large |
 | 6.3 Seven Gods | `world2d` from the 2D files kept uncompiled, plus the code removed from shared files, taken from `main`; `games/SevenGods` with its `Game.cpp`, context, assets and scripts | It reaches the overworld, plays a self-running battle, loads existing saves and opens the level viewer | Large, riskiest |
@@ -280,9 +282,10 @@ its checks.
 - **6.3 is where regressions can hide.** With the job system, Seven Gods has only had short overworld runs, and its
   2D code hasn't been compiled since refactor step 4. Compare against the 6.0 record. Once it passes, Seven Gods work
   resumes in `games/SevenGods`, not on the old layout.
-- **`git filter-repo`** isn't installed (`pip install git-filter-repo`).
-- **GitHub:** the `gh` command isn't installed, so you create the empty repositories (for 6.0, the two forks; for
-  6.4, `SevenGods` and `IndoorCyclingSoftware`) or install `gh`. Nothing is pushed without your go-ahead.
+- **GitHub:** the forks `n0id0nt/wren` and `n0id0nt/bgfx.cmake` hold the two library fixes on a `struktur` branch. The
+  game repositories are created in 6.4. Nothing is pushed to the engine repository without your go-ahead.
+- **Switching to `main` or `RideSoftware`** puts wren and bgfx.cmake back to their unfixed versions. Apply the files in
+  `third_party/patches` there before building.
 
 ### Handled in 6.4
 
