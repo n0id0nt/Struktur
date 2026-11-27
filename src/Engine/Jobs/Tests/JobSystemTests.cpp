@@ -91,7 +91,7 @@ TEST_CASE("every job runs exactly once")
 		CHECK(stats.jobsRun == count + 1);
 		if (workers == 0)
 		{
-			CHECK(stats.jobsRunByHelper == stats.jobsRun);
+			CHECK(stats.jobsRunByHelper == count);  // every job ran on the waiting thread; the WhenAll completed itself
 		}
 	}
 }
@@ -499,4 +499,240 @@ TEST_CASE("many threads scheduling at once")
 		thread.join();
 	}
 	CHECK(runs.load() == producers * perThread);
+}
+
+// --- phase 1b: pooled slots, inline work, background limit, stealing ------------------------------------------------
+
+TEST_CASE("recycled job slots never make an old handle look unfinished")
+{
+	for (int workers : WorkerCounts())
+	{
+		CAPTURE(workers);
+		JobSystem jobs(JobSystemConfig{workers});
+		JobHandle first = jobs.Schedule([] {});
+		jobs.Wait(first);
+		REQUIRE(first.IsComplete());
+		// Churn through far more jobs than one cache holds, so the first job's slot is reused.
+		for (int round = 0; round < 20; ++round)
+		{
+			std::vector<JobHandle> batch;
+			for (int index = 0; index < 1000; ++index)
+			{
+				batch.push_back(jobs.Schedule([] {}));
+			}
+			jobs.WaitAll(batch);
+			CHECK(first.IsComplete());
+			CHECK_FALSE(first.WasDropped());
+		}
+		// A long-running job keeps its slot: its handle stays incomplete while newer jobs come and go.
+		std::atomic<bool> release{false};
+		std::atomic<bool> heldStarted{false};
+		JobHandle held = jobs.Schedule([&release, &heldStarted] {
+			heldStarted = true;
+			while (!release.load())
+			{
+				std::this_thread::yield();
+			}
+		});
+		if (workers > 0)
+		{
+			// Let a worker take it first, or this thread's own Wait() below could pick it up and spin forever.
+			while (!heldStarted.load())
+			{
+				std::this_thread::yield();
+			}
+			for (int index = 0; index < 2000; ++index)
+			{
+				jobs.Wait(jobs.Schedule([] {}));
+			}
+			CHECK_FALSE(held.IsComplete());
+		}
+		release = true;
+		jobs.Wait(held);
+		CHECK(held.IsComplete());
+	}
+}
+
+TEST_CASE("the job pool grows when many jobs are alive at once")
+{
+	for (int workers : WorkerCounts())
+	{
+		CAPTURE(workers);
+		JobSystem jobs(JobSystemConfig{workers});
+		const uint32_t initial = jobs.GetStats().poolSlots;
+		std::atomic<bool> release{false};
+		JobHandle gate = jobs.Schedule([&release] {
+			while (!release.load())
+			{
+				std::this_thread::yield();
+			}
+		});
+		std::atomic<int> runs{0};
+		std::vector<JobHandle> blocked;
+		for (int index = 0; index < 30000; ++index)
+		{
+			blocked.push_back(jobs.Schedule([&runs] { runs.fetch_add(1); }, Lane::FRAME, gate));
+		}
+		CHECK(jobs.GetStats().poolSlots > initial);
+		release = true;
+		jobs.WaitAll(blocked);
+		CHECK(runs.load() == 30000);
+	}
+}
+
+struct Tracker
+{
+	static std::atomic<int> alive;
+	static std::atomic<int> calls;
+	uint8_t padding[200];  // bigger than JobFunction::INLINE_SIZE: stored on the heap
+	Tracker() { alive.fetch_add(1); }
+	Tracker(const Tracker&) { alive.fetch_add(1); }
+	Tracker(Tracker&&) noexcept { alive.fetch_add(1); }
+	~Tracker() { alive.fetch_sub(1); }
+	void operator()() const { calls.fetch_add(1); }
+};
+std::atomic<int> Tracker::alive{0};
+std::atomic<int> Tracker::calls{0};
+
+struct SmallTracker
+{
+	static std::atomic<int> alive;
+	SmallTracker() { alive.fetch_add(1); }
+	SmallTracker(const SmallTracker&) { alive.fetch_add(1); }
+	SmallTracker(SmallTracker&&) noexcept { alive.fetch_add(1); }
+	~SmallTracker() { alive.fetch_sub(1); }
+	void operator()() const {}
+};
+std::atomic<int> SmallTracker::alive{0};
+
+TEST_CASE("work of any size runs once and is destroyed once, run or dropped")
+{
+	for (int workers : WorkerCounts())
+	{
+		CAPTURE(workers);
+		Tracker::calls = 0;
+		{
+			JobSystem jobs(JobSystemConfig{workers});
+			std::vector<JobHandle> handles;
+			for (int index = 0; index < 500; ++index)
+			{
+				handles.push_back(jobs.Schedule(Tracker()));
+				handles.push_back(jobs.Schedule(SmallTracker()));
+			}
+			jobs.WaitAll(handles);
+			CHECK(Tracker::calls.load() == 500);
+			CHECK(Tracker::alive.load() == 0);
+			CHECK(SmallTracker::alive.load() == 0);
+			const JobSystemStats stats = jobs.GetStats();
+			CHECK(stats.heapWork == 500);  // only the big ones
+			// Dropped work is destroyed too.
+			std::atomic<bool> release{false};
+			JobHandle gate = jobs.Schedule([&release] {
+				while (!release.load())
+				{
+					std::this_thread::yield();
+				}
+			});
+			for (int index = 0; index < 100; ++index)
+			{
+				jobs.Schedule(Tracker(), Lane::FRAME, gate);
+			}
+			CHECK(Tracker::alive.load() == 100);
+			release = true;
+			if (workers > 0)
+			{
+				jobs.Wait(gate);
+			}
+			jobs.Shutdown();
+		}
+		CHECK(Tracker::alive.load() == 0);
+	}
+}
+
+TEST_CASE("background work never takes more than its limit of workers")
+{
+	CHECK(JobSystem::ResolveBackgroundLimit(-1, 0) == 0);
+	CHECK(JobSystem::ResolveBackgroundLimit(-1, 1) == 1);
+	CHECK(JobSystem::ResolveBackgroundLimit(-1, 3) == 2);
+	CHECK(JobSystem::ResolveBackgroundLimit(-1, 8) == 6);
+	CHECK(JobSystem::ResolveBackgroundLimit(3, 8) == 3);
+	CHECK(JobSystem::ResolveBackgroundLimit(20, 8) == 8);
+	if (!JobSystem::ThreadsAvailable())
+	{
+		return;
+	}
+	JobSystem jobs(JobSystemConfig{4});
+	CHECK(jobs.GetBackgroundWorkerLimit() == 2);
+	std::atomic<int> running{0};
+	std::atomic<int> most{0};
+	std::vector<JobHandle> background;
+	for (int index = 0; index < 8; ++index)
+	{
+		background.push_back(jobs.Schedule(
+		    [&running, &most]
+		    {
+			    const int now = running.fetch_add(1) + 1;
+			    int seen      = most.load();
+			    while (now > seen && !most.compare_exchange_weak(seen, now))
+			    {
+			    }
+			    BusyMilliseconds(15.0);
+			    running.fetch_sub(1);
+		    },
+		    Lane::BACKGROUND));
+	}
+	BusyMilliseconds(5.0);
+	// While background jobs hold two workers, a frame job starts at once on a free one (no waiting on them).
+	const std::chrono::steady_clock::time_point scheduled = std::chrono::steady_clock::now();
+	std::atomic<double> startedAfterMs{-1.0};
+	JobHandle frame = jobs.Schedule(
+	    [&startedAfterMs, scheduled]
+	    { startedAfterMs = std::chrono::duration<double, std::milli>(std::chrono::steady_clock::now() - scheduled).count(); },
+	    Lane::FRAME);
+	while (!frame.IsComplete())
+	{
+		std::this_thread::yield();
+	}
+	CHECK(startedAfterMs.load() < 5.0);
+	for (const JobHandle& handle : background)
+	{
+		while (!handle.IsComplete())
+		{
+			std::this_thread::yield();
+		}
+	}
+	CHECK(most.load() <= 2);
+	CHECK(most.load() >= 1);
+}
+
+TEST_CASE("idle workers steal jobs another worker spawned")
+{
+	if (!JobSystem::ThreadsAvailable())
+	{
+		return;
+	}
+	JobSystem jobs(JobSystemConfig{4});
+	std::atomic<int> runs{0};
+	JobHandle spawner = jobs.Schedule(
+	    [&jobs, &runs]
+	    {
+		    // Spawned from a worker: they go to its own queue; the others have to steal them.
+		    std::vector<JobHandle> children;
+		    for (int index = 0; index < 400; ++index)
+		    {
+			    children.push_back(jobs.Schedule(
+			        [&runs]
+			        {
+				        BusyMilliseconds(0.05);
+				        runs.fetch_add(1);
+			        }));
+		    }
+		    jobs.Wait(jobs.WhenAll(children));
+	    });
+	while (!spawner.IsComplete())
+	{
+		std::this_thread::yield();
+	}
+	CHECK(runs.load() == 400);
+	CHECK(jobs.GetStats().jobsStolen > 0);
 }
