@@ -2,6 +2,8 @@
 // Generated from C++ bindings
 // Module: fileSystem
 
+import "jobs" for Task
+
 // Enum for the error codes for the file system
 class FileSystemError {
     static FileNotFound { 0 }
@@ -67,5 +69,7 @@ class FileSystem {
     foreign static syncSaves()
     // Check if a file exists in the file system
     foreign static exists(arg0)
+    // Reads a file as a String on the job system; returns a jobs.Task whose result is the text
+    foreign static readStringAsync(arg0)
 }
 

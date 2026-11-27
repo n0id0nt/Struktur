@@ -6,6 +6,14 @@
 #include "Engine/GameContext.h"
 #include "Engine/Jobs/JobSystem.h"
 
+void Struktur::Resource::TexturePool::AddDecoded(const std::string& filePath, TextureResource::DecodedImage&& image)
+{
+	if (m_nameToHandle.count(filePath) == 0 && m_prefetched.count(filePath) == 0)
+	{
+		m_prefetched.emplace(filePath, std::move(image));
+	}
+}
+
 void Struktur::Resource::TexturePool::Prefetch(GameContext& context, const std::vector<std::string>& filePaths)
 {
 	std::vector<std::string> wanted;

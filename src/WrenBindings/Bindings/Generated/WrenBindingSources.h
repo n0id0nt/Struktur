@@ -351,6 +351,8 @@ inline const char* wrenfileSystemSource()
     "// Generated from C++ bindings\n"
     "// Module: fileSystem\n"
     "\n"
+    "import \"jobs\" for Task\n"
+    "\n"
     "// Enum for the error codes for the file system\n"
     "class FileSystemError {\n"
     "    static FileNotFound { 0 }\n"
@@ -416,6 +418,8 @@ inline const char* wrenfileSystemSource()
     "    foreign static syncSaves()\n"
     "    // Check if a file exists in the file system\n"
     "    foreign static exists(arg0)\n"
+    "    // Reads a file as a String on the job system; returns a jobs.Task whose result is the text\n"
+    "    foreign static readStringAsync(arg0)\n"
     "}\n"
     "\n"
     "";
@@ -1088,6 +1092,38 @@ inline const char* wreninputSource()
     "";
 }
 
+// Module: jobs
+inline const char* wrenjobsSource()
+{
+    return "// AUTO-GENERATED FILE - DO NOT EDIT\n"
+    "// Generated from C++ bindings\n"
+    "// Module: jobs\n"
+    "\n"
+    "// Work running on the job system - poll it from update() (isComplete, then succeeded and result). Made by engine calls such as Texture.loadAsync and FileSystem.readStringAsync\n"
+    "foreign class Task {\n"
+    "    // True once the task has finished, failed, been cancelled or been dropped\n"
+    "    foreign isComplete\n"
+    "    // True once the task has finished and its result is ready\n"
+    "    foreign succeeded\n"
+    "    // True if the work ran but failed - see error\n"
+    "    foreign failed\n"
+    "    // True if cancel() stopped it\n"
+    "    foreign cancelled\n"
+    "    // Why the task failed, or null\n"
+    "    foreign error\n"
+    "    // 0 to 1 as reported by the work; 1 once it succeeded\n"
+    "    foreign progress\n"
+    "    // \"pending\", \"running\", \"succeeded\", \"failed\", \"cancelled\" or \"dropped\"\n"
+    "    foreign status\n"
+    "    // The result (String, Texture, ...) once succeeded, otherwise null\n"
+    "    foreign result\n"
+    "    // Asks the task to stop; one that hasn't started never runs\n"
+    "    foreign cancel()\n"
+    "}\n"
+    "\n"
+    "";
+}
+
 // Module: localization
 inline const char* wrenlocalizationSource()
 {
@@ -1688,6 +1724,8 @@ inline const char* wrenresourceManagerSource()
     "// Generated from C++ bindings\n"
     "// Module: resourceManager\n"
     "\n"
+    "import \"jobs\" for Task\n"
+    "\n"
     "// Sound resource handle\n"
     "foreign class Sound {\n"
     "    // Load sound from path\n"
@@ -1774,6 +1812,8 @@ inline const char* wrenresourceManagerSource()
     "    foreign height\n"
     "    // Convert to string\n"
     "    foreign toString()\n"
+    "    // Loads a texture on the job system (decode on a worker, GPU upload on the main thread); returns a jobs.Task whose result is the Texture\n"
+    "    foreign static loadAsync(arg0)\n"
     "}\n"
     "\n"
     "// Font resource handle\n"
@@ -3003,6 +3043,7 @@ inline const std::unordered_map<std::string, const char*(*)()>& GetWrenBindingSo
         { "gameObject", wrengameObjectSource },
         { "gameObjectComponents", wrengameObjectComponentsSource },
         { "input", wreninputSource },
+        { "jobs", wrenjobsSource },
         { "localization", wrenlocalizationSource },
         { "math", wrenmathSource },
         { "physics", wrenphysicsSource },

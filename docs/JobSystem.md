@@ -1,14 +1,15 @@
 # Job system
 
-The engine's job system and scheduler. **Phases 1 to 4 are done:**
+The engine's job system and scheduler. **Phases 1 to 5 are done:**
 - **Phase 1:** worker threads, lanes, dependencies, waiting that helps, parallel-for and inline mode.
 - **Phase 1b:** pooled jobs, per-worker work-stealing queues and a cap on background workers.
 - **Phase 2:** tasks with results, progress and cancellation; follow-ups that run on the main thread; stepped jobs.
 - **Phase 3:** the engine owns a job system and syncs it with the frame loop; level tilesets decode in parallel;
   on branch `RideSoftware`, ride world chunks build as background tasks and ride autosaves write in the background.
 - **Phase 4:** ECS systems declare what they touch, and systems that don't clash run side by side as jobs.
+- **Phase 5:** scripts get task handles: `Texture.loadAsync` and `FileSystem.readStringAsync` return a `Task` to poll.
 
-All of it has unit tests and a benchmark. Phases 5–6 (Wren handles, web threads) are planned at the end.
+All of it has unit tests and a benchmark. Phase 6 (a threaded web build) is planned at the end.
 
 Code: `src/Engine/Jobs/` (library `StrukturJobs`, no SDL, bgfx or Wren). Tests: `src/Engine/Jobs/Tests/`. Benchmark:
 `tools/job_bench/`.
@@ -170,6 +171,48 @@ SystemAccess AnimationSystem::Access() const
   (`SystemManager::SetParallel`). Zero job workers (`--threads=0`, web) does the same.
 - **Profiler:** it's main-thread only, so a parallel batch shows as one scope ("Batch: Animation System Particle
   System") instead of one scope per system. Serial runs keep the per-system scopes.
+
+### Script tasks (phase 5)
+
+```wren
+import "resourceManager" for Texture
+import "fileSystem" for FileSystem
+
+construct new() {
+    _load = Texture.loadAsync("Backgrounds/big.png")
+    _config = FileSystem.readStringAsync("Data/quests.json")
+}
+
+update() {
+    if (_load != null && _load.isComplete) {
+        if (_load.succeeded) _sprite.texture = _load.result
+        if (_load.failed) Debug.warning(_load.error)
+        _load = null
+    }
+    _bar.value = _config.progress
+}
+```
+
+- **`Task`** (module `jobs`, made by engine calls, not by scripts):
+  - `isComplete`, `succeeded`, `failed` (the work ran but failed, see `error`), `cancelled`, `progress` (0 to 1);
+  - `status`: `"pending"`, `"running"`, `"succeeded"`, `"failed"`, `"cancelled"` or `"dropped"`;
+  - `result`: the value once succeeded, otherwise null;
+  - `cancel()`: a task that hasn't started never runs.
+- **Calls that return one:**
+  - `Texture.loadAsync(path)`: reads and decodes the image on a worker. The first read of `result` hands the
+    pixels to the texture pool on the main thread and returns a `Texture`. Later reads return the same texture,
+    and if the texture was already loaded the decoded copy is simply discarded.
+  - `FileSystem.readStringAsync(path)`: reads the file on a worker; `result` is the text.
+- **Threads:** Wren never runs on a worker. The work is C++, and its result becomes a Wren value on the main
+  thread when the script reads `result`. With zero workers (web, `--threads=0`) the work runs inside the frame
+  scheduler's main-thread budget, so tasks complete a frame or two later instead of blocking.
+- **Lifetime:** a script can drop a task at any time. When Wren's garbage collector frees it, the work finishes or
+  stops, and its result is thrown away. Tasks still running at shutdown are dropped like any other job.
+- **Polling, not callbacks:** there's no `onComplete(fn)` yet. Calling back into Wren needs handle management the
+  bindings don't have, and polling from `update()` was the use case asked for.
+- **Bindings:** `src/WrenBindings/WrenJobs.cpp`. The `jobs.wren` module and the generated header were regenerated
+  by a Debug run and copied in. Stale `fitness.wren` / `ride.wren` files left in the shared output folder
+  (`../src/WrenBindings/Bindings`) get pulled into the generated header, so they were moved aside first.
 
 ### How it works (phase 1b)
 
@@ -355,6 +398,21 @@ work to show a difference; the ride world's chunk building is the meaningful ben
 - **Not measured:** game frame time, before against after. Animation and particles take a fraction of a millisecond
   in this game, so the two-system batch saves little. The gain comes as heavier systems are converted.
 
+### Phase 5 in the game
+
+A temporary script hook in the Debug game build, muted, run once with 19 workers and once with `--threads=0`:
+- **Texture load:** succeeded, 528x368 and valid. Reading `result` again returned the same texture.
+- **Missing texture and missing file:** both report `failed`, with the error message.
+- **File read:** returned 7,100 characters.
+- **Cancel:** a load cancelled right away reports `cancelled`, with progress 0.
+- **Dropped task:** one dropped and garbage-collected mid-run caused no crash.
+- **Timing:** with workers, results arrived on frames 1 and 2. Without workers they arrived on frames 2 and 3,
+  through the frame scheduler.
+- **Both runs:** no crashes, saves unchanged, and both exited normally when the window was closed.
+
+**Not covered:** no C++ unit tests for the bindings themselves (they need the engine); the in-game hook is the
+test.
+
 ## Next
 
 - **More worker systems:** candidates are SpriteRenderSystem's culling and sorting (not its bgfx submission) and
@@ -362,7 +420,8 @@ work to show a difference; the ride world's chunk building is the meaningful ben
   its task callbacks (`b2WorldDef.enqueueTask`).
 - **Parallel-for inside systems:** a system with many entities can split its own loop with `ParallelFor`; the batch
   scheduler doesn't do that by itself.
-- **Phase 5:** Wren task handles (`if (load.isComplete)`).
+- **Script tasks, more calls:** level prefetch, sound and music loading, and `writeStringAsync` for saves. Also
+  possibly `onComplete(fn)` callbacks.
 - **Phase 6:** optional threaded web build (pthread pool and cross-origin isolation headers).
 
 **Not covered yet:**

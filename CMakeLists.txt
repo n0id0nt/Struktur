@@ -454,6 +454,7 @@ set(WREN_BINDING_SOURCES
     src/WrenBindings/WrenDialogue.h             src/WrenBindings/WrenDialogue.cpp
     src/WrenBindings/WrenFunctionCallback.h     src/WrenBindings/WrenFunctionCallback.cpp
     src/WrenBindings/WrenFileSystem.h           src/WrenBindings/WrenFileSystem.cpp
+    src/WrenBindings/WrenJobs.h                 src/WrenBindings/WrenJobs.cpp
                                                 src/WrenBindings/WrenFlags.cpp
                                                 src/WrenBindings/WrenLocalization.cpp
                                                 src/WrenBindings/WrenEvents.cpp
