@@ -293,6 +293,12 @@ set(PHYSFS_BUILD_DOCS   FALSE CACHE BOOL "" FORCE)
 set(PHYSFS_TARGETNAME_UNINSTALL "physfs_uninstall" CACHE STRING "" FORCE)
 add_subdirectory(third_party/physfs)
 
+# StrukturJobs - the job system (docs/JobSystem.md). STRUKTUR_THREADS (off on web by default) decides whether it starts
+# worker threads; its tests and job_bench build when src/Engine/Jobs is configured on its own.
+set(STRUKTUR_JOBS_BUILD_TESTS OFF CACHE BOOL "" FORCE)
+set(STRUKTUR_JOBS_BUILD_BENCH OFF CACHE BOOL "" FORCE)
+add_subdirectory(src/Engine/Jobs)
+
 # Wren (manual build - same as before, just different source path)
 file(GLOB WREN_SOURCES
     ${CMAKE_CURRENT_SOURCE_DIR}/third_party/wren/src/vm/*.c
@@ -610,6 +616,7 @@ target_link_libraries(${PROJECT_NAME}
     nlohmann_json::nlohmann_json
     box2d
     PhysFS::PhysFS-static
+    StrukturJobs
     $<$<OR:$<BOOL:${PLATFORM_DESKTOP}>,$<BOOL:${PLATFORM_WEB}>>:SDL3_mixer::SDL3_mixer>
     $<$<OR:$<BOOL:${PLATFORM_DESKTOP}>,$<BOOL:${PLATFORM_WEB}>>:SDL3::SDL3>
     $<$<OR:$<BOOL:${PLATFORM_DESKTOP}>,$<BOOL:${PLATFORM_WEB}>>:bgfx>
