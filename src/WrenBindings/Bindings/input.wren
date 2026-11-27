@@ -31,6 +31,14 @@ class Input {
     foreign static getInputAxis2(arg0)
     // Loads the input bindings.
     foreign static loadInputBindings(arg0)
+    // Starts text entry: typed characters arrive via takeTypedText() and keyboard keys stop driving actions.
+    foreign static startTextInput()
+    // Ends text entry; keyboard keys drive actions again.
+    foreign static stopTextInput()
+    // True between startTextInput() and stopTextInput().
+    foreign static isTextInputActive
+    // Text typed since the last call (UTF-8, may be empty).
+    foreign static takeTypedText()
     // The device used most recently: "keyboard" (keyboard or mouse) or "gamepad".
     foreign static activeDevice
     // How the active pad's face buttons are pictured: "lettered" (Xbox) or "positional".
