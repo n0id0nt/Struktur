@@ -21,7 +21,7 @@ road is drawn behind the HUD; see [RideWorld.md](RideWorld.md).*
  UI/Ride/RideLayout    WrenRide.cpp)            │  output paths, command line               ├─ TrainerController (ERG/SIM)
  States/WorkoutBrowser                          │                                            ├─ SpeedModel
  States/RideSettings      ◄── ride* events ─────┤  ECS/System/RideSystem: Update each frame  ├─ RideLog → FitWriter / JSON
-                           (rideTick ~4 Hz,     │  reads FitnessManager → SensorReadings     └─ Zones
+                           (rideTick ~4 Hz,     │  FitnessManager → Input.trainer            └─ Zones
                             rideCue, ...)       └─► Fitness::Trainer (FTMS control-point queue)
  UIGraph (engine UI element) ◄─ Ride.updateGraph / updateProfile fill it in C++
 ```
@@ -50,7 +50,8 @@ road is drawn behind the HUD; see [RideWorld.md](RideWorld.md).*
   - **`RideSettings`:** app-wide options, persisted as `<save folder>/ride_settings.json`. Rider-specific values
     (FTP, max HR, threshold HR, weight, units) stay on the rider profile.
 - **Engine:**
-  - **`RideService`** owns the session and builds `SensorReadings` from `FitnessManager`:
+  - **`RideService`** owns the session and reads `FitnessManager` once a frame into `Input::TrainerInput` (devices
+    plus what the session makes of them), which the HUD, the world and scripts read:
     - The power source is chosen per the settings (Auto prefers a connected power meter).
     - Readings older than 3 s (power) or 5 s (heart rate) count as missing.
     - Session events are forwarded as `ride*` engine events, and `rideTick` fires about 4× a second while riding.

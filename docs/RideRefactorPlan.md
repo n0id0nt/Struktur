@@ -1,6 +1,7 @@
 # Ride refactor plan
 
-A plan for branch `RideSoftware`. Nothing here is implemented yet. It covers eight requests:
+A plan for branch `RideSoftware`. **Steps 1–5 are implemented** (see "What was done" below); step 6, the module and
+repo split, is still to be planned. It covers eight requests:
 1. Separate the world from the ride service.
 2. Put the world and its renderer on the game context, and connect the world to the ECS.
 3. Stop compiling tile maps, render layers and LDtk levels.
@@ -12,6 +13,45 @@ A plan for branch `RideSoftware`. Nothing here is implemented yet. It covers eig
 
 Steps 1–6 below are ordered so the game builds and runs after each one. Step 7 (shared pointers) mostly happens
 inside the earlier steps. Step 8 (modules and repos) is a separate, larger track.
+
+## What was done
+
+Implemented with the recommended decisions, in the order 1, 2, 4, 3, 5. The game builds and runs after each step.
+
+| Step | Commit |
+|---|---|
+| 1. Trainer data in `Input` | Read trainer data from input |
+| 2. World out of the ride service | Move the world out of the ride service |
+| 4. 2D pipeline off | Stop compiling the 2D world pipeline |
+| 3. World in the ECS, 3D camera, textures | Make the world entities and use a 3D camera |
+| 5. Shared pointers | Replace shared pointers with single owners |
+
+**Where it differs from the plan below:**
+- **Order:** step 4 came before step 3, so the new 3D camera and `WorldRenderer` didn't have to coexist with the 2D
+  ones.
+- **No `STRUKTUR_2D_WORLD` switch.** The 2D files are kept but simply left out of the build lists. A switch that
+  could turn them back on would have needed two cameras and `#ifdef`s through shared files, for a configuration
+  nobody uses on this branch. Restoring them is a revert of the step 4 commit.
+- **`World.load` takes a settings string** (`Ride.worldSettings()`), not a map: foreign methods can't take maps.
+- **Biomes and prop types need no retire list:** the world keeps its own copy, fixed from load to unload, and
+  releases the streamer (which waits for builds) first.
+
+**Found on the way:** `ChunkStreamer` lost finished chunks whenever builds completed one at a time (it read a task
+after erasing it from its list), leaving gaps in the road. That came from the job-system change in phase 3; it's fixed
+with a test ("Fix world chunks being lost when builds finish").
+
+**Files no longer compiled** (kept in the repository):
+- World and levels: `World/Level`, `World/TileMap`, `World/RenderLayer.h`, `World/Camera2D`,
+  `FileLoading/LevelParser`, `Physics/CollisionShapeGenerators/TileMapCollisionBodyGenerator`.
+- Components: `Sprite`, `SpriteAnimation`, `ParticleEmitter`, `TileMap`, `Camera`, `Shader`, `Level`, `World`,
+  `LevelEntityInstance`.
+- Systems: `SpriteRenderSystem`, `AnimationSystem`, `ParticleSystem`, `Camera2DSystem`, `ShaderSystem`.
+- Rendering: `Renderer/SpriteBatchRenderer` (the old 2D `WorldRenderer`), `TileChunk*`, `FlipBit.h`.
+- Bindings: `WrenAnimation`, `WrenRenderer.cpp`, `Wren2DComponents.cpp` (the 2D component bindings, moved out of
+  `WrenGameObjectComponents.cpp`).
+- Editor: the level viewer (`LevelViewer/*`, `LevelViewerWindow`), the sprite and shader previews and
+  `Inspector2DComponents.cpp`.
+- Scripts: the Seven Gods scripts are still in `assets/Scripts`, but `Main.wren` no longer imports them.
 
 ## Where things stand
 

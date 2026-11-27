@@ -2,7 +2,7 @@
 
 The procedural ride world ([RideWorld.md](RideWorld.md)) needs 34 art roles, listed in
 `assets/World/manifest.json`. 27 of them have no real file yet, so the game draws a placeholder in code for each
-(`RideWorld::GeneratePlaceholder`, named `placeholder_<role>` in logs). The game runs fine without them.
+(`World::GeneratePlaceholder`, named `placeholder_<role>` in logs). The game runs fine without them.
 
 **To replace a placeholder:** save a PNG at the expected path below, or edit the role's `file` in the manifest to
 point at an existing asset. Nothing else changes; sizes, frame layout and anchors are read from the manifest.

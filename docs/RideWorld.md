@@ -1,4 +1,4 @@
-# Ride world: the procedural road behind the ride screens
+# The world: the procedural road behind the ride screens
 
 An endless, seeded 3D road drawn with bgfx behind the Free Ride and Workout HUDs ([RideScreens.md](RideScreens.md)),
 with a rider sprite whose legs follow your cadence. All art is replaceable data; anything missing is drawn by a
@@ -18,29 +18,45 @@ code placeholder, so the game always runs ([missing-assets.md](missing-assets.md
 ## Architecture
 
 ```
- ride screens (Wren)          RideIntegration::RideService                  src/Engine/RideWorld (pure C++, unit-tested)
- ───────────────────          ────────────────────────────                  ─────────────────────────────────────────────
- RideHudUI (transparent) ──►  creates RideWorld with each ride  ──owns──►   RideWorld
- RideSettingsState rows       UpdateWorld(): speed, grade, zone,             ├─ Route          centripetal Catmull-Rom, arc length
- F3 stats                     cadence, HR, workout plan ahead                ├─ ElevationProfile  h(s), grade limits
-                              session.SetRoadGrade(world grade)  ◄──────     ├─ BiomeSequence  JSON biomes, blended
-                              RenderWorld() ──► Renderer::RideWorldRenderer  ├─ ChunkStreamer  job-system tasks, mesh pool
-                                                (bgfx, game only)            │   └─ BuildChunk terrain / road / water / props
-                                                                             ├─ RiderAnimation crank phase, wheel, lean, pose
-                                                                             └─ camera, actors (IWorldActorSource), banners
+ Wren                       engine (game only)                              src/Engine/World (pure C++, unit-tested)
+ ────                       ──────────────────                              ────────────────────────────────────────
+ RideState                  "world" module ─► LoadWorld / UnloadWorld ──►   World::World  (on the GameContext)
+   World.load(settings)        ├─ World::Load                                ├─ Route          centripetal Catmull-Rom
+   World.unload()              ├─ Renderer::WorldRenderer::Initialise        ├─ ElevationProfile  h(s), grade limits
+                               └─ entities: rider, camera, pacer             ├─ BiomeSequence  JSON biomes, blended
+ Input.trainer  ◄───────── RideSystem writes it (devices + ride)             └─ ChunkStreamer  job tasks, mesh pool
+                            update: Ride ─ World ─ Pacer ─ RiderAnimation ─ Camera
+                            render: WorldRenderSystem ─► WorldRenderer      RoadFollow, Pacer, RiderAnimation
 ```
 
-- **`StrukturRideWorld`** (`src/Engine/RideWorld`) has no SDL, bgfx or Wren. It builds in the standalone test project
-  (`cmake -S src/Engine/Fitness -B build-fitness`), so everything below is covered by `RideWorldTests.cpp`.
-  `RideWorld::Update(RideWorldInputs)` takes simulated speed, the rider's chosen grade, ERG on/off, power zone,
-  cadence (optional), heart rate, power/FTP, workout progress, target delta and the workout's target intensity for the
-  next 300 s. It knows nothing about trainers, so `--demo` and the tests drive it exactly like a real ride.
-- **`RideService`** creates the world when a ride starts (if `world.enabled` and biome data loaded), feeds it every
-  frame after the ride session, and hands the world's road grade back to the session
-  (`TrainerController::SetRoadGrade`): in SIM the trainer simulates the road under the rider. A finished workout
-  drops a finish banner 90 m ahead.
-- **`RideWorldRenderer`** (`src/Engine/Renderer`, game only) turns the world into bgfx draws; `RideWorldRenderSystem`
-  calls it every frame.
+- **`StrukturWorld`** (`src/Engine/World`) has no SDL, bgfx or Wren. It builds in the standalone test project
+  (`cmake -S src/Engine/Fitness -B build-fitness`), so the world, camera following, pacer motion and rider animation
+  are covered by `RideWorldTests.cpp`. It knows nothing about trainers or rides: `World::Update(delta,
+  Input::TrainerInput)` takes speed, chosen grade, ERG, power zone and the workout's intensity ahead, so `--demo` and
+  the tests drive it exactly like a real ride.
+- **Loading is explicit.** The `World` and `WorldRenderer` live on the `GameContext`, empty until a script calls
+  `World.load(Ride.worldSettings())`; `RideState` loads it on entry and unloads it on exit.
+- **The ride and the world are separate.** `RideService` owns the settings, workouts and session and never touches
+  the world. `RideSystem` links them: it hands the world's road grade to the session
+  (`TrainerController::SetRoadGrade`, so SIM simulates the road under the rider) and places a finish banner 90 m ahead
+  when a workout finishes.
+- **Entities** (`ECS/Component/WorldComponents.h`, all tagged `WorldMember` and destroyed on unload):
+
+  | Entity | Components | Moved by |
+  |---|---|---|
+  | The player's rider | `RoadPosition`, `CrankAnimation`, `RiderSprite` | `WorldSystem`, `RiderAnimationSystem` |
+  | Pacer (`--demo`) | `RoadPosition`, `CrankAnimation`, `Tint`, `Pacer` | `PacerSystem`, `RiderAnimationSystem` |
+  | Finish banner | `RoadPosition`, `Banner` | removed by `WorldSystem` once passed |
+  | Camera | `Camera3D`, `World::RoadFollow` | `CameraSystem` |
+
+  `PacerSystem` and `RiderAnimationSystem` are worker systems (docs/JobSystem.md). Chunks aren't entities: they're
+  built on workers and recycled constantly, so they stay inside the streamer.
+- **Camera:** `World::Camera` is a 3D camera (position, target, field of view, near/far, view and projection
+  matrices) on the context. `CameraSystem` follows the rider along the road and writes it; `WorldRenderer` draws
+  through it.
+- **Textures** go through the `ResourceManager`. Role art is decoded in parallel (`PrefetchTextures`); frames cut
+  from sheets and code-drawn placeholders are registered as `world/...` textures.
+- **`WorldRenderer`** (`src/Engine/Renderer`) turns the world and its entities into bgfx draws.
 
 ### Route and elevation
 
@@ -283,7 +299,7 @@ are `[r, g, b]` (0–255) or `"#rrggbb"`.
 One entry per art role: `role`, `category`, `file` (relative to `assets/`), `size` per frame, `frames`, `rows`,
 `framesPerRevolution`, `anchor`, `tileable`, `format`, `notes`, and the `placeholder` (`shape` + `color`).
 
-- **Missing file:** the renderer generates the placeholder in code (`RideWorld::GeneratePlaceholder`).
+- **Missing file:** the renderer generates the placeholder in code (`World::GeneratePlaceholder`).
 - **`regions`:** an optional list of `[x, y, w, h]` cut-outs from a larger sheet (a tileset, a character atlas). Each
   region becomes one frame, placed bottom-centre in equal cells (`ComposeRegions`, tested). The trees and the
   Explorer use this.
@@ -323,29 +339,27 @@ One entry per art role: `role`, `category`, `file` (relative to `assets/`), `siz
 | `nearestUpscale`, `flatShading`, `bandedFog`, `fogBands` | true, true, true, 8 | retro look |
 | `dither`, `paletteLevels`, `scanlines` | false, 6, false | |
 | `debugOverlay` | false | F3 |
-| `demoPacer` | true | the pacer actor (`--demo` only) |
+| `demoPacer` | true | the pacer rider (`--demo` only) |
 
 The Ride Settings screen's second column edits on/off, quality, grade source, scenery (biome), seed (Left/Right
 steps it, Enter picks a random one), look preset, comfort mode and the stats overlay.
 
-- **HUD:** the ride HUD's backdrop is transparent while a world is drawn (`Ride.worldActive()`), and solid when it's
+- **HUD:** the ride HUD's backdrop is transparent while a world is drawn (`World.isLoaded`), and solid when it's
   off. The graph panel in `assets/Settings/RideLayout.json` is now 170 px tall (was 300) so the road and rider show
   above it.
-- **Wren (`ride` module):**
-  - `Ride.worldActive()`.
-  - `Ride.biomes()` (ids).
-  - `Ride.worldInfo()` (biome name, distance, grade).
-  - `Ride.setSetting("world…", value)` for every key above, e.g. `worldQuality`, `worldComfortMode`,
-    `worldDebugOverlay`.
-  - `Ride.worldJumpTo(metres)`, a development helper: it moves the rider along the same seeded road. The screenshot
-    run used it.
+- **Wren:**
+  - `world` module: `World.load(settings)`, `World.unload()`, `World.isLoaded`, `World.applySettings(settings)`,
+    `World.biomes`, `World.info` (biome name, distance, grade) and `World.jumpTo(metres)`, a development helper that
+    moves the rider along the same seeded road.
+  - `ride` module: `Ride.setSetting("world…", value)` for every key above, e.g. `worldQuality`, `worldComfortMode`,
+    `worldDebugOverlay` (saved with the ride settings), and `Ride.worldSettings()`, the settings string `World.load`
+    takes.
+  - `Input.trainer`: the live trainer, sensor and ride values the world is driven by.
 
-## Actors
+## Pacer
 
-`IWorldActorSource::Collect(riderDistance, dt, out)` returns `WorldActor`s (distance, lateral offset, crank phase,
-tint) each frame. They're drawn as world billboards from the rider sprite's layers. Only `DemoPacer` exists for now:
-about 30 km/h with a slow surge, only in `--demo`, rejoining ahead if dropped. Ghost replays would be another
-implementation.
+`PacerSystem` (`World::MovePacer`) rides about 30 km/h with a slow surge, only in `--demo`, rejoining ahead if
+dropped. Ghost replays would be another mover for the same components.
 
 ## Testing
 
@@ -356,7 +370,9 @@ implementation.
   - Biome parsing, the seeded sequence and forced biomes.
   - No terrain self-intersection over 100 km.
   - Chunk pool and buffer flatness over 30 km.
-  - Threaded vs inline build equality.
+  - Job-system vs inline build equality, safe rebuilds and teardown mid-build, and no chunk lost when builds finish
+    one at a time.
+  - Load / unload, the road camera and pacer motion.
   - SIM grade blending and limits; ERG intensity grades.
   - The trainer road-grade override.
   - Same-seed worlds matching.
@@ -369,7 +385,7 @@ implementation.
 ## Libraries
 
 There are no new dependencies. The spline, noise, elevation, chunk builder, placeholder art and asset manifest are
-written in-house in `src/Engine/RideWorld`. Rendering uses the bgfx that's already vendored (and its shaderc step),
+written in-house in `src/Engine/World`. Rendering uses the bgfx that's already vendored (and its shaderc step),
 glm, and the stb_image already vendored by bimg (for real PNGs). Tests use the existing doctest.
 
 ## Decisions
@@ -400,7 +416,7 @@ glm, and the stb_image already vendored by bimg (for real PNGs). Tests use the e
    that scale (e.g. 64×96 rider frames), or a higher internal resolution?
 4. **Shipping biomes:** five ship (coastal, alpine, desert, forest, night). Want more, or different weather and time
    of day mixes?
-5. **The debug helper:** `Ride.worldJumpTo` is a dev-only helper exposed to Wren. Keep it, or put it behind
+5. **The debug helper:** `World.jumpTo` is a dev-only helper exposed to Wren. Keep it, or put it behind
    `--demo`?
 
 ## Not verified
