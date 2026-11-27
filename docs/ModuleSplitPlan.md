@@ -1,7 +1,7 @@
 # Splitting the engine from the games (refactor step 6)
 
-A plan. Step 6.0 is done, on the `Modules` branch (record: `docs/SplitBaseline.md`); nothing later is started. It
-follows these choices:
+A plan. Steps 6.0 and 6.1 are done, on the `Modules` branch (record: `docs/SplitBaseline.md`); nothing later is
+started. It follows these choices:
 
 - **Three GitHub repositories:** the engine and two games, **Seven Gods** and **Indoor Cycling Software**.
 - **Folders:** the engine stays in `Documents\Game Creation Projects\Struktur`; the games go beside it.
@@ -20,8 +20,8 @@ follows these choices:
 
 | For you | Why |
 |---|---|
-| Try the ride on the real trainer, and Play/Stop in the editor | Neither is tested since the refactor. Best before 6.1 changes the code |
-| Apply or drop the two git stashes (`main`, 27 August: Editor, Game, ImGui renderer; `master`, 14 August: UI batching) | They won't apply cleanly once the files move |
+| Try the ride on the real trainer | Not tested since the refactor or 6.1 |
+| Apply or drop the two git stashes (`main`, 27 August: Editor, Game, ImGui renderer; `master`, 14 August: UI batching) | 6.1 has started moving files, so they're getting harder to apply |
 | Confirm level, dialogue and art edits to Seven Gods are also on hold until 6.3 | Code and assets both move in that step |
 | Decide on the local engine override (below) | It shapes how the game projects are set up in 6.2 |
 | `Struktur` is public on GitHub, with the old game assets in its history and the save encoding key in its source | Say if it should be private. The new game repositories will be private |
@@ -119,6 +119,8 @@ struktur_add_game(IndoorCyclingSoftware
   ```
 
 - A check builds core alone, each game's set and everything together, so a missing guard fails there.
+- So far (6.1) the root `CMakeLists.txt` takes the list as `STRUKTUR_LIBRARIES` (everything by default), and
+  `builds\check-all.ps1` also builds the ride with only `ecs;wren;ui;fitness`.
 
 What has to change for the libraries to separate (found by checking includes on `main` and `RideSoftware`):
 
@@ -135,6 +137,12 @@ What has to change for the libraries to separate (found by checking includes on 
 | The dialogue editor fixes the script folder and speaker names (Greg, Mei, Baron, ...) | The game supplies both |
 | The key that encodes save files is in the engine's file system code | Each game supplies its own; Seven Gods keeps the current one, so its saves still load |
 
+6.1 made these changes, apart from the tile map and level viewer rows, which concern the 2D code (6.3):
+
+- `Game.cpp` gives the key to `FileSystem::SetSaveKey`.
+- The dialogue editor reads `Settings/DialogueEditor.json` from the open project. The file goes with Seven Gods in
+  6.3.
+
 ### Component lists
 
 Each library keeps its own list beside its components, with its script wrappers. One header joins the lists the game
@@ -142,26 +150,23 @@ uses, so the code that reads `COMPONENT_LIST` stays as it is. A game can add its
 it.
 
 ```cpp
-// ecs/ScriptComponents.h (inside STRUKTUR_WREN)
-#include "ecs/EcsComponentList.h"             // ECS_COMPONENT_LIST: transforms, script
+// Engine/ECS/ScriptComponents.h (used by the script bindings)
+#include "Engine/ECS/EcsComponentList.h"             // ECS_COMPONENT_LIST: transforms, script
 #ifdef STRUKTUR_PHYSICS
-#include "physics/PhysicsComponentList.h"     // PHYSICS_COMPONENT_LIST: PhysicsBody
+#include "Engine/Physics/PhysicsComponentList.h"     // PHYSICS_COMPONENT_LIST: PhysicsBody
 #else
 #define PHYSICS_COMPONENT_LIST
 #endif
-#ifdef STRUKTUR_WORLD2D
-#include "world2d/World2DComponentList.h"     // WORLD2D_COMPONENT_LIST: Camera, Level, Sprite, TileMap, ...
-#else
-#define WORLD2D_COMPONENT_LIST
-#endif
 #ifdef STRUKTUR_GAME_COMPONENT_HEADER
-#include STRUKTUR_GAME_COMPONENT_HEADER       // set by the game's CMake; defines GAME_COMPONENT_LIST
+#include STRUKTUR_GAME_COMPONENT_HEADER              // set by the game's CMake; defines GAME_COMPONENT_LIST
 #else
 #define GAME_COMPONENT_LIST
 #endif
 
-#define COMPONENT_LIST ECS_COMPONENT_LIST PHYSICS_COMPONENT_LIST WORLD2D_COMPONENT_LIST GAME_COMPONENT_LIST
+#define COMPONENT_LIST ECS_COMPONENT_LIST PHYSICS_COMPONENT_LIST GAME_COMPONENT_LIST
 ```
+
+6.3 adds the 2D world's list (camera, level, sprite, tile map and so on) the same way.
 
 ## Game context
 
@@ -169,7 +174,7 @@ Core declares what the libraries need as virtual getters, and each game implemen
 calls such as `context.GetRegistry()` don't change.
 
 ```cpp
-// Struktur: core/GameContext.h
+// Struktur: Engine/GameContext.h
 class GameContext
 {
 public:
@@ -191,20 +196,20 @@ public:
 ```
 
 ```cpp
-// Indoor Cycling Software: src/RideContext.h
-class RideContext final : public Struktur::GameContext
+// Indoor Cycling Software: RideContext.h (in Engine/RideIntegration until 6.2)
+class RideContext final : public GameContext
 {
 public:
-	static RideContext& From(Struktur::GameContext& context) { return static_cast<RideContext&>(context); }
+	static RideContext& From(GameContext& context) { return static_cast<RideContext&>(context); }
 
 	entt::registry& GetRegistry() const override;
-	Ride::RideService& GetRideService() const;  // the game's own additions
+	RideIntegration::RideService& GetRideService() const;  // the game's own additions
 	World::World& GetWorld() const;
 	World::Camera& GetCamera() const;
 
 private:
-	Struktur::Ecs::Services m_ecs;  // each library supplies a holder for its services
-	std::unique_ptr<Ride::RideService> m_rideService;
+	System::Services m_ecs;  // each library supplies a holder for its services
+	std::unique_ptr<RideIntegration::RideService> m_rideService;
 };
 ```
 
@@ -273,12 +278,15 @@ its checks.
 | Step | Work | Done when | Size |
 |---|---|---|---|
 | 6.0 Groundwork (done) | Tag `main` and `RideSoftware` (`pre-split-...`); fix the `Ui` / `UI` folder case; fork wren and bgfx.cmake and use the forks; record how both games behave now; one script that builds and tests everything | A fresh clone builds; the record exists | Small |
-| 6.1 Untangle | Virtual `GameContext` and `RideContext`; per-library component lists; in-memory script modules; the include changes above and their guards | Ride tests and demo ride as today | Medium–large |
+| 6.1 Untangle (done) | Virtual `GameContext` and `RideContext`; per-library component lists; in-memory script modules; the include changes above and their guards | Ride tests and demo ride as today | Medium–large |
 | 6.2 Libraries | A CMake target per library and `struktur_add_game`; the ride becomes `games/IndoorCyclingSoftware` (still in this repository) with its own `Game.cpp` | The engine names no game; the library combinations build | Medium–large |
 | 6.3 Seven Gods | `world2d` from the 2D files kept uncompiled, plus the code removed from shared files, taken from `main`; `games/SevenGods` with its `Game.cpp`, context, assets and scripts | It reaches the overworld, plays a self-running battle, loads existing saves and opens the level viewer | Large, riskiest |
 | 6.4 Move the games out | Push `Modules`; make each game folder a repository with its history and the engine submodule; copy shared assets and the files git doesn't hold (below) | Both build from their new folders | Medium |
 | 6.5 GitHub | Push the games to their new repositories; merge `Modules` into the engine's `main` without squashing, with game code removed by ordinary commits | Fresh clones of all three build | Small |
 
+- **Left from 6.1 for 6.2:** the libraries are still source lists in one `CMakeLists.txt`; `Game.cpp` and
+  `RegisterAllBindings` still name the ride; and there are no guards yet for building without `ecs`, `wren` or `ui`,
+  since nothing can be built that way until core is its own target.
 - **6.3 is where regressions can hide.** With the job system, Seven Gods has only had short overworld runs, and its
   2D code hasn't been compiled since refactor step 4. Compare against the 6.0 record. Once it passes, Seven Gods work
   resumes in `games/SevenGods`, not on the old layout.

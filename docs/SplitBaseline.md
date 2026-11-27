@@ -64,6 +64,22 @@ and the editor closes cleanly with no errors.
 
 No crashes in any run.
 
+## After step 6.1
+
+Checked 2026-11-28 on `Modules` (`b844a75`).
+
+| Check | Result |
+|---|---|
+| `check-all.ps1 -Web` | 10 of 10, including the two new builds with only the ride's libraries |
+| Ride check, all libraries | as above, the same one warning, save folder unchanged |
+| Ride check, ride libraries only | the same |
+| Ride libraries only | the compiler opened no physics, dialogue, flag or Box2D header |
+| Script modules built in memory | identical text to the files generated before (21 modules) |
+| Editor with simulated devices: Play, Stop, Play, Refresh, Stop, Play | no errors; the binding count stays the same across restarts; closes cleanly |
+| Save key | the same bytes as before |
+
+The editor check used a temporary hook that opens the project and drives the toolbar's actions.
+
 ## Repeating it
 
 The saves, reports and screenshots are in `baseline\` (not in git). `tools\checks\README.md` explains the checks.
