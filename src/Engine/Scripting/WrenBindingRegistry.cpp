@@ -4,29 +4,45 @@ namespace Struktur::Wren
 {
 void RegisterAllBindings(BindingRegistry& registry)
 {
-	RegisterGameObjectBindings(registry);
-	RegisterPhysicsBodyBindings(registry);
-	RegisterGameObjectComponentBindings(registry);
+	// Core's
 	RegisterMathBindings(registry);
-	RegisterPhysicsBindings(registry);
-	RegisterCollisionLayersBindings(registry);
 	RegisterResourceManagerBindings(registry);
-	RegisterUIBindings(registry);
-	RegisterDialogueBindings(registry);
 	RegisterFunctionCallbackBindings(registry);
 	RegisterFileSystemBindings(registry);
-	RegisterFlagsBindings(registry);
 	RegisterApplicationBindings(registry);
 	RegisterInputBindings(registry);
 	RegisterDebugBindings(registry);
 	RegisterSerialisationBindings(registry);
-	RegisterVariableSubstitutionBindings(registry);
 	RegisterEventsBindings(registry);
 	RegisterAudioBindings(registry);
 	RegisterLocalizationBindings(registry);
-	RegisterFitnessBindings(registry);
-	RegisterRideBindings(registry);
 	RegisterJobsBindings(registry);
+#ifdef STRUKTUR_ECS
+	RegisterGameObjectBindings(registry);
+	#ifdef STRUKTUR_PHYSICS
+	RegisterPhysicsBodyBindings(registry);
+	#endif
+	RegisterGameObjectComponentBindings(registry);
+#endif
+#ifdef STRUKTUR_PHYSICS
+	RegisterPhysicsBindings(registry);
+	RegisterCollisionLayersBindings(registry);
+#endif
+#ifdef STRUKTUR_UI
+	RegisterUIBindings(registry);
+#endif
+#ifdef STRUKTUR_DIALOGUE
+	RegisterDialogueBindings(registry);
+	RegisterVariableSubstitutionBindings(registry);
+#endif
+#ifdef STRUKTUR_FLAG
+	RegisterFlagsBindings(registry);
+#endif
+#ifdef STRUKTUR_FITNESS
+	RegisterFitnessBindings(registry);
+#endif
+	// The game's own
+	RegisterRideBindings(registry);
 	RegisterWorldBindings(registry);
 }
 }  // namespace Struktur::Wren

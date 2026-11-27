@@ -7,7 +7,6 @@
 #include <unordered_map>
 
 #include "Engine/ECS/SystemManager.h"
-#include "Engine/Physics/CollisionLayers.h"
 #define GLM_ENABLE_EXPERIMENTAL
 #include <glm/gtx/quaternion.hpp>
 
@@ -19,15 +18,13 @@
 #include "Debug/Editor/Windows/UIHierarchyWindow.h"
 #include "Engine/ECS/Component/Active.h"
 #include "Engine/ECS/Component/Identifier.h"
-#include "Engine/ECS/Component/PhysicsBody.h"
 #include "Engine/ECS/Component/Transform.h"
 #include "Engine/ECS/Component/WrenScript.h"
 #include "Engine/ECS/System/HierarchySystem.h"
 #include "Engine/ECS/System/TransformSystem.h"
 #include "Engine/ECS/System/WrenScriptSystem.h"
+#include "Engine/ECS/WrenScriptComponentRegistry.h"
 #include "Engine/GameContext.h"
-#include "Engine/Physics/PhysicsWorld.h"
-#include "Engine/Scripting/WrenScriptComponentRegistry.h"
 #include "Engine/UI/UIBorder.h"
 #include "Engine/UI/UIClip.h"
 #include "Engine/UI/UIColor.h"
@@ -39,6 +36,11 @@
 #include "Engine/UI/UIRichLabel.h"
 #include "Engine/UI/UIScroll.h"
 #include "Engine/UI/UITexture.h"
+#ifdef STRUKTUR_PHYSICS
+	#include "Engine/ECS/Component/PhysicsBody.h"
+	#include "Engine/Physics/CollisionLayers.h"
+	#include "Engine/Physics/PhysicsWorld.h"
+#endif
 
 namespace Struktur::Debug
 {
@@ -68,6 +70,7 @@ static std::string FormatFieldValue(const Wren::WrenItem& item)
 	}
 }
 
+#ifdef STRUKTUR_PHYSICS
 // A checkbox per named collision layer for one of a body's filter bitmasks. True when a box was toggled.
 static bool RenderCollisionLayerToggles(Physics::CollisionLayers& collisionLayers, const char* title, uint16& bits)
 {
@@ -104,6 +107,7 @@ static bool RenderRawCollisionBits(const char* label, uint16& bits)
 	}
 	return false;
 }
+#endif
 
 InspectorWindow::InspectorWindow(HierarchyWindow* hierarchyWindow, UIHierarchyWindow* uiHierarchyWindow,
                                  PreviewWindow* previewWindow)
@@ -265,6 +269,7 @@ void InspectorWindow::RenderComponents(GameContext& context, entt::entity entity
 		}
 	}
 
+#ifdef STRUKTUR_PHYSICS
 	// Render PhysicsBody if exists
 	if (auto* physicsBody = registry.try_get<Component::PhysicsBody>(entity))
 	{
@@ -275,6 +280,7 @@ void InspectorWindow::RenderComponents(GameContext& context, entt::entity entity
 			ImGui::PopID();
 		}
 	}
+#endif
 
 	// Render WrenScript if exists
 	if (auto* script = registry.try_get<Component::WrenScript>(entity))
@@ -676,7 +682,7 @@ void InspectorWindow::RenderUIElementProperties(GameContext& context, UI::UIElem
 	}
 
 	// Callbacks - deliberately read-only. A callback here (UIClickCallback etc., see UIElement.h) wraps a Wren
-	// fiber/closure captured at script-authoring time (see Engine/Callback/WrenCallback.h) - there's no
+	// fiber/closure captured at script-authoring time (see Engine/Scripting/WrenCallback.h) - there's no
 	// serializable, editable representation of a closure to put in an ImGui panel, the same reason a
 	// WrenScript component's methods aren't editable here either (only its #!export-tagged fields are, since
 	// those are plain data, not code). Wiring a callback is a script/code-time decision, not a per-instance
@@ -996,6 +1002,7 @@ void InspectorWindow::RenderActiveComponent(GameContext& context, Component::Act
 	}
 }
 
+#ifdef STRUKTUR_PHYSICS
 void InspectorWindow::RenderPhysicsBodyComponent(GameContext& context, Component::PhysicsBody& physicsBody,
                                                  entt::registry& registry, entt::entity entity)
 {
@@ -1175,6 +1182,7 @@ void InspectorWindow::RenderPhysicsBodyComponent(GameContext& context, Component
 		ImGui::TreePop();
 	}
 }
+#endif
 
 void InspectorWindow::RenderWrenScriptComponent(GameContext& context, Component::WrenScript& script,
                                                 entt::registry& registry, entt::entity entity)

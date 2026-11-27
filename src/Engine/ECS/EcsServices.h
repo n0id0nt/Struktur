@@ -6,7 +6,7 @@
 #include "Engine/ECS/SystemManager.h"
 #include "entt/entt.hpp"
 #ifdef STRUKTUR_WREN
-	#include "Engine/Scripting/WrenScriptComponentRegistry.h"
+	#include "Engine/ECS/WrenScriptComponentRegistry.h"
 #endif
 
 namespace Struktur::System

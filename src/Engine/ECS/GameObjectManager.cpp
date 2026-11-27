@@ -2,7 +2,6 @@
 
 #include "Engine/ECS/Component/Active.h"
 #include "Engine/ECS/Component/Identifier.h"
-#include "Engine/ECS/Component/PhysicsBody.h"
 #include "Engine/ECS/Component/Transform.h"
 #include "Engine/ECS/Component/WrenScript.h"
 #include "Engine/ECS/System/HierarchySystem.h"
@@ -10,9 +9,12 @@
 #include "Engine/ECS/System/WrenScriptSystem.h"
 #include "Engine/ECS/SystemManager.h"
 #include "Engine/GameContext.h"
-#include "Engine/Physics/PhysicsWorld.h"
 #include "glm/glm.hpp"
 #include "glm/gtc/quaternion.hpp."
+#ifdef STRUKTUR_PHYSICS
+	#include "Engine/ECS/Component/PhysicsBody.h"
+	#include "Engine/Physics/PhysicsWorld.h"
+#endif
 
 void Struktur::System::GameObjectManager::CreateObjectCallBack(GameContext& context)
 {
@@ -21,7 +23,9 @@ void Struktur::System::GameObjectManager::CreateObjectCallBack(GameContext& cont
 
 	// Listen for entity destruction to clean up references
 	registry.on_destroy<Component::Children>().connect<&GameObjectManager::OnChildrenDestroy>(*this);
+#ifdef STRUKTUR_PHYSICS
 	registry.on_destroy<Component::PhysicsBody>().connect<&GameObjectManager::OnPhysicsBodyDestory>(*this);
+#endif
 	registry.on_construct<Component::WrenScript>().connect<&GameObjectManager::OnScriptConstruct>(*this);
 	registry.on_destroy<Component::WrenScript>().connect<&GameObjectManager::OnScriptDestory>(*this);
 
@@ -35,7 +39,9 @@ void Struktur::System::GameObjectManager::Shutdown(GameContext& context)
 	entt::registry& registry = context.GetRegistry();
 
 	registry.on_destroy<Component::Children>().disconnect<&GameObjectManager::OnChildrenDestroy>(*this);
+#ifdef STRUKTUR_PHYSICS
 	registry.on_destroy<Component::PhysicsBody>().disconnect<&GameObjectManager::OnPhysicsBodyDestory>(*this);
+#endif
 	registry.on_construct<Component::WrenScript>().disconnect<&GameObjectManager::OnScriptConstruct>(*this);
 	registry.on_destroy<Component::WrenScript>().disconnect<&GameObjectManager::OnScriptDestory>(*this);
 	registry.on_construct<Component::Active>().disconnect<&GameObjectManager::OnActiveStateChanged>(*this);
@@ -115,10 +121,12 @@ void Struktur::System::GameObjectManager::UpdateGameObjectsActiveStateQueue(Game
 			registry.emplace_or_replace<Inactive>(entity);
 		}
 
+#ifdef STRUKTUR_PHYSICS
 		if (auto* body = registry.try_get<Component::PhysicsBody>(entity))
 		{
 			body->body->SetEnabled(isActive);
 		}
+#endif
 	}
 	m_queueOfObjectsToUpdateActiveState.clear();
 }
@@ -145,6 +153,7 @@ void Struktur::System::GameObjectManager::OnChildrenDestroy(entt::registry& reg,
 	}
 }
 
+#ifdef STRUKTUR_PHYSICS
 void Struktur::System::GameObjectManager::OnPhysicsBodyDestory(entt::registry& reg, entt::entity entity)
 {
 	// remove physics bodies from entities from the physics worked
@@ -155,6 +164,7 @@ void Struktur::System::GameObjectManager::OnPhysicsBodyDestory(entt::registry& r
 		physicsBody.body = nullptr;
 	}
 }
+#endif
 
 void Struktur::System::GameObjectManager::OnScriptConstruct(entt::registry& reg, entt::entity entity)
 {

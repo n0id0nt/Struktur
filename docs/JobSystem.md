@@ -212,9 +212,8 @@ update() {
   stops, and its result is thrown away. Tasks still running at shutdown are dropped like any other job.
 - **Polling, not callbacks:** there's no `onComplete(fn)` yet. Calling back into Wren needs handle management the
   bindings don't have, and polling from `update()` was the use case asked for.
-- **Bindings:** `src/WrenBindings/WrenJobs.cpp`. The `jobs.wren` module and the generated header were regenerated
-  by a Debug run and copied in. Stale `fitness.wren` / `ride.wren` files left in the shared output folder
-  (`../src/WrenBindings/Bindings`) get pulled into the generated header, so they were moved aside first.
+- **Bindings:** `src/WrenBindings/WrenJobs.cpp`. Like every binding module, `jobs` is built in memory from the
+  registered bindings when the script engine starts.
 
 ### How it works (phase 1b)
 

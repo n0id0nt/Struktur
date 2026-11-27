@@ -24,4 +24,6 @@ editor_saves.json
 
 # Local checks: a fresh clone and the behaviour records (tools/checks)
 build-fresh/
+build-ride-libs/
+build-ride-libs-editor/
 baseline/

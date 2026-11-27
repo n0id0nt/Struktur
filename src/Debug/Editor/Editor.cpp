@@ -9,7 +9,6 @@
 // Include all window types
 #include "Debug/Editor/EditorTheme.h"
 #include "Debug/Editor/Windows/DebugInfoWindow.h"
-#include "Debug/Editor/Windows/DialogueEditorWindow.h"
 #include "Debug/Editor/Windows/FileExplorerWindow.h"
 #include "Debug/Editor/Windows/GameViewportWindow.h"
 #include "Debug/Editor/Windows/HierarchyWindow.h"
@@ -24,6 +23,9 @@
 #include "Debug/Editor/Windows/StateWindow.h"
 #include "Debug/Editor/Windows/ToolbarWindow.h"
 #include "Debug/Editor/Windows/UIHierarchyWindow.h"
+#ifdef STRUKTUR_DIALOGUE
+	#include "Debug/Editor/Windows/DialogueEditorWindow.h"
+#endif
 
 namespace Struktur::Debug
 {
@@ -71,8 +73,9 @@ void Editor::Initialise(GameContext& context)
 	// Inspector window (depends on hierarchy)
 	CreateWindow<InspectorWindow>(hierarchyPtr, uiHierarchyPtr, previewPtr);
 
-	// Inspector window (depends on hierarchy)
+#ifdef STRUKTUR_DIALOGUE
 	CreateWindow<DialogueEditorWindow>(previewPtr);
+#endif
 
 	// Resource manager window (depends on preview window - texture rows preview through it)
 	CreateWindow<ResourceManagerWindow>(previewPtr);

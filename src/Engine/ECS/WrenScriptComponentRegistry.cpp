@@ -1,4 +1,4 @@
-#include "WrenScriptComponentRegistry.h"
+#include "Engine/ECS/WrenScriptComponentRegistry.h"
 
 #include <format>
 

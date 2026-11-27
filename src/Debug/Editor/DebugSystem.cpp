@@ -2,22 +2,24 @@
 
 #include "Debug/Editor/Editor.h"
 #include "Debug/Editor/Windows/HierarchyWindow.h"
-#include "Engine/ECS/Component/PhysicsBody.h"
 #include "Engine/ECS/Component/Transform.h"
 #include "Engine/ECS/System/TransformSystem.h"
 #include "Engine/GameContext.h"
-#include "Engine/Physics/PhysicsWorld.h"
 #include "entt/entt.hpp"
+#ifdef STRUKTUR_PHYSICS
+	#include "Engine/ECS/Component/PhysicsBody.h"
+	#include "Engine/Physics/PhysicsWorld.h"
+#endif
 
 Struktur::System::DebugSystem::DebugSystem() {}
 
 void Struktur::System::DebugSystem::Update(GameContext& context)
 {
 	auto& debugSettings                 = context.GetEditor().GetSettings().debugRender;
-	Physics::PhysicsWorld& physicsWorld = context.GetPhysicsWorld();
 
 	m_debugRenderer.SetupView(context);
 
+#ifdef STRUKTUR_PHYSICS
 	// box2d's own b2Draw walk (see b2World::DebugDraw) replaces Box2DDebugRenderer's manual raylib-coupled walk
 	// on this path - its flags map onto real box2d concepts rather than Box2DDebugRenderer::RenderWorld's
 	// positional-argument reuse (e.g. web's "showPhysicsBodies" setting happens to control that function's
@@ -37,6 +39,7 @@ void Struktur::System::DebugSystem::Update(GameContext& context)
 			flags |= b2Draw::e_aabbBit;
 		}
 
+		Physics::PhysicsWorld& physicsWorld = context.GetPhysicsWorld();
 		m_box2dBgfxDebugDraw.SetPixelsPerMeter(physicsWorld.GetPixelsPerMeter());
 		m_box2dBgfxDebugDraw.SetFlags(flags);
 		physicsWorld.GetRawWorld()->SetDebugDraw(&m_box2dBgfxDebugDraw);
@@ -46,6 +49,7 @@ void Struktur::System::DebugSystem::Update(GameContext& context)
 	{
 		RenderPhysicsShapes(context);
 	}
+#endif
 	// showPhysicsContactPoints: dead on web too (// TODO: Implement contact point rendering, never called) - not
 	// ported.
 
@@ -106,6 +110,7 @@ void Struktur::System::DebugSystem::RenderSelectedEntityHighlight(GameContext& c
 	                                  2.0f, Util::ColorGreen);
 }
 
+#ifdef STRUKTUR_PHYSICS
 void Struktur::System::DebugSystem::RenderPhysicsShapes(GameContext& context)
 {
 	auto& debugSettings                 = context.GetEditor().GetSettings().debugRender;
@@ -224,6 +229,7 @@ void Struktur::System::DebugSystem::RenderPhysicsShapes(GameContext& context)
 		}
 	}
 }
+#endif
 
 void Struktur::System::DebugSystem::RenderGrid(GameContext& context)
 {

@@ -1,7 +1,7 @@
-#include "Engine/Callback/CallbackHelperFunctions.h"
 #include "Engine/Event/Event.h"
 #include "Engine/Event/EventManager.h"
 #include "Engine/GameContext.h"
+#include "Engine/Scripting/CallbackHelperFunctions.h"
 #include "Engine/Scripting/WrenBindingRegistry.h"
 #include "wren.hpp"
 

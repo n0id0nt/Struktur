@@ -3,7 +3,7 @@
 #include <string>
 #include <vector>
 
-#include "Engine/Scripting/WrenScriptComponentRegistry.h"
+#include "Engine/ECS/WrenScriptComponentRegistry.h"
 #include "Engine/Scripting/WrenValueWrapper.h"
 #include "wren.hpp"
 

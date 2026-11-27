@@ -66,6 +66,10 @@ Test-Build 'fitness and ride tests' 'src\Engine\Fitness' 'build-fitness' 'Debug'
 Test-Build 'game, debug' '.' 'build-nogame' 'Debug' @('-DCMAKE_BUILD_TYPE=Debug', '-DEDITOR=FALSE') $null
 Test-Build 'editor, debug' '.' 'build-windows-debug' 'Debug' @('-DCMAKE_BUILD_TYPE=Debug') $null
 Test-Build 'game, release' '.' 'build-windows' 'Release' @('-DCMAKE_BUILD_TYPE=Release') $null
+# Only the libraries the ride uses, so nothing else comes to depend on the others.
+$rideLibraries = '-DSTRUKTUR_LIBRARIES=ecs;wren;ui;fitness'
+Test-Build 'game, ride libraries only' '.' 'build-ride-libs' 'Debug' @('-DCMAKE_BUILD_TYPE=Debug', '-DEDITOR=FALSE', $rideLibraries) $null
+Test-Build 'editor, ride libraries only' '.' 'build-ride-libs-editor' 'Debug' @('-DCMAKE_BUILD_TYPE=Debug', $rideLibraries) $null
 
 if ($Web) {
     $build = Join-Path $root 'build-web'

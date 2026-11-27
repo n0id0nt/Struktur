@@ -1,24 +1,5 @@
 #include "Game.h"
 
-#include "Engine/Dialogue/DialogueManager.h"
-#include "Engine/Dialogue/DialogueRegistry.h"
-#include "Engine/Fitness/FitnessManager.h"
-#include "Engine/Flag/FlagManager.h"
-#include "Engine/Physics/PhysicsWorld.h"
-#include "Engine/Renderer/UIRenderer.h"
-#include "Engine/RideIntegration/RideContext.h"
-#include "Engine/RideIntegration/RideService.h"
-#include "Engine/Scripting/WrenScriptComponentRegistry.h"
-#include "Engine/Scripting/WrenStateManager.h"
-#include "Engine/UI/InputGlyphs.h"
-#include "Engine/UI/UIManager.h"
-#include "Engine/World/World.h"
-#include "entt/entt.hpp"
-#ifdef EDITOR
-	#include "Debug/Editor/Editor.h"
-	#include "Engine/Renderer/ImGuiRenderer.h"
-#endif
-
 #include <cstdio>
 #include <memory>
 #include <string>
@@ -34,50 +15,74 @@
 #include "Engine/Core/CommandLine.h"
 #include "Engine/Core/EngineSettings.h"
 #include "Engine/Core/FileSystem.h"
-#include "Engine/ECS/Component/Camera.h"
-#include "Engine/ECS/Component/PhysicsBody.h"
 #include "Engine/ECS/Component/Transform.h"
 #include "Engine/ECS/GameObjectManager.h"
-#include "Engine/ECS/System/DebugSystem.h"
+#include "Engine/ECS/System/CameraSystem.h"
 #include "Engine/ECS/System/EventSystem.h"
 #include "Engine/ECS/System/FitnessSystem.h"
-#include "Engine/ECS/System/RideSystem.h"
-#include "Engine/ECS/System/WorldRenderSystem.h"
-#include "Engine/ECS/System/WorldSystem.h"
-#include "Engine/ECS/System/CameraSystem.h"
-#include "Engine/ECS/System/PacerSystem.h"
-#include "Engine/ECS/System/RiderAnimationSystem.h"
 #include "Engine/ECS/System/HierarchySystem.h"
-#include "Engine/ECS/System/PhysicsSystem.h"
+#include "Engine/ECS/System/PacerSystem.h"
+#include "Engine/ECS/System/RideSystem.h"
+#include "Engine/ECS/System/RiderAnimationSystem.h"
 #include "Engine/ECS/System/SoundSystem.h"
 #include "Engine/ECS/System/TransformSystem.h"
 #include "Engine/ECS/System/UIRenderSystem.h"
 #include "Engine/ECS/System/UIsystem.h"
+#include "Engine/ECS/System/WorldRenderSystem.h"
+#include "Engine/ECS/System/WorldSystem.h"
 #include "Engine/ECS/System/WrenScriptSystem.h"
 #include "Engine/ECS/System/WrenStateSystem.h"
 #include "Engine/ECS/SystemManager.h"
+#include "Engine/ECS/WrenScriptComponentRegistry.h"
+#include "Engine/Fitness/FitnessManager.h"
 #include "Engine/GameContext.h"
 #include "Engine/Input/Input.h"
+#include "Engine/Platform/Window.h"
+#include "Engine/Renderer/GraphicsDevice.h"
+#include "Engine/Renderer/UIRenderer.h"
+#include "Engine/RideIntegration/RideContext.h"
+#include "Engine/RideIntegration/RideService.h"
 #include "Engine/Scripting/WrenScriptEngine.h"
+#include "Engine/Scripting/WrenStateManager.h"
 #include "Engine/Text/Font.h"
+#include "Engine/UI/InputGlyphs.h"
+#include "Engine/UI/UIManager.h"
 #include "Engine/Util/Color.h"
 #include "Engine/Util/MathUtil.h"
+#include "Engine/World/World.h"
 #include "Engine/World/WorldAssetLoader.h"
 #include "Engine/World/WorldLifecycle.h"
+#include "entt/entt.hpp"
+#ifdef STRUKTUR_PHYSICS
+	#include "Engine/ECS/System/PhysicsSystem.h"
+	#include "Engine/Physics/PhysicsWorld.h"
+#endif
+#ifdef STRUKTUR_DIALOGUE
+	#include "Engine/Dialogue/DialogueManager.h"
+	#include "Engine/Dialogue/DialogueRegistry.h"
+#endif
+#ifdef STRUKTUR_FLAG
+	#include "Engine/Flag/FlagManager.h"
+#endif
 
 #include <SDL3/SDL.h>
 
-#include "Engine/Platform/Window.h"
-#include "Engine/Renderer/GraphicsDevice.h"
 #ifdef EDITOR
 	#include <imgui.h>
 	#include <imgui_impl_sdl3.h>
 
+	#include "Debug/Editor/DebugSystem.h"
+	#include "Debug/Editor/Editor.h"
 	#include "Debug/Editor/EditorLayoutManager.h"
 	#include "Debug/Editor/EditorTheme.h"
 	#include "Debug/Editor/ProjectLauncher.h"
 	#include "Debug/Editor/SaveFolders.h"
+	#include "Engine/Renderer/ImGuiRenderer.h"
 #endif
+
+// Encodes this game's saves (FileSystem::SetSaveKey). Keep it: changing it makes existing saves unreadable.
+static constexpr uint8_t k_saveKey[] = {0x4B, 0x72, 0x69, 0x63, 0x6B, 0x65, 0x74, 0x47,
+                                        0x61, 0x6D, 0x65, 0x53, 0x61, 0x76, 0x65, 0x31};
 
 #ifdef EDITOR
 	#define SPLASHSCREENFONT "Fonts/machine-std/machine-std-regular.ttf"
@@ -98,12 +103,12 @@ bool Struktur::InitialiseGame(GameContext& context)
 	Core::GameData& gameData                                       = context.GetGameData();
 	System::SystemManager& systemManager                           = context.GetSystemManager();
 	System::GameObjectManager& gameObjectManager                   = context.GetGameObjectManager();
-	Physics::PhysicsWorld& physicsWorld                            = context.GetPhysicsWorld();
 	Wren::WrenScriptEngine& wrenScriptEngine                       = context.GetWrenScriptEngine();
 	Wren::WrenStateManager& wrenStateManager                       = context.GetWrenStateManager();
 	Wren::WrenScriptComponentRegistry& wrenScriptComponentRegistry = context.GetWrenScriptComponentRegistry();
 
 	FileSystem::Init(FileSystem::GetWorkingDirectory());
+	FileSystem::SetSaveKey({std::begin(k_saveKey), std::end(k_saveKey)});
 #if defined(PLATFORM_WEB)
 	// Emscripten preloads assets into its virtual FS
 	// Mount the preloaded assets directory directly
@@ -249,8 +254,11 @@ bool Struktur::InitialiseGame(GameContext& context)
 
 	gameObjectManager.CreateObjectCallBack(context);
 
+#ifdef STRUKTUR_PHYSICS
 	glm::vec2 gravity(0.0f, 0.0f);
-	physicsWorld.Initialise(gravity, gameData.velocityIterations, gameData.positionIterations, gameData.pixelsPerMeter);
+	context.GetPhysicsWorld().Initialise(gravity, gameData.velocityIterations, gameData.positionIterations,
+	                                     gameData.pixelsPerMeter);
+#endif
 
 	// need a way to have helper systems with out an empty update
 	systemManager.AddHelperSystem<System::HierarchySystem>();
@@ -258,10 +266,12 @@ bool Struktur::InitialiseGame(GameContext& context)
 	systemManager.AddUpdateSystem<System::WrenStateSystem>();
 	systemManager.AddFixedUpdateSystem<System::WrenStateFixedUpdateSystem>();
 	systemManager.AddFixedUpdateSystem<System::WrenScriptFixedUpdateSystem>();
+#ifdef STRUKTUR_PHYSICS
 	// Fixed-cadence Box2D step only - kept separate from PhysicsSystem's own per-frame Update (registered below,
 	// right before CameraSystem, same relative slot it always had) which handles the Transform<->physics sync.
 	// See PhysicsFixedStepSystem's own comment for why these two can't both move to fixed-rate together.
 	systemManager.AddFixedUpdateSystem<System::PhysicsFixedStepSystem>();
+#endif
 	// Before WrenScriptSystem/EventSystem so fitness events queued this frame are delivered this frame.
 	systemManager.AddUpdateSystem<System::FitnessSystem>();
 	systemManager.AddUpdateSystem<System::RideSystem>();
@@ -272,7 +282,9 @@ bool Struktur::InitialiseGame(GameContext& context)
 	systemManager.AddUpdateSystem<System::CameraSystem>();
 	systemManager.AddUpdateSystem<System::WrenScriptSystem>();
 	systemManager.AddUpdateSystem<System::EventSystem>();
+#ifdef STRUKTUR_PHYSICS
 	systemManager.AddUpdateSystem<System::PhysicsSystem>();
+#endif
 	systemManager.AddUpdateSystem<System::UISystem>();
 	systemManager.AddUpdateSystem<System::SoundSystem>();
 	// The world has its own bgfx views, ordered before the UI's (see GraphicsDevice).
@@ -323,13 +335,17 @@ void Struktur::ExitGame(GameContext& context)
 	System::GameObjectManager& gameObjectManager = context.GetGameObjectManager();
 	gameObjectManager.CreateObjectCallBack(context);
 
+#ifdef STRUKTUR_PHYSICS
 	DEBUG_INFO("[Clean Up] Physics World");
 	Physics::PhysicsWorld& world = context.GetPhysicsWorld();
 	world.Clear();
+#endif
 
+#ifdef STRUKTUR_DIALOGUE
 	DEBUG_INFO("[Clean Up] Dialogue Registry");
 	Dialogue::DialogueRegistry& dialogueRegistry = context.GetDialogueRegistry();
 	dialogueRegistry.Clear(context);
+#endif
 
 	DEBUG_INFO("[Clean Up] Wren Script Component Registry");
 	Wren::WrenScriptComponentRegistry& wrenScriptComponentRegistry = context.GetWrenScriptComponentRegistry();
@@ -339,9 +355,11 @@ void Struktur::ExitGame(GameContext& context)
 	Wren::WrenScriptEngine& wrenScriptEngine = context.GetWrenScriptEngine();
 	wrenScriptEngine.Shutdown();
 
+#ifdef STRUKTUR_DIALOGUE
 	DEBUG_INFO("[Clean Up] DialogueManager");
 	Dialogue::DialogueManager& dialogueManager = context.GetDialogueManager();
 	dialogueManager.Clear();
+#endif
 
 	// Before the resource manager: the world renderer holds textures.
 	DEBUG_INFO("[Clean Up] World");
@@ -482,6 +500,7 @@ void Struktur::GameLoop(GameContext& context)
 				int fixedSteps = 0;
 				while (gameData.physicsAccumulator >= gameData.timeStep && fixedSteps < gameData.maxFixedStepsPerFrame)
 				{
+#ifdef STRUKTUR_PHYSICS
 					// Once per STEP, right before it runs - captures where bodies sit now as the blend-from point
 					// for the step about to advance them (see PhysicsSystem::SyncPhysicsToTransforms). This has to
 					// be per-step, not once per frame: the render-time blend only ever spans a single timeStep
@@ -492,6 +511,7 @@ void Struktur::GameLoop(GameContext& context)
 					// frame still never calls this (the loop body doesn't run), so the blend keeps smoothly
 					// approaching an unchanged "current" as the accumulator grows toward the next step.
 					systemManager.GetSystem<System::PhysicsSystem>().SnapshotPreviousTransforms(context);
+#endif
 					systemManager.FixedUpdate(context);
 					gameData.physicsAccumulator -= gameData.timeStep;
 					fixedSteps++;
@@ -705,9 +725,11 @@ void Struktur::ClearGameSystems(GameContext& context)
 	// Reset so a restart doesn't fire a burst of stale catch-up fixed steps carried over from before the reset.
 	context.GetGameData().physicsAccumulator = 0.0f;
 
+	#ifdef STRUKTUR_FLAG
 	DEBUG_INFO("[Clean Up] FlagManager");
 	Flag::FlagManager& flagManager = context.GetFlagManager();
 	flagManager.Clear();
+	#endif
 
 	DEBUG_INFO("[Clean Up] Input");
 	Input::Input& input = context.GetInput();
@@ -733,13 +755,17 @@ void Struktur::ClearGameSystems(GameContext& context)
 	// A script loads the world; a restart starts without one.
 	World::UnloadWorld(context);
 
+	#ifdef STRUKTUR_PHYSICS
 	DEBUG_INFO("[Clean Up] Physics World");
 	Physics::PhysicsWorld& world = context.GetPhysicsWorld();
 	world.Clear();
+	#endif
 
+	#ifdef STRUKTUR_DIALOGUE
 	DEBUG_INFO("[Clean Up] Dialogue Registry");
 	Dialogue::DialogueRegistry& dialogueRegistry = context.GetDialogueRegistry();
 	dialogueRegistry.Clear(context);
+	#endif
 
 	DEBUG_INFO("[Clean Up] Wren Script Component Registry");
 	Wren::WrenScriptComponentRegistry& wrenScriptComponentRegistry = context.GetWrenScriptComponentRegistry();
@@ -749,9 +775,11 @@ void Struktur::ClearGameSystems(GameContext& context)
 	Wren::WrenScriptEngine& wrenScriptEngine = context.GetWrenScriptEngine();
 	wrenScriptEngine.Shutdown();
 
+	#ifdef STRUKTUR_DIALOGUE
 	DEBUG_INFO("[Clean Up] Dialogue Manager");
 	Dialogue::DialogueManager& dialogueManager = context.GetDialogueManager();
 	dialogueManager.Clear();
+	#endif
 
 	DEBUG_INFO("[Clean Up] Resource Manager");
 	Resource::ResourceManager& resourceManager = context.GetResourceManager();
@@ -784,7 +812,9 @@ void Struktur::ClearGameSystems(GameContext& context)
 
 void Struktur::StartGameSystems(GameContext& context)
 {
+	#ifdef STRUKTUR_PHYSICS
 	Core::GameData& gameData = context.GetGameData();
+	#endif
 
 	DEBUG_INFO("[Start] Wren State Engine");
 	Wren::WrenScriptEngine& wrenScriptEngine = context.GetWrenScriptEngine();
@@ -798,9 +828,11 @@ void Struktur::StartGameSystems(GameContext& context)
 	Wren::WrenScriptComponentRegistry& wrenScriptComponentRegistry = context.GetWrenScriptComponentRegistry();
 	wrenScriptComponentRegistry.LoadAllScriptComponents(context);
 
+	#ifdef STRUKTUR_PHYSICS
 	DEBUG_INFO("[Start] Physics World");
-	Physics::PhysicsWorld& physicsWorld = context.GetPhysicsWorld();
 	glm::vec2 gravity(0.0f, 0.0f);
-	physicsWorld.Initialise(gravity, gameData.velocityIterations, gameData.positionIterations, gameData.pixelsPerMeter);
+	context.GetPhysicsWorld().Initialise(gravity, gameData.velocityIterations, gameData.positionIterations,
+	                                     gameData.pixelsPerMeter);
+	#endif
 }
 #endif

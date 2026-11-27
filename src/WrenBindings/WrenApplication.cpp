@@ -1,8 +1,10 @@
 #include "Engine/GameContext.h"
 #include "Engine/Platform/Window.h"
 #include "Engine/Scripting/WrenBindingRegistry.h"
-#include "Engine/Scripting/WrenScriptComponentRegistry.h"
 #include "wren.hpp"
+#ifdef STRUKTUR_ECS
+	#include "Engine/ECS/WrenScriptComponentRegistry.h"
+#endif
 
 // ============================================================================
 // APPLICATION BINDINGS
@@ -41,6 +43,7 @@ void wren_ApplicationSetApplicationName(WrenVM* vm)
 	// this can be called before there is a window so need to handle that case as well
 }
 
+#ifdef STRUKTUR_ECS
 // Application.registerComponentScript(module, className)
 void wren_ApplicationRegisterComponentScript(WrenVM* vm)
 {
@@ -51,6 +54,7 @@ void wren_ApplicationRegisterComponentScript(WrenVM* vm)
 
 	scriptComponentRegistry.RegisterScriptComponent(module, className);
 }
+#endif
 
 // Application.gameWidth -> number
 void wren_ApplicationGetGameWidth(WrenVM* vm)
@@ -204,8 +208,10 @@ WREN_BINDING_MODULE(Application)
 	                  "Change the size of the game window.");
 	WREN_CLASS_STATIC(registry, "app", "Application", "setApplicationName(_)", wren_ApplicationSetApplicationName,
 	                  "Changes the name of the game window.");
+#ifdef STRUKTUR_ECS
 	WREN_CLASS_STATIC(registry, "app", "Application", "registerComponentScript(_,_)",
 	                  wren_ApplicationRegisterComponentScript, "Changes the name of the game window.");
+#endif
 	WREN_CLASS_STATIC(registry, "app", "Application", "gameWidth", wren_ApplicationGetGameWidth,
 	                  "Get the games width.");
 	WREN_CLASS_STATIC(registry, "app", "Application", "gameHeight", wren_ApplicationGetGameHeight,

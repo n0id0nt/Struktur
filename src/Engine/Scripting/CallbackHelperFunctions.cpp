@@ -1,9 +1,11 @@
 #include "CallbackHelperFunctions.h"
 
 #include "Debug/Assertions.h"
-#include "Engine/UI/UIElement.h"
 #include "WrenBindings/WrenMath.h"
-#include "WrenBindings/WrenUI.h"
+#ifdef STRUKTUR_UI
+	#include "Engine/UI/UIElement.h"
+	#include "WrenBindings/WrenUI.h"
+#endif
 
 std::string Struktur::Callback::HelperFunctions::MakeWrenCallSignature(size_t argCount)
 {
@@ -79,11 +81,15 @@ void Struktur::Callback::HelperFunctions::VariantToWrenSlot(WrenVM* vm, int slot
 		    }
 		    else if constexpr (std::is_same_v<T, UI::UIElement*>)
 		    {
+#ifdef STRUKTUR_UI
 			    wrenEnsureSlots(vm, slot + 2);
 			    wrenGetVariable(vm, "ui", "UIElement", slot + 1);
 			    WrenUIElement* foreign =
 			        static_cast<WrenUIElement*>(wrenSetSlotNewForeign(vm, slot, slot + 1, sizeof(WrenUIElement)));
 			    new (foreign) WrenUIElement{arg, false};
+#else
+			    wrenSetSlotNull(vm, slot);
+#endif
 		    }
 		    else if constexpr (std::is_same_v<T, VariantList>)
 		    {

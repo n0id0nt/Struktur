@@ -2,8 +2,8 @@
 
 #include <unordered_map>
 
-#include "Callback.h"
-#include "Variant.h"
+#include "Engine/Callback/Callback.h"
+#include "Engine/Callback/Variant.h"
 #include "wren.hpp"
 
 namespace Struktur::Callback

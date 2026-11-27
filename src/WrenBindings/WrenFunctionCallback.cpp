@@ -1,10 +1,10 @@
 #include "WrenFunctionCallback.h"
 
 #include "Debug/Assertions.h"
-#include "Engine/Callback/CallbackHelperFunctions.h"
 #include "Engine/Callback/Variant.h"
-#include "Engine/Callback/WrenCallback.h"
+#include "Engine/Scripting/CallbackHelperFunctions.h"
 #include "Engine/Scripting/WrenBindingRegistry.h"
+#include "Engine/Scripting/WrenCallback.h"
 
 void wrenSetSlotCallback(WrenVM* vm, int slot, Struktur::Callback::ICallback* callback)
 {

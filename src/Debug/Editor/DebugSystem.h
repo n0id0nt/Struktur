@@ -1,9 +1,11 @@
 #pragma once
 
-#include "Debug/Box2DBgfxDebugDraw.h"
 #include "Engine/ECS/SystemManager.h"
 #include "Engine/Renderer/DebugRenderer.h"
-#include "box2d/box2d.h"
+#ifdef STRUKTUR_PHYSICS
+	#include "Debug/Box2DBgfxDebugDraw.h"
+	#include "box2d/box2d.h"
+#endif
 
 namespace Struktur
 {
@@ -21,7 +23,9 @@ public:
 	void RenderEntityGizmos(GameContext &context);
 	void RenderSelectedEntityHighlight(GameContext &context);
 	void RenderGrid(GameContext &context);
+#ifdef STRUKTUR_PHYSICS
 	void RenderPhysicsShapes(GameContext &context);
+#endif
 
 	// Lets other editor code (e.g. Debug::UIHierarchyWindow, highlighting a selected UIElement's bounds via
 	// DebugRenderer::SetupUIView) reach the same DebugRenderer instance this system already owns, rather than
@@ -38,7 +42,9 @@ public:
 
 private:
 	Renderer::DebugRenderer m_debugRenderer;
+#ifdef STRUKTUR_PHYSICS
 	Debug::Box2DBgfxDebugDraw m_box2dBgfxDebugDraw{m_debugRenderer};
+#endif
 };
 }  // namespace System
 }  // namespace Struktur

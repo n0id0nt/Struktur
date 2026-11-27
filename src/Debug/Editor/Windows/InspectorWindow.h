@@ -20,7 +20,9 @@ namespace Component
 {
 struct Active;
 struct Transform;
+#ifdef STRUKTUR_PHYSICS
 struct PhysicsBody;
+#endif
 struct WrenScript;
 }  // namespace Component
 
@@ -119,17 +121,10 @@ private:
 	void RenderLocalTransformComponent(GameContext& context, Component::Transform& transform, entt::registry& registry,
 	                                   entt::entity entity);
 
-
-
-
-
+#ifdef STRUKTUR_PHYSICS
 	void RenderPhysicsBodyComponent(GameContext& context, Component::PhysicsBody& physicsBody, entt::registry& registry,
 	                                entt::entity entity);
-
-
-
-
-
+#endif
 
 	void RenderWrenScriptComponent(GameContext& context, Component::WrenScript& script, entt::registry& registry,
 	                               entt::entity entity);

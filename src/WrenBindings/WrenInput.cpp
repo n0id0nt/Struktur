@@ -1,6 +1,6 @@
-#include "Engine/Callback/CallbackHelperFunctions.h"
 #include "Engine/Callback/Variant.h"
 #include "Engine/GameContext.h"
+#include "Engine/Scripting/CallbackHelperFunctions.h"
 #include "Engine/Scripting/WrenBindingRegistry.h"
 #include "WrenMath.h"
 #include "wren.hpp"
@@ -221,6 +221,7 @@ void wren_InputTakeTypedText(WrenVM* vm)
 	wrenSetSlotString(vm, 0, typed.c_str());
 }
 
+#ifdef STRUKTUR_FITNESS
 static Struktur::Callback::Variant OptionalVariant(const std::optional<double>& value)
 {
 	return value ? Struktur::Callback::Variant(*value) : Struktur::Callback::Variant(nullptr);
@@ -248,6 +249,7 @@ void wren_InputTrainer(WrenVM* vm)
 	map.items["workoutProgress"]     = trainer.workoutProgress;
 	Struktur::Callback::HelperFunctions::VariantToWrenSlot(vm, 0, map);
 }
+#endif
 
 // Input.activeDevice -> "keyboard" | "gamepad"
 void wren_InputActiveDevice(WrenVM* vm)
@@ -349,10 +351,12 @@ WREN_BINDING_MODULE(Input)
 	                  "True between startTextInput() and stopTextInput().");
 	WREN_CLASS_STATIC(registry, "input", "Input", "takeTypedText()", wren_InputTakeTypedText,
 	                  "Text typed since the last call (UTF-8, may be empty).");
+#ifdef STRUKTUR_FITNESS
 	WREN_CLASS_STATIC(registry, "input", "Input", "trainer", wren_InputTrainer,
 	                  "Map of the fitness devices and the ride in progress: power, smoothedPower, cadence, heartRate "
 	                  "(null while nothing reports them), *Connected, speed, grade, erg, powerZone, powerFraction, "
 	                  "targetDelta, workoutProgress.");
+#endif
 	WREN_CLASS_STATIC(registry, "input", "Input", "activeDevice", wren_InputActiveDevice,
 	                  "The device used most recently: \"keyboard\" (keyboard or mouse) or \"gamepad\".");
 	WREN_CLASS_STATIC(registry, "input", "Input", "gamepadFamily", wren_InputGamepadFamily,

@@ -1,6 +1,6 @@
 #include "UIHierarchyWindow.h"
 
-#include "Engine/ECS/System/DebugSystem.h"
+#include "Debug/Editor/DebugSystem.h"
 #include "Engine/ECS/SystemManager.h"
 #include "Engine/GameContext.h"
 #include "Engine/UI/UIManager.h"

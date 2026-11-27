@@ -13,8 +13,10 @@
 #include <vector>
 
 #include "Debug/Assertions.h"
-#include "Engine/Input/TrainerInput.h"
 #include "glm/glm.hpp"
+#ifdef STRUKTUR_FITNESS
+	#include "Engine/Input/TrainerInput.h"
+#endif
 
 union SDL_Event;
 struct SDL_Window;
@@ -189,6 +191,7 @@ public:
 
 	void Update();
 
+#ifdef STRUKTUR_FITNESS
 	// The fitness devices and the ride in progress (see TrainerInput). Set once per frame by System::RideSystem.
 	const TrainerInput& GetTrainer() const
 	{
@@ -198,6 +201,7 @@ public:
 	{
 		m_trainer = std::move(trainer);
 	}
+#endif
 
 	void LoadInputBindings(const std::string& file);
 	void Clear();
@@ -392,7 +396,9 @@ private:
 	// snapshot shape as keyboard/gamepad above, so IsPointerButtonJustPressed/Released can edge-detect the same
 	// way. Indexed by PointerButton.
 	glm::vec2 m_pointerPosition{0.0f, 0.0f};
+#ifdef STRUKTUR_FITNESS
 	TrainerInput m_trainer;
+#endif
 	std::array<bool, (size_t)PointerButton::Count> m_currPointerButtons{};
 	std::array<bool, (size_t)PointerButton::Count> m_prevPointerButtons{};
 	// Set while at least one finger is down (HandleEvent tracks the first one by its SDL finger ID, stored as a

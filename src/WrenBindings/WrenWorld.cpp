@@ -5,12 +5,12 @@
 #include <string>
 
 #include "Debug/Assertions.h"
-#include "Engine/Callback/CallbackHelperFunctions.h"
 #include "Engine/Callback/Variant.h"
 #include "Engine/Core/CommandLine.h"
 #include "Engine/GameContext.h"
 #include "Engine/Renderer/WorldRenderer.h"
 #include "Engine/RideIntegration/RideContext.h"
+#include "Engine/Scripting/CallbackHelperFunctions.h"
 #include "Engine/Scripting/WrenBindingRegistry.h"
 #include "Engine/World/World.h"
 #include "Engine/World/WorldLifecycle.h"

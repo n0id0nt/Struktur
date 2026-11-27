@@ -6,10 +6,10 @@
 #ifdef DEBUG
 	#include <Trace/wren_trace.h>
 #endif
-#include "Engine/Callback/WrenCallback.h"
 #include "Engine/GameContext.h"
 #include "Engine/Renderer/UIRenderer.h"
 #include "Engine/Scripting/WrenBindingRegistry.h"
+#include "Engine/Scripting/WrenCallback.h"
 #include "Engine/UI/UIBorder.h"
 #include "Engine/UI/UIClip.h"
 #include "Engine/UI/UIColor.h"

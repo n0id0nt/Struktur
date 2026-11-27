@@ -7,7 +7,6 @@
 #include "Reflect/wren_reflect.h"
 #include "Trace/wren_trace.h"
 #include "WrenCodeGenerator.h"
-#include "entt/entt.hpp"
 
 void Struktur::Wren::WrenScriptEngine::Initialise(GameContext& context)
 {

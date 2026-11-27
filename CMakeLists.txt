@@ -401,26 +401,24 @@ endif()
 
 if(DEBUG)
     set(DEBUG_SOURCES
-        src/Debug/Box2DBgfxDebugDraw.h              src/Debug/Box2DBgfxDebugDraw.cpp
 
-        src/Engine/Renderer/DebugRenderer.h         src/Engine/Renderer/DebugRenderer.cpp
     )
 endif()
 
 if(EDITOR)
     # Debug: Use source assets directly
     set(EDITOR_SOURCES
-        src/Engine/ECS/System/DebugSystem.h         src/Engine/ECS/System/DebugSystem.cpp
+        src/Debug/Editor/DebugSystem.h         src/Debug/Editor/DebugSystem.cpp
 
         src/Debug/Editor/Editor.h                   src/Debug/Editor/Editor.cpp
         src/Debug/Editor/EditorServices.h           src/Debug/Editor/EditorServices.cpp
+        src/Engine/Renderer/DebugRenderer.h   src/Engine/Renderer/DebugRenderer.cpp
         src/Debug/Editor/ExportedFieldRenderer.h    src/Debug/Editor/ExportedFieldRenderer.cpp
         src/Debug/Editor/EditorLayoutManager.h      src/Debug/Editor/EditorLayoutManager.cpp
         src/Debug/Editor/EditorSettings.h           src/Debug/Editor/EditorSettings.cpp
         src/Debug/Editor/EditorTheme.h              src/Debug/Editor/EditorTheme.cpp
         src/Debug/Editor/ProjectLauncher.h          src/Debug/Editor/ProjectLauncher.cpp
         src/Debug/Editor/SaveFolders.h              src/Debug/Editor/SaveFolders.cpp
-        src/Debug/Editor/Exporters/DialogueExporter.h src/Debug/Editor/Exporters/DialogueExporter.cpp
 
         src/Debug/Editor/EditorSettings.h           src/Debug/Editor/EditorSettings.cpp
         src/Engine/Renderer/ImGuiRenderer.h         src/Engine/Renderer/ImGuiRenderer.cpp
@@ -437,7 +435,6 @@ if(EDITOR)
         src/Debug/Editor/Windows/FileExplorerWindow.h src/Debug/Editor/Windows/FileExplorerWindow.cpp
         src/Debug/Editor/Windows/LogWindow.h        src/Debug/Editor/Windows/LogWindow.cpp
         src/Debug/Editor/Windows/ProfilerWindow.h   src/Debug/Editor/Windows/ProfilerWindow.cpp
-        src/Debug/Editor/Windows/DialogueEditorWindow.h src/Debug/Editor/Windows/DialogueEditorWindow.cpp
         src/Debug/Editor/Windows/ResourceManagerWindow.h src/Debug/Editor/Windows/ResourceManagerWindow.cpp
         src/Debug/Editor/Windows/LocalizationWindow.h src/Debug/Editor/Windows/LocalizationWindow.cpp
         src/Debug/Editor/Windows/StateWindow.h      src/Debug/Editor/Windows/StateWindow.cpp
@@ -462,16 +459,11 @@ endif()
 set(WREN_BINDING_SOURCES 
     src/WrenBindings/WrenGameObjectComponents.h src/WrenBindings/WrenGameObjectComponents.cpp
     src/WrenBindings/WrenMath.h                 src/WrenBindings/WrenMath.cpp
-    src/WrenBindings/WrenPhysics.h              src/WrenBindings/WrenPhysics.cpp
-                                                src/WrenBindings/WrenCollisionLayers.cpp
-                                                src/WrenBindings/WrenPhysicsBody.cpp
     src/WrenBindings/WrenResourceManager.h      src/WrenBindings/WrenResourceManager.cpp
     src/WrenBindings/WrenUI.h                   src/WrenBindings/WrenUI.cpp
-    src/WrenBindings/WrenDialogue.h             src/WrenBindings/WrenDialogue.cpp
     src/WrenBindings/WrenFunctionCallback.h     src/WrenBindings/WrenFunctionCallback.cpp
     src/WrenBindings/WrenFileSystem.h           src/WrenBindings/WrenFileSystem.cpp
     src/WrenBindings/WrenJobs.h                 src/WrenBindings/WrenJobs.cpp
-                                                src/WrenBindings/WrenFlags.cpp
                                                 src/WrenBindings/WrenLocalization.cpp
                                                 src/WrenBindings/WrenEvents.cpp
                                                 src/WrenBindings/WrenFitness.cpp
@@ -483,8 +475,79 @@ set(WREN_BINDING_SOURCES
                                                 src/WrenBindings/WrenInput.cpp
                                                 src/WrenBindings/WrenDebug.cpp
                                                 src/WrenBindings/WrenSerialisation.cpp
-                                                src/WrenBindings/WrenVariableSubstitutionSystem.cpp
 )
+
+# The optional libraries' sources (see STRUKTUR_LIBRARIES).
+set(OPTIONAL_LIBRARY_SOURCES)
+if("physics" IN_LIST STRUKTUR_LIBRARIES)
+    list(APPEND OPTIONAL_LIBRARY_SOURCES
+        src/WrenBindings/WrenPhysics.h
+        src/WrenBindings/WrenPhysics.cpp
+        src/WrenBindings/WrenCollisionLayers.cpp
+        src/WrenBindings/WrenPhysicsBody.cpp
+        src/Engine/Physics/PhysicsServices.h
+        src/Engine/Physics/PhysicsServices.cpp
+        src/Engine/Physics/PhysicsComponentList.h
+        src/Engine/ECS/Component/PhysicsBody.h
+        src/Engine/ECS/System/PhysicsSystem.h
+        src/Engine/ECS/System/PhysicsSystem.cpp
+        src/Engine/Physics/PhysicsWorld.h
+        src/Engine/Physics/PhysicsWorld.cpp
+        src/Engine/Physics/ContactListener.h
+        src/Engine/Physics/ContactListener.cpp
+        src/Engine/Physics/CollisionLayers.h
+        src/Engine/Physics/CollisionLayers.cpp
+    )
+endif()
+if("dialogue" IN_LIST STRUKTUR_LIBRARIES)
+    list(APPEND OPTIONAL_LIBRARY_SOURCES
+        src/WrenBindings/WrenDialogue.h
+        src/WrenBindings/WrenDialogue.cpp
+        src/WrenBindings/WrenVariableSubstitutionSystem.cpp
+        src/Engine/Dialogue/DialogueServices.h
+        src/Engine/Dialogue/DialogueServices.cpp
+        src/Engine/Dialogue/DialogueManager.h
+        src/Engine/Dialogue/DialogueManager.cpp
+        src/Engine/Dialogue/DialogueNode.h
+        src/Engine/Dialogue/DialogueNode.cpp
+        src/Engine/Dialogue/DialogueRegistry.h
+        src/Engine/Dialogue/DialogueRegistry.cpp
+        src/Engine/Dialogue/DialogueValue.h
+        src/Engine/Dialogue/DialogueValue.cpp
+        src/Engine/Dialogue/Command.h
+        src/Engine/Dialogue/Command.cpp
+        src/Engine/Dialogue/Condition.h
+        src/Engine/Dialogue/Condition.cpp
+        src/Engine/Dialogue/DialogueHelperFunctions.h
+        src/Engine/Dialogue/DialogueHelperFunctions.cpp
+        src/Engine/Dialogue/TextSystems/VariableSubstitutionSystem.h
+        src/Engine/Dialogue/TextSystems/VariableSubstitutionSystem.cpp
+        src/Engine/Dialogue/DialogueResult.h
+    )
+endif()
+if("flag" IN_LIST STRUKTUR_LIBRARIES)
+    list(APPEND OPTIONAL_LIBRARY_SOURCES
+        src/WrenBindings/WrenFlags.cpp
+        src/Engine/Flag/FlagServices.h
+        src/Engine/Flag/FlagServices.cpp
+        src/Engine/Flag/FlagManager.h
+        src/Engine/Flag/FlagManager.cpp
+    )
+endif()
+if(EDITOR AND "physics" IN_LIST STRUKTUR_LIBRARIES)
+    list(APPEND OPTIONAL_LIBRARY_SOURCES
+        src/Debug/Box2DBgfxDebugDraw.h
+        src/Debug/Box2DBgfxDebugDraw.cpp
+    )
+endif()
+if(EDITOR AND "dialogue" IN_LIST STRUKTUR_LIBRARIES)
+    list(APPEND OPTIONAL_LIBRARY_SOURCES
+        src/Debug/Editor/Exporters/DialogueExporter.h
+        src/Debug/Editor/Exporters/DialogueExporter.cpp
+        src/Debug/Editor/Windows/DialogueEditorWindow.h
+        src/Debug/Editor/Windows/DialogueEditorWindow.cpp
+    )
+endif()
 
 # Source files
 set(SOURCES
@@ -498,9 +561,6 @@ set(SOURCES
     src/Engine/ECS/EcsServices.h                src/Engine/ECS/EcsServices.cpp
     src/Engine/Scripting/WrenServices.h         src/Engine/Scripting/WrenServices.cpp
     src/Engine/UI/UIServices.h                  src/Engine/UI/UIServices.cpp
-    src/Engine/Physics/PhysicsServices.h        src/Engine/Physics/PhysicsServices.cpp
-    src/Engine/Dialogue/DialogueServices.h      src/Engine/Dialogue/DialogueServices.cpp
-    src/Engine/Flag/FlagServices.h              src/Engine/Flag/FlagServices.cpp
     src/Engine/Fitness/FitnessServices.h        src/Engine/Fitness/FitnessServices.cpp
 
     src/Engine/Core/Gamedata.h                  src/Engine/Core/GameData.cpp
@@ -515,25 +575,15 @@ set(SOURCES
 
     src/Engine/Audio/Mixer.h                    src/Engine/Audio/Mixer.cpp
 
-    src/Engine/Flag/FlagManager.h               src/Engine/Flag/FlagManager.cpp
 
     src/Engine/Localization/LocalizationManager.h src/Engine/Localization/LocalizationManager.cpp
 
     src/Engine/Callback/Callback.h 
     src/Engine/Callback/Variant.h
-    src/Engine/Callback/CallbackHelperFunctions.h src/Engine/Callback/CallbackHelperFunctions.cpp
+    src/Engine/Scripting/CallbackHelperFunctions.h src/Engine/Scripting/CallbackHelperFunctions.cpp
     src/Engine/Callback/FunctionCallback.h      src/Engine/Callback/FunctionCallback.cpp
-    src/Engine/Callback/WrenCallback.h          src/Engine/Callback/WrenCallback.cpp
+    src/Engine/Scripting/WrenCallback.h          src/Engine/Scripting/WrenCallback.cpp
 
-    src/Engine/Dialogue/DialogueManager.h       src/Engine/Dialogue/DialogueManager.cpp
-    src/Engine/Dialogue/DialogueNode.h          src/Engine/Dialogue/DialogueNode.cpp
-    src/Engine/Dialogue/DialogueRegistry.h      src/Engine/Dialogue/DialogueRegistry.cpp
-    src/Engine/Dialogue/DialogueValue.h         src/Engine/Dialogue/DialogueValue.cpp
-    src/Engine/Dialogue/Command.h               src/Engine/Dialogue/Command.cpp
-    src/Engine/Dialogue/Condition.h             src/Engine/Dialogue/Condition.cpp
-    src/Engine/Dialogue/DialogueHelperFunctions.h src/Engine/Dialogue/DialogueHelperFunctions.cpp
-    src/Engine/Dialogue/TextSystems/VariableSubstitutionSystem.h src/Engine/Dialogue/TextSystems/VariableSubstitutionSystem.cpp
-    src/Engine/Dialogue/DialogueResult.h
 
     src/Engine/Resource/Resource.h
     src/Engine/Resource/Pointers/ResourcePtr.h
@@ -555,9 +605,7 @@ set(SOURCES
     src/Engine/ECS/GameObjectManager.h          src/Engine/ECS/GameObjectManager.cpp
     src/Engine/ECS/ScriptComponents.h
     src/Engine/ECS/EcsComponentList.h
-    src/Engine/Physics/PhysicsComponentList.h
     src/Engine/ECS/Component/active.h
-    src/Engine/ECS/Component/PhysicsBody.h
     
     src/Engine/ECS/Component/Transform.h
     src/Engine/ECS/Component/Identifier.h
@@ -565,7 +613,6 @@ set(SOURCES
     src/Engine/ECS/Component/WrenScript.h
 
     src/Engine/ECS/System/HierarchySystem.h     src/Engine/ECS/System/HierarchySystem.cpp
-    src/Engine/ECS/System/PhysicsSystem.h       src/Engine/ECS/System/PhysicsSystem.cpp
          
     src/Engine/ECS/System/TransformSystem.h     src/Engine/ECS/System/TransformSystem.cpp
           
@@ -587,9 +634,6 @@ set(SOURCES
     src/Engine/RideIntegration/RideService.h    src/Engine/RideIntegration/RideService.cpp
     src/Engine/ECS/System/EventSystem.h         src/Engine/ECS/System/EventSystem.cpp
 
-    src/Engine/Physics/PhysicsWorld.h           src/Engine/Physics/PhysicsWorld.cpp
-    src/Engine/Physics/ContactListener.h        src/Engine/Physics/ContactListener.cpp
-    src/Engine/Physics/CollisionLayers.h        src/Engine/Physics/CollisionLayers.cpp
 
 
     src/Engine/UI/UIManager.h                   src/Engine/UI/UIManager.cpp
@@ -617,7 +661,7 @@ set(SOURCES
     src/Engine/Scripting/WrenBindingRegistry.h  src/Engine/Scripting/WrenBindingRegistry.cpp
     src/Engine/Scripting/WrenCodeGenerator.h    src/Engine/Scripting/WrenCodeGenerator.cpp
     src/Engine/Scripting/WrenStateManager.h     src/Engine/Scripting/WrenStateManager.cpp
-    src/Engine/Scripting/WrenScriptComponentRegistry.h src/Engine/Scripting/WrenScriptComponentRegistry.cpp
+    src/Engine/ECS/WrenScriptComponentRegistry.h src/Engine/ECS/WrenScriptComponentRegistry.cpp
     src/Engine/Scripting/WrenExportedFields.h   src/Engine/Scripting/WrenExportedFields.cpp
     src/Engine/Scripting/WrenUtil.h             src/Engine/Scripting/WrenUtil.cpp
     src/Engine/Scripting/WrenValueWrapper.h
@@ -641,6 +685,7 @@ set(SOURCES
     ${DEBUG_SOURCES}
     ${EDITOR_SOURCES}
     ${RENDERER_SOURCES}
+    ${OPTIONAL_LIBRARY_SOURCES}
 )
 
 # Create executable
@@ -657,7 +702,6 @@ target_link_libraries(${PROJECT_NAME}
     glm::glm
     wren
     nlohmann_json::nlohmann_json
-    box2d
     PhysFS::PhysFS-static
     StrukturFitness
     StrukturRide
@@ -671,6 +715,10 @@ target_link_libraries(${PROJECT_NAME}
     $<$<BOOL:${EDITOR}>:imgui>
     $<$<BOOL:${EDITOR}>:tinyfiledialogs>
 )
+
+if("physics" IN_LIST STRUKTUR_LIBRARIES)
+    target_link_libraries(${PROJECT_NAME} box2d)
+endif()
 
 # Platform-specific settings
 if(PLATFORM_WEB)

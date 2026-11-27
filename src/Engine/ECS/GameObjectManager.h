@@ -29,7 +29,9 @@ public:
 
 private:
 	void OnChildrenDestroy(entt::registry& reg, entt::entity entity);
+#ifdef STRUKTUR_PHYSICS
 	void OnPhysicsBodyDestory(entt::registry& reg, entt::entity entity);
+#endif
 	void OnScriptConstruct(entt::registry& reg, entt::entity entity);
 	void OnScriptDestory(entt::registry& reg, entt::entity entity);
 	void OnActiveStateChanged(entt::registry& reg, entt::entity entity);

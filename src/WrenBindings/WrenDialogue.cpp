@@ -5,8 +5,6 @@
 #include <memory>
 
 #include "Debug/Assertions.h"
-#include "Engine/Callback/CallbackHelperFunctions.h"
-#include "Engine/Callback/WrenCallback.h"
 #include "Engine/Dialogue/Command.h"
 #include "Engine/Dialogue/Condition.h"
 #include "Engine/Dialogue/DialogueHelperFunctions.h"
@@ -14,7 +12,9 @@
 #include "Engine/Dialogue/DialogueNode.h"
 #include "Engine/Dialogue/DialogueRegistry.h"
 #include "Engine/GameContext.h"
+#include "Engine/Scripting/CallbackHelperFunctions.h"
 #include "Engine/Scripting/WrenBindingRegistry.h"
+#include "Engine/Scripting/WrenCallback.h"
 #include "WrenFunctionCallback.h"
 
 // ============================================================================
