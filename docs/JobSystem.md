@@ -1,7 +1,8 @@
 # Job system
 
-The engine's job system and scheduler. **Phase 1 is done:** worker threads, lanes, dependencies, waiting that helps,
-parallel-for and inline mode, with unit tests and a benchmark. Phases 2–6 (tasks, frame integration, ECS systems
+The engine's job system and scheduler. **Phases 1 and 1b are done:** worker threads, lanes, dependencies, waiting
+that helps, parallel-for and inline mode (phase 1), then pooled jobs, per-worker work-stealing queues and a cap on
+background workers (phase 1b), with unit tests and a benchmark. Phases 2–6 (tasks, frame integration, ECS systems
 as jobs, Wren handles, web threads) are planned at the end.
 
 Code: `src/Engine/Jobs/` (library `StrukturJobs`, no SDL, bgfx or Wren). Tests: `src/Engine/Jobs/Tests/`. Benchmark:
@@ -38,6 +39,24 @@ if (build.IsComplete()) { ... }                         // poll from the update 
   shutdown returns an already-dropped handle.
 - **Dependency rule:** jobs must not hold locks that a job they depend on also takes. Dependencies, not locks,
   order the work.
+- **Background limit:** `JobSystemConfig{workers, backgroundWorkerLimit}` caps how many workers run background jobs
+  at once. The default (-1) keeps workers free for frame work: all workers when there's 1, all but one for 2–3, all
+  but two otherwise. Threads helping inside `Wait()` don't count towards it.
+- **Stats:** `GetStats()` reports jobs scheduled, run, run by helpers, stolen and dropped, how many jobs needed heap
+  storage for their work, and the pool size.
+
+### How it works (phase 1b)
+
+- **Pooled jobs:** jobs live in a pool of fixed slots (chunks of 4,096, growing on demand) and are reused, so
+  scheduling doesn't allocate. A `JobHandle` stores the slot index and a generation number; a handle to a reused
+  slot still reports complete. Work is stored in the slot inline when it fits in 64 bytes (most lambdas), otherwise
+  on the heap.
+- **Work-stealing queues:** each worker has its own queue per lane. A worker runs its newest job first (warm
+  caches, short chains) and an idle worker steals the oldest job from another. Threads that aren't workers spread
+  their jobs across the queues in turn.
+- **Free-slot caches:** each worker keeps a small list of free slots, refilled from and returned to a shared list in
+  batches of 256.
+- **Idle workers** spin briefly, then sleep until woken by new work.
 
 ### Without threads
 
@@ -63,7 +82,7 @@ Add `--quick` for a shorter benchmark run, and `-DSTRUKTUR_THREADS=OFF` for the 
 links `StrukturJobs` into the game, with tests and the benchmark off. Nothing in the engine uses it yet; that's
 phase 3.
 
-### Tests (13 cases, ~84k checks)
+### Tests (18 cases, ~84k checks)
 
 Every scenario runs with 0, 1, 4 and all workers:
 - Exactly-once execution of 20k jobs, and the job counters.
@@ -78,49 +97,49 @@ Every scenario runs with 0, 1, 4 and all workers:
 - `WhenAll` and invalid handles.
 - Shutdown finishes the running job, drops 1,000 dependents and completes late schedules as dropped.
 - Eight threads scheduling 10k jobs each at once.
+- Phase 1b: an old handle to a reused slot still reads as complete; the pool grows past 30k live jobs; work of
+  any size (inline or heap) runs once and is destroyed once, including dropped work; background jobs never use
+  more workers than the limit while a frame job still starts promptly; idle workers steal spawned jobs.
 
-**Stability:** 40 Release runs and 10 Debug runs in a row all passed.
+**Stability:** 40 Release runs and 10 Debug runs in a row all passed, plus the `STRUKTUR_THREADS=OFF` build.
 
-## Measured (phase 1)
+## Measured
 
-Release build on a 20-thread desktop CPU (Windows, MSVC). Full numbers: `job_bench.exe --csv`.
+Release build on a 20-thread desktop CPU (Windows, MSVC). Each cell is phase 1 → phase 1b. Full numbers:
+`job_bench.exe --csv`.
 
 | Benchmark | 0 workers (inline) | 1 | 4 | 8 | 19 |
 |---|---|---|---|---|---|
-| Schedule + wait, one at a time (ns/job) | 121 | 352 | 950 | 1393 | 1402 |
-| Schedule + complete, batched (ns/job) | 312 | 585 | 1125 | 1458 | 1468 |
-| Tiny-job throughput, 1 M jobs (M jobs/s) | 3.15 | 1.96 | 0.83 | 0.63 | 0.58 |
-| Parallel-for, 200k items × ~0.8 µs: speed-up | 1.0× | 2.0× | 4.9× | 8.7× | 17.8× |
-| Parallel-for efficiency | 100 % | 99 % | 98 % | 97 % | 89 % |
-| 10k dependency chain (ns/link) | 271 | 495 | 727 | 1406 | 1521 |
-| 8 producers × 20k jobs (M jobs/s) | – | 1.54 | 1.25 | 0.97 | 0.66 |
-| Simulated frame, mean (ms) | 48.5 | 24.8 | 10.1 | 6.6 | 3.6 |
-| Simulated frame + background streaming, mean / p99 (ms) | 50.4 / 52.1 | 25.7 / 27.6 | 11.1 / 12.0 | 7.1 / 7.9 | 5.1 / 5.9 |
+| Schedule + wait, one at a time (ns/job) | 121 → 90 | 352 → 175 | 950 → 601 | 1393 → 1140 | 1402 → 1980 |
+| Schedule + complete, batched (ns/job) | 312 → 158 | 585 → 334 | 1125 → 405 | 1458 → 534 | 1468 → 647 |
+| Tiny-job throughput, 1 M jobs (M jobs/s) | 3.15 → 6.25 | 1.96 → 3.23 | 0.83 → 2.36 | 0.63 → 1.97 | 0.58 → 1.61 |
+| Parallel-for, 200k items × ~0.8 µs: speed-up | 1.0× | 2.0× | 4.9× | 8.7× | 17.8× → 17.7× |
+| Frame job start under background load, p50 (µs) | – | 2720 → 2330 | 2380 → 2.6 | 2730 → 0.6 | 1100 → 2.7 |
+| Frame job start under background load, p99 (µs) | – | 4800 → 4030 | 4380 → 34 | 4790 → 39 | 2550 → 454 |
+| 10k dependency chain (ns/link) | 271 → 125 | 495 → 80 | 727 → 162 | 1406 → 519 | 1521 → 451 |
+| 8 producers × 20k jobs (M jobs/s) | – | 1.54 → 1.71 | 1.25 → 2.60 | 0.97 → 2.36 | 0.66 → 2.34 |
+| Simulated frame, mean (ms) | 48.5 | 24.8 → 25.1 | 10.1 → 10.4 | 6.6 | 3.6 |
+| Simulated frame + background streaming, mean / p99 (ms) | 50.4 / 52.5 | 25.9 / 27.4 | 11.1 / 11.8 | 7.1 / 7.5 | 5.1 / 5.9 → 5.0 / 5.7 |
 
 The baseline is a plain `std::function` call: 0.8 ns.
 
 **What this says:**
-- **Parallel work scales well.** Parallel-for keeps 89–99 % efficiency up to all 19 workers, and the simulated
-  frame (a parallel-for phase, dependent jobs, 1 ms of main-thread work) goes from 48 ms to 3.6 ms. This passes
-  the plan's target of at least 70 % efficiency at 8 threads, with 97 % measured.
-- **Per-job cost misses the target beyond about 2 workers.** It's 0.35 µs with one worker but about 1.4 µs at
-  8 or more, and throughput for very small jobs drops as workers are added. Every schedule and pop goes through
-  one locked queue per lane, and each job is a `shared_ptr` plus a `std::function`. That's the "simple first"
-  design from the plan, and the benchmark shows where it stops scaling. For jobs of 50 µs or more (what systems
-  and streaming will be) the cost is negligible. For very fine-grained jobs it isn't yet: use parallel-for with a
-  bigger grain instead.
-- **Background work can delay frame work.** In the latency test every worker is inside a long background job, so
-  frame jobs wait until a worker frees up or the main thread helps (p50 about 2.5 ms, p99 about 4.7 ms). Lanes
-  pick the next job but can't pre-empt one that's running. The "+ background" frame rows show the same effect at
-  high worker counts (+1.5 ms at 16–19 workers, with that many 2 ms streaming jobs in flight).
+- **Per-job cost roughly halved, and contention mostly went away.** Batched scheduling costs 0.3–0.65 µs at
+  any worker count (was up to 1.5 µs), tiny-job throughput is 2–3× higher, and eight producers scheduling at once
+  now get 2.3–2.6 M jobs/s instead of dropping to 0.66 M. Throughput still falls a little as workers are added:
+  more threads stealing from each other for jobs that take nanoseconds. Jobs of a few µs or more don't notice.
+- **One-at-a-time schedule + wait got slower at 19 workers** (1.4 → 2.0 µs). Each job wakes a sleeping worker,
+  and with that many workers the wake-up and the steal attempts cost more than the job. It's the worst case (one
+  tiny job, then wait); batching, parallel-for or running it inline avoids it.
+- **Frame work no longer waits behind background work.** With 4 or more workers, the background limit keeps two
+  workers free, so a frame job starts within a few µs (p50) instead of 2.4–2.7 ms. With a single worker there is
+  nothing to reserve, so it still waits until the main thread helps; phase 2's step-based background jobs address
+  that case.
+- **Parallel work is unchanged.** Parallel-for keeps 89–99 % efficiency, and the simulated frame still goes from
+  48 ms to 3.6 ms. Those jobs are big enough that per-job cost never mattered.
 
 ## Next
 
-- **Phase 1b** (driven by the numbers above):
-  1. Per-worker work-stealing queues and pooled job objects (no `shared_ptr` / `std::function` allocation per
-     job) to cut per-job cost and contention.
-  2. Cap how many workers may run background jobs at once (e.g. all but two), so frame work always finds a free
-     worker.
 - **Phase 2:** tasks with results, progress and cancellation; follow-up steps that run on the main thread;
   step-based background jobs that run within a per-frame budget (long jobs give way between steps, which also
   fixes the latency issue).
