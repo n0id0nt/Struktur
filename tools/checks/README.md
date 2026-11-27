@@ -29,7 +29,7 @@ powershell -ExecutionPolicy Bypass -File tools\checks\run_check.ps1 -Scenario ri
 |---|---|
 | `-Game` | The folder holding `assets\` (default: this repository) |
 | `-Exe` | The game to run (default: `<Game>\build-nogame\Debug\Struktur.exe`) |
-| `-Saves` | Save files to install for the run, so two runs start from the same state |
+| `-Saves` | A folder of save files that replaces the `.sav` files for the run, so two runs start from the same state |
 | `-SaveName` | The save folder under `%APPDATA%\StrukturGames` |
 
 A run changes the game's scripts and the save folder, and puts both back when it ends. The save folder as it was is

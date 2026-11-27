@@ -200,13 +200,13 @@ import "fileSystem" for FileSystem
         }
         if (_checkStarted == null || _checkEnded) return
         var time = Time.unscaledTime - _checkStarted
-        if (_checkShots != 1 && time > 20) {
+        if (_checkShots != 1 && time > 6) {
             _checkShots = 1
             checkShot_("battle")
         }
         if (!_inBattle || time > 240) {
             _checkEnded = true
-            checkNote_(_inBattle ? "still fighting after 240 s" : "finished")
+            checkNote_(_inBattle ? "still fighting after 240 s" : "finished after %(time.floor) s")
             checkShot_("done")
         }
     }

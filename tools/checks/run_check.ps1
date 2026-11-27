@@ -90,7 +90,11 @@ $report = Join-Path $saveFolder 'check_report.txt'
 $marker = Join-Path $saveFolder 'check_shot.txt'
 
 try {
-    if ($Saves) { Copy-Item -Recurse -Force (Join-Path (Resolve-Path $Saves).Path '*') $saveFolder }
+    if ($Saves) {
+        # Only the given game saves, so a file the set lacks can't leak in from the player's own. All restored below.
+        Get-ChildItem -File $saveFolder -Filter '*.sav' | ForEach-Object { Remove-Item -LiteralPath $_.FullName }
+        Copy-Item -Recurse -Force (Join-Path (Resolve-Path $Saves).Path '*') $saveFolder
+    }
     Remove-Item $report, $marker -ErrorAction SilentlyContinue
     Remove-Item (Join-Path $OutDir '*.png'), (Join-Path $OutDir 'report.txt') -ErrorAction SilentlyContinue
     python (Join-Path $PSScriptRoot 'scenarios.py') apply $Scenario $Game $scripts
