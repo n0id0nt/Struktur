@@ -164,6 +164,17 @@ bool Struktur::InitialiseGame(GameContext& context)
 	// keyboard/gamepad stay polled in Input::Update() as before; only touch needs the raw event stream (see
 	// Input::HandleEvent's own comment).
 	context.GetWindow().AddEventCallback([&context](const SDL_Event& event) { context.GetInput().HandleEvent(event); });
+	// Files dropped on the window become a "fileDropped" engine event: {"path": String, UTF-8}.
+	context.GetWindow().AddEventCallback(
+	    [&context](const SDL_Event& event)
+	    {
+		    if (event.type == SDL_EVENT_DROP_FILE && event.drop.data != nullptr)
+		    {
+			    Callback::VariantMap data;
+			    data.items["path"] = std::string(event.drop.data);
+			    context.GetEventManager().AddEvent("fileDropped", data);
+		    }
+	    });
 
 #if defined(PLATFORM_WEB)
 	std::string saveDir = "/saves";  // Emscripten virtual path
