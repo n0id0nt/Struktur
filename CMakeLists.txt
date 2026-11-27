@@ -451,6 +451,7 @@ set(SOURCES
     src/Engine/Core/TimeSystem.h                src/Engine/Core/TimeSystem.cpp
     src/Engine/Core/FileSystem.h                src/Engine/Core/FileSystem.cpp
     src/Engine/Core/EngineSettings.h            src/Engine/Core/EngineSettings.cpp
+    src/Engine/Core/CommandLine.h               src/Engine/Core/CommandLine.cpp
 
     src/Engine/Input/Input.h                    src/Engine/Input/Input.cpp
     src/Engine/Input/InputConfigLoader.h        src/Engine/Input/InputConfigLoader.cpp

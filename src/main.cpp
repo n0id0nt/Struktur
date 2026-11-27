@@ -1,3 +1,4 @@
+#include "Engine/Core/CommandLine.h"
 #include "Engine/Game.h"
 
 #if WINDOWS_EXECUTABLE
@@ -11,6 +12,8 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 
 int main(int argc, char* argv[])
 {
+	// Before Game(), so systems can read flags from their constructors.
+	Struktur::Core::CommandLine::Set(argc, argv);
 	Struktur::Game();
 	return 0;
 }
