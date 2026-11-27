@@ -2,6 +2,8 @@
 // Generated from C++ bindings
 // Module: resourceManager
 
+import "jobs" for Task
+
 // Sound resource handle
 foreign class Sound {
     // Load sound from path
@@ -88,6 +90,8 @@ foreign class Texture {
     foreign height
     // Convert to string
     foreign toString()
+    // Loads a texture on the job system (decode on a worker, GPU upload on the main thread); returns a jobs.Task whose result is the Texture
+    foreign static loadAsync(arg0)
 }
 
 // Font resource handle
