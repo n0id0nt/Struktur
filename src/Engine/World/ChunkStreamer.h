@@ -6,11 +6,11 @@
 #include <vector>
 
 #include "Engine/Jobs/Task.h"
-#include "Engine/RideWorld/Biome.h"
-#include "Engine/RideWorld/ChunkBuilder.h"
-#include "Engine/RideWorld/Route.h"
+#include "Engine/World/Biome.h"
+#include "Engine/World/ChunkBuilder.h"
+#include "Engine/World/Route.h"
 
-namespace Struktur::RideWorld
+namespace Struktur::World
 {
 struct StreamerStats
 {
@@ -95,4 +95,4 @@ private:
 
 	StreamerStats m_stats;
 };
-}  // namespace Struktur::RideWorld
+}  // namespace Struktur::World

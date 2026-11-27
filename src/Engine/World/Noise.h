@@ -4,7 +4,7 @@
 
 // Seeded, deterministic noise for the ride world. Integer hashing only (no std::rand, no global state), so the same
 // seed and coordinates always give the same value on every platform that has IEEE doubles.
-namespace Struktur::RideWorld
+namespace Struktur::World
 {
 // 64-bit mix (SplitMix64 finaliser).
 uint64_t Hash64(uint64_t value);
@@ -35,4 +35,4 @@ private:
 	uint64_t m_state;
 	uint64_t m_increment;
 };
-}  // namespace Struktur::RideWorld
+}  // namespace Struktur::World

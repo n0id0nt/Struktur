@@ -8,7 +8,8 @@ class GameContext;
 
 namespace System
 {
-// Ticks the active ride (RideIntegration::RideService) once per frame, after FitnessSystem has pumped the sensors.
+// Ticks the active ride (RideIntegration::RideService) once per frame, after FitnessSystem has pumped the sensors:
+// writes Input's trainer data, and links the ride to the world (road grade, finish banner).
 class RideSystem : public ISystem
 {
 public:

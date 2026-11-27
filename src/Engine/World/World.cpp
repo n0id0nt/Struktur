@@ -1,11 +1,11 @@
-#include "RideWorld.h"
+#include "World.h"
 
 #include <algorithm>
 #include <cmath>
 
-#include "Engine/RideWorld/Noise.h"
+#include "Engine/World/Noise.h"
 
-namespace Struktur::RideWorld
+namespace Struktur::World
 {
 static constexpr double PI                     = 3.14159265358979323846;
 static constexpr double CHUNKS_BEHIND_METERS   = 64.0;
@@ -61,29 +61,71 @@ void DemoPacer::Collect(double riderDistance, double deltaSeconds, std::vector<W
 	out.push_back(actor);
 }
 
-RideWorld::RideWorld(const WorldSettings& settings, BiomeList biomes, Jobs::JobSystem* jobs)
-    : m_settings(settings),
-      m_biomes(std::move(biomes)),
-      m_jobs(jobs),
-      m_actorSource(nullptr),
-      m_distance(0.0),
-      m_time(0.0),
-      m_powerZone(0),
-      m_smoothedLookX(1.0),
-      m_smoothedLookY(0.0),
-      m_smoothedLookZ(0.0),
-      m_smoothedFov(settings.fieldOfViewDegrees),
-      m_cameraInitialised(false)
+World::World()
 {
-	if (!m_biomes)
-	{
-		m_biomes = std::make_shared<const std::vector<BiomeDefinition>>();
-	}
-	m_settings.Validate();
-	Rebuild();
+	Unload();
 }
 
-ChunkSettings RideWorld::MakeChunkSettings() const
+World::~World()
+{
+	Unload();
+}
+
+void World::SetAssets(WorldAssets assets)
+{
+	m_assets = std::move(assets);
+}
+
+const WorldAssets& World::GetAssets() const
+{
+	return m_assets;
+}
+
+void World::Load(const WorldSettings& settings, Jobs::JobSystem* jobs)
+{
+	Unload();
+	m_settings = settings;
+	m_settings.Validate();
+	m_biomes = m_assets.biomes ? m_assets.biomes : std::make_shared<const std::vector<BiomeDefinition>>();
+	m_smoothedFov = m_settings.fieldOfViewDegrees;
+	m_streamer    = std::make_unique<ChunkStreamer>(jobs);
+	Rebuild();
+	// A standing frame, so the camera, look and first chunk requests are valid before the first real one.
+	Update(0.0, Input::TrainerInput());
+}
+
+void World::Unload()
+{
+	m_streamer.reset();  // waits for the builds that write into its meshes
+	m_sequence.reset();
+	m_route.reset();
+	m_propTypes.reset();
+	m_biomes.reset();
+	m_actorSource.reset();
+	m_actors.clear();
+	m_banners.clear();
+	m_targetGrades.clear();
+	m_profile           = ElevationProfile();
+	m_rider             = RiderAnimation();
+	m_look              = BiomeLook();
+	m_blend             = BiomeBlend();
+	m_camera            = WorldCamera();
+	m_distance          = 0.0;
+	m_time              = 0.0;
+	m_powerZone         = 0;
+	m_smoothedLookX     = 1.0;
+	m_smoothedLookY     = 0.0;
+	m_smoothedLookZ     = 0.0;
+	m_smoothedFov       = m_settings.fieldOfViewDegrees;
+	m_cameraInitialised = false;
+}
+
+bool World::IsLoaded() const
+{
+	return m_streamer != nullptr;
+}
+
+ChunkSettings World::MakeChunkSettings() const
 {
 	const QualityParameters quality = m_settings.Resolved();
 	ChunkSettings settings;
@@ -96,7 +138,7 @@ ChunkSettings RideWorld::MakeChunkSettings() const
 	return settings;
 }
 
-void RideWorld::Rebuild()
+void World::Rebuild()
 {
 	RouteSettings routeSettings;
 	routeSettings.seed                 = Hash64(m_settings.seed);
@@ -104,10 +146,6 @@ void RideWorld::Rebuild()
 	m_route    = std::make_unique<Route>(routeSettings);
 	m_sequence = std::make_unique<BiomeSequence>(m_biomes, Hash64(m_settings.seed ^ 0xB10Bu), m_settings.biome);
 	m_propTypes = std::make_shared<const PropTypeTable>(PropTypeTable::FromBiomes(*m_biomes));
-	if (!m_streamer)
-	{
-		m_streamer = std::make_unique<ChunkStreamer>(m_jobs);
-	}
 	m_streamer->Configure(MakeChunkSettings(), m_biomes, m_propTypes);
 
 	ElevationLimits limits;
@@ -125,13 +163,18 @@ void RideWorld::Rebuild()
 	m_cameraInitialised = false;
 }
 
-void RideWorld::SetSettings(const WorldSettings& settings)
+void World::SetSettings(const WorldSettings& settings)
 {
 	WorldSettings validated = settings;
 	validated.Validate();
 	const bool routeChanged = validated.seed != m_settings.seed ||
 	                          validated.minCurveRadiusMeters != m_settings.minCurveRadiusMeters ||
 	                          validated.biome != m_settings.biome;
+	if (!IsLoaded())
+	{
+		m_settings = validated;
+		return;
+	}
 	const WorldSettings previous = m_settings;
 	m_settings                   = validated;
 	if (routeChanged)
@@ -157,17 +200,17 @@ void RideWorld::SetSettings(const WorldSettings& settings)
 	}
 }
 
-const WorldSettings& RideWorld::GetSettings() const
+const WorldSettings& World::GetSettings() const
 {
 	return m_settings;
 }
 
-void RideWorld::SetActorSource(IWorldActorSource* source)
+void World::SetActorSource(std::unique_ptr<IWorldActorSource> source)
 {
-	m_actorSource = source;
+	m_actorSource = std::move(source);
 }
 
-double RideWorld::RouteGradeAt(double distance)
+double World::RouteGradeAt(double distance)
 {
 	const BiomeBlend blend = m_sequence->BlendAt(distance);
 	const std::vector<BiomeDefinition>& biomes = *m_biomes;
@@ -183,7 +226,7 @@ double RideWorld::RouteGradeAt(double distance)
 	return amplitude * 1.6 * Fbm1D(Hash64(m_settings.seed ^ 0x6EADu), distance / wavelength, 2);
 }
 
-void RideWorld::FillTargetGrades(const Input::TrainerInput& trainer)
+void World::FillTargetGrades(const Input::TrainerInput& trainer)
 {
 	const double spacing = m_profile.GetLimits().spacingMeters;
 	const double ahead   = m_settings.Resolved().drawDistanceMeters + PROFILE_MARGIN_METERS;
@@ -217,7 +260,7 @@ void RideWorld::FillTargetGrades(const Input::TrainerInput& trainer)
 	}
 }
 
-void RideWorld::Update(double deltaSeconds, const Input::TrainerInput& trainer)
+void World::Update(double deltaSeconds, const Input::TrainerInput& trainer)
 {
 	const double delta = std::clamp(deltaSeconds, 0.0, 0.25);
 	m_time += delta;
@@ -258,7 +301,7 @@ void RideWorld::Update(double deltaSeconds, const Input::TrainerInput& trainer)
 	UpdateCamera(delta, trainer.speedMetersPerSecond);
 }
 
-void RideWorld::UpdateCamera(double delta, double speedMetersPerSecond)
+void World::UpdateCamera(double delta, double speedMetersPerSecond)
 {
 	const double origin     = GetHeightOrigin();
 	const double cameraAt   = std::max(m_route->GetStart(), m_distance - m_settings.cameraDistanceMeters);
@@ -313,108 +356,108 @@ void RideWorld::UpdateCamera(double delta, double speedMetersPerSecond)
 	m_camera.fieldOfViewDegrees = motion ? m_smoothedFov : m_settings.fieldOfViewDegrees;
 }
 
-double RideWorld::GetDistance() const
+double World::GetDistance() const
 {
 	return m_distance;
 }
 
-double RideWorld::GetRoadGradePercent() const
+double World::GetRoadGradePercent() const
 {
 	return m_profile.GradeAt(m_distance);
 }
 
-double RideWorld::GetHeightOrigin() const
+double World::GetHeightOrigin() const
 {
 	return m_profile.HeightAt(m_distance);
 }
 
-const Route& RideWorld::GetRoute() const
+const Route& World::GetRoute() const
 {
 	return *m_route;
 }
 
-const ElevationProfile& RideWorld::GetProfile() const
+const ElevationProfile& World::GetProfile() const
 {
 	return m_profile;
 }
 
-ChunkStreamer& RideWorld::GetStreamer()
+ChunkStreamer& World::GetStreamer()
 {
 	return *m_streamer;
 }
 
-const std::vector<ChunkMesh*>& RideWorld::GetChunks() const
+const std::vector<ChunkMesh*>& World::GetChunks() const
 {
 	return m_streamer->GetReady();
 }
 
-std::shared_ptr<const PropTypeTable> RideWorld::GetPropTypes() const
+std::shared_ptr<const PropTypeTable> World::GetPropTypes() const
 {
 	return m_propTypes;
 }
 
-BiomeSequence& RideWorld::GetBiomeSequence()
+BiomeSequence& World::GetBiomeSequence()
 {
 	return *m_sequence;
 }
 
-const std::vector<BiomeDefinition>& RideWorld::GetBiomes() const
+const std::vector<BiomeDefinition>& World::GetBiomes() const
 {
 	return *m_biomes;
 }
 
-const BiomeLook& RideWorld::GetLook() const
+const BiomeLook& World::GetLook() const
 {
 	return m_look;
 }
 
-BiomeBlend RideWorld::GetBlend() const
+BiomeBlend World::GetBlend() const
 {
 	return m_blend;
 }
 
-const WorldCamera& RideWorld::GetCamera() const
+const WorldCamera& World::GetCamera() const
 {
 	return m_camera;
 }
 
-const RiderAnimation& RideWorld::GetRiderAnimation() const
+const RiderAnimation& World::GetRiderAnimation() const
 {
 	return m_rider;
 }
 
-const std::vector<WorldActor>& RideWorld::GetActors() const
+const std::vector<WorldActor>& World::GetActors() const
 {
 	return m_actors;
 }
 
-const std::vector<double>& RideWorld::GetBanners() const
+const std::vector<double>& World::GetBanners() const
 {
 	return m_banners;
 }
 
-int RideWorld::GetPowerZone() const
+int World::GetPowerZone() const
 {
 	return m_powerZone;
 }
 
-double RideWorld::GetTimeSeconds() const
+double World::GetTimeSeconds() const
 {
 	return m_time;
 }
 
-void RideWorld::PlaceBanner(double aheadMeters)
+void World::PlaceBanner(double aheadMeters)
 {
 	m_banners.push_back(m_distance + aheadMeters);
 }
 
-void RideWorld::JumpTo(double distance)
+void World::JumpTo(double distance)
 {
 	m_distance = std::max(0.0, distance);
 	Rebuild();
 }
 
-void RideWorld::WaitForChunks()
+void World::WaitForChunks()
 {
 	const QualityParameters quality = m_settings.Resolved();
 	for (int attempt = 0; attempt < 200; ++attempt)
@@ -430,4 +473,4 @@ void RideWorld::WaitForChunks()
 		}
 	}
 }
-}  // namespace Struktur::RideWorld
+}  // namespace Struktur::World

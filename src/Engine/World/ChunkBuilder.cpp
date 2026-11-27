@@ -4,9 +4,9 @@
 #include <chrono>
 #include <cmath>
 
-#include "Engine/RideWorld/Noise.h"
+#include "Engine/World/Noise.h"
 
-namespace Struktur::RideWorld
+namespace Struktur::World
 {
 static constexpr double ROAD_SURFACE_DROP     = 0.08;   // terrain under/beside the road sits this far below it
 static constexpr double CURVATURE_WINDOW      = 12.0;   // metres either side when finding the local bend radius
@@ -665,4 +665,4 @@ void BuildChunk(const ChunkJob& job, ChunkMesh& out)
 	out.buildMilliseconds =
 	    std::chrono::duration<double, std::milli>(std::chrono::steady_clock::now() - started).count();
 }
-}  // namespace Struktur::RideWorld
+}  // namespace Struktur::World

@@ -217,6 +217,7 @@ void RegisterLocalizationBindings(BindingRegistry& registry);
 void RegisterFitnessBindings(BindingRegistry& registry);
 void RegisterRideBindings(BindingRegistry& registry);
 void RegisterJobsBindings(BindingRegistry& registry);
+void RegisterWorldBindings(BindingRegistry& registry);
 
 // Call this once at startup
 void RegisterAllBindings(BindingRegistry& registry);

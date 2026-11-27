@@ -5,7 +5,7 @@
 
 #include "nlohmann/json.hpp"
 
-namespace Struktur::RideWorld
+namespace Struktur::World
 {
 static constexpr size_t MAX_ROLES       = 256;
 static constexpr int MAX_IMAGE_SIZE     = 4096;
@@ -270,4 +270,4 @@ std::vector<std::string> FormatMissingAssetsLines(const std::vector<ResolvedAsse
 	}
 	return lines;
 }
-}  // namespace Struktur::RideWorld
+}  // namespace Struktur::World

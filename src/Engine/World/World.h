@@ -6,14 +6,16 @@
 #include <vector>
 
 #include "Engine/Input/TrainerInput.h"
-#include "Engine/RideWorld/Biome.h"
-#include "Engine/RideWorld/ChunkStreamer.h"
-#include "Engine/RideWorld/ElevationProfile.h"
-#include "Engine/RideWorld/RiderAnimation.h"
-#include "Engine/RideWorld/Route.h"
-#include "Engine/RideWorld/WorldSettings.h"
+#include "Engine/World/AssetManifest.h"
+#include "Engine/World/Biome.h"
+#include "Engine/World/ChunkStreamer.h"
+#include "Engine/World/ElevationProfile.h"
+#include "Engine/World/RiderAnimation.h"
+#include "Engine/World/Route.h"
+#include "Engine/World/SpriteDescriptor.h"
+#include "Engine/World/WorldSettings.h"
 
-namespace Struktur::RideWorld
+namespace Struktur::World
 {
 // Something drawn on the road at a distance: a pacer or a ghost.
 struct WorldActor
@@ -58,18 +60,41 @@ struct WorldCamera
 // climb. Free-ride steps (NaN) give 0.
 double GradeForIntensity(double intensity);
 
-// The procedural ride world: route, elevation, biomes, chunk streaming, camera and rider animation. Engine-agnostic -
-// the renderer reads its state and draws it.
-class RideWorld
+// What a world is built from: the data under assets/World (see WorldAssetLoader.h).
+struct WorldAssets
+{
+	BiomeList biomes;
+	AssetManifest manifest;
+	SpriteDescriptor spriteDescriptor = DefaultSpriteDescriptor();
+};
+
+// The procedural world: route, elevation, biomes, chunk streaming, camera and rider animation. It lives on the
+// GameContext and is empty until Load(); the renderer reads its state and draws it. Engine-agnostic.
+class World
 {
 public:
-	// `jobs` builds chunks in the background; null builds them inline (tests).
-	RideWorld(const WorldSettings& settings, BiomeList biomes, Jobs::JobSystem* jobs);
+	World();
+	~World();
+
+	World(const World&)            = delete;
+	World& operator=(const World&) = delete;
+
+	// Set once at startup; a replacement applies from the next Load().
+	void SetAssets(WorldAssets assets);
+	const WorldAssets& GetAssets() const;
+
+	// Builds the world for `settings` (replacing any loaded one) and requests the first chunks. `jobs` builds chunks in
+	// the background; null builds them inline (tests).
+	void Load(const WorldSettings& settings, Jobs::JobSystem* jobs);
+	// Drops the road, chunks and actors, waiting for builds in flight. The assets stay.
+	void Unload();
+	// Everything below, apart from the assets and settings, needs a loaded world.
+	bool IsLoaded() const;
 
 	// Applies new settings; geometry is rebuilt only when something that shapes it changed.
 	void SetSettings(const WorldSettings& settings);
 	const WorldSettings& GetSettings() const;
-	void SetActorSource(IWorldActorSource* source);
+	void SetActorSource(std::unique_ptr<IWorldActorSource> source);
 
 	// Advances the road under the rider from what the trainer and the ride report this frame.
 	void Update(double deltaSeconds, const Input::TrainerInput& trainer);
@@ -106,16 +131,16 @@ private:
 	double RouteGradeAt(double distance);
 	void UpdateCamera(double deltaSeconds, double speedMetersPerSecond);
 
+	WorldAssets m_assets;
 	WorldSettings m_settings;
-	BiomeList m_biomes;
-	Jobs::JobSystem* m_jobs;
+	BiomeList m_biomes;  // the loaded world's
 	std::unique_ptr<Route> m_route;
 	std::unique_ptr<BiomeSequence> m_sequence;
 	std::unique_ptr<ChunkStreamer> m_streamer;
 	std::shared_ptr<const PropTypeTable> m_propTypes;
 	ElevationProfile m_profile;
 	RiderAnimation m_rider;
-	IWorldActorSource* m_actorSource;
+	std::unique_ptr<IWorldActorSource> m_actorSource;
 	std::vector<WorldActor> m_actors;
 	std::vector<double> m_banners;
 	std::vector<double> m_targetGrades;
@@ -129,4 +154,4 @@ private:
 	double m_smoothedFov;
 	bool m_cameraInitialised;
 };
-}  // namespace Struktur::RideWorld
+}  // namespace Struktur::World

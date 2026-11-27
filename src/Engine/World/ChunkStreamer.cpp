@@ -3,7 +3,7 @@
 #include <algorithm>
 #include <cmath>
 
-namespace Struktur::RideWorld
+namespace Struktur::World
 {
 static constexpr double SAMPLE_MARGIN_METERS = 20.0;  // route samples copied either side of a chunk (bend radius)
 static constexpr int MAX_REQUESTS_PER_UPDATE = 4;
@@ -277,4 +277,4 @@ void ChunkStreamer::WaitIdle()
 		m_jobs->Wait(flight.task);
 	}
 }
-}  // namespace Struktur::RideWorld
+}  // namespace Struktur::World

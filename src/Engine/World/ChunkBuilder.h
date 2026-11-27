@@ -5,10 +5,10 @@
 #include <string>
 #include <vector>
 
-#include "Engine/RideWorld/Biome.h"
-#include "Engine/RideWorld/Route.h"
+#include "Engine/World/Biome.h"
+#include "Engine/World/Route.h"
 
-namespace Struktur::RideWorld
+namespace Struktur::World
 {
 // GPU vertex for terrain, road and water (40 bytes). Positions are relative to the chunk origin; y is the height
 // relative to the ROAD at that distance - the road's own elevation h(s) is added in the vertex shader from a height
@@ -103,4 +103,4 @@ void BuildChunk(const ChunkJob& job, ChunkMesh& out);
 
 // The lateral offsets of the terrain columns on one side (from the road edge outwards), shared by the tests.
 std::vector<double> TerrainColumnOffsets(double lateralExtent);
-}  // namespace Struktur::RideWorld
+}  // namespace Struktur::World

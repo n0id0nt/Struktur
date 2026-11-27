@@ -7,9 +7,9 @@
 #include <unordered_map>
 #include <vector>
 
-#include "Engine/RideWorld/AssetManifest.h"
-#include "Engine/RideWorld/RideWorld.h"
-#include "Engine/RideWorld/SpriteDescriptor.h"
+#include "Engine/World/AssetManifest.h"
+#include "Engine/World/World.h"
+#include "Engine/World/SpriteDescriptor.h"
 
 namespace Struktur
 {
@@ -17,7 +17,7 @@ class GameContext;
 
 namespace Renderer
 {
-// Draws a RideWorld::RideWorld with bgfx, behind the ride HUD:
+// Draws a World::World with bgfx, behind the ride HUD:
 //
 //   RideSkyViewId     low-res framebuffer, orthographic: sky gradient, stars, mountain bands, sun/moon, clouds
 //   RideSceneViewId   same framebuffer, perspective: terrain, water, road, instanced props, actors, banners, weather
@@ -37,11 +37,11 @@ public:
 	RideWorldRenderer& operator=(const RideWorldRenderer&) = delete;
 
 	// Creates GPU resources and loads every manifest role (real file or placeholder). Needs bgfx initialised.
-	void Initialise(const RideWorld::AssetManifest& manifest, const RideWorld::SpriteDescriptor& descriptor);
+	void Initialise(const World::AssetManifest& manifest, const World::SpriteDescriptor& descriptor);
 	void Shutdown();
 	bool IsInitialised() const;
 
-	void Render(GameContext& context, RideWorld::RideWorld& world, float frameSeconds);
+	void Render(GameContext& context, World::World& world, float frameSeconds);
 	// Drops every chunk's GPU buffers (the world was rebuilt or replaced).
 	void ResetChunks();
 
@@ -71,30 +71,30 @@ private:
 		std::vector<uint32_t> propCounts;
 	};
 
-	void LoadTexture(const RideWorld::AssetRole& role, const RideWorld::ResolvedAsset& resolved);
+	void LoadTexture(const World::AssetRole& role, const World::ResolvedAsset& resolved);
 	const RoleTexture& Texture(const std::string& role) const;
-	void SyncChunks(RideWorld::RideWorld& world);
+	void SyncChunks(World::World& world);
 	void DestroyChunk(ChunkGpu& chunk);
 	void EnsureFrameBuffer(uint16_t width, uint16_t height);
-	void UpdateHeightTexture(const RideWorld::RideWorld& world);
-	void SetSharedUniforms(const RideWorld::RideWorld& world);
-	void DrawSky(const RideWorld::RideWorld& world);
-	void DrawScene(RideWorld::RideWorld& world);
-	void DrawProps(const RideWorld::RideWorld& world, const ChunkGpu& chunk);
-	void DrawActors(const RideWorld::RideWorld& world);
-	void DrawBanners(const RideWorld::RideWorld& world);
-	void DrawWeather(const RideWorld::RideWorld& world);
-	void DrawRider(const RideWorld::RideWorld& world);
-	void DrawPost(const RideWorld::RideWorld& world, bgfx::FrameBufferHandle target, uint16_t width, uint16_t height);
-	void DrawDebugOverlay(RideWorld::RideWorld& world, float frameSeconds);
+	void UpdateHeightTexture(const World::World& world);
+	void SetSharedUniforms(const World::World& world);
+	void DrawSky(const World::World& world);
+	void DrawScene(World::World& world);
+	void DrawProps(const World::World& world, const ChunkGpu& chunk);
+	void DrawActors(const World::World& world);
+	void DrawBanners(const World::World& world);
+	void DrawWeather(const World::World& world);
+	void DrawRider(const World::World& world);
+	void DrawPost(const World::World& world, bgfx::FrameBufferHandle target, uint16_t width, uint16_t height);
+	void DrawDebugOverlay(World::World& world, float frameSeconds);
 	void SubmitSprite(bgfx::ViewId view, const RoleTexture& texture, const float corners[8], float u0, float v0,
 	                  float u1, float v1, uint32_t abgr, uint64_t extraState = 0, uint32_t samplerFlags = UINT32_MAX);
-	void SubmitBillboard(const RideWorld::RideWorld& world, const std::string& role, double distance, double lateral,
+	void SubmitBillboard(const World::World& world, const std::string& role, double distance, double lateral,
 	                     double heightMeters, double angle, bool aligned, int column, int row, uint32_t tint,
 	                     double towardsCamera, double baseHeight = 0.0);
 
 	bool m_initialised = false;
-	RideWorld::SpriteDescriptor m_descriptor;
+	World::SpriteDescriptor m_descriptor;
 	std::unordered_map<std::string, RoleTexture> m_textures;
 	RoleTexture m_missing;
 	std::unordered_map<int64_t, ChunkGpu> m_chunks;

@@ -17,6 +17,7 @@ import "app" for Time
 import "input" for Input
 import "localization" for Localization
 import "ride" for Ride
+import "world" for World
 import "States/BaseState" for BaseState
 import "UI/Ride/RideHudUI" for RideHudUI
 import "UI/Ride/RideLayout" for RideLayout
@@ -75,6 +76,8 @@ class RideState is BaseState {
                 rider["weightKg"])
         }
 
+        // The world lives as long as this screen: loaded here, unloaded in exit(). Off in the settings = no world.
+        if (started) World.load(Ride.worldSettings())
         buildView_()
 
         if (!started) {
@@ -155,6 +158,7 @@ class RideState is BaseState {
         // Leaving any other way still saves the ride (the autosave already has most of it).
         if (Ride.isActive()) Ride.finish()
         Ride.discard()
+        World.unload()
         if (_view != null) {
             _view.teardown()
             _view = null
@@ -199,7 +203,10 @@ class RideState is BaseState {
         if (Input.isKeyJustPressed("p") || Input.isControllerButtonJustPressed("start")) Ride.togglePause()
         if (Input.isKeyJustPressed("m")) perform_("trimMode", 0)
         // F3: world debug overlay (frame time, draw calls, chunk build times). Not saved.
-        if (Input.isKeyJustPressed("f3")) Ride.setSetting("worldDebugOverlay", !Ride.settings()["worldDebugOverlay"])
+        if (Input.isKeyJustPressed("f3")) {
+            Ride.setSetting("worldDebugOverlay", !Ride.settings()["worldDebugOverlay"])
+            World.applySettings(Ride.worldSettings())
+        }
         if (Input.isKeyJustPressed("h")) {
             cycleLayout_()
             return

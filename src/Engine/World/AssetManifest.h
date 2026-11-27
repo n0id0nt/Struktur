@@ -5,7 +5,7 @@
 #include <string>
 #include <vector>
 
-namespace Struktur::RideWorld
+namespace Struktur::World
 {
 // One art role the world needs (assets/World/manifest.json). `file` is where a real asset is expected; when it is
 // missing a placeholder is generated in code from `placeholderShape`, so the game always runs. Replacing a
@@ -59,4 +59,4 @@ std::vector<ResolvedAsset> ResolveAssets(const AssetManifest& manifest, FileExis
 std::string FormatMissingAssetsMarkdown(const std::vector<ResolvedAsset>& resolved);
 // The same list as plain log lines.
 std::vector<std::string> FormatMissingAssetsLines(const std::vector<ResolvedAsset>& resolved);
-}  // namespace Struktur::RideWorld
+}  // namespace Struktur::World

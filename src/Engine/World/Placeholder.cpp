@@ -3,9 +3,9 @@
 #include <algorithm>
 #include <cmath>
 
-#include "Engine/RideWorld/Noise.h"
+#include "Engine/World/Noise.h"
 
-namespace Struktur::RideWorld
+namespace Struktur::World
 {
 static constexpr double PI = 3.14159265358979323846;
 static constexpr int MAX_PLACEHOLDER_DIMENSION = 2048;
@@ -808,4 +808,4 @@ PlaceholderImage GeneratePlaceholder(const AssetRole& role, uint64_t seed)
 	}
 	return image;
 }
-}  // namespace Struktur::RideWorld
+}  // namespace Struktur::World

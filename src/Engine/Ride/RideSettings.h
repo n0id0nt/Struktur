@@ -5,7 +5,7 @@
 #include "Engine/Ride/SpeedModel.h"
 #include "Engine/Ride/TrainerController.h"
 #include "Engine/Ride/Zones.h"
-#include "Engine/RideWorld/WorldSettings.h"
+#include "Engine/World/WorldSettings.h"
 
 namespace Struktur::Ride
 {
@@ -34,7 +34,7 @@ struct RideSettings
 	std::string hudLayout                 = "compact";  // a layout name in assets/Settings/RideLayout.json
 	SpeedModelParameters speed;                    // riderMassKg is replaced by the rider's weight at ride start
 	TrainerControlSettings control;
-	RideWorld::WorldSettings world = RideWorld::WorldSettings::Defaults();  // the "world" section
+	World::WorldSettings world = World::WorldSettings::Defaults();  // the "world" section
 
 	// Missing or out-of-range values fall back to defaults; `warning` describes anything that was ignored.
 	static RideSettings FromJson(const std::string& json, std::string& warning);

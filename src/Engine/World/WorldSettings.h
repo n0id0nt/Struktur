@@ -5,7 +5,7 @@
 
 #include "nlohmann/json_fwd.hpp"
 
-namespace Struktur::RideWorld
+namespace Struktur::World
 {
 enum class Quality : uint8_t
 {
@@ -88,4 +88,4 @@ struct WorldSettings
 
 	QualityParameters Resolved() const;  // preset + overrides
 };
-}  // namespace Struktur::RideWorld
+}  // namespace Struktur::World

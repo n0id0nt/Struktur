@@ -2,7 +2,7 @@
 
 #include <cmath>
 
-namespace Struktur::RideWorld
+namespace Struktur::World
 {
 uint64_t Hash64(uint64_t value)
 {
@@ -123,4 +123,4 @@ double Random::Range(double minimum, double maximum)
 {
 	return minimum + (maximum - minimum) * NextUnit();
 }
-}  // namespace Struktur::RideWorld
+}  // namespace Struktur::World

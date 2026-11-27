@@ -6,7 +6,7 @@
 #include <string>
 #include <vector>
 
-namespace Struktur::RideWorld
+namespace Struktur::World
 {
 struct Color
 {
@@ -180,4 +180,4 @@ private:
 	std::vector<double> m_regionStarts;  // m_regionStarts[i] = start of region i (region 0 starts at 0)
 	std::vector<int> m_regionBiomes;
 };
-}  // namespace Struktur::RideWorld
+}  // namespace Struktur::World

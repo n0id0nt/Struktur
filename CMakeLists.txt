@@ -460,6 +460,7 @@ set(WREN_BINDING_SOURCES
                                                 src/WrenBindings/WrenEvents.cpp
                                                 src/WrenBindings/WrenFitness.cpp
                                                 src/WrenBindings/WrenRide.cpp
+                                                src/WrenBindings/WrenWorld.cpp
                                                 src/WrenBindings/WrenApplication.cpp
                                                 src/WrenBindings/WrenAudio.cpp
                                                 src/WrenBindings/WrenGameObject.cpp
@@ -556,7 +557,9 @@ set(SOURCES
     src/Engine/ECS/System/SoundSystem.h         src/Engine/ECS/System/SoundSystem.cpp
     src/Engine/ECS/System/FitnessSystem.h       src/Engine/ECS/System/FitnessSystem.cpp
     src/Engine/ECS/System/RideSystem.h          src/Engine/ECS/System/RideSystem.cpp
-    src/Engine/ECS/System/RideWorldRenderSystem.h src/Engine/ECS/System/RideWorldRenderSystem.cpp
+    src/Engine/ECS/System/WorldSystem.h         src/Engine/ECS/System/WorldSystem.cpp
+    src/Engine/ECS/System/WorldRenderSystem.h   src/Engine/ECS/System/WorldRenderSystem.cpp
+    src/Engine/World/WorldAssetLoader.h         src/Engine/World/WorldAssetLoader.cpp
     src/Engine/RideIntegration/RideService.h    src/Engine/RideIntegration/RideService.cpp
     src/Engine/ECS/System/EventSystem.h         src/Engine/ECS/System/EventSystem.cpp
 
@@ -639,7 +642,7 @@ target_link_libraries(${PROJECT_NAME}
     PhysFS::PhysFS-static
     StrukturFitness
     StrukturRide
-    StrukturRideWorld
+    StrukturWorld
     StrukturJobs
     $<$<OR:$<BOOL:${PLATFORM_DESKTOP}>,$<BOOL:${PLATFORM_WEB}>>:SDL3_mixer::SDL3_mixer>
     $<$<OR:$<BOOL:${PLATFORM_DESKTOP}>,$<BOOL:${PLATFORM_WEB}>>:SDL3::SDL3>

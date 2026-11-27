@@ -28,5 +28,6 @@ void RegisterAllBindings(BindingRegistry& registry)
 	RegisterFitnessBindings(registry);
 	RegisterRideBindings(registry);
 	RegisterJobsBindings(registry);
+	RegisterWorldBindings(registry);
 }
 }  // namespace Struktur::Wren

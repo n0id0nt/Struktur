@@ -16,8 +16,8 @@
 #include "Engine/Renderer/GraphicsDevice.h"
 #include "Engine/Renderer/QuadVertex.h"
 #include "Engine/Ride/Zones.h"
-#include "Engine/RideWorld/Noise.h"
-#include "Engine/RideWorld/Placeholder.h"
+#include "Engine/World/Noise.h"
+#include "Engine/World/Placeholder.h"
 
 namespace Struktur::Renderer
 {
@@ -70,7 +70,7 @@ void RideWorldRenderer::SetVec4(const char* name, float x, float y, float z, flo
 	bgfx::setUniform(Uniform(name), value);
 }
 
-void RideWorldRenderer::Initialise(const RideWorld::AssetManifest& manifest, const RideWorld::SpriteDescriptor& descriptor)
+void RideWorldRenderer::Initialise(const World::AssetManifest& manifest, const World::SpriteDescriptor& descriptor)
 {
 	if (m_initialised)
 	{
@@ -84,13 +84,13 @@ void RideWorldRenderer::Initialise(const RideWorld::AssetManifest& manifest, con
 	    .add(bgfx::Attrib::Color0, 4, bgfx::AttribType::Uint8, true)
 	    .add(bgfx::Attrib::TexCoord0, 3, bgfx::AttribType::Float)
 	    .end();
-	ASSERT_MSG(m_worldLayout.getStride() == sizeof(RideWorld::WorldVertex), "WorldVertex layout mismatch");
+	ASSERT_MSG(m_worldLayout.getStride() == sizeof(World::WorldVertex), "WorldVertex layout mismatch");
 	// Instance data: two vec4 per instance (the attributes only give the stride; shaders read i_data0/i_data1).
 	m_instanceLayout.begin()
 	    .add(bgfx::Attrib::TexCoord7, 4, bgfx::AttribType::Float)
 	    .add(bgfx::Attrib::TexCoord6, 4, bgfx::AttribType::Float)
 	    .end();
-	ASSERT_MSG(m_instanceLayout.getStride() == sizeof(RideWorld::PropInstance), "PropInstance layout mismatch");
+	ASSERT_MSG(m_instanceLayout.getStride() == sizeof(World::PropInstance), "PropInstance layout mismatch");
 	m_screenLayout.begin()
 	    .add(bgfx::Attrib::Position, 3, bgfx::AttribType::Float)
 	    .add(bgfx::Attrib::TexCoord0, 3, bgfx::AttribType::Float)
@@ -119,15 +119,15 @@ void RideWorldRenderer::Initialise(const RideWorld::AssetManifest& manifest, con
 	static const uint32_t white = 0xFFFFFFFFu;
 	m_missing.handle = bgfx::createTexture2D(1, 1, false, 1, bgfx::TextureFormat::RGBA8, POINT_CLAMP, bgfx::copy(&white, 4));
 
-	const std::vector<RideWorld::ResolvedAsset> resolved = RideWorld::ResolveAssets(manifest, FileSystem::Exists);
-	for (const RideWorld::ResolvedAsset& asset : resolved)
+	const std::vector<World::ResolvedAsset> resolved = World::ResolveAssets(manifest, FileSystem::Exists);
+	for (const World::ResolvedAsset& asset : resolved)
 	{
 		LoadTexture(*asset.role, asset);
 	}
 	m_initialised = true;
 }
 
-void RideWorldRenderer::LoadTexture(const RideWorld::AssetRole& role, const RideWorld::ResolvedAsset& resolved)
+void RideWorldRenderer::LoadTexture(const World::AssetRole& role, const World::ResolvedAsset& resolved)
 {
 	RoleTexture texture;
 	texture.columns = std::max(1, role.frames);
@@ -148,7 +148,7 @@ void RideWorldRenderer::LoadTexture(const RideWorld::AssetRole& role, const Ride
 				if (!role.regions.empty())
 				{
 					// Frames cut out of a larger sheet (tileset trees, a character atlas): build a strip of them.
-					const RideWorld::PlaceholderImage strip = RideWorld::ComposeRegions(pixels, width, height, role);
+					const World::PlaceholderImage strip = World::ComposeRegions(pixels, width, height, role);
 					texture.handle = bgfx::createTexture2D(static_cast<uint16_t>(strip.width), static_cast<uint16_t>(strip.height),
 					                                       false, 1, bgfx::TextureFormat::RGBA8, flags,
 					                                       bgfx::copy(strip.pixels.data(), static_cast<uint32_t>(strip.pixels.size())));
@@ -178,7 +178,7 @@ void RideWorldRenderer::LoadTexture(const RideWorld::AssetRole& role, const Ride
 	}
 	if (!bgfx::isValid(texture.handle))
 	{
-		const RideWorld::PlaceholderImage image = RideWorld::GeneratePlaceholder(role, 1);
+		const World::PlaceholderImage image = World::GeneratePlaceholder(role, 1);
 		texture.handle = bgfx::createTexture2D(static_cast<uint16_t>(image.width), static_cast<uint16_t>(image.height), false, 1,
 		                                       bgfx::TextureFormat::RGBA8, flags,
 		                                       bgfx::copy(image.pixels.data(), static_cast<uint32_t>(image.pixels.size())));
@@ -308,9 +308,9 @@ void RideWorldRenderer::EnsureFrameBuffer(uint16_t width, uint16_t height)
 	m_frameHeight                             = height;
 }
 
-void RideWorldRenderer::SyncChunks(RideWorld::RideWorld& world)
+void RideWorldRenderer::SyncChunks(World::World& world)
 {
-	RideWorld::ChunkStreamer& streamer = world.GetStreamer();
+	World::ChunkStreamer& streamer = world.GetStreamer();
 	for (int64_t index : streamer.TakeReleased())
 	{
 		const auto found = m_chunks.find(index);
@@ -325,7 +325,7 @@ void RideWorldRenderer::SyncChunks(RideWorld::RideWorld& world)
 	{
 		m_propTypeCount = propTypes;
 	}
-	for (const RideWorld::ChunkMesh* mesh : streamer.TakeNewlyReady())
+	for (const World::ChunkMesh* mesh : streamer.TakeNewlyReady())
 	{
 		const auto existing = m_chunks.find(mesh->chunkIndex);
 		if (existing != m_chunks.end())
@@ -339,7 +339,7 @@ void RideWorldRenderer::SyncChunks(RideWorld::RideWorld& world)
 		if (!mesh->terrain.empty())
 		{
 			chunk.terrainVertices = bgfx::createVertexBuffer(
-			    bgfx::copy(mesh->terrain.data(), static_cast<uint32_t>(mesh->terrain.size() * sizeof(RideWorld::WorldVertex))),
+			    bgfx::copy(mesh->terrain.data(), static_cast<uint32_t>(mesh->terrain.size() * sizeof(World::WorldVertex))),
 			    m_worldLayout);
 			chunk.terrainIndices = bgfx::createIndexBuffer(
 			    bgfx::copy(mesh->terrainIndices.data(), static_cast<uint32_t>(mesh->terrainIndices.size() * sizeof(uint16_t))));
@@ -347,7 +347,7 @@ void RideWorldRenderer::SyncChunks(RideWorld::RideWorld& world)
 		if (!mesh->road.empty())
 		{
 			chunk.roadVertices = bgfx::createVertexBuffer(
-			    bgfx::copy(mesh->road.data(), static_cast<uint32_t>(mesh->road.size() * sizeof(RideWorld::WorldVertex))),
+			    bgfx::copy(mesh->road.data(), static_cast<uint32_t>(mesh->road.size() * sizeof(World::WorldVertex))),
 			    m_worldLayout);
 			chunk.roadIndices = bgfx::createIndexBuffer(
 			    bgfx::copy(mesh->roadIndices.data(), static_cast<uint32_t>(mesh->roadIndices.size() * sizeof(uint16_t))));
@@ -355,7 +355,7 @@ void RideWorldRenderer::SyncChunks(RideWorld::RideWorld& world)
 		if (!mesh->water.empty())
 		{
 			chunk.waterVertices = bgfx::createVertexBuffer(
-			    bgfx::copy(mesh->water.data(), static_cast<uint32_t>(mesh->water.size() * sizeof(RideWorld::WorldVertex))),
+			    bgfx::copy(mesh->water.data(), static_cast<uint32_t>(mesh->water.size() * sizeof(World::WorldVertex))),
 			    m_worldLayout);
 			chunk.waterIndices = bgfx::createIndexBuffer(
 			    bgfx::copy(mesh->waterIndices.data(), static_cast<uint32_t>(mesh->waterIndices.size() * sizeof(uint16_t))));
@@ -364,13 +364,13 @@ void RideWorldRenderer::SyncChunks(RideWorld::RideWorld& world)
 		chunk.propCounts.assign(mesh->props.size(), 0);
 		for (size_t type = 0; type < mesh->props.size(); ++type)
 		{
-			const std::vector<RideWorld::PropInstance>& instances = mesh->props[type];
+			const std::vector<World::PropInstance>& instances = mesh->props[type];
 			if (instances.empty())
 			{
 				continue;
 			}
 			chunk.props[type] = bgfx::createVertexBuffer(
-			    bgfx::copy(instances.data(), static_cast<uint32_t>(instances.size() * sizeof(RideWorld::PropInstance))),
+			    bgfx::copy(instances.data(), static_cast<uint32_t>(instances.size() * sizeof(World::PropInstance))),
 			    m_instanceLayout);
 			chunk.propCounts[type] = static_cast<uint32_t>(instances.size());
 		}
@@ -378,7 +378,7 @@ void RideWorldRenderer::SyncChunks(RideWorld::RideWorld& world)
 	}
 }
 
-void RideWorldRenderer::UpdateHeightTexture(const RideWorld::RideWorld& world)
+void RideWorldRenderer::UpdateHeightTexture(const World::World& world)
 {
 	const double spacing = world.GetProfile().GetLimits().spacingMeters;
 	m_heightBase         = std::floor((world.GetDistance() - HEIGHT_TEXTURE_BEHIND) / spacing) * spacing;
@@ -387,17 +387,17 @@ void RideWorldRenderer::UpdateHeightTexture(const RideWorld::RideWorld& world)
 	                      bgfx::copy(m_heightScratch.data(), HEIGHT_TEXTURE_WIDTH * sizeof(float)));
 }
 
-static void ColorUniformArgs(const RideWorld::Color& color, float out[3])
+static void ColorUniformArgs(const World::Color& color, float out[3])
 {
 	out[0] = color.red;
 	out[1] = color.green;
 	out[2] = color.blue;
 }
 
-void RideWorldRenderer::SetSharedUniforms(const RideWorld::RideWorld& world)
+void RideWorldRenderer::SetSharedUniforms(const World::World& world)
 {
-	const RideWorld::BiomeLook& look       = world.GetLook();
-	const RideWorld::WorldSettings& settings = world.GetSettings();
+	const World::BiomeLook& look       = world.GetLook();
+	const World::WorldSettings& settings = world.GetSettings();
 	const double spacing                   = world.GetProfile().GetLimits().spacingMeters;
 	SetVec4("u_heightParams", static_cast<float>(spacing), static_cast<float>(HEIGHT_TEXTURE_WIDTH),
 	        m_vertexTexturesSupported ? 1.0f : 0.0f, static_cast<float>(std::fmod(world.GetTimeSeconds(), 3600.0)));
@@ -410,16 +410,16 @@ void RideWorldRenderer::SetSharedUniforms(const RideWorld::RideWorld& world)
 	SetVec4("u_ambient", look.ambient.red, look.ambient.green, look.ambient.blue, 1.0f);
 	SetVec4("u_cameraRight", m_right[0], m_right[1], m_right[2], 0.0f);
 
-	const RideWorld::BiomeBlend blend               = world.GetBlend();
-	const std::vector<RideWorld::BiomeDefinition>& biomes = world.GetBiomes();
+	const World::BiomeBlend blend               = world.GetBlend();
+	const std::vector<World::BiomeDefinition>& biomes = world.GetBiomes();
 	float line[3]     = {0.9f, 0.9f, 0.9f};
 	float shoulder[3] = {0.4f, 0.4f, 0.4f};
 	if (!biomes.empty())
 	{
-		const RideWorld::BiomeDefinition& from = biomes[static_cast<size_t>(blend.from)];
-		const RideWorld::BiomeDefinition& to   = biomes[static_cast<size_t>(blend.to)];
-		ColorUniformArgs(RideWorld::Color::Lerp(from.roadLine, to.roadLine, blend.weight), line);
-		ColorUniformArgs(RideWorld::Color::Lerp(from.roadShoulder, to.roadShoulder, blend.weight), shoulder);
+		const World::BiomeDefinition& from = biomes[static_cast<size_t>(blend.from)];
+		const World::BiomeDefinition& to   = biomes[static_cast<size_t>(blend.to)];
+		ColorUniformArgs(World::Color::Lerp(from.roadLine, to.roadLine, blend.weight), line);
+		ColorUniformArgs(World::Color::Lerp(from.roadShoulder, to.roadShoulder, blend.weight), shoulder);
 	}
 	SetVec4("u_road", static_cast<float>(settings.roadHalfWidthMeters), static_cast<float>(settings.shoulderMeters), 0.15f, 0.45f);
 	SetVec4("u_roadLine", line[0], line[1], line[2], 1.0f);
@@ -508,10 +508,10 @@ static bool ProjectToScreen(const glm::mat4& rotationViewProjection, const glm::
 	return true;
 }
 
-void RideWorldRenderer::DrawSky(const RideWorld::RideWorld& world)
+void RideWorldRenderer::DrawSky(const World::World& world)
 {
 	const bgfx::ViewId view          = GraphicsDevice::RideSkyViewId;
-	const RideWorld::BiomeLook& look = world.GetLook();
+	const World::BiomeLook& look = world.GetLook();
 	const float width                = m_frameWidth;
 	const float height               = m_frameHeight;
 	const glm::mat4 ortho            = glm::ortho(0.0f, width, height, 0.0f, -1.0f, 1.0f);
@@ -540,8 +540,8 @@ void RideWorldRenderer::DrawSky(const RideWorld::RideWorld& world)
 	const double distance  = world.GetDistance();
 	SetVec4("u_skyParams", static_cast<float>(look.starIntensity), static_cast<float>(look.mountainHeight) * fovRadians,
 	        static_cast<float>(std::fmod(distance * 0.000012, 1.0)), static_cast<float>(std::fmod(distance * 0.00004, 1.0)));
-	const RideWorld::Color far  = RideWorld::Color::Lerp(look.mountainFar, look.fogColor, 0.35f);
-	const RideWorld::Color near = RideWorld::Color::Lerp(look.mountainNear, look.fogColor, 0.15f);
+	const World::Color far  = World::Color::Lerp(look.mountainFar, look.fogColor, 0.35f);
+	const World::Color near = World::Color::Lerp(look.mountainNear, look.fogColor, 0.15f);
 	SetVec4("u_skyMountainFar", far.red, far.green, far.blue, 1.0f);
 	SetVec4("u_skyMountainNear", near.red, near.green, near.blue, 1.0f);
 
@@ -581,18 +581,18 @@ void RideWorldRenderer::DrawSky(const RideWorld::RideWorld& world)
 	}
 	const int clouds = std::clamp(static_cast<int>(std::lround(look.cloudAmount * MAX_CLOUDS)), 0, MAX_CLOUDS);
 	const RoleTexture& cloud = Texture("sky_clouds");
-	const RideWorld::Color tint = RideWorld::Color::Lerp(look.skyHorizon, RideWorld::Color{1.0f, 1.0f, 1.0f},
+	const World::Color tint = World::Color::Lerp(look.skyHorizon, World::Color{1.0f, 1.0f, 1.0f},
 	                                                     day ? 0.7f : 0.25f);
 	const float time = static_cast<float>(world.GetTimeSeconds());
 	for (int index = 0; index < clouds; ++index)
 	{
-		const float azimuth   = static_cast<float>(RideWorld::HashUnit(7, index) * 360.0) + time * 0.15f;
-		const float elevation = 3.0f + static_cast<float>(RideWorld::HashUnit(8, index) * 14.0);
+		const float azimuth   = static_cast<float>(World::HashUnit(7, index) * 360.0) + time * 0.15f;
+		const float elevation = 3.0f + static_cast<float>(World::HashUnit(8, index) * 14.0);
 		if (!ProjectToScreen(rotationViewProjection, SkyDirection(elevation, azimuth), width, height, screen))
 		{
 			continue;
 		}
-		const float cloudWidth  = height * (0.22f + static_cast<float>(RideWorld::HashUnit(9, index)) * 0.25f);
+		const float cloudWidth  = height * (0.22f + static_cast<float>(World::HashUnit(9, index)) * 0.25f);
 		const float cloudHeight = cloudWidth * static_cast<float>(cloud.height) / static_cast<float>(cloud.width);
 		const float corners[8]  = {screen.x - cloudWidth * 0.5f, screen.y - cloudHeight * 0.5f,
 		                           screen.x + cloudWidth * 0.5f, screen.y - cloudHeight * 0.5f,
@@ -602,9 +602,9 @@ void RideWorldRenderer::DrawSky(const RideWorld::RideWorld& world)
 	}
 }
 
-void RideWorldRenderer::DrawProps(const RideWorld::RideWorld& world, const ChunkGpu& chunk)
+void RideWorldRenderer::DrawProps(const World::World& world, const ChunkGpu& chunk)
 {
-	const std::shared_ptr<const RideWorld::PropTypeTable> table = world.GetPropTypes();
+	const std::shared_ptr<const World::PropTypeTable> table = world.GetPropTypes();
 	if (!table)
 	{
 		return;
@@ -640,15 +640,15 @@ void RideWorldRenderer::DrawProps(const RideWorld::RideWorld& world, const Chunk
 	}
 }
 
-void RideWorldRenderer::SubmitBillboard(const RideWorld::RideWorld& world, const std::string& role, double distance,
+void RideWorldRenderer::SubmitBillboard(const World::World& world, const std::string& role, double distance,
                                         double lateral, double heightMeters, double angle, bool aligned, int column,
                                         int row, uint32_t tint, double towardsCamera, double baseHeight)
 {
-	if (bgfx::getAvailInstanceDataBuffer(1, sizeof(RideWorld::PropInstance)) < 1)
+	if (bgfx::getAvailInstanceDataBuffer(1, sizeof(World::PropInstance)) < 1)
 	{
 		return;
 	}
-	const RideWorld::RouteSample sample = world.GetRoute().SampleAt(distance);
+	const World::RouteSample sample = world.GetRoute().SampleAt(distance);
 	float x = static_cast<float>(sample.x + sample.LeftX() * lateral - m_cameraX);
 	float z = static_cast<float>(sample.z + sample.LeftZ() * lateral - m_cameraZ);
 	// Nudge layered sprites towards the camera so their layers don't z-fight.
@@ -659,8 +659,8 @@ void RideWorldRenderer::SubmitBillboard(const RideWorld::RideWorld& world, const
 	z += toEyeZ / length * static_cast<float>(towardsCamera);
 
 	bgfx::InstanceDataBuffer instances;
-	bgfx::allocInstanceDataBuffer(&instances, 1, sizeof(RideWorld::PropInstance));
-	RideWorld::PropInstance* instance = reinterpret_cast<RideWorld::PropInstance*>(instances.data);
+	bgfx::allocInstanceDataBuffer(&instances, 1, sizeof(World::PropInstance));
+	World::PropInstance* instance = reinterpret_cast<World::PropInstance*>(instances.data);
 	const RoleTexture& texture        = Texture(role);
 	instance->x            = x;
 	instance->y            = static_cast<float>(baseHeight);
@@ -689,31 +689,31 @@ void RideWorldRenderer::SubmitBillboard(const RideWorld::RideWorld& world, const
 }
 
 // Which frame (column, row) of a crank layer to show for a pose.
-static void CrankCell(const RideWorld::SpriteLayer& layer, const RideWorld::SpriteDescriptor& descriptor,
-                      RideWorld::RiderPose pose, double phase, int& column, int& row)
+static void CrankCell(const World::SpriteLayer& layer, const World::SpriteDescriptor& descriptor,
+                      World::RiderPose pose, double phase, int& column, int& row)
 {
 	row    = layer.pedalRow;
-	column = RideWorld::CrankFrame(phase, layer.framesPerRevolution > 0 ? layer.framesPerRevolution : descriptor.framesPerRevolution);
-	if (pose == RideWorld::RiderPose::OUT_OF_SADDLE && layer.outOfSaddleRow >= 0)
+	column = World::CrankFrame(phase, layer.framesPerRevolution > 0 ? layer.framesPerRevolution : descriptor.framesPerRevolution);
+	if (pose == World::RiderPose::OUT_OF_SADDLE && layer.outOfSaddleRow >= 0)
 	{
 		row = layer.outOfSaddleRow;
 	}
-	else if (pose == RideWorld::RiderPose::COASTING)
+	else if (pose == World::RiderPose::COASTING)
 	{
 		row    = layer.stillRow >= 0 ? layer.stillRow : layer.pedalRow;
 		column = layer.coastColumn;
 	}
-	else if (pose == RideWorld::RiderPose::IDLE)
+	else if (pose == World::RiderPose::IDLE)
 	{
 		row    = layer.stillRow >= 0 ? layer.stillRow : layer.pedalRow;
 		column = layer.stillRow >= 0 ? layer.idleColumn : layer.coastColumn;
 	}
 }
 
-void RideWorldRenderer::DrawActors(const RideWorld::RideWorld& world)
+void RideWorldRenderer::DrawActors(const World::World& world)
 {
 	const double height = m_descriptor.heightMeters;
-	for (const RideWorld::WorldActor& actor : world.GetActors())
+	for (const World::WorldActor& actor : world.GetActors())
 	{
 		if (actor.distance < world.GetDistance() - 2.0 ||
 		    actor.distance > world.GetDistance() + world.GetSettings().Resolved().drawDistanceMeters)
@@ -721,17 +721,17 @@ void RideWorldRenderer::DrawActors(const RideWorld::RideWorld& world)
 			continue;
 		}
 		double offset = 0.0;
-		for (const RideWorld::SpriteLayer& layer : m_descriptor.layers)
+		for (const World::SpriteLayer& layer : m_descriptor.layers)
 		{
-			if (layer.motion == RideWorld::SpriteLayerMotion::WHEEL_SCROLL)
+			if (layer.motion == World::SpriteLayerMotion::WHEEL_SCROLL)
 			{
 				continue;  // the tread strip only makes sense on the close-up player sprite
 			}
 			int column = 0;
 			int row    = 0;
-			if (layer.motion == RideWorld::SpriteLayerMotion::CRANK)
+			if (layer.motion == World::SpriteLayerMotion::CRANK)
 			{
-				CrankCell(layer, m_descriptor, RideWorld::RiderPose::PEDALLING, actor.crankPhase, column, row);
+				CrankCell(layer, m_descriptor, World::RiderPose::PEDALLING, actor.crankPhase, column, row);
 			}
 			// A layer with its own rect (e.g. the character over the bike) is scaled and lifted to match the frame.
 			double layerHeight = height;
@@ -749,20 +749,20 @@ void RideWorldRenderer::DrawActors(const RideWorld::RideWorld& world)
 	}
 }
 
-void RideWorldRenderer::DrawBanners(const RideWorld::RideWorld& world)
+void RideWorldRenderer::DrawBanners(const World::World& world)
 {
 	for (double distance : world.GetBanners())
 	{
-		const RideWorld::RouteSample sample = world.GetRoute().SampleAt(distance);
+		const World::RouteSample sample = world.GetRoute().SampleAt(distance);
 		// Aligned quad across the road: its "right" runs along the road's left vector.
 		const double angle = std::atan2(sample.LeftZ(), sample.LeftX());
 		SubmitBillboard(world, "finish_banner", distance, 0.0, 4.2, angle, true, 0, 0, 0xFFFFFFFFu, 0.0);
 	}
 }
 
-void RideWorldRenderer::DrawWeather(const RideWorld::RideWorld& world)
+void RideWorldRenderer::DrawWeather(const World::World& world)
 {
-	const RideWorld::BiomeLook& look = world.GetLook();
+	const World::BiomeLook& look = world.GetLook();
 	const bool snow                  = look.snow > look.rain;
 	const double intensity           = snow ? look.snow : look.rain;
 	if (intensity < 0.02)
@@ -771,14 +771,14 @@ void RideWorldRenderer::DrawWeather(const RideWorld::RideWorld& world)
 	}
 	const int wanted = std::min(MAX_WEATHER_PARTICLES,
 	                            static_cast<int>(world.GetSettings().Resolved().weatherParticles * intensity));
-	const uint32_t count = bgfx::getAvailInstanceDataBuffer(static_cast<uint32_t>(wanted), sizeof(RideWorld::PropInstance));
+	const uint32_t count = bgfx::getAvailInstanceDataBuffer(static_cast<uint32_t>(wanted), sizeof(World::PropInstance));
 	if (count == 0)
 	{
 		return;
 	}
 	bgfx::InstanceDataBuffer instances;
-	bgfx::allocInstanceDataBuffer(&instances, count, sizeof(RideWorld::PropInstance));
-	RideWorld::PropInstance* particle = reinterpret_cast<RideWorld::PropInstance*>(instances.data);
+	bgfx::allocInstanceDataBuffer(&instances, count, sizeof(World::PropInstance));
+	World::PropInstance* particle = reinterpret_cast<World::PropInstance*>(instances.data);
 	const double time   = world.GetTimeSeconds();
 	const double fall   = snow ? 1.3 : 11.0;
 	const double drift  = snow ? 0.8 : 0.0;
@@ -786,9 +786,9 @@ void RideWorldRenderer::DrawWeather(const RideWorld::RideWorld& world)
 	for (uint32_t index = 0; index < count; ++index)
 	{
 		// Each particle lives at a hashed spot in a box that wraps around the camera as it moves and as time passes.
-		const double baseX = RideWorld::HashUnit(31, index) * WEATHER_BOX;
-		const double baseZ = RideWorld::HashUnit(32, index) * WEATHER_BOX;
-		const double baseY = RideWorld::HashUnit(33, index) * WEATHER_HEIGHT;
+		const double baseX = World::HashUnit(31, index) * WEATHER_BOX;
+		const double baseZ = World::HashUnit(32, index) * WEATHER_BOX;
+		const double baseY = World::HashUnit(33, index) * WEATHER_HEIGHT;
 		const double worldX = baseX + std::sin(time * 0.7 + index) * drift;
 		const double worldZ = baseZ + std::cos(time * 0.6 + index * 1.3) * drift;
 		const double wrappedX = std::fmod(std::fmod(worldX - m_cameraX, WEATHER_BOX) + WEATHER_BOX, WEATHER_BOX) - WEATHER_BOX * 0.5;
@@ -805,7 +805,7 @@ void RideWorldRenderer::DrawWeather(const RideWorld::RideWorld& world)
 		particle[index].distance     = 0.0f;
 		particle[index].heightMeters = tooClose ? 0.0f : (snow ? 0.07f : 0.45f);
 		particle[index].angle        = 0.0f;
-		particle[index].variant      = static_cast<float>(RideWorld::HashUnit(34, index));
+		particle[index].variant      = static_cast<float>(World::HashUnit(34, index));
 		particle[index].tint         = 0.5f;
 	}
 	const RoleTexture& texture = Texture(snow ? "particle_snow" : "particle_rain");
@@ -829,7 +829,7 @@ void RideWorldRenderer::DrawWeather(const RideWorld::RideWorld& world)
 	bgfx::submit(GraphicsDevice::RideSceneViewId, GetEmbeddedProgram("rideProp"));
 }
 
-void RideWorldRenderer::DrawScene(RideWorld::RideWorld& world)
+void RideWorldRenderer::DrawScene(World::World& world)
 {
 	const bgfx::ViewId view = GraphicsDevice::RideSceneViewId;
 	bgfx::setViewName(view, "Ride scene");
@@ -892,7 +892,7 @@ void RideWorldRenderer::DrawScene(RideWorld::RideWorld& world)
 	DrawWeather(world);
 }
 
-void RideWorldRenderer::DrawRider(const RideWorld::RideWorld& world)
+void RideWorldRenderer::DrawRider(const World::World& world)
 {
 	const bgfx::ViewId view = GraphicsDevice::RideOverlayViewId;
 	const float width       = m_frameWidth;
@@ -906,8 +906,8 @@ void RideWorldRenderer::DrawRider(const RideWorld::RideWorld& world)
 	bgfx::setViewMode(view, bgfx::ViewMode::Sequential);
 	bgfx::setViewTransform(view, glm::value_ptr(identity), glm::value_ptr(ortho));
 
-	const RideWorld::RiderAnimation& animation = world.GetRiderAnimation();
-	const RideWorld::SpriteDescriptor& sprite  = m_descriptor;
+	const World::RiderAnimation& animation = world.GetRiderAnimation();
+	const World::SpriteDescriptor& sprite  = m_descriptor;
 	// Projected from the rider's place on the road; if that failed, the descriptor's fixed size at the bottom centre.
 	float scale   = static_cast<float>(sprite.screenHeight) * height / static_cast<float>(sprite.frameHeight);
 	float anchorX = width * 0.5f;
@@ -946,8 +946,8 @@ void RideWorldRenderer::DrawRider(const RideWorld::RideWorld& world)
 		SubmitSprite(view, Texture("rider_shadow"), corners, 0.0f, 0.0f, 1.0f, 1.0f, 0xB0FFFFFFu, 0, BGFX_SAMPLER_UVW_CLAMP);
 	}
 
-	const RideWorld::RiderPose pose = animation.GetPose();
-	for (const RideWorld::SpriteLayer& layer : sprite.layers)
+	const World::RiderPose pose = animation.GetPose();
+	for (const World::SpriteLayer& layer : sprite.layers)
 	{
 		const RoleTexture& texture = Texture(layer.role);
 		// Layer rectangle in frame pixels.
@@ -955,7 +955,7 @@ void RideWorldRenderer::DrawRider(const RideWorld::RideWorld& world)
 		float top    = static_cast<float>(layer.rectY);
 		float right  = layer.rectWidth > 0 ? left + layer.rectWidth : static_cast<float>(sprite.frameWidth);
 		float bottom = layer.rectHeight > 0 ? top + layer.rectHeight : static_cast<float>(sprite.frameHeight);
-		if (pose == RideWorld::RiderPose::OUT_OF_SADDLE && layer.motion == RideWorld::SpriteLayerMotion::STATIC)
+		if (pose == World::RiderPose::OUT_OF_SADDLE && layer.motion == World::SpriteLayerMotion::STATIC)
 		{
 			top += layer.outOfSaddleOffsetY;
 			bottom += layer.outOfSaddleOffsetY;
@@ -967,15 +967,15 @@ void RideWorldRenderer::DrawRider(const RideWorld::RideWorld& world)
 		uint32_t sampler = BGFX_SAMPLER_POINT | BGFX_SAMPLER_UVW_CLAMP;
 		float spin       = 0.0f;
 		uint32_t color   = 0xFFFFFFFFu;
-		if (layer.motion == RideWorld::SpriteLayerMotion::CRANK || layer.motion == RideWorld::SpriteLayerMotion::STATIC)
+		if (layer.motion == World::SpriteLayerMotion::CRANK || layer.motion == World::SpriteLayerMotion::STATIC)
 		{
 			int column = 0;
 			int row    = 0;
-			if (layer.motion == RideWorld::SpriteLayerMotion::CRANK)
+			if (layer.motion == World::SpriteLayerMotion::CRANK)
 			{
 				CrankCell(layer, sprite, pose, animation.GetCrankPhase(), column, row);
 			}
-			if (leanRow >= 0 && layer.motion == RideWorld::SpriteLayerMotion::CRANK)
+			if (leanRow >= 0 && layer.motion == World::SpriteLayerMotion::CRANK)
 			{
 				row = leanRow;
 			}
@@ -986,7 +986,7 @@ void RideWorldRenderer::DrawRider(const RideWorld::RideWorld& world)
 			v0     = static_cast<float>(row) / texture.rows;
 			v1     = static_cast<float>(row + 1) / texture.rows;
 		}
-		else if (layer.motion == RideWorld::SpriteLayerMotion::WHEEL_SCROLL)
+		else if (layer.motion == World::SpriteLayerMotion::WHEEL_SCROLL)
 		{
 			// Tread strip scrolls down as the wheel turns (rear view): 4 texture repeats per revolution.
 			const float scroll = static_cast<float>(animation.GetWheelAngle() / (2.0 * PI) * 4.0);
@@ -997,7 +997,7 @@ void RideWorldRenderer::DrawRider(const RideWorld::RideWorld& world)
 		else
 		{
 			spin = static_cast<float>(animation.GetWheelAngle());
-			if (RideWorld::WheelAliases(animation.GetWheelRevolutionsPerSecond(), layer.spokes, 60.0))
+			if (World::WheelAliases(animation.GetWheelRevolutionsPerSecond(), layer.spokes, 60.0))
 			{
 				color = 0x80FFFFFFu;  // spokes would strobe: fade towards a blurred wheel
 			}
@@ -1028,7 +1028,7 @@ void RideWorldRenderer::DrawRider(const RideWorld::RideWorld& world)
 	}
 }
 
-void RideWorldRenderer::DrawPost(const RideWorld::RideWorld& world, bgfx::FrameBufferHandle target, uint16_t width,
+void RideWorldRenderer::DrawPost(const World::World& world, bgfx::FrameBufferHandle target, uint16_t width,
                                  uint16_t height)
 {
 	const bgfx::ViewId view = GraphicsDevice::RidePostViewId;
@@ -1040,7 +1040,7 @@ void RideWorldRenderer::DrawPost(const RideWorld::RideWorld& world, bgfx::FrameB
 	bgfx::setViewClear(view, BGFX_CLEAR_NONE);
 	bgfx::setViewTransform(view, glm::value_ptr(identity), glm::value_ptr(ortho));
 
-	const RideWorld::WorldSettings& settings = world.GetSettings();
+	const World::WorldSettings& settings = world.GetSettings();
 	SetVec4("u_post", static_cast<float>(m_frameWidth), static_cast<float>(m_frameHeight), static_cast<float>(settings.paletteLevels),
 	        settings.dither ? 1.0f : 0.0f);
 	SetVec4("u_post2", settings.scanlines ? 1.0f : 0.0f, 0.35f, 0.0f, 0.0f);
@@ -1056,7 +1056,7 @@ void RideWorldRenderer::DrawPost(const RideWorld::RideWorld& world, bgfx::FrameB
 	}
 }
 
-void RideWorldRenderer::DrawDebugOverlay(RideWorld::RideWorld& world, float frameSeconds)
+void RideWorldRenderer::DrawDebugOverlay(World::World& world, float frameSeconds)
 {
 	if (!world.GetSettings().debugOverlay)
 	{
@@ -1073,9 +1073,9 @@ void RideWorldRenderer::DrawDebugOverlay(RideWorld::RideWorld& world, float fram
 		m_debugTextEnabled = true;
 	}
 	const bgfx::Stats* stats                = bgfx::getStats();
-	const RideWorld::StreamerStats streamer = world.GetStreamer().GetStats();
-	const RideWorld::BiomeBlend blend       = world.GetBlend();
-	const std::vector<RideWorld::BiomeDefinition>& biomes = world.GetBiomeSequence().GetBiomes();
+	const World::StreamerStats streamer = world.GetStreamer().GetStats();
+	const World::BiomeBlend blend       = world.GetBlend();
+	const std::vector<World::BiomeDefinition>& biomes = world.GetBiomeSequence().GetBiomes();
 	const char* from = biomes.empty() ? "-" : biomes[static_cast<size_t>(blend.from)].id.c_str();
 	const char* to   = biomes.empty() ? "-" : biomes[static_cast<size_t>(blend.to)].id.c_str();
 	bgfx::dbgTextClear();
@@ -1089,10 +1089,10 @@ void RideWorldRenderer::DrawDebugOverlay(RideWorld::RideWorld& world, float fram
 	                    static_cast<int>(m_chunks.size()));
 	bgfx::dbgTextPrintf(1, 3, 0x0f, "biome %s -> %s (%.2f)  s %.0f m  grade %.1f%%  scene %ux%u  quality %s", from, to,
 	                    blend.weight, world.GetDistance(), world.GetRoadGradePercent(), m_frameWidth, m_frameHeight,
-	                    RideWorld::ToString(world.GetSettings().quality));
+	                    World::ToString(world.GetSettings().quality));
 }
 
-void RideWorldRenderer::Render(GameContext& context, RideWorld::RideWorld& world, float frameSeconds)
+void RideWorldRenderer::Render(GameContext& context, World::World& world, float frameSeconds)
 {
 	if (!m_initialised)
 	{
@@ -1105,7 +1105,7 @@ void RideWorldRenderer::Render(GameContext& context, RideWorld::RideWorld& world
 	{
 		return;
 	}
-	const RideWorld::QualityParameters quality = world.GetSettings().Resolved();
+	const World::QualityParameters quality = world.GetSettings().Resolved();
 	const uint16_t lowHeight = static_cast<uint16_t>(std::clamp<int>(quality.lowResHeight, 90, targetHeight));
 	const uint16_t lowWidth  = static_cast<uint16_t>(std::clamp<long>(
         std::lround(static_cast<double>(lowHeight) * targetWidth / targetHeight), 16, 2048));
@@ -1114,7 +1114,7 @@ void RideWorldRenderer::Render(GameContext& context, RideWorld::RideWorld& world
 	UpdateHeightTexture(world);
 
 	// Camera in the render frame: x/z relative to the camera (precision over endless distances), y relative to h(rider).
-	const RideWorld::WorldCamera& camera = world.GetCamera();
+	const World::WorldCamera& camera = world.GetCamera();
 	m_cameraX = camera.x;
 	m_cameraZ = camera.z;
 	const glm::vec3 eye(0.0f, static_cast<float>(camera.y), 0.0f);
@@ -1143,7 +1143,7 @@ void RideWorldRenderer::Render(GameContext& context, RideWorld::RideWorld& world
 	m_right[2] = right.z;
 
 	// Sun (or moon) for lighting: height from the time of day.
-	const RideWorld::BiomeLook& look = world.GetLook();
+	const World::BiomeLook& look = world.GetLook();
 	const float hours                = static_cast<float>(look.timeOfDay);
 	const float sunElevation         = std::sin((hours - 6.0f) / 12.0f * PI) * 62.0f;
 	glm::vec3 light;
@@ -1163,7 +1163,7 @@ void RideWorldRenderer::Render(GameContext& context, RideWorld::RideWorld& world
 
 	// Rider anchor: the road point under the rider (height 0 = h(rider)) and the top of a heightMeters-tall sprite.
 	{
-		const RideWorld::RouteSample rider = world.GetRoute().SampleAt(world.GetDistance());
+		const World::RouteSample rider = world.GetRoute().SampleAt(world.GetDistance());
 		const glm::mat4 viewProjection     = projection * view;
 		const glm::vec3 foot(static_cast<float>(rider.x - m_cameraX), 0.0f, static_cast<float>(rider.z - m_cameraZ));
 		const glm::vec4 footClip = viewProjection * glm::vec4(foot, 1.0f);

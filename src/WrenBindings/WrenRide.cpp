@@ -6,6 +6,8 @@
 #include <optional>
 #include <string>
 
+#include <nlohmann/json.hpp>
+
 #include "Debug/Assertions.h"
 #include "Engine/Callback/CallbackHelperFunctions.h"
 #include "Engine/Callback/Variant.h"
@@ -26,7 +28,7 @@ using Struktur::Callback::Variant;
 using Struktur::Callback::VariantList;
 using Struktur::Callback::VariantMap;
 namespace Ride = Struktur::Ride;
-namespace RideWorld = Struktur::RideWorld;
+namespace World = Struktur::World;
 
 static Struktur::GameContext& GetContext(WrenVM* vm)
 {
@@ -132,11 +134,11 @@ static void wren_RideSettings(WrenVM* vm)
 	map.items["targetBandPercent"] = settings.targetBandPercent;
 	map.items["hudLayout"]         = settings.hudLayout;
 	// Procedural world ("world" section of ride_settings.json).
-	const RideWorld::WorldSettings& world = settings.world;
+	const World::WorldSettings& world = settings.world;
 	map.items["worldEnabled"]        = world.enabled;
 	map.items["worldSeed"]           = (double)world.seed;
-	map.items["worldQuality"]        = std::string(RideWorld::ToString(world.quality));
-	map.items["worldGradeSource"]    = std::string(RideWorld::ToString(world.gradeSource));
+	map.items["worldQuality"]        = std::string(World::ToString(world.quality));
+	map.items["worldGradeSource"]    = std::string(World::ToString(world.gradeSource));
 	map.items["worldBiome"]          = world.biome;
 	map.items["worldComfortMode"]    = world.comfortMode;
 	map.items["worldCadenceBob"]     = world.cadenceBob;
@@ -154,19 +156,19 @@ static void wren_RideSettings(WrenVM* vm)
 }
 
 // world* keys of Ride.setSetting. Returns false for an unknown key / wrong type.
-static bool SetWorldSetting(RideWorld::WorldSettings& world, const std::string& key, WrenVM* vm, WrenType type)
+static bool SetWorldSetting(World::WorldSettings& world, const std::string& key, WrenVM* vm, WrenType type)
 {
 	if (type == WREN_TYPE_STRING)
 	{
 		const std::string value = wrenGetSlotString(vm, 2);
 		if (key == "worldQuality")
 		{
-			world.quality = RideWorld::QualityFromString(value, world.quality);
+			world.quality = World::QualityFromString(value, world.quality);
 			return true;
 		}
 		if (key == "worldGradeSource")
 		{
-			world.gradeSource = RideWorld::GradeSourceFromString(value, world.gradeSource);
+			world.gradeSource = World::GradeSourceFromString(value, world.gradeSource);
 			return true;
 		}
 		if (key == "worldBiome")
@@ -233,11 +235,7 @@ static void wren_RideSetSetting(WrenVM* vm)
 	{
 		ok = SetWorldSetting(settings.world, key, vm, type);
 		settings.Validate();
-		if (ok)
-		{
-			GetService(vm).ApplyWorldSettings();
-		}
-		else
+		if (!ok)
 		{
 			DEBUG_WARNING("Ride.setSetting: unknown setting or wrong value type for '%s'", key.c_str());
 		}
@@ -331,6 +329,12 @@ static void wren_RideSetSetting(WrenVM* vm)
 	wrenSetSlotBool(vm, 0, ok);
 }
 
+// Ride.worldSettings() -> String: the "world" section of the settings, for the world module
+static void wren_RideWorldSettings(WrenVM* vm)
+{
+	wrenSetSlotString(vm, 0, GetService(vm).GetSettings().world.ToJson().dump().c_str());
+}
+
 // Ride.saveSettings() -> bool
 static void wren_RideSaveSettings(WrenVM* vm)
 {
@@ -391,51 +395,6 @@ static void wren_RideCommandLineWorkout(WrenVM* vm)
 static void wren_RideIsDemo(WrenVM* vm)
 {
 	wrenSetSlotBool(vm, 0, GetService(vm).IsDemo());
-}
-
-// Ride.worldActive() -> bool: a procedural world is drawn behind the ride HUD.
-static void wren_RideWorldActive(WrenVM* vm)
-{
-	wrenSetSlotBool(vm, 0, GetService(vm).GetWorld() != nullptr);
-}
-
-// Ride.biomes() -> list of biome ids (assets/World/Biomes).
-static void wren_RideBiomes(WrenVM* vm)
-{
-	VariantList list;
-	for (const std::string& id : GetService(vm).GetBiomeIds())
-	{
-		list.items.push_back(id);
-	}
-	ReturnVariant(vm, list);
-}
-
-// Ride.worldJumpTo(distance) - development helper: moves the rider along the same seeded road.
-static void wren_RideWorldJumpTo(WrenVM* vm)
-{
-	RideWorld::RideWorld* world = GetService(vm).GetWorld();
-	if (world != nullptr && wrenGetSlotType(vm, 1) == WREN_TYPE_NUM)
-	{
-		world->JumpTo(std::clamp(wrenGetSlotDouble(vm, 1), 0.0, 1.0e7));
-	}
-}
-
-// Ride.worldInfo() -> map (biome, distance, grade) or null when there is no world.
-static void wren_RideWorldInfo(WrenVM* vm)
-{
-	RideWorld::RideWorld* world = GetService(vm).GetWorld();
-	if (world == nullptr)
-	{
-		wrenSetSlotNull(vm, 0);
-		return;
-	}
-	const RideWorld::BiomeBlend blend               = world->GetBlend();
-	const std::vector<RideWorld::BiomeDefinition>& biomes = world->GetBiomes();
-	VariantMap map;
-	map.items["biome"]    = biomes.empty() ? std::string() : biomes[(size_t)blend.from].name;
-	map.items["distance"] = world->GetDistance();
-	map.items["grade"]    = world->GetRoadGradePercent();
-	ReturnVariant(vm, map);
 }
 
 // ============================================================================
@@ -921,13 +880,8 @@ WREN_BINDING_MODULE(Ride)
 	WREN_CLASS_STATIC(registry, "ride", "Ride", "commandLineWorkout()", wren_RideCommandLineWorkout,
 	                  "A workout path from the command line, returned once (else null).");
 	WREN_CLASS_STATIC(registry, "ride", "Ride", "isDemo()", wren_RideIsDemo, "True when started with --demo.");
-	WREN_CLASS_STATIC(registry, "ride", "Ride", "worldActive()", wren_RideWorldActive,
-	                  "True while a procedural world is drawn behind the ride HUD.");
-	WREN_CLASS_STATIC(registry, "ride", "Ride", "biomes()", wren_RideBiomes, "Biome ids from assets/World/Biomes.");
-	WREN_CLASS_STATIC(registry, "ride", "Ride", "worldJumpTo(_)", wren_RideWorldJumpTo,
-	                  "Development: moves the rider to a distance (m) along the same seeded road.");
-	WREN_CLASS_STATIC(registry, "ride", "Ride", "worldInfo()", wren_RideWorldInfo,
-	                  "The world's current biome name, distance and road grade, or null.");
+	WREN_CLASS_STATIC(registry, "ride", "Ride", "worldSettings()", wren_RideWorldSettings,
+	                  "The saved world settings as a string for World.load / World.applySettings.");
 	WREN_CLASS_STATIC(registry, "ride", "Ride", "startFreeRide(_,_,_,_,_)", wren_RideStartFreeRide,
 	                  "Starts a Free Ride (name, ftpWatts, maxHeartRateBpm, thresholdHeartRateBpm, weightKg).");
 	WREN_CLASS_STATIC(

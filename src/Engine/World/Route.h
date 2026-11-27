@@ -4,7 +4,7 @@
 #include <deque>
 #include <vector>
 
-namespace Struktur::RideWorld
+namespace Struktur::World
 {
 // One arc-length sample of the road's centre line, in the horizontal (x, z) plane. y is up; positive t (lateral) is
 // to the rider's left: left = (tangentZ, -tangentX).
@@ -97,4 +97,4 @@ private:
 	Point m_lastDense;
 	bool m_hasDense;
 };
-}  // namespace Struktur::RideWorld
+}  // namespace Struktur::World

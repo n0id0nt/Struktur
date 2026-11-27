@@ -3,7 +3,7 @@
 #include <algorithm>
 #include <cmath>
 
-namespace Struktur::RideWorld
+namespace Struktur::World
 {
 static constexpr double PI                   = 3.14159265358979323846;
 static constexpr double GRAVITY              = 9.81;
@@ -155,4 +155,4 @@ int RiderAnimation::GetFrame(int framesPerRevolution, int coastFrame) const
 	}
 	return CrankFrame(m_phase, framesPerRevolution);
 }
-}  // namespace Struktur::RideWorld
+}  // namespace Struktur::World

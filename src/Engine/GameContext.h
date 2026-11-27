@@ -15,6 +15,7 @@
 #include "Engine/ECS/SystemManager.h"
 #include "Engine/Event/EventManager.h"
 #include "Engine/Fitness/FitnessManager.h"
+#include "Engine/Renderer/RideWorldRenderer.h"
 #include "Engine/RideIntegration/RideService.h"
 #include "Engine/Flag/FlagManager.h"
 #include "Engine/Input/Input.h"
@@ -29,6 +30,7 @@
 #include "Engine/Renderer/WorldRenderer.h"
 #include "Engine/Resource/ResourceManager.h"
 #include "Engine/World/Camera.h"
+#include "Engine/World/World.h"
 #if defined(EDITOR)
 	#include "Engine/Renderer/ImGuiRenderer.h"
 #endif
@@ -64,6 +66,8 @@ public:
 	Event::EventManager& GetEventManager() const;
 	Fitness::FitnessManager& GetFitnessManager() const;
 	RideIntegration::RideService& GetRideService() const;
+	World::World& GetWorld() const;
+	Renderer::RideWorldRenderer& GetRideWorldRenderer() const;
 	Flag::FlagManager& GetFlagManager() const;
 	Core::GameData& GetGameData() const;
 	System::GameObjectManager& GetGameObjectManager() const;
@@ -105,6 +109,8 @@ private:
 	std::unique_ptr<Event::EventManager> m_eventManager;
 	std::unique_ptr<Fitness::FitnessManager> m_fitnessManager;
 	std::unique_ptr<RideIntegration::RideService> m_rideService;
+	std::unique_ptr<World::World> m_world;
+	std::unique_ptr<Renderer::RideWorldRenderer> m_rideWorldRenderer;
 	std::unique_ptr<Flag::FlagManager> m_flagManager;
 	std::unique_ptr<Core::GameData> m_gameData;
 	std::unique_ptr<System::GameObjectManager> m_gameObjectManager;

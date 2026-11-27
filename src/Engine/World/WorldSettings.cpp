@@ -4,7 +4,7 @@
 
 #include "nlohmann/json.hpp"
 
-namespace Struktur::RideWorld
+namespace Struktur::World
 {
 const char* ToString(Quality quality)
 {
@@ -242,4 +242,4 @@ QualityParameters WorldSettings::Resolved() const
 	}
 	return parameters;
 }
-}  // namespace Struktur::RideWorld
+}  // namespace Struktur::World

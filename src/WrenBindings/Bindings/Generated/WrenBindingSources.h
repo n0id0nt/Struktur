@@ -1881,14 +1881,8 @@ inline const char* wrenrideSource()
     "    foreign static commandLineWorkout()\n"
     "    // True when started with --demo.\n"
     "    foreign static isDemo()\n"
-    "    // True while a procedural world is drawn behind the ride HUD.\n"
-    "    foreign static worldActive()\n"
-    "    // Biome ids from assets/World/Biomes.\n"
-    "    foreign static biomes()\n"
-    "    // Development: moves the rider to a distance (m) along the same seeded road.\n"
-    "    foreign static worldJumpTo(arg0)\n"
-    "    // The world's current biome name, distance and road grade, or null.\n"
-    "    foreign static worldInfo()\n"
+    "    // The saved world settings as a string for World.load / World.applySettings.\n"
+    "    foreign static worldSettings()\n"
     "    // Starts a Free Ride (name, ftpWatts, maxHeartRateBpm, thresholdHeartRateBpm, weightKg).\n"
     "    foreign static startFreeRide(arg0,arg1,arg2,arg3,arg4)\n"
     "    // Starts a workout (id, name, ftpWatts, maxHeartRateBpm, thresholdHeartRateBpm, weightKg) -> map.\n"
@@ -3029,6 +3023,33 @@ inline const char* wrenuiSource()
     "";
 }
 
+// Module: world
+inline const char* wrenworldSource()
+{
+    return "// AUTO-GENERATED FILE - DO NOT EDIT\n"
+    "// Generated from C++ bindings\n"
+    "// Module: world\n"
+    "\n"
+    "class World {\n"
+    "    // Loads the world (and its GPU resources) from a settings string - see Ride.worldSettings().\n"
+    "    foreign static load(arg0)\n"
+    "    // Releases the loaded world and its GPU resources.\n"
+    "    foreign static unload()\n"
+    "    // True while a world is loaded.\n"
+    "    foreign static isLoaded\n"
+    "    // Applies a changed settings string to the loaded world.\n"
+    "    foreign static applySettings(arg0)\n"
+    "    // Biome ids from assets/World/Biomes.\n"
+    "    foreign static biomes\n"
+    "    // The loaded world's biome name, distance and road grade, or null.\n"
+    "    foreign static info\n"
+    "    // Development: moves the rider to a distance (m) along the same seeded road.\n"
+    "    foreign static jumpTo(arg0)\n"
+    "}\n"
+    "\n"
+    "";
+}
+
 inline const std::unordered_map<std::string, const char*(*)()>& GetWrenBindingSources()
 {
     static const std::unordered_map<std::string, const char*(*)()> k_sources = {
@@ -3054,6 +3075,7 @@ inline const std::unordered_map<std::string, const char*(*)()>& GetWrenBindingSo
         { "ride", wrenrideSource },
         { "serialisation", wrenserialisationSource },
         { "ui", wrenuiSource },
+        { "world", wrenworldSource },
     };
     return k_sources;
 }

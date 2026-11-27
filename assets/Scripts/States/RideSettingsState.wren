@@ -11,6 +11,7 @@ import "math" for Vec2, Vec4
 import "ui" for UIManager, UIPanel, NavigationDirection
 import "localization" for Localization
 import "ride" for Ride
+import "world" for World
 import "States/BaseState" for BaseState
 import "UI/Ride/RideTheme" for RideTheme, RideFonts, TextField, RideListRow
 import "UI/Ride/RideFormat" for RideFormat
@@ -196,7 +197,7 @@ class RideSettingsState is BaseState {
         } else if (id == "worldGradeSource") {
             Ride.setSetting("worldGradeSource", cycle_(GRADE_SOURCES, settings["worldGradeSource"], direction))
         } else if (id == "worldBiome") {
-            Ride.setSetting("worldBiome", cycle_(["auto"] + Ride.biomes(), settings["worldBiome"], direction))
+            Ride.setSetting("worldBiome", cycle_(["auto"] + World.biomes, settings["worldBiome"], direction))
         } else if (id == "worldSeed") {
             var seed = settings["worldSeed"] + direction
             Ride.setSetting("worldSeed", seed < 0 ? 0 : seed)

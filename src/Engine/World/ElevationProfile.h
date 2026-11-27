@@ -4,7 +4,7 @@
 #include <deque>
 #include <vector>
 
-namespace Struktur::RideWorld
+namespace Struktur::World
 {
 struct ElevationLimits
 {
@@ -46,4 +46,4 @@ private:
 	std::deque<double> m_heights;
 	std::deque<double> m_grades;
 };
-}  // namespace Struktur::RideWorld
+}  // namespace Struktur::World

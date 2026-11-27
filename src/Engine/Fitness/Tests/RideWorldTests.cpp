@@ -12,21 +12,21 @@
 
 #include "Engine/Ride/RideSettings.h"
 #include "Engine/Ride/TrainerController.h"
-#include "Engine/RideWorld/AssetManifest.h"
-#include "Engine/RideWorld/Biome.h"
-#include "Engine/RideWorld/ChunkBuilder.h"
+#include "Engine/World/AssetManifest.h"
+#include "Engine/World/Biome.h"
+#include "Engine/World/ChunkBuilder.h"
 #include "Engine/Jobs/JobSystem.h"
-#include "Engine/RideWorld/ChunkStreamer.h"
-#include "Engine/RideWorld/ElevationProfile.h"
-#include "Engine/RideWorld/Noise.h"
-#include "Engine/RideWorld/Placeholder.h"
-#include "Engine/RideWorld/RideWorld.h"
-#include "Engine/RideWorld/RiderAnimation.h"
-#include "Engine/RideWorld/Route.h"
-#include "Engine/RideWorld/SpriteDescriptor.h"
-#include "Engine/RideWorld/WorldSettings.h"
+#include "Engine/World/ChunkStreamer.h"
+#include "Engine/World/ElevationProfile.h"
+#include "Engine/World/Noise.h"
+#include "Engine/World/Placeholder.h"
+#include "Engine/World/World.h"
+#include "Engine/World/RiderAnimation.h"
+#include "Engine/World/Route.h"
+#include "Engine/World/SpriteDescriptor.h"
+#include "Engine/World/WorldSettings.h"
 
-using namespace Struktur::RideWorld;
+using namespace Struktur::World;
 
 static std::string ReadTextFile(const std::filesystem::path& path)
 {
@@ -69,6 +69,15 @@ static bool ExistsInAssets(const std::string& path)
 }
 
 // --- noise --------------------------------------------------------------------------------------------------------
+
+static void LoadWorld(World& world, const WorldSettings& settings, const BiomeList& biomes,
+                      Struktur::Jobs::JobSystem* jobs)
+{
+	WorldAssets assets;
+	assets.biomes = biomes;
+	world.SetAssets(std::move(assets));
+	world.Load(settings, jobs);
+}
 
 TEST_CASE("world noise is deterministic and bounded")
 {
@@ -281,7 +290,8 @@ TEST_CASE("terrain never folds over itself on the inside of bends over 100 km")
 	settings.seed        = 3;
 	settings.flatShading = false;
 	settings.quality     = Quality::MEDIUM;
-	RideWorld world(settings, biomes, nullptr);
+	World world;
+	LoadWorld(world, settings, biomes, nullptr);
 	Struktur::Input::TrainerInput inputs;
 	const double deltaSeconds   = 0.25;
 	inputs.speedMetersPerSecond = 64.0 / 0.25 / 4.0;  // one chunk every 4 updates
@@ -332,7 +342,8 @@ TEST_CASE("chunk recycling keeps the pool and buffers flat")
 	const BiomeList biomes = LoadShippedBiomes();
 	WorldSettings settings;
 	settings.seed = 8;
-	RideWorld world(settings, biomes, nullptr);
+	World world;
+	LoadWorld(world, settings, biomes, nullptr);
 	Struktur::Input::TrainerInput inputs;
 	const double deltaSeconds   = 0.1;
 	inputs.speedMetersPerSecond = 40.0;
@@ -375,8 +386,10 @@ TEST_CASE("job-system and inline chunk builds produce the same meshes")
 	{
 	CAPTURE(workers);
 	Struktur::Jobs::JobSystem jobs(Struktur::Jobs::JobSystemConfig{workers});
-	RideWorld inlineWorld(settings, biomes, nullptr);
-	RideWorld threadedWorld(settings, biomes, &jobs);
+	World inlineWorld;
+	LoadWorld(inlineWorld, settings, biomes, nullptr);
+	World threadedWorld;
+	LoadWorld(threadedWorld, settings, biomes, &jobs);
 	Struktur::Input::TrainerInput inputs;
 	const double deltaSeconds   = 0.1;
 	inputs.speedMetersPerSecond = 10.0;
@@ -432,7 +445,8 @@ TEST_CASE("changing chunk settings while builds are in flight recycles them safe
 	Struktur::Jobs::JobSystem jobs(Struktur::Jobs::JobSystemConfig{4});
 	WorldSettings settings;
 	settings.seed = 5;
-	RideWorld world(settings, biomes, &jobs);
+	World world;
+	LoadWorld(world, settings, biomes, &jobs);
 	Struktur::Input::TrainerInput inputs;
 	const double deltaSeconds   = 0.1;
 	inputs.speedMetersPerSecond = 30.0;
@@ -468,7 +482,8 @@ TEST_CASE("a world destroyed with builds in flight waits for them")
 	{
 		WorldSettings settings;
 		settings.seed = static_cast<uint32_t>(round);
-		RideWorld world(settings, biomes, &jobs);
+		World world;
+		LoadWorld(world, settings, biomes, &jobs);
 		Struktur::Input::TrainerInput inputs;
 		const double deltaSeconds   = 0.1;
 		inputs.speedMetersPerSecond = 30.0;
@@ -477,13 +492,46 @@ TEST_CASE("a world destroyed with builds in flight waits for them")
 	CHECK(jobs.GetQueuedCount() == 0);
 }
 
+TEST_CASE("a world is empty until loaded, and loading again starts afresh")
+{
+	const BiomeList biomes = LoadShippedBiomes();
+	World world;
+	CHECK_FALSE(world.IsLoaded());
+	WorldSettings settings;
+	settings.seed = 13;
+	for (int round = 0; round < 3; ++round)
+	{
+		LoadWorld(world, settings, biomes, nullptr);
+		CHECK(world.IsLoaded());
+		CHECK(world.GetDistance() == 0.0);
+		CHECK_FALSE(world.GetChunks().empty());
+		CHECK(world.GetBanners().empty());
+		Struktur::Input::TrainerInput input;
+		input.speedMetersPerSecond = 40.0;
+		for (int frame = 0; frame < 50; ++frame)
+		{
+			world.Update(0.2, input);
+		}
+		world.PlaceBanner(50.0);
+		CHECK(world.GetDistance() > 300.0);
+		world.Unload();
+		CHECK_FALSE(world.IsLoaded());
+	}
+	// Settings applied to an unloaded world are only remembered.
+	settings.seed = 14;
+	world.SetSettings(settings);
+	CHECK_FALSE(world.IsLoaded());
+	CHECK(world.GetSettings().seed == 14);
+}
+
 // --- grade behaviour -----------------------------------------------------------------------------------------------
 
 TEST_CASE("SIM manual grade: the road blends towards the set grade and the rider's grade follows")
 {
 	const BiomeList biomes = LoadShippedBiomes();
 	WorldSettings settings;
-	RideWorld world(settings, biomes, nullptr);
+	World world;
+	LoadWorld(world, settings, biomes, nullptr);
 	Struktur::Input::TrainerInput inputs;
 	const double deltaSeconds   = 0.1;
 	inputs.speedMetersPerSecond = 8.0;
@@ -517,7 +565,8 @@ TEST_CASE("ERG grade is cosmetic and follows workout intensity")
 
 	const BiomeList biomes = LoadShippedBiomes();
 	WorldSettings settings;
-	RideWorld world(settings, biomes, nullptr);
+	World world;
+	LoadWorld(world, settings, biomes, nullptr);
 	Struktur::Input::TrainerInput inputs;
 	const double deltaSeconds   = 0.1;
 	inputs.speedMetersPerSecond = 8.0;
@@ -560,8 +609,10 @@ TEST_CASE("same seed, same world: camera and grade match between two worlds")
 	WorldSettings settings;
 	settings.seed        = 99;
 	settings.gradeSource = GradeSource::ROUTE;
-	RideWorld first(settings, biomes, nullptr);
-	RideWorld second(settings, biomes, nullptr);
+	World first;
+	LoadWorld(first, settings, biomes, nullptr);
+	World second;
+	LoadWorld(second, settings, biomes, nullptr);
 	Struktur::Input::TrainerInput inputs;
 	const double deltaSeconds   = 1.0 / 60.0;
 	inputs.speedMetersPerSecond = 9.0;

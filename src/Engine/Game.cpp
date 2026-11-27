@@ -26,7 +26,8 @@
 #include "Engine/ECS/System/EventSystem.h"
 #include "Engine/ECS/System/FitnessSystem.h"
 #include "Engine/ECS/System/RideSystem.h"
-#include "Engine/ECS/System/RideWorldRenderSystem.h"
+#include "Engine/ECS/System/WorldRenderSystem.h"
+#include "Engine/ECS/System/WorldSystem.h"
 #include "Engine/ECS/System/HierarchySystem.h"
 #include "Engine/ECS/System/ParticleSystem.h"
 #include "Engine/ECS/System/PhysicsSystem.h"
@@ -47,6 +48,7 @@
 #include "Engine/Util/Color.h"
 #include "Engine/Util/MathUtil.h"
 #include "Engine/World/Level.h"
+#include "Engine/World/WorldAssetLoader.h"
 
 #ifdef DEBUG
 	#include "Engine/Scripting/WrenCodeGenerator.h"
@@ -196,14 +198,16 @@ bool Struktur::InitialiseGame(GameContext& context)
 	context.GetFitnessManager().SetRegistryPath(saveDir + "/fitness_devices.json");
 	context.GetFitnessManager().LoadRegistry();
 	context.GetRideService().Initialise(saveDir);
+	context.GetWorld().SetAssets(World::LoadWorldAssets());
 	if (Core::CommandLine::HasFlag("--list-missing-assets"))
 	{
 		// Prints every ride-world art role still using a placeholder (Markdown, same table as docs/missing-assets.md)
 		// and quits before the first frame.
-		const std::string table = context.GetRideService().GetMissingAssetsMarkdown();
+		const World::AssetManifest& manifest = context.GetWorld().GetAssets().manifest;
+		const std::string table              = World::GetMissingAssetsMarkdown(manifest);
 		std::printf("%s", table.c_str());
 		std::fflush(stdout);
-		for (const std::string& line : context.GetRideService().GetMissingAssetLines())
+		for (const std::string& line : World::GetMissingAssetLines(manifest))
 		{
 			DEBUG_INFO("missing %s", line.c_str());
 		}
@@ -256,6 +260,7 @@ bool Struktur::InitialiseGame(GameContext& context)
 	// Before WrenScriptSystem/EventSystem so fitness events queued this frame are delivered this frame.
 	systemManager.AddUpdateSystem<System::FitnessSystem>();
 	systemManager.AddUpdateSystem<System::RideSystem>();
+	systemManager.AddUpdateSystem<System::WorldSystem>();
 	systemManager.AddUpdateSystem<System::WrenScriptSystem>();
 	systemManager.AddUpdateSystem<System::EventSystem>();
 	systemManager.AddUpdateSystem<System::PhysicsSystem>();
@@ -265,8 +270,8 @@ bool Struktur::InitialiseGame(GameContext& context)
 	systemManager.AddUpdateSystem<System::UISystem>();
 	systemManager.AddUpdateSystem<System::SoundSystem>();
 	systemManager.AddRenderSystem<System::SpriteRenderSystem>();
-	// Ride world: its own bgfx views, ordered before the UI's (see GraphicsDevice).
-	systemManager.AddRenderSystem<System::RideWorldRenderSystem>();
+	// The world has its own bgfx views, ordered before the UI's (see GraphicsDevice).
+	systemManager.AddRenderSystem<System::WorldRenderSystem>();
 	// Wren rendering not used for anything at the moment so commenting it out
 // #if defined(PLATFORM_WEB)
 //	systemManager.AddRenderSystem<System::WrenStateRenderSystem>();
@@ -715,6 +720,10 @@ void Struktur::ClearGameSystems(GameContext& context)
 	DEBUG_INFO("[Clean Up] Registry");
 	entt::registry& registry = context.GetRegistry();
 	registry.clear();
+
+	// A script loads the world; a restart starts without one.
+	context.GetRideWorldRenderer().Shutdown();
+	context.GetWorld().Unload();
 
 	DEBUG_INFO("[Clean Up] Physics World");
 	Physics::PhysicsWorld& world = context.GetPhysicsWorld();

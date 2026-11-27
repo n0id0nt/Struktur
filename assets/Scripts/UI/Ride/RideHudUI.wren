@@ -16,6 +16,7 @@ import "math" for Vec2, Vec4
 import "ui" for UIManager, UIPanel, UIGraph, NavigationDirection
 import "localization" for Localization
 import "ride" for Ride
+import "world" for World
 import "UI/Theme/UIKit" for UIKit
 import "UI/Ride/RideTheme" for RideTheme, TextField
 import "UI/Ride/RideFormat" for RideFormat
@@ -109,7 +110,7 @@ class RideHudUI {
 
         _root = UIPanel.new(Vec2.new(0, 0), Vec2.new(0, 0), Vec2.new(Application.gameWidth, Application.gameHeight), Vec2.new(0, 0))
         // Transparent over the procedural world (drawn behind the UI); a solid backdrop when the world is off.
-        _root.setBackgroundColor(Ride.worldActive() ? RideTheme.clear : Vec4.new(20, 24, 30, 255))
+        _root.setBackgroundColor(World.isLoaded ? RideTheme.clear : Vec4.new(20, 24, 30, 255))
         _root.setBorderColor(RideTheme.clear)
         _root.setZIndex(ROOT_Z)
         UIManager.addUIElement(_root)

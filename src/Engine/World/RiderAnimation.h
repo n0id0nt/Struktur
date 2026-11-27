@@ -3,7 +3,7 @@
 #include <cstdint>
 #include <optional>
 
-namespace Struktur::RideWorld
+namespace Struktur::World
 {
 enum class RiderPose : uint8_t
 {
@@ -68,4 +68,4 @@ private:
 	double m_lean;
 	bool m_standing;
 };
-}  // namespace Struktur::RideWorld
+}  // namespace Struktur::World

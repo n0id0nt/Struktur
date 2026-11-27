@@ -4,9 +4,9 @@
 #include <string>
 #include <vector>
 
-#include "Engine/RideWorld/AssetManifest.h"
+#include "Engine/World/AssetManifest.h"
 
-namespace Struktur::RideWorld
+namespace Struktur::World
 {
 // An RGBA8 image (straight alpha, rows top to bottom).
 struct PlaceholderImage
@@ -31,4 +31,4 @@ PlaceholderImage ComposeRegions(const uint8_t* pixels, int width, int height, co
 
 // Shapes GeneratePlaceholder knows (for the manifest test).
 const std::vector<std::string>& KnownPlaceholderShapes();
-}  // namespace Struktur::RideWorld
+}  // namespace Struktur::World

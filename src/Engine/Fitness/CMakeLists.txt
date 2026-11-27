@@ -95,38 +95,38 @@ FetchContent_Declare(pugixml
 )
 FetchContent_MakeAvailable(pugixml)
 
-# StrukturRideWorld - the procedural road world behind the ride screens (route spline, elevation, biomes, chunk
+# StrukturWorld - the procedural road world behind the ride screens (route spline, elevation, biomes, chunk
 # meshes, rider animation, asset manifest + placeholders). Pure C++: the bgfx renderer lives in the engine.
-set(RIDE_WORLD_DIR ${STRUKTUR_REPO_ROOT}/src/Engine/RideWorld)
-set(RIDE_WORLD_SOURCES
-    ${RIDE_WORLD_DIR}/Noise.h               ${RIDE_WORLD_DIR}/Noise.cpp
-    ${RIDE_WORLD_DIR}/WorldSettings.h       ${RIDE_WORLD_DIR}/WorldSettings.cpp
-    ${RIDE_WORLD_DIR}/Route.h               ${RIDE_WORLD_DIR}/Route.cpp
-    ${RIDE_WORLD_DIR}/ElevationProfile.h    ${RIDE_WORLD_DIR}/ElevationProfile.cpp
-    ${RIDE_WORLD_DIR}/Biome.h               ${RIDE_WORLD_DIR}/Biome.cpp
-    ${RIDE_WORLD_DIR}/ChunkBuilder.h        ${RIDE_WORLD_DIR}/ChunkBuilder.cpp
-    ${RIDE_WORLD_DIR}/ChunkStreamer.h       ${RIDE_WORLD_DIR}/ChunkStreamer.cpp
-    ${RIDE_WORLD_DIR}/RiderAnimation.h      ${RIDE_WORLD_DIR}/RiderAnimation.cpp
-    ${RIDE_WORLD_DIR}/SpriteDescriptor.h    ${RIDE_WORLD_DIR}/SpriteDescriptor.cpp
-    ${RIDE_WORLD_DIR}/AssetManifest.h       ${RIDE_WORLD_DIR}/AssetManifest.cpp
-    ${RIDE_WORLD_DIR}/Placeholder.h         ${RIDE_WORLD_DIR}/Placeholder.cpp
-    ${RIDE_WORLD_DIR}/RideWorld.h           ${RIDE_WORLD_DIR}/RideWorld.cpp
+set(WORLD_DIR ${STRUKTUR_REPO_ROOT}/src/Engine/World)
+set(WORLD_SOURCES
+    ${WORLD_DIR}/Noise.h               ${WORLD_DIR}/Noise.cpp
+    ${WORLD_DIR}/WorldSettings.h       ${WORLD_DIR}/WorldSettings.cpp
+    ${WORLD_DIR}/Route.h               ${WORLD_DIR}/Route.cpp
+    ${WORLD_DIR}/ElevationProfile.h    ${WORLD_DIR}/ElevationProfile.cpp
+    ${WORLD_DIR}/Biome.h               ${WORLD_DIR}/Biome.cpp
+    ${WORLD_DIR}/ChunkBuilder.h        ${WORLD_DIR}/ChunkBuilder.cpp
+    ${WORLD_DIR}/ChunkStreamer.h       ${WORLD_DIR}/ChunkStreamer.cpp
+    ${WORLD_DIR}/RiderAnimation.h      ${WORLD_DIR}/RiderAnimation.cpp
+    ${WORLD_DIR}/SpriteDescriptor.h    ${WORLD_DIR}/SpriteDescriptor.cpp
+    ${WORLD_DIR}/AssetManifest.h       ${WORLD_DIR}/AssetManifest.cpp
+    ${WORLD_DIR}/Placeholder.h         ${WORLD_DIR}/Placeholder.cpp
+    ${WORLD_DIR}/World.h           ${WORLD_DIR}/World.cpp
 )
 # The job system (chunk builds, ride autosaves). The root build adds it first; standalone, pull it in here.
 if(NOT TARGET StrukturJobs)
     add_subdirectory(${STRUKTUR_REPO_ROOT}/src/Engine/Jobs ${CMAKE_CURRENT_BINARY_DIR}/StrukturJobs)
 endif()
 
-add_library(StrukturRideWorld STATIC ${RIDE_WORLD_SOURCES})
-target_include_directories(StrukturRideWorld PUBLIC ${STRUKTUR_REPO_ROOT}/src)
-target_link_libraries(StrukturRideWorld PUBLIC nlohmann_json::nlohmann_json StrukturJobs)
-target_compile_features(StrukturRideWorld PUBLIC cxx_std_20)
+add_library(StrukturWorld STATIC ${WORLD_SOURCES})
+target_include_directories(StrukturWorld PUBLIC ${STRUKTUR_REPO_ROOT}/src)
+target_link_libraries(StrukturWorld PUBLIC nlohmann_json::nlohmann_json StrukturJobs)
+target_compile_features(StrukturWorld PUBLIC cxx_std_20)
 find_package(Threads)
 if(Threads_FOUND)
-    target_link_libraries(StrukturRideWorld PUBLIC Threads::Threads)
+    target_link_libraries(StrukturWorld PUBLIC Threads::Threads)
 endif()
 if(MSVC)
-    target_compile_options(StrukturRideWorld PRIVATE /W4)
+    target_compile_options(StrukturWorld PRIVATE /W4)
 endif()
 
 set(RIDE_DIR ${STRUKTUR_REPO_ROOT}/src/Engine/Ride)
@@ -144,7 +144,7 @@ set(RIDE_SOURCES
 )
 add_library(StrukturRide STATIC ${RIDE_SOURCES})
 target_include_directories(StrukturRide PUBLIC ${STRUKTUR_REPO_ROOT}/src ${pugixml_SOURCE_DIR}/src)
-target_link_libraries(StrukturRide PUBLIC StrukturFitness StrukturRideWorld nlohmann_json::nlohmann_json)
+target_link_libraries(StrukturRide PUBLIC StrukturFitness StrukturWorld nlohmann_json::nlohmann_json)
 target_compile_features(StrukturRide PUBLIC cxx_std_20)
 if(MSVC)
     target_compile_options(StrukturRide PRIVATE /W4)
@@ -178,7 +178,7 @@ if(STRUKTUR_BUILD_TESTS)
         ${STRUKTUR_FITNESS_LOGGER_SOURCE}
     )
     target_include_directories(StrukturFitnessTests PRIVATE ${doctest_SOURCE_DIR}/doctest)
-    target_link_libraries(StrukturFitnessTests PRIVATE StrukturFitness StrukturRide StrukturRideWorld)
+    target_link_libraries(StrukturFitnessTests PRIVATE StrukturFitness StrukturRide StrukturWorld)
     # Sample/malformed workout files the tests load from disk.
     target_compile_definitions(StrukturFitnessTests PRIVATE
         STRUKTUR_TEST_DATA_DIR="${CMAKE_CURRENT_SOURCE_DIR}/Tests/Data"

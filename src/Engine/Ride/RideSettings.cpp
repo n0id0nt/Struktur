@@ -163,7 +163,7 @@ RideSettings RideSettings::FromJson(const std::string& json, std::string& warnin
 	if (root.contains("world"))
 	{
 		std::string worldWarning;
-		settings.world = RideWorld::WorldSettings::FromJson(root["world"], worldWarning);
+		settings.world = World::WorldSettings::FromJson(root["world"], worldWarning);
 		if (!worldWarning.empty())
 		{
 			warning = worldWarning;

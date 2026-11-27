@@ -3,7 +3,7 @@
 #include <algorithm>
 #include <cmath>
 
-namespace Struktur::RideWorld
+namespace Struktur::World
 {
 ElevationProfile::ElevationProfile(const ElevationLimits& limits)
     : m_limits(limits),
@@ -102,4 +102,4 @@ void ElevationProfile::FillRelativeHeights(double firstDistance, double origin, 
 		    static_cast<float>(HeightAt(firstDistance + static_cast<double>(index) * m_limits.spacingMeters) - origin);
 	}
 }
-}  // namespace Struktur::RideWorld
+}  // namespace Struktur::World

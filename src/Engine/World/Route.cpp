@@ -3,9 +3,9 @@
 #include <algorithm>
 #include <cmath>
 
-#include "Engine/RideWorld/Noise.h"
+#include "Engine/World/Noise.h"
 
-namespace Struktur::RideWorld
+namespace Struktur::World
 {
 static constexpr double PI                 = 3.14159265358979323846;
 static constexpr int DENSE_STEPS_PER_SEGMENT = 384;
@@ -315,4 +315,4 @@ void Route::CopySamples(int64_t firstIndex, int64_t count, std::vector<RouteSamp
 		out[static_cast<size_t>(offset)] = GetSample(firstIndex + offset);
 	}
 }
-}  // namespace Struktur::RideWorld
+}  // namespace Struktur::World

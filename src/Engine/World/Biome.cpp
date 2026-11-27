@@ -4,10 +4,10 @@
 #include <cmath>
 #include <cstdlib>
 
-#include "Engine/RideWorld/Noise.h"
+#include "Engine/World/Noise.h"
 #include "nlohmann/json.hpp"
 
-namespace Struktur::RideWorld
+namespace Struktur::World
 {
 Color Color::Lerp(const Color& from, const Color& to, float weight)
 {
@@ -445,4 +445,4 @@ double BiomeSequence::RegionStart(double distance)
 	const auto found = std::upper_bound(m_regionStarts.begin(), m_regionStarts.end(), distance);
 	return m_regionStarts[static_cast<size_t>(std::max<ptrdiff_t>(0, (found - m_regionStarts.begin()) - 1))];
 }
-}  // namespace Struktur::RideWorld
+}  // namespace Struktur::World

@@ -3,7 +3,7 @@
 #include <string>
 #include <vector>
 
-namespace Struktur::RideWorld
+namespace Struktur::World
 {
 enum class SpriteLayerMotion
 {
@@ -57,4 +57,4 @@ struct SpriteDescriptor
 bool ParseSpriteDescriptor(const std::string& json, SpriteDescriptor& out, std::string& error);
 // The built-in descriptor matching the code-drawn placeholder rider.
 SpriteDescriptor DefaultSpriteDescriptor();
-}  // namespace Struktur::RideWorld
+}  // namespace Struktur::World

@@ -4,7 +4,7 @@
 
 #include "nlohmann/json.hpp"
 
-namespace Struktur::RideWorld
+namespace Struktur::World
 {
 static constexpr size_t MAX_LAYERS = 16;
 
@@ -183,4 +183,4 @@ SpriteDescriptor DefaultSpriteDescriptor()
 	descriptor.layers = {wheel, frame, legs, torso};
 	return descriptor;
 }
-}  // namespace Struktur::RideWorld
+}  // namespace Struktur::World
