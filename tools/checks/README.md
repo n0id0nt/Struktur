@@ -17,6 +17,7 @@ printed. Run them before and after a change and compare.
 | Scenario | Game | What it does |
 |---|---|---|
 | `ride` | Indoor Cycling Software (add `-GameArguments --demo`) | Free ride, workout and a second free ride on simulated devices |
+| `ride-screens` | Indoor Cycling Software (add `-GameArguments --demo`) | Opens every other screen in turn, so a missing script, picture or font shows up |
 | `overworld` | Seven Gods | Loads the saves, starts in the overworld and reports room, party, items, moves and defeats |
 | `battle-wolves` | Seven Gods | The battle test's first wolves fight, both sides playing themselves |
 | `battle-warden` | Seven Gods | The same against the Warden |

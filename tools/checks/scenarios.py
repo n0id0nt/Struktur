@@ -132,6 +132,46 @@ import "world" for World
     patcher.substitute(MAIN, '    update() {\n', '    update() {\n        check_()\n')
 
 
+def ride_screens(patcher):
+    # Every indoor cycling screen in turn, so a missing script, picture or font shows up (run with --demo).
+    patcher.substitute(MAIN, 'import "debug" for Debug\n', '''import "debug" for Debug
+import "audio" for Audio
+import "fitness" for Fitness
+''')
+    patcher.substitute(MAIN, '        _stateManager.changeState("DevicePairing")\n    }\n', MUTE + '''        var profile = RiderProfiles.newProfile()
+        profile["name"] = "Check Rider"
+        RiderProfiles.select(RiderProfiles.create(profile))
+        Fitness.connectRemembered()
+        _checkStart = Time.unscaledTime
+        _checkStep = 0
+        _checkLines = []
+        _stateManager.changeState("DevicePairing")
+    }
+
+''' + REPORT_METHODS + '''    check_() {
+        var screens = ["DevicePairing", "RiderSelect", "RiderEdit", "Settings", "WorkoutBrowser", "RideSettings",
+            "MainMenu"]
+        var time = Time.unscaledTime - _checkStart
+        // Each screen is opened, given three seconds to draw, then reported and captured.
+        var index = (_checkStep / 2).floor
+        if (_checkStep % 2 == 0 && time > 3 + index * 4) {
+            if (index < screens.count) {
+                _stateManager.changeState(screens[index])
+                _checkStep = _checkStep + 1
+            } else if (index == screens.count) {
+                checkShot_("done")
+                _checkStep = _checkStep + 2
+            }
+        } else if (_checkStep % 2 == 1 && time > 6 + index * 4) {
+            checkNote_("%(screens[index]): state %(_stateManager.currentState.name)")
+            checkShot_(screens[index])
+            _checkStep = _checkStep + 1
+        }
+    }
+''')
+    patcher.substitute(MAIN, '    update() {\n', '    update() {\n        check_()\n')
+
+
 def overworld(patcher):
     """Seven Gods: starts in the overworld with the installed saves and reports what they loaded."""
     patcher.substitute(MAIN, 'import "debug" for Debug\n', 'import "debug" for Debug\nimport "audio" for Audio\n')
@@ -234,6 +274,7 @@ import "fileSystem" for FileSystem
 
 SCENARIOS = {
     "ride": ride,
+    "ride-screens": ride_screens,
     "overworld": overworld,
     "battle-wolves": lambda patcher: battle(patcher, 2),
     "battle-warden": lambda patcher: battle(patcher, 3),
