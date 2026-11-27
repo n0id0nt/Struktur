@@ -404,8 +404,6 @@ if(DEBUG)
         src/Debug/Box2DBgfxDebugDraw.h              src/Debug/Box2DBgfxDebugDraw.cpp
 
         src/Engine/Renderer/DebugRenderer.h         src/Engine/Renderer/DebugRenderer.cpp
-
-        src/Engine/Scripting/WrenCodeGenerator.h    src/Engine/Scripting/WrenCodeGenerator.cpp
     )
 endif()
 
@@ -617,6 +615,7 @@ set(SOURCES
 
     src/Engine/Scripting/WrenScriptEngine.h     src/Engine/Scripting/WrenScriptEngine.cpp
     src/Engine/Scripting/WrenBindingRegistry.h  src/Engine/Scripting/WrenBindingRegistry.cpp
+    src/Engine/Scripting/WrenCodeGenerator.h    src/Engine/Scripting/WrenCodeGenerator.cpp
     src/Engine/Scripting/WrenStateManager.h     src/Engine/Scripting/WrenStateManager.cpp
     src/Engine/Scripting/WrenScriptComponentRegistry.h src/Engine/Scripting/WrenScriptComponentRegistry.cpp
     src/Engine/Scripting/WrenExportedFields.h   src/Engine/Scripting/WrenExportedFields.cpp

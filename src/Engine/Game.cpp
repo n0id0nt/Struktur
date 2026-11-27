@@ -65,10 +65,6 @@
 #include "Engine/World/WorldAssetLoader.h"
 #include "Engine/World/WorldLifecycle.h"
 
-#ifdef DEBUG
-	#include "Engine/Scripting/WrenCodeGenerator.h"
-#endif
-
 #include <SDL3/SDL.h>
 
 #include "Engine/Platform/Window.h"
@@ -250,11 +246,6 @@ bool Struktur::InitialiseGame(GameContext& context)
 	context.GetGraphicsDevice().SetVSync(engineSettings.vsync);
 	gameData.vsyncEnabled = engineSettings.vsync;
 	gameData.targetFps    = engineSettings.targetFps;
-
-#ifdef DEBUG
-	Wren::CodeGenerator::GenerateBindingFiles(wrenScriptEngine.GetRegistry(),
-	                                          FileSystem::GetWorkingDirectory() + "/../src/WrenBindings/Bindings");
-#endif
 
 	gameObjectManager.CreateObjectCallBack(context);
 

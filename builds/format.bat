@@ -11,7 +11,6 @@ rem %%~fI resolves the ".." away to a clean absolute path - needed so EXCLUDE_DI
 rem the fully-resolved paths the for /r loop produces, which never contain "..".
 for %%I in ("%SCRIPT_DIR%..") do set "ROOT_DIR=%%~fI"
 set "SRC_DIR=%ROOT_DIR%\src"
-set "EXCLUDE_DIR=%SRC_DIR%\WrenBindings\Bindings\Generated"
 
 rem Prefer clang-format on PATH; fall back to the copy bundled with VS2022's LLVM tools.
 set "CLANG_FORMAT=clang-format"
@@ -41,12 +40,8 @@ echo.
 
 set "FAIL=0"
 for /r "%SRC_DIR%" %%F in (*.cpp *.h *.hpp) do (
-    set "FILE=%%F"
-    echo !FILE! | findstr /I /C:"%EXCLUDE_DIR%" >nul
-    if errorlevel 1 (
-        "!CLANG_FORMAT!" %MODE% "%%F"
-        if errorlevel 1 set "FAIL=1"
-    )
+    "!CLANG_FORMAT!" %MODE% "%%F"
+    if errorlevel 1 set "FAIL=1"
 )
 
 echo.
