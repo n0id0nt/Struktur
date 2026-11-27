@@ -30,6 +30,7 @@ public:
 	// Worker-safe: simulates each emitter's own particle pool. Writes Transform because reading a world position
 	// refreshes TransformSystem's cached world transform.
 	SystemAccess Access() const override;
+	void Prepare(GameContext& context) override;
 };
 }  // namespace System
 }  // namespace Struktur

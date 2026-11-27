@@ -155,6 +155,11 @@ SystemAccess AnimationSystem::Access() const
   (create or destroy entities, add or remove components) or touch Wren, bgfx, the UI or audio. They record such
   changes with `context.GetSystemManager().GetCommands().Defer(...)`; the commands run on the main thread, in the
   order they were recorded, when the batch ends.
+- **`Prepare()`:** EnTT creates a component's storage the first time a non-const registry is asked for it
+  (`view<T>()`, `try_get<T>()`), and that is a structural change. Each worker system overrides `ISystem::Prepare`,
+  which runs on the main thread before its batch, to create (`registry.storage<T>()`) the storage of every
+  component it touches. Without it, two systems creating storages at once crashed the ride branch's menu, where
+  no sprites or emitters existed yet.
 - **Converted so far:** `AnimationSystem` and `ParticleSystem`. They're registered next to each other in the update
   phase, so they run as one batch: "Systems scheduled side by side: Animation System, Particle System" in the log.
   `ParticleSystem` declares a write to `Transform`, because reading a world position refreshes TransformSystem's

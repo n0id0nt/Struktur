@@ -54,6 +54,10 @@ void Struktur::System::SystemManager::RunPhase(GameContext& context, const std::
 				name += " " + phase.systems[index]->Name();
 			}
 			PROFILE_SCOPE(name);
+			for (size_t index : step.systems)
+			{
+				phase.systems[index]->Prepare(context);
+			}
 			RunSchedule(std::vector<ScheduleStep>{step}, jobs, true, [&phase, &context](size_t index) { phase.systems[index]->Update(context); },
 			            [] {});
 		}

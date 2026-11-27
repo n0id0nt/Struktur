@@ -36,6 +36,7 @@ public:
 	}
 	// Worker-safe: picks each animated sprite's frame from game time.
 	SystemAccess Access() const override;
+	void Prepare(GameContext& context) override;
 };
 }  // namespace System
 }  // namespace Struktur

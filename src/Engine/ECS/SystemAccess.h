@@ -15,7 +15,8 @@
 // A worker system may read and write the component types (and engine services - any type works as a token) it
 // declares, and nothing else. It must not create or destroy entities, add or remove components, or touch Wren, bgfx,
 // the UI or audio: record structural changes in the SystemManager's CommandList instead, which is applied on the main
-// thread once the system's batch is done.
+// thread once the system's batch is done. It must also override ISystem::Prepare to create the storage of every
+// component it touches - EnTT creates a missing storage on first use, which is itself a structural change.
 namespace Struktur::System
 {
 class SystemAccess
