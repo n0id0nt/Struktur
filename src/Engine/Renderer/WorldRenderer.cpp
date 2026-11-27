@@ -3,7 +3,6 @@
 #include <algorithm>
 #include <cmath>
 #include <cstring>
-
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
@@ -16,6 +15,7 @@
 #include "Engine/Renderer/GraphicsDevice.h"
 #include "Engine/Renderer/QuadVertex.h"
 #include "Engine/Ride/Zones.h"
+#include "Engine/RideIntegration/RideContext.h"
 #include "Engine/World/Noise.h"
 #include "Engine/World/Placeholder.h"
 
@@ -1120,7 +1120,7 @@ void WorldRenderer::Render(GameContext& context, World::World& world, float fram
 	UpdateHeightTexture(world);
 
 	// The context's camera, in the render frame: x/z relative to the camera, y relative to h(rider).
-	m_camera    = context.GetCamera();
+	m_camera                = Struktur::RideContext::From(context).GetCamera();
 	m_powerZone = context.GetInput().GetTrainer().powerZone;
 	m_cameraX   = m_camera.position.x;
 	m_cameraZ   = m_camera.position.z;

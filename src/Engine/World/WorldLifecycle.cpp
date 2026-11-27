@@ -2,8 +2,14 @@
 
 #include "Engine/ECS/Component/WorldComponents.h"
 #include "Engine/ECS/System/CameraSystem.h"
+#include "Engine/ECS/SystemManager.h"
 #include "Engine/GameContext.h"
+#include "Engine/Renderer/WorldRenderer.h"
+#include "Engine/RideIntegration/RideContext.h"
+#include "Engine/World/Camera.h"
 #include "Engine/World/RoadFollow.h"
+#include "Engine/World/World.h"
+#include "entt/entt.hpp"
 
 namespace Struktur::World
 {
@@ -46,14 +52,15 @@ static void DestroyEntities(entt::registry& registry)
 bool LoadWorld(GameContext& context, const WorldSettings& settings, bool demoPacer)
 {
 	UnloadWorld(context);
-	World& world              = context.GetWorld();
+	World& world              = Struktur::RideContext::From(context).GetWorld();
 	const WorldAssets& assets = world.GetAssets();
 	if (!settings.enabled || assets.biomes.empty())
 	{
 		return false;
 	}
 	world.Load(settings, &context.GetJobSystem());
-	context.GetWorldRenderer().Initialise(context, assets.manifest, assets.spriteDescriptor);
+	Struktur::RideContext::From(context).GetWorldRenderer().Initialise(context, assets.manifest,
+	                                                                   assets.spriteDescriptor);
 	CreateEntities(context, demoPacer);
 	// So the camera is already behind the rider if this frame still draws.
 	context.GetSystemManager().GetSystem<System::CameraSystem>().Update(context);
@@ -63,14 +70,14 @@ bool LoadWorld(GameContext& context, const WorldSettings& settings, bool demoPac
 void UnloadWorld(GameContext& context)
 {
 	DestroyEntities(context.GetRegistry());
-	context.GetWorldRenderer().Shutdown();
-	context.GetWorld().Unload();
-	context.GetCamera() = Camera();
+	Struktur::RideContext::From(context).GetWorldRenderer().Shutdown();
+	Struktur::RideContext::From(context).GetWorld().Unload();
+	Struktur::RideContext::From(context).GetCamera() = Camera();
 }
 
 void PlaceFinishBanner(GameContext& context, double aheadMeters)
 {
-	const World& world = context.GetWorld();
+	const World& world = Struktur::RideContext::From(context).GetWorld();
 	if (!world.IsLoaded())
 	{
 		return;

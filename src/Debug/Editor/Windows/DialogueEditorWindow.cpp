@@ -21,6 +21,7 @@
 #include "Engine/Dialogue/DialogueManager.h"
 #include "Engine/Dialogue/DialogueRegistry.h"
 #include "Engine/GameContext.h"
+#include "Engine/Scripting/WrenScriptEngine.h"
 
 #define DIALOGUE_FILE_PATH "Scripts/Dialogue/"
 

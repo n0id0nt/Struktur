@@ -4,6 +4,9 @@
 #include <mutex>
 #include <vector>
 
+#include "Engine/ECS/GameObjectManager.h"
+#include "Engine/ECS/SystemManager.h"
+
 namespace Struktur
 {
 class GameContext;

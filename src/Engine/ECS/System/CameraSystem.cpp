@@ -2,11 +2,15 @@
 
 #include "Engine/ECS/Component/WorldComponents.h"
 #include "Engine/GameContext.h"
+#include "Engine/RideIntegration/RideContext.h"
+#include "Engine/World/Camera.h"
 #include "Engine/World/RoadFollow.h"
+#include "Engine/World/World.h"
+#include "entt/entt.hpp"
 
 void Struktur::System::CameraSystem::Update(GameContext& context)
 {
-	const World::World& world = context.GetWorld();
+	const World::World& world = Struktur::RideContext::From(context).GetWorld();
 	if (!world.IsLoaded())
 	{
 		return;
@@ -27,6 +31,6 @@ void Struktur::System::CameraSystem::Update(GameContext& context)
 		follow.ApplySettings(world.GetSettings());
 		World::FollowRoad(follow, world, context.GetTimeSystem().unscaledDelta, speed, crankPhase, pedalling,
 		                  camera.camera);
-		context.GetCamera() = camera.camera;
+		Struktur::RideContext::From(context).GetCamera() = camera.camera;
 	}
 }

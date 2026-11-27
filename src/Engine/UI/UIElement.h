@@ -8,6 +8,7 @@
 
 #include "Engine/Callback/Callback.h"
 #include "Engine/Renderer/UIBatchTypes.h"
+#include "Engine/Renderer/UIRenderer.h"
 #include "Engine/Util/Color.h"
 #include "Engine/Util/MathUtil.h"
 #include "glm/glm.hpp"

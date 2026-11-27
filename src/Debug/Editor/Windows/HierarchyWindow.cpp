@@ -4,6 +4,7 @@
 #include "Engine/ECS/Component/Identifier.h"
 #include "Engine/ECS/Component/Transform.h"
 #include "Engine/ECS/System/HierarchySystem.h"
+#include "Engine/ECS/SystemManager.h"
 #include "Engine/GameContext.h"
 
 namespace Struktur::Debug

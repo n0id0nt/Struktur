@@ -6,6 +6,7 @@
 #include "Engine/Callback/CallbackHelperFunctions.h"
 #include "Engine/GameContext.h"
 #include "Engine/Scripting/WrenExportedFields.h"
+#include "Engine/Scripting/WrenScriptComponentRegistry.h"
 #include "Engine/Scripting/WrenUtil.h"
 
 namespace Struktur::System

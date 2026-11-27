@@ -1,5 +1,6 @@
 #include "Debug/Assertions.h"
 #include "Engine/Dialogue/DialogueHelperFunctions.h"
+#include "Engine/Dialogue/TextSystems/VariableSubstitutionSystem.h"
 #include "Engine/GameContext.h"
 #include "Engine/Scripting/WrenBindingRegistry.h"
 #include "wren.hpp"

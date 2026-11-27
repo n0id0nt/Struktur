@@ -1,5 +1,8 @@
 #include "WrenUI.h"
 
+#include "Engine/UI/InputGlyphs.h"
+#include "Engine/UI/UIManager.h"
+
 #ifdef DEBUG
 	#include <Trace/wren_trace.h>
 #endif

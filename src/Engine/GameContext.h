@@ -1,141 +1,185 @@
 #pragma once
 
 #include <memory>
-#include <stdexcept>
 #include <string>
 
 #include "Debug/Assertions.h"
 #include "Engine/Audio/Mixer.h"
 #include "Engine/Core/GameData.h"
 #include "Engine/Core/TimeSystem.h"
-#include "Engine/Dialogue/DialogueManager.h"
-#include "Engine/Dialogue/DialogueRegistry.h"
-#include "Engine/Dialogue/TextSystems/VariableSubstitutionSystem.h"
-#include "Engine/ECS/GameObjectManager.h"
-#include "Engine/ECS/SystemManager.h"
 #include "Engine/Event/EventManager.h"
-#include "Engine/Fitness/FitnessManager.h"
-#include "Engine/RideIntegration/RideService.h"
-#include "Engine/Flag/FlagManager.h"
 #include "Engine/Input/Input.h"
 #include "Engine/Jobs/FrameScheduler.h"
 #include "Engine/Jobs/JobSystem.h"
 #include "Engine/Localization/LocalizationManager.h"
-#include "Engine/Physics/CollisionLayers.h"
-#include "Engine/Physics/PhysicsWorld.h"
 #include "Engine/Platform/Window.h"
 #include "Engine/Renderer/GraphicsDevice.h"
-#include "Engine/Renderer/UIRenderer.h"
-#include "Engine/Renderer/WorldRenderer.h"
 #include "Engine/Resource/ResourceManager.h"
-#include "Engine/World/Camera.h"
-#include "Engine/World/World.h"
-#if defined(EDITOR)
-	#include "Engine/Renderer/ImGuiRenderer.h"
-#endif
-#include "Engine/Scripting/WrenScriptComponentRegistry.h"
-#include "Engine/Scripting/WrenScriptEngine.h"
-#include "Engine/Scripting/WrenStateManager.h"
-#include "Engine/UI/InputGlyphs.h"
-#include "Engine/UI/UIManager.h"
-#include "entt/entt.hpp"
-#ifdef EDITOR
-	#include "Debug/Editor/Editor.h"
-#endif
 #ifdef DEBUG
 	#include "Debug/Profiling/Profiler.h"
+#endif
+#ifdef STRUKTUR_ECS
+	#include "entt/fwd.hpp"
 #endif
 
 namespace Struktur
 {
+// The libraries' service types. Only declared here, so core doesn't depend on them - include a service's own header to
+// use it.
+#ifdef STRUKTUR_ECS
+namespace System
+{
+class GameObjectManager;
+class SystemManager;
+}  // namespace System
+#endif
+#ifdef STRUKTUR_WREN
+namespace Wren
+{
+class WrenScriptComponentRegistry;
+class WrenScriptEngine;
+class WrenStateManager;
+}  // namespace Wren
+#endif
+#ifdef STRUKTUR_UI
+namespace UI
+{
+class InputGlyphs;
+class UIManager;
+}  // namespace UI
+namespace Renderer
+{
+class UIRenderer;
+}
+#endif
+#ifdef STRUKTUR_PHYSICS
+namespace Physics
+{
+class CollisionLayers;
+class PhysicsWorld;
+}  // namespace Physics
+#endif
+#ifdef STRUKTUR_DIALOGUE
+namespace Dialogue
+{
+class DialogueManager;
+class DialogueRegistry;
+class VariableSubstitutionSystem;
+}  // namespace Dialogue
+#endif
+#ifdef STRUKTUR_FLAG
+namespace Flag
+{
+class FlagManager;
+}
+#endif
+#ifdef STRUKTUR_FITNESS
+namespace Fitness
+{
+class FitnessManager;
+}
+#endif
+#ifdef EDITOR
+namespace Debug
+{
+class Editor;
+}
+namespace Renderer
+{
+class ImGuiRenderer;
+}
+#endif
+
+// What every game has: the core services, held here, and the getters the libraries need, which each game's own context
+// implements beside whatever it adds. A library's getters exist only in builds that use it (STRUKTUR_<NAME>).
 class GameContext
 {
 public:
 	GameContext();
+	virtual ~GameContext();
 
-	void Shutdown();
+	GameContext(const GameContext&)            = delete;
+	GameContext& operator=(const GameContext&) = delete;
 
-	World::Camera& GetCamera() const;
-	Physics::CollisionLayers& GetCollisionLayers() const;
-	Dialogue::DialogueManager& GetDialogueManager() const;
-	Dialogue::DialogueRegistry& GetDialogueRegistry() const;
-#ifdef EDITOR
-	Debug::Editor& GetEditor() const;
-#endif
+	// Destroys every service, in order. Call once, after the game loop has ended.
+	virtual void Shutdown() = 0;
+
+	// --- core ----------------------------------------------------------------------------------------------------
 	Event::EventManager& GetEventManager() const;
-	Fitness::FitnessManager& GetFitnessManager() const;
-	RideIntegration::RideService& GetRideService() const;
-	World::World& GetWorld() const;
-	Flag::FlagManager& GetFlagManager() const;
 	Core::GameData& GetGameData() const;
-	System::GameObjectManager& GetGameObjectManager() const;
 	Renderer::GraphicsDevice& GetGraphicsDevice() const;
-#ifdef EDITOR
-	Renderer::ImGuiRenderer& GetImGuiRenderer() const;
-#endif
 	Input::Input& GetInput() const;
 	Jobs::JobSystem& GetJobSystem() const;
 	Jobs::FrameScheduler& GetFrameScheduler() const;
-	UI::InputGlyphs& GetInputGlyphs() const;
 	Localization::LocalizationManager& GetLocalizationManager() const;
 	Audio::Mixer& GetMixer() const;
-	Physics::PhysicsWorld& GetPhysicsWorld() const;
 #ifdef DEBUG
 	Debug::Profiler& GetProfiler() const;
 #endif
-	entt::registry& GetRegistry() const;
 	Resource::ResourceManager& GetResourceManager() const;
-	System::SystemManager& GetSystemManager() const;
 	Core::TimeSystem& GetTimeSystem() const;
-	UI::UIManager& GetUIManager() const;
-	Renderer::UIRenderer& GetUIRenderer() const;
-	Dialogue::VariableSubstitutionSystem& GetVariableSubstitutionSystem() const;
 	Platform::Window& GetWindow() const;
-	Renderer::WorldRenderer& GetWorldRenderer() const;
-	Wren::WrenScriptComponentRegistry& GetWrenScriptComponentRegistry() const;
-	Wren::WrenScriptEngine& GetWrenScriptEngine() const;
-	Wren::WrenStateManager& GetWrenStateManager() const;
+
+	// --- libraries -----------------------------------------------------------------------------------------------
+#ifdef STRUKTUR_ECS
+	virtual entt::registry& GetRegistry() const                     = 0;
+	virtual System::GameObjectManager& GetGameObjectManager() const = 0;
+	virtual System::SystemManager& GetSystemManager() const         = 0;
+	#ifdef STRUKTUR_WREN
+	virtual Wren::WrenScriptComponentRegistry& GetWrenScriptComponentRegistry() const = 0;
+	#endif
+#endif
+#ifdef STRUKTUR_WREN
+	virtual Wren::WrenScriptEngine& GetWrenScriptEngine() const = 0;
+	virtual Wren::WrenStateManager& GetWrenStateManager() const = 0;
+#endif
+#ifdef STRUKTUR_UI
+	virtual UI::InputGlyphs& GetInputGlyphs() const     = 0;
+	virtual UI::UIManager& GetUIManager() const         = 0;
+	virtual Renderer::UIRenderer& GetUIRenderer() const = 0;
+#endif
+#ifdef STRUKTUR_PHYSICS
+	virtual Physics::CollisionLayers& GetCollisionLayers() const = 0;
+	virtual Physics::PhysicsWorld& GetPhysicsWorld() const       = 0;
+#endif
+#ifdef STRUKTUR_DIALOGUE
+	virtual Dialogue::DialogueManager& GetDialogueManager() const                       = 0;
+	virtual Dialogue::DialogueRegistry& GetDialogueRegistry() const                     = 0;
+	virtual Dialogue::VariableSubstitutionSystem& GetVariableSubstitutionSystem() const = 0;
+#endif
+#ifdef STRUKTUR_FLAG
+	virtual Flag::FlagManager& GetFlagManager() const = 0;
+#endif
+#ifdef STRUKTUR_FITNESS
+	virtual Fitness::FitnessManager& GetFitnessManager() const = 0;
+#endif
+#ifdef EDITOR
+	virtual Debug::Editor& GetEditor() const                  = 0;
+	virtual Renderer::ImGuiRenderer& GetImGuiRenderer() const = 0;
+#endif
+
+protected:
+	// First thing in a game's Shutdown: running jobs finish, queued ones and their main-thread follow-ups are dropped,
+	// so nothing is torn down while a worker might still be using it.
+	void StopJobs();
+	// Last thing in a game's Shutdown, once everything that draws or loads is gone: the core services, ending with the
+	// graphics device, the window and the job system.
+	void ShutdownCore();
 
 private:
-	std::unique_ptr<World::Camera> m_camera;
-	std::unique_ptr<Physics::CollisionLayers> m_collisionLayers;
-	std::unique_ptr<Dialogue::DialogueManager> m_dialogueManager;
-	std::unique_ptr<Dialogue::DialogueRegistry> m_dialogueRegistry;
-#ifdef EDITOR
-	std::unique_ptr<Debug::Editor> m_editor;
-#endif
 	std::unique_ptr<Event::EventManager> m_eventManager;
-	std::unique_ptr<Fitness::FitnessManager> m_fitnessManager;
-	std::unique_ptr<RideIntegration::RideService> m_rideService;
-	std::unique_ptr<World::World> m_world;
-	std::unique_ptr<Flag::FlagManager> m_flagManager;
 	std::unique_ptr<Core::GameData> m_gameData;
-	std::unique_ptr<System::GameObjectManager> m_gameObjectManager;
 	std::unique_ptr<Renderer::GraphicsDevice> m_graphicsDevice;
-#ifdef EDITOR
-	std::unique_ptr<Renderer::ImGuiRenderer> m_imGuiRenderer;
-#endif
 	std::unique_ptr<Input::Input> m_input;
 	std::unique_ptr<Jobs::JobSystem> m_jobSystem;
 	std::unique_ptr<Jobs::FrameScheduler> m_frameScheduler;
-	std::unique_ptr<UI::InputGlyphs> m_inputGlyphs;
 	std::unique_ptr<Localization::LocalizationManager> m_localizationManager;
 	std::unique_ptr<Audio::Mixer> m_mixer;
-	std::unique_ptr<Physics::PhysicsWorld> m_physicsWorld;
 #ifdef DEBUG
 	std::unique_ptr<Debug::Profiler> m_profiler;
 #endif
-	std::unique_ptr<entt::registry> m_registry;
 	std::unique_ptr<Resource::ResourceManager> m_resourceManager;
-	std::unique_ptr<System::SystemManager> m_systemManager;
 	std::unique_ptr<Core::TimeSystem> m_timeSystem;
-	std::unique_ptr<UI::UIManager> m_uiManager;
-	std::unique_ptr<Renderer::UIRenderer> m_uiRenderer;
-	std::unique_ptr<Dialogue::VariableSubstitutionSystem> m_variableSubstitutionSystem;
 	std::unique_ptr<Platform::Window> m_window;
-	std::unique_ptr<Renderer::WorldRenderer> m_worldRenderer;
-	std::unique_ptr<Wren::WrenScriptComponentRegistry> m_wrenScriptComponentRegistry;
-	std::unique_ptr<Wren::WrenScriptEngine> m_wrenScriptEngine;
-	std::unique_ptr<Wren::WrenStateManager> m_wrenStateManager;
 };
 }  // namespace Struktur

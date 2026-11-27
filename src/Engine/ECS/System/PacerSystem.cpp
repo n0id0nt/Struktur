@@ -2,7 +2,10 @@
 
 #include "Engine/ECS/Component/WorldComponents.h"
 #include "Engine/GameContext.h"
+#include "Engine/RideIntegration/RideContext.h"
 #include "Engine/World/Pacer.h"
+#include "Engine/World/World.h"
+#include "entt/entt.hpp"
 
 Struktur::System::SystemAccess Struktur::System::PacerSystem::Access() const
 {
@@ -20,7 +23,7 @@ void Struktur::System::PacerSystem::Prepare(GameContext& context)
 
 void Struktur::System::PacerSystem::Update(GameContext& context)
 {
-	const World::World& world = context.GetWorld();
+	const World::World& world = Struktur::RideContext::From(context).GetWorld();
 	if (!world.IsLoaded())
 	{
 		return;

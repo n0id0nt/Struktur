@@ -1,5 +1,24 @@
 #include "Game.h"
 
+#include "Engine/Dialogue/DialogueManager.h"
+#include "Engine/Dialogue/DialogueRegistry.h"
+#include "Engine/Fitness/FitnessManager.h"
+#include "Engine/Flag/FlagManager.h"
+#include "Engine/Physics/PhysicsWorld.h"
+#include "Engine/Renderer/UIRenderer.h"
+#include "Engine/RideIntegration/RideContext.h"
+#include "Engine/RideIntegration/RideService.h"
+#include "Engine/Scripting/WrenScriptComponentRegistry.h"
+#include "Engine/Scripting/WrenStateManager.h"
+#include "Engine/UI/InputGlyphs.h"
+#include "Engine/UI/UIManager.h"
+#include "Engine/World/World.h"
+#include "entt/entt.hpp"
+#ifdef EDITOR
+	#include "Debug/Editor/Editor.h"
+	#include "Engine/Renderer/ImGuiRenderer.h"
+#endif
+
 #include <cstdio>
 #include <memory>
 #include <string>
@@ -193,13 +212,13 @@ bool Struktur::InitialiseGame(GameContext& context)
 	// nothing connects until the game calls FitnessManager::ConnectRememberedDevices.
 	context.GetFitnessManager().SetRegistryPath(saveDir + "/fitness_devices.json");
 	context.GetFitnessManager().LoadRegistry();
-	context.GetRideService().Initialise(saveDir);
-	context.GetWorld().SetAssets(World::LoadWorldAssets());
+	Struktur::RideContext::From(context).GetRideService().Initialise(saveDir);
+	Struktur::RideContext::From(context).GetWorld().SetAssets(World::LoadWorldAssets());
 	if (Core::CommandLine::HasFlag("--list-missing-assets"))
 	{
 		// Prints every ride-world art role still using a placeholder (Markdown, same table as docs/missing-assets.md)
 		// and quits before the first frame.
-		const World::AssetManifest& manifest = context.GetWorld().GetAssets().manifest;
+		const World::AssetManifest& manifest = Struktur::RideContext::From(context).GetWorld().GetAssets().manifest;
 		const std::string table              = World::GetMissingAssetsMarkdown(manifest);
 		std::printf("%s", table.c_str());
 		std::fflush(stdout);
@@ -221,7 +240,7 @@ bool Struktur::InitialiseGame(GameContext& context)
 		fitness.GetRegistry().Remember(Fitness::DeviceRole::HEART_RATE,
 		                               Fitness::RememberedDevice{"5E:ED:00:00:00:02", "SIM Heart Rate", "ble"});
 	}
-	// Audio setup now happens in GameContext's constructor via SDL3_mixer, so it's already available here.
+	// Audio is set up by GameContext's constructor (SDL3_mixer), so it's already available here.
 
 	// GraphicsDevice::Initialise (above) already ran with the hardcoded VSync-on default, since it happens
 	// before the save-directory mount above even exists to read a persisted choice from - applying the real
@@ -589,7 +608,7 @@ void Struktur::UpdateLoop(void* userData)
 
 void Struktur::Game()
 {
-	GameContext context;
+	RideContext context;
 
 	// Load resources
 	if (!InitialiseGame(context))

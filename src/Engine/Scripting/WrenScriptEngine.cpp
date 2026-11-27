@@ -6,6 +6,7 @@
 #include "Engine/GameContext.h"
 #include "Reflect/wren_reflect.h"
 #include "Trace/wren_trace.h"
+#include "entt/entt.hpp"
 #ifndef DEBUG
 	#include "WrenBindings/Bindings/Generated/WrenBindingSources.h"
 #endif

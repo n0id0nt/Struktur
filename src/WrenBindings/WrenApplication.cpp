@@ -1,6 +1,7 @@
 #include "Engine/GameContext.h"
 #include "Engine/Platform/Window.h"
 #include "Engine/Scripting/WrenBindingRegistry.h"
+#include "Engine/Scripting/WrenScriptComponentRegistry.h"
 #include "wren.hpp"
 
 // ============================================================================

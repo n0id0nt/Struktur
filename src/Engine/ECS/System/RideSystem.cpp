@@ -1,15 +1,17 @@
 #include "RideSystem.h"
 
 #include "Engine/GameContext.h"
+#include "Engine/RideIntegration/RideContext.h"
 #include "Engine/RideIntegration/RideService.h"
+#include "Engine/World/World.h"
 #include "Engine/World/WorldLifecycle.h"
 
 static constexpr double FINISH_BANNER_AHEAD_METERS = 90.0;
 
 void Struktur::System::RideSystem::Update(GameContext& context)
 {
-	RideIntegration::RideService& service = context.GetRideService();
-	World::World& world                   = context.GetWorld();
+	RideIntegration::RideService& service = Struktur::RideContext::From(context).GetRideService();
+	World::World& world                   = Struktur::RideContext::From(context).GetWorld();
 	// SIM simulates the world's road under the rider (in ERG the controller holds watts and ignores it).
 	if (Ride::RideSession* session = service.GetSession())
 	{

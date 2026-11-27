@@ -2,6 +2,9 @@
 
 #include "Engine/ECS/Component/WorldComponents.h"
 #include "Engine/GameContext.h"
+#include "Engine/RideIntegration/RideContext.h"
+#include "Engine/World/World.h"
+#include "entt/entt.hpp"
 
 Struktur::System::SystemAccess Struktur::System::RiderAnimationSystem::Access() const
 {
@@ -22,7 +25,7 @@ void Struktur::System::RiderAnimationSystem::Prepare(GameContext& context)
 
 void Struktur::System::RiderAnimationSystem::Update(GameContext& context)
 {
-	const World::World& world = context.GetWorld();
+	const World::World& world = Struktur::RideContext::From(context).GetWorld();
 	if (!world.IsLoaded())
 	{
 		return;

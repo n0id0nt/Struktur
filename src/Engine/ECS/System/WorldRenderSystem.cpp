@@ -2,13 +2,16 @@
 
 #include "Engine/GameContext.h"
 #include "Engine/Renderer/WorldRenderer.h"
+#include "Engine/RideIntegration/RideContext.h"
+#include "Engine/World/World.h"
 
 void Struktur::System::WorldRenderSystem::Update(GameContext& context)
 {
-	World::World& world = context.GetWorld();
+	World::World& world = Struktur::RideContext::From(context).GetWorld();
 	if (!world.IsLoaded())
 	{
 		return;
 	}
-	context.GetWorldRenderer().Render(context, world, context.GetTimeSystem().unscaledDelta);
+	Struktur::RideContext::From(context).GetWorldRenderer().Render(context, world,
+	                                                               context.GetTimeSystem().unscaledDelta);
 }

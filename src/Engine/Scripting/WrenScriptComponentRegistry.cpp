@@ -4,6 +4,7 @@
 
 #include "Debug/Assertions.h"
 #include "Engine/GameContext.h"
+#include "Engine/Scripting/WrenScriptEngine.h"
 #ifdef DEBUG
 	#include <sys/stat.h>
 

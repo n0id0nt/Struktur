@@ -1,4 +1,7 @@
 #include "ToolbarWindow.h"
+#ifdef EDITOR
+	#include "Debug/Editor/Editor.h"
+#endif
 
 #include "Engine/Core/GameData.h"
 #include "Engine/Game.h"

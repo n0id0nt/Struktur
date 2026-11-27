@@ -11,9 +11,12 @@
 #include "Engine/ECS/Component/Transform.h"
 #include "Engine/ECS/Component/World.h"
 #include "Engine/ECS/Component/WrenScript.h"
+#include "Engine/ECS/GameObjectManager.h"
 #include "Engine/ECS/System/HierarchySystem.h"
+#include "Engine/ECS/SystemManager.h"
 #include "Engine/GameContext.h"
 #include "Engine/Scripting/WrenBindingRegistry.h"
+#include "entt/entt.hpp"
 #include "wren.hpp"
 
 // ============================================================================

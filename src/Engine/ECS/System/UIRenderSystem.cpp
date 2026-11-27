@@ -2,6 +2,7 @@
 
 #include "Engine/GameContext.h"
 #include "Engine/Renderer/UIRenderer.h"
+#include "Engine/UI/UIManager.h"
 
 void Struktur::System::UIRenderSystem::Update(GameContext& context)
 {

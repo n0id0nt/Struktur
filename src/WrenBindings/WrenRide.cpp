@@ -3,16 +3,16 @@
 // nothing calls back into Wren - changes arrive as ride* engine events (see RideService).
 #include <algorithm>
 #include <cmath>
+#include <nlohmann/json.hpp>
 #include <optional>
 #include <string>
-
-#include <nlohmann/json.hpp>
 
 #include "Debug/Assertions.h"
 #include "Engine/Callback/CallbackHelperFunctions.h"
 #include "Engine/Callback/Variant.h"
 #include "Engine/GameContext.h"
 #include "Engine/Ride/Zones.h"
+#include "Engine/RideIntegration/RideContext.h"
 #include "Engine/RideIntegration/RideService.h"
 #include "Engine/Scripting/WrenBindingRegistry.h"
 #include "Engine/UI/UIGraph.h"
@@ -37,7 +37,7 @@ static Struktur::GameContext& GetContext(WrenVM* vm)
 
 static Struktur::RideIntegration::RideService& GetService(WrenVM* vm)
 {
-	return GetContext(vm).GetRideService();
+	return Struktur::RideContext::From(GetContext(vm)).GetRideService();
 }
 
 static double GetNow(WrenVM* vm)

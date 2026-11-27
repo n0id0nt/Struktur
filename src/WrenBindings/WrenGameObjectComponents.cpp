@@ -6,6 +6,7 @@
 #include "Engine/ECS/System/PhysicsSystem.h"
 #include "Engine/ECS/System/TransformSystem.h"
 #include "Engine/ECS/System/WrenScriptSystem.h"
+#include "Engine/ECS/SystemManager.h"
 #include "Engine/GameContext.h"
 #include "Engine/Scripting/WrenBindingRegistry.h"
 #include "Engine/Scripting/WrenUtil.h"
@@ -13,6 +14,7 @@
 #include "WrenMath.h"
 #include "WrenPhysics.h"
 #include "WrenResourceManager.h"
+#include "entt/entt.hpp"
 #include "wren.hpp"
 
 // ============================================================================

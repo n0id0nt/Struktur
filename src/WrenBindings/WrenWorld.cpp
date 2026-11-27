@@ -1,16 +1,18 @@
 // "world" module - the Wren face of the procedural world (World::World + its renderer). Scripts load and unload it
 // explicitly, e.g. when the ride screen is entered and left.
 #include <algorithm>
-#include <string>
-
 #include <nlohmann/json.hpp>
+#include <string>
 
 #include "Debug/Assertions.h"
 #include "Engine/Callback/CallbackHelperFunctions.h"
 #include "Engine/Callback/Variant.h"
 #include "Engine/Core/CommandLine.h"
 #include "Engine/GameContext.h"
+#include "Engine/Renderer/WorldRenderer.h"
+#include "Engine/RideIntegration/RideContext.h"
 #include "Engine/Scripting/WrenBindingRegistry.h"
+#include "Engine/World/World.h"
 #include "Engine/World/WorldLifecycle.h"
 #include "wren.hpp"
 
@@ -68,7 +70,7 @@ static void wren_WorldUnload(WrenVM* vm)
 // World.isLoaded -> bool
 static void wren_WorldIsLoaded(WrenVM* vm)
 {
-	wrenSetSlotBool(vm, 0, ContextOf(vm).GetWorld().IsLoaded());
+	wrenSetSlotBool(vm, 0, Struktur::RideContext::From(ContextOf(vm)).GetWorld().IsLoaded());
 }
 
 // World.applySettings(settingsJson) -> bool: changes a loaded world in place (geometry is rebuilt only if needed);
@@ -76,7 +78,7 @@ static void wren_WorldIsLoaded(WrenVM* vm)
 static void wren_WorldApplySettings(WrenVM* vm)
 {
 	Struktur::GameContext& context = ContextOf(vm);
-	World::World& world            = context.GetWorld();
+	World::World& world            = Struktur::RideContext::From(context).GetWorld();
 	World::WorldSettings settings;
 	if (!world.IsLoaded() || !SettingsFromSlot(vm, 1, settings))
 	{
@@ -93,7 +95,7 @@ static void wren_WorldApplySettings(WrenVM* vm)
 	world.SetSettings(settings);
 	if (newRoad)
 	{
-		context.GetWorldRenderer().ResetChunks();
+		Struktur::RideContext::From(context).GetWorldRenderer().ResetChunks();
 	}
 	wrenSetSlotBool(vm, 0, true);
 }
@@ -102,7 +104,7 @@ static void wren_WorldApplySettings(WrenVM* vm)
 static void wren_WorldBiomes(WrenVM* vm)
 {
 	Struktur::Callback::VariantList list;
-	const World::WorldAssets& assets = ContextOf(vm).GetWorld().GetAssets();
+	const World::WorldAssets& assets = Struktur::RideContext::From(ContextOf(vm)).GetWorld().GetAssets();
 	for (const World::BiomeDefinition& biome : assets.biomes)
 	{
 		list.items.push_back(biome.id);
@@ -113,7 +115,7 @@ static void wren_WorldBiomes(WrenVM* vm)
 // World.info -> map (biome, distance, grade) or null while nothing is loaded
 static void wren_WorldInfo(WrenVM* vm)
 {
-	World::World& world = ContextOf(vm).GetWorld();
+	World::World& world = Struktur::RideContext::From(ContextOf(vm)).GetWorld();
 	if (!world.IsLoaded())
 	{
 		wrenSetSlotNull(vm, 0);
@@ -131,7 +133,7 @@ static void wren_WorldInfo(WrenVM* vm)
 // World.jumpTo(distance) - development helper: moves the rider along the same seeded road
 static void wren_WorldJumpTo(WrenVM* vm)
 {
-	World::World& world = ContextOf(vm).GetWorld();
+	World::World& world = Struktur::RideContext::From(ContextOf(vm)).GetWorld();
 	if (world.IsLoaded() && wrenGetSlotType(vm, 1) == WREN_TYPE_NUM)
 	{
 		world.JumpTo(std::clamp(wrenGetSlotDouble(vm, 1), 0.0, 1.0e7));

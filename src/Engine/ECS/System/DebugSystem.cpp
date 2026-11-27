@@ -1,10 +1,13 @@
 #include "DebugSystem.h"
 
+#include "Debug/Editor/Editor.h"
 #include "Debug/Editor/Windows/HierarchyWindow.h"
 #include "Engine/ECS/Component/PhysicsBody.h"
 #include "Engine/ECS/Component/Transform.h"
 #include "Engine/ECS/System/TransformSystem.h"
 #include "Engine/GameContext.h"
+#include "Engine/Physics/PhysicsWorld.h"
+#include "entt/entt.hpp"
 
 Struktur::System::DebugSystem::DebugSystem() {}
 

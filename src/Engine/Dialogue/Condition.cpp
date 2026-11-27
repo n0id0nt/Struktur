@@ -2,6 +2,7 @@
 
 #include "DialogueHelperFunctions.h"
 #include "Engine/Callback/Callback.h"
+#include "Engine/Dialogue/DialogueRegistry.h"
 #include "Engine/GameContext.h"
 
 Struktur::Dialogue::Condition::Condition(const std::string& key,

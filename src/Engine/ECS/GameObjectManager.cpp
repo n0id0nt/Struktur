@@ -10,6 +10,7 @@
 #include "Engine/ECS/System/WrenScriptSystem.h"
 #include "Engine/ECS/SystemManager.h"
 #include "Engine/GameContext.h"
+#include "Engine/Physics/PhysicsWorld.h"
 #include "glm/glm.hpp"
 #include "glm/gtc/quaternion.hpp."
 

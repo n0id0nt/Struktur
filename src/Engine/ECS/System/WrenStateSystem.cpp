@@ -1,6 +1,7 @@
 #include "WrenStateSystem.h"
 
 #include "Engine/GameContext.h"
+#include "Engine/Scripting/WrenStateManager.h"
 
 void Struktur::System::WrenStateSystem::Update(GameContext& context)
 {

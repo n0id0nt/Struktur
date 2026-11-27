@@ -102,6 +102,28 @@ if(CMAKE_BUILD_TYPE STREQUAL "Debug")
 endif()
 
 ##########################################################################################
+# Engine libraries
+##########################################################################################
+
+# Which engine libraries the game is built with (core is always there). Each one listed defines STRUKTUR_<NAME> for
+# every file, and code that uses an optional library sits inside its define - see docs/ModuleSplitPlan.md. The ride
+# needs ecs, wren, ui and fitness; leaving the others out checks that nothing else depends on them.
+set(STRUKTUR_ALL_LIBRARIES ecs wren ui physics dialogue flag fitness)
+set(STRUKTUR_LIBRARIES "${STRUKTUR_ALL_LIBRARIES}" CACHE STRING "Engine libraries compiled into the game")
+foreach(library IN LISTS STRUKTUR_LIBRARIES)
+    if(NOT library IN_LIST STRUKTUR_ALL_LIBRARIES)
+        message(FATAL_ERROR "Unknown engine library '${library}' (known: ${STRUKTUR_ALL_LIBRARIES})")
+    endif()
+    string(TOUPPER ${library} library_define)
+    add_compile_definitions(STRUKTUR_${library_define})
+endforeach()
+foreach(library IN ITEMS ecs wren ui fitness)
+    if(NOT library IN_LIST STRUKTUR_LIBRARIES)
+        message(FATAL_ERROR "The game needs the '${library}' engine library")
+    endif()
+endforeach()
+
+##########################################################################################
 # MSVC runtime linking
 ##########################################################################################
 
@@ -393,6 +415,7 @@ if(EDITOR)
         src/Engine/ECS/System/DebugSystem.h         src/Engine/ECS/System/DebugSystem.cpp
 
         src/Debug/Editor/Editor.h                   src/Debug/Editor/Editor.cpp
+        src/Debug/Editor/EditorServices.h           src/Debug/Editor/EditorServices.cpp
         src/Debug/Editor/ExportedFieldRenderer.h    src/Debug/Editor/ExportedFieldRenderer.cpp
         src/Debug/Editor/EditorLayoutManager.h      src/Debug/Editor/EditorLayoutManager.cpp
         src/Debug/Editor/EditorSettings.h           src/Debug/Editor/EditorSettings.cpp
@@ -471,6 +494,16 @@ set(SOURCES
 
     src/Engine/Game.h                           src/Engine/Game.cpp
     src/Engine/GameContext.h                    src/Engine/GameContext.cpp
+    src/Engine/RideIntegration/RideContext.h    src/Engine/RideIntegration/RideContext.cpp
+
+    # Each library's services, held by the game's context
+    src/Engine/ECS/EcsServices.h                src/Engine/ECS/EcsServices.cpp
+    src/Engine/Scripting/WrenServices.h         src/Engine/Scripting/WrenServices.cpp
+    src/Engine/UI/UIServices.h                  src/Engine/UI/UIServices.cpp
+    src/Engine/Physics/PhysicsServices.h        src/Engine/Physics/PhysicsServices.cpp
+    src/Engine/Dialogue/DialogueServices.h      src/Engine/Dialogue/DialogueServices.cpp
+    src/Engine/Flag/FlagServices.h              src/Engine/Flag/FlagServices.cpp
+    src/Engine/Fitness/FitnessServices.h        src/Engine/Fitness/FitnessServices.cpp
 
     src/Engine/Core/Gamedata.h                  src/Engine/Core/GameData.cpp
     src/Engine/Core/TimeSystem.h                src/Engine/Core/TimeSystem.cpp

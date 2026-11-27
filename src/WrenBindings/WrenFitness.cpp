@@ -12,6 +12,7 @@
 #include "Engine/Fitness/FitnessManager.h"
 #include "Engine/GameContext.h"
 #include "Engine/Scripting/WrenBindingRegistry.h"
+#include "entt/entt.hpp"
 #include "wren.hpp"
 
 using Struktur::Callback::Variant;

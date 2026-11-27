@@ -4,12 +4,15 @@
 
 #include "Engine/ECS/Component/WorldComponents.h"
 #include "Engine/GameContext.h"
+#include "Engine/RideIntegration/RideContext.h"
+#include "Engine/World/World.h"
+#include "entt/entt.hpp"
 
 static constexpr double BANNER_KEPT_BEHIND_METERS = 20.0;
 
 void Struktur::System::WorldSystem::Update(GameContext& context)
 {
-	World::World& world = context.GetWorld();
+	World::World& world = Struktur::RideContext::From(context).GetWorld();
 	if (!world.IsLoaded())
 	{
 		return;
