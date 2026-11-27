@@ -4,6 +4,13 @@
 #include "Engine/ECS/Component/SpriteAnimation.h"
 #include "Engine/GameContext.h"
 
+Struktur::System::SystemAccess Struktur::System::AnimationSystem::Access() const
+{
+	return SystemAccess::Worker()
+	    .Read<Component::SpriteAnimation, Inactive, Core::TimeSystem>()
+	    .Write<Component::Sprite>();
+}
+
 void Struktur::System::AnimationSystem::Update(GameContext& context)
 {
 	entt::registry& registry     = context.GetRegistry();

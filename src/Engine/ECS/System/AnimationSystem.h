@@ -34,6 +34,8 @@ public:
 	{
 		return "Animation System";
 	}
+	// Worker-safe: picks each animated sprite's frame from game time.
+	SystemAccess Access() const override;
 };
 }  // namespace System
 }  // namespace Struktur
