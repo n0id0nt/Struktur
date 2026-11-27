@@ -462,11 +462,11 @@ endif()
 # Renderer/WorldRenderer) is the only world that gets rendered. docs/RideRefactorPlan.md lists the files.
 # Wren Scripting: Use source assets directly
 set(WREN_BINDING_SOURCES 
-    src/WrenBindings/ComponentListXMacro.h
     src/WrenBindings/WrenGameObjectComponents.h src/WrenBindings/WrenGameObjectComponents.cpp
     src/WrenBindings/WrenMath.h                 src/WrenBindings/WrenMath.cpp
     src/WrenBindings/WrenPhysics.h              src/WrenBindings/WrenPhysics.cpp
                                                 src/WrenBindings/WrenCollisionLayers.cpp
+                                                src/WrenBindings/WrenPhysicsBody.cpp
     src/WrenBindings/WrenResourceManager.h      src/WrenBindings/WrenResourceManager.cpp
     src/WrenBindings/WrenUI.h                   src/WrenBindings/WrenUI.cpp
     src/WrenBindings/WrenDialogue.h             src/WrenBindings/WrenDialogue.cpp
@@ -555,6 +555,9 @@ set(SOURCES
     src/Engine/Resource/ShaderResource.h        src/Engine/Resource/ShaderResource.cpp
     src/Engine/ECS/SystemManager.h              src/Engine/ECS/SystemManager.cpp
     src/Engine/ECS/GameObjectManager.h          src/Engine/ECS/GameObjectManager.cpp
+    src/Engine/ECS/ScriptComponents.h
+    src/Engine/ECS/EcsComponentList.h
+    src/Engine/Physics/PhysicsComponentList.h
     src/Engine/ECS/Component/active.h
     src/Engine/ECS/Component/PhysicsBody.h
     

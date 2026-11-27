@@ -5,6 +5,7 @@ namespace Struktur::Wren
 void RegisterAllBindings(BindingRegistry& registry)
 {
 	RegisterGameObjectBindings(registry);
+	RegisterPhysicsBodyBindings(registry);
 	RegisterGameObjectComponentBindings(registry);
 	RegisterMathBindings(registry);
 	RegisterPhysicsBindings(registry);

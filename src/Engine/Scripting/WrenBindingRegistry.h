@@ -197,6 +197,7 @@ void RegisterGameObjectBindings(BindingRegistry& registry);
 void RegisterGameObjectComponentBindings(BindingRegistry& registry);
 void RegisterMathBindings(BindingRegistry& registry);
 void RegisterPhysicsBindings(BindingRegistry& registry);
+void RegisterPhysicsBodyBindings(BindingRegistry& registry);
 void RegisterCollisionLayersBindings(BindingRegistry& registry);
 void RegisterResourceManagerBindings(BindingRegistry& registry);
 void RegisterUIBindings(BindingRegistry& registry);

@@ -1,7 +1,7 @@
 // NOT COMPILED on this branch: the Wren bindings of the 2D world's components (camera, LDtk level and world,
 // shader, sprite, sprite animation and particle emitter), moved here from WrenGameObjectComponents.cpp when the 2D
 // pipeline left the build (docs/RideRefactorPlan.md). Restoring them means adding their entries back to
-// ComponentListXMacro.h and these registrations to the module.
+// the script component lists and these registrations to the module.
 
 // ============================================================================
 // CAMERA BINDINGS
