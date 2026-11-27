@@ -81,7 +81,8 @@ double GradeForIntensity(double intensity);
 class RideWorld
 {
 public:
-	RideWorld(const WorldSettings& settings, BiomeList biomes, bool threaded);
+	// `jobs` builds chunks in the background; null builds them inline (tests).
+	RideWorld(const WorldSettings& settings, BiomeList biomes, Jobs::JobSystem* jobs);
 
 	// Applies new settings; geometry is rebuilt only when something that shapes it changed.
 	void SetSettings(const WorldSettings& settings);
@@ -124,7 +125,7 @@ private:
 
 	WorldSettings m_settings;
 	BiomeList m_biomes;
-	bool m_threaded;
+	Jobs::JobSystem* m_jobs;
 	std::unique_ptr<Route> m_route;
 	std::unique_ptr<BiomeSequence> m_sequence;
 	std::unique_ptr<ChunkStreamer> m_streamer;

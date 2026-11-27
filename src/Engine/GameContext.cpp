@@ -56,7 +56,7 @@ GameContext::GameContext()
 	// Idle until the game asks it to scan or connect (see docs/SmartTrainer.md) - constructing it never touches the
 	// radio. Non-Windows platforms get a backend that reports Bluetooth as unavailable.
 	m_fitnessManager = std::make_unique<Fitness::FitnessManager>(CreateFitnessCentral());
-	m_rideService    = std::make_unique<RideIntegration::RideService>();
+	m_rideService    = std::make_unique<RideIntegration::RideService>(m_jobSystem.get());
 	m_flagManager       = std::make_unique<Flag::FlagManager>();
 	m_gameData          = std::make_unique<Core::GameData>();
 	m_gameObjectManager = std::make_unique<System::GameObjectManager>();
@@ -92,7 +92,6 @@ void GameContext::Shutdown()
 	// torn down while a worker might still be using it.
 	m_frameScheduler.reset();
 	m_jobSystem->Shutdown();
-	m_jobSystem.reset();
 	// Every member below (other than the graphics device itself) must be torn down before
 	// m_graphicsDevice->Shutdown() runs - bgfx::destroy() is invalid once bgfx has shut down. Resetting
 	// everything else first, in any order, means declaration order above no longer has to encode this.
@@ -145,6 +144,8 @@ void GameContext::Shutdown()
 	m_graphicsDevice->Shutdown();
 	m_graphicsDevice.reset();
 	m_window.reset();
+	// Last: objects torn down above (ride world, ride session) may still wait on their - by now complete - tasks.
+	m_jobSystem.reset();
 }
 
 World::Camera& GameContext::GetCamera() const

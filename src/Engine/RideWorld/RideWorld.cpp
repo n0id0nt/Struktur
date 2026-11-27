@@ -61,10 +61,10 @@ void DemoPacer::Collect(double riderDistance, double deltaSeconds, std::vector<W
 	out.push_back(actor);
 }
 
-RideWorld::RideWorld(const WorldSettings& settings, BiomeList biomes, bool threaded)
+RideWorld::RideWorld(const WorldSettings& settings, BiomeList biomes, Jobs::JobSystem* jobs)
     : m_settings(settings),
       m_biomes(std::move(biomes)),
-      m_threaded(threaded),
+      m_jobs(jobs),
       m_actorSource(nullptr),
       m_distance(0.0),
       m_time(0.0),
@@ -106,7 +106,7 @@ void RideWorld::Rebuild()
 	m_propTypes = std::make_shared<const PropTypeTable>(PropTypeTable::FromBiomes(*m_biomes));
 	if (!m_streamer)
 	{
-		m_streamer = std::make_unique<ChunkStreamer>(m_threaded);
+		m_streamer = std::make_unique<ChunkStreamer>(m_jobs);
 	}
 	m_streamer->Configure(MakeChunkSettings(), m_biomes, m_propTypes);
 

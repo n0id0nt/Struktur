@@ -1,13 +1,11 @@
 #pragma once
 
-#include <condition_variable>
+#include <atomic>
 #include <cstdint>
-#include <deque>
 #include <memory>
-#include <mutex>
-#include <thread>
 #include <vector>
 
+#include "Engine/Jobs/Task.h"
 #include "Engine/RideWorld/Biome.h"
 #include "Engine/RideWorld/ChunkBuilder.h"
 #include "Engine/RideWorld/Route.h"
@@ -25,13 +23,14 @@ struct StreamerStats
 	int64_t chunksBuilt             = 0;
 };
 
-// Streams chunks along the road: builds the ones in [rider - behind, rider + ahead] on a worker thread (or inline
-// when threaded = false, e.g. tests and single-threaded builds), hands finished ones to the renderer, and recycles
-// the ones that fall behind into a fixed pool - meshes are reused, so memory stays flat over any distance.
+// Streams chunks along the road: builds the ones in [rider - behind, rider + ahead] as background tasks on the job
+// system (or inline when `jobs` is null, e.g. tests), hands finished ones to the renderer, and recycles the ones that
+// fall behind into a fixed pool - meshes are reused, so memory stays flat over any distance. Every call is made from
+// one thread (the main thread); only BuildChunk runs on workers, writing to a mesh nothing else touches meanwhile.
 class ChunkStreamer
 {
 public:
-	explicit ChunkStreamer(bool threaded);
+	explicit ChunkStreamer(Jobs::JobSystem* jobs);
 	~ChunkStreamer();
 
 	ChunkStreamer(const ChunkStreamer&)            = delete;
@@ -50,7 +49,7 @@ public:
 	std::vector<int64_t> TakeReleased();
 
 	StreamerStats GetStats() const;
-	// Blocks until no job is pending (tests, screenshots).
+	// Blocks until no build is in flight (tests, screenshots), helping run them meanwhile.
 	void WaitIdle();
 
 private:
@@ -65,10 +64,21 @@ private:
 	void ReleaseMesh(ChunkMesh* mesh);
 	void RequestChunk(Route& route, BiomeSequence& sequence, int64_t chunkIndex);
 	void CollectFinished();
-	void WorkerLoop();
+	void FinishJob(Job& job);
 	bool IsPendingOrReady(int64_t chunkIndex) const;
 
-	bool m_threaded;
+	// A build running as a task. The Job lives on the heap so its address stays put while a worker builds into it.
+	// `claimed` is set by whichever comes first: the build starting, or Configure() taking the mesh back from a build
+	// that hasn't started (so stale queued builds don't hold meshes until a worker gets round to them).
+	struct InFlight
+	{
+		std::unique_ptr<Job> job;
+		std::unique_ptr<std::atomic<bool>> claimed;
+		Jobs::Task<void> task;
+	};
+	void ReclaimUnstarted();
+
+	Jobs::JobSystem* m_jobs;
 	ChunkSettings m_settings;
 	BiomeList m_biomes;
 	std::shared_ptr<const PropTypeTable> m_propTypes;
@@ -81,15 +91,7 @@ private:
 	std::vector<const ChunkMesh*> m_newlyReady;
 	std::vector<int64_t> m_released;
 
-	// Worker side.
-	mutable std::mutex m_mutex;
-	std::condition_variable m_wake;
-	std::condition_variable m_idle;
-	std::deque<Job> m_jobs;
-	std::vector<Job> m_finished;
-	bool m_busy;
-	bool m_stop;
-	std::thread m_worker;
+	std::vector<InFlight> m_inFlight;
 
 	StreamerStats m_stats;
 };

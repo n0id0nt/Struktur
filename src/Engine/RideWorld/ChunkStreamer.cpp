@@ -13,29 +13,20 @@ static bool ByChunkIndex(const ChunkMesh* first, const ChunkMesh* second)
 	return first->chunkIndex < second->chunkIndex;
 }
 
-ChunkStreamer::ChunkStreamer(bool threaded)
-    : m_threaded(threaded),
-      m_generation(1),
-      m_busy(false),
-      m_stop(false)
+ChunkStreamer::ChunkStreamer(Jobs::JobSystem* jobs)
+    : m_jobs(jobs),
+      m_generation(1)
 {
-	if (m_threaded)
-	{
-		m_worker = std::thread(&ChunkStreamer::WorkerLoop, this);
-	}
 }
 
 ChunkStreamer::~ChunkStreamer()
 {
-	if (m_threaded)
+	// Builds write into meshes this owns: stop the ones that haven't started and wait out the rest. (The job system
+	// outlives every streamer - GameContext destroys it last - and after its Shutdown() every task is complete.)
+	ReclaimUnstarted();
+	for (InFlight& flight : m_inFlight)
 	{
-		{
-			std::lock_guard<std::mutex> lock(m_mutex);
-			m_stop = true;
-			m_jobs.clear();
-		}
-		m_wake.notify_all();
-		m_worker.join();
+		m_jobs->Wait(flight.task);
 	}
 }
 
@@ -46,15 +37,9 @@ void ChunkStreamer::Configure(const ChunkSettings& settings, BiomeList biomes,
 	m_biomes    = std::move(biomes);
 	m_propTypes = std::move(propTypes);
 	++m_generation;
-	// Drop queued work; anything mid-build comes back with the old generation and is recycled.
-	{
-		std::lock_guard<std::mutex> lock(m_mutex);
-		for (Job& job : m_jobs)
-		{
-			m_freeMeshes.push_back(job.mesh);
-		}
-		m_jobs.clear();
-	}
+	// Builds that haven't started give their mesh back now; running ones come back with the old generation and
+	// their mesh is recycled then (not now - they're still writing to it).
+	ReclaimUnstarted();
 	m_pendingIndices.clear();
 	for (ChunkMesh* mesh : m_ready)
 	{
@@ -133,45 +118,85 @@ void ChunkStreamer::RequestChunk(Route& route, BiomeSequence& sequence, int64_t 
 	}
 	m_pendingIndices.push_back(chunkIndex);
 
-	if (!m_threaded)
+	if (m_jobs == nullptr)
 	{
 		BuildChunk(job.job, *job.mesh);
-		m_finished.push_back(std::move(job));
+		FinishJob(job);
 		return;
 	}
+	InFlight flight;
+	flight.job                 = std::make_unique<Job>(std::move(job));
+	flight.claimed             = std::make_unique<std::atomic<bool>>(false);
+	Job* building              = flight.job.get();
+	std::atomic<bool>* claimed = flight.claimed.get();
+	flight.task                = m_jobs->Run(
+        [building, claimed]
+        {
+            if (!claimed->exchange(true, std::memory_order_acq_rel))
+            {
+                BuildChunk(building->job, *building->mesh);
+            }
+        },
+        Jobs::Lane::BACKGROUND);
+	m_inFlight.push_back(std::move(flight));
+}
+
+void ChunkStreamer::ReclaimUnstarted()
+{
+	for (InFlight& flight : m_inFlight)
 	{
-		std::lock_guard<std::mutex> lock(m_mutex);
-		m_jobs.push_back(std::move(job));
+		flight.task.Cancel();
+		if (!flight.claimed->exchange(true, std::memory_order_acq_rel) && flight.job->mesh != nullptr)
+		{
+			ReleaseMesh(flight.job->mesh);
+			flight.job->mesh = nullptr;
+		}
 	}
-	m_wake.notify_one();
 }
 
 void ChunkStreamer::CollectFinished()
 {
-	std::vector<Job> finished;
+	for (size_t index = 0; index < m_inFlight.size();)
 	{
-		std::lock_guard<std::mutex> lock(m_mutex);
-		finished.swap(m_finished);
-	}
-	for (Job& job : finished)
-	{
-		const int64_t index = job.job.chunkIndex;
-		m_pendingIndices.erase(std::remove(m_pendingIndices.begin(), m_pendingIndices.end(), index),
-		                       m_pendingIndices.end());
-		if (job.generation != m_generation)
+		InFlight& flight = m_inFlight[index];
+		if (!flight.task.IsComplete())
 		{
-			ReleaseMesh(job.mesh);
+			++index;
 			continue;
 		}
-		m_ready.push_back(job.mesh);
-		m_newlyReady.push_back(job.mesh);
-		const double milliseconds = job.mesh->buildMilliseconds;
-		m_stats.lastBuildMilliseconds = milliseconds;
-		m_stats.averageBuildMilliseconds =
-		    m_stats.chunksBuilt == 0 ? milliseconds : m_stats.averageBuildMilliseconds * 0.9 + milliseconds * 0.1;
-		m_stats.maxBuildMilliseconds = std::max(m_stats.maxBuildMilliseconds, milliseconds);
-		++m_stats.chunksBuilt;
+		Job job = std::move(*flight.job);
+		m_inFlight.erase(m_inFlight.begin() + static_cast<ptrdiff_t>(index));
+		if (job.mesh == nullptr)
+		{
+			continue;  // reclaimed before it started
+		}
+		if (!flight.task.Succeeded())
+		{
+			job.generation = 0;  // dropped at shutdown: nothing was built, recycle the mesh
+		}
+		FinishJob(job);
 	}
+}
+
+void ChunkStreamer::FinishJob(Job& job)
+{
+	if (job.generation != m_generation)
+	{
+		// Stale (settings changed meanwhile): its index may already be pending again for the new generation.
+		ReleaseMesh(job.mesh);
+		return;
+	}
+	const int64_t index = job.job.chunkIndex;
+	m_pendingIndices.erase(std::remove(m_pendingIndices.begin(), m_pendingIndices.end(), index),
+	                       m_pendingIndices.end());
+	m_ready.push_back(job.mesh);
+	m_newlyReady.push_back(job.mesh);
+	const double milliseconds = job.mesh->buildMilliseconds;
+	m_stats.lastBuildMilliseconds = milliseconds;
+	m_stats.averageBuildMilliseconds =
+	    m_stats.chunksBuilt == 0 ? milliseconds : m_stats.averageBuildMilliseconds * 0.9 + milliseconds * 0.1;
+	m_stats.maxBuildMilliseconds = std::max(m_stats.maxBuildMilliseconds, milliseconds);
+	++m_stats.chunksBuilt;
 }
 
 void ChunkStreamer::Update(Route& route, BiomeSequence& sequence, double riderDistance, double behindMeters,
@@ -215,10 +240,6 @@ void ChunkStreamer::Update(Route& route, BiomeSequence& sequence, double riderDi
 			++requested;
 		}
 	}
-	if (!m_threaded)
-	{
-		CollectFinished();
-	}
 	std::sort(m_ready.begin(), m_ready.end(), ByChunkIndex);
 	m_stats.readyChunks  = static_cast<int>(m_ready.size());
 	m_stats.pendingJobs  = static_cast<int>(m_pendingIndices.size());
@@ -251,43 +272,9 @@ StreamerStats ChunkStreamer::GetStats() const
 
 void ChunkStreamer::WaitIdle()
 {
-	if (!m_threaded)
+	for (InFlight& flight : m_inFlight)
 	{
-		return;
-	}
-	std::unique_lock<std::mutex> lock(m_mutex);
-	while (!m_jobs.empty() || m_busy)
-	{
-		m_idle.wait(lock);
-	}
-}
-
-void ChunkStreamer::WorkerLoop()
-{
-	for (;;)
-	{
-		Job job;
-		{
-			std::unique_lock<std::mutex> lock(m_mutex);
-			while (!m_stop && m_jobs.empty())
-			{
-				m_wake.wait(lock);
-			}
-			if (m_stop)
-			{
-				return;
-			}
-			job = std::move(m_jobs.front());
-			m_jobs.pop_front();
-			m_busy = true;
-		}
-		BuildChunk(job.job, *job.mesh);
-		{
-			std::lock_guard<std::mutex> lock(m_mutex);
-			m_finished.push_back(std::move(job));
-			m_busy = false;
-		}
-		m_idle.notify_all();
+		m_jobs->Wait(flight.task);
 	}
 }
 }  // namespace Struktur::RideWorld

@@ -40,7 +40,8 @@ struct WorkoutListing
 class RideService
 {
 public:
-	RideService();
+	// Chunk builds and ride autosaves run on `jobs` (GameContext's job system, which outlives this service).
+	explicit RideService(Jobs::JobSystem* jobs);
 	~RideService();
 
 	// saveDirectory: the OS path the engine mounts as its write dir. Loads ride_settings.json and makes sure the
@@ -98,6 +99,7 @@ private:
 	std::vector<std::string> m_biomeIds;
 	RideWorld::AssetManifest m_manifest;
 	RideWorld::SpriteDescriptor m_spriteDescriptor;
+	Jobs::JobSystem* m_jobs = nullptr;
 	std::unique_ptr<RideWorld::RideWorld> m_world;
 	std::unique_ptr<RideWorld::DemoPacer> m_pacer;
 	std::unique_ptr<Renderer::RideWorldRenderer> m_worldRenderer;

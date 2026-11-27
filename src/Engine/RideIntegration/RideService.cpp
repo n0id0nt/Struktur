@@ -59,7 +59,10 @@ static bool IsWorkoutFile(const std::string& name)
 	return lower.size() > 4 && (lower.ends_with(".zwo") || lower.ends_with(".mrc"));
 }
 
-RideService::RideService() = default;
+RideService::RideService(Jobs::JobSystem* jobs)
+    : m_jobs(jobs)
+{
+}
 
 // Out of line: RideWorldRenderer is only forward-declared in the header. Destroying it releases its GPU resources,
 // which GameContext::Shutdown guarantees happens before bgfx shuts down.
@@ -205,7 +208,7 @@ void RideService::CreateWorld()
 	{
 		return;
 	}
-	m_world = std::make_unique<RideWorld::RideWorld>(m_settings.world, m_biomes, true);
+	m_world = std::make_unique<RideWorld::RideWorld>(m_settings.world, m_biomes, m_jobs);
 	if (IsDemo() && m_settings.world.demoPacer)
 	{
 		m_pacer = std::make_unique<RideWorld::DemoPacer>();
@@ -486,6 +489,7 @@ bool RideService::StartFreeRide(const Ride::RiderInfo& rider, double now)
 	m_session = std::make_unique<Ride::RideSession>(Ride::RideMode::FREE_RIDE, rider, m_settings, std::nullopt,
 	                                                MakeOutputBasePath("Free_Ride"), (int64_t)std::time(nullptr),
 	                                                LocalUtcOffsetSeconds());
+	m_session->SetBackgroundJobs(m_jobs);
 	m_session->Start(now);
 	m_lastTickNow  = now;
 	m_lastWorldNow = now;
@@ -506,6 +510,7 @@ bool RideService::StartWorkout(const std::string& workoutId, const Ride::RiderIn
 	m_session               = std::make_unique<Ride::RideSession>(Ride::RideMode::WORKOUT, rider, m_settings,
 	                                                              std::move(loaded.workout), MakeOutputBasePath(title),
 	                                                              (int64_t)std::time(nullptr), LocalUtcOffsetSeconds());
+	m_session->SetBackgroundJobs(m_jobs);
 	m_session->Start(now);
 	m_lastTickNow  = now;
 	m_lastWorldNow = now;

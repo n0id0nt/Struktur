@@ -15,6 +15,7 @@
 #include "Engine/RideWorld/AssetManifest.h"
 #include "Engine/RideWorld/Biome.h"
 #include "Engine/RideWorld/ChunkBuilder.h"
+#include "Engine/Jobs/JobSystem.h"
 #include "Engine/RideWorld/ChunkStreamer.h"
 #include "Engine/RideWorld/ElevationProfile.h"
 #include "Engine/RideWorld/Noise.h"
@@ -280,7 +281,7 @@ TEST_CASE("terrain never folds over itself on the inside of bends over 100 km")
 	settings.seed        = 3;
 	settings.flatShading = false;
 	settings.quality     = Quality::MEDIUM;
-	RideWorld world(settings, biomes, false);
+	RideWorld world(settings, biomes, nullptr);
 	RideWorldInputs inputs;
 	inputs.deltaSeconds         = 0.25;
 	inputs.speedMetersPerSecond = 64.0 / 0.25 / 4.0;  // one chunk every 4 updates
@@ -331,7 +332,7 @@ TEST_CASE("chunk recycling keeps the pool and buffers flat")
 	const BiomeList biomes = LoadShippedBiomes();
 	WorldSettings settings;
 	settings.seed = 8;
-	RideWorld world(settings, biomes, false);
+	RideWorld world(settings, biomes, nullptr);
 	RideWorldInputs inputs;
 	inputs.deltaSeconds         = 0.1;
 	inputs.speedMetersPerSecond = 40.0;
@@ -364,13 +365,18 @@ TEST_CASE("chunk recycling keeps the pool and buffers flat")
 	CHECK(world.GetStreamer().GetStats().chunksBuilt > 400);
 }
 
-TEST_CASE("threaded and inline chunk builds produce the same meshes")
+TEST_CASE("job-system and inline chunk builds produce the same meshes")
 {
 	const BiomeList biomes = LoadShippedBiomes();
 	WorldSettings settings;
 	settings.seed = 21;
-	RideWorld inlineWorld(settings, biomes, false);
-	RideWorld threadedWorld(settings, biomes, true);
+	// 4 workers, and 0 (jobs queue up and run when the world waits for them - the threads-off path).
+	for (int workers : {4, 0})
+	{
+	CAPTURE(workers);
+	Struktur::Jobs::JobSystem jobs(Struktur::Jobs::JobSystemConfig{workers});
+	RideWorld inlineWorld(settings, biomes, nullptr);
+	RideWorld threadedWorld(settings, biomes, &jobs);
 	RideWorldInputs inputs;
 	inputs.deltaSeconds         = 0.1;
 	inputs.speedMetersPerSecond = 10.0;
@@ -417,6 +423,58 @@ TEST_CASE("threaded and inline chunk builds produce the same meshes")
 		propsThreaded += list.size();
 	}
 	CHECK(propsInline == propsThreaded);
+	}
+}
+
+TEST_CASE("changing chunk settings while builds are in flight recycles them safely")
+{
+	const BiomeList biomes = LoadShippedBiomes();
+	Struktur::Jobs::JobSystem jobs(Struktur::Jobs::JobSystemConfig{4});
+	WorldSettings settings;
+	settings.seed = 5;
+	RideWorld world(settings, biomes, &jobs);
+	RideWorldInputs inputs;
+	inputs.deltaSeconds         = 0.1;
+	inputs.speedMetersPerSecond = 30.0;
+	for (int frame = 0; frame < 300; ++frame)
+	{
+		world.Update(inputs);
+		if (frame % 7 == 3)
+		{
+			// Flip a setting that rebuilds every chunk, mid-stream: queued builds are cancelled, running ones finish
+			// and come back stale.
+			settings.flatShading = !settings.flatShading;
+			world.SetSettings(settings);
+		}
+	}
+	world.WaitForChunks();
+	const StreamerStats stats = world.GetStreamer().GetStats();
+	CHECK(stats.pendingJobs == 0);
+	CHECK(stats.readyChunks > 0);
+	for (const ChunkMesh* chunk : world.GetChunks())
+	{
+		CHECK(chunk->chunkIndex >= 0);
+		CHECK_FALSE(chunk->terrain.empty());
+	}
+	// Meshes are recycled, not leaked: the pool stays around what the window needs plus what was in flight.
+	CHECK(stats.pooledMeshes < 64);
+}
+
+TEST_CASE("a world destroyed with builds in flight waits for them")
+{
+	const BiomeList biomes = LoadShippedBiomes();
+	Struktur::Jobs::JobSystem jobs(Struktur::Jobs::JobSystemConfig{2});
+	for (int round = 0; round < 20; ++round)
+	{
+		WorldSettings settings;
+		settings.seed = static_cast<uint32_t>(round);
+		RideWorld world(settings, biomes, &jobs);
+		RideWorldInputs inputs;
+		inputs.deltaSeconds         = 0.1;
+		inputs.speedMetersPerSecond = 30.0;
+		world.Update(inputs);  // requests the first chunks, then goes out of scope immediately
+	}
+	CHECK(jobs.GetQueuedCount() == 0);
 }
 
 // --- grade behaviour -----------------------------------------------------------------------------------------------
@@ -425,7 +483,7 @@ TEST_CASE("SIM manual grade: the road blends towards the set grade and the rider
 {
 	const BiomeList biomes = LoadShippedBiomes();
 	WorldSettings settings;
-	RideWorld world(settings, biomes, false);
+	RideWorld world(settings, biomes, nullptr);
 	RideWorldInputs inputs;
 	inputs.deltaSeconds         = 0.1;
 	inputs.speedMetersPerSecond = 8.0;
@@ -459,7 +517,7 @@ TEST_CASE("ERG grade is cosmetic and follows workout intensity")
 
 	const BiomeList biomes = LoadShippedBiomes();
 	WorldSettings settings;
-	RideWorld world(settings, biomes, false);
+	RideWorld world(settings, biomes, nullptr);
 	RideWorldInputs inputs;
 	inputs.deltaSeconds         = 0.1;
 	inputs.speedMetersPerSecond = 8.0;
@@ -502,8 +560,8 @@ TEST_CASE("same seed, same world: camera and grade match between two worlds")
 	WorldSettings settings;
 	settings.seed        = 99;
 	settings.gradeSource = GradeSource::ROUTE;
-	RideWorld first(settings, biomes, false);
-	RideWorld second(settings, biomes, false);
+	RideWorld first(settings, biomes, nullptr);
+	RideWorld second(settings, biomes, nullptr);
 	RideWorldInputs inputs;
 	inputs.deltaSeconds         = 1.0 / 60.0;
 	inputs.speedMetersPerSecond = 9.0;

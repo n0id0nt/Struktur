@@ -112,9 +112,14 @@ set(RIDE_WORLD_SOURCES
     ${RIDE_WORLD_DIR}/Placeholder.h         ${RIDE_WORLD_DIR}/Placeholder.cpp
     ${RIDE_WORLD_DIR}/RideWorld.h           ${RIDE_WORLD_DIR}/RideWorld.cpp
 )
+# The job system (chunk builds, ride autosaves). The root build adds it first; standalone, pull it in here.
+if(NOT TARGET StrukturJobs)
+    add_subdirectory(${STRUKTUR_REPO_ROOT}/src/Engine/Jobs ${CMAKE_CURRENT_BINARY_DIR}/StrukturJobs)
+endif()
+
 add_library(StrukturRideWorld STATIC ${RIDE_WORLD_SOURCES})
 target_include_directories(StrukturRideWorld PUBLIC ${STRUKTUR_REPO_ROOT}/src)
-target_link_libraries(StrukturRideWorld PUBLIC nlohmann_json::nlohmann_json)
+target_link_libraries(StrukturRideWorld PUBLIC nlohmann_json::nlohmann_json StrukturJobs)
 target_compile_features(StrukturRideWorld PUBLIC cxx_std_20)
 find_package(Threads)
 if(Threads_FOUND)

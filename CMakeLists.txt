@@ -299,17 +299,17 @@ set(PHYSFS_BUILD_DOCS   FALSE CACHE BOOL "" FORCE)
 set(PHYSFS_TARGETNAME_UNINSTALL "physfs_uninstall" CACHE STRING "" FORCE)
 add_subdirectory(third_party/physfs)
 
-# StrukturFitness - BLE smart trainer / heart rate / power meter support (docs/SmartTrainer.md). Its unit tests and
-# the trainer_probe tool are off in the game build; configure src/Engine/Fitness on its own to build them.
-option(STRUKTUR_BUILD_TESTS "Build the StrukturFitness unit tests" OFF)
-option(STRUKTUR_BUILD_TOOLS "Build trainer_probe" OFF)
-add_subdirectory(src/Engine/Fitness)
-
 # StrukturJobs - the job system (docs/JobSystem.md). STRUKTUR_THREADS (off on web by default) decides whether it starts
 # worker threads; its tests and job_bench build when src/Engine/Jobs is configured on its own.
 set(STRUKTUR_JOBS_BUILD_TESTS OFF CACHE BOOL "" FORCE)
 set(STRUKTUR_JOBS_BUILD_BENCH OFF CACHE BOOL "" FORCE)
 add_subdirectory(src/Engine/Jobs)
+
+# StrukturFitness - BLE smart trainer / heart rate / power meter support (docs/SmartTrainer.md). Its unit tests and
+# the trainer_probe tool are off in the game build; configure src/Engine/Fitness on its own to build them.
+option(STRUKTUR_BUILD_TESTS "Build the StrukturFitness unit tests" OFF)
+option(STRUKTUR_BUILD_TOOLS "Build trainer_probe" OFF)
+add_subdirectory(src/Engine/Fitness)
 
 # Wren (manual build - same as before, just different source path)
 file(GLOB WREN_SOURCES
