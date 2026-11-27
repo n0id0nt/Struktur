@@ -17,11 +17,8 @@
 #include "Engine/Core/FileSystem.h"
 #include "Engine/ECS/Component/Camera.h"
 #include "Engine/ECS/Component/PhysicsBody.h"
-#include "Engine/ECS/Component/Sprite.h"
 #include "Engine/ECS/Component/Transform.h"
 #include "Engine/ECS/GameObjectManager.h"
-#include "Engine/ECS/System/AnimationSystem.h"
-#include "Engine/ECS/System/CameraSystem.h"
 #include "Engine/ECS/System/DebugSystem.h"
 #include "Engine/ECS/System/EventSystem.h"
 #include "Engine/ECS/System/FitnessSystem.h"
@@ -29,25 +26,20 @@
 #include "Engine/ECS/System/WorldRenderSystem.h"
 #include "Engine/ECS/System/WorldSystem.h"
 #include "Engine/ECS/System/HierarchySystem.h"
-#include "Engine/ECS/System/ParticleSystem.h"
 #include "Engine/ECS/System/PhysicsSystem.h"
-#include "Engine/ECS/System/ShaderSystem.h"
 #include "Engine/ECS/System/SoundSystem.h"
-#include "Engine/ECS/System/SpriteRenderSystem.h"
 #include "Engine/ECS/System/TransformSystem.h"
 #include "Engine/ECS/System/UIRenderSystem.h"
 #include "Engine/ECS/System/UIsystem.h"
 #include "Engine/ECS/System/WrenScriptSystem.h"
 #include "Engine/ECS/System/WrenStateSystem.h"
 #include "Engine/ECS/SystemManager.h"
-#include "Engine/FileLoading/LevelParser.h"
 #include "Engine/GameContext.h"
 #include "Engine/Input/Input.h"
 #include "Engine/Scripting/WrenScriptEngine.h"
 #include "Engine/Text/Font.h"
 #include "Engine/Util/Color.h"
 #include "Engine/Util/MathUtil.h"
-#include "Engine/World/Level.h"
 #include "Engine/World/WorldAssetLoader.h"
 
 #ifdef DEBUG
@@ -249,7 +241,6 @@ bool Struktur::InitialiseGame(GameContext& context)
 	// need a way to have helper systems with out an empty update
 	systemManager.AddHelperSystem<System::HierarchySystem>();
 	systemManager.AddHelperSystem<System::TransformSystem>();
-	systemManager.AddHelperSystem<System::ShaderSystem>();
 	systemManager.AddUpdateSystem<System::WrenStateSystem>();
 	systemManager.AddFixedUpdateSystem<System::WrenStateFixedUpdateSystem>();
 	systemManager.AddFixedUpdateSystem<System::WrenScriptFixedUpdateSystem>();
@@ -264,12 +255,8 @@ bool Struktur::InitialiseGame(GameContext& context)
 	systemManager.AddUpdateSystem<System::WrenScriptSystem>();
 	systemManager.AddUpdateSystem<System::EventSystem>();
 	systemManager.AddUpdateSystem<System::PhysicsSystem>();
-	systemManager.AddUpdateSystem<System::CameraSystem>();
-	systemManager.AddUpdateSystem<System::AnimationSystem>();
-	systemManager.AddUpdateSystem<System::ParticleSystem>();
 	systemManager.AddUpdateSystem<System::UISystem>();
 	systemManager.AddUpdateSystem<System::SoundSystem>();
-	systemManager.AddRenderSystem<System::SpriteRenderSystem>();
 	// The world has its own bgfx views, ordered before the UI's (see GraphicsDevice).
 	systemManager.AddRenderSystem<System::WorldRenderSystem>();
 	// Wren rendering not used for anything at the moment so commenting it out
@@ -722,7 +709,7 @@ void Struktur::ClearGameSystems(GameContext& context)
 	registry.clear();
 
 	// A script loads the world; a restart starts without one.
-	context.GetRideWorldRenderer().Shutdown();
+	context.GetWorldRenderer().Shutdown();
 	context.GetWorld().Unload();
 
 	DEBUG_INFO("[Clean Up] Physics World");

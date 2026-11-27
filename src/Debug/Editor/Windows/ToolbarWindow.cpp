@@ -24,19 +24,16 @@ void ToolbarWindow::Render(GameContext& context)
 	// Play/Pause/Stop buttons
 	if (ImGui::Button(debugSettings.playingGame ? "Stop" : "Play"))
 	{
-		LevelViewer& levelViewer = context.GetEditor().GetLevelViewer();
-		if (!debugSettings.playingGame)
+		const bool play           = !debugSettings.playingGame;
+		debugSettings.playingGame = play;
+		debugSettings.pausedGame  = false;
+		if (play)
 		{
-			// Through the level viewer, which first asks to save any unsaved edits (Play would wipe them). Plain
-			// Play starts where the game normally does - it clears the viewer's "Play from here" spot.
-			levelViewer.RequestPlay(context);
+			StartDebugGame(context);
 		}
 		else
 		{
-			debugSettings.playingGame = false;
-			debugSettings.pausedGame  = false;
 			StopDebugGame(context);
-			levelViewer.OnPlayStopped(context);
 		}
 	}
 	ImGui::SameLine();

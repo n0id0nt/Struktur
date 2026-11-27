@@ -193,10 +193,8 @@ struct BindingRegistry
 // Each binding module implements this signature
 // ============================================================================
 // Forward declarations - implemented in each WrenBinding*.cpp
-void RegisterAnimationBindings(BindingRegistry& registry);
 void RegisterGameObjectBindings(BindingRegistry& registry);
 void RegisterGameObjectComponentBindings(BindingRegistry& registry);
-void RegisterRendererBindings(BindingRegistry& registry);
 void RegisterMathBindings(BindingRegistry& registry);
 void RegisterPhysicsBindings(BindingRegistry& registry);
 void RegisterCollisionLayersBindings(BindingRegistry& registry);

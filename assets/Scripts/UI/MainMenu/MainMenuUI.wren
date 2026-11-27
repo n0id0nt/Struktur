@@ -1,5 +1,5 @@
 // UI/MainMenu/MainMenuUI.wren
-// The main menu's view: title, a rich-text feature showcase panel, and the Start/Settings/Quit
+// The main menu's view: title, a rich-text feature showcase panel, and the ride, Settings and Quit
 // buttons (via UI/Shared/ButtonUI). Pure construction - button actions are wired by
 // States/MainMenuState.wren via setOnClick; the rich-text reveal's elapsed-time computation
 // also lives on the State (same precedent as Combat's strike animation) - this view only
@@ -34,14 +34,13 @@ class MainMenuUI {
 
         showcaseRichText_()
 
-        // One row of buttons: the ride modes first, then the game.
+        // One row of buttons: the ride modes first.
         _freeRideButton = button_(Localization.get("menu.free_ride"), 0, font)
         _workoutsButton = button_(Localization.get("menu.workouts"), 1, font)
         _rideSettingsButton = button_(Localization.get("menu.ride_settings"), 2, font)
-        _startButton = button_(Localization.get("menu.start_game"), 3, font)
-        _settingsButton = button_(Localization.get("menu.settings"), 4, font)
-        _quitButton = button_(Localization.get("menu.quit"), 5, font)
-        var buttons = [_freeRideButton, _workoutsButton, _rideSettingsButton, _startButton, _settingsButton, _quitButton]
+        _settingsButton = button_(Localization.get("menu.settings"), 3, font)
+        _quitButton = button_(Localization.get("menu.quit"), 4, font)
+        var buttons = [_freeRideButton, _workoutsButton, _rideSettingsButton, _settingsButton, _quitButton]
         for (i in 0...buttons.count) {
             var panel = buttons[i].panel
             panel.setNavigationNeighbor(NavigationDirection.LEFT, i > 0 ? buttons[i - 1].panel : panel)
@@ -102,12 +101,12 @@ class MainMenuUI {
         regularFont.unload()
     }
 
-    // Six buttons in one row under the showcase panel (index 0 is leftmost).
+    // Five buttons in one row under the showcase panel (index 0 is leftmost).
     button_(text, index, font) {
         var buttonWidth = 186
         var buttonHeight = 60
         var spacing = 14
-        var rowWidth = buttonWidth * 6 + spacing * 5
+        var rowWidth = buttonWidth * 5 + spacing * 4
         var x = -rowWidth / 2 + index * (buttonWidth + spacing)
         var button = ButtonUI.new(_screenPanel, text, Vec2.new(x, 610), Vec2.new(0.5, 0), Vec2.new(buttonWidth, buttonHeight),
                              font, 22.0)
@@ -117,7 +116,6 @@ class MainMenuUI {
     freeRideButton { _freeRideButton }
     workoutsButton { _workoutsButton }
     rideSettingsButton { _rideSettingsButton }
-    startButton { _startButton }
     settingsButton { _settingsButton }
     quitButton { _quitButton }
 

@@ -1,5 +1,5 @@
 // states/MainMenuState.wren
-// Main menu state - first state when game starts. Wires the Start/Settings/Quit buttons to state
+// Main menu state. Wires the ride, Settings and Quit buttons to state
 // transitions and drives the rich-text showcase's reveal timing. UI/MainMenu/MainMenuUI.wren is the
 // pure view this owns and refreshes.
 import "app" for Time
@@ -39,7 +39,6 @@ class MainMenuState is BaseState {
         _view.rideSettingsButton.setOnClick { |sender, mousePos|
             _pendingState = ["RideSettings", {}]
         }
-        _view.startButton.setOnClick { |sender, mousePos| startGame() }
         _view.settingsButton.setOnClick { |sender, mousePos| openSettings() }
         _view.quitButton.setOnClick { |sender, mousePos| quit() }
 
@@ -83,11 +82,6 @@ class MainMenuState is BaseState {
             _view.teardown()
             _view = null
         }
-    }
-
-    startGame() {
-        Debug.info("Starting game...")
-        _stateManager.changeState("GameWorld")
     }
 
     openSettings() {

@@ -40,7 +40,7 @@ public:
 	static constexpr bgfx::ViewId EditorViewId = 4;
 #endif
 
-	// Procedural ride world (RideWorldRenderer): sky and scene render into a low-resolution framebuffer, the rider
+	// Procedural ride world (WorldRenderer): sky and scene render into a low-resolution framebuffer, the rider
 	// sprite overlays it, then RidePostViewId upscales it into the world target. bgfx::setViewOrder (see Initialise)
 	// runs these after WorldViewId (which clears the target) and before DebugViewId/UIViewId, so the HUD draws on top.
 	static constexpr bgfx::ViewId RideSkyViewId     = 10;

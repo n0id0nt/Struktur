@@ -1,8 +1,6 @@
 #pragma once
 
 #include "PreviewWindow.h"
-#include "ShaderPreviewRenderer.h"
-#include "SpritePreviewRenderer.h"
 #include "TexturePreviewRenderer.h"
 // #include "CurvePreviewRenderer.h"
 #include <memory>
@@ -22,26 +20,6 @@ inline void PreviewTexture(PreviewWindow* window, const Resource::ResourcePtr<Re
 		return;
 	}
 	auto renderer = std::make_unique<TexturePreviewRenderer>(texture, name);
-	window->SetPreviewRenderer(std::move(renderer));
-}
-
-inline void PreviewShader(PreviewWindow* window, const Component::Shader* shader, const std::string& name)
-{
-	if (!window)
-	{
-		return;
-	}
-	auto renderer = std::make_unique<ShaderPreviewRenderer>(shader, name);
-	window->SetPreviewRenderer(std::move(renderer));
-}
-
-inline void PreviewSprite(PreviewWindow* window, const Component::Sprite* sprite, const std::string& name)
-{
-	if (!window)
-	{
-		return;
-	}
-	auto renderer = std::make_unique<SpritePreviewRenderer>(sprite, name);
 	window->SetPreviewRenderer(std::move(renderer));
 }
 

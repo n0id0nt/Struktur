@@ -410,10 +410,6 @@ void FileExplorerWindow::RenderGridCell(GameContext& context, GridState& grid, c
 			m_selectedFile        = entry.path;
 			grid.previewRequested = true;
 			grid.previewPath      = entry.path;
-			if (doubleClicked && GetExtensionLower(entry.name) == ".ldtk")
-			{
-				context.GetEditor().GetLevelViewer().RequestOpen(context, entry.path);
-			}
 		}
 	}
 

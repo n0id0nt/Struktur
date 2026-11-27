@@ -8,7 +8,6 @@
 
 #include "Debug/Editor/EditorLayoutManager.h"
 #include "Debug/Editor/EditorSettings.h"
-#include "Debug/Editor/LevelViewer/LevelViewer.h"
 #include "Debug/Editor/Windows/EditorWindow.h"
 
 namespace Struktur
@@ -71,11 +70,6 @@ public:
 		return m_settings;
 	}
 
-	// Shows LDtk worlds in the Game Viewport while the game is stopped
-	LevelViewer& GetLevelViewer()
-	{
-		return m_levelViewer;
-	}
 
 private:
 	// Render the complete editor layout
@@ -100,7 +94,6 @@ private:
 	// Editor settings
 	EditorSettings m_settings;
 
-	LevelViewer m_levelViewer;
 
 	// Editor state
 	bool m_showDemoWindow;

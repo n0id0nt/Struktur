@@ -1,7 +1,7 @@
 #include "WorldRenderSystem.h"
 
 #include "Engine/GameContext.h"
-#include "Engine/Renderer/RideWorldRenderer.h"
+#include "Engine/Renderer/WorldRenderer.h"
 
 void Struktur::System::WorldRenderSystem::Update(GameContext& context)
 {
@@ -10,5 +10,5 @@ void Struktur::System::WorldRenderSystem::Update(GameContext& context)
 	{
 		return;
 	}
-	context.GetRideWorldRenderer().Render(context, world, context.GetTimeSystem().unscaledDelta);
+	context.GetWorldRenderer().Render(context, world, context.GetTimeSystem().unscaledDelta);
 }

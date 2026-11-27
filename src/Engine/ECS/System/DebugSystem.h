@@ -21,8 +21,6 @@ public:
 	void RenderEntityGizmos(GameContext &context);
 	void RenderSelectedEntityHighlight(GameContext &context);
 	void RenderGrid(GameContext &context);
-	void RenderLevelBounds(GameContext &context);
-	void RenderLevelEntityPlaceholders(GameContext &context);
 	void RenderPhysicsShapes(GameContext &context);
 
 	// Lets other editor code (e.g. Debug::UIHierarchyWindow, highlighting a selected UIElement's bounds via

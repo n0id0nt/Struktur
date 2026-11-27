@@ -59,7 +59,6 @@ GameContext::GameContext()
 	m_rideService    = std::make_unique<RideIntegration::RideService>(m_jobSystem.get());
 	// Both empty until a script loads them (World.load).
 	m_world             = std::make_unique<World::World>();
-	m_rideWorldRenderer = std::make_unique<Renderer::RideWorldRenderer>();
 	m_flagManager       = std::make_unique<Flag::FlagManager>();
 	m_gameData          = std::make_unique<Core::GameData>();
 	m_gameObjectManager = std::make_unique<System::GameObjectManager>();
@@ -107,8 +106,8 @@ void GameContext::Shutdown()
 	}
 	m_rideService.reset();
 	// GPU resources first (bgfx is still up), then the world, which waits for its (by now complete) chunk builds.
-	m_rideWorldRenderer->Shutdown();
-	m_rideWorldRenderer.reset();
+	m_worldRenderer->Shutdown();
+	m_worldRenderer.reset();
 	m_world.reset();
 	m_fitnessManager.reset();
 	m_camera.reset();
@@ -142,8 +141,6 @@ void GameContext::Shutdown()
 	m_uiRenderer->Shutdown();
 	m_uiRenderer.reset();
 	m_variableSubstitutionSystem.reset();
-	m_worldRenderer->Shutdown();
-	m_worldRenderer.reset();
 	m_wrenScriptComponentRegistry.reset();
 	m_wrenScriptEngine.reset();
 	m_wrenStateManager.reset();
@@ -291,12 +288,6 @@ World::World& GameContext::GetWorld() const
 {
 	ASSERT_MSG(m_world.get(), "World not initialised");
 	return *m_world;
-}
-
-Renderer::RideWorldRenderer& GameContext::GetRideWorldRenderer() const
-{
-	ASSERT_MSG(m_rideWorldRenderer.get(), "Ride World Renderer not initialised");
-	return *m_rideWorldRenderer;
 }
 
 Resource::ResourceManager& GameContext::GetResourceManager() const

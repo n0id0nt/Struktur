@@ -14,23 +14,13 @@ namespace Struktur
 {
 namespace Animation
 {
-struct SpriteAnimation;
 }  // namespace Animation
 
 namespace Component
 {
 struct Active;
 struct Transform;
-struct Sprite;
-struct Shader;
-struct Camera;
-struct ParticleEmitter;
 struct PhysicsBody;
-struct SpriteAnimation;
-struct Level;
-struct LevelEntityInstance;
-struct World;
-struct TileMap;
 struct WrenScript;
 }  // namespace Component
 
@@ -129,35 +119,17 @@ private:
 	void RenderLocalTransformComponent(GameContext& context, Component::Transform& transform, entt::registry& registry,
 	                                   entt::entity entity);
 
-	void RenderSpriteComponent(GameContext& context, Component::Sprite& sprite, entt::registry& registry,
-	                           entt::entity entity);
 
-	void RenderShaderComponent(GameContext& context, Component::Shader& shader, entt::registry& registry,
-	                           entt::entity entity);
 
-	void RenderCameraComponent(GameContext& context, Component::Camera& camera, entt::registry& registry,
-	                           entt::entity entity);
 
-	void RenderParticleEmitterComponent(GameContext& context, Component::ParticleEmitter& emitter,
-	                                    entt::registry& registry, entt::entity entity);
 
 	void RenderPhysicsBodyComponent(GameContext& context, Component::PhysicsBody& physicsBody, entt::registry& registry,
 	                                entt::entity entity);
 
-	void RenderSpriteAnimationComponent(GameContext& context, Component::SpriteAnimation& spriteAnimation,
-	                                    entt::registry& registry, entt::entity entity);
 
-	void RenderLevelComponent(GameContext& context, Component::Level& level, entt::registry& registry,
-	                          entt::entity entity);
 
-	void RenderLevelEntityInstanceComponent(GameContext& context, Component::LevelEntityInstance& instance,
-	                                        entt::registry& registry, entt::entity entity);
 
-	void RenderWorldComponent(GameContext& context, Component::World& world, entt::registry& registry,
-	                          entt::entity entity);
 
-	void RenderTileMapComponent(GameContext& context, Component::TileMap& tileMap, entt::registry& registry,
-	                            entt::entity entity);
 
 	void RenderWrenScriptComponent(GameContext& context, Component::WrenScript& script, entt::registry& registry,
 	                               entt::entity entity);
@@ -184,8 +156,6 @@ private:
 	float m_newAnimationTime           = 1.0f;
 	bool m_newAnimationLoop            = true;
 
-	// Currently selected cell in the TileMap grid editor, as row * width + col
-	int m_selectedTileMapCell = -1;
 };
 }  // namespace Debug
 }  // namespace Struktur

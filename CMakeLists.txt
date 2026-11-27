@@ -258,7 +258,7 @@ if(PLATFORM_DESKTOP OR PLATFORM_WEB)
         struktur_compile_shader(spriteCoverage)
         struktur_compile_shader(richTextAnim)
         struktur_compile_shader(soulEffect)
-        # Procedural ride world (Engine/Renderer/RideWorldRenderer.cpp).
+        # Procedural ride world (Engine/Renderer/WorldRenderer.cpp).
         struktur_compile_shader(rideTerrain varying_rideWorld.def.sc)
         struktur_compile_shader(rideRoad varying_rideWorld.def.sc)
         struktur_compile_shader(rideProp varying_rideWorld.def.sc)
@@ -369,10 +369,9 @@ if(PLATFORM_DESKTOP OR PLATFORM_WEB)
         src/Engine/Renderer/GraphicsDevice.h        src/Engine/Renderer/GraphicsDevice.cpp
         src/Engine/Renderer/EmbeddedShaders.h        src/Engine/Renderer/EmbeddedShaders.cpp
         src/Engine/Renderer/QuadVertex.h
-        src/Engine/Renderer/TileChunk.h
-        src/Engine/Renderer/TileChunkBuilder.h      src/Engine/Renderer/TileChunkBuilder.cpp
+              
         src/Engine/Renderer/UIRenderer.h            src/Engine/Renderer/UIRenderer.cpp
-        src/Engine/Renderer/RideWorldRenderer.h     src/Engine/Renderer/RideWorldRenderer.cpp
+        src/Engine/Renderer/WorldRenderer.h     src/Engine/Renderer/WorldRenderer.cpp
         ${STRUKTUR_SHADER_OUTPUTS}
     )
     source_group("Shaders/Compiled" FILES ${STRUKTUR_SHADER_OUTPUTS})
@@ -403,7 +402,6 @@ if(EDITOR)
         src/Debug/Editor/Exporters/DialogueExporter.h src/Debug/Editor/Exporters/DialogueExporter.cpp
 
         src/Debug/Editor/EditorSettings.h           src/Debug/Editor/EditorSettings.cpp
-        
         src/Engine/Renderer/ImGuiRenderer.h         src/Engine/Renderer/ImGuiRenderer.cpp
 
         src/Debug/Editor/Windows/EditorWindow.h     src/Debug/Editor/Windows/EditorWindow.cpp
@@ -423,29 +421,26 @@ if(EDITOR)
         src/Debug/Editor/Windows/LocalizationWindow.h src/Debug/Editor/Windows/LocalizationWindow.cpp
         src/Debug/Editor/Windows/StateWindow.h      src/Debug/Editor/Windows/StateWindow.cpp
         src/Debug/Editor/Windows/SavesWindow.h      src/Debug/Editor/Windows/SavesWindow.cpp
-        src/Debug/Editor/Windows/LevelViewerWindow.h src/Debug/Editor/Windows/LevelViewerWindow.cpp
 
-        src/Debug/Editor/LevelViewer/LevelViewer.h  src/Debug/Editor/LevelViewer/LevelViewer.cpp
-        src/Debug/Editor/LevelViewer/LdtkDocument.h src/Debug/Editor/LevelViewer/LdtkDocument.cpp
-        src/Debug/Editor/LevelViewer/EntityFieldEditor.h src/Debug/Editor/LevelViewer/EntityFieldEditor.cpp
-        src/Debug/Editor/LevelViewer/EditorCamera.h src/Debug/Editor/LevelViewer/EditorCamera.cpp
+         
+         
 
         src/Debug/Editor/PreviewRenderers/PreviewRenderer.h
         src/Debug/Editor/PreviewRenderers/TexturePreviewRenderer.h src/Debug/Editor/PreviewRenderers/TexturePreviewRenderer.cpp
-        src/Debug/Editor/PreviewRenderers/ShaderPreviewRenderer.h  src/Debug/Editor/PreviewRenderers/ShaderPreviewRenderer.cpp
-        src/Debug/Editor/PreviewRenderers/SpritePreviewRenderer.h  src/Debug/Editor/PreviewRenderers/SpritePreviewRenderer.cpp
+          
         src/Debug/Editor/PreviewRenderers/TextFilePreviewRenderer.h src/Debug/Editor/PreviewRenderers/TextFilePreviewRenderer.cpp
         src/Debug/Editor/PreviewRenderers/UnknownFilePreviewRenderer.h src/Debug/Editor/PreviewRenderers/UnknownFilePreviewRenderer.cpp
         src/Debug/Editor/PreviewRenderers/PreviewHelpers.h
     )
 endif()
 
+# The 2D game world (tile maps, LDtk levels, sprites, particles, 2D camera and renderer, and the editor's level
+# viewer) is kept in the repository but not compiled on this branch: the procedural 3D world (src/Engine/World,
+# Renderer/WorldRenderer) is the only world that gets rendered. docs/RideRefactorPlan.md lists the files.
 # Wren Scripting: Use source assets directly
 set(WREN_BINDING_SOURCES 
     src/WrenBindings/ComponentListXMacro.h
-    src/WrenBindings/WrenAnimation.h            src/WrenBindings/WrenAnimation.cpp
     src/WrenBindings/WrenGameObjectComponents.h src/WrenBindings/WrenGameObjectComponents.cpp
-                                                src/WrenBindings/WrenRenderer.cpp
     src/WrenBindings/WrenMath.h                 src/WrenBindings/WrenMath.cpp
     src/WrenBindings/WrenPhysics.h              src/WrenBindings/WrenPhysics.cpp
                                                 src/WrenBindings/WrenCollisionLayers.cpp
@@ -525,33 +520,23 @@ set(SOURCES
     src/Engine/Resource/MusicResource.h         src/Engine/Resource/MusicResource.cpp
     src/Engine/Resource/TextureResource.h       src/Engine/Resource/TextureResource.cpp
     src/Engine/Resource/ShaderResource.h        src/Engine/Resource/ShaderResource.cpp
-    
     src/Engine/ECS/SystemManager.h              src/Engine/ECS/SystemManager.cpp
     src/Engine/ECS/GameObjectManager.h          src/Engine/ECS/GameObjectManager.cpp
-    
     src/Engine/ECS/Component/active.h
     src/Engine/ECS/Component/PhysicsBody.h
-    src/Engine/ECS/Component/LevelEntityInstance.h
-    src/Engine/ECS/Component/Sprite.h
-    src/Engine/ECS/Component/SpriteAnimation.h
+    
     src/Engine/ECS/Component/Transform.h
-    src/Engine/ECS/Component/TileMap.h
     src/Engine/ECS/Component/Identifier.h
-    src/Engine/ECS/Component/Camera.h
-    src/Engine/ECS/Component/ParticleEmitter.h
-    src/Engine/ECS/Component/Shader.h
+    
     src/Engine/ECS/Component/WrenScript.h
 
     src/Engine/ECS/System/HierarchySystem.h     src/Engine/ECS/System/HierarchySystem.cpp
     src/Engine/ECS/System/PhysicsSystem.h       src/Engine/ECS/System/PhysicsSystem.cpp
-    src/Engine/ECS/System/SpriteRenderSystem.h  src/Engine/ECS/System/SpriteRenderSystem.cpp
-    src/Engine/ECS/System/AnimationSystem.h     src/Engine/ECS/System/AnimationSystem.cpp
+         
     src/Engine/ECS/System/TransformSystem.h     src/Engine/ECS/System/TransformSystem.cpp
-    src/Engine/ECS/System/CameraSystem.h        src/Engine/ECS/System/CameraSystem.cpp
-    src/Engine/ECS/System/ParticleSystem.h      src/Engine/ECS/System/ParticleSystem.cpp
+          
     src/Engine/ECS/System/UISystem.h            src/Engine/ECS/System/UISystem.cpp
     src/Engine/ECS/System/UIRenderSystem.h      src/Engine/ECS/System/UIRenderSystem.cpp
-    src/Engine/ECS/System/ShaderSystem.h        src/Engine/ECS/System/ShaderSystem.cpp
     src/Engine/ECS/System/WrenScriptSystem.h    src/Engine/ECS/System/WrenScriptSystem.cpp
     src/Engine/ECS/System/WrenStateSystem.h     src/Engine/ECS/System/WrenStateSystem.cpp
     src/Engine/ECS/System/SoundSystem.h         src/Engine/ECS/System/SoundSystem.cpp
@@ -566,9 +551,7 @@ set(SOURCES
     src/Engine/Physics/PhysicsWorld.h           src/Engine/Physics/PhysicsWorld.cpp
     src/Engine/Physics/ContactListener.h        src/Engine/Physics/ContactListener.cpp
     src/Engine/Physics/CollisionLayers.h        src/Engine/Physics/CollisionLayers.cpp
-    src/Engine/Physics/CollisionShapeGenerators/TileMapCollisionBodyGenerator.h src/Engine/Physics/CollisionShapeGenerators/TileMapCollisionBodyGenerator.cpp
 
-    src/Engine/FileLoading/LevelParser.h        src/Engine/FileLoading/LevelParser.cpp
 
     src/Engine/UI/UIManager.h                   src/Engine/UI/UIManager.cpp
     src/Engine/UI/FocusNavigator.h              src/Engine/UI/FocusNavigator.cpp
@@ -587,13 +570,10 @@ set(SOURCES
     src/Engine/UI/UIClip.h                      src/Engine/UI/UIClip.cpp
     src/Engine/UI/UIScroll.h                    src/Engine/UI/UIScroll.cpp
 
-    src/Engine/World/Level.h                    src/Engine/World/Level.cpp
-    src/Engine/World/TileMap.h                  src/Engine/World/TileMap.cpp
+                      
     src/Engine/World/Camera.h                   src/Engine/World/Camera.cpp
-    src/Engine/World/RenderLayer.h
 
-    src/Engine/Renderer/WorldRenderer.h         src/Engine/Renderer/WorldRenderer.cpp
-    src/Engine/Renderer/FlipBit.h
+    
 
     src/Engine/Scripting/WrenScriptEngine.h     src/Engine/Scripting/WrenScriptEngine.cpp
     src/Engine/Scripting/WrenBindingRegistry.h  src/Engine/Scripting/WrenBindingRegistry.cpp

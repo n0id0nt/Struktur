@@ -44,7 +44,7 @@ static bool SettingsFromSlot(WrenVM* vm, int slot, World::WorldSettings& setting
 
 static void UnloadWorld(Struktur::GameContext& context)
 {
-	context.GetRideWorldRenderer().Shutdown();
+	context.GetWorldRenderer().Shutdown();
 	context.GetWorld().Unload();
 }
 
@@ -68,7 +68,7 @@ static void wren_WorldLoad(WrenVM* vm)
 	{
 		world.SetActorSource(std::make_unique<World::DemoPacer>());
 	}
-	context.GetRideWorldRenderer().Initialise(assets.manifest, assets.spriteDescriptor);
+	context.GetWorldRenderer().Initialise(assets.manifest, assets.spriteDescriptor);
 	wrenSetSlotBool(vm, 0, true);
 }
 
@@ -106,7 +106,7 @@ static void wren_WorldApplySettings(WrenVM* vm)
 	world.SetSettings(settings);
 	if (newRoad)
 	{
-		context.GetRideWorldRenderer().ResetChunks();
+		context.GetWorldRenderer().ResetChunks();
 	}
 	wrenSetSlotBool(vm, 0, true);
 }

@@ -14,7 +14,6 @@
 #include "Debug/Editor/Windows/GameViewportWindow.h"
 #include "Debug/Editor/Windows/HierarchyWindow.h"
 #include "Debug/Editor/Windows/InspectorWindow.h"
-#include "Debug/Editor/Windows/LevelViewerWindow.h"
 #include "Debug/Editor/Windows/LocalizationWindow.h"
 #include "Debug/Editor/Windows/LogWindow.h"
 #include "Debug/Editor/Windows/PreviewWindow.h"
@@ -85,7 +84,6 @@ void Editor::Initialise(GameContext& context)
 	CreateWindow<StateWindow>();
 
 	// LDtk world picker for the level viewer
-	CreateWindow<LevelViewerWindow>(&m_levelViewer);
 
 	// Saves folder picker and save versions (see SaveFolders)
 	CreateWindow<SavesWindow>();
@@ -140,9 +138,6 @@ void Editor::Update(GameContext& context)
 {
 	// Setup dockspace and render all editor windows
 	RenderEditorLayout(context);
-
-	// After the windows, so the Game Viewport's hover/size state is from this frame
-	m_levelViewer.Update(context);
 
 	// Render demo window if enabled
 	if (m_showDemoWindow)
