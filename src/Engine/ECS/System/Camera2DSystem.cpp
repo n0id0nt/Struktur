@@ -1,0 +1,195 @@
+#include "CameraSystem.h"
+
+#include "Engine/ECS/Component/Camera.h"
+#include "Engine/ECS/Component/Transform.h"
+#include "Engine/ECS/System/TransformSystem.h"
+#include "Engine/GameContext.h"
+#include "Engine/Util/MathUtil.h"
+#include "Engine/Util/Noise.h"
+#include "Engine/World/Camera.h"
+#include "glm/gtc/quaternion.hpp."
+
+void Struktur::System::CameraSystem::Update(GameContext& context)
+{
+	entt::registry& registry         = context.GetRegistry();
+	TransformSystem& transformSystem = context.GetSystemManager().GetSystem<TransformSystem>();
+
+	auto view = registry.view<Struktur::Component::Camera, Struktur::Component::Transform>(entt::exclude<Inactive>);
+
+	entt::entity focusedCameraEntity;
+	Struktur::Component::Camera* focusedCameraComponent = nullptr;
+	int highestPriority                                 = INT_MIN;
+	for (auto [entity, camera, transform] : view.each())
+	{
+		if (camera.cameraPriority > highestPriority)
+		{
+			highestPriority        = camera.cameraPriority;
+			focusedCameraEntity    = entity;
+			focusedCameraComponent = &camera;
+		}
+	}
+
+	if (focusedCameraComponent)
+	{
+		Core::GameData& gameData     = context.GetGameData();
+		Core::TimeSystem& timeSystem = context.GetTimeSystem();
+
+		glm::vec3 focusedWorldPosition = transformSystem.GetWorldPosition(context, focusedCameraEntity);
+
+		float gameTime            = timeSystem.scaledTime;
+		float deltaTime           = timeSystem.scaledDelta;
+		int screenWidth           = gameData.gameWidth;
+		int screenHeight          = gameData.gameHeight;
+		World::Camera& out_camera = context.GetCamera();
+		// out_camera.target = out_camera.previousCameraPosition;
+		glm::vec2 newPos                      = focusedCameraComponent->forcePosition
+		                                            ? TargetPosition(gameTime, deltaTime, screenWidth, screenHeight, focusedCameraComponent,
+		                                                             focusedWorldPosition, out_camera)
+		                                            : CalculateSmoothedPosition(gameTime, deltaTime, screenWidth, screenHeight,
+		                                                                        focusedCameraComponent, focusedWorldPosition, out_camera);
+		if (focusedCameraComponent->confineToBounds)
+		{
+			newPos = ConfineToBounds(newPos, screenWidth, screenHeight, focusedCameraComponent);
+		}
+		focusedCameraComponent->forcePosition = false;
+		focusedCameraComponent->viewCenter    = newPos;
+		out_camera.target                     = newPos;
+		out_camera.offset                     = glm::vec2{screenWidth / 2.f + focusedCameraComponent->offset.x,
+                                      screenHeight / 2.f + focusedCameraComponent->offset.y};
+		out_camera.zoom                       = focusedCameraComponent->zoom;
+		out_camera.rotation                   = focusedCameraComponent->angle;
+		out_camera.previousCameraPosition     = newPos;
+		// out_camera.previousCameraAngle = angle;
+
+		// exclude shake from previous position
+		CalculateCameraShake(gameTime, deltaTime, screenWidth, screenHeight, focusedCameraComponent, out_camera);
+	}
+}
+
+glm::vec2 Struktur::System::CameraSystem::CalculateSmoothedPosition(float gameTime, float deltaTime, int screenWidth,
+                                                                    int screenHeight,
+                                                                    Struktur::Component::Camera* cameraComponent,
+                                                                    const glm::vec2& cameraComponentPos,
+                                                                    World::Camera& camera)
+{
+	glm::vec2 cameraComponentScreenPos = camera.WorldPosToScreenPos(cameraComponentPos);
+	glm::vec2 newPos{};
+	// x
+	{
+		if (cameraComponent->offset.x + cameraComponent->deadZone.x < cameraComponentScreenPos.x)
+		{
+			newPos.x =
+			    Util::Math::Lerp(screenWidth / 2.f,
+			                     cameraComponentScreenPos.x - cameraComponent->offset.x - cameraComponent->deadZone.x,
+			                     cameraComponent->damping.x * deltaTime);
+		}
+		else if (cameraComponent->offset.x - cameraComponent->deadZone.x > cameraComponentScreenPos.x)
+		{
+			newPos.x =
+			    Util::Math::Lerp(screenWidth / 2.f,
+			                     cameraComponentScreenPos.x - cameraComponent->offset.x + cameraComponent->deadZone.x,
+			                     cameraComponent->damping.x * deltaTime);
+		}
+	}
+	// y
+	{
+		if (cameraComponent->offset.y + cameraComponent->deadZone.y < cameraComponentScreenPos.y)
+		{
+			newPos.y =
+			    Util::Math::Lerp(screenHeight / 2.f,
+			                     cameraComponentScreenPos.y - cameraComponent->offset.y - cameraComponent->deadZone.y,
+			                     cameraComponent->damping.y * deltaTime);
+		}
+		else if (cameraComponent->offset.y - cameraComponent->deadZone.y > cameraComponentScreenPos.y)
+		{
+			newPos.y =
+			    Util::Math::Lerp(screenHeight / 2.f,
+			                     cameraComponentScreenPos.y - cameraComponent->offset.y + cameraComponent->deadZone.y,
+			                     cameraComponent->damping.y * deltaTime);
+		}
+	}
+
+	return camera.ScreenPosToWorldPos(newPos);
+}
+
+glm::vec2 Struktur::System::CameraSystem::TargetPosition(float gameTime, float deltaTime, int screenWidth,
+                                                         int screenHeight, Struktur::Component::Camera* cameraComponent,
+                                                         const glm::vec2& cameraComponentPos, World::Camera& camera)
+{
+	return cameraComponentPos;
+}
+
+glm::vec2 Struktur::System::CameraSystem::ConfineToBounds(const glm::vec2& position, int screenWidth, int screenHeight,
+                                                          Struktur::Component::Camera* cameraComponent)
+{
+	// The camera target is the world point at the centre of the screen, so keep it half a view in from each edge.
+	float zoom = cameraComponent->zoom > 0.f ? cameraComponent->zoom : 1.f;
+	glm::vec2 halfView{screenWidth / (2.f * zoom), screenHeight / (2.f * zoom)};
+	glm::vec2 boundsMin{cameraComponent->bounds.x, cameraComponent->bounds.y};
+	glm::vec2 boundsSize{cameraComponent->bounds.z, cameraComponent->bounds.w};
+
+	glm::vec2 confined = position;
+	for (int axis = 0; axis < 2; ++axis)
+	{
+		float low  = boundsMin[axis] + halfView[axis];
+		float high = boundsMin[axis] + boundsSize[axis] - halfView[axis];
+		confined[axis] = low > high ? boundsMin[axis] + boundsSize[axis] / 2.f : glm::clamp(position[axis], low, high);
+	}
+	return confined;
+}
+
+void Struktur::System::CameraSystem::CalculateCameraShake(float gameTime, float deltaTime, int screenWidth,
+                                                          int screenHeight,
+                                                          Struktur::Component::Camera* cameraComponent,
+                                                          World::Camera& camera)
+{
+	float trauma = cameraComponent->trauma;
+	if (trauma > 0.f)
+	{
+		const int seed = 0;
+		float shake    = std::pow(trauma, 2.f);
+		float angle    = cameraComponent->maxAngle * shake *
+		              Util::Noise::PerlinNoise1(seed, gameTime / cameraComponent->shakeAmplitude);
+		float xOffset = cameraComponent->maxOffset * shake *
+		                Util::Noise::PerlinNoise1(seed + 1, gameTime / cameraComponent->shakeAmplitude);
+		float yOffset = cameraComponent->maxOffset * shake *
+		                Util::Noise::PerlinNoise1(seed + 2, gameTime / cameraComponent->shakeAmplitude);
+
+		cameraComponent->trauma = trauma - deltaTime / cameraComponent->traumaTime;
+		camera.target           = glm::vec2{camera.target.x + xOffset, camera.target.y + yOffset};
+		// camera.previousCameraAngle = camera.rotation + angle;
+		camera.rotation = camera.rotation + angle;
+	}
+	else
+	{
+		cameraComponent->trauma = 0;
+	}
+}
+
+void Struktur::System::CameraSystem::AddCameraTrauma(GameContext& context, entt::entity entity, float trauma)
+{
+	entt::registry& registry                     = context.GetRegistry();
+	Struktur::Component::Camera* cameraComponent = registry.try_get<Struktur::Component::Camera>(entity);
+	if (!cameraComponent)
+	{
+		BREAK_MSG("Entity provided does not contain a camera component");
+		return;
+	}
+	cameraComponent->trauma += trauma;
+	if (cameraComponent->trauma > 1.0f)
+	{
+		cameraComponent->trauma = 1.0f;
+	}
+}
+
+void Struktur::System::CameraSystem::ResetCameraTrauma(GameContext& context, entt::entity entity)
+{
+	entt::registry& registry                     = context.GetRegistry();
+	Struktur::Component::Camera* cameraComponent = registry.try_get<Struktur::Component::Camera>(entity);
+	if (!cameraComponent)
+	{
+		BREAK_MSG("Entity provided does not contain a camera component");
+		return;
+	}
+	cameraComponent->trauma = 0.0f;
+}

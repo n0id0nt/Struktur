@@ -1,6 +1,7 @@
 #pragma once
 
 #include <bgfx/bgfx.h>
+#include <entt/entt.hpp>
 
 #include <cstdint>
 #include <string>
@@ -8,7 +9,10 @@
 #include <vector>
 
 #include "Engine/World/AssetManifest.h"
+#include "Engine/Resource/TextureResource.h"
+#include "Engine/World/Camera.h"
 #include "Engine/World/World.h"
+#include "Engine/World/Placeholder.h"
 #include "Engine/World/SpriteDescriptor.h"
 
 namespace Struktur
@@ -37,7 +41,8 @@ public:
 	WorldRenderer& operator=(const WorldRenderer&) = delete;
 
 	// Creates GPU resources and loads every manifest role (real file or placeholder). Needs bgfx initialised.
-	void Initialise(const World::AssetManifest& manifest, const World::SpriteDescriptor& descriptor);
+	void Initialise(GameContext& context, const World::AssetManifest& manifest,
+	                const World::SpriteDescriptor& descriptor);
 	void Shutdown();
 	bool IsInitialised() const;
 
@@ -48,7 +53,10 @@ public:
 private:
 	struct RoleTexture
 	{
+		// Keeps the texture loaded in the resource manager; `handle` is its GPU texture.
+		Resource::ResourcePtr<Resource::TextureResource> resource;
 		bgfx::TextureHandle handle = BGFX_INVALID_HANDLE;
+		uint32_t samplerFlags      = 0;
 		int width       = 1;  // whole texture
 		int height      = 1;
 		int columns     = 1;
@@ -71,7 +79,9 @@ private:
 		std::vector<uint32_t> propCounts;
 	};
 
-	void LoadTexture(const World::AssetRole& role, const World::ResolvedAsset& resolved);
+	void LoadTexture(GameContext& context, const World::AssetRole& role, const World::ResolvedAsset& resolved);
+	// Registers a generated image with the resource manager under `name` and makes it the role texture.
+	bool UseImage(GameContext& context, const std::string& name, World::PlaceholderImage&& image, RoleTexture& texture);
 	const RoleTexture& Texture(const std::string& role) const;
 	void SyncChunks(World::World& world);
 	void DestroyChunk(ChunkGpu& chunk);
@@ -79,12 +89,12 @@ private:
 	void UpdateHeightTexture(const World::World& world);
 	void SetSharedUniforms(const World::World& world);
 	void DrawSky(const World::World& world);
-	void DrawScene(World::World& world);
+	void DrawScene(World::World& world, entt::registry& registry);
 	void DrawProps(const World::World& world, const ChunkGpu& chunk);
-	void DrawActors(const World::World& world);
-	void DrawBanners(const World::World& world);
+	void DrawActors(const World::World& world, entt::registry& registry);
+	void DrawBanners(const World::World& world, entt::registry& registry);
 	void DrawWeather(const World::World& world);
-	void DrawRider(const World::World& world);
+	void DrawRider(const World::World& world, entt::registry& registry);
 	void DrawPost(const World::World& world, bgfx::FrameBufferHandle target, uint16_t width, uint16_t height);
 	void DrawDebugOverlay(World::World& world, float frameSeconds);
 	void SubmitSprite(bgfx::ViewId view, const RoleTexture& texture, const float corners[8], float u0, float v0,
@@ -118,6 +128,8 @@ private:
 	uint16_t m_frameHeight                = 0;
 
 	// Per-frame camera, in the render frame (camera x/z at the origin).
+	World::Camera m_camera;
+	int m_powerZone = 0;
 	double m_cameraX = 0.0;
 	double m_cameraZ = 0.0;
 	float m_eye[3]       = {0.0f, 0.0f, 0.0f};

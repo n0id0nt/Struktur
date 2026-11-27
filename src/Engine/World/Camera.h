@@ -1,27 +1,41 @@
 #pragma once
 
-#include "glm/glm.hpp"
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
 
-namespace Struktur
+namespace Struktur::World
 {
-namespace World
-{
+// The 3D camera the world is drawn through. It lives on the GameContext; System::CameraSystem moves it. Positions are
+// in the world's coordinates (x / z absolute metres, y relative to the road height under the rider) and kept in double
+// precision; the matrices are built relative to the camera's x / z, so rendering stays precise over any distance.
 struct Camera
 {
-	glm::vec2 offset;
-	glm::vec2 target;
-	float rotation;
-	float zoom;
-	glm::vec2 previousCameraPosition;
-	float previousCameraAngle;
+	glm::dvec3 position{0.0, 2.2, 0.0};
+	glm::dvec3 target{10.0, 2.2, 0.0};
+	double fieldOfViewDegrees = 62.0;  // vertical
+	float nearPlane           = 0.3f;
+	float farPlane            = 1200.0f;
 
-	glm::vec2 WorldPosToScreenPos(const glm::vec2& worldPos);
-	glm::vec2 ScreenPosToWorldPos(const glm::vec2& screenPos);
-
-	// Standard 2D camera view matrix: translate by -target, rotate, scale by zoom, translate by +offset.
-	glm::mat4 GetViewMatrix() const;
-	// Screen-space orthographic projection (origin top-left, Y down), matching raylib's prior screen convention.
-	glm::mat4 GetProjectionMatrix(int viewportWidth, int viewportHeight) const;
+	// The eye and target in the frame the world is rendered in: relative to (position.x, 0, position.z).
+	glm::vec3 GetEye() const
+	{
+		return glm::vec3(0.0f, static_cast<float>(position.y), 0.0f);
+	}
+	glm::vec3 GetRelativeTarget() const
+	{
+		return glm::vec3(static_cast<float>(target.x - position.x), static_cast<float>(target.y),
+		                 static_cast<float>(target.z - position.z));
+	}
+	glm::mat4 GetViewMatrix() const
+	{
+		return glm::lookAtRH(GetEye(), GetRelativeTarget(), glm::vec3(0.0f, 1.0f, 0.0f));
+	}
+	// `homogeneousDepth`: clip-space depth is -1..1 (bgfx::getCaps()->homogeneousDepth) rather than 0..1.
+	glm::mat4 GetProjectionMatrix(float aspect, bool homogeneousDepth) const
+	{
+		const float fieldOfView = glm::radians(static_cast<float>(fieldOfViewDegrees));
+		return homogeneousDepth ? glm::perspectiveRH_NO(fieldOfView, aspect, nearPlane, farPlane)
+		                        : glm::perspectiveRH_ZO(fieldOfView, aspect, nearPlane, farPlane);
+	}
 };
-}  // namespace World
-}  // namespace Struktur
+}  // namespace Struktur::World

@@ -35,10 +35,10 @@ Struktur::Renderer::DebugRenderer::~DebugRenderer()
 
 void Struktur::Renderer::DebugRenderer::SetupView(GameContext& context)
 {
-	World::Camera& camera    = context.GetCamera();
+	// The 2D debug drawing (physics shapes, grid) is in screen space: the world camera is 3D.
 	Core::GameData& gameData = context.GetGameData();
-	glm::mat4 view           = camera.GetViewMatrix();
-	glm::mat4 proj           = camera.GetProjectionMatrix(gameData.gameWidth, gameData.gameHeight);
+	glm::mat4 view(1.0f);
+	glm::mat4 proj = glm::ortho(0.0f, (float)gameData.gameWidth, (float)gameData.gameHeight, 0.0f, -1.0f, 1.0f);
 	bgfx::setViewTransform(GraphicsDevice::DebugViewId, glm::value_ptr(view), glm::value_ptr(proj));
 	m_currentViewId = GraphicsDevice::DebugViewId;
 }

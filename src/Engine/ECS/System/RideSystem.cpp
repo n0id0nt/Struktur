@@ -2,6 +2,7 @@
 
 #include "Engine/GameContext.h"
 #include "Engine/RideIntegration/RideService.h"
+#include "Engine/World/WorldLifecycle.h"
 
 static constexpr double FINISH_BANNER_AHEAD_METERS = 90.0;
 
@@ -15,8 +16,8 @@ void Struktur::System::RideSystem::Update(GameContext& context)
 		session->SetRoadGrade(world.IsLoaded() ? std::optional<double>(world.GetRoadGradePercent()) : std::nullopt);
 	}
 	service.Update(context, context.GetTimeSystem().unscaledTime);
-	if (service.TakeWorkoutFinished() && world.IsLoaded())
+	if (service.TakeWorkoutFinished())
 	{
-		world.PlaceBanner(FINISH_BANNER_AHEAD_METERS);
+		World::PlaceFinishBanner(context, FINISH_BANNER_AHEAD_METERS);
 	}
 }

@@ -7,10 +7,10 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
-#include <stb_image.h>
 
 #include "Debug/Assertions.h"
 #include "Engine/Core/FileSystem.h"
+#include "Engine/ECS/Component/WorldComponents.h"
 #include "Engine/GameContext.h"
 #include "Engine/Renderer/EmbeddedShaders.h"
 #include "Engine/Renderer/GraphicsDevice.h"
@@ -26,7 +26,6 @@ static constexpr int HEIGHT_TEXTURE_WIDTH   = 2048;
 static constexpr double HEIGHT_TEXTURE_BEHIND = 64.0;  // metres of road behind the rider kept in the height texture
 static constexpr double STRIPE_PERIOD       = 1800.0;  // multiple of every road pattern period (dash 9 m, rumble 1.6 m)
 static constexpr double TEXTURE_FOLD        = 1024.0;  // world texture coordinates are taken modulo this (precision)
-static constexpr float NEAR_PLANE           = 0.3f;
 static constexpr int MAX_CLOUDS             = 10;
 static constexpr int MAX_WEATHER_PARTICLES  = 2000;
 static constexpr float WEATHER_BOX          = 32.0f;  // metres around the camera
@@ -70,7 +69,8 @@ void WorldRenderer::SetVec4(const char* name, float x, float y, float z, float w
 	bgfx::setUniform(Uniform(name), value);
 }
 
-void WorldRenderer::Initialise(const World::AssetManifest& manifest, const World::SpriteDescriptor& descriptor)
+void WorldRenderer::Initialise(GameContext& context, const World::AssetManifest& manifest,
+                               const World::SpriteDescriptor& descriptor)
 {
 	if (m_initialised)
 	{
@@ -120,73 +120,81 @@ void WorldRenderer::Initialise(const World::AssetManifest& manifest, const World
 	m_missing.handle = bgfx::createTexture2D(1, 1, false, 1, bgfx::TextureFormat::RGBA8, POINT_CLAMP, bgfx::copy(&white, 4));
 
 	const std::vector<World::ResolvedAsset> resolved = World::ResolveAssets(manifest, FileSystem::Exists);
+	// The files used whole are decoded in parallel first.
+	std::vector<std::string> files;
 	for (const World::ResolvedAsset& asset : resolved)
 	{
-		LoadTexture(*asset.role, asset);
+		if (asset.found && asset.role->regions.empty())
+		{
+			files.push_back(asset.path);
+		}
+	}
+	context.GetResourceManager().PrefetchTextures(context, files);
+	for (const World::ResolvedAsset& asset : resolved)
+	{
+		LoadTexture(context, *asset.role, asset);
 	}
 	m_initialised = true;
 }
 
-void WorldRenderer::LoadTexture(const World::AssetRole& role, const World::ResolvedAsset& resolved)
+// Takes `texture.resource` to the GPU; false (and the resource released) if it can't be used.
+static constexpr int MAX_TEXTURE_SIZE = 8192;
+
+bool WorldRenderer::UseImage(GameContext& context, const std::string& name, World::PlaceholderImage&& image,
+                             RoleTexture& texture)
+{
+	Resource::TextureResource::DecodedImage decoded;
+	decoded.pixels = std::move(image.pixels);
+	decoded.width  = image.width;
+	decoded.height = image.height;
+	context.GetResourceManager().AddDecodedTexture(name, std::move(decoded));
+	texture.resource = context.GetResourceManager().GetTexture(context, name);
+	return texture.resource && texture.resource.EnsureReady(context);
+}
+
+void WorldRenderer::LoadTexture(GameContext& context, const World::AssetRole& role, const World::ResolvedAsset& resolved)
 {
 	RoleTexture texture;
-	texture.columns = std::max(1, role.frames);
-	texture.rows    = std::max(1, role.rows);
-	const uint32_t flags = BGFX_SAMPLER_POINT | (role.tileable ? 0u : static_cast<uint32_t>(BGFX_SAMPLER_UVW_CLAMP));
-	if (resolved.found)
+	texture.columns      = std::max(1, role.frames);
+	texture.rows         = std::max(1, role.rows);
+	texture.samplerFlags = BGFX_SAMPLER_POINT | (role.tileable ? 0u : static_cast<uint32_t>(BGFX_SAMPLER_UVW_CLAMP));
+	bool loaded          = false;
+	if (resolved.found && role.regions.empty())
 	{
-		const FileResult<std::vector<uint8_t>> bytes = FileSystem::ReadBytes(resolved.path);
-		if (bytes.success)
+		texture.resource = context.GetResourceManager().GetTexture(context, resolved.path);
+		loaded           = texture.resource && texture.resource->GetWidth() <= MAX_TEXTURE_SIZE &&
+		         texture.resource->GetHeight() <= MAX_TEXTURE_SIZE && texture.resource.EnsureReady(context);
+	}
+	else if (resolved.found)
+	{
+		// Frames cut out of a larger sheet (tileset trees, a character atlas): build a strip of them.
+		Resource::TextureResource::DecodedImage sheet;
+		std::string error;
+		if (Resource::TextureResource::Decode(resolved.path, sheet, error) && sheet.width <= MAX_TEXTURE_SIZE &&
+		    sheet.height <= MAX_TEXTURE_SIZE)
 		{
-			int width    = 0;
-			int height   = 0;
-			int channels = 0;
-			stbi_uc* pixels =
-			    stbi_load_from_memory(bytes.value.data(), static_cast<int>(bytes.value.size()), &width, &height, &channels, 4);
-			if (pixels != nullptr && width > 0 && height > 0 && width <= 8192 && height <= 8192)
-			{
-				if (!role.regions.empty())
-				{
-					// Frames cut out of a larger sheet (tileset trees, a character atlas): build a strip of them.
-					const World::PlaceholderImage strip = World::ComposeRegions(pixels, width, height, role);
-					texture.handle = bgfx::createTexture2D(static_cast<uint16_t>(strip.width), static_cast<uint16_t>(strip.height),
-					                                       false, 1, bgfx::TextureFormat::RGBA8, flags,
-					                                       bgfx::copy(strip.pixels.data(), static_cast<uint32_t>(strip.pixels.size())));
-					texture.width  = strip.width;
-					texture.height = strip.height;
-				}
-				else
-				{
-					texture.handle = bgfx::createTexture2D(static_cast<uint16_t>(width), static_cast<uint16_t>(height), false, 1,
-					                                       bgfx::TextureFormat::RGBA8, flags,
-					                                       bgfx::copy(pixels, static_cast<uint32_t>(width * height * 4)));
-					texture.width  = width;
-					texture.height = height;
-				}
-				texture.placeholder = false;
-			}
-			if (pixels != nullptr)
-			{
-				stbi_image_free(pixels);
-			}
-		}
-		if (!bgfx::isValid(texture.handle))
-		{
-			DEBUG_WARNING("Ride world: couldn't load %s for role '%s' - using %s", resolved.path.c_str(), role.role.c_str(),
-			              resolved.placeholderName.c_str());
+			loaded = UseImage(context, "world/" + role.role,
+			                  World::ComposeRegions(sheet.pixels.data(), sheet.width, sheet.height, role), texture);
 		}
 	}
-	if (!bgfx::isValid(texture.handle))
+	if (resolved.found && !loaded)
 	{
-		const World::PlaceholderImage image = World::GeneratePlaceholder(role, 1);
-		texture.handle = bgfx::createTexture2D(static_cast<uint16_t>(image.width), static_cast<uint16_t>(image.height), false, 1,
-		                                       bgfx::TextureFormat::RGBA8, flags,
-		                                       bgfx::copy(image.pixels.data(), static_cast<uint32_t>(image.pixels.size())));
-		texture.width       = image.width;
-		texture.height      = image.height;
-		texture.placeholder = true;
+		DEBUG_WARNING("World: couldn't load %s for role '%s' - using %s", resolved.path.c_str(), role.role.c_str(),
+		              resolved.placeholderName.c_str());
 	}
-	m_textures[role.role] = texture;
+	texture.placeholder = !loaded;
+	if (!loaded)
+	{
+		loaded = UseImage(context, "world/placeholder/" + role.role, World::GeneratePlaceholder(role, 1), texture);
+	}
+	if (!loaded)
+	{
+		return;  // drawn with the 1x1 white fallback
+	}
+	texture.handle     = texture.resource->texture;
+	texture.width      = texture.resource->GetWidth();
+	texture.height     = texture.resource->GetHeight();
+	m_textures[role.role] = std::move(texture);
 }
 
 const WorldRenderer::RoleTexture& WorldRenderer::Texture(const std::string& role) const
@@ -239,14 +247,7 @@ void WorldRenderer::Shutdown()
 		return;
 	}
 	ResetChunks();
-	for (auto& [role, texture] : m_textures)
-	{
-		if (bgfx::isValid(texture.handle))
-		{
-			bgfx::destroy(texture.handle);
-		}
-	}
-	m_textures.clear();
+	m_textures.clear();  // releases the resource manager's textures
 	const bgfx::TextureHandle textures[2] = {m_missing.handle, m_heightTexture};
 	for (const bgfx::TextureHandle& handle : textures)
 	{
@@ -424,7 +425,7 @@ void WorldRenderer::SetSharedUniforms(const World::World& world)
 	SetVec4("u_road", static_cast<float>(settings.roadHalfWidthMeters), static_cast<float>(settings.shoulderMeters), 0.15f, 0.45f);
 	SetVec4("u_roadLine", line[0], line[1], line[2], 1.0f);
 	SetVec4("u_roadShoulder", shoulder[0], shoulder[1], shoulder[2], 1.0f);
-	const Ride::ZoneColor zone = Ride::PowerZoneColor(std::clamp(world.GetPowerZone(), 0, Ride::POWER_ZONE_COUNT));
+	const Ride::ZoneColor zone = Ride::PowerZoneColor(std::clamp(m_powerZone, 0, Ride::POWER_ZONE_COUNT));
 	SetVec4("u_zoneColor", zone.red / 255.0f, zone.green / 255.0f, zone.blue / 255.0f, 1.0f);
 }
 
@@ -455,7 +456,8 @@ void WorldRenderer::SubmitSprite(bgfx::ViewId view, const RoleTexture& texture, 
 	std::memcpy(index, order, sizeof(order));
 	bgfx::setVertexBuffer(0, &vertices);
 	bgfx::setIndexBuffer(&indices);
-	bgfx::setTexture(0, Uniform("s_texColor", bgfx::UniformType::Sampler), texture.handle, samplerFlags);
+	bgfx::setTexture(0, Uniform("s_texColor", bgfx::UniformType::Sampler), texture.handle,
+	                 samplerFlags == UINT32_MAX ? texture.samplerFlags : samplerFlags);
 	const uint64_t blend = extraState != 0 ? extraState : BGFX_STATE_BLEND_ALPHA;
 	bgfx::setState(BGFX_STATE_WRITE_RGB | BGFX_STATE_WRITE_A | blend);
 	bgfx::submit(view, GetEmbeddedProgram("sprite"));
@@ -536,7 +538,7 @@ void WorldRenderer::DrawSky(const World::World& world)
 	SetVec4("u_skySun", m_sunDirection[0], m_sunDirection[1], m_sunDirection[2], day ? 1.0f : 0.15f);
 	SetVec4("u_skySunColor", look.sunColor.red, look.sunColor.green, look.sunColor.blue, 1.0f);
 	// Mountains: band height as a fraction of the vertical field of view; slow parallax with distance.
-	const float fovRadians = static_cast<float>(world.GetCamera().fieldOfViewDegrees) * PI / 180.0f;
+	const float fovRadians = static_cast<float>(m_camera.fieldOfViewDegrees) * PI / 180.0f;
 	const double distance  = world.GetDistance();
 	SetVec4("u_skyParams", static_cast<float>(look.starIntensity), static_cast<float>(look.mountainHeight) * fovRadians,
 	        static_cast<float>(std::fmod(distance * 0.000012, 1.0)), static_cast<float>(std::fmod(distance * 0.00004, 1.0)));
@@ -549,9 +551,9 @@ void WorldRenderer::DrawSky(const World::World& world)
 	ScreenQuad(width, height, -1.0f, 1.0f, 1.0f, -1.0f, quad);
 	if (SubmitScreenQuad(m_screenLayout, quad))
 	{
-		bgfx::setTexture(0, Uniform("s_stars", bgfx::UniformType::Sampler), Texture("sky_stars").handle);
-		bgfx::setTexture(1, Uniform("s_mountainsFar", bgfx::UniformType::Sampler), Texture("mountains_far").handle);
-		bgfx::setTexture(2, Uniform("s_mountainsNear", bgfx::UniformType::Sampler), Texture("mountains_near").handle);
+		bgfx::setTexture(0, Uniform("s_stars", bgfx::UniformType::Sampler), Texture("sky_stars").handle, Texture("sky_stars").samplerFlags);
+		bgfx::setTexture(1, Uniform("s_mountainsFar", bgfx::UniformType::Sampler), Texture("mountains_far").handle, Texture("mountains_far").samplerFlags);
+		bgfx::setTexture(2, Uniform("s_mountainsNear", bgfx::UniformType::Sampler), Texture("mountains_near").handle, Texture("mountains_near").samplerFlags);
 		bgfx::setState(BGFX_STATE_WRITE_RGB | BGFX_STATE_WRITE_A);
 		bgfx::submit(view, GetEmbeddedProgram("rideSky"));
 	}
@@ -632,7 +634,7 @@ void WorldRenderer::DrawProps(const World::World& world, const ChunkGpu& chunk)
 		// One instanced draw per prop type per chunk, from the chunk's static instance buffer.
 		bgfx::setInstanceDataBuffer(chunk.props[type], 0, count);
 		bgfx::setTexture(0, Uniform("s_height", bgfx::UniformType::Sampler), m_heightTexture);
-		bgfx::setTexture(1, Uniform("s_texColor", bgfx::UniformType::Sampler), texture.handle);
+		bgfx::setTexture(1, Uniform("s_texColor", bgfx::UniformType::Sampler), texture.handle, texture.samplerFlags);
 		bgfx::setState(OPAQUE_STATE);
 		bgfx::submit(GraphicsDevice::RideSceneViewId, GetEmbeddedProgram("rideProp"));
 		++m_propDraws;
@@ -683,7 +685,7 @@ void WorldRenderer::SubmitBillboard(const World::World& world, const std::string
 	bgfx::setIndexBuffer(m_quadIndices);
 	bgfx::setInstanceDataBuffer(&instances);
 	bgfx::setTexture(0, Uniform("s_height", bgfx::UniformType::Sampler), m_heightTexture);
-	bgfx::setTexture(1, Uniform("s_texColor", bgfx::UniformType::Sampler), texture.handle);
+	bgfx::setTexture(1, Uniform("s_texColor", bgfx::UniformType::Sampler), texture.handle, texture.samplerFlags);
 	bgfx::setState(OPAQUE_STATE);
 	bgfx::submit(GraphicsDevice::RideSceneViewId, GetEmbeddedProgram("rideProp"));
 }
@@ -710,13 +712,14 @@ static void CrankCell(const World::SpriteLayer& layer, const World::SpriteDescri
 	}
 }
 
-void WorldRenderer::DrawActors(const World::World& world)
+void WorldRenderer::DrawActors(const World::World& world, entt::registry& registry)
 {
 	const double height = m_descriptor.heightMeters;
-	for (const World::WorldActor& actor : world.GetActors())
+	auto riders         = registry.view<Component::RoadPosition, Component::CrankAnimation, Component::Tint>();
+	for (auto [entity, position, crank, tint] : riders.each())
 	{
-		if (actor.distance < world.GetDistance() - 2.0 ||
-		    actor.distance > world.GetDistance() + world.GetSettings().Resolved().drawDistanceMeters)
+		if (position.distance < world.GetDistance() - 2.0 ||
+		    position.distance > world.GetDistance() + world.GetSettings().Resolved().drawDistanceMeters)
 		{
 			continue;
 		}
@@ -731,7 +734,7 @@ void WorldRenderer::DrawActors(const World::World& world)
 			int row    = 0;
 			if (layer.motion == World::SpriteLayerMotion::CRANK)
 			{
-				CrankCell(layer, m_descriptor, World::RiderPose::PEDALLING, actor.crankPhase, column, row);
+				CrankCell(layer, m_descriptor, World::RiderPose::PEDALLING, crank.animation.GetCrankPhase(), column, row);
 			}
 			// A layer with its own rect (e.g. the character over the bike) is scaled and lifted to match the frame.
 			double layerHeight = height;
@@ -742,17 +745,19 @@ void WorldRenderer::DrawActors(const World::World& world)
 				baseHeight  = height * (m_descriptor.anchorY - (layer.rectY + layer.rectHeight)) / m_descriptor.frameHeight;
 			}
 			const bool tinted = layer.name == "torso";
-			SubmitBillboard(world, layer.role, actor.distance, actor.lateral, layerHeight, 0.0, false, column, row,
-			                tinted ? actor.tint : 0xFFFFFFFFu, offset, baseHeight);
+			SubmitBillboard(world, layer.role, position.distance, position.lateral, layerHeight, 0.0, false, column, row,
+			                tinted ? tint.abgr : 0xFFFFFFFFu, offset, baseHeight);
 			offset += 0.02;
 		}
 	}
 }
 
-void WorldRenderer::DrawBanners(const World::World& world)
+void WorldRenderer::DrawBanners(const World::World& world, entt::registry& registry)
 {
-	for (double distance : world.GetBanners())
+	auto banners = registry.view<Component::Banner, Component::RoadPosition>();
+	for (auto [entity, position] : banners.each())
 	{
+		const double distance           = position.distance;
 		const World::RouteSample sample = world.GetRoute().SampleAt(distance);
 		// Aligned quad across the road: its "right" runs along the road's left vector.
 		const double angle = std::atan2(sample.LeftZ(), sample.LeftX());
@@ -782,7 +787,7 @@ void WorldRenderer::DrawWeather(const World::World& world)
 	const double time   = world.GetTimeSeconds();
 	const double fall   = snow ? 1.3 : 11.0;
 	const double drift  = snow ? 0.8 : 0.0;
-	const double cameraY = world.GetCamera().y;
+	const double cameraY = m_camera.position.y;
 	for (uint32_t index = 0; index < count; ++index)
 	{
 		// Each particle lives at a hashed spot in a box that wraps around the camera as it moves and as time passes.
@@ -824,12 +829,12 @@ void WorldRenderer::DrawWeather(const World::World& world)
 	bgfx::setIndexBuffer(m_quadIndices);
 	bgfx::setInstanceDataBuffer(&instances);
 	bgfx::setTexture(0, Uniform("s_height", bgfx::UniformType::Sampler), m_heightTexture);
-	bgfx::setTexture(1, Uniform("s_texColor", bgfx::UniformType::Sampler), texture.handle);
+	bgfx::setTexture(1, Uniform("s_texColor", bgfx::UniformType::Sampler), texture.handle, texture.samplerFlags);
 	bgfx::setState(OPAQUE_STATE);
 	bgfx::submit(GraphicsDevice::RideSceneViewId, GetEmbeddedProgram("rideProp"));
 }
 
-void WorldRenderer::DrawScene(World::World& world)
+void WorldRenderer::DrawScene(World::World& world, entt::registry& registry)
 {
 	const bgfx::ViewId view = GraphicsDevice::RideSceneViewId;
 	bgfx::setViewName(view, "Ride scene");
@@ -866,11 +871,11 @@ void WorldRenderer::DrawScene(World::World& world)
 			bgfx::setVertexBuffer(0, meshes[mesh]);
 			bgfx::setIndexBuffer(indices[mesh]);
 			bgfx::setTexture(0, height, m_heightTexture);
-			bgfx::setTexture(1, Uniform("s_grass", bgfx::UniformType::Sampler), Texture("terrain_grass").handle);
-			bgfx::setTexture(2, Uniform("s_rock", bgfx::UniformType::Sampler), Texture("terrain_rock").handle);
-			bgfx::setTexture(3, Uniform("s_snow", bgfx::UniformType::Sampler), Texture("terrain_snow").handle);
-			bgfx::setTexture(4, Uniform("s_sand", bgfx::UniformType::Sampler), Texture("terrain_sand").handle);
-			bgfx::setTexture(5, Uniform("s_water", bgfx::UniformType::Sampler), Texture("water").handle);
+			bgfx::setTexture(1, Uniform("s_grass", bgfx::UniformType::Sampler), Texture("terrain_grass").handle, Texture("terrain_grass").samplerFlags);
+			bgfx::setTexture(2, Uniform("s_rock", bgfx::UniformType::Sampler), Texture("terrain_rock").handle, Texture("terrain_rock").samplerFlags);
+			bgfx::setTexture(3, Uniform("s_snow", bgfx::UniformType::Sampler), Texture("terrain_snow").handle, Texture("terrain_snow").samplerFlags);
+			bgfx::setTexture(4, Uniform("s_sand", bgfx::UniformType::Sampler), Texture("terrain_sand").handle, Texture("terrain_sand").samplerFlags);
+			bgfx::setTexture(5, Uniform("s_water", bgfx::UniformType::Sampler), Texture("water").handle, Texture("water").samplerFlags);
 			bgfx::setState(OPAQUE_STATE);
 			bgfx::submit(view, GetEmbeddedProgram("rideTerrain"));
 		}
@@ -880,19 +885,19 @@ void WorldRenderer::DrawScene(World::World& world)
 			bgfx::setVertexBuffer(0, chunk.roadVertices);
 			bgfx::setIndexBuffer(chunk.roadIndices);
 			bgfx::setTexture(0, height, m_heightTexture);
-			bgfx::setTexture(1, Uniform("s_asphalt", bgfx::UniformType::Sampler), Texture("road_asphalt").handle);
-			bgfx::setTexture(2, Uniform("s_markings", bgfx::UniformType::Sampler), Texture("road_markings").handle);
+			bgfx::setTexture(1, Uniform("s_asphalt", bgfx::UniformType::Sampler), Texture("road_asphalt").handle, Texture("road_asphalt").samplerFlags);
+			bgfx::setTexture(2, Uniform("s_markings", bgfx::UniformType::Sampler), Texture("road_markings").handle, Texture("road_markings").samplerFlags);
 			bgfx::setState(OPAQUE_STATE);
 			bgfx::submit(view, GetEmbeddedProgram("rideRoad"));
 		}
 		DrawProps(world, chunk);
 	}
-	DrawBanners(world);
-	DrawActors(world);
+	DrawBanners(world, registry);
+	DrawActors(world, registry);
 	DrawWeather(world);
 }
 
-void WorldRenderer::DrawRider(const World::World& world)
+void WorldRenderer::DrawRider(const World::World& world, entt::registry& registry)
 {
 	const bgfx::ViewId view = GraphicsDevice::RideOverlayViewId;
 	const float width       = m_frameWidth;
@@ -906,7 +911,12 @@ void WorldRenderer::DrawRider(const World::World& world)
 	bgfx::setViewMode(view, bgfx::ViewMode::Sequential);
 	bgfx::setViewTransform(view, glm::value_ptr(identity), glm::value_ptr(ortho));
 
-	const World::RiderAnimation& animation = world.GetRiderAnimation();
+	const auto riders = registry.view<Component::RiderSprite, Component::CrankAnimation>();
+	if (riders.begin() == riders.end())
+	{
+		return;
+	}
+	const World::RiderAnimation& animation = registry.get<Component::CrankAnimation>(*riders.begin()).animation;
 	const World::SpriteDescriptor& sprite  = m_descriptor;
 	// Projected from the rider's place on the road; if that failed, the descriptor's fixed size at the bottom centre.
 	float scale   = static_cast<float>(sprite.screenHeight) * height / static_cast<float>(sprite.frameHeight);
@@ -1113,20 +1123,17 @@ void WorldRenderer::Render(GameContext& context, World::World& world, float fram
 	SyncChunks(world);
 	UpdateHeightTexture(world);
 
-	// Camera in the render frame: x/z relative to the camera (precision over endless distances), y relative to h(rider).
-	const World::WorldCamera& camera = world.GetCamera();
-	m_cameraX = camera.x;
-	m_cameraZ = camera.z;
-	const glm::vec3 eye(0.0f, static_cast<float>(camera.y), 0.0f);
-	const glm::vec3 target3(static_cast<float>(camera.targetX - camera.x), static_cast<float>(camera.targetY),
-	                        static_cast<float>(camera.targetZ - camera.z));
+	// The context's camera, in the render frame: x/z relative to the camera, y relative to h(rider).
+	m_camera    = context.GetCamera();
+	m_powerZone = context.GetInput().GetTrainer().powerZone;
+	m_cameraX   = m_camera.position.x;
+	m_cameraZ   = m_camera.position.z;
+	const glm::vec3 eye     = m_camera.GetEye();
+	const glm::vec3 target3 = m_camera.GetRelativeTarget();
 	const glm::vec3 up(0.0f, 1.0f, 0.0f);
-	const glm::mat4 view = glm::lookAtRH(eye, target3, up);
-	const float aspect   = static_cast<float>(lowWidth) / static_cast<float>(lowHeight);
-	const float fov      = static_cast<float>(camera.fieldOfViewDegrees) * PI / 180.0f;
-	const float farPlane = static_cast<float>(quality.drawDistanceMeters + 200.0);
-	const glm::mat4 projection = bgfx::getCaps()->homogeneousDepth ? glm::perspectiveRH_NO(fov, aspect, NEAR_PLANE, farPlane)
-	                                                               : glm::perspectiveRH_ZO(fov, aspect, NEAR_PLANE, farPlane);
+	const glm::mat4 view       = m_camera.GetViewMatrix();
+	const float aspect         = static_cast<float>(lowWidth) / static_cast<float>(lowHeight);
+	const glm::mat4 projection = m_camera.GetProjectionMatrix(aspect, bgfx::getCaps()->homogeneousDepth);
 	const glm::mat4 rotationView = glm::lookAtRH(glm::vec3(0.0f), target3 - eye, up);
 	std::memcpy(m_view, glm::value_ptr(view), sizeof(m_view));
 	std::memcpy(m_projection, glm::value_ptr(projection), sizeof(m_projection));
@@ -1183,8 +1190,8 @@ void WorldRenderer::Render(GameContext& context, World::World& world, float fram
 
 	SetSharedUniforms(world);
 	DrawSky(world);
-	DrawScene(world);
-	DrawRider(world);
+	DrawScene(world, context.GetRegistry());
+	DrawRider(world, context.GetRegistry());
 	DrawPost(world, target, targetWidth, targetHeight);
 	DrawDebugOverlay(world, frameSeconds);
 }

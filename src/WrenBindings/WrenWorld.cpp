@@ -11,6 +11,7 @@
 #include "Engine/Core/CommandLine.h"
 #include "Engine/GameContext.h"
 #include "Engine/Scripting/WrenBindingRegistry.h"
+#include "Engine/World/WorldLifecycle.h"
 #include "wren.hpp"
 
 namespace World = Struktur::World;
@@ -42,40 +43,26 @@ static bool SettingsFromSlot(WrenVM* vm, int slot, World::WorldSettings& setting
 	return true;
 }
 
-static void UnloadWorld(Struktur::GameContext& context)
-{
-	context.GetWorldRenderer().Shutdown();
-	context.GetWorld().Unload();
-}
-
 // World.load(settingsJson) -> bool: builds the world and its GPU resources (replacing a loaded one). False when the
 // settings disable the world, there is no biome data, or the argument isn't a settings string.
 static void wren_WorldLoad(WrenVM* vm)
 {
 	Struktur::GameContext& context = ContextOf(vm);
 	World::WorldSettings settings;
-	const bool valid = SettingsFromSlot(vm, 1, settings);
-	UnloadWorld(context);
-	World::World& world                = context.GetWorld();
-	const World::WorldAssets& assets   = world.GetAssets();
-	if (!valid || !settings.enabled || !assets.biomes || assets.biomes->empty())
+	const bool demoPacer = Struktur::Core::CommandLine::HasFlag("--demo");
+	const bool loaded    = SettingsFromSlot(vm, 1, settings) &&
+	                    World::LoadWorld(context, settings, demoPacer && settings.demoPacer);
+	if (!loaded)
 	{
-		wrenSetSlotBool(vm, 0, false);
-		return;
+		World::UnloadWorld(context);
 	}
-	world.Load(settings, &context.GetJobSystem());
-	if (Struktur::Core::CommandLine::HasFlag("--demo") && settings.demoPacer)
-	{
-		world.SetActorSource(std::make_unique<World::DemoPacer>());
-	}
-	context.GetWorldRenderer().Initialise(assets.manifest, assets.spriteDescriptor);
-	wrenSetSlotBool(vm, 0, true);
+	wrenSetSlotBool(vm, 0, loaded);
 }
 
 // World.unload()
 static void wren_WorldUnload(WrenVM* vm)
 {
-	UnloadWorld(ContextOf(vm));
+	World::UnloadWorld(ContextOf(vm));
 }
 
 // World.isLoaded -> bool
@@ -98,7 +85,7 @@ static void wren_WorldApplySettings(WrenVM* vm)
 	}
 	if (!settings.enabled)
 	{
-		UnloadWorld(context);
+		World::UnloadWorld(context);
 		wrenSetSlotBool(vm, 0, true);
 		return;
 	}

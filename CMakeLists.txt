@@ -543,6 +543,11 @@ set(SOURCES
     src/Engine/ECS/System/FitnessSystem.h       src/Engine/ECS/System/FitnessSystem.cpp
     src/Engine/ECS/System/RideSystem.h          src/Engine/ECS/System/RideSystem.cpp
     src/Engine/ECS/System/WorldSystem.h         src/Engine/ECS/System/WorldSystem.cpp
+    src/Engine/ECS/System/PacerSystem.h         src/Engine/ECS/System/PacerSystem.cpp
+    src/Engine/ECS/System/RiderAnimationSystem.h src/Engine/ECS/System/RiderAnimationSystem.cpp
+    src/Engine/ECS/System/CameraSystem.h        src/Engine/ECS/System/CameraSystem.cpp
+    src/Engine/ECS/Component/WorldComponents.h
+    src/Engine/World/WorldLifecycle.h           src/Engine/World/WorldLifecycle.cpp
     src/Engine/ECS/System/WorldRenderSystem.h   src/Engine/ECS/System/WorldRenderSystem.cpp
     src/Engine/World/WorldAssetLoader.h         src/Engine/World/WorldAssetLoader.cpp
     src/Engine/RideIntegration/RideService.h    src/Engine/RideIntegration/RideService.cpp
@@ -571,7 +576,6 @@ set(SOURCES
     src/Engine/UI/UIScroll.h                    src/Engine/UI/UIScroll.cpp
 
                       
-    src/Engine/World/Camera.h                   src/Engine/World/Camera.cpp
 
     
 

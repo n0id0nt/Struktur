@@ -111,6 +111,9 @@ set(WORLD_SOURCES
     ${WORLD_DIR}/AssetManifest.h       ${WORLD_DIR}/AssetManifest.cpp
     ${WORLD_DIR}/Placeholder.h         ${WORLD_DIR}/Placeholder.cpp
     ${WORLD_DIR}/World.h           ${WORLD_DIR}/World.cpp
+    ${WORLD_DIR}/Camera.h
+    ${WORLD_DIR}/RoadFollow.h      ${WORLD_DIR}/RoadFollow.cpp
+    ${WORLD_DIR}/Pacer.h           ${WORLD_DIR}/Pacer.cpp
 )
 # The job system (chunk builds, ride autosaves). The root build adds it first; standalone, pull it in here.
 if(NOT TARGET StrukturJobs)
@@ -118,7 +121,7 @@ if(NOT TARGET StrukturJobs)
 endif()
 
 add_library(StrukturWorld STATIC ${WORLD_SOURCES})
-target_include_directories(StrukturWorld PUBLIC ${STRUKTUR_REPO_ROOT}/src)
+target_include_directories(StrukturWorld PUBLIC ${STRUKTUR_REPO_ROOT}/src ${STRUKTUR_REPO_ROOT}/third_party/glm)
 target_link_libraries(StrukturWorld PUBLIC nlohmann_json::nlohmann_json StrukturJobs)
 target_compile_features(StrukturWorld PUBLIC cxx_std_20)
 find_package(Threads)

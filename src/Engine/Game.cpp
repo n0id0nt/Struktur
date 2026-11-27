@@ -25,6 +25,9 @@
 #include "Engine/ECS/System/RideSystem.h"
 #include "Engine/ECS/System/WorldRenderSystem.h"
 #include "Engine/ECS/System/WorldSystem.h"
+#include "Engine/ECS/System/CameraSystem.h"
+#include "Engine/ECS/System/PacerSystem.h"
+#include "Engine/ECS/System/RiderAnimationSystem.h"
 #include "Engine/ECS/System/HierarchySystem.h"
 #include "Engine/ECS/System/PhysicsSystem.h"
 #include "Engine/ECS/System/SoundSystem.h"
@@ -41,6 +44,7 @@
 #include "Engine/Util/Color.h"
 #include "Engine/Util/MathUtil.h"
 #include "Engine/World/WorldAssetLoader.h"
+#include "Engine/World/WorldLifecycle.h"
 
 #ifdef DEBUG
 	#include "Engine/Scripting/WrenCodeGenerator.h"
@@ -251,7 +255,11 @@ bool Struktur::InitialiseGame(GameContext& context)
 	// Before WrenScriptSystem/EventSystem so fitness events queued this frame are delivered this frame.
 	systemManager.AddUpdateSystem<System::FitnessSystem>();
 	systemManager.AddUpdateSystem<System::RideSystem>();
+	// The world: advance the road and the player, then move what rides on it, then the camera that follows.
 	systemManager.AddUpdateSystem<System::WorldSystem>();
+	systemManager.AddUpdateSystem<System::PacerSystem>();
+	systemManager.AddUpdateSystem<System::RiderAnimationSystem>();
+	systemManager.AddUpdateSystem<System::CameraSystem>();
 	systemManager.AddUpdateSystem<System::WrenScriptSystem>();
 	systemManager.AddUpdateSystem<System::EventSystem>();
 	systemManager.AddUpdateSystem<System::PhysicsSystem>();
@@ -324,6 +332,10 @@ void Struktur::ExitGame(GameContext& context)
 	DEBUG_INFO("[Clean Up] DialogueManager");
 	Dialogue::DialogueManager& dialogueManager = context.GetDialogueManager();
 	dialogueManager.Clear();
+
+	// Before the resource manager: the world renderer holds textures.
+	DEBUG_INFO("[Clean Up] World");
+	World::UnloadWorld(context);
 
 	DEBUG_INFO("[Clean Up] Resource Manager");
 	Resource::ResourceManager& resourceManager = context.GetResourceManager();
@@ -709,8 +721,7 @@ void Struktur::ClearGameSystems(GameContext& context)
 	registry.clear();
 
 	// A script loads the world; a restart starts without one.
-	context.GetWorldRenderer().Shutdown();
-	context.GetWorld().Unload();
+	World::UnloadWorld(context);
 
 	DEBUG_INFO("[Clean Up] Physics World");
 	Physics::PhysicsWorld& world = context.GetPhysicsWorld();

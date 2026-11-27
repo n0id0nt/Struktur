@@ -225,11 +225,10 @@ void Struktur::System::DebugSystem::RenderPhysicsShapes(GameContext& context)
 void Struktur::System::DebugSystem::RenderGrid(GameContext& context)
 {
 	auto& gridSettings       = context.GetEditor().GetSettings().grid;
-	World::Camera& camera    = context.GetCamera();
 	Core::GameData& gameData = context.GetGameData();
 
-	glm::vec2 topLeft     = camera.ScreenPosToWorldPos(glm::vec2(0, 0));
-	glm::vec2 bottomRight = camera.ScreenPosToWorldPos(glm::vec2(gameData.gameWidth, gameData.gameHeight));
+	glm::vec2 topLeft(0.0f, 0.0f);
+	glm::vec2 bottomRight(gameData.gameWidth, gameData.gameHeight);
 
 	float gridSize        = gridSettings.gridSize;
 	unsigned char alpha   = (unsigned char)(gridSettings.gridOpacity * 255.0f);

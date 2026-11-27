@@ -19,6 +19,8 @@
 #include "Engine/World/ChunkStreamer.h"
 #include "Engine/World/ElevationProfile.h"
 #include "Engine/World/Noise.h"
+#include "Engine/World/Pacer.h"
+#include "Engine/World/RoadFollow.h"
 #include "Engine/World/Placeholder.h"
 #include "Engine/World/World.h"
 #include "Engine/World/RiderAnimation.h"
@@ -505,14 +507,12 @@ TEST_CASE("a world is empty until loaded, and loading again starts afresh")
 		CHECK(world.IsLoaded());
 		CHECK(world.GetDistance() == 0.0);
 		CHECK_FALSE(world.GetChunks().empty());
-		CHECK(world.GetBanners().empty());
 		Struktur::Input::TrainerInput input;
 		input.speedMetersPerSecond = 40.0;
 		for (int frame = 0; frame < 50; ++frame)
 		{
 			world.Update(0.2, input);
 		}
-		world.PlaceBanner(50.0);
 		CHECK(world.GetDistance() > 300.0);
 		world.Unload();
 		CHECK_FALSE(world.IsLoaded());
@@ -553,6 +553,60 @@ TEST_CASE("no chunk is lost when builds finish one at a time")
 	{
 		CHECK(world.GetChunks()[index]->chunkIndex == world.GetChunks()[index - 1]->chunkIndex + 1);
 	}
+}
+
+TEST_CASE("the road camera stays behind the rider and snaps when the road is rebuilt")
+{
+	const BiomeList biomes = LoadShippedBiomes();
+	WorldSettings settings;
+	settings.seed = 4;
+	World world;
+	LoadWorld(world, settings, biomes, nullptr);
+	RoadFollow follow;
+	follow.ApplySettings(settings);
+	Camera camera;
+	Struktur::Input::TrainerInput input;
+	input.speedMetersPerSecond = 10.0;
+	for (int frame = 0; frame < 300; ++frame)
+	{
+		world.Update(0.1, input);
+		FollowRoad(follow, world, 0.1, 10.0, frame * 0.15, true, camera);
+		const RouteSample rider = world.GetRoute().SampleAt(world.GetDistance());
+		const double behind     = std::hypot(camera.position.x - rider.x, camera.position.z - rider.z);
+		CHECK(behind <= settings.cameraDistanceMeters + 0.01);
+		CHECK(camera.position.y > 0.0);
+	}
+	CHECK(camera.fieldOfViewDegrees > settings.fieldOfViewDegrees);  // widened with speed
+	const uint32_t before = world.GetRoadRevision();
+	world.JumpTo(5000.0);
+	CHECK(world.GetRoadRevision() != before);
+	FollowRoad(follow, world, 0.0, 10.0, 0.0, false, camera);
+	// Snapped: looking straight at the road ahead, even with no time passed.
+	const RouteSample focus    = world.GetRoute().SampleAt(world.GetDistance() + settings.cameraLookAheadMeters);
+	const glm::dvec3 direction = glm::normalize(camera.target - camera.position);
+	const glm::dvec3 wanted    = glm::normalize(glm::dvec3(focus.x - camera.position.x, direction.y * 20.0,
+	                                                    focus.z - camera.position.z));
+	CHECK(direction.x == doctest::Approx(wanted.x).epsilon(0.05));
+	CHECK(direction.z == doctest::Approx(wanted.z).epsilon(0.05));
+}
+
+TEST_CASE("a pacer starts ahead, rides on, and rejoins when it gets too far away")
+{
+	Struktur::Component::Pacer pacer;
+	Struktur::Component::RoadPosition position;
+	MovePacer(pacer, position, 100.0, 0.0);
+	CHECK(position.distance == doctest::Approx(125.0));
+	for (int frame = 0; frame < 100; ++frame)
+	{
+		MovePacer(pacer, position, 100.0, 0.1);
+	}
+	CHECK(position.distance > 190.0);
+	CHECK(pacer.speedMetersPerSecond > 7.0);
+	CHECK(pacer.speedMetersPerSecond < 10.0);
+	MovePacer(pacer, position, 2000.0, 0.1);  // the player jumped far past it
+	CHECK(position.distance == doctest::Approx(2025.0));
+	MovePacer(pacer, position, 0.0, 0.1);  // and far behind
+	CHECK(position.distance == doctest::Approx(25.0));
 }
 
 // --- grade behaviour -----------------------------------------------------------------------------------------------
@@ -652,8 +706,14 @@ TEST_CASE("same seed, same world: camera and grade match between two worlds")
 		first.Update(deltaSeconds, inputs);
 		second.Update(deltaSeconds, inputs);
 	}
-	CHECK(first.GetCamera().x == second.GetCamera().x);
-	CHECK(first.GetCamera().z == second.GetCamera().z);
+	Camera firstCamera;
+	Camera secondCamera;
+	RoadFollow firstFollow;
+	RoadFollow secondFollow;
+	FollowRoad(firstFollow, first, 0.1, 9.0, 0.25, true, firstCamera);
+	FollowRoad(secondFollow, second, 0.1, 9.0, 0.25, true, secondCamera);
+	CHECK(firstCamera.position.x == secondCamera.position.x);
+	CHECK(firstCamera.position.z == secondCamera.position.z);
 	CHECK(first.GetRoadGradePercent() == second.GetRoadGradePercent());
 	CHECK(std::abs(first.GetRoadGradePercent()) <= settings.maxGradePercent + 1e-9);
 }

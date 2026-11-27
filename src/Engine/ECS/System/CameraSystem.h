@@ -1,42 +1,19 @@
 #pragma once
 
 #include "Engine/ECS/SystemManager.h"
-#include "entt/entt.hpp"
-#include "glm/glm.hpp"
 
 namespace Struktur
 {
-
 class GameContext;
 
-namespace World
-{
-struct Camera;
-}
-namespace Component
-{
-struct Camera;
-}
 namespace System
 {
+// Moves the world camera: the camera entity follows the rider along the road (World::FollowRoad), and the
+// result becomes the context's camera, which the world renderer draws through.
 class CameraSystem : public ISystem
 {
 public:
 	void Update(GameContext& context) override;
-
-	glm::vec2 CalculateSmoothedPosition(float gameTime, float deltaTime, int screenWidth, int screenHeight,
-	                                    Component::Camera* cameraComponent, const glm::vec2& cameraComponentPos,
-	                                    World::Camera& camera);
-	glm::vec2 TargetPosition(float gameTime, float deltaTime, int screenWidth, int screenHeight,
-	                         Component::Camera* cameraComponent, const glm::vec2& cameraComponentPos,
-	                         World::Camera& camera);
-	glm::vec2 ConfineToBounds(const glm::vec2& position, int screenWidth, int screenHeight,
-	                          Component::Camera* cameraComponent);
-	void CalculateCameraShake(float gameTime, float deltaTime, int screenWidth, int screenHeight,
-	                          Component::Camera* cameraComponent, World::Camera& camera);
-
-	void AddCameraTrauma(GameContext& context, entt::entity entity, float trauma);
-	void ResetCameraTrauma(GameContext& context, entt::entity entity);
 
 	std::string Name() const override
 	{
