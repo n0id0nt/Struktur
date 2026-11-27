@@ -4,7 +4,8 @@ The engine's job system and scheduler. **Phases 1, 1b, 2 and 3 are done:**
 - **Phase 1:** worker threads, lanes, dependencies, waiting that helps, parallel-for and inline mode.
 - **Phase 1b:** pooled jobs, per-worker work-stealing queues and a cap on background workers.
 - **Phase 2:** tasks with results, progress and cancellation; follow-ups that run on the main thread; stepped jobs.
-- **Phase 3:** the engine owns a job system and syncs it with the frame loop; level tilesets decode in parallel.
+- **Phase 3:** the engine owns a job system and syncs it with the frame loop; level tilesets decode in parallel;
+  on branch `RideSoftware`, ride world chunks build as background tasks and ride autosaves write in the background.
 
 All of it has unit tests and a benchmark. Phases 4–6 (ECS systems as jobs, Wren handles, web threads) are planned at
 the end.
@@ -272,10 +273,30 @@ Debug game build (`build-nogame`), muted 45-second runs into the overworld:
 **Not measured yet:** a level's load time or a frame's time, before against after. Five small tilesets is too little
 work to show a difference; the ride world's chunk building is the meaningful benchmark.
 
+### Phase 3, ride part (branch `RideSoftware`)
+
+- **Chunk streaming:** `ChunkStreamer` no longer owns a thread. Each chunk build is a background `Task`, so builds
+  run on as many workers as the background limit allows instead of one. A null job system builds inline (tests).
+  - A settings change cancels queued builds and takes their meshes back at once (an atomic claim flag the build
+    checks first); running builds finish and come back stale.
+  - Destroying the streamer reclaims unstarted builds and waits for running ones, since they write into its meshes.
+  - `GameContext` now stops the job system first in `Shutdown()` but destroys it last, so the ride world and
+    session can still wait on their (by then complete) tasks while being torn down.
+- **Ride autosave:** a background task, not `PostFrame`. A post-frame job must finish by the next frame, and a slow
+  disk would stall that frame; a background task can't. The main thread copies the ride and builds the JSON text,
+  since those read live session state; the worker encodes the FIT file and writes both files atomically. The result
+  comes back as the usual SAVED / SAVE_FAILED session event. `Finish()` waits for an autosave still in flight, so
+  it can't overwrite the final files.
+- **Tests** (build-fitness, 106 cases, 10 runs in a row): job-system against inline chunk builds with 4 and 0
+  workers, settings flipped every 7 frames mid-stream, worlds destroyed right after requesting chunks, and
+  background autosaves with 2 and 0 workers (files written, SAVED reported, `Finish()` still correct).
+- **In the game:** a `--demo` free ride (Debug, muted) for 82 seconds, past the 60-second autosave. The world
+  streamed and rendered normally, there were no errors, and the final FIT and JSON were written. Closing the window
+  then exited normally.
+- **Not measured:** chunk build throughput against the old single worker thread.
+
 ## Next
 
-- **Phase 3, ride part:** move the ride world's `ChunkStreamer` worker thread onto background tasks, and the ride
-  autosave onto `PostFrame`. That code lives on branch `RideSoftware`, so it needs this branch merged into it.
 - **Phase 4:** ECS systems as jobs (access declarations, a dependency graph per phase, command lists for entity
   changes). Every existing system starts out marked main-thread-only.
 - **Phase 5:** Wren task handles (`if (load.isComplete)`).
@@ -284,5 +305,5 @@ work to show a difference; the ride world's chunk building is the meaningful ben
 **Not covered yet:**
 - ThreadSanitizer (not available with MSVC).
 - Web, Linux and macOS builds of the library.
-- The real-world benchmarks (chunk building, game frame time) wait for the ride part of phase 3.
+- Real-world benchmarks: chunk build throughput against the old worker thread, and game frame time.
 - The editor build (`build-windows-debug`) and the web build haven't been rebuilt with the engine changes.

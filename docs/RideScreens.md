@@ -192,7 +192,9 @@ so ↑ / ↓ always mean resistance.
 ## Saving rides
 
 - **Where:** a finished ride is written to `<save folder>/Rides/<date>_<time>_<name>.fit` with a `.json` sidecar. The
-  same files are autosaved every 60 s, so a crash loses at most about a minute.
+  same files are autosaved every 60 s, so a crash loses at most about a minute. The autosave copies the ride on the
+  main thread, then encodes and writes the files as a background task on the job system; finishing the ride waits
+  for an autosave still in flight, then writes the final files.
 - **When:** ending a ride by any route saves it, including leaving the state or quitting the game.
 - **FIT contents:**
   - `file_id` (activity, manufacturer "development").

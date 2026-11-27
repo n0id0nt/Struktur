@@ -24,7 +24,7 @@ code placeholder, so the game always runs ([missing-assets.md](missing-assets.md
  RideSettingsState rows       UpdateWorld(): speed, grade, zone,             ├─ Route          centripetal Catmull-Rom, arc length
  F3 stats                     cadence, HR, workout plan ahead                ├─ ElevationProfile  h(s), grade limits
                               session.SetRoadGrade(world grade)  ◄──────     ├─ BiomeSequence  JSON biomes, blended
-                              RenderWorld() ──► Renderer::RideWorldRenderer  ├─ ChunkStreamer  worker thread, mesh pool
+                              RenderWorld() ──► Renderer::RideWorldRenderer  ├─ ChunkStreamer  job-system tasks, mesh pool
                                                 (bgfx, game only)            │   └─ BuildChunk terrain / road / water / props
                                                                              ├─ RiderAnimation crank phase, wheel, lean, pose
                                                                              └─ camera, actors (IWorldActorSource), banners
@@ -102,11 +102,14 @@ code placeholder, so the game always runs ([missing-assets.md](missing-assets.md
   - Camera-facing billboards, or road-aligned quads for guardrails, buildings and the banner.
 - **Streaming**
   - The window covers 64 m behind to the quality's draw distance ahead (640/1000/1536 m).
-  - Missing chunks are requested nearest-first (at most 4 per frame) and built on one worker thread from copies of
-    the route samples.
+  - Missing chunks are requested nearest-first (at most 4 per frame). Each is built as a background task on the
+    engine's job system (docs/JobSystem.md), from copies of the route samples, so several build at once. A settings
+    change takes back the meshes of builds that haven't started; running ones finish and are recycled. With zero
+    workers (web) the builds run on the main thread within the frame budget.
   - Finished meshes become static vertex/index/instance buffers. Chunks behind are destroyed and their CPU meshes
-    go back to a pool. The tests check that the pool and buffer capacity stay flat over 30 km and that threaded and
-    inline builds give identical meshes.
+    go back to a pool. The tests check that the pool and buffer capacity stay flat over 30 km, that job-system and
+    inline builds give identical meshes (with 4 workers and with 0), and that settings changes and destroying the
+    world mid-build are safe.
 
 ### Rendering and views
 
@@ -409,8 +412,8 @@ glm, and the stb_image already vendored by bimg (for real PNGs). Tests use the e
   - **Metal:** profile not compiled on Windows.
   - **Consoles:** not tried at all.
 - **Web build:** not built or run. The shaders compile for ESSL 100/300, and Low quality is the web default.
-  - **Not exercised:** WebGL2 vertex texture fetch of an R32F texture, instancing, and the worker thread (the web
-    build has pthreads, but SharedArrayBuffer needs cross-origin isolation headers).
+  - **Not exercised:** WebGL2 vertex texture fetch of an R32F texture, instancing, and worker threads (the web
+    build runs the job system without workers by default; threads, but SharedArrayBuffer needs cross-origin isolation headers).
 - **The height-texture fallback:** on a GPU without R32F vertex textures the road is drawn flat, and that path has
   never run.
 - **The editor build:** compiles, but the world wasn't viewed in the editor's game viewport, which renders into the
