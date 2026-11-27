@@ -42,7 +42,7 @@ var CATEGORIES = {
     "quest": "Items/Scroll/Scroll.png",
     "item": "Items/Object/Bag.png",
     "gold": "Items/Treasure/GoldCoin.png",
-    "party": "Ui/Skill Icon/Items & Weapon/Helmet.png",
+    "party": "UI/Skill Icon/Items & Weapon/Helmet.png",
     "info": "Items/Other/Letter.png"
 }
 

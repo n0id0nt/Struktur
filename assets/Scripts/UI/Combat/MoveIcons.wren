@@ -1,9 +1,9 @@
 // UI/Combat/MoveIcons.wren
-// Which icon (from the Ui/Skill Icon pack, 24 x 24 tiles) stands for a move's type - on the command panel's move
+// Which icon (from the UI/Skill Icon pack, 24 x 24 tiles) stands for a move's type - on the command panel's move
 // buttons (UI/Combat/MoveButtonUI.wren) and on the timeline's blocks (UI/Combat/TimelineUI.wren). Drawn at 1x, like
 // the item icons in the battle's item list.
 
-var ICON_DIR = "Ui/Skill Icon/"
+var ICON_DIR = "UI/Skill Icon/"
 
 var ICONS = {
     "slash": ICON_DIR + "Spell/Cut.png",
