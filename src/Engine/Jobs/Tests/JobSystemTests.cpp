@@ -11,38 +11,9 @@
 #include <vector>
 
 #include "Engine/Jobs/JobSystem.h"
+#include "TestHelpers.h"
 
 using namespace Struktur::Jobs;
-
-static std::vector<int> WorkerCounts()
-{
-	std::vector<int> counts = {0};
-	if (JobSystem::ThreadsAvailable())
-	{
-		counts.push_back(1);
-		counts.push_back(4);
-		const int all = JobSystem::ResolveWorkerCount(-1);
-		if (all > 4)
-		{
-			counts.push_back(all);
-		}
-	}
-	return counts;
-}
-
-static void SleepMilliseconds(int milliseconds)
-{
-	std::this_thread::sleep_for(std::chrono::milliseconds(milliseconds));
-}
-
-// Busy for a precise time (sleep_for rounds up to the OS timer - ~15 ms on Windows).
-static void BusyMilliseconds(double milliseconds)
-{
-	const std::chrono::steady_clock::time_point start = std::chrono::steady_clock::now();
-	while (std::chrono::duration<double, std::milli>(std::chrono::steady_clock::now() - start).count() < milliseconds)
-	{
-	}
-}
 
 TEST_CASE("worker count resolves to cores minus one, or what was asked")
 {
