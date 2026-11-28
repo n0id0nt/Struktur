@@ -59,7 +59,8 @@ Documents\Game Creation Projects\
 Each game records the engine commit it uses. There will be three copies of the engine on disk (about 930 MB of
 `third_party` each).
 
-- Clone a game with `git clone --recurse-submodules`, since the engine has submodules of its own.
+- Clone a game with `git -c core.longpaths=true clone --recurse-submodules <url>`: the engine has submodules of its
+  own, and some nest too deeply for Windows' default path limit.
 - An engine change made inside a game: switch `engine\` to a branch (a submodule starts on no branch), commit, push
   the engine, then commit the new pointer in the game. Each game sets `push.recurseSubmodules=check`, which stops a
   push that points at an unpushed engine commit.

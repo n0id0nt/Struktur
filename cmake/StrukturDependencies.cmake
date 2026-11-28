@@ -1,10 +1,11 @@
 # Third-party dependencies (the engine's git submodules) and the engine's two standalone libraries, jobs and fitness.
 
 # Fetch only the submodules that are missing: updating one that's already there would move a checkout you're working on.
+# core.longpaths: SDL_mixer's own submodules nest deeply enough to pass Windows' 260 character limit.
 find_package(Git QUIET)
 if(GIT_FOUND AND EXISTS "${STRUKTUR_ENGINE_DIR}/.git")
     execute_process(
-        COMMAND ${GIT_EXECUTABLE} submodule status --recursive
+        COMMAND ${GIT_EXECUTABLE} -c core.longpaths=true submodule status --recursive
         WORKING_DIRECTORY ${STRUKTUR_ENGINE_DIR}
         OUTPUT_VARIABLE submodule_status
     )
@@ -17,7 +18,7 @@ if(GIT_FOUND AND EXISTS "${STRUKTUR_ENGINE_DIR}/.git")
             get_filename_component(missing_name "${missing}" NAME)
             message(STATUS "Fetching submodule ${missing}")
             execute_process(
-                COMMAND ${GIT_EXECUTABLE} submodule update --init --recursive -- ${missing_name}
+                COMMAND ${GIT_EXECUTABLE} -c core.longpaths=true submodule update --init --recursive -- ${missing_name}
                 WORKING_DIRECTORY ${missing_parent}
             )
         endif()
