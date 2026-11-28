@@ -9,7 +9,7 @@ param(
     [string]$Exe = '',                    # default: <Game>\build-nogame\Debug\<the game folder's name>.exe
     [string]$Saves = '',                  # save files to install for the run, so runs can be compared
     [string]$GameArguments = '',
-    [string]$SaveName = 'Seven Gods',     # %APPDATA%\StrukturGames\<SaveName>
+    [string]$SaveName = '',               # %APPDATA%\StrukturGames\<SaveName> (default: the name the game sets)
     [int]$TimeoutSeconds = 360
 )
 
@@ -91,6 +91,13 @@ if ($running) {
     throw "$($running[0].ProcessName) is already running. Close it first: a check swaps the save files."
 }
 
+# The game saves under the name its Main.wren sets, and a check must back up and restore that folder.
+if (-not $SaveName) {
+    $main = Join-Path $Game 'assets\Scripts\Main.wren'
+    $named = Select-String -Path $main -Pattern 'Application\.setApplicationName\("([^"]+)"\)' | Select-Object -First 1
+    if (-not $named) { throw "no Application.setApplicationName in $main - give -SaveName" }
+    $SaveName = $named.Matches[0].Groups[1].Value
+}
 $saveFolder = Join-Path $env:APPDATA "StrukturGames\$SaveName"
 New-Item -ItemType Directory -Force $saveFolder | Out-Null
 # One backup per run, never overwritten, so an interrupted run can't replace the real saves with test ones.

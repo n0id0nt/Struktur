@@ -31,7 +31,7 @@ powershell -ExecutionPolicy Bypass -File tools\checks\run_check.ps1 -Scenario ri
 | `-Game` | The folder holding `assets\` (default: the scenario's game under `games\`) |
 | `-Exe` | The game to run (default: the program in the game's `build-nogame\Debug`) |
 | `-Saves` | A folder of save files that replaces the `.sav` files for the run, so two runs start from the same state |
-| `-SaveName` | The save folder under `%APPDATA%\StrukturGames` |
+| `-SaveName` | The save folder under `%APPDATA%\StrukturGames` (default: the name the game's `Main.wren` sets) |
 
 A run changes the game's scripts and the save folder, and puts both back when it ends. The save folder as it was is
 also kept in `<OutDir>\saves-before-<time>`. Don't play or edit the game while a check runs. A check mutes the game
