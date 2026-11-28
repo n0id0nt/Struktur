@@ -28,3 +28,7 @@ build-ride-libs/
 build-ride-libs-editor/
 baseline/
 build-checks/
+build-games/
+
+# What's left of the games' folders from before they moved to their own repositories
+games/
