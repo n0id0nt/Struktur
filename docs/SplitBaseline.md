@@ -121,6 +121,22 @@ scripts hasn't changed since `main`; `main`'s editor run didn't load such a room
 
 Not covered: a play session of Seven Gods, and the web builds in a browser.
 
+## After step 6.4
+
+Checked 2026-11-28 in `SevenGods` and `IndoorCyclingSoftware`, each against its `engine/` submodule (`e96a5f9`).
+
+| Check | Result |
+|---|---|
+| Builds from the new folders | both games in debug, editor, release and web; the ride's tests (59) |
+| `overworld` (both saves), `battle-wolves`, `battle-warden` | as the tables above (the wolves fight took 16 s) |
+| `ride`, `ride-screens` | as before, saving under "Indoor Cycling Software" |
+| The ride's splash screen and main menu | show the new name and fit the window |
+| Both editors | open on their own assets, with the copied layout and saves, and close cleanly |
+| Save folders | unchanged by every run |
+
+Not covered: cloning a game from GitHub (the repositories don't exist yet), and the packaged releases from the new
+folders.
+
 ## Repeating it
 
 The saves, reports and screenshots are in `baseline\` (not in git). `tools\checks\README.md` explains the checks.

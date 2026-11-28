@@ -1,7 +1,6 @@
 # Splitting the engine from the games (refactor step 6)
 
-A plan. Steps 6.0 to 6.3 are done, on the `Modules` branch (record: `docs/SplitBaseline.md`); nothing later is
-started. It follows these choices:
+A plan. Steps 6.0 to 6.4 are done (record: `docs/SplitBaseline.md`); 6.5 isn't started. It follows these choices:
 
 - **Three GitHub repositories:** the engine and two games, **Seven Gods** and **Indoor Cycling Software**.
 - **Folders:** the engine stays in `Documents\Game Creation Projects\Struktur`; the games go beside it.
@@ -14,7 +13,8 @@ started. It follows these choices:
 - **Libraries that use each other** compile that code out with `#define`s when the other library isn't used.
 - **Each game** has its own `Game.cpp` and its own game context.
 - **Component list:** broken up, one per library.
-- **`main`** took no changes until step 6.3 was done. Seven Gods work now happens in `games/SevenGods` on `Modules`.
+- **`main`** took no changes until step 6.3 was done. Work on the games now happens in their own folders, beside
+  this one; the copies under `games/` are removed in 6.5.
 
 ## Still open
 
@@ -22,7 +22,8 @@ started. It follows these choices:
 |---|---|
 | Try the ride on the real trainer | Not tested since the refactor or the split |
 | Apply or drop the two git stashes (`main`, 27 August: Editor, Game, ImGui renderer; `master`, 14 August: UI batching) | The split moved their files, so they now need applying by hand |
-| Play a stretch of Seven Gods from `games/SevenGods` | The checks cover loading, battles and the editor, not a play session |
+| Play a stretch of Seven Gods from its own folder | The checks cover loading, battles and the editor, not a play session |
+| Approve pushing the engine commits made after the games moved out | `Modules` on GitHub stops at the commit both games use |
 | Say if the local engine override (below) isn't wanted | 6.2 built it in as recommended |
 | `Struktur` is public on GitHub, with the old game assets in its history and the save encoding key in its source | Say if it should be private. The new game repositories will be private |
 
@@ -269,7 +270,7 @@ its checks.
 | 6.1 Untangle (done) | Virtual `GameContext` and `RideContext`; per-library component lists; in-memory script modules; the include changes above and their guards | Ride tests and demo ride as today | Medium–large |
 | 6.2 Libraries (done) | A CMake target per library and `struktur_add_game`; the ride becomes `games/IndoorCyclingSoftware` (still in this repository) with its own `Game.cpp` | The engine names no game; the library combinations build | Medium–large |
 | 6.3 Seven Gods (done) | `world2d` from the 2D files kept uncompiled, plus the code removed from shared files, taken from `main`; `games/SevenGods` with its `Game.cpp`, context, assets and scripts | It reaches the overworld, plays a self-running battle, loads existing saves and opens the level viewer | Large, riskiest |
-| 6.4 Move the games out | Push `Modules`; make each game folder a repository with its history and the engine submodule; copy shared assets and the files git doesn't hold (below) | Both build from their new folders | Medium |
+| 6.4 Move the games out (done) | Push `Modules`; make each game folder a repository with its history and the engine submodule; copy shared assets and the files git doesn't hold (below) | Both build from their new folders | Medium |
 | 6.5 GitHub | Push the games to their new repositories; merge `Modules` into the engine's `main` without squashing, with game code removed by ordinary commits | Fresh clones of all three build | Small |
 
 - **What 6.3 changed beyond moving files:**
@@ -291,12 +292,25 @@ its checks.
 - **Switching to `main` or `RideSoftware`** puts wren and bgfx.cmake back to their unfixed versions. Apply the files in
   `third_party/patches` there before building.
 
-### Handled in 6.4
+### What 6.4 did
 
-- **Files git doesn't hold:** copy `saves/` (editor snapshots), the editor layout and project files, `imgui.ini` and
-  local editor settings to the game that uses them.
-- **Save folders:** Seven Gods keeps its name, so its saves carry on. Indoor Cycling Software gets its own folder and
-  copies its rides, workouts and input settings from `StrukturGames\Seven Gods` once.
-- **Sprite pipeline** (`..\3dModelsToSprites`): point it at `SevenGods\assets`. The ride's copy of the rider sprite
-  (`games/IndoorCyclingSoftware/assets/Actors/explorer.png`, since 6.2) is then updated by hand.
-- **Working notes:** add a `CLAUDE.md` to each repository, because Claude's memory is tied to this folder.
+- **Repositories:** `SevenGods` and `IndoorCyclingSoftware` beside this folder, each on a `main` branch, made with
+  `git filter-repo` from `Modules`. Seven Gods keeps the history of `assets/`, its design documents and the dialogue
+  tool; the ride's files are followed back through their earlier names. Each tree matched its folder under `games/`
+  before the changes below. Neither has a remote yet.
+- **Engine:** an `engine/` submodule at the pushed `Modules` commit. `STRUKTUR_DIR` defaults to it.
+- **The ride's name:** window, menu title, splash screen and save folder are "Indoor Cycling Software".
+- **Files git doesn't hold:** copied, with the originals left where they were: the editor's `saves/` and layout files
+  to the game that used them, `.vscode/` to both, and the ride's rides, workouts and input settings into its new save
+  folder. The old project launcher's list wasn't copied, nor `.claude/settings.local.json` (permission settings).
+- **Sprite pipeline** (`..\3dModelsToSprites`): installs into `SevenGods\assets`. The ride's copy of the rider
+  sprite (`assets/Actors/explorer.png`) is updated by hand.
+- **Working notes:** a `CLAUDE.md` in each repository.
+
+### Left for 6.5
+
+- Create the two private GitHub repositories and push the games, with `engine/` pointing at a pushed commit.
+- Remove `games/` here with ordinary commits. `builds/check-all.ps1`, `builds/format.bat`,
+  `tools/check_asset_case.py` and the check defaults still expect the games inside this repository; the asset case
+  check in particular doesn't cover the games' own folders.
+- Merge `Modules` into `main` without squashing.
