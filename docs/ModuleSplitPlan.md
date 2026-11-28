@@ -1,6 +1,6 @@
 # Splitting the engine from the games (refactor step 6)
 
-A plan. Steps 6.0 to 6.4 are done (record: `docs/SplitBaseline.md`); 6.5 isn't started. It follows these choices:
+A plan, now carried out: steps 6.0 to 6.5 are done (record: `docs/SplitBaseline.md`). It followed these choices:
 
 - **Three GitHub repositories:** the engine and two games, **Seven Gods** and **Indoor Cycling Software**.
 - **Folders:** the engine stays in `Documents\Game Creation Projects\Struktur`; the games go beside it.
@@ -14,7 +14,7 @@ A plan. Steps 6.0 to 6.4 are done (record: `docs/SplitBaseline.md`); 6.5 isn't s
 - **Each game** has its own `Game.cpp` and its own game context.
 - **Component list:** broken up, one per library.
 - **`main`** took no changes until step 6.3 was done. Work on the games now happens in their own folders, beside
-  this one; the copies under `games/` are removed in 6.5.
+  this one.
 
 ## Still open
 
@@ -23,9 +23,8 @@ A plan. Steps 6.0 to 6.4 are done (record: `docs/SplitBaseline.md`); 6.5 isn't s
 | Try the ride on the real trainer | Not tested since the refactor or the split |
 | Apply or drop the two git stashes (`main`, 27 August: Editor, Game, ImGui renderer; `master`, 14 August: UI batching) | The split moved their files, so they now need applying by hand |
 | Play a stretch of Seven Gods from its own folder | The checks cover loading, battles and the editor, not a play session |
-| Approve pushing the engine commits made after the games moved out | `Modules` on GitHub stops at the commit both games use |
 | Say if the local engine override (below) isn't wanted | 6.2 built it in as recommended |
-| `Struktur` is public on GitHub, with the old game assets in its history and the save encoding key in its source | Say if it should be private. The new game repositories will be private |
+| `Struktur` is public on GitHub, with the old game assets in its history and the save encoding key in its source | Say if it should be private. The game repositories are private |
 
 ## Folders and repositories
 
@@ -273,7 +272,7 @@ its checks.
 | 6.2 Libraries (done) | A CMake target per library and `struktur_add_game`; the ride becomes `games/IndoorCyclingSoftware` (still in this repository) with its own `Game.cpp` | The engine names no game; the library combinations build | Medium–large |
 | 6.3 Seven Gods (done) | `world2d` from the 2D files kept uncompiled, plus the code removed from shared files, taken from `main`; `games/SevenGods` with its `Game.cpp`, context, assets and scripts | It reaches the overworld, plays a self-running battle, loads existing saves and opens the level viewer | Large, riskiest |
 | 6.4 Move the games out (done) | Push `Modules`; make each game folder a repository with its history and the engine submodule; copy shared assets and the files git doesn't hold (below) | Both build from their new folders | Medium |
-| 6.5 GitHub | Push the games to their new repositories; merge `Modules` into the engine's `main` without squashing, with game code removed by ordinary commits | Fresh clones of all three build | Small |
+| 6.5 GitHub (done) | Push the games to their new repositories; merge `Modules` into the engine's `main` without squashing, with game code removed by ordinary commits | Fresh clones of all three build | Small |
 
 - **What 6.3 changed beyond moving files:**
   - The 2D classes took their files' names: `World::Camera2D`, `System::Camera2DSystem` and
@@ -309,10 +308,19 @@ its checks.
   sprite (`assets/Actors/explorer.png`) is updated by hand.
 - **Working notes:** a `CLAUDE.md` in each repository.
 
-### Left for 6.5
+### What 6.5 did
 
-- Create the two private GitHub repositories and push the games, with `engine/` pointing at a pushed commit.
-- Remove `games/` here with ordinary commits. `builds/check-all.ps1`, `builds/format.bat`,
-  `tools/check_asset_case.py` and the check defaults still expect the games inside this repository; the asset case
-  check in particular doesn't cover the games' own folders.
-- Merge `Modules` into `main` without squashing.
+- **Repositories:** `n0id0nt/SevenGods` and `n0id0nt/IndoorCyclingSoftware` on GitHub, both private, each pinning the
+  engine's `main`. Seven Gods' history holds two old music files over 50 MB (92.9 MB and 54.7 MB), close to GitHub's
+  100 MB limit.
+- **Engine:** `games/` removed with ordinary commits, and `Modules` merged into `main` with a merge commit.
+- **Tools:** `builds/check-all.ps1` builds the game repositories found beside the engine against it, in
+  `build-games/`; the asset case check and the behaviour checks find them there too.
+- **Cloning:** `git clone --recurse-submodules` fails once a game's path is deep enough, on test data nested inside
+  SDL_mixer. Configuring now fetches the engine's libraries without that data, and the clone steps are in each game's
+  `CLAUDE.md`.
+
+### Afterwards
+
+- Delete the leftover `games/` folder and old build folders when you're ready: they're untracked.
+- The `Modules` branch and the older branches are still there, on GitHub too; nothing needs them.

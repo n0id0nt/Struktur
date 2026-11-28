@@ -134,8 +134,22 @@ Checked 2026-11-28 in `SevenGods` and `IndoorCyclingSoftware`, each against its 
 | Both editors | open on their own assets, with the copied layout and saves, and close cleanly |
 | Save folders | unchanged by every run |
 
-Not covered: cloning a game from GitHub (the repositories don't exist yet), and the packaged releases from the new
+Not covered: cloning a game from GitHub (the repositories didn't exist yet), and the packaged releases from the new
 folders.
+
+## After step 6.5
+
+Checked 2026-11-28.
+
+| Check | Result |
+|---|---|
+| `check-all.ps1 -Web`, with `games/` removed | 14 of 14: jobs, fitness and ride tests, the library combinations, and both game repositories against this engine in debug, editor, release and web |
+| `ride-screens`, finding the game beside the engine | as before |
+| Fresh clones from GitHub: engine `d4a340b`, both games pinning it | all three configure and build (Debug); the engine's libraries are fetched by configuring |
+| `git clone --recurse-submodules` of a game into a deep folder | fails on SDL_mixer's nested test data, with or without long paths enabled; the documented steps don't take it |
+
+Not covered: a play session of Seven Gods, the web builds in a browser, packaged releases from the game folders, the
+real trainer, and a web build or editor build from a fresh clone.
 
 ## Repeating it
 
