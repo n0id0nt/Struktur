@@ -6,14 +6,15 @@
 #include "Engine/GameContext.h"
 #include "Reflect/wren_reflect.h"
 #include "Trace/wren_trace.h"
-#ifndef DEBUG
-	#include "WrenBindings/Bindings/Generated/WrenBindingSources.h"
-#endif
+#include "WrenCodeGenerator.h"
 
 void Struktur::Wren::WrenScriptEngine::Initialise(GameContext& context)
 {
-	// Register all bindings explicitly
-	RegisterAllBindings(m_registry);
+	// Register all bindings explicitly - from empty, since a restart initialises this engine again.
+	ASSERT_MSG(m_registerBindings != nullptr, "WrenScriptEngine::SetBindings must be called before Initialise");
+	m_registry = BindingRegistry();
+	m_registerBindings(m_registry);
+	m_moduleSources = CodeGenerator::BuildModuleSources(m_registry);
 
 	WrenConfiguration config;
 	wrenInitConfiguration(&config);
@@ -148,52 +149,25 @@ WrenLoadModuleResult Struktur::Wren::WrenScriptEngine::OnLoadModule(WrenVM* vm, 
 		return result;
 	}
 
-	std::string source;
-	bool found = false;
-
-#ifndef DEBUG
+	Struktur::GameContext* context = static_cast<Struktur::GameContext*>(wrenGetUserData(vm));
+	const auto& moduleSources      = context->GetWrenScriptEngine().m_moduleSources;
+	const auto binding             = moduleSources.find(name);
+	if (binding != moduleSources.end())
 	{
-		const auto& sources = GetWrenBindingSources();
-		auto it             = sources.find(name);
-		if (it != sources.end())
-		{
-			result.source     = it->second();
-			result.onComplete = nullptr;
-			return result;
-		}
-	}
-#else
-	{
-		std::string searchPath = FileSystem::GetWorkingDirectory() + "/../src/WrenBindings/Bindings/" + name + ".wren";
-		std::ifstream file(searchPath);
-		if (file)
-		{
-			std::stringstream buffer;
-			buffer << file.rdbuf();
-			source = buffer.str();
-			found  = true;
-			DEBUG_INFO("Loaded Wren module: %s from %s", name, searchPath.c_str());
-		}
+		result.source     = binding->second.c_str();
+		result.onComplete = nullptr;
+		return result;
 	}
 
-	if (!found)
-#endif
-	{
-		std::string searchPath = std::string("Scripts/") + name + ".wren";
-		auto fsResult          = FileSystem::ReadString(searchPath);
-		if (fsResult)
-		{
-			source = std::move(fsResult.value);
-			found  = true;
-			DEBUG_INFO("Loaded Wren module: %s from %s", name, searchPath.c_str());
-		}
-	}
-
-	if (!found)
+	std::string searchPath = std::string("Scripts/") + name + ".wren";
+	auto fsResult          = FileSystem::ReadString(searchPath);
+	if (!fsResult)
 	{
 		DEBUG_ERROR("Failed to load Wren module: %s", name);
 		return result;
 	}
+	std::string source = std::move(fsResult.value);
+	DEBUG_INFO("Loaded Wren module: %s from %s", name, searchPath.c_str());
 
 	char* source_copy = new char[source.size() + 1];
 	strcpy(source_copy, source.c_str());

@@ -5,6 +5,7 @@
 #include "Engine/ECS/Component/PhysicsBody.h"
 #include "Engine/ECS/Component/TileMap.h"
 #include "Engine/GameContext.h"
+#include "Engine/Physics/PhysicsWorld.h"
 
 void Struktur::Physics::TileMapCollisionBodyGenerator::CreateTileMapShape(GameContext& context,
                                                                           const Component::TileMap& tilemap,

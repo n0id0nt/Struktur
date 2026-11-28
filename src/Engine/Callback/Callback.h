@@ -2,7 +2,6 @@
 
 #include <memory>
 
-#include "CallbackHelperFunctions.h"
 #include "Debug/Assertions.h"
 #include "Variant.h"
 

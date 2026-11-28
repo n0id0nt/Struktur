@@ -1,7 +1,8 @@
 #include "Command.h"
 
-#include "DialogueHelperFunctions.h"
+#include "DialogueVariants.h"
 #include "Engine/Callback/Callback.h"
+#include "Engine/Dialogue/DialogueRegistry.h"
 #include "Engine/GameContext.h"
 
 Struktur::Dialogue::Command::Command(const std::string& key,

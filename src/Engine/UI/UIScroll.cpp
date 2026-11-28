@@ -102,7 +102,7 @@ void Struktur::UI::UIScroll::UpdateFocusFollow(GameContext& context)
 
 	glm::vec2 newOffset = m_scrollOffset;
 
-	// x - mirrors CameraSystem::CalculateSmoothedPosition's own offset±deadZone band check, just driving a
+	// x - mirrors Camera2DSystem::CalculateSmoothedPosition's own offset±deadZone band check, just driving a
 	// scroll offset instead of a camera position.
 	if (m_horizontalScrollEnabled)
 	{

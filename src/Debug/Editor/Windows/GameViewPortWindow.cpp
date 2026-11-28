@@ -55,7 +55,7 @@ void GameViewportWindow::ResizeGameViewport(GameContext& context, int width, int
 	Core::GameData& gameData = context.GetGameData();
 	gameData.gameWidth       = width;
 	gameData.gameHeight      = height;
-	// UIRenderer::SetupView's orthographic projection and WorldRenderer's camera projection already re-derive
+	// UIRenderer::SetupView's orthographic projection and the game renderer's camera projection already re-derive
 	// from gameData.gameWidth/gameHeight every frame, so updating those two fields is enough for logical layout -
 	// but the framebuffer's actual pixel size and bgfx view rect are only ever set once (at creation), so those
 	// need to be explicitly rebuilt here too or the physical render target would stay at its old resolution while
@@ -110,6 +110,7 @@ void GameViewportWindow::Render(GameContext& context)
 	ImVec2 uv1 = flipY ? ImVec2(1.0f, 0.0f) : ImVec2(1.0f, 1.0f);
 	ImGui::Image((ImTextureID)(intptr_t)colorTexture.idx, imageSize, uv0, uv1);
 
+#ifdef STRUKTUR_WORLD2D
 	LevelViewer& levelViewer = context.GetEditor().GetLevelViewer();
 	if (levelViewer.IsActive() && !context.GetEditor().GetSettings().debugRender.playingGame)
 	{
@@ -117,6 +118,7 @@ void GameViewportWindow::Render(GameContext& context)
 		                                  glm::vec2(m_viewportPos.x, m_viewportPos.y),
 		                                  glm::vec2(m_viewportSize.x, m_viewportSize.y));
 	}
+#endif
 
 	RenderSizeControls(context);
 

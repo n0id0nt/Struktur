@@ -8,7 +8,6 @@
 #include "Engine/ECS/Component/Identifier.h"
 #include "Engine/ECS/Component/Level.h"
 #include "Engine/ECS/Component/LevelEntityInstance.h"
-#include "Engine/ECS/Component/PhysicsBody.h"
 #include "Engine/ECS/Component/Sprite.h"
 #include "Engine/ECS/Component/SpriteAnimation.h"
 #include "Engine/ECS/Component/TileMap.h"
@@ -16,13 +15,16 @@
 #include "Engine/ECS/Component/World.h"
 #include "Engine/ECS/Component/WrenScript.h"
 #include "Engine/ECS/System/AnimationSystem.h"
-#include "Engine/ECS/System/PhysicsSystem.h"
 #include "Engine/ECS/System/TransformSystem.h"
 #include "Engine/ECS/System/WrenScriptSystem.h"
 #include "Engine/FileLoading/LevelParser.h"
 #include "Engine/GameContext.h"
-#include "Engine/Physics/CollisionShapeGenerators/TileMapCollisionBodyGenerator.h"
 #include "Engine/Util/Color.h"
+#ifdef STRUKTUR_PHYSICS
+	#include "Engine/ECS/Component/PhysicsBody.h"
+	#include "Engine/ECS/System/PhysicsSystem.h"
+	#include "Engine/Physics/CollisionShapeGenerators/TileMapCollisionBodyGenerator.h"
+#endif
 
 entt::entity Struktur::World::Level::CreateWorldEntity(GameContext& context, const std::string& filePath)
 {
@@ -45,7 +47,6 @@ entt::entity Struktur::World::Level::LoadLevelEntities(GameContext& context, con
 	Resource::ResourceManager& resoruceManager   = context.GetResourceManager();
 	System::SystemManager& systemManager         = context.GetSystemManager();
 	auto& transformSystem                        = systemManager.GetSystem<System::TransformSystem>();
-	auto& physicsSystem                          = systemManager.GetSystem<System::PhysicsSystem>();
 	auto& animationSystem                        = systemManager.GetSystem<System::AnimationSystem>();
 	auto& wrenScriptSystem                       = systemManager.GetSystem<System::WrenScriptSystem>();
 
@@ -72,6 +73,17 @@ entt::entity Struktur::World::Level::LoadLevelEntities(GameContext& context, con
 	worldComponent->loadedLevels[levelIndex] = levelEntity;
 	transformSystem.SetWorldTransform(context, levelEntity, glm::vec3(levelToLoad.worldX, levelToLoad.worldY, 0.0f),
 	                                  glm::vec3(1.0f), glm::quat(1.0f, 0.0f, 0.0f, 0.0f));
+
+	// Decode the level's new tilesets in parallel up front; the GetTexture() calls below then skip the decode.
+	std::vector<std::string> tilesets;
+	for (const auto& layer : levelToLoad.layers)
+	{
+		if (layer.tilesetPath.has_value())
+		{
+			tilesets.push_back(layer.tilesetPath.value());
+		}
+	}
+	resoruceManager.PrefetchTextures(context, tilesets);
 
 	for (auto& layer : levelToLoad.layers)
 	{
@@ -103,20 +115,23 @@ entt::entity Struktur::World::Level::LoadLevelEntities(GameContext& context, con
 
 				// TODO - grab the tileset path from the level somehow - possibly have a store the tilesets in the
 				// resource pool and grab is here
-				Component::TileMap& tileMap =
+				[[maybe_unused]] Component::TileMap& tileMap =
 				    registry.emplace<Component::TileMap>(layerEntity, std::move(texture), layer.cWid, layer.cHei,
 				                                         layer.gridSize, grid, layer.intGrid, layer.renderLayer,
 				                                         layer.orderInLayer, layer.rowSorted);
 
+#ifdef STRUKTUR_PHYSICS
 				if (options.createPhysics && FileLoading::LevelParser::LayerHasTag(layer, "Collision"))
 				{
-					bool isSensor = false;
+					auto& physicsSystem = systemManager.GetSystem<System::PhysicsSystem>();
+					bool isSensor       = false;
 					b2BodyDef staticBodyDef;
 					staticBodyDef.type = b2_staticBody;
 					Component::PhysicsBody& physicsBody =
 					    physicsSystem.CreatePhysicsBody(context, layerEntity, staticBodyDef);
 					Physics::TileMapCollisionBodyGenerator::CreateTileMapShape(context, tileMap, isSensor, physicsBody);
 				}
+#endif
 				break;
 			}
 			case FileLoading::LevelParser::LayerType::ENTITIES:
@@ -261,7 +276,7 @@ std::vector<Struktur::Wren::WrenItem> Struktur::World::Level::BuildEntityScriptA
 			case Struktur::FileLoading::LevelParser::FieldInstanceType::FILE_PATH:
 			{
 				// LDtk stores the path relative to the .ldtk file; scripts get the virtual path every loader takes
-				// (e.g. "../FX/Particle/Spark.png" from Levels/SevenGods.ldtk -> "FX/Particle/Spark.png").
+				// (e.g. "../FX/Particle/Spark.png" from Levels/World.ldtk -> "FX/Particle/Spark.png").
 				item.type             = WrenType::WREN_TYPE_STRING;
 				std::string pathValue = std::any_cast<std::string>(field.value);
 				if (!pathValue.empty())

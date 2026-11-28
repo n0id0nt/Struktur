@@ -23,8 +23,8 @@ struct Camera
 	bool confineToBounds = false;
 	glm::vec4 bounds{0.f};
 
-	// World point at the centre of the view as of the last CameraSystem update, before shake. Written by
-	// CameraSystem only.
+	// World point at the centre of the view as of the last Camera2DSystem update, before shake. Written by
+	// Camera2DSystem only.
 	glm::vec2 viewCenter{0.f};
 
 	bool forcePosition   = false;

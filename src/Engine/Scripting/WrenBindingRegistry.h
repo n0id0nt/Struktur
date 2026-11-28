@@ -193,12 +193,14 @@ struct BindingRegistry
 // Each binding module implements this signature
 // ============================================================================
 // Forward declarations - implemented in each WrenBinding*.cpp
-void RegisterAnimationBindings(BindingRegistry& registry);
 void RegisterGameObjectBindings(BindingRegistry& registry);
 void RegisterGameObjectComponentBindings(BindingRegistry& registry);
+void RegisterWorld2DComponentBindings(BindingRegistry& registry);
+void RegisterAnimationBindings(BindingRegistry& registry);
 void RegisterRendererBindings(BindingRegistry& registry);
 void RegisterMathBindings(BindingRegistry& registry);
 void RegisterPhysicsBindings(BindingRegistry& registry);
+void RegisterPhysicsBodyBindings(BindingRegistry& registry);
 void RegisterCollisionLayersBindings(BindingRegistry& registry);
 void RegisterResourceManagerBindings(BindingRegistry& registry);
 void RegisterUIBindings(BindingRegistry& registry);
@@ -214,9 +216,11 @@ void RegisterVariableSubstitutionBindings(BindingRegistry& registry);
 void RegisterEventsBindings(BindingRegistry& registry);
 void RegisterAudioBindings(BindingRegistry& registry);
 void RegisterLocalizationBindings(BindingRegistry& registry);
+void RegisterFitnessBindings(BindingRegistry& registry);
+void RegisterJobsBindings(BindingRegistry& registry);
 
-// Call this once at startup
-void RegisterAllBindings(BindingRegistry& registry);
+// Every binding of the engine libraries in the build. A game calls it from its own registration function.
+void RegisterEngineBindings(BindingRegistry& registry);
 
 }  // namespace Struktur::Wren
 

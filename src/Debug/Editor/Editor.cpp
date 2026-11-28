@@ -9,12 +9,13 @@
 // Include all window types
 #include "Debug/Editor/EditorTheme.h"
 #include "Debug/Editor/Windows/DebugInfoWindow.h"
-#include "Debug/Editor/Windows/DialogueEditorWindow.h"
 #include "Debug/Editor/Windows/FileExplorerWindow.h"
 #include "Debug/Editor/Windows/GameViewportWindow.h"
 #include "Debug/Editor/Windows/HierarchyWindow.h"
 #include "Debug/Editor/Windows/InspectorWindow.h"
-#include "Debug/Editor/Windows/LevelViewerWindow.h"
+#ifdef STRUKTUR_WORLD2D
+	#include "Debug/Editor/Windows/LevelViewerWindow.h"
+#endif
 #include "Debug/Editor/Windows/LocalizationWindow.h"
 #include "Debug/Editor/Windows/LogWindow.h"
 #include "Debug/Editor/Windows/PreviewWindow.h"
@@ -22,9 +23,16 @@
 #include "Debug/Editor/Windows/ResourceManagerWindow.h"
 #include "Debug/Editor/Windows/SavesWindow.h"
 #include "Debug/Editor/Windows/SettingsWindow.h"
-#include "Debug/Editor/Windows/StateWindow.h"
 #include "Debug/Editor/Windows/ToolbarWindow.h"
-#include "Debug/Editor/Windows/UIHierarchyWindow.h"
+#ifdef STRUKTUR_WREN
+	#include "Debug/Editor/Windows/StateWindow.h"
+#endif
+#ifdef STRUKTUR_UI
+	#include "Debug/Editor/Windows/UIHierarchyWindow.h"
+#endif
+#if defined(STRUKTUR_DIALOGUE) && defined(STRUKTUR_WREN)
+	#include "Debug/Editor/Windows/DialogueEditorWindow.h"
+#endif
 
 namespace Struktur::Debug
 {
@@ -45,8 +53,12 @@ void Editor::Initialise(GameContext& context)
 	// Hierarchy window (must be created before inspector)
 	auto hierarchyPtr = CreateWindow<HierarchyWindow>();
 
-	// Hierarchy window (must be created before inspector)
+	// UI hierarchy window (must be created before inspector)
+#ifdef STRUKTUR_UI
 	auto uiHierarchyPtr = CreateWindow<UIHierarchyWindow>();
+#else
+	UIHierarchyWindow* uiHierarchyPtr = nullptr;
+#endif
 
 	// Debug info panel
 	CreateWindow<DebugInfoWindow>(m_gameViewport);
@@ -72,8 +84,9 @@ void Editor::Initialise(GameContext& context)
 	// Inspector window (depends on hierarchy)
 	CreateWindow<InspectorWindow>(hierarchyPtr, uiHierarchyPtr, previewPtr);
 
-	// Inspector window (depends on hierarchy)
+#if defined(STRUKTUR_DIALOGUE) && defined(STRUKTUR_WREN)
 	CreateWindow<DialogueEditorWindow>(previewPtr);
+#endif
 
 	// Resource manager window (depends on preview window - texture rows preview through it)
 	CreateWindow<ResourceManagerWindow>(previewPtr);
@@ -81,11 +94,15 @@ void Editor::Initialise(GameContext& context)
 	// Localization audit window (key x language table)
 	CreateWindow<LocalizationWindow>();
 
+#ifdef STRUKTUR_WREN
 	// State system debug window (active state stack, exported fields, force-transition)
 	CreateWindow<StateWindow>();
+#endif
 
+#ifdef STRUKTUR_WORLD2D
 	// LDtk world picker for the level viewer
 	CreateWindow<LevelViewerWindow>(&m_levelViewer);
+#endif
 
 	// Saves folder picker and save versions (see SaveFolders)
 	CreateWindow<SavesWindow>();
@@ -141,8 +158,10 @@ void Editor::Update(GameContext& context)
 	// Setup dockspace and render all editor windows
 	RenderEditorLayout(context);
 
+#ifdef STRUKTUR_WORLD2D
 	// After the windows, so the Game Viewport's hover/size state is from this frame
 	m_levelViewer.Update(context);
+#endif
 
 	// Render demo window if enabled
 	if (m_showDemoWindow)

@@ -35,3 +35,16 @@ struct VariantMap
 	std::unordered_map<std::string, Variant> items;
 };
 }  // namespace Struktur::Callback
+
+namespace Struktur::Callback::HelperFunctions
+{
+// Convert variadic arguments to vector of variants
+template <typename... Args>
+std::vector<Variant> ToVariants(Args&&... args)
+{
+	std::vector<Variant> result;
+	result.reserve(sizeof...(Args));
+	(result.push_back(Variant(std::forward<Args>(args))), ...);
+	return result;
+}
+}  // namespace Struktur::Callback::HelperFunctions

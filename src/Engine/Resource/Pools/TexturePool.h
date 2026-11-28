@@ -1,6 +1,8 @@
 #pragma once
 
 #include <string>
+#include <unordered_map>
+#include <vector>
 
 #include "Engine/Resource/Pools/GpuResourcePool.h"
 #include "Engine/Resource/TextureResource.h"
@@ -22,8 +24,23 @@ public:
 	{
 	}  // 256MB for textures
 
+	// Decodes every listed texture that isn't loaded yet in parallel on the job system, and waits. The next
+	// GetResource() for each one then skips the file read and decode. Call before a batch of GetResource() calls
+	// (e.g. a level's tilesets); with zero workers it simply decodes them in turn.
+	void Prefetch(GameContext& context, const std::vector<std::string>& filePaths);
+	// Hands over an image decoded elsewhere (e.g. a script's Texture.loadAsync task); the next GetResource() for
+	// `filePath` uses it. Ignored when that texture is already loaded or waiting. Main thread only.
+	void AddDecoded(const std::string& filePath, TextureResource::DecodedImage&& image);
+	size_t GetPrefetchedCount() const
+	{
+		return m_prefetched.size();
+	}
+
 protected:
 	TextureResource* LoadResource(GameContext& context, const std::string& filePath) override;
+
+private:
+	std::unordered_map<std::string, TextureResource::DecodedImage> m_prefetched;  // main thread only
 };
 }  // namespace Resource
 }  // namespace Struktur

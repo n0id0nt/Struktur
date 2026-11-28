@@ -104,6 +104,10 @@ public:
 	// mounted virtual filesystem).
 	static std::string GetWorkingDirectory();
 
+	// The key that encodes this game's saves (ReadEncrypted / WriteEncrypted). Set it before reading or writing them;
+	// changing it makes existing saves unreadable.
+	static void SetSaveKey(const std::vector<uint8_t>& key);
+
 	//-----------------------------------------------------------------------------------
 	// Mounting
 	//-----------------------------------------------------------------------------------

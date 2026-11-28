@@ -3,8 +3,8 @@
 #include <sstream>
 
 #include "Debug/Assertions.h"
-#include "Engine/Callback/CallbackHelperFunctions.h"
 #include "Engine/GameContext.h"
+#include "Engine/Scripting/CallbackHelperFunctions.h"
 
 namespace Struktur::Wren
 {

@@ -1,7 +1,9 @@
 #include "ToolbarWindow.h"
+#ifdef EDITOR
+	#include "Debug/Editor/Editor.h"
+#endif
 
 #include "Engine/Core/GameData.h"
-#include "Engine/Game.h"
 #include "Engine/GameContext.h"
 
 namespace Struktur::Debug
@@ -24,8 +26,10 @@ void ToolbarWindow::Render(GameContext& context)
 	// Play/Pause/Stop buttons
 	if (ImGui::Button(debugSettings.playingGame ? "Stop" : "Play"))
 	{
+		const bool play = !debugSettings.playingGame;
+#ifdef STRUKTUR_WORLD2D
 		LevelViewer& levelViewer = context.GetEditor().GetLevelViewer();
-		if (!debugSettings.playingGame)
+		if (play)
 		{
 			// Through the level viewer, which first asks to save any unsaved edits (Play would wipe them). Plain
 			// Play starts where the game normally does - it clears the viewer's "Play from here" spot.
@@ -35,9 +39,21 @@ void ToolbarWindow::Render(GameContext& context)
 		{
 			debugSettings.playingGame = false;
 			debugSettings.pausedGame  = false;
-			StopDebugGame(context);
+			context.GetEditor().GetPlayControls().stop(context);
 			levelViewer.OnPlayStopped(context);
 		}
+#else
+		debugSettings.playingGame = play;
+		debugSettings.pausedGame  = false;
+		if (play)
+		{
+			context.GetEditor().GetPlayControls().start(context);
+		}
+		else
+		{
+			context.GetEditor().GetPlayControls().stop(context);
+		}
+#endif
 	}
 	ImGui::SameLine();
 	ImGui::BeginDisabled(!debugSettings.playingGame);
@@ -50,7 +66,7 @@ void ToolbarWindow::Render(GameContext& context)
 	if (ImGui::Button("Refresh"))
 	{
 		debugSettings.playingGame = true;
-		StartDebugGame(context);
+		context.GetEditor().GetPlayControls().start(context);
 	}
 	ImGui::EndDisabled();
 

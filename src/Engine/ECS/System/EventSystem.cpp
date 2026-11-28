@@ -2,6 +2,8 @@
 
 #include "Engine/ECS/System/WrenScriptSystem.h"
 #include "Engine/GameContext.h"
+#include "Engine/Scripting/WrenStateManager.h"
+#include "entt/entt.hpp"
 
 void Struktur::System::EventSystem::Update(GameContext& context)
 {

@@ -65,7 +65,7 @@ struct UIFreeRegion
 	uint32_t quadCount;
 };
 
-// One persistent, update-in-place bgfx buffer pair plus its CPU-side vertex mirror. Unlike WorldRenderer's
+// One persistent, update-in-place bgfx buffer pair plus its CPU-side vertex mirror. Unlike SpriteBatchRenderer's
 // transient per-frame sprite batches, UI content (panels/labels) mostly doesn't change frame to frame, so this
 // is only re-uploaded to the GPU when actually dirtied (see UIRenderer::Flush), not rebuilt every frame.
 struct UIBatch
@@ -76,7 +76,7 @@ struct UIBatch
 	// One entry per quad (always kept the same length as cpuVertices.size()/4 - see AllocateOrResizeSlot) -
 	// which texture that specific quad samples from. A batch is NOT limited to one texture: Flush() walks
 	// quads in order and splits into a separate bgfx::submit() per contiguous same-texture run (mirroring
-	// WorldRenderer::Flush's own texture-based run-splitting), all against this one persistent vb/ib via
+	// SpriteBatchRenderer::Flush's own texture-based run-splitting), all against this one persistent vb/ib via
 	// offset+count, not a fresh buffer per run. This is what lets differently-textured widgets (e.g. a panel's
 	// solid-color background next to a label's font atlas) safely share one batch/vertex cache.
 	std::vector<bgfx::TextureHandle> quadTextures;
@@ -191,6 +191,8 @@ struct AnimationUniformValues
 // each glyph or rect submitted as its own bgfx draw call; removed once every caller had a real batch/slot to
 // write into instead, see UIManager's own focus-indicator batch and Game.cpp's splash screen for the two
 // non-UIElement callers that needed one added).
+class GraphicsDevice;
+
 class UIRenderer
 {
 public:
@@ -202,13 +204,14 @@ public:
 
 	// Actually creates the white texture/sampler uniform - deferred from construction so GameContext can own
 	// this unconditionally (see GameContext's constructor) while still requiring bgfx to already exist by the
-	// time this runs (call right after GraphicsDevice::Initialise).
-	void Initialise();
+	// time this runs (call after GraphicsDevice::Initialise). Adds the UI's view, so call it once the views that
+	// draw under the UI have been added.
+	void Initialise(GraphicsDevice& device);
 	// Explicit rather than in the destructor - must run before GraphicsDevice::Shutdown() (see
 	// GameContext::Shutdown()), since bgfx::destroy() is invalid once bgfx itself has shut down.
 	void Shutdown();
 
-	// Sets GraphicsDevice::UIViewId's per-frame orthographic transform, sized to the game viewport (not the
+	// Sets the UI view's per-frame orthographic transform, sized to the game viewport (not the
 	// real window) - call once per frame before any batch write below (see UIRenderSystem::Update).
 	void SetupView(GameContext& context);
 
@@ -378,6 +381,7 @@ private:
 	void FreeQuadRange(UIBatch& batch, uint32_t firstQuad, uint32_t quadCount);
 	void ResizeQuadArrays(UIBatch& batch, uint32_t quadTotal);
 
+	bgfx::ViewId m_viewId                 = 0;
 	bgfx::TextureHandle m_whiteTexture    = BGFX_INVALID_HANDLE;
 	bgfx::UniformHandle m_texColorSampler = BGFX_INVALID_HANDLE;
 

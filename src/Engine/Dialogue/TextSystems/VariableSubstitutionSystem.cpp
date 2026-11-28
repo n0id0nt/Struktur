@@ -8,9 +8,9 @@
 #include <regex>
 #include <sstream>
 
-#include "Engine/Dialogue/DialogueHelperFunctions.h"
 #include "Engine/Dialogue/DialogueRegistry.h"
 #include "Engine/Dialogue/DialogueValue.h"
+#include "Engine/Dialogue/DialogueVariants.h"
 #include "Engine/GameContext.h"
 
 namespace Struktur::Dialogue

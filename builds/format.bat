@@ -1,17 +1,14 @@
 @echo off
 setlocal enabledelayedexpansion
 
-rem Formats all .cpp/.h/.hpp files under src/ using the repo's .clang-format config.
+rem Formats the engine's and the games' .cpp/.h/.hpp files using the repo's .clang-format config.
 rem Usage:
 rem   format.bat            - format files in place
 rem   format.bat --check    - report files that aren't correctly formatted, don't modify anything (exit code 1 if any)
 
 set "SCRIPT_DIR=%~dp0"
-rem %%~fI resolves the ".." away to a clean absolute path - needed so EXCLUDE_DIR below is a plain substring of
-rem the fully-resolved paths the for /r loop produces, which never contain "..".
+rem %%~fI resolves the ".." away to a clean absolute path.
 for %%I in ("%SCRIPT_DIR%..") do set "ROOT_DIR=%%~fI"
-set "SRC_DIR=%ROOT_DIR%\src"
-set "EXCLUDE_DIR=%SRC_DIR%\WrenBindings\Bindings\Generated"
 
 rem Prefer clang-format on PATH; fall back to the copy bundled with VS2022's LLVM tools.
 set "CLANG_FORMAT=clang-format"
@@ -40,10 +37,8 @@ echo Using "!CLANG_FORMAT!"
 echo.
 
 set "FAIL=0"
-for /r "%SRC_DIR%" %%F in (*.cpp *.h *.hpp) do (
-    set "FILE=%%F"
-    echo !FILE! | findstr /I /C:"%EXCLUDE_DIR%" >nul
-    if errorlevel 1 (
+for %%D in ("%ROOT_DIR%\src" "%ROOT_DIR%\tests") do (
+    for /r "%%~D" %%F in (*.cpp *.h *.hpp) do (
         "!CLANG_FORMAT!" %MODE% "%%F"
         if errorlevel 1 set "FAIL=1"
     )

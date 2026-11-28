@@ -29,7 +29,7 @@ enum class EntityMode
 
 struct LevelLoadOptions
 {
-	// Builds the static body for the layers tagged "Collision" in LDtk.
+	// Builds the static body for the layers tagged "Collision" in LDtk (in games with physics).
 	bool createPhysics    = true;
 	EntityMode entityMode = EntityMode::SCRIPT;
 };

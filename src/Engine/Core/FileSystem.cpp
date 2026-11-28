@@ -298,18 +298,21 @@ bool FileSystem::Exists(const std::string& path)
 // Encryption
 //////////////////////////////////////////////////////////////////////////////////////////
 
-// Keep this secret - changing it will invalidate all existing saves
-// TODO Move this to a git ignored header
-static constexpr uint8_t k_encryptionKey[] = {0x4B, 0x72, 0x69, 0x63, 0x6B, 0x65, 0x74, 0x47,
-                                              0x61, 0x6D, 0x65, 0x53, 0x61, 0x76, 0x65, 0x31};
-static constexpr size_t k_keyLength        = sizeof(k_encryptionKey);
+// The game's key (SetSaveKey).
+static std::vector<uint8_t> s_saveKey;
+
+void FileSystem::SetSaveKey(const std::vector<uint8_t>& key)
+{
+	s_saveKey = key;
+}
 
 std::vector<uint8_t> FileSystem::Encrypt(const std::vector<uint8_t>& data)
 {
-	std::vector<uint8_t> result(data.size());
-	for (size_t i = 0; i < data.size(); i++)
+	ASSERT_MSG(!s_saveKey.empty(), "No save key - the game must call FileSystem::SetSaveKey");
+	std::vector<uint8_t> result(data);
+	for (size_t i = 0; i < result.size() && !s_saveKey.empty(); i++)
 	{
-		result[i] = data[i] ^ k_encryptionKey[i % k_keyLength];
+		result[i] ^= s_saveKey[i % s_saveKey.size()];
 	}
 	return result;
 }

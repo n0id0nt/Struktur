@@ -6,6 +6,9 @@
 #include <string>
 
 #include "Debug/Assertions.h"
+#ifdef STRUKTUR_WORLD2D
+	#include "Debug/Editor/Editor.h"
+#endif
 #include "Debug/Editor/PreviewRenderers/PreviewHelpers.h"
 #include "Engine/Core/FileSystem.h"
 #include "Engine/GameContext.h"
@@ -410,10 +413,12 @@ void FileExplorerWindow::RenderGridCell(GameContext& context, GridState& grid, c
 			m_selectedFile        = entry.path;
 			grid.previewRequested = true;
 			grid.previewPath      = entry.path;
+#ifdef STRUKTUR_WORLD2D
 			if (doubleClicked && GetExtensionLower(entry.name) == ".ldtk")
 			{
 				context.GetEditor().GetLevelViewer().RequestOpen(context, entry.path);
 			}
+#endif
 		}
 	}
 

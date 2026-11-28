@@ -19,7 +19,7 @@ namespace Component
 // One slot in a ParticleEmitter's fixed-capacity pool (see ParticleEmitter::particles) - simulated by
 // System::ParticleSystem, rendered by System::SpriteRenderSystem (see its own comment for why rendering
 // particles lives there rather than in ParticleSystem itself). Deliberately CPU-simulated, not GPU-shader-
-// driven - see the particle system design plan for why: this codebase's existing WorldRenderer::SubmitSprite
+// driven - see the particle system design plan for why: this codebase's existing SpriteBatchRenderer::SubmitSprite
 // pipeline (cull bounds, sort-key batching, atlas frames, per-material Component::Shader) is reused as-is, and
 // CPU simulation keeps the door open for anything that isn't closed-form (collision, drag, wind) without an
 // architecture change later.

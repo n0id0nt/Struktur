@@ -78,6 +78,23 @@ static Struktur::Component::Particle* SpawnParticle(Struktur::Component::Particl
 	return slot;
 }
 
+void Struktur::System::ParticleSystem::Prepare(GameContext& context)
+{
+	entt::registry& registry = context.GetRegistry();
+	registry.storage<Component::ParticleEmitter>();
+	registry.storage<Component::Transform>();
+	registry.storage<Component::Parent>();
+	registry.storage<Component::Children>();
+	registry.storage<Inactive>();
+}
+
+Struktur::System::SystemAccess Struktur::System::ParticleSystem::Access() const
+{
+	return SystemAccess::Worker()
+	    .Read<Inactive, Core::TimeSystem, Component::Parent, Component::Children>()
+	    .Write<Component::ParticleEmitter, Component::Transform>();
+}
+
 void Struktur::System::ParticleSystem::Update(GameContext& context)
 {
 	entt::registry& registry          = context.GetRegistry();

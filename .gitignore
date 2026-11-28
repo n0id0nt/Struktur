@@ -6,9 +6,11 @@ build-web
 build-windows
 build-windows-debug
 build-nogame
+build-fitness
+build-jobs*
 
-# Shaders compiled at build time by CMake's struktur_compile_shader (see CMakeLists.txt)
-assets/Shaders/compiled/
+# Shaders compiled at build time by CMake's struktur_add_shaders
+shaders/*/compiled/
 
 # ImGui
 imgui.ini
@@ -19,3 +21,14 @@ saves/
 editor_layout_windows.json
 editor_projects.json
 editor_saves.json
+
+# Local checks: a fresh clone and the behaviour records (tools/checks)
+build-fresh/
+build-ride-libs/
+build-ride-libs-editor/
+baseline/
+build-checks/
+build-games/
+
+# What's left of the games' folders from before they moved to their own repositories
+games/

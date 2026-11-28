@@ -6,7 +6,6 @@
 
 #include "Callback.h"
 #include "Variant.h"
-#include "wren.hpp"
 
 namespace Struktur::Callback
 {

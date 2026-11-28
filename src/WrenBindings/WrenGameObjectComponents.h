@@ -1,17 +1,7 @@
 #pragma once
 
-#include "ComponentListXMacro.h"
-#include "Engine/ECS/Component/Camera.h"
-#include "Engine/ECS/Component/Level.h"
-#include "Engine/ECS/Component/ParticleEmitter.h"
-#include "Engine/ECS/Component/PhysicsBody.h"
-#include "Engine/ECS/Component/Shader.h"
-#include "Engine/ECS/Component/Sprite.h"
-#include "Engine/ECS/Component/SpriteAnimation.h"
-#include "Engine/ECS/Component/TileMap.h"
-#include "Engine/ECS/Component/Transform.h"
-#include "Engine/ECS/Component/World.h"
-#include "Engine/ECS/Component/WrenScript.h"
+#include "Engine/ECS/ScriptComponents.h"
+#include "wren.hpp"
 
 #define COMPONENT(component_name, component_type, component_name_string)                                 \
 	struct Wren##component_name                                                                          \
@@ -29,5 +19,14 @@
 		{                                                                                                \
 		}                                                                                                \
 	};
+COMPONENT_LIST
+#undef COMPONENT
+
+// Every script component's allocate, finalize and get(entity) bindings (defined in WrenGameObjectComponents.cpp), for
+// the library that registers the component's class.
+#define COMPONENT(component_name, component_type, component_name_string) \
+	void wren_##component_name##Allocate(WrenVM* vm);                    \
+	void wren_##component_name##Finalize(void* data);                    \
+	void wren_##component_name##Get(WrenVM* vm);
 COMPONENT_LIST
 #undef COMPONENT

@@ -3,10 +3,12 @@
 #include <algorithm>
 #include <vector>
 
-#include "Engine/ECS/Component/PhysicsBody.h"
 #include "Engine/ECS/Component/Transform.h"
 #include "Engine/ECS/SystemManager.h"
 #include "Engine/GameContext.h"
+#ifdef STRUKTUR_PHYSICS
+	#include "Engine/ECS/Component/PhysicsBody.h"
+#endif
 
 void Struktur::System::HierarchySystem::SetParent(GameContext& context, entt::entity child, entt::entity parent)
 {
@@ -123,6 +125,7 @@ void Struktur::System::HierarchySystem::SetFrozen(GameContext& context, entt::en
 	if (frozen)
 	{
 		registry.emplace_or_replace<Frozen>(entity);
+#ifdef STRUKTUR_PHYSICS
 		// Its script won't steer it any more - stop it where it is rather than let it drift on its last velocity.
 		if (auto* physicsBody = registry.try_get<Component::PhysicsBody>(entity))
 		{
@@ -131,6 +134,7 @@ void Struktur::System::HierarchySystem::SetFrozen(GameContext& context, entt::en
 				physicsBody->body->SetLinearVelocity(b2Vec2(0.0f, 0.0f));
 			}
 		}
+#endif
 	}
 	else
 	{

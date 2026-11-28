@@ -12,26 +12,25 @@
 
 namespace Struktur
 {
-namespace Animation
-{
-struct SpriteAnimation;
-}  // namespace Animation
-
 namespace Component
 {
 struct Active;
 struct Transform;
+#ifdef STRUKTUR_PHYSICS
+struct PhysicsBody;
+#endif
+struct WrenScript;
+#ifdef STRUKTUR_WORLD2D
 struct Sprite;
 struct Shader;
 struct Camera;
 struct ParticleEmitter;
-struct PhysicsBody;
 struct SpriteAnimation;
 struct Level;
 struct LevelEntityInstance;
 struct World;
 struct TileMap;
-struct WrenScript;
+#endif
 }  // namespace Component
 
 namespace UI
@@ -95,6 +94,7 @@ private:
 	void RenderEntityHeader(GameContext& context, entt::entity entity);
 	void RenderComponents(GameContext& context, entt::entity entity);
 
+#ifdef STRUKTUR_UI
 	// UI Element rendering
 	void RenderUIElementInspector(GameContext& context, UI::UIElement* element);
 	void RenderUIElementHeader(UI::UIElement* element);
@@ -121,6 +121,7 @@ private:
 	// so a field can't be pointed at its own owning element.
 	bool RenderUIElementPicker(const char* label, GameContext& context, UI::UIElement* excludeSelf,
 	                           UI::UIElement*& value);
+#endif
 
 	// Component-specific renderers
 	void RenderActiveComponent(GameContext& context, Component::Active& active, entt::registry& registry,
@@ -128,6 +129,20 @@ private:
 
 	void RenderLocalTransformComponent(GameContext& context, Component::Transform& transform, entt::registry& registry,
 	                                   entt::entity entity);
+
+#ifdef STRUKTUR_PHYSICS
+	void RenderPhysicsBodyComponent(GameContext& context, Component::PhysicsBody& physicsBody, entt::registry& registry,
+	                                entt::entity entity);
+#endif
+
+#ifdef STRUKTUR_WREN
+	void RenderWrenScriptComponent(GameContext& context, Component::WrenScript& script, entt::registry& registry,
+	                               entt::entity entity);
+#endif
+
+#ifdef STRUKTUR_WORLD2D
+	// The 2D world's components (Inspector2DComponents.cpp)
+	void Render2DComponents(GameContext& context, entt::entity entity);
 
 	void RenderSpriteComponent(GameContext& context, Component::Sprite& sprite, entt::registry& registry,
 	                           entt::entity entity);
@@ -140,9 +155,6 @@ private:
 
 	void RenderParticleEmitterComponent(GameContext& context, Component::ParticleEmitter& emitter,
 	                                    entt::registry& registry, entt::entity entity);
-
-	void RenderPhysicsBodyComponent(GameContext& context, Component::PhysicsBody& physicsBody, entt::registry& registry,
-	                                entt::entity entity);
 
 	void RenderSpriteAnimationComponent(GameContext& context, Component::SpriteAnimation& spriteAnimation,
 	                                    entt::registry& registry, entt::entity entity);
@@ -158,9 +170,7 @@ private:
 
 	void RenderTileMapComponent(GameContext& context, Component::TileMap& tileMap, entt::registry& registry,
 	                            entt::entity entity);
-
-	void RenderWrenScriptComponent(GameContext& context, Component::WrenScript& script, entt::registry& registry,
-	                               entt::entity entity);
+#endif
 
 	// Helper functions for rendering common data types
 	bool RenderVec2(const char* label, glm::vec2& vec);
@@ -174,7 +184,9 @@ private:
 	PreviewWindow* m_previewWindow;
 	std::unordered_map<std::string, ComponentRenderer> m_componentRenderers;
 	InspectorDisplayType m_displayType;
+#ifdef STRUKTUR_UI
 	UI::UIElement* m_selectedUIElement;
+#endif
 	entt::entity m_selectedEntity;
 
 	// "New Animation" form state, kept persistent across frames while the user fills it in
@@ -184,8 +196,10 @@ private:
 	float m_newAnimationTime           = 1.0f;
 	bool m_newAnimationLoop            = true;
 
+#ifdef STRUKTUR_WORLD2D
 	// Currently selected cell in the TileMap grid editor, as row * width + col
 	int m_selectedTileMapCell = -1;
+#endif
 };
 }  // namespace Debug
 }  // namespace Struktur

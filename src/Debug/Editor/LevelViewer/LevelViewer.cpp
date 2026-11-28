@@ -24,8 +24,8 @@
 #include "Engine/ECS/System/ParticleSystem.h"
 #include "Engine/ECS/System/TransformSystem.h"
 #include "Engine/ECS/System/WrenScriptSystem.h"
-#include "Engine/Game.h"
 #include "Engine/GameContext.h"
+#include "Engine/World/Camera2D.h"
 #include "Engine/World/Level.h"
 #include "nlohmann/json.hpp"
 
@@ -133,8 +133,7 @@ void LevelViewer::Open(GameContext& context, const std::string& filePath)
 	m_reopenAfterPlay         = false;
 
 	// Same reset Play does, minus starting the game state - leaves a clean scene with the engine systems up.
-	ClearGameSystems(context);
-	StartGameSystems(context);
+	context.GetEditor().GetPlayControls().reset(context);
 
 	// The registry was just cleared, so any selection points at a dead entity.
 	SelectEntity(context, entt::null);
@@ -203,7 +202,7 @@ void LevelViewer::Close(GameContext& context)
 	EndEntityDrag();
 	SetStatus("", false);
 	SelectEntity(context, entt::null);
-	ClearGameSystems(context);
+	context.GetEditor().GetPlayControls().stop(context);
 }
 
 void LevelViewer::Reload(GameContext& context)
@@ -460,7 +459,7 @@ void LevelViewer::StartGame(GameContext& context)
 	debugSettings.playingGame = true;
 	debugSettings.pausedGame  = false;
 	OnPlayStarted();
-	StartDebugGame(context);
+	context.GetEditor().GetPlayControls().start(context);
 }
 
 bool LevelViewer::Save(GameContext& context)
@@ -877,7 +876,7 @@ glm::vec2 LevelViewer::WorldToViewScreen(GameContext& context, const glm::vec2& 
 {
 	Core::GameData& gameData = context.GetGameData();
 	glm::vec2 gameToScreen   = m_viewImageSize / glm::vec2((float)gameData.gameWidth, (float)gameData.gameHeight);
-	return m_viewImagePos + context.GetCamera().WorldPosToScreenPos(worldPos) * gameToScreen;
+	return m_viewImagePos + context.GetCamera2D().WorldPosToScreenPos(worldPos) * gameToScreen;
 }
 
 LevelViewer::GizmoHandle LevelViewer::FindGizmoHandleAt(GameContext& context, const glm::vec2& screenPos) const
@@ -992,7 +991,7 @@ void LevelViewer::UpdateHover(GameContext& context, const GameViewportWindow& vi
 	{
 		return;
 	}
-	m_mouseWorldPos = context.GetCamera().ScreenPosToWorldPos(mouseGamePos);
+	m_mouseWorldPos = context.GetCamera2D().ScreenPosToWorldPos(mouseGamePos);
 	m_hoveredLevel  = FindLevelAt(context, m_mouseWorldPos);
 
 	// Smallest rect under the cursor wins, so an item on top of a big placeholder can still be picked.
@@ -1026,7 +1025,7 @@ void LevelViewer::RenderViewportOverlay(GameContext& context, ImDrawList* drawLi
 
 	System::TransformSystem& transformSystem = context.GetSystemManager().GetSystem<System::TransformSystem>();
 	Core::GameData& gameData                 = context.GetGameData();
-	World::Camera& camera                    = context.GetCamera();
+	World::Camera2D& camera                  = context.GetCamera2D();
 	glm::vec2 gameToScreen = imageSize / glm::vec2((float)gameData.gameWidth, (float)gameData.gameHeight);
 	auto toScreen          = [&](const glm::vec2& worldPos)
 	{

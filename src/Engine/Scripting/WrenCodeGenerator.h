@@ -1,32 +1,29 @@
 #pragma once
 
-#include <filesystem>
-#include <fstream>
-#include <sstream>
+#include <string>
 #include <unordered_map>
-#include <unordered_set>
+#include <vector>
 
-#include "Debug/Assertions.h"
 #include "WrenBindingRegistry.h"
 
 namespace Struktur::Wren
 {
+// Writes the Wren source of the modules scripts import ("math", "input", ...) from the registered bindings.
 class CodeGenerator
 {
 public:
-	static void GenerateBindingFiles(const BindingRegistry& registry, const std::string& outputDir);
+	// Module name -> source, for every module with a binding of any kind.
+	static std::unordered_map<std::string, std::string> BuildModuleSources(const BindingRegistry& registry);
 
 private:
-	static void GenerateModuleFile(const std::string& outputDir, const std::string& moduleName,
-	                               const std::vector<const MethodBinding*>& methods,
-	                               const std::vector<const ClassBinding*>& classes,
-	                               const std::vector<const EnumBinding*>& enums,
-	                               const std::vector<const ConstantBinding*>& constants,
-	                               const std::vector<const WrenImplementationBinding*>& wrenImpls,
-	                               const std::vector<const ModuleImportBinding*>& imports);
+	static std::string BuildModuleSource(const std::string& moduleName,
+	                                     const std::vector<const MethodBinding*>& methods,
+	                                     const std::vector<const ClassBinding*>& classes,
+	                                     const std::vector<const EnumBinding*>& enums,
+	                                     const std::vector<const ConstantBinding*>& constants,
+	                                     const std::vector<const WrenImplementationBinding*>& wrenImpls,
+	                                     const std::vector<const ModuleImportBinding*>& imports);
 
 	static std::string ConvertSignature(const std::string& signature);
-
-	static void GenerateAllHeaders(const std::string& wrenSourceDir, const std::string& headerOutputDir);
 };
 }  // namespace Struktur::Wren

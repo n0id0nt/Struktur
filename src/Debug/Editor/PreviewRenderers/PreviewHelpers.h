@@ -1,9 +1,11 @@
 #pragma once
 
 #include "PreviewWindow.h"
-#include "ShaderPreviewRenderer.h"
-#include "SpritePreviewRenderer.h"
 #include "TexturePreviewRenderer.h"
+#ifdef STRUKTUR_WORLD2D
+	#include "ShaderPreviewRenderer.h"
+	#include "SpritePreviewRenderer.h"
+#endif
 // #include "CurvePreviewRenderer.h"
 #include <memory>
 
@@ -25,6 +27,7 @@ inline void PreviewTexture(PreviewWindow* window, const Resource::ResourcePtr<Re
 	window->SetPreviewRenderer(std::move(renderer));
 }
 
+#ifdef STRUKTUR_WORLD2D
 inline void PreviewShader(PreviewWindow* window, const Component::Shader* shader, const std::string& name)
 {
 	if (!window)
@@ -44,6 +47,7 @@ inline void PreviewSprite(PreviewWindow* window, const Component::Sprite* sprite
 	auto renderer = std::make_unique<SpritePreviewRenderer>(sprite, name);
 	window->SetPreviewRenderer(std::move(renderer));
 }
+#endif
 
 // inline void PreviewCurve(PreviewWindow* window,
 //                          Util::Curve* curve,

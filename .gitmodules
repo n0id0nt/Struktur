@@ -12,7 +12,7 @@
 	url = https://github.com/erincatto/box2d.git
 [submodule "third_party/wren"]
 	path = third_party/wren
-	url = https://github.com/wren-lang/wren.git
+	url = https://github.com/n0id0nt/wren.git
 [submodule "third_party/physfs"]
 	path = third_party/physfs
 	url = https://github.com/icculus/physfs.git
@@ -30,4 +30,4 @@
 	url = https://github.com/libsdl-org/SDL_mixer.git
 [submodule "third_party/bgfx.cmake"]
 	path = third_party/bgfx.cmake
-	url = https://github.com/bkaradzic/bgfx.cmake.git
+	url = https://github.com/n0id0nt/bgfx.cmake.git

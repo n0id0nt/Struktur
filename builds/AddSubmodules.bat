@@ -5,11 +5,11 @@ git submodule add https://github.com/skypjack/entt.git           third_party/ent
 git submodule add https://github.com/g-truc/glm.git              third_party/glm
 git submodule add https://github.com/nlohmann/json.git           third_party/json
 git submodule add https://github.com/erincatto/box2d.git         third_party/box2d
-git submodule add https://github.com/wren-lang/wren.git          third_party/wren
+git submodule add https://github.com/n0id0nt/wren.git            third_party/wren
 git submodule add https://github.com/icculus/physfs.git          third_party/physfs
 git submodule add https://github.com/libsdl-org/SDL.git          third_party/SDL
 git submodule add https://github.com/libsdl-org/SDL_mixer.git    third_party/SDL_mixer
-git submodule add https://github.com/bkaradzic/bgfx.cmake.git    third_party/bgfx.cmake
+git submodule add https://github.com/n0id0nt/bgfx.cmake.git      third_party/bgfx.cmake
 
 # Editor-only
 git submodule add https://github.com/ocornut/imgui.git           third_party/imgui

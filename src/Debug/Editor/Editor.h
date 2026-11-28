@@ -1,5 +1,6 @@
 #pragma once
 
+#include <bgfx/bgfx.h>
 #include <imgui.h>
 
 #include <memory>
@@ -8,8 +9,10 @@
 
 #include "Debug/Editor/EditorLayoutManager.h"
 #include "Debug/Editor/EditorSettings.h"
-#include "Debug/Editor/LevelViewer/LevelViewer.h"
 #include "Debug/Editor/Windows/EditorWindow.h"
+#ifdef STRUKTUR_WORLD2D
+	#include "Debug/Editor/LevelViewer/LevelViewer.h"
+#endif
 
 namespace Struktur
 {
@@ -18,6 +21,23 @@ class GameContext;
 namespace Debug
 {
 class GameViewportWindow;
+
+// The views debug drawing goes to: over the game's scene, and over the UI.
+struct DebugViews
+{
+	bgfx::ViewId world  = 0;
+	bgfx::ViewId screen = 0;
+};
+
+// What the toolbar's Play, Stop and Refresh do, set by the game.
+struct PlayControls
+{
+	void (*start)(GameContext& context) = nullptr;
+	void (*stop)(GameContext& context)  = nullptr;
+	// Back to nothing loaded but with the scripts and physics up, for showing a scene without running the game (the
+	// level viewer, so only games with the 2D world need it).
+	void (*reset)(GameContext& context) = nullptr;
+};
 
 class Editor
 {
@@ -61,6 +81,24 @@ public:
 		return m_gameViewport;
 	}
 
+	void SetPlayControls(const PlayControls& controls)
+	{
+		m_playControls = controls;
+	}
+	const PlayControls& GetPlayControls() const
+	{
+		return m_playControls;
+	}
+
+	void SetDebugViews(const DebugViews& views)
+	{
+		m_debugViews = views;
+	}
+	const DebugViews& GetDebugViews() const
+	{
+		return m_debugViews;
+	}
+
 	// Get editor settings
 	EditorSettings& GetSettings()
 	{
@@ -71,11 +109,13 @@ public:
 		return m_settings;
 	}
 
+#ifdef STRUKTUR_WORLD2D
 	// Shows LDtk worlds in the Game Viewport while the game is stopped
 	LevelViewer& GetLevelViewer()
 	{
 		return m_levelViewer;
 	}
+#endif
 
 private:
 	// Render the complete editor layout
@@ -100,7 +140,12 @@ private:
 	// Editor settings
 	EditorSettings m_settings;
 
+	DebugViews m_debugViews;
+	PlayControls m_playControls;
+
+#ifdef STRUKTUR_WORLD2D
 	LevelViewer m_levelViewer;
+#endif
 
 	// Editor state
 	bool m_showDemoWindow;

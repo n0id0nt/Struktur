@@ -3,8 +3,9 @@
 #include <fstream>
 #include <sstream>
 
-#include "Engine/Callback/CallbackHelperFunctions.h"
+#include "Engine/ECS/WrenScriptComponentRegistry.h"
 #include "Engine/GameContext.h"
+#include "Engine/Scripting/CallbackHelperFunctions.h"
 #include "Engine/Scripting/WrenExportedFields.h"
 #include "Engine/Scripting/WrenUtil.h"
 

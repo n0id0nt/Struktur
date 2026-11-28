@@ -21,8 +21,10 @@
 #include "Engine/Dialogue/DialogueManager.h"
 #include "Engine/Dialogue/DialogueRegistry.h"
 #include "Engine/GameContext.h"
+#include "Engine/Scripting/WrenScriptEngine.h"
 
-#define DIALOGUE_FILE_PATH "Scripts/Dialogue/"
+// The project's own names for this editor.
+static constexpr const char* k_settingsPath = "Settings/DialogueEditor.json";
 
 namespace Struktur::Debug
 {
@@ -51,6 +53,7 @@ DialogueEditorWindow::DialogueEditorWindow(PreviewWindow* previewWindow)
       m_previewWindow(previewWindow),
       m_importCount(0u)
 {
+	LoadProjectSettings();
 	m_newNodeIdBuffer[0] = '\0';
 	m_searchBuffer[0]    = '\0';
 }
@@ -277,7 +280,7 @@ void DialogueEditorWindow::Render(GameContext& context)
 
 		static char classNameBuffer[128] = "";
 		ImGui::InputText("Class Name", classNameBuffer, sizeof(classNameBuffer));
-		ImGui::TextWrapped("e.g., 'GregDialogue', 'MerchantDialogue'");
+		ImGui::TextWrapped("e.g., 'ShopkeeperDialogue', 'MerchantDialogue'");
 
 		if (ImGui::Button("Create", ImVec2(120, 0)))
 		{
@@ -393,7 +396,7 @@ void DialogueEditorWindow::RenderFilePanel(GameContext& context)
 	{
 		static char classNameBuffer[128] = "";
 		ImGui::InputText("Class Name", classNameBuffer, sizeof(classNameBuffer));
-		ImGui::TextWrapped("e.g., 'GregDialogue', 'MerchantDialogue'");
+		ImGui::TextWrapped("e.g., 'ShopkeeperDialogue', 'MerchantDialogue'");
 
 		if (ImGui::Button("Create"))
 		{
@@ -490,12 +493,30 @@ void DialogueEditorWindow::RenderFilePanel(GameContext& context)
 	}
 }
 
+void DialogueEditorWindow::LoadProjectSettings()
+{
+	const auto file = FileSystem::ReadString(k_settingsPath);
+	if (!file)
+	{
+		DEBUG_INFO("Dialogue editor: no %s in this project - no speaker list", k_settingsPath);
+		return;
+	}
+	const nlohmann::json settings = nlohmann::json::parse(file.value, nullptr, false);
+	if (!settings.is_object())
+	{
+		DEBUG_ERROR("Dialogue editor: %s is not a JSON object", k_settingsPath);
+		return;
+	}
+	m_scriptFolder = settings.value("scriptFolder", m_scriptFolder);
+	m_speakers     = settings.value("speakers", m_speakers);
+}
+
 void DialogueEditorWindow::SaveFileWithPicker()
 {
 	bool useJson = (m_currentSaveFormat == Dialogue::DialogueExporter::DialogueSaveFormat::Json);
 
 	// Build a default filename from the current class name if we have one
-	std::string defaultPath = DIALOGUE_FILE_PATH;
+	std::string defaultPath = m_scriptFolder;
 	if (!m_currentClassName.empty())
 	{
 		defaultPath += m_currentClassName;
@@ -517,7 +538,7 @@ void DialogueEditorWindow::SaveFileWithPicker()
 
 void DialogueEditorWindow::OpenFileWithPicker(GameContext& context)
 {
-	std::string filepath = FileSystem::OpenFileDialog("Open Dialogue File", DIALOGUE_FILE_PATH, {"*.wren", "*.json"},
+	std::string filepath = FileSystem::OpenFileDialog("Open Dialogue File", m_scriptFolder, {"*.wren", "*.json"},
 	                                                  "Dialogue Files (*.wren, *.json)");
 
 	if (filepath.empty())
@@ -2433,9 +2454,6 @@ bool DialogueEditorWindow::SpeakerInput(char* buffer, size_t bufferSize)
 {
 	bool changed = false;
 
-	// Common speakers for quick selection
-	static const char* commonSpeakers[] = {"Greg", "Player", "Narrator", "Mei", "Baron"};
-
 	if (ImGui::BeginCombo("Speaker", buffer))
 	{
 		if (ImGui::Selectable("<None>"))
@@ -2444,11 +2462,11 @@ bool DialogueEditorWindow::SpeakerInput(char* buffer, size_t bufferSize)
 			changed   = true;
 		}
 
-		for (const char* speaker : commonSpeakers)
+		for (const std::string& speaker : m_speakers)
 		{
-			if (ImGui::Selectable(speaker))
+			if (ImGui::Selectable(speaker.c_str()))
 			{
-				strncpy_s(buffer, bufferSize, speaker, bufferSize - 1);
+				strncpy_s(buffer, bufferSize, speaker.c_str(), bufferSize - 1);
 				changed = true;
 			}
 		}
