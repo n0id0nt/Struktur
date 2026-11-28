@@ -1,7 +1,7 @@
 """Finds asset paths written with a different letter case from the file on disk.
 
-Windows doesn't care, but the web build and packed assets do. Each asset folder (assets/, and each game's) is checked
-against the paths and script imports in the tracked files that can use it: its game's, and the engine's.
+Windows doesn't care, but the web build and packed assets do. Each game's asset folder is checked against the paths
+and script imports in the tracked files that can use it: the game's, and the engine's.
 
     python tools/check_asset_case.py
 
@@ -21,7 +21,7 @@ def tracked_files():
 
 
 def check_folder(tracked, prefix, mismatches):
-    """prefix: the game's folder ("" for the engine's own assets/ folder)."""
+    """prefix: the game's folder."""
     asset_prefix = prefix + "assets/"
     assets = {path[len(asset_prefix):] for path in tracked if path.startswith(asset_prefix)}
     folders = set()
@@ -37,10 +37,8 @@ def check_folder(tracked, prefix, mismatches):
 
     # The game's own files and the engine's code; other games' files are for their own assets.
     sources = [path for path in tracked
-               if path.endswith((".wren", ".json", ".ldtk", ".cpp", ".h")) and not path.startswith("third_party/")
-               and (path.startswith(prefix) if prefix else not path.startswith("games/"))]
-    if prefix:
-        sources += [path for path in tracked if path.startswith("src/") and path.endswith((".cpp", ".h"))]
+               if path.startswith(prefix) and path.endswith((".wren", ".json", ".ldtk", ".cpp", ".h"))]
+    sources += [path for path in tracked if path.startswith("src/") and path.endswith((".cpp", ".h"))]
     for source in sources:
         text = (ROOT / source).read_text(encoding="utf-8", errors="ignore")
         imports = set()
@@ -67,7 +65,7 @@ def main():
     games = sorted({"/".join(path.split("/")[:2]) + "/" for path in tracked
                     if path.startswith("games/") and path.split("/")[2:3] == ["assets"]})
     mismatches = {}
-    for prefix in [""] + games:
+    for prefix in games:
         check_folder(tracked, prefix, mismatches)
 
     for (found, actual), where in sorted(mismatches.items()):

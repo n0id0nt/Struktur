@@ -1,0 +1,8 @@
+build-*/
+# The editor's own files: layout, and the save snapshots it works on.
+saves/
+imgui.ini
+editor_layout.ini
+editor_layout_windows.json
+editor_saves.json
+editor_settings.json
