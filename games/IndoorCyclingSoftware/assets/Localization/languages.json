@@ -1,0 +1,7 @@
+{
+  "defaultLanguage": "en",
+  "languages": [
+    { "code": "en", "name": "English", "file": "Localization/en.json" },
+    { "code": "fr", "name": "Français", "file": "Localization/fr.json" }
+  ]
+}

@@ -62,20 +62,21 @@ Pop-Location
 
 Test-Build 'jobs tests' 'src\Engine\Jobs' 'build-jobs' 'Debug' @('-DSTRUKTUR_THREADS=ON') @('Debug\StrukturJobsTests.exe')
 Test-Build 'jobs tests, no threads' 'src\Engine\Jobs' 'build-jobs-nothreads' 'Debug' @('-DSTRUKTUR_THREADS=OFF') @('Debug\StrukturJobsTests.exe')
-Test-Build 'fitness and ride tests' 'src\Engine\Fitness' 'build-fitness' 'Debug' @() @('Debug\StrukturFitnessTests.exe')
-Test-Build 'game, debug' '.' 'build-nogame' 'Debug' @('-DCMAKE_BUILD_TYPE=Debug', '-DEDITOR=FALSE') $null
-Test-Build 'editor, debug' '.' 'build-windows-debug' 'Debug' @('-DCMAKE_BUILD_TYPE=Debug') $null
-Test-Build 'game, release' '.' 'build-windows' 'Release' @('-DCMAKE_BUILD_TYPE=Release') $null
-# Only the libraries the ride uses, so nothing else comes to depend on the others.
-$rideLibraries = '-DSTRUKTUR_LIBRARIES=ecs;wren;ui;fitness'
-Test-Build 'game, ride libraries only' '.' 'build-ride-libs' 'Debug' @('-DCMAKE_BUILD_TYPE=Debug', '-DEDITOR=FALSE', $rideLibraries) $null
-Test-Build 'editor, ride libraries only' '.' 'build-ride-libs-editor' 'Debug' @('-DCMAKE_BUILD_TYPE=Debug', $rideLibraries) $null
+Test-Build 'fitness tests' 'src\Engine\Fitness' 'build-fitness' 'Debug' @() @('Debug\StrukturFitnessTests.exe')
+# The engine compiled for each library and the combinations games use, so nothing depends on a library left out.
+Test-Build 'engine libraries' '.' 'build-checks' 'Debug' @('-DCMAKE_BUILD_TYPE=Debug') $null
+
+$ride = 'games\IndoorCyclingSoftware'
+Test-Build 'ride tests' "$ride\tests" "$ride\build-tests" 'Debug' @() @('Debug\RideTests.exe')
+Test-Build 'ride, debug' $ride "$ride\build-nogame" 'Debug' @('-DCMAKE_BUILD_TYPE=Debug', '-DEDITOR=FALSE') $null
+Test-Build 'ride editor, debug' $ride "$ride\build-windows-debug" 'Debug' @('-DCMAKE_BUILD_TYPE=Debug') $null
+Test-Build 'ride, release' $ride "$ride\build-windows" 'Release' @('-DCMAKE_BUILD_TYPE=Release') $null
 
 if ($Web) {
-    $build = Join-Path $root 'build-web'
+    $build = Join-Path $root "$ride\build-web"
     New-Item -ItemType Directory -Force $build | Out-Null
     $log = Join-Path $build 'check.log'
-    Set-Content -Path $log -Value 'game, web' -Encoding utf8
+    Set-Content -Path $log -Value 'ride, web' -Encoding utf8
     $environment = Join-Path $env:EMSDK 'emsdk_env.bat'
     $toolchain = Join-Path $env:EMSDK 'upstream\emscripten\cmake\Modules\Platform\Emscripten.cmake'
     # A batch file, because emsdk_env only sets up the shell it runs in.
@@ -83,11 +84,11 @@ if ($Web) {
     Set-Content -Path $batch -Encoding ascii -Value @(
         '@echo off',
         "call `"$environment`" >nul 2>&1",
-        "call emcmake cmake -S `"$root`" -B `"$build`" -G Ninja -DPLATFORM=Web -DCMAKE_BUILD_TYPE=Release -DCMAKE_TOOLCHAIN_FILE=`"$toolchain`" || exit /b 1",
+        "call emcmake cmake -S `"$root\$ride`" -B `"$build`" -G Ninja -DPLATFORM=Web -DCMAKE_BUILD_TYPE=Release -DCMAKE_TOOLCHAIN_FILE=`"$toolchain`" || exit /b 1",
         "cmake --build `"$build`" || exit /b 1")
     $passed = Invoke-Logged $log $batch @()
     $detail = if ($passed) { 'built' } else { "see $log" }
-    Add-Result 'game, web' $passed $detail
+    Add-Result 'ride, web' $passed $detail
 }
 
 $failed = @($results | Where-Object { -not $_.Passed })

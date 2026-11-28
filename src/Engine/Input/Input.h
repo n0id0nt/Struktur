@@ -192,7 +192,7 @@ public:
 	void Update();
 
 #ifdef STRUKTUR_FITNESS
-	// The fitness devices and the ride in progress (see TrainerInput). Set once per frame by System::RideSystem.
+	// The fitness devices and the ride in progress (see TrainerInput). Set once per frame by the game.
 	const TrainerInput& GetTrainer() const
 	{
 		return m_trainer;

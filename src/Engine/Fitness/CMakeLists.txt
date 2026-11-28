@@ -82,80 +82,7 @@ if(STRUKTUR_FITNESS_WINRT)
     target_link_libraries(StrukturFitness PRIVATE windowsapp)
 endif()
 
-# StrukturRide - the ride screens' logic (zones, speed model, workouts, ERG/SIM control, recording, FIT). Lives
-# beside StrukturFitness because it drives a Fitness::Trainer; still free of SDL/bgfx/Wren so it unit-tests here.
-include(FetchContent)
-# pugixml (MIT) - workout (.zwo) parsing. Pinned release tarball + hash; pugixml.cpp is compiled straight into
-# StrukturRide (SOURCE_SUBDIR keeps pugixml's own CMake project, and its install rules, out of the build).
-FetchContent_Declare(pugixml
-    URL https://github.com/zeux/pugixml/releases/download/v1.14/pugixml-1.14.tar.gz
-    URL_HASH SHA256=2f10e276870c64b1db6809050a75e11a897a8d7456c4be5c6b2e35a11168a015
-    SOURCE_SUBDIR not-a-cmake-dir
-    DOWNLOAD_EXTRACT_TIMESTAMP TRUE
-)
-FetchContent_MakeAvailable(pugixml)
-
-# StrukturWorld - the procedural road world behind the ride screens (route spline, elevation, biomes, chunk
-# meshes, rider animation, asset manifest + placeholders). Pure C++: the bgfx renderer lives in the engine.
-set(WORLD_DIR ${STRUKTUR_REPO_ROOT}/src/Engine/World)
-set(WORLD_SOURCES
-    ${WORLD_DIR}/Noise.h               ${WORLD_DIR}/Noise.cpp
-    ${WORLD_DIR}/WorldSettings.h       ${WORLD_DIR}/WorldSettings.cpp
-    ${WORLD_DIR}/Route.h               ${WORLD_DIR}/Route.cpp
-    ${WORLD_DIR}/ElevationProfile.h    ${WORLD_DIR}/ElevationProfile.cpp
-    ${WORLD_DIR}/Biome.h               ${WORLD_DIR}/Biome.cpp
-    ${WORLD_DIR}/ChunkBuilder.h        ${WORLD_DIR}/ChunkBuilder.cpp
-    ${WORLD_DIR}/ChunkStreamer.h       ${WORLD_DIR}/ChunkStreamer.cpp
-    ${WORLD_DIR}/RiderAnimation.h      ${WORLD_DIR}/RiderAnimation.cpp
-    ${WORLD_DIR}/SpriteDescriptor.h    ${WORLD_DIR}/SpriteDescriptor.cpp
-    ${WORLD_DIR}/AssetManifest.h       ${WORLD_DIR}/AssetManifest.cpp
-    ${WORLD_DIR}/Placeholder.h         ${WORLD_DIR}/Placeholder.cpp
-    ${WORLD_DIR}/World.h           ${WORLD_DIR}/World.cpp
-    ${WORLD_DIR}/Camera.h
-    ${WORLD_DIR}/RoadFollow.h      ${WORLD_DIR}/RoadFollow.cpp
-    ${WORLD_DIR}/Pacer.h           ${WORLD_DIR}/Pacer.cpp
-)
-# The job system (chunk builds, ride autosaves). The root build adds it first; standalone, pull it in here.
-if(NOT TARGET StrukturJobs)
-    add_subdirectory(${STRUKTUR_REPO_ROOT}/src/Engine/Jobs ${CMAKE_CURRENT_BINARY_DIR}/StrukturJobs)
-endif()
-
-add_library(StrukturWorld STATIC ${WORLD_SOURCES})
-target_include_directories(StrukturWorld PUBLIC ${STRUKTUR_REPO_ROOT}/src ${STRUKTUR_REPO_ROOT}/third_party/glm)
-target_link_libraries(StrukturWorld PUBLIC nlohmann_json::nlohmann_json StrukturJobs)
-target_compile_features(StrukturWorld PUBLIC cxx_std_20)
-find_package(Threads)
-if(Threads_FOUND)
-    target_link_libraries(StrukturWorld PUBLIC Threads::Threads)
-endif()
-if(MSVC)
-    target_compile_options(StrukturWorld PRIVATE /W4)
-endif()
-
-set(RIDE_DIR ${STRUKTUR_REPO_ROOT}/src/Engine/Ride)
-set(RIDE_SOURCES
-    ${RIDE_DIR}/Zones.h                 ${RIDE_DIR}/Zones.cpp
-    ${RIDE_DIR}/SpeedModel.h            ${RIDE_DIR}/SpeedModel.cpp
-    ${RIDE_DIR}/Workout.h               ${RIDE_DIR}/WorkoutLoader.cpp
-    ${RIDE_DIR}/WorkoutRunner.h         ${RIDE_DIR}/WorkoutRunner.cpp
-    ${RIDE_DIR}/TrainerController.h     ${RIDE_DIR}/TrainerController.cpp
-    ${RIDE_DIR}/RideLog.h               ${RIDE_DIR}/RideLog.cpp
-    ${RIDE_DIR}/FitWriter.h             ${RIDE_DIR}/FitWriter.cpp
-    ${RIDE_DIR}/RideSettings.h          ${RIDE_DIR}/RideSettings.cpp
-    ${RIDE_DIR}/RideSession.h           ${RIDE_DIR}/RideSession.cpp
-    ${pugixml_SOURCE_DIR}/src/pugixml.cpp
-)
-add_library(StrukturRide STATIC ${RIDE_SOURCES})
-target_include_directories(StrukturRide PUBLIC ${STRUKTUR_REPO_ROOT}/src ${pugixml_SOURCE_DIR}/src)
-target_link_libraries(StrukturRide PUBLIC StrukturFitness StrukturWorld nlohmann_json::nlohmann_json)
-target_compile_features(StrukturRide PUBLIC cxx_std_20)
-if(MSVC)
-    target_compile_options(StrukturRide PRIVATE /W4)
-    # Third-party source compiled into this target: keep its warnings out of our /W4 output.
-    set_source_files_properties(${pugixml_SOURCE_DIR}/src/pugixml.cpp PROPERTIES COMPILE_OPTIONS "/W0")
-endif()
-
-# Debug/Logger.cpp is compiled into the game executable already; standalone consumers (tests, probe) add it to
+# Debug/Logger.cpp is part of the engine's core library; standalone consumers (tests, probe) add it to
 # their own sources instead of this library, so the game never sees a duplicate definition.
 set(STRUKTUR_FITNESS_LOGGER_SOURCE ${STRUKTUR_REPO_ROOT}/src/Debug/Logger.cpp)
 
@@ -175,18 +102,10 @@ if(STRUKTUR_BUILD_TESTS)
         Tests/TestMain.cpp
         Tests/ProtocolTests.cpp
         Tests/DeviceTests.cpp
-        Tests/RideCoreTests.cpp
-        Tests/RideControlTests.cpp
-        Tests/RideWorldTests.cpp
         ${STRUKTUR_FITNESS_LOGGER_SOURCE}
     )
     target_include_directories(StrukturFitnessTests PRIVATE ${doctest_SOURCE_DIR}/doctest)
-    target_link_libraries(StrukturFitnessTests PRIVATE StrukturFitness StrukturRide StrukturWorld)
-    # Sample/malformed workout files the tests load from disk.
-    target_compile_definitions(StrukturFitnessTests PRIVATE
-        STRUKTUR_TEST_DATA_DIR="${CMAKE_CURRENT_SOURCE_DIR}/Tests/Data"
-        STRUKTUR_WORKOUTS_DIR="${STRUKTUR_REPO_ROOT}/assets/Workouts"
-        STRUKTUR_ASSETS_DIR="${STRUKTUR_REPO_ROOT}/assets")
+    target_link_libraries(StrukturFitnessTests PRIVATE StrukturFitness)
 
     enable_testing()
     add_test(NAME StrukturFitnessTests COMMAND StrukturFitnessTests)

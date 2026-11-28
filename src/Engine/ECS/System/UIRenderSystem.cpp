@@ -6,8 +6,7 @@
 
 void Struktur::System::UIRenderSystem::Update(GameContext& context)
 {
-	// Self-contained per-frame view setup, same pattern as WorldRenderer::Flush setting WorldViewId's own
-	// transform rather than Game.cpp doing it centrally.
+	// Self-contained per-frame view setup: each renderer sets its own views' transforms.
 	context.GetUIRenderer().SetupView(context);
 	UI::UIManager& uiManager = context.GetUIManager();
 	uiManager.Render(context);

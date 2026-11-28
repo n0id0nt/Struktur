@@ -5,8 +5,8 @@
 param(
     [Parameter(Mandatory = $true)][string]$Scenario,
     [Parameter(Mandatory = $true)][string]$OutDir,
-    [string]$Game = '',                   # folder holding assets\ (default: this repository)
-    [string]$Exe = '',                    # default: <Game>\build-nogame\Debug\Struktur.exe
+    [string]$Game = '',                   # folder holding assets\ (default: the game the scenario is for)
+    [string]$Exe = '',                    # default: the game's <Game>\build-nogame\Debug\*.exe
     [string]$Saves = '',                  # save files to install for the run, so runs can be compared
     [string]$GameArguments = '',
     [string]$SaveName = 'Seven Gods',     # %APPDATA%\StrukturGames\<SaveName>
@@ -70,14 +70,23 @@ function Restore-Folder([string]$source, [string]$target) {
 }
 
 # Not a parameter default: Windows PowerShell leaves $PSScriptRoot empty there.
-if (-not $Game) { $Game = Split-Path -Parent (Split-Path -Parent $PSScriptRoot) }
+$repository = Split-Path -Parent (Split-Path -Parent $PSScriptRoot)
+if (-not $Game) {
+    if (-not $Scenario.StartsWith('ride')) { throw "give -Game: the folder of the game the '$Scenario' check runs" }
+    $Game = Join-Path $repository 'games\IndoorCyclingSoftware'
+}
 $Game = (Resolve-Path $Game).Path
-if (-not $Exe) { $Exe = Join-Path $Game 'build-nogame\Debug\Struktur.exe' }
+if (-not $Exe) {
+    $Exe = Join-Path $Game 'build-nogame\Debug\IndoorCyclingSoftware.exe'
+    # A copy of the engine from before the split builds one program, Struktur.exe.
+    if (-not (Test-Path $Exe)) { $Exe = Join-Path $Game 'build-nogame\Debug\Struktur.exe' }
+}
 $Exe = (Resolve-Path $Exe).Path
+$program = [System.IO.Path]::GetFileNameWithoutExtension($Exe)
 New-Item -ItemType Directory -Force $OutDir | Out-Null
 $OutDir = (Resolve-Path $OutDir).Path
-if (Get-Process -Name Struktur -ErrorAction SilentlyContinue) {
-    throw "Struktur is already running. Close it first: a check swaps the save files."
+if (Get-Process -Name $program, Struktur -ErrorAction SilentlyContinue) {
+    throw "$program is already running. Close it first: a check swaps the save files."
 }
 
 $saveFolder = Join-Path $env:APPDATA "StrukturGames\$SaveName"
@@ -134,7 +143,7 @@ try {
     }
     if (Test-Path $report) { Copy-Item $report (Join-Path $OutDir 'report.txt') }
     $crashes = @(Get-WinEvent -FilterHashtable @{ LogName = 'Application'; Id = 1000; StartTime = $start } -ErrorAction SilentlyContinue |
-        Where-Object { $_.Message -match 'Struktur' }).Count
+        Where-Object { $_.Message -match $program }).Count
     # Warnings and errors with their timestamps and numbers removed, so two runs can be compared.
     $problems = Get-Content (Join-Path $OutDir 'game.out'), (Join-Path $OutDir 'game.err') -ErrorAction SilentlyContinue |
         Where-Object { $_ -match '^(WARN|WARNING|ERROR|FATAL)|Wren (Runtime|Compile)' } |

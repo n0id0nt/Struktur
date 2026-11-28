@@ -1,7 +1,7 @@
 """Finds asset paths written with a different letter case from the file on disk.
 
-Windows doesn't care, but the web build and packed assets do. Checks the paths and script imports in tracked files
-against the tracked assets.
+Windows doesn't care, but the web build and packed assets do. Each asset folder (assets/, and each game's) is checked
+against the paths and script imports in the tracked files that can use it: its game's, and the engine's.
 
     python tools/check_asset_case.py
 
@@ -20,9 +20,10 @@ def tracked_files():
     return [name for name in listing.decode("utf-8").split("\0") if name]
 
 
-def main():
-    tracked = tracked_files()
-    assets = {path[len("assets/"):] for path in tracked if path.startswith("assets/")}
+def check_folder(tracked, prefix, mismatches):
+    """prefix: the game's folder ("" for the engine's own assets/ folder)."""
+    asset_prefix = prefix + "assets/"
+    assets = {path[len(asset_prefix):] for path in tracked if path.startswith(asset_prefix)}
     folders = set()
     for path in assets:
         parts = path.split("/")
@@ -34,9 +35,12 @@ def main():
     folders_by_lower = {name.lower(): name for name in folders}
     scripts_by_lower = {name.lower(): name for name in scripts}
 
-    mismatches = {}
+    # The game's own files and the engine's code; other games' files are for their own assets.
     sources = [path for path in tracked
-               if path.endswith((".wren", ".json", ".ldtk", ".cpp", ".h")) and not path.startswith("third_party/")]
+               if path.endswith((".wren", ".json", ".ldtk", ".cpp", ".h")) and not path.startswith("third_party/")
+               and (path.startswith(prefix) if prefix else not path.startswith("games/"))]
+    if prefix:
+        sources += [path for path in tracked if path.startswith("src/") and path.endswith((".cpp", ".h"))]
     for source in sources:
         text = (ROOT / source).read_text(encoding="utf-8", errors="ignore")
         imports = set()
@@ -52,10 +56,19 @@ def main():
                 continue
             actual = files_by_lower.get(name.lower())
             # A folder name alone only counts in game data: C++ uses similar strings as resource names.
-            if not actual and source.startswith("assets/"):
+            if not actual and source.startswith(asset_prefix):
                 actual = folders_by_lower.get(name.lower())
             if actual:
                 mismatches.setdefault((name, actual), set()).add(source)
+
+
+def main():
+    tracked = tracked_files()
+    games = sorted({"/".join(path.split("/")[:2]) + "/" for path in tracked
+                    if path.startswith("games/") and path.split("/")[2:3] == ["assets"]})
+    mismatches = {}
+    for prefix in [""] + games:
+        check_folder(tracked, prefix, mismatches)
 
     for (found, actual), where in sorted(mismatches.items()):
         print("'%s' should be '%s'  (%s)" % (found, actual, ", ".join(sorted(where)[:3])))

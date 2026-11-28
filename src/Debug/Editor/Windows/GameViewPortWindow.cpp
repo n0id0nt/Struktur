@@ -55,7 +55,7 @@ void GameViewportWindow::ResizeGameViewport(GameContext& context, int width, int
 	Core::GameData& gameData = context.GetGameData();
 	gameData.gameWidth       = width;
 	gameData.gameHeight      = height;
-	// UIRenderer::SetupView's orthographic projection and WorldRenderer's camera projection already re-derive
+	// UIRenderer::SetupView's orthographic projection and the game renderer's camera projection already re-derive
 	// from gameData.gameWidth/gameHeight every frame, so updating those two fields is enough for logical layout -
 	// but the framebuffer's actual pixel size and bgfx view rect are only ever set once (at creation), so those
 	// need to be explicitly rebuilt here too or the physical render target would stay at its old resolution while

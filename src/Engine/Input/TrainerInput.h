@@ -6,7 +6,7 @@
 namespace Struktur::Input
 {
 // The smart trainer, heart rate strap and power meter as game input, plus the ride values derived from them. Written
-// once per frame by System::RideSystem and read everywhere else (the world, the HUD, scripts) through
+// once per frame by the game and read everywhere else (its world, HUD and scripts) through
 // Input::GetTrainer(). Engine-free, so the world library and its tests can fill one in by hand.
 struct TrainerInput
 {
@@ -21,7 +21,7 @@ struct TrainerInput
 	bool powerMeterAssigned  = false;
 	bool powerMeterConnected = false;
 
-	// --- the ride in progress (Ride::RideSession): the defaults while none is running -----------------------------
+	// --- the ride in progress (the game's ride session): the defaults while none is running -----------------------------
 	std::optional<double> smoothedPowerWatts;  // 3 s average
 	double speedMetersPerSecond = 0.0;         // simulated
 	double chosenGradePercent   = 0.0;         // the rider's -/+ grade (SIM resistance)
