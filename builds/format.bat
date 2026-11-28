@@ -37,7 +37,7 @@ echo Using "!CLANG_FORMAT!"
 echo.
 
 set "FAIL=0"
-for %%D in ("%ROOT_DIR%\src" "%ROOT_DIR%\tests" "%ROOT_DIR%\games\IndoorCyclingSoftware\src" "%ROOT_DIR%\games\IndoorCyclingSoftware\tests") do (
+for %%D in ("%ROOT_DIR%\src" "%ROOT_DIR%\tests" "%ROOT_DIR%\games\IndoorCyclingSoftware\src" "%ROOT_DIR%\games\IndoorCyclingSoftware\tests" "%ROOT_DIR%\games\SevenGods\src") do (
     for /r "%%~D" %%F in (*.cpp *.h *.hpp) do (
         "!CLANG_FORMAT!" %MODE% "%%F"
         if errorlevel 1 set "FAIL=1"

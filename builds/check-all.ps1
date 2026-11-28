@@ -72,11 +72,17 @@ Test-Build 'ride, debug' $ride "$ride\build-nogame" 'Debug' @('-DCMAKE_BUILD_TYP
 Test-Build 'ride editor, debug' $ride "$ride\build-windows-debug" 'Debug' @('-DCMAKE_BUILD_TYPE=Debug') $null
 Test-Build 'ride, release' $ride "$ride\build-windows" 'Release' @('-DCMAKE_BUILD_TYPE=Release') $null
 
-if ($Web) {
-    $build = Join-Path $root "$ride\build-web"
+$gods = 'games\SevenGods'
+Test-Build 'Seven Gods, debug' $gods "$gods\build-nogame" 'Debug' @('-DCMAKE_BUILD_TYPE=Debug', '-DEDITOR=FALSE') $null
+Test-Build 'Seven Gods editor, debug' $gods "$gods\build-windows-debug" 'Debug' @('-DCMAKE_BUILD_TYPE=Debug') $null
+Test-Build 'Seven Gods, release' $gods "$gods\build-windows" 'Release' @('-DCMAKE_BUILD_TYPE=Release') $null
+
+# Configures and builds one game for the web. Build it for desktop first: the web build embeds those shaders.
+function Test-WebBuild($name, $game) {
+    $build = Join-Path $root "$game\build-web"
     New-Item -ItemType Directory -Force $build | Out-Null
     $log = Join-Path $build 'check.log'
-    Set-Content -Path $log -Value 'ride, web' -Encoding utf8
+    Set-Content -Path $log -Value $name -Encoding utf8
     $environment = Join-Path $env:EMSDK 'emsdk_env.bat'
     $toolchain = Join-Path $env:EMSDK 'upstream\emscripten\cmake\Modules\Platform\Emscripten.cmake'
     # A batch file, because emsdk_env only sets up the shell it runs in.
@@ -84,11 +90,16 @@ if ($Web) {
     Set-Content -Path $batch -Encoding ascii -Value @(
         '@echo off',
         "call `"$environment`" >nul 2>&1",
-        "call emcmake cmake -S `"$root\$ride`" -B `"$build`" -G Ninja -DPLATFORM=Web -DCMAKE_BUILD_TYPE=Release -DCMAKE_TOOLCHAIN_FILE=`"$toolchain`" || exit /b 1",
+        "call emcmake cmake -S `"$root\$game`" -B `"$build`" -G Ninja -DPLATFORM=Web -DCMAKE_BUILD_TYPE=Release -DCMAKE_TOOLCHAIN_FILE=`"$toolchain`" || exit /b 1",
         "cmake --build `"$build`" || exit /b 1")
     $passed = Invoke-Logged $log $batch @()
     $detail = if ($passed) { 'built' } else { "see $log" }
-    Add-Result 'ride, web' $passed $detail
+    Add-Result $name $passed $detail
+}
+
+if ($Web) {
+    Test-WebBuild 'ride, web' $ride
+    Test-WebBuild 'Seven Gods, web' $gods
 }
 
 $failed = @($results | Where-Object { -not $_.Passed })

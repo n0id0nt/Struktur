@@ -6,7 +6,7 @@ param(
     [Parameter(Mandatory = $true)][string]$Scenario,
     [Parameter(Mandatory = $true)][string]$OutDir,
     [string]$Game = '',                   # folder holding assets\ (default: the game the scenario is for)
-    [string]$Exe = '',                    # default: the game's <Game>\build-nogame\Debug\*.exe
+    [string]$Exe = '',                    # default: <Game>\build-nogame\Debug\<the game folder's name>.exe
     [string]$Saves = '',                  # save files to install for the run, so runs can be compared
     [string]$GameArguments = '',
     [string]$SaveName = 'Seven Gods',     # %APPDATA%\StrukturGames\<SaveName>
@@ -72,12 +72,12 @@ function Restore-Folder([string]$source, [string]$target) {
 # Not a parameter default: Windows PowerShell leaves $PSScriptRoot empty there.
 $repository = Split-Path -Parent (Split-Path -Parent $PSScriptRoot)
 if (-not $Game) {
-    if (-not $Scenario.StartsWith('ride')) { throw "give -Game: the folder of the game the '$Scenario' check runs" }
-    $Game = Join-Path $repository 'games\IndoorCyclingSoftware'
+    $name = if ($Scenario.StartsWith('ride')) { 'IndoorCyclingSoftware' } else { 'SevenGods' }
+    $Game = Join-Path $repository "games\$name"
 }
 $Game = (Resolve-Path $Game).Path
 if (-not $Exe) {
-    $Exe = Join-Path $Game 'build-nogame\Debug\IndoorCyclingSoftware.exe'
+    $Exe = Join-Path $Game "build-nogame\Debug\$(Split-Path -Leaf $Game).exe"
     # A copy of the engine from before the split builds one program, Struktur.exe.
     if (-not (Test-Path $Exe)) { $Exe = Join-Path $Game 'build-nogame\Debug\Struktur.exe' }
 }
@@ -85,8 +85,10 @@ $Exe = (Resolve-Path $Exe).Path
 $program = [System.IO.Path]::GetFileNameWithoutExtension($Exe)
 New-Item -ItemType Directory -Force $OutDir | Out-Null
 $OutDir = (Resolve-Path $OutDir).Path
-if (Get-Process -Name $program, Struktur -ErrorAction SilentlyContinue) {
-    throw "$program is already running. Close it first: a check swaps the save files."
+# Any of the games: they may share a save folder.
+$running = Get-Process -Name $program, Struktur, SevenGods, IndoorCyclingSoftware -ErrorAction SilentlyContinue
+if ($running) {
+    throw "$($running[0].ProcessName) is already running. Close it first: a check swaps the save files."
 }
 
 $saveFolder = Join-Path $env:APPDATA "StrukturGames\$SaveName"

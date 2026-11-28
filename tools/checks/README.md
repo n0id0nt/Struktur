@@ -28,8 +28,8 @@ powershell -ExecutionPolicy Bypass -File tools\checks\run_check.ps1 -Scenario ri
 
 | Option | Meaning |
 |---|---|
-| `-Game` | The folder holding `assets\` (default for the ride checks: `games\IndoorCyclingSoftware`) |
-| `-Exe` | The game to run (default: the game's `build-nogame\Debug` program) |
+| `-Game` | The folder holding `assets\` (default: the scenario's game under `games\`) |
+| `-Exe` | The game to run (default: the program in the game's `build-nogame\Debug`) |
 | `-Saves` | A folder of save files that replaces the `.sav` files for the run, so two runs start from the same state |
 | `-SaveName` | The save folder under `%APPDATA%\StrukturGames` |
 
