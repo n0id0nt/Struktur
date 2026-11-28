@@ -72,8 +72,10 @@ function Restore-Folder([string]$source, [string]$target) {
 # Not a parameter default: Windows PowerShell leaves $PSScriptRoot empty there.
 $repository = Split-Path -Parent (Split-Path -Parent $PSScriptRoot)
 if (-not $Game) {
+    # As a game's engine\ submodule, that game; otherwise the scenario's game, in its repository beside this one.
+    $beside = Split-Path -Parent $repository
     $name = if ($Scenario.StartsWith('ride')) { 'IndoorCyclingSoftware' } else { 'SevenGods' }
-    $Game = Join-Path $repository "games\$name"
+    $Game = if (Test-Path (Join-Path $beside 'assets')) { $beside } else { Join-Path $beside $name }
 }
 $Game = (Resolve-Path $Game).Path
 if (-not $Exe) {

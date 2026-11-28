@@ -1,12 +1,16 @@
 # Builds every configuration and runs every automated test, then prints what passed.
 #
 #   powershell -ExecutionPolicy Bypass -File builds\check-all.ps1          (desktop builds and tests)
-#   powershell -ExecutionPolicy Bypass -File builds\check-all.ps1 -Web     (also the web build; needs EMSDK)
+#   powershell -ExecutionPolicy Bypass -File builds\check-all.ps1 -Web     (also the web builds; needs EMSDK)
+#
+# The games are separate repositories. Those found beside this one (or named with -Games) are built against this engine,
+# in build-games\ here, so an engine change is checked against them before it's pushed. -Games @() skips them.
 #
 # Each step writes its output to <build folder>\check.log. Exit code 0 when everything passes.
 # The behaviour checks that start the game are separate: see tools\checks.
 param(
-    [switch]$Web
+    [switch]$Web,
+    [string[]]$Games
 )
 
 $ErrorActionPreference = 'Continue'
@@ -27,14 +31,28 @@ function Add-Result($name, $passed, $detail) {
     Write-Host ("{0,-4}  {1}  {2}" -f $word, $name, $detail)
 }
 
-# Configures and builds one CMake folder. $tests names the test programs to run after it, relative to the folder.
+if (-not $PSBoundParameters.ContainsKey('Games')) {
+    $beside = Split-Path -Parent $root
+    $Games = @('SevenGods', 'IndoorCyclingSoftware' | ForEach-Object { Join-Path $beside $_ } |
+        Where-Object { Test-Path (Join-Path $_ 'CMakeLists.txt') })
+}
+$Games = @($Games | Where-Object { $_ } | ForEach-Object { (Resolve-Path $_).Path })
+
+# A path as given, or inside this repository.
+function Get-FullPath($path) {
+    if ([System.IO.Path]::IsPathRooted($path)) { return $path }
+    return Join-Path $root $path
+}
+
+# Configures and builds one CMake folder. $tests names the test programs to run after it, relative to the folder; 'all'
+# runs every *Tests.exe the build made.
 function Test-Build($name, $source, $folder, $config, $configureArguments, $tests) {
-    $build = Join-Path $root $folder
+    $build = Get-FullPath $folder
     New-Item -ItemType Directory -Force $build | Out-Null
     $log = Join-Path $build 'check.log'
     Set-Content -Path $log -Value "$name" -Encoding utf8
 
-    $configure = @('-S', (Join-Path $root $source), '-B', $build, '-G', $generator) + $configureArguments
+    $configure = @('-S', (Get-FullPath $source), '-B', $build, '-G', $generator) + $configureArguments
     if (-not (Invoke-Logged $log 'cmake' $configure)) {
         Add-Result $name $false "configure failed, see $log"
         return
@@ -47,6 +65,9 @@ function Test-Build($name, $source, $folder, $config, $configureArguments, $test
         Add-Result $name $true 'built'
         return
     }
+    if ($tests -eq 'all') {
+        $tests = @(Get-ChildItem (Join-Path $build "$config\*Tests.exe") | ForEach-Object { "$config\$($_.Name)" })
+    }
     foreach ($test in $tests) {
         $passed = Invoke-Logged $log (Join-Path $build $test) @()
         $summary = Select-String -Path $log -Pattern 'test cases:' | Select-Object -Last 1
@@ -56,8 +77,10 @@ function Test-Build($name, $source, $folder, $config, $configureArguments, $test
 }
 
 Push-Location $root
-python tools\check_asset_case.py
-Add-Result 'asset path case' ($LASTEXITCODE -eq 0) ''
+if ($Games.Count -gt 0) {
+    python tools\check_asset_case.py @Games
+    Add-Result 'asset path case' ($LASTEXITCODE -eq 0) ''
+}
 Pop-Location
 
 Test-Build 'jobs tests' 'src\Engine\Jobs' 'build-jobs' 'Debug' @('-DSTRUKTUR_THREADS=ON') @('Debug\StrukturJobsTests.exe')
@@ -66,20 +89,9 @@ Test-Build 'fitness tests' 'src\Engine\Fitness' 'build-fitness' 'Debug' @() @('D
 # The engine compiled for each library and the combinations games use, so nothing depends on a library left out.
 Test-Build 'engine libraries' '.' 'build-checks' 'Debug' @('-DCMAKE_BUILD_TYPE=Debug') $null
 
-$ride = 'games\IndoorCyclingSoftware'
-Test-Build 'ride tests' "$ride\tests" "$ride\build-tests" 'Debug' @() @('Debug\RideTests.exe')
-Test-Build 'ride, debug' $ride "$ride\build-nogame" 'Debug' @('-DCMAKE_BUILD_TYPE=Debug', '-DEDITOR=FALSE') $null
-Test-Build 'ride editor, debug' $ride "$ride\build-windows-debug" 'Debug' @('-DCMAKE_BUILD_TYPE=Debug') $null
-Test-Build 'ride, release' $ride "$ride\build-windows" 'Release' @('-DCMAKE_BUILD_TYPE=Release') $null
-
-$gods = 'games\SevenGods'
-Test-Build 'Seven Gods, debug' $gods "$gods\build-nogame" 'Debug' @('-DCMAKE_BUILD_TYPE=Debug', '-DEDITOR=FALSE') $null
-Test-Build 'Seven Gods editor, debug' $gods "$gods\build-windows-debug" 'Debug' @('-DCMAKE_BUILD_TYPE=Debug') $null
-Test-Build 'Seven Gods, release' $gods "$gods\build-windows" 'Release' @('-DCMAKE_BUILD_TYPE=Release') $null
-
 # Configures and builds one game for the web. Build it for desktop first: the web build embeds those shaders.
-function Test-WebBuild($name, $game) {
-    $build = Join-Path $root "$game\build-web"
+function Test-WebBuild($name, $source, $folder, $engineArgument) {
+    $build = Get-FullPath $folder
     New-Item -ItemType Directory -Force $build | Out-Null
     $log = Join-Path $build 'check.log'
     Set-Content -Path $log -Value $name -Encoding utf8
@@ -90,16 +102,27 @@ function Test-WebBuild($name, $game) {
     Set-Content -Path $batch -Encoding ascii -Value @(
         '@echo off',
         "call `"$environment`" >nul 2>&1",
-        "call emcmake cmake -S `"$root\$game`" -B `"$build`" -G Ninja -DPLATFORM=Web -DCMAKE_BUILD_TYPE=Release -DCMAKE_TOOLCHAIN_FILE=`"$toolchain`" || exit /b 1",
+        "call emcmake cmake -S `"$source`" -B `"$build`" -G Ninja -DPLATFORM=Web -DCMAKE_BUILD_TYPE=Release `"$engineArgument`" -DCMAKE_TOOLCHAIN_FILE=`"$toolchain`" || exit /b 1",
         "cmake --build `"$build`" || exit /b 1")
     $passed = Invoke-Logged $log $batch @()
     $detail = if ($passed) { 'built' } else { "see $log" }
     Add-Result $name $passed $detail
 }
 
-if ($Web) {
-    Test-WebBuild 'ride, web' $ride
-    Test-WebBuild 'Seven Gods, web' $gods
+# Forward slashes: CMake reads backslashes in a path as escapes.
+$engine = '-DSTRUKTUR_DIR=' + ($root -replace '\\', '/')
+foreach ($game in $Games) {
+    $name = Split-Path -Leaf $game
+    $builds = "build-games\$name"
+    if (Test-Path (Join-Path $game 'tests\CMakeLists.txt')) {
+        Test-Build "$name tests" "$game\tests" "$builds\tests" 'Debug' @($engine) 'all'
+    }
+    Test-Build "$name, debug" $game "$builds\debug" 'Debug' @($engine, '-DCMAKE_BUILD_TYPE=Debug', '-DEDITOR=FALSE') $null
+    Test-Build "$name editor, debug" $game "$builds\editor" 'Debug' @($engine, '-DCMAKE_BUILD_TYPE=Debug') $null
+    Test-Build "$name, release" $game "$builds\release" 'Release' @($engine, '-DCMAKE_BUILD_TYPE=Release') $null
+    if ($Web) {
+        Test-WebBuild "$name, web" $game "$builds\web" $engine
+    }
 }
 
 $failed = @($results | Where-Object { -not $_.Passed })

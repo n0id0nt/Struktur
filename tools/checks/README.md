@@ -6,8 +6,10 @@
 powershell -ExecutionPolicy Bypass -File builds\check-all.ps1
 ```
 
-Builds the standalone test projects, the engine's library combinations and each game in every desktop
-configuration, runs the tests and checks the letter case of asset paths. Add `-Web` for the web build. Each step logs to `<build folder>\check.log`.
+Builds the standalone test projects and the engine's library combinations and runs the tests. The game repositories
+beside this one (or named with `-Games`) are built against this engine in every desktop configuration, their tests run
+and the letter case of their asset paths checked. Add `-Web` for their web builds. Each step logs to
+`<build folder>\check.log`; the games build in `build-games\`.
 
 ## Behaviour checks
 
@@ -28,7 +30,7 @@ powershell -ExecutionPolicy Bypass -File tools\checks\run_check.ps1 -Scenario ri
 
 | Option | Meaning |
 |---|---|
-| `-Game` | The folder holding `assets\` (default: the scenario's game under `games\`) |
+| `-Game` | The folder holding `assets\` (default: the game this engine is a submodule of, otherwise the scenario's game beside this repository) |
 | `-Exe` | The game to run (default: the program in the game's `build-nogame\Debug`) |
 | `-Saves` | A folder of save files that replaces the `.sav` files for the run, so two runs start from the same state |
 | `-SaveName` | The save folder under `%APPDATA%\StrukturGames` (default: the name the game's `Main.wren` sets) |

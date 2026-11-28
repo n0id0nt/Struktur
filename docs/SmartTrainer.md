@@ -123,7 +123,7 @@ the way cycling apps open on a pairing screen:
   **Unpair** when the role has a device.
 - **Let's Ride** stays disabled until a **power source**, a trainer or a power meter, is connected. Heart rate is
   optional. It then leads to the rider select screen (`NEXT_STATE` in the state; see
-  [RiderProfiles.md](../games/IndoorCyclingSoftware/docs/RiderProfiles.md)), and from there to the main menu.
+  `docs/RiderProfiles.md` in Indoor Cycling Software), and from there to the main menu.
 - **On entering** the screen, remembered devices reconnect on their own and a scan starts. The scan stops when the
   screen is left; paired devices stay connected.
 - **Event-driven:** connection events refresh a tile, `fitnessSample` updates its value, and `fitnessDeviceFound`
@@ -133,7 +133,7 @@ the way cycling apps open on a pairing screen:
   screen's status line says so.
 
 ```powershell
-cd games/IndoorCyclingSoftware
+cd ../IndoorCyclingSoftware
 $env:STRUKTUR_FITNESS_SIMULATE = '1'; ./build-nogame/Debug/IndoorCyclingSoftware.exe
 ```
 

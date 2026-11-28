@@ -2,8 +2,8 @@
 
 A C++ game engine: CMake libraries a game picks from (`cmake/StrukturLibraries.cmake`), Wren scripting, an ImGui
 editor. Its games are separate repositories beside this folder (`..\SevenGods`, `..\IndoorCyclingSoftware`), each
-holding the engine as an `engine/` submodule. The copies under `games/` go in step 6.5: don't edit them
-(`docs/ModuleSplitPlan.md`).
+holding the engine as an `engine/` submodule. Any `games/` folder here is a leftover from before they moved and isn't
+tracked (`docs/ModuleSplitPlan.md`).
 
 ## Working agreements
 
@@ -18,5 +18,5 @@ holding the engine as an `engine/` submodule. The copies under `games/` go in st
 
 ## Verifying
 
-`builds\check-all.ps1` builds every library combination and game and runs the tests (`-Web` adds the web builds).
-`tools\checks` drives the real games (see its README); `-Game ..\SevenGods` checks a game in its own folder.
+`builds\check-all.ps1` builds every library combination, builds the games beside this folder against this engine and
+runs the tests (`-Web` adds the web builds). `tools\checks` drives the real games (see its README).

@@ -34,7 +34,7 @@ code is written from the public Bluetooth SIG specifications.
 | pugixml 1.14 | ZWO workout parsing (ride screens) | MIT | `FetchContent`, release tarball pinned by SHA-256 (`2f10e276…a015`). `pugixml.cpp` is compiled into the ride game's `RideCore`. |
 
 The ride screens' font (Barlow Semi Condensed, OFL), the test-only `fitdecode` and the decision to write our own FIT
-encoder are recorded in [RideScreens.md](../games/IndoorCyclingSoftware/docs/RideScreens.md#library-choices).
+encoder are recorded in `docs/RideScreens.md` in Indoor Cycling Software, under Library choices.
 
 ## Design consequences
 
