@@ -231,70 +231,15 @@ if(PLATFORM_DESKTOP OR PLATFORM_WEB)
     # above. Note this is a DIFFERENT stb/ dir than bimg's (bgfx.cmake vendors its own copy under bgfx/3rdparty).
     set(STB_TRUETYPE_INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/third_party/bgfx.cmake/bgfx/3rdparty/stb)
 
-    set(STRUKTUR_SHADER_DIR ${CMAKE_CURRENT_SOURCE_DIR}/assets/Shaders)
-    set(STRUKTUR_SHADER_OUTPUT_DIR ${CMAKE_CURRENT_SOURCE_DIR}/assets/Shaders/compiled)
-    set(STRUKTUR_SHADER_OUTPUTS "")
-
-    if(PLATFORM_DESKTOP)
-        # NAME must have no dots - shaderc's bin2c step derives a C array name from the shader filename. Default
-        # PROFILES (see bgfxToolUtils.cmake) includes 100_es (GLES2/WebGL-compatible) alongside the desktop
-        # profiles, for free, on every desktop build - that's what web's bgfx picks up at runtime below.
-        # Optional second argument: a varying.def.sc other than the shared one (for shaders that need different varyings).
-        function(struktur_compile_shader NAME)
-            set(VARYING_FILE ${STRUKTUR_SHADER_DIR}/varying.def.sc)
-            if(ARGC GREATER 1)
-                set(VARYING_FILE ${STRUKTUR_SHADER_DIR}/${ARGV1})
-            endif()
-            # DEBUG requests shaderc's --debug (embeds source-level debug info, e.g. into the compiled DXBC/DXIL
-            # blob on Windows) so a GPU capture tool (RenderDoc) can show real disassembly/source and let you
-            # step a shader's execution with named variables instead of raw, symbol-free bytecode. Passed
-            # unconditionally (not gated to Debug-vs-Release config) because this project uses a multi-config
-            # generator (Visual Studio) where CMAKE_BUILD_TYPE isn't meaningful at configure time - the config
-            # is only chosen at build time - and a real per-config gate would need a generator expression
-            # threaded through as a bare option, which is exactly the bug this DEBUG option itself was just
-            # fixed to avoid (see bgfxToolUtils.cmake's own comment on this same line shape). The extra debug
-            # info is small and harmless for a project this size; revisit if that ever stops being true.
-            bgfx_compile_shaders(
-                TYPE VERTEX
-                SHADERS ${STRUKTUR_SHADER_DIR}/vs_${NAME}.sc
-                VARYING_DEF ${VARYING_FILE}
-                INCLUDE_DIRS ${STRUKTUR_SHADER_DIR}
-                OUTPUT_DIR ${STRUKTUR_SHADER_OUTPUT_DIR}
-                OUT_FILES_VAR ${NAME}_VS_OUT
-                AS_HEADERS
-                DEBUG
-            )
-            bgfx_compile_shaders(
-                TYPE FRAGMENT
-                SHADERS ${STRUKTUR_SHADER_DIR}/fs_${NAME}.sc
-                VARYING_DEF ${VARYING_FILE}
-                INCLUDE_DIRS ${STRUKTUR_SHADER_DIR}
-                OUTPUT_DIR ${STRUKTUR_SHADER_OUTPUT_DIR}
-                OUT_FILES_VAR ${NAME}_FS_OUT
-                AS_HEADERS
-                DEBUG
-            )
-            set(STRUKTUR_SHADER_OUTPUTS ${STRUKTUR_SHADER_OUTPUTS} ${${NAME}_VS_OUT} ${${NAME}_FS_OUT} PARENT_SCOPE)
-        endfunction()
-        struktur_compile_shader(sprite)
-        struktur_compile_shader(spriteCoverage)
-        struktur_compile_shader(richTextAnim)
-        struktur_compile_shader(soulEffect)
-        # Procedural ride world (Engine/Renderer/WorldRenderer.cpp).
-        struktur_compile_shader(rideTerrain varying_rideWorld.def.sc)
-        struktur_compile_shader(rideRoad varying_rideWorld.def.sc)
-        struktur_compile_shader(rideProp varying_rideWorld.def.sc)
-        struktur_compile_shader(rideSky varying_rideWorld.def.sc)
-        struktur_compile_shader(ridePost varying_rideWorld.def.sc)
-    else()
-        # Web doesn't (can't) invoke shaderc itself - just reference whatever a prior desktop build already
-        # generated on disk as plain existing sources (see the PLATFORM_DESKTOP branch above).
-        file(GLOB_RECURSE STRUKTUR_SHADER_OUTPUTS ${STRUKTUR_SHADER_OUTPUT_DIR}/*.bin.h)
-        if(NOT STRUKTUR_SHADER_OUTPUTS)
-            message(WARNING "assets/Shaders/compiled is empty - build build-windows (Desktop) at least once "
-                             "before building web, so bgfx has compiled shaders to embed.")
-        endif()
-    endif()
+    include(cmake/StrukturShaders.cmake)
+    struktur_add_shaders(CoreShaders DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/shaders/core
+        VARYING ${CMAKE_CURRENT_SOURCE_DIR}/shaders/varying.def.sc SHADERS sprite)
+    struktur_add_shaders(UIShaders DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/shaders/ui
+        VARYING ${CMAKE_CURRENT_SOURCE_DIR}/shaders/varying.def.sc SHADERS spriteCoverage richTextAnim)
+    # Procedural ride world (Engine/Renderer/WorldRenderer.cpp).
+    struktur_add_shaders(RideShaders DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/assets/Shaders
+        VARYING ${CMAKE_CURRENT_SOURCE_DIR}/assets/Shaders/varying_rideWorld.def.sc
+        SHADERS rideTerrain rideRoad rideProp rideSky ridePost)
 endif()
 
 # EnTT
@@ -394,9 +339,7 @@ if(PLATFORM_DESKTOP OR PLATFORM_WEB)
               
         src/Engine/Renderer/UIRenderer.h            src/Engine/Renderer/UIRenderer.cpp
         src/Engine/Renderer/WorldRenderer.h     src/Engine/Renderer/WorldRenderer.cpp
-        ${STRUKTUR_SHADER_OUTPUTS}
     )
-    source_group("Shaders/Compiled" FILES ${STRUKTUR_SHADER_OUTPUTS})
 endif()
 
 if(DEBUG)
@@ -417,7 +360,6 @@ if(EDITOR)
         src/Debug/Editor/EditorLayoutManager.h      src/Debug/Editor/EditorLayoutManager.cpp
         src/Debug/Editor/EditorSettings.h           src/Debug/Editor/EditorSettings.cpp
         src/Debug/Editor/EditorTheme.h              src/Debug/Editor/EditorTheme.cpp
-        src/Debug/Editor/ProjectLauncher.h          src/Debug/Editor/ProjectLauncher.cpp
         src/Debug/Editor/SaveFolders.h              src/Debug/Editor/SaveFolders.cpp
 
         src/Debug/Editor/EditorSettings.h           src/Debug/Editor/EditorSettings.cpp
@@ -554,6 +496,9 @@ set(SOURCES
     src/Main.cpp
 
     src/Engine/Game.h                           src/Engine/Game.cpp
+    src/Engine/App/App.h                        src/Engine/App/App.cpp
+    src/Engine/App/EngineBindings.cpp
+    src/WrenBindings/RideBindings.h
     src/Engine/GameContext.h                    src/Engine/GameContext.cpp
     src/Engine/RideIntegration/RideContext.h    src/Engine/RideIntegration/RideContext.cpp
 
@@ -658,7 +603,7 @@ set(SOURCES
     
 
     src/Engine/Scripting/WrenScriptEngine.h     src/Engine/Scripting/WrenScriptEngine.cpp
-    src/Engine/Scripting/WrenBindingRegistry.h  src/Engine/Scripting/WrenBindingRegistry.cpp
+    src/Engine/Scripting/WrenBindingRegistry.h
     src/Engine/Scripting/WrenCodeGenerator.h    src/Engine/Scripting/WrenCodeGenerator.cpp
     src/Engine/Scripting/WrenStateManager.h     src/Engine/Scripting/WrenStateManager.cpp
     src/Engine/ECS/WrenScriptComponentRegistry.h src/Engine/ECS/WrenScriptComponentRegistry.cpp
@@ -693,7 +638,14 @@ add_executable(${PROJECT_NAME} ${SOURCES})
 
 target_include_directories(${PROJECT_NAME} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src)
 if(PLATFORM_DESKTOP OR PLATFORM_WEB)
-    target_include_directories(${PROJECT_NAME} PRIVATE ${STB_IMAGE_INCLUDE_DIR} ${STB_TRUETYPE_INCLUDE_DIR} ${STRUKTUR_SHADER_OUTPUT_DIR})
+    target_include_directories(${PROJECT_NAME} PRIVATE ${STB_IMAGE_INCLUDE_DIR} ${STB_TRUETYPE_INCLUDE_DIR})
+endif()
+
+foreach(shaders IN ITEMS CoreShaders UIShaders RideShaders)
+    struktur_use_shaders(${PROJECT_NAME} ${shaders})
+endforeach()
+if(EDITOR)
+    target_compile_definitions(${PROJECT_NAME} PRIVATE STRUKTUR_ASSETS_DIR="${CMAKE_CURRENT_SOURCE_DIR}/assets")
 endif()
 
 # Link Libraries

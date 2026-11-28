@@ -1,8 +1,8 @@
-#include "WrenBindingRegistry.h"
+#include "Engine/Scripting/WrenBindingRegistry.h"
 
 namespace Struktur::Wren
 {
-void RegisterAllBindings(BindingRegistry& registry)
+void RegisterEngineBindings(BindingRegistry& registry)
 {
 	// Core's
 	RegisterMathBindings(registry);
@@ -41,8 +41,5 @@ void RegisterAllBindings(BindingRegistry& registry)
 #ifdef STRUKTUR_FITNESS
 	RegisterFitnessBindings(registry);
 #endif
-	// The game's own
-	RegisterRideBindings(registry);
-	RegisterWorldBindings(registry);
 }
 }  // namespace Struktur::Wren

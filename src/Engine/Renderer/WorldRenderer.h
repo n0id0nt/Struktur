@@ -21,14 +21,16 @@ class GameContext;
 
 namespace Renderer
 {
+class GraphicsDevice;
+
 // Draws a World::World with bgfx, behind the ride HUD:
 //
-//   RideSkyViewId     low-res framebuffer, orthographic: sky gradient, stars, mountain bands, sun/moon, clouds
-//   RideSceneViewId   same framebuffer, perspective: terrain, water, road, instanced props, actors, banners, weather
-//   RideOverlayViewId same framebuffer, orthographic: the rider sprite and its shadow (pixel-matched to the scene)
-//   RidePostViewId    the world target at native size: nearest/linear upscale, optional dither + CRT scanlines
+//   sky view          low-res framebuffer, orthographic: sky gradient, stars, mountain bands, sun/moon, clouds
+//   scene view        same framebuffer, perspective: terrain, water, road, instanced props, actors, banners, weather
+//   overlay view      same framebuffer, orthographic: the rider sprite and its shadow (pixel-matched to the scene)
+//   post view         the world target at native size: nearest/linear upscale, optional dither + CRT scanlines
 //
-// The HUD (UIViewId) runs after these (GraphicsDevice's view order) at native resolution. Chunk meshes arrive from
+// The HUD runs after these (the UI view is added after them) at native resolution. Chunk meshes arrive from
 // the world's ChunkStreamer and become static vertex/index/instance buffers; released chunks are destroyed. The
 // road's elevation goes up every frame as a 1-D float texture the vertex shaders read.
 class WorldRenderer
@@ -40,6 +42,9 @@ public:
 	WorldRenderer(const WorldRenderer&)            = delete;
 	WorldRenderer& operator=(const WorldRenderer&) = delete;
 
+	// Registers the ride's shaders and adds the views it draws into (above), in that order. Call once, after the
+	// graphics device is initialised and before any view that draws over the world.
+	void AddViews(GraphicsDevice& device);
 	// Creates GPU resources and loads every manifest role (real file or placeholder). Needs bgfx initialised.
 	void Initialise(GameContext& context, const World::AssetManifest& manifest,
 	                const World::SpriteDescriptor& descriptor);
@@ -102,6 +107,11 @@ private:
 	void SubmitBillboard(const World::World& world, const std::string& role, double distance, double lateral,
 	                     double heightMeters, double angle, bool aligned, int column, int row, uint32_t tint,
 	                     double towardsCamera, double baseHeight = 0.0);
+
+	bgfx::ViewId m_skyViewId     = 0;
+	bgfx::ViewId m_sceneViewId   = 0;
+	bgfx::ViewId m_overlayViewId = 0;
+	bgfx::ViewId m_postViewId    = 0;
 
 	bool m_initialised = false;
 	World::SpriteDescriptor m_descriptor;

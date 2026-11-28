@@ -24,41 +24,11 @@ void Struktur::Renderer::GraphicsDevice::Initialise(void* nativeWindowHandle, in
 	bool ok = bgfx::init(init);
 	ASSERT_MSG(ok, "bgfx::init failed");
 
+	RegisterEmbeddedShaders(Shaders::CoreShaders());
+
 	bgfx::setViewClear(WorldViewId, BGFX_CLEAR_COLOR | BGFX_CLEAR_DEPTH, 0x000000ff, 1.0f, 0);
 	bgfx::setViewRect(WorldViewId, 0, 0, (uint16_t)width, (uint16_t)height);
-
-	// No clear - composites on top of whatever WorldViewId already drew into the same target. Default (state-
-	// sorted) ViewMode is fine here - debug shapes have no ordering requirement among themselves, only relative
-	// to WorldViewId (below) and UIViewId (above), both already guaranteed by view ID order.
-	bgfx::setViewClear(DebugViewId, BGFX_CLEAR_NONE);
-	bgfx::setViewRect(DebugViewId, 0, 0, (uint16_t)width, (uint16_t)height);
-
-	// No clear - composites on top of whatever WorldViewId/DebugViewId already drew into the same target.
-	// Sequential mode preserves the UI tree's z-index paint order instead of letting bgfx reorder by state.
-	bgfx::setViewClear(UIViewId, BGFX_CLEAR_NONE);
-	bgfx::setViewRect(UIViewId, 0, 0, (uint16_t)width, (uint16_t)height);
-	bgfx::setViewMode(UIViewId, bgfx::ViewMode::Sequential);
-
-	// No clear - composites on top of whatever UIViewId already drew. Default (state-sorted) ViewMode is fine,
-	// same reasoning as DebugViewId above - these highlights have no ordering requirement among themselves.
-	bgfx::setViewClear(DebugUIViewId, BGFX_CLEAR_NONE);
-	bgfx::setViewRect(DebugUIViewId, 0, 0, (uint16_t)width, (uint16_t)height);
-
-#ifdef EDITOR
-	// No clear - it composites on top of whatever WorldViewId/DebugViewId/UIViewId/DebugUIViewId already drew.
-	// Sequential mode preserves ImGui's own draw-command order instead of letting bgfx reorder by state (the
-	// default for opaque geometry).
-	bgfx::setViewClear(EditorViewId, BGFX_CLEAR_NONE);
-	bgfx::setViewRect(EditorViewId, 0, 0, (uint16_t)width, (uint16_t)height);
-	bgfx::setViewMode(EditorViewId, bgfx::ViewMode::Sequential);
-#endif
-
-	// Execution order (position -> view id): World, the ride world's sky/scene/overlay/post, then Debug, UI, DebugUI,
-	// Editor. Ids 5-9 keep their places after those.
-	static const bgfx::ViewId viewOrder[] = {WorldViewId,       RideSkyViewId, RideSceneViewId, RideOverlayViewId,
-	                                         RidePostViewId,    DebugViewId,   UIViewId,        DebugUIViewId,
-	                                         4, 5, 6, 7, 8, 9};
-	bgfx::setViewOrder(0, static_cast<uint16_t>(sizeof(viewOrder) / sizeof(viewOrder[0])), viewOrder);
+	m_views = {{WorldViewId, ViewTarget::Game}};
 
 	DEBUG_INFO("bgfx initialised, renderer: %s", bgfx::getRendererName(bgfx::getRendererType()));
 	m_initialised = true;
@@ -96,16 +66,53 @@ void Struktur::Renderer::GraphicsDevice::Resize(int width, int height)
 	}
 	else
 	{
-		// Not redirected (release/web builds, or mid-splash-bypass) - World/Debug/UI/DebugUI draw straight to the
-		// backbuffer, so their rect should track the real window size like EditorViewId's does below.
-		bgfx::setViewRect(WorldViewId, 0, 0, (uint16_t)width, (uint16_t)height);
-		bgfx::setViewRect(DebugViewId, 0, 0, (uint16_t)width, (uint16_t)height);
-		bgfx::setViewRect(UIViewId, 0, 0, (uint16_t)width, (uint16_t)height);
-		bgfx::setViewRect(DebugUIViewId, 0, 0, (uint16_t)width, (uint16_t)height);
+		// Not redirected (release/web builds, or mid-splash-bypass) - the game's views draw straight to the
+		// backbuffer, so their rect should track the real window size.
+		BindGameViews(BGFX_INVALID_HANDLE, (uint16_t)width, (uint16_t)height);
 	}
-#ifdef EDITOR
-	bgfx::setViewRect(EditorViewId, 0, 0, (uint16_t)width, (uint16_t)height);
-#endif
+	for (const View& view : m_views)
+	{
+		if (view.target == ViewTarget::Window)
+		{
+			bgfx::setViewRect(view.id, 0, 0, (uint16_t)width, (uint16_t)height);
+		}
+	}
+}
+
+bgfx::ViewId Struktur::Renderer::GraphicsDevice::AddView(ViewTarget target, bool sequential)
+{
+	ASSERT_MSG(m_initialised, "AddView needs the graphics device to be initialised");
+	// bgfx runs views in ascending id order, so handing ids out in call order gives the draw order.
+	const bgfx::ViewId id = static_cast<bgfx::ViewId>(m_views.size());
+	m_views.push_back({id, target});
+
+	bgfx::setViewClear(id, BGFX_CLEAR_NONE);
+	if (sequential)
+	{
+		bgfx::setViewMode(id, bgfx::ViewMode::Sequential);
+	}
+	if (target == ViewTarget::Game && m_worldRenderTargetActive)
+	{
+		RestoreWorldRenderTarget();
+	}
+	else if (target != ViewTarget::Own)
+	{
+		bgfx::setViewRect(id, 0, 0, (uint16_t)m_width, (uint16_t)m_height);
+	}
+	return id;
+}
+
+void Struktur::Renderer::GraphicsDevice::BindGameViews(bgfx::FrameBufferHandle frameBuffer, uint16_t width,
+                                                       uint16_t height)
+{
+	for (const View& view : m_views)
+	{
+		if (view.target == ViewTarget::Game)
+		{
+			bgfx::setViewFrameBuffer(view.id, frameBuffer);
+			bgfx::setViewRect(view.id, 0, 0, width, height);
+		}
+	}
 }
 
 void Struktur::Renderer::GraphicsDevice::SetVSync(bool enabled)
@@ -141,16 +148,9 @@ void Struktur::Renderer::GraphicsDevice::SetWorldRenderTarget(bgfx::FrameBufferH
 void Struktur::Renderer::GraphicsDevice::ResetWorldRenderTarget()
 {
 	m_worldRenderTargetActive = false;
-	bgfx::setViewFrameBuffer(WorldViewId, BGFX_INVALID_HANDLE);
-	bgfx::setViewFrameBuffer(DebugViewId, BGFX_INVALID_HANDLE);
-	bgfx::setViewFrameBuffer(UIViewId, BGFX_INVALID_HANDLE);
-	bgfx::setViewFrameBuffer(DebugUIViewId, BGFX_INVALID_HANDLE);
-	// Drawing straight to the backbuffer now (e.g. SplashScreenLoop's bypass) - match its real size, not
+	// Drawing straight to the backbuffer now (e.g. the splash screen's bypass) - match its real size, not
 	// whatever the offscreen framebuffer's rect was.
-	bgfx::setViewRect(WorldViewId, 0, 0, (uint16_t)m_width, (uint16_t)m_height);
-	bgfx::setViewRect(DebugViewId, 0, 0, (uint16_t)m_width, (uint16_t)m_height);
-	bgfx::setViewRect(UIViewId, 0, 0, (uint16_t)m_width, (uint16_t)m_height);
-	bgfx::setViewRect(DebugUIViewId, 0, 0, (uint16_t)m_width, (uint16_t)m_height);
+	BindGameViews(BGFX_INVALID_HANDLE, (uint16_t)m_width, (uint16_t)m_height);
 }
 
 void Struktur::Renderer::GraphicsDevice::RestoreWorldRenderTarget()
@@ -158,14 +158,7 @@ void Struktur::Renderer::GraphicsDevice::RestoreWorldRenderTarget()
 	if (bgfx::isValid(m_worldFrameBuffer))
 	{
 		m_worldRenderTargetActive = true;
-		bgfx::setViewFrameBuffer(WorldViewId, m_worldFrameBuffer);
-		bgfx::setViewFrameBuffer(DebugViewId, m_worldFrameBuffer);
-		bgfx::setViewFrameBuffer(UIViewId, m_worldFrameBuffer);
-		bgfx::setViewFrameBuffer(DebugUIViewId, m_worldFrameBuffer);
-		bgfx::setViewRect(WorldViewId, 0, 0, m_worldFrameBufferWidth, m_worldFrameBufferHeight);
-		bgfx::setViewRect(DebugViewId, 0, 0, m_worldFrameBufferWidth, m_worldFrameBufferHeight);
-		bgfx::setViewRect(UIViewId, 0, 0, m_worldFrameBufferWidth, m_worldFrameBufferHeight);
-		bgfx::setViewRect(DebugUIViewId, 0, 0, m_worldFrameBufferWidth, m_worldFrameBufferHeight);
+		BindGameViews(m_worldFrameBuffer, m_worldFrameBufferWidth, m_worldFrameBufferHeight);
 	}
 }
 
@@ -185,10 +178,13 @@ bgfx::FrameBufferHandle Struktur::Renderer::GraphicsDevice::GetWorldTarget(uint1
 void Struktur::Renderer::GraphicsDevice::BeginFrame()
 {
 	// Ensures every view gets cleared/participates in the frame even when nothing is submitted to it.
-	bgfx::touch(WorldViewId);
-	bgfx::touch(DebugViewId);
-	bgfx::touch(UIViewId);
-	bgfx::touch(DebugUIViewId);
+	for (const View& view : m_views)
+	{
+		if (view.target == ViewTarget::Game)
+		{
+			bgfx::touch(view.id);
+		}
+	}
 }
 
 void Struktur::Renderer::GraphicsDevice::EndFrame()

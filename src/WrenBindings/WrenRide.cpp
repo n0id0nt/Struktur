@@ -16,6 +16,7 @@
 #include "Engine/Scripting/CallbackHelperFunctions.h"
 #include "Engine/Scripting/WrenBindingRegistry.h"
 #include "Engine/UI/UIGraph.h"
+#include "WrenBindings/RideBindings.h"
 #include "WrenBindings/WrenMath.h"
 #include "WrenBindings/WrenUI.h"
 #include "wren.hpp"

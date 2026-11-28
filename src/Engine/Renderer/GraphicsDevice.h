@@ -3,6 +3,7 @@
 #include <bgfx/bgfx.h>
 
 #include <cstdint>
+#include <vector>
 
 namespace Struktur
 {
@@ -13,40 +14,17 @@ namespace Renderer
 class GraphicsDevice
 {
 public:
-	// The world view all sprites/tiles render into.
+	// The game's base view: cleared every frame, and the first to draw. It and every ViewTarget::Game view draw into
+	// the game's render target (see SetWorldRenderTarget).
 	static constexpr bgfx::ViewId WorldViewId = 0;
-	// Physics shapes/gizmos/grid/level bounds (DebugSystem) - composited on top of WorldViewId's contents in the
-	// same target, using the same camera transform WorldRenderer::Flush sets for WorldViewId every frame (see
-	// DebugRenderer::SetupView). Must have a lower ViewId than UIViewId/EditorViewId for the same "shares a
-	// render target that EditorViewId later samples via ImGui::Image" reasoning documented on UIViewId below.
-	static constexpr bgfx::ViewId DebugViewId = 1;
-	// In-game UI (UIRenderSystem) - composited on top of WorldViewId/DebugViewId's contents in the same target.
-	// Shares WorldViewId's render target redirect (see SetWorldRenderTarget) so UI stays inside the game viewport
-	// panel rather than smearing across the real editor window. Must execute (and therefore have a lower ViewId,
-	// bgfx runs views in ascending order by default) BEFORE EditorViewId - the editor's Game Viewport panel
-	// displays this shared framebuffer via ImGui::Image from within EditorViewId, so if EditorViewId ran first it
-	// would sample the texture one step before UIViewId's draws land in it, and in-game UI would never appear.
-	static constexpr bgfx::ViewId UIViewId = 2;
-	// Screen-space debug overlays on top of UI (DebugRenderer::SetupUIView, not the world-space DebugViewId
-	// above) - e.g. Debug::HierarchyWindow highlighting a selected UIElement's on-screen bounds. Shares UIViewId's
-	// render target redirect for the same reason UIViewId shares WorldViewId's, and must have a higher ViewId
-	// than UIViewId so the highlight actually draws on top of the UI it's outlining instead of being drawn under
-	// it and immediately covered up.
-	static constexpr bgfx::ViewId DebugUIViewId = 3;
-#ifdef EDITOR
-	// Composited after WorldViewId/DebugViewId/UIViewId/DebugUIViewId, straight to the backbuffer - the editor's
-	// ImGui overlay (see ImGuiRenderer), including the Game Viewport's display of the shared framebuffer (see
-	// UIViewId above).
-	static constexpr bgfx::ViewId EditorViewId = 4;
-#endif
 
-	// Procedural ride world (WorldRenderer): sky and scene render into a low-resolution framebuffer, the rider
-	// sprite overlays it, then RidePostViewId upscales it into the world target. bgfx::setViewOrder (see Initialise)
-	// runs these after WorldViewId (which clears the target) and before DebugViewId/UIViewId, so the HUD draws on top.
-	static constexpr bgfx::ViewId RideSkyViewId     = 10;
-	static constexpr bgfx::ViewId RideSceneViewId   = 11;
-	static constexpr bgfx::ViewId RideOverlayViewId = 12;
-	static constexpr bgfx::ViewId RidePostViewId    = 13;
+	// Where a view added with AddView draws.
+	enum class ViewTarget
+	{
+		Game,    // the game's render target (redirected into the editor's Game Viewport), at its size
+		Window,  // straight to the window, at its size
+		Own      // the caller sets the framebuffer and rect itself
+	};
 
 	GraphicsDevice()  = default;
 	~GraphicsDevice() = default;
@@ -64,6 +42,11 @@ public:
 
 	void Resize(int width, int height);
 
+	// Adds a view that draws after every view added before it, without clearing. Sequential keeps the order of its
+	// draw calls instead of letting bgfx sort them. Call after Initialise, in the order the views should draw: the
+	// game's own scene views, then the editor's debug drawing, the UI, and the editor itself.
+	bgfx::ViewId AddView(ViewTarget target, bool sequential = false);
+
 	// Toggles BGFX_RESET_VSYNC and re-applies it immediately via bgfx::reset if already initialised (bgfx allows
 	// re-resetting outside of a resize) - see Core::EngineSettings for the persisted setting this backs.
 	void SetVSync(bool enabled);
@@ -72,12 +55,12 @@ public:
 		return (m_resetFlags & BGFX_RESET_VSYNC) != 0;
 	}
 
-	// Redirects WorldViewId into an offscreen framebuffer (the editor's game-viewport panel) instead of the
+	// Redirects the game's views into an offscreen framebuffer (the editor's game-viewport panel) instead of the
 	// real backbuffer - a one-time sticky redirect, not a per-frame push/pop like raylib's BeginTextureMode.
 	// width/height are the framebuffer's own (fixed, game-resolution) size, cached so Resize() can keep the
 	// view rect matching it instead of stretching it to the real window's size.
 	void SetWorldRenderTarget(bgfx::FrameBufferHandle frameBuffer, uint16_t width, uint16_t height);
-	// Points World/Debug/UI views at the real backbuffer. Does not forget the framebuffer passed to
+	// Points the game's views at the real backbuffer. Does not forget the framebuffer passed to
 	// SetWorldRenderTarget - see RestoreWorldRenderTarget, used by SplashScreenLoop to draw straight to the
 	// window (matching web's raw BeginDrawing/EndDrawing) before the editor's game-viewport panel exists to
 	// composite anything for it.
@@ -85,7 +68,7 @@ public:
 	// Re-applies the last framebuffer passed to SetWorldRenderTarget (no-op if none was ever set).
 	void RestoreWorldRenderTarget();
 
-	// Where the world/UI views currently render: the redirect framebuffer (editor game viewport) or the backbuffer
+	// Where the game's views currently render: the redirect framebuffer (editor game viewport) or the backbuffer
 	// (invalid handle), and its size.
 	bgfx::FrameBufferHandle GetWorldTarget(uint16_t& width, uint16_t& height) const;
 
@@ -99,6 +82,17 @@ public:
 	bgfx::ProgramHandle GetDefaultSpriteProgram() const;
 
 private:
+	struct View
+	{
+		bgfx::ViewId id;
+		ViewTarget target;
+	};
+
+	// Points the game's views at a framebuffer (or the backbuffer) and sizes them to it.
+	void BindGameViews(bgfx::FrameBufferHandle frameBuffer, uint16_t width, uint16_t height);
+
+	// The world view, then everything added, in draw order.
+	std::vector<View> m_views;
 	int m_width  = 0;
 	int m_height = 0;
 	// Passed to both bgfx::init (Initialise) and bgfx::reset (Resize/SetVSync) - stored so SetVSync can flip just
@@ -108,7 +102,7 @@ private:
 	bgfx::FrameBufferHandle m_worldFrameBuffer = BGFX_INVALID_HANDLE;
 	uint16_t m_worldFrameBufferWidth           = 0;
 	uint16_t m_worldFrameBufferHeight          = 0;
-	// Tracks whether World/Debug/UI are currently pointed at m_worldFrameBuffer (true) or the backbuffer
+	// Tracks whether the game's views are currently pointed at m_worldFrameBuffer (true) or the backbuffer
 	// (false - either no redirect was ever set, or ResetWorldRenderTarget bypassed it). Resize() needs this to
 	// know which one to reapply after bgfx::reset(), which unconditionally clears every view's frame buffer
 	// binding back to the backbuffer as a side effect (see bgfx's Context::reset).

@@ -191,6 +191,8 @@ struct AnimationUniformValues
 // each glyph or rect submitted as its own bgfx draw call; removed once every caller had a real batch/slot to
 // write into instead, see UIManager's own focus-indicator batch and Game.cpp's splash screen for the two
 // non-UIElement callers that needed one added).
+class GraphicsDevice;
+
 class UIRenderer
 {
 public:
@@ -202,13 +204,14 @@ public:
 
 	// Actually creates the white texture/sampler uniform - deferred from construction so GameContext can own
 	// this unconditionally (see GameContext's constructor) while still requiring bgfx to already exist by the
-	// time this runs (call right after GraphicsDevice::Initialise).
-	void Initialise();
+	// time this runs (call after GraphicsDevice::Initialise). Adds the UI's view, so call it once the views that
+	// draw under the UI have been added.
+	void Initialise(GraphicsDevice& device);
 	// Explicit rather than in the destructor - must run before GraphicsDevice::Shutdown() (see
 	// GameContext::Shutdown()), since bgfx::destroy() is invalid once bgfx itself has shut down.
 	void Shutdown();
 
-	// Sets GraphicsDevice::UIViewId's per-frame orthographic transform, sized to the game viewport (not the
+	// Sets the UI view's per-frame orthographic transform, sized to the game viewport (not the
 	// real window) - call once per frame before any batch write below (see UIRenderSystem::Update).
 	void SetupView(GameContext& context);
 
@@ -378,6 +381,7 @@ private:
 	void FreeQuadRange(UIBatch& batch, uint32_t firstQuad, uint32_t quadCount);
 	void ResizeQuadArrays(UIBatch& batch, uint32_t quadTotal);
 
+	bgfx::ViewId m_viewId                 = 0;
 	bgfx::TextureHandle m_whiteTexture    = BGFX_INVALID_HANDLE;
 	bgfx::UniformHandle m_texColorSampler = BGFX_INVALID_HANDLE;
 

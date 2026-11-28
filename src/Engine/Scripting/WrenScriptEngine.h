@@ -23,6 +23,11 @@ public:
 	{
 	}
 
+	// The function that registers every script binding of the game: set once, before Initialise.
+	void SetBindings(void (*registerBindings)(BindingRegistry& registry))
+	{
+		m_registerBindings = registerBindings;
+	}
 	void Initialise(GameContext& ctx);
 	void Shutdown();
 
@@ -40,6 +45,7 @@ public:
 
 private:
 	WrenVM* m_vm;
+	void (*m_registerBindings)(BindingRegistry& registry) = nullptr;
 	BindingRegistry m_registry;
 	// The binding modules' Wren source by module name, built from m_registry. Wren reads these strings directly.
 	std::unordered_map<std::string, std::string> m_moduleSources;

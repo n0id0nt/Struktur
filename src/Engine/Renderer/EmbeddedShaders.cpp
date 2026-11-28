@@ -1,145 +1,46 @@
 #include "EmbeddedShaders.h"
 
+#include <algorithm>
 #include <cstring>
 #include <string>
 #include <unordered_map>
+#include <vector>
 
 #include "Debug/Assertions.h"
 
-// embedded_shader.h auto-detects WGSL support from the platform alone (BX_PLATFORM_WINDOWS etc, regardless of
-// BGFX_CONFIG_RENDERER_WEBGPU), which would require _wgsl-suffixed symbols this project's shaders were never
-// compiled for (CMakeLists.txt's struktur_compile_shader doesn't request the wgsl profile) - disabled explicitly.
+// embedded_shader.h auto-detects WGSL support from the platform alone, which would require _wgsl-suffixed symbols this
+// project's shaders are never compiled for (struktur_add_shaders doesn't request the wgsl profile) - disabled.
 #define BGFX_PLATFORM_SUPPORTS_WGSL 0
 #include <bgfx/embedded_shader.h>
-#include <essl/fs_richTextAnim.sc.bin.h>
-#include <essl/fs_soulEffect.sc.bin.h>
-#include <essl/fs_sprite.sc.bin.h>
-#include <essl/fs_spriteCoverage.sc.bin.h>
-#include <essl/vs_richTextAnim.sc.bin.h>
-#include <essl/vs_soulEffect.sc.bin.h>
-#include <essl/vs_sprite.sc.bin.h>
-#include <essl/vs_spriteCoverage.sc.bin.h>
-#include <essl/vs_rideTerrain.sc.bin.h>
-#include <essl/fs_rideTerrain.sc.bin.h>
-#include <essl/vs_rideRoad.sc.bin.h>
-#include <essl/fs_rideRoad.sc.bin.h>
-#include <essl/vs_rideProp.sc.bin.h>
-#include <essl/fs_rideProp.sc.bin.h>
-#include <essl/vs_rideSky.sc.bin.h>
-#include <essl/fs_rideSky.sc.bin.h>
-#include <essl/vs_ridePost.sc.bin.h>
-#include <essl/fs_ridePost.sc.bin.h>
-#include <glsl/fs_richTextAnim.sc.bin.h>
-#include <glsl/fs_soulEffect.sc.bin.h>
-#include <glsl/fs_sprite.sc.bin.h>
-#include <glsl/fs_spriteCoverage.sc.bin.h>
-#include <glsl/vs_richTextAnim.sc.bin.h>
-#include <glsl/vs_soulEffect.sc.bin.h>
-#include <glsl/vs_sprite.sc.bin.h>
-#include <glsl/vs_spriteCoverage.sc.bin.h>
-#include <glsl/vs_rideTerrain.sc.bin.h>
-#include <glsl/fs_rideTerrain.sc.bin.h>
-#include <glsl/vs_rideRoad.sc.bin.h>
-#include <glsl/fs_rideRoad.sc.bin.h>
-#include <glsl/vs_rideProp.sc.bin.h>
-#include <glsl/fs_rideProp.sc.bin.h>
-#include <glsl/vs_rideSky.sc.bin.h>
-#include <glsl/fs_rideSky.sc.bin.h>
-#include <glsl/vs_ridePost.sc.bin.h>
-#include <glsl/fs_ridePost.sc.bin.h>
-#include <spirv/fs_richTextAnim.sc.bin.h>
-#include <spirv/fs_soulEffect.sc.bin.h>
-#include <spirv/fs_sprite.sc.bin.h>
-#include <spirv/fs_spriteCoverage.sc.bin.h>
-#include <spirv/vs_richTextAnim.sc.bin.h>
-#include <spirv/vs_soulEffect.sc.bin.h>
-#include <spirv/vs_sprite.sc.bin.h>
-#include <spirv/vs_spriteCoverage.sc.bin.h>
-#include <spirv/vs_rideTerrain.sc.bin.h>
-#include <spirv/fs_rideTerrain.sc.bin.h>
-#include <spirv/vs_rideRoad.sc.bin.h>
-#include <spirv/fs_rideRoad.sc.bin.h>
-#include <spirv/vs_rideProp.sc.bin.h>
-#include <spirv/fs_rideProp.sc.bin.h>
-#include <spirv/vs_rideSky.sc.bin.h>
-#include <spirv/fs_rideSky.sc.bin.h>
-#include <spirv/vs_ridePost.sc.bin.h>
-#include <spirv/fs_ridePost.sc.bin.h>
-#if defined(_WIN32)
-	#include <dxbc/vs_sprite.sc.bin.h>
-	#include <dxbc/fs_sprite.sc.bin.h>
-	#include <dxbc/vs_spriteCoverage.sc.bin.h>
-	#include <dxbc/fs_spriteCoverage.sc.bin.h>
-	#include <dxbc/vs_richTextAnim.sc.bin.h>
-	#include <dxbc/fs_richTextAnim.sc.bin.h>
-	#include <dxbc/vs_soulEffect.sc.bin.h>
-	#include <dxbc/fs_soulEffect.sc.bin.h>
-	#include <dxbc/vs_rideTerrain.sc.bin.h>
-	#include <dxbc/fs_rideTerrain.sc.bin.h>
-	#include <dxbc/vs_rideRoad.sc.bin.h>
-	#include <dxbc/fs_rideRoad.sc.bin.h>
-	#include <dxbc/vs_rideProp.sc.bin.h>
-	#include <dxbc/fs_rideProp.sc.bin.h>
-	#include <dxbc/vs_rideSky.sc.bin.h>
-	#include <dxbc/fs_rideSky.sc.bin.h>
-	#include <dxbc/vs_ridePost.sc.bin.h>
-	#include <dxbc/fs_ridePost.sc.bin.h>
-	#include <dxil/vs_sprite.sc.bin.h>
-	#include <dxil/fs_sprite.sc.bin.h>
-	#include <dxil/vs_spriteCoverage.sc.bin.h>
-	#include <dxil/fs_spriteCoverage.sc.bin.h>
-	#include <dxil/vs_richTextAnim.sc.bin.h>
-	#include <dxil/fs_richTextAnim.sc.bin.h>
-	#include <dxil/vs_soulEffect.sc.bin.h>
-	#include <dxil/fs_soulEffect.sc.bin.h>
-	#include <dxil/vs_rideTerrain.sc.bin.h>
-	#include <dxil/fs_rideTerrain.sc.bin.h>
-	#include <dxil/vs_rideRoad.sc.bin.h>
-	#include <dxil/fs_rideRoad.sc.bin.h>
-	#include <dxil/vs_rideProp.sc.bin.h>
-	#include <dxil/fs_rideProp.sc.bin.h>
-	#include <dxil/vs_rideSky.sc.bin.h>
-	#include <dxil/fs_rideSky.sc.bin.h>
-	#include <dxil/vs_ridePost.sc.bin.h>
-	#include <dxil/fs_ridePost.sc.bin.h>
-#endif
-#if defined(__APPLE__)
-	#include <metal/vs_sprite.sc.bin.h>
-	#include <metal/fs_sprite.sc.bin.h>
-	#include <metal/vs_spriteCoverage.sc.bin.h>
-	#include <metal/fs_spriteCoverage.sc.bin.h>
-	#include <metal/vs_richTextAnim.sc.bin.h>
-	#include <metal/fs_richTextAnim.sc.bin.h>
-	#include <metal/vs_soulEffect.sc.bin.h>
-	#include <metal/fs_soulEffect.sc.bin.h>
-	#include <metal/vs_rideTerrain.sc.bin.h>
-	#include <metal/fs_rideTerrain.sc.bin.h>
-	#include <metal/vs_rideRoad.sc.bin.h>
-	#include <metal/fs_rideRoad.sc.bin.h>
-	#include <metal/vs_rideProp.sc.bin.h>
-	#include <metal/fs_rideProp.sc.bin.h>
-	#include <metal/vs_rideSky.sc.bin.h>
-	#include <metal/fs_rideSky.sc.bin.h>
-	#include <metal/vs_ridePost.sc.bin.h>
-	#include <metal/fs_ridePost.sc.bin.h>
-#endif
 
-static const bgfx::EmbeddedShader kEmbeddedShaders[] = {
-    BGFX_EMBEDDED_SHADER(vs_sprite),         BGFX_EMBEDDED_SHADER(fs_sprite),
-    BGFX_EMBEDDED_SHADER(vs_spriteCoverage), BGFX_EMBEDDED_SHADER(fs_spriteCoverage),
-    BGFX_EMBEDDED_SHADER(vs_richTextAnim),   BGFX_EMBEDDED_SHADER(fs_richTextAnim),
-    BGFX_EMBEDDED_SHADER(vs_soulEffect),     BGFX_EMBEDDED_SHADER(fs_soulEffect),
-    BGFX_EMBEDDED_SHADER(vs_rideTerrain), BGFX_EMBEDDED_SHADER(fs_rideTerrain),
-    BGFX_EMBEDDED_SHADER(vs_rideRoad), BGFX_EMBEDDED_SHADER(fs_rideRoad),
-    BGFX_EMBEDDED_SHADER(vs_rideProp), BGFX_EMBEDDED_SHADER(fs_rideProp),
-    BGFX_EMBEDDED_SHADER(vs_rideSky), BGFX_EMBEDDED_SHADER(fs_rideSky),
-    BGFX_EMBEDDED_SHADER(vs_ridePost), BGFX_EMBEDDED_SHADER(fs_ridePost),
-    BGFX_EMBEDDED_SHADER_END(),
-};
-
+static std::vector<const bgfx::EmbeddedShader*> g_shaderTables;
 static std::unordered_map<std::string, bgfx::ShaderHandle> g_shaderCache;
 static std::unordered_map<std::string, bgfx::ProgramHandle> g_programCache;
 static std::unordered_map<std::string, bgfx::UniformHandle> g_uniformCache;
+
+// The registered table holding a shader of that name, or null.
+static const bgfx::EmbeddedShader* FindTable(const char* name)
+{
+	for (const bgfx::EmbeddedShader* table : g_shaderTables)
+	{
+		for (const bgfx::EmbeddedShader* shader = table; shader->name != nullptr; ++shader)
+		{
+			if (std::strcmp(shader->name, name) == 0)
+			{
+				return table;
+			}
+		}
+	}
+	return nullptr;
+}
+
+void Struktur::Renderer::RegisterEmbeddedShaders(const bgfx::EmbeddedShader* shaders)
+{
+	if (std::find(g_shaderTables.begin(), g_shaderTables.end(), shaders) == g_shaderTables.end())
+	{
+		g_shaderTables.push_back(shaders);
+	}
+}
 
 bgfx::ShaderHandle Struktur::Renderer::GetEmbeddedShader(const char* name)
 {
@@ -149,7 +50,13 @@ bgfx::ShaderHandle Struktur::Renderer::GetEmbeddedShader(const char* name)
 		return it->second;
 	}
 
-	bgfx::ShaderHandle handle = bgfx::createEmbeddedShader(kEmbeddedShaders, bgfx::getRendererType(), name);
+	const bgfx::EmbeddedShader* table = FindTable(name);
+	ASSERT_MSG(table != nullptr, "No registered shader table has '%s'", name);
+	bgfx::ShaderHandle handle = BGFX_INVALID_HANDLE;
+	if (table != nullptr)
+	{
+		handle = bgfx::createEmbeddedShader(table, bgfx::getRendererType(), name);
+	}
 	ASSERT_MSG(bgfx::isValid(handle), "Failed to create embedded shader '%s'", name);
 	g_shaderCache[name] = handle;
 	return handle;

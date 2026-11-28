@@ -12,8 +12,12 @@
 #include "Engine/Renderer/QuadVertex.h"
 #include "Engine/UI/UIElement.h"
 
-void Struktur::Renderer::UIRenderer::Initialise()
+void Struktur::Renderer::UIRenderer::Initialise(GraphicsDevice& device)
 {
+	RegisterEmbeddedShaders(Shaders::UIShaders());
+	// Sequential keeps the UI tree's z-index paint order instead of letting bgfx reorder by state.
+	m_viewId = device.AddView(GraphicsDevice::ViewTarget::Game, true);
+
 	m_texColorSampler = bgfx::createUniform("s_texColor", bgfx::UniformType::Sampler);
 
 	uint8_t whitePixel[4] = {255, 255, 255, 255};
@@ -43,7 +47,7 @@ void Struktur::Renderer::UIRenderer::SetupView(GameContext& context)
 	// WorldRenderer's camera projection sizing convention so UI lines up with the same target when
 	// GraphicsDevice::SetWorldRenderTarget redirects both views into the editor's Game Viewport framebuffer.
 	glm::mat4 proj = glm::ortho(0.0f, (float)gameData.gameWidth, (float)gameData.gameHeight, 0.0f, -1.0f, 1.0f);
-	bgfx::setViewTransform(GraphicsDevice::UIViewId, glm::value_ptr(identity), glm::value_ptr(proj));
+	bgfx::setViewTransform(m_viewId, glm::value_ptr(identity), glm::value_ptr(proj));
 }
 
 // Fills one quad's 4 vertices (position/UV/packed color), CCW starting top-left - shared by every batch-write
@@ -487,7 +491,7 @@ void Struktur::Renderer::UIRenderer::SubmitBatch(UIBatch& batch, uint64_t drawSt
 			                 (uint16_t)batch.clipRect.height);
 		}
 		bgfx::setState(drawState);
-		bgfx::submit(GraphicsDevice::UIViewId, GetEmbeddedProgram(run.isCoverage ? "spriteCoverage" : "sprite"));
+		bgfx::submit(m_viewId, GetEmbeddedProgram(run.isCoverage ? "spriteCoverage" : "sprite"));
 
 		runStart = run.endQuad;
 	}
@@ -562,7 +566,7 @@ void Struktur::Renderer::UIRenderer::SubmitAnimatedBatch(GameContext& context, A
 	bgfx::setIndexBuffer(batch.ib, 0, quadCount * 6);
 	bgfx::setTexture(0, m_texColorSampler, batch.texture);
 	bgfx::setState(drawState);
-	bgfx::submit(GraphicsDevice::UIViewId, GetEmbeddedProgram("richTextAnim"));
+	bgfx::submit(m_viewId, GetEmbeddedProgram("richTextAnim"));
 }
 
 Struktur::Renderer::AnimatedBatchHandle Struktur::Renderer::UIRenderer::CreateOrUpdateAnimatedBatch(

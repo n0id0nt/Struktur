@@ -14,6 +14,7 @@
 #include "Engine/Scripting/WrenBindingRegistry.h"
 #include "Engine/World/World.h"
 #include "Engine/World/WorldLifecycle.h"
+#include "WrenBindings/RideBindings.h"
 #include "wren.hpp"
 
 namespace World = Struktur::World;

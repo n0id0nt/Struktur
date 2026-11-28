@@ -214,12 +214,10 @@ void RegisterEventsBindings(BindingRegistry& registry);
 void RegisterAudioBindings(BindingRegistry& registry);
 void RegisterLocalizationBindings(BindingRegistry& registry);
 void RegisterFitnessBindings(BindingRegistry& registry);
-void RegisterRideBindings(BindingRegistry& registry);
 void RegisterJobsBindings(BindingRegistry& registry);
-void RegisterWorldBindings(BindingRegistry& registry);
 
-// Call this once at startup
-void RegisterAllBindings(BindingRegistry& registry);
+// Every binding of the engine libraries in the build. A game calls it from its own registration function.
+void RegisterEngineBindings(BindingRegistry& registry);
 
 }  // namespace Struktur::Wren
 

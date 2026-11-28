@@ -1,5 +1,6 @@
 #pragma once
 
+#include <bgfx/bgfx.h>
 #include <imgui.h>
 
 #include <memory>
@@ -17,6 +18,20 @@ class GameContext;
 namespace Debug
 {
 class GameViewportWindow;
+
+// The views debug drawing goes to: over the game's scene, and over the UI.
+struct DebugViews
+{
+	bgfx::ViewId world  = 0;
+	bgfx::ViewId screen = 0;
+};
+
+// What the toolbar's Play, Stop and Refresh do, set by the game.
+struct PlayControls
+{
+	void (*start)(GameContext& context) = nullptr;
+	void (*stop)(GameContext& context)  = nullptr;
+};
 
 class Editor
 {
@@ -60,6 +75,24 @@ public:
 		return m_gameViewport;
 	}
 
+	void SetPlayControls(const PlayControls& controls)
+	{
+		m_playControls = controls;
+	}
+	const PlayControls& GetPlayControls() const
+	{
+		return m_playControls;
+	}
+
+	void SetDebugViews(const DebugViews& views)
+	{
+		m_debugViews = views;
+	}
+	const DebugViews& GetDebugViews() const
+	{
+		return m_debugViews;
+	}
+
 	// Get editor settings
 	EditorSettings& GetSettings()
 	{
@@ -94,6 +127,8 @@ private:
 	// Editor settings
 	EditorSettings m_settings;
 
+	DebugViews m_debugViews;
+	PlayControls m_playControls;
 
 	// Editor state
 	bool m_showDemoWindow;

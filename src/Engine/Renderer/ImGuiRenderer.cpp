@@ -11,8 +11,11 @@
 #include "Engine/Renderer/GraphicsDevice.h"
 #include "Engine/Renderer/QuadVertex.h"
 
-void Struktur::Renderer::ImGuiRenderer::Initialise()
+void Struktur::Renderer::ImGuiRenderer::Initialise(GraphicsDevice& device)
 {
+	// Straight to the window, in ImGui's own draw order.
+	m_viewId = device.AddView(GraphicsDevice::ViewTarget::Window, true);
+
 	m_texColorSampler = bgfx::createUniform("s_texColor", bgfx::UniformType::Sampler);
 
 	// Old single-atlas texture model (this vendored ImGui predates the dynamic ImTextureData API) - build one
@@ -61,7 +64,7 @@ void Struktur::Renderer::ImGuiRenderer::Render(ImDrawData* drawData)
 	glm::mat4 identity(1.0f);
 	glm::mat4 proj = glm::ortho(drawData->DisplayPos.x, drawData->DisplayPos.x + drawData->DisplaySize.x,
 	                            drawData->DisplayPos.y + drawData->DisplaySize.y, drawData->DisplayPos.y, -1.0f, 1.0f);
-	bgfx::setViewTransform(GraphicsDevice::EditorViewId, glm::value_ptr(identity), glm::value_ptr(proj));
+	bgfx::setViewTransform(m_viewId, glm::value_ptr(identity), glm::value_ptr(proj));
 
 	static const bgfx::VertexLayout layout = BuildQuadVertexLayout();
 	bgfx::ProgramHandle program            = GetEmbeddedProgram("sprite");
@@ -123,7 +126,7 @@ void Struktur::Renderer::ImGuiRenderer::Render(ImDrawData* drawData)
 			bgfx::setIndexBuffer(&tib, cmd.IdxOffset, cmd.ElemCount);
 			bgfx::setState(BGFX_STATE_WRITE_RGB | BGFX_STATE_WRITE_A |
 			               BGFX_STATE_BLEND_FUNC(BGFX_STATE_BLEND_SRC_ALPHA, BGFX_STATE_BLEND_INV_SRC_ALPHA));
-			bgfx::submit(GraphicsDevice::EditorViewId, program);
+			bgfx::submit(m_viewId, program);
 		}
 	}
 }

@@ -4,7 +4,6 @@
 #endif
 
 #include "Engine/Core/GameData.h"
-#include "Engine/Game.h"
 #include "Engine/GameContext.h"
 
 namespace Struktur::Debug
@@ -32,11 +31,11 @@ void ToolbarWindow::Render(GameContext& context)
 		debugSettings.pausedGame  = false;
 		if (play)
 		{
-			StartDebugGame(context);
+			context.GetEditor().GetPlayControls().start(context);
 		}
 		else
 		{
-			StopDebugGame(context);
+			context.GetEditor().GetPlayControls().stop(context);
 		}
 	}
 	ImGui::SameLine();
@@ -50,7 +49,7 @@ void ToolbarWindow::Render(GameContext& context)
 	if (ImGui::Button("Refresh"))
 	{
 		debugSettings.playingGame = true;
-		StartDebugGame(context);
+		context.GetEditor().GetPlayControls().start(context);
 	}
 	ImGui::EndDisabled();
 

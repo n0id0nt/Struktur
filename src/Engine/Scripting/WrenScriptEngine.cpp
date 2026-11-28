@@ -11,8 +11,9 @@
 void Struktur::Wren::WrenScriptEngine::Initialise(GameContext& context)
 {
 	// Register all bindings explicitly - from empty, since a restart initialises this engine again.
+	ASSERT_MSG(m_registerBindings != nullptr, "WrenScriptEngine::SetBindings must be called before Initialise");
 	m_registry = BindingRegistry();
-	RegisterAllBindings(m_registry);
+	m_registerBindings(m_registry);
 	m_moduleSources = CodeGenerator::BuildModuleSources(m_registry);
 
 	WrenConfiguration config;

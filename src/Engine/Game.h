@@ -2,19 +2,6 @@
 
 namespace Struktur
 {
-class GameContext;
-
+// Runs the game until it is closed.
 void Game();
-void UpdateLoop(void* userData);
-// Returns false if startup was abandoned before a project was mounted (editor launcher window closed)
-bool InitialiseGame(GameContext& context);
-void ExitGame(GameContext& context);
-void GameLoop(GameContext& context);
-void SplashScreenLoop(GameContext& context);
-#ifdef DEBUG
-void StartDebugGame(GameContext& context);
-void StopDebugGame(GameContext& context);
-void ClearGameSystems(GameContext& context);
-void StartGameSystems(GameContext& context);
-#endif
-};  // namespace Struktur
+}  // namespace Struktur

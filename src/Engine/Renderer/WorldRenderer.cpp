@@ -19,6 +19,12 @@
 #include "Engine/World/Noise.h"
 #include "Engine/World/Placeholder.h"
 
+// The ride's compiled shader table (struktur_add_shaders).
+namespace Struktur::Shaders
+{
+const bgfx::EmbeddedShader* RideShaders();
+}
+
 namespace Struktur::Renderer
 {
 static constexpr float PI                   = 3.14159265358979323846f;
@@ -40,6 +46,16 @@ struct ScreenVertex
 	float x, y, z;
 	float u, v, w;
 };
+
+void WorldRenderer::AddViews(GraphicsDevice& device)
+{
+	RegisterEmbeddedShaders(Shaders::RideShaders());
+	// Each sets its own framebuffer and rect every frame.
+	m_skyViewId     = device.AddView(GraphicsDevice::ViewTarget::Own);
+	m_sceneViewId   = device.AddView(GraphicsDevice::ViewTarget::Own);
+	m_overlayViewId = device.AddView(GraphicsDevice::ViewTarget::Own);
+	m_postViewId    = device.AddView(GraphicsDevice::ViewTarget::Own);
+}
 
 WorldRenderer::~WorldRenderer()
 {
@@ -512,7 +528,7 @@ static bool ProjectToScreen(const glm::mat4& rotationViewProjection, const glm::
 
 void WorldRenderer::DrawSky(const World::World& world)
 {
-	const bgfx::ViewId view          = GraphicsDevice::RideSkyViewId;
+	const bgfx::ViewId view          = m_skyViewId;
 	const World::BiomeLook& look = world.GetLook();
 	const float width                = m_frameWidth;
 	const float height               = m_frameHeight;
@@ -632,7 +648,7 @@ void WorldRenderer::DrawProps(const World::World& world, const ChunkGpu& chunk)
 		bgfx::setTexture(0, Uniform("s_height", bgfx::UniformType::Sampler), m_heightTexture);
 		bgfx::setTexture(1, Uniform("s_texColor", bgfx::UniformType::Sampler), texture.handle, texture.samplerFlags);
 		bgfx::setState(OPAQUE_STATE);
-		bgfx::submit(GraphicsDevice::RideSceneViewId, GetEmbeddedProgram("rideProp"));
+		bgfx::submit(m_sceneViewId, GetEmbeddedProgram("rideProp"));
 		++m_propDraws;
 		m_propInstances += count;
 	}
@@ -683,7 +699,7 @@ void WorldRenderer::SubmitBillboard(const World::World& world, const std::string
 	bgfx::setTexture(0, Uniform("s_height", bgfx::UniformType::Sampler), m_heightTexture);
 	bgfx::setTexture(1, Uniform("s_texColor", bgfx::UniformType::Sampler), texture.handle, texture.samplerFlags);
 	bgfx::setState(OPAQUE_STATE);
-	bgfx::submit(GraphicsDevice::RideSceneViewId, GetEmbeddedProgram("rideProp"));
+	bgfx::submit(m_sceneViewId, GetEmbeddedProgram("rideProp"));
 }
 
 // Which frame (column, row) of a crank layer to show for a pose.
@@ -827,12 +843,12 @@ void WorldRenderer::DrawWeather(const World::World& world)
 	bgfx::setTexture(0, Uniform("s_height", bgfx::UniformType::Sampler), m_heightTexture);
 	bgfx::setTexture(1, Uniform("s_texColor", bgfx::UniformType::Sampler), texture.handle, texture.samplerFlags);
 	bgfx::setState(OPAQUE_STATE);
-	bgfx::submit(GraphicsDevice::RideSceneViewId, GetEmbeddedProgram("rideProp"));
+	bgfx::submit(m_sceneViewId, GetEmbeddedProgram("rideProp"));
 }
 
 void WorldRenderer::DrawScene(World::World& world, entt::registry& registry)
 {
-	const bgfx::ViewId view = GraphicsDevice::RideSceneViewId;
+	const bgfx::ViewId view = m_sceneViewId;
 	bgfx::setViewName(view, "Ride scene");
 	bgfx::setViewFrameBuffer(view, m_frameBuffer);
 	bgfx::setViewRect(view, 0, 0, m_frameWidth, m_frameHeight);
@@ -895,7 +911,7 @@ void WorldRenderer::DrawScene(World::World& world, entt::registry& registry)
 
 void WorldRenderer::DrawRider(const World::World& world, entt::registry& registry)
 {
-	const bgfx::ViewId view = GraphicsDevice::RideOverlayViewId;
+	const bgfx::ViewId view = m_overlayViewId;
 	const float width       = m_frameWidth;
 	const float height      = m_frameHeight;
 	const glm::mat4 ortho   = glm::ortho(0.0f, width, height, 0.0f, -1.0f, 1.0f);
@@ -1037,7 +1053,7 @@ void WorldRenderer::DrawRider(const World::World& world, entt::registry& registr
 void WorldRenderer::DrawPost(const World::World& world, bgfx::FrameBufferHandle target, uint16_t width,
                                  uint16_t height)
 {
-	const bgfx::ViewId view = GraphicsDevice::RidePostViewId;
+	const bgfx::ViewId view = m_postViewId;
 	const glm::mat4 ortho   = glm::ortho(0.0f, static_cast<float>(width), static_cast<float>(height), 0.0f, -1.0f, 1.0f);
 	const glm::mat4 identity(1.0f);
 	bgfx::setViewName(view, "Ride post");

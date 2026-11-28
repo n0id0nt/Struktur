@@ -4,16 +4,14 @@
 #include <glm/gtc/type_ptr.hpp>
 
 #include "Debug/Assertions.h"
+#include "Debug/Editor/Editor.h"
 #include "Engine/Core/GameData.h"
 #include "Engine/GameContext.h"
 #include "Engine/Renderer/EmbeddedShaders.h"
-#include "Engine/Renderer/GraphicsDevice.h"
 #include "Engine/Renderer/QuadVertex.h"
 
 Struktur::Renderer::DebugRenderer::DebugRenderer()
 {
-	m_currentViewId = GraphicsDevice::DebugViewId;
-
 	m_texColorSampler = bgfx::createUniform("s_texColor", bgfx::UniformType::Sampler);
 
 	uint8_t whitePixel[4] = {255, 255, 255, 255};
@@ -39,8 +37,8 @@ void Struktur::Renderer::DebugRenderer::SetupView(GameContext& context)
 	Core::GameData& gameData = context.GetGameData();
 	glm::mat4 view(1.0f);
 	glm::mat4 proj = glm::ortho(0.0f, (float)gameData.gameWidth, (float)gameData.gameHeight, 0.0f, -1.0f, 1.0f);
-	bgfx::setViewTransform(GraphicsDevice::DebugViewId, glm::value_ptr(view), glm::value_ptr(proj));
-	m_currentViewId = GraphicsDevice::DebugViewId;
+	m_currentViewId = context.GetEditor().GetDebugViews().world;
+	bgfx::setViewTransform(m_currentViewId, glm::value_ptr(view), glm::value_ptr(proj));
 }
 
 void Struktur::Renderer::DebugRenderer::SetupUIView(GameContext& context)
@@ -51,8 +49,8 @@ void Struktur::Renderer::DebugRenderer::SetupUIView(GameContext& context)
 	// resolution, so a UIElement's own m_bounds (already in that same space) can be passed straight into
 	// DrawRectOutline/etc. below with no extra transform.
 	glm::mat4 proj = glm::ortho(0.0f, (float)gameData.gameWidth, (float)gameData.gameHeight, 0.0f, -1.0f, 1.0f);
-	bgfx::setViewTransform(GraphicsDevice::DebugUIViewId, glm::value_ptr(identity), glm::value_ptr(proj));
-	m_currentViewId = GraphicsDevice::DebugUIViewId;
+	m_currentViewId = context.GetEditor().GetDebugViews().screen;
+	bgfx::setViewTransform(m_currentViewId, glm::value_ptr(identity), glm::value_ptr(proj));
 }
 
 void Struktur::Renderer::DebugRenderer::SubmitTriangleFan(const glm::vec2* points, int count, uint32_t abgr)
