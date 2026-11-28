@@ -1,6 +1,6 @@
 # Splitting the engine from the games (refactor step 6)
 
-A plan. Steps 6.0 and 6.1 are done, on the `Modules` branch (record: `docs/SplitBaseline.md`); nothing later is
+A plan. Steps 6.0 to 6.2 are done, on the `Modules` branch (record: `docs/SplitBaseline.md`); nothing later is
 started. It follows these choices:
 
 - **Three GitHub repositories:** the engine and two games, **Seven Gods** and **Indoor Cycling Software**.
@@ -20,10 +20,10 @@ started. It follows these choices:
 
 | For you | Why |
 |---|---|
-| Try the ride on the real trainer | Not tested since the refactor or 6.1 |
-| Apply or drop the two git stashes (`main`, 27 August: Editor, Game, ImGui renderer; `master`, 14 August: UI batching) | 6.1 has started moving files, so they're getting harder to apply |
+| Try the ride on the real trainer | Not tested since the refactor, 6.1 or 6.2 |
+| Apply or drop the two git stashes (`main`, 27 August: Editor, Game, ImGui renderer; `master`, 14 August: UI batching) | 6.1 and 6.2 moved their files, so they now need applying by hand |
 | Confirm level, dialogue and art edits to Seven Gods are also on hold until 6.3 | Code and assets both move in that step |
-| Decide on the local engine override (below) | It shapes how the game projects are set up in 6.2 |
+| Say if the local engine override (below) isn't wanted | 6.2 built it in as recommended |
 | `Struktur` is public on GitHub, with the old game assets in its history and the save encoding key in its source | Say if it should be private. The new game repositories will be private |
 
 ## Folders and repositories
@@ -63,12 +63,11 @@ Each game records the engine commit it uses. There will be three copies of the e
   the engine, then commit the new pointer in the game. Each game sets `push.recurseSubmodules=check`, which stops a
   push that points at an unpushed engine commit.
 - Pushed engine commits that a game points at are never rebased or squashed.
-- **To fix first:** the engine's `CMakeLists.txt` runs `git submodule update --init --recursive` on every configure.
-  In a game, that would move `engine\` back to the recorded commit while you work on it. It changes to fetch only
-  what's missing.
-- **Local override (recommended):** a CMake setting, `STRUKTUR_DIR`, that defaults to `engine\` and can point at the
-  `Struktur` folder instead. An engine edit then shows up in both games at once, with no push and pull between copies.
-  Leave it at the default to check a game against its recorded commit.
+- Configuring fetches only the submodules that are missing (6.2), so it never moves a checkout you're working on.
+- **Local override:** a CMake setting, `STRUKTUR_DIR`, names the engine to build against. It defaults to this
+  repository (`../..`) while the game lives inside it, and to `engine\` from 6.4. Point it at the `Struktur` folder to
+  see an engine edit in both games at once, with no push and pull between copies; leave it at the default to check a
+  game against its recorded commit.
 
 ## Libraries
 
@@ -92,19 +91,21 @@ Each game records the engine commit it uses. There will be three copies of the e
 
 - `world2d` needs `wren` because a level keeps its entities' fields as script values and builds the entities from
   scripts.
-- Jobs was already a separate library; it folds into core, and its standalone tests and benchmark keep working.
+- Jobs was already a separate library; core links it, and its standalone tests and benchmark keep working.
+- The startup, frame and shutdown that games share (`Engine/App`) build as one more target, whenever `ecs`, `wren`
+  and `ui` are all in.
 
 ### The `#define` rules
 
 A game lists its libraries once:
 
 ```cmake
-set(STRUKTUR_DIR ${CMAKE_CURRENT_SOURCE_DIR}/engine CACHE PATH "Engine source")
+set(STRUKTUR_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../.." CACHE PATH "Engine source")
 include(${STRUKTUR_DIR}/cmake/Struktur.cmake)
 struktur_add_game(IndoorCyclingSoftware
     LIBRARIES ecs wren ui fitness
-    SOURCES   ${RIDE_SOURCES}
-    ASSETS    assets)
+    ASSETS    ${CMAKE_CURRENT_SOURCE_DIR}/assets
+    SOURCES   src/Main.cpp src/Game.cpp ...)
 ```
 
 - Each listed library defines `STRUKTUR_<NAME>` (`STRUKTUR_PHYSICS`, `STRUKTUR_WORLD2D`, ...) for **every** file in
@@ -118,9 +119,9 @@ struktur_add_game(IndoorCyclingSoftware
   #endif
   ```
 
-- A check builds core alone, each game's set and everything together, so a missing guard fails there.
-- So far (6.1) the root `CMakeLists.txt` takes the list as `STRUKTUR_LIBRARIES` (everything by default), and
-  `builds\check-all.ps1` also builds the ride with only `ecs;wren;ui;fitness`.
+- Building the engine on its own (the root `CMakeLists.txt`) checks 19 sets: each library with only what it needs,
+  the combinations games use and everything together, with and without the editor. Each links every object of the set
+  into an empty program, so a missing guard fails there. `builds\check-all.ps1` runs it.
 
 What has to change for the libraries to separate (found by checking includes on `main` and `RideSoftware`):
 
@@ -196,7 +197,7 @@ public:
 ```
 
 ```cpp
-// Indoor Cycling Software: RideContext.h (in Engine/RideIntegration until 6.2)
+// Indoor Cycling Software: src/RideContext.h
 class RideContext final : public GameContext
 {
 public:
@@ -221,53 +222,41 @@ private:
 
 ## Game.cpp
 
-Each game's `Game.cpp` creates its context, registers its libraries' bindings and writes out the frame. Core
-provides the shared pieces (window and file setup, splash screen, input polling, fixed-step loop, shutdown) as
-functions, so they aren't copied into each game.
+Each game's `Game.cpp` creates its context, registers its bindings, systems and render views, and writes out the frame.
+The engine provides the shared pieces (asset and save folders, window and editor setup, splash screen, input polling,
+fixed-step loop, restart and shutdown) as functions in `Engine/App/App.h`, so they aren't copied into each game.
 
 ```cpp
 // Indoor Cycling Software: src/Game.cpp
-static void RegisterSystems(System::SystemManager& systems)
-{
-	systems.AddHelperSystem<System::HierarchySystem>();
-	systems.AddHelperSystem<System::TransformSystem>();
-	systems.AddFixedUpdateSystem<System::WrenStateFixedUpdateSystem>();
-	systems.AddFixedUpdateSystem<System::WrenScriptFixedUpdateSystem>();
-	systems.AddUpdateSystem<System::WrenStateSystem>();
-	systems.AddUpdateSystem<System::FitnessSystem>();
-	systems.AddUpdateSystem<Ride::RideSystem>();
-	systems.AddUpdateSystem<World::WorldSystem>();
-	systems.AddUpdateSystem<World::PacerSystem>();
-	systems.AddUpdateSystem<World::RiderAnimationSystem>();
-	systems.AddUpdateSystem<World::CameraSystem>();
-	systems.AddUpdateSystem<System::WrenScriptSystem>();
-	systems.AddUpdateSystem<System::EventSystem>();
-	systems.AddUpdateSystem<System::UISystem>();
-	systems.AddUpdateSystem<System::SoundSystem>();
-	systems.AddRenderSystem<World::WorldRenderSystem>();  // render order = this order
-	systems.AddRenderSystem<System::UIRenderSystem>();
-}
-
 static void RegisterBindings(Wren::BindingRegistry& registry)
 {
-	Wren::RegisterCoreBindings(registry);
-	Wren::RegisterEcsBindings(registry);
-	Wren::RegisterUIBindings(registry);
-	Wren::RegisterFitnessBindings(registry);
-	Ride::RegisterBindings(registry);
-	World::RegisterBindings(registry);
+	Wren::RegisterEngineBindings(registry);  // every engine library in the build
+	Wren::RegisterRideBindings(registry);
+	Wren::RegisterWorldBindings(registry);
+}
+
+static void Frame(GameContext& context)
+{
+	App::BeginFrame(context);
+	switch (context.GetGameData().gameState)
+	{
+		case Core::GameState::SPLASH_SCREEN: App::SplashScreenFrame(context, k_splashScreen); break;
+		case Core::GameState::GAME: App::PlayFrame(context); break;
+		default: App::StopLoop(context); break;
+	}
+	App::EndFrame(context);
 }
 ```
 
-Two other pieces move out of fixed lists so a game controls them:
+Pieces that used to be fixed lists are now the game's to control:
 
-- **Render views and shaders:** a render system asks for the views it needs, in registration order; each library or
-  game compiles and registers its own shaders.
-- **Script modules:** the `.wren` sources are built in memory from the registry. This removes the generated files,
-  the output folder outside the repository and the second run after a binding change.
-
-Each game builds its own editor program, because the editor has to link that game's components. The project
-launcher goes.
+- **Render views:** `GraphicsDevice::AddView` hands them out in draw order. The game adds its own first, then the
+  engine adds the editor's debug drawing, the UI and the editor.
+- **Shaders:** each library and game lists its own with `struktur_add_shaders` and registers the table. The core and UI
+  shaders are in `shaders/`.
+- **Script modules:** the `.wren` sources are built in memory from the registry, with no generated files.
+- **Editor:** each game builds its own editor program, which opens that game's `assets\`; Play and Stop call functions
+  the game gives it. The project launcher is gone.
 
 ## Steps
 
@@ -279,14 +268,19 @@ its checks.
 |---|---|---|---|
 | 6.0 Groundwork (done) | Tag `main` and `RideSoftware` (`pre-split-...`); fix the `Ui` / `UI` folder case; fork wren and bgfx.cmake and use the forks; record how both games behave now; one script that builds and tests everything | A fresh clone builds; the record exists | Small |
 | 6.1 Untangle (done) | Virtual `GameContext` and `RideContext`; per-library component lists; in-memory script modules; the include changes above and their guards | Ride tests and demo ride as today | Medium–large |
-| 6.2 Libraries | A CMake target per library and `struktur_add_game`; the ride becomes `games/IndoorCyclingSoftware` (still in this repository) with its own `Game.cpp` | The engine names no game; the library combinations build | Medium–large |
+| 6.2 Libraries (done) | A CMake target per library and `struktur_add_game`; the ride becomes `games/IndoorCyclingSoftware` (still in this repository) with its own `Game.cpp` | The engine names no game; the library combinations build | Medium–large |
 | 6.3 Seven Gods | `world2d` from the 2D files kept uncompiled, plus the code removed from shared files, taken from `main`; `games/SevenGods` with its `Game.cpp`, context, assets and scripts | It reaches the overworld, plays a self-running battle, loads existing saves and opens the level viewer | Large, riskiest |
 | 6.4 Move the games out | Push `Modules`; make each game folder a repository with its history and the engine submodule; copy shared assets and the files git doesn't hold (below) | Both build from their new folders | Medium |
 | 6.5 GitHub | Push the games to their new repositories; merge `Modules` into the engine's `main` without squashing, with game code removed by ordinary commits | Fresh clones of all three build | Small |
 
-- **Left from 6.1 for 6.2:** the libraries are still source lists in one `CMakeLists.txt`; `Game.cpp` and
-  `RegisterAllBindings` still name the ride; and there are no guards yet for building without `ecs`, `wren` or `ui`,
-  since nothing can be built that way until core is its own target.
+- **Left for 6.3:**
+  - The root `assets/` folder now holds only the Seven Gods leftovers on this branch, and doesn't run. 6.3 brings
+    `main`'s assets into `games/SevenGods`, removes it, and re-applies two changes made on this branch: the `Ui` →
+    `UI` folder case fix and `Settings/DialogueEditor.json`.
+  - The uncompiled 2D files in the engine still include the old paths (`Engine/World/Camera.h`, `Engine/Game.h`).
+    `world2d` has to become a library in `cmake/StrukturLibraries.cmake`, with its own render views, and compile the
+    `shaders/world2d` pair.
+  - `check-all.ps1` and `tools\checks` know one game so far.
 - **6.3 is where regressions can hide.** With the job system, Seven Gods has only had short overworld runs, and its
   2D code hasn't been compiled since refactor step 4. Compare against the 6.0 record. Once it passes, Seven Gods work
   resumes in `games/SevenGods`, not on the old layout.
@@ -301,6 +295,6 @@ its checks.
   local editor settings to the game that uses them.
 - **Save folders:** Seven Gods keeps its name, so its saves carry on. Indoor Cycling Software gets its own folder and
   copies its rides, workouts and input settings from `StrukturGames\Seven Gods` once.
-- **Sprite pipeline** (`..\3dModelsToSprites`): point it at `SevenGods\assets`. The ride's copy of the rider sprite is
-  then updated by hand.
+- **Sprite pipeline** (`..\3dModelsToSprites`): point it at `SevenGods\assets`. The ride's copy of the rider sprite
+  (`games/IndoorCyclingSoftware/assets/Actors/explorer.png`, since 6.2) is then updated by hand.
 - **Working notes:** add a `CLAUDE.md` to each repository, because Claude's memory is tied to this folder.

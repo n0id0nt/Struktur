@@ -80,6 +80,24 @@ Checked 2026-11-28 on `Modules` (`b844a75`).
 
 The editor check used a temporary hook that opens the project and drives the toolbar's actions.
 
+## After step 6.2
+
+Checked 2026-11-28 on `Modules` (`f8a5546`). The ride is now `games/IndoorCyclingSoftware`.
+
+| Check | Result |
+|---|---|
+| `check-all.ps1 -Web` | 10 of 10: jobs, fitness (51) and ride (59) tests, the 19 library combinations, and the ride in debug, editor, release and web |
+| Library check against a deliberate use of the UI from core | fails to link, as it should |
+| Ride check from the game folder | as above, the same one warning, save folder unchanged |
+| Every other ride screen (`ride-screens`) | all open; screenshots as before the move, save folder unchanged |
+| Ride art still using placeholders | the same list as before |
+| Editor: Play, Stop, Refresh, then a ride | the game and road world draw in the Game Viewport; saves go to the game's `saves\`; no new warnings |
+| `builds\build-windows.bat` | the packaged release game starts from `data.pak` and shows device pairing |
+| Fresh clone, submodules not fetched | configuring fetches all 11; the ride builds and passes `ride-screens` |
+| Configuring after moving a submodule to another commit | the checkout stays where it was put |
+
+The 6.0 totals (110 fitness and ride tests) are now split between the two test programs.
+
 ## Repeating it
 
 The saves, reports and screenshots are in `baseline\` (not in git). `tools\checks\README.md` explains the checks.
