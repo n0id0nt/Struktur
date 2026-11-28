@@ -33,5 +33,5 @@ echo Executable : build-windows\Dist\IndoorCyclingSoftware.exe
 echo Assets     : build-windows\Dist\data.pak
 echo.
 cd build-windows\Dist
-IndoorCyclingSoftware.exe
+.\IndoorCyclingSoftware.exe
 pause
