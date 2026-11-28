@@ -130,6 +130,10 @@ function(struktur_add_libraries prefix)
         LINK StrukturJobs SDL3_mixer::SDL3_mixer SDL3::SDL3 bgfx bimg bx PhysFS::PhysFS-static EnTT::EnTT glm::glm
              nlohmann_json::nlohmann_json)
     struktur_use_shaders(${prefix}_core CoreShaders)
+    # The file system's open and save dialogs exist in editor builds.
+    if(ARG_EDITOR)
+        target_link_libraries(${prefix}_core PUBLIC tinyfiledialogs)
+    endif()
 
     # --- ecs --------------------------------------------------------------------------------------------------------
     if(has_ecs)
@@ -249,6 +253,7 @@ function(struktur_add_libraries prefix)
             Engine/Dialogue/Condition.h Engine/Dialogue/Condition.cpp
             Engine/Dialogue/TextSystems/VariableSubstitutionSystem.h
             Engine/Dialogue/TextSystems/VariableSubstitutionSystem.cpp
+            Engine/Dialogue/DialogueVariants.h Engine/Dialogue/DialogueVariants.cpp
             Engine/Dialogue/DialogueResult.h)
         if(has_wren)
             list(APPEND sources

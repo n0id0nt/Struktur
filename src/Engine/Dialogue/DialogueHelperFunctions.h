@@ -5,14 +5,11 @@
 
 #include "DialogueNode.h"
 #include "DialogueValue.h"
-#include "Engine/Callback/Variant.h"
+#include "DialogueVariants.h"
 #include "wren.hpp"
 
 namespace Struktur::Dialogue::HelperFunctions
 {
-DialogueValue ConvertVariantToDialogueValue(Callback::Variant variant);
-std::vector<Callback::Variant> ConvertParamsToVariant(std::unordered_map<std::string, DialogueValue> params);
-
 std::vector<std::unique_ptr<DialogueNode>> GetNodeListFromWren(WrenVM* vm, int slot);
 std::pair<std::string, std::unique_ptr<DialogueNode>> DialogueParseWrenNodeKeyPair(WrenVM* vm, int slot);
 std::unique_ptr<DialogueNode> DialogueParseWrenNodeData(WrenVM* vm, int slot, std::string id);

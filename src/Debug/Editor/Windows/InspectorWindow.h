@@ -87,6 +87,7 @@ private:
 	void RenderEntityHeader(GameContext& context, entt::entity entity);
 	void RenderComponents(GameContext& context, entt::entity entity);
 
+#ifdef STRUKTUR_UI
 	// UI Element rendering
 	void RenderUIElementInspector(GameContext& context, UI::UIElement* element);
 	void RenderUIElementHeader(UI::UIElement* element);
@@ -113,6 +114,7 @@ private:
 	// so a field can't be pointed at its own owning element.
 	bool RenderUIElementPicker(const char* label, GameContext& context, UI::UIElement* excludeSelf,
 	                           UI::UIElement*& value);
+#endif
 
 	// Component-specific renderers
 	void RenderActiveComponent(GameContext& context, Component::Active& active, entt::registry& registry,
@@ -126,8 +128,10 @@ private:
 	                                entt::entity entity);
 #endif
 
+#ifdef STRUKTUR_WREN
 	void RenderWrenScriptComponent(GameContext& context, Component::WrenScript& script, entt::registry& registry,
 	                               entt::entity entity);
+#endif
 
 	// Helper functions for rendering common data types
 	bool RenderVec2(const char* label, glm::vec2& vec);
@@ -141,7 +145,9 @@ private:
 	PreviewWindow* m_previewWindow;
 	std::unordered_map<std::string, ComponentRenderer> m_componentRenderers;
 	InspectorDisplayType m_displayType;
+#ifdef STRUKTUR_UI
 	UI::UIElement* m_selectedUIElement;
+#endif
 	entt::entity m_selectedEntity;
 
 	// "New Animation" form state, kept persistent across frames while the user fills it in

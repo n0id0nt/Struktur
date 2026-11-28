@@ -20,10 +20,14 @@
 #include "Debug/Editor/Windows/ResourceManagerWindow.h"
 #include "Debug/Editor/Windows/SavesWindow.h"
 #include "Debug/Editor/Windows/SettingsWindow.h"
-#include "Debug/Editor/Windows/StateWindow.h"
 #include "Debug/Editor/Windows/ToolbarWindow.h"
-#include "Debug/Editor/Windows/UIHierarchyWindow.h"
-#ifdef STRUKTUR_DIALOGUE
+#ifdef STRUKTUR_WREN
+	#include "Debug/Editor/Windows/StateWindow.h"
+#endif
+#ifdef STRUKTUR_UI
+	#include "Debug/Editor/Windows/UIHierarchyWindow.h"
+#endif
+#if defined(STRUKTUR_DIALOGUE) && defined(STRUKTUR_WREN)
 	#include "Debug/Editor/Windows/DialogueEditorWindow.h"
 #endif
 
@@ -46,8 +50,12 @@ void Editor::Initialise(GameContext& context)
 	// Hierarchy window (must be created before inspector)
 	auto hierarchyPtr = CreateWindow<HierarchyWindow>();
 
-	// Hierarchy window (must be created before inspector)
+	// UI hierarchy window (must be created before inspector)
+#ifdef STRUKTUR_UI
 	auto uiHierarchyPtr = CreateWindow<UIHierarchyWindow>();
+#else
+	UIHierarchyWindow* uiHierarchyPtr = nullptr;
+#endif
 
 	// Debug info panel
 	CreateWindow<DebugInfoWindow>(m_gameViewport);
@@ -73,7 +81,7 @@ void Editor::Initialise(GameContext& context)
 	// Inspector window (depends on hierarchy)
 	CreateWindow<InspectorWindow>(hierarchyPtr, uiHierarchyPtr, previewPtr);
 
-#ifdef STRUKTUR_DIALOGUE
+#if defined(STRUKTUR_DIALOGUE) && defined(STRUKTUR_WREN)
 	CreateWindow<DialogueEditorWindow>(previewPtr);
 #endif
 
@@ -83,8 +91,10 @@ void Editor::Initialise(GameContext& context)
 	// Localization audit window (key x language table)
 	CreateWindow<LocalizationWindow>();
 
+#ifdef STRUKTUR_WREN
 	// State system debug window (active state stack, exported fields, force-transition)
 	CreateWindow<StateWindow>();
+#endif
 
 	// LDtk world picker for the level viewer
 

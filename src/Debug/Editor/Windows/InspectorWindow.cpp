@@ -11,31 +11,35 @@
 #include <glm/gtx/quaternion.hpp>
 
 #include "Debug/Editor/Editor.h"
-#include "Debug/Editor/ExportedFieldRenderer.h"
 #include "Debug/Editor/PreviewRenderers/PreviewHelpers.h"
 #include "Debug/Editor/Windows/HierarchyWindow.h"
 #include "Debug/Editor/Windows/PreviewWindow.h"
-#include "Debug/Editor/Windows/UIHierarchyWindow.h"
 #include "Engine/ECS/Component/Active.h"
 #include "Engine/ECS/Component/Identifier.h"
 #include "Engine/ECS/Component/Transform.h"
-#include "Engine/ECS/Component/WrenScript.h"
 #include "Engine/ECS/System/HierarchySystem.h"
 #include "Engine/ECS/System/TransformSystem.h"
-#include "Engine/ECS/System/WrenScriptSystem.h"
-#include "Engine/ECS/WrenScriptComponentRegistry.h"
 #include "Engine/GameContext.h"
-#include "Engine/UI/UIBorder.h"
-#include "Engine/UI/UIClip.h"
-#include "Engine/UI/UIColor.h"
-#include "Engine/UI/UIElement.h"
-#include "Engine/UI/UILabel.h"
-#include "Engine/UI/UIManager.h"
-#include "Engine/UI/UINineSlice.h"
-#include "Engine/UI/UIPanel.h"
-#include "Engine/UI/UIRichLabel.h"
-#include "Engine/UI/UIScroll.h"
-#include "Engine/UI/UITexture.h"
+#ifdef STRUKTUR_WREN
+	#include "Debug/Editor/ExportedFieldRenderer.h"
+	#include "Engine/ECS/Component/WrenScript.h"
+	#include "Engine/ECS/System/WrenScriptSystem.h"
+	#include "Engine/ECS/WrenScriptComponentRegistry.h"
+#endif
+#ifdef STRUKTUR_UI
+	#include "Debug/Editor/Windows/UIHierarchyWindow.h"
+	#include "Engine/UI/UIBorder.h"
+	#include "Engine/UI/UIClip.h"
+	#include "Engine/UI/UIColor.h"
+	#include "Engine/UI/UIElement.h"
+	#include "Engine/UI/UILabel.h"
+	#include "Engine/UI/UIManager.h"
+	#include "Engine/UI/UINineSlice.h"
+	#include "Engine/UI/UIPanel.h"
+	#include "Engine/UI/UIRichLabel.h"
+	#include "Engine/UI/UIScroll.h"
+	#include "Engine/UI/UITexture.h"
+#endif
 #ifdef STRUKTUR_PHYSICS
 	#include "Engine/ECS/Component/PhysicsBody.h"
 	#include "Engine/Physics/CollisionLayers.h"
@@ -44,6 +48,7 @@
 
 namespace Struktur::Debug
 {
+#ifdef STRUKTUR_WREN
 // A level entity field's value as text. Lists (LDtk Colour / Point fields) are shown as their named parts, e.g.
 // "x: 3, y: 4".
 static std::string FormatFieldValue(const Wren::WrenItem& item)
@@ -69,6 +74,7 @@ static std::string FormatFieldValue(const Wren::WrenItem& item)
 			return "null";
 	}
 }
+#endif
 
 #ifdef STRUKTUR_PHYSICS
 // A checkbox per named collision layer for one of a body's filter bitmasks. True when a box was toggled.
@@ -116,7 +122,9 @@ InspectorWindow::InspectorWindow(HierarchyWindow* hierarchyWindow, UIHierarchyWi
       m_uiHierarchyWindow(uiHierarchyWindow),
       m_previewWindow(previewWindow),
       m_displayType(InspectorDisplayType::None),
+#ifdef STRUKTUR_UI
       m_selectedUIElement(nullptr),
+#endif
       m_selectedEntity(entt::null)
 {
 	// Register default component renderers
@@ -132,6 +140,7 @@ void InspectorWindow::Render(GameContext& context)
 
 	ImGui::Begin(m_name.c_str(), &m_isOpen);
 
+#ifdef STRUKTUR_UI
 	// Check if we have a UI element selected
 	UI::UIElement* selectedUIElement = m_uiHierarchyWindow->GetSelectedElement();
 	if (selectedUIElement != m_selectedUIElement)
@@ -151,6 +160,7 @@ void InspectorWindow::Render(GameContext& context)
 			m_displayType = InspectorDisplayType::None;
 		}
 	}
+#endif
 
 	// Check if we have an entity selected
 	entt::entity selectedEntity = m_hierarchyWindow->GetSelectedEntity();
@@ -160,12 +170,16 @@ void InspectorWindow::Render(GameContext& context)
 		if (m_selectedEntity != entt::null)
 		{
 			m_displayType = InspectorDisplayType::Entity;
+#ifdef STRUKTUR_UI
 			m_uiHierarchyWindow->SetSelectedElement(nullptr);
+#endif
 		}
+#ifdef STRUKTUR_UI
 		else if (m_selectedUIElement)
 		{
 			m_displayType = InspectorDisplayType::UIElement;
 		}
+#endif
 		else
 		{
 			m_displayType = InspectorDisplayType::None;
@@ -176,11 +190,13 @@ void InspectorWindow::Render(GameContext& context)
 	// UI elements take precedence if both are selected
 	switch (m_displayType)
 	{
+#ifdef STRUKTUR_UI
 		case InspectorDisplayType::UIElement:
 		{
 			RenderUIElementInspector(context, m_selectedUIElement);
 			break;
 		}
+#endif
 		case InspectorDisplayType::Entity:
 		{
 			RenderEntityInspector(context, m_selectedEntity);
@@ -282,6 +298,7 @@ void InspectorWindow::RenderComponents(GameContext& context, entt::entity entity
 	}
 #endif
 
+#ifdef STRUKTUR_WREN
 	// Render WrenScript if exists
 	if (auto* script = registry.try_get<Component::WrenScript>(entity))
 	{
@@ -292,6 +309,7 @@ void InspectorWindow::RenderComponents(GameContext& context, entt::entity entity
 			ImGui::PopID();
 		}
 	}
+#endif
 
 	// Render Identifier if exists
 	if (auto* identifier = registry.try_get<Component::Identifier>(entity))
@@ -331,6 +349,7 @@ void InspectorWindow::RenderComponents(GameContext& context, entt::entity entity
 	}
 }
 
+#ifdef STRUKTUR_UI
 // ====================================================================
 // UI Element Inspector Rendering
 // ====================================================================
@@ -973,6 +992,7 @@ bool InspectorWindow::RenderUIElementPicker(const char* label, GameContext& cont
 // ====================================================================
 // Component Renderers
 // ====================================================================
+#endif
 
 void InspectorWindow::RenderActiveComponent(GameContext& context, Component::Active& active, entt::registry& registry,
                                             entt::entity entity)
@@ -1184,6 +1204,7 @@ void InspectorWindow::RenderPhysicsBodyComponent(GameContext& context, Component
 }
 #endif
 
+#ifdef STRUKTUR_WREN
 void InspectorWindow::RenderWrenScriptComponent(GameContext& context, Component::WrenScript& script,
                                                 entt::registry& registry, entt::entity entity)
 {
@@ -1291,6 +1312,7 @@ void InspectorWindow::RenderWrenScriptComponent(GameContext& context, Component:
 	}
 #endif
 }
+#endif
 
 void InspectorWindow::RenderLocalTransformComponent(GameContext& context, Component::Transform& transform,
                                                     entt::registry& registry, entt::entity entity)

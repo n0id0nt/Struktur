@@ -18,7 +18,7 @@ code placeholder, so the game always runs ([missing-assets.md](missing-assets.md
 ## Architecture
 
 ```
- Wren                       engine (game only)                              src/Engine/World (pure C++, unit-tested)
+ Wren                       game (C++)                                      src/World (pure C++, unit-tested)
  ────                       ──────────────────                              ────────────────────────────────────────
  RideState                  "world" module ─► LoadWorld / UnloadWorld ──►   World::World  (on the GameContext)
    World.load(settings)        ├─ World::Load                                ├─ Route          centripetal Catmull-Rom
@@ -29,18 +29,18 @@ code placeholder, so the game always runs ([missing-assets.md](missing-assets.md
                             render: WorldRenderSystem ─► WorldRenderer      RoadFollow, Pacer, RiderAnimation
 ```
 
-- **`StrukturWorld`** (`src/Engine/World`) has no SDL, bgfx or Wren. It builds in the standalone test project
-  (`cmake -S src/Engine/Fitness -B build-fitness`), so the world, camera following, pacer motion and rider animation
+- **`RideWorld`** (`src/World`) has no SDL, bgfx or Wren. It builds in the standalone test project
+  (`cmake -S tests -B build-tests`), so the world, camera following, pacer motion and rider animation
   are covered by `RideWorldTests.cpp`. It knows nothing about trainers or rides: `World::Update(delta,
   Input::TrainerInput)` takes speed, chosen grade, ERG, power zone and the workout's intensity ahead, so `--demo` and
   the tests drive it exactly like a real ride.
-- **Loading is explicit.** The `World` and `WorldRenderer` live on the `GameContext`, empty until a script calls
+- **Loading is explicit.** The `World` and `WorldRenderer` live on the `RideContext`, empty until a script calls
   `World.load(Ride.worldSettings())`; `RideState` loads it on entry and unloads it on exit.
 - **The ride and the world are separate.** `RideService` owns the settings, workouts and session and never touches
   the world. `RideSystem` links them: it hands the world's road grade to the session
   (`TrainerController::SetRoadGrade`, so SIM simulates the road under the rider) and places a finish banner 90 m ahead
   when a workout finishes.
-- **Entities** (`ECS/Component/WorldComponents.h`, all tagged `WorldMember` and destroyed on unload):
+- **Entities** (`src/Components/WorldComponents.h`, all tagged `WorldMember` and destroyed on unload):
 
   | Entity | Components | Moved by |
   |---|---|---|
@@ -49,14 +49,14 @@ code placeholder, so the game always runs ([missing-assets.md](missing-assets.md
   | Finish banner | `RoadPosition`, `Banner` | removed by `WorldSystem` once passed |
   | Camera | `Camera3D`, `World::RoadFollow` | `CameraSystem` |
 
-  `PacerSystem` and `RiderAnimationSystem` are worker systems (docs/JobSystem.md). Chunks aren't entities: they're
+  `PacerSystem` and `RiderAnimationSystem` are worker systems (the engine's docs/JobSystem.md). Chunks aren't entities: they're
   built on workers and recycled constantly, so they stay inside the streamer.
 - **Camera:** `World::Camera` is a 3D camera (position, target, field of view, near/far, view and projection
   matrices) on the context. `CameraSystem` follows the rider along the road and writes it; `WorldRenderer` draws
   through it.
 - **Textures** go through the `ResourceManager`. Role art is decoded in parallel (`PrefetchTextures`); frames cut
   from sheets and code-drawn placeholders are registered as `world/...` textures.
-- **`WorldRenderer`** (`src/Engine/Renderer`) turns the world and its entities into bgfx draws.
+- **`WorldRenderer`** (`src/Renderer`) turns the world and its entities into bgfx draws.
 
 ### Route and elevation
 
@@ -119,7 +119,7 @@ code placeholder, so the game always runs ([missing-assets.md](missing-assets.md
 - **Streaming**
   - The window covers 64 m behind to the quality's draw distance ahead (640/1000/1536 m).
   - Missing chunks are requested nearest-first (at most 4 per frame). Each is built as a background task on the
-    engine's job system (docs/JobSystem.md), from copies of the route samples, so several build at once. A settings
+    engine's job system (the engine's docs/JobSystem.md), from copies of the route samples, so several build at once. A settings
     change takes back the meshes of builds that haven't started; running ones finish and are recycled. With zero
     workers (web) the builds run on the main thread within the frame budget.
   - Finished meshes become static vertex/index/instance buffers. Chunks behind are destroyed and their CPU meshes
@@ -140,9 +140,9 @@ code placeholder, so the game always runs ([missing-assets.md](missing-assets.md
   Debug/UI, so the HUD stays at native resolution on top.
 - **Precision:** chunks are translated relative to the camera (x/z in double on the CPU), and heights are relative to
   h(rider), so precision holds over any distance.
-- **Shaders:** `assets/Shaders/{vs,fs}_ride{Terrain,Road,Prop,Sky,Post}.sc` with their own
-  `varying_rideWorld.def.sc` and `rideCommon.sh`. They're built by the existing `struktur_compile_shader` step, which
-  now takes an optional varying file, with no new build step. Every profile was compiled (D3D11 `s_5_0`, GLSL 120,
+- **Shaders:** `shaders/{vs,fs}_ride{Terrain,Road,Prop,Sky,Post}.sc` with their own
+  `varying_rideWorld.def.sc` and `rideCommon.sh`. The game's CMake compiles them with the engine's
+  `struktur_add_shaders`. Every profile was compiled (D3D11 `s_5_0`, GLSL 120,
   ESSL 100/300, SPIR-V).
 - **WebGL2 / no compute:**
   - No compute shaders.
@@ -363,7 +363,7 @@ dropped. Ghost replays would be another mover for the same components.
 
 ## Testing
 
-- **Unit tests** (`build-fitness/Debug/StrukturFitnessTests.exe`, `RideWorldTests.cpp`):
+- **Unit tests** (`build-tests/Debug/RideTests.exe`, `tests/RideWorldTests.cpp`):
   - Noise and route determinism.
   - Curvature, spacing and heading over 100 km.
   - Elevation grade and grade-change limits, history immutability and re-derivation stability.
@@ -385,7 +385,7 @@ dropped. Ghost replays would be another mover for the same components.
 ## Libraries
 
 There are no new dependencies. The spline, noise, elevation, chunk builder, placeholder art and asset manifest are
-written in-house in `src/Engine/World`. Rendering uses the bgfx that's already vendored (and its shaderc step),
+written in-house in `src/World`. Rendering uses the bgfx that's already vendored (and its shaderc step),
 glm, and the stb_image already vendored by bimg (for real PNGs). Tests use the existing doctest.
 
 ## Decisions

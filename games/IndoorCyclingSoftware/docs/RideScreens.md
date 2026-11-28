@@ -1,6 +1,6 @@
 # Ride screens: Free Ride and Workout
 
-Indoor-cycling screens built on the smart-trainer layer ([SmartTrainer.md](SmartTrainer.md)). They're opened from
+Indoor-cycling screens built on the smart-trainer layer ([SmartTrainer.md](../../../docs/SmartTrainer.md)). They're opened from
 the main menu (**Free Ride**, **Workouts**, **Ride Settings**) after device pairing and rider select
 ([RiderProfiles.md](RiderProfiles.md)).
 
@@ -14,20 +14,20 @@ road is drawn behind the HUD; see [RideWorld.md](RideWorld.md).*
 ## Architecture
 
 ```
- Wren (assets/Scripts)                         C++ engine (src/Engine)                       C++ core (src/Engine/Ride)
+ Wren (assets/Scripts)                         C++ game (src)                                C++ core (src/Ride)
  ─────────────────────                         ───────────────────────                       ─────────────────────────
  States/RideState ── "ride" module ──────────► RideIntegration/RideService ──owns──────────► RideSession
- UI/Ride/RideHudUI    (WrenBindings/            │  settings file, workout library,              ├─ WorkoutRunner (+ Workout, ZWO/MRC)
+ UI/Ride/RideHudUI    (Bindings/                │  settings file, workout library,              ├─ WorkoutRunner (+ Workout, ZWO/MRC)
  UI/Ride/RideLayout    WrenRide.cpp)            │  output paths, command line               ├─ TrainerController (ERG/SIM)
  States/WorkoutBrowser                          │                                            ├─ SpeedModel
- States/RideSettings      ◄── ride* events ─────┤  ECS/System/RideSystem: Update each frame  ├─ RideLog → FitWriter / JSON
+ States/RideSettings      ◄── ride* events ─────┤  Systems/RideSystem: Update each frame     ├─ RideLog → FitWriter / JSON
                            (rideTick ~4 Hz,     │  FitnessManager → Input.trainer            └─ Zones
                             rideCue, ...)       └─► Fitness::Trainer (FTMS control-point queue)
  UIGraph (engine UI element) ◄─ Ride.updateGraph / updateProfile fill it in C++
 ```
 
-- **`StrukturRide`** (`src/Engine/Ride`) is a static library free of SDL, bgfx and Wren, built in the same standalone
-  CMake project as `StrukturFitness`, so all of it is unit-tested:
+- **`RideCore`** (`src/Ride`, `cmake/RideLibraries.cmake`) is a static library free of SDL, bgfx and Wren, built on
+  its own with the tests (`tests/`), so all of it is unit-tested:
   - **`Zones`:** Coggan 7 power zones from FTP. Heart-rate zones come from % of max HR (5 zones) or % of threshold
     HR (Friel, 7 zones). One shared colour palette.
   - **`SpeedModel`:** rider + bike mass, rolling resistance (Crr), drag area (CdA), air density, drivetrain
@@ -49,7 +49,7 @@ road is drawn behind the HUD; see [RideWorld.md](RideWorld.md).*
     atomically (temp file + rename), so a crash mid-autosave never leaves a torn file.
   - **`RideSettings`:** app-wide options, persisted as `<save folder>/ride_settings.json`. Rider-specific values
     (FTP, max HR, threshold HR, weight, units) stay on the rider profile.
-- **Engine:**
+- **Game:**
   - **`RideService`** owns the session and reads `FitnessManager` once a frame into `Input::TrainerInput` (devices
     plus what the session makes of them), which the HUD, the world and scripts read:
     - The power source is chosen per the settings (Auto prefers a connected power meter).
@@ -230,7 +230,7 @@ the trainer-control thresholds are in `ride_settings.json`. They're validated an
 ## Demo mode and testing
 
 ```powershell
-./build-nogame/Debug/Struktur.exe --demo
+./build-nogame/Debug/IndoorCyclingSoftware.exe --demo
 ```
 
 - **Demo devices:** `--demo` uses `SimulatedBleCentral`. The simulated trainer and heart-rate strap are remembered in
@@ -239,7 +239,8 @@ the trainer-control thresholds are in `ride_settings.json`. They're validated an
   - In ERG, power follows the trainer's target with about a 1 s lag and a little noise.
   - In simulation, power rises and falls with grade around 185 W, and cadence sags on climbs.
   - Heart rate drifts towards a level set by power over about 25 s.
-- **Tests:** the standalone build (`cmake -S src/Engine/Fitness -B build-fitness`) runs 82 test cases, including:
+- **Tests:** the standalone build (`cmake -S tests -B build-tests`) runs the ride's test cases (the devices and
+  protocols are tested in the engine, `src/Engine/Fitness`), including:
   - ZWO / MRC parsing with sample, malformed and hostile files.
   - Zones, runner timing and the speed model.
   - The controller's ramps, rate limit, trims, clamping and cadence protection.

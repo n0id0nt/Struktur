@@ -162,7 +162,7 @@ SystemAccess AnimationSystem::Access() const
   which runs on the main thread before its batch, to create (`registry.storage<T>()`) the storage of every
   component it touches. Without it, two systems creating storages at once crashed the ride branch's menu, where
   no sprites or emitters existed yet.
-- **On `RideSoftware`** the 2D systems aren't compiled (docs/RideRefactorPlan.md); the worker systems there are
+- **On `RideSoftware`** the 2D systems aren't compiled (games/IndoorCyclingSoftware/docs/RideRefactorPlan.md); the worker systems there are
   `PacerSystem` and `RiderAnimationSystem`.
 - **Converted so far:** `AnimationSystem` and `ParticleSystem`. They're registered next to each other in the update
   phase, so they run as one batch: "Systems scheduled side by side: Animation System, Particle System" in the log.

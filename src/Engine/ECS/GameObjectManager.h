@@ -32,8 +32,10 @@ private:
 #ifdef STRUKTUR_PHYSICS
 	void OnPhysicsBodyDestory(entt::registry& reg, entt::entity entity);
 #endif
+#ifdef STRUKTUR_WREN
 	void OnScriptConstruct(entt::registry& reg, entt::entity entity);
 	void OnScriptDestory(entt::registry& reg, entt::entity entity);
+#endif
 	void OnActiveStateChanged(entt::registry& reg, entt::entity entity);
 
 	GameContext* m_context = nullptr;

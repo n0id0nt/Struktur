@@ -31,10 +31,10 @@ code is written from the public Bluetooth SIG specifications.
 |---|---|---|---|
 | doctest 2.4.12 | unit tests only | MIT | `FetchContent`, release tarball pinned by SHA-256 (`73381c7a…2d70`). Only the header is used, and doctest's own CMake project is never added. Not linked into the game. |
 | nlohmann/json | device registry | MIT | already a git submodule in `third_party/json` |
-| pugixml 1.14 | ZWO workout parsing (ride screens) | MIT | `FetchContent`, release tarball pinned by SHA-256 (`2f10e276…a015`). `pugixml.cpp` is compiled into `StrukturRide`. |
+| pugixml 1.14 | ZWO workout parsing (ride screens) | MIT | `FetchContent`, release tarball pinned by SHA-256 (`2f10e276…a015`). `pugixml.cpp` is compiled into the ride game's `RideCore`. |
 
 The ride screens' font (Barlow Semi Condensed, OFL), the test-only `fitdecode` and the decision to write our own FIT
-encoder are recorded in [RideScreens.md](RideScreens.md#library-choices).
+encoder are recorded in [RideScreens.md](../games/IndoorCyclingSoftware/docs/RideScreens.md#library-choices).
 
 ## Design consequences
 

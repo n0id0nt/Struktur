@@ -3,14 +3,16 @@
 #include "Engine/ECS/Component/Active.h"
 #include "Engine/ECS/Component/Identifier.h"
 #include "Engine/ECS/Component/Transform.h"
-#include "Engine/ECS/Component/WrenScript.h"
 #include "Engine/ECS/System/HierarchySystem.h"
 #include "Engine/ECS/System/TransformSystem.h"
-#include "Engine/ECS/System/WrenScriptSystem.h"
 #include "Engine/ECS/SystemManager.h"
 #include "Engine/GameContext.h"
 #include "glm/glm.hpp"
 #include "glm/gtc/quaternion.hpp."
+#ifdef STRUKTUR_WREN
+	#include "Engine/ECS/Component/WrenScript.h"
+	#include "Engine/ECS/System/WrenScriptSystem.h"
+#endif
 #ifdef STRUKTUR_PHYSICS
 	#include "Engine/ECS/Component/PhysicsBody.h"
 	#include "Engine/Physics/PhysicsWorld.h"
@@ -26,8 +28,10 @@ void Struktur::System::GameObjectManager::CreateObjectCallBack(GameContext& cont
 #ifdef STRUKTUR_PHYSICS
 	registry.on_destroy<Component::PhysicsBody>().connect<&GameObjectManager::OnPhysicsBodyDestory>(*this);
 #endif
+#ifdef STRUKTUR_WREN
 	registry.on_construct<Component::WrenScript>().connect<&GameObjectManager::OnScriptConstruct>(*this);
 	registry.on_destroy<Component::WrenScript>().connect<&GameObjectManager::OnScriptDestory>(*this);
+#endif
 
 	// In GameObjectManager::Init or wherever you set up your registry signals
 	registry.on_construct<Component::Active>().connect<&GameObjectManager::OnActiveStateChanged>(*this);
@@ -42,8 +46,10 @@ void Struktur::System::GameObjectManager::Shutdown(GameContext& context)
 #ifdef STRUKTUR_PHYSICS
 	registry.on_destroy<Component::PhysicsBody>().disconnect<&GameObjectManager::OnPhysicsBodyDestory>(*this);
 #endif
+#ifdef STRUKTUR_WREN
 	registry.on_construct<Component::WrenScript>().disconnect<&GameObjectManager::OnScriptConstruct>(*this);
 	registry.on_destroy<Component::WrenScript>().disconnect<&GameObjectManager::OnScriptDestory>(*this);
+#endif
 	registry.on_construct<Component::Active>().disconnect<&GameObjectManager::OnActiveStateChanged>(*this);
 	registry.on_update<Component::Active>().disconnect<&GameObjectManager::OnActiveStateChanged>(*this);
 }
@@ -166,6 +172,7 @@ void Struktur::System::GameObjectManager::OnPhysicsBodyDestory(entt::registry& r
 }
 #endif
 
+#ifdef STRUKTUR_WREN
 void Struktur::System::GameObjectManager::OnScriptConstruct(entt::registry& reg, entt::entity entity)
 {
 	// Must not call InitialiseScript() here - on_construct can fire mid-Wren-call, which wrenCall() doesn't support.
@@ -179,6 +186,7 @@ void Struktur::System::GameObjectManager::OnScriptDestory(entt::registry& reg, e
 	auto& wrenScript   = reg.get<Component::WrenScript>(entity);
 	scriptSystem.DestroyScript(*m_context, entity, wrenScript);
 }
+#endif
 
 void Struktur::System::GameObjectManager::OnActiveStateChanged(entt::registry& reg, entt::entity entity)
 {
