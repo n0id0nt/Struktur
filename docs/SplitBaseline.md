@@ -98,6 +98,29 @@ Checked 2026-11-28 on `Modules` (`f8a5546`). The ride is now `games/IndoorCyclin
 
 The 6.0 totals (110 fitness and ride tests) are now split between the two test programs.
 
+## After step 6.3
+
+Checked 2026-11-28 on `Modules`. Seven Gods is now `games/SevenGods`.
+
+| Check | Result |
+|---|---|
+| `check-all.ps1 -Web` | 14 of 14: jobs (41 twice), fitness (51) and ride (59) tests, the 24 library combinations, and both games in debug, editor, release and web |
+| `overworld`, both saves | the same room, rooms visited, party, items, gold, moves and defeats as the table above; the same warnings; no crashes |
+| `battle-wolves`, `battle-warden` | both fights end (won in 11 s, lost in 13 s) with the same warnings and no crashes |
+| Game screenshots beside `main`'s | the same picture, apart from animation frames and how far each fight had got |
+| Level viewer | opens `Levels/SevenGods.ldtk` (34 levels); its picture matches `main`'s pixel for pixel |
+| Editor: Play, Stop, Play from a spot, Refresh, close the viewer | all work and it closes cleanly; the inspector shows each kind of 2D component the scene had |
+| Ride checks (`ride`, `ride-screens`) | as before |
+| Assets against `main` | identical, apart from the shader sources (now the engine's), `Settings/DialogueEditor.json` and three scripts' `UI` folder case |
+| Save files | unchanged by every run |
+| Packaged release, from `data.pak` | `overworld` with the current saves loads the same as above |
+
+The editor check used a temporary hook, and saw no particle emitter or custom shader to inspect. It logged `Script
+Chicken is being updated before it was initialised` once for each chicken as its room loaded. The code that starts
+scripts hasn't changed since `main`; `main`'s editor run didn't load such a room, so there's nothing to compare with.
+
+Not covered: a play session of Seven Gods, and the web builds in a browser.
+
 ## Repeating it
 
 The saves, reports and screenshots are in `baseline\` (not in git). `tools\checks\README.md` explains the checks.
