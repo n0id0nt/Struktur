@@ -9,6 +9,11 @@
 // A game adds its own with a header that defines GAME_COMPONENT_LIST, named by STRUKTUR_GAME_COMPONENT_HEADER in its
 // CMake.
 #include "Engine/ECS/EcsComponentList.h"
+#ifdef STRUKTUR_WORLD2D
+	#include "Engine/World/World2DComponentList.h"
+#else
+	#define WORLD2D_COMPONENT_LIST
+#endif
 #ifdef STRUKTUR_PHYSICS
 	#include "Engine/Physics/PhysicsComponentList.h"
 #else
@@ -20,4 +25,4 @@
 	#define GAME_COMPONENT_LIST
 #endif
 
-#define COMPONENT_LIST ECS_COMPONENT_LIST PHYSICS_COMPONENT_LIST GAME_COMPONENT_LIST
+#define COMPONENT_LIST ECS_COMPONENT_LIST WORLD2D_COMPONENT_LIST PHYSICS_COMPONENT_LIST GAME_COMPONENT_LIST

@@ -14,6 +14,7 @@ namespace Struktur::Shaders
 {
 const bgfx::EmbeddedShader* CoreShaders();
 const bgfx::EmbeddedShader* UIShaders();
+const bgfx::EmbeddedShader* World2DShaders();
 }  // namespace Struktur::Shaders
 
 namespace Struktur

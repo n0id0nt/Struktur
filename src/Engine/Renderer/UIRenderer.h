@@ -65,7 +65,7 @@ struct UIFreeRegion
 	uint32_t quadCount;
 };
 
-// One persistent, update-in-place bgfx buffer pair plus its CPU-side vertex mirror. Unlike WorldRenderer's
+// One persistent, update-in-place bgfx buffer pair plus its CPU-side vertex mirror. Unlike SpriteBatchRenderer's
 // transient per-frame sprite batches, UI content (panels/labels) mostly doesn't change frame to frame, so this
 // is only re-uploaded to the GPU when actually dirtied (see UIRenderer::Flush), not rebuilt every frame.
 struct UIBatch
@@ -76,7 +76,7 @@ struct UIBatch
 	// One entry per quad (always kept the same length as cpuVertices.size()/4 - see AllocateOrResizeSlot) -
 	// which texture that specific quad samples from. A batch is NOT limited to one texture: Flush() walks
 	// quads in order and splits into a separate bgfx::submit() per contiguous same-texture run (mirroring
-	// WorldRenderer::Flush's own texture-based run-splitting), all against this one persistent vb/ib via
+	// SpriteBatchRenderer::Flush's own texture-based run-splitting), all against this one persistent vb/ib via
 	// offset+count, not a fresh buffer per run. This is what lets differently-textured widgets (e.g. a panel's
 	// solid-color background next to a label's font atlas) safely share one batch/vertex cache.
 	std::vector<bgfx::TextureHandle> quadTextures;

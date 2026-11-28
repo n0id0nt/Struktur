@@ -28,7 +28,7 @@ struct DrawItem
 	uint64_t sortKey;
 	TextureHandle texture;
 	// Resolved by the caller (see System::ShaderSystem::ResolveProgram) and handed to SubmitSprite/SubmitChunk
-	// directly - WorldRenderer has no business knowing about entt::entity, it only needs the resulting bgfx
+	// directly - SpriteBatchRenderer has no business knowing about entt::entity, it only needs the resulting bgfx
 	// handle to sort/batch by. Also folded into sortKey (see PackSortKey), so the two must always come from the
 	// same resolve call.
 	bgfx::ProgramHandle program;
@@ -61,10 +61,10 @@ struct CullBounds
 // Owns the per-frame draw list for everything in the game world - individual sprites/tiles (SubmitSprite) and
 // cached tilemap chunk meshes (SubmitChunk) alike - so both funnel through the same cull, sort, and flush,
 // even though tiles-as-a-chunk and a moving sprite end up drawn very differently once Flush() gets to them.
-class WorldRenderer
+class SpriteBatchRenderer
 {
 public:
-	WorldRenderer();
+	SpriteBatchRenderer();
 
 	// Explicit rather than in the destructor - must run before GraphicsDevice::Shutdown() (see UIRenderer::
 	// Shutdown's own comment), since bgfx::destroy() is invalid once bgfx itself has shut down.
@@ -76,7 +76,7 @@ public:
 
 	void Clear();
 	// program/shader are resolved by the caller (System::ShaderSystem::ResolveProgram, Component::Shader lookup)
-	// before calling in - WorldRenderer only needs the resulting bgfx handle to sort/batch by and the resolved
+	// before calling in - SpriteBatchRenderer only needs the resulting bgfx handle to sort/batch by and the resolved
 	// component to apply uniforms from later, not the entt::entity or GameContext that produced them. This also
 	// means SubmitChunk (below) can be handed a real per-tilemap program/shader instead of being hardcoded to
 	// whatever entt::null happens to resolve to.
@@ -104,7 +104,7 @@ private:
 	static constexpr size_t kMaxQuadsPerRun = 16384;
 
 	std::vector<DrawItem> m_drawItems;
-	// Lazily created on first Flush() (like the rest of this class, WorldRenderer exists before bgfx does - see
+	// Lazily created on first Flush() (like the rest of this class, SpriteBatchRenderer exists before bgfx does - see
 	// the constructor) rather than in an Initialise() - held as a member instead of Flush()'s old function-local
 	// static purely so Shutdown() above has something to destroy.
 	bgfx::UniformHandle m_texColorSampler = BGFX_INVALID_HANDLE;

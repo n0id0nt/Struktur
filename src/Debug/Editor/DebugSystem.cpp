@@ -6,6 +6,13 @@
 #include "Engine/ECS/System/TransformSystem.h"
 #include "Engine/GameContext.h"
 #include "entt/entt.hpp"
+#ifdef STRUKTUR_WORLD2D
+	#include "Engine/ECS/Component/Level.h"
+	#include "Engine/ECS/Component/LevelEntityInstance.h"
+	#include "Engine/ECS/Component/ParticleEmitter.h"
+	#include "Engine/ECS/Component/Sprite.h"
+	#include "Engine/World/Camera2D.h"
+#endif
 #ifdef STRUKTUR_PHYSICS
 	#include "Engine/ECS/Component/PhysicsBody.h"
 	#include "Engine/Physics/PhysicsWorld.h"
@@ -53,6 +60,14 @@ void Struktur::System::DebugSystem::Update(GameContext& context)
 	// showPhysicsContactPoints: dead on web too (// TODO: Implement contact point rendering, never called) - not
 	// ported.
 
+#ifdef STRUKTUR_WORLD2D
+	if (debugSettings.showLevelBounds)
+	{
+		RenderLevelBounds(context);
+	}
+	// Not a toggle - these only exist in the level viewer, where they stand in for a missing sprite.
+	RenderLevelEntityPlaceholders(context);
+#endif
 	if (debugSettings.showEntityGizmos)
 	{
 		RenderEntityGizmos(context);
@@ -236,8 +251,14 @@ void Struktur::System::DebugSystem::RenderGrid(GameContext& context)
 	auto& gridSettings       = context.GetEditor().GetSettings().grid;
 	Core::GameData& gameData = context.GetGameData();
 
+#ifdef STRUKTUR_WORLD2D
+	World::Camera2D& camera = context.GetCamera2D();
+	glm::vec2 topLeft       = camera.ScreenPosToWorldPos(glm::vec2(0, 0));
+	glm::vec2 bottomRight   = camera.ScreenPosToWorldPos(glm::vec2(gameData.gameWidth, gameData.gameHeight));
+#else
 	glm::vec2 topLeft(0.0f, 0.0f);
 	glm::vec2 bottomRight(gameData.gameWidth, gameData.gameHeight);
+#endif
 
 	float gridSize        = gridSettings.gridSize;
 	unsigned char alpha   = (unsigned char)(gridSettings.gridOpacity * 255.0f);
@@ -268,3 +289,48 @@ void Struktur::System::DebugSystem::RenderGrid(GameContext& context)
 	}
 }
 
+#ifdef STRUKTUR_WORLD2D
+void Struktur::System::DebugSystem::RenderLevelBounds(GameContext& context)
+{
+	auto& debugSettings              = context.GetEditor().GetSettings().debugRender;
+	entt::registry& registry         = context.GetRegistry();
+	TransformSystem& transformSystem = context.GetSystemManager().GetSystem<TransformSystem>();
+
+	auto view = registry.view<Component::Level, Component::Transform>(entt::exclude<Inactive>);
+	for (auto [entity, level, transform] : view.each())
+	{
+		glm::vec3 worldPosition = transformSystem.GetWorldPosition(context, entity);
+		glm::vec2 min           = {worldPosition.x, worldPosition.y};
+		glm::vec2 max           = {worldPosition.x + level.width, worldPosition.y + level.height};
+		m_debugRenderer.DrawRectOutline(min, max, debugSettings.levelBoundsThickness, Util::ColorOrange);
+	}
+}
+
+void Struktur::System::DebugSystem::RenderLevelEntityPlaceholders(GameContext& context)
+{
+	constexpr uint8_t FILL_ALPHA = 110;
+
+	entt::registry& registry         = context.GetRegistry();
+	TransformSystem& transformSystem = context.GetSystemManager().GetSystem<TransformSystem>();
+
+	// Only the instances whose preview gave them no sprite (no hook, or one that shows nothing - e.g. an Item with
+	// no image).
+	auto view =
+	    registry.view<Component::LevelEntityInstance, Component::Transform>(entt::exclude<Inactive, Component::Sprite>);
+	for (auto [entity, placeholder, transform] : view.each())
+	{
+		glm::vec3 worldPosition = transformSystem.GetWorldPosition(context, entity);
+		glm::vec2 min           = glm::vec2(worldPosition) + placeholder.offset;
+		glm::vec2 max           = min + placeholder.size;
+		// A particle emitter shows its particles - just outline where it is, so a fill doesn't cover them.
+		if (!registry.all_of<Component::ParticleEmitter>(entity))
+		{
+			glm::vec2 corners[4] = {min, {max.x, min.y}, max, {min.x, max.y}};
+			Util::Color fill     = placeholder.color;
+			fill.a               = FILL_ALPHA;
+			m_debugRenderer.DrawSolidPolygon(corners, 4, fill);
+		}
+		m_debugRenderer.DrawRectOutline(min, max, 1.0f, placeholder.color);
+	}
+}
+#endif

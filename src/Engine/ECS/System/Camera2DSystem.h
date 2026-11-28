@@ -11,7 +11,7 @@ class GameContext;
 
 namespace World
 {
-struct Camera;
+struct Camera2D;
 }
 namespace Component
 {
@@ -19,21 +19,21 @@ struct Camera;
 }
 namespace System
 {
-class CameraSystem : public ISystem
+class Camera2DSystem : public ISystem
 {
 public:
 	void Update(GameContext& context) override;
 
 	glm::vec2 CalculateSmoothedPosition(float gameTime, float deltaTime, int screenWidth, int screenHeight,
 	                                    Component::Camera* cameraComponent, const glm::vec2& cameraComponentPos,
-	                                    World::Camera& camera);
+	                                    World::Camera2D& camera);
 	glm::vec2 TargetPosition(float gameTime, float deltaTime, int screenWidth, int screenHeight,
 	                         Component::Camera* cameraComponent, const glm::vec2& cameraComponentPos,
-	                         World::Camera& camera);
+	                         World::Camera2D& camera);
 	glm::vec2 ConfineToBounds(const glm::vec2& position, int screenWidth, int screenHeight,
 	                          Component::Camera* cameraComponent);
 	void CalculateCameraShake(float gameTime, float deltaTime, int screenWidth, int screenHeight,
-	                          Component::Camera* cameraComponent, World::Camera& camera);
+	                          Component::Camera* cameraComponent, World::Camera2D& camera);
 
 	void AddCameraTrauma(GameContext& context, entt::entity entity, float trauma);
 	void ResetCameraTrauma(GameContext& context, entt::entity entity);

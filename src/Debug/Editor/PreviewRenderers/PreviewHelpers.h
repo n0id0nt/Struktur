@@ -2,6 +2,10 @@
 
 #include "PreviewWindow.h"
 #include "TexturePreviewRenderer.h"
+#ifdef STRUKTUR_WORLD2D
+	#include "ShaderPreviewRenderer.h"
+	#include "SpritePreviewRenderer.h"
+#endif
 // #include "CurvePreviewRenderer.h"
 #include <memory>
 
@@ -22,6 +26,28 @@ inline void PreviewTexture(PreviewWindow* window, const Resource::ResourcePtr<Re
 	auto renderer = std::make_unique<TexturePreviewRenderer>(texture, name);
 	window->SetPreviewRenderer(std::move(renderer));
 }
+
+#ifdef STRUKTUR_WORLD2D
+inline void PreviewShader(PreviewWindow* window, const Component::Shader* shader, const std::string& name)
+{
+	if (!window)
+	{
+		return;
+	}
+	auto renderer = std::make_unique<ShaderPreviewRenderer>(shader, name);
+	window->SetPreviewRenderer(std::move(renderer));
+}
+
+inline void PreviewSprite(PreviewWindow* window, const Component::Sprite* sprite, const std::string& name)
+{
+	if (!window)
+	{
+		return;
+	}
+	auto renderer = std::make_unique<SpritePreviewRenderer>(sprite, name);
+	window->SetPreviewRenderer(std::move(renderer));
+}
+#endif
 
 // inline void PreviewCurve(PreviewWindow* window,
 //                          Util::Curve* curve,

@@ -8,16 +8,16 @@ namespace UI
 {
 //=============================================================================
 // UIScroll - Adds scrolling on top of UIClip's masking. Each axis is opted into (SetVerticalScrollEnabled/
-// SetHorizontalScrollEnabled, both default false - a new UIScroll only clips until one is turned on); content size is derived each Update() tick from direct
-// children's combined extents (no explicit re-layout - children position themselves as usual, e.g. a
-// hand-built vertical list, and UIScroll just measures the resulting bounding box).
+// SetHorizontalScrollEnabled, both default false - a new UIScroll only clips until one is turned on); content size is
+// derived each Update() tick from direct children's combined extents (no explicit re-layout - children position
+// themselves as usual, e.g. a hand-built vertical list, and UIScroll just measures the resulting bounding box).
 //
 // Scroll offset is exposed to descendants via GetContentOffset() (see UIElement::GetPosition()'s parent-walk
 // formula), so scrolling reuses the exact same position-propagation mechanism UIElement::UpdateBounds()'s
 // recursive cascade already provides - not a bespoke second pathway.
 //
 // Two independent, optional behaviors layer on top of the offset itself:
-//  - Camera-style deadzone focus-follow (mirrors Component::Camera/CameraSystem::CalculateSmoothedPosition) -
+//  - Camera-style deadzone focus-follow (mirrors Component::Camera/Camera2DSystem::CalculateSmoothedPosition) -
 //    keeps the currently-focused descendant within an offset±deadzone band, lerping toward the band edge at
 //    m_focusDamping's rate rather than snapping/re-centering every focus change.
 //  - A two-way position sync with a plain UIElement (SetScrollIndicator) acting as the scrollbar thumb - see

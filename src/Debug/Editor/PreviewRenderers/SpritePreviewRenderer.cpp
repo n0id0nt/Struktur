@@ -86,7 +86,7 @@ void Struktur::Debug::SpritePreviewRenderer::RenderSingleFrame(GameContext& cont
 
 	// Same column/row math System::SpriteRenderSystem actually draws with (see its Render()) - deliberately does
 	// NOT add sprite->offset here, unlike this preview's previous implementation: offset is a world-space pivot
-	// passed to WorldRenderer::SubmitSprite as `origin`, used to shift destRec, not a shift into the sheet's
+	// passed to SpriteBatchRenderer::SubmitSprite as `origin`, used to shift destRec, not a shift into the sheet's
 	// source rect. Adding it here was the "source rect not positioned correctly" bug - it made the previewed
 	// frame drift away from the actual on-screen frame for any sprite with a nonzero offset.
 	float frameWidth  = (float)texWidth / m_sprite->columns;

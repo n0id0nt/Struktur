@@ -26,7 +26,23 @@ void ToolbarWindow::Render(GameContext& context)
 	// Play/Pause/Stop buttons
 	if (ImGui::Button(debugSettings.playingGame ? "Stop" : "Play"))
 	{
-		const bool play           = !debugSettings.playingGame;
+		const bool play = !debugSettings.playingGame;
+#ifdef STRUKTUR_WORLD2D
+		LevelViewer& levelViewer = context.GetEditor().GetLevelViewer();
+		if (play)
+		{
+			// Through the level viewer, which first asks to save any unsaved edits (Play would wipe them). Plain
+			// Play starts where the game normally does - it clears the viewer's "Play from here" spot.
+			levelViewer.RequestPlay(context);
+		}
+		else
+		{
+			debugSettings.playingGame = false;
+			debugSettings.pausedGame  = false;
+			context.GetEditor().GetPlayControls().stop(context);
+			levelViewer.OnPlayStopped(context);
+		}
+#else
 		debugSettings.playingGame = play;
 		debugSettings.pausedGame  = false;
 		if (play)
@@ -37,6 +53,7 @@ void ToolbarWindow::Render(GameContext& context)
 		{
 			context.GetEditor().GetPlayControls().stop(context);
 		}
+#endif
 	}
 	ImGui::SameLine();
 	ImGui::BeginDisabled(!debugSettings.playingGame);

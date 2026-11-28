@@ -1,5 +1,156 @@
-// NOT COMPILED on this branch: the inspector panels of the 2D world's components, moved here from
-// InspectorWindow.cpp when the 2D pipeline left the build (docs/RideRefactorPlan.md).
+// The inspector panels of the 2D world's components: part of the editor in games with the world2d library.
+#include <cmath>
+#include <format>
+#include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtc/type_ptr.hpp>
+#define GLM_ENABLE_EXPERIMENTAL
+#include <glm/gtx/quaternion.hpp>
+
+#include "Debug/Editor/Editor.h"
+#include "Debug/Editor/LevelViewer/EntityFieldEditor.h"
+#include "Debug/Editor/PreviewRenderers/PreviewHelpers.h"
+#include "Debug/Editor/Windows/PreviewWindow.h"
+#include "Engine/Animation/SpriteAnimation.h"
+#include "Engine/ECS/Component/Camera.h"
+#include "Engine/ECS/Component/Level.h"
+#include "Engine/ECS/Component/LevelEntityInstance.h"
+#include "Engine/ECS/Component/ParticleEmitter.h"
+#include "Engine/ECS/Component/Shader.h"
+#include "Engine/ECS/Component/Sprite.h"
+#include "Engine/ECS/Component/SpriteAnimation.h"
+#include "Engine/ECS/Component/TileMap.h"
+#include "Engine/ECS/Component/Transform.h"
+#include "Engine/ECS/Component/World.h"
+#include "Engine/ECS/System/AnimationSystem.h"
+#include "Engine/ECS/System/TransformSystem.h"
+#include "Engine/ECS/SystemManager.h"
+#include "Engine/FileLoading/LevelParser.h"
+#include "Engine/GameContext.h"
+#include "Engine/World/RenderLayer.h"
+#include "InspectorWindow.h"
+
+namespace Struktur::Debug
+{
+// A level entity field's value as text. Lists (LDtk Colour / Point fields) are shown as their named parts, e.g.
+// "x: 3, y: 4".
+static std::string FormatFieldValue(const Wren::WrenItem& item)
+{
+	switch (item.type)
+	{
+		case WrenType::WREN_TYPE_NUM:
+			return std::format("{:.4g}", std::any_cast<double>(item.value));
+		case WrenType::WREN_TYPE_BOOL:
+			return std::any_cast<bool>(item.value) ? "true" : "false";
+		case WrenType::WREN_TYPE_STRING:
+			return "\"" + std::any_cast<std::string>(item.value) + "\"";
+		case WrenType::WREN_TYPE_LIST:
+		{
+			std::string text;
+			for (const auto& part : std::any_cast<std::vector<Wren::WrenItem>>(item.value))
+			{
+				text += (text.empty() ? "" : ", ") + part.identifier + ": " + FormatFieldValue(part);
+			}
+			return text;
+		}
+		default:
+			return "null";
+	}
+}
+
+void InspectorWindow::Render2DComponents(GameContext& context, entt::entity entity)
+{
+	entt::registry& registry = context.GetRegistry();
+
+	if (auto* sprite = registry.try_get<Component::Sprite>(entity))
+	{
+		if (ImGui::CollapsingHeader("Sprite", ImGuiTreeNodeFlags_DefaultOpen))
+		{
+			ImGui::PushID("Sprite");
+			RenderSpriteComponent(context, *sprite, registry, entity);
+			ImGui::PopID();
+		}
+	}
+
+	if (auto* shader = registry.try_get<Component::Shader>(entity))
+	{
+		if (ImGui::CollapsingHeader("Shader", ImGuiTreeNodeFlags_DefaultOpen))
+		{
+			ImGui::PushID("Shader");
+			RenderShaderComponent(context, *shader, registry, entity);
+			ImGui::PopID();
+		}
+	}
+
+	if (auto* camera = registry.try_get<Component::Camera>(entity))
+	{
+		if (ImGui::CollapsingHeader("Camera", ImGuiTreeNodeFlags_DefaultOpen))
+		{
+			ImGui::PushID("Camera");
+			RenderCameraComponent(context, *camera, registry, entity);
+			ImGui::PopID();
+		}
+	}
+
+	if (auto* particleEmitter = registry.try_get<Component::ParticleEmitter>(entity))
+	{
+		if (ImGui::CollapsingHeader("Particle Emitter", ImGuiTreeNodeFlags_DefaultOpen))
+		{
+			ImGui::PushID("ParticleEmitter");
+			RenderParticleEmitterComponent(context, *particleEmitter, registry, entity);
+			ImGui::PopID();
+		}
+	}
+
+	if (auto* spriteAnimation = registry.try_get<Component::SpriteAnimation>(entity))
+	{
+		if (ImGui::CollapsingHeader("Sprite Animation", ImGuiTreeNodeFlags_DefaultOpen))
+		{
+			ImGui::PushID("SpriteAnimation");
+			RenderSpriteAnimationComponent(context, *spriteAnimation, registry, entity);
+			ImGui::PopID();
+		}
+	}
+
+	if (auto* level = registry.try_get<Component::Level>(entity))
+	{
+		if (ImGui::CollapsingHeader("Level"))
+		{
+			ImGui::PushID("Level");
+			RenderLevelComponent(context, *level, registry, entity);
+			ImGui::PopID();
+		}
+	}
+
+	if (auto* instance = registry.try_get<Component::LevelEntityInstance>(entity))
+	{
+		if (ImGui::CollapsingHeader("LDtk Entity", ImGuiTreeNodeFlags_DefaultOpen))
+		{
+			ImGui::PushID("LDtk Entity");
+			RenderLevelEntityInstanceComponent(context, *instance, registry, entity);
+			ImGui::PopID();
+		}
+	}
+
+	if (auto* world = registry.try_get<Component::World>(entity))
+	{
+		if (ImGui::CollapsingHeader("World"))
+		{
+			ImGui::PushID("World");
+			RenderWorldComponent(context, *world, registry, entity);
+			ImGui::PopID();
+		}
+	}
+
+	if (auto* tileMap = registry.try_get<Component::TileMap>(entity))
+	{
+		if (ImGui::CollapsingHeader("Tile Map", ImGuiTreeNodeFlags_DefaultOpen))
+		{
+			ImGui::PushID("TileMap");
+			RenderTileMapComponent(context, *tileMap, registry, entity);
+			ImGui::PopID();
+		}
+	}
+}
 
 void InspectorWindow::RenderCameraComponent(GameContext& context, Component::Camera& camera, entt::registry& registry,
                                             entt::entity entity)
@@ -614,8 +765,9 @@ void InspectorWindow::RenderParticleEmitterComponent(GameContext& context, Compo
 	ImGui::Checkbox("Additive Blend", &emitter.additive);
 	if (ImGui::IsItemHovered())
 	{
-		ImGui::SetTooltip("Order-independent - the natural default for sparks/fire/glow. Off gives normal alpha "
-		                  "blending, better for smoke/dust (see WorldRenderer's own additive-blend comment).");
+		ImGui::SetTooltip(
+		    "Order-independent - the natural default for sparks/fire/glow. Off gives normal alpha "
+		    "blending, better for smoke/dust (see SpriteBatchRenderer's own additive-blend comment).");
 	}
 
 	ImGui::Spacing();
@@ -770,3 +922,4 @@ void InspectorWindow::RenderShaderComponent(GameContext& context, Component::Sha
 		}
 	}
 }
+}  // namespace Struktur::Debug

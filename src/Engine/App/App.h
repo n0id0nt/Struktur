@@ -25,7 +25,8 @@ struct SplashScreen
 	bool pixelFont;
 };
 
-// Adds a game's own render views (GraphicsDevice::AddView). They draw under the debug drawing and the UI.
+// Adds a game's own render views (GraphicsDevice::AddView). They draw under the debug drawing and the UI. A game
+// with none passes nullptr.
 using AddViewsFunction = void (*)(GameContext& context);
 using FrameFunction    = void (*)(GameContext& context);
 

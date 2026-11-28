@@ -32,7 +32,7 @@ public:
 		bool joinsPrevious = false;
 	};
 
-	// Reads and parses the file (a virtual path, e.g. "Levels/SevenGods.ldtk"). Clears the undo history.
+	// Reads and parses the file (a virtual path, e.g. "Levels/World.ldtk"). Clears the undo history.
 	bool Load(const std::string& filePath, std::string& outError);
 	void Clear();
 	bool IsLoaded() const

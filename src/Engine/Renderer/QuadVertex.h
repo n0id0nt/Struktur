@@ -10,7 +10,7 @@ namespace Struktur
 {
 namespace Renderer
 {
-// Shared vertex format for every textured quad drawn into the world view - individual sprites (WorldRenderer's
+// Shared vertex format for every textured quad drawn into the world view - individual sprites (SpriteBatchRenderer's
 // transient per-frame batches) and cached tile chunks (TileChunkBuilder's static meshes) alike.
 struct QuadVertex
 {

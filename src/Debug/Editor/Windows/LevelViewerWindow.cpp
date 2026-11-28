@@ -168,8 +168,9 @@ void LevelViewerWindow::RenderLevelList(GameContext& context)
 	ImGui::TextDisabled("Ctrl+click: play from here");
 	if (ImGui::IsItemHovered())
 	{
-		ImGui::SetTooltip("Starts the game with the player at the clicked spot - used by a game state that loads\n"
-		                  "this world at its LDtk positions (GameWorldState for SevenGods). Stop comes back here.");
+		ImGui::SetTooltip(
+		    "Starts the game with the player at the clicked spot - used by a game state that loads\n"
+		    "this world at its LDtk positions (Application.debugSpawn). Stop comes back here.");
 	}
 
 	LevelViewer::Options& options = m_levelViewer->GetOptions();

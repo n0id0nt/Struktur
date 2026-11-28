@@ -9,6 +9,9 @@
 #include "Engine/GameContext.h"
 #include "Engine/Renderer/EmbeddedShaders.h"
 #include "Engine/Renderer/QuadVertex.h"
+#ifdef STRUKTUR_WORLD2D
+	#include "Engine/World/Camera2D.h"
+#endif
 
 Struktur::Renderer::DebugRenderer::DebugRenderer()
 {
@@ -33,10 +36,17 @@ Struktur::Renderer::DebugRenderer::~DebugRenderer()
 
 void Struktur::Renderer::DebugRenderer::SetupView(GameContext& context)
 {
-	// The 2D debug drawing (physics shapes, grid) is in screen space: the world camera is 3D.
 	Core::GameData& gameData = context.GetGameData();
+#ifdef STRUKTUR_WORLD2D
+	// Through the 2D camera, so shapes track sprites under pan and zoom.
+	World::Camera2D& camera = context.GetCamera2D();
+	glm::mat4 view          = camera.GetViewMatrix();
+	glm::mat4 proj          = camera.GetProjectionMatrix(gameData.gameWidth, gameData.gameHeight);
+#else
+	// Without the 2D world there's no camera to follow: debug drawing is in screen space.
 	glm::mat4 view(1.0f);
 	glm::mat4 proj = glm::ortho(0.0f, (float)gameData.gameWidth, (float)gameData.gameHeight, 0.0f, -1.0f, 1.0f);
+#endif
 	m_currentViewId = context.GetEditor().GetDebugViews().world;
 	bgfx::setViewTransform(m_currentViewId, glm::value_ptr(view), glm::value_ptr(proj));
 }

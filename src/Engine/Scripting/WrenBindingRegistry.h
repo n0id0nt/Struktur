@@ -195,6 +195,9 @@ struct BindingRegistry
 // Forward declarations - implemented in each WrenBinding*.cpp
 void RegisterGameObjectBindings(BindingRegistry& registry);
 void RegisterGameObjectComponentBindings(BindingRegistry& registry);
+void RegisterWorld2DComponentBindings(BindingRegistry& registry);
+void RegisterAnimationBindings(BindingRegistry& registry);
+void RegisterRendererBindings(BindingRegistry& registry);
 void RegisterMathBindings(BindingRegistry& registry);
 void RegisterPhysicsBindings(BindingRegistry& registry);
 void RegisterPhysicsBodyBindings(BindingRegistry& registry);

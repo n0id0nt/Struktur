@@ -99,7 +99,10 @@ void OpenEditor(GameContext& context, AddViewsFunction addGameViews)
 	// Views draw in the order they're added: the game's, debug drawing over them, the UI, debug highlights over the
 	// UI, then the editor.
 	Debug::DebugViews debugViews;
-	addGameViews(context);
+	if (addGameViews)
+	{
+		addGameViews(context);
+	}
 	debugViews.world = graphicsDevice.AddView(Renderer::GraphicsDevice::ViewTarget::Game);
 	context.GetUIRenderer().Initialise(graphicsDevice);
 	debugViews.screen = graphicsDevice.AddView(Renderer::GraphicsDevice::ViewTarget::Game);
@@ -151,7 +154,10 @@ void OpenWindow(GameContext& context, AddViewsFunction addGameViews)
 	Renderer::GraphicsDevice& graphicsDevice = context.GetGraphicsDevice();
 	graphicsDevice.Initialise(window.GetNativeHandle(), gameData.gameWidth, gameData.gameHeight);
 	// The game's views first, so the UI draws over them.
-	addGameViews(context);
+	if (addGameViews)
+	{
+		addGameViews(context);
+	}
 	context.GetUIRenderer().Initialise(graphicsDevice);
 	if (gameData.isFullScreen)
 	{

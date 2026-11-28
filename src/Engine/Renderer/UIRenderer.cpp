@@ -44,7 +44,7 @@ void Struktur::Renderer::UIRenderer::SetupView(GameContext& context)
 	Core::GameData& gameData = context.GetGameData();
 	glm::mat4 identity(1.0f);
 	// Screen-space, top-left origin, sized to the game's logical resolution (not the real window) - matches
-	// WorldRenderer's camera projection sizing convention so UI lines up with the same target when
+	// SpriteBatchRenderer's camera projection sizing convention so UI lines up with the same target when
 	// GraphicsDevice::SetWorldRenderTarget redirects both views into the editor's Game Viewport framebuffer.
 	glm::mat4 proj = glm::ortho(0.0f, (float)gameData.gameWidth, (float)gameData.gameHeight, 0.0f, -1.0f, 1.0f);
 	bgfx::setViewTransform(m_viewId, glm::value_ptr(identity), glm::value_ptr(proj));
@@ -416,7 +416,7 @@ void Struktur::Renderer::UIRenderer::SubmitBatch(UIBatch& batch, uint64_t drawSt
 		          });
 
 		// Index content is otherwise a fixed, deterministic pattern (the same 0,1,2,0,2,3-per-quad layout
-		// WorldRenderer's own transient sprite batches use) - not worth mirroring on UIBatch itself alongside
+		// SpriteBatchRenderer's own transient sprite batches use) - not worth mirroring on UIBatch itself alongside
 		// cpuVertices, so it's rebuilt here whenever an upload is actually needed. Built by walking
 		// sortedQuadOrder - a quad's vertex data never moves from wherever AllocateOrResizeSlot placed it, only
 		// which index-buffer position references it, so base is still that quad's own real vertexOffset-derived

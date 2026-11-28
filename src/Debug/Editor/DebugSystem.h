@@ -23,6 +23,10 @@ public:
 	void RenderEntityGizmos(GameContext &context);
 	void RenderSelectedEntityHighlight(GameContext &context);
 	void RenderGrid(GameContext &context);
+#ifdef STRUKTUR_WORLD2D
+	void RenderLevelBounds(GameContext &context);
+	void RenderLevelEntityPlaceholders(GameContext &context);
+#endif
 #ifdef STRUKTUR_PHYSICS
 	void RenderPhysicsShapes(GameContext &context);
 #endif

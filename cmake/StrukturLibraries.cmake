@@ -4,10 +4,11 @@
 # defines STRUKTUR_<NAME> for every file of that game, so a class has the same layout everywhere, and a library's use of
 # an optional one sits inside that define - see docs/ModuleSplitPlan.md.
 
-set(STRUKTUR_ALL_LIBRARIES ecs wren ui physics dialogue flag fitness)
+set(STRUKTUR_ALL_LIBRARIES ecs wren ui physics world2d dialogue flag fitness)
 # Libraries one of these can't build without (besides core).
 set(STRUKTUR_REQUIRES_ui ecs)
 set(STRUKTUR_REQUIRES_physics ecs)
+set(STRUKTUR_REQUIRES_world2d ecs wren)
 
 # struktur_add_libraries(<prefix> [LIBRARIES <name>...] [EDITOR] [ASSETS <folder>] [COMPONENTS <header>])
 #
@@ -81,6 +82,7 @@ function(struktur_add_libraries prefix)
     set(has_wren OFF)
     set(has_ui OFF)
     set(has_physics OFF)
+    set(has_world2d OFF)
     set(has_dialogue OFF)
     foreach(library IN LISTS libraries)
         set(has_${library} ON)
@@ -157,7 +159,7 @@ function(struktur_add_libraries prefix)
                 WrenBindings/WrenGameObject.cpp
                 WrenBindings/WrenGameObjectComponents.h WrenBindings/WrenGameObjectComponents.cpp)
         endif()
-        struktur_optional(optional physics wren)
+        struktur_optional(optional physics world2d wren)
         struktur_library(ecs SOURCES ${sources} LINK ${prefix}_core ${optional})
     endif()
 
@@ -239,6 +241,43 @@ function(struktur_add_libraries prefix)
         endif()
         struktur_optional(optional wren)
         struktur_library(physics SOURCES ${sources} LINK ${prefix}_core ${prefix}_ecs box2d ${optional})
+    endif()
+
+    # --- world2d ----------------------------------------------------------------------------------------------------
+    if(has_world2d)
+        set(sources
+            Engine/World/World2DServices.h Engine/World/World2DServices.cpp
+            Engine/World/World2DComponentList.h
+            Engine/World/Camera2D.h Engine/World/Camera2D.cpp
+            Engine/World/Level.h Engine/World/Level.cpp
+            Engine/World/TileMap.h Engine/World/TileMap.cpp
+            Engine/World/RenderLayer.h
+            Engine/Animation/SpriteAnimation.h
+            Engine/FileLoading/LevelParser.h Engine/FileLoading/LevelParser.cpp
+            Engine/Renderer/FlipBit.h
+            Engine/Renderer/SpriteBatchRenderer.h Engine/Renderer/SpriteBatchRenderer.cpp
+            Engine/Renderer/TileChunk.h
+            Engine/Renderer/TileChunkBuilder.h Engine/Renderer/TileChunkBuilder.cpp
+            Engine/ECS/Component/Camera.h Engine/ECS/Component/Level.h Engine/ECS/Component/LevelEntityInstance.h
+            Engine/ECS/Component/ParticleEmitter.h Engine/ECS/Component/Shader.h Engine/ECS/Component/Sprite.h
+            Engine/ECS/Component/SpriteAnimation.h Engine/ECS/Component/TileMap.h Engine/ECS/Component/World.h
+            Engine/ECS/System/AnimationSystem.h Engine/ECS/System/AnimationSystem.cpp
+            Engine/ECS/System/Camera2DSystem.h Engine/ECS/System/Camera2DSystem.cpp
+            Engine/ECS/System/ParticleSystem.h Engine/ECS/System/ParticleSystem.cpp
+            Engine/ECS/System/ShaderSystem.h Engine/ECS/System/ShaderSystem.cpp
+            Engine/ECS/System/SpriteRenderSystem.h Engine/ECS/System/SpriteRenderSystem.cpp
+            WrenBindings/Wren2DComponents.cpp
+            WrenBindings/WrenAnimation.h WrenBindings/WrenAnimation.cpp
+            WrenBindings/WrenRenderer.cpp)
+        # Tile maps build collision shapes in games with physics.
+        if(has_physics)
+            list(APPEND sources
+                Engine/Physics/CollisionShapeGenerators/TileMapCollisionBodyGenerator.h
+                Engine/Physics/CollisionShapeGenerators/TileMapCollisionBodyGenerator.cpp)
+        endif()
+        struktur_optional(optional physics)
+        struktur_library(world2d SOURCES ${sources} LINK ${prefix}_core ${prefix}_ecs ${prefix}_wren ${optional})
+        struktur_use_shaders(${prefix}_world2d World2DShaders)
     endif()
 
     # --- dialogue ---------------------------------------------------------------------------------------------------
@@ -338,13 +377,27 @@ function(struktur_add_libraries prefix)
         if(has_physics)
             list(APPEND sources Debug/Box2DBgfxDebugDraw.h Debug/Box2DBgfxDebugDraw.cpp)
         endif()
+        if(has_world2d)
+            list(APPEND sources
+                Debug/Editor/LevelViewer/EditorCamera.h Debug/Editor/LevelViewer/EditorCamera.cpp
+                Debug/Editor/LevelViewer/EntityFieldEditor.h Debug/Editor/LevelViewer/EntityFieldEditor.cpp
+                Debug/Editor/LevelViewer/LdtkDocument.h Debug/Editor/LevelViewer/LdtkDocument.cpp
+                Debug/Editor/LevelViewer/LevelViewer.h Debug/Editor/LevelViewer/LevelViewer.cpp
+                Debug/Editor/PreviewRenderers/CurvePreviewRenderer.h
+                Debug/Editor/PreviewRenderers/ShaderPreviewRenderer.h
+                Debug/Editor/PreviewRenderers/ShaderPreviewRenderer.cpp
+                Debug/Editor/PreviewRenderers/SpritePreviewRenderer.h
+                Debug/Editor/PreviewRenderers/SpritePreviewRenderer.cpp
+                Debug/Editor/Windows/Inspector2DComponents.cpp
+                Debug/Editor/Windows/LevelViewerWindow.h Debug/Editor/Windows/LevelViewerWindow.cpp)
+        endif()
         # The dialogue editor loads and previews dialogue through the scripts.
         if(has_dialogue AND has_wren)
             list(APPEND sources
                 Debug/Editor/Windows/DialogueEditorWindow.h Debug/Editor/Windows/DialogueEditorWindow.cpp
                 Debug/Editor/Exporters/DialogueExporter.h Debug/Editor/Exporters/DialogueExporter.cpp)
         endif()
-        struktur_optional(optional ui physics dialogue wren)
+        struktur_optional(optional ui physics world2d dialogue wren)
         struktur_library(editor SOURCES ${sources} LINK ${prefix}_core ${prefix}_ecs imgui tinyfiledialogs ${optional})
     endif()
 

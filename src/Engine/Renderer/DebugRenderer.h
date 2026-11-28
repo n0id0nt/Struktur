@@ -38,9 +38,9 @@ public:
 
 	// Sets the debug view's transform to the world camera's view/projection, and every Draw* call below to submit
 	// there until SetupUIView below is called instead (see m_currentViewId) - call once before a group of
-	// world-space Draw* calls (see DebugSystem::Update). Mirrors WorldRenderer::Flush's own setViewTransform for
-	// WorldViewId (not UIRenderer::SetupView's screen-space identity/ortho) so debug shapes track sprites under
-	// pan/zoom.
+	// world-space Draw* calls (see DebugSystem::Update). In 2D games it mirrors SpriteBatchRenderer::Flush's own
+	// setViewTransform for WorldViewId (not UIRenderer::SetupView's screen-space identity/ortho) so debug shapes track
+	// sprites under pan/zoom.
 	void SetupView(GameContext& context);
 	// Screen-space counterpart to SetupView - sets the debug screen view's transform to the same orthographic
 	// projection UIRenderer::SetupView uses for the UI view, and every Draw* call below to submit there until SetupView

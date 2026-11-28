@@ -59,6 +59,16 @@ class CollisionLayers;
 class PhysicsWorld;
 }  // namespace Physics
 #endif
+#ifdef STRUKTUR_WORLD2D
+namespace World
+{
+struct Camera2D;
+}
+namespace Renderer
+{
+class SpriteBatchRenderer;
+}
+#endif
 #ifdef STRUKTUR_DIALOGUE
 namespace Dialogue
 {
@@ -141,6 +151,10 @@ public:
 #ifdef STRUKTUR_PHYSICS
 	virtual Physics::CollisionLayers& GetCollisionLayers() const = 0;
 	virtual Physics::PhysicsWorld& GetPhysicsWorld() const       = 0;
+#endif
+#ifdef STRUKTUR_WORLD2D
+	virtual World::Camera2D& GetCamera2D() const                          = 0;
+	virtual Renderer::SpriteBatchRenderer& GetSpriteBatchRenderer() const = 0;
 #endif
 #ifdef STRUKTUR_DIALOGUE
 	virtual Dialogue::DialogueManager& GetDialogueManager() const                       = 0;

@@ -6,7 +6,7 @@ namespace Struktur
 {
 namespace World
 {
-struct Camera
+struct Camera2D
 {
 	glm::vec2 offset;
 	glm::vec2 target;

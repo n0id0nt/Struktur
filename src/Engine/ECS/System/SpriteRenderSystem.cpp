@@ -14,8 +14,8 @@
 #include "Engine/ECS/System/TransformSystem.h"
 #include "Engine/GameContext.h"
 #include "Engine/Renderer/GraphicsDevice.h"
+#include "Engine/Renderer/SpriteBatchRenderer.h"
 #include "Engine/Renderer/TileChunkBuilder.h"
-#include "Engine/Renderer/WorldRenderer.h"
 #include "Engine/Resource/FontResource.h"
 #include "Engine/Text/Font.h"
 #include "Engine/Util/MathUtil.h"
@@ -63,8 +63,9 @@ static int ParticleFrame(const Struktur::Component::ParticleEmitter& emitter,
 }
 // Draws a text particle: its text in the emitter's font, centred on the particle, glyph by glyph through the world's
 // sprite shader using the font's RGBA atlas (FontResource::GetWorldAtlas - the UI's R8 atlas needs its coverage shader,
-// which draws nothing in the world view), outline first so the fill lands on top (WorldRenderer's sort is stable).
-static void SubmitParticleText(Struktur::Renderer::WorldRenderer& worldRenderer,
+// which draws nothing in the world view), outline first so the fill lands on top (SpriteBatchRenderer's sort is
+// stable).
+static void SubmitParticleText(Struktur::Renderer::SpriteBatchRenderer& spriteRenderer,
                                const Struktur::Component::ParticleEmitter& emitter,
                                Struktur::Resource::FontResource& fontResource,
                                const Struktur::Component::Particle& particle, float scale,
@@ -122,8 +123,8 @@ static void SubmitParticleText(Struktur::Renderer::WorldRenderer& worldRenderer,
 				Util::Math::Rect dest{penX + glyph.offsetX * glyphScale,
 				                      origin.y + pass.offset.y + glyph.offsetY * glyphScale,
 				                      glyph.rec.width * glyphScale, glyph.rec.height * glyphScale};
-				worldRenderer.SubmitSprite(emitter.layer, emitter.orderInLayer, program, nullptr, atlas, glyph.rec,
-				                           dest, glm::vec2{0.0f, 0.0f}, 0.0f, pass.tint, false, cullBounds);
+				spriteRenderer.SubmitSprite(emitter.layer, emitter.orderInLayer, program, nullptr, atlas, glyph.rec,
+				                            dest, glm::vec2{0.0f, 0.0f}, 0.0f, pass.tint, false, cullBounds);
 			}
 			penX += (glyph.advanceX > 0 ? glyph.advanceX : glyph.rec.width) * glyphScale;
 		}
@@ -133,16 +134,16 @@ static void SubmitParticleText(Struktur::Renderer::WorldRenderer& worldRenderer,
 void Struktur::System::SpriteRenderSystem::Update(GameContext& context)
 {
 	entt::registry& registry               = context.GetRegistry();
-	Renderer::WorldRenderer& worldRenderer = context.GetWorldRenderer();
+	Renderer::SpriteBatchRenderer& spriteRenderer = context.GetSpriteBatchRenderer();
 	TransformSystem& transformSystem       = context.GetSystemManager().GetSystem<TransformSystem>();
 	ShaderSystem& shaderSystem             = context.GetSystemManager().GetSystem<ShaderSystem>();
-	// Resolved here rather than inside WorldRenderer - it only needs the resulting bgfx handle to sort/batch
-	// by, not the entt::entity or Component::Shader that produced it (see WorldRenderer::SubmitSprite).
+	// Resolved here rather than inside SpriteBatchRenderer - it only needs the resulting bgfx handle to sort/batch
+	// by, not the entt::entity or Component::Shader that produced it (see SpriteBatchRenderer::SubmitSprite).
 	bgfx::ProgramHandle defaultProgram = context.GetGraphicsDevice().GetDefaultSpriteProgram();
 
 	{
-		Renderer::CullBounds cullBounds = Renderer::WorldRenderer::ComputeCullBounds(context);
-		worldRenderer.Clear();
+		Renderer::CullBounds cullBounds = Renderer::SpriteBatchRenderer::ComputeCullBounds(context);
+		spriteRenderer.Clear();
 
 		{
 			auto view = registry.view<Component::TileMap, Component::Transform>(entt::exclude<Inactive>);
@@ -184,8 +185,8 @@ void Struktur::System::SpriteRenderSystem::Update(GameContext& context)
 					// layer's panel index) only nudges it so two sorted layers keep their panel order on the same row.
 					float orderInLayer =
 					    tileMap.rowSorted ? chunk.sortY + tileMap.orderInLayer * kSortedLayerNudge : tileMap.orderInLayer;
-					worldRenderer.SubmitChunk(tileMap.layer, orderInLayer, program, shader, chunk,
-					                          texture->GetHandle(), cullBounds);
+					spriteRenderer.SubmitChunk(tileMap.layer, orderInLayer, program, shader, chunk,
+					                           texture->GetHandle(), cullBounds);
 				}
 			}
 		}
@@ -260,8 +261,9 @@ void Struktur::System::SpriteRenderSystem::Update(GameContext& context)
 
 				bgfx::ProgramHandle program     = shaderSystem.ResolveProgram(context, entity, defaultProgram);
 				const Component::Shader* shader = registry.try_get<Component::Shader>(entity);
-				worldRenderer.SubmitSprite(sprite.layer, orderInLayer, program, shader, texture->GetHandle(), sourceRec,
-				                           destRec, offset, glm::degrees(angleZ), sprite.color, false, cullBounds);
+				spriteRenderer.SubmitSprite(sprite.layer, orderInLayer, program, shader, texture->GetHandle(),
+				                            sourceRec, destRec, offset, glm::degrees(angleZ), sprite.color, false,
+				                            cullBounds);
 			}
 		}
 
@@ -318,8 +320,8 @@ void Struktur::System::SpriteRenderSystem::Update(GameContext& context)
 							float textScale = Util::Math::Lerp(emitter.startScale, emitter.endScale, t);
 							Util::Color textColor =
 							    Util::Color(glm::mix(glm::vec4(particle.startColor), glm::vec4(particle.endColor), t));
-							SubmitParticleText(worldRenderer, emitter, *font, particle, textScale, textColor, defaultProgram,
-							                   cullBounds);
+							SubmitParticleText(spriteRenderer, emitter, *font, particle, textScale, textColor,
+							                   defaultProgram, cullBounds);
 						}
 						continue;
 					}
@@ -336,13 +338,13 @@ void Struktur::System::SpriteRenderSystem::Update(GameContext& context)
 					                         frameSize.x * scale, frameSize.y * scale};
 					glm::vec2 origin{destRec.width * 0.5f, destRec.height * 0.5f};  // rotate/scale about center
 
-					worldRenderer.SubmitSprite(emitter.layer, emitter.orderInLayer, program, shader,
-					                           texture->GetHandle(), sourceRec, destRec, origin,
-					                           glm::degrees(particle.rotation), color, emitter.additive, cullBounds);
+					spriteRenderer.SubmitSprite(emitter.layer, emitter.orderInLayer, program, shader,
+					                            texture->GetHandle(), sourceRec, destRec, origin,
+					                            glm::degrees(particle.rotation), color, emitter.additive, cullBounds);
 				}
 			}
 		}
 
-		worldRenderer.Flush(context);
+		spriteRenderer.Flush(context);
 	}
 }

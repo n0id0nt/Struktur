@@ -48,34 +48,6 @@
 
 namespace Struktur::Debug
 {
-#ifdef STRUKTUR_WREN
-// A level entity field's value as text. Lists (LDtk Colour / Point fields) are shown as their named parts, e.g.
-// "x: 3, y: 4".
-static std::string FormatFieldValue(const Wren::WrenItem& item)
-{
-	switch (item.type)
-	{
-		case WrenType::WREN_TYPE_NUM:
-			return std::format("{:.4g}", std::any_cast<double>(item.value));
-		case WrenType::WREN_TYPE_BOOL:
-			return std::any_cast<bool>(item.value) ? "true" : "false";
-		case WrenType::WREN_TYPE_STRING:
-			return "\"" + std::any_cast<std::string>(item.value) + "\"";
-		case WrenType::WREN_TYPE_LIST:
-		{
-			std::string text;
-			for (const auto& part : std::any_cast<std::vector<Wren::WrenItem>>(item.value))
-			{
-				text += (text.empty() ? "" : ", ") + part.identifier + ": " + FormatFieldValue(part);
-			}
-			return text;
-		}
-		default:
-			return "null";
-	}
-}
-#endif
-
 #ifdef STRUKTUR_PHYSICS
 // A checkbox per named collision layer for one of a body's filter bitmasks. True when a box was toggled.
 static bool RenderCollisionLayerToggles(Physics::CollisionLayers& collisionLayers, const char* title, uint16& bits)
@@ -284,6 +256,10 @@ void InspectorWindow::RenderComponents(GameContext& context, entt::entity entity
 			ImGui::PopID();
 		}
 	}
+
+#ifdef STRUKTUR_WORLD2D
+	Render2DComponents(context, entity);
+#endif
 
 #ifdef STRUKTUR_PHYSICS
 	// Render PhysicsBody if exists

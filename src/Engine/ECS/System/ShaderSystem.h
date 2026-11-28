@@ -29,7 +29,7 @@ public:
 	void SetUniform(GameContext& context, entt::entity entity, const std::string& name, glm::mat4 value);
 
 	// Takes the resolved Component::Shader directly rather than an entity - this must be called immediately
-	// before the bgfx::submit() that actually uses these values (see WorldRenderer::Flush/FlushRun), not any
+	// before the bgfx::submit() that actually uses these values (see SpriteBatchRenderer::Flush/FlushRun), not any
 	// earlier, since bgfx::setUniform's state is only valid for the next submit on this encoder. Resolving via
 	// entity+registry here would tempt calling this eagerly at submit-collection time again, which is exactly
 	// what caused uniform values from an earlier entity to still be "pending" when a later entity's ApplyUniforms

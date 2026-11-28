@@ -1,7 +1,26 @@
-// NOT COMPILED on this branch: the Wren bindings of the 2D world's components (camera, LDtk level and world,
-// shader, sprite, sprite animation and particle emitter), moved here from WrenGameObjectComponents.cpp when the 2D
-// pipeline left the build (docs/RideRefactorPlan.md). Restoring them means adding their entries back to
-// the script component lists and these registrations to the module.
+// The bindings of the 2D world's script components (camera, LDtk level and world, shader, sprite, sprite animation and
+// particle emitter): part of the world2d library, registered into gameObjectComponents.
+#include <algorithm>
+
+#include "Engine/ECS/System/AnimationSystem.h"
+#include "Engine/ECS/System/Camera2DSystem.h"
+#include "Engine/ECS/System/ShaderSystem.h"
+#include "Engine/ECS/System/TransformSystem.h"
+#include "Engine/ECS/SystemManager.h"
+#include "Engine/GameContext.h"
+#include "Engine/Renderer/FlipBit.h"
+#include "Engine/Scripting/WrenBindingRegistry.h"
+#include "Engine/Scripting/WrenUtil.h"
+#include "Engine/Util/Color.h"
+#include "Engine/World/Camera2D.h"
+#include "Engine/World/Level.h"
+#include "Engine/World/RenderLayer.h"
+#include "WrenAnimation.h"
+#include "WrenGameObjectComponents.h"
+#include "WrenMath.h"
+#include "WrenResourceManager.h"
+#include "entt/entt.hpp"
+#include "wren.hpp"
 
 // ============================================================================
 // CAMERA BINDINGS
@@ -109,7 +128,7 @@ void wren_CameraGetViewCenter(WrenVM* vm)
 void wren_CameraWorldPosToScreenPos(WrenVM* vm)
 {
 	Struktur::GameContext* context  = static_cast<Struktur::GameContext*>(wrenGetUserData(vm));
-	Struktur::World::Camera& camera = context->GetCamera();
+	Struktur::World::Camera2D& camera = context->GetCamera2D();
 
 	WrenVec2* worldPos  = static_cast<WrenVec2*>(wrenGetSlotForeign(vm, 1));
 	glm::vec2 screenPos = camera.WorldPosToScreenPos(worldPos->value);
@@ -123,7 +142,7 @@ void wren_CameraWorldPosToScreenPos(WrenVM* vm)
 void wren_CameraScreenPosToWorldPos(WrenVM* vm)
 {
 	Struktur::GameContext* context  = static_cast<Struktur::GameContext*>(wrenGetUserData(vm));
-	Struktur::World::Camera& camera = context->GetCamera();
+	Struktur::World::Camera2D& camera = context->GetCamera2D();
 
 	WrenVec2* screenPos = static_cast<WrenVec2*>(wrenGetSlotForeign(vm, 1));
 	glm::vec2 worldPos  = camera.ScreenPosToWorldPos(screenPos->value);
@@ -138,7 +157,7 @@ void wren_CameraAddCameraTrauma(WrenVM* vm)
 {
 	Struktur::GameContext* context                 = static_cast<Struktur::GameContext*>(wrenGetUserData(vm));
 	Struktur::System::SystemManager& systemManager = context->GetSystemManager();
-	Struktur::System::CameraSystem& cameraSystem   = systemManager.GetSystem<Struktur::System::CameraSystem>();
+	Struktur::System::Camera2DSystem& cameraSystem = systemManager.GetSystem<Struktur::System::Camera2DSystem>();
 
 	WrenCamera* camera = (WrenCamera*)wrenGetSlotForeign(vm, 0);
 	float trauma       = (float)wrenGetSlotDouble(vm, 1);
@@ -150,7 +169,7 @@ void wren_CameraStaticAddCameraTrauma(WrenVM* vm)
 {
 	Struktur::GameContext* context                 = static_cast<Struktur::GameContext*>(wrenGetUserData(vm));
 	Struktur::System::SystemManager& systemManager = context->GetSystemManager();
-	Struktur::System::CameraSystem& cameraSystem   = systemManager.GetSystem<Struktur::System::CameraSystem>();
+	Struktur::System::Camera2DSystem& cameraSystem = systemManager.GetSystem<Struktur::System::Camera2DSystem>();
 
 	entt::entity entity = (entt::entity)wrenGetSlotDouble(vm, 1);
 	float trauma        = (float)wrenGetSlotDouble(vm, 2);
@@ -1654,10 +1673,11 @@ void wren_SpriteStaticSetFlipped(WrenVM* vm)
 	sprite->flipped = flipped;
 }
 
-
-// --- registrations -------------------------------------
-#if 0
-
+// ============================================================================
+// BINDING REGISTRATION
+// ============================================================================
+WREN_BINDING_MODULE(World2DComponent)
+{
 	// Register ParticleEmitter Component foreign class
 	WREN_FOREIGN_CLASS(registry, "gameObjectComponents", "ParticleEmitter", wren_ParticleEmitterAllocate,
 	                   wren_ParticleEmitterFinalize, "ParticleEmitter component class");
@@ -2016,5 +2036,4 @@ void wren_SpriteStaticSetFlipped(WrenVM* vm)
 	          WREN_ENUM_PAIR("ONCE", Struktur::Component::ParticleAnimationMode::Once),
 	          WREN_ENUM_PAIR("LOOP", Struktur::Component::ParticleAnimationMode::Loop),
 	          WREN_ENUM_PAIR("LIFETIME", Struktur::Component::ParticleAnimationMode::Lifetime), );
-
-#endif
+}

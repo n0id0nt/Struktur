@@ -110,6 +110,16 @@ void GameViewportWindow::Render(GameContext& context)
 	ImVec2 uv1 = flipY ? ImVec2(1.0f, 0.0f) : ImVec2(1.0f, 1.0f);
 	ImGui::Image((ImTextureID)(intptr_t)colorTexture.idx, imageSize, uv0, uv1);
 
+#ifdef STRUKTUR_WORLD2D
+	LevelViewer& levelViewer = context.GetEditor().GetLevelViewer();
+	if (levelViewer.IsActive() && !context.GetEditor().GetSettings().debugRender.playingGame)
+	{
+		levelViewer.RenderViewportOverlay(context, ImGui::GetWindowDrawList(),
+		                                  glm::vec2(m_viewportPos.x, m_viewportPos.y),
+		                                  glm::vec2(m_viewportSize.x, m_viewportSize.y));
+	}
+#endif
+
 	RenderSizeControls(context);
 
 	ImGui::End();

@@ -1,4 +1,4 @@
-#include "CameraSystem.h"
+#include "Camera2DSystem.h"
 
 #include "Engine/ECS/Component/Camera.h"
 #include "Engine/ECS/Component/Transform.h"
@@ -6,10 +6,10 @@
 #include "Engine/GameContext.h"
 #include "Engine/Util/MathUtil.h"
 #include "Engine/Util/Noise.h"
-#include "Engine/World/Camera.h"
+#include "Engine/World/Camera2D.h"
 #include "glm/gtc/quaternion.hpp."
 
-void Struktur::System::CameraSystem::Update(GameContext& context)
+void Struktur::System::Camera2DSystem::Update(GameContext& context)
 {
 	entt::registry& registry         = context.GetRegistry();
 	TransformSystem& transformSystem = context.GetSystemManager().GetSystem<TransformSystem>();
@@ -40,7 +40,7 @@ void Struktur::System::CameraSystem::Update(GameContext& context)
 		float deltaTime           = timeSystem.scaledDelta;
 		int screenWidth           = gameData.gameWidth;
 		int screenHeight          = gameData.gameHeight;
-		World::Camera& out_camera = context.GetCamera();
+		World::Camera2D& out_camera = context.GetCamera2D();
 		// out_camera.target = out_camera.previousCameraPosition;
 		glm::vec2 newPos                      = focusedCameraComponent->forcePosition
 		                                            ? TargetPosition(gameTime, deltaTime, screenWidth, screenHeight, focusedCameraComponent,
@@ -66,11 +66,11 @@ void Struktur::System::CameraSystem::Update(GameContext& context)
 	}
 }
 
-glm::vec2 Struktur::System::CameraSystem::CalculateSmoothedPosition(float gameTime, float deltaTime, int screenWidth,
-                                                                    int screenHeight,
-                                                                    Struktur::Component::Camera* cameraComponent,
-                                                                    const glm::vec2& cameraComponentPos,
-                                                                    World::Camera& camera)
+glm::vec2 Struktur::System::Camera2DSystem::CalculateSmoothedPosition(float gameTime, float deltaTime, int screenWidth,
+                                                                      int screenHeight,
+                                                                      Struktur::Component::Camera* cameraComponent,
+                                                                      const glm::vec2& cameraComponentPos,
+                                                                      World::Camera2D& camera)
 {
 	glm::vec2 cameraComponentScreenPos = camera.WorldPosToScreenPos(cameraComponentPos);
 	glm::vec2 newPos{};
@@ -112,15 +112,17 @@ glm::vec2 Struktur::System::CameraSystem::CalculateSmoothedPosition(float gameTi
 	return camera.ScreenPosToWorldPos(newPos);
 }
 
-glm::vec2 Struktur::System::CameraSystem::TargetPosition(float gameTime, float deltaTime, int screenWidth,
-                                                         int screenHeight, Struktur::Component::Camera* cameraComponent,
-                                                         const glm::vec2& cameraComponentPos, World::Camera& camera)
+glm::vec2 Struktur::System::Camera2DSystem::TargetPosition(float gameTime, float deltaTime, int screenWidth,
+                                                           int screenHeight,
+                                                           Struktur::Component::Camera* cameraComponent,
+                                                           const glm::vec2& cameraComponentPos, World::Camera2D& camera)
 {
 	return cameraComponentPos;
 }
 
-glm::vec2 Struktur::System::CameraSystem::ConfineToBounds(const glm::vec2& position, int screenWidth, int screenHeight,
-                                                          Struktur::Component::Camera* cameraComponent)
+glm::vec2 Struktur::System::Camera2DSystem::ConfineToBounds(const glm::vec2& position, int screenWidth,
+                                                            int screenHeight,
+                                                            Struktur::Component::Camera* cameraComponent)
 {
 	// The camera target is the world point at the centre of the screen, so keep it half a view in from each edge.
 	float zoom = cameraComponent->zoom > 0.f ? cameraComponent->zoom : 1.f;
@@ -138,10 +140,10 @@ glm::vec2 Struktur::System::CameraSystem::ConfineToBounds(const glm::vec2& posit
 	return confined;
 }
 
-void Struktur::System::CameraSystem::CalculateCameraShake(float gameTime, float deltaTime, int screenWidth,
-                                                          int screenHeight,
-                                                          Struktur::Component::Camera* cameraComponent,
-                                                          World::Camera& camera)
+void Struktur::System::Camera2DSystem::CalculateCameraShake(float gameTime, float deltaTime, int screenWidth,
+                                                            int screenHeight,
+                                                            Struktur::Component::Camera* cameraComponent,
+                                                            World::Camera2D& camera)
 {
 	float trauma = cameraComponent->trauma;
 	if (trauma > 0.f)
@@ -166,7 +168,7 @@ void Struktur::System::CameraSystem::CalculateCameraShake(float gameTime, float 
 	}
 }
 
-void Struktur::System::CameraSystem::AddCameraTrauma(GameContext& context, entt::entity entity, float trauma)
+void Struktur::System::Camera2DSystem::AddCameraTrauma(GameContext& context, entt::entity entity, float trauma)
 {
 	entt::registry& registry                     = context.GetRegistry();
 	Struktur::Component::Camera* cameraComponent = registry.try_get<Struktur::Component::Camera>(entity);
@@ -182,7 +184,7 @@ void Struktur::System::CameraSystem::AddCameraTrauma(GameContext& context, entt:
 	}
 }
 
-void Struktur::System::CameraSystem::ResetCameraTrauma(GameContext& context, entt::entity entity)
+void Struktur::System::Camera2DSystem::ResetCameraTrauma(GameContext& context, entt::entity entity)
 {
 	entt::registry& registry                     = context.GetRegistry();
 	Struktur::Component::Camera* cameraComponent = registry.try_get<Struktur::Component::Camera>(entity);

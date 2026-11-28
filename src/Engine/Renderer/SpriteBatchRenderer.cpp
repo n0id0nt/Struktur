@@ -12,13 +12,14 @@
 #include "Engine/Renderer/EmbeddedShaders.h"
 #include "Engine/Renderer/GraphicsDevice.h"
 #include "Engine/Renderer/QuadVertex.h"
+#include "Engine/World/Camera2D.h"
 
-Struktur::Renderer::WorldRenderer::WorldRenderer()
+Struktur::Renderer::SpriteBatchRenderer::SpriteBatchRenderer()
 {
 	m_drawItems.reserve(2048);
 }
 
-void Struktur::Renderer::WorldRenderer::Shutdown()
+void Struktur::Renderer::SpriteBatchRenderer::Shutdown()
 {
 	if (bgfx::isValid(m_texColorSampler))
 	{
@@ -27,9 +28,9 @@ void Struktur::Renderer::WorldRenderer::Shutdown()
 	}
 }
 
-Struktur::Renderer::CullBounds Struktur::Renderer::WorldRenderer::ComputeCullBounds(GameContext& context)
+Struktur::Renderer::CullBounds Struktur::Renderer::SpriteBatchRenderer::ComputeCullBounds(GameContext& context)
 {
-	World::Camera& camera    = context.GetCamera();
+	World::Camera2D& camera  = context.GetCamera2D();
 	Core::GameData& gameData = context.GetGameData();
 
 	glm::mat4 view = camera.GetViewMatrix();
@@ -56,8 +57,8 @@ Struktur::Renderer::CullBounds Struktur::Renderer::WorldRenderer::ComputeCullBou
 	return bounds;
 }
 
-uint64_t Struktur::Renderer::WorldRenderer::PackSortKey(World::RenderLayer layer, float orderInLayer,
-                                                        unsigned int textureId, uint16_t programId)
+uint64_t Struktur::Renderer::SpriteBatchRenderer::PackSortKey(World::RenderLayer layer, float orderInLayer,
+                                                              unsigned int textureId, uint16_t programId)
 {
 	// [63:60] layer (4 bits) | [59:28] orderInLayer, sortable-float-bits (32 bits) | [27:12] textureId (16 bits -
 	// matches bgfx::TextureHandle::idx's own uint16_t width) | [11:0] programId (12 bits - bgfx caps
@@ -72,7 +73,7 @@ uint64_t Struktur::Renderer::WorldRenderer::PackSortKey(World::RenderLayer layer
 	return (layerBits << 60) | (orderBits << 28) | (textureBits << 12) | programBits;
 }
 
-void Struktur::Renderer::WorldRenderer::Clear()
+void Struktur::Renderer::SpriteBatchRenderer::Clear()
 {
 	m_drawItems.clear();
 }
@@ -126,12 +127,10 @@ static Struktur::Util::Math::Rect ComputeQuadWorldBounds(const Struktur::Util::M
 	return {minX, minY, maxX - minX, maxY - minY};
 }
 
-void Struktur::Renderer::WorldRenderer::SubmitSprite(World::RenderLayer layer, float orderInLayer,
-                                                     bgfx::ProgramHandle program, const Component::Shader* shader,
-                                                     const TextureHandle& texture, const Util::Math::Rect& sourceRec,
-                                                     const Util::Math::Rect& destRec, const glm::vec2& origin,
-                                                     float rotation, const Util::Color& tint, bool additive,
-                                                     const CullBounds& cullBounds)
+void Struktur::Renderer::SpriteBatchRenderer::SubmitSprite(
+    World::RenderLayer layer, float orderInLayer, bgfx::ProgramHandle program, const Component::Shader* shader,
+    const TextureHandle& texture, const Util::Math::Rect& sourceRec, const Util::Math::Rect& destRec,
+    const glm::vec2& origin, float rotation, const Util::Color& tint, bool additive, const CullBounds& cullBounds)
 {
 	Util::Math::Rect worldBounds = ComputeQuadWorldBounds(destRec, origin, rotation);
 	if (!Util::Math::RectOverlaps(worldBounds, cullBounds.minX, cullBounds.minY, cullBounds.maxX, cullBounds.maxY))
@@ -152,10 +151,10 @@ void Struktur::Renderer::WorldRenderer::SubmitSprite(World::RenderLayer layer, f
 	m_drawItems.push_back(item);
 }
 
-void Struktur::Renderer::WorldRenderer::SubmitChunk(World::RenderLayer layer, float orderInLayer,
-                                                    bgfx::ProgramHandle program, const Component::Shader* shader,
-                                                    const TileChunk& chunk, const TextureHandle& texture,
-                                                    const CullBounds& cullBounds)
+void Struktur::Renderer::SpriteBatchRenderer::SubmitChunk(World::RenderLayer layer, float orderInLayer,
+                                                          bgfx::ProgramHandle program, const Component::Shader* shader,
+                                                          const TileChunk& chunk, const TextureHandle& texture,
+                                                          const CullBounds& cullBounds)
 {
 	if (!Util::Math::RectOverlaps(chunk.worldBounds, cullBounds.minX, cullBounds.minY, cullBounds.maxX,
 	                              cullBounds.maxY))
@@ -177,7 +176,7 @@ void Struktur::Renderer::WorldRenderer::SubmitChunk(World::RenderLayer layer, fl
 	m_drawItems.push_back(item);
 }
 
-void Struktur::Renderer::WorldRenderer::Flush(GameContext& context)
+void Struktur::Renderer::SpriteBatchRenderer::Flush(GameContext& context)
 {
 	// stable_sort, not sort: two items with identical (layer, orderInLayer, texture, program) produce identical
 	// sortKeys, and plain sort gives no ordering guarantee among ties - for overlapping same-order transparent
@@ -188,7 +187,7 @@ void Struktur::Renderer::WorldRenderer::Flush(GameContext& context)
 	std::stable_sort(m_drawItems.begin(), m_drawItems.end(), LowerSortKeyFirst);
 
 	System::ShaderSystem& shaderSystem = context.GetSystemManager().GetSystem<System::ShaderSystem>();
-	World::Camera& camera              = context.GetCamera();
+	World::Camera2D& camera            = context.GetCamera2D();
 	Core::GameData& gameData           = context.GetGameData();
 
 	glm::mat4 view = camera.GetViewMatrix();
@@ -257,10 +256,10 @@ void Struktur::Renderer::WorldRenderer::Flush(GameContext& context)
 	FlushRun(context, runStart, m_drawItems.size(), quadLayout, texColorSampler, runAdditive, runTexture, runProgram);
 }
 
-void Struktur::Renderer::WorldRenderer::FlushRun(GameContext& context, size_t runStart, size_t runEnd,
-                                                 const bgfx::VertexLayout& quadLayout,
-                                                 bgfx::UniformHandle texColorSampler, bool runAdditive,
-                                                 const TextureHandle& runTexture, bgfx::ProgramHandle runProgram)
+void Struktur::Renderer::SpriteBatchRenderer::FlushRun(GameContext& context, size_t runStart, size_t runEnd,
+                                                       const bgfx::VertexLayout& quadLayout,
+                                                       bgfx::UniformHandle texColorSampler, bool runAdditive,
+                                                       const TextureHandle& runTexture, bgfx::ProgramHandle runProgram)
 {
 	size_t count = runEnd - runStart;
 	if (count == 0)

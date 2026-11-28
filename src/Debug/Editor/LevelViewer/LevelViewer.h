@@ -24,7 +24,7 @@ class GameViewportWindow;
 // Shows an LDtk world in the Game Viewport while the game is stopped - every room's tiles and each entity's sprite
 // (see World::Level::EntityMode::PREVIEW), nothing simulating (GameLoop only updates systems while
 // debugSettings.playingGame is set; render systems always run).
-// Lives in the normal registry, so pressing Play (StartDebugGame -> ClearGameSystems) wipes it like any other
+// Lives in the normal registry, so pressing Play (the game's PlayControls::start) wipes it like any other
 // scene; the toolbar calls OnPlayStarted/OnPlayStopped so Stop brings the viewer back.
 class LevelViewer
 {
@@ -47,7 +47,7 @@ public:
 	};
 
 	// Stops the game if it is running, clears the scene and loads every level of the world at filePath (a
-	// virtual path, e.g. "Levels/SevenGods.ldtk"). Returns to where the camera last was for that file this
+	// virtual path, e.g. "Levels/World.ldtk"). Returns to where the camera last was for that file this
 	// session, otherwise frames the whole world.
 	void Open(GameContext& context, const std::string& filePath);
 	// Clears the scene (back to the plain stopped editor).

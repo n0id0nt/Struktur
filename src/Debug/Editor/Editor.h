@@ -10,6 +10,9 @@
 #include "Debug/Editor/EditorLayoutManager.h"
 #include "Debug/Editor/EditorSettings.h"
 #include "Debug/Editor/Windows/EditorWindow.h"
+#ifdef STRUKTUR_WORLD2D
+	#include "Debug/Editor/LevelViewer/LevelViewer.h"
+#endif
 
 namespace Struktur
 {
@@ -31,6 +34,9 @@ struct PlayControls
 {
 	void (*start)(GameContext& context) = nullptr;
 	void (*stop)(GameContext& context)  = nullptr;
+	// Back to nothing loaded but with the scripts and physics up, for showing a scene without running the game (the
+	// level viewer, so only games with the 2D world need it).
+	void (*reset)(GameContext& context) = nullptr;
 };
 
 class Editor
@@ -103,6 +109,13 @@ public:
 		return m_settings;
 	}
 
+#ifdef STRUKTUR_WORLD2D
+	// Shows LDtk worlds in the Game Viewport while the game is stopped
+	LevelViewer& GetLevelViewer()
+	{
+		return m_levelViewer;
+	}
+#endif
 
 private:
 	// Render the complete editor layout
@@ -129,6 +142,10 @@ private:
 
 	DebugViews m_debugViews;
 	PlayControls m_playControls;
+
+#ifdef STRUKTUR_WORLD2D
+	LevelViewer m_levelViewer;
+#endif
 
 	// Editor state
 	bool m_showDemoWindow;

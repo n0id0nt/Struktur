@@ -24,6 +24,11 @@ void RegisterEngineBindings(BindingRegistry& registry)
 	#endif
 	RegisterGameObjectComponentBindings(registry);
 #endif
+#ifdef STRUKTUR_WORLD2D
+	RegisterAnimationBindings(registry);
+	RegisterRendererBindings(registry);
+	RegisterWorld2DComponentBindings(registry);
+#endif
 #ifdef STRUKTUR_PHYSICS
 	RegisterPhysicsBindings(registry);
 	RegisterCollisionLayersBindings(registry);

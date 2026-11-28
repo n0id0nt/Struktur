@@ -77,7 +77,7 @@ public:
 	// bgfx::frame() - hands the recorded draw calls to the render thread and swaps buffers.
 	void EndFrame();
 
-	// Fallback program for sprites/tiles with no Component::Shader - WorldRenderer::Flush's batch renderer uses
+	// Fallback program for sprites/tiles with no Component::Shader - SpriteBatchRenderer::Flush's batch renderer uses
 	// this instead of relying on an implicit default the way raylib's rlgl provided one.
 	bgfx::ProgramHandle GetDefaultSpriteProgram() const;
 

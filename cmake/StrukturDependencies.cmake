@@ -193,8 +193,10 @@ if(EDITOR)
     target_include_directories(tinyfiledialogs PUBLIC ${third_party}/tinyfiledialogs)
 endif()
 
-# The shaders the core and UI libraries embed.
+# The shaders the core, UI and 2D world libraries embed.
 struktur_add_shaders(CoreShaders DIRECTORY ${STRUKTUR_ENGINE_DIR}/shaders/core
     VARYING ${STRUKTUR_ENGINE_DIR}/shaders/varying.def.sc SHADERS sprite)
 struktur_add_shaders(UIShaders DIRECTORY ${STRUKTUR_ENGINE_DIR}/shaders/ui
     VARYING ${STRUKTUR_ENGINE_DIR}/shaders/varying.def.sc SHADERS spriteCoverage richTextAnim)
+struktur_add_shaders(World2DShaders DIRECTORY ${STRUKTUR_ENGINE_DIR}/shaders/world2d
+    VARYING ${STRUKTUR_ENGINE_DIR}/shaders/varying.def.sc SHADERS soulEffect)

@@ -12,10 +12,6 @@
 
 namespace Struktur
 {
-namespace Animation
-{
-}  // namespace Animation
-
 namespace Component
 {
 struct Active;
@@ -24,6 +20,17 @@ struct Transform;
 struct PhysicsBody;
 #endif
 struct WrenScript;
+#ifdef STRUKTUR_WORLD2D
+struct Sprite;
+struct Shader;
+struct Camera;
+struct ParticleEmitter;
+struct SpriteAnimation;
+struct Level;
+struct LevelEntityInstance;
+struct World;
+struct TileMap;
+#endif
 }  // namespace Component
 
 namespace UI
@@ -133,6 +140,38 @@ private:
 	                               entt::entity entity);
 #endif
 
+#ifdef STRUKTUR_WORLD2D
+	// The 2D world's components (Inspector2DComponents.cpp)
+	void Render2DComponents(GameContext& context, entt::entity entity);
+
+	void RenderSpriteComponent(GameContext& context, Component::Sprite& sprite, entt::registry& registry,
+	                           entt::entity entity);
+
+	void RenderShaderComponent(GameContext& context, Component::Shader& shader, entt::registry& registry,
+	                           entt::entity entity);
+
+	void RenderCameraComponent(GameContext& context, Component::Camera& camera, entt::registry& registry,
+	                           entt::entity entity);
+
+	void RenderParticleEmitterComponent(GameContext& context, Component::ParticleEmitter& emitter,
+	                                    entt::registry& registry, entt::entity entity);
+
+	void RenderSpriteAnimationComponent(GameContext& context, Component::SpriteAnimation& spriteAnimation,
+	                                    entt::registry& registry, entt::entity entity);
+
+	void RenderLevelComponent(GameContext& context, Component::Level& level, entt::registry& registry,
+	                          entt::entity entity);
+
+	void RenderLevelEntityInstanceComponent(GameContext& context, Component::LevelEntityInstance& instance,
+	                                        entt::registry& registry, entt::entity entity);
+
+	void RenderWorldComponent(GameContext& context, Component::World& world, entt::registry& registry,
+	                          entt::entity entity);
+
+	void RenderTileMapComponent(GameContext& context, Component::TileMap& tileMap, entt::registry& registry,
+	                            entt::entity entity);
+#endif
+
 	// Helper functions for rendering common data types
 	bool RenderVec2(const char* label, glm::vec2& vec);
 	bool RenderVec3(const char* label, glm::vec3& vec);
@@ -157,6 +196,10 @@ private:
 	float m_newAnimationTime           = 1.0f;
 	bool m_newAnimationLoop            = true;
 
+#ifdef STRUKTUR_WORLD2D
+	// Currently selected cell in the TileMap grid editor, as row * width + col
+	int m_selectedTileMapCell = -1;
+#endif
 };
 }  // namespace Debug
 }  // namespace Struktur

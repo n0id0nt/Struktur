@@ -7,6 +7,7 @@
 
 #include "Debug/Editor/Windows/GameViewportWindow.h"
 #include "Engine/GameContext.h"
+#include "Engine/World/Camera2D.h"
 
 namespace Struktur::Debug
 {
@@ -60,7 +61,7 @@ void EditorCamera::HandleInput(GameContext& context, const GameViewportWindow& v
 void EditorCamera::Apply(GameContext& context) const
 {
 	Core::GameData& gameData      = context.GetGameData();
-	World::Camera& camera         = context.GetCamera();
+	World::Camera2D& camera       = context.GetCamera2D();
 	camera.target                 = m_view.target;
 	camera.offset                 = glm::vec2(gameData.gameWidth / 2.f, gameData.gameHeight / 2.f);
 	camera.zoom                   = m_view.zoom;
