@@ -1,4 +1,4 @@
-build*/
+build-*/
 shaders/compiled/
 # The editor's own files: layout, and the save snapshots it works on.
 saves/
